@@ -6,25 +6,80 @@
 {% block title %}پروفایل | فایلینگ دیوار{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
 <div class="container mk-dashboard-page">
-    <header class="dash-head">
-        <div class="dash-head-main">
-            <div class="dash-avatar" aria-hidden="true">{{ user.username|slice:":1"|upper }}</div>
-            <div>
-                <p class="dash-eyebrow">حساب کاربری</p>
-                <h1 class="dash-title">سلام، {{ user.get_full_name|default:user.username }}</h1>
-                <p class="dash-lead">مدیریت سفارش‌ها، لایسنس‌ها و تنظیمات پروفایل</p>
-            </div>
+    <header class="dash-hero">
+        <div class="dash-hero-bg" aria-hidden="true">
+            <span class="dash-hero-orb dash-hero-orb--1"></span>
+            <span class="dash-hero-orb dash-hero-orb--2"></span>
         </div>
-        <div class="dash-head-actions">
-            <a href="{% url 'workspace:home' %}" class="btn btn-primary dash-head-btn">
-                <i class="fas fa-layer-group" aria-hidden="true"></i> ورود به میزکار
-            </a>
+        <div class="dash-hero-inner">
+            <div class="dash-hero-profile">
+                <div class="dash-hero-avatar-wrap">
+                    {% if user.profile and user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="" class="dash-hero-avatar-img">
+                    {% else %}
+                        <span class="dash-hero-avatar" aria-hidden="true">{{ user.username|slice:":1"|upper }}</span>
+                    {% endif %}
+                    <span class="dash-hero-status{% if active_licenses %} is-active{% endif %}" title="{% if active_licenses %}لایسنس فعال{% else %}بدون لایسنس فعال{% endif %}"></span>
+                </div>
+                <div class="dash-hero-copy">
+                    <p class="dash-hero-kicker">
+                        <i class="fas fa-shield-check" aria-hidden="true"></i>
+                        حساب کاربری
+                    </p>
+                    <h1 class="dash-hero-title">
+                        سلام، <em>{{ user.get_full_name|default:user.username }}</em>
+                    </h1>
+                    <p class="dash-hero-lead">مدیریت سفارش‌ها، لایسنس‌ها و تنظیمات پروفایل در یک نگاه</p>
+                    <div class="dash-hero-meta">
+                        <span class="dash-hero-meta-item">
+                            <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                            عضو از {{ user.date_joined|to_jalali_date:"%Y/%m/%d" }}
+                        </span>
+                        {% if user.phone %}
+                        <span class="dash-hero-meta-item">
+                            <i class="fas fa-mobile-screen" aria-hidden="true"></i>
+                            {{ user.phone }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="dash-hero-tags">
+                        <span class="dash-hero-tag" data-tone="violet">
+                            <i class="fas fa-key" aria-hidden="true"></i>
+                            {{ active_licenses }} لایسنس فعال
+                        </span>
+                        <span class="dash-hero-tag" data-tone="sky">
+                            <i class="fas fa-receipt" aria-hidden="true"></i>
+                            {{ paid_orders }} سفارش پرداخت‌شده
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="dash-hero-actions">
+                <a href="{% url 'workspace:home' %}" class="dash-hero-btn dash-hero-btn--primary">
+                    <span class="dash-hero-btn-icon"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
+                    <span class="dash-hero-btn-text">
+                        <strong>ورود به میزکار</strong>
+                        <small>CRM و فایلینگ دیوار</small>
+                    </span>
+                    <i class="fas fa-arrow-left dash-hero-btn-arrow" aria-hidden="true"></i>
+                </a>
+                <button type="button" class="dash-hero-btn dash-hero-btn--ghost" onclick="showTab('profile', event)">
+                    <i class="fas fa-user-pen" aria-hidden="true"></i>
+                    <span>ویرایش پروفایل</span>
+                </button>
+                {% if active_licenses == 0 %}
+                <a href="{% url 'product_list' %}" class="dash-hero-btn dash-hero-btn--outline">
+                    <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                    <span>خرید لایسنس</span>
+                </a>
+                {% endif %}
+            </div>
         </div>
     </header>
 

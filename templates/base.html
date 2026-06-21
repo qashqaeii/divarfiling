@@ -1,5 +1,6 @@
 {% load static %}
 {% load seo_tags %}
+{% load persian_tags %}
 <!DOCTYPE html>
 <html lang="fa" dir="rtl" class="mk-public" data-theme="light">
 <head>
@@ -43,7 +44,7 @@
     <!-- Main CSS -->
     <link rel="stylesheet" href="{% static 'workspace/css/design-system.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/main.css' %}?v=4.8.2">
-    <link rel="stylesheet" href="{% static 'css/mizkar-public.css' %}?v=19">
+    <link rel="stylesheet" href="{% static 'css/mizkar-public.css' %}?v=20">
     <link rel="stylesheet" href="{% static 'css/mizkar-pages.css' %}?v=6">
     <link rel="stylesheet" href="{% static 'css/responsive-base.css' %}?v=1">
     
@@ -101,23 +102,28 @@
 
     <!-- Announcements Section -->
     {% if announcements %}
-        <div class="announcements-section">
-            <div class="container">
+        <div class="announcements-section mk-announce" role="region" aria-label="اطلاعیه‌ها">
+            <div class="mk-announce-inner">
                 {% for announcement in announcements %}
-                    <div class="announcement-bar">
-                        <div class="announcement-bar-content">
-                            <div class="announcement-bar-text">
-                                <span class="announcement-title">{{ announcement.title }}</span>
-                                <span class="announcement-desc">{{ announcement.content }}</span>
-                            </div>
+                    <div class="announcement-bar mk-announce-bar">
+                        <span class="mk-announce-badge" aria-hidden="true">
+                            <i class="fas fa-bullhorn"></i>
+                            <span class="mk-announce-badge-label">اطلاعیه</span>
+                        </span>
+                        <div class="announcement-bar-content mk-announce-body">
+                            <p class="announcement-bar-text mk-announce-message">
+                                <strong class="announcement-title">{{ announcement.title }}</strong>
+                                <span class="announcement-desc">{{ announcement.content|highlight_promo_codes }}</span>
+                            </p>
                             {% if announcement.link %}
-                                <a href="{{ announcement.link }}" class="announcement-bar-link">
-                                    {{ announcement.link_text|default:"مشاهده" }}
+                                <a href="{{ announcement.link }}" class="announcement-bar-link mk-announce-cta">
+                                    <span>{{ announcement.link_text|default:"مشاهده" }}</span>
+                                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                 </a>
                             {% endif %}
                         </div>
-                        <button class="announcement-bar-close" onclick="closeAnnouncement(this)" aria-label="بستن">
-                            <i class="fas fa-times"></i>
+                        <button type="button" class="announcement-bar-close mk-announce-dismiss" onclick="closeAnnouncement(this)" aria-label="بستن اطلاعیه">
+                            <i class="fas fa-xmark" aria-hidden="true"></i>
                         </button>
                     </div>
                 {% endfor %}

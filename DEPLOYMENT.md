@@ -140,6 +140,14 @@ sudo apt install -y \
   build-essential libpq-dev
 ```
 
+
+cd ~/DivarFiling
+git pull origin main
+source venv/bin/activate
+python manage.py collectstatic --noinput
+sudo systemctl restart divar_shop
+
+
 ### ۴.۳ ایجاد کاربر و دایرکتوری (پیشنهادی)
 
 ```bash
@@ -168,6 +176,11 @@ git clone <repository-url> .
 # یا فقط پوشه django:
 git clone <repository-url> repo && mv repo/django/* . && rm -rf repo
 ```
+cd ~/DivarFiling
+git pull origin main
+source venv/bin/activate
+python manage.py collectstatic --noinput
+sudo systemctl restart divar_shop
 
 ### ۵.۲ روش SCP / SFTP (از Windows)
 

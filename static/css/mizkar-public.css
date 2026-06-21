@@ -195,6 +195,233 @@ html.mk-public[data-theme="light"] .nav-menu a.is-active {
     color: var(--mk-purple, #6d28d9) !important;
 }
 
+/* ─── Announcement strip — minimal & professional ─── */
+html.mk-public .announcements-section.mk-announce {
+    position: relative;
+    z-index: 900;
+    padding: 0;
+    border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+    background:
+        linear-gradient(
+            90deg,
+            rgba(124, 58, 237, 0.06) 0%,
+            rgba(99, 102, 241, 0.04) 45%,
+            rgba(6, 182, 212, 0.04) 100%
+        );
+    overflow: hidden;
+    transition: opacity 0.28s ease, max-height 0.28s ease, padding 0.28s ease;
+}
+
+html.mk-public .announcements-section.mk-announce::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--mk-purple), var(--mk-blue), var(--mk-cyan));
+    opacity: 0.75;
+}
+
+html.mk-public .mk-announce-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 1.15rem;
+}
+
+html.mk-public .mk-announce-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.62rem 0;
+    min-height: 2.75rem;
+    border: none !important;
+    background: transparent !important;
+}
+
+html.mk-public .mk-announce-bar + .mk-announce-bar {
+    border-top: 1px solid rgba(124, 58, 237, 0.08) !important;
+}
+
+html.mk-public .mk-announce-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    padding: 0.28rem 0.62rem;
+    border-radius: 999px;
+    background: rgba(124, 58, 237, 0.11);
+    border: 1px solid rgba(124, 58, 237, 0.16);
+    color: var(--mk-purple);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+html.mk-public .mk-announce-badge i {
+    font-size: 0.62rem;
+    opacity: 0.9;
+}
+
+html.mk-public .mk-announce-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+html.mk-public .mk-announce-message {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+}
+
+html.mk-public .mk-announce-message .announcement-title {
+    flex-shrink: 0;
+    margin: 0;
+    color: var(--mk-text) !important;
+    font-size: 0.8125rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap;
+}
+
+html.mk-public .mk-announce-message .announcement-title::after {
+    content: '·';
+    margin-inline-start: 0.55rem;
+    color: var(--mk-text-muted);
+    font-weight: 400;
+}
+
+html.mk-public .mk-announce-message .announcement-desc {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    color: var(--mk-text-secondary) !important;
+    font-size: 0.8125rem !important;
+    line-height: 1.55 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+html.mk-public .mk-announce-code {
+    display: inline-block;
+    padding: 0.1rem 0.45rem;
+    margin-inline: 0.12rem;
+    border-radius: 6px;
+    background: rgba(124, 58, 237, 0.12);
+    border: 1px dashed rgba(124, 58, 237, 0.35);
+    color: var(--mk-purple) !important;
+    font-family: ui-monospace, 'Cascadia Code', monospace;
+    font-size: 0.76em;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    vertical-align: baseline;
+}
+
+html.mk-public .mk-announce-cta {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    min-height: 1.85rem;
+    padding: 0 0.82rem !important;
+    border: none !important;
+    border-radius: 999px !important;
+    background: var(--mk-purple) !important;
+    color: #fff !important;
+    font-size: 0.74rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.22);
+    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+html.mk-public .mk-announce-cta:hover {
+    background: var(--mk-purple-hover) !important;
+    color: #fff !important;
+    transform: translateX(-2px);
+    box-shadow: 0 6px 18px rgba(124, 58, 237, 0.28);
+}
+
+html.mk-public .mk-announce-cta i {
+    font-size: 0.62rem;
+    opacity: 0.92;
+}
+
+html.mk-public .mk-announce-dismiss {
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    color: var(--mk-text-muted) !important;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+html.mk-public .mk-announce-dismiss:hover {
+    background: rgba(148, 163, 184, 0.14) !important;
+    color: var(--mk-text) !important;
+}
+
+@media (max-width: 768px) {
+    html.mk-public .mk-announce-bar {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 0.55rem;
+        padding: 0.72rem 0;
+    }
+
+    html.mk-public .mk-announce-badge-label {
+        display: none;
+    }
+
+    html.mk-public .mk-announce-body {
+        order: 2;
+        flex: 1 1 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+    }
+
+    html.mk-public .mk-announce-message {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    html.mk-public .mk-announce-message .announcement-title::after {
+        display: none;
+    }
+
+    html.mk-public .mk-announce-message .announcement-desc {
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    html.mk-public .mk-announce-cta {
+        align-self: flex-start;
+    }
+
+    html.mk-public .mk-announce-dismiss {
+        order: 1;
+        margin-inline-start: auto;
+    }
+}
+
 html.mk-public .mk-nav-account,
 html.mk-public .nav-actions {
     display: flex;
@@ -2042,36 +2269,27 @@ html.mk-public[data-theme="light"] .mk-bot-teaser-price {
     color: var(--mk-purple);
 }
 
-html.mk-public[data-theme="light"] .announcements-section {
-    background: #FFFFFF;
-    border-bottom-color: var(--mk-border);
+html.mk-public[data-theme="light"] .announcements-section.mk-announce {
+    background:
+        linear-gradient(
+            90deg,
+            rgba(124, 58, 237, 0.05) 0%,
+            rgba(248, 250, 252, 0.98) 42%,
+            rgba(6, 182, 212, 0.04) 100%
+        );
+    border-bottom-color: rgba(124, 58, 237, 0.1);
 }
 
-html.mk-public[data-theme="light"] .announcement-bar {
-    border-bottom-color: var(--mk-border);
-}
-
-html.mk-public[data-theme="light"] .announcement-title {
-    color: var(--mk-text);
-}
-
-html.mk-public[data-theme="light"] .announcement-desc {
-    color: var(--mk-text-secondary);
-}
-
-html.mk-public[data-theme="light"] .announcement-bar-link {
-    color: var(--mk-purple);
-    border-color: rgba(124, 58, 237, 0.25);
-}
-
-html.mk-public[data-theme="light"] .announcement-bar-link:hover {
+html.mk-public[data-theme="light"] .mk-announce-badge {
     background: rgba(124, 58, 237, 0.08);
-    border-color: rgba(124, 58, 237, 0.4);
+    border-color: rgba(124, 58, 237, 0.14);
     color: var(--mk-purple-hover);
 }
 
-html.mk-public[data-theme="light"] .announcement-bar-close {
-    color: var(--mk-text-muted);
+html.mk-public[data-theme="light"] .mk-announce-code {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.28);
+    color: var(--mk-purple-hover) !important;
 }
 
 html.mk-public[data-theme="light"] .alert {

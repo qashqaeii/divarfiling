@@ -1,8 +1,12 @@
 """
 Template tags برای تاریخ شمسی و تبدیل‌های فارسی
 """
+import re
+
 from django import template
 from django.utils import timezone
+from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
 import jdatetime
 
 register = template.Library()
@@ -75,4 +79,19 @@ def transaction_status_fa(value):
         'cancelled': 'لغو شده',
     }
     return status_map.get(str(value).upper(), str(value))
+
+
+@register.filter
+def highlight_promo_codes(value):
+    """برجسته‌کردن کدهای تخفیف لاتین داخل متن اطلاعیه."""
+    if not value:
+        return ''
+
+    escaped = conditional_escape(value)
+    highlighted = re.sub(
+        r'([A-Z][A-Z0-9]{3,15})',
+        r'<code class="mk-announce-code">\1</code>',
+        str(escaped),
+    )
+    return mark_safe(highlighted)
 

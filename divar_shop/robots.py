@@ -5,6 +5,8 @@ from django.conf import settings
 from django.http import HttpResponse
 
 
+
+
 def robots_txt(request):
     site_url = getattr(settings, 'SITE_URL', 'https://divarfiling.ir').rstrip('/')
 

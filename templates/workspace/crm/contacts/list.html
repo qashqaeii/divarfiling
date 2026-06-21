@@ -1,0 +1,291 @@
+{% extends 'workspace/crm/base_crm.html' %}
+{% load workspace_tags crm_tags %}
+
+{% block page_title %}CRM — مخاطبین{% endblock %}
+{% block crm_title %}{% endblock %}
+{% block crm_desc %}{% endblock %}
+{% block crm_actions %}{% endblock %}
+{% block crm_search %}{% endblock %}
+{% block status_bar %}{% endblock %}
+
+{% block crm_content %}
+<div class="crm-contacts-pro crm-page-chrome">
+
+    <header class="crm-dash-bar">
+        <div class="crm-dash-bar-main">
+            <h1 class="crm-dash-bar-title">مخاطبین</h1>
+        </div>
+        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات مخاطبین">
+            <button type="button" class="crm-dash-act" data-drawer-open="drawer-import" title="ورود گروهی مخاطبین">
+                <i class="fas fa-file-import" aria-hidden="true"></i><span>ورود فایل</span>
+            </button>
+            <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-dash-act crm-dash-act--icon" title="خروجی Excel">
+                <i class="fas fa-file-excel" aria-hidden="true"></i>
+            </a>
+            <button type="button" class="crm-dash-act" data-drawer-open="drawer-quick-lead">
+                <i class="fas fa-bolt" aria-hidden="true"></i><span>سرنخ</span>
+            </button>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-contact">
+                <i class="fas fa-user-plus" aria-hidden="true"></i><span>مخاطب</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="crm-dash-kpis" aria-label="آمار مخاطبین">
+        <article class="crm-dash-kpi">
+            <span class="crm-dash-kpi-val">{{ stats.total }}</span>
+            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">کل</span></span>
+        </article>
+        <article class="crm-dash-kpi">
+            <span class="crm-dash-kpi-val">{{ stats.new }}</span>
+            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">جدید</span></span>
+        </article>
+        <article class="crm-dash-kpi crm-dash-kpi--accent">
+            <span class="crm-dash-kpi-val">{{ stats.in_progress }}</span>
+            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">پیگیری</span></span>
+        </article>
+        <article class="crm-dash-kpi{% if stats.due_today %} crm-dash-kpi--warn{% endif %}">
+            <span class="crm-dash-kpi-val">{{ stats.due_today }}</span>
+            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">امروز</span></span>
+        </article>
+    </section>
+
+    {% if duplicate_groups %}
+    <div class="crm-contacts-alert">
+        <i class="fas fa-clone" aria-hidden="true"></i>
+        <span><strong>{{ duplicate_groups|length }}</strong> گروه تکراری (تلفن یکسان)</span>
+        <button type="button" class="crm-dash-act" data-drawer-open="drawer-merge">ادغام</button>
+    </div>
+    {% endif %}
+
+    <form method="get" class="crm-contacts-filters crm-page-filters" id="crmContactFilters">
+        <input type="hidden" name="view" value="{{ view_mode }}">
+        <label class="crm-contacts-search">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو نام، تلفن..." autocomplete="off" aria-label="جستجو">
+        </label>
+        <select name="customer_type" class="crm-contacts-select" aria-label="نوع" onchange="this.form.submit()">
+            <option value="">همه انواع</option>
+            {% for t in crm_types %}<option value="{{ t }}" {% if request.GET.customer_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+        </select>
+        <select name="status" class="crm-contacts-select" aria-label="وضعیت" onchange="this.form.submit()">
+            <option value="">همه وضعیت‌ها</option>
+            {% for s in crm_statuses %}<option value="{{ s }}" {% if request.GET.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+        </select>
+        <select name="priority" class="crm-contacts-select" aria-label="اولویت" onchange="this.form.submit()">
+            <option value="">اولویت</option>
+            {% for p in crm_priorities %}<option value="{{ p }}" {% if request.GET.priority == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+        </select>
+        <select name="due" class="crm-contacts-select" aria-label="پیگیری" onchange="this.form.submit()">
+            <option value="">پیگیری</option>
+            <option value="today" {% if request.GET.due == 'today' %}selected{% endif %}>امروز</option>
+            <option value="overdue" {% if request.GET.due == 'overdue' %}selected{% endif %}>معوق</option>
+            <option value="none" {% if request.GET.due == 'none' %}selected{% endif %}>بدون تاریخ</option>
+        </select>
+        <div class="crm-contacts-filter-actions">
+            {% include 'workspace/crm/includes/saved_filters.html' %}
+            {% if request.GET.q or request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due %}
+            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}" class="crm-dash-act crm-dash-act--icon" title="پاک کردن فیلتر"><i class="fas fa-times" aria-hidden="true"></i></a>
+            {% endif %}
+            <div class="crm-contacts-view-toggle" role="tablist">
+                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-contacts-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-contacts-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+            </div>
+        </div>
+    </form>
+
+    {% if view_mode == 'pipeline' %}
+    <section class="crm-contacts-pipeline">
+        {% include 'workspace/crm/includes/pipeline.html' with pipeline_interactive=True status_update_url_template=status_update_url_template %}
+    </section>
+    {% else %}
+
+    <div class="crm-contacts-workspace crm-contacts-layout" id="crmContactsLayout">
+        <div class="crm-contacts-main">
+            <div class="crm-contacts-table-wrap">
+                <table class="crm-contacts-table" id="crmContactsTable">
+                    <thead>
+                        <tr>
+                            <th class="crm-contacts-col-check"><input type="checkbox" class="crm-checkbox" id="crmSelectAll" aria-label="انتخاب همه"></th>
+                            <th>مخاطب</th>
+                            <th class="crm-contacts-col-phone">تماس</th>
+                            <th class="crm-contacts-col-type">نوع</th>
+                            <th class="crm-contacts-col-status">وضعیت</th>
+                            <th class="crm-contacts-col-priority">اولویت</th>
+                            <th class="crm-contacts-col-date">پیگیری</th>
+                            <th class="crm-contacts-col-actions"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in customers %}
+                        <tr data-id="{{ c.id }}" class="crm-row-selectable" data-panel-url="{% url 'workspace:crm_contact_panel' c.id %}">
+                            <td class="crm-contacts-col-check"><input type="checkbox" class="crm-checkbox crm-row-check" value="{{ c.id }}"></td>
+                            <td>
+                                <div class="crm-contacts-person">
+                                    <div class="crm-contacts-person-text">
+                                        <span class="crm-contacts-name">{{ c.name }}</span>
+                                        {% if c.company_name %}<span class="crm-contacts-sub">{{ c.company_name }}</span>{% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="crm-contacts-col-phone" dir="ltr">{{ c.phone|default:"—" }}</td>
+                            <td class="crm-contacts-col-type"><span class="crm-contacts-type">{{ c.customer_type }}</span></td>
+                            <td class="crm-contacts-col-status">
+                                <span class="crm-contacts-status">
+                                    <span class="crm-contacts-dot" style="background:{{ c.status|crm_status_dot }}"></span>
+                                    {{ c.status }}
+                                </span>
+                            </td>
+                            <td class="crm-contacts-col-priority">
+                                {% if c.priority == 'بالا' %}
+                                <span class="crm-contacts-priority crm-contacts-priority--high">بالا</span>
+                                {% elif c.priority %}
+                                <span class="crm-contacts-priority">{{ c.priority }}</span>
+                                {% else %}<span class="crm-contacts-muted">—</span>{% endif %}
+                            </td>
+                            <td class="crm-contacts-col-date">
+                                {% if c.next_follow_up %}{{ c.next_follow_up|ws_jalali }}{% else %}<span class="crm-contacts-muted">—</span>{% endif %}
+                            </td>
+                            <td class="crm-contacts-col-actions">
+                                <div class="crm-contacts-row-actions">
+                                    <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-row-act" title="پروفایل"><i class="fas fa-arrow-left" aria-hidden="true"></i></a>
+                                    {% if c.phone %}<a href="tel:{{ c.phone }}" class="crm-contacts-row-act" title="تماس"><i class="fas fa-phone" aria-hidden="true"></i></a>{% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr class="crm-empty-state-row">
+                            <td colspan="8">
+                                {% if stats.total %}
+                                {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 icon='fa-users' title='مخاطبی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا مخاطب جدید ثبت کنید.' btn_text='ثبت مخاطب' btn_icon='fa-user-plus' btn_drawer='drawer-contact' extra_class='crm-empty-state--inline' %}
+                                {% else %}
+                                {% include 'workspace/crm/includes/list_empty_state.html' with compact=1 icon='fa-users' title='مخاطبی ثبت نشده' desc='اولین مخاطب یا سرنخ خود را ثبت کنید و پیگیری حرفه‌ای را از همین‌جا شروع کنید.' btn_text='ثبت اولین مخاطب' btn_icon='fa-user-plus' btn_drawer='drawer-contact' extra_class='crm-empty-state--inline' %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if page_obj.has_other_pages %}
+            <footer class="crm-contacts-pagination">
+                {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&view={{ view_mode }}&{{ filter_qs }}" class="crm-contacts-btn crm-contacts-btn--sm">قبلی</a>{% endif %}
+                <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&view={{ view_mode }}&{{ filter_qs }}" class="crm-contacts-btn crm-contacts-btn--sm">بعدی</a>{% endif %}
+            </footer>
+            {% endif %}
+        </div>
+
+        <aside class="crm-contacts-preview" id="crmSidePanel" hidden aria-label="پیش‌نمایش مخاطب">
+            <div class="crm-contacts-preview-inner">
+                <button type="button" class="crm-contacts-preview-close" id="crmSideClose" aria-label="بستن"><i class="fas fa-times"></i></button>
+                <div class="crm-contacts-preview-body" id="crmSideContent"></div>
+                <div class="crm-contacts-preview-loading" id="crmSideLoading" hidden>
+                    <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="crm-bulk-dock" id="crmBulkBar" hidden aria-live="polite">
+        <div class="crm-bulk-dock-inner">
+            <div class="crm-bulk-dock-meta">
+                <span class="crm-bulk-dock-count" id="crmBulkCount">0</span>
+                <span class="crm-bulk-dock-label">انتخاب شده</span>
+                <button type="button" class="crm-bulk-dock-clear" id="crmBulkClear" aria-label="لغو انتخاب">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <form method="post" action="{% url 'workspace:crm_bulk' %}" class="crm-bulk-dock-form" id="crmBulkForm">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="hidden" name="ids" id="crmBulkIds" value="">
+                <select name="bulk_action" class="crm-bulk-dock-select" required aria-label="عملیات گروهی">
+                    <option value="">عملیات</option>
+                    <option value="status">تغییر وضعیت</option>
+                    <option value="archive">بایگانی</option>
+                    <option value="tag">افزودن برچسب</option>
+                    <option value="delete">حذف</option>
+                </select>
+                <select name="status" class="crm-bulk-dock-select crm-bulk-dock-extra crm-bulk-extra" data-for="status" hidden aria-label="وضعیت جدید">
+                    {% for s in bulk_statuses %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                </select>
+                <input type="text" name="tag" class="crm-bulk-dock-input crm-bulk-dock-extra crm-bulk-extra" data-for="tag" placeholder="برچسب" hidden aria-label="برچسب">
+                <button type="submit" class="crm-bulk-dock-apply">اعمال</button>
+            </form>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block crm_drawers %}
+<aside class="crm-drawer" id="drawer-contact" {% if open_modal == 'drawer-contact' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg">
+        <div class="crm-drawer-head">
+            <div><h2>مخاطب جدید</h2><p>اطلاعات کامل مخاطب</p></div>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:crm_create' %}" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+                {% csrf_token %}
+                {% include 'workspace/crm/includes/contact_form_sections.html' with form=customer_form type_profiles_json=type_profiles_json %}
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ثبت مخاطب</button>
+            </div>
+        </form>
+    </div>
+</aside>
+
+{% include 'workspace/crm/includes/drawer_quick_lead.html' with quick_lead_form=quick_lead_form open_modal=open_modal %}
+{% include 'workspace/crm/includes/drawer_import.html' %}
+
+<aside class="crm-drawer" id="drawer-merge">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head">
+            <div><h2>ادغام مخاطبین</h2><p>انتخاب مخاطب اصلی و حذف تکراری</p></div>
+            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button>
+        </div>
+        <div class="crm-drawer-body">
+            {% for g in duplicate_groups %}
+            <div class="crm-merge-group">
+                <header><span class="crm-mono">{{ g.display_phone }}</span><em>{{ g.count }} مخاطب</em></header>
+                <form method="post" action="{% url 'workspace:crm_merge' %}" class="crm-merge-form">
+                    {% csrf_token %}
+                    <label class="crm-field">
+                        <span class="crm-label">نگه‌داری (اصلی)</span>
+                        <select name="primary_id" class="crm-select" required>
+                            {% for c in g.customers %}<option value="{{ c.id }}">{{ c.name }} — {{ c.status }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label class="crm-field">
+                        <span class="crm-label">ادغام و حذف</span>
+                        <select name="secondary_id" class="crm-select" required>
+                            {% for c in g.customers %}<option value="{{ c.id }}">{{ c.name }} — {{ c.status }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block">ادغام</button>
+                </form>
+            </div>
+            {% empty %}
+            <p class="crm-empty-text">تکراری یافت نشد.</p>
+            {% endfor %}
+        </div>
+    </div>
+</aside>
+{% endblock %}
+
+{% block crm_js %}
+<script>
+window.crmTypeProfiles = {{ type_profiles_json|safe }};
+window.crmQuickLeadUrl = "{% url 'workspace:crm_quick_lead' %}";
+window.crmStatusUrlTemplate = "{{ status_update_url_template }}";
+window.crmPanelBase = "{% url 'workspace:crm_contact_panel' 0 %}".replace('/0/', '/');
+</script>
+{% endblock %}

@@ -1,0 +1,1618 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% block title %}پروفایل | فایلینگ دیوار{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="container mk-dashboard-page">
+    <header class="dash-head">
+        <div class="dash-head-main">
+            <div class="dash-avatar" aria-hidden="true">{{ user.username|slice:":1"|upper }}</div>
+            <div>
+                <p class="dash-eyebrow">حساب کاربری</p>
+                <h1 class="dash-title">سلام، {{ user.get_full_name|default:user.username }}</h1>
+                <p class="dash-lead">مدیریت سفارش‌ها، لایسنس‌ها و تنظیمات پروفایل</p>
+            </div>
+        </div>
+        <div class="dash-head-actions">
+            <a href="{% url 'workspace:home' %}" class="btn btn-primary dash-head-btn">
+                <i class="fas fa-layer-group" aria-hidden="true"></i> ورود به میزکار
+            </a>
+        </div>
+    </header>
+
+    <section class="dash-stats" aria-label="آمار حساب">
+        <div class="dash-stats-strip">
+            <article class="dash-stat" data-accent="violet">
+                <span class="dash-stat-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
+                <span class="dash-stat-text">
+                    <span class="dash-stat-lbl">کل سفارش‌ها</span>
+                    <span class="dash-stat-val">{{ total_orders }}</span>
+                </span>
+            </article>
+            <span class="dash-stat-sep" aria-hidden="true"></span>
+            <article class="dash-stat" data-accent="emerald">
+                <span class="dash-stat-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
+                <span class="dash-stat-text">
+                    <span class="dash-stat-lbl">پرداخت شده</span>
+                    <span class="dash-stat-val">{{ paid_orders }}</span>
+                </span>
+            </article>
+            <span class="dash-stat-sep" aria-hidden="true"></span>
+            <article class="dash-stat" data-accent="sky">
+                <span class="dash-stat-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+                <span class="dash-stat-text">
+                    <span class="dash-stat-lbl">لایسنس فعال</span>
+                    <span class="dash-stat-val">{{ active_licenses }}</span>
+                </span>
+            </article>
+            <span class="dash-stat-sep" aria-hidden="true"></span>
+            <article class="dash-stat" data-accent="amber">
+                <span class="dash-stat-icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
+                <span class="dash-stat-text">
+                    <span class="dash-stat-lbl">کل هزینه</span>
+                    <span class="dash-stat-val">{{ total_spent|floatformat:0 }} <small>تومان</small></span>
+                </span>
+            </article>
+        </div>
+    </section>
+
+    {% if active_licenses == 0 %}
+    <aside class="mk-workspace-cta mk-workspace-cta-free mb-4">
+        <div>
+            <h2><i class="fas fa-chart-network" aria-hidden="true"></i> میز کار</h2>
+            <p class="mk-workspace-cta-desc">CRM رایگان برای شما فعال است. برای آپلود و تحلیل داده‌های دیوار، ربات استخراج را تهیه کنید.</p>
+        </div>
+        <div class="mk-workspace-cta-actions">
+            <a href="{% url 'workspace:upgrade' %}" class="btn mk-workspace-cta-btn">
+                <i class="fas fa-robot" aria-hidden="true"></i> امکانات ربات
+            </a>
+            <a href="{% url 'product_list' %}" class="btn btn-outline mk-workspace-cta-btn-secondary">
+                <i class="fas fa-shopping-cart" aria-hidden="true"></i> خرید لایسنس
+            </a>
+        </div>
+    </aside>
+    {% endif %}
+    
+    <div class="dash-shell dashboard-main-card">
+        <nav class="dash-tabs dashboard-tabs-modern" aria-label="بخش‌های پروفایل">
+            <button class="tab-btn-modern active" onclick="showTab('overview', event)">
+                <span class="tab-icon"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
+                <span class="tab-text">نمای کلی</span>
+            </button>
+            <button class="tab-btn-modern" onclick="showTab('orders', event)">
+                <span class="tab-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
+                <span class="tab-text">سفارش‌ها</span>
+            </button>
+            <button class="tab-btn-modern" onclick="showTab('licenses', event)">
+                <span class="tab-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+                <span class="tab-text">لایسنس‌ها</span>
+            </button>
+            <button class="tab-btn-modern" onclick="showTab('transactions', event)">
+                <span class="tab-icon"><i class="fas fa-exchange-alt" aria-hidden="true"></i></span>
+                <span class="tab-text">تراکنش‌ها</span>
+            </button>
+            {% if has_paid_orders %}
+            <button class="tab-btn-modern" onclick="showTab('affiliate', event)">
+                <span class="tab-icon"><i class="fas fa-handshake" aria-hidden="true"></i></span>
+                <span class="tab-text">همکاری در فروش</span>
+            </button>
+            {% endif %}
+            <button class="tab-btn-modern" onclick="showTab('profile', event)">
+                <span class="tab-icon"><i class="fas fa-user" aria-hidden="true"></i></span>
+                <span class="tab-text">پروفایل</span>
+            </button>
+        </nav>
+        
+        <!-- Tab: Overview -->
+        <div id="tab-overview" class="tab-content">
+            <div class="overview-grid">
+                <!-- آخرین سفارش‌ها -->
+                <div class="section-card overview-card">
+                    <h3 class="section-title">
+                        <i class="fas fa-shopping-bag" aria-hidden="true"></i> آخرین سفارش‌های پرداخت شده
+                    </h3>
+                    {% if paid_orders_for_overview %}
+                        <div class="orders-preview">
+                            {% for order in paid_orders_for_overview %}
+                                <div class="preview-item">
+                                    <div class="preview-info">
+                                        <strong>{{ order.product.title }}</strong>
+                                        <span class="preview-meta">{{ order.created_at|to_jalali_date:"%Y/%m/%d" }}</span>
+                                    </div>
+                                    <span class="badge badge-success">{{ order.get_status_display }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <a href="#" onclick="showTab('orders', event); return false;" class="view-all-link">
+                            مشاهده همه سفارش‌ها <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        </a>
+                    {% else %}
+                        <p class="empty-text">هنوز سفارش پرداخت‌شده‌ای ندارید.</p>
+                    {% endif %}
+                </div>
+                
+                <!-- لایسنس‌های فعال -->
+                <div class="section-card overview-card">
+                    <h3 class="section-title">
+                        <i class="fas fa-key" aria-hidden="true"></i> لایسنس‌های فعال
+                    </h3>
+                    {% if licenses %}
+                        <div class="licenses-preview">
+                            {% for license in licenses|slice:":5" %}
+                                {% if license.status == 'active' %}
+                                    <div class="preview-item">
+                                        <div class="preview-info">
+                                            <strong>{{ license.order.product.title }}</strong>
+                                            <span class="preview-meta">
+                                                {% if license.expires_at %}
+                                                    انقضا: {{ license.expires_at|to_jalali_date:"%Y/%m/%d" }}
+                                                {% else %}
+                                                    بدون تاریخ انقضا
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <span class="badge badge-active">فعال</span>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <a href="#" onclick="showTab('licenses', event); return false;" class="view-all-link">
+                            مشاهده همه لایسنس‌ها <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        </a>
+                    {% else %}
+                        <p class="empty-text">لایسنس فعالی ندارید. <a href="{% url 'product_list' %}" class="view-all-link">خرید ربات استخراج</a></p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- بخش افیلیت (اگر کاربر خرید کرده باشد) -->
+            {% if has_paid_orders and affiliate %}
+            <div class="affiliate-modern-card">
+                <div class="affiliate-modern-header">
+                    <div class="affiliate-modern-title">
+                        <i class="fas fa-handshake" aria-hidden="true"></i>
+                        <h3>همکاری در فروش</h3>
+                    </div>
+                </div>
+                
+                <div class="affiliate-modern-stats">
+                    <div class="affiliate-modern-stat-card">
+                        <div class="affiliate-modern-stat-icon sales">
+                            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                        </div>
+                        <div class="affiliate-modern-stat-info">
+                            <span class="affiliate-modern-stat-label">تعداد فروش</span>
+                            <span class="affiliate-modern-stat-value">{{ affiliate_stats.total_sales_count }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="affiliate-modern-stat-card">
+                        <div class="affiliate-modern-stat-icon commission">
+                            <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                        </div>
+                        <div class="affiliate-modern-stat-info">
+                            <span class="affiliate-modern-stat-label">کل کمیسیون</span>
+                            <span class="affiliate-modern-stat-value">{{ affiliate_stats.total_commission|currency }} <span class="affiliate-modern-stat-unit">تومان</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="affiliate-modern-stat-card">
+                        <div class="affiliate-modern-stat-icon wallet">
+                            <i class="fas fa-wallet" aria-hidden="true"></i>
+                        </div>
+                        <div class="affiliate-modern-stat-info">
+                            <span class="affiliate-modern-stat-label">موجودی کیف پول</span>
+                            <span class="affiliate-modern-stat-value success">{{ affiliate_wallet.balance|currency }} <span class="affiliate-modern-stat-unit">تومان</span></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="affiliate-modern-link-section">
+                    <label class="affiliate-modern-link-label">
+                        <i class="fas fa-link" aria-hidden="true"></i>
+                        لینک معرف شما
+                    </label>
+                    <div class="affiliate-modern-link-input-group">
+                        <input type="text" value="{{ affiliate_stats.referral_url }}" readonly class="affiliate-modern-link-input" id="affiliateReferralLinkOverview">
+                        <button class="affiliate-modern-link-btn" onclick="copyAffiliateLinkOverview()">
+                            <i class="fas fa-copy" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="affiliate-modern-code">
+                        <span>کد معرف:</span>
+                        <strong>{{ affiliate.code }}</strong>
+                    </div>
+                </div>
+                
+                <div class="affiliate-modern-actions">
+                    <a href="#" onclick="showTab('affiliate', event); return false;" class="affiliate-modern-action-btn outline">
+                        <i class="fas fa-chart-line" aria-hidden="true"></i>
+                        <span>مشاهده جزئیات</span>
+                    </a>
+                    {% if affiliate_wallet.balance >= affiliate_stats.min_withdrawal %}
+                    <a href="{% url 'affiliate_withdrawal' %}" class="affiliate-modern-action-btn primary">
+                        <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                        <span>درخواست برداشت</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Tab: Orders -->
+        <div id="tab-orders" class="tab-content" style="display: none;">
+            <div class="tab-header">
+                <h2 class="tab-content-title mb-4">سفارش‌های من</h2>
+                
+                <!-- فیلتر و جستجو -->
+                <div class="filter-section">
+                    <form method="get" class="filter-form">
+                        <input type="hidden" name="order_status" value="{{ order_status_filter }}">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label>جستجو</label>
+                                <input type="text" name="order_search" value="{{ order_search }}" 
+                                       placeholder="جستجوی سفارش..." class="form-control">
+                            </div>
+                            <div class="filter-group">
+                                <label>وضعیت</label>
+                                <select name="order_status" class="form-control" onchange="this.form.submit()">
+                                    <option value="">همه وضعیت‌ها</option>
+                                    <option value="pending" {% if order_status_filter == 'pending' %}selected{% endif %}>در انتظار پرداخت</option>
+                                    <option value="pending_verification" {% if order_status_filter == 'pending_verification' %}selected{% endif %}>در انتظار تایید پرداخت</option>
+                                    <option value="paid" {% if order_status_filter == 'paid' %}selected{% endif %}>پرداخت شده</option>
+                                    <option value="failed" {% if order_status_filter == 'failed' %}selected{% endif %}>ناموفق</option>
+                                    <option value="cancelled" {% if order_status_filter == 'cancelled' %}selected{% endif %}>لغو شده</option>
+                                </select>
+                            </div>
+                            <div class="filter-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search" aria-hidden="true"></i> جستجو
+                                </button>
+                                {% if order_status_filter or order_search %}
+                                    <a href="{% url 'dashboard' %}" class="btn btn-outline">
+                                        <i class="fas fa-times" aria-hidden="true"></i> پاک کردن
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            {% if orders %}
+                <div class="dash-orders-wrap">
+                    <table class="dash-orders-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">شماره سفارش</th>
+                                <th scope="col">محصول</th>
+                                <th scope="col">پلن</th>
+                                <th scope="col">مبلغ</th>
+                                <th scope="col">تاریخ</th>
+                                <th scope="col">وضعیت</th>
+                                <th scope="col" class="dash-orders-th-actions">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                                <tr>
+                                    <td data-label="شماره سفارش">
+                                        <code class="dash-order-id" title="{{ order.id }}">{{ order.id|slice:":8" }}…</code>
+                                    </td>
+                                    <td data-label="محصول">
+                                        <span class="dash-order-product" title="{{ order.product.title }}">{{ order.product.title }}</span>
+                                    </td>
+                                    <td data-label="پلن">
+                                        <span class="dash-order-plan">{{ order.plan.name }}</span>
+                                    </td>
+                                    <td data-label="مبلغ">
+                                        <span class="dash-order-amount">{{ order.amount|currency }} <small>تومان</small></span>
+                                    </td>
+                                    <td data-label="تاریخ">
+                                        <span class="dash-order-date">{{ order.created_at|to_jalali_date:"%Y/%m/%d" }}</span>
+                                        <span class="dash-order-time">{{ order.created_at|to_jalali_date:"%H:%M" }}</span>
+                                    </td>
+                                    <td data-label="وضعیت">
+                                        <span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span>
+                                    </td>
+                                    <td data-label="عملیات">
+                                        <div class="dash-orders-actions">
+                                            <button type="button" class="btn-icon" onclick="showOrderDetails('{{ order.id }}')" title="جزئیات">
+                                                <i class="fas fa-eye" aria-hidden="true"></i>
+                                            </button>
+                                            {% if order.status == 'paid' %}
+                                                <a href="{% url 'payment:success' order.id %}" class="btn-icon" title="لایسنس و جزئیات">
+                                                    <i class="fas fa-key" aria-hidden="true"></i>
+                                                </a>
+                                                <a href="{% url 'payment:download' order.id %}" class="btn-icon btn-icon--accent" title="دانلود ربات">
+                                                    <i class="fas fa-download" aria-hidden="true"></i>
+                                                </a>
+                                            {% elif order.status == 'pending_verification' %}
+                                                <a href="{% url 'payment:card_pending' order.id %}" class="btn-icon btn-icon--amber" title="پیگیری پرداخت">
+                                                    <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+                                                </a>
+                                            {% elif order.status == 'pending' and order.payment_method == 'card_transfer' %}
+                                                <a href="{% url 'payment:card_transfer' order.id %}" class="btn-icon btn-icon--accent" title="تکمیل پرداخت">
+                                                    <i class="fas fa-credit-card" aria-hidden="true"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                    <p>شما هنوز سفارشی ثبت نکرده‌اید.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Tab: Licenses -->
+        <div id="tab-licenses" class="tab-content" style="display: none;" data-license-mgmt>
+            <div class="licenses-page-header">
+                <div>
+                    <h2 class="licenses-page-title">مدیریت لایسنس‌ها</h2>
+                    <p class="licenses-page-subtitle">صدور کلید، ثبت سیستم‌ها و تخصیص دسترسی به اعضای تیم</p>
+                </div>
+                {% if products %}
+                    <a href="{% url 'product_list' %}" class="btn btn-primary btn-buy-license" title="ربات استخراج دیوار">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                        خرید لایسنس جدید
+                    </a>
+                {% endif %}
+            </div>
+
+            {% if license_dashboard.assigned_seats %}
+            <section class="lic-seat-shared" aria-label="لایسنس‌های تخصیص‌یافته به من">
+                <header class="lic-seat-shared-head">
+                    <i class="fas fa-user-check" aria-hidden="true"></i>
+                    <div>
+                        <h3>دسترسی تیم</h3>
+                        <p>اسلات‌هایی که مدیر آژانس به شما تخصیص داده — امکانات ربات در میزکار باز است.</p>
+                    </div>
+                </header>
+                <div class="lic-seat-shared-grid">
+                    {% for seat in license_dashboard.assigned_seats %}
+                    <article class="lic-seat-shared-card">
+                        <strong>{{ seat.license.order.product.title }}</strong>
+                        <span class="lic-seat-shared-meta">{{ seat.license.plan.name }} · {{ seat.display_name }}</span>
+                        {% if seat.is_active %}
+                        <span class="lic-seat-badge lic-seat-badge--active">فعال در ربات</span>
+                        {% else %}
+                        <span class="lic-seat-badge lic-seat-badge--pending">در انتظار فعال‌سازی</span>
+                        {% endif %}
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% if orders_pending_claim %}
+            <div class="license-claim-section" id="claim-license">
+                <div class="license-claim-header">
+                    <h3 class="license-claim-title">
+                        <i class="fas fa-microchip" aria-hidden="true"></i>
+                        صدور لایسنس — ثبت اولین سیستم
+                    </h3>
+                    <p class="license-claim-desc">
+                        شناسه سخت‌افزاری را از برنامه «ربات استخراج» (تب لایسنس) کپی کنید. برای پلن‌های چندسیستمی، پس از صدور می‌توانید سیستم‌های بیشتری اضافه کنید.
+                    </p>
+                </div>
+                {% for order in orders_pending_claim %}
+                <div class="license-claim-card">
+                    <div class="license-claim-order-info">
+                        <strong>{{ order.product.title }}</strong>
+                        <span class="license-meta-item">
+                            <i class="fas fa-layer-group" aria-hidden="true"></i>
+                            پلن: {{ order.plan.name }}
+                        </span>
+                        <span class="license-meta-item">
+                            <i class="fas fa-microchip" aria-hidden="true"></i>
+                            {{ order.plan.max_activations }} سیستم
+                        </span>
+                        <span class="license-meta-item">سفارش #{{ order.id|slice:":8" }}</span>
+                    </div>
+                    <form method="post" action="{% url 'claim_license' %}" class="license-claim-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <div class="lic-form-row">
+                            <div class="lic-form-field">
+                                <label class="license-claim-label" for="hw-label-{{ order.id }}">نام سیستم (اختیاری)</label>
+                                <input type="text" id="hw-label-{{ order.id }}" name="label" class="license-claim-input" placeholder="مثلاً لپ‌تاپ دفتر">
+                            </div>
+                            <div class="lic-form-field lic-form-field--grow">
+                                <label class="license-claim-label" for="hw-id-{{ order.id }}">شناسه سخت‌افزاری <span class="lic-required">*</span></label>
+                                <div class="license-claim-input-row">
+                                    <input
+                                        type="text"
+                                        id="hw-id-{{ order.id }}"
+                                        name="hardware_fingerprint"
+                                        class="license-claim-input"
+                                        placeholder="شناسه را از ربات کپی و اینجا بچسبانید"
+                                        required
+                                        dir="ltr"
+                                    >
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-key" aria-hidden="true"></i>
+                                        صدور لایسنس
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    {% if order.product.download_file %}
+                    <a href="{% url 'payment:download' order.id %}" class="btn btn-secondary btn-sm lic-claim-dl">
+                        <i class="fas fa-download" aria-hidden="true"></i> دانلود ربات
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if license_dashboard.portfolios %}
+            <div class="lic-portfolios">
+                {% for item in license_dashboard.portfolios %}
+                {% with lic=item.license %}
+                <article class="lic-card" data-license-id="{{ lic.id }}">
+                    <header class="lic-card-head">
+                        <div class="lic-card-head-main">
+                            <div class="lic-card-icon {% if item.is_multi %}lic-card-icon--multi{% endif %}" aria-hidden="true">
+                                <i class="fas {% if item.is_multi %}fa-laptop-house{% else %}fa-desktop{% endif %}"></i>
+                            </div>
+                            <div>
+                                <h3 class="lic-card-title">{{ lic.order.product.title }}</h3>
+                                <p class="lic-card-plan">{{ lic.plan.name }} · {{ lic.plan.get_plan_type_display }}</p>
+                            </div>
+                        </div>
+                        <div class="lic-card-head-side">
+                            <span class="license-status-badge license-status-{{ lic.status }}">{{ lic.get_status_display }}</span>
+                            {% if lic.expires_at %}
+                            <span class="lic-card-expiry" data-expires="{{ lic.expires_at|date:'c' }}">
+                                <i class="fas fa-clock" aria-hidden="true"></i>
+                                {{ lic.expires_at|to_jalali_date:"%Y/%m/%d" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </header>
+
+                    <div class="lic-card-key">
+                        <label class="lic-card-key-label">کلید لایسنس</label>
+                        <div class="license-item-key-row">
+                            <code class="license-key-minimal" id="license-key-{{ lic.id }}">{{ lic.license_key }}</code>
+                            <button type="button" class="license-copy-btn" onclick="copyLicenseKey('license-key-{{ lic.id }}')" title="کپی">
+                                <i class="fas fa-copy" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <p class="lic-card-key-hint">این کلید را در تمام سیستم‌های ثبت‌شده وارد کنید — هر سیستم شناسه سخت‌افزاری جداگانه دارد.</p>
+                    </div>
+
+                    <div class="lic-slots-meter" aria-label="مصرف اسلات">
+                        <div class="lic-slots-meter-top">
+                            <span><i class="fas fa-microchip"></i> سیستم‌های ثبت‌شده</span>
+                            <strong>{{ item.slots_used }} / {{ lic.max_activations }}</strong>
+                        </div>
+                        <div class="lic-slots-bar" role="progressbar" aria-valuenow="{{ item.slots_used }}" aria-valuemin="0" aria-valuemax="{{ lic.max_activations }}">
+                            <span class="lic-slots-fill" style="width: {% widthratio item.slots_used lic.max_activations 100 %}%"></span>
+                        </div>
+                        <div class="lic-slots-legend">
+                            <span><em class="lic-dot lic-dot--active"></em> {{ item.active_count }} فعال در ربات</span>
+                            <span><em class="lic-dot lic-dot--pending"></em> {{ item.pending_count }} در انتظار</span>
+                        </div>
+                    </div>
+
+                    {% if item.activations %}
+                    <div class="lic-seats-table-wrap">
+                        <table class="lic-seats-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">سیستم</th>
+                                    <th scope="col">شناسه سخت‌افزار</th>
+                                    <th scope="col">وضعیت</th>
+                                    <th scope="col">عضو تیم</th>
+                                    <th scope="col" class="lic-seats-th-actions">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for seat in item.activations %}
+                                <tr data-activation-id="{{ seat.id }}">
+                                    <td data-label="سیستم">
+                                        <input type="text" class="lic-seat-label-input" value="{{ seat.label }}" placeholder="{{ seat.display_name }}" data-seat-label>
+                                    </td>
+                                    <td data-label="شناسه" dir="ltr"><code class="lic-hw-code">{{ seat.masked_fingerprint }}</code></td>
+                                    <td data-label="وضعیت">
+                                        {% if seat.is_active %}
+                                        <span class="lic-seat-badge lic-seat-badge--active">فعال</span>
+                                        {% else %}
+                                        <span class="lic-seat-badge lic-seat-badge--pending">در انتظار ربات</span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="عضو تیم">
+                                        {% if license_dashboard.can_assign_team %}
+                                        <select class="lic-seat-member-select" data-seat-assign>
+                                            <option value="">— بدون تخصیص —</option>
+                                            {% for member in license_dashboard.team_members %}
+                                            {% if not member.is_self %}
+                                            <option value="{{ member.id }}" {% if seat.assigned_user_id == member.id %}selected{% endif %}>{{ member.name }} (@{{ member.username }})</option>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        {% elif seat.assigned_user %}
+                                        <span class="lic-seat-member-name">{{ seat.assigned_user.get_full_name|default:seat.assigned_user.username }}</span>
+                                        {% else %}
+                                        <span class="lic-seat-member-empty">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="عملیات">
+                                        <div class="lic-seat-actions">
+                                            <button type="button" class="lic-seat-btn" data-seat-save-label title="ذخیره نام">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            {% if not seat.is_active %}
+                                            <button type="button" class="lic-seat-btn lic-seat-btn--danger" data-seat-remove title="حذف سیستم">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="lic-no-seats">هنوز سیستمی ثبت نشده — فرم زیر را پر کنید.</p>
+                    {% endif %}
+
+                    {% if item.slots_available > 0 %}
+                    <form class="lic-add-device-form" data-add-device data-license-id="{{ lic.id }}">
+                        {% csrf_token %}
+                        <h4 class="lic-add-device-title">
+                            <i class="fas fa-plus-circle" aria-hidden="true"></i>
+                            ثبت سیستم جدید
+                            <span class="lic-add-device-remaining">{{ item.slots_available }} اسلات باقی‌مانده</span>
+                        </h4>
+                        <div class="lic-form-row">
+                            <div class="lic-form-field">
+                                <label>نام سیستم</label>
+                                <input type="text" name="label" class="license-claim-input" placeholder="مثلاً PC مشاور ۲">
+                            </div>
+                            <div class="lic-form-field lic-form-field--grow">
+                                <label>شناسه سخت‌افزاری <span class="lic-required">*</span></label>
+                                <div class="license-claim-input-row">
+                                    <input type="text" name="hardware_fingerprint" class="license-claim-input" placeholder="از تب لایسنس ربات کپی کنید" required dir="ltr">
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-microchip"></i> ثبت سیستم
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    {% elif item.is_multi %}
+                    <p class="lic-slots-full"><i class="fas fa-info-circle"></i> تمام {{ lic.max_activations }} اسلات این پلن استفاده شده است.</p>
+                    {% endif %}
+
+                    <footer class="lic-card-foot">
+                        {% if lic.order.status == 'paid' and lic.order.product.download_file %}
+                        <a href="{% url 'payment:download' lic.order.id %}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-download" aria-hidden="true"></i> دانلود ربات
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'license_guide' %}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-book" aria-hidden="true"></i> راهنمای فعال‌سازی
+                        </a>
+                    </footer>
+                </article>
+                {% endwith %}
+                {% endfor %}
+            </div>
+
+            {% if license_dashboard.can_assign_team %}
+            <aside class="lic-team-guide">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                <div>
+                    <strong>تخصیص به اعضای تیم</strong>
+                    <p>برای هر سیستم ثبت‌شده، عضو تیم را انتخاب کنید تا امکانات ربات (فایلینگ، تحلیل، نقشه) در میزکار او باز شود. عضو باید همان کلید لایسنس را در ربات خود فعال کند.</p>
+                </div>
+            </aside>
+            {% elif not license_dashboard.has_agency %}
+            <aside class="lic-team-guide lic-team-guide--muted">
+                <i class="fas fa-building" aria-hidden="true"></i>
+                <div>
+                    <strong>پلن تیمی دارید؟</strong>
+                    <p>برای تخصیص اسلات به مشاوران، ابتدا <a href="{% url 'workspace:crm_team' %}">تیم آژانس</a> را در CRM بسازید و اعضا را اضافه کنید.</p>
+                </div>
+            </aside>
+            {% endif %}
+
+            {% elif not orders_pending_claim %}
+                <div class="licenses-empty-state">
+                    <div class="licenses-empty-icon">
+                        <i class="fas fa-key" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="licenses-empty-title">لایسنس فعالی ندارید</h3>
+                    <p class="licenses-empty-text">برای استفاده از ربات استخراج و امکانات تحلیل در میزکار، یک لایسنس خریداری کنید.</p>
+                    {% if products %}
+                        <a href="{% url 'product_list' %}" class="btn btn-primary btn-buy-license-empty">
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                            خرید ربات استخراج
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Tab: Transactions -->
+        <div id="tab-transactions" class="tab-content" style="display: none;">
+            <h2 class="tab-content-title mb-4">تراکنش‌های من</h2>
+            
+            {% if transactions %}
+                <div class="transactions-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>کد پیگیری</th>
+                                <th>سفارش</th>
+                                <th>مبلغ</th>
+                                <th>وضعیت</th>
+                                <th>تاریخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                                <tr>
+                                    <td><code>{{ transaction.zibal_track_id }}</code></td>
+                                    <td>{{ transaction.order.product.title }}</td>
+                                    <td>{{ transaction.amount|floatformat:0 }} تومان</td>
+                                    <td>
+                                        <span class="badge {% if transaction.status == 'SUCCESS' or transaction.status == 'success' %}badge-success{% elif transaction.status == 'FAILED' or transaction.status == 'failed' %}badge-danger{% elif transaction.status == 'PENDING' or transaction.status == 'pending' %}badge-pending{% else %}badge-cancelled{% endif %}">
+                                            {{ transaction.status|transaction_status_fa }}
+                                        </span>
+                                    </td>
+                                    <td>{{ transaction.created_at|to_jalali }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+                    <p>شما تراکنشی ندارید.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Tab: Affiliate -->
+        {% if has_paid_orders %}
+        <div id="tab-affiliate" class="tab-content" style="display: none;">
+            <h2 class="tab-content-title mb-4">همکاری در فروش</h2>
+            
+            {% if affiliate %}
+                <!-- آمار افیلیت -->
+                <div class="stats-grid-modern mb-4">
+                    <div class="stat-card-modern success">
+                        <div class="stat-header-modern">
+                            <span class="stat-label-modern">تعداد فروش</span>
+                            <div class="stat-icon-modern">
+                                <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value-modern">{{ affiliate_stats.total_sales_count }}</div>
+                    </div>
+                    
+                    <div class="stat-card-modern primary">
+                        <div class="stat-header-modern">
+                            <span class="stat-label-modern">کل کمیسیون</span>
+                            <div class="stat-icon-modern">
+                                <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value-modern">{{ affiliate_stats.total_commission|floatformat:0 }}</div>
+                        <div class="stat-currency">تومان</div>
+                    </div>
+                    
+                    <div class="stat-card-modern success">
+                        <div class="stat-header-modern">
+                            <span class="stat-label-modern">موجودی کیف پول</span>
+                            <div class="stat-icon-modern">
+                                <i class="fas fa-wallet" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value-modern">{{ affiliate_wallet.balance|floatformat:0 }}</div>
+                        <div class="stat-currency">تومان</div>
+                    </div>
+                    
+                    <div class="stat-card-modern">
+                        <div class="stat-header-modern">
+                            <span class="stat-label-modern">کل درآمد</span>
+                            <div class="stat-icon-modern">
+                                <i class="fas fa-chart-line" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value-modern">{{ affiliate_wallet.total_earned|floatformat:0 }}</div>
+                        <div class="stat-currency">تومان</div>
+                    </div>
+                </div>
+                
+                <!-- لینک معرف -->
+                <div class="section-card mb-4">
+                    <h3 class="section-title">
+                        <i class="fas fa-link" aria-hidden="true"></i> لینک معرف شما
+                    </h3>
+                    <div class="affiliate-modern-link-input-group">
+                        <input type="text" value="{{ affiliate_stats.referral_url }}" readonly class="affiliate-modern-link-input" id="affiliateReferralLink">
+                        <button type="button" class="affiliate-modern-link-btn" onclick="copyAffiliateLink()">
+                            <i class="fas fa-copy" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <p class="affiliate-modern-code mt-2">
+                        کد معرف: <strong>{{ affiliate.code }}</strong>
+                    </p>
+                    <p class="empty-text mt-2">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
+                        با اشتراک‌گذاری لینک، کاربران دعوت‌شده تخفیف می‌گیرند و شما کمیسیون دریافت می‌کنید.
+                    </p>
+                </div>
+                
+                <!-- کیف پول و اقدامات -->
+                <div class="wallet-minimal-card">
+                    <div class="wallet-minimal-content">
+                        <div class="wallet-minimal-info">
+                            <div class="wallet-minimal-label">
+                                <i class="fas fa-wallet" aria-hidden="true"></i>
+                                <span>موجودی قابل برداشت</span>
+                            </div>
+                            <div class="wallet-minimal-balance">
+                                <span class="wallet-amount">{{ affiliate_wallet.balance|currency }}</span>
+                                <span class="wallet-currency">تومان</span>
+                            </div>
+                            <div class="wallet-minimal-min">
+                                حداقل برداشت: {{ affiliate_stats.min_withdrawal|currency }} تومان
+                            </div>
+                        </div>
+                        <div class="wallet-minimal-actions">
+                            <a href="{% url 'affiliate_transactions' %}" class="wallet-minimal-btn">
+                                <i class="fas fa-list" aria-hidden="true"></i>
+                                <span>تراکنش‌ها</span>
+                            </a>
+                            <a href="{% url 'affiliate_withdrawal' %}" class="wallet-minimal-btn primary">
+                                <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                                <span>درخواست برداشت</span>
+                            </a>
+                            <a href="{% url 'affiliate_dashboard' %}" class="wallet-minimal-btn" target="_blank">
+                                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                                <span>داشبورد کامل</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- فروش‌های اخیر -->
+                <div class="section-card mb-4">
+                    <h3 class="section-title mb-3">
+                        <i class="fas fa-shopping-bag" aria-hidden="true"></i> فروش‌های اخیر
+                    </h3>
+                    {% if affiliate_stats.recent_sales %}
+                        <div class="sales-list">
+                            {% for sale in affiliate_stats.recent_sales %}
+                                <div class="preview-item">
+                                    <div class="preview-info">
+                                        <strong>{{ sale.order.product.title }}</strong>
+                                        <span class="preview-meta">
+                                            مبلغ سفارش: {{ sale.order.amount|floatformat:0 }} تومان
+                                        </span>
+                                        <span class="preview-meta">
+                                            کمیسیون: <span style="color: var(--color-success); font-weight: 700;">{{ sale.commission_amount|floatformat:0 }} تومان</span> ({{ sale.commission_rate }}%)
+                                        </span>
+                                        <span class="preview-meta">
+                                            تاریخ: {{ sale.created_at|to_jalali }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span class="badge badge-success">{{ sale.get_status_display }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'affiliate_dashboard' %}" class="btn btn-outline" target="_blank">
+                                مشاهده همه فروش‌ها
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                            <p>هنوز فروشی ثبت نشده است.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="section-card">
+                    <div class="empty-state">
+                        <i class="fas fa-hourglass" aria-hidden="true"></i>
+                        <p>در حال ایجاد حساب افیلیت شما...</p>
+                        <p style="font-size: var(--font-size-sm); margin-top: var(--spacing-sm);">
+                            لطفاً چند لحظه صبر کنید و صفحه را رفرش کنید.
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Tab: Profile -->
+        <div id="tab-profile" class="tab-content" style="display: none;">
+            <h2 class="tab-content-title mb-4">پروفایل من</h2>
+            
+            <!-- اطلاعات کاربری -->
+            <div class="glass-card mb-4">
+                <h3 class="section-title mb-3">اطلاعات کاربری</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>نام کاربری</label>
+                        <input type="text" value="{{ user.username }}" disabled class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>ایمیل</label>
+                        <input type="email" value="{{ user.email }}" disabled class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>شماره تلفن</label>
+                        <input type="text" value="{{ user.phone|default:'-' }}" disabled class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>تاریخ عضویت</label>
+                        <input type="text" value="{{ user.date_joined|to_jalali_date:'%Y/%m/%d' }}" disabled class="form-control">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary" onclick="openUserInfoModal()">
+                        <i class="fas fa-pen" aria-hidden="true"></i> ویرایش اطلاعات کاربری
+                    </button>
+                </div>
+            </div>
+            
+            <!-- اطلاعات تکمیلی -->
+            <div class="glass-card">
+                <h3 class="section-title mb-3">اطلاعات تکمیلی</h3>
+                {% if user.profile %}
+                    <div class="profile-info">
+                        {% if user.profile.avatar %}
+                        <div class="profile-avatar-preview mb-3">
+                            <img src="{{ user.profile.avatar.url }}" alt="آواتار" class="avatar-preview-img">
+                        </div>
+                        {% endif %}
+                        <div class="info-item">
+                            <i class="fas fa-user-circle" aria-hidden="true"></i>
+                            <span>درباره من: {{ user.profile.bio|default:'-' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                            <span>آدرس: {{ user.profile.address|default:'-' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-building" aria-hidden="true"></i>
+                            <span>شهر: {{ user.profile.city|default:'-' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-mail-bulk" aria-hidden="true"></i>
+                            <span>کد پستی: {{ user.profile.postal_code|default:'-' }}</span>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-center empty-text">اطلاعات تکمیلی ثبت نشده است.</p>
+                {% endif %}
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary" onclick="openProfileModal()">
+                        <i class="fas fa-pen" aria-hidden="true"></i> ویرایش اطلاعات تکمیلی
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal برای ویرایش اطلاعات کاربری -->
+<div id="userInfoModal" class="modal-professional" onclick="closeProfessionalModal(event, 'userInfoModal')">
+    <div class="modal-content-professional" onclick="event.stopPropagation()">
+        <div class="modal-header-professional">
+            <h2 class="modal-title-professional">
+                <i class="fas fa-user-edit" aria-hidden="true"></i>
+                ویرایش اطلاعات کاربری
+            </h2>
+            <button type="button" class="modal-close-btn" onclick="closeProfessionalModal(event, 'userInfoModal')">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="modal-body-professional">
+            <form id="userInfoForm" onsubmit="submitUserInfoForm(event)">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-user" aria-hidden="true"></i>
+                        نام کاربری
+                    </label>
+                    <input type="text" name="username" id="userInfoUsername" class="form-control modal-input" value="{{ user.username }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-envelope" aria-hidden="true"></i>
+                        ایمیل
+                    </label>
+                    <input type="email" name="email" id="userInfoEmail" class="form-control modal-input" value="{{ user.email }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-phone" aria-hidden="true"></i>
+                        شماره تلفن
+                    </label>
+                    <input type="text" name="phone" id="userInfoPhone" class="form-control modal-input" value="{{ user.phone|default:'' }}">
+                </div>
+                <div id="userInfoError" class="alert alert-danger modal-error" style="display: none;"></div>
+            </form>
+        </div>
+        <div class="modal-footer-professional">
+            <button type="button" class="btn btn-secondary" onclick="closeProfessionalModal(event, 'userInfoModal')">
+                <i class="fas fa-times" aria-hidden="true"></i> انصراف
+            </button>
+            <button type="submit" id="userInfoSubmitBtn" form="userInfoForm" class="btn btn-primary">
+                <i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal برای ویرایش اطلاعات تکمیلی -->
+<div id="profileModal" class="modal-professional" onclick="closeProfessionalModal(event, 'profileModal')">
+    <div class="modal-content-professional" onclick="event.stopPropagation()">
+        <div class="modal-header-professional">
+            <h2 class="modal-title-professional">
+                <i class="fas fa-user-cog" aria-hidden="true"></i>
+                ویرایش اطلاعات تکمیلی
+            </h2>
+            <button type="button" class="modal-close-btn" onclick="closeProfessionalModal(event, 'profileModal')">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="modal-body-professional">
+            <form id="profileForm" onsubmit="submitProfileForm(event)" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-image" aria-hidden="true"></i>
+                        تصویر پروفایل
+                    </label>
+                    <div class="avatar-upload-container">
+                        <div class="avatar-preview-container">
+                            {% if user.profile.avatar %}
+                                <img id="avatarPreview" src="{{ user.profile.avatar.url }}" alt="پیش‌نمایش آواتار" class="avatar-preview">
+                            {% else %}
+                                <img id="avatarPreview" src="" alt="پیش‌نمایش آواتار" class="avatar-preview" style="display: none;">
+                            {% endif %}
+                            <div id="avatarPlaceholder" class="avatar-placeholder" {% if user.profile.avatar %}style="display: none;"{% endif %}>
+                                <i class="fas fa-user-circle" aria-hidden="true"></i>
+                                <span>تصویر پروفایل</span>
+                            </div>
+                        </div>
+                        <input type="file" name="avatar" id="profileAvatar" class="form-control modal-input" accept="image/*" onchange="previewAvatar(event)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
+                        درباره من
+                    </label>
+                    <textarea name="bio" id="profileBio" class="form-control modal-input" rows="4">{{ user.profile.bio|default:'' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                        آدرس
+                    </label>
+                    <textarea name="address" id="profileAddress" class="form-control modal-input" rows="3">{{ user.profile.address|default:'' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-building" aria-hidden="true"></i>
+                        شهر
+                    </label>
+                    <input type="text" name="city" id="profileCity" class="form-control modal-input" value="{{ user.profile.city|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-mail-bulk" aria-hidden="true"></i>
+                        کد پستی
+                    </label>
+                    <input type="text" name="postal_code" id="profilePostalCode" class="form-control modal-input" value="{{ user.profile.postal_code|default:'' }}">
+                </div>
+                <div id="profileError" class="alert alert-danger modal-error" style="display: none;"></div>
+            </form>
+        </div>
+        <div class="modal-footer-professional">
+            <button type="button" class="btn btn-secondary" onclick="closeProfessionalModal(event, 'profileModal')">
+                <i class="fas fa-times" aria-hidden="true"></i> انصراف
+            </button>
+            <button type="submit" id="profileSubmitBtn" form="profileForm" class="btn btn-primary">
+                <i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal برای جزئیات سفارش -->
+<div id="orderModal" class="modal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <div id="orderModalBody"></div>
+    </div>
+</div>
+
+<script>
+// تابع برای دریافت CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// توابع مودال‌های حرفه‌ای
+function openUserInfoModal() {
+    const modal = document.getElementById('userInfoModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
+}
+
+function openProfileModal() {
+    const modal = document.getElementById('profileModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
+}
+
+function closeProfessionalModal(event, modalId) {
+    if (event) {
+        event.stopPropagation();
+    }
+    const modal = document.getElementById(modalId);
+    modal.classList.remove('active');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }, 300);
+}
+
+// بستن مودال با کلید ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modals = document.querySelectorAll('.modal-professional.active');
+        modals.forEach(modal => {
+            closeProfessionalModal(null, modal.id);
+        });
+    }
+});
+
+// ارسال فرم اطلاعات کاربری
+function submitUserInfoForm(event) {
+    event.preventDefault();
+    
+    // پیدا کردن عناصر
+    const form = document.getElementById('userInfoForm');
+    let errorDiv = document.getElementById('userInfoError');
+    const submitBtn = document.getElementById('userInfoSubmitBtn');
+    
+    // بررسی وجود فرم
+    if (!form) {
+        console.error('فرم userInfoForm یافت نشد');
+        alert('خطا: فرم یافت نشد. لطفاً صفحه را رفرش کنید.');
+        return;
+    }
+    
+    // اگر errorDiv پیدا نشد، آن را ایجاد می‌کنیم
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'userInfoError';
+        errorDiv.className = 'alert alert-danger modal-error';
+        errorDiv.style.display = 'none';
+        form.appendChild(errorDiv);
+    }
+    
+    // بررسی وجود دکمه submit
+    if (!submitBtn) {
+        console.error('دکمه submit یافت نشد');
+        alert('خطا: دکمه ذخیره یافت نشد. لطفاً صفحه را رفرش کنید.');
+        return;
+    }
+    
+    const formData = {
+        username: document.getElementById('userInfoUsername')?.value.trim() || '',
+        email: document.getElementById('userInfoEmail')?.value.trim() || '',
+        phone: document.getElementById('userInfoPhone')?.value.trim() || ''
+    };
+    
+    // بررسی اعتبار داده‌ها
+    if (!formData.username || !formData.email) {
+        if (errorDiv) {
+            errorDiv.textContent = 'لطفاً تمام فیلدهای الزامی را پر کنید.';
+            errorDiv.style.display = 'block';
+        }
+        return;
+    }
+    
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+    }
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ذخیره...';
+    }
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+    
+    fetch('{% url "update_user_info" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'خطا در ارتباط با سرور');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            closeProfessionalModal(null, 'userInfoModal');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            if (errorDiv) {
+                errorDiv.textContent = data.error || 'خطایی رخ داد. لطفاً دوباره تلاش کنید.';
+                errorDiv.style.display = 'block';
+            }
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (errorDiv) {
+            errorDiv.textContent = error.message || 'خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.';
+            errorDiv.style.display = 'block';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات';
+        }
+    });
+}
+
+// ارسال فرم اطلاعات تکمیلی
+function submitProfileForm(event) {
+    event.preventDefault();
+    
+    // پیدا کردن عناصر
+    const form = document.getElementById('profileForm');
+    let errorDiv = document.getElementById('profileError');
+    const submitBtn = document.getElementById('profileSubmitBtn');
+    
+    // بررسی وجود فرم
+    if (!form) {
+        console.error('فرم profileForm یافت نشد');
+        alert('خطا: فرم یافت نشد. لطفاً صفحه را رفرش کنید.');
+        return;
+    }
+    
+    // اگر errorDiv پیدا نشد، آن را ایجاد می‌کنیم
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'profileError';
+        errorDiv.className = 'alert alert-danger modal-error';
+        errorDiv.style.display = 'none';
+        form.appendChild(errorDiv);
+    }
+    
+    // بررسی وجود دکمه submit
+    if (!submitBtn) {
+        console.error('دکمه submit یافت نشد');
+        alert('خطا: دکمه ذخیره یافت نشد. لطفاً صفحه را رفرش کنید.');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+    }
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ذخیره...';
+    }
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+    
+    fetch('{% url "update_profile" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'خطا در ارتباط با سرور');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            closeProfessionalModal(null, 'profileModal');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            if (errorDiv) {
+                errorDiv.textContent = data.error || 'خطایی رخ داد. لطفاً دوباره تلاش کنید.';
+                errorDiv.style.display = 'block';
+            }
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (errorDiv) {
+            errorDiv.textContent = error.message || 'خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.';
+            errorDiv.style.display = 'block';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات';
+        }
+    });
+}
+
+// پیش‌نمایش آواتار
+function previewAvatar(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('avatarPreview');
+            const placeholder = document.getElementById('avatarPlaceholder');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// نمایش نوتیفیکیشن
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+function showTab(tabName, event) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-btn-modern').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    const tabContent = document.getElementById('tab-' + tabName);
+    if (tabContent) {
+        tabContent.style.display = 'block';
+    }
+    
+    // Add active class to clicked button
+    if (event && event.target) {
+        const btn = event.target.closest('.tab-btn-modern');
+        if (btn) {
+            document.querySelectorAll('.tab-btn-modern').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    } else {
+        document.querySelectorAll('.tab-btn-modern').forEach(btn => {
+            const onclick = btn.getAttribute('onclick') || '';
+            if (onclick.includes("showTab('" + tabName + "'")) {
+                btn.classList.add('active');
+            }
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    const hashTab = window.location.hash.replace('#', '');
+    const tabName = tabParam || hashTab;
+    if (tabName) {
+        showTab(tabName, null);
+    }
+});
+
+function copyLicenseKey(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+    
+    navigator.clipboard.writeText(text).then(() => {
+        // نمایش Toast
+        showToast('لایسنس کپی شد!', 'success');
+    }).catch(err => {
+        showToast('خطا در کپی کردن', 'error');
+    });
+}
+
+function showOrderDetails(orderId) {
+    // TODO: بارگذاری جزئیات سفارش با AJAX
+    document.getElementById('orderModal').style.display = 'block';
+    document.getElementById('orderModalBody').innerHTML = '<p>در حال بارگذاری...</p>';
+}
+
+function closeModal(event) {
+    if (!event || event.target.classList.contains('modal') || event.target.classList.contains('modal-close')) {
+        document.getElementById('orderModal').style.display = 'none';
+    }
+}
+
+function showToast(message, type) {
+    // ایجاد Toast Notification
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${type === 'success' ? 'var(--color-success)' : 'var(--color-danger)'};
+        color: white;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        z-index: 3000;
+        animation: slideDown 0.3s;
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideUp 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Countdown برای لایسنس‌ها
+document.querySelectorAll('.countdown').forEach(countdown => {
+    const expiresAt = new Date(countdown.dataset.expires);
+    
+    function updateCountdown() {
+        const now = new Date();
+        const diff = expiresAt - now;
+        
+        if (diff <= 0) {
+            countdown.querySelector('.countdown-text').textContent = 'منقضی شده';
+            countdown.style.color = 'var(--color-danger)';
+            return;
+        }
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        let text = '';
+        if (days > 0) {
+            text = `${days} روز و ${hours} ساعت باقی مانده`;
+        } else if (hours > 0) {
+            text = `${hours} ساعت و ${minutes} دقیقه باقی مانده`;
+        } else {
+            text = `${minutes} دقیقه باقی مانده`;
+        }
+        
+        countdown.querySelector('.countdown-text').textContent = text;
+    }
+    
+    updateCountdown();
+    setInterval(updateCountdown, 60000); // به‌روزرسانی هر دقیقه
+});
+
+// کپی لینک افیلیت
+function copyAffiliateLink() {
+    const input = document.getElementById('affiliateReferralLink');
+    if (input) {
+        input.select();
+        input.setSelectionRange(0, 99999); // برای موبایل
+        document.execCommand('copy');
+        showNotification('لینک معرف کپی شد!', 'success');
+    }
+}
+
+// کپی لینک افیلیت از نمای کلی
+function copyAffiliateLinkOverview() {
+    const input = document.getElementById('affiliateReferralLinkOverview');
+    if (input) {
+        input.select();
+        input.setSelectionRange(0, 99999); // برای موبایل
+        document.execCommand('copy');
+        showNotification('لینک معرف کپی شد!', 'success');
+    }
+}
+
+// ─── مدیریت لایسنس چندسیستمی ───
+(function initLicenseManagement() {
+    const root = document.querySelector('[data-license-mgmt]');
+    if (!root) return;
+
+    const csrf = () => document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+
+    const postForm = async (url, data) => {
+        const body = new FormData();
+        Object.entries(data).forEach(([k, v]) => body.append(k, v));
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrf(), 'X-Requested-With': 'XMLHttpRequest' },
+            body,
+        });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error || 'خطا در انجام عملیات');
+        return json;
+    };
+
+    root.querySelectorAll('[data-add-device]').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = form.querySelector('button[type=submit]');
+            const licenseId = form.dataset.licenseId;
+            const hw = form.querySelector('[name=hardware_fingerprint]').value.trim();
+            const label = form.querySelector('[name=label]')?.value.trim() || '';
+            if (!hw) return;
+            btn.disabled = true;
+            try {
+                const data = await postForm('{% url "license_register_device" %}', {
+                    license_id: licenseId,
+                    hardware_fingerprint: hw,
+                    label,
+                });
+                showToast(data.message, 'success');
+                setTimeout(() => window.location.reload(), 800);
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
+
+    root.querySelectorAll('[data-activation-id]').forEach(row => {
+        const activationId = row.dataset.activationId;
+
+        const saveBtn = row.querySelector('[data-seat-save-label]');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', async () => {
+                const label = row.querySelector('[data-seat-label]')?.value.trim() || '';
+                saveBtn.disabled = true;
+                try {
+                    await postForm('{% url "license_update_device" %}', { activation_id: activationId, label });
+                    showToast('نام سیستم ذخیره شد', 'success');
+                } catch (err) {
+                    showToast(err.message, 'error');
+                } finally {
+                    saveBtn.disabled = false;
+                }
+            });
+        }
+
+        const removeBtn = row.querySelector('[data-seat-remove]');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', async () => {
+                if (!window.confirm('این سیستم از لایسنس حذف شود؟')) return;
+                removeBtn.disabled = true;
+                try {
+                    const data = await postForm('{% url "license_remove_device" %}', { activation_id: activationId });
+                    showToast(data.message, 'success');
+                    setTimeout(() => window.location.reload(), 800);
+                } catch (err) {
+                    showToast(err.message, 'error');
+                } finally {
+                    removeBtn.disabled = false;
+                }
+            });
+        }
+
+        const memberSelect = row.querySelector('[data-seat-assign]');
+        if (memberSelect) {
+            let prev = memberSelect.value;
+            memberSelect.addEventListener('change', async () => {
+                const memberId = memberSelect.value;
+                memberSelect.disabled = true;
+                try {
+                    if (memberId) {
+                        const data = await postForm('{% url "license_assign_seat" %}', {
+                            activation_id: activationId,
+                            member_id: memberId,
+                        });
+                        showToast(data.message, 'success');
+                    } else {
+                        const data = await postForm('{% url "license_revoke_seat" %}', { activation_id: activationId });
+                        showToast(data.message, 'success');
+                    }
+                    prev = memberId;
+                } catch (err) {
+                    showToast(err.message, 'error');
+                    memberSelect.value = prev;
+                } finally {
+                    memberSelect.disabled = false;
+                }
+            });
+        }
+    });
+})();
+</script>
+
+{% endblock %}

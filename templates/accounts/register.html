@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ثبت‌نام | میزکار{% endblock %}
+{% block body_class %}mk-auth-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}?v=6">
+{% endblock %}
+
+{% block content %}
+<div class="mk-auth-v2">
+    <aside class="mk-auth-visual-v2" aria-hidden="true">
+        <div class="mk-auth-grid-bg"></div>
+        <div class="mk-auth-visual-inner">
+            <div class="mk-auth-brand-row">
+                <div class="mk-auth-brand-logo-wrap">
+                    <img src="{% static 'logo.png' %}" alt="" width="36" height="36">
+                </div>
+                <div>
+                    <div class="mk-auth-brand-tag">شروع رایگان</div>
+                    <strong style="font-size:.85rem">بدون کارت بانکی</strong>
+                </div>
+            </div>
+            <h2>در کمتر از ۲ دقیقه آماده کار شوید</h2>
+            <p class="mk-auth-lead">حساب بسازید و بلافاصله به CRM، فایل‌های شخصی و ابزار تحلیل بازار دسترسی پیدا کنید.</p>
+            <div class="mk-auth-stats">
+                <div class="mk-auth-stat"><strong>رایگان</strong><span>شروع کار</span></div>
+                <div class="mk-auth-stat"><strong>فارسی</strong><span>رابط و پشتیبانی</span></div>
+                <div class="mk-auth-stat"><strong>ابری</strong><span>هر دستگاه</span></div>
+            </div>
+            <div class="mk-auth-features-v2">
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>ثبت‌نام ساده با شماره موبایل</span></div>
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>داشبورد CRM از همان لحظه اول</span></div>
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>امنیت رمز و احراز هویت استاندارد</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="mk-auth-form-side-v2">
+        <div class="mk-auth-card-v2">
+            <div class="mk-auth-mobile-brand">
+                <img src="{% static 'logo.png' %}" alt="">
+                <strong>ایجاد حساب میزکار</strong>
+            </div>
+            <a href="{% url 'home' %}" class="mk-auth-back-v2"><i class="fas fa-arrow-right"></i> بازگشت به سایت</a>
+
+            <header class="auth-header-v2">
+                <h1 class="auth-title">ثبت‌نام</h1>
+                <p class="auth-subtitle">اطلاعات زیر را وارد کنید تا حساب شما ساخته شود</p>
+            </header>
+
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.phone.id_for_label }}">شماره موبایل</label>
+                    <div class="auth-input-wrap">
+                        {{ form.phone }}
+                        <i class="fas fa-phone auth-input-icon" aria-hidden="true"></i>
+                    </div>
+                    {% if form.phone.errors %}
+                    <div class="auth-form-error-v2"><i class="fas fa-circle-exclamation"></i> {{ form.phone.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.password1.id_for_label }}">رمز عبور</label>
+                    <div class="auth-input-wrap">
+                        {{ form.password1 }}
+                        <i class="fas fa-lock auth-input-icon" aria-hidden="true"></i>
+                        <button type="button" class="auth-password-toggle" data-password-toggle aria-label="نمایش رمز">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="auth-strength" aria-live="polite">
+                        <div class="auth-strength-track"><i data-strength-bar></i></div>
+                        <span class="auth-strength-label" data-strength-label></span>
+                    </div>
+                    {% if form.password1.errors %}
+                    <div class="auth-form-error-v2"><i class="fas fa-circle-exclamation"></i> {{ form.password1.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.password2.id_for_label }}">تکرار رمز عبور</label>
+                    <div class="auth-input-wrap">
+                        {{ form.password2 }}
+                        <i class="fas fa-lock auth-input-icon" aria-hidden="true"></i>
+                        <button type="button" class="auth-password-toggle" data-password-toggle aria-label="نمایش رمز">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    {% if form.password2.errors %}
+                    <div class="auth-form-error-v2"><i class="fas fa-circle-exclamation"></i> {{ form.password2.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="auth-alert-v2" role="alert">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>{{ form.non_field_errors.0 }}</span>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="auth-submit-btn auth-submit-btn-v2"><span>ایجاد حساب و ورود</span></button>
+            </form>
+
+            <footer class="auth-footer-v2">
+                <a href="{% url 'login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">قبلاً ثبت‌نام کرده‌اید؟ وارد شوید</a>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}?v=1"></script>
+{% endblock %}

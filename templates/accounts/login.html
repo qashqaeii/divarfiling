@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ورود | میزکار{% endblock %}
+{% block body_class %}mk-auth-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}?v=6">
+{% endblock %}
+
+{% block content %}
+<div class="mk-auth-v2">
+    <aside class="mk-auth-visual-v2" aria-hidden="true">
+        <div class="mk-auth-grid-bg"></div>
+        <div class="mk-auth-visual-inner">
+            <div class="mk-auth-brand-row">
+                <div class="mk-auth-brand-logo-wrap">
+                    <img src="{% static 'logo.png' %}" alt="" width="36" height="36">
+                </div>
+                <div>
+                    <div class="mk-auth-brand-tag">فایلینگ دیوار</div>
+                    <strong style="font-size:.85rem">میزکار هوشمند</strong>
+                </div>
+            </div>
+            <h2>مدیریت حرفه‌ای املاک، در یک پلتفرم</h2>
+            <p class="mk-auth-lead">CRM، تحلیل بازار دیوار، قیف فروش و پیگیری هوشمند — ابزار کامل برای مشاوران و آژانس‌های امروزی.</p>
+            <div class="mk-auth-stats">
+                <div class="mk-auth-stat"><strong>CRM</strong><span>مخاطب و معامله</span></div>
+                <div class="mk-auth-stat"><strong>AI</strong><span>تحلیل بازار</span></div>
+                <div class="mk-auth-stat"><strong>24/7</strong><span>دسترسی ابری</span></div>
+            </div>
+            <div class="mk-auth-features-v2">
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>ورود با شماره موبایل — سریع و امن</span></div>
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>مدیریت مخاطبین، املاک و قیف فروش</span></div>
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>یادآور و اتوماسیون پیگیری</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="mk-auth-form-side-v2">
+        <div class="mk-auth-card-v2">
+            <div class="mk-auth-mobile-brand">
+                <img src="{% static 'logo.png' %}" alt="">
+                <strong>میزکار هوشمند املاک</strong>
+            </div>
+            <a href="{% url 'home' %}" class="mk-auth-back-v2"><i class="fas fa-arrow-right"></i> بازگشت به سایت</a>
+
+            <header class="auth-header-v2">
+                <h1 class="auth-title">خوش آمدید</h1>
+                <p class="auth-subtitle">با شماره موبایل و رمز عبور وارد حساب خود شوید</p>
+            </header>
+
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.username.id_for_label }}">شماره موبایل</label>
+                    <div class="auth-input-wrap">
+                        {{ form.username }}
+                        <i class="fas fa-phone auth-input-icon" aria-hidden="true"></i>
+                    </div>
+                    <p class="auth-hint">شماره‌ای که هنگام ثبت‌نام وارد کرده‌اید</p>
+                    {% if form.username.errors %}
+                    <div class="auth-form-error-v2"><i class="fas fa-circle-exclamation"></i> {{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.password.id_for_label }}">رمز عبور</label>
+                    <div class="auth-input-wrap">
+                        {{ form.password }}
+                        <i class="fas fa-lock auth-input-icon" aria-hidden="true"></i>
+                        <button type="button" class="auth-password-toggle" data-password-toggle aria-label="نمایش رمز" aria-pressed="false">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                    <div class="auth-form-error-v2"><i class="fas fa-circle-exclamation"></i> {{ form.password.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="auth-alert-v2" role="alert">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>{{ form.non_field_errors.0 }}</span>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="auth-submit-btn auth-submit-btn-v2"><span>ورود به میزکار</span></button>
+            </form>
+
+            <footer class="auth-footer-v2">
+                <a href="{% url 'password_reset' %}">رمز عبور را فراموش کرده‌اید؟</a>
+                <a href="{% url 'register' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">حساب ندارید؟ ثبت‌نام رایگان</a>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}?v=1"></script>
+{% endblock %}

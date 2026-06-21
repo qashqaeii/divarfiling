@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ثبت‌نام مشاور - فایلینگ دیوار{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="glass-card mt-4" style="max-width: 600px; margin: 0 auto;">
+        <h1 class="text-white mb-4">ثبت‌نام به عنوان مشاور فروش</h1>
+        <p class="text-white mb-4">با ثبت‌نام به عنوان مشاور، می‌توانید از فروش‌های خود کمیسیون دریافت کنید.</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fas fa-user" aria-hidden="true"></i>
+                ثبت‌نام به عنوان مشاور
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

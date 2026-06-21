@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static currency_tags %}
+
+{% block title %}پرداخت کارت به کارت{% endblock %}
+
+{% block body_class %}mk-checkout-page ctp-page-wrap{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/mizkar-card-transfer.css' %}?v=3">
+<link rel="stylesheet" href="https://unpkg.com/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="ctp" data-card-pay>
+    <header class="ctp-head">
+        <a href="{% url 'buy' order.product.slug %}" class="ctp-back">
+            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            <span>بازگشت</span>
+        </a>
+        <div class="ctp-head-meta">
+            <span class="ctp-badge">کارت به کارت</span>
+            <span class="ctp-step-label">مرحله ۲ از ۴</span>
+        </div>
+    </header>
+
+    <nav class="ctp-rail" aria-label="پیشرفت پرداخت">
+        <div class="ctp-rail-item is-done"><span class="ctp-rail-dot"></span><span>پلن</span></div>
+        <div class="ctp-rail-line is-done"></div>
+        <div class="ctp-rail-item is-active"><span class="ctp-rail-dot"></span><span>واریز</span></div>
+        <div class="ctp-rail-line"></div>
+        <div class="ctp-rail-item"><span class="ctp-rail-dot"></span><span>رسید</span></div>
+        <div class="ctp-rail-line"></div>
+        <div class="ctp-rail-item"><span class="ctp-rail-dot"></span><span>تایید</span></div>
+    </nav>
+
+    <div class="ctp-grid">
+        <aside class="ctp-aside" aria-label="خلاصه سفارش">
+            <div class="ctp-aside-card">
+                <p class="ctp-aside-eyebrow">مبلغ واریز</p>
+                <p class="ctp-aside-amount">{{ order.amount|currency }}<small>تومان</small></p>
+                <div class="ctp-aside-divider"></div>
+                <div class="ctp-aside-row">
+                    <span>محصول</span>
+                    <strong>{{ order.product.title|truncatechars:28 }}</strong>
+                </div>
+                <div class="ctp-aside-row">
+                    <span>پلن</span>
+                    <strong>{{ order.plan.name }}</strong>
+                </div>
+                <div class="ctp-aside-row ctp-aside-row--mono">
+                    <span>شناسه</span>
+                    <code>{{ order.id|truncatechars:13 }}</code>
+                </div>
+            </div>
+            <p class="ctp-aside-note">
+                <i class="fas fa-circle-info" aria-hidden="true"></i>
+                مبلغ را دقیقاً مطابق بالا واریز کنید.
+            </p>
+        </aside>
+
+        <main class="ctp-main">
+            <section class="ctp-visa" aria-label="کارت مقصد">
+                <div class="ctp-visa-glow" aria-hidden="true"></div>
+                <div class="ctp-visa-top">
+                    {% if pay_settings.bank_name %}
+                    <span class="ctp-visa-bank">{{ pay_settings.bank_name }}</span>
+                    {% endif %}
+                    <span class="ctp-visa-chip" aria-hidden="true"></span>
+                </div>
+                <div class="ctp-visa-number-row">
+                    <code class="ctp-visa-number" id="cardNumber" dir="ltr">{{ pay_settings.card_number|card_format }}</code>
+                    <button type="button" class="ctp-icon-btn" data-copy-target="cardNumber" title="کپی شماره کارت">
+                        <i class="fas fa-copy" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="ctp-visa-foot">
+                    <div>
+                        <span class="ctp-visa-label">صاحب حساب</span>
+                        <strong>{{ pay_settings.card_holder_name }}</strong>
+                    </div>
+                    {% if pay_settings.iban %}
+                    <div class="ctp-visa-iban">
+                        <span class="ctp-visa-label">شبا</span>
+                        <div class="ctp-visa-iban-row">
+                            <code id="cardIban" dir="ltr">{{ pay_settings.iban }}</code>
+                            <button type="button" class="ctp-icon-btn ctp-icon-btn--light" data-copy-target="cardIban" title="کپی شبا">
+                                <i class="fas fa-copy" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            {% if pay_settings.instructions %}
+            <p class="ctp-instructions">{{ pay_settings.instructions|linebreaksbr }}</p>
+            {% endif %}
+
+            <section class="ctp-form-panel" aria-label="ثبت رسید">
+                <div class="ctp-form-head">
+                    <h2>ثبت رسید واریز</h2>
+                    <p>پس از واریز، اطلاعات زیر را وارد کنید تا سفارش در صف تایید قرار گیرد.</p>
+                </div>
+                <form method="post" enctype="multipart/form-data" class="ctp-form">
+                    {% csrf_token %}
+                    <div class="ctp-form-grid">
+                        {% for field in form %}
+                        <div class="ctp-field{% if field.name == 'user_note' %} ctp-field--full{% endif %}{% if field.name == 'receipt_image' %} ctp-field--upload{% endif %}{% if field.errors %} is-error{% endif %}">
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}{% if field.field.required %}<span class="ctp-req">*</span>{% endif %}
+                            </label>
+                            {% if field.name == 'receipt_image' %}
+                            <div class="ctp-upload">
+                                {{ field }}
+                                <div class="ctp-upload-ui">
+                                    <i class="fas fa-image" aria-hidden="true"></i>
+                                    <span>انتخاب تصویر رسید</span>
+                                    <small>JPG یا PNG — حداکثر ۵ مگابایت</small>
+                                </div>
+                                <span class="ctp-upload-name" data-upload-name></span>
+                            </div>
+                            {% elif field.name == 'transferred_at' %}
+                            <div class="ctp-datetime-wrap">
+                                {{ field }}
+                                <span class="ctp-datetime-icon" aria-hidden="true"><i class="fas fa-calendar-alt"></i></span>
+                            </div>
+                            <small class="ctp-field-hint">تقویم شمسی — تاریخ و ساعت واریز را انتخاب کنید</small>
+                            {% else %}
+                            {{ field }}
+                            {% endif %}
+                            {% if field.errors %}
+                            <span class="ctp-field-error" role="alert">{{ field.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="ctp-submit">
+                        <span>ارسال برای بررسی</span>
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    </button>
+                    <p class="ctp-form-foot">معمولاً کمتر از ۲۴ ساعت بررسی می‌شود{% if pay_settings.support_contact %} · {{ pay_settings.support_contact }}{% endif %}</p>
+                </form>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.js"></script>
+<script src="{% static 'js/mizkar-card-transfer.js' %}?v=3" defer></script>
+{% endblock %}

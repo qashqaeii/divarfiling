@@ -1,0 +1,605 @@
+{% extends 'workspace/base.html' %}
+{% load humanize l10n workspace_tags %}
+
+{% block page_title %}تحلیل — {{ dataset.name }}{% endblock %}
+
+{% block content %}
+<div class="mk-page ws-rpt">
+{% with r=report ctx=r.context lb=r.labels pa=r.price_analysis pps=pa.price_per_sqm rent=pa.rent dep=pa.deposit depth=r.market_depth conf=analysis_confidence liq=r.liquidity dq=r.data_quality %}
+
+<header class="ws-rpt-head">
+    <div class="ws-rpt-head-row">
+        <div class="ws-rpt-head-main">
+            {% with hdr=r.header %}
+            {% if hdr.tags %}
+            <div class="ws-rpt-head-tags" aria-label="نوع تحلیل">
+                {% for tag in hdr.tags %}
+                <span class="ws-rpt-head-tag ws-rpt-head-tag--{{ tag.tone }}">{{ tag.text }}</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <span class="ws-rpt-badge">{{ ctx.badge }}</span>
+            {% endif %}
+            {% if hdr.headline %}
+            <p class="ws-rpt-headline">{{ hdr.headline }}</p>
+            {% endif %}
+            <h1>{{ hdr.title|default:dataset.name }}</h1>
+            {% if hdr.subtitle %}
+            <p class="ws-rpt-scope">{{ hdr.subtitle }}</p>
+            {% elif r.publication_scope.line %}
+            <p class="ws-rpt-scope">{{ r.publication_scope.line }}</p>
+            {% else %}
+            <p class="ws-rpt-scope">{{ dq.valid_count|intcomma }} فایل{% if dataset.city %} · {{ dataset.city }}{% endif %}</p>
+            {% endif %}
+            {% endwith %}
+        </div>
+        <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="mk-hero-btn mk-hero-btn-ghost">
+            <i class="fas fa-table"></i> لیست آگهی‌ها
+        </a>
+    </div>
+</header>
+
+{% if r.quick_snapshot.signals or r.quick_snapshot.market_value.rows or r.quick_snapshot.market_sentiment.label or r.quick_snapshot.property_basis.facts %}
+<details class="ws-rpt-layer ws-rpt-layer-level1" open>
+<summary class="ws-rpt-l1-summary">
+    <span class="ws-rpt-l1-summary-title">سطح ۱ — نگاه سریع</span>
+    {% if r.quick_snapshot.district %}<span class="ws-rpt-l1-summary-meta">{{ r.quick_snapshot.district }}</span>{% endif %}
+</summary>
+<div class="ws-rpt-layer-body ws-rpt-layer-body-level1">
+
+    <div class="ws-rpt-l1-top-grid">
+        <section class="ws-rpt-l1-card ws-rpt-l1-card-conf">
+            <h2 class="ws-rpt-l1-card-title"><i class="fas fa-shield-halved" aria-hidden="true"></i> اعتماد به تحلیل</h2>
+            <div class="ws-rpt-l1-conf-body">
+                {% localize off %}
+                <div class="ws-rpt-l1-conf-ring" data-score="{{ conf|ws_conf_score_attr }}" style="--p: {{ conf|ws_conf_score_attr }};">
+                    <div class="ws-rpt-l1-conf-ring-inner">
+                        <strong>{{ conf|ws_conf_score }}%</strong>
+                        <span>امتیاز</span>
+                    </div>
+                </div>
+                {% endlocalize %}
+
+                <div class="ws-rpt-l1-conf-text">
+                    <strong class="ws-rpt-l1-conf-level">{% firstof conf.level_plain conf.level "—" %}</strong>
+                    {% if conf.level_hint %}
+                    <small>{{ conf.level_hint }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        {% if r.quick_snapshot.market_sentiment.label %}
+        <section class="ws-rpt-l1-card ws-rpt-l1-card-sentiment">
+            <h2 class="ws-rpt-l1-card-title"><i class="fas fa-chart-pie" aria-hidden="true"></i> وضعیت بازار</h2>
+            <div class="ws-rpt-sentiment ws-rpt-sentiment-{{ r.quick_snapshot.market_sentiment.tone }}">
+                <span class="ws-rpt-sentiment-icon">
+                    <i class="fas {{ r.quick_snapshot.market_sentiment.icon }}" aria-hidden="true"></i>
+                </span>
+                <div>
+                    <strong>{{ r.quick_snapshot.market_sentiment.label }}</strong>
+                    {% if r.quick_snapshot.market_sentiment.factors %}
+                    <small>{{ r.quick_snapshot.market_sentiment.factors|join:" · " }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if r.quick_snapshot.market_value.rows %}
+        <section class="ws-rpt-l1-card ws-rpt-l1-card-mv">
+            <h2 class="ws-rpt-l1-card-title"><i class="fas fa-coins" aria-hidden="true"></i> {{ r.quick_snapshot.market_value.title }}</h2>
+            <div class="ws-rpt-l1-mv-grid">
+                {% for row in r.quick_snapshot.market_value.rows %}
+                <div class="ws-rpt-l1-mv-row">
+                    {% if row.icon %}
+                    <span class="ws-rpt-l1-mv-icon"><i class="fas {{ row.icon }}" aria-hidden="true"></i></span>
+                    {% endif %}
+                    <div class="ws-rpt-l1-mv-copy">
+                        <span class="ws-rpt-l1-mv-label">{{ row.label }}</span>
+                        <strong class="ws-rpt-l1-mv-value">{{ row.value }}</strong>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    {% if r.quick_snapshot.property_basis.facts or r.quick_snapshot.property_basis.segment_hint %}
+    <section class="ws-rpt-l1-basis" aria-label="مبنای اعداد">
+        <header class="ws-rpt-l1-basis-head">
+            <h2><i class="fas fa-building-circle-check" aria-hidden="true"></i> {{ r.quick_snapshot.property_basis.title }}</h2>
+            {% if r.quick_snapshot.property_basis.headline %}
+            <p>{{ r.quick_snapshot.property_basis.headline }}</p>
+            {% endif %}
+        </header>
+        <div class="ws-rpt-l1-basis-grid">
+            {% for fact in r.quick_snapshot.property_basis.facts %}
+            <div class="ws-rpt-l1-basis-fact">
+                {% if fact.icon %}<span class="ws-rpt-l1-basis-icon"><i class="fas {{ fact.icon }}" aria-hidden="true"></i></span>{% endif %}
+                <div>
+                    <span class="ws-rpt-l1-basis-label">{{ fact.label }}</span>
+                    <strong>{{ fact.value }}</strong>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if r.quick_snapshot.property_basis.amenities %}
+        <div class="ws-rpt-l1-basis-amen">
+            {% for am in r.quick_snapshot.property_basis.amenities %}
+            <span class="ws-rpt-l1-basis-amen-chip" title="{{ am.label }}">
+                {{ am.label }} <em>{{ am.pct }}٪</em>
+            </span>
+            {% endfor %}
+        </div>
+        {% if r.quick_snapshot.property_basis.amenity_note %}
+        <p class="ws-rpt-l1-basis-amen-note">{{ r.quick_snapshot.property_basis.amenity_note }}</p>
+        {% endif %}
+        {% endif %}
+        {% if r.quick_snapshot.property_basis.amenity_valuation.headline %}
+        <div class="ws-rpt-l1-amen-val">
+            <p class="ws-rpt-l1-amen-val-head"><i class="fas fa-star-half-stroke" aria-hidden="true"></i> {{ r.quick_snapshot.property_basis.amenity_valuation.headline }}</p>
+            {% if r.quick_snapshot.property_basis.amenity_valuation.full_vs_bare.gap_pct %}
+            <div class="ws-rpt-l1-amen-val-compare">
+                <span>فول امکانات: <strong>{{ r.quick_snapshot.property_basis.amenity_valuation.full_vs_bare.full_median_fmt }}</strong></span>
+                <span>بدون امکانات: <strong>{{ r.quick_snapshot.property_basis.amenity_valuation.full_vs_bare.bare_median_fmt }}</strong></span>
+            </div>
+            {% elif r.quick_snapshot.property_basis.amenity_valuation.build_year_gap.gap_pct %}
+            <div class="ws-rpt-l1-amen-val-compare">
+                <span>نوساز (از {{ r.quick_snapshot.property_basis.amenity_valuation.build_year_gap.median_year }}): <strong>{{ r.quick_snapshot.property_basis.amenity_valuation.build_year_gap.newer_median_fmt }}</strong></span>
+                <span>قدیمی‌تر: <strong>{{ r.quick_snapshot.property_basis.amenity_valuation.build_year_gap.older_median_fmt }}</strong></span>
+            </div>
+            {% endif %}
+            {% if r.quick_snapshot.property_basis.amenity_valuation.note %}
+            <p class="ws-rpt-l1-amen-val-note">{{ r.quick_snapshot.property_basis.amenity_valuation.note }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if r.quick_snapshot.property_basis.segment_hint %}
+        <div class="ws-rpt-l1-basis-segment">
+            <i class="fas fa-location-dot" aria-hidden="true"></i>
+            <span>{{ r.quick_snapshot.property_basis.segment_hint }}</span>
+        </div>
+        {% endif %}
+        {% if r.quick_snapshot.property_basis.note %}
+        <p class="ws-rpt-l1-basis-note"><i class="fas fa-circle-info" aria-hidden="true"></i> {{ r.quick_snapshot.property_basis.note }}</p>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {% if r.quick_snapshot.ready_numbers %}
+    <section class="ws-rpt-l1-ready" aria-label="اعداد بر اساس متراژ">
+        <h2 class="ws-rpt-l1-ready-title"><i class="fas fa-calculator" aria-hidden="true"></i> اعداد آماده بر اساس متراژ</h2>
+        <div class="ws-rpt-l1-ready-grid">
+            {% for num in r.quick_snapshot.ready_numbers %}
+            <article class="ws-rpt-l1-ready-card">
+                <span class="ws-rpt-l1-ready-label">{{ num.title }}</span>
+                <strong class="ws-rpt-l1-ready-value">{{ num.price }}</strong>
+                {% if num.hint %}<small>{{ num.hint }}</small>{% endif %}
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if r.quick_snapshot.signals or r.opportunities %}
+    <div class="ws-rpt-l1-signals">
+        <div class="ws-rpt-l1-signal-grid">
+            {% for sig in r.quick_snapshot.signals %}
+            <div class="ws-rpt-l1-signal">
+                <span class="ws-rpt-l1-signal-icon"><i class="fas {{ sig.icon }}" aria-hidden="true"></i></span>
+                <div class="ws-rpt-l1-signal-copy">
+                    <span class="ws-rpt-l1-signal-label">{{ sig.label }}</span>
+                    <strong class="ws-rpt-l1-signal-value">{{ sig.value }}</strong>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if r.opportunities %}
+            <a href="#ws-opps" class="ws-rpt-l1-signal ws-rpt-l1-signal-link">
+                <span class="ws-rpt-l1-signal-icon"><i class="fas fa-bullseye" aria-hidden="true"></i></span>
+                <div class="ws-rpt-l1-signal-copy">
+                    <span class="ws-rpt-l1-signal-label">فرصت‌های برتر</span>
+                    <strong class="ws-rpt-l1-signal-value">{{ r.opportunities|length }} مورد</strong>
+                </div>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if depth.total %}
+    <section class="ws-rpt-mix ws-rpt-mix-level1">
+        <div class="ws-rpt-mix-head">
+            <span class="ws-rpt-mix-title"><i class="fas fa-layer-group" aria-hidden="true"></i> توزیع قیمت در بازار</span>
+        </div>
+        <div class="ws-rpt-mix-labels">
+            <span>ارزون‌تر {{ depth.under_pct|ws_pct }}</span>
+            <span>سر به سر {{ depth.fair_pct|ws_pct }}</span>
+            <span>گرون‌تر {{ depth.over_pct|ws_pct }}</span>
+        </div>
+        <div class="ws-rpt-mix-bar">
+            <i class="cheap" style="width:{{ depth.under_pct }}%"></i>
+            <i class="fair" style="width:{{ depth.fair_pct }}%"></i>
+            <i class="high" style="width:{{ depth.over_pct }}%"></i>
+        </div>
+    </section>
+    {% endif %}
+</div>
+</details>
+{% endif %}
+
+<details class="ws-rpt-layer ws-rpt-layer-level2" open>
+<summary class="ws-rpt-l2-summary">
+    <span class="ws-rpt-l2-summary-title">سطح ۲ — تحلیل حرفه‌ای</span>
+    <span class="ws-rpt-l2-summary-meta">نمودار · بینش · فرصت‌ها</span>
+</summary>
+<div class="ws-rpt-layer-body ws-rpt-layer-body-level2 ws-rpt-l2-pro">
+
+{% if l2.quality_note %}
+<p class="ws-rpt-l2-alert"><i class="fas fa-circle-info" aria-hidden="true"></i> {{ l2.quality_note }}</p>
+{% endif %}
+
+{% if l2.actions %}
+<section class="ws-rpt-l2-playbook" aria-label="اقدام عملی">
+    <header class="ws-rpt-l2-playbook-head">
+        <h2><i class="fas fa-bolt" aria-hidden="true"></i> اقدام عملی</h2>
+    </header>
+    <div class="ws-rpt-l2-playbook-list">
+        {% for act in l2.actions %}
+        <article class="ws-rpt-l2-playbook-item">
+            <span class="ws-rpt-l2-playbook-num">{{ forloop.counter }}</span>
+            <div class="ws-rpt-l2-playbook-copy">
+                <strong>{{ act.title }}</strong>
+                <p>{{ act.body }}</p>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if l2.opportunities %}
+<section class="ws-rpt-l2-opp-board" id="ws-opps" aria-label="فرصت‌های برتر">
+    <header class="ws-rpt-l2-opp-board-head">
+        <div>
+            <h2><i class="fas fa-bullseye" aria-hidden="true"></i> {{ ctx.opportunity_title|default:"فرصت‌های برتر" }}</h2>
+            <p>قیمت زیر بازار — با امکانات و دلیل انتخاب</p>
+        </div>
+        <span class="ws-rpt-l2-opp-board-count">{{ r.opportunities|length }} فایل</span>
+    </header>
+    <div class="ws-rpt-l2-opp-board-list">
+        {% for opp in l2.opportunities %}
+        {% include 'workspace/includes/analyze_opp_item.html' with opp=opp compact=False %}
+        {% endfor %}
+    </div>
+    {% if l2.opportunities_more %}
+    <details class="ws-rpt-l2-more">
+        <summary><i class="fas fa-chevron-down" aria-hidden="true"></i> {{ l2.opportunities_more|length }} فرصت دیگر</summary>
+        <div class="ws-rpt-l2-opp-board-list ws-rpt-l2-opp-board-list--more">
+            {% for opp in l2.opportunities_more %}
+            {% include 'workspace/includes/analyze_opp_item.html' with opp=opp compact=True %}
+            {% endfor %}
+        </div>
+    </details>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if l2.tabs %}
+<section class="ws-rpt-l2-studio" aria-label="تحلیل تلفیقی">
+    <nav class="ws-rpt-l2-tabnav" role="tablist">
+        {% for tab in l2.tabs %}
+        <button type="button" class="ws-rpt-l2-tab{% if forloop.first %} is-active{% endif %}" data-l2-tab="{{ tab.id }}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+            <i class="fas {{ tab.icon }}" aria-hidden="true"></i>
+            <span>{{ tab.label }}</span>
+        </button>
+        {% endfor %}
+    </nav>
+
+    {% for tab in l2.tabs %}
+    <div class="ws-rpt-l2-tabpanel{% if forloop.first %} is-active{% endif %}" data-l2-panel="{{ tab.id }}" role="tabpanel"{% if not forloop.first %} hidden{% endif %}>
+        {% if tab.insights %}
+        <ul class="ws-rpt-l2-insight-row">
+            {% for line in tab.insights %}
+            <li>{{ line }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="ws-rpt-l2-fusion">
+            <aside class="ws-rpt-l2-brief">
+                {% if tab.has_depth and depth.total %}
+                <div class="ws-rpt-l2-mini-mix">
+                    <div class="ws-rpt-l2-mini-mix-labels">
+                        <span>زیر بازار {{ depth.under_pct|ws_pct }}</span>
+                        <span>سر به سر {{ depth.fair_pct|ws_pct }}</span>
+                        <span>بالا {{ depth.over_pct|ws_pct }}</span>
+                    </div>
+                    <div class="ws-rpt-mix-bar ws-rpt-mix-bar--compact">
+                        <i class="cheap" style="width:{{ depth.under_pct }}%"></i>
+                        <i class="fair" style="width:{{ depth.fair_pct }}%"></i>
+                        <i class="high" style="width:{{ depth.over_pct }}%"></i>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if tab.id == 'price' %}
+                <div class="ws-rpt-l2-price-pills">
+                    {% if ctx.deal == 'rent' and rent.median_fmt %}
+                    <div><em>اجاره</em><strong>{{ rent.median_fmt }}</strong></div>
+                    {% if dep.median_fmt %}<div><em>ودیعه</em><strong>{{ dep.median_fmt }}</strong></div>{% endif %}
+                    {% elif pps.median_fmt %}
+                    <div><em>متری</em><strong>{{ pps.median_fmt }}</strong></div>
+                    <div><em>بازه ۵۰٪</em><strong>{{ pps.range_50_fmt|default:"—" }}</strong></div>
+                    {% elif pa.price.median_fmt %}
+                    <div><em>قیمت کل</em><strong>{{ pa.price.median_fmt }}</strong></div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </aside>
+
+            <div class="ws-rpt-l2-viz">
+                {% for ch in tab.charts %}
+                <article class="ws-rpt-l2-viz-card">
+                    <h4>{{ ch.title }}</h4>
+                    <div class="ws-rpt-l2-chart-canvas"><canvas id="chart-{{ ch.idx }}"></canvas></div>
+                </article>
+                {% empty %}
+                {% if not tab.has_segments and not tab.has_neighborhoods %}
+                <div class="ws-rpt-l2-viz-empty">
+                    <i class="fas fa-chart-simple" aria-hidden="true"></i>
+                    <p>داده کافی برای نمودار این بخش نیست</p>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if tab.has_segments and area_segments %}
+        <div class="ws-rpt-l2-compact-table-wrap">
+            <table class="ws-rpt-l2-compact-table">
+                <thead><tr>
+                    <th>{{ ctx.area_word }}</th><th>تعداد</th>
+                    {% if ctx.deal == 'rent' %}<th>اجاره</th>
+                    {% elif ctx.show_pps %}<th>متری</th>{% endif %}
+                </tr></thead>
+                <tbody>
+                    {% for seg in area_segments|slice:":5" %}
+                    <tr>
+                        <td>{{ seg.bucket_plain }}</td>
+                        <td>{{ seg.count }}</td>
+                        <td>
+                            {% if ctx.deal == 'rent' %}{{ seg.median_rent_fmt|default:"—" }}
+                            {% elif ctx.show_pps %}{{ seg.median_pps_fmt|default:"—" }}
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if tab.has_amenities and ctx.show_amenities and r.amenities_coverage %}
+        <ul class="ws-rpt-l2-amenity-row">
+            {% for a in r.amenities_coverage|slice:":4" %}
+            <li>
+                <span>{{ a.label }}</span>
+                <div class="ws-rpt-l2-amenity-bar"><i style="width:{{ a.coverage_pct }}%"></i></div>
+                <em>{{ a.coverage_pct|ws_pct }}</em>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if tab.has_neighborhoods and r.neighborhoods %}
+        <div class="ws-rpt-l2-compact-table-wrap">
+            <table class="ws-rpt-l2-compact-table">
+                <thead><tr><th>محله</th><th>تعداد</th><th>میانه</th></tr></thead>
+                <tbody>
+                    {% for nb in r.neighborhoods|slice:":6" %}
+                    <tr>
+                        <td>{{ nb.neighborhood }}</td>
+                        <td>{{ nb.count }}</td>
+                        <td>{% if nb.full_deposit %}{{ nb.full_deposit.median_fmt }}{% elif nb.rent %}{{ nb.rent.median_fmt }}{% elif nb.price_per_sqm %}{{ nb.price_per_sqm.median_fmt }}{% else %}—{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
+
+{% if l2.negotiation %}
+<section class="ws-rpt-l2-neg-strip">
+    <h2><i class="fas fa-handshake" aria-hidden="true"></i> {{ lb.negotiate }}</h2>
+    <ol class="ws-rpt-l2-neg-ol">
+        {% for tip in l2.negotiation %}<li>{{ tip|truncatechars:120 }}</li>{% endfor %}
+    </ol>
+</section>
+{% endif %}
+
+<details class="ws-rpt-l2-drawer">
+    <summary><i class="fas fa-layer-group" aria-hidden="true"></i> سناریوها و جزئیات متنی</summary>
+    <div class="ws-rpt-l2-drawer-body">
+        {% if l2.scenarios %}
+        <div class="ws-rpt-l2-drawer-block">
+            <h3>عددهای آماده برای مشتری</h3>
+            <div class="ws-rpt-scenario-compact">
+                {% for sc in l2.scenarios %}
+                <div class="ws-rpt-scenario-line"><span>{{ sc.title }}</span><strong>{{ sc.price }}</strong></div>
+                {% endfor %}
+            </div>
+            {% if l2.scenarios_extra %}
+            <div class="ws-rpt-scenario-grid ws-rpt-l2-scenario-grid">
+                {% for sc in l2.scenarios_extra %}
+                <article class="ws-rpt-scenario-card ws-rpt-l2-scenario-card">
+                    <h4>{{ sc.title }}</h4>
+                    <strong class="ws-rpt-scenario-price">{{ sc.price }}</strong>
+                    <p>{{ sc.body|truncatechars:100 }}</p>
+                </article>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if r.professional_summary %}
+        <div class="ws-rpt-l2-drawer-block">
+            {% if r.professional_summary.intro %}<p class="ws-rpt-pro-intro">{{ r.professional_summary.intro }}</p>{% endif %}
+            {% for sec in r.professional_summary.sections %}
+            <details class="ws-rpt-l2-drawer-nest">
+                <summary>{{ sec.title }}</summary>
+                {% if sec.rows %}
+                <dl class="ws-rpt-pro-rows">
+                    {% for row in sec.rows %}<div class="ws-rpt-pro-row"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>{% endfor %}
+                </dl>
+                {% endif %}
+                {% if sec.lines %}<ul class="ws-rpt-pro-lines">{% for line in sec.lines %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+            </details>
+            {% endfor %}
+        </div>
+        {% elif r.summary_lines %}
+        <ul class="ws-rpt-summary">{% for line in r.summary_lines %}<li>{{ line }}</li>{% endfor %}</ul>
+        {% elif r.summary %}<p class="ws-rpt-lead">{{ r.summary }}</p>{% endif %}
+
+        {% if r.segment_notes %}
+        <details class="ws-rpt-l2-drawer-nest">
+            <summary>جزئیات بازه‌های متراژ</summary>
+            <div class="ws-rpt-segment-notes">
+                {% for note in r.segment_notes %}
+                <details class="ws-rpt-segment-detail">
+                    <summary>{{ note.bucket }} · {{ note.count }} فایل</summary>
+                    <ul>{% for line in note.lines %}<li>{{ line }}</li>{% endfor %}</ul>
+                </details>
+                {% endfor %}
+            </div>
+        </details>
+        {% endif %}
+    </div>
+</details>
+
+</div>
+</details>
+
+{% if l3.show %}
+<details class="ws-rpt-layer ws-rpt-layer-level3">
+<summary class="ws-rpt-l3-summary">
+    <span class="ws-rpt-l3-summary-title">سطح ۳ — تحلیل کارشناسی</span>
+    <span class="ws-rpt-l3-summary-meta">{{ l3.summary_meta }}</span>
+</summary>
+<div class="ws-rpt-layer-body ws-rpt-layer-body-level3">
+
+    {% if l3.verdict.headline %}
+    <article class="ws-rpt-l3-verdict ws-rpt-l3-verdict--{{ l3.verdict.tone }}">
+        <div class="ws-rpt-l3-verdict-icon">
+            <i class="fas {{ l3.verdict.icon }}" aria-hidden="true"></i>
+        </div>
+        <div class="ws-rpt-l3-verdict-copy">
+            <span class="ws-rpt-l3-verdict-kicker">جمع‌بندی کارشناسی</span>
+            <h2 class="ws-rpt-l3-verdict-headline">{{ l3.verdict.headline }}</h2>
+            {% if l3.verdict.lead %}<p class="ws-rpt-l3-verdict-lead">{{ l3.verdict.lead }}</p>{% endif %}
+        </div>
+        {% if l3.confidence %}
+        <div class="ws-rpt-l3-verdict-conf">
+            <strong>{{ l3.confidence.level }}</strong>
+            <span>{{ l3.confidence.score }} از ۱۰۰</span>
+        </div>
+        {% endif %}
+    </article>
+    {% endif %}
+
+    {% for sec in l3.sections %}
+    <section class="ws-rpt-l3-card ws-rpt-l3-card--{{ sec.tone|default:'default' }}" aria-labelledby="l3-sec-{{ sec.id }}">
+        <header class="ws-rpt-l3-card-head">
+            <span class="ws-rpt-l3-card-icon"><i class="fas {{ sec.icon }}" aria-hidden="true"></i></span>
+            <div>
+                <h3 id="l3-sec-{{ sec.id }}">{{ sec.title }}</h3>
+                {% if sec.lead %}<p>{{ sec.lead }}</p>{% endif %}
+            </div>
+        </header>
+        {% if sec.id == 'playbook' %}
+        <div class="ws-rpt-l3-playbook">
+            {% for item in sec.items %}
+            <div class="ws-rpt-l3-playbook-row ws-rpt-l3-playbook-row--{{ item.tone|default:'neutral' }}">
+                <span class="ws-rpt-l3-playbook-label">{{ item.label }}</span>
+                <p>{{ item.text }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% elif sec.id == 'risks' %}
+        <ul class="ws-rpt-l3-risk-list">
+            {% for item in sec.items %}
+            <li class="ws-rpt-l3-risk-item ws-rpt-l3-risk-item--{{ item.severity|default:'medium' }}">
+                <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                <span>{{ item.text }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <ul class="ws-rpt-l3-insight-list">
+            {% for line in sec.items %}
+            <li>{{ line }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </section>
+    {% endfor %}
+
+    {% if l3.bands.items %}
+    <section class="ws-rpt-l3-card ws-rpt-l3-card--bands" aria-label="بازه‌های قیمت">
+        <header class="ws-rpt-l3-card-head">
+            <span class="ws-rpt-l3-card-icon"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
+            <div>
+                <h3>{{ l3.bands.title }}</h3>
+                {% if l3.bands.note %}<p>{{ l3.bands.note }}</p>{% endif %}
+            </div>
+        </header>
+        <div class="ws-rpt-l3-bands">
+            {% for band in l3.bands.items %}
+            <div class="ws-rpt-l3-band">
+                <span class="ws-rpt-l3-band-label">{{ band.label }}</span>
+                <strong class="ws-rpt-l3-band-value">{{ band.range }}</strong>
+            </div>
+            {% endfor %}
+        </div>
+        {% if l3.bands.cv_label or l3.bands.trend_monthly %}
+        <div class="ws-rpt-l3-bands-foot">
+            {% if l3.bands.cv_label %}<span><i class="fas fa-wave-square" aria-hidden="true"></i> {{ l3.bands.cv_label }}</span>{% endif %}
+            {% if l3.bands.trend_monthly %}<span><i class="fas fa-arrow-trend-up" aria-hidden="true"></i> روند ماهانه: <strong>{{ l3.bands.trend_monthly }}</strong></span>{% endif %}
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+
+</div>
+</details>
+{% endif %}
+
+<details class="ws-rpt-panel ws-rpt-panel-fold ws-rpt-l2-data-fold">
+    <summary class="ws-rpt-l2-data-summary"><i class="fas fa-database" aria-hidden="true"></i> {{ lb.data_section }} <span class="ws-rpt-l2-data-badge">{{ dq.valid_count }} فایل معتبر</span></summary>
+    <div class="ws-rpt-l2-data-stats">
+        <div class="ws-rpt-l2-data-stat"><span>دریافت</span><strong>{{ dq.raw_count|intcomma }}</strong></div>
+        <div class="ws-rpt-l2-data-stat"><span>حذف‌شده</span><strong>{{ dq.removed_count|intcomma }}</strong></div>
+        <div class="ws-rpt-l2-data-stat ws-rpt-l2-data-stat-main"><span>کیفیت</span><strong>{{ dq.quality_pct|ws_pct }}</strong></div>
+    </div>
+</details>
+
+{% endwith %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>window.wsCharts = {{ charts_json|safe }};</script>
+<script>
+if (typeof initConfidenceRings === 'function') initConfidenceRings();
+if (typeof initL2Tabs === 'function') initL2Tabs();
+if (typeof initCharts === 'function' && window.wsCharts) initCharts(window.wsCharts);
+</script>
+{% endblock %}

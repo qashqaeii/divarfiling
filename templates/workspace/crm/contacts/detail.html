@@ -1,0 +1,745 @@
+{% extends 'workspace/crm/base_crm.html' %}
+{% load humanize workspace_tags crm_tags %}
+
+{% block page_title %}{{ customer.name }}{% endblock %}
+{% block crm_title %}{{ customer.name }}{% endblock %}
+{% block crm_desc %}{{ customer.customer_type }} · {{ customer.status }}{% endblock %}
+{% block crm_search %}{% endblock %}
+
+{% block crm_actions %}
+{% if not customer_is_shared %}
+{% if customer.phone %}
+<a href="https://wa.me/98{{ customer.phone|slice:'1:' }}" target="_blank" class="mk-hero-btn mk-hero-btn-accent" title="واتساپ"><i class="fas fa-comment-dots" aria-hidden="true"></i></a>
+<button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-copy="{{ whatsapp_text }}" title="قالب پیام"><i class="fas fa-comment-dots" aria-hidden="true"></i><span>قالب</span></button>
+<a href="tel:{{ customer.phone }}" class="mk-hero-btn mk-hero-btn-ghost" title="تماس"><i class="fas fa-phone" aria-hidden="true"></i></a>
+<form method="post" class="mk-inline-form" title="ثبت تماس">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="log_call">
+    <button type="submit" class="mk-hero-btn mk-hero-btn-ghost"><i class="fas fa-phone-volume"></i><span>تماس گرفتم</span></button>
+</form>
+{% endif %}
+<button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-drawer-open="drawer-activity"><i class="fas fa-plus" aria-hidden="true"></i><span>فعالیت</span></button>
+<button type="button" class="mk-hero-btn mk-hero-btn-primary" data-drawer-open="drawer-edit"><i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span></button>
+{% endif %}
+{% endblock %}
+
+{% block crm_content %}
+    <div class="crm-contact-detail-pro crm-page-chrome">
+    <div class="crm-detail-header crm-detail-header-pro">
+        <div class="crm-detail-avatar">{{ customer.name|slice:":1" }}</div>
+        <div class="crm-detail-info">
+            <div class="crm-detail-top">
+                <h1>{{ customer.name }}</h1>
+                <span class="crm-pill" style="{% crm_role_style customer.customer_type %}">{{ customer.customer_type }}</span>
+                <span class="crm-status-badge">{{ customer.status }}</span>
+                {% if customer.priority == 'بالا' %}<span class="crm-priority high">اولویت بالا</span>{% endif %}
+            </div>
+            <div class="crm-detail-meta">
+                {% if customer.phone %}<span><i class="fas fa-phone" aria-hidden="true"></i> {{ customer.phone }} <button type="button" class="crm-btn crm-btn-icon" data-copy="{{ customer.phone }}"><i class="fas fa-copy" aria-hidden="true"></i></button></span>{% endif %}
+                {% if customer.phone_alt %}<span><i class="fas fa-phone" aria-hidden="true"></i> {{ customer.phone_alt }}</span>{% endif %}
+                {% if customer.email %}<span><i class="fas fa-envelope" aria-hidden="true"></i> {{ customer.email }}</span>{% endif %}
+                {% if customer.city %}<span><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ customer.city }}{% if customer.district %} — {{ customer.district }}{% endif %}</span>{% endif %}
+                {% if customer.source %}<span><i class="fas fa-question-circle" aria-hidden="true"></i> {{ customer.source }}</span>{% endif %}
+            </div>
+            {% if crm_agency %}
+            <div class="crm-contact-team-bar" data-crm-contact-team data-customer-id="{{ customer.pk }}">
+                {% if customer_is_shared %}
+                {% include 'workspace/crm/includes/shared_view_badge.html' with share=customer_share %}
+                {% elif is_customer_owner %}
+                <span class="crm-contact-team-label"><i class="fas fa-lock" aria-hidden="true"></i> مخاطب خصوصی شما</span>
+                <div class="crm-contact-team-actions">
+                    <div class="crm-contact-team-actions--grouped">
+                        <select class="crm-select crm-select-sm" id="crm-share-select" aria-label="ارسال به هم‌تیمی">
+                            <option value="">ارسال به…</option>
+                            {% for m in agency_members %}
+                            {% if m.user_id != request.user.id %}
+                            <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="crm-dash-act crm-dash-act--primary" id="crm-share-btn" title="اشتراک با هم‌تیمی">
+                            <i class="fas fa-paper-plane" aria-hidden="true"></i><span>ارسال</span>
+                        </button>
+                    </div>
+                    <button type="button" class="crm-dash-act crm-dash-act--ghost" id="crm-transfer-btn" title="انتقال مالکیت">
+                        <i class="fas fa-right-left" aria-hidden="true"></i><span>انتقال</span>
+                    </button>
+                </div>
+                {% if customer_shares %}
+                <ul class="crm-contact-share-list">
+                    {% for s in customer_shares %}
+                    <li>
+                        <span>{{ s.shared_with.get_full_name|default:s.shared_with.username }}</span>
+                        <button type="button" class="crm-team-icon-btn-v2" data-revoke-share="{{ s.pk }}" title="لغو اشتراک"><i class="fas fa-xmark"></i></button>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if customer.is_legal_entity and customer.company_name %}
+            <div class="crm-detail-company"><i class="fas fa-building" aria-hidden="true"></i> {{ customer.company_name }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="crm-detail-grid">
+        <div class="crm-detail-main crm-contact-main">
+            <nav class="crm-tabs crm-tabs-pro crm-contact-tabs" role="tablist" aria-label="بخش‌های مخاطب">
+                <button type="button" class="crm-tab crm-tab-pro active" data-tab="timeline" role="tab" aria-selected="true"><i class="fas fa-stream" aria-hidden="true"></i><span>تایم‌لاین</span><em>{{ activities|length }}</em></button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="matches" role="tab"><i class="fas fa-house" aria-hidden="true"></i><span>پیشنهاد ملک</span><em>{% if match_data.eligible %}{{ match_data.crm_matches|length|add:match_data.divar_matches|length }}{% else %}0{% endif %}</em></button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="visits" role="tab"><i class="fas fa-door-open" aria-hidden="true"></i><span>بازدیدها</span><em>{{ visits|length }}</em></button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="properties" role="tab"><i class="fas fa-link" aria-hidden="true"></i><span>املاک</span><em>{{ property_links|length|add:linked_listings|length }}</em></button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="docs" role="tab"><i class="fas fa-file" aria-hidden="true"></i><span>مدارک</span><em>{{ documents|length }}</em></button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="notes" role="tab"><i class="fas fa-note-sticky" aria-hidden="true"></i><span>یادداشت</span><em>{% if customer.notes or customer.tags %}1{% else %}0{% endif %}</em></button>
+            </nav>
+
+            <div data-panel="timeline" class="crm-contact-panel" {% if active_tab and active_tab != 'timeline' %}hidden{% endif %}>
+                <header class="crm-contact-panel-head">
+                    <div class="crm-contact-panel-head-text">
+                        <h2>تایم‌لاین فعالیت</h2>
+                        <p>تماس‌ها، پیگیری‌ها و تغییرات وضعیت</p>
+                    </div>
+                    <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-activity">
+                        <i class="fas fa-plus" aria-hidden="true"></i><span>فعالیت</span>
+                    </button>
+                </header>
+                <div class="crm-contact-panel-body">
+                    {% if activities %}
+                    <div class="crm-timeline crm-timeline-pro">
+                        {% for a in activities %}
+                        <article class="crm-timeline-item">
+                            <div class="crm-timeline-rail" aria-hidden="true"><span class="crm-timeline-icon"><i class="{{ a.activity_type|crm_activity_icon }}"></i></span></div>
+                            <div class="crm-timeline-body">
+                                <div class="crm-timeline-top">
+                                    <span class="crm-timeline-type">{{ a.activity_type }}</span>
+                                    <time class="crm-timeline-time">{{ a.created_at|ws_jalali }}</time>
+                                </div>
+                                {% if a.title %}<strong class="crm-timeline-title">{{ a.title }}</strong>{% endif %}
+                                {% if a.content %}<p class="crm-timeline-text">{{ a.content }}</p>{% endif %}
+                                {% if a.property %}<a href="{% url 'workspace:crm_property_detail' a.property_id %}" class="crm-timeline-link"><i class="fas fa-building" aria-hidden="true"></i>{{ a.property.title }}</a>{% endif %}
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="crm-contact-empty">
+                        <span class="crm-contact-empty-icon"><i class="fas fa-stream" aria-hidden="true"></i></span>
+                        <strong>هنوز فعالیتی ثبت نشده</strong>
+                        <p>اولین تماس، بازدید یا یادداشت را اضافه کنید.</p>
+                        <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-activity">ثبت فعالیت</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div data-panel="matches" class="crm-contact-panel crm-contact-panel--flush" {% if active_tab != 'matches' %}hidden{% endif %}>
+                <div class="crm-contact-panel-body crm-contact-panel-body--flush">
+                    {% include 'workspace/crm/includes/matches_panel.html' %}
+                </div>
+            </div>
+
+            <div data-panel="visits" class="crm-contact-panel" {% if active_tab != 'visits' %}hidden{% endif %}>
+                <header class="crm-contact-panel-head">
+                    <div class="crm-contact-panel-head-text">
+                        <h2>آلبوم بازدید</h2>
+                        <p>نتیجه بازدیدها و دلایل رد</p>
+                    </div>
+                    <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-visit">
+                        <i class="fas fa-door-open" aria-hidden="true"></i><span>ثبت بازدید</span>
+                    </button>
+                </header>
+                <div class="crm-contact-panel-body">
+                    {% if visits %}
+                    <ul class="crm-visit-album crm-visit-album-pro">
+                        {% for v in visits %}
+                        <li class="crm-visit-card crm-visit-card-pro crm-visit-card--{{ v.outcome }}">
+                            <div class="crm-visit-card-head">
+                                <span class="crm-visit-outcome">{{ v.outcome }}</span>
+                                <time>{{ v.visit_date|ws_jalali }}</time>
+                            </div>
+                            <strong class="crm-visit-card-title">{% if v.property %}{{ v.property.title }}{% else %}{{ v.listing_title|default:v.listing_token }}{% endif %}</strong>
+                            {% if v.reject_reason %}<span class="crm-visit-reason">{{ v.reject_reason }}</span>{% endif %}
+                            {% if v.notes %}<p class="crm-visit-notes">{{ v.notes }}</p>{% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="crm-contact-empty">
+                        <span class="crm-contact-empty-icon"><i class="fas fa-door-open" aria-hidden="true"></i></span>
+                        <strong>بازدیدی ثبت نشده</strong>
+                        <p>نتیجه هر بازدید (پسندید / رد + دلیل) را اینجا نگه دارید.</p>
+                        <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-visit">ثبت بازدید</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div data-panel="properties" class="crm-contact-panel" hidden>
+                <header class="crm-contact-panel-head">
+                    <div class="crm-contact-panel-head-text">
+                        <h2>املاک مرتبط</h2>
+                        <p>فایل‌های CRM و آگهی‌های پیوندشده</p>
+                    </div>
+                    <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-link-property">
+                        <i class="fas fa-link" aria-hidden="true"></i><span>پیوند ملک</span>
+                    </button>
+                </header>
+                <div class="crm-contact-panel-body">
+                    {% if property_links or linked_listings %}
+                    <div class="crm-property-grid crm-property-grid-pro">
+                    {% for link in property_links %}
+                    <div class="crm-property-card">
+                        <div class="crm-property-card-head">
+                            <a href="{% url 'workspace:crm_property_detail' link.property_id %}">{{ link.property.title }}</a>
+                            <span class="crm-pill" style="{% crm_role_style link.role %}">{{ link.role }}</span>
+                        </div>
+                        <div class="crm-property-card-meta">
+                            <span>{{ link.property.deal_mode }}</span>
+                            {% if link.property.area %}<span>{{ link.property.area }} متر</span>{% endif %}
+                            {% if link.property.sale_price %}<span>{{ link.property.sale_price|ws_money }}</span>{% endif %}
+                        </div>
+                        <form method="post" class="crm-inline-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="unlink_property">
+                            <input type="hidden" name="link_id" value="{{ link.id }}">
+                            <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">حذف پیوند</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                    {% for l in linked_listings %}
+                    <div class="crm-property-card crm-property-card-muted">
+                        <div class="crm-property-card-head">
+                            {% if l.link %}<a href="{{ l.link }}" target="_blank">{{ l.title|truncatechars:40 }}</a>{% else %}<span>{{ l.title|truncatechars:40 }}</span>{% endif %}
+                            <span class="crm-pill">{{ l.role }}</span>
+                        </div>
+                        <div class="crm-property-card-meta">
+                            <span>{{ l.deal_type }}</span>
+                            {% if l.price %}<span>{{ l.price }}</span>{% endif %}
+                            {% if l.token %}<code class="crm-token">{{ l.token }}</code>{% endif %}
+                        </div>
+                        {% with hl=linked_listing_highlights|dict_get:l.token %}
+                        {% if hl %}
+                        <div class="mk-feat-chips crm-feat-chips">
+                            {% for h in hl %}<span class="mk-feat-chip" title="{{ h }}">{{ h|truncatechars:18 }}</span>{% endfor %}
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                        <form method="post" class="crm-inline-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="unlink_listing">
+                            <input type="hidden" name="listing_id" value="{{ l.id }}">
+                            <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">حذف پیوند</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="crm-contact-empty">
+                        <span class="crm-contact-empty-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
+                        <strong>ملکی پیوند نشده</strong>
+                        <p>مالک چند ملک، خریدار علاقه‌مند به چند فایل و... از اینجا مدیریت می‌شود.</p>
+                        <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-link-property">پیوند ملک</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div data-panel="docs" class="crm-contact-panel" hidden>
+                <header class="crm-contact-panel-head">
+                    <div class="crm-contact-panel-head-text">
+                        <h2>فایل‌ها و مدارک</h2>
+                        <p>قراردادها، تصاویر و اسناد پیوست</p>
+                    </div>
+                    <button type="button" class="crm-dash-act" data-drawer-open="drawer-document">
+                        <i class="fas fa-upload" aria-hidden="true"></i><span>آپلود</span>
+                    </button>
+                </header>
+                <div class="crm-contact-panel-body">
+                    {% if documents %}
+                    <ul class="crm-doc-list crm-doc-list-pro">
+                        {% for d in documents %}
+                        <li class="crm-doc-item">
+                            <a href="{{ d.file.url }}" target="_blank" class="crm-doc-link">
+                                <span class="crm-doc-icon"><i class="fas fa-file-alt" aria-hidden="true"></i></span>
+                                <span class="crm-doc-info">
+                                    <strong>{{ d.title }}</strong>
+                                    <time>{{ d.uploaded_at|ws_jalali }}</time>
+                                </span>
+                            </a>
+                            <a href="{{ d.file.url }}" target="_blank" class="crm-doc-dl" title="دانلود"><i class="fas fa-download" aria-hidden="true"></i></a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="crm-contact-empty">
+                        <span class="crm-contact-empty-icon"><i class="fas fa-file" aria-hidden="true"></i></span>
+                        <strong>مدرکی آپلود نشده</strong>
+                        <p>فایل قرارداد، کارت ملی یا سایر مدارک را اینجا نگه دارید.</p>
+                        <button type="button" class="crm-dash-act" data-drawer-open="drawer-document">آپلود مدرک</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div data-panel="notes" class="crm-contact-panel" hidden>
+                <header class="crm-contact-panel-head">
+                    <div class="crm-contact-panel-head-text">
+                        <h2>یادداشت و برچسب</h2>
+                        <p>نکات داخلی تیم درباره مخاطب</p>
+                    </div>
+                    <button type="button" class="crm-dash-act" data-drawer-open="drawer-edit">
+                        <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
+                    </button>
+                </header>
+                <div class="crm-contact-panel-body">
+                    {% if customer.notes %}
+                    <div class="crm-notes-block crm-notes-block-pro">{{ customer.notes|linebreaks }}</div>
+                    {% else %}
+                    <div class="crm-contact-empty crm-contact-empty--compact">
+                        <span class="crm-contact-empty-icon"><i class="fas fa-note-sticky" aria-hidden="true"></i></span>
+                        <strong>یادداشتی ثبت نشده</strong>
+                    </div>
+                    {% endif %}
+                    {% if customer.tags %}
+                    <div class="crm-tags crm-tags-pro">
+                        <span class="crm-tags-label">برچسب‌ها</span>
+                        <div class="crm-tags-list">{% for tag in customer.tags|split_tags %}<span class="crm-tag">{{ tag }}</span>{% endfor %}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <aside class="crm-detail-sidebar crm-contact-sidebar">
+            <div class="crm-contact-side-card">
+                <header class="crm-contact-side-head">
+                    <span class="crm-contact-side-icon crm-contact-side-icon--finance" aria-hidden="true"><i class="fas fa-wallet"></i></span>
+                    <h3>خلاصه مالی</h3>
+                </header>
+                <div class="crm-contact-side-stats">
+                    {% if customer.budget_min or customer.budget_max %}
+                    <div class="crm-contact-side-stat">
+                        <span class="crm-contact-side-stat-lbl">بودجه</span>
+                        <strong>{{ customer.budget_min|ws_money|default:"—" }} — {{ customer.budget_max|ws_money|default:"—" }}</strong>
+                    </div>
+                    {% endif %}
+                    {% if customer.deposit_min or customer.deposit_max %}
+                    <div class="crm-contact-side-stat">
+                        <span class="crm-contact-side-stat-lbl">ودیعه</span>
+                        <strong>{{ customer.deposit_min|ws_money|default:"—" }} — {{ customer.deposit_max|ws_money|default:"—" }}</strong>
+                    </div>
+                    {% endif %}
+                    {% if customer.rent_min or customer.rent_max %}
+                    <div class="crm-contact-side-stat">
+                        <span class="crm-contact-side-stat-lbl">اجاره</span>
+                        <strong>{{ customer.rent_min|ws_money|default:"—" }} — {{ customer.rent_max|ws_money|default:"—" }}</strong>
+                    </div>
+                    {% endif %}
+                    {% if customer.min_area or customer.max_area %}
+                    <div class="crm-contact-side-stat">
+                        <span class="crm-contact-side-stat-lbl">متراژ</span>
+                        <strong>{{ customer.min_area|default:"—" }} — {{ customer.max_area|default:"—" }} متر</strong>
+                    </div>
+                    {% endif %}
+                    {% if not customer.budget_min and not customer.budget_max and not customer.deposit_min and not customer.deposit_max and not customer.rent_min and not customer.rent_max and not customer.min_area and not customer.max_area %}
+                    <p class="crm-contact-side-muted">اطلاعات مالی ثبت نشده</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="crm-contact-side-card crm-contact-side-card--followup crm-followup-v2">
+                <header class="crm-contact-side-head">
+                    <span class="crm-contact-side-icon crm-contact-side-icon--followup" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+                    <h3>پیگیری</h3>
+                    {% if follow_up_state == 'overdue' %}
+                    <span class="crm-followup-badge overdue">معوق</span>
+                    {% elif follow_up_state == 'today' %}
+                    <span class="crm-followup-badge today">امروز</span>
+                    {% elif follow_up_state == 'upcoming' %}
+                    <span class="crm-followup-badge upcoming">برنامه‌ریزی</span>
+                    {% endif %}
+                </header>
+
+                {% if customer.next_follow_up %}
+                <div class="crm-followup-v2-current {% if follow_up_state == 'overdue' %}is-overdue{% elif follow_up_state == 'today' %}is-today{% endif %}">
+                    <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                    <div>
+                        <strong>{{ customer.next_follow_up|ws_jalali }}</strong>
+                        <span>تاریخ پیگیری بعدی</span>
+                    </div>
+                </div>
+                <form method="post" class="crm-followup-v2-done">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="complete_followup">
+                    <button type="submit" class="crm-btn crm-btn-sm crm-btn-primary crm-btn-block">
+                        <i class="fas fa-check" aria-hidden="true"></i> انجام شد
+                    </button>
+                </form>
+                {% else %}
+                <p class="crm-followup-v2-empty">پیگیری بعدی ثبت نشده</p>
+                {% endif %}
+
+                <div class="crm-followup-v2-quick">
+                    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="1"><button type="submit">فردا</button></form>
+                    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="3"><button type="submit">۳ روز</button></form>
+                    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="7"><button type="submit">۱ هفته</button></form>
+                </div>
+
+                <button type="button" class="crm-dash-act crm-dash-act--block" data-drawer-open="drawer-followup">
+                    <i class="fas fa-calendar-plus" aria-hidden="true"></i><span>ثبت پیگیری</span>
+                </button>
+                <button type="button" class="crm-dash-act crm-dash-act--block" data-drawer-open="drawer-reminder">
+                    <i class="fas fa-bell" aria-hidden="true"></i><span>یادآور</span>
+                </button>
+
+                {% if follow_up_logs %}
+                <div class="crm-followup-v2-history">
+                    <span class="crm-followup-v2-history-title">سوابق پیگیری</span>
+                    <ul>
+                        {% for a in follow_up_logs %}
+                        <li>
+                            <time>{{ a.created_at|ws_jalali }}</time>
+                            <span>{{ a.content|truncatechars:60 }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if message_templates %}
+            <div class="crm-contact-side-card">
+                <header class="crm-contact-side-head">
+                    <span class="crm-contact-side-icon crm-contact-side-icon--msg" aria-hidden="true"><i class="fas fa-comment-dots"></i></span>
+                    <h3>قالب پیام</h3>
+                </header>
+                <div class="crm-template-picker" data-customer-id="{{ customer.id }}">
+                    <select class="crm-select crm-select-sm" id="crmMsgTemplateSelect">
+                        <option value="">انتخاب قالب...</option>
+                        {% for t in message_templates %}
+                        <option value="{{ t.id }}">{{ t.category }} — {{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <textarea class="crm-textarea crm-template-preview" id="crmMsgPreview" rows="4" readonly placeholder="پیش‌نمایش پیام"></textarea>
+                    <div class="crm-template-picker-actions">
+                        <button type="button" class="crm-btn crm-btn-sm crm-btn-ghost" id="crmMsgCopy">کپی</button>
+                        <a href="#" class="crm-btn crm-btn-sm crm-btn-primary" id="crmMsgWhatsApp" target="_blank" hidden>واتساپ</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if reminders %}
+            <div class="crm-contact-side-card">
+                <header class="crm-contact-side-head">
+                    <span class="crm-contact-side-icon crm-contact-side-icon--reminder" aria-hidden="true"><i class="fas fa-bell"></i></span>
+                    <h3>یادآورها</h3>
+                </header>
+                <div class="crm-contact-side-list">
+                {% for r in reminders %}
+                <div class="crm-reminder-item crm-reminder-item-pro">
+                    <strong>{{ r.title }}</strong>
+                    <time>{{ r.due_at|ws_jalali }}</time>
+                </div>
+                {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if deals %}
+            <div class="crm-contact-side-card">
+                <header class="crm-contact-side-head">
+                    <span class="crm-contact-side-icon crm-contact-side-icon--deal" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                    <h3>معاملات</h3>
+                </header>
+                <div class="crm-contact-side-list">
+                {% for d in deals %}
+                <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deal-mini crm-deal-mini-pro">
+                    <span class="crm-pill crm-pill-sm" style="{% crm_deal_stage_style d.stage %}">{{ d.stage }}</span>
+                    <strong>{{ d.title|truncatechars:28 }}</strong>
+                    {% if d.commission_amount %}<em>{{ d.commission_amount|ws_money }}</em>{% endif %}
+                </a>
+                {% endfor %}
+                </div>
+                <button type="button" class="crm-dash-act crm-dash-act--block" data-drawer-open="drawer-deal"><i class="fas fa-plus" aria-hidden="true"></i><span>معامله جدید</span></button>
+            </div>
+            {% else %}
+            <div class="crm-contact-side-card">
+                <header class="crm-contact-side-head">
+                    <span class="crm-contact-side-icon crm-contact-side-icon--deal" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                    <h3>معاملات</h3>
+                </header>
+                <p class="crm-contact-side-muted">معامله‌ای ثبت نشده</p>
+                <button type="button" class="crm-dash-act crm-dash-act--primary crm-dash-act--block" data-drawer-open="drawer-deal">ثبت معامله</button>
+            </div>
+            {% endif %}
+
+            {% if duplicate_candidates %}
+            <div class="crm-contact-side-card crm-contact-side-card--warn">
+                <header class="crm-contact-side-head">
+                    <span class="crm-contact-side-icon crm-contact-side-icon--warn" aria-hidden="true"><i class="fas fa-clone"></i></span>
+                    <h3>مخاطب تکراری</h3>
+                </header>
+                <p class="crm-muted">{{ duplicate_candidates|length }} مخاطب با همین تلفن</p>
+                {% for dup in duplicate_candidates %}
+                <form method="post" class="crm-merge-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="merge_customer">
+                    <input type="hidden" name="merge_with_id" value="{{ dup.id }}">
+                    <span>{{ dup.name }}</span>
+                    <button type="submit" class="crm-btn crm-btn-sm crm-btn-ghost" onclick="return confirm('ادغام با {{ dup.name }}؟')">ادغام</button>
+                </form>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if convert_form.fields.new_type.choices %}
+            <div class="crm-contact-side-card crm-contact-side-card--accent">
+                <header class="crm-contact-side-head">
+                    <span class="crm-contact-side-icon crm-contact-side-icon--convert" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
+                    <h3>تبدیل سرنخ</h3>
+                </header>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="convert_lead">
+                    {{ convert_form.new_type }}
+                    <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block" style="margin-top:.5rem">تبدیل</button>
+                </form>
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'workspace:crm_delete' customer.id %}" onsubmit="return confirm('حذف این مخاطب؟')">
+                {% csrf_token %}
+                <button type="submit" class="crm-btn crm-btn-danger crm-btn-sm crm-btn-block"><i class="fas fa-trash" aria-hidden="true"></i> حذف مخاطب</button>
+            </form>
+        </aside>
+    </div>
+    </div>
+{% endblock %}
+
+{% block crm_drawers %}
+<!-- Drawer: ویرایش -->
+<aside class="crm-drawer" id="drawer-edit" {% if open_drawer == 'edit' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg">
+        <div class="crm-drawer-head">
+            <div><h2>ویرایش مخاطب</h2><p>{{ customer.name }}</p></div>
+            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:crm_edit' customer.id %}" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+            {% csrf_token %}
+            {% include 'workspace/crm/includes/contact_form_sections.html' with form=customer_form type_profiles_json=type_profiles_json %}
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</aside>
+
+<!-- Drawer: فعالیت -->
+<aside class="crm-drawer" id="drawer-activity">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head"><h2>ثبت فعالیت</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button></div>
+        <form method="post" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_activity">
+            <div class="ws-fields">
+                <div class="ws-field"><label class="ws-label">نوع</label>{{ activity_form.activity_type }}</div>
+                <div class="ws-field"><label class="ws-label">عنوان</label>{{ activity_form.title }}</div>
+                <div class="ws-field"><label class="ws-label">توضیحات</label>{{ activity_form.content }}</div>
+                <div class="ws-field"><label class="ws-label">مدت (دقیقه)</label>{{ activity_form.duration_minutes }}</div>
+                <div class="ws-field"><label class="ws-label">پیگیری بعدی <span class="crm-label-hint">اختیاری</span></label>{{ activity_form.next_follow_up }}</div>
+            </div>
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ثبت</button>
+            </div>
+        </form>
+    </div>
+</aside>
+
+<!-- Drawer: پیگیری -->
+<aside class="crm-drawer" id="drawer-followup" {% if open_drawer == 'followup' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head">
+            <div><h2>ثبت پیگیری</h2><p>{{ customer.name }}</p></div>
+            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="schedule_followup">
+            <div class="ws-fields">
+                <div class="ws-field"><label class="ws-label">تاریخ پیگیری *</label>{{ followup_form.next_follow_up }}</div>
+                <div class="ws-field"><label class="ws-label">یادداشت</label>{{ followup_form.note }}</div>
+            </div>
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ثبت پیگیری</button>
+            </div>
+        </form>
+    </div>
+</aside>
+
+<!-- Drawer: یادآور -->
+<aside class="crm-drawer" id="drawer-reminder">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head"><h2>یادآور جدید</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button></div>
+        <form method="post" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_reminder">
+            {% render_fields reminder_form 1 %}
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ثبت</button>
+            </div>
+        </form>
+    </div>
+</aside>
+
+<!-- Drawer: مدرک -->
+<aside class="crm-drawer" id="drawer-document">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head"><h2>آپلود مدرک</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button></div>
+        <form method="post" enctype="multipart/form-data" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_document">
+            {% render_fields document_form 1 %}
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">آپلود</button>
+            </div>
+        </form>
+    </div>
+</aside>
+
+<!-- Drawer: پیوند ملک -->
+<aside class="crm-drawer" id="drawer-link-property">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head"><h2>پیوند ملک</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button></div>
+        <form method="post" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="link_property">
+            <div class="ws-field">
+                <label class="ws-label">ملک</label>
+                <select name="property_id" class="ws-select" required>
+                    <option value="">انتخاب ملک...</option>
+                    {% for p in user_properties %}<option value="{{ p.id }}">{{ p.title }} — {{ p.deal_mode }}</option>{% endfor %}
+                </select>
+            </div>
+            {% render_fields property_link_form 1 %}
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">پیوند</button>
+            </div>
+        </form>
+    </div>
+</aside>
+
+<aside class="crm-drawer" id="drawer-visit" {% if open_drawer == 'visit' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head"><h2>ثبت بازدید</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button></div>
+        <form method="post" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_visit">
+            <div class="ws-fields">
+                <div class="ws-field"><label class="ws-label">تاریخ *</label>{{ visit_form.visit_date }}</div>
+                <div class="ws-field"><label class="ws-label">ملک CRM</label>{{ visit_form.property }}</div>
+                <div class="ws-field"><label class="ws-label">شناسه آگهی</label>{{ visit_form.listing_token }}</div>
+                <div class="ws-field"><label class="ws-label">عنوان آگهی</label>{{ visit_form.listing_title }}</div>
+                <div class="ws-field"><label class="ws-label">نتیجه</label>{{ visit_form.outcome }}</div>
+                <div class="ws-field crm-visit-reject-field"><label class="ws-label">دلیل رد</label>{{ visit_form.reject_reason }}</div>
+                <div class="ws-field"><label class="ws-label">یادداشت</label>{{ visit_form.notes }}</div>
+            </div>
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ثبت</button>
+            </div>
+        </form>
+    </div>
+</aside>
+
+<aside class="crm-drawer" id="drawer-deal">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg">
+        <div class="crm-drawer-head"><h2>معامله جدید</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button></div>
+        <form method="post" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_deal">
+            <div class="ws-fields">{% render_fields deal_form 2 %}</div>
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ثبت معامله</button>
+            </div>
+        </form>
+    </div>
+</aside>
+{% endblock %}
+
+{% block crm_js %}
+<script>window.crmTypeProfiles = {{ type_profiles_json|safe }};</script>
+{% if crm_agency and is_customer_owner %}
+<script>
+window.crmTeamShareUrl = "{% url 'workspace:crm_team_assign' customer.id %}";
+window.crmTeamTransferUrl = "{% url 'workspace:crm_team_transfer' customer.id %}";
+window.crmShareRevokeUrlTemplate = "{% url 'workspace:crm_share_revoke' share_id=0 %}".replace('/0/', '/{id}/');
+</script>
+{% endif %}
+{% if active_tab %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const tab = document.querySelector('.crm-tab[data-tab="{{ active_tab }}"]');
+    if (tab) tab.click();
+});
+</script>
+{% endif %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const picker = document.querySelector('.crm-template-picker');
+    if (!picker) return;
+    const cid = picker.dataset.customerId;
+    const sel = document.getElementById('crmMsgTemplateSelect');
+    const preview = document.getElementById('crmMsgPreview');
+    const copyBtn = document.getElementById('crmMsgCopy');
+    const waBtn = document.getElementById('crmMsgWhatsApp');
+    sel?.addEventListener('change', async () => {
+        if (!sel.value) { preview.value = ''; waBtn.hidden = true; return; }
+        const res = await fetch(`/workspace/crm/contacts/${cid}/message-preview/?template_id=${sel.value}`);
+        const data = await res.json();
+        if (data.ok) {
+            preview.value = data.text;
+            if (data.whatsapp_url) { waBtn.href = data.whatsapp_url; waBtn.hidden = false; }
+            else waBtn.hidden = true;
+        }
+    });
+    copyBtn?.addEventListener('click', () => {
+        if (!preview.value) return;
+        navigator.clipboard?.writeText(preview.value);
+    });
+});
+</script>
+{% endblock %}

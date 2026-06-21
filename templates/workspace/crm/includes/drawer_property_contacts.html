@@ -1,0 +1,90 @@
+{% load workspace_tags crm_tags %}
+<!-- Drawer: پیوند مخاطب موجود -->
+<aside class="crm-drawer" id="drawer-link-contact" {% if open_drawer == 'link-contact' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head">
+            <div>
+                <h2>پیوند مخاطب</h2>
+                <p>انتخاب مخاطب موجود برای اتصال به این ملک</p>
+            </div>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times"></i></button>
+        </div>
+        <form method="post" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="link_contact">
+                <div class="ws-field">
+                    <label class="ws-label">مخاطب</label>
+                    <select name="customer_id" class="ws-select" required>
+                        <option value="">انتخاب مخاطب...</option>
+                        {% for c in user_contacts %}
+                        <option value="{{ c.id }}">{{ c.name }}{% if c.phone %} — {{ c.phone }}{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% render_fields property_link_form 1 %}
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary"><i class="fas fa-link"></i> پیوند</button>
+            </div>
+        </form>
+    </div>
+</aside>
+
+<!-- Drawer: مخاطب جدید + پیوند -->
+<aside class="crm-drawer crm-drawer-quick" id="drawer-create-contact" {% if open_drawer == 'create-contact' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-sm">
+        <div class="crm-drawer-head crm-drawer-head-accent">
+            <div>
+                <span class="crm-drawer-kicker"><i class="fas fa-user-plus" aria-hidden="true"></i> ثبت و پیوند</span>
+                <h2>مخاطب جدید</h2>
+                <p>پروفایل ساخته می‌شود و بلافاصله به این ملک پیوند می‌خورد</p>
+            </div>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times"></i></button>
+        </div>
+        <form method="post" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_link_contact">
+                <div class="crm-quick-fields">
+                    <label class="crm-field">
+                        <span class="crm-label">نام <em>*</em></span>
+                        <input type="text" name="name" class="crm-input crm-input-lg" placeholder="نام و نام خانوادگی" required autocomplete="name"
+                               value="{{ quick_lead_form.name.value|default:'' }}">
+                    </label>
+                    <label class="crm-field">
+                        <span class="crm-label">تلفن</span>
+                        <input type="tel" name="phone" class="crm-input crm-input-lg" placeholder="۰۹۱۲۳۴۵۶۷۸۹" dir="ltr" inputmode="tel" autocomplete="tel"
+                               value="{{ quick_lead_form.phone.value|default:'' }}">
+                    </label>
+                    <label class="crm-field">
+                        <span class="crm-label">منبع</span>
+                        <select name="source" class="crm-select">
+                            <option value="">—</option>
+                            {% for s in crm_sources %}
+                            <option value="{{ s }}" {% if quick_lead_form.source.value == s %}selected{% endif %}>{{ s }}</option>
+                            {% empty %}
+                            <option value="تماس ورودی">تماس ورودی</option>
+                            <option value="دیوار">دیوار</option>
+                            <option value="معرف">معرف</option>
+                            <option value="سایر">سایر</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+                <div class="crm-drawer-divider" aria-hidden="true"></div>
+                <p class="crm-drawer-section-label">نقش در این ملک</p>
+                {% render_fields property_link_form 1 %}
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary crm-btn-glow">
+                    <i class="fas fa-user-plus" aria-hidden="true"></i> ثبت و پیوند
+                </button>
+            </div>
+        </form>
+    </div>
+</aside>

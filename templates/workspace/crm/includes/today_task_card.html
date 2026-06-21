@@ -1,0 +1,81 @@
+<article class="crm-queue-card crm-queue-card--{{ item.urgency }} crm-queue-card--{{ item.kind }}">
+    <div class="crm-queue-card-accent" aria-hidden="true"></div>
+    <div class="crm-queue-card-inner">
+        <div class="crm-queue-card-head">
+            {% if item.kind == 'followup' and item.customer_id %}
+            <form method="post" class="crm-inline-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="complete_followup">
+                <input type="hidden" name="customer_id" value="{{ item.customer_id }}">
+                <button type="submit" class="crm-queue-check" title="انجام شد" aria-label="انجام پیگیری {{ item.title }}">
+                    <i class="fas fa-check" aria-hidden="true"></i>
+                </button>
+            </form>
+            {% elif item.kind == 'reminder' %}
+            <form method="post" class="crm-inline-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_reminder">
+                <input type="hidden" name="reminder_id" value="{{ item.reminder_id }}">
+                <button type="submit" class="crm-queue-check" title="انجام شد" aria-label="انجام یادآور">
+                    <i class="fas fa-check" aria-hidden="true"></i>
+                </button>
+            </form>
+            {% else %}
+            <span class="crm-queue-check crm-queue-check--static" aria-hidden="true"></span>
+            {% endif %}
+
+            <span class="crm-queue-card-avatar" aria-hidden="true">{{ item.title|slice:":1" }}</span>
+
+            <div class="crm-queue-card-info">
+                {% if item.customer_id %}
+                <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-queue-card-name">{{ item.title }}</a>
+                {% else %}
+                <span class="crm-queue-card-name">{{ item.title }}</span>
+                {% endif %}
+                <p class="crm-queue-card-sub">{{ item.subtitle }}</p>
+            </div>
+
+            <span class="crm-queue-card-kind">
+                {% if item.kind == 'reminder' %}
+                <i class="fas fa-bell" aria-hidden="true"></i> یادآور
+                {% else %}
+                <i class="fas fa-phone-volume" aria-hidden="true"></i> پیگیری
+                {% endif %}
+            </span>
+        </div>
+
+        {% if item.customer_type or item.customer_phone or item.note %}
+        <div class="crm-queue-card-meta">
+            {% if item.customer_type %}
+            <span class="crm-queue-meta-pill">{{ item.customer_type }}</span>
+            {% endif %}
+            {% if item.customer_phone %}
+            <a href="tel:{{ item.customer_phone }}" class="crm-queue-meta-pill crm-queue-meta-pill--phone" dir="ltr">
+                <i class="fas fa-phone" aria-hidden="true"></i>{{ item.customer_phone }}
+            </a>
+            {% endif %}
+        </div>
+        {% if item.note %}<p class="crm-queue-card-note">{{ item.note }}</p>{% endif %}
+        {% endif %}
+
+        <div class="crm-queue-card-actions">
+            {% if item.kind == 'followup' and item.customer_id %}
+            <form method="post" class="crm-inline-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="log_call">
+                <input type="hidden" name="customer_id" value="{{ item.customer_id }}">
+                <button type="submit" class="crm-queue-act crm-queue-act--call"{% if item.customer_phone %} data-tel="{{ item.customer_phone }}"{% endif %}>
+                    <i class="fas fa-phone-volume" aria-hidden="true"></i><span>ثبت تماس</span>
+                </button>
+            </form>
+            <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-queue-act crm-queue-act--ghost">
+                <span>پروفایل</span><i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </a>
+            {% elif item.kind == 'reminder' and item.customer_id %}
+            <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-queue-act crm-queue-act--ghost">
+                <span>پروفایل</span><i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</article>

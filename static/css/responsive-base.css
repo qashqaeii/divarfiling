@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════════════════════════
+   Responsive Foundation — shared public + workspace
+   Load after design-system.css; does not override desktop layouts.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Modals & drawers — mobile full-width ─── */
+@media (max-width: 640px) {
+    .ws-modal-panel,
+    .crm-drawer-panel,
+    .modal-content-professional,
+    .modal-content {
+        max-width: calc(100vw - 1rem) !important;
+        max-height: calc(100dvh - 1rem) !important;
+        margin: 0.5rem;
+        border-radius: 12px !important;
+    }
+
+    .crm-drawer-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+html,
+body {
+    max-width: 100%;
+}
+
+img,
+video,
+svg:not(.mk-icon-fixed),
+canvas,
+iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ─── Safe area (notched phones) ─── */
+@supports (padding: max(0px)) {
+    html.mk-public .mk-nav-inner,
+    html.mk-public .container,
+    .ws-content,
+    .ws-mobile-menu {
+        padding-left: max(0.75rem, env(safe-area-inset-left));
+        padding-right: max(0.75rem, env(safe-area-inset-right));
+    }
+
+    html.mk-public .mk-footer-pro .mk-ft-bar,
+    .ws-status-bar {
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    }
+}
+
+/* ─── Touch-friendly controls ─── */
+@media (max-width: 960px) {
+    html.mk-public .mk-nav-link,
+    html.mk-public .mk-nav-btn,
+    html.mk-public .mk-nav-toggle,
+    .ws-mobile-menu,
+    .ws-nav-item,
+    .btn {
+        min-height: 44px;
+    }
+}
+
+/* ─── Forms: full-width + prevent iOS input zoom ─── */
+@media (max-width: 768px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+        font-size: max(16px, 1em);
+    }
+
+    .mk-form-row,
+    .mk-profile-card .mk-form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* ─── Tablet: 2-column grids ─── */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .ws-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ─── Tables: controlled horizontal scroll ─── */
+.table-responsive,
+.mk-table-wrap,
+.ws-table-wrap,
+.crm-table-wrap,
+.ws-data-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
+/* ─── Public mobile nav backdrop ─── */
+html.mk-public body.mk-nav-open {
+    overflow: hidden;
+    touch-action: none;
+}
+
+html.mk-public body.mk-nav-open::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(7, 11, 23, 0.55);
+    z-index: 900;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+html.mk-public[data-theme="light"] body.mk-nav-open::before {
+    background: rgba(15, 23, 42, 0.35);
+}
+
+html.mk-public .mk-site-header {
+    position: relative;
+    z-index: 950;
+}
+
+/* ─── Workspace sidebar backdrop (mobile) ─── */
+@media (max-width: 768px) {
+    body.ws-sidebar-open::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(7, 11, 23, 0.5);
+        z-index: 199;
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+    }
+
+    body.ws-sidebar-open {
+        overflow: hidden;
+    }
+
+    .ws-mobile-menu {
+        width: 44px;
+        height: 44px;
+        top: max(0.75rem, env(safe-area-inset-top, 0.75rem));
+        right: max(0.75rem, env(safe-area-inset-right, 0.75rem));
+    }
+
+    .ws-sidebar {
+        box-shadow: -8px 0 32px rgba(0, 0, 0, 0.25);
+    }
+}

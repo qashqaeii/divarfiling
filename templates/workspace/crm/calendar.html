@@ -1,0 +1,130 @@
+{% extends 'workspace/crm/base_crm.html' %}
+{% load workspace_tags crm_tags %}
+
+{% block page_title %}تقویم CRM{% endblock %}
+{% block crm_title %}{% endblock %}
+{% block crm_desc %}{% endblock %}
+{% block crm_search %}{% endblock %}
+{% block crm_actions %}{% endblock %}
+
+{% block crm_content %}
+<div class="crm-shell-page crm-cal-page">
+    <div class="crm-shell-body crm-shell-body--flush">
+    <div class="crm-cal-layout">
+        <section class="crm-cal-board" aria-label="تقویم {{ calendar.title }}">
+
+            <header class="crm-cal-head">
+                <div class="crm-cal-head-row">
+                    <a href="?jy={{ calendar.prev.jyear }}&jm={{ calendar.prev.jmonth }}" class="crm-cal-nav-btn" title="ماه قبل" aria-label="ماه قبل">
+                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                    </a>
+                    <div class="crm-cal-head-title">
+                        <strong>{{ calendar.month_label }}</strong>
+                        <span>{{ calendar.year_label }} · {{ calendar.event_total_label }} رویداد</span>
+                    </div>
+                    <a href="?jy={{ calendar.next.jyear }}&jm={{ calendar.next.jmonth }}" class="crm-cal-nav-btn" title="ماه بعد" aria-label="ماه بعد">
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="crm-cal-head-actions">
+                    <nav class="crm-cal-months" aria-label="ماه‌های سال">
+                        {% for m in calendar.month_strip %}
+                        <a href="?jy={{ calendar.jyear }}&jm={{ m.num }}"
+                           class="crm-cal-month-btn {% if m.active %}is-active{% endif %}">{{ m.label }}</a>
+                        {% endfor %}
+                    </nav>
+                    <div class="crm-cal-head-btns">
+                        <a href="?jy={{ calendar.today.jyear }}&jm={{ calendar.today.jmonth }}" class="crm-cal-head-btn" title="برو به امروز">
+                            <i class="fas fa-calendar-day" aria-hidden="true"></i><span>امروز</span>
+                        </a>
+                        <a href="{% url 'workspace:crm_today' %}" class="crm-cal-head-btn crm-cal-head-btn--primary" title="صف کار">
+                            <i class="fas fa-list-check" aria-hidden="true"></i><span>صف</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="crm-cal-head-meta">
+                    <div class="crm-cal-legend" aria-label="راهنمای رویدادها">
+                        <span><i class="fas fa-phone crm-cal-legend-ic crm-cal-legend-ic--followup" aria-hidden="true"></i>پیگیری</span>
+                        <span><i class="fas fa-bell crm-cal-legend-ic crm-cal-legend-ic--reminder" aria-hidden="true"></i>یادآور</span>
+                        <span><i class="fas fa-door-open crm-cal-legend-ic crm-cal-legend-ic--visit" aria-hidden="true"></i>بازدید</span>
+                    </div>
+                    <span class="crm-cal-days-count">{{ calendar.days_in_month_label }} روز</span>
+                </div>
+            </header>
+
+            <div class="crm-cal-grid-wrap">
+                <div class="crm-cal-weekdays" role="row">
+                    <span>ش</span><span>ی</span><span>د</span><span>س</span>
+                    <span>چ</span><span>پ</span><span class="is-friday">ج</span>
+                </div>
+
+                <div class="crm-cal-grid" role="grid">
+                    {% for week in calendar.weeks %}
+                    {% for day in week %}
+                    <div class="crm-cal-cell {% if not day.in_month %}is-out{% endif %} {% if day.is_today %}is-today{% endif %} {% if day.is_friday %}is-friday{% endif %} {% if day.event_count %}has-events{% endif %}"
+                         role="gridcell"
+                         data-jkey="{{ day.jkey }}"
+                         aria-label="{{ day.day_label }} {{ calendar.month_label }}{% if day.event_count %} · {{ day.event_count }} رویداد{% endif %}">
+                        <span class="crm-cal-day-num">{{ day.day_label }}</span>
+                        {% if day.in_month and day.events %}
+                        <div class="crm-cal-events">
+                            {% for ev in day.events|slice:":3" %}
+                            <a href="{{ ev.href }}" class="crm-cal-chip crm-cal-chip--{{ ev.type }}" title="{{ ev.label }}">
+                                <i class="fas {{ ev.type|crm_cal_event_icon }}" aria-hidden="true"></i>
+                            </a>
+                            {% endfor %}
+                            {% if day.event_count > 3 %}
+                            <span class="crm-cal-chip-more" title="{{ day.event_count }} رویداد">+{{ day.event_count|add:"-3" }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <aside class="crm-cal-agenda">
+            <header class="crm-cal-agenda-head">
+                <div>
+                    <h2>برنامه پیشِ رو</h2>
+                    <p>{{ calendar.month_label }} {{ calendar.year_label }}</p>
+                </div>
+                <a href="{% url 'workspace:crm_reminders' %}" class="crm-pro-link">یادآورها</a>
+            </header>
+
+            <div class="crm-cal-agenda-scroll">
+            {% if calendar.upcoming %}
+            <ol class="crm-cal-agenda-list">
+                {% for ev in calendar.upcoming %}
+                <li class="crm-cal-agenda-item crm-cal-agenda-item--{{ ev.type }}">
+                    <div class="crm-cal-agenda-date">
+                        <strong>{{ ev.date_label }}</strong>
+                        <em>{{ ev.weekday }}</em>
+                    </div>
+                    <a href="{{ ev.href }}" class="crm-cal-agenda-body">
+                        <span class="crm-cal-agenda-type">
+                            {% if ev.type == 'followup' %}پیگیری
+                            {% elif ev.type == 'reminder' %}یادآور
+                            {% else %}بازدید{% endif %}
+                        </span>
+                        <strong>{{ ev.label|truncatechars:42 }}</strong>
+                        {% if ev.time %}<time>{{ ev.time }}</time>{% endif %}
+                    </a>
+                </li>
+                {% endfor %}
+            </ol>
+            {% else %}
+            <div class="crm-pro-empty crm-cal-agenda-empty">
+                <div class="crm-pro-empty-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></div>
+                <p>رویدادی در {{ calendar.month_label }} ثبت نشده</p>
+                <a href="{% url 'workspace:crm_contacts' %}" class="crm-shell-btn crm-shell-btn--ghost crm-shell-btn--sm">ثبت پیگیری</a>
+            </div>
+            {% endif %}
+            </div>
+        </aside>
+    </div>
+    </div>
+</div>
+{% endblock %}

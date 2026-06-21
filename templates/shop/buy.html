@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static currency_tags %}
+
+{% block title %}خرید — {{ product.title }}{% endblock %}
+
+{% block body_class %}mk-checkout-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=8">
+{% endblock %}
+
+{% block content %}
+<div class="ck-page" data-checkout data-apply-discount-url="{% url 'apply_discount' product.slug %}">
+
+    <nav class="ck-topbar" aria-label="مسیر">
+        <a href="{% url 'product_detail' product.slug %}" class="ck-back">
+            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            <span>بازگشت به محصول</span>
+        </a>
+        <span class="ck-secure-pill"><i class="fas fa-lock"></i> پرداخت امن SSL</span>
+    </nav>
+
+    <div class="ck-shell">
+        <header class="ck-shell-header">
+            <div class="ck-shell-brand">
+                <span class="ck-shell-icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
+                <div>
+                    <p class="ck-shell-eyebrow">تکمیل خرید</p>
+                    <h1>{{ product.title }}</h1>
+                </div>
+            </div>
+            <ul class="ck-shell-perks" aria-label="مزایا">
+                <li><i class="fas fa-bolt"></i> فعال‌سازی فوری</li>
+                <li><i class="fas fa-calendar-check"></i> یک، سه و دوازده ماهه</li>
+                <li><i class="fas fa-headset"></i> پشتیبانی</li>
+            </ul>
+        </header>
+
+        <div class="ck-shell-body">
+            <form method="post" id="buy-form" class="ck-form ck-form--checkout">
+                {% csrf_token %}
+
+                <aside class="ck-order" aria-label="خلاصه سفارش و پرداخت">
+                    <div class="ck-order-inner">
+                        <h2 class="ck-order-title">خلاصه سفارش</h2>
+
+                        <div class="ck-order-product">
+                            <span class="ck-order-product-icon"><i class="fas fa-robot"></i></span>
+                            <div>
+                                <strong>{{ product.title }}</strong>
+                                <span id="summary-plan-name">—</span>
+                            </div>
+                        </div>
+
+                        <div class="ck-order-lines">
+                            <div class="ck-order-line">
+                                <span>قیمت پلن</span>
+                                <span id="summary-original-price" class="ck-order-val">—</span>
+                            </div>
+                            <div id="summary-discount-rows"></div>
+                        </div>
+
+                        <div class="ck-order-total">
+                            <span>مبلغ قابل پرداخت</span>
+                            <strong id="summary-final-price">—</strong>
+                        </div>
+
+                        <div class="ck-order-actions">
+                            <fieldset class="ck-fieldset ck-fieldset--compact">
+                                <legend class="ck-legend ck-legend--compact">
+                                    <span>کد تخفیف</span>
+                                    <em>(اختیاری)</em>
+                                </legend>
+                                <div class="ck-promo">
+                                    <div class="ck-promo-row ck-promo-row--stack">
+                                        <input
+                                            type="text"
+                                            name="discount_code"
+                                            id="id_discount_code"
+                                            class="ck-promo-input"
+                                            placeholder="مثال: SUMMER1404"
+                                            autocomplete="off"
+                                            aria-describedby="discount-message"
+                                        >
+                                        <button type="button" id="apply-discount-btn" class="ck-promo-btn">اعمال</button>
+                                    </div>
+                                    <div id="discount-message" class="ck-promo-msg" role="status" aria-live="polite"></div>
+                                    {% if form.discount_code.errors %}
+                                    <div class="ck-promo-msg is-error" role="alert">
+                                        {{ form.discount_code.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </fieldset>
+
+                            {% if payment_methods %}
+                            <fieldset class="ck-fieldset ck-fieldset--compact">
+                                <legend class="ck-legend ck-legend--compact">
+                                    <span>روش پرداخت</span>
+                                </legend>
+                                <div class="ck-pay-methods ck-pay-methods--compact" role="radiogroup" aria-label="روش پرداخت">
+                                    {% if 'zibal' in payment_methods %}
+                                    <label class="ck-pay-method{% if payment_methods.0 == 'zibal' %} is-selected{% endif %}">
+                                        <input type="radio" name="payment_method" value="zibal"{% if payment_methods.0 == 'zibal' %} checked{% endif %}>
+                                        <span class="ck-pay-method-icon"><i class="fas fa-credit-card"></i></span>
+                                        <span class="ck-pay-method-body">
+                                            <strong>درگاه آنلاین زیبال</strong>
+                                            <small>پرداخت فوری با کارت بانکی</small>
+                                        </span>
+                                    </label>
+                                    {% endif %}
+                                    {% if 'card_transfer' in payment_methods %}
+                                    <label class="ck-pay-method{% if payment_methods.0 == 'card_transfer' %} is-selected{% endif %}">
+                                        <input type="radio" name="payment_method" value="card_transfer"{% if payment_methods.0 == 'card_transfer' %} checked{% endif %}>
+                                        <span class="ck-pay-method-icon"><i class="fas fa-money-bill-transfer"></i></span>
+                                        <span class="ck-pay-method-body">
+                                            <strong>کارت به کارت</strong>
+                                            <small>واریز دستی و تایید پشتیبانی</small>
+                                        </span>
+                                    </label>
+                                    {% endif %}
+                                </div>
+                            </fieldset>
+                            {% endif %}
+                        </div>
+
+                        <button type="button" class="ck-pay-btn" data-pay-btn>
+                            <span class="ck-pay-btn-main"><i class="fas fa-lock"></i> پرداخت و دریافت لایسنس</span>
+                            <span class="ck-pay-btn-sub" id="pay-btn-hint">{% if show_payment_choice %}انتخاب روش پرداخت بالا{% elif 'card_transfer' in payment_methods %}ثبت واریز کارت به کارت{% else %}انتقال به درگاه زیبال{% endif %}</span>
+                        </button>
+
+                        <ul class="ck-order-trust">
+                            <li><i class="fas fa-shield-halved"></i> اطلاعات کارت ذخیره نمی‌شود</li>
+                            <li><i class="fas fa-key"></i> لایسنس بلافاصله پس از پرداخت</li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <main class="ck-form-area">
+                    {% if form.non_field_errors %}
+                    <div class="ck-promo-msg is-error" role="alert">
+                        {{ form.non_field_errors.0 }}
+                    </div>
+                    {% endif %}
+
+                    {% if has_previous_purchase and product.repeat_purchase_discount > 0 %}
+                    <div class="ck-loyalty" role="status">
+                        <i class="fas fa-star" aria-hidden="true"></i>
+                        <p><strong>{{ product.repeat_purchase_discount|floatformat:0 }}% تخفیف وفاداری</strong> — به‌صورت خودکار روی قیمت اعمال می‌شود.</p>
+                    </div>
+                    {% endif %}
+
+                    <fieldset class="ck-fieldset">
+                        <legend class="ck-legend">
+                            <span class="ck-legend-num">۱</span>
+                            <span>انتخاب پلن لایسنس</span>
+                        </legend>
+                        <div class="ck-plans" role="radiogroup" aria-label="پلن لایسنس">
+                            {% for plan_data in plans_with_prices %}
+                            <label class="ck-plan ck-plan--{% if plan_data.plan.max_activations > 1 %}team{% else %}solo{% endif %}{% if plan_data.plan.id == selected_plan_id %} is-selected{% endif %}">
+                                <input
+                                    type="radio"
+                                    name="plan"
+                                    value="{{ plan_data.plan.id }}"
+                                    id="plan_{{ plan_data.plan.id }}"
+                                    {% if plan_data.plan.id == selected_plan_id %}checked{% endif %}
+                                    data-original-price="{{ plan_data.original_price }}"
+                                    data-final-price="{{ plan_data.final_price }}"
+                                    data-has-repeat-discount="{% if plan_data.has_repeat_discount %}true{% else %}false{% endif %}"
+                                    data-repeat-discount-percentage="{{ plan_data.repeat_discount_percentage }}"
+                                >
+                                <span class="ck-plan-accent" aria-hidden="true"></span>
+                                <span class="ck-plan-check" aria-hidden="true"><i class="fas fa-check"></i></span>
+
+                                <div class="ck-plan-icon-wrap" aria-hidden="true">
+                                    {% if plan_data.plan.max_activations > 1 %}
+                                    <i class="fas fa-laptop-house"></i>
+                                    {% else %}
+                                    <i class="fas fa-desktop"></i>
+                                    {% endif %}
+                                </div>
+
+                                <div class="ck-plan-head">
+                                    <h3 class="ck-plan-name">{{ plan_data.plan.name }}</h3>
+                                    <span class="ck-plan-type">{{ plan_data.plan.get_plan_type_display }}</span>
+                                </div>
+
+                                <div class="ck-plan-price-block">
+                                    {% if plan_data.has_discount %}
+                                    <s class="ck-plan-was">{{ plan_data.original_price|currency }} تومان</s>
+                                    {% endif %}
+                                    <div class="ck-plan-price-row">
+                                        <span class="ck-plan-amount">{{ plan_data.final_price|currency }}</span>
+                                        <span class="ck-plan-currency">تومان</span>
+                                    </div>
+                                    {% for reason in plan_data.discount_reasons %}
+                                    <span class="ck-plan-save"><i class="fas fa-tag"></i> {{ reason }}</span>
+                                    {% endfor %}
+                                </div>
+
+                                <ul class="ck-plan-feats">
+                                    <li><span class="ck-plan-feat-icon"><i class="fas fa-clock"></i></span><span>{{ plan_data.plan.get_plan_type_display }} دسترسی</span></li>
+                                    <li><span class="ck-plan-feat-icon"><i class="fas fa-microchip"></i></span><span>{{ plan_data.plan.max_activations }} دستگاه فعال</span></li>
+                                </ul>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+
+                    <section class="ck-includes" aria-label="شامل خرید">
+                        <h3 class="ck-includes-title">شامل تمام پلن‌ها</h3>
+                        <ul class="ck-includes-grid">
+                            <li><i class="fas fa-database"></i> فایلینگ دیوار</li>
+                            <li><i class="fas fa-chart-line"></i> تحلیل بازار</li>
+                            <li><i class="fas fa-wand-magic-sparkles"></i> ابزارهای هوشمند</li>
+                            <li><i class="fas fa-map-location-dot"></i> نقشه آگهی‌ها</li>
+                            <li><i class="fas fa-code-compare"></i> مقایسه فایل‌ها</li>
+                            <li><i class="fas fa-cloud-upload-alt"></i> آپلود در میزکار</li>
+                        </ul>
+                    </section>
+
+                    <footer class="ck-form-foot">
+                        <a href="{% url 'license_guide' %}" class="ck-foot-link"><i class="fas fa-book-open"></i> راهنمای فعال‌سازی</a>
+                        <span class="ck-foot-dot" aria-hidden="true">·</span>
+                        <span class="ck-foot-note" id="pay-foot-note">{% if show_payment_choice %}پرداخت آنلاین یا کارت به کارت{% elif 'card_transfer' in payment_methods %}پرداخت کارت به کارت{% else %}پرداخت از درگاه امن زیبال{% endif %}</span>
+                    </footer>
+                </main>
+            </form>
+        </div>
+    </div>
+
+    <div class="ck-mobile-bar" role="region" aria-label="پرداخت سریع">
+        <div class="ck-mobile-bar-inner">
+            <div class="ck-mobile-total">
+                <span>قابل پرداخت</span>
+                <strong id="mobile-final-price">—</strong>
+            </div>
+            <button type="button" class="ck-pay-btn ck-pay-btn--compact" data-pay-btn>
+                <i class="fas fa-lock"></i> پرداخت
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/mizkar-checkout.js' %}?v=4" defer></script>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% if feature_profile.has_details %}
+<section class="ws-ld-features{% if embedded %} ws-ld-features--embedded{% endif %}" aria-label="ویژگی‌ها و امکانات">
+    {% if not embedded %}
+    <header class="ws-ld-features-head">
+        <div class="ws-ld-features-head-main">
+            <span class="ws-ld-features-icon" aria-hidden="true"><i class="fas fa-list-ul"></i></span>
+            <div>
+                <h2 class="ws-ld-features-title">ویژگی‌ها و امکانات</h2>
+                <p class="ws-ld-features-sub">{{ feature_profile.detail_count }} مورد ثبت‌شده از دیوار</p>
+            </div>
+        </div>
+    </header>
+    {% else %}
+    <p class="ws-ld-features-embedded-meta">{{ feature_profile.detail_count }} مورد ثبت‌شده از دیوار</p>
+    {% endif %}
+
+    <div class="ws-ld-features-core">
+        {% for item in feature_profile.core %}
+        <article class="ws-ld-feat-core-card state-{{ item.state }}" data-known="{% if item.known %}1{% else %}0{% endif %}">
+            <span class="ws-ld-feat-core-icon" aria-hidden="true"><i class="fas {{ item.icon }}"></i></span>
+            <div class="ws-ld-feat-core-body">
+                <span class="ws-ld-feat-core-label">{{ item.label }}</span>
+                <strong class="ws-ld-feat-core-value">
+                    {% if item.state == 'yes' %}دارد{% elif item.state == 'no' %}ندارد{% else %}{{ item.value }}{% endif %}
+                </strong>
+            </div>
+            <span class="ws-ld-feat-core-dot" aria-hidden="true"></span>
+        </article>
+        {% endfor %}
+    </div>
+
+    {% if feature_profile.groups %}
+    <div class="ws-ld-features-bento">
+        {% for group in feature_profile.groups %}
+        <section class="ws-ld-feat-group" data-accent="{{ group.accent }}">
+            <header class="ws-ld-feat-group-head">
+                <span class="ws-ld-feat-group-icon" aria-hidden="true"><i class="fas {{ group.icon }}"></i></span>
+                <h3>{{ group.title }}</h3>
+            </header>
+            <div class="ws-ld-feat-group-grid">
+                {% for item in group.items %}
+                <article class="ws-ld-feat-item state-{{ item.state }}{% if item.is_chip %} is-chip-row{% endif %}">
+                    <span class="ws-ld-feat-item-icon" aria-hidden="true"><i class="fas {{ item.icon }}"></i></span>
+                    <div class="ws-ld-feat-item-body">
+                        <span class="ws-ld-feat-item-label">{{ item.label }}</span>
+                        {% if item.is_chip %}
+                        <div class="ws-ld-feat-chips">
+                            {% for chip in item.chips %}
+                            <span class="ws-ld-feat-chip">{{ chip }}</span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <strong class="ws-ld-feat-item-value">{{ item.value }}</strong>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    </div>
+    {% endif %}
+</section>
+{% endif %}

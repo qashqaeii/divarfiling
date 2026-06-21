@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}درخواست برداشت - فایلینگ دیوار{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="glass-card mt-4" style="max-width: 600px; margin: 0 auto;">
+        <h1 class="text-white mb-4">درخواست برداشت از کیف پول</h1>
+        
+        <div class="glass-card mb-4" style="background: rgba(40, 167, 69, 0.2);">
+            <p class="text-white mb-2">موجودی کیف پول:</p>
+            <h2 class="text-white" style="font-size: var(--font-size-2xl); color: var(--color-success);">{{ wallet.balance|currency }} تومان</h2>
+            <p class="text-white mt-2" style="font-size: var(--font-size-sm);">
+                حداقل مبلغ برداشت: {{ min_withdrawal|currency }} تومان
+            </p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">{{ form.amount.label }}</label>
+                {{ form.amount }}
+                {% if form.amount.errors %}
+                    <div class="alert alert-error mt-2">
+                        {{ form.amount.errors }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">{{ form.bank_name.label }}</label>
+                {{ form.bank_name }}
+                {% if form.bank_name.errors %}
+                    <div class="alert alert-error mt-2">
+                        {{ form.bank_name.errors }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">{{ form.bank_account.label }}</label>
+                {{ form.bank_account }}
+                {% if form.bank_account.errors %}
+                    <div class="alert alert-error mt-2">
+                        {{ form.bank_account.errors }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">{{ form.account_holder.label }}</label>
+                {{ form.account_holder }}
+                {% if form.account_holder.errors %}
+                    <div class="alert alert-error mt-2">
+                        {{ form.account_holder.errors }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">{{ form.notes.label }}</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="alert alert-error mt-2">
+                        {{ form.notes.errors }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div style="display: flex; gap: var(--spacing-sm);">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    ارسال درخواست
+                </button>
+                <a href="{% url 'affiliate_dashboard' %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    بازگشت
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

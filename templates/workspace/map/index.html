@@ -1,0 +1,515 @@
+{% extends 'workspace/base.html' %}
+
+{% load static humanize %}
+
+
+
+{% block page_title %}{% endblock %}
+
+
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=12">
+
+<div class="mk-page mk-map-pro">
+
+
+
+    <header class="mk-map-head">
+
+        <div class="mk-map-hero">
+
+            <div class="mk-map-head-main">
+
+                <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="mk-map-back" title="بازگشت به فایل">
+
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+
+                </a>
+
+                <div class="mk-map-head-text">
+
+                    <div class="mk-map-head-kicker">
+
+                        <span class="mk-map-kicker-dot" aria-hidden="true"></span>
+
+                        <span>نقشه آگهی‌ها</span>
+
+                        {% if dataset.city %}<span class="mk-map-head-sep">·</span><span>{{ dataset.city }}{% if dataset.district %} — {{ dataset.district }}{% endif %}</span>{% endif %}
+
+                    </div>
+
+                    <h1 class="mk-map-head-title">{{ dataset.name }}</h1>
+
+                </div>
+
+            </div>
+
+            <div class="mk-map-head-stats" aria-label="آمار نقشه">
+
+                <div class="mk-map-head-stat">
+
+                    <span class="mk-map-head-stat-val">{{ geo_count|intcomma }}</span>
+
+                    <span class="mk-map-head-stat-lbl">با مختصات</span>
+
+                </div>
+
+                <div class="mk-map-head-stat mk-map-head-stat--consultant">
+
+                    <span class="mk-map-head-stat-val">{{ consultant_count|intcomma }}</span>
+
+                    <span class="mk-map-head-stat-lbl">مشاور</span>
+
+                </div>
+
+                <div class="mk-map-head-stat mk-map-head-stat--personal">
+
+                    <span class="mk-map-head-stat-val">{{ personal_count|intcomma }}</span>
+
+                    <span class="mk-map-head-stat-lbl">شخصی</span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        {% if geo_count %}
+
+        <div class="mk-map-deck" id="mkMapModesBar" role="toolbar" aria-label="کنترل نقشه">
+
+            <div class="mk-map-deck-row mk-map-deck-row--primary">
+
+                <div class="mk-map-deck-group">
+
+                    <span class="mk-map-deck-label">نوع</span>
+
+                    <div class="mk-map-filters" id="mkMapFilters" role="group" aria-label="فیلتر نوع آگهی">
+
+                        <button type="button" class="mk-map-filter is-active" data-filter="all" aria-pressed="true">همه</button>
+
+                        <button type="button" class="mk-map-filter mk-map-filter--consultant" data-filter="consultant" aria-pressed="false">مشاور</button>
+
+                        <button type="button" class="mk-map-filter mk-map-filter--personal" data-filter="personal" aria-pressed="false">شخصی</button>
+
+                    </div>
+
+                </div>
+
+                <button type="button" class="mk-map-advanced-toggle" id="mkMapFilterToggle" aria-expanded="false" aria-controls="mkMapAdvancedFilters">
+
+                    <i class="fas fa-sliders-h" aria-hidden="true"></i>
+
+                    <span>فیلتر پیشرفته</span>
+
+                    <span class="mk-map-advanced-badge" id="mkMapFilterBadge" hidden>۰</span>
+
+                </button>
+
+            </div>
+
+            <div class="mk-map-deck-row mk-map-deck-row--basemap">
+
+                <div class="mk-map-deck-group mk-map-deck-group--grow">
+
+                    <span class="mk-map-deck-label">نوع نقشه</span>
+
+                    <div class="mk-map-modes-scroll">
+
+                        <div class="mk-map-basemap-bar" id="mkMapBasemapBar" role="group" aria-label="انتخاب نوع نقشه"></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="mk-map-deck-row mk-map-deck-row--modes">
+
+                <div class="mk-map-deck-group mk-map-deck-group--grow">
+
+                    <span class="mk-map-deck-label">نمایش</span>
+
+                    <div class="mk-map-modes-scroll">
+
+                        <div class="mk-map-modes" id="mkMapModes">
+
+                            <button type="button" class="mk-map-mode is-active" data-mode="markers" aria-pressed="true" title="نقاط روی نقشه">
+
+                                <span class="mk-map-mode-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></span>
+
+                                <span class="mk-map-mode-label">نقاط</span>
+
+                            </button>
+
+                            <button type="button" class="mk-map-mode" data-mode="market" aria-pressed="false" title="رنگ‌بندی زیر/سر به سر/بالای بازار">
+
+                                <span class="mk-map-mode-icon" aria-hidden="true"><i class="fas fa-tags"></i></span>
+
+                                <span class="mk-map-mode-label">بازار</span>
+
+                            </button>
+
+                            <button type="button" class="mk-map-mode" data-mode="heatmap" aria-pressed="false" title="تراکم آگهی‌ها">
+
+                                <span class="mk-map-mode-icon" aria-hidden="true"><i class="fas fa-fire"></i></span>
+
+                                <span class="mk-map-mode-label">تراکم</span>
+
+                            </button>
+
+                            <button type="button" class="mk-map-mode" data-mode="price" aria-pressed="false" title="توزیع قیمت کل">
+
+                                <span class="mk-map-mode-icon" aria-hidden="true"><i class="fas fa-coins"></i></span>
+
+                                <span class="mk-map-mode-label">قیمت</span>
+
+                            </button>
+
+                            <button type="button" class="mk-map-mode" data-mode="pps" aria-pressed="false" title="قیمت هر متر مربع">
+
+                                <span class="mk-map-mode-icon" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+
+                                <span class="mk-map-mode-label">هر متر</span>
+
+                            </button>
+
+                            {% if map_config.is_rent %}
+
+                            <button type="button" class="mk-map-mode" data-mode="full_deposit" aria-pressed="false" title="توزیع رهن کامل معادل">
+
+                                <span class="mk-map-mode-icon" aria-hidden="true"><i class="fas fa-key"></i></span>
+
+                                <span class="mk-map-mode-label">رهن کامل</span>
+
+                            </button>
+
+                            {% endif %}
+
+                            <button type="button" class="mk-map-mode" data-mode="grid" aria-pressed="false" title="شبکه تراکم منطقه‌ای">
+
+                                <span class="mk-map-mode-icon" aria-hidden="true"><i class="fas fa-border-all"></i></span>
+
+                                <span class="mk-map-mode-label">شبکه</span>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="mk-map-advanced" id="mkMapAdvancedFilters" hidden>
+
+            <div class="mk-map-advanced-grid">
+
+                <div class="mk-map-advanced-field">
+
+                    <label class="mk-map-advanced-label" for="mkMapPriceMin" id="mkMapPriceMinLabel">حداقل {{ map_config.filter_value_label }} <small>(میلیون)</small></label>
+
+                    <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapPriceMin" inputmode="numeric" placeholder="مثلاً ۴۵۰" autocomplete="off">
+
+                </div>
+
+                <div class="mk-map-advanced-field">
+
+                    <label class="mk-map-advanced-label" for="mkMapPriceMax" id="mkMapPriceMaxLabel">حداکثر {{ map_config.filter_value_label }} <small>(میلیون)</small></label>
+
+                    <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapPriceMax" inputmode="numeric" placeholder="مثلاً ۹۰۰" autocomplete="off">
+
+                </div>
+
+                <div class="mk-map-advanced-field">
+
+                    <label class="mk-map-advanced-label" for="mkMapAreaMin">حداقل متراژ</label>
+
+                    <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapAreaMin" inputmode="numeric" placeholder="مثلاً ۶۰" autocomplete="off">
+
+                </div>
+
+                <div class="mk-map-advanced-field">
+
+                    <label class="mk-map-advanced-label" for="mkMapAreaMax">حداکثر متراژ</label>
+
+                    <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapAreaMax" inputmode="numeric" placeholder="مثلاً ۱۲۰" autocomplete="off">
+
+                </div>
+
+                <div class="mk-map-advanced-field">
+
+                    <label class="mk-map-advanced-label" for="mkMapRooms">اتاق</label>
+
+                    <select class="mk-map-advanced-input" id="mkMapRooms">
+
+                        <option value="all">همه</option>
+
+                        <option value="1">۱ خواب</option>
+
+                        <option value="2">۲ خواب</option>
+
+                        <option value="3">۳ خواب</option>
+
+                        <option value="4+">۴+ خواب</option>
+
+                    </select>
+
+                </div>
+
+                <div class="mk-map-advanced-field">
+
+                    <label class="mk-map-advanced-label" for="mkMapFreshness">تازگی</label>
+
+                    <select class="mk-map-advanced-input" id="mkMapFreshness">
+
+                        <option value="all">همه</option>
+
+                        <option value="1">۲۴ ساعت اخیر</option>
+
+                        <option value="7">۷ روز اخیر</option>
+
+                        <option value="30">۳۰ روز اخیر</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="mk-map-advanced-actions">
+
+                <label class="mk-map-advanced-check">
+
+                    <input type="checkbox" id="mkMapUnderOnly">
+
+                    <span>فقط زیر بازار</span>
+
+                </label>
+
+                <label class="mk-map-advanced-check">
+
+                    <input type="checkbox" id="mkMapShowRings">
+
+                    <span>نمایش شعاع موقعیت تقریبی</span>
+
+                </label>
+
+                <button type="button" class="mk-map-advanced-reset" id="mkMapFilterReset">پاک کردن فیلترها</button>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </header>
+
+
+
+    {% if geo_count %}
+
+    <div class="mk-map-panel" id="mkMapPanel">
+
+        <div class="mk-map-stage">
+
+            <div id="wsMap" class="ws-map mk-map-canvas" role="application" aria-label="نقشه آگهی‌ها"></div>
+
+
+
+            <div class="mk-map-hud" aria-label="ابزارهای نقشه">
+
+                <div class="mk-map-hud-panel mk-map-hud-panel--main" role="toolbar" aria-label="عملیات نقشه">
+
+                    <button type="button" class="mk-map-hud-btn" id="mkMapListToggle" title="لیست فایل‌ها کنار نقشه">
+
+                        <i class="fas fa-list" aria-hidden="true"></i>
+
+                        <span class="mk-map-hud-btn-label">لیست</span>
+
+                    </button>
+
+                    <button type="button" class="mk-map-hud-btn" id="mkMapFitBtn" title="نمایش همه نقاط">
+
+                        <i class="fas fa-compress-arrows-alt" aria-hidden="true"></i>
+
+                        <span class="mk-map-hud-btn-label">همه نقاط</span>
+
+                    </button>
+
+                    <button type="button" class="mk-map-hud-btn" id="mkMapExportBtn" title="ذخیره تصویر نقشه">
+
+                        <i class="fas fa-camera" aria-hidden="true"></i>
+
+                        <span class="mk-map-hud-btn-label">ذخیره</span>
+
+                    </button>
+
+                    <button type="button" class="mk-map-hud-btn" id="mkMapFullscreenBtn" title="تمام‌صفحه">
+
+                        <i class="fas fa-expand" aria-hidden="true"></i>
+
+                        <span class="mk-map-hud-btn-label">تمام‌صفحه</span>
+
+                    </button>
+
+                </div>
+
+                <div class="mk-map-hud-status" id="mkMapStatusBar" aria-live="polite">
+
+                    <span id="mkMapZoomBadge">زوم —</span>
+
+                    <span class="mk-map-hud-status-sep" aria-hidden="true">·</span>
+
+                    <span id="mkMapCoordsBadge">روی نقشه حرکت کنید</span>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="mk-map-export-toast" id="mkMapExportToast" hidden aria-live="polite"></div>
+
+
+
+            <div class="mk-map-overlay mk-map-overlay--hint">
+
+                <i class="fas fa-search-plus" aria-hidden="true"></i>
+
+                <span>برای دیدن نقاط، زوم کنید</span>
+
+            </div>
+
+
+
+            {% if markers_truncated %}
+
+            <div class="mk-map-overlay mk-map-overlay--note">
+
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+
+                نمایش {{ markers_shown|intcomma }} از {{ geo_count|intcomma }} آگهی
+
+            </div>
+
+            {% endif %}
+
+
+
+            <div class="mk-map-legend mk-map-legend-float" id="mkMapLegend" aria-label="راهنمای نقشه">
+                <div class="mk-map-legend-strip">
+                    <span class="mk-map-legend-kicker">راهنما</span>
+                    <span class="mk-map-legend-badge" id="mkMapLegendBadge">نقاط</span>
+                    <span class="mk-map-legend-count" id="mkMapLegendCount" aria-hidden="true"></span>
+                    <span class="mk-map-legend-divider" aria-hidden="true"></span>
+                    <div class="mk-map-legend-body" id="mkMapLegendBody"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <aside class="mk-map-list" id="mkMapList" hidden aria-label="لیست فایل‌های نقشه">
+
+            <div class="mk-map-list-head">
+
+                <div class="mk-map-list-head-text">
+
+                    <strong>فایل‌های ناحیه</strong>
+
+                    <span id="mkMapListCount">۰ مورد در نما</span>
+
+                </div>
+
+                <button type="button" class="mk-map-list-close" id="mkMapListClose" title="بستن لیست" aria-label="بستن لیست">
+
+                    <i class="fas fa-times" aria-hidden="true"></i>
+
+                </button>
+
+            </div>
+
+            <div class="mk-map-list-body" id="mkMapListBody"></div>
+
+        </aside>
+
+    </div>
+
+    {% else %}
+
+    <div class="mk-map-empty ws-glass-panel">
+
+        <div class="ws-empty">
+
+            <span class="mk-filing-empty-icon" aria-hidden="true"><i class="fas fa-map"></i></span>
+
+            <p class="ws-empty-title">مختصات جغرافیایی یافت نشد</p>
+
+            <p class="ws-empty-desc">آگهی‌های این فایل فیلد عرض/طول جغرافیایی ندارند.</p>
+
+            <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="ws-btn ws-btn-sm ws-btn-ghost">بازگشت به فایل</a>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+
+{% if geo_count %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+
+<script type="application/json" id="mkMapMarkers">{{ markers_json|safe }}</script>
+
+<script type="application/json" id="mkMapConfig">{{ map_config_json|safe }}</script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const dataEl = document.getElementById('mkMapMarkers');
+
+    const cfgEl = document.getElementById('mkMapConfig');
+
+    if (!dataEl || !cfgEl) return;
+
+    initMap(JSON.parse(dataEl.textContent), JSON.parse(cfgEl.textContent));
+
+});
+
+</script>
+
+{% endif %}
+
+{% endblock %}
+
+

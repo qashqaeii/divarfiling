@@ -1,0 +1,242 @@
+"""نگاشت و نرمال‌سازی ستون‌های Divar."""
+from __future__ import annotations
+
+import re
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+import pandas as pd
+from django.db.models import Q
+from django.utils import timezone as dj_tz
+
+from workspace.services.jalali_input import _normalize_digits, parse_jalali_datetime_string
+
+COLUMN_ALIASES: Dict[str, List[str]] = {
+    'token': ['شناسه', 'token', 'id', 'آگهی_id', 'listing_id'],
+    'title': ['عنوان', 'title', 'نام'],
+    'price': ['قیمت', 'price', 'قیمت کل'],
+    'deposit': ['ودیعه', 'deposit', 'رهن', 'ودیعه (تومان)'],
+    'rent': ['اجاره', 'rent', 'اجاره ماهانه', 'اجاره (تومان)'],
+    'area': ['متراژ', 'area', 'متراژ (متر)', 'متراژ مفید'],
+    'rooms': ['اتاق', 'rooms', 'تعداد اتاق', 'اتاق خواب'],
+    'neighborhood': ['محله', 'مکان_منطقه', 'district', 'district_persian', 'منطقه'],
+    'city': ['شهر', 'مکان_شهر', 'city', 'city_persian'],
+    'latitude': ['عرض جغرافیایی', 'مکان_مختصات_lat', 'latitude', 'lat'],
+    'longitude': ['طول جغرافیایی', 'مکان_مختصات_lng', 'longitude', 'lng'],
+    'business_type': ['نوع آگهی دهنده', 'فروشنده_business_type', 'business_type', 'نوع آگهی‌دهنده'],
+    'description': ['توضیحات', 'description', 'متن آگهی'],
+    'link': ['لینک', 'url', 'link', 'آدرس آگهی'],
+    'published_at': ['ایجاد آگهی', 'تاریخ انتشار', 'published_at', 'created_at'],
+    'expires_at': ['انقضا آگهی', 'expires_at', 'انتشار_unavailable_after'],
+    'images': ['تصاویر', 'images', 'عکس‌ها', 'رسانه_تصاویر'],
+    'build_year': ['ساخت', 'سال ساخت', 'build_year', 'سن بنا'],
+    'floor': ['طبقه', 'floor'],
+    'parking': ['پارکینگ', 'parking'],
+    'elevator': ['آسانسور', 'elevator'],
+    'storage': ['انباری', 'storage', 'انبار'],
+}
+
+CONSULTANT_NAME_KEYS = (
+    'نام مشاور / آژانس',
+    'مشاور_نام',
+    'agency_name',
+    'نام آژانس',
+    'نام مشاور',
+)
+
+
+def extract_consultant_name(data: Optional[Dict[str, Any]]) -> str:
+    """نام آژانس/مشاور از دادهٔ خام آگهی (اکسل استخراج)."""
+    if not isinstance(data, dict):
+        return ''
+    for key in CONSULTANT_NAME_KEYS:
+        val = data.get(key)
+        if val is None:
+            continue
+        text = str(val).strip()
+        if text and text not in ('-', '—', 'nan', 'None'):
+            return text
+    return ''
+
+
+def _find_column(df: pd.DataFrame, field: str) -> Optional[str]:
+    aliases = COLUMN_ALIASES.get(field, [])
+    for alias in aliases:
+        if alias in df.columns:
+            return alias
+    return None
+
+
+def _safe_int(val: Any) -> Optional[int]:
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return None
+    try:
+        s = str(val).strip().replace(',', '').replace('٬', '')
+        if not s or s.lower() in ('nan', 'none', '-'):
+            return None
+        return int(float(s))
+    except (ValueError, TypeError):
+        return None
+
+
+def _safe_float(val: Any) -> Optional[float]:
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return None
+    try:
+        s = str(val).strip().replace(',', '').replace('٬', '')
+        if not s or s.lower() in ('nan', 'none', '-'):
+            return None
+        return float(s)
+    except (ValueError, TypeError):
+        return None
+
+
+def _safe_str(val: Any) -> str:
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return ''
+    return str(val).strip()
+
+
+def _aware(dt: datetime) -> datetime:
+    if dj_tz.is_aware(dt):
+        return dt
+    return dj_tz.make_aware(dt, dj_tz.get_current_timezone())
+
+
+def _parse_datetime(val: Any) -> Optional[datetime]:
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return None
+    if isinstance(val, datetime):
+        return _aware(val)
+    s = _normalize_digits(_safe_str(val))
+    if not s:
+        return None
+    year_m = re.match(r'^(\d{4})', s)
+    if year_m:
+        year = int(year_m.group(1))
+        if 1300 <= year <= 1500:
+            jalali_dt = parse_jalali_datetime_string(s)
+            return _aware(jalali_dt) if jalali_dt else None
+    for fmt in (
+        '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d',
+        '%Y/%m/%d %H:%M:%S', '%Y/%m/%d %H:%M', '%Y/%m/%d',
+    ):
+        try:
+            return _aware(datetime.strptime(s[:19], fmt))
+        except ValueError:
+            continue
+    return None
+
+
+def _parse_images(val: Any) -> List[str]:
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return []
+    if isinstance(val, list):
+        return [str(u) for u in val if u]
+    s = _safe_str(val)
+    if s.startswith('['):
+        import json
+        try:
+            arr = json.loads(s.replace("'", '"'))
+            return [str(u) for u in arr if u]
+        except (json.JSONDecodeError, ValueError):
+            pass
+    if ',' in s:
+        return [u.strip() for u in s.split(',') if u.strip().startswith('http')]
+    if s.startswith('http'):
+        return [s]
+    return []
+
+
+def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
+    """تبدیل یک ردیف DataFrame به فیلدهای Listing."""
+    cols = {f: _find_column(df, f) for f in COLUMN_ALIASES}
+    token_col = cols['token']
+    token = _safe_str(row[token_col]) if token_col else ''
+    if not token:
+        for c in df.columns:
+            if 'شناسه' in c or c.lower() == 'token':
+                token = _safe_str(row[c])
+                break
+
+    data = {}
+    for col in df.columns:
+        val = row[col]
+        if isinstance(val, float) and pd.isna(val):
+            data[col] = None
+        elif hasattr(val, 'isoformat'):
+            data[col] = val.isoformat()
+        else:
+            if isinstance(val, str):
+                s = val.strip()
+                if not s or s in ('-', '—', 'nan', 'None'):
+                    data[col] = None
+                    continue
+            data[col] = val if not (isinstance(val, float) and pd.isna(val)) else None
+
+    return {
+        'token': token or f'row_{hash(tuple(row.values)) % 10**8}',
+        'title': _safe_str(row[cols['title']]) if cols['title'] else '',
+        'price': _safe_int(row[cols['price']]) if cols['price'] else None,
+        'deposit': _safe_int(row[cols['deposit']]) if cols['deposit'] else None,
+        'rent': _safe_int(row[cols['rent']]) if cols['rent'] else None,
+        'area': _safe_float(row[cols['area']]) if cols['area'] else None,
+        'rooms': _safe_str(row[cols['rooms']]) if cols['rooms'] else '',
+        'neighborhood': _safe_str(row[cols['neighborhood']]) if cols['neighborhood'] else '',
+        'city': _safe_str(row[cols['city']]) if cols['city'] else '',
+        'latitude': _safe_float(row[cols['latitude']]) if cols['latitude'] else None,
+        'longitude': _safe_float(row[cols['longitude']]) if cols['longitude'] else None,
+        'business_type': _safe_str(row[cols['business_type']]) if cols['business_type'] else '',
+        'description': _safe_str(row[cols['description']]) if cols['description'] else '',
+        'link': _safe_str(row[cols['link']]) if cols['link'] else '',
+        'images': _parse_images(row[cols['images']]) if cols['images'] else [],
+        'published_at': _parse_datetime(row[cols['published_at']]) if cols['published_at'] else None,
+        'expires_at': _parse_datetime(row[cols['expires_at']]) if cols['expires_at'] else None,
+        'data': data,
+    }
+
+
+def detect_metadata(df: pd.DataFrame) -> Dict[str, Any]:
+    """تشخیص نوع معامله و مکان از داده."""
+    meta: Dict[str, Any] = {}
+    cols_lower = [c.lower() for c in df.columns]
+    has_rent = any('اجاره' in c or 'rent' in c for c in df.columns)
+    has_deposit = any('ودیعه' in c or 'deposit' in c or 'رهن' in c for c in df.columns)
+    has_price = any('قیمت' in c or c == 'price' for c in df.columns)
+
+    if has_rent and has_deposit and not has_price:
+        meta['transaction_type'] = 'اجاره'
+    elif has_rent and has_deposit and has_price:
+        meta['transaction_type'] = 'ترکیبی'
+    elif has_price:
+        meta['transaction_type'] = 'فروش'
+    else:
+        meta['transaction_type'] = 'نامشخص'
+
+    city_col = _find_column(df, 'city')
+    if city_col and len(df) > 0:
+        cities = df[city_col].dropna().astype(str).value_counts()
+        if len(cities):
+            meta['city'] = str(cities.index[0])
+
+    nb_col = _find_column(df, 'neighborhood')
+    if nb_col and len(df) > 0:
+        nbs = df[nb_col].dropna().astype(str).value_counts()
+        if len(nbs):
+            meta['district'] = str(nbs.index[0])
+
+    return meta
+
+
+def is_consultant(business_type: str) -> bool:
+    bt = (business_type or '').strip().lower()
+    return 'مشاور' in bt or 'business' in bt or 'agency' in bt
+
+
+def consultant_q(qs):
+    """فیلتر آگهی‌های مشاور در QuerySet."""
+    return qs.filter(
+        Q(business_type__icontains='مشاور')
+        | Q(business_type__icontains='business')
+        | Q(business_type__icontains='agency')
+    )

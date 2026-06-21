@@ -1,0 +1,255 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=2">
+{% endblock %}
+
+{% block page_title %}{% endblock %}
+
+{% block content %}
+<div class="mk-page ws-toolbox-pro" id="wsToolbox">
+
+    <header class="ws-tbx-hero">
+        <div class="ws-tbx-hero-main">
+            <div class="ws-tbx-hero-kicker">
+                <span class="ws-tbx-hero-mark" aria-hidden="true"></span>
+                <span>جعبه ابزار مشاور</span>
+            </div>
+            <h1 class="ws-tbx-hero-title">ابزارهای هوشمند</h1>
+            <p class="ws-tbx-hero-desc">محاسبات تخصصی املاک — سریع، دقیق و آماده استفاده در معاملات روزانه</p>
+        </div>
+        <div class="ws-tbx-hero-badges" role="list">
+            <span class="ws-tbx-badge" role="listitem"><i class="fas fa-bolt" aria-hidden="true"></i> نتیجه فوری</span>
+            <span class="ws-tbx-badge" role="listitem"><i class="fas fa-shield-halved" aria-hidden="true"></i> بدون ذخیره داده</span>
+            <span class="ws-tbx-badge" role="listitem"><i class="fas fa-keyboard" aria-hidden="true"></i> میانبر ۱–۳</span>
+        </div>
+    </header>
+
+    <section class="ws-tbx-kpis" aria-label="خلاصه ابزارها">
+        <article class="ws-tbx-kpi ws-tbx-kpi--purple">
+            <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
+            <span class="ws-tbx-kpi-icon" aria-hidden="true"><i class="fas fa-exchange-alt"></i></span>
+            <div class="ws-tbx-kpi-body">
+                <span class="ws-tbx-kpi-val">۳۰:۱</span>
+                <span class="ws-tbx-kpi-lbl">نرخ پیش‌فرض رهن</span>
+            </div>
+        </article>
+        <article class="ws-tbx-kpi ws-tbx-kpi--blue">
+            <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
+            <span class="ws-tbx-kpi-icon" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+            <div class="ws-tbx-kpi-body">
+                <span class="ws-tbx-kpi-val">۳</span>
+                <span class="ws-tbx-kpi-lbl">متغیر قیمت‌گذاری</span>
+            </div>
+        </article>
+        <article class="ws-tbx-kpi ws-tbx-kpi--green">
+            <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
+            <span class="ws-tbx-kpi-icon" aria-hidden="true"><i class="fas fa-percent"></i></span>
+            <div class="ws-tbx-kpi-body">
+                <span class="ws-tbx-kpi-val">۲</span>
+                <span class="ws-tbx-kpi-lbl">سهم کمیسیون</span>
+            </div>
+        </article>
+        <article class="ws-tbx-kpi ws-tbx-kpi--amber">
+            <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
+            <span class="ws-tbx-kpi-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+            <div class="ws-tbx-kpi-body">
+                <span class="ws-tbx-kpi-val">{% if active_dataset %}۱{% else %}۰{% endif %}</span>
+                <span class="ws-tbx-kpi-lbl">فایل فعال تحلیل</span>
+            </div>
+        </article>
+    </section>
+
+    <div class="ws-tbx-workspace">
+        <aside class="ws-tbx-rail" aria-label="انتخاب ابزار">
+            <div class="ws-tbx-search-wrap">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" id="wsTbxSearch" class="ws-tbx-search" placeholder="جستجوی ابزار..." autocomplete="off" aria-label="جستجوی ابزار">
+            </div>
+
+            <nav class="ws-tbx-nav" id="wsTbxNav" role="tablist">
+                <button type="button" class="ws-tbx-nav-item is-active" data-tool="deposit" data-accent="purple" role="tab" aria-selected="true" aria-controls="wsTbxPanelDeposit">
+                    <span class="ws-tbx-nav-key" aria-hidden="true">۱</span>
+                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-exchange-alt"></i></span>
+                    <span class="ws-tbx-nav-text">
+                        <strong>ودیعه ↔ اجاره</strong>
+                        <em>تبدیل رهن با نرخ دلخواه</em>
+                    </span>
+                </button>
+                <button type="button" class="ws-tbx-nav-item" data-tool="area" data-accent="blue" role="tab" aria-selected="false" aria-controls="wsTbxPanelArea">
+                    <span class="ws-tbx-nav-key" aria-hidden="true">۲</span>
+                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+                    <span class="ws-tbx-nav-text">
+                        <strong>متراژ و قیمت</strong>
+                        <em>قیمت متر، متراژ یا کل</em>
+                    </span>
+                </button>
+                <button type="button" class="ws-tbx-nav-item" data-tool="commission" data-accent="green" role="tab" aria-selected="false" aria-controls="wsTbxPanelCommission">
+                    <span class="ws-tbx-nav-key" aria-hidden="true">۳</span>
+                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-percent"></i></span>
+                    <span class="ws-tbx-nav-text">
+                        <strong>کمیسیون معامله</strong>
+                        <em>سهم خریدار و فروشنده</em>
+                    </span>
+                </button>
+            </nav>
+
+            <div class="ws-tbx-rail-foot">
+                <span class="ws-tbx-rail-label">تحلیل بازار</span>
+                {% if active_dataset %}
+                <a href="{% url 'workspace:dataset_analyze' active_dataset.id %}" class="ws-tbx-analysis-card">
+                    <span class="ws-tbx-analysis-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+                    <span class="ws-tbx-analysis-body">
+                        <strong>تحلیل املاک</strong>
+                        <em>{{ active_dataset.name|truncatechars:28 }}</em>
+                    </span>
+                    <i class="fas fa-arrow-left ws-tbx-analysis-arrow" aria-hidden="true"></i>
+                </a>
+                {% else %}
+                <button type="button" class="ws-tbx-analysis-card is-empty" data-modal-open="modal-upload">
+                    <span class="ws-tbx-analysis-icon" aria-hidden="true"><i class="fas fa-upload"></i></span>
+                    <span class="ws-tbx-analysis-body">
+                        <strong>تحلیل بازار</strong>
+                        <em>ابتدا یک فایل داده آپلود کنید</em>
+                    </span>
+                    <i class="fas fa-plus ws-tbx-analysis-arrow" aria-hidden="true"></i>
+                </button>
+                {% endif %}
+            </div>
+        </aside>
+
+        <main class="ws-tbx-stage" id="wsTbxStage">
+
+            {# ─── ودیعه ↔ اجاره ─── #}
+            <section class="ws-tbx-panel is-active" id="wsTbxPanelDeposit" data-tool-panel="deposit" data-accent="purple" role="tabpanel">
+                <header class="ws-tbx-panel-head">
+                    <div class="ws-tbx-panel-head-icon" aria-hidden="true"><i class="fas fa-exchange-alt"></i></div>
+                    <div>
+                        <h2>تبدیل ودیعه ↔ اجاره</h2>
+                        <p>یکی از مقادیر را وارد کنید — نرخ پیش‌فرض ۳۰:۱</p>
+                    </div>
+                </header>
+
+                <div class="ws-tbx-panel-grid">
+                    <div class="ws-tbx-form-card">
+                        <div class="ws-tbx-formula" aria-hidden="true">
+                            <span>ودیعه</span><i class="fas fa-divide"></i><span>نرخ</span><i class="fas fa-equals"></i><span>اجاره</span>
+                        </div>
+                        <div class="ws-field">
+                            <label class="ws-label" for="tbxFullDeposit">ودیعه کامل (تومان)</label>
+                            <input type="text" inputmode="numeric" id="tbxFullDeposit" class="ws-input mk-filter-num" placeholder="۳۰۰,۰۰۰,۰۰۰" data-tbx-field="deposit">
+                        </div>
+                        <div class="ws-tbx-or"><span>یا</span></div>
+                        <div class="ws-field">
+                            <label class="ws-label" for="tbxFullRent">اجاره ماهانه (تومان)</label>
+                            <input type="text" inputmode="numeric" id="tbxFullRent" class="ws-input mk-filter-num" placeholder="۱۰,۰۰۰,۰۰۰" data-tbx-field="rent">
+                        </div>
+                        <div class="ws-field">
+                            <label class="ws-label" for="tbxRate">نرخ تبدیل (ودیعه ÷ اجاره)</label>
+                            <div class="ws-tbx-presets" role="group" aria-label="نرخ‌های پیش‌فرض">
+                                <button type="button" class="ws-tbx-preset is-active" data-rate="30">۳۰</button>
+                                <button type="button" class="ws-tbx-preset" data-rate="25">۲۵</button>
+                                <button type="button" class="ws-tbx-preset" data-rate="20">۲۰</button>
+                            </div>
+                            <input type="text" inputmode="numeric" id="tbxRate" class="ws-input mk-filter-num" value="30">
+                        </div>
+                    </div>
+
+                    <div class="ws-tbx-result-card" id="tbxDepositResult">
+                        <div class="ws-tbx-result-empty">
+                            <i class="fas fa-calculator" aria-hidden="true"></i>
+                            <p>مقدار را وارد کنید — نتیجه بلافاصله نمایش داده می‌شود</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {# ─── متراژ و قیمت ─── #}
+            <section class="ws-tbx-panel" id="wsTbxPanelArea" data-tool-panel="area" data-accent="blue" role="tabpanel" hidden>
+                <header class="ws-tbx-panel-head">
+                    <div class="ws-tbx-panel-head-icon" aria-hidden="true"><i class="fas fa-ruler-combined"></i></div>
+                    <div>
+                        <h2>متراژ و قیمت</h2>
+                        <p>دو مقدار از سه‌تایی را وارد کنید — سومی محاسبه می‌شود</p>
+                    </div>
+                </header>
+
+                <div class="ws-tbx-panel-grid">
+                    <div class="ws-tbx-form-card">
+                        <div class="ws-tbx-formula" aria-hidden="true">
+                            <span>متر</span><i class="fas fa-times"></i><span>قیمت متر</span><i class="fas fa-equals"></i><span>کل</span>
+                        </div>
+                        <div class="ws-field">
+                            <label class="ws-label" for="tbxPps">قیمت هر متر (میلیون)</label>
+                            <input type="text" inputmode="decimal" id="tbxPps" class="ws-input mk-filter-num" placeholder="۵۰">
+                        </div>
+                        <div class="ws-field">
+                            <label class="ws-label" for="tbxArea">متراژ (متر مربع)</label>
+                            <input type="text" inputmode="decimal" id="tbxArea" class="ws-input mk-filter-num" placeholder="۱۰۰">
+                        </div>
+                        <div class="ws-field">
+                            <label class="ws-label" for="tbxTotal">قیمت کل (تومان)</label>
+                            <input type="text" inputmode="numeric" id="tbxTotal" class="ws-input mk-filter-num" placeholder="۵,۰۰۰,۰۰۰,۰۰۰">
+                        </div>
+                    </div>
+
+                    <div class="ws-tbx-result-card" id="tbxAreaResult">
+                        <div class="ws-tbx-result-empty">
+                            <i class="fas fa-ruler-combined" aria-hidden="true"></i>
+                            <p>حداقل دو فیلد را پر کنید</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {# ─── کمیسیون ─── #}
+            <section class="ws-tbx-panel" id="wsTbxPanelCommission" data-tool-panel="commission" data-accent="green" role="tabpanel" hidden>
+                <header class="ws-tbx-panel-head">
+                    <div class="ws-tbx-panel-head-icon" aria-hidden="true"><i class="fas fa-percent"></i></div>
+                    <div>
+                        <h2>کمیسیون معامله</h2>
+                        <p>درصد جداگانه برای خریدار و فروشنده</p>
+                    </div>
+                </header>
+
+                <div class="ws-tbx-panel-grid">
+                    <div class="ws-tbx-form-card">
+                        <div class="ws-field">
+                            <label class="ws-label" for="tbxPrice">قیمت معامله (تومان)</label>
+                            <input type="text" inputmode="numeric" id="tbxPrice" class="ws-input mk-filter-num" placeholder="۵,۰۰۰,۰۰۰,۰۰۰">
+                        </div>
+                        <div class="ws-fields ws-fields-2">
+                            <div class="ws-field">
+                                <label class="ws-label" for="tbxBuyerPct">٪ خریدار</label>
+                                <input type="text" inputmode="decimal" id="tbxBuyerPct" class="ws-input mk-filter-num" value="1">
+                            </div>
+                            <div class="ws-field">
+                                <label class="ws-label" for="tbxSellerPct">٪ فروشنده</label>
+                                <input type="text" inputmode="decimal" id="tbxSellerPct" class="ws-input mk-filter-num" value="1">
+                            </div>
+                        </div>
+                        <div class="ws-tbx-presets" role="group" aria-label="درصدهای رایج">
+                            <button type="button" class="ws-tbx-preset" data-commission="1,1">۱٪ + ۱٪</button>
+                            <button type="button" class="ws-tbx-preset" data-commission="0.5,0.5">۰٫۵٪ + ۰٫۵٪</button>
+                            <button type="button" class="ws-tbx-preset" data-commission="1,0">۱٪ خریدار</button>
+                        </div>
+                    </div>
+
+                    <div class="ws-tbx-result-card" id="tbxCommissionResult">
+                        <div class="ws-tbx-result-empty">
+                            <i class="fas fa-percent" aria-hidden="true"></i>
+                            <p>قیمت معامله را وارد کنید</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'workspace/js/tools.js' %}?v=1"></script>
+{% endblock %}

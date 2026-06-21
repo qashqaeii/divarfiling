@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}پروفایل | میزکار{% endblock %}
+
+{% block content %}
+<div class="mk-profile-page">
+    <div class="mk-profile-card">
+        <header class="mk-profile-head">
+            <div class="mk-profile-avatar"><i class="fas fa-user" aria-hidden="true"></i></div>
+            <div>
+                <h1>ویرایش پروفایل</h1>
+                <p>اطلاعات حساب کاربری خود را به‌روز کنید</p>
+            </div>
+        </header>
+        <form method="post" enctype="multipart/form-data" class="mk-profile-form">
+            {% csrf_token %}
+            <div class="mk-form-group">
+                <label>{{ form.avatar.label }}</label>
+                {{ form.avatar }}
+            </div>
+            <div class="mk-form-group">
+                <label>{{ form.bio.label }}</label>
+                {{ form.bio }}
+            </div>
+            <div class="mk-form-row">
+                <div class="mk-form-group">
+                    <label>{{ form.city.label }}</label>
+                    {{ form.city }}
+                </div>
+                <div class="mk-form-group">
+                    <label>{{ form.postal_code.label }}</label>
+                    {{ form.postal_code }}
+                </div>
+            </div>
+            <div class="mk-form-group">
+                <label>{{ form.address.label }}</label>
+                {{ form.address }}
+            </div>
+            <button type="submit" class="btn btn-primary mk-profile-submit">
+                <i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

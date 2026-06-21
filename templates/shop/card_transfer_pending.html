@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static currency_tags persian_tags %}
+
+{% block title %}در انتظار تایید پرداخت{% endblock %}
+
+{% block body_class %}mk-checkout-page ctp-page-wrap ctp-pending-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/mizkar-card-transfer.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="ctp ctp--pending">
+    <header class="ctp-head">
+        <a href="{% url 'product_detail' order.product.slug %}" class="ctp-back">
+            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            <span>بازگشت به محصول</span>
+        </a>
+        <span class="ctp-badge ctp-badge--amber">در انتظار تایید</span>
+    </header>
+
+    <nav class="ctp-rail ctp-rail--compact" aria-label="پیشرفت پرداخت">
+        <div class="ctp-rail-item is-done"><span class="ctp-rail-dot"></span><span>پلن</span></div>
+        <div class="ctp-rail-line is-done"></div>
+        <div class="ctp-rail-item is-done"><span class="ctp-rail-dot"></span><span>واریز</span></div>
+        <div class="ctp-rail-line is-done"></div>
+        <div class="ctp-rail-item is-done"><span class="ctp-rail-dot"></span><span>رسید</span></div>
+        <div class="ctp-rail-line is-active"></div>
+        <div class="ctp-rail-item is-active"><span class="ctp-rail-dot"></span><span>تایید</span></div>
+    </nav>
+
+    <div class="ctp-pending-layout">
+        <section class="ctp-pending-hero" aria-labelledby="pending-title">
+            <div class="ctp-pending-visual" aria-hidden="true">
+                <span class="ctp-pending-orbit ctp-pending-orbit--1"></span>
+                <span class="ctp-pending-orbit ctp-pending-orbit--2"></span>
+                <span class="ctp-pending-visual-core">
+                    <i class="fas fa-check"></i>
+                    <i class="fas fa-hourglass-half ctp-pending-sand"></i>
+                </span>
+            </div>
+            <p class="ctp-pending-kicker">رسید ثبت شد</p>
+            <h1 id="pending-title">در صف بررسی پشتیبانی</h1>
+            <p class="ctp-pending-lead">
+                درخواست شما دریافت شد. پس از تطبیق واریز با حساب بانکی، لایسنس به‌صورت خودکار در پنل کاربری فعال می‌شود.
+            </p>
+            <ul class="ctp-pending-estimate">
+                <li><i class="fas fa-clock" aria-hidden="true"></i> زمان معمول بررسی: کمتر از ۲۴ ساعت</li>
+                <li><i class="fas fa-bell-slash" aria-hidden="true"></i> وضعیت را از پنل کاربری پیگیری کنید</li>
+            </ul>
+        </section>
+
+        <aside class="ctp-ticket" aria-label="جزئیات درخواست">
+            <div class="ctp-ticket-notch" aria-hidden="true"></div>
+            <div class="ctp-ticket-head">
+                <span class="ctp-ticket-label">شماره پیگیری</span>
+                {% if submission %}
+                <code class="ctp-ticket-ref" dir="ltr">{{ submission.reference_number }}</code>
+                {% else %}
+                <code class="ctp-ticket-ref">—</code>
+                {% endif %}
+            </div>
+
+            <div class="ctp-ticket-grid">
+                <div class="ctp-ticket-cell">
+                    <span>محصول</span>
+                    <strong>{{ order.product.title|truncatechars:32 }}</strong>
+                </div>
+                <div class="ctp-ticket-cell">
+                    <span>پلن</span>
+                    <strong>{{ order.plan.name }}</strong>
+                </div>
+                <div class="ctp-ticket-cell ctp-ticket-cell--amount">
+                    <span>مبلغ واریزی</span>
+                    <strong>{{ order.amount|currency }}<small>تومان</small></strong>
+                </div>
+                <div class="ctp-ticket-cell">
+                    <span>وضعیت</span>
+                    <strong>
+                        {% if submission %}
+                        <span class="ctp-status-pill">{{ submission.get_status_display }}</span>
+                        {% else %}
+                        <span class="ctp-status-pill">در انتظار</span>
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+
+            {% if submission %}
+            <p class="ctp-ticket-meta">
+                <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                ثبت شده {{ submission.created_at|to_jalali }}
+            </p>
+            {% endif %}
+
+            <div class="ctp-ticket-barcode" aria-hidden="true">
+                {% for i in "1234567890123456789012345678901234567890" %}
+                <span{% if forloop.counter|divisibleby:3 %} class="is-gap"{% endif %}></span>
+                {% endfor %}
+            </div>
+        </aside>
+    </div>
+
+    <section class="ctp-next" aria-label="مراحل بعدی">
+        <h2 class="ctp-next-title">بعد از تایید چه می‌شود؟</h2>
+        <ol class="ctp-next-list">
+            <li>
+                <span class="ctp-next-num">۱</span>
+                <div>
+                    <strong>تایید واریز</strong>
+                    <p>مدیر مبلغ و رسید را با حساب بانکی تطبیق می‌دهد.</p>
+                </div>
+            </li>
+            <li>
+                <span class="ctp-next-num">۲</span>
+                <div>
+                    <strong>صدور لایسنس</strong>
+                    <p>کلید لایسنس به‌صورت خودکار برای سفارش شما ساخته می‌شود.</p>
+                </div>
+            </li>
+            <li>
+                <span class="ctp-next-num">۳</span>
+                <div>
+                    <strong>فعال‌سازی در میزکار</strong>
+                    <p>از پنل کاربری می‌توانید ربات را دانلود و فعال کنید.</p>
+                </div>
+            </li>
+        </ol>
+    </section>
+
+    <footer class="ctp-pending-foot">
+        <a href="{% url 'dashboard' %}" class="ctp-submit ctp-submit--inline">
+            <span>رفتن به پنل کاربری</span>
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        </a>
+        <a href="{% url 'license_guide' %}" class="ctp-pending-link">راهنمای فعال‌سازی لایسنس</a>
+        {% if pay_settings.support_contact %}
+        <p class="ctp-pending-support">
+            <i class="fas fa-headset" aria-hidden="true"></i>
+            پشتیبانی: <span dir="ltr">{{ pay_settings.support_contact }}</span>
+        </p>
+        {% endif %}
+    </footer>
+</div>
+{% endblock %}

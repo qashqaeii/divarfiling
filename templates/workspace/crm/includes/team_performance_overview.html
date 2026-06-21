@@ -1,0 +1,229 @@
+{% load crm_tags %}
+<section class="crm-perf-dashboard" aria-label="داشبورد عملکرد تیم">
+
+    <div class="crm-perf-kpis" aria-label="شاخص‌های کل تیم">
+        <article class="crm-perf-kpi crm-perf-kpi--contacts">
+            <span class="crm-perf-kpi-icon"><i class="fas fa-users"></i></span>
+            <div class="crm-perf-kpi-body">
+                <span class="crm-perf-kpi-val">{{ performance.totals.contacts }}</span>
+                <span class="crm-perf-kpi-lbl">مخاطب</span>
+            </div>
+        </article>
+        <article class="crm-perf-kpi crm-perf-kpi--properties">
+            <span class="crm-perf-kpi-icon"><i class="fas fa-building"></i></span>
+            <div class="crm-perf-kpi-body">
+                <span class="crm-perf-kpi-val">{{ performance.totals.properties }}</span>
+                <span class="crm-perf-kpi-lbl">فایل ملک</span>
+            </div>
+        </article>
+        <article class="crm-perf-kpi crm-perf-kpi--calls">
+            <span class="crm-perf-kpi-icon"><i class="fas fa-phone"></i></span>
+            <div class="crm-perf-kpi-body">
+                <span class="crm-perf-kpi-val">{{ performance.totals.calls }}</span>
+                <span class="crm-perf-kpi-lbl">تماس · {{ performance.days }} روز</span>
+            </div>
+        </article>
+        <article class="crm-perf-kpi crm-perf-kpi--visits">
+            <span class="crm-perf-kpi-icon"><i class="fas fa-door-open"></i></span>
+            <div class="crm-perf-kpi-body">
+                <span class="crm-perf-kpi-val">{{ performance.totals.visits }}</span>
+                <span class="crm-perf-kpi-lbl">بازدید</span>
+            </div>
+        </article>
+        <article class="crm-perf-kpi crm-perf-kpi--closed">
+            <span class="crm-perf-kpi-icon"><i class="fas fa-handshake"></i></span>
+            <div class="crm-perf-kpi-body">
+                <span class="crm-perf-kpi-val">{{ performance.totals.deals_closed }}</span>
+                <span class="crm-perf-kpi-lbl">معامله بسته</span>
+            </div>
+        </article>
+        <article class="crm-perf-kpi crm-perf-kpi--active">
+            <span class="crm-perf-kpi-icon"><i class="fas fa-bolt"></i></span>
+            <div class="crm-perf-kpi-body">
+                <span class="crm-perf-kpi-val">{{ performance.totals.active_deals }}</span>
+                <span class="crm-perf-kpi-lbl">معامله فعال</span>
+            </div>
+        </article>
+    </div>
+
+    {% if performance.top %}
+    <article class="crm-perf-spotlight" aria-label="برترین عملکرد">
+        <div class="crm-perf-spotlight-glow" aria-hidden="true"></div>
+        <div class="crm-perf-spotlight-badge"><i class="fas fa-crown"></i> برترین عملکرد</div>
+        <div class="crm-perf-spotlight-main">
+            <div class="crm-perf-score-ring" style="--pct: {{ performance.top.score_pct }}">
+                <span class="crm-perf-score-val">{{ performance.top.score_pct }}%</span>
+                <svg viewBox="0 0 36 36" aria-hidden="true"><circle class="crm-perf-score-track" cx="18" cy="18" r="15.5"/><circle class="crm-perf-score-fill" cx="18" cy="18" r="15.5"/></svg>
+            </div>
+            <div class="crm-perf-spotlight-identity">
+                <span class="crm-team-avatar crm-team-avatar--lg" style="--hue: {{ performance.top.name|crm_avatar_hue }}">{{ performance.top.name|crm_initials }}</span>
+                <div>
+                    <strong>{{ performance.top.name }}</strong>
+                    <span class="crm-team-role-pill" style="{% crm_agency_role_style performance.top.member.role %}">{{ performance.top.role }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="crm-perf-spotlight-metrics">
+            <span><em>{{ performance.top.calls }}</em> تماس</span>
+            <span><em>{{ performance.top.visits }}</em> بازدید</span>
+            <span><em>{{ performance.top.deals_closed }}</em> بسته‌شده</span>
+            <span><em>{{ performance.top.active_deals }}</em> فعال</span>
+        </div>
+    </article>
+    {% endif %}
+
+    <div class="crm-perf-layout">
+        <section class="crm-perf-panel crm-perf-panel--chart" aria-labelledby="crm-perf-chart-title">
+            <header class="crm-perf-panel-head">
+                <div>
+                    <h2 id="crm-perf-chart-title">مقایسه بصری اعضا</h2>
+                    <p>نسبت هر مشاور به بالاترین مقدار در هر شاخص · {{ performance.days }} روز اخیر</p>
+                </div>
+            </header>
+            <div class="crm-perf-chart" role="img" aria-label="نمودار مقایسه عملکرد اعضا">
+                {% for row in performance.members %}
+                <div class="crm-perf-chart-member">
+                    <div class="crm-perf-chart-member-head">
+                        <span class="crm-team-avatar" style="--hue: {{ row.name|crm_avatar_hue }}">{{ row.name|crm_initials }}</span>
+                        <div class="crm-perf-chart-member-meta">
+                            <strong>{{ row.name }}</strong>
+                            <span class="crm-team-role-pill" style="{% crm_agency_role_style row.member.role %}">{{ row.role }}</span>
+                        </div>
+                        <span class="crm-perf-chart-score">{{ row.score_pct }}%</span>
+                    </div>
+                    <div class="crm-perf-chart-bars">
+                        <div class="crm-perf-chart-bar-row" title="تماس">
+                            <span class="crm-perf-chart-bar-lbl"><i class="fas fa-phone"></i></span>
+                            <div class="crm-perf-chart-bar crm-perf-chart-bar--call"><i style="width: {{ row.calls_pct }}%"></i></div>
+                            <span class="crm-perf-chart-bar-num">{{ row.calls }}</span>
+                        </div>
+                        <div class="crm-perf-chart-bar-row" title="بازدید">
+                            <span class="crm-perf-chart-bar-lbl"><i class="fas fa-door-open"></i></span>
+                            <div class="crm-perf-chart-bar crm-perf-chart-bar--visit"><i style="width: {{ row.visits_pct }}%"></i></div>
+                            <span class="crm-perf-chart-bar-num">{{ row.visits }}</span>
+                        </div>
+                        <div class="crm-perf-chart-bar-row" title="معامله بسته">
+                            <span class="crm-perf-chart-bar-lbl"><i class="fas fa-handshake"></i></span>
+                            <div class="crm-perf-chart-bar crm-perf-chart-bar--deal"><i style="width: {{ row.closed_pct }}%"></i></div>
+                            <span class="crm-perf-chart-bar-num">{{ row.deals_closed }}</span>
+                        </div>
+                        <div class="crm-perf-chart-bar-row" title="معامله فعال">
+                            <span class="crm-perf-chart-bar-lbl"><i class="fas fa-bolt"></i></span>
+                            <div class="crm-perf-chart-bar crm-perf-chart-bar--active"><i style="width: {{ row.active_pct }}%"></i></div>
+                            <span class="crm-perf-chart-bar-num">{{ row.active_deals }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="crm-perf-panel crm-perf-panel--matrix" aria-labelledby="crm-perf-matrix-title">
+            <header class="crm-perf-panel-head">
+                <div>
+                    <h2 id="crm-perf-matrix-title">ماتریس عملکرد</h2>
+                    <p>مقایسه دقیق — فقط آمار تجمیعی، بدون دسترسی به پرونده‌ها</p>
+                </div>
+            </header>
+            <div class="crm-perf-matrix-wrap">
+                <table class="crm-perf-matrix">
+                    <thead>
+                        <tr>
+                            <th scope="col">مشاور</th>
+                            <th scope="col">امتیاز</th>
+                            <th scope="col">مخاطب</th>
+                            <th scope="col">فایل</th>
+                            <th scope="col">تماس</th>
+                            <th scope="col">بازدید</th>
+                            <th scope="col">فعال</th>
+                            <th scope="col">بسته</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in performance.members %}
+                        <tr class="crm-perf-matrix-row {% if forloop.first %}crm-perf-matrix-row--top{% endif %}">
+                            <th scope="row">
+                                <div class="crm-perf-matrix-user">
+                                    <span class="crm-perf-rank">{% if row.rank <= 3 %}<i class="fas fa-medal"></i>{% else %}{{ row.rank }}{% endif %}</span>
+                                    <span class="crm-team-avatar crm-team-avatar--xs" style="--hue: {{ row.name|crm_avatar_hue }}">{{ row.name|crm_initials }}</span>
+                                    <span class="crm-perf-matrix-name">{{ row.name }}</span>
+                                </div>
+                            </th>
+                            <td>
+                                <span class="crm-perf-heat crm-perf-heat--score" style="--intensity: {{ row.score_pct }}">{{ row.score_pct }}%</span>
+                            </td>
+                            <td><span class="crm-perf-heat crm-perf-heat--contacts" style="--intensity: {{ row.contacts_pct }}">{{ row.contacts }}</span></td>
+                            <td><span class="crm-perf-heat crm-perf-heat--props" style="--intensity: {{ row.properties_pct }}">{{ row.properties }}</span></td>
+                            <td><span class="crm-perf-heat crm-perf-heat--calls" style="--intensity: {{ row.calls_pct }}">{{ row.calls }}</span></td>
+                            <td><span class="crm-perf-heat crm-perf-heat--visits" style="--intensity: {{ row.visits_pct }}">{{ row.visits }}</span></td>
+                            <td><span class="crm-perf-heat crm-perf-heat--active" style="--intensity: {{ row.active_pct }}">{{ row.active_deals }}</span></td>
+                            <td><span class="crm-perf-heat crm-perf-heat--closed" style="--intensity: {{ row.closed_pct }}">{{ row.deals_closed }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <section class="crm-perf-panel crm-perf-panel--cards" aria-labelledby="crm-perf-cards-title">
+        <header class="crm-perf-panel-head">
+            <div>
+                <h2 id="crm-perf-cards-title">کارت عملکرد مشاوران</h2>
+                <p>نمای خلاصه برای پیگیری سریع هر عضو</p>
+            </div>
+        </header>
+        <div class="crm-perf-cards">
+            {% for row in performance.members %}
+            <article class="crm-perf-card {% if forloop.first %}crm-perf-card--top{% endif %}">
+                <header class="crm-perf-card-head">
+                    <span class="crm-perf-rank">{% if row.rank <= 3 %}<i class="fas fa-medal"></i>{% else %}#{{ row.rank }}{% endif %}</span>
+                    <span class="crm-team-avatar crm-team-avatar--lg" style="--hue: {{ row.name|crm_avatar_hue }}">{{ row.name|crm_initials }}</span>
+                    <div class="crm-perf-card-identity">
+                        <strong>{{ row.name }}</strong>
+                        <span class="crm-team-role-pill" style="{% crm_agency_role_style row.member.role %}">{{ row.role }}</span>
+                    </div>
+                    <div class="crm-perf-score-ring crm-perf-score-ring--sm" style="--pct: {{ row.score_pct }}">
+                        <span class="crm-perf-score-val">{{ row.score_pct }}</span>
+                        <svg viewBox="0 0 36 36" aria-hidden="true"><circle class="crm-perf-score-track" cx="18" cy="18" r="15.5"/><circle class="crm-perf-score-fill" cx="18" cy="18" r="15.5"/></svg>
+                    </div>
+                </header>
+                <div class="crm-perf-card-metrics">
+                    <div class="crm-perf-card-metric">
+                        <span class="crm-perf-card-metric-lbl">مخاطب</span>
+                        <span class="crm-perf-card-metric-val">{{ row.contacts }}</span>
+                        <span class="crm-perf-card-metric-bar"><i style="width: {{ row.contacts_pct }}%"></i></span>
+                    </div>
+                    <div class="crm-perf-card-metric">
+                        <span class="crm-perf-card-metric-lbl">فایل</span>
+                        <span class="crm-perf-card-metric-val">{{ row.properties }}</span>
+                        <span class="crm-perf-card-metric-bar crm-perf-card-metric-bar--prop"><i style="width: {{ row.properties_pct }}%"></i></span>
+                    </div>
+                    <div class="crm-perf-card-metric">
+                        <span class="crm-perf-card-metric-lbl">تماس</span>
+                        <span class="crm-perf-card-metric-val">{{ row.calls }}</span>
+                        <span class="crm-perf-card-metric-bar crm-perf-card-metric-bar--call"><i style="width: {{ row.calls_pct }}%"></i></span>
+                    </div>
+                    <div class="crm-perf-card-metric">
+                        <span class="crm-perf-card-metric-lbl">بازدید</span>
+                        <span class="crm-perf-card-metric-val">{{ row.visits }}</span>
+                        <span class="crm-perf-card-metric-bar crm-perf-card-metric-bar--visit"><i style="width: {{ row.visits_pct }}%"></i></span>
+                    </div>
+                    <div class="crm-perf-card-metric">
+                        <span class="crm-perf-card-metric-lbl">فعال</span>
+                        <span class="crm-perf-card-metric-val">{{ row.active_deals }}</span>
+                        <span class="crm-perf-card-metric-bar crm-perf-card-metric-bar--active"><i style="width: {{ row.active_pct }}%"></i></span>
+                    </div>
+                    <div class="crm-perf-card-metric">
+                        <span class="crm-perf-card-metric-lbl">بسته</span>
+                        <span class="crm-perf-card-metric-val crm-perf-card-metric-val--accent">{{ row.deals_closed }}</span>
+                        <span class="crm-perf-card-metric-bar crm-perf-card-metric-bar--deal"><i style="width: {{ row.closed_pct }}%"></i></span>
+                    </div>
+                </div>
+            </article>
+            {% empty %}
+            <p class="crm-team-empty-v2">هنوز عضوی در تیم نیست.</p>
+            {% endfor %}
+        </div>
+    </section>
+</section>

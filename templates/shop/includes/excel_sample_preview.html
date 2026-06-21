@@ -1,0 +1,121 @@
+{% load static %}
+{% if excel_sample %}
+<section class="pb-band pb-excel-band" id="excel-sample" aria-labelledby="pb-excel-title">
+    <div class="container">
+        <div class="pb-excel-shell" data-pb-xls>
+            <header class="pb-excel-head">
+                <div class="pb-excel-head-copy">
+                    <span class="pb-head-kicker">نمونه خروجی واقعی</span>
+                    <h2 id="pb-excel-title">پیش‌نمایش فایل اکسل استخراج</h2>
+                    <p>
+                        داده واقعی از فایل
+                        <code dir="ltr">output/{{ excel_sample.folder_path }}{{ excel_sample.filename }}</code>
+                        — همان ساختاری که ربات روی سیستم شما می‌سازد.
+                    </p>
+                </div>
+                <ul class="pb-excel-meta" aria-label="مشخصات فایل">
+                    <li>
+                        <span class="pb-excel-meta-val">{{ excel_sample.total_rows }}</span>
+                        <span class="pb-excel-meta-lbl">ردیف آگهی</span>
+                    </li>
+                    <li>
+                        <span class="pb-excel-meta-val">{{ excel_sample.total_cols }}</span>
+                        <span class="pb-excel-meta-lbl">ستون داده</span>
+                    </li>
+                    <li>
+                        <span class="pb-excel-meta-val">فروش آپارتمان</span>
+                        <span class="pb-excel-meta-lbl">نوع معامله</span>
+                    </li>
+                </ul>
+            </header>
+
+            <div class="pb-xls-workbook" role="region" aria-label="پیش‌نمایش اکسل {{ excel_sample.filename }}">
+                <div class="pb-xls-titlebar" aria-hidden="true">
+                    <div class="pb-xls-titlebar-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="pb-xls-titlebar-brand">
+                        <i class="fas fa-file-excel"></i>
+                        <span dir="ltr">{{ excel_sample.filename }}</span>
+                    </div>
+                    <div class="pb-xls-titlebar-actions">
+                        <a href="{% static excel_sample.filename %}" class="pb-xls-titlebar-btn" download title="دانلود فایل نمونه">
+                            <i class="fas fa-download" aria-hidden="true"></i>
+                            <span>دانلود نمونه</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="pb-xls-ribbon" aria-hidden="true">
+                    <span class="pb-xls-ribbon-tab is-active">خانه</span>
+                    <span class="pb-xls-ribbon-tab">درج</span>
+                    <span class="pb-xls-ribbon-tab">نمایش</span>
+                    <div class="pb-xls-ribbon-tools">
+                        <span><i class="fas fa-bold"></i></span>
+                        <span><i class="fas fa-italic"></i></span>
+                        <span><i class="fas fa-align-right"></i></span>
+                        <span class="pb-xls-ribbon-sep"></span>
+                        <span><i class="fas fa-filter"></i> فیلتر</span>
+                        <span><i class="fas fa-sort"></i> مرتب‌سازی</span>
+                    </div>
+                </div>
+
+                <div class="pb-xls-formula" aria-live="polite">
+                    <span class="pb-xls-formula-name" data-pb-xls-cell-ref>A1</span>
+                    <span class="pb-xls-formula-fx">fx</span>
+                    <span class="pb-xls-formula-value" data-pb-xls-formula>شناسه</span>
+                </div>
+
+                <div class="pb-xls-viewport" data-pb-xls-scroll tabindex="0" role="grid" aria-rowcount="{{ excel_sample.preview_rows|add:2 }}" aria-colcount="{{ excel_sample.total_cols|add:1 }}">
+                    <table class="pb-xls-grid">
+                        <thead>
+                            <tr class="pb-xls-grid-letters">
+                                <th class="pb-xls-corner" scope="col" aria-label="شماره ردیف"></th>
+                                {% for col in excel_sample.columns %}
+                                <th class="pb-xls-letter" scope="col" dir="ltr">{{ col.letter }}</th>
+                                {% endfor %}
+                            </tr>
+                            <tr class="pb-xls-grid-headers">
+                                <th class="pb-xls-rowhead pb-xls-corner-label" scope="col">#</th>
+                                {% for col in excel_sample.columns %}
+                                <th class="pb-xls-colhead {{ col.class }}" scope="col">{{ col.name }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in excel_sample.rows %}
+                            <tr>
+                                <th class="pb-xls-rowhead" scope="row" dir="ltr">{{ row.num }}</th>
+                                {% for cell in row.cells %}
+                                <td class="{{ cell.class }}"{% if cell.title %} title="{{ cell.title }}"{% endif %}{% if cell.href %} data-href="{{ cell.href }}"{% endif %}>{{ cell.value }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pb-xls-statusbar" aria-hidden="true">
+                    <div class="pb-xls-statusbar-left">
+                        <span class="pb-xls-status-sheet is-active">
+                            <i class="fas fa-table" aria-hidden="true"></i>
+                            Sheet1
+                        </span>
+                    </div>
+                    <div class="pb-xls-statusbar-right">
+                        <span data-pb-xls-status>نمایش {{ excel_sample.preview_rows }} از {{ excel_sample.total_rows }} ردیف</span>
+                        <span>{{ excel_sample.total_cols }} ستون</span>
+                        <span>آماده</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="pb-excel-footnote">
+                <i class="fas fa-circle-info" aria-hidden="true"></i>
+                برای سرعت بارگذاری صفحه، {{ excel_sample.preview_rows }} ردیف اول نمایش داده می‌شود.
+                فایل کامل {{ excel_sample.total_rows }} آگهی با {{ excel_sample.total_cols }} فیلد استخراج‌شده دارد.
+            </p>
+        </div>
+    </div>
+</section>
+{% endif %}

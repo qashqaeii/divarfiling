@@ -1,0 +1,354 @@
+"""محدوده دسترسی CRM آژانس — حریم خصوصی اعضا + اشتراک صریح."""
+
+from __future__ import annotations
+
+
+
+from typing import Optional, Set
+
+
+
+from django.db.models import Q, QuerySet
+
+
+
+from workspace.constants import AGENCY_MANAGER_ROLES
+
+from workspace.models import (
+
+    CRMAgency, CRMAgencyMember, CRMDeal, CRMProperty, CRMResourceShare, Customer, Reminder,
+
+)
+
+
+
+
+
+def get_membership(user) -> Optional[CRMAgencyMember]:
+
+    if not user or not user.is_authenticated:
+
+        return None
+
+    return (
+
+        CRMAgencyMember.objects
+
+        .filter(user=user, is_active=True)
+
+        .select_related('agency', 'user')
+
+        .first()
+
+    )
+
+
+
+
+
+def get_agency(user) -> Optional[CRMAgency]:
+
+    m = get_membership(user)
+
+    return m.agency if m else None
+
+
+
+
+
+def can_manage_team(user) -> bool:
+
+    m = get_membership(user)
+
+    return bool(m and m.role in AGENCY_MANAGER_ROLES)
+
+
+
+
+
+def can_view_team_performance(user) -> bool:
+
+    """مدیر/مالک — مشاهده آمار عملکرد اعضا بدون دسترسی به پرونده‌ها."""
+
+    return can_manage_team(user)
+
+
+
+
+
+def can_assign_contacts(user) -> bool:
+
+    """مدیریت تیم — بدون دسترسی خودکار به داده‌های دیگران."""
+
+    return can_manage_team(user)
+
+
+
+
+
+def agency_members(agency: CRMAgency):
+
+    return (
+
+        CRMAgencyMember.objects
+
+        .filter(agency=agency, is_active=True)
+
+        .select_related('user')
+
+        .order_by('role', 'joined_at')
+
+    )
+
+
+
+
+
+def _shared_customer_ids(user, agency: CRMAgency) -> Set[int]:
+
+    return set(
+
+        CRMResourceShare.objects.filter(
+
+            agency=agency, shared_with=user, customer_id__isnull=False,
+
+        ).values_list('customer_id', flat=True)
+
+    )
+
+
+
+
+
+def _shared_property_ids(user, agency: CRMAgency) -> Set[int]:
+
+    return set(
+
+        CRMResourceShare.objects.filter(
+
+            agency=agency, shared_with=user, property_id__isnull=False,
+
+        ).values_list('property_id', flat=True)
+
+    )
+
+
+
+
+
+def _shared_deal_ids(user, agency: CRMAgency) -> Set[int]:
+
+    return set(
+
+        CRMResourceShare.objects.filter(
+
+            agency=agency, shared_with=user, deal_id__isnull=False,
+
+        ).values_list('deal_id', flat=True)
+
+    )
+
+
+
+
+
+def is_customer_owner(user, customer: Customer) -> bool:
+
+    return customer.user_id == user.id
+
+
+
+
+
+def is_property_owner(user, prop: CRMProperty) -> bool:
+
+    return prop.user_id == user.id
+
+
+
+
+
+def is_deal_owner(user, deal: CRMDeal) -> bool:
+
+    return deal.user_id == user.id
+
+
+
+
+
+def can_edit_customer(user, customer: Customer) -> bool:
+
+    return is_customer_owner(user, customer)
+
+
+
+
+
+def can_edit_property(user, prop: CRMProperty) -> bool:
+    if prop.deleted_at:
+        return False
+    if is_property_owner(user, prop):
+        return True
+    share = (
+        CRMResourceShare.objects.filter(property=prop, shared_with=user)
+        .only('share_mode')
+        .first()
+    )
+    return bool(
+        share and share.share_mode == CRMResourceShare.SHARE_MODE_COLLABORATIVE
+    )
+
+
+def property_share_mode(user, prop: CRMProperty) -> Optional[str]:
+    if is_property_owner(user, prop):
+        return None
+    share = (
+        CRMResourceShare.objects.filter(property=prop, shared_with=user)
+        .only('share_mode')
+        .first()
+    )
+    return share.share_mode if share else None
+
+
+
+
+
+def can_edit_deal(user, deal: CRMDeal) -> bool:
+
+    return is_deal_owner(user, deal)
+
+
+
+
+
+def customers_qs(user) -> QuerySet:
+
+    """فقط مخاطبین خود کاربر + موارد به‌اشتراک‌گذاشته‌شده."""
+
+    m = get_membership(user)
+
+    if not m:
+
+        return Customer.objects.filter(user=user)
+
+    shared = _shared_customer_ids(user, m.agency)
+
+    q = Q(user=user)
+
+    if shared:
+
+        q |= Q(pk__in=shared)
+
+    return Customer.objects.filter(agency=m.agency).filter(q)
+
+
+
+
+
+def properties_qs(user) -> QuerySet:
+
+    """فقط فایل‌های شخصی خود کاربر + موارد به‌اشتراک‌گذاشته‌شده (فعال)."""
+
+    m = get_membership(user)
+
+    if not m:
+
+        return CRMProperty.objects.filter(user=user, deleted_at__isnull=True)
+
+    shared = _shared_property_ids(user, m.agency)
+
+    q = Q(user=user)
+
+    if shared:
+
+        q |= Q(pk__in=shared)
+
+    return CRMProperty.objects.filter(agency=m.agency, deleted_at__isnull=True).filter(q)
+
+
+
+
+
+def deals_qs(user) -> QuerySet:
+
+    m = get_membership(user)
+
+    if not m:
+
+        return CRMDeal.objects.filter(user=user)
+
+    shared = _shared_deal_ids(user, m.agency)
+
+    q = Q(user=user)
+
+    if shared:
+
+        q |= Q(pk__in=shared)
+
+    return CRMDeal.objects.filter(agency=m.agency).filter(q)
+
+
+
+
+
+def reminders_qs(user) -> QuerySet:
+
+    m = get_membership(user)
+
+    if not m:
+
+        return Reminder.objects.filter(user=user)
+
+    accessible_customers = customers_qs(user).values_list('pk', flat=True)
+
+    return Reminder.objects.filter(
+
+        Q(user=user) | Q(customer_id__in=accessible_customers),
+
+    ).distinct()
+
+
+
+
+
+def customer_for_user(user, customer_id: int) -> Optional[Customer]:
+
+    return customers_qs(user).filter(pk=customer_id).first()
+
+
+
+
+
+def deal_for_user(user, deal_id: int) -> Optional[CRMDeal]:
+
+    return deals_qs(user).filter(pk=deal_id).first()
+
+
+
+
+
+def property_for_user(user, property_id: int) -> Optional[CRMProperty]:
+
+    prop = properties_qs(user).filter(pk=property_id).first()
+    if prop:
+        return prop
+
+    m = get_membership(user)
+    if not m:
+        return None
+
+    prop = CRMProperty.objects.filter(
+        pk=property_id, agency=m.agency, deleted_at__isnull=False,
+    ).first()
+    if not prop:
+        return None
+
+    if prop.user_id == user.id:
+        return prop
+
+    shared = CRMResourceShare.objects.filter(
+        agency=m.agency, shared_with=user, property_id=property_id,
+    ).exists()
+    return prop if shared else None
+
+

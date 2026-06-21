@@ -1,0 +1,514 @@
+{% extends 'workspace/crm/base_crm.html' %}
+{% load workspace_tags crm_tags %}
+
+{% block page_title %}{{ property.title }}{% endblock %}
+{% block crm_title %}{% endblock %}
+{% block crm_desc %}{% endblock %}
+{% block crm_search %}{% endblock %}
+{% block crm_actions %}{% endblock %}
+
+{% block crm_content %}
+{% if property_is_deleted %}
+<div class="crm-prop-detail-v2 crm-page-chrome">
+    <section class="crm-prop-deleted-page" aria-label="فایل حذف شده">
+        <div class="crm-prop-deleted-icon"><i class="fas fa-folder-minus"></i></div>
+        <h1>این فایل شخصی دیگر در دسترس نیست</h1>
+        {% if is_property_owner %}
+        <p>شما این ملک را حذف کرده‌اید. گیرندگان اشتراک دیگر به محتوای فایل دسترسی ندارند.</p>
+        {% elif property_is_shared %}
+        <p>مالک فایل، ملک <strong>«{{ property.title }}»</strong> را حذف کرده است.</p>
+        {% if property_owner_user %}
+        <p class="crm-prop-deleted-owner">مالک: {{ property_owner_user.get_full_name|default:property_owner_user.username }}</p>
+        {% endif %}
+        {% if property_share %}
+        <div class="crm-prop-deleted-share-meta">
+            <span>فرستنده: {{ property_share.shared_by.get_full_name|default:property_share.shared_by.username }}</span>
+            <span>گیرنده: {{ property_share.shared_with.get_full_name|default:property_share.shared_with.username }}</span>
+            <span>نوع ارسال: {{ property_share.get_share_mode_display }}</span>
+            <time>تاریخ ارسال: {{ property_share.created_at|ws_jalali }}</time>
+        </div>
+        {% endif %}
+        {% else %}
+        <p>این ملک در سیستم یافت نشد یا دسترسی شما به آن پایان یافته است.</p>
+        {% endif %}
+        <a href="{% url 'workspace:crm_properties' %}" class="crm-dash-act crm-dash-act--primary"><i class="fas fa-arrow-right"></i><span>بازگشت به فایل‌های شخصی</span></a>
+    </section>
+</div>
+{% else %}
+<div class="crm-prop-detail-v2 crm-page-chrome{% if is_confidential_share %} crm-prop-detail-v2--confidential{% elif is_collaborative_share %} crm-prop-detail-v2--collaborative{% endif %}">
+
+    {% if property_share %}
+    <section class="crm-prop-share-banner crm-prop-share-banner--{{ share_mode }}" aria-label="وضعیت اشتراک">
+        <div class="crm-prop-share-banner-mode">
+            {% if is_collaborative_share %}
+            <i class="fas fa-people-arrows"></i>
+            <div>
+                <strong>اشتراک کامل</strong>
+                <span>دسترسی کامل به فایل — امکان ویرایش مشترک</span>
+            </div>
+            {% else %}
+            <i class="fas fa-user-secret"></i>
+            <div>
+                <strong>ارسال محرمانه</strong>
+                <span>فقط اطلاعات معرفی ملک — مالک و لوکیشن دقیق مخفی</span>
+            </div>
+            {% endif %}
+        </div>
+        <div class="crm-prop-share-banner-flow">
+            <div class="crm-prop-share-party">
+                <span class="crm-prop-share-party-lbl">فرستنده</span>
+                <strong>{{ property_share.shared_by.get_full_name|default:property_share.shared_by.username }}</strong>
+            </div>
+            <i class="fas fa-arrow-left crm-prop-share-arrow" aria-hidden="true"></i>
+            <div class="crm-prop-share-party crm-prop-share-party--you">
+                <span class="crm-prop-share-party-lbl">گیرنده</span>
+                <strong>{{ property_share.shared_with.get_full_name|default:property_share.shared_with.username }}</strong>
+            </div>
+        </div>
+        <time class="crm-prop-share-banner-time">{{ property_share.created_at|ws_jalali }}</time>
+    </section>
+    {% endif %}
+
+    <header class="crm-prop-hero" aria-label="خلاصه ملک">
+        <div class="crm-prop-hero-top">
+            <div class="crm-prop-hero-identity">
+                <a href="{% url 'workspace:crm_properties' %}" class="crm-prop-hero-back" title="بازگشت به فایل‌ها">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <span class="crm-prop-hero-icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+                <div class="crm-prop-hero-copy">
+                    <div class="crm-prop-hero-title-row">
+                        <h1>{{ property.title }}</h1>
+                        <div class="crm-prop-hero-badges">
+                            <span class="crm-prop-badge crm-prop-badge--deal">{{ property.deal_mode }}</span>
+                            <span class="crm-prop-badge crm-prop-badge--status">{{ property.transaction_status }}</span>
+                            <span class="crm-prop-badge crm-prop-badge--type">{{ property.property_type }}</span>
+                            {% if property.publish_status %}
+                            <span class="crm-prop-badge crm-prop-badge--pub crm-prop-badge--pub-{{ property.publish_status }}">{{ property.publish_status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="crm-prop-hero-meta">
+                        {% if property_location_display and property_location_display != "—" %}
+                        <span><i class="fas fa-location-dot" aria-hidden="true"></i> {{ property_location_display }}</span>
+                        {% endif %}
+                        {% if property.token and not mask_sensitive %}
+                        <span class="crm-prop-hero-meta-sep">·</span>
+                        <span class="crm-prop-hero-token">
+                            <code>{{ property.token }}</code>
+                            <button type="button" class="crm-prop-copy" data-copy="{{ property.token }}" title="کپی"><i class="fas fa-copy"></i></button>
+                        </span>
+                        {% endif %}
+                        {% if is_property_owner %}
+                        <span class="crm-prop-hero-meta-sep">·</span>
+                        <span class="crm-prop-hero-owner-tag"><i class="fas fa-user"></i> مالک: شما</span>
+                        {% elif property_owner_user %}
+                        <span class="crm-prop-hero-meta-sep">·</span>
+                        <span class="crm-prop-hero-owner-tag"><i class="fas fa-user"></i> مالک: {{ property_owner_user.get_full_name|default:property_owner_user.username }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="crm-prop-hero-actions" role="toolbar">
+                {% if not mask_sensitive %}
+                {% if source_listing and source_listing.link %}
+                <a href="{{ source_listing.link }}" target="_blank" rel="noopener" class="crm-dash-act" title="دیوار">
+                    <i class="fas fa-external-link-alt"></i><span>دیوار</span>
+                </a>
+                {% elif property.link %}
+                <a href="{{ property.link }}" target="_blank" rel="noopener" class="crm-dash-act" title="لینک">
+                    <i class="fas fa-external-link-alt"></i><span>لینک</span>
+                </a>
+                {% endif %}
+                {% endif %}
+                {% if can_edit_property %}
+                <button type="button" class="crm-dash-act" data-drawer-open="drawer-document" title="آپلود مدرک">
+                    <i class="fas fa-paperclip"></i><span>مدرک</span>
+                </button>
+                <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-edit">
+                    <i class="fas fa-pen"></i><span>ویرایش</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="crm-prop-hero-metrics" aria-label="قیمت و مشخصات">
+            <div class="crm-prop-hero-prices">
+                {% if property.sale_price %}
+                <div class="crm-prop-hero-price crm-prop-hero-price--sale"><span>فروش</span><strong>{{ property.sale_price|ws_money }}</strong></div>
+                {% endif %}
+                {% if property.deposit %}
+                <div class="crm-prop-hero-price crm-prop-hero-price--dep"><span>رهن</span><strong>{{ property.deposit|ws_money }}</strong></div>
+                {% endif %}
+                {% if property.monthly_rent %}
+                <div class="crm-prop-hero-price crm-prop-hero-price--rent"><span>اجاره</span><strong>{{ property.monthly_rent|ws_money }}</strong></div>
+                {% endif %}
+                {% if not property.sale_price and not property.deposit and not property.monthly_rent %}
+                <div class="crm-prop-hero-price crm-prop-hero-price--empty"><span>قیمت ثبت نشده</span></div>
+                {% endif %}
+            </div>
+            <div class="crm-prop-hero-specs">
+                {% if property.area %}<div class="crm-prop-hero-spec"><i class="fas fa-ruler-combined"></i><em>متراژ</em><strong>{{ property.area|ws_area }}</strong></div>{% endif %}
+                {% if property.rooms %}<div class="crm-prop-hero-spec"><i class="fas fa-door-open"></i><em>اتاق</em><strong>{{ property.rooms }}</strong></div>{% endif %}
+                {% if property.floor %}<div class="crm-prop-hero-spec"><i class="fas fa-building"></i><em>طبقه</em><strong>{{ property.floor }}{% if property.total_floors %}/{{ property.total_floors }}{% endif %}</strong></div>{% endif %}
+                {% if property.build_year %}<div class="crm-prop-hero-spec"><i class="fas fa-calendar"></i><em>ساخت</em><strong>{{ property.build_year }}</strong></div>{% endif %}
+                <div class="crm-prop-hero-spec crm-prop-hero-spec--accent"><i class="fas fa-users"></i><em>مخاطب</em><strong>{% if mask_sensitive %}—{% else %}{{ contact_links|length }}{% endif %}</strong></div>
+                <div class="crm-prop-hero-spec"><i class="fas fa-clock"></i><em>بروزرسانی</em><strong class="crm-prop-hero-spec-time">{{ property.updated_at|ws_jalali }}</strong></div>
+            </div>
+        </div>
+
+        {% if property_is_shared and not can_edit_property and property_share %}
+        <div class="crm-prop-hero-share-view">
+            {% include 'workspace/crm/includes/shared_view_badge.html' with share=property_share %}
+        </div>
+        {% endif %}
+
+        {% if crm_agency and is_property_owner %}
+        <div class="crm-prop-hero-share-block" data-crm-property-team data-property-id="{{ property.pk }}">
+            <div class="crm-prop-share-bar">
+                <span class="crm-prop-share-bar-label" title="فایل خصوصی شما — فقط با ارسال صریح در اختیار هم‌تیمی قرار می‌گیرد">
+                    <i class="fas fa-lock" aria-hidden="true"></i>
+                    <span>فایل خصوصی</span>
+                </span>
+                <span class="crm-prop-share-bar-vrule" aria-hidden="true"></span>
+                <div class="crm-prop-share-segment" role="radiogroup" aria-label="نوع ارسال">
+                    <label class="crm-prop-share-seg" title="اشتراک کامل — اطلاعات کامل و ویرایش مشترک">
+                        <input type="radio" name="crm-prop-share-mode" value="collaborative" checked>
+                        <span><i class="fas fa-people-arrows" aria-hidden="true"></i> کامل</span>
+                    </label>
+                    <label class="crm-prop-share-seg" title="ارسال محرمانه — فقط معرفی ملک">
+                        <input type="radio" name="crm-prop-share-mode" value="confidential">
+                        <span><i class="fas fa-user-secret" aria-hidden="true"></i> محرمانه</span>
+                    </label>
+                </div>
+                <span class="crm-prop-share-bar-vrule" aria-hidden="true"></span>
+                <div class="crm-contact-team-actions crm-contact-team-actions--grouped">
+                    <select class="crm-select crm-select-sm" id="crm-prop-share-select" aria-label="ارسال به هم‌تیمی">
+                        <option value="">هم‌تیمی…</option>
+                        {% for m in agency_members %}{% if m.user_id != request.user.id %}
+                        <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
+                        {% endif %}{% endfor %}
+                    </select>
+                    <button type="button" class="crm-dash-act crm-dash-act--primary" id="crm-prop-share-btn"><i class="fas fa-paper-plane"></i><span>ارسال</span></button>
+                </div>
+            </div>
+            {% if property_shares %}
+            <ul class="crm-prop-share-out-list">
+                {% for s in property_shares %}
+                <li class="crm-prop-share-out-item crm-prop-share-out-item--{{ s.share_mode }}">
+                    <div class="crm-prop-share-out-flow">
+                        <div class="crm-prop-share-party">
+                            <span>فرستنده</span>
+                            <strong>{{ s.shared_by.get_full_name|default:s.shared_by.username }}</strong>
+                        </div>
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        <div class="crm-prop-share-party">
+                            <span>گیرنده</span>
+                            <strong>{{ s.shared_with.get_full_name|default:s.shared_with.username }}</strong>
+                        </div>
+                    </div>
+                    <span class="crm-prop-share-mode-chip crm-prop-share-mode-chip--{{ s.share_mode }}">{{ s.get_share_mode_display }}</span>
+                    <time>{{ s.created_at|ws_jalali }}</time>
+                    <button type="button" class="crm-team-icon-btn-v2" data-revoke-share="{{ s.pk }}" title="لغو اشتراک"><i class="fas fa-xmark"></i></button>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if property.has_parking or property.has_storage or property.has_elevator or listing_highlights %}
+        <div class="crm-prop-hero-tags">
+            {% if property.has_parking %}<span class="crm-prop-tag"><i class="fas fa-car"></i> پارکینگ</span>{% endif %}
+            {% if property.has_storage %}<span class="crm-prop-tag"><i class="fas fa-box"></i> انباری</span>{% endif %}
+            {% if property.has_elevator %}<span class="crm-prop-tag"><i class="fas fa-elevator"></i> آسانسور</span>{% endif %}
+            {% for hl in listing_highlights %}<span class="crm-prop-tag crm-prop-tag--hl">{{ hl }}</span>{% endfor %}
+        </div>
+        {% endif %}
+
+        {% if property.images %}
+        <div class="crm-prop-hero-gallery" aria-label="تصاویر">
+            {% for img in property.images|slice:":8" %}
+            <a href="{{ img }}" target="_blank" rel="noopener" class="crm-prop-gallery-item"><img src="{{ img }}" alt="" loading="lazy"></a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if property.address and not mask_sensitive %}
+        <p class="crm-prop-hero-address"><i class="fas fa-map-pin"></i> {{ property.address }}</p>
+        {% endif %}
+    </header>
+
+    <div class="crm-prop-detail-grid">
+        <main class="crm-prop-main crm-detail-main">
+            <nav class="crm-tabs crm-tabs-pro crm-prop-tabs" role="tablist">
+                <button type="button" class="crm-tab crm-tab-pro active" data-tab="overview" role="tab" aria-selected="true">
+                    <i class="fas fa-table-columns"></i><span>پرونده</span>
+                </button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="contacts" role="tab" aria-selected="false">
+                    <i class="fas fa-users"></i><span>مخاطبین</span>{% if not mask_sensitive and contact_links %}<em>{{ contact_links|length }}</em>{% endif %}
+                </button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="activity" role="tab" aria-selected="false">
+                    <i class="fas fa-clock-rotate-left"></i><span>فعالیت‌ها</span>{% if not mask_sensitive and activities %}<em>{{ activities|length }}</em>{% endif %}
+                </button>
+                {% if feature_profile.has_details %}
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="specs" role="tab" aria-selected="false">
+                    <i class="fas fa-list-check"></i><span>مشخصات</span>
+                </button>
+                {% endif %}
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="notes" role="tab" aria-selected="false">
+                    <i class="fas fa-note-sticky"></i><span>یادداشت</span>
+                </button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="docs" role="tab" aria-selected="false">
+                    <i class="fas fa-file"></i><span>مدارک</span>{% if not mask_sensitive and documents %}<em>{{ documents|length }}</em>{% endif %}
+                </button>
+            </nav>
+
+            <div data-panel="overview" class="crm-prop-panel crm-prop-panel-pro" role="tabpanel">
+                <header class="crm-prop-panel-head"><h2>پرونده کامل ملک</h2><p>تمام اطلاعات ثبت‌شده برای معرفی و پیگیری</p></header>
+                <div class="crm-prop-panel-body">
+                    {% include 'workspace/crm/includes/property_dossier_grid.html' %}
+                </div>
+            </div>
+
+            <div data-panel="contacts" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head crm-prop-panel-head--row">
+                    <div><h2>مخاطبین مرتبط</h2><p>افراد متصل به این ملک</p></div>
+                    {% if can_edit_property %}
+                    <div class="crm-prop-panel-head-actions">
+                        <button type="button" class="crm-dash-act" data-drawer-open="drawer-link-contact">
+                            <i class="fas fa-link"></i><span>پیوند مخاطب</span>
+                        </button>
+                        <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-create-contact">
+                            <i class="fas fa-user-plus"></i><span>مخاطب جدید</span>
+                        </button>
+                    </div>
+                    {% endif %}
+                </header>
+                <div class="crm-prop-panel-body">
+                    {% if mask_sensitive %}
+                    <div class="crm-prop-locked-panel">
+                        <div class="crm-prop-locked-icon"><i class="fas fa-user-shield"></i></div>
+                        <h3>اطلاعات مالک و مخاطبین محرمانه است</h3>
+                        <p>در ارسال محرمانه، نام مالک و مخاطبین مرتبط نمایش داده نمی‌شود.</p>
+                    </div>
+                    {% elif contact_links %}
+                    <div class="crm-prop-contact-grid">
+                        {% for link in contact_links %}
+                        <a href="{% url 'workspace:crm_detail' link.customer_id %}" class="crm-prop-contact-tile">
+                            <span class="crm-prop-contact-avatar">{{ link.customer.name|slice:":1" }}</span>
+                            <div class="crm-prop-contact-body">
+                                <strong>{{ link.customer.name }}</strong>
+                                <span class="crm-prop-contact-role" {% crm_role_style_attr link.role %}>{{ link.role }}</span>
+                                <div class="crm-prop-contact-meta">
+                                    {% if link.deal_type %}<span>{{ link.deal_type }}</span>{% endif %}
+                                    {% if link.interest_level %}<span>{{ link.interest_level }}</span>{% endif %}
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-left crm-prop-contact-go"></i>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="crm-prop-empty crm-prop-empty--pro">
+                        <div class="crm-prop-empty-icon"><i class="fas fa-user-plus"></i></div>
+                        <p>مخاطبی به این ملک پیوند نشده</p>
+                        {% if can_edit_property %}
+                        <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-create-contact">
+                            <i class="fas fa-user-plus"></i><span>ثبت و پیوند مخاطب</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div data-panel="activity" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head"><h2>فعالیت‌ها</h2><p>تاریخچه تعاملات</p></header>
+                <div class="crm-prop-panel-body">
+                    {% if mask_sensitive %}
+                    <div class="crm-prop-locked-panel">
+                        <div class="crm-prop-locked-icon"><i class="fas fa-clock-rotate-left"></i></div>
+                        <h3>فعالیت‌های مالک فایل مخفی است</h3>
+                        <p>تاریخچه تماس و پیگیری‌های مالک در حالت ارسال محرمانه قابل مشاهده نیست.</p>
+                    </div>
+                    {% elif activities %}
+                    <div class="crm-timeline crm-timeline-pro crm-prop-timeline">
+                        {% for a in activities %}
+                        <article class="crm-timeline-item">
+                            <div class="crm-timeline-icon"><i class="{{ a.activity_type|crm_activity_icon }}"></i></div>
+                            <div class="crm-timeline-body">
+                                <div class="crm-timeline-top">
+                                    <a href="{% url 'workspace:crm_detail' a.customer_id %}">{{ a.customer.name }}</a>
+                                    <time class="crm-timeline-time">{{ a.created_at|ws_jalali }}</time>
+                                </div>
+                                <span class="crm-pill">{{ a.activity_type }}</span>
+                                <p>{{ a.content }}</p>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="crm-prop-empty crm-prop-empty--pro"><div class="crm-prop-empty-icon"><i class="fas fa-clock-rotate-left"></i></div><p>فعالیتی ثبت نشده</p></div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if feature_profile.has_details %}
+            <div data-panel="specs" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head">
+                    <h2>مشخصات تفصیلی</h2>
+                    {% if source_listing and source_listing.link and not mask_sensitive %}
+                    <p>منبع: <a href="{{ source_listing.link }}" target="_blank" rel="noopener">مشاهده آگهی</a></p>
+                    {% endif %}
+                </header>
+                <div class="crm-prop-panel-body">
+                    {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div data-panel="notes" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head"><h2>یادداشت</h2></header>
+                <div class="crm-prop-panel-body">
+                    {% if mask_sensitive %}
+                    <div class="crm-prop-locked-panel">
+                        <div class="crm-prop-locked-icon"><i class="fas fa-note-sticky"></i></div>
+                        <h3>یادداشت خصوصی مالک</h3>
+                        <p>یادداشت‌های شخصی مالک فایل در ارسال محرمانه نمایش داده نمی‌شود.</p>
+                    </div>
+                    {% elif property.notes %}
+                    <div class="crm-notes-block crm-prop-notes">{{ property.notes|linebreaks }}</div>
+                    {% else %}
+                    <div class="crm-prop-empty crm-prop-empty--pro">
+                        <p>یادداشتی ثبت نشده</p>
+                        {% if can_edit_property %}<button type="button" class="crm-dash-act" data-drawer-open="drawer-edit">افزودن یادداشت</button>{% endif %}
+                    </div>
+                    {% endif %}
+                    {% if property.amenities %}
+                    <div class="crm-prop-notes-extra"><h3>امکانات</h3><p>{{ property.amenities }}</p></div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div data-panel="docs" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head crm-prop-panel-head--row">
+                    <div><h2>مدارک</h2></div>
+                    {% if can_edit_property %}
+                    <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-document"><i class="fas fa-upload"></i><span>آپلود</span></button>
+                    {% endif %}
+                </header>
+                <div class="crm-prop-panel-body">
+                    {% if mask_sensitive %}
+                    <div class="crm-prop-locked-panel">
+                        <div class="crm-prop-locked-icon"><i class="fas fa-file-shield"></i></div>
+                        <h3>مدارک مالک محرمانه است</h3>
+                        <p>فایل‌های آپلودشده توسط مالک در ارسال محرمانه در دسترس نیست.</p>
+                    </div>
+                    {% elif documents %}
+                    <ul class="crm-doc-list crm-prop-doc-list">
+                        {% for d in documents %}
+                        <li>
+                            <a href="{{ d.file.url }}" target="_blank" rel="noopener"><i class="fas fa-file-lines"></i><span>{{ d.title }}</span></a>
+                            <time>{{ d.uploaded_at|ws_jalali }}</time>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="crm-prop-empty crm-prop-empty--pro">
+                        <div class="crm-prop-empty-icon"><i class="fas fa-file"></i></div>
+                        <p>مدرکی آپلود نشده</p>
+                        {% if can_edit_property %}<button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-document">آپلود مدرک</button>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+
+        <aside class="crm-prop-aside" aria-label="اطلاعات پرونده">
+            {% if property_share %}
+            <div class="crm-prop-side-card crm-prop-side-card--pro crm-prop-side-card--share">
+                <h3>جزئیات اشتراک</h3>
+                <dl class="crm-prop-side-dl">
+                    <div><dt>نوع</dt><dd>{{ property_share.get_share_mode_display }}</dd></div>
+                    <div><dt>فرستنده</dt><dd>{{ property_share.shared_by.get_full_name|default:property_share.shared_by.username }}</dd></div>
+                    <div><dt>گیرنده</dt><dd>{{ property_share.shared_with.get_full_name|default:property_share.shared_with.username }}</dd></div>
+                    <div><dt>تاریخ</dt><dd>{{ property_share.created_at|ws_jalali }}</dd></div>
+                </dl>
+            </div>
+            {% endif %}
+            <div class="crm-prop-side-card crm-prop-side-card--pro">
+                <h3>خلاصه پرونده</h3>
+                <dl class="crm-prop-side-dl">
+                    <div><dt>نوع</dt><dd>{{ property.property_type }}</dd></div>
+                    <div><dt>معامله</dt><dd>{{ property.deal_mode }}</dd></div>
+                    <div><dt>وضعیت</dt><dd>{{ property.transaction_status }}</dd></div>
+                    <div><dt>انتشار</dt><dd>{{ property.publish_status|default:"—" }}</dd></div>
+                    {% if is_property_owner %}<div><dt>مالک</dt><dd>شما</dd></div>
+                    {% elif property_owner_user %}<div><dt>مالک</dt><dd>{{ property_owner_user.get_full_name|default:property_owner_user.username }}</dd></div>{% endif %}
+                    <div><dt>ثبت</dt><dd>{{ property.created_at|ws_jalali }}</dd></div>
+                </dl>
+            </div>
+            {% if is_property_owner %}
+            <form method="post" action="{% url 'workspace:crm_property_delete' property.id %}" class="crm-prop-delete-form" onsubmit="return confirm('حذف این ملک؟')">
+                {% csrf_token %}
+                <button type="submit" class="crm-prop-delete-btn"><i class="fas fa-trash"></i> حذف ملک</button>
+            </form>
+            {% endif %}
+        </aside>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block crm_drawers %}
+{% if can_edit_property %}
+<aside class="crm-drawer" id="drawer-edit" {% if open_drawer == 'edit' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg">
+        <div class="crm-drawer-head">
+            <div><h2>ویرایش ملک</h2><p>{{ property.title }}</p></div>
+            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:crm_property_edit' property.id %}" class="crm-drawer-form">
+            <div class="crm-drawer-body">{% csrf_token %}{% include 'workspace/crm/includes/property_form_sections.html' with form=property_form %}</div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary"><i class="fas fa-save"></i> ذخیره</button>
+            </div>
+        </form>
+    </div>
+</aside>
+<aside class="crm-drawer" id="drawer-document">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head"><h2>آپلود مدرک</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button></div>
+        <form method="post" enctype="multipart/form-data" class="crm-drawer-form">
+            <div class="crm-drawer-body">{% csrf_token %}<input type="hidden" name="action" value="add_document">{% render_fields document_form 1 %}</div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary"><i class="fas fa-upload"></i> آپلود</button>
+            </div>
+        </form>
+    </div>
+</aside>
+{% include 'workspace/crm/includes/drawer_property_contacts.html' %}
+{% endif %}
+{% endblock %}
+
+{% block crm_js %}
+{% if crm_agency and is_property_owner %}
+<script>
+window.crmPropShareUrl = "{% url 'workspace:crm_property_share' property.id %}";
+window.crmShareRevokeUrlTemplate = "{% url 'workspace:crm_share_revoke' share_id=0 %}".replace('/0/', '/{id}/');
+</script>
+{% endif %}
+{% if active_tab %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const tab = document.querySelector('.crm-tab[data-tab="{{ active_tab }}"]');
+    if (tab) tab.click();
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+<div class="ws-bot-banner{% if has_pending_bot_activation %} ws-bot-banner--pending{% else %} ws-bot-banner--cta{% endif %}" role="status">
+    <div class="ws-bot-banner-glow" aria-hidden="true"></div>
+    <div class="ws-bot-banner-icon ws-up-icon ws-up-icon--banner ws-up-icon--solid" aria-hidden="true">
+        <i class="fas {% if has_pending_bot_activation %}fa-key{% else %}fa-robot{% endif %}"></i>
+    </div>
+    <div class="ws-bot-banner-body">
+        {% if has_pending_bot_activation %}
+        <span class="ws-bot-banner-badge ws-bot-banner-badge--warn"><i class="fas fa-circle"></i> در انتظار فعال‌سازی</span>
+        <strong>لایسنس خریداری شده — فعال‌سازی در ربات لازم است</strong>
+        <p>پرداخت شما ثبت شده است. ربات را نصب کنید و کلید لایسنس را وارد کنید تا فایلینگ، تحلیل و ابزارهای هوشمند باز شوند.</p>
+        {% else %}
+        <span class="ws-bot-banner-badge"><i class="fas fa-sparkles"></i> ارتقا به نسخه کامل</span>
+        <strong>میزکار CRM برای شما فعال است</strong>
+        <p>برای آپلود فایل‌های دیوار، تحلیل بازار و ابزارهای هوشمند، ربات استخراج را خریداری و لایسنس را فعال کنید.</p>
+        {% endif %}
+    </div>
+    <div class="ws-bot-banner-actions">
+        {% if has_pending_bot_activation %}
+        <a href="{% url 'license_guide' %}" class="ws-btn ws-btn-ghost ws-btn-sm">راهنمای فعال‌سازی</a>
+        <a href="{% url 'dashboard' %}" class="ws-btn ws-btn-primary ws-btn-sm"><i class="fas fa-key"></i> کلید لایسنس</a>
+        {% else %}
+        <a href="{% url 'workspace:upgrade' %}" class="ws-btn ws-btn-ghost ws-btn-sm">امکانات ربات</a>
+        <a href="{{ bot_buy_url }}" class="ws-btn ws-btn-primary ws-btn-sm"><i class="fas fa-shopping-cart"></i> خرید ربات</a>
+        {% endif %}
+    </div>
+</div>

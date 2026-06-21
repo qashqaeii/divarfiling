@@ -1,0 +1,37 @@
+<nav class="crm-nav" aria-label="ناوبری CRM">
+    <a href="{% url 'workspace:crm_dashboard' %}" class="crm-nav-item {% if crm_section == 'dashboard' %}active{% endif %}">
+        <i class="fas fa-chart-pie" aria-hidden="true"></i><span>داشبورد</span>
+    </a>
+    <a href="{% url 'workspace:crm_today' %}" class="crm-nav-item {% if crm_section == 'today' %}active{% endif %}">
+        <i class="fas fa-list-check" aria-hidden="true"></i><span>امروز</span>
+        {% if crm_nav_counts.today %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.today }}</em>{% endif %}
+    </a>
+    <a href="{% url 'workspace:crm_contacts' %}" class="crm-nav-item {% if crm_section == 'contacts' %}active{% endif %}">
+        <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
+        {% if crm_nav_counts.contacts %}<em class="crm-nav-count">{{ crm_nav_counts.contacts }}</em>{% endif %}
+    </a>
+    <a href="{% url 'workspace:crm_deals' %}" class="crm-nav-item {% if crm_section == 'deals' %}active{% endif %}">
+        <i class="fas fa-handshake" aria-hidden="true"></i><span>معاملات</span>
+        {% if crm_nav_counts.deals %}<em class="crm-nav-count">{{ crm_nav_counts.deals }}</em>{% endif %}
+    </a>
+    <a href="{% url 'workspace:crm_properties' %}" class="crm-nav-item {% if crm_section == 'properties' %}active{% endif %}">
+        <i class="fas fa-folder-open" aria-hidden="true"></i><span>فایل‌های شخصی</span>
+        {% if crm_nav_counts.properties %}<em class="crm-nav-count">{{ crm_nav_counts.properties }}</em>{% endif %}
+    </a>
+    <a href="{% url 'workspace:crm_calendar' %}" class="crm-nav-item {% if crm_section == 'calendar' %}active{% endif %}">
+        <i class="fas fa-calendar" aria-hidden="true"></i><span>تقویم</span>
+    </a>
+    <a href="{% url 'workspace:crm_templates' %}" class="crm-nav-item {% if crm_section == 'templates' %}active{% endif %}">
+        <i class="fas fa-message" aria-hidden="true"></i><span>قالب پیام</span>
+    </a>
+    <a href="{% url 'workspace:crm_automation' %}" class="crm-nav-item {% if crm_section == 'automation' %}active{% endif %}">
+        <i class="fas fa-robot" aria-hidden="true"></i><span>اتوماسیون</span>
+    </a>
+    <a href="{% url 'workspace:crm_team' %}" class="crm-nav-item {% if crm_section == 'team' %}active{% endif %}">
+        <i class="fas fa-people-group" aria-hidden="true"></i><span>تیم</span>
+    </a>
+    <a href="{% url 'workspace:crm_reminders' %}" class="crm-nav-item {% if crm_section == 'reminders' %}active{% endif %}">
+        <i class="fas fa-bell" aria-hidden="true"></i><span>یادآورها</span>
+        {% if crm_nav_counts.reminders %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.reminders }}</em>{% endif %}
+    </a>
+</nav>

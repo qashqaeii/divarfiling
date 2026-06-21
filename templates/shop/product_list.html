@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}محصولات — فایلینگ دیوار{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="glass-card mt-4">
+        <h1 class="text-white mb-4">محصولات</h1>
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card glass-card">
+                <h3 class="text-white mb-2">
+                    <a href="{% url 'product_detail' product.slug %}">{{ product.title }}</a>
+                </h3>
+                {% if product.avg_rating %}
+                <div class="rating-stars">
+                    <div class="stars-display">
+                        {% for i in "12345" %}
+                        {% if forloop.counter <= product.avg_rating %}<i class="fas fa-star star-filled" aria-hidden="true"></i>{% else %}<i class="far fa-star star-empty" aria-hidden="true"></i>{% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                <p class="text-white">{{ product.short_description }}</p>
+            </div>
+            {% empty %}
+            <p class="text-white">محصولی یافت نشد.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

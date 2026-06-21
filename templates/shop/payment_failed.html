@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}پرداخت ناموفق — فایلینگ دیوار{% endblock %}
+{% block body_class %}mk-pub-page{% endblock %}
+
+{% block content %}
+<div class="mk-pub-wrap">
+    <div class="container mk-pub-result">
+        <div class="mk-pub-result-card">
+            <div class="mk-pub-result-icon">
+                <span class="mk-icon mk-icon--lg mk-icon--rose"><i class="fas fa-times-circle"></i></span>
+            </div>
+            <h1>پرداخت ناموفق بود</h1>
+            <p class="mk-pub-result-msg">متأسفانه پرداخت شما انجام نشد. لطفاً دوباره تلاش کنید.</p>
+
+            {% if error_message %}
+            <div class="mk-pub-error-box">
+                <h2><i class="fas fa-info-circle"></i> جزئیات خطا</h2>
+                <p>{{ error_message }}</p>
+            </div>
+            {% endif %}
+
+            <div class="mk-pub-result-actions">
+                {% if retry_order %}
+                <a href="{% url 'payment:checkout' retry_order.id %}" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> تلاش مجدد پرداخت
+                </a>
+                <a href="{% url 'product_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right"></i> بازگشت به محصولات
+                </a>
+                {% else %}
+                <a href="{% url 'product_list' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> بازگشت به محصولات
+                </a>
+                {% endif %}
+                <a href="{% url 'contact' %}" class="btn btn-secondary">
+                    <i class="fas fa-headset"></i> تماس با پشتیبانی
+                </a>
+            </div>
+
+            <div class="mk-pub-help-box">
+                <h2><i class="fas fa-question-circle"></i> راهنمای رفع مشکل</h2>
+                <ul class="mk-pub-help-list">
+                    <li>اطمینان حاصل کنید که موجودی حساب بانکی شما کافی است</li>
+                    <li>بررسی کنید که اطلاعات کارت بانکی شما صحیح است</li>
+                    <li>در صورت تکرار مشکل، با پشتیبانی تماس بگیرید</li>
+                    <li>ممکن است درگاه پرداخت موقتاً در دسترس نباشد</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

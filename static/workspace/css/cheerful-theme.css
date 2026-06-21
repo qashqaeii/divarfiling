@@ -1,0 +1,383 @@
+/* ═══════════════════════════════════════════════════════════
+   Mizkar — Cheerful Theme (تم شاد)
+   Premium artistic layer — warm, vibrant, professional
+   ═══════════════════════════════════════════════════════════ */
+
+[data-theme="cheerful"] {
+    --ch-grad-primary: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 42%, #FFD93D 100%);
+    --ch-grad-primary-hover: linear-gradient(135deg, #F25555 0%, #FF7A45 42%, #F5C518 100%);
+    --ch-grad-rainbow: linear-gradient(90deg, #FF6B6B, #FFD93D, #6BCB77, #4D96FF, #C77DFF);
+    --ch-grad-surface: linear-gradient(165deg, #FFFFFF 0%, #FFFCFA 48%, #FFF4EC 100%);
+    --ch-grad-sidebar: linear-gradient(180deg, #FFFFFF 0%, #FFF9F5 100%);
+    --ch-grad-aside: linear-gradient(160deg, #FFF8F3 0%, #FFF0E6 100%);
+    --ch-glow-coral: 0 8px 32px -8px rgba(255, 107, 107, 0.35);
+    --ch-glow-warm: 0 16px 48px -12px rgba(251, 191, 36, 0.2);
+    --ws-radius: 16px;
+    --ws-radius-sm: 12px;
+    --ws-radius-xs: 8px;
+}
+
+/* ─── Ambient mesh ─── */
+[data-theme="cheerful"] body.ws-body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.45;
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(255, 107, 107, 0.04) 0%, transparent 8%),
+        radial-gradient(circle at 80% 20%, rgba(34, 211, 238, 0.04) 0%, transparent 8%),
+        radial-gradient(circle at 60% 80%, rgba(251, 191, 36, 0.04) 0%, transparent 8%),
+        radial-gradient(circle at 10% 70%, rgba(107, 203, 119, 0.03) 0%, transparent 7%);
+    background-size: 100% 100%;
+}
+
+/* ─── Sidebar ─── */
+[data-theme="cheerful"] .ws-sidebar {
+    background: var(--ch-grad-sidebar);
+    box-shadow: -4px 0 24px -8px rgba(255, 107, 107, 0.08);
+}
+
+[data-theme="cheerful"] .ws-nav-item.active {
+    background: linear-gradient(90deg, rgba(255, 107, 107, 0.14) 0%, rgba(255, 107, 107, 0.04) 100%);
+    box-shadow: none;
+}
+
+[data-theme="cheerful"] .ws-nav-item.active::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block: 5px;
+    width: 3px;
+    border-radius: 0 4px 4px 0;
+    background: var(--ch-grad-rainbow);
+}
+
+[data-theme="cheerful"] .ws-logo-mark {
+    border-radius: 9px;
+    box-shadow: 0 2px 8px -2px rgba(255, 107, 107, 0.25);
+}
+
+[data-theme="cheerful"] .ws-topbar {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom-color: rgba(255, 212, 194, 0.7);
+}
+
+[data-theme="cheerful"] .ws-topbar-search-wrap:focus-within {
+    border-color: rgba(255, 107, 107, 0.45);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.12);
+}
+
+/* ─── Cards & surfaces ─── */
+[data-theme="cheerful"] .ws-card,
+[data-theme="cheerful"] .ws-stat {
+    background: var(--ch-grad-surface);
+    border-color: rgba(255, 212, 194, 0.85);
+    box-shadow:
+        0 1px 2px rgba(255, 107, 107, 0.04),
+        0 8px 24px -8px rgba(255, 107, 107, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="cheerful"] .ws-card::before,
+[data-theme="cheerful"] .ws-stat::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    height: 2px;
+    background: var(--ch-grad-rainbow);
+    opacity: 0.55;
+}
+
+/* ─── Buttons ─── */
+[data-theme="cheerful"] .ws-btn-primary {
+    background: var(--ch-grad-primary);
+    border: none;
+    box-shadow: var(--ch-glow-coral);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+[data-theme="cheerful"] .ws-btn-primary:hover {
+    background: var(--ch-grad-primary-hover);
+    box-shadow: 0 10px 28px -6px rgba(255, 107, 107, 0.45);
+    transform: translateY(-1px);
+}
+
+[data-theme="cheerful"] .ws-btn-ghost:hover {
+    border-color: rgba(255, 107, 107, 0.35);
+    background: rgba(255, 107, 107, 0.06);
+}
+
+/* ─── Upgrade page ─── */
+[data-theme="cheerful"] .upg {
+    --upg-accent: #FF6B6B;
+    --upg-accent-rgb: 255, 107, 107;
+    --upg-accent-soft: rgba(255, 107, 107, 0.1);
+    --upg-accent-border: rgba(255, 180, 150, 0.55);
+}
+
+[data-theme="cheerful"] .upg-stage {
+    border-color: rgba(255, 212, 194, 0.9);
+    background: var(--ch-grad-surface);
+    box-shadow:
+        var(--ch-glow-warm),
+        0 4px 20px -6px rgba(255, 107, 107, 0.12);
+    border-radius: 18px;
+}
+
+[data-theme="cheerful"] .upg-stage-accent {
+    height: 4px;
+    background: var(--ch-grad-rainbow);
+    opacity: 1;
+}
+
+[data-theme="cheerful"] .upg-stage-orbs {
+    display: block;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+
+[data-theme="cheerful"] .upg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.55;
+}
+
+[data-theme="cheerful"] .upg-orb--1 {
+    width: 180px;
+    height: 180px;
+    inset-block-start: -60px;
+    inset-inline-start: -40px;
+    background: rgba(255, 107, 107, 0.28);
+    animation: ch-orb-drift 14s ease-in-out infinite;
+}
+
+[data-theme="cheerful"] .upg-orb--2 {
+    width: 140px;
+    height: 140px;
+    inset-block-end: -30px;
+    inset-inline-end: 10%;
+    background: rgba(251, 191, 36, 0.25);
+    animation: ch-orb-drift 18s ease-in-out infinite reverse;
+}
+
+[data-theme="cheerful"] .upg-orb--3 {
+    width: 100px;
+    height: 100px;
+    inset-block-start: 40%;
+    inset-inline-end: -20px;
+    background: rgba(77, 150, 255, 0.2);
+    animation: ch-orb-drift 12s ease-in-out infinite 2s;
+}
+
+@keyframes ch-orb-drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(12px, -8px) scale(1.06); }
+    66% { transform: translate(-8px, 10px) scale(0.96); }
+}
+
+[data-theme="cheerful"] .upg-stage-grid,
+[data-theme="cheerful"] .upg-stage-foot {
+    position: relative;
+    z-index: 1;
+}
+
+[data-theme="cheerful"] .upg-hero {
+    border-inline-end-color: rgba(255, 212, 194, 0.7);
+}
+
+[data-theme="cheerful"] .upg-lock {
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(255, 107, 107, 0.08);
+    border: 1px solid rgba(255, 180, 150, 0.4);
+    color: #E85D5D;
+    font-weight: 600;
+}
+
+[data-theme="cheerful"] .upg-icon {
+    background: linear-gradient(145deg, rgba(255, 107, 107, 0.16), rgba(251, 191, 36, 0.12));
+    border-color: rgba(255, 180, 150, 0.55);
+    box-shadow: 0 6px 20px -6px rgba(255, 107, 107, 0.3);
+    border-radius: 14px;
+}
+
+[data-theme="cheerful"] .upg-hero-copy h1 {
+    background: linear-gradient(135deg, #292524 30%, #C2410C 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+[data-theme="cheerful"] .upg-aside {
+    background: var(--ch-grad-aside);
+}
+
+[data-theme="cheerful"] .upg-step-num {
+    border-radius: 50%;
+    font-weight: 800;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="cheerful"] .upg-step:hover .upg-step-num {
+    transform: scale(1.08);
+}
+
+[data-theme="cheerful"] .upg-step--last .upg-step-num {
+    color: #fff;
+    background: var(--ch-grad-primary);
+    border-color: transparent;
+    box-shadow: 0 4px 12px -4px rgba(255, 107, 107, 0.45);
+}
+
+[data-theme="cheerful"] .upg-step:not(:last-child)::after {
+    background: linear-gradient(180deg, rgba(255, 180, 150, 0.6), rgba(255, 212, 194, 0.3));
+}
+
+[data-theme="cheerful"] .upg-cta {
+    background: var(--ch-grad-primary);
+    border-radius: 12px;
+    box-shadow: var(--ch-glow-coral);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+[data-theme="cheerful"] .upg-cta:hover {
+    filter: brightness(1.04);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px -8px rgba(255, 107, 107, 0.5);
+}
+
+[data-theme="cheerful"] .upg-stage-foot {
+    background: linear-gradient(90deg, rgba(52, 211, 153, 0.06), rgba(255, 107, 107, 0.04), rgba(251, 191, 36, 0.06));
+    border-block-start-color: rgba(255, 212, 194, 0.7);
+    font-weight: 500;
+}
+
+[data-theme="cheerful"] .upg-stage-foot .fa-gift {
+    color: #34D399;
+}
+
+[data-theme="cheerful"] .upg-bottom {
+    border-color: rgba(255, 212, 194, 0.85);
+    background: var(--ch-grad-surface);
+    border-radius: 18px;
+    box-shadow: 0 6px 24px -10px rgba(255, 107, 107, 0.1);
+}
+
+[data-theme="cheerful"] .upg-bottom-label--free {
+    color: #059669;
+    font-weight: 700;
+}
+
+[data-theme="cheerful"] .upg-chip {
+    border-radius: 10px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+[data-theme="cheerful"] .upg-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="cheerful"] .upg-chip.is-current {
+    box-shadow: 0 4px 14px -4px rgba(var(--upg-accent-rgb), 0.35);
+}
+
+[data-theme="cheerful"] .upg-chip--free {
+    background: rgba(52, 211, 153, 0.08);
+    border-color: rgba(52, 211, 153, 0.25);
+}
+
+[data-theme="cheerful"] .upg-chip--free:hover {
+    background: rgba(52, 211, 153, 0.14);
+    border-color: rgba(52, 211, 153, 0.4);
+}
+
+[data-theme="cheerful"] .upg-chip--free i {
+    color: #059669;
+}
+
+/* ─── Bot banner ─── */
+[data-theme="cheerful"] .ws-bot-banner {
+    border-color: rgba(255, 180, 150, 0.5);
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.08), #FFFFFF 60%);
+    border-radius: 16px;
+}
+
+[data-theme="cheerful"] .ws-up-icon--solid {
+    background: var(--ch-grad-primary);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* ─── CRM touches ─── */
+[data-theme="cheerful"] .crm-nav {
+    background: var(--ch-grad-surface);
+    border-color: rgba(255, 212, 194, 0.85);
+    border-radius: 16px;
+}
+
+[data-theme="cheerful"] .crm-nav-item.active {
+    background: var(--ch-grad-primary);
+    color: #fff;
+    box-shadow: var(--ch-glow-coral);
+}
+
+[data-theme="cheerful"] .crm-nav-item.active .crm-nav-count {
+    background: rgba(255, 255, 255, 0.28);
+    color: #fff;
+}
+
+[data-theme="cheerful"] .crm-card,
+[data-theme="cheerful"] .crm-panel,
+[data-theme="cheerful"] .crm-stat-card {
+    background: var(--ch-grad-surface);
+    border-color: rgba(255, 212, 194, 0.8);
+    box-shadow: 0 6px 20px -8px rgba(255, 107, 107, 0.1);
+}
+
+[data-theme="cheerful"] .crm-search-input-wrap:focus-within {
+    border-color: rgba(255, 107, 107, 0.5);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15);
+}
+
+[data-theme="cheerful"] .crm-btn-primary,
+[data-theme="cheerful"] .crm-action-primary {
+    background: var(--ch-grad-primary);
+    border: none;
+    box-shadow: var(--ch-glow-coral);
+}
+
+[data-theme="cheerful"] .mk-page-hero,
+[data-theme="cheerful"] .crm-page-header.mk-page-hero {
+    border-color: rgba(255, 212, 194, 0.7);
+    background: var(--ch-grad-surface);
+}
+
+/* ─── Settings swatch card ─── */
+[data-theme="cheerful"] .ws-settings-theme-card.is-active {
+    border-color: #FF6B6B;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.18), var(--ch-glow-warm);
+}
+
+[data-theme="cheerful"] .ws-settings-theme-card:hover {
+    border-color: rgba(255, 107, 107, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-theme="cheerful"] .upg-orb { animation: none; }
+    [data-theme="cheerful"] .upg-cta:hover,
+    [data-theme="cheerful"] .ws-btn-primary:hover,
+    [data-theme="cheerful"] .upg-chip:hover { transform: none; }
+}

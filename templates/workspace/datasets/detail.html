@@ -1,0 +1,744 @@
+{% extends 'workspace/base.html' %}
+{% load humanize workspace_tags %}
+
+{% block page_title %}{{ dataset.name }}{% endblock %}
+
+{% block content %}
+<div class="mk-page mk-filing-page mk-listing-page">
+
+    <section class="mk-ds-command mk-ds-command--{{ tx.mode|default:'other' }}" aria-label="خلاصه فایل">
+        <div class="mk-ds-command-top">
+            <nav class="mk-ds-crumb" aria-label="مسیر">
+                <a href="{% url 'workspace:dataset_list' %}" class="mk-ds-crumb-link">
+                    <i class="fas fa-folder-open" aria-hidden="true"></i>
+                    <span>فایلینگ دیوار</span>
+                </a>
+                <i class="fas fa-chevron-left mk-ds-crumb-sep" aria-hidden="true"></i>
+                <span class="mk-ds-crumb-current">جدول آگهی</span>
+            </nav>
+            <div class="mk-ds-command-actions" role="toolbar" aria-label="عملیات فایل">
+                <div class="mk-ds-action-group mk-ds-action-group-primary">
+                    <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="mk-ds-action mk-ds-action-cta" title="تحلیل بازار">
+                        <i class="fas fa-chart-line" aria-hidden="true"></i>
+                        <span>تحلیل</span>
+                    </a>
+                    <a href="{% url 'workspace:dataset_map' dataset.id %}" class="mk-ds-action" title="نقشه آگهی‌ها">
+                        <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                        <span>نقشه</span>
+                    </a>
+                    <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="mk-ds-action" title="دانلود CSV">
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                        <span>خروجی</span>
+                    </a>
+                </div>
+                <div class="mk-ds-action-group mk-ds-action-group-tools">
+                    <button type="button" class="mk-ds-action mk-ds-action-icon" data-modal-open="modal-rename" title="تغییر نام فایل" aria-label="تغییر نام">
+                        <i class="fas fa-pen" aria-hidden="true"></i>
+                    </button>
+                    {% if consultant_count %}
+                    <button type="button" class="mk-ds-action mk-ds-action-icon mk-ds-action-danger" data-modal-open="modal-delete-consultants" title="حذف آگهی‌های مشاور" aria-label="حذف مشاورین">
+                        <i class="fas fa-user-slash" aria-hidden="true"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="mk-ds-command-main">
+            <div class="mk-ds-command-identity">
+                <div class="mk-ds-command-icon mk-file-icon mk-file-icon-{{ dataset.file_format }}" aria-hidden="true">
+                    {% if dataset.file_format == 'xlsx' %}XLS{% elif dataset.file_format == 'csv' %}CSV{% else %}JSON{% endif %}
+                </div>
+                <div class="mk-ds-command-text">
+                    <h1 class="mk-ds-command-title">{{ dataset.name }}</h1>
+                    <div class="mk-ds-command-chips">
+                        {% if dataset.city %}
+                        <span class="mk-ds-chip mk-ds-chip-loc">
+                            <i class="fas fa-location-dot" aria-hidden="true"></i>
+                            {{ dataset.city }}{% if dataset.district %} · {{ dataset.district }}{% endif %}
+                        </span>
+                        {% endif %}
+                        <span class="mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
+                        {% if dataset.subcategory %}
+                        <span class="mk-ds-chip">{{ dataset.subcategory }}</span>
+                        {% endif %}
+                        <span class="mk-ds-chip mk-ds-chip-muted">{{ dataset.file_format|upper }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mk-ds-filter-gauge" title="{% if is_listing_filtered %}نمایش فیلترشده{% else %}همه آگهی‌ها{% endif %}">
+                <div class="mk-ds-filter-ring" style="--mk-filter-pct: {{ filter_pct }};" role="img" aria-label="{{ filtered_count|intcomma }} از {{ total_count|intcomma }} آگهی">
+                    <div class="mk-ds-filter-ring-inner">
+                        <strong>{{ filtered_count|intcomma }}</strong>
+                        <span>از {{ total_count|intcomma }}</span>
+                    </div>
+                </div>
+                <span class="mk-ds-filter-gauge-lbl">{% if is_listing_filtered %}فیلترشده{% else %}همه آگهی{% endif %}</span>
+            </div>
+        </div>
+
+        <div class="mk-ds-command-stats">
+            <article class="mk-ds-kpi">
+                <span class="mk-ds-kpi-icon mk-ds-kpi-icon-view"><i class="fas fa-eye" aria-hidden="true"></i></span>
+                <div class="mk-ds-kpi-body">
+                    <strong class="mk-ds-kpi-val">{{ filtered_count|intcomma }}</strong>
+                    <span class="mk-ds-kpi-lbl">در نمایش</span>
+                </div>
+            </article>
+            <article class="mk-ds-kpi">
+                <span class="mk-ds-kpi-icon mk-ds-kpi-icon-total"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
+                <div class="mk-ds-kpi-body">
+                    <strong class="mk-ds-kpi-val">{{ total_count|intcomma }}</strong>
+                    <span class="mk-ds-kpi-lbl">کل آگهی</span>
+                </div>
+            </article>
+            <article class="mk-ds-kpi">
+                <span class="mk-ds-kpi-icon mk-ds-kpi-icon-consultant"><i class="fas fa-building" aria-hidden="true"></i></span>
+                <div class="mk-ds-kpi-body">
+                    <strong class="mk-ds-kpi-val">{{ consultant_count|intcomma }}</strong>
+                    <span class="mk-ds-kpi-lbl">مشاور <em>{{ consultant_pct }}٪</em></span>
+                </div>
+            </article>
+            <article class="mk-ds-kpi">
+                <span class="mk-ds-kpi-icon mk-ds-kpi-icon-personal"><i class="fas fa-user" aria-hidden="true"></i></span>
+                <div class="mk-ds-kpi-body">
+                    <strong class="mk-ds-kpi-val">{{ personal_count|intcomma }}</strong>
+                    <span class="mk-ds-kpi-lbl">شخصی <em>{{ personal_pct }}٪</em></span>
+                </div>
+            </article>
+            {% if filter_count %}
+            <article class="mk-ds-kpi mk-ds-kpi-accent">
+                <span class="mk-ds-kpi-icon mk-ds-kpi-icon-filter"><i class="fas fa-sliders" aria-hidden="true"></i></span>
+                <div class="mk-ds-kpi-body">
+                    <strong class="mk-ds-kpi-val">{{ filter_count }}</strong>
+                    <span class="mk-ds-kpi-lbl">فیلتر فعال</span>
+                </div>
+            </article>
+            {% endif %}
+            <div class="mk-ds-mix" aria-label="ترکیب آگهی‌دهنده">
+                <div class="mk-ds-mix-head">
+                    <span class="mk-ds-mix-title">ترکیب آگهی‌دهنده</span>
+                    <span class="mk-ds-mix-counts">{{ consultant_count|intcomma }} مشاور · {{ personal_count|intcomma }} شخصی</span>
+                </div>
+                <div class="mk-ds-mix-track" role="presentation">
+                    {% if consultant_pct %}<span class="mk-ds-mix-seg mk-ds-mix-seg-consultant" style="width: {{ consultant_pct }}%;" title="مشاور {{ consultant_pct }}٪"></span>{% endif %}
+                    {% if personal_pct %}<span class="mk-ds-mix-seg mk-ds-mix-seg-personal" style="width: {{ personal_pct }}%;" title="شخصی {{ personal_pct }}٪"></span>{% endif %}
+                </div>
+                <div class="mk-ds-mix-legend">
+                    <span><i class="mk-ds-mix-dot mk-ds-mix-dot-consultant" aria-hidden="true"></i>مشاور</span>
+                    <span><i class="mk-ds-mix-dot mk-ds-mix-dot-personal" aria-hidden="true"></i>شخصی</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mk-filter-shell" id="wsFilterShell">
+        <form method="get" class="mk-filter-bar mk-filter-bar-listing" id="wsFilterForm">
+            <div class="mk-filter-primary">
+                <label class="mk-filter-search mk-filter-search-grow">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو در عنوان…" autocomplete="off" aria-label="جستجو">
+                </label>
+                <select name="neighborhood" class="mk-filter-select" aria-label="محله">
+                    <option value="">همه محله‌ها</option>
+                    {% for nb in neighborhoods %}<option value="{{ nb }}" {% if filters.neighborhood == nb %}selected{% endif %}>{{ nb }}</option>{% endfor %}
+                </select>
+                <select name="consultant" class="mk-filter-select mk-filter-select-narrow" aria-label="آگهی‌دهنده">
+                    <option value="">آگهی‌دهنده</option>
+                    <option value="1" {% if filters.consultant == '1' %}selected{% endif %}>مشاور</option>
+                    <option value="0" {% if filters.consultant == '0' %}selected{% endif %}>شخصی</option>
+                </select>
+                <div class="mk-filter-actions">
+                    <button type="button" class="mk-filter-toggle" id="wsAdvToggle" aria-expanded="{% if filters_open %}true{% else %}false{% endif %}" aria-controls="wsAdvPanel">
+                        <i class="fas fa-sliders-h" aria-hidden="true"></i>
+                        <span>فیلتر پیشرفته</span>
+                        {% if advanced_filter_count %}<span class="mk-filter-badge">{{ advanced_filter_count }}</span>{% endif %}
+                        <i class="fas fa-chevron-down mk-filter-chevron" aria-hidden="true"></i>
+                    </button>
+                    <button type="submit" class="mk-filter-apply">اعمال</button>
+                    {% if filter_count %}
+                    <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="mk-filter-reset" title="پاک کردن همه فیلترها"><i class="fas fa-times" aria-hidden="true"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mk-filter-advanced{% if filters_open %} is-open{% endif %}" id="wsAdvPanel"{% if not filters_open %} hidden{% endif %}>
+                <div class="mk-filter-adv-section">
+                    <span class="mk-filter-adv-label">جستجوی دقیق</span>
+                    <div class="mk-filter-adv-grid mk-filter-adv-grid-4">
+                        <input type="text" name="token" value="{{ filters.token }}" class="mk-filter-inp" placeholder="شناسه">
+                        <input type="text" name="desc" value="{{ filters.desc }}" class="mk-filter-inp" placeholder="توضیحات">
+                        <input type="text" name="rooms" value="{{ filters.rooms }}" class="mk-filter-inp" placeholder="اتاق">
+                        <select name="tag" class="mk-filter-select">
+                            <option value="">برچسب</option>
+                            <option value="تماس" {% if filters.tag == 'تماس' %}selected{% endif %}>تماس</option>
+                            <option value="بازدید" {% if filters.tag == 'بازدید' %}selected{% endif %}>بازدید</option>
+                            <option value="علاقه‌مند" {% if filters.tag == 'علاقه‌مند' %}selected{% endif %}>علاقه‌مند</option>
+                            <option value="رد" {% if filters.tag == 'رد' %}selected{% endif %}>رد</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mk-filter-adv-section">
+                    <span class="mk-filter-adv-label">محدوده‌ها</span>
+                    <div class="mk-filter-ranges">
+                        <div class="mk-range">
+                            <span>متراژ</span>
+                            <input type="text" name="area_min" value="{{ filters.area_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                            <i>—</i>
+                            <input type="text" name="area_max" value="{{ filters.area_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                        </div>
+                        {% if tx.show_price %}
+                        <div class="mk-range">
+                            <span>قیمت</span>
+                            <input type="text" name="price_min" value="{{ filters.price_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                            <i>—</i>
+                            <input type="text" name="price_max" value="{{ filters.price_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                        </div>
+                        {% endif %}
+                        {% if tx.show_deposit %}
+                        <div class="mk-range">
+                            <span>ودیعه</span>
+                            <input type="text" name="deposit_min" value="{{ filters.deposit_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                            <i>—</i>
+                            <input type="text" name="deposit_max" value="{{ filters.deposit_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                        </div>
+                        {% endif %}
+                        {% if tx.show_rent %}
+                        <div class="mk-range">
+                            <span>اجاره</span>
+                            <input type="text" name="rent_min" value="{{ filters.rent_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                            <i>—</i>
+                            <input type="text" name="rent_max" value="{{ filters.rent_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                        </div>
+                        {% endif %}
+                        <div class="mk-range">
+                            <span>ساخت</span>
+                            <input type="text" name="year_min" value="{{ filters.year_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                            <i>—</i>
+                            <input type="text" name="year_max" value="{{ filters.year_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                        </div>
+                        <select name="value" class="mk-filter-select mk-filter-select-narrow" aria-label="ارزش">
+                            <option value="">ارزش</option>
+                            <option value="below" {% if filters.value == 'below' %}selected{% endif %}>زیر بازار</option>
+                            <option value="fair" {% if filters.value == 'fair' %}selected{% endif %}>متعارف</option>
+                            <option value="above" {% if filters.value == 'above' %}selected{% endif %}>بالای بازار</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mk-filter-adv-section mk-filter-adv-section-row">
+                    <span class="mk-filter-adv-label">امکانات</span>
+                    <div class="mk-filter-amenities">
+                        <select name="elevator" class="mk-filter-select" title="آسانسور">
+                            <option value="">آسانسور</option>
+                            <option value="1" {% if filters.elevator == '1' %}selected{% endif %}>دارد</option>
+                            <option value="0" {% if filters.elevator == '0' %}selected{% endif %}>ندارد</option>
+                        </select>
+                        <select name="parking" class="mk-filter-select" title="پارکینگ">
+                            <option value="">پارکینگ</option>
+                            <option value="1" {% if filters.parking == '1' %}selected{% endif %}>دارد</option>
+                            <option value="0" {% if filters.parking == '0' %}selected{% endif %}>ندارد</option>
+                        </select>
+                        <select name="storage" class="mk-filter-select" title="انباری">
+                            <option value="">انباری</option>
+                            <option value="1" {% if filters.storage == '1' %}selected{% endif %}>دارد</option>
+                            <option value="0" {% if filters.storage == '0' %}selected{% endif %}>ندارد</option>
+                        </select>
+                    </div>
+                    <div class="mk-filter-pills">
+                        <label class="mk-pill"><input type="checkbox" name="favorites" value="1" {% if filters.favorites == '1' %}checked{% endif %}><span>⭐ علاقه‌مند</span></label>
+                        <label class="mk-pill"><input type="checkbox" name="duplicates" value="1" {% if filters.duplicates == '1' %}checked{% endif %}><span>تکراری</span></label>
+                        <label class="mk-pill"><input type="checkbox" name="has_geo" value="1" {% if filters.has_geo == '1' %}checked{% endif %}><span>📍 موقعیت</span></label>
+                    </div>
+                </div>
+            </div>
+
+            {% if filter_count %}
+            <div class="mk-filter-active" aria-label="فیلترهای فعال">
+                {% if filters.q %}<span class="mk-filter-chip">جستجو: {{ filters.q|truncatechars:20 }}</span>{% endif %}
+                {% if filters.neighborhood %}<span class="mk-filter-chip">محله: {{ filters.neighborhood }}</span>{% endif %}
+                {% if filters.consultant == '1' %}<span class="mk-filter-chip">مشاور</span>{% elif filters.consultant == '0' %}<span class="mk-filter-chip">شخصی</span>{% endif %}
+                {% if filters.value == 'below' %}<span class="mk-filter-chip">زیر بازار</span>{% elif filters.value == 'fair' %}<span class="mk-filter-chip">متعارف</span>{% elif filters.value == 'above' %}<span class="mk-filter-chip">بالای بازار</span>{% endif %}
+                {% if advanced_filter_count %}<span class="mk-filter-chip mk-filter-chip-muted">+{{ advanced_filter_count }} فیلتر دیگر</span>{% endif %}
+            </div>
+            {% endif %}
+
+            <input type="hidden" name="sort" value="{{ filters.sort }}">
+            <input type="hidden" name="filters_open" id="filtersOpenField" value="{% if filters_open %}1{% else %}0{% endif %}">
+        </form>
+    </section>
+
+    <section class="ws-glass-panel mk-panel mk-panel-flush mk-listing-panel">
+        <header class="ws-glass-head mk-panel-head mk-panel-head-table">
+            <div class="mk-panel-head-text">
+                <h2>لیست آگهی‌ها</h2>
+                <span class="mk-panel-count">{{ filtered_count|intcomma }} ردیف · مرتب‌سازی با کلیک روی سرستون</span>
+            </div>
+        </header>
+
+        <div class="mk-table-wrap mk-table-wrap-fit">
+            <table class="mk-data-table mk-data-table-listings mk-data-table-listings--pro">
+                <colgroup>
+                    <col class="mk-col-w-title">
+                    {% if tx.show_price %}<col class="mk-col-w-money">{% endif %}
+                    {% if tx.show_deposit %}<col class="mk-col-w-money">{% endif %}
+                    {% if tx.show_rent %}<col class="mk-col-w-money">{% endif %}
+                    <col class="mk-col-w-area">
+                    <col class="mk-col-w-specs">
+                    <col class="mk-col-w-amenity">
+                    <col class="mk-col-w-pub">
+                    <col class="mk-col-w-nb">
+                    <col class="mk-col-w-value">
+                    <col class="mk-col-w-actions">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th><a href="{% ws_sort_url filters 'title' filters.sort filter_qs %}" class="mk-sort-th">عنوان {% if filters.sort == 'title' %}↑{% elif filters.sort == '-title' %}↓{% endif %}</a></th>
+                        {% if tx.show_price %}<th class="mk-col-money"><a href="{% ws_sort_url filters 'price' filters.sort filter_qs %}" class="mk-sort-th">قیمت {% if filters.sort == 'price' %}↑{% elif filters.sort == '-price' %}↓{% endif %}</a></th>{% endif %}
+                        {% if tx.show_deposit %}<th class="mk-col-money"><a href="{% ws_sort_url filters 'deposit' filters.sort filter_qs %}" class="mk-sort-th">ودیعه {% if filters.sort == 'deposit' %}↑{% elif filters.sort == '-deposit' %}↓{% endif %}</a></th>{% endif %}
+                        {% if tx.show_rent %}<th class="mk-col-money"><a href="{% ws_sort_url filters 'rent' filters.sort filter_qs %}" class="mk-sort-th">اجاره {% if filters.sort == 'rent' %}↑{% elif filters.sort == '-rent' %}↓{% endif %}</a></th>{% endif %}
+                        <th class="mk-col-num"><a href="{% ws_sort_url filters 'area' filters.sort filter_qs %}" class="mk-sort-th">متر {% if filters.sort == 'area' %}↑{% elif filters.sort == '-area' %}↓{% endif %}</a></th>
+                        <th class="mk-col-specs">مشخصات</th>
+                        <th class="mk-col-amenity">امکانات</th>
+                        <th class="mk-col-publisher"><a href="{% ws_sort_url filters 'business_type' filters.sort filter_qs %}" class="mk-sort-th">آگهی‌دهنده {% if filters.sort == 'business_type' %}↑{% elif filters.sort == '-business_type' %}↓{% endif %}</a></th>
+                        <th><a href="{% ws_sort_url filters 'neighborhood' filters.sort filter_qs %}" class="mk-sort-th">محله {% if filters.sort == 'neighborhood' %}↑{% elif filters.sort == '-neighborhood' %}↓{% endif %}</a></th>
+                        <th class="mk-col-value">ارزش</th>
+                        <th class="mk-col-actions" aria-label="عملیات"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% include 'workspace/includes/listing_table_rows.html' %}
+                </tbody>
+            </table>
+        </div>
+
+        {% mk_pagination page_obj page_query aria_label="صفحه‌بندی آگهی‌ها" %}
+    </section>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="ws-modal" id="modal-rename" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-sm">
+        <div class="ws-modal-head">
+            <h2 class="ws-modal-title">تغییر نام فایل</h2>
+            <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:dataset_rename' dataset.id %}" class="ws-modal-body">
+            {% csrf_token %}
+            <div class="ws-field">
+                <label class="ws-label">نام مجموعه‌داده</label>
+                <input type="text" name="name" class="ws-input" value="{{ dataset.name }}" required>
+            </div>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ws-modal" id="modal-edit-listing" role="dialog" aria-modal="true" aria-labelledby="editListingTitle">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-lg mk-edit-modal-panel">
+        <div class="ws-modal-head mk-edit-modal-head">
+            <div class="mk-edit-modal-head-main">
+                <h2 class="ws-modal-title" id="editListingTitle"><i class="fas fa-pen-to-square" aria-hidden="true"></i> ویرایش آگهی</h2>
+                <p class="ws-modal-sub mk-edit-modal-sub" id="editListingSubtitle">—</p>
+                <code class="mk-edit-token" id="editListingToken" title="شناسه دیوار"></code>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" id="editListingForm" class="ws-modal-body mk-edit-form">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+            <section class="mk-edit-section">
+                <h3 class="mk-edit-section-title"><i class="fas fa-tag" aria-hidden="true"></i> اطلاعات اصلی</h3>
+                <div class="ws-fields ws-fields-2">
+                    <div class="ws-field ws-field-full">
+                        <label class="ws-label" for="editTitle">عنوان آگهی</label>
+                        <input type="text" name="title" id="editTitle" class="ws-input" required autocomplete="off">
+                    </div>
+                </div>
+            </section>
+
+            {% if tx.show_price or tx.show_deposit or tx.show_rent %}
+            <section class="mk-edit-section">
+                <h3 class="mk-edit-section-title"><i class="fas fa-coins" aria-hidden="true"></i> اطلاعات مالی</h3>
+                <div class="ws-fields ws-fields-2">
+                    {% if tx.show_price %}
+                    <div class="ws-field">
+                        <label class="ws-label" for="editPrice">قیمت (تومان)</label>
+                        <input type="number" name="price" id="editPrice" class="ws-input" min="0" step="1" inputmode="numeric" placeholder="مثلاً ۵۰۰۰۰۰۰۰۰۰">
+                        <span class="mk-edit-hint" id="editPriceHint" aria-live="polite"></span>
+                    </div>
+                    {% endif %}
+                    {% if tx.show_deposit %}
+                    <div class="ws-field">
+                        <label class="ws-label" for="editDeposit">ودیعه (تومان)</label>
+                        <input type="number" name="deposit" id="editDeposit" class="ws-input" min="0" step="1" inputmode="numeric" placeholder="مثلاً ۲۰۰۰۰۰۰۰۰۰">
+                        <span class="mk-edit-hint" id="editDepositHint" aria-live="polite"></span>
+                    </div>
+                    {% endif %}
+                    {% if tx.show_rent %}
+                    <div class="ws-field">
+                        <label class="ws-label" for="editRent">اجاره (تومان)</label>
+                        <input type="number" name="rent" id="editRent" class="ws-input" min="0" step="1" inputmode="numeric" placeholder="مثلاً ۱۵۰۰۰۰۰۰">
+                        <span class="mk-edit-hint" id="editRentHint" aria-live="polite"></span>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+
+            <section class="mk-edit-section">
+                <h3 class="mk-edit-section-title"><i class="fas fa-building" aria-hidden="true"></i> مشخصات ملک</h3>
+                <div class="ws-fields ws-fields-2">
+                    <div class="ws-field">
+                        <label class="ws-label" for="editArea">متراژ (متر)</label>
+                        <input type="number" name="area" id="editArea" class="ws-input" step="0.1" min="0" inputmode="decimal">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editRooms">تعداد اتاق</label>
+                        <input type="text" name="rooms" id="editRooms" class="ws-input" placeholder="مثلاً ۳">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editFloor">طبقه</label>
+                        <input type="text" name="floor" id="editFloor" class="ws-input" placeholder="مثلاً ۶">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editBuildYear">سال ساخت</label>
+                        <input type="number" name="build_year" id="editBuildYear" class="ws-input" min="1300" max="1500" step="1" placeholder="مثلاً ۱۴۰۳">
+                    </div>
+                </div>
+                <div class="mk-edit-amenities">
+                    <span class="mk-edit-amenities-label">امکانات</span>
+                    <div class="mk-edit-amenities-grid">
+                        <label class="mk-edit-amenity">
+                            <span>آسانسور</span>
+                            <select name="elevator" id="editElevator" class="ws-select ws-select-sm">
+                                <option value="">نامشخص</option>
+                                <option value="1">دارد</option>
+                                <option value="0">ندارد</option>
+                            </select>
+                        </label>
+                        <label class="mk-edit-amenity">
+                            <span>پارکینگ</span>
+                            <select name="parking" id="editParking" class="ws-select ws-select-sm">
+                                <option value="">نامشخص</option>
+                                <option value="1">دارد</option>
+                                <option value="0">ندارد</option>
+                            </select>
+                        </label>
+                        <label class="mk-edit-amenity">
+                            <span>انباری</span>
+                            <select name="storage" id="editStorage" class="ws-select ws-select-sm">
+                                <option value="">نامشخص</option>
+                                <option value="1">دارد</option>
+                                <option value="0">ندارد</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mk-edit-section mk-edit-features-section" id="editFeaturesSection" hidden>
+                <h3 class="mk-edit-section-title"><i class="fas fa-list-ul" aria-hidden="true"></i> ویژگی‌ها و امکانات <span class="mk-edit-features-note">(از دیوار)</span></h3>
+                <div class="mk-edit-features-grid" id="editFeaturesGrid"></div>
+                <p class="mk-edit-features-empty" id="editFeaturesEmpty" hidden>ویژگی تفصیلی ثبت نشده.</p>
+            </section>
+
+            <section class="mk-edit-section">
+                <h3 class="mk-edit-section-title"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> موقعیت و آگهی‌دهنده</h3>
+                <div class="ws-fields ws-fields-2">
+                    <div class="ws-field">
+                        <label class="ws-label" for="editNeighborhood">محله</label>
+                        <input type="text" name="neighborhood" id="editNeighborhood" class="ws-input">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editCity">شهر</label>
+                        <input type="text" name="city" id="editCity" class="ws-input">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editBusiness">آگهی‌دهنده</label>
+                        <select name="business_type" id="editBusiness" class="ws-select">
+                            <option value="شخصی">شخصی</option>
+                            <option value="مشاور">مشاور املاک</option>
+                            <option value="business">بنگاه / Business</option>
+                        </select>
+                    </div>
+                    <div class="ws-field ws-field-full">
+                        <label class="ws-label" for="editLink">لینک دیوار</label>
+                        <input type="url" name="link" id="editLink" class="ws-input mk-edit-link" dir="ltr" placeholder="https://divar.ir/v/...">
+                    </div>
+                </div>
+            </section>
+
+            <section class="mk-edit-section mk-edit-section-last">
+                <h3 class="mk-edit-section-title"><i class="fas fa-align-right" aria-hidden="true"></i> توضیحات</h3>
+                <div class="ws-field ws-field-full">
+                    <textarea name="description" id="editDescription" class="ws-textarea mk-edit-description" rows="8" placeholder="متن کامل آگهی…"></textarea>
+                </div>
+            </section>
+
+            <div class="ws-modal-foot mk-edit-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary"><i class="fas fa-check" aria-hidden="true"></i> ذخیره تغییرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{ listings_edit_data|json_script:"listings-edit-data" }}
+
+<div class="ws-modal" id="modal-delete-listing" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-sm">
+        <div class="ws-modal-head">
+            <h2 class="ws-modal-title">حذف آگهی</h2>
+            <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" id="deleteListingForm" class="ws-modal-body">
+            {% csrf_token %}
+            <p class="ws-modal-text" id="deleteListingText">این آگهی حذف می‌شود.</p>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-danger">🗑 حذف</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if consultant_count %}
+<div class="ws-modal" id="modal-delete-consultants" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-sm">
+        <div class="ws-modal-head">
+            <h2 class="ws-modal-title">حذف آگهی‌های مشاور</h2>
+            <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:dataset_delete_consultants' dataset.id %}" class="ws-modal-body">
+            {% csrf_token %}
+            <p class="ws-modal-text">
+                <strong>{{ consultant_count|intcomma }}</strong> آگهی مشاور از این فایل حذف می‌شود.
+                این عمل قابل بازگشت نیست.
+            </p>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-danger">🧹 حذف همه مشاورین</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const advToggle = document.getElementById('wsAdvToggle');
+    const advPanel = document.getElementById('wsAdvPanel');
+    const filtersOpenField = document.getElementById('filtersOpenField');
+    const filterShell = document.getElementById('wsFilterShell');
+
+    function setFilterPanel(open) {
+        if (!advPanel || !advToggle) return;
+        if (open) {
+            advPanel.removeAttribute('hidden');
+        } else {
+            advPanel.setAttribute('hidden', '');
+        }
+        advPanel.classList.toggle('is-open', open);
+        advToggle.classList.toggle('is-open', open);
+        advToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        filterShell?.classList.toggle('mk-filter-shell-open', open);
+        if (filtersOpenField) filtersOpenField.value = open ? '1' : '0';
+    }
+
+    advToggle?.addEventListener('click', function () {
+        setFilterPanel(advPanel.hidden);
+    });
+
+    if (advPanel && !advPanel.hidden) setFilterPanel(true);
+
+    const editModal = document.getElementById('modal-edit-listing');
+    const editForm = document.getElementById('editListingForm');
+    const editSubtitle = document.getElementById('editListingSubtitle');
+    const editToken = document.getElementById('editListingToken');
+    const listingsEditEl = document.getElementById('listings-edit-data');
+    const listingsEditData = listingsEditEl ? JSON.parse(listingsEditEl.textContent) : {};
+
+    const fields = {
+        title: document.getElementById('editTitle'),
+        price: document.getElementById('editPrice'),
+        deposit: document.getElementById('editDeposit'),
+        rent: document.getElementById('editRent'),
+        area: document.getElementById('editArea'),
+        rooms: document.getElementById('editRooms'),
+        floor: document.getElementById('editFloor'),
+        buildYear: document.getElementById('editBuildYear'),
+        elevator: document.getElementById('editElevator'),
+        parking: document.getElementById('editParking'),
+        storage: document.getElementById('editStorage'),
+        neighborhood: document.getElementById('editNeighborhood'),
+        city: document.getElementById('editCity'),
+        business: document.getElementById('editBusiness'),
+        link: document.getElementById('editLink'),
+        description: document.getElementById('editDescription'),
+    };
+    const moneyHints = {
+        price: document.getElementById('editPriceHint'),
+        deposit: document.getElementById('editDepositHint'),
+        rent: document.getElementById('editRentHint'),
+    };
+
+    function setField(el, value) {
+        if (!el) return;
+        el.value = value == null || value === '' ? '' : value;
+    }
+
+    function setTriState(el, value) {
+        if (!el) return;
+        if (value === true) el.value = '1';
+        else if (value === false) el.value = '0';
+        else el.value = '';
+    }
+
+    function formatMoneyHint(raw) {
+        const n = Number(String(raw || '').replace(/,/g, ''));
+        if (!n || Number.isNaN(n)) return '';
+        if (n >= 1e9) return (n / 1e9).toFixed(2).replace(/\.?0+$/, '') + ' میلیارد تومان';
+        if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + ' میلیون تومان';
+        if (n >= 1e3) return (n / 1e3).toFixed(0) + ' هزار تومان';
+        return n.toLocaleString('fa-IR') + ' تومان';
+    }
+
+    function updateMoneyHint(input, hint) {
+        if (!input || !hint) return;
+        hint.textContent = formatMoneyHint(input.value);
+    }
+
+    ['price', 'deposit', 'rent'].forEach(function (key) {
+        const input = fields[key];
+        const hint = moneyHints[key];
+        if (!input) return;
+        input.addEventListener('input', function () { updateMoneyHint(input, hint); });
+    });
+
+    const editFeaturesSection = document.getElementById('editFeaturesSection');
+    const editFeaturesGrid = document.getElementById('editFeaturesGrid');
+    const editFeaturesEmpty = document.getElementById('editFeaturesEmpty');
+
+    function renderFeatureDetails(details) {
+        if (!editFeaturesSection || !editFeaturesGrid) return;
+        editFeaturesGrid.innerHTML = '';
+        const items = Array.isArray(details) ? details : [];
+        if (!items.length) {
+            editFeaturesSection.hidden = true;
+            if (editFeaturesEmpty) editFeaturesEmpty.hidden = true;
+            return;
+        }
+        editFeaturesSection.hidden = false;
+        if (editFeaturesEmpty) editFeaturesEmpty.hidden = true;
+        items.forEach(function (item) {
+            const card = document.createElement('div');
+            card.className = 'mk-edit-feature-item';
+            const label = document.createElement('span');
+            label.className = 'mk-edit-feature-label';
+            label.textContent = item.label || '';
+            const value = document.createElement('strong');
+            value.className = 'mk-edit-feature-value';
+            value.textContent = item.value || '';
+            card.appendChild(label);
+            card.appendChild(value);
+            editFeaturesGrid.appendChild(card);
+        });
+    }
+
+    function fillEditForm(data) {
+        if (!data) return;
+        renderFeatureDetails(data.feature_details);
+        editSubtitle.textContent = data.title || '—';
+        if (editToken) editToken.textContent = data.token ? 'شناسه: ' + data.token : '';
+        setField(fields.title, data.title);
+        setField(fields.price, data.price);
+        setField(fields.deposit, data.deposit);
+        setField(fields.rent, data.rent);
+        setField(fields.area, data.area);
+        setField(fields.rooms, data.rooms);
+        setField(fields.floor, data.floor);
+        setField(fields.buildYear, data.build_year);
+        setTriState(fields.elevator, data.elevator);
+        setTriState(fields.parking, data.parking);
+        setTriState(fields.storage, data.storage);
+        setField(fields.neighborhood, data.neighborhood);
+        setField(fields.city, data.city);
+        if (fields.business) {
+            const biz = data.business_type || 'شخصی';
+            fields.business.value = ['شخصی', 'مشاور', 'business'].includes(biz) ? biz : 'شخصی';
+        }
+        setField(fields.link, data.link);
+        if (fields.description) fields.description.value = data.description || '';
+        updateMoneyHint(fields.price, moneyHints.price);
+        updateMoneyHint(fields.deposit, moneyHints.deposit);
+        updateMoneyHint(fields.rent, moneyHints.rent);
+    }
+
+    document.querySelectorAll('.js-edit-listing').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            this.closest('.mk-action-menu')?.removeAttribute('open');
+            const id = String(this.dataset.id || '');
+            const data = listingsEditData[id];
+            if (!data) return;
+            editForm.action = '{% url "workspace:listing_edit" dataset.id 0 %}'.replace('/0/', '/' + id + '/');
+            fillEditForm(data);
+            editModal?.classList.add('is-open');
+            document.body.classList.add('ws-modal-open');
+            fields.title?.focus();
+        });
+    });
+
+    const deleteModal = document.getElementById('modal-delete-listing');
+    const deleteForm = document.getElementById('deleteListingForm');
+    const deleteText = document.getElementById('deleteListingText');
+    document.querySelectorAll('.mk-action-menu').forEach(function (menu) {
+        menu.addEventListener('toggle', function () {
+            if (!menu.open) return;
+            document.querySelectorAll('.mk-action-menu[open]').forEach(function (other) {
+                if (other !== menu) other.removeAttribute('open');
+            });
+        });
+    });
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('.mk-action-menu')) return;
+        document.querySelectorAll('.mk-action-menu[open]').forEach(function (m) {
+            m.removeAttribute('open');
+        });
+    });
+
+    document.querySelectorAll('.js-delete-listing').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            this.closest('.mk-action-menu')?.removeAttribute('open');
+            const id = this.dataset.id;
+            deleteForm.action = '{% url "workspace:listing_delete" dataset.id 0 %}'.replace('/0/', '/' + id + '/');
+            deleteText.textContent = 'آگهی «' + (this.dataset.title || '') + '» حذف می‌شود.';
+            deleteModal?.classList.add('is-open');
+            document.body.classList.add('ws-modal-open');
+        });
+    });
+
+    {% if open_modal %}
+    const openId = '{{ open_modal }}';
+    if (openId) document.getElementById(openId)?.classList.add('is-open');
+    {% endif %}
+
+    document.querySelectorAll('.mk-listing-row[data-href]').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, input, select, textarea, summary, details, label, form')) return;
+            window.location.href = row.dataset.href;
+        });
+    });
+})();
+</script>
+{% endblock %}

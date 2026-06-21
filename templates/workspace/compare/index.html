@@ -1,0 +1,73 @@
+{% extends 'workspace/base.html' %}
+{% load humanize workspace_tags %}
+
+{% block page_title %}مقایسه{% endblock %}
+
+{% block content %}
+<div class="mk-page">
+    <header class="mk-page-hero">
+        <div class="mk-page-hero-main">
+            <div class="mk-page-hero-kicker">
+                <span class="mk-page-hero-mark" aria-hidden="true"></span>
+                <span class="mk-page-hero-eyebrow">تحلیل</span>
+            </div>
+            <h1 class="mk-page-hero-title">مقایسه دو دوره</h1>
+            <p class="mk-page-hero-desc">تغییرات بازار بین دو فایل داده</p>
+        </div>
+        <div class="mk-page-hero-toolbar" role="toolbar" aria-label="عملیات">
+            <button type="button" class="mk-hero-btn mk-hero-btn-primary" data-modal-open="modal-compare">
+                <i class="fas fa-code-compare" aria-hidden="true"></i><span>مقایسه جدید</span>
+            </button>
+        </div>
+    </header>
+
+{% if result %}
+<section class="mk-stat-strip" style="margin-bottom:.75rem">
+    <div class="mk-stat">
+        <span class="mk-stat-lbl">فایل قدیمی</span>
+        <span class="mk-stat-val" style="font-size:.95rem">{{ result.dataset_a.name|truncatechars:28 }}</span>
+        <span class="mk-stat-sub">{{ result.dataset_a.count|intcomma }} آگهی{% if result.dataset_a.stats.price %} · {{ result.dataset_a.stats.price.median_fmt }}{% endif %}</span>
+    </div>
+    <div class="mk-stat">
+        <span class="mk-stat-lbl">فایل جدید</span>
+        <span class="mk-stat-val" style="font-size:.95rem">{{ result.dataset_b.name|truncatechars:28 }}</span>
+        <span class="mk-stat-sub">{{ result.dataset_b.count|intcomma }} آگهی{% if result.dataset_b.stats.price %} · {{ result.dataset_b.stats.price.median_fmt }}{% endif %}</span>
+    </div>
+</section>
+
+<section class="mk-panel">
+    <div class="mk-panel-head"><h2>تغییرات</h2></div>
+    <div class="ws-grid ws-grid-3">
+        {% if result.delta.count_pct is not None %}<div class="ws-delta"><div class="ws-delta-val">{{ result.delta.count_pct }}%</div><div class="ws-delta-lbl">تعداد آگهی</div></div>{% endif %}
+        {% if result.delta.median_price_pct is not None %}<div class="ws-delta"><div class="ws-delta-val">{{ result.delta.median_price_pct }}%</div><div class="ws-delta-lbl">میانه قیمت</div></div>{% endif %}
+        {% if result.delta.median_pps_pct is not None %}<div class="ws-delta"><div class="ws-delta-val">{{ result.delta.median_pps_pct }}%</div><div class="ws-delta-lbl">قیمت/متر</div></div>{% endif %}
+    </div>
+    <p class="mk-meta" style="text-align:center;margin-top:1rem">{{ result.tokens.common|intcomma }} مشترک · {{ result.tokens.new_count }} جدید · {{ result.tokens.removed_count }} حذف</p>
+</section>
+{% else %}
+<section class="mk-panel">
+    <div class="ws-empty">
+        <div class="ws-empty-icon"><i class="fas fa-code-compare" aria-hidden="true"></i></div>
+        <p class="ws-empty-title">مقایسه‌ای انجام نشده</p>
+        <p class="ws-empty-desc">دو فایل داده را انتخاب کنید.</p>
+        <button type="button" class="ws-btn ws-btn-sm ws-btn-primary" data-modal-open="modal-compare">شروع مقایسه</button>
+    </div>
+</section>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="ws-modal" id="modal-compare" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel">
+        <div class="ws-modal-head"><div><h2 class="ws-modal-title">مقایسه دو فایل</h2><p class="ws-modal-sub">انتخاب دو مجموعه‌داده برای تحلیل تغییرات</p></div><button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button></div>
+        <form method="post" class="ws-modal-body">
+            {% csrf_token %}
+            <div class="ws-field"><label class="ws-label">فایل قدیمی</label>{{ form.dataset_a }}</div>
+            <div class="ws-field"><label class="ws-label">فایل جدید</label>{{ form.dataset_b }}</div>
+            <div class="ws-modal-foot"><button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button><button type="submit" class="ws-btn ws-btn-primary">مقایسه</button></div>
+        </form>
+    </div>
+</div>
+{% endblock %}

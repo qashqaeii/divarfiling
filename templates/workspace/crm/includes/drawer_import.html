@@ -1,0 +1,142 @@
+<aside class="crm-drawer crm-drawer-import" id="drawer-import" {% if open_modal == 'drawer-import' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-import">
+        <div class="crm-drawer-head crm-drawer-head-import">
+            <div class="crm-drawer-head-import-text">
+                <span class="crm-drawer-kicker"><i class="fas fa-file-import" aria-hidden="true"></i> ورود گروهی</span>
+                <h2>Import مخاطبین</h2>
+                <p>فایل Excel یا CSV با ستون‌های استاندارد — تکراری‌ها بر اساس تلفن رد می‌شوند</p>
+            </div>
+            <button type="button" class="crm-drawer-close crm-drawer-close--on-accent" data-drawer-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'workspace:crm_import' %}" enctype="multipart/form-data" class="crm-drawer-form" id="crmImportForm">
+            <div class="crm-drawer-body">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                {% if import_form.errors %}
+                <div class="crm-import-alert crm-import-alert--error" role="alert">
+                    <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                    <span>فایل انتخاب‌شده معتبر نیست. فرمت xlsx، xls یا csv را بررسی کنید.</span>
+                </div>
+                {% endif %}
+
+                <div class="crm-import-steps" aria-hidden="true">
+                    <span class="crm-import-step is-active"><i class="fas fa-upload"></i> آپلود</span>
+                    <span class="crm-import-step-line"></span>
+                    <span class="crm-import-step"><i class="fas fa-table"></i> تطبیق ستون</span>
+                    <span class="crm-import-step-line"></span>
+                    <span class="crm-import-step"><i class="fas fa-check"></i> ثبت</span>
+                </div>
+
+                <section class="crm-import-section">
+                    <div class="crm-import-section-head">
+                        <h3>۱. فایل مخاطبین</h3>
+                        <a href="{% url 'workspace:crm_import_template' %}" class="crm-import-template-btn" download>
+                            <i class="fas fa-download" aria-hidden="true"></i>
+                            <span>دانلود فایل نمونه</span>
+                        </a>
+                    </div>
+
+                    <div class="crm-import-dropzone" data-import-dropzone tabindex="0" role="button" aria-label="انتخاب یا رها کردن فایل">
+                        <input type="file" name="file" class="crm-import-file-input" data-import-file accept=".xlsx,.xls,.csv" required>
+                        <div class="crm-import-dropzone-empty" data-import-empty>
+                            <span class="crm-import-dropzone-icon" aria-hidden="true"><i class="fas fa-cloud-upload-alt"></i></span>
+                            <strong>فایل را اینجا رها کنید</strong>
+                            <span>یا برای انتخاب کلیک کنید</span>
+                            <span class="crm-import-dropzone-formats">xlsx · xls · csv</span>
+                        </div>
+                        <div class="crm-import-dropzone-preview" data-import-preview hidden>
+                            <span class="crm-import-file-icon" aria-hidden="true"><i class="fas fa-file-excel"></i></span>
+                            <div class="crm-import-file-meta">
+                                <strong data-import-filename>—</strong>
+                                <span data-import-filesize>—</span>
+                            </div>
+                            <button type="button" class="crm-import-file-clear" data-import-clear title="حذف فایل" aria-label="حذف فایل">
+                                <i class="fas fa-times" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="crm-import-section">
+                    <h3>۲. ستون‌های پشتیبانی‌شده</h3>
+                    <p class="crm-import-section-desc">عنوان ستون‌ها در فایل باید دقیقاً مطابق جدول زیر باشد.</p>
+                    <div class="crm-import-table-wrap">
+                        <table class="crm-import-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">ستون</th>
+                                    <th scope="col">توضیح</th>
+                                    <th scope="col">نمونه</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for col in import_column_specs %}
+                                <tr>
+                                    <td>
+                                        <span class="crm-import-col-name">{{ col.header }}</span>
+                                        {% if col.required %}<span class="crm-import-col-req">الزامی</span>{% endif %}
+                                    </td>
+                                    <td class="crm-import-col-hint">{{ col.hint }}</td>
+                                    <td class="crm-import-col-example" dir="ltr">{{ col.example }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="crm-import-section crm-import-section--compact">
+                    <h3>مقادیر مجاز</h3>
+                    <div class="crm-import-values-grid">
+                        <div class="crm-import-values-card">
+                            <span class="crm-import-values-label">نوع</span>
+                            <div class="crm-import-values-chips">
+                                {% for v in import_allowed_values.types %}<span class="crm-chip crm-chip--soft">{{ v }}</span>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="crm-import-values-card">
+                            <span class="crm-import-values-label">وضعیت</span>
+                            <div class="crm-import-values-chips">
+                                {% for v in import_allowed_values.statuses %}<span class="crm-chip crm-chip--soft">{{ v }}</span>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="crm-import-values-card">
+                            <span class="crm-import-values-label">اولویت</span>
+                            <div class="crm-import-values-chips">
+                                {% for v in import_allowed_values.priorities %}<span class="crm-chip crm-chip--soft">{{ v }}</span>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="crm-import-rules">
+                    <div class="crm-import-rule">
+                        <i class="fas fa-user-check" aria-hidden="true"></i>
+                        <span>فقط ردیف‌هایی که <strong>نام</strong> دارند import می‌شوند.</span>
+                    </div>
+                    <div class="crm-import-rule">
+                        <i class="fas fa-phone" aria-hidden="true"></i>
+                        <span>شماره تکراری با مخاطب موجود <strong>رد</strong> می‌شود.</span>
+                    </div>
+                    <div class="crm-import-rule">
+                        <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                        <span>داده‌ها فقط در حساب شما ذخیره می‌شوند.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="crm-drawer-foot crm-drawer-foot-import">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary crm-btn-glow" data-import-submit disabled>
+                    <i class="fas fa-file-import" aria-hidden="true"></i>
+                    <span>شروع Import</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</aside>

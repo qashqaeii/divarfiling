@@ -1,0 +1,248 @@
+{% extends 'workspace/base.html' %}
+{% load static %}
+
+{% block title %}راهنما و آموزش{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/help.css' %}?v=8">
+{% endblock %}
+
+{% block content %}
+<div class="hlp">
+
+    {# ── Hero ── #}
+    <section class="hlp-stage" aria-labelledby="hlp-title">
+        <div class="hlp-stage-accent" aria-hidden="true"></div>
+        <div class="hlp-stage-orbs" aria-hidden="true">
+            <span class="hlp-orb hlp-orb--1"></span>
+            <span class="hlp-orb hlp-orb--2"></span>
+            <span class="hlp-orb hlp-orb--3"></span>
+        </div>
+
+        <header class="hlp-hero">
+            <span class="hlp-eyebrow">
+                <span class="hlp-icon hlp-icon--xs" data-accent="violet"><i class="fas fa-graduation-cap" aria-hidden="true"></i></span>
+                {{ help.hero.eyebrow }}
+            </span>
+            <h1 id="hlp-title">{{ help.hero.title }}</h1>
+            <p class="hlp-lead">{{ help.hero.lead }}</p>
+        </header>
+
+        <nav class="hlp-pipeline" aria-label="شروع سریع">
+            {% for step in help.quick_start %}
+            <a href="{% if step.requires_bot and not has_bot_license %}{% url 'workspace:upgrade' %}?feature={{ step.feature }}{% elif step.url_query %}{% url step.url_name %}?{{ step.url_query }}{% else %}{% url step.url_name %}{% endif %}"
+               class="hlp-pipeline-card{% if step.requires_bot and not has_bot_license %} hlp-pipeline-card--locked{% endif %}">
+                <span class="hlp-pipeline-num">{{ step.num }}</span>
+                <span class="hlp-icon hlp-icon--lg" data-accent="{{ step.accent }}">
+                    <i class="fas {{ step.icon }}" aria-hidden="true"></i>
+                    {% if step.requires_bot and not has_bot_license %}
+                    <span class="hlp-icon-lock"><i class="fas fa-lock" aria-hidden="true"></i></span>
+                    {% endif %}
+                </span>
+                <span class="hlp-pipeline-body">
+                    <strong>{{ step.title }}</strong>
+                    <span>{{ step.desc }}</span>
+                </span>
+                <i class="fas fa-arrow-left hlp-pipeline-arrow" aria-hidden="true"></i>
+            </a>
+            {% if not forloop.last %}
+            <span class="hlp-pipeline-connector" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+            {% endif %}
+            {% endfor %}
+        </nav>
+    </section>
+
+    {# ── Layout: TOC + Main ── #}
+    <div class="hlp-layout">
+
+        <aside class="hlp-toc" aria-label="فهرست مطالب">
+            <div class="hlp-toc-inner">
+                <h2 class="hlp-toc-title"><i class="fas fa-list" aria-hidden="true"></i> فهرست</h2>
+                <nav class="hlp-toc-nav">
+                    <a href="#start" class="hlp-toc-link is-active" data-target="start">
+                        <i class="fas fa-rocket" aria-hidden="true"></i> شروع سریع
+                    </a>
+                    <a href="{% url 'workspace:home' %}?tour=1" class="hlp-toc-link hlp-toc-link--tour">
+                        <i class="fas fa-compass" aria-hidden="true"></i> تور آموزشی میزکار
+                    </a>
+                    {% for item in help.toc %}
+                    {% if item.id != 'start' and item.id != 'faq' %}
+                    <a href="#{{ item.id }}" class="hlp-toc-link" data-target="{{ item.id }}">
+                        <i class="fas {{ item.icon }}" aria-hidden="true"></i> {{ item.title }}
+                    </a>
+                    {% endif %}
+                    {% endfor %}
+                    <a href="#faq" class="hlp-toc-link" data-target="faq">
+                        <i class="fas fa-circle-question" aria-hidden="true"></i> سؤالات متداول
+                    </a>
+                </nav>
+                {% if not has_bot_license %}
+                <div class="hlp-toc-promo">
+                    <span class="hlp-icon hlp-icon--sm" data-accent="violet"><i class="fas fa-robot" aria-hidden="true"></i></span>
+                    <p>برای تحلیل بازار، ربات استخراج نیاز است.</p>
+                    <a href="{% url 'workspace:upgrade' %}" class="hlp-cta hlp-cta--sm">مشاهده پلن‌ها</a>
+                </div>
+                {% endif %}
+            </div>
+        </aside>
+
+        <main class="hlp-main">
+
+            {# ── Start section ── #}
+            <section id="start" class="hlp-section hlp-section--start">
+                <div class="hlp-panel hlp-panel--workflow">
+                    <header class="hlp-panel-head">
+                        <div class="hlp-panel-head-main">
+                            <h2>{{ help.daily_workflow.title }}</h2>
+                            <p>{{ help.daily_workflow.subtitle }}</p>
+                        </div>
+                    </header>
+                    <ol class="hlp-workflow">
+                        {% for step in help.daily_workflow.steps %}
+                        <li>
+                            <a href="{% url step.url_name %}" class="hlp-workflow-card">
+                                <span class="hlp-icon hlp-icon--sm" data-accent="{{ step.accent }}">
+                                    <i class="fas {{ step.icon }}" aria-hidden="true"></i>
+                                </span>
+                                <span class="hlp-workflow-copy">
+                                    <strong>{{ step.title }}</strong>
+                                    <span>{{ step.desc }}</span>
+                                </span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </section>
+
+            {# ── Guide sections ── #}
+            {% for guide in help.guides %}
+            <section id="{{ guide.id }}" class="hlp-section hlp-guide">
+                <header class="hlp-guide-head">
+                    <div class="hlp-guide-head-icon">
+                        <span class="hlp-icon hlp-icon--lg" data-accent="{{ guide.accent }}">
+                            <i class="fas {{ guide.icon }}" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <div class="hlp-guide-head-copy">
+                        {% if guide.badge == 'bot' %}
+                        <span class="hlp-badge hlp-badge--bot"><i class="fas fa-robot" aria-hidden="true"></i> نیاز به ربات</span>
+                        {% elif guide.badge == 'free' %}
+                        <span class="hlp-badge hlp-badge--free"><i class="fas fa-gift" aria-hidden="true"></i> رایگان</span>
+                        {% else %}
+                        <span class="hlp-badge hlp-badge--all"><i class="fas fa-check" aria-hidden="true"></i> همه کاربران</span>
+                        {% endif %}
+                        <h2>{{ guide.title }}</h2>
+                        <p class="hlp-guide-subtitle">{{ guide.subtitle }}</p>
+                        <p class="hlp-guide-intro">{{ guide.intro }}</p>
+                    </div>
+                </header>
+
+                <div class="hlp-topics">
+                    {% for topic in guide.topics %}
+                    <article class="hlp-topic{% if topic.image %} hlp-topic--has-image{% endif %}">
+                        <div class="hlp-topic-content">
+                            <header class="hlp-topic-head">
+                                <span class="hlp-icon hlp-icon--sm" data-accent="{{ guide.accent }}">
+                                    <i class="fas {{ topic.icon }}" aria-hidden="true"></i>
+                                </span>
+                                <h3>{{ topic.title }}</h3>
+                                {% if topic.requires_bot and not has_bot_license %}
+                                <span class="hlp-topic-lock" title="نیاز به لایسنس ربات"><i class="fas fa-lock" aria-hidden="true"></i></span>
+                                {% endif %}
+                            </header>
+
+                            {% if topic.steps %}
+                            <ol class="hlp-steps">
+                                {% for step in topic.steps %}
+                                <li>
+                                    <strong>{{ step.title }}</strong>
+                                    <span>{{ step.desc }}</span>
+                                </li>
+                                {% endfor %}
+                            </ol>
+                            {% endif %}
+
+                            {% if topic.tips %}
+                            <div class="hlp-tips">
+                                <span class="hlp-tips-label"><i class="fas fa-lightbulb" aria-hidden="true"></i> نکته</span>
+                                <ul>
+                                    {% for tip in topic.tips %}
+                                    <li>{{ tip }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            {% if topic.url_name %}
+                            <a href="{% if topic.requires_bot and not has_bot_license %}{% url 'workspace:upgrade' %}?feature={{ topic.feature }}{% elif topic.url_query %}{% url topic.url_name %}?{{ topic.url_query }}{% else %}{% url topic.url_name %}{% endif %}"
+                               class="hlp-topic-link">
+                                رفتن به این بخش <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        {% if topic.image %}
+                        <figure class="hlp-figure">
+                            <button type="button" class="hlp-figure-frame" data-filename="{{ topic.image }}" data-hlp-lightbox aria-label="بزرگ‌نمایی: {{ topic.image_caption|default:topic.title }}">
+                                <img src="{% static 'images/' %}{{ topic.image }}"
+                                     alt="{{ topic.image_caption|default:topic.title }}"
+                                     loading="lazy"
+                                     class="hlp-figure-img"
+                                     onerror="this.closest('.hlp-figure-frame').classList.add('hlp-figure-frame--missing'); this.closest('.hlp-figure-frame').disabled = true;">
+                                <span class="hlp-figure-zoom-hint" aria-hidden="true"><i class="fas fa-expand"></i></span>
+                                <div class="hlp-figure-placeholder" aria-hidden="true">
+                                    <i class="fas fa-image"></i>
+                                    <span>تصویر این بخش در دسترس نیست</span>
+                                </div>
+                            </button>
+                            {% if topic.image_caption %}
+                            <figcaption>{{ topic.image_caption }}</figcaption>
+                            {% endif %}
+                        </figure>
+                        {% endif %}
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endfor %}
+
+            {# ── FAQ ── #}
+            <section id="faq" class="hlp-section">
+                <div class="hlp-panel hlp-panel--faq">
+                    <header class="hlp-panel-head hlp-panel-head--compact">
+                        <div class="hlp-panel-head-main">
+                            <h2>سؤالات متداول</h2>
+                            <p>پاسخ سریع به پرسش‌های رایج</p>
+                        </div>
+                    </header>
+                    <div class="hlp-faq">
+                        {% for item in help.faq %}
+                        <details class="hlp-faq-item"{% if forloop.first %} open{% endif %}>
+                            <summary>{{ item.q }}</summary>
+                            <p>{{ item.a }}</p>
+                        </details>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+
+            {# ── Footer ── #}
+            <footer class="hlp-foot">
+                <div class="hlp-foot-links">
+                    <a href="{% url 'workspace:home' %}">نمای کلی</a>
+                    <span aria-hidden="true">·</span>
+                    <a href="{% url 'workspace:crm_dashboard' %}">داشبورد CRM</a>
+                    <span aria-hidden="true">·</span>
+                    <a href="{% url 'license_guide' %}">راهنمای فعال‌سازی ربات</a>
+                </div>
+            </footer>
+
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'workspace/js/help.js' %}?v=2" defer></script>
+{% endblock %}

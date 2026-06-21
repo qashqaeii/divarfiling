@@ -1,0 +1,343 @@
+================================================================================
+                    دستورات مهم Django - پروژه فروشگاه دیوار
+================================================================================
+
+📁 مسیر پروژه: django/
+📁 محیط مجازی: django/venv/
+
+================================================================================
+1. فعال‌سازی محیط مجازی (Virtual Environment)
+================================================================================
+
+Windows (PowerShell):
+    cd django
+    .\venv\Scripts\Activate.ps1
+
+Windows (CMD):
+    cd django
+    venv\Scripts\activate.bat
+
+Linux/Mac:
+    cd django
+    source venv/bin/activate
+
+غیرفعال‌سازی محیط مجازی:
+    deactivate
+
+================================================================================
+2. نصب وابستگی‌ها (Dependencies)
+================================================================================
+
+نصب تمام پکیج‌های مورد نیاز:
+    pip install -r requirements.txt
+
+به‌روزرسانی pip:
+    python -m pip install --upgrade pip
+
+نصب یک پکیج خاص:
+    pip install package_name
+
+ذخیره لیست پکیج‌های نصب شده:
+    pip freeze > requirements.txt
+
+================================================================================
+3. مدیریت دیتابیس (Database Management)
+================================================================================
+
+ایجاد فایل‌های migration:
+    python manage.py makemigrations
+
+ایجاد migration برای یک app خاص:
+    python manage.py makemigrations app_name
+
+اعمال migration‌ها به دیتابیس:
+    python manage.py migrate
+
+اعمال migration برای یک app خاص:
+    python manage.py migrate app_name
+
+بررسی وضعیت migration‌ها:
+    python manage.py showmigrations
+
+بازگشت به migration قبلی:
+    python manage.py migrate app_name migration_number
+
+مثال: بازگشت به migration 0001:
+    python manage.py migrate shop 0001
+
+حذف تمام جداول و ایجاد مجدد (⚠️ خطرناک - تمام داده‌ها پاک می‌شود):
+    python manage.py flush
+
+================================================================================
+4. مدیریت فایل‌های استاتیک (Static Files)
+================================================================================
+
+جمع‌آوری فایل‌های استاتیک:
+    python manage.py collectstatic
+
+جمع‌آوری بدون تایید:
+    python manage.py collectstatic --noinput
+
+پاک کردن فایل‌های استاتیک جمع‌آوری شده:
+    python manage.py collectstatic --clear
+
+================================================================================
+5. مدیریت کاربران (User Management)
+================================================================================
+
+ایجاد superuser (مدیر اصلی):
+    python manage.py createsuperuser
+
+ایجاد superuser با اسکریپت:
+    python create_superuser.py
+
+تغییر رمز عبور کاربر:
+    python manage.py changepassword username
+
+================================================================================
+6. اجرای سرور توسعه (Development Server)
+================================================================================
+
+اجرای سرور روی پورت پیش‌فرض (8000):
+    python manage.py runserver
+
+اجرای سرور روی پورت خاص:
+    python manage.py runserver 8080
+
+اجرای سرور روی IP و پورت خاص:
+    python manage.py runserver 0.0.0.0:8000
+
+اجرای سرور با reload خودکار (پیش‌فرض):
+    python manage.py runserver --noreload
+
+================================================================================
+7. دستورات مدیریتی (Management Commands)
+================================================================================
+
+اجرای shell Django:
+    python manage.py shell
+
+اجرای shell با IPython (اگر نصب باشد):
+    python manage.py shell_plus
+
+اجرای دستورات Python در shell:
+    python manage.py shell -c "from shop.models import Product; print(Product.objects.count())"
+
+بررسی تنظیمات:
+    python manage.py check
+
+بررسی تنظیمات با بررسی امنیت:
+    python manage.py check --deploy
+
+================================================================================
+8. دستورات سفارشی پروژه (Custom Commands)
+================================================================================
+
+ایجاد محصول پایه:
+    python manage.py import_basic_product
+
+ایجاد محصول از فایل JSON:
+    python manage.py import_product path/to/product.json
+
+ایجاد سفارش تستی:
+    python manage.py create_fake_order
+
+================================================================================
+9. لاگ‌ها و دیباگ (Logs & Debug)
+================================================================================
+
+مشاهده لاگ‌های Django:
+    tail -f logs/django.log
+
+Windows PowerShell:
+    Get-Content logs/django.log -Wait -Tail 50
+
+پاک کردن لاگ:
+    > logs/django.log
+
+================================================================================
+10. دستورات Production (سرور واقعی)
+================================================================================
+
+اجرای با Gunicorn:
+    gunicorn divar_shop.wsgi:application --config gunicorn_config.py
+
+اجرای با Gunicorn به صورت دستی:
+    gunicorn divar_shop.wsgi:application --bind 0.0.0.0:8000 --workers 4
+
+اجرای به صورت daemon:
+    gunicorn divar_shop.wsgi:application --config gunicorn_config.py --daemon
+
+توقف Gunicorn:
+    pkill -f gunicorn
+
+بررسی وضعیت سرویس:
+    systemctl status divar_shop
+
+شروع سرویس:
+    sudo systemctl start divar_shop
+
+توقف سرویس:
+    sudo systemctl stop divar_shop
+
+راه‌اندازی مجدد سرویس:
+    sudo systemctl restart divar_shop
+
+مشاهده لاگ‌های سرویس:
+    sudo journalctl -u divar_shop -f
+
+================================================================================
+11. دستورات Nginx
+================================================================================
+
+بررسی تنظیمات Nginx:
+    sudo nginx -t
+
+راه‌اندازی مجدد Nginx:
+    sudo systemctl restart nginx
+
+بارگذاری مجدد تنظیمات (بدون قطعی):
+    sudo nginx -s reload
+
+مشاهده لاگ‌های Nginx:
+    sudo tail -f /var/log/nginx/error.log
+    sudo tail -f /var/log/nginx/access.log
+
+================================================================================
+12. دستورات مفید دیگر
+================================================================================
+
+پاک کردن فایل‌های __pycache__:
+    find . -type d -name __pycache__ -exec rm -r {} +
+    
+Windows PowerShell:
+    Get-ChildItem -Path . -Recurse -Filter __pycache__ | Remove-Item -Recurse -Force
+
+پاک کردن فایل‌های .pyc:
+    find . -name "*.pyc" -delete
+
+Windows PowerShell:
+    Get-ChildItem -Path . -Recurse -Filter *.pyc | Remove-Item -Force
+
+بررسی استفاده از پورت:
+    netstat -ano | findstr :8000
+
+Linux:
+    sudo lsof -i :8000
+
+بررسی فرآیندهای Python:
+    tasklist | findstr python
+
+Linux:
+    ps aux | grep python
+
+================================================================================
+13. ترتیب اجرای دستورات برای راه‌اندازی اولیه
+================================================================================
+
+1. فعال‌سازی محیط مجازی:
+   cd django
+   .\venv\Scripts\Activate.ps1
+
+2. نصب وابستگی‌ها:
+   pip install -r requirements.txt
+
+3. ایجاد migration‌ها:
+   python manage.py makemigrations
+
+4. اعمال migration‌ها:
+   python manage.py migrate
+
+5. جمع‌آوری فایل‌های استاتیک:
+   python manage.py collectstatic --noinput
+
+6. ایجاد superuser:
+   python manage.py createsuperuser
+
+7. اجرای سرور:
+   python manage.py runserver
+
+================================================================================
+14. ترتیب اجرای دستورات برای به‌روزرسانی
+================================================================================
+
+1. فعال‌سازی محیط مجازی:
+   cd django
+   .\venv\Scripts\Activate.ps1
+
+2. به‌روزرسانی وابستگی‌ها (در صورت نیاز):
+   pip install -r requirements.txt --upgrade
+
+3. ایجاد migration‌های جدید:
+   python manage.py makemigrations
+
+4. اعمال migration‌های جدید:
+   python manage.py migrate
+
+5. جمع‌آوری فایل‌های استاتیک:
+   python manage.py collectstatic --noinput
+
+6. راه‌اندازی مجدد سرویس:
+   sudo systemctl restart divar_shop
+
+================================================================================
+15. دستورات عیب‌یابی (Troubleshooting)
+================================================================================
+
+بررسی خطاهای Django:
+    python manage.py check
+
+بررسی اتصال به دیتابیس:
+    python manage.py dbshell
+
+پاک کردن session‌ها:
+    python manage.py clearsessions
+
+بررسی تنظیمات:
+    python manage.py diffsettings
+
+مشاهده URL‌های ثبت شده:
+    python manage.py show_urls
+
+(نیاز به نصب django-extensions)
+
+================================================================================
+16. دستورات Git (در صورت استفاده)
+================================================================================
+
+بررسی وضعیت:
+    git status
+
+افزودن فایل‌ها:
+    git add .
+
+ثبت تغییرات:
+    git commit -m "توضیحات تغییرات"
+
+ارسال به repository:
+    git push origin main
+
+دریافت تغییرات:
+    git pull origin main
+
+================================================================================
+⚠️ نکات مهم:
+================================================================================
+
+- همیشه قبل از migrate، از دیتابیس backup بگیرید
+- در production، حتماً DEBUG=False باشد
+- فایل‌های .env را در .gitignore قرار دهید
+- قبل از collectstatic، مطمئن شوید STATIC_ROOT تنظیم شده است
+- در production، از Gunicorn یا uWSGI استفاده کنید نه runserver
+- همیشه لاگ‌ها را بررسی کنید
+
+================================================================================
+📝 یادداشت:
+================================================================================
+
+این فایل شامل دستورات مهم و پرکاربرد Django است.
+برای اطلاعات بیشتر به مستندات Django مراجعه کنید:
+https://docs.djangoproject.com/
+
+================================================================================
+

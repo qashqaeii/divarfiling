@@ -1,0 +1,175 @@
+{% with tree=bot_page.extraction_tree %}
+<section class="pb-band pb-xtree-band" id="extraction-tree">
+    <div class="container">
+        <div class="pb-xtree-shell" data-pb-xtree>
+            <header class="pb-xtree-head">
+                <div class="pb-xtree-head-copy">
+                    <span class="pb-head-kicker">{{ tree.eyebrow }}</span>
+                    <h2>{{ tree.title }}</h2>
+                    <p>{{ tree.subtitle }}</p>
+                </div>
+                <ul class="pb-xtree-stats" aria-label="خلاصه استخراج">
+                    {% for stat in tree.stats %}
+                    <li>
+                        <span class="pb-xtree-stat-val">{{ stat.value }}</span>
+                        <span class="pb-xtree-stat-lbl">{{ stat.label }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </header>
+
+            <div class="pb-xtree-stage">
+                <svg class="pb-xtree-lines" aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="pbXtreeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="rgba(124,58,237,0.05)"/>
+                            <stop offset="50%" stop-color="rgba(124,58,237,0.45)"/>
+                            <stop offset="100%" stop-color="rgba(56,189,248,0.35)"/>
+                        </linearGradient>
+                    </defs>
+                    <path class="pb-xtree-line pb-xtree-line--a" d="M72 8 C 58 28, 42 38, 28 52"/>
+                    <path class="pb-xtree-line pb-xtree-line--b" d="M72 50 C 58 58, 42 62, 28 68"/>
+                    <path class="pb-xtree-line pb-xtree-line--c" d="M72 92 C 58 78, 42 68, 28 58"/>
+                </svg>
+
+                <aside class="pb-xtree-nav" aria-label="دسته‌بندی‌های استخراج">
+                    <div class="pb-xtree-root">
+                        <span class="pb-xtree-root-icon pb-icon pb-icon--sm pb-icon--violet"><i class="fas fa-sitemap"></i></span>
+                        <div>
+                            <strong>درخت استخراج</strong>
+                            <span>output / استان / شهر / محله</span>
+                        </div>
+                    </div>
+
+                    <div class="pb-xtree-branches">
+                        {% for cat in tree.categories %}
+                        <div class="pb-xtree-branch" data-accent="{{ cat.accent }}">
+                            <button type="button"
+                                    class="pb-xtree-branch-btn{% if forloop.first %} is-active{% endif %}"
+                                    data-xtree-select="{{ cat.id }}"
+                                    aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">
+                                <span class="pb-xtree-branch-dot" aria-hidden="true"></span>
+                                <span class="pb-xtree-branch-icon pb-icon pb-icon--xs pb-icon--{{ cat.accent }}"><i class="fas {{ cat.icon }}"></i></span>
+                                <span class="pb-xtree-branch-label">{{ cat.label }}</span>
+                                <span class="pb-xtree-branch-count">{{ cat.subcategories|length }}</span>
+                            </button>
+                            <ul class="pb-xtree-leaves" hidden>
+                                {% for sub in cat.subcategories %}
+                                <li>
+                                    <button type="button" class="pb-xtree-leaf" data-xtree-select="{{ cat.id }}" data-xtree-file="{{ sub.file }}">
+                                        <i class="fas fa-file-excel" aria-hidden="true"></i>
+                                        <span>{{ sub.label }}</span>
+                                        <code dir="ltr">{{ sub.file }}</code>
+                                    </button>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </aside>
+
+                <div class="pb-xtree-detail">
+                    {% for cat in tree.categories %}
+                    <article class="pb-xtree-pane{% if forloop.first %} is-active{% endif %}" data-xtree-pane="{{ cat.id }}"{% if not forloop.first %} hidden{% endif %}>
+                        <header class="pb-xtree-pane-head">
+                            <span class="pb-xtree-pane-icon pb-icon pb-icon--lg pb-icon--{{ cat.accent }}"><i class="fas {{ cat.icon }}"></i></span>
+                            <div>
+                                <h3>{{ cat.label }}</h3>
+                                <p>{{ cat.desc }}</p>
+                            </div>
+                        </header>
+
+                        <div class="pb-xtree-subs">
+                            {% for sub in cat.subcategories %}
+                            <span class="pb-xtree-sub-chip" data-accent="{{ cat.accent }}">
+                                <i class="fas fa-file-excel" aria-hidden="true"></i>
+                                {{ sub.label }}
+                                <code dir="ltr">{{ sub.file }}</code>
+                            </span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="pb-xtree-layers">
+                            <section class="pb-xtree-layer pb-xtree-layer--price" data-accent="{{ cat.accent }}">
+                                <header>
+                                    <span class="pb-icon pb-icon--sm pb-icon--{{ cat.accent }}"><i class="fas {{ cat.price_layer.icon }}"></i></span>
+                                    <h4>{{ cat.price_layer.label }}</h4>
+                                </header>
+                                <ul>
+                                    {% for field in cat.price_layer.fields %}
+                                    <li>{{ field }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </section>
+
+                            {% for layer in cat.spec_layers %}
+                            <section class="pb-xtree-layer" data-accent="{{ cat.accent }}">
+                                <header>
+                                    <span class="pb-icon pb-icon--sm pb-icon--{{ cat.accent }}"><i class="fas {{ layer.icon }}"></i></span>
+                                    <h4>{{ layer.label }}</h4>
+                                </header>
+                                <ul>
+                                    {% for field in layer.fields %}
+                                    <li>{{ field }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </section>
+                            {% endfor %}
+                        </div>
+
+                        <aside class="pb-xtree-sample" data-accent="{{ cat.accent }}">
+                            <div class="pb-xtree-sample-path" dir="ltr">
+                                <i class="fas fa-folder-tree" aria-hidden="true"></i>
+                                output/{{ cat.sample.path }}{{ cat.sample.file }}
+                            </div>
+                            <h4>{{ cat.sample.title }}</h4>
+                            <dl class="pb-xtree-sample-grid">
+                                {% for h in cat.sample.highlights %}
+                                <div>
+                                    <dt>{{ h.label }}</dt>
+                                    <dd>{{ h.value }}</dd>
+                                </div>
+                                {% endfor %}
+                            </dl>
+                            {% if cat.id == 'sale-residential' %}
+                            <a href="#excel-sample" class="pb-xtree-sample-cta">
+                                <i class="fas fa-table" aria-hidden="true"></i>
+                                مشاهده پیش‌نمایش اکسل واقعی
+                                <i class="fas fa-arrow-down" aria-hidden="true"></i>
+                            </a>
+                            {% endif %}
+                        </aside>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <footer class="pb-xtree-shared">
+                <div class="pb-xtree-shared-head">
+                    <span class="pb-icon pb-icon--md pb-icon--violet"><i class="fas fa-layer-group"></i></span>
+                    <div>
+                        <h3>{{ tree.shared_label }}</h3>
+                        <p>در هر فایل Excel — مستقل از نوع معامله</p>
+                    </div>
+                </div>
+                <div class="pb-xtree-shared-grid">
+                    {% for layer in tree.shared_layers %}
+                    <article class="pb-xtree-shared-card" data-accent="{{ layer.accent }}">
+                        <header>
+                            <span class="pb-icon pb-icon--xs pb-icon--{{ layer.accent }}"><i class="fas {{ layer.icon }}"></i></span>
+                            <h4>{{ layer.label }}</h4>
+                        </header>
+                        <ul>
+                            {% for field in layer.fields %}
+                            <li>{{ field }}</li>
+                            {% endfor %}
+                        </ul>
+                    </article>
+                    {% endfor %}
+                </div>
+            </footer>
+        </div>
+    </div>
+</section>
+{% endwith %}

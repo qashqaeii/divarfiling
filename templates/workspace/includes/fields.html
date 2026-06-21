@@ -1,0 +1,15 @@
+<div class="ws-fields ws-fields-{{ columns }}">
+{% for field in form %}
+    <div class="ws-field{% if field.errors %} ws-field-error{% endif %}{% if field.field.widget.input_type == 'checkbox' %} ws-field-check{% endif %}">
+        {% if field.field.widget.input_type != 'checkbox' %}
+        <label class="ws-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="ws-required">*</span>{% endif %}</label>
+        {% endif %}
+        {{ field }}
+        {% if field.help_text %}<p class="ws-hint">{{ field.help_text }}</p>{% endif %}
+        {% for error in field.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+        {% if field.field.widget.input_type == 'checkbox' %}
+        <label class="ws-label ws-label-check" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {% endif %}
+    </div>
+{% endfor %}
+</div>

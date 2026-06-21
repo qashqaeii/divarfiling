@@ -1,0 +1,51 @@
+{% extends 'errors/base_error.html' %}
+
+{% block err_body_class %} err-body--403{% endblock %}
+{% block err_title %}دسترسی مجاز نیست{% endblock %}
+{% block err_code %}403{% endblock %}
+{% block err_http %}403{% endblock %}
+{% block err_eyebrow %}خطای ۴۰۳ — ممنوع{% endblock %}
+{% block err_heading %}ورود به این بخش مجاز نیست{% endblock %}
+{% block err_lead %}
+{% if user.is_authenticated %}
+حساب شما اجازه مشاهده یا انجام این عملیات را ندارد. اگر فکر می‌کنید اشتباه است، با مدیر workspace یا پشتیبانی تماس بگیرید.
+{% else %}
+برای دسترسی به این صفحه باید وارد حساب کاربری خود شوید.
+{% endif %}
+{% endblock %}
+
+{% block err_visual %}
+<div class="err-scene err-scene--403">
+    <div class="err-code-display">403</div>
+    <div class="err-shield">
+        <i class="fas fa-shield-halved" aria-hidden="true"></i>
+        <span class="err-shield-lock"><i class="fas fa-lock" aria-hidden="true"></i></span>
+    </div>
+</div>
+{% endblock %}
+
+{% block err_actions %}
+<button type="button" class="err-btn err-btn--ghost" onclick="history.back()">
+    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+    <span>بازگشت</span>
+</button>
+{% if user.is_authenticated %}
+<a href="{% url 'workspace:home' %}" class="err-btn err-btn--primary">
+    <i class="fas fa-layer-group" aria-hidden="true"></i>
+    <span>میزکار من</span>
+</a>
+<a href="{% url 'dashboard' %}" class="err-btn err-btn--soft">
+    <i class="fas fa-user" aria-hidden="true"></i>
+    <span>پروفایل</span>
+</a>
+{% else %}
+<a href="{% url 'login' %}?next={{ path|urlencode }}" class="err-btn err-btn--primary">
+    <i class="fas fa-right-to-bracket" aria-hidden="true"></i>
+    <span>ورود به حساب</span>
+</a>
+<a href="{% url 'home' %}" class="err-btn err-btn--soft">
+    <i class="fas fa-house" aria-hidden="true"></i>
+    <span>صفحه اصلی</span>
+</a>
+{% endif %}
+{% endblock %}

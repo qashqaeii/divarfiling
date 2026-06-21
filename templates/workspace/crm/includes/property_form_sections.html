@@ -1,0 +1,86 @@
+<div class="crm-prop-form-scroll crm-form-sections">
+    <section class="crm-prop-form-block" data-form-section="pinfo">
+        <header class="crm-prop-form-block-head">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            <h3>اطلاعات پایه</h3>
+        </header>
+        <div class="crm-fields crm-fields-2">
+            <div class="crm-field crm-field-full"><label class="crm-label">عنوان *</label>{{ form.title }}</div>
+            <div class="crm-field"><label class="crm-label">نوع ملک</label>{{ form.property_type }}</div>
+            <div class="crm-field"><label class="crm-label">نوع معامله</label>{{ form.deal_mode }}</div>
+            <div class="crm-field"><label class="crm-label">وضعیت معامله</label>{{ form.transaction_status }}</div>
+            <div class="crm-field"><label class="crm-label">وضعیت انتشار</label>{{ form.publish_status }}</div>
+            <div class="crm-field crm-field-full"><label class="crm-label">لینک آگهی</label>{{ form.link }}</div>
+            {% if form.instance.pk and form.instance.token %}
+            <div class="crm-field crm-field-full">
+                <label class="crm-label">شناسه آگهی</label>
+                <div class="crm-prop-form-readonly">
+                    <code>{{ form.instance.token }}</code>
+                    <button type="button" class="crm-prop-copy" data-copy="{{ form.instance.token }}" title="کپی"><i class="fas fa-copy"></i></button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="crm-prop-form-block" data-form-section="plocation">
+        <header class="crm-prop-form-block-head">
+            <i class="fas fa-location-dot" aria-hidden="true"></i>
+            <h3>موقعیت</h3>
+        </header>
+        <div class="crm-fields crm-fields-2">
+            <div class="crm-field crm-field-full"><label class="crm-label">آدرس</label>{{ form.address }}</div>
+            <div class="crm-field"><label class="crm-label">شهر</label>{{ form.city }}</div>
+            <div class="crm-field"><label class="crm-label">منطقه</label>{{ form.district }}</div>
+            <div class="crm-field"><label class="crm-label">محله</label>{{ form.neighborhood }}</div>
+            <div class="crm-field"><label class="crm-label">عرض جغرافیایی</label>{{ form.latitude }}</div>
+            <div class="crm-field"><label class="crm-label">طول جغرافیایی</label>{{ form.longitude }}</div>
+        </div>
+    </section>
+
+    <section class="crm-prop-form-block" data-form-section="pspecs">
+        <header class="crm-prop-form-block-head">
+            <i class="fas fa-ruler-combined" aria-hidden="true"></i>
+            <h3>مشخصات فنی</h3>
+        </header>
+        <div class="crm-fields crm-fields-2">
+            <div class="crm-field"><label class="crm-label">متراژ (متر)</label>{{ form.area }}</div>
+            <div class="crm-field"><label class="crm-label">اتاق</label>{{ form.rooms }}</div>
+            <div class="crm-field"><label class="crm-label">طبقه</label>{{ form.floor }}</div>
+            <div class="crm-field"><label class="crm-label">تعداد طبقات</label>{{ form.total_floors }}</div>
+            <div class="crm-field"><label class="crm-label">سال ساخت</label>{{ form.build_year }}</div>
+            <div class="crm-field crm-field-check">{{ form.has_parking }}<label class="crm-label crm-label-check">پارکینگ</label></div>
+            <div class="crm-field crm-field-check">{{ form.has_storage }}<label class="crm-label crm-label-check">انباری</label></div>
+            <div class="crm-field crm-field-check">{{ form.has_elevator }}<label class="crm-label crm-label-check">آسانسور</label></div>
+            <div class="crm-field crm-field-full"><label class="crm-label">امکانات</label>{{ form.amenities }}</div>
+        </div>
+    </section>
+
+    <section class="crm-prop-form-block" data-form-section="pprice">
+        <header class="crm-prop-form-block-head">
+            <i class="fas fa-tag" aria-hidden="true"></i>
+            <h3>قیمت و یادداشت</h3>
+        </header>
+        <div class="crm-fields crm-fields-2">
+            <div class="crm-field crm-price-sale"><label class="crm-label">قیمت فروش (تومان)</label>{{ form.sale_price }}</div>
+            <div class="crm-field crm-price-deposit"><label class="crm-label">مبلغ رهن (تومان)</label>{{ form.deposit }}</div>
+            <div class="crm-field crm-price-rent"><label class="crm-label">اجاره ماهانه (تومان)</label>{{ form.monthly_rent }}</div>
+            <div class="crm-field crm-field-full"><label class="crm-label">یادداشت</label>{{ form.notes }}</div>
+        </div>
+    </section>
+
+    {% if form.instance.pk and form.instance.images %}
+    <section class="crm-prop-form-block crm-prop-form-block--readonly">
+        <header class="crm-prop-form-block-head">
+            <i class="fas fa-images" aria-hidden="true"></i>
+            <h3>تصاویر</h3>
+            <span class="crm-prop-form-block-hint">{{ form.instance.images|length }} تصویر — از صفحه پرونده مدیریت می‌شود</span>
+        </header>
+        <div class="crm-prop-form-gallery">
+            {% for img in form.instance.images|slice:":6" %}
+            <a href="{{ img }}" target="_blank" rel="noopener"><img src="{{ img }}" alt="" loading="lazy"></a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>

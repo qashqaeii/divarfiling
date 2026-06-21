@@ -1,0 +1,297 @@
+{% load crm_tags %}
+
+
+
+<div class="crm-form-sections" data-type-profiles="{{ type_profiles_json|default:'{}'|escape }}">
+
+
+
+    {% if form.errors %}
+
+    <div class="crm-form-errors" role="alert">
+
+        <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+
+        <div>
+
+            <strong>خطا در ثبت اطلاعات</strong>
+
+            <p>فیلدهای مشخص‌شده را تکمیل یا اصلاح کنید.</p>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+
+    <div class="crm-form-tabs" role="tablist">
+
+
+
+        <button type="button" class="crm-form-tab active" data-tab="basic"><i class="fas fa-user" aria-hidden="true"></i> پایه</button>
+
+
+
+        <button type="button" class="crm-form-tab" data-tab="financial"><i class="fas fa-coins" aria-hidden="true"></i> مالی</button>
+
+
+
+        <button type="button" class="crm-form-tab" data-tab="prefs"><i class="fas fa-sliders-h" aria-hidden="true"></i> ترجیحات</button>
+
+
+
+        <button type="button" class="crm-form-tab" data-tab="extra"><i class="fas fa-ellipsis-h" aria-hidden="true"></i> سایر</button>
+
+
+
+    </div>
+
+
+
+
+
+
+
+    <div data-panel="basic" class="crm-form-panel">
+
+
+
+        <div class="crm-fields crm-fields-2">
+
+
+
+            {% crm_field form.name 'نام و نام خانوادگی *' %}
+
+
+
+            {% crm_field form.customer_type 'نوع مخاطب' %}
+
+
+
+            {% crm_field form.phone 'موبایل' %}
+
+
+
+            {% crm_field form.phone_alt 'تلفن دوم' %}
+
+
+
+            {% crm_field form.email 'ایمیل' %}
+
+
+
+            {% crm_field form.city 'شهر' %}
+
+
+
+            {% crm_field form.district 'منطقه' %}
+
+
+
+            {% crm_field form.job 'شغل' %}
+
+
+
+            <div class="crm-field crm-field-check{% if form.is_legal_entity.errors %} crm-field-has-error{% endif %}" data-field="is_legal_entity">
+
+                {{ form.is_legal_entity }}
+
+                <label class="crm-label crm-label-check" for="{{ form.is_legal_entity.id_for_label }}">شخص حقوقی</label>
+
+                {% for error in form.is_legal_entity.errors %}
+
+                <p class="crm-field-error" role="alert">{{ error }}</p>
+
+                {% endfor %}
+
+            </div>
+
+
+
+            {% crm_field form.company_name 'نام شرکت' 'crm-legal-field' %}
+
+
+
+            {% crm_field form.national_id 'کد ملی' %}
+
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+
+
+
+    <div data-panel="financial" class="crm-form-panel" hidden>
+
+
+
+        <p class="crm-form-hint" id="crmMoneyHint">محدوده مالی بر اساس نوع مخاطب</p>
+
+
+
+        <div class="crm-fields crm-fields-2">
+
+
+
+            {% crm_field form.budget_min 'بودجه از' 'crm-money-budget' %}
+
+
+
+            {% crm_field form.budget_max 'بودجه تا' 'crm-money-budget' %}
+
+
+
+            {% crm_field form.deposit_min 'ودیعه از' 'crm-money-deposit' %}
+
+
+
+            {% crm_field form.deposit_max 'ودیعه تا' 'crm-money-deposit' %}
+
+
+
+            {% crm_field form.rent_min 'اجاره از' 'crm-money-rent' %}
+
+
+
+            {% crm_field form.rent_max 'اجاره تا' 'crm-money-rent' %}
+
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+
+
+
+    <div data-panel="prefs" class="crm-form-panel" hidden>
+
+
+
+        <div class="crm-fields crm-fields-2">
+
+
+
+            {% crm_field form.property_type 'نوع ملک' %}
+
+
+
+            {% crm_field form.rooms 'اتاق' %}
+
+
+
+            {% crm_field form.min_area 'متراژ از' %}
+
+
+
+            {% crm_field form.max_area 'متراژ تا' %}
+
+
+
+            {% crm_field form.areas 'محله‌های مورد نظر' 'crm-field-full' %}
+
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+
+
+
+    <div data-panel="extra" class="crm-form-panel" hidden>
+
+
+
+        <div class="crm-fields crm-fields-2">
+
+
+
+            {% crm_field form.status 'وضعیت' %}
+
+
+
+            {% crm_field form.priority 'اولویت' %}
+
+
+
+            {% crm_field form.source 'منبع جذب' %}
+
+
+
+            <div class="crm-field{% if form.next_follow_up.errors %} crm-field-has-error{% endif %}" data-field="next_follow_up">
+
+                <label class="crm-label" for="{{ form.next_follow_up.id_for_label }}">پیگیری بعدی</label>
+
+                {{ form.next_follow_up }}
+
+                {% for error in form.next_follow_up.errors %}
+
+                <p class="crm-field-error" role="alert">{{ error }}</p>
+
+                {% endfor %}
+
+            </div>
+
+
+
+            {% crm_field form.tags 'برچسب‌ها' 'crm-field-full' %}
+
+
+
+        </div>
+
+
+
+        <details class="crm-notes-expand">
+
+
+
+            <summary><i class="fas fa-sticky-note" aria-hidden="true"></i> یادداشت</summary>
+
+
+
+            <div class="crm-field crm-field-full{% if form.notes.errors %} crm-field-has-error{% endif %}" data-field="notes">
+
+                {{ form.notes }}
+
+                {% for error in form.notes.errors %}
+
+                <p class="crm-field-error" role="alert">{{ error }}</p>
+
+                {% endfor %}
+
+            </div>
+
+
+
+        </details>
+
+
+
+    </div>
+
+
+
+</div>
+
+

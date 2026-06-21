@@ -1,0 +1,66 @@
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+.installed.cfg
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ─── Virtual env ───
+venv/
+.venv/
+env/
+ENV/
+
+# ─── Django ───
+*.log
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+/media/
+media/
+
+# ─── Secrets (هرگز commit نشوند) ───
+.env
+.env.*
+!.env.example
+env_template.txt
+
+# ─── Node (lucide icons) ───
+node_modules/
+package-lock.json
+
+# ─── Runtime / deploy ───
+gunicorn.pid
+logs/*.log
+!logs/.gitkeep
+
+# ─── IDE & OS ───
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Large binaries (روی سرور جداگانه آپلود شوند) ───
+files/*.zip
+*.zip
+*.tgz
+
+# ─── Local scratch ───
+66998772.txt
+_feat_test.txt
+gunicorn.pid

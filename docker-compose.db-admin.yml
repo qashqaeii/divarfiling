@@ -1,0 +1,30 @@
+# Adminer — رابط وب شبیه phpMyAdmin برای PostgreSQL
+#
+# پیش‌نیاز: Docker و Docker Compose روی سرور
+#   sudo apt install -y docker.io docker-compose-v2
+#
+# اجرا:
+#   cd $DJANGO_ROOT
+#   docker compose -f docker-compose.db-admin.yml up -d
+#
+# دسترسی محلی (فقط localhost):
+#   http://127.0.0.1:8080
+#
+# ورود به Adminer:
+#   System:   PostgreSQL
+#   Server:   host.docker.internal
+#   Username: divarfilingAdmin  (از .env)
+#   Password: DATABASE_PASSWORD (از .env)
+#   Database: divarfilingDb
+
+services:
+  adminer:
+    image: adminer:4
+    container_name: divar_db_admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      ADMINER_DEFAULT_SERVER: host.docker.internal

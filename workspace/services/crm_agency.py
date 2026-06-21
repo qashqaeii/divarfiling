@@ -1,0 +1,274 @@
+"""سرویس آژانس CRM — فاز ۴."""
+from __future__ import annotations
+
+import secrets
+from typing import Any, Dict, List, Optional
+
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.utils import timezone
+from django.utils.text import slugify
+
+from accounts.phone_utils import find_user_by_phone, is_valid_iran_mobile, normalize_phone
+from workspace.constants import AGENCY_ROLE_ADVISOR, AGENCY_ROLE_OWNER
+from workspace.models import (
+    CRMAgency, CRMAgencyMember, CRMAgencyMembershipRequest, CRMDeal, CRMDealCommissionSplit,
+    CRMProperty, Customer, CustomerTransferLog,
+)
+from workspace.services.crm import log_activity
+from workspace.services.crm_scope import can_manage_team, get_membership
+
+User = get_user_model()
+
+
+def _unique_slug(base: str) -> str:
+    slug = slugify(base, allow_unicode=True) or 'agency'
+    slug = slug[:70]
+    candidate = slug
+    n = 1
+    while CRMAgency.objects.filter(slug=candidate).exists():
+        candidate = f'{slug}-{n}'
+        n += 1
+    return candidate
+
+
+def _gen_api_key() -> str:
+    return secrets.token_hex(24)
+
+
+def _assert_not_in_agency(user) -> None:
+    if get_membership(user):
+        raise ValueError('کاربر از قبل عضو یک آژانس است')
+
+
+def _pending_request_exists(agency, user, request_type: str) -> bool:
+    return CRMAgencyMembershipRequest.objects.filter(
+        agency=agency, user=user, request_type=request_type, status=CRMAgencyMembershipRequest.STATUS_PENDING,
+    ).exists()
+
+
+@transaction.atomic
+def create_agency(user, name: str) -> CRMAgency:
+    name = (name or '').strip()
+    if not name:
+        raise ValueError('نام آژانس الزامی است')
+    if get_membership(user):
+        raise ValueError('شما عضو یک آژانس هستید')
+    agency = CRMAgency.objects.create(
+        name=name,
+        slug=_unique_slug(name),
+        owner=user,
+        api_key=_gen_api_key(),
+    )
+    CRMAgencyMember.objects.create(agency=agency, user=user, role=AGENCY_ROLE_OWNER)
+    _attach_user_records(user, agency)
+    return agency
+
+
+def _attach_user_records(user, agency: CRMAgency) -> None:
+    Customer.objects.filter(user=user, agency__isnull=True).update(agency=agency)
+    CRMProperty.objects.filter(user=user, agency__isnull=True).update(agency=agency)
+    CRMDeal.objects.filter(user=user, agency__isnull=True).update(agency=agency)
+
+
+@transaction.atomic
+def invite_member_by_phone(actor, phone: str, role: str = AGENCY_ROLE_ADVISOR) -> CRMAgencyMembershipRequest:
+    if not can_manage_team(actor):
+        raise ValueError('دسترسی مدیریت تیم ندارید')
+    m = get_membership(actor)
+    if not m:
+        raise ValueError('آژانس یافت نشد')
+    phone = normalize_phone(phone or '')
+    if not is_valid_iran_mobile(phone):
+        raise ValueError('شماره موبایل معتبر نیست')
+    if role == AGENCY_ROLE_OWNER:
+        raise ValueError('نقش مالک قابل تخصیص نیست')
+    target = find_user_by_phone(phone)
+    if not target:
+        raise ValueError('کاربری با این شماره یافت نشد — ابتدا باید در سیستم ثبت‌نام کند')
+    if target.id == actor.id:
+        raise ValueError('نمی‌توانید خودتان را دعوت کنید')
+    if CRMAgencyMember.objects.filter(agency=m.agency, user=target, is_active=True).exists():
+        raise ValueError('کاربر از قبل عضو است')
+    if get_membership(target):
+        raise ValueError('کاربر عضو آژانس دیگری است')
+    if _pending_request_exists(m.agency, target, CRMAgencyMembershipRequest.TYPE_INVITE):
+        raise ValueError('دعوت در انتظار تأیید از قبل ارسال شده است')
+    return CRMAgencyMembershipRequest.objects.create(
+        agency=m.agency,
+        user=target,
+        requested_by=actor,
+        request_type=CRMAgencyMembershipRequest.TYPE_INVITE,
+        role=role,
+    )
+
+
+@transaction.atomic
+def request_join_agency(user, agency_slug: str, message: str = '') -> CRMAgencyMembershipRequest:
+    if get_membership(user):
+        raise ValueError('شما عضو یک آژانس هستید')
+    slug = (agency_slug or '').strip()
+    if not slug:
+        raise ValueError('شناسه آژانس الزامی است')
+    agency = CRMAgency.objects.filter(slug__iexact=slug).first()
+    if not agency:
+        raise ValueError('آژانس با این شناسه یافت نشد')
+    if CRMAgencyMember.objects.filter(agency=agency, user=user, is_active=True).exists():
+        raise ValueError('شما از قبل عضو این آژانس هستید')
+    if _pending_request_exists(agency, user, CRMAgencyMembershipRequest.TYPE_JOIN):
+        raise ValueError('درخواست عضویت شما در انتظار تأیید است')
+    return CRMAgencyMembershipRequest.objects.create(
+        agency=agency,
+        user=user,
+        requested_by=user,
+        request_type=CRMAgencyMembershipRequest.TYPE_JOIN,
+        message=(message or '').strip()[:500],
+    )
+
+
+def _finalize_membership(request: CRMAgencyMembershipRequest) -> CRMAgencyMember:
+    _assert_not_in_agency(request.user)
+    member, _ = CRMAgencyMember.objects.update_or_create(
+        agency=request.agency, user=request.user,
+        defaults={'role': request.role, 'is_active': True},
+    )
+    return member
+
+
+@transaction.atomic
+def respond_membership_request(actor, request_id: int, *, accept: bool) -> CRMAgencyMembershipRequest:
+    req = CRMAgencyMembershipRequest.objects.select_related('agency', 'user').get(pk=request_id)
+    if req.status != CRMAgencyMembershipRequest.STATUS_PENDING:
+        raise ValueError('این درخواست دیگر قابل پاسخ نیست')
+
+    if req.request_type == CRMAgencyMembershipRequest.TYPE_INVITE:
+        if req.user_id != actor.id:
+            raise ValueError('فقط کاربر دعوت‌شده می‌تواند پاسخ دهد')
+    elif req.request_type == CRMAgencyMembershipRequest.TYPE_JOIN:
+        m = get_membership(actor)
+        if not m or m.agency_id != req.agency_id or not can_manage_team(actor):
+            raise ValueError('فقط مدیر آژانس می‌تواند درخواست عضویت را بررسی کند')
+    else:
+        raise ValueError('نوع درخواست نامعتبر است')
+
+    req.responded_by = actor
+    req.responded_at = timezone.now()
+    if accept:
+        _finalize_membership(req)
+        req.status = CRMAgencyMembershipRequest.STATUS_ACCEPTED
+    else:
+        req.status = CRMAgencyMembershipRequest.STATUS_REJECTED
+    req.save(update_fields=['status', 'responded_by', 'responded_at'])
+    return req
+
+
+@transaction.atomic
+def cancel_membership_request(actor, request_id: int) -> None:
+    req = CRMAgencyMembershipRequest.objects.get(pk=request_id)
+    if req.status != CRMAgencyMembershipRequest.STATUS_PENDING:
+        raise ValueError('این درخواست دیگر قابل لغو نیست')
+    if req.requested_by_id != actor.id:
+        raise ValueError('فقط درخواست‌دهنده می‌تواند لغو کند')
+    req.status = CRMAgencyMembershipRequest.STATUS_CANCELLED
+    req.responded_by = actor
+    req.responded_at = timezone.now()
+    req.save(update_fields=['status', 'responded_by', 'responded_at'])
+
+
+def update_member_role(actor, member_id: int, role: str) -> CRMAgencyMember:
+    if not can_manage_team(actor):
+        raise ValueError('دسترسی ندارید')
+    m = get_membership(actor)
+    member = CRMAgencyMember.objects.get(pk=member_id, agency=m.agency, is_active=True)
+    if member.role == AGENCY_ROLE_OWNER:
+        raise ValueError('نقش مالک قابل تغییر نیست')
+    if role == AGENCY_ROLE_OWNER:
+        raise ValueError('نقش مالک مجاز نیست')
+    member.role = role
+    member.save(update_fields=['role'])
+    return member
+
+
+def remove_member(actor, member_id: int) -> None:
+    if not can_manage_team(actor):
+        raise ValueError('دسترسی ندارید')
+    m = get_membership(actor)
+    member = CRMAgencyMember.objects.get(pk=member_id, agency=m.agency)
+    if member.role == AGENCY_ROLE_OWNER:
+        raise ValueError('مالک قابل حذف نیست')
+    member.is_active = False
+    member.save(update_fields=['is_active'])
+
+
+def assign_customer(actor, customer: Customer, advisor_id: int) -> Customer:
+    """تخصیص = اشتراک‌گذاری مخاطب با مشاور (فقط مالک)."""
+    from workspace.services.crm_sharing import share_customer
+    share_customer(actor, customer, advisor_id)
+    m = get_membership(actor)
+    advisor = CRMAgencyMember.objects.get(pk=advisor_id, agency=m.agency, is_active=True)
+    customer.assigned_to = advisor.user
+    customer.save(update_fields=['assigned_to', 'updated_at'])
+    return customer
+
+
+def transfer_customer(
+    actor, customer: Customer, to_member_id: int, *, note: str = '',
+) -> Customer:
+    if customer.user_id != actor.id:
+        raise ValueError('فقط مالک پرونده می‌تواند آن را منتقل کند')
+    m = get_membership(actor)
+    if not m:
+        raise ValueError('آژانس یافت نشد')
+    if customer.agency_id != m.agency_id:
+        raise ValueError('مخاطب در آژانس شما نیست')
+    to_member = CRMAgencyMember.objects.get(pk=to_member_id, agency=m.agency, is_active=True)
+    from_user = customer.assigned_to or customer.user
+    customer.assigned_to = to_member.user
+    customer.user = to_member.user
+    customer.save(update_fields=['assigned_to', 'user', 'updated_at'])
+    customer.shares.all().delete()
+    CustomerTransferLog.objects.create(
+        agency=m.agency,
+        customer=customer,
+        from_user=from_user,
+        to_user=to_member.user,
+        transferred_by=actor,
+        note=(note or '').strip()[:300],
+    )
+    log_activity(
+        customer, 'یادداشت',
+        title='انتقال پرونده',
+        content=f'به {to_member.user.get_full_name() or to_member.user.username}',
+    )
+    return customer
+
+
+def set_commission_splits(actor, deal: CRMDeal, splits: List[Dict[str, Any]]) -> List[CRMDealCommissionSplit]:
+    if not can_manage_team(actor):
+        raise ValueError('دسترسی ندارید')
+    m = get_membership(actor)
+    if deal.agency_id != m.agency_id:
+        raise ValueError('معامله در آژانس شما نیست')
+    total_pct = sum(float(s.get('percent') or 0) for s in splits)
+    if splits and abs(total_pct - 100) > 0.01:
+        raise ValueError('مجموع درصدها باید ۱۰۰ باشد')
+    deal.commission_splits.all().delete()
+    rows = []
+    base = deal.commission_amount or 0
+    for s in splits:
+        member = CRMAgencyMember.objects.get(pk=s['member_id'], agency=m.agency, is_active=True)
+        pct = float(s.get('percent') or 0)
+        amount = int(base * pct / 100) if base else None
+        rows.append(CRMDealCommissionSplit.objects.create(
+            deal=deal, member=member, percent=pct, amount=amount,
+        ))
+    return rows
+
+
+def member_display(member: CRMAgencyMember) -> str:
+    u = member.user
+    return u.get_full_name() or u.phone or u.username
+
+
+def role_label(role: str) -> str:
+    return dict(CRMAgencyMember._meta.get_field('role').choices).get(role, role)

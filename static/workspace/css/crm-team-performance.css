@@ -1,0 +1,731 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM Team Performance — مدیر / مالک
+   ═══════════════════════════════════════════════════════════ */
+
+.crm-perf-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.crm-app--team .crm-team-pro-v2.crm-page-chrome {
+    background:
+        radial-gradient(ellipse 70% 50% at 100% 0%, rgba(124, 58, 237, 0.04), transparent 55%),
+        radial-gradient(ellipse 55% 40% at 0% 100%, rgba(37, 99, 235, 0.03), transparent 50%);
+}
+
+/* ─── KPI strip ─── */
+.crm-perf-kpis {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.crm-perf-kpi {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.75rem 0.8rem;
+    border-radius: 14px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    overflow: hidden;
+    min-width: 0;
+    transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.crm-perf-kpi:hover {
+    box-shadow: 0 8px 24px -10px rgba(15, 23, 42, 0.12);
+    border-color: color-mix(in srgb, var(--ws-primary) 20%, var(--ws-border));
+}
+
+.crm-perf-kpi-icon {
+    flex-shrink: 0;
+    width: 2.1rem;
+    height: 2.1rem;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    font-size: 0.72rem;
+}
+
+.crm-perf-kpi--contacts .crm-perf-kpi-icon { color: #7c3aed; background: rgba(124, 58, 237, 0.1); }
+.crm-perf-kpi--properties .crm-perf-kpi-icon { color: #6366f1; background: rgba(99, 102, 241, 0.1); }
+.crm-perf-kpi--calls .crm-perf-kpi-icon { color: #2563eb; background: #dbeafe; }
+.crm-perf-kpi--visits .crm-perf-kpi-icon { color: #b45309; background: #fef3c7; }
+.crm-perf-kpi--closed .crm-perf-kpi-icon { color: #15803d; background: #dcfce7; }
+.crm-perf-kpi--active .crm-perf-kpi-icon { color: #7c3aed; background: #f3e8ff; }
+
+.crm-perf-kpi-val {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: var(--ws-text);
+}
+
+.crm-perf-kpi-lbl {
+    display: block;
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    margin-top: 0.08rem;
+}
+
+/* ─── Spotlight (MVP) ─── */
+.crm-perf-spotlight {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.85rem 1.5rem;
+    padding: 1rem 1.15rem;
+    border-radius: 16px;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, var(--ws-surface) 55%);
+    overflow: hidden;
+}
+
+.crm-perf-spotlight-glow {
+    position: absolute;
+    inset-inline-end: -3rem;
+    inset-block-start: -3rem;
+    width: 10rem;
+    height: 10rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.2), transparent 70%);
+    pointer-events: none;
+}
+
+.crm-perf-spotlight-badge {
+    position: relative;
+    z-index: 1;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #b45309;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(251, 191, 36, 0.15);
+}
+
+.crm-perf-spotlight-main {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.crm-perf-spotlight-identity {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.crm-perf-spotlight-identity strong {
+    display: block;
+    font-size: 0.88rem;
+}
+
+.crm-perf-spotlight-metrics {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1.25rem;
+    font-size: 0.65rem;
+    color: var(--ws-text-muted);
+}
+
+.crm-perf-spotlight-metrics em {
+    font-style: normal;
+    font-weight: 800;
+    color: var(--ws-text);
+    margin-inline-end: 0.2rem;
+}
+
+/* ─── Score ring ─── */
+.crm-perf-score-ring {
+    --ring-size: 3.5rem;
+    position: relative;
+    width: var(--ring-size);
+    height: var(--ring-size);
+    flex-shrink: 0;
+}
+
+.crm-perf-score-ring--sm {
+    --ring-size: 2.65rem;
+}
+
+.crm-perf-score-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.crm-perf-score-track {
+    fill: none;
+    stroke: var(--ws-border);
+    stroke-width: 2.5;
+}
+
+.crm-perf-score-fill {
+    fill: none;
+    stroke: var(--ws-primary);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 97.4;
+    stroke-dashoffset: calc(97.4 - (97.4 * var(--pct, 0) / 100));
+    transition: stroke-dashoffset 0.6s ease;
+}
+
+.crm-perf-score-val {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: var(--ws-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.crm-perf-score-ring--sm .crm-perf-score-val {
+    font-size: 0.52rem;
+}
+
+/* ─── Layout grid ─── */
+.crm-perf-layout {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.crm-perf-panel {
+    border: 1px solid var(--ws-border);
+    border-radius: 16px;
+    background: var(--ws-surface);
+    overflow: hidden;
+    min-width: 0;
+}
+
+.crm-perf-panel-head {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--ws-border-light, var(--ws-border));
+}
+
+.crm-perf-panel-head h2 {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.crm-perf-panel-head p {
+    margin: 0.15rem 0 0;
+    font-size: 0.62rem;
+    color: var(--ws-text-muted);
+    line-height: 1.5;
+}
+
+/* ─── Comparison chart ─── */
+.crm-perf-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.75rem 1rem 1rem;
+}
+
+.crm-perf-chart-member {
+    padding: 0.65rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--ws-border-light, var(--ws-border));
+    background: var(--ws-surface-2);
+}
+
+.crm-perf-chart-member-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+}
+
+.crm-perf-chart-member-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.crm-perf-chart-member-meta strong {
+    display: block;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.crm-perf-chart-score {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--ws-primary);
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: var(--ws-primary-soft);
+}
+
+.crm-perf-chart-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.crm-perf-chart-bar-row {
+    display: grid;
+    grid-template-columns: 1.25rem 1fr auto;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.crm-perf-chart-bar-lbl {
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+    text-align: center;
+}
+
+.crm-perf-chart-bar {
+    height: 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ws-border) 80%, transparent);
+    overflow: hidden;
+}
+
+.crm-perf-chart-bar i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--ws-primary);
+    transition: width 0.5s ease;
+}
+
+.crm-perf-chart-bar--call i { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.crm-perf-chart-bar--visit i { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.crm-perf-chart-bar--deal i { background: linear-gradient(90deg, #15803d, #34d399); }
+.crm-perf-chart-bar--active i { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+
+.crm-perf-chart-bar-num {
+    font-size: 0.62rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 1.25rem;
+    text-align: end;
+}
+
+/* ─── Matrix table ─── */
+.crm-perf-matrix-wrap {
+    overflow-x: auto;
+    padding: 0.5rem 0.65rem 0.75rem;
+    scrollbar-width: thin;
+}
+
+.crm-perf-matrix {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.68rem;
+}
+
+.crm-perf-matrix th,
+.crm-perf-matrix td {
+    padding: 0.45rem 0.4rem;
+    text-align: center;
+    border-bottom: 1px solid var(--ws-border-light, var(--ws-border));
+}
+
+.crm-perf-matrix thead th {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+    text-transform: none;
+    background: var(--ws-surface-2);
+}
+
+.crm-perf-matrix thead th:first-child {
+    text-align: start;
+    border-radius: 8px 0 0 0;
+}
+
+.crm-perf-matrix thead th:last-child {
+    border-radius: 0 8px 0 0;
+}
+
+.crm-perf-matrix-row--top {
+    background: color-mix(in srgb, var(--ws-primary) 4%, transparent);
+}
+
+.crm-perf-matrix-user {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    text-align: start;
+}
+
+.crm-perf-matrix-name {
+    font-weight: 600;
+    font-size: 0.68rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 8rem;
+}
+
+.crm-perf-rank {
+    width: 1.25rem;
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+}
+
+.crm-perf-rank .fa-medal {
+    color: #f59e0b;
+}
+
+.crm-perf-heat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    padding: 0.18rem 0.4rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    background: color-mix(
+        in srgb,
+        var(--heat-color, var(--ws-primary)) calc(var(--intensity, 0) * 0.35%),
+        transparent
+    );
+    color: var(--ws-text);
+}
+
+.crm-perf-heat--score { --heat-color: #7c3aed; }
+.crm-perf-heat--contacts { --heat-color: #6366f1; }
+.crm-perf-heat--props { --heat-color: #8b5cf6; }
+.crm-perf-heat--calls { --heat-color: #2563eb; }
+.crm-perf-heat--visits { --heat-color: #d97706; }
+.crm-perf-heat--active { --heat-color: #a855f7; }
+.crm-perf-heat--closed { --heat-color: #16a34a; }
+
+/* ─── Member cards ─── */
+.crm-perf-panel--cards .crm-perf-panel-head {
+    border-bottom: 1px solid var(--ws-border-light, var(--ws-border));
+}
+
+.crm-perf-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    gap: 0.65rem;
+    padding: 0.75rem;
+}
+
+.crm-perf-card {
+    border: 1px solid var(--ws-border);
+    border-radius: 14px;
+    background: var(--ws-surface-2);
+    overflow: hidden;
+    transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.crm-perf-card:hover {
+    box-shadow: 0 10px 28px -12px rgba(15, 23, 42, 0.12);
+}
+
+.crm-perf-card--top {
+    border-color: color-mix(in srgb, #f59e0b 35%, var(--ws-border));
+    background: linear-gradient(165deg, rgba(251, 191, 36, 0.06) 0%, var(--ws-surface-2) 45%);
+}
+
+.crm-perf-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.8rem;
+    border-bottom: 1px solid var(--ws-border-light, var(--ws-border));
+}
+
+.crm-perf-card-identity {
+    flex: 1;
+    min-width: 0;
+}
+
+.crm-perf-card-identity strong {
+    display: block;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.crm-perf-card-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+    padding: 0.7rem 0.8rem;
+}
+
+.crm-perf-card-metric-lbl {
+    display: block;
+    font-size: 0.55rem;
+    color: var(--ws-text-muted);
+    margin-bottom: 0.08rem;
+}
+
+.crm-perf-card-metric-val {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.crm-perf-card-metric-val--accent {
+    color: #15803d;
+}
+
+.crm-perf-card-metric-bar {
+    display: block;
+    height: 3px;
+    margin-top: 0.25rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ws-border) 80%, transparent);
+    overflow: hidden;
+}
+
+.crm-perf-card-metric-bar i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--ws-primary);
+}
+
+.crm-perf-card-metric-bar--prop i { background: #6366f1; }
+.crm-perf-card-metric-bar--call i { background: #2563eb; }
+.crm-perf-card-metric-bar--visit i { background: #d97706; }
+.crm-perf-card-metric-bar--active i { background: #7c3aed; }
+.crm-perf-card-metric-bar--deal i { background: #16a34a; }
+
+/* ─── Personal performance (advisor view) ─── */
+.crm-perf-solo {
+    border: 1px solid var(--ws-border);
+    border-radius: 16px;
+    background: var(--ws-surface);
+    overflow: hidden;
+}
+
+.crm-perf-solo-head {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--ws-border-light, var(--ws-border));
+}
+
+.crm-perf-solo-head h2 {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.crm-perf-solo-head p {
+    margin: 0.15rem 0 0;
+    font-size: 0.62rem;
+    color: var(--ws-text-muted);
+}
+
+.crm-perf-solo-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.crm-perf-solo-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+    flex: 1;
+    min-width: 12rem;
+}
+
+.crm-perf-solo-metric {
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid var(--ws-border-light, var(--ws-border));
+    background: var(--ws-surface-2);
+    text-align: center;
+}
+
+.crm-perf-solo-metric span {
+    display: block;
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+}
+
+.crm-perf-solo-metric strong {
+    display: block;
+    font-size: 1rem;
+    font-weight: 800;
+    margin-top: 0.15rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ─── Cheerful theme ─── */
+[data-theme="cheerful"] .crm-perf-spotlight {
+    border-color: rgba(251, 191, 36, 0.4);
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.06) 0%, #fff 50%, rgba(251, 191, 36, 0.08) 100%);
+}
+
+[data-theme="cheerful"] .crm-perf-score-fill {
+    stroke: #ff6b6b;
+}
+
+[data-theme="cheerful"] .crm-perf-kpi:hover {
+    border-color: rgba(255, 107, 107, 0.25);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 1100px) {
+    .crm-perf-kpis {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .crm-perf-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .crm-perf-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .crm-perf-spotlight-main {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .crm-perf-card-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .crm-perf-solo-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crm-perf-chart-bar i,
+    .crm-perf-score-fill {
+        transition: none;
+    }
+}
+
+/* ─── Membership requests ─── */
+.crm-team-requests-v2 {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+}
+
+.crm-team-requests-v2--muted .crm-team-request-card {
+    opacity: 0.92;
+}
+
+.crm-team-request-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.crm-team-request-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--crm-border, rgba(148, 163, 184, 0.22));
+    border-radius: 12px;
+    background: var(--crm-surface, rgba(255, 255, 255, 0.02));
+}
+
+.crm-team-request-card--pending {
+    margin-top: 0.5rem;
+}
+
+.crm-team-request-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.crm-team-request-main span {
+    font-size: 0.82rem;
+    color: var(--crm-text-muted, #94a3b8);
+}
+
+.crm-team-request-msg {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: var(--crm-text-muted, #94a3b8);
+}
+
+.crm-team-request-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.crm-team-join-panel {
+    grid-column: 1 / -1;
+    margin-top: 0.5rem;
+    padding: 1rem;
+    border: 1px dashed var(--crm-border, rgba(148, 163, 184, 0.28));
+    border-radius: 14px;
+    background: rgba(124, 58, 237, 0.04);
+}
+
+.crm-team-join-panel h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+}
+
+.crm-team-join-panel p {
+    margin: 0 0 0.75rem;
+    font-size: 0.88rem;
+    color: var(--crm-text-muted, #94a3b8);
+}
+
+.crm-team-join-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.crm-team-hero-slug {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.78rem;
+    color: var(--crm-text-muted, #94a3b8);
+}
+
+.crm-team-hero-slug code {
+    font-size: 0.82rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 6px;
+    background: rgba(148, 163, 184, 0.12);
+}

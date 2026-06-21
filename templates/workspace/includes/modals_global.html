@@ -1,0 +1,279 @@
+{% load workspace_tags %}
+
+{% if has_bot_license %}
+{# ─── آپلود فایل / پوشه ─── #}
+<div class="ws-modal" id="modal-upload" role="dialog" aria-modal="true" aria-labelledby="modal-upload-title">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-lg">
+        <div class="ws-modal-head">
+            <div>
+                <h2 id="modal-upload-title" class="ws-modal-title">آپلود مجموعه‌داده</h2>
+                <p class="ws-modal-sub">فایل تکی یا کل پوشه output (استان / شهر / منطقه)</p>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <div class="ws-modal-body">
+            <nav class="ws-tabs mk-upload-tabs" aria-label="نوع آپلود">
+                <button type="button" class="ws-tab active" data-tab="upload-single">فایل تکی</button>
+                <button type="button" class="ws-tab" data-tab="upload-folder">پوشه output</button>
+            </nav>
+
+            <div data-panel="upload-single">
+                <form method="post" action="{% url 'workspace:dataset_upload' %}" enctype="multipart/form-data" id="uploadSingleForm">
+                    {% csrf_token %}
+                    <div class="ws-upload-zone" id="uploadZone">
+                        <div class="ws-upload-icon"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></div>
+                        <p class="ws-upload-text">فایل را بکشید یا <span>انتخاب کنید</span></p>
+                        <p class="ws-upload-hint">.xlsx · .csv · .json</p>
+                        <input type="file" name="file" id="fileInput" accept=".xlsx,.xls,.csv,.json" required class="ws-upload-input">
+                    </div>
+                    <div id="uploadFileName" class="ws-upload-filename"></div>
+                    <div class="ws-field" style="margin-top:1.25rem">
+                        <label class="ws-label" for="datasetName">نام مجموعه‌داده</label>
+                        <input type="text" name="name" id="datasetName" class="ws-input" placeholder="اختیاری — از نام فایل پر می‌شود">
+                    </div>
+                    <div class="ws-modal-foot">
+                        <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                        <button type="submit" class="ws-btn ws-btn-primary" id="uploadSubmit">
+                            <i class="fas fa-upload" aria-hidden="true"></i> آپلود و ذخیره
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div data-panel="upload-folder" hidden>
+                <form method="post" action="{% url 'workspace:dataset_bulk_upload' %}" enctype="multipart/form-data" id="uploadFolderForm" data-list-url="{% url 'workspace:dataset_list' %}?open=modal-batch-result">
+                    {% csrf_token %}
+                    <div class="ws-upload-zone" id="folderUploadZone">
+                        <div class="ws-upload-icon"><i class="fas fa-folder-open" aria-hidden="true"></i></div>
+                        <p class="ws-upload-text">پوشه output را <span>انتخاب کنید</span></p>
+                        <p class="ws-upload-hint">کل output یا زیرپوشه استان / شهر — فایل‌ها خودکار تفکیک می‌شوند</p>
+                        <input type="file" id="folderInput" webkitdirectory directory multiple class="ws-upload-input">
+                    </div>
+                    <div id="folderPreview" class="mk-folder-preview" hidden>
+                        <div class="mk-folder-preview-head">
+                            <span id="folderPreviewSummary" class="mk-folder-preview-summary"></span>
+                        </div>
+                        <div id="folderPreviewTree" class="mk-folder-tree" role="tree"></div>
+                    </div>
+                    <div class="ws-modal-foot">
+                        <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                        <button type="submit" class="ws-btn ws-btn-primary" id="folderSubmit" disabled>
+                            <i class="fas fa-layer-group" aria-hidden="true"></i> وارد کردن همه
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# ─── تنظیمات میزکار (Pro) ─── #}
+<div class="ws-modal" id="modal-settings" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-settings-panel">
+        <div class="ws-modal-head ws-settings-head">
+            <div class="ws-settings-head-main">
+                <div class="ws-settings-head-icon" aria-hidden="true"><i class="fas fa-sliders-h"></i></div>
+                <div>
+                    <h2 id="modal-settings-title" class="ws-modal-title">تنظیمات میز کار</h2>
+                    <p class="ws-modal-sub">ظاهر، نقشه و برندینگ</p>
+                </div>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+
+        <form method="post" action="{% url 'workspace:settings' %}" enctype="multipart/form-data" id="wsSettingsForm" class="ws-settings-form">
+            {% csrf_token %}
+
+            {% if ws_settings_form.errors %}
+            <div class="ws-settings-alert" role="alert">
+                <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                <div>
+                    <strong>خطا در ذخیره تنظیمات</strong>
+                    <ul>
+                        {% for field, errors in ws_settings_form.errors.items %}
+                            {% for error in errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="ws-modal-body ws-settings-body">
+                <div class="ws-settings-preview" id="wsSettingsPreview" data-theme="{{ ws_settings_form.theme.value|default:'light' }}">
+                    <div class="ws-settings-preview-chrome">
+                        <span class="ws-settings-preview-dot"></span>
+                        <span class="ws-settings-preview-dot"></span>
+                        <span class="ws-settings-preview-dot"></span>
+                    </div>
+                    <div class="ws-settings-preview-inner">
+                        <div class="ws-settings-preview-side"></div>
+                        <div class="ws-settings-preview-main">
+                            <div class="ws-settings-preview-bar"></div>
+                            <div class="ws-settings-preview-cards">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="ws-settings-preview-caption">پیش‌نمایش زنده تم</p>
+                </div>
+
+                <section class="ws-settings-section" aria-labelledby="ws-settings-appearance">
+                    <h3 id="ws-settings-appearance" class="ws-settings-section-title">
+                        <i class="fas fa-palette" aria-hidden="true"></i> ظاهر و خوانایی
+                    </h3>
+                    <div class="ws-settings-section-body">
+                        <div class="ws-field">
+                            <span class="ws-label">تم ظاهری</span>
+                            <div class="ws-settings-theme-grid" role="radiogroup" aria-label="تم ظاهری">
+                                {% for value, label in ws_settings_form.fields.theme.choices %}
+                                <label class="ws-settings-theme-card{% if ws_settings_form.theme.value == value %} is-active{% endif %}" data-theme="{{ value }}">
+                                    <input type="radio" name="theme" value="{{ value }}" class="ws-settings-theme-input"{% if ws_settings_form.theme.value == value %} checked{% endif %}>
+                                    <span class="ws-settings-theme-swatch ws-settings-theme-swatch--{{ value }}" aria-hidden="true"></span>
+                                    <span class="ws-settings-theme-name">{{ label }}</span>
+                                    <span class="ws-settings-theme-desc">{% if value == 'light' %}روشن و مینیمال{% elif value == 'cheerful' %}رنگ‌های شاد و پرانرژی{% else %}تاریک و حرفه‌ای{% endif %}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="ws-field">
+                            <div class="ws-settings-scale-head">
+                                <label class="ws-label" for="wsFontScaleRange">اندازه فونت</label>
+                                <output class="ws-settings-scale-val" id="wsFontScaleOut" for="wsFontScaleRange">{{ ws_settings_form.font_scale.value|default:1 }}</output>
+                            </div>
+                            <input type="range" id="wsFontScaleRange" class="ws-settings-range" min="0.8" max="1.5" step="0.1" value="{{ ws_settings_form.font_scale.value|default:1 }}">
+                            <input type="hidden" name="font_scale" id="id_font_scale" value="{{ ws_settings_form.font_scale.value|default:1 }}">
+                            <p class="ws-settings-hint">بین ۰٫۸ تا ۱٫۵ — پیش‌فرض ۱٫۰</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-settings-section" aria-labelledby="ws-settings-map">
+                    <h3 id="ws-settings-map" class="ws-settings-section-title">
+                        <i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه و تجسم داده
+                    </h3>
+                    <div class="ws-settings-section-body">
+                        <div class="ws-settings-toggles">
+                            <label class="ws-settings-toggle-row">
+                                <span class="ws-settings-toggle-info">
+                                    <span class="ws-settings-toggle-title">خوشه‌بندی نقشه</span>
+                                    <span class="ws-settings-toggle-desc">نقاط نزدیک در یک خوشه نمایش داده می‌شوند</span>
+                                </span>
+                                <span class="ws-settings-switch">
+                                    <input type="checkbox" name="map_cluster" id="id_map_cluster" class="ws-settings-toggle-input"{% if ws_settings_form.map_cluster.value %} checked{% endif %}>
+                                    <span class="ws-settings-switch-track" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                            <label class="ws-settings-toggle-row">
+                                <span class="ws-settings-toggle-info">
+                                    <span class="ws-settings-toggle-title">نقشه حرارتی</span>
+                                    <span class="ws-settings-toggle-desc">تراکم داده با گرادیان رنگی روی نقشه</span>
+                                </span>
+                                <span class="ws-settings-switch">
+                                    <input type="checkbox" name="map_heatmap" id="id_map_heatmap" class="ws-settings-toggle-input"{% if ws_settings_form.map_heatmap.value %} checked{% endif %}>
+                                    <span class="ws-settings-switch-track" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="ws-field ws-settings-kmeans-field">
+                            <div class="ws-settings-scale-head">
+                                <label class="ws-label" for="wsKmeansRange">خوشه‌بندی K-Means</label>
+                                <output class="ws-settings-scale-val ws-settings-kmeans-val" id="wsKmeansOut" for="wsKmeansRange">{{ ws_settings_form.map_kmeans.value|default:0 }}</output>
+                            </div>
+                            <input type="range" id="wsKmeansRange" class="ws-settings-range ws-settings-range--kmeans" min="0" max="10" step="1" value="{{ ws_settings_form.map_kmeans.value|default:0 }}">
+                            <input type="hidden" name="map_kmeans" id="id_map_kmeans" value="{{ ws_settings_form.map_kmeans.value|default:0 }}">
+                            <p class="ws-settings-hint">۰ یعنی غیرفعال · حداکثر ۱۰ خوشه</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ws-settings-section ws-settings-section--last" aria-labelledby="ws-settings-brand">
+                    <h3 id="ws-settings-brand" class="ws-settings-section-title">
+                        <i class="fas fa-building" aria-hidden="true"></i> برندینگ آژانس
+                    </h3>
+                    <div class="ws-settings-section-body">
+                        <div class="ws-field">
+                            <label class="ws-label" for="id_agency_name">نام آژانس</label>
+                            <input type="text" name="agency_name" id="id_agency_name" class="ws-input" value="{{ ws_settings_form.agency_name.value|default:'' }}" placeholder="مثلاً آژانس املاک نمونه" maxlength="200">
+                            <p class="ws-settings-hint">در خروجی‌ها و برندینگ CRM نمایش داده می‌شود</p>
+                        </div>
+
+                        <div class="ws-field">
+                            <span class="ws-label">لوگو آژانس</span>
+                            <div class="ws-settings-logo-wrap">
+                                <div class="ws-settings-logo-current{% if not ws_settings.agency_logo %} is-empty{% endif %}" id="wsLogoCurrent">
+                                    {% if ws_settings.agency_logo %}
+                                    <img src="{{ ws_settings.agency_logo.url }}" alt="لوگوی فعلی آژانس" id="wsLogoCurrentImg">
+                                    {% else %}
+                                    <div class="ws-settings-logo-placeholder" id="wsLogoPlaceholder"><i class="fas fa-image" aria-hidden="true"></i></div>
+                                    {% endif %}
+                                </div>
+                                <div class="ws-upload-zone ws-settings-logo-zone" id="wsLogoZone">
+                                    <div class="ws-upload-icon"><i class="fas fa-cloud-arrow-up" aria-hidden="true"></i></div>
+                                    <p class="ws-upload-text">لوگو را بکشید یا <span>انتخاب کنید</span></p>
+                                    <p class="ws-upload-hint">PNG · JPG · WebP · SVG — حداکثر ۲ مگابایت</p>
+                                    <input type="file" name="agency_logo" id="id_agency_logo" class="ws-upload-input ws-settings-logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+                                </div>
+                            </div>
+                            <div id="wsLogoFileName" class="ws-upload-filename"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="ws-modal-foot ws-settings-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary" id="wsSettingsSubmit">
+                    <i class="fas fa-check" aria-hidden="true"></i> ذخیره تنظیمات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ─── یادآور ─── #}
+<div class="ws-modal" id="modal-reminder" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel">
+        <div class="ws-modal-head">
+            <div>
+                <h2 class="ws-modal-title">یادآور جدید</h2>
+                <p class="ws-modal-sub">پیگیری و یادآوری کارها</p>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:reminder_create' %}" class="ws-modal-body">
+            {% csrf_token %}
+            {% render_fields ws_reminder_form 1 %}
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary">ثبت یادآور</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ─── تأیید حذف ─── #}
+<div class="ws-modal" id="modal-confirm" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-sm">
+        <div class="ws-modal-head">
+            <h2 class="ws-modal-title" id="confirmTitle">تأیید عملیات</h2>
+            <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <div class="ws-modal-body">
+            <p id="confirmMessage" class="ws-confirm-text"></p>
+        </div>
+        <div class="ws-modal-foot">
+            <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+            <button type="button" id="confirmAction" class="ws-btn ws-btn-danger">تأیید</button>
+        </div>
+    </div>
+</div>
+<form id="confirmDeleteForm" method="post" style="display:none">{% csrf_token %}</form>

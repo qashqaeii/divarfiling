@@ -1,0 +1,9 @@
+<div class="crm-field{% if extra_class %} {{ extra_class }}{% endif %}{% if field.errors %} crm-field-has-error{% endif %}" data-field="{{ field.name }}">
+    {% if show_label %}
+    <label class="crm-label{% if label_class %} {{ label_class }}{% endif %}" for="{{ field.id_for_label }}">{{ label }}</label>
+    {% endif %}
+    {{ field }}
+    {% for error in field.errors %}
+    <p class="crm-field-error" role="alert">{{ error }}</p>
+    {% endfor %}
+</div>

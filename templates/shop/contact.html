@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تماس با ما — فایلینگ دیوار{% endblock %}
+{% block body_class %}mk-pub-page{% endblock %}
+
+{% block content %}
+<div class="mk-pub-wrap">
+
+    <header class="mk-pub-hero mk-pub-hero--contact">
+        <div class="container">
+            <span class="mk-pub-kicker">
+                <span class="mk-icon mk-icon--xs mk-icon--sky"><i class="fas fa-headset"></i></span>
+                پشتیبانی
+            </span>
+            <h1>در دسترس هستیم</h1>
+            <p class="mk-pub-lead">برای خرید لایسنس، راه‌اندازی ربات، خطای فنی یا پیشنهاد بهبود — پیام بفرستید یا مستقیم تماس بگیرید.</p>
+            <div class="mk-pub-hero-actions mk-contact-quick">
+                <a href="tel:{{ site_brand.creator_phone_tel }}" class="mk-contact-quick__btn">
+                    <i class="fas fa-phone-alt"></i>
+                    {{ site_brand.creator_phone_display }}
+                </a>
+                <a href="{{ site_brand.creator_telegram_url }}" class="mk-contact-quick__btn" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram"></i>
+                    {{ site_brand.creator_telegram }}
+                </a>
+                <a href="mailto:{{ site_brand.support_email }}" class="mk-contact-quick__btn">
+                    <i class="fas fa-envelope"></i>
+                    {{ site_brand.support_email }}
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="mk-pub-band mk-pub-band--alt">
+        <div class="container mk-pub-contact-layout">
+            <div class="mk-pub-form-wrap">
+                <header class="mk-pub-form-head">
+                    <span class="mk-about-eyebrow">فرم تماس</span>
+                    <h2>ارسال پیام</h2>
+                    <p>معمولاً در همان روز کاری پاسخ می‌دهیم.</p>
+                </header>
+                <form method="post" class="mk-pub-form contact-form">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-user"></i> {{ form.name.label }}</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="form-error">{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-envelope"></i> {{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-tag"></i> {{ form.subject.label }}</label>
+                        {{ form.subject }}
+                        {% if form.subject.errors %}<div class="form-error">{{ form.subject.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-comment-alt"></i> {{ form.message.label }}</label>
+                        {{ form.message }}
+                        {% if form.message.errors %}<div class="form-error">{{ form.message.errors.0 }}</div>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-submit">
+                        <i class="fas fa-paper-plane"></i> ارسال پیام
+                    </button>
+                </form>
+            </div>
+
+            <aside class="mk-contact-aside">
+                {% include 'includes/creator_info.html' with compact=True %}
+
+                <div class="mk-pub-side-card">
+                    <h3>سوالات متداول</h3>
+                    <details class="mk-pub-faq-item">
+                        <summary>چگونه لایسنس بخرم؟</summary>
+                        <p>از صفحه <a href="{% url 'product_detail' slug='divar-extraction-bot' %}" class="mk-pub-link">ربات استخراج</a> پلن را انتخاب کنید و مراحل پرداخت را طی کنید.</p>
+                    </details>
+                    <details class="mk-pub-faq-item">
+                        <summary>فعال‌سازی چقدر طول می‌کشد؟</summary>
+                        <p>پس از پرداخت، کلید لایسنس در داشبورد شما فعال می‌شود و می‌توانید همان لحظه استفاده کنید.</p>
+                    </details>
+                    <details class="mk-pub-faq-item">
+                        <summary>پشتیبانی فنی چگونه است؟</summary>
+                        <p>مستقیم با {{ site_brand.creator_name }} از طریق تلفن، تلگرام یا همین فرم تماس.</p>
+                    </details>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

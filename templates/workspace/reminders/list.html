@@ -1,0 +1,58 @@
+{% extends 'workspace/base.html' %}
+{% load workspace_tags %}
+
+{% block page_title %}{% endblock %}
+
+{% block content %}
+<div class="mk-page">
+    <header class="mk-page-hero">
+        <div class="mk-page-hero-main">
+            <div class="mk-page-hero-kicker">
+                <span class="mk-page-hero-mark" aria-hidden="true"></span>
+                <span class="mk-page-hero-eyebrow">میزکار</span>
+            </div>
+            <h1 class="mk-page-hero-title">یادآورها</h1>
+            <p class="mk-page-hero-desc">مدیریت وظایف و پیگیری‌های زمانی</p>
+        </div>
+        <div class="mk-page-hero-toolbar" role="toolbar" aria-label="عملیات">
+            <a href="?show=active" class="mk-hero-btn {% if show == 'active' %}mk-hero-btn-primary{% else %}mk-hero-btn-ghost{% endif %}">فعال</a>
+            <a href="?show=done" class="mk-hero-btn {% if show == 'done' %}mk-hero-btn-primary{% else %}mk-hero-btn-ghost{% endif %}">انجام‌شده</a>
+            <a href="?show=all" class="mk-hero-btn {% if show == 'all' %}mk-hero-btn-primary{% else %}mk-hero-btn-ghost{% endif %}">همه</a>
+            <button type="button" class="mk-hero-btn mk-hero-btn-primary" data-modal-open="modal-reminder">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>جدید</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="ws-glass-panel">
+        {% if reminders %}
+        <div class="ws-table-wrap" style="border:none;background:transparent">
+            <table class="ws-table">
+                <thead><tr><th>عنوان</th><th>یادداشت</th><th>سررسید</th><th>وضعیت</th><th></th></tr></thead>
+                <tbody>
+                    {% for r in reminders %}
+                    <tr>
+                        <td><strong>{{ r.title }}</strong></td>
+                        <td>{{ r.note|truncatechars:50|default:"—" }}</td>
+                        <td>{{ r.due_at|ws_jalali }}</td>
+                        <td>{% if r.is_done %}<span class="ws-badge ws-badge-green">انجام</span>{% else %}<span class="ws-badge ws-badge-amber">فعال</span>{% endif %}</td>
+                        <td>
+                            <form method="post" action="{% url 'workspace:reminder_toggle' r.id %}" style="display:inline">{% csrf_token %}
+                                <button type="submit" class="ws-btn ws-btn-sm ws-btn-ghost">{% if r.is_done %}بازگردانی{% else %}انجام{% endif %}</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="ws-empty">
+            <div class="ws-empty-icon"><i class="fas fa-bell" aria-hidden="true"></i></div>
+            <p class="ws-empty-title">یادآوری نیست</p>
+            <button type="button" class="ws-btn ws-btn-primary" data-modal-open="modal-reminder">ثبت یادآور</button>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

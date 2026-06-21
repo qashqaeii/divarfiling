@@ -1,0 +1,741 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM — Today's Queue (کارهای امروز) Pro
+   Artistic, professional kanban work queue
+   ═══════════════════════════════════════════════════════════ */
+
+.crm-today-pro {
+    --tq-radius: 16px;
+    --tq-radius-sm: 12px;
+    --tq-overdue: #f59e0b;
+    --tq-overdue-soft: rgba(245, 158, 11, 0.12);
+    --tq-overdue-border: rgba(245, 158, 11, 0.28);
+    --tq-today: var(--ws-primary, #7c3aed);
+    --tq-today-soft: var(--ws-primary-soft, rgba(124, 58, 237, 0.12));
+    --tq-today-border: color-mix(in srgb, var(--ws-primary) 28%, transparent);
+    --tq-follow: #3b82f6;
+    --tq-follow-soft: rgba(59, 130, 246, 0.1);
+    --tq-remind: #8b5cf6;
+    --tq-remind-soft: rgba(139, 92, 246, 0.1);
+    gap: 0.75rem;
+    padding: 0.75rem 1rem 1rem;
+}
+
+.crm-today-pro > .crm-dash-bar,
+.crm-today-pro > .crm-dash-kpis {
+    display: none;
+}
+
+/* ─── Hero ─── */
+.crm-today-hero {
+    position: relative;
+    border-radius: var(--tq-radius);
+    border: 1px solid var(--ws-border);
+    background: linear-gradient(135deg, var(--ws-surface) 0%, var(--ws-surface-2) 100%);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.crm-today-hero-ambient {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.crm-today-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(48px);
+    opacity: 0.5;
+}
+
+.crm-today-orb--1 {
+    width: 200px;
+    height: 200px;
+    inset-block-start: -80px;
+    inset-inline-end: -40px;
+    background: var(--tq-today-soft);
+}
+
+.crm-today-orb--2 {
+    width: 160px;
+    height: 160px;
+    inset-block-end: -60px;
+    inset-inline-start: 10%;
+    background: var(--tq-overdue-soft);
+}
+
+.crm-today-hero-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.15rem;
+}
+
+.crm-today-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ws-primary);
+    margin-bottom: 0.25rem;
+}
+
+.crm-today-eyebrow i { font-size: 0.58rem; opacity: 0.85; }
+
+.crm-today-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    color: var(--ws-text);
+}
+
+.crm-today-sub {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.35rem 0 0;
+    font-size: 0.78rem;
+    color: var(--ws-text-muted);
+    font-weight: 500;
+}
+
+.crm-today-sub-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ws-text-muted);
+    opacity: 0.4;
+    flex-shrink: 0;
+}
+
+.crm-today-sub-dot.is-live {
+    background: #22c55e;
+    opacity: 1;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+    animation: tq-pulse 2s ease-in-out infinite;
+}
+
+@keyframes tq-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.75; }
+}
+
+.crm-today-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.crm-today-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: 38px;
+    padding: 0 0.9rem;
+    border: 1px solid var(--ws-border);
+    border-radius: 10px;
+    background: var(--ws-surface);
+    color: var(--ws-text-secondary);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.crm-today-btn:hover {
+    border-color: var(--ws-primary);
+    color: var(--ws-text);
+    background: var(--ws-primary-soft);
+}
+
+.crm-today-btn--primary {
+    background: var(--ws-primary);
+    border-color: var(--ws-primary);
+    color: #fff;
+    box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--ws-primary) 45%, transparent);
+}
+
+.crm-today-btn--primary:hover {
+    background: var(--ws-primary-hover);
+    border-color: var(--ws-primary-hover);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px -6px color-mix(in srgb, var(--ws-primary) 50%, transparent);
+}
+
+.crm-today-btn--icon {
+    width: 38px;
+    padding: 0;
+}
+
+/* ─── Stats strip ─── */
+.crm-today-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem;
+    flex-shrink: 0;
+}
+
+.crm-today-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: var(--tq-radius-sm);
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.crm-today-stat.has-value:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -10px rgba(15, 23, 42, 0.12);
+}
+
+.crm-today-stat-icon {
+    width: 2.1rem;
+    height: 2.1rem;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+    background: var(--ws-surface-2);
+    color: var(--ws-text-muted);
+}
+
+.crm-today-stat--overdue .crm-today-stat-icon { background: var(--tq-overdue-soft); color: #d97706; }
+.crm-today-stat--overdue.has-value .crm-today-stat-val { color: #b45309; }
+.crm-today-stat--today .crm-today-stat-icon { background: var(--tq-today-soft); color: var(--ws-primary); }
+.crm-today-stat--today.has-value .crm-today-stat-val { color: var(--ws-primary); }
+.crm-today-stat--follow .crm-today-stat-icon { background: var(--tq-follow-soft); color: #2563eb; }
+.crm-today-stat--remind .crm-today-stat-icon { background: var(--tq-remind-soft); color: #7c3aed; }
+
+.crm-today-stat-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+}
+
+.crm-today-stat-val {
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    color: var(--ws-text);
+}
+
+.crm-today-stat-lbl {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+}
+
+/* ─── Board ─── */
+.crm-today-pro .crm-today-board {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    overflow: hidden;
+}
+
+.crm-today-pro .crm-queue-col {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    border: 1px solid var(--ws-border);
+    border-radius: var(--tq-radius);
+    background: var(--ws-surface);
+    box-shadow: 0 2px 12px -4px rgba(15, 23, 42, 0.06);
+    border-inline-start: none;
+    overflow: hidden;
+}
+
+.crm-today-pro .crm-queue-col--overdue {
+    --tq-col-accent: var(--tq-overdue);
+    --tq-col-soft: var(--tq-overdue-soft);
+}
+
+.crm-today-pro .crm-queue-col--today {
+    --tq-col-accent: var(--tq-today);
+    --tq-col-soft: var(--tq-today-soft);
+}
+
+.crm-today-pro .crm-queue-col-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(180deg, var(--tq-col-soft) 0%, var(--ws-surface) 100%);
+    border-bottom: 1px solid var(--ws-border);
+    position: relative;
+}
+
+.crm-today-pro .crm-queue-col-head::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    height: 3px;
+    background: var(--tq-col-accent);
+    opacity: 0.85;
+}
+
+.crm-today-pro .crm-queue-col-head-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.crm-today-pro .crm-queue-col-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    background: var(--tq-col-soft);
+    color: var(--tq-col-accent);
+    flex-shrink: 0;
+}
+
+.crm-today-pro .crm-queue-col-head h2 {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ws-text);
+}
+
+.crm-today-pro .crm-queue-col--overdue .crm-queue-col-head h2 { color: #b45309; }
+.crm-today-pro .crm-queue-col-count {
+    font-size: 0.72rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--tq-col-accent);
+    background: var(--tq-col-soft);
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--tq-col-accent) 22%, transparent);
+}
+
+.crm-today-pro .crm-queue-col-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
+}
+
+.crm-today-pro .crm-queue-col-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 10rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ws-text-muted);
+    border: 1px dashed var(--ws-border);
+    border-radius: var(--tq-radius-sm);
+    background: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.crm-today-pro .crm-queue-col-empty i {
+    font-size: 1.5rem;
+    opacity: 0.45;
+    color: var(--tq-col-accent, var(--ws-primary));
+}
+
+/* ─── Task cards ─── */
+.crm-today-pro .crm-queue-card {
+    position: relative;
+    border: 1px solid var(--ws-border);
+    border-radius: var(--tq-radius-sm);
+    padding: 0;
+    background: var(--ws-surface);
+    overflow: hidden;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.crm-today-pro .crm-queue-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
+    box-shadow: 0 10px 28px -12px rgba(15, 23, 42, 0.14);
+}
+
+.crm-today-pro .crm-queue-card-accent {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 4px;
+    background: var(--ws-border);
+}
+
+.crm-today-pro .crm-queue-card--overdue .crm-queue-card-accent {
+    background: linear-gradient(180deg, #fbbf24, #f59e0b);
+}
+
+.crm-today-pro .crm-queue-card--today .crm-queue-card-accent {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--ws-primary) 70%, #fff), var(--ws-primary));
+}
+
+.crm-today-pro .crm-queue-card--reminder .crm-queue-card-accent {
+    background: linear-gradient(180deg, #a78bfa, #8b5cf6);
+}
+
+.crm-today-pro .crm-queue-card-inner {
+    padding: 0.85rem 0.9rem 0.85rem 1rem;
+}
+
+.crm-today-pro .crm-queue-card-head {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: start;
+    gap: 0.55rem;
+}
+
+.crm-today-pro .crm-queue-check {
+    width: 26px;
+    height: 26px;
+    margin-top: 0.15rem;
+    border-width: 2px;
+    border-radius: 50%;
+    background: var(--ws-surface);
+    transition: all 0.18s ease;
+}
+
+.crm-today-pro .crm-queue-check:hover {
+    border-color: #22c55e;
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.08);
+    transform: scale(1.08);
+}
+
+.crm-today-pro .crm-queue-check:active {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: #fff;
+}
+
+.crm-today-pro .crm-queue-card-avatar {
+    width: 2rem;
+    height: 2rem;
+    margin-top: 0.05rem;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--ws-primary);
+    background: var(--ws-primary-soft);
+    flex-shrink: 0;
+}
+
+.crm-today-pro .crm-queue-card--overdue .crm-queue-card-avatar {
+    color: #b45309;
+    background: var(--tq-overdue-soft);
+}
+
+.crm-today-pro .crm-queue-card--reminder .crm-queue-card-avatar {
+    color: #7c3aed;
+    background: var(--tq-remind-soft);
+}
+
+.crm-today-pro .crm-queue-card-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.crm-today-pro .crm-queue-card-sub {
+    font-size: 0.7rem;
+    margin-top: 0.15rem;
+}
+
+.crm-today-pro .crm-queue-card-kind {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 0.22rem 0.45rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    align-self: start;
+    background: var(--ws-surface-2);
+    color: var(--ws-text-muted);
+}
+
+.crm-today-pro .crm-queue-card--followup .crm-queue-card-kind {
+    background: var(--tq-follow-soft);
+    color: #1d4ed8;
+}
+
+.crm-today-pro .crm-queue-card--reminder .crm-queue-card-kind {
+    background: var(--tq-remind-soft);
+    color: #6d28d9;
+}
+
+.crm-today-pro .crm-queue-card-kind i { font-size: 0.5rem; }
+
+.crm-today-pro .crm-queue-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.65rem;
+    padding-top: 0;
+    border-top: none;
+}
+
+.crm-today-pro .crm-queue-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    background: var(--ws-surface-2);
+    border: 1px solid var(--ws-border);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: border-color 0.12s, background 0.12s;
+}
+
+.crm-today-pro .crm-queue-meta-pill--phone {
+    color: #059669;
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.crm-today-pro .crm-queue-meta-pill--phone:hover {
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.35);
+}
+
+.crm-today-pro .crm-queue-card-note {
+    margin-top: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 8px;
+    background: var(--ws-surface-2);
+    font-size: 0.68rem;
+    line-height: 1.55;
+    border-inline-start: 2px solid var(--ws-border);
+}
+
+.crm-today-pro .crm-queue-card-actions {
+    margin-top: 0.7rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--ws-border-light, var(--ws-border));
+    gap: 0.4rem;
+}
+
+.crm-today-pro .crm-queue-act {
+    height: 32px;
+    padding: 0 0.7rem;
+    border-radius: 9px;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+.crm-today-pro .crm-queue-act--call {
+    background: var(--ws-primary);
+    border-color: var(--ws-primary);
+    color: #fff;
+}
+
+.crm-today-pro .crm-queue-act--call:hover {
+    background: var(--ws-primary-hover);
+    border-color: var(--ws-primary-hover);
+    color: #fff;
+}
+
+.crm-today-pro .crm-today-empty {
+    flex: 1;
+    margin-top: 0.5rem;
+}
+
+/* Legacy alias — today empty now uses .crm-empty-state */
+.crm-today-done {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    border-radius: var(--tq-radius);
+    border: 1px dashed var(--ws-border);
+    background: linear-gradient(165deg, var(--ws-surface) 0%, var(--ws-surface-2) 100%);
+}
+
+.crm-today-done-visual {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 1.25rem;
+    font-size: 2rem;
+    color: #059669;
+}
+
+.crm-today-done-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #ecfdf5, #a7f3d0);
+    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0.06);
+}
+
+.crm-today-done-visual i {
+    position: relative;
+    z-index: 1;
+}
+
+.crm-today-done h2 {
+    margin: 0 0 0.45rem;
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.crm-today-done p {
+    margin: 0 0 1.25rem;
+    max-width: 22rem;
+    font-size: 0.82rem;
+    color: var(--ws-text-muted);
+    line-height: 1.65;
+}
+
+/* ─── Cheerful theme ─── */
+[data-theme="cheerful"] .crm-today-hero {
+    border-color: rgba(255, 212, 194, 0.85);
+    background: linear-gradient(135deg, #fff 0%, #fff4ec 100%);
+}
+
+[data-theme="cheerful"] .crm-today-title {
+    background: linear-gradient(135deg, #292524 20%, #ea580c 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+[data-theme="cheerful"] .crm-today-btn--primary {
+    background: linear-gradient(135deg, #ff6b6b, #ff8e53, #ffd93d);
+    border: none;
+    box-shadow: 0 6px 20px -6px rgba(255, 107, 107, 0.4);
+}
+
+[data-theme="cheerful"] .crm-today-stat.has-value:hover {
+    box-shadow: 0 8px 24px -10px rgba(255, 107, 107, 0.15);
+}
+
+[data-theme="cheerful"] .crm-today-pro .crm-queue-col {
+    border-color: rgba(255, 212, 194, 0.85);
+}
+
+[data-theme="cheerful"] .crm-today-pro .crm-queue-act--call {
+    background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+    border: none;
+}
+
+/* ─── Dark theme ─── */
+[data-theme="dark"] .crm-today-hero {
+    background: linear-gradient(135deg, var(--ws-surface) 0%, rgba(15, 23, 42, 0.6) 100%);
+}
+
+[data-theme="dark"] .crm-today-pro .crm-queue-col-body {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .crm-today-pro .crm-queue-col-empty {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .crm-today-done {
+    background: linear-gradient(165deg, var(--ws-surface) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+    .crm-today-pro .crm-today-board {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+    }
+
+    .crm-today-pro .crm-queue-col {
+        min-height: auto;
+        max-height: none;
+    }
+
+    .crm-today-pro .crm-queue-col-body {
+        max-height: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .crm-today-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .crm-today-hero-inner {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .crm-today-hero-actions {
+        justify-content: stretch;
+    }
+
+    .crm-today-btn--primary {
+        flex: 1;
+    }
+
+    .crm-today-pro .crm-queue-card-head {
+        grid-template-columns: auto auto 1fr;
+    }
+
+    .crm-today-pro .crm-queue-card-kind {
+        grid-column: 2 / -1;
+        justify-self: start;
+        margin-inline-start: 2.6rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crm-today-sub-dot.is-live { animation: none; }
+    .crm-today-stat.has-value:hover,
+    .crm-today-pro .crm-queue-card:hover,
+    .crm-today-btn--primary:hover { transform: none; }
+}

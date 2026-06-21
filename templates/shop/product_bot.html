@@ -1,0 +1,667 @@
+{% extends 'base.html' %}
+{% load static currency_tags %}
+
+{% block title %}{{ product.title }} — فایلینگ دیوار{% endblock %}
+
+{% block body_class %}mk-product-bot-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=26">
+{% endblock %}
+
+{% block content %}
+<div class="pb-page">
+
+    {# ─── Hero ─── #}
+    <section class="pb-hero">
+        <div class="container pb-hero-wrap">
+            <div class="pb-hero-stage">
+                <div class="pb-hero-copy-col">
+                    <span class="pb-kicker">
+                        <span class="pb-icon pb-icon--xs pb-icon--violet"><i class="fas fa-robot"></i></span>
+                        {{ bot_page.tagline }}
+                    </span>
+                    <h1 class="pb-title">{{ product.title }}</h1>
+                    <p class="pb-lead">{{ product.short_description|default:bot_page.hero_lead }}</p>
+                    <div class="pb-hero-pills">
+                        <span class="pb-hero-pill">
+                            <span class="pb-icon pb-icon--sm pb-icon--sky"><i class="fab fa-windows"></i></span>
+                            ویندوز
+                        </span>
+                        <span class="pb-hero-pill">
+                            <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fas fa-folder-tree"></i></span>
+                            فایلینگ خودکار
+                        </span>
+                        <span class="pb-hero-pill">
+                            <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fas fa-layer-group"></i></span>
+                            اتصال به میزکار
+                        </span>
+                    </div>
+                    {% if average_rating > 0 %}
+                    <div class="pb-rating-card">
+                        <span class="pb-rating-card-val">{{ average_rating|floatformat:1 }}</span>
+                        <div class="pb-rating-card-body">
+                            <span class="pb-rating-stars" dir="rtl" aria-hidden="true">
+                                {% for i in "12345" %}
+                                <i class="fas fa-star{% if forloop.counter > average_rating %}-o{% endif %}"></i>
+                                {% endfor %}
+                            </span>
+                            <span class="pb-rating-count">{{ rating_count }} امتیاز کاربران</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="button" class="pb-hero-preview pb-app-shot" data-pb-lightbox-open aria-label="بزرگنمایی تصویر برنامه">
+                    <div class="pb-app-shot-chrome" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                        <span class="pb-app-shot-title">دیوار — استخراج حرفه‌ای</span>
+                    </div>
+                    <img
+                        src="{% static 'images/help-bot-extract-tab.png' %}"
+                        alt="نمای برنامه استخراج دیوار — تب استخراج با فیلتر شهر و محله، پیشرفت زنده و گزارش عملیات"
+                        class="pb-app-shot-img"
+                        loading="eager"
+                        decoding="async"
+                        width="1680"
+                        height="1000"
+                    >
+                    <span class="pb-app-shot-zoom" aria-hidden="true">
+                        <i class="fas fa-search-plus"></i>
+                        <span>برای بزرگنمایی کلیک کنید</span>
+                    </span>
+                </button>
+            </div>
+
+            <section class="pb-pricing-deck" aria-label="پلن‌های لایسنس">
+                <div class="pb-pricing-deck-head">
+                    <h2>انتخاب پلن لایسنس</h2>
+                    <p>پس از خرید، ربات را نصب کنید و لایسنس را در همان روز فعال نمایید.</p>
+                </div>
+                <div class="pb-plan-deck">
+                    {% for plan in plans %}
+                    <article class="pb-plan-card{% if forloop.counter == 2 %} pb-plan-card--featured{% endif %}">
+                        {% if forloop.counter == 2 %}<span class="pb-plan-card-ribbon">پیشنهادی</span>{% endif %}
+                        <div class="pb-plan-card-top">
+                            <span class="pb-plan-card-icon pb-icon pb-icon--md pb-icon--{% if forloop.counter == 1 %}sky{% elif forloop.counter == 2 %}violet{% else %}emerald{% endif %}">
+                                <i class="fas {% if forloop.counter == 1 %}fa-calendar-day{% elif forloop.counter == 2 %}fa-calendar-week{% else %}fa-calendar{% endif %}"></i>
+                            </span>
+                            <div>
+                                <h3>{{ plan.get_plan_type_display }}</h3>
+                                <span class="pb-plan-card-sub">{{ plan.duration_days }} روز دسترسی</span>
+                            </div>
+                        </div>
+                        <div class="pb-plan-card-price">
+                            <span class="pb-plan-card-amount">{{ plan.price|currency }}</span>
+                            <span class="pb-plan-card-unit">تومان</span>
+                        </div>
+                        <ul class="pb-plan-card-feats">
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ plan.max_activations }} دستگاه فعال</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> فعال‌سازی فوری پس از خرید</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> پشتیبانی نصب و راه‌اندازی</li>
+                        </ul>
+                        <a href="{% url 'buy' product.slug %}?plan={{ plan.id }}" class="pb-plan-card-cta{% if forloop.counter == 2 %} pb-plan-card-cta--primary{% endif %}">
+                            خرید {{ plan.get_plan_type_display }}
+                        </a>
+                    </article>
+                    {% empty %}
+                    <p class="pb-pricing-empty">پلن فعالی ثبت نشده. با پشتیبانی تماس بگیرید.</p>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'license_guide' %}" class="pb-pricing-deck-guide">
+                    راهنمای نصب و فعال‌سازی <i class="fas fa-arrow-left"></i>
+                </a>
+            </section>
+        </div>
+    </section>
+
+    {# ─── Value props ─── #}
+    <section class="pb-band pb-value-band">
+        <div class="container">
+            <div class="pb-value-layout">
+                <header class="pb-value-intro">
+                    <span class="pb-head-kicker">ارزش پیشنهادی</span>
+                    <h2>ربات برای شما چه می‌کند؟</h2>
+                    <p class="pb-value-lead">جایگزین کار دستی — فایلینگ منظم روی سیستم خودتان</p>
+                    <div class="pb-value-rail" aria-hidden="true">
+                        {% for item in bot_page.value_props %}
+                        {% cycle 'violet' 'sky' 'emerald' 'amber' as value_accent silent %}
+                        <span class="pb-value-rail-node pb-icon pb-icon--sm pb-icon--{{ value_accent }}" data-accent="{{ value_accent }}">
+                            <i class="fas {{ item.icon }}"></i>
+                        </span>
+                        {% if not forloop.last %}<span class="pb-value-rail-line"></span>{% endif %}
+                        {% endfor %}
+                    </div>
+                    <p class="pb-value-tagline">از استخراج خودکار تا میزکار — یک مسیر یکپارچه روی سیستم شما</p>
+                </header>
+                {% resetcycle value_accent %}
+                <div class="pb-value-bento">
+                    {% for item in bot_page.value_props %}
+                    {% cycle 'violet' 'sky' 'emerald' 'amber' as value_accent silent %}
+                    <article class="pb-value-card{% if forloop.first %} pb-value-card--hero{% elif forloop.last %} pb-value-card--wide{% endif %}" data-accent="{{ value_accent }}">
+                        <span class="pb-value-card-num" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <span class="pb-value-card-icon pb-icon pb-icon--lg pb-icon--{{ value_accent }}"><i class="fas {{ item.icon }}"></i></span>
+                        <div class="pb-value-card-body">
+                            <h3>{{ item.title }}</h3>
+                            <p>{{ item.desc }}</p>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ─── Workflow ─── #}
+    <section class="pb-band pb-band--alt pb-flow-band">
+        <div class="container">
+            <div class="pb-flow-shell">
+                <header class="pb-flow-head">
+                    <div class="pb-flow-head-copy">
+                        <span class="pb-head-kicker">مسیر کار</span>
+                        <h2>از استخراج تا تحلیل</h2>
+                        <p>ربات روی ویندوز → پوشه <code>output</code> → میزکار</p>
+                    </div>
+                    <div class="pb-flow-pipeline" aria-hidden="true">
+                        <span class="pb-flow-hub pb-flow-hub--bot">
+                            <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fab fa-windows"></i></span>
+                            <span>ربات ویندوز</span>
+                        </span>
+                        <span class="pb-flow-hub-line"></span>
+                        <span class="pb-flow-hub pb-flow-hub--output">
+                            <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fas fa-folder-tree"></i></span>
+                            <span>output</span>
+                        </span>
+                        <span class="pb-flow-hub-line"></span>
+                        <span class="pb-flow-hub pb-flow-hub--desk">
+                            <span class="pb-icon pb-icon--sm pb-icon--sky"><i class="fas fa-layer-group"></i></span>
+                            <span>میزکار</span>
+                        </span>
+                    </div>
+                </header>
+
+                <div class="pb-flow-journey">
+                    <div class="pb-flow-phase">
+                        <div class="pb-flow-phase-head">
+                            <span class="pb-flow-phase-badge pb-flow-phase-badge--bot">فاز ۱</span>
+                            <h3 class="pb-flow-phase-title">ربات روی ویندوز</h3>
+                            <p class="pb-flow-phase-desc">خرید، تنظیم، استخراج و فایلینگ خودکار</p>
+                        </div>
+                        <div class="pb-flow-grid pb-flow-grid--quad">
+                            {% for step in bot_page.workflow_steps %}
+                            {% if forloop.counter <= 4 %}
+                            {% cycle 'violet' 'sky' 'emerald' 'amber' as flow_accent silent %}
+                            <article class="pb-flow-step" data-accent="{{ flow_accent }}">
+                                <header class="pb-flow-step-head">
+                                    <span class="pb-flow-step-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                                    <span class="pb-flow-step-icon pb-icon pb-icon--md pb-icon--{{ flow_accent }}"><i class="fas {{ step.icon }}"></i></span>
+                                </header>
+                                <h4>{{ step.title }}</h4>
+                                <p>{{ step.desc }}</p>
+                            </article>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="pb-flow-bridge" aria-hidden="true">
+                        <span class="pb-flow-bridge-rail"></span>
+                        <span class="pb-flow-bridge-chip">
+                            <i class="fas fa-arrow-down" aria-hidden="true"></i>
+                            <span>انتقال پوشه output</span>
+                        </span>
+                        <span class="pb-flow-bridge-rail"></span>
+                    </div>
+
+                    <div class="pb-flow-phase pb-flow-phase--desk">
+                        <div class="pb-flow-phase-head">
+                            <span class="pb-flow-phase-badge pb-flow-phase-badge--desk">فاز ۲</span>
+                            <h3 class="pb-flow-phase-title">میزکار فایلینگ دیوار</h3>
+                            <p class="pb-flow-phase-desc">آپلود داده و فعال‌سازی تحلیل و CRM</p>
+                        </div>
+                        <div class="pb-flow-grid pb-flow-grid--duo">
+                            {% resetcycle flow_accent %}
+                            {% for step in bot_page.workflow_steps %}
+                            {% if forloop.counter > 4 %}
+                            {% cycle 'rose' 'violet' as flow_accent silent %}
+                            <article class="pb-flow-step pb-flow-step--wide" data-accent="{{ flow_accent }}">
+                                <header class="pb-flow-step-head">
+                                    <span class="pb-flow-step-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                                    <span class="pb-flow-step-icon pb-icon pb-icon--md pb-icon--{{ flow_accent }}"><i class="fas {{ step.icon }}"></i></span>
+                                </header>
+                                <h4>{{ step.title }}</h4>
+                                <p>{{ step.desc }}</p>
+                            </article>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ─── Filing ─── #}
+    <section class="pb-band">
+        <div class="container pb-filing">
+            <div class="pb-filing-copy">
+                <header class="pb-head pb-head--left">
+                    <span class="pb-head-kicker">فایلینگ</span>
+                    <h2>ساختار پوشه output</h2>
+                    <p>ربات پوشه <code>output</code> را با ساختار درختی می‌سازد — هر فایل مربوط به شهر/محله و نوع معامله است.</p>
+                </header>
+                <ul class="pb-checklist">
+                    {% for note in bot_page.folder_notes %}
+                    <li><span class="pb-icon pb-icon--check"><i class="fas fa-check"></i></span>{{ note }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="pb-terminal" dir="ltr">
+                <div class="pb-terminal-bar">
+                    <span></span><span></span><span></span>
+                    <code>output/</code>
+                </div>
+                <pre class="pb-terminal-body">{% for line in bot_page.folder_tree %}{{ line }}
+{% endfor %}</pre>
+            </div>
+        </div>
+    </section>
+
+    {# ─── Features + tags ─── #}
+    <section class="pb-band pb-band--alt pb-extract-band">
+        <div class="container">
+            <div class="pb-extract-shell">
+                <header class="pb-extract-head">
+                    <div class="pb-extract-head-copy">
+                        <span class="pb-head-kicker">امکانات</span>
+                        <h2>بخش استخراج</h2>
+                        <p>جمع‌آوری دقیق و سریع آگهی‌های دیوار — <a href="#extraction-tree" class="pb-inline-link">ساختار درختی استخراج</a></p>
+                    </div>
+                    <ul class="pb-extract-stats" aria-label="خلاصه امکانات">
+                        <li>
+                            <span class="pb-extract-stat-val">۶</span>
+                            <span class="pb-extract-stat-label">قابلیت کلیدی</span>
+                        </li>
+                        <li>
+                            <span class="pb-extract-stat-val">۳</span>
+                            <span class="pb-extract-stat-label">فرمت خروجی</span>
+                        </li>
+                        <li>
+                            <span class="pb-extract-stat-val">۶</span>
+                            <span class="pb-extract-stat-label">نوع معامله</span>
+                        </li>
+                    </ul>
+                </header>
+
+                <div class="pb-extract-bento">
+                    {% for feat in bot_page.extraction_features %}
+                    {% cycle 'violet' 'sky' 'emerald' 'amber' 'rose' 'violet' as extract_accent silent %}
+                    <article class="pb-extract-card{% if forloop.first %} pb-extract-card--hero{% elif forloop.last %} pb-extract-card--wide{% endif %}" data-accent="{{ extract_accent }}">
+                        <span class="pb-extract-card-glow" aria-hidden="true"></span>
+                        <header class="pb-extract-card-head">
+                            <span class="pb-extract-card-icon pb-icon pb-icon--{% if forloop.first %}lg{% else %}md{% endif %} pb-icon--{{ extract_accent }}"><i class="fas {{ feat.icon }}"></i></span>
+                            <span class="pb-extract-card-idx">{{ forloop.counter|stringformat:"02d" }}</span>
+                        </header>
+                        <h3>{{ feat.title }}</h3>
+                        <p>{{ feat.desc }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+
+                <aside class="pb-extract-types">
+                    <div class="pb-extract-types-intro">
+                        <span class="pb-extract-types-icon pb-icon pb-icon--md pb-icon--emerald"><i class="fas fa-tags"></i></span>
+                        <div>
+                            <h3>انواع معاملات پشتیبانی‌شده</h3>
+                            <p>هر دسته را جداگانه فیلتر و استخراج کنید — خروجی با نام‌گذاری خودکار</p>
+                        </div>
+                    </div>
+                    <div class="pb-extract-types-grid">
+                        {% for tx in bot_page.transaction_types %}
+                        {% cycle 'violet' 'sky' 'emerald' 'amber' 'rose' 'violet' as tx_accent silent %}
+                        <span class="pb-extract-type-chip" data-accent="{{ tx_accent }}">
+                            <i class="fas fa-circle" aria-hidden="true"></i>
+                            {{ tx }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    {# ─── Extraction tree ─── #}
+    {% include 'shop/includes/extraction_tree.html' %}
+
+    {# ─── Excel sample preview ─── #}
+    {% include 'shop/includes/excel_sample_preview.html' %}
+
+    {# ─── Workspace ─── #}
+    <section class="pb-band pb-band--alt pb-ws-band">
+        <div class="container">
+            <header class="pb-head">
+                <span class="pb-head-kicker">میزکار</span>
+                <h2>پس از آپلود</h2>
+                <p>CRM رایگان است؛ تحلیل و فایلینگ با لایسنس فعال باز می‌شود</p>
+            </header>
+            <div class="pb-ws-grid">
+                {% for item in bot_page.workspace_integration %}
+                <article class="pb-ws-card" data-accent="{{ item.accent }}">
+                    <button
+                        type="button"
+                        class="pb-ws-shot pb-app-shot"
+                        data-pb-lightbox-open
+                        data-pb-lightbox-src="{% static item.image %}"
+                        data-pb-lightbox-caption="{{ item.title }}"
+                        aria-label="بزرگنمایی {{ item.title }}"
+                    >
+                        <div class="pb-app-shot-chrome" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                            <span class="pb-app-shot-title">میزکار — {{ item.title }}</span>
+                        </div>
+                        <div class="pb-ws-shot-frame">
+                            <img
+                                src="{% static item.image %}"
+                                alt="{{ item.image_alt }}"
+                                class="pb-ws-shot-img"
+                                loading="lazy"
+                                decoding="async"
+                                width="1280"
+                                height="800"
+                            >
+                            <span class="pb-ws-shot-shine" aria-hidden="true"></span>
+                        </div>
+                        <span class="pb-app-shot-zoom" aria-hidden="true">
+                            <i class="fas fa-search-plus"></i>
+                            <span>بزرگنمایی</span>
+                        </span>
+                    </button>
+                    <div class="pb-ws-card-body">
+                        <span class="pb-ws-icon pb-icon pb-icon--md pb-icon--{{ item.accent }}">
+                            <i class="fas {{ item.icon }}"></i>
+                        </span>
+                        <div>
+                            <h3>{{ item.title }}</h3>
+                            <p>{{ item.desc }}</p>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            <div class="pb-ws-actions">
+                {% if user.is_authenticated %}
+                <a href="{% url 'workspace:home' %}" class="pb-btn pb-btn--ghost">ورود به میزکار</a>
+                {% else %}
+                <a href="{% url 'register' %}" class="pb-btn pb-btn--ghost">شروع رایگان — CRM</a>
+                {% endif %}
+                <a href="{% url 'workspace:upgrade' %}" class="pb-btn pb-btn--line">مقایسه امکانات</a>
+            </div>
+        </div>
+    </section>
+
+    {# ─── FAQ ─── #}
+    <section class="pb-band pb-faq-band">
+        <div class="container">
+            <div class="pb-faq-shell">
+                <header class="pb-faq-head">
+                    <div class="pb-faq-head-copy">
+                        <span class="pb-head-kicker">پشتیبانی</span>
+                        <h2>سوالات متداول</h2>
+                        <p>پاسخ سریع درباره ربات، فایلینگ روی ویندوز و اتصال به میزکار</p>
+                    </div>
+                    <div class="pb-faq-head-actions">
+                        <a href="{% url 'license_guide' %}" class="pb-faq-action">
+                            <i class="fas fa-book-open" aria-hidden="true"></i>
+                            <span>راهنمای نصب</span>
+                        </a>
+                        <a href="{% url 'contact' %}" class="pb-faq-action pb-faq-action--ghost">
+                            <i class="fas fa-headset" aria-hidden="true"></i>
+                            <span>تماس با پشتیبانی</span>
+                        </a>
+                    </div>
+                </header>
+
+                <div class="pb-faq-grid" data-pb-faq>
+                    {% for faq in bot_page.faqs %}
+                    {% cycle 'violet' 'sky' 'emerald' 'amber' as faq_accent silent %}
+                    <details class="pb-faq-card" data-accent="{{ faq_accent }}">
+                        <summary>
+                            <span class="pb-faq-card-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                            <span class="pb-faq-card-q">{{ faq.q }}</span>
+                            <span class="pb-faq-card-toggle" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                        </summary>
+                        <div class="pb-faq-card-a"><p>{{ faq.a }}</p></div>
+                    </details>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ─── CTA ─── #}
+    <section class="pb-cta">
+        <div class="container">
+            <article class="pb-cta-card">
+                <div>
+                    <h2>آماده ساخت فایلینگ حرفه‌ای هستید؟</h2>
+                    <p>ربات را بخرید، روی ویندوز نصب کنید و اولین خروجی را در میزکار تحلیل کنید.</p>
+                </div>
+                {% if plans.first %}
+                <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pb-btn pb-btn--primary">
+                    <i class="fas fa-shopping-cart"></i> خرید ربات استخراج
+                </a>
+                {% endif %}
+            </article>
+        </div>
+    </section>
+
+    {% include 'shop/includes/product_reviews.html' %}
+</div>
+{% endblock %}
+
+{% block page_overlays %}
+<div id="pb-lightbox" class="pb-lightbox" hidden role="dialog" aria-modal="true" aria-label="نمای بزرگ برنامه">
+    <button type="button" class="pb-lightbox-backdrop" data-pb-lightbox-close aria-label="بستن"></button>
+    <button type="button" class="pb-lightbox-close" data-pb-lightbox-close aria-label="بستن">
+        <i class="fas fa-times" aria-hidden="true"></i>
+    </button>
+    <figure class="pb-lightbox-frame">
+        <img
+            id="pb-lightbox-img"
+            src="{% static 'images/help-bot-extract-tab.png' %}"
+            alt="نمای برنامه استخراج دیوار — تب استخراج"
+            class="pb-lightbox-img"
+        >
+        <figcaption class="pb-lightbox-caption">دیوار — استخراج حرفه‌ای</figcaption>
+    </figure>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var panel = document.querySelector('[data-pb-faq]');
+    if (panel) {
+        panel.querySelectorAll('.pb-faq-card').forEach(function (item) {
+            item.addEventListener('toggle', function () {
+                if (!item.open) return;
+                panel.querySelectorAll('.pb-faq-card').forEach(function (other) {
+                    if (other !== item) other.open = false;
+                });
+            });
+        });
+    }
+
+    var lightbox = document.getElementById('pb-lightbox');
+    var lightboxImg = document.getElementById('pb-lightbox-img');
+    var lightboxCaption = lightbox ? lightbox.querySelector('.pb-lightbox-caption') : null;
+    var openBtns = document.querySelectorAll('[data-pb-lightbox-open]');
+
+    if (lightbox && openBtns.length) {
+        if (lightbox.parentElement !== document.body) {
+            document.body.appendChild(lightbox);
+        }
+
+        var lastFocus = null;
+
+        function resolveLightboxSrc(trigger) {
+            if (trigger.dataset.pbLightboxSrc) return trigger.dataset.pbLightboxSrc;
+            var innerImg = trigger.querySelector('img');
+            return innerImg ? (innerImg.currentSrc || innerImg.src) : '';
+        }
+
+        function openLightbox(trigger) {
+            var src = resolveLightboxSrc(trigger);
+            var caption = trigger.dataset.pbLightboxCaption || '';
+            if (src && lightboxImg) {
+                lightboxImg.src = src;
+                lightboxImg.alt = caption;
+            }
+            if (lightboxCaption) {
+                lightboxCaption.textContent = caption || lightboxImg.alt || '';
+            }
+            lastFocus = document.activeElement;
+            lightbox.hidden = false;
+            document.body.style.overflow = 'hidden';
+            var closeBtn = lightbox.querySelector('.pb-lightbox-close');
+            if (closeBtn) closeBtn.focus();
+        }
+
+        function closeLightbox() {
+            lightbox.hidden = true;
+            document.body.style.overflow = '';
+            if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+        }
+
+        openBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () { openLightbox(btn); });
+        });
+
+        lightbox.querySelectorAll('[data-pb-lightbox-close]').forEach(function (el) {
+            el.addEventListener('click', closeLightbox);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (lightbox.hidden) return;
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeLightbox();
+            }
+        });
+    }
+
+    var xtree = document.querySelector('[data-pb-xtree]');
+    if (xtree) {
+        var branchBtns = xtree.querySelectorAll('.pb-xtree-branch-btn[data-xtree-select]');
+        var panes = xtree.querySelectorAll('[data-xtree-pane]');
+        var branches = xtree.querySelectorAll('.pb-xtree-branch');
+
+        function activateBranch(id, btn) {
+            branchBtns.forEach(function (b) {
+                var on = b === btn;
+                b.classList.toggle('is-active', on);
+                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+            branches.forEach(function (branch) {
+                var leaves = branch.querySelector('.pb-xtree-leaves');
+                var branchBtn = branch.querySelector('.pb-xtree-branch-btn');
+                var isActive = branchBtn && branchBtn.dataset.xtreeSelect === id;
+                branch.classList.toggle('is-expanded', isActive);
+                if (leaves) leaves.hidden = !isActive;
+            });
+            panes.forEach(function (pane) {
+                var on = pane.dataset.xtreePane === id;
+                pane.classList.toggle('is-active', on);
+                pane.hidden = !on;
+            });
+        }
+
+        branchBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                activateBranch(btn.dataset.xtreeSelect, btn);
+            });
+        });
+
+        xtree.querySelectorAll('.pb-xtree-leaf[data-xtree-select]').forEach(function (leaf) {
+            leaf.addEventListener('click', function () {
+                var id = leaf.dataset.xtreeSelect;
+                var branchBtn = xtree.querySelector('.pb-xtree-branch-btn[data-xtree-select="' + id + '"]');
+                if (branchBtn) activateBranch(id, branchBtn);
+                var file = leaf.dataset.xtreeFile;
+                var pane = xtree.querySelector('[data-xtree-pane="' + id + '"]');
+                if (pane && file) {
+                    var pathEl = pane.querySelector('.pb-xtree-sample-path');
+                    if (pathEl) pathEl.classList.add('is-pulse');
+                    setTimeout(function () { pathEl && pathEl.classList.remove('is-pulse'); }, 900);
+                }
+            });
+        });
+
+        var first = branchBtns[0];
+        if (first) activateBranch(first.dataset.xtreeSelect, first);
+    }
+
+    var xlsRoot = document.querySelector('[data-pb-xls]');
+    if (xlsRoot) {
+        var viewport = xlsRoot.querySelector('[data-pb-xls-scroll]');
+        var formulaRef = xlsRoot.querySelector('[data-pb-xls-cell-ref]');
+        var formulaVal = xlsRoot.querySelector('[data-pb-xls-formula]');
+        var selectedCell = null;
+
+        function colLetterFromIndex(index) {
+            var n = index + 1;
+            var letters = '';
+            while (n > 0) {
+                var rem = (n - 1) % 26;
+                letters = String.fromCharCode(65 + rem) + letters;
+                n = Math.floor((n - 1) / 26);
+            }
+            return letters;
+        }
+
+        function updateScrollState() {
+            if (!viewport) return;
+            viewport.classList.toggle('is-scrolled-x', viewport.scrollLeft > 4);
+            viewport.classList.toggle('is-scrolled-y', viewport.scrollTop > 4);
+        }
+
+        function selectCell(cell) {
+            if (!cell || cell.tagName !== 'TD') return;
+            if (selectedCell) selectedCell.classList.remove('is-selected');
+            selectedCell = cell;
+            cell.classList.add('is-selected');
+
+            var row = cell.parentElement;
+            var rowNum = row ? row.querySelector('.pb-xls-rowhead') : null;
+            var colIndex = Array.prototype.indexOf.call(row.children, cell) - 1;
+            var letter = colIndex >= 0 ? colLetterFromIndex(colIndex) : 'A';
+            var rowLabel = rowNum ? rowNum.textContent.trim() : '1';
+
+            if (formulaRef) formulaRef.textContent = letter + rowLabel;
+            if (formulaVal) formulaVal.textContent = cell.getAttribute('title') || cell.textContent.trim();
+        }
+
+        if (viewport) {
+            viewport.addEventListener('scroll', updateScrollState, { passive: true });
+            updateScrollState();
+
+            viewport.addEventListener('click', function (e) {
+                var cell = e.target.closest('td');
+                if (!cell || !viewport.contains(cell)) return;
+                selectCell(cell);
+            });
+
+            viewport.addEventListener('dblclick', function (e) {
+                var cell = e.target.closest('td[data-href]');
+                if (!cell) return;
+                var href = cell.getAttribute('data-href');
+                if (href) window.open(href, '_blank', 'noopener,noreferrer');
+            });
+
+            var firstDataCell = viewport.querySelector('tbody td');
+            if (firstDataCell) selectCell(firstDataCell);
+        }
+    }
+})();
+</script>
+{% endblock %}

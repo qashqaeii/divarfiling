@@ -1,0 +1,325 @@
+{% extends 'workspace/base.html' %}
+{% load static %}
+
+{% block title %}مستندات API{% endblock %}
+
+{% block body_extra_class %} ws-apidoc-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/api-docs.css' %}?v=6">
+{% endblock %}
+
+{% block content %}
+<div class="apidoc" data-base-url="{{ api_docs.meta.base_url }}" data-crm-key-url="{% url 'workspace:docs_api_crm_key' %}">
+
+    <section class="apidoc-hero" aria-labelledby="apidoc-title">
+        <div class="apidoc-hero-accent" aria-hidden="true"></div>
+        <header class="apidoc-hero-inner">
+            <span class="apidoc-eyebrow">
+                <i class="fas fa-code" aria-hidden="true"></i>
+                {{ api_docs.hero.eyebrow }}
+            </span>
+            <h1 id="apidoc-title">{{ api_docs.hero.title }}</h1>
+            <p class="apidoc-lead">{{ api_docs.hero.lead }}</p>
+            <div class="apidoc-meta-bar">
+                <span class="apidoc-meta-chip" dir="ltr">
+                    <i class="fas fa-link" aria-hidden="true"></i>
+                    {{ api_docs.meta.base_url }}
+                </span>
+                <span class="apidoc-meta-chip">
+                    <i class="fas fa-tag" aria-hidden="true"></i>
+                    v{{ api_docs.meta.version }}
+                </span>
+            </div>
+        </header>
+    </section>
+
+    <div class="apidoc-layout">
+
+        <aside class="apidoc-sidebar" aria-label="فهرست API">
+            <div class="apidoc-sidebar-inner">
+                <h2 class="apidoc-sidebar-title">فهرست</h2>
+                <nav class="apidoc-toc">
+                    <a href="#overview" class="apidoc-toc-link is-active" data-target="overview">
+                        <i class="fas fa-shield-halved" aria-hidden="true"></i> احراز هویت
+                    </a>
+                    {% for guide in api_docs.guides %}
+                    <a href="#{{ guide.id }}" class="apidoc-toc-link" data-target="{{ guide.id }}">
+                        <i class="fas fa-bolt" aria-hidden="true"></i> {{ guide.title }}
+                    </a>
+                    {% endfor %}
+                    {% for group in api_docs.groups %}
+                    <div class="apidoc-toc-group">
+                        <span class="apidoc-toc-group-label">
+                            <i class="fas {{ group.icon }}" aria-hidden="true"></i> {{ group.title }}
+                        </span>
+                        {% for ep in group.endpoints %}
+                        <a href="#{{ ep.id }}" class="apidoc-toc-link apidoc-toc-link--ep" data-target="{{ ep.id }}">
+                            <span class="apidoc-method apidoc-method--{{ ep.method|lower }}">{{ ep.method }}</span>
+                            <span class="apidoc-toc-path" dir="ltr">{{ ep.path }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                    <a href="#errors" class="apidoc-toc-link" data-target="errors">
+                        <i class="fas fa-triangle-exclamation" aria-hidden="true"></i> کدهای خطا
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="apidoc-main">
+
+            <section id="overview" class="apidoc-section">
+                <header class="apidoc-section-head">
+                    <h2>احراز هویت</h2>
+                    <p>هر گروه API از روش احراز مخصوص خود استفاده می‌کند. همیشه <code dir="ltr">Content-Type: application/json</code> را برای POST ارسال کنید.</p>
+                </header>
+                <div class="apidoc-security-notice" role="note">
+                    <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                    <div>
+                        <strong>امنیت و محرمانگی</strong>
+                        <p>کلیدهای API را در مخزن کد، چت یا اسکرین‌شات قرار ندهید. نمونه‌های cURL در این صفحه از placeholder استفاده می‌کنند — کلید واقعی CRM فقط با درخواست امن و پس از ورود قابل مشاهده است.</p>
+                    </div>
+                </div>
+                <div class="apidoc-auth-grid">
+                    {% for auth in api_docs.auth_overview %}
+                    <article class="apidoc-auth-card" id="auth-{{ auth.id }}">
+                        <header>
+                            <code class="apidoc-auth-header" dir="ltr">{{ auth.header }}</code>
+                            <span class="apidoc-auth-scope">{{ auth.scope }}</span>
+                        </header>
+                        <p>{{ auth.desc }}</p>
+                        {% if auth.id == 'bot-api-key' %}
+                        <div class="apidoc-auth-status">
+                            {% if auth.configured %}
+                            <span class="apidoc-badge apidoc-badge--ok"><i class="fas fa-check"></i> پیکربندی شده در سرور</span>
+                            {% else %}
+                            <span class="apidoc-badge apidoc-badge--warn"><i class="fas fa-info-circle"></i> فقط در DEBUG بدون کلید</span>
+                            {% endif %}
+                        </div>
+                        {% elif auth.id == 'crm-api-key' %}
+                        <div class="apidoc-auth-key">
+                            {% if can_manage_crm_api and auth.has_user_key %}
+                            <label for="user-crm-api-key">کلید آژانس شما</label>
+                            <div class="apidoc-key-row">
+                                <code class="apidoc-key-value apidoc-key-value--masked" id="user-crm-api-key" dir="ltr" spellcheck="false" autocomplete="off" aria-live="polite">••••••••••••••••</code>
+                                <button type="button" class="apidoc-key-toggle" id="crmApiKeyToggle" aria-pressed="false" aria-label="نمایش کلید API" title="نمایش کلید">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                </button>
+                                <button type="button" class="apidoc-copy-btn apidoc-copy-btn--key" id="crmApiKeyCopy" data-copy-secret="user-crm-api-key" title="کپی کلید" disabled>
+                                    <i class="fas fa-copy" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <p class="apidoc-key-hint">کلید پس از ۶۰ ثانیه خودکار مخفی می‌شود.</p>
+                            <a href="{% url 'workspace:crm_team' %}" class="apidoc-link">مدیریت در صفحه تیم CRM</a>
+                            {% elif can_manage_crm_api %}
+                            <p class="apidoc-muted">ابتدا آژانس CRM بسازید تا کلید API دریافت کنید.</p>
+                            <a href="{% url 'workspace:crm_team' %}" class="apidoc-link">رفتن به تیم CRM</a>
+                            {% else %}
+                            <p class="apidoc-muted">فقط مدیر/مالک آژانس می‌تواند کلید API را ببیند.</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+
+            {% for guide in api_docs.guides %}
+            <section id="{{ guide.id }}" class="apidoc-section apidoc-guide">
+                <header class="apidoc-section-head">
+                    <h2>{{ guide.title }}</h2>
+                </header>
+                <ol class="apidoc-steps">
+                    {% for step in guide.steps %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ol>
+            </section>
+            {% endfor %}
+
+            {% for group in api_docs.groups %}
+            <section id="group-{{ group.id }}" class="apidoc-section apidoc-group" data-accent="{{ group.accent }}">
+                <header class="apidoc-group-head">
+                    <div class="apidoc-group-icon" data-accent="{{ group.accent }}">
+                        <i class="fas {{ group.icon }}" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h2>{{ group.title }}</h2>
+                        <p>{{ group.intro }}</p>
+                        <div class="apidoc-group-meta">
+                            <span class="apidoc-badge" dir="ltr">{{ group.base_path }}</span>
+                            <span class="apidoc-badge apidoc-badge--auth">
+                                <i class="fas fa-lock" aria-hidden="true"></i>
+                                {{ group.auth.name }}
+                                {% if group.auth.required_in_production %}<em>(الزامی)</em>{% endif %}
+                            </span>
+                        </div>
+                        {% if group.auth.note %}
+                        <p class="apidoc-note"><i class="fas fa-info-circle"></i> {{ group.auth.note }}</p>
+                        {% endif %}
+                    </div>
+                </header>
+
+                {% for ep in group.endpoints %}
+                <article id="{{ ep.id }}" class="apidoc-endpoint{% if ep.internal %} apidoc-endpoint--internal{% endif %}">
+                    <header class="apidoc-endpoint-head">
+                        <div class="apidoc-endpoint-title-row">
+                            <span class="apidoc-method apidoc-method--{{ ep.method|lower }}">{{ ep.method }}</span>
+                            <code class="apidoc-path" dir="ltr">{{ ep.path }}</code>
+                            {% if ep.internal %}
+                            <span class="apidoc-badge apidoc-badge--internal">داخلی</span>
+                            {% endif %}
+                        </div>
+                        <h3>{{ ep.title }}</h3>
+                        <p>{{ ep.summary }}</p>
+                        <code class="apidoc-full-url" dir="ltr">{{ ep.full_url }}</code>
+                    </header>
+
+                    {% if ep.request_fields %}
+                    <div class="apidoc-block">
+                        <h4>پارامترهای بدنه (JSON)</h4>
+                        <div class="apidoc-table-wrap">
+                            <table class="apidoc-table">
+                                <thead>
+                                    <tr>
+                                        <th>فیلد</th>
+                                        <th>نوع</th>
+                                        <th>الزامی</th>
+                                        <th>توضیح</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for f in ep.request_fields %}
+                                    <tr>
+                                        <td data-label="فیلد"><code dir="ltr">{{ f.name }}</code></td>
+                                        <td data-label="نوع"><code dir="ltr">{{ f.type }}</code></td>
+                                        <td data-label="الزامی">{% if f.required %}<span class="apidoc-req">بله</span>{% else %}خیر{% endif %}</td>
+                                        <td data-label="توضیح">{{ f.desc }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if ep.query_params %}
+                    <div class="apidoc-block">
+                        <h4>Query Parameters</h4>
+                        <div class="apidoc-table-wrap">
+                            <table class="apidoc-table">
+                                <thead>
+                                    <tr>
+                                        <th>پارامتر</th>
+                                        <th>نوع</th>
+                                        <th>الزامی</th>
+                                        <th>توضیح</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for f in ep.query_params %}
+                                    <tr>
+                                        <td data-label="پارامتر"><code dir="ltr">{{ f.name }}</code></td>
+                                        <td data-label="نوع"><code dir="ltr">{{ f.type }}</code></td>
+                                        <td data-label="الزامی">{% if f.required %}<span class="apidoc-req">بله</span>{% else %}خیر{% endif %}</td>
+                                        <td data-label="توضیح">{{ f.desc }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="apidoc-code-grid">
+                        {% if ep.request_example_json %}
+                        <div class="apidoc-code-panel">
+                            <div class="apidoc-code-head">
+                                <span>Request Body</span>
+                                <button type="button" class="apidoc-copy-btn" data-copy-id="req-{{ ep.id }}">
+                                    <i class="fas fa-copy"></i> کپی
+                                </button>
+                            </div>
+                            <pre class="apidoc-code" id="req-{{ ep.id }}"><code dir="ltr">{{ ep.request_example_json }}</code></pre>
+                        </div>
+                        {% endif %}
+
+                        {% if ep.response_success_json %}
+                        <div class="apidoc-code-panel apidoc-code-panel--success">
+                            <div class="apidoc-code-head">
+                                <span>Response <em>200</em></span>
+                                <button type="button" class="apidoc-copy-btn" data-copy-id="res-{{ ep.id }}">
+                                    <i class="fas fa-copy"></i> کپی
+                                </button>
+                            </div>
+                            <pre class="apidoc-code" id="res-{{ ep.id }}"><code dir="ltr">{{ ep.response_success_json }}</code></pre>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if ep.response_errors %}
+                    <div class="apidoc-block">
+                        <h4>پاسخ‌های خطا</h4>
+                        <div class="apidoc-errors">
+                            {% for err in ep.response_errors %}
+                            <div class="apidoc-error-item">
+                                <span class="apidoc-status apidoc-status--{{ err.status }}">{{ err.status }}</span>
+                                <pre class="apidoc-code apidoc-code--compact"><code dir="ltr">{{ err.body_json }}</code></pre>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="apidoc-block">
+                        <h4>cURL</h4>
+                        <div class="apidoc-code-panel apidoc-code-panel--curl">
+                            <div class="apidoc-code-head">
+                                <span>Terminal</span>
+                                <button type="button" class="apidoc-copy-btn" data-copy-id="curl-{{ ep.id }}">
+                                    <i class="fas fa-copy"></i> کپی
+                                </button>
+                            </div>
+                            <pre class="apidoc-code" id="curl-{{ ep.id }}"><code dir="ltr">{{ ep.curl_example }}</code></pre>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </section>
+            {% endfor %}
+
+            <section id="errors" class="apidoc-section">
+                <header class="apidoc-section-head">
+                    <h2>{{ api_docs.errors.title }}</h2>
+                    <p>همه APIها از قرارداد HTTP استاندارد پیروی می‌کنند.</p>
+                </header>
+                <div class="apidoc-table-wrap">
+                    <table class="apidoc-table apidoc-table--errors">
+                        <thead>
+                            <tr>
+                                <th>کد</th>
+                                <th>معنی</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in api_docs.errors.rows %}
+                            <tr>
+                                <td><span class="apidoc-status apidoc-status--{{ row.code }}">{{ row.code }}</span></td>
+                                <td>{{ row.meaning }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'workspace/js/api-docs.js' %}?v=4"></script>
+{% endblock %}

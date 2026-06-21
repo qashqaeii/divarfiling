@@ -1,0 +1,397 @@
+{% load seo_tags %}
+
+<section class="pb-band pb-reviews">
+
+    <div class="container">
+
+        <header class="pb-head">
+
+            <span class="pb-head-kicker">
+                <span class="pb-icon pb-icon--xs pb-icon--amber"><i class="fas fa-star"></i></span>
+                بازخورد کاربران
+            </span>
+
+            <h2>نظرات و امتیاز کاربران</h2>
+
+            <p>از زبان مشاورانی که روزانه با ربات کار می‌کنند</p>
+
+        </header>
+
+
+
+        <div class="pb-rev-board">
+
+            <aside class="pb-rev-summary">
+
+                <div class="pb-rev-score-card">
+
+                    <div class="pb-rev-score-main">
+
+                        <span class="pb-rev-score-val">
+
+                            {% if rating_count > 0 %}{{ average_rating|floatformat:1 }}{% else %}—{% endif %}
+
+                        </span>
+
+                        <span class="pb-rev-score-of">از ۵</span>
+
+                    </div>
+
+                    <div class="pb-rev-score-stars" dir="rtl" aria-hidden="true">
+
+                        {% for i in "12345" %}
+
+                        <i class="fas fa-star{% if rating_count == 0 or forloop.counter > average_rating %}-o{% endif %}"></i>
+
+                        {% endfor %}
+
+                    </div>
+
+                    <p class="pb-rev-score-meta">
+
+                        {% if rating_count > 0 %}{{ rating_count }} امتیاز{% if reviews_count %} · {{ reviews_count }} نظر{% endif %}
+
+                        {% else %}هنوز امتیازی ثبت نشده{% endif %}
+
+                    </p>
+
+                </div>
+
+
+
+                <div class="pb-rev-bars" aria-label="توزیع امتیازها">
+
+                    <div class="pb-rev-bar-row">
+
+                        <span class="pb-rev-bar-label">۵</span>
+
+                        <div class="pb-rev-bar"><i style="width: {{ rating_percentages.5|default:0 }}%"></i></div>
+
+                        <span class="pb-rev-bar-count">{{ rating_distribution.5|default:0 }}</span>
+
+                    </div>
+
+                    <div class="pb-rev-bar-row">
+
+                        <span class="pb-rev-bar-label">۴</span>
+
+                        <div class="pb-rev-bar"><i style="width: {{ rating_percentages.4|default:0 }}%"></i></div>
+
+                        <span class="pb-rev-bar-count">{{ rating_distribution.4|default:0 }}</span>
+
+                    </div>
+
+                    <div class="pb-rev-bar-row">
+
+                        <span class="pb-rev-bar-label">۳</span>
+
+                        <div class="pb-rev-bar"><i style="width: {{ rating_percentages.3|default:0 }}%"></i></div>
+
+                        <span class="pb-rev-bar-count">{{ rating_distribution.3|default:0 }}</span>
+
+                    </div>
+
+                    <div class="pb-rev-bar-row">
+
+                        <span class="pb-rev-bar-label">۲</span>
+
+                        <div class="pb-rev-bar"><i style="width: {{ rating_percentages.2|default:0 }}%"></i></div>
+
+                        <span class="pb-rev-bar-count">{{ rating_distribution.2|default:0 }}</span>
+
+                    </div>
+
+                    <div class="pb-rev-bar-row">
+
+                        <span class="pb-rev-bar-label">۱</span>
+
+                        <div class="pb-rev-bar"><i style="width: {{ rating_percentages.1|default:0 }}%"></i></div>
+
+                        <span class="pb-rev-bar-count">{{ rating_distribution.1|default:0 }}</span>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="pb-rev-rate-box">
+
+                    {% if user.is_authenticated %}
+
+                    <p class="pb-rev-rate-title">امتیاز شما</p>
+
+                    <form id="ratingForm" class="pb-rev-rate-form">
+
+                        {% csrf_token %}
+
+                        <div class="pb-rev-stars" dir="rtl">
+
+                            {% for choice in rating_form.rating.field.choices reversed %}
+
+                            <input type="radio" name="rating" id="pb_rating_{{ choice.0 }}" value="{{ choice.0 }}"
+
+                                   {% if user_rating and user_rating.rating == choice.0 %}checked{% endif %}>
+
+                            <label for="pb_rating_{{ choice.0 }}" title="{{ choice.1 }}"><i class="fas fa-star"></i></label>
+
+                            {% endfor %}
+
+                        </div>
+
+                        <button type="submit" class="pb-rev-submit">
+
+                            <i class="fas fa-paper-plane"></i> ثبت امتیاز
+
+                        </button>
+
+                    </form>
+
+                    {% else %}
+
+                    <p class="pb-rev-login">
+
+                        <i class="fas fa-user-lock"></i>
+
+                        برای ثبت امتیاز <a href="{% url 'login' %}?next={{ request.path }}">وارد شوید</a>
+
+                    </p>
+
+                    {% endif %}
+
+                </div>
+
+            </aside>
+
+
+
+            <div class="pb-rev-feed">
+
+                {% if user.is_authenticated %}
+
+                <div class="pb-rev-compose">
+
+                    <p class="pb-rev-compose-title">
+                        <span class="pb-icon pb-icon--xs pb-icon--violet"><i class="fas fa-pen"></i></span>
+                        نظر شما
+                    </p>
+
+                    <form id="reviewForm" class="pb-rev-compose-form">
+
+                        {% csrf_token %}
+
+                        <label class="pb-rev-field">
+
+                            <span>عنوان</span>
+
+                            <input type="text" name="title" maxlength="200" required
+
+                                   placeholder="یه جمله کوتاه — مثلاً: راضیم"
+
+                                   value="{% if user_review %}{{ user_review.title }}{% endif %}">
+
+                        </label>
+
+                        <label class="pb-rev-field">
+
+                            <span>متن نظر</span>
+
+                            <textarea name="content" rows="4" required
+
+                                      placeholder="راحت بنویسید؛ مثل اینکه برای همکارتون تعریف می‌کنید...">{% if user_review %}{{ user_review.content }}{% endif %}</textarea>
+
+                        </label>
+
+                        <button type="submit" class="pb-rev-compose-submit">
+
+                            <i class="fas fa-paper-plane"></i>
+
+                            {% if user_review %}به‌روزرسانی نظر{% else %}ثبت نظر{% endif %}
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+                {% else %}
+
+                <p class="pb-rev-compose-login">
+
+                    <i class="fas fa-comment-dots"></i>
+
+                    برای نوشتن نظر <a href="{% url 'login' %}?next={{ request.path }}">وارد شوید</a>
+
+                </p>
+
+                {% endif %}
+
+
+
+                {% for review in display_reviews %}
+
+                <article class="pb-rev-card">
+
+                    <header class="pb-rev-card-head">
+
+                        <span class="pb-rev-avatar" aria-hidden="true">{{ review.initial }}</span>
+
+                        <div class="pb-rev-card-meta">
+
+                            <strong>{{ review.name }}</strong>
+
+                            <div class="pb-rev-card-sub">
+
+                                <time>{{ review.date }}</time>
+
+                                {% if review.rating %}
+
+                                <span class="pb-rev-card-stars" dir="rtl" aria-label="امتیاز {{ review.rating }}">
+
+                                    {% for i in "12345" %}
+
+                                    <i class="fas fa-star{% if forloop.counter > review.rating %}-o{% endif %}"></i>
+
+                                    {% endfor %}
+
+                                </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                        {% if review.is_verified %}
+
+                        <span class="pb-rev-verified"><i class="fas fa-circle-check"></i> خریدار</span>
+
+                        {% endif %}
+
+                    </header>
+
+                    {% if review.title %}<h3 class="pb-rev-card-title">{{ review.title }}</h3>{% endif %}
+
+                    <p class="pb-rev-card-text">{{ review.content|linebreaksbr }}</p>
+
+                </article>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+{% if user.is_authenticated %}
+
+<script>
+
+(function() {
+    const starsWrap = document.querySelector('.pb-rev-stars');
+    if (starsWrap) {
+        const labels = starsWrap.querySelectorAll('label');
+        const updateStars = (n) => {
+            labels.forEach((label) => {
+                const input = document.getElementById(label.getAttribute('for'));
+                const val = parseInt(input?.value || '0', 10);
+                label.style.color = (n > 0 && val <= n) ? '#fbbf24' : 'rgba(148, 163, 184, 0.25)';
+            });
+        };
+        labels.forEach((label) => {
+            const input = document.getElementById(label.getAttribute('for'));
+            if (!input) return;
+            const val = parseInt(input.value, 10);
+            label.addEventListener('mouseenter', () => updateStars(val));
+            label.addEventListener('click', () => { input.checked = true; updateStars(val); });
+        });
+        starsWrap.addEventListener('mouseleave', () => {
+            const checked = starsWrap.querySelector('input:checked');
+            updateStars(checked ? parseInt(checked.value, 10) : 0);
+        });
+        const init = starsWrap.querySelector('input:checked');
+        if (init) updateStars(parseInt(init.value, 10));
+    }
+
+    const ratingForm = document.getElementById('ratingForm');
+
+    ratingForm?.addEventListener('submit', function(e) {
+
+        e.preventDefault();
+
+        const fd = new FormData(this);
+
+        if (!fd.get('rating')) { alert('لطفاً امتیاز را انتخاب کنید'); return; }
+
+        const btn = this.querySelector('.pb-rev-submit');
+
+        if (btn) btn.disabled = true;
+
+        fetch('{% url "submit_rating" product.slug %}', {
+
+            method: 'POST', body: fd,
+
+            headers: { 'X-CSRFToken': fd.get('csrfmiddlewaretoken') }
+
+        }).then(r => r.json()).then(d => {
+
+            if (d.success) location.reload();
+
+            else { alert('خطا در ثبت امتیاز'); if (btn) btn.disabled = false; }
+
+        }).catch(() => { alert('خطا در ارتباط'); if (btn) btn.disabled = false; });
+
+    });
+
+
+
+    const reviewForm = document.getElementById('reviewForm');
+
+    reviewForm?.addEventListener('submit', function(e) {
+
+        e.preventDefault();
+
+        const fd = new FormData(this);
+
+        const btn = this.querySelector('.pb-rev-compose-submit');
+
+        if (btn) btn.disabled = true;
+
+        fetch('{% url "submit_review" product.slug %}', {
+
+            method: 'POST', body: fd,
+
+            headers: { 'X-CSRFToken': fd.get('csrfmiddlewaretoken') }
+
+        }).then(r => r.json()).then(d => {
+
+            if (d.success) {
+
+                alert(d.message || 'ممنون! نظر شما ثبت شد.');
+
+                this.reset();
+
+            } else {
+
+                alert('لطفاً عنوان و متن نظر را کامل کنید');
+
+                if (btn) btn.disabled = false;
+
+            }
+
+        }).catch(() => { alert('خطا در ارتباط'); if (btn) btn.disabled = false; });
+
+    });
+
+})();
+
+</script>
+
+{% endif %}
+
+

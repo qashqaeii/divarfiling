@@ -1,0 +1,107 @@
+{% load workspace_tags crm_tags %}
+
+<div class="crm-pipeline crm-pipeline--contacts crm-kanban{% if pipeline_interactive %} crm-pipeline--interactive{% endif %}"
+     {% if pipeline_interactive %}data-status-url="{{ status_update_url_template }}"{% endif %}
+     role="list">
+
+    {% for col in pipeline %}
+    <div class="crm-pipeline-col crm-kanban-col{% if col.count >= 6 %} crm-kanban-col--dense{% endif %}" data-status="{{ col.status }}" style="--kanban-accent: {{ col.status|crm_status_dot }}">
+        <header class="crm-kanban-col-head">
+            <div class="crm-kanban-col-top">
+                <span class="crm-kanban-col-dot" aria-hidden="true"></span>
+                <span class="crm-kanban-col-title">{{ col.status }}</span>
+                <span class="crm-kanban-col-count" data-count>{{ col.count }}</span>
+            </div>
+            <div class="crm-kanban-col-accent" aria-hidden="true"></div>
+        </header>
+
+        <div class="crm-pipeline-cards crm-kanban-cards" data-drop-zone>
+            {% for c in col.contacts %}
+            {% if pipeline_interactive %}
+            <article class="crm-kanban-card crm-pipe-card--draggable" draggable="true"
+                     data-customer-id="{{ c.id }}" data-status="{{ c.status }}">
+                <div class="crm-kanban-card-head">
+                    <span class="crm-kanban-grip" aria-hidden="true" title="جابجایی">
+                        <i class="fas fa-grip-vertical"></i>
+                    </span>
+                    <span class="crm-kanban-avatar crm-kanban-avatar--hue-{{ c.name|crm_avatar_hue }}">{{ c.name|crm_initials }}</span>
+                    <div class="crm-kanban-card-info">
+                        <div class="crm-kanban-title-row">
+                            <strong class="crm-kanban-name">{{ c.name }}</strong>
+                            <span class="crm-kanban-signals" aria-hidden="true">
+                                {% if c.next_follow_up %}
+                                <span class="crm-kanban-signal crm-kanban-due {{ c|crm_follow_due_class }}" title="پیگیری">{{ c.next_follow_up|ws_jalali }}</span>
+                                {% endif %}
+                                {% if c.priority == 'بالا' %}
+                                <span class="crm-kanban-signal crm-kanban-signal--prio" title="اولویت بالا"></span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <span class="crm-kanban-type">{{ c.customer_type|default:"—" }}</span>
+                    </div>
+                    <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-kanban-open crm-pipe-open" title="پروفایل مخاطب">
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="crm-kanban-card-foot">
+                    {% if c.phone %}
+                    <span class="crm-kanban-meta" dir="ltr"><i class="fas fa-phone" aria-hidden="true"></i>{{ c.phone }}</span>
+                    {% endif %}
+                    {% if c.next_follow_up %}
+                    <span class="crm-kanban-due {{ c|crm_follow_due_class }}">
+                        <i class="fas fa-calendar-day" aria-hidden="true"></i>{{ c.next_follow_up|ws_jalali }}
+                    </span>
+                    {% endif %}
+                    {% if c.priority == 'بالا' %}
+                    <span class="crm-kanban-priority"><i class="fas fa-flag" aria-hidden="true"></i>بالا</span>
+                    {% endif %}
+                </div>
+            </article>
+            {% else %}
+            <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-kanban-card crm-kanban-card--link" title="{{ c.name }}">
+                <div class="crm-kanban-card-head">
+                    <span class="crm-kanban-avatar crm-kanban-avatar--hue-{{ c.name|crm_avatar_hue }}">{{ c.name|crm_initials }}</span>
+                    <div class="crm-kanban-card-info">
+                        <div class="crm-kanban-title-row">
+                            <strong class="crm-kanban-name">{{ c.name }}</strong>
+                            <span class="crm-kanban-signals" aria-hidden="true">
+                                {% if c.next_follow_up %}
+                                <span class="crm-kanban-signal crm-kanban-due {{ c|crm_follow_due_class }}" title="پیگیری">{{ c.next_follow_up|ws_jalali }}</span>
+                                {% endif %}
+                                {% if c.priority == 'بالا' %}
+                                <span class="crm-kanban-signal crm-kanban-signal--prio" title="اولویت بالا"></span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <span class="crm-kanban-type">{{ c.customer_type|default:"—" }}</span>
+                    </div>
+                </div>
+                <div class="crm-kanban-card-foot">
+                    {% if c.phone %}
+                    <span class="crm-kanban-meta" dir="ltr"><i class="fas fa-phone" aria-hidden="true"></i>{{ c.phone }}</span>
+                    {% endif %}
+                    {% if c.next_follow_up %}
+                    <span class="crm-kanban-due {{ c|crm_follow_due_class }}">
+                        <i class="fas fa-calendar-day" aria-hidden="true"></i>{{ c.next_follow_up|ws_jalali }}
+                    </span>
+                    {% endif %}
+                </div>
+            </a>
+            {% endif %}
+            {% empty %}
+            <div class="crm-kanban-empty" data-empty>
+                <i class="fas fa-inbox" aria-hidden="true"></i>
+                <span>خالی</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if col.count > col.contacts|length %}
+        <a href="{% url 'workspace:crm_contacts' %}?status={{ col.status|urlencode }}" class="crm-kanban-more">
+            <span>مشاهده همه</span>
+            <em>{{ col.count }}</em>
+        </a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static currency_tags %}
+
+{% block title %}تأیید پرداخت — {{ order.product.title }}{% endblock %}
+
+{% block body_class %}mk-checkout-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=9">
+{% endblock %}
+
+{% block content %}
+<div class="ck-page ck-pay-flow" data-pay-checkout>
+    <nav class="ck-topbar" aria-label="مسیر">
+        <a href="{% url 'buy' order.product.slug %}" class="ck-back">
+            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            <span>بازگشت به انتخاب پلن</span>
+        </a>
+        <span class="ck-secure-pill"><i class="fas fa-lock"></i> پرداخت امن SSL</span>
+    </nav>
+
+    <nav class="ck-pay-rail" aria-label="مراحل پرداخت">
+        <div class="ck-pay-rail-item is-done"><span class="ck-pay-rail-dot"></span><span>انتخاب پلن</span></div>
+        <div class="ck-pay-rail-line is-done"></div>
+        <div class="ck-pay-rail-item is-active"><span class="ck-pay-rail-dot"></span><span>تأیید و پرداخت</span></div>
+        <div class="ck-pay-rail-line"></div>
+        <div class="ck-pay-rail-item"><span class="ck-pay-rail-dot"></span><span>دریافت لایسنس</span></div>
+    </nav>
+
+    <div class="ck-shell ck-pay-shell">
+        <header class="ck-shell-header">
+            <div class="ck-shell-brand">
+                <span class="ck-shell-icon" aria-hidden="true"><i class="fas fa-receipt"></i></span>
+                <div>
+                    <p class="ck-shell-eyebrow">مرور نهایی سفارش</p>
+                    <h1>آماده انتقال به درگاه زیبال</h1>
+                </div>
+            </div>
+        </header>
+
+        <div class="ck-pay-grid">
+            <aside class="ck-pay-summary" aria-label="خلاصه سفارش">
+                <div class="ck-order-inner">
+                    <h2 class="ck-order-title">جزئیات سفارش</h2>
+
+                    <div class="ck-order-product">
+                        <span class="ck-order-product-icon"><i class="fas fa-robot"></i></span>
+                        <div>
+                            <strong>{{ order.product.title }}</strong>
+                            <span>{{ order.plan.name }} — {{ order.plan.get_plan_type_display }}</span>
+                        </div>
+                    </div>
+
+                    <div class="ck-order-lines">
+                        {% if order.original_price and order.original_price > order.amount %}
+                        <div class="ck-order-line">
+                            <span>قیمت پلن</span>
+                            <span class="ck-order-val">{{ order.original_price|currency }} تومان</span>
+                        </div>
+                        <div class="ck-order-line ck-order-line--discount">
+                            <span>تخفیف</span>
+                            <span class="ck-order-val">-{{ order.discount_amount|currency }} تومان</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="ck-order-total">
+                        <span>مبلغ قابل پرداخت</span>
+                        <strong>{{ order.amount|currency }} تومان</strong>
+                    </div>
+
+                    <div class="ck-pay-meta">
+                        <div class="ck-pay-meta-row">
+                            <span>معادل ریالی</span>
+                            <span>{{ amount_rial|floatformat:0 }} ریال</span>
+                        </div>
+                        <div class="ck-pay-meta-row ck-pay-meta-row--mono">
+                            <span>شناسه سفارش</span>
+                            <code>{{ order.id }}</code>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="ck-pay-main">
+                {% if not merchant_configured %}
+                <div class="ck-pay-alert ck-pay-alert--warn" role="alert">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <div>
+                        <strong>درگاه هنوز پیکربندی نشده</strong>
+                        <p>برای فعال‌سازی پرداخت آنلاین، مقدار <code>ZIBAL_MERCHANT_ID</code> را در فایل <code>.env</code> قرار دهید.</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="ck-pay-gateway-card">
+                    <div class="ck-pay-gateway-head">
+                        <span class="ck-pay-gateway-logo"><i class="fas fa-credit-card"></i></span>
+                        <div>
+                            <h2>درگاه پرداخت زیبال</h2>
+                            <p>پس از کلیک، به صفحه امن بانکی هدایت می‌شوید.</p>
+                        </div>
+                    </div>
+
+                    <ul class="ck-pay-trust-list">
+                        <li><i class="fas fa-shield-halved"></i> اطلاعات کارت در سرور ما ذخیره نمی‌شود</li>
+                        <li><i class="fas fa-bolt"></i> فعال‌سازی لایسنس بلافاصله پس از پرداخت موفق</li>
+                        <li><i class="fas fa-rotate-left"></i> در صورت انصراف، می‌توانید دوباره تلاش کنید</li>
+                    </ul>
+
+                    <form method="post" action="{% url 'payment:initiate' order.id %}" class="ck-pay-start-form">
+                        {% csrf_token %}
+                        <button type="submit" class="ck-pay-btn ck-pay-btn--full">
+                            <span class="ck-pay-btn-main">
+                                <i class="fas fa-lock"></i>
+                                پرداخت {{ order.amount|currency }} تومان
+                            </span>
+                            <span class="ck-pay-btn-sub">انتقال به درگاه امن زیبال</span>
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                <p class="ck-pay-footnote">
+                    <i class="fas fa-circle-info"></i>
+                    با ادامه، <a href="{% url 'terms' %}">قوانین و مقررات</a> را می‌پذیرید.
+                </p>
+            </main>
+        </div>
+    </div>
+</div>
+{% endblock %}

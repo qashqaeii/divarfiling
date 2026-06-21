@@ -1,0 +1,6 @@
+{% if share %}
+<span class="crm-contact-privacy-badge">
+    <i class="fas fa-share-nodes" aria-hidden="true"></i>
+    به اشتراک‌گذاری‌شده از طرف {{ share.shared_by.get_full_name|default:share.shared_by.username }} — فقط مشاهده
+</span>
+{% endif %}

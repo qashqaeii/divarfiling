@@ -1,0 +1,1924 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load seo_tags %}
+{% load breadcrumbs %}
+{% load currency_tags %}
+
+{% block title %}{{ product.title }} - فایلینگ دیوار{% endblock %}
+
+{% block breadcrumbs %}
+{% comment %}
+Breadcrumbs removed for fullscreen design
+{% endcomment %}
+{% endblock %}
+
+{% block content %}
+<div class="product-detail-fullscreen">
+    <div class="product-detail-wrapper">
+        <div class="product-detail">
+            <div class="product-detail-header">
+                <h1 class="text-white">{{ product.title }}</h1>
+                {% if product.short_description %}
+                    <p class="text-white" style="opacity: 0.9; margin-top: var(--spacing-sm);">{{ product.short_description }}</p>
+                {% endif %}
+                
+                <!-- بخش امتیاز و آمار -->
+                <div class="product-rating-summary mt-3">
+                    <div class="rating-display">
+                        <div class="rating-stars-large">
+                            {% if average_rating > 0 %}
+                                {% with avg_rating_int=average_rating|floatformat:0|add:0 %}
+                                    {% for i in "12345" %}
+                                        {% with star_num=forloop.counter %}
+                                            {% if star_num <= avg_rating_int %}
+                                                <i class="fas fa-star filled"></i>
+                                            {% elif star_num|add:-1 < average_rating %}
+                                                <i class="fas fa-star-half-alt filled"></i>
+                                            {% else %}
+                                                <i class="fas fa-star" aria-hidden="true"></i>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endfor %}
+                                {% endwith %}
+                                <span class="rating-value">{{ average_rating|floatformat:1 }}</span>
+                            {% else %}
+                                <span class="no-rating">هنوز امتیازی ثبت نشده</span>
+                            {% endif %}
+                        </div>
+                        <div class="rating-count">
+                            <span>({{ rating_count }} امتیاز)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="product-detail-layout">
+                <!-- گالری تصاویر و ویدیو -->
+                {% if product.media.exists %}
+                    {% with all_media=product.media.all %}
+                        {% if all_media %}
+                            <div class="product-gallery-section">
+                                <!-- نمایش ویدیو یا تصویر اصلی -->
+                                <div class="product-gallery-main">
+                                    <!-- ویدیو (فقط یک element) -->
+                                    {% if first_video %}
+                                        <video id="mainVideo" class="product-main-video" controls 
+                                               style="display: {% if first_media_type == 'video' %}block{% else %}none{% endif %};"
+                                               poster="{% if first_image %}{{ first_image.file.url }}{% endif %}">
+                                            <source src="{{ first_video.file.url }}" type="video/mp4">
+                                            مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+                                        </video>
+                                    {% endif %}
+                                    
+                                    <!-- تصویر اصلی (فقط یک element) -->
+                                    {% if first_image %}
+                                        <div id="mainImageContainer" style="display: {% if first_media_type == 'image' %}block{% else %}none{% endif %};">
+                                            <img id="mainImage" src="{{ first_image.file.url }}" alt="{{ first_image.alt_text|default:product.title }}" 
+                                                 class="product-main-image" onclick="openLightbox(0)">
+                                            <div class="image-zoom-hint">
+                                                <i class="fas fa-question-circle" aria-hidden="true"></i> برای بزرگنمایی کلیک کنید
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if all_media|length > 1 %}
+                                    <div class="product-gallery-thumbnails">
+                                        {% for media in all_media %}
+                                            {% if media.media_type == 'image' %}
+                                                <div class="thumbnail-item {% if forloop.first %}active{% endif %}" onclick="changeMainImage('{{ media.file.url|escapejs }}', '{{ media.alt_text|default:product.title|escapejs }}', {{ forloop.counter0 }})">
+                                                    <img src="{{ media.file.url }}" alt="{{ media.alt_text|default:product.title }}" loading="lazy">
+                                                </div>
+                                            {% elif media.media_type == 'video' %}
+                                                <div class="thumbnail-item video-thumbnail {% if forloop.first %}active{% endif %}" onclick="changeMainVideo('{{ media.file.url|escapejs }}', {{ forloop.counter0 }})">
+                                                    <i class="fas fa-question-circle" aria-hidden="true"></i>
+                                                    <span>ویدیو</span>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                {% endif %}
+                
+                <!-- اطلاعات محصول -->
+                <div class="product-info-section">
+                    <div class="product-price-info mb-4">
+                        <div class="plans-compact-container">
+                            {% for plan in plans %}
+                                <div class="plan-compact-item {% if forloop.counter == 2 %}plan-compact-featured{% endif %}">
+                                    {% if forloop.counter == 2 %}
+                                        <span class="plan-compact-badge">پیشنهادی</span>
+                                    {% endif %}
+                                    <div class="plan-compact-info">
+                                        <div class="plan-compact-header">
+                                            <span class="plan-compact-name">{{ plan.name }}</span>
+                                            <span class="plan-compact-type">{{ plan.get_plan_type_display }}</span>
+                                        </div>
+                                        <div class="plan-compact-price-row">
+                                            <span class="plan-compact-price">{{ plan.price|currency }}</span>
+                                            <span class="plan-compact-currency">تومان</span>
+                                        </div>
+                                        {% if plan.duration_days %}
+                                            <div class="plan-compact-details">
+                                                <span>{{ plan.duration_days }} روز</span>
+                                                <span>•</span>
+                                                <span>{{ plan.max_activations }} فعال‌سازی</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="plan-compact-details">
+                                                <span>{{ plan.max_activations }} فعال‌سازی</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{% url 'buy' product.slug %}?plan={{ plan.id }}" class="plan-compact-btn">
+                                        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                                        خرید
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Tabbed Interface -->
+                    <div class="product-tabs">
+                        <div class="tabs-header">
+                            <button class="tab-btn active" onclick="switchTab('description', event)">
+                                <i class="fas fa-question-circle" aria-hidden="true"></i> توضیحات
+                            </button>
+                            {% if product.features %}
+                                <button class="tab-btn" onclick="switchTab('features', event)">
+                                    <i class="fas fa-question-circle" aria-hidden="true"></i> امکانات
+                                </button>
+                            {% endif %}
+                            {% if has_video_media or product.video_url %}
+                                <button class="tab-btn" onclick="switchTab('video', event)">
+                                    <i class="fas fa-question-circle" aria-hidden="true"></i> ویدیو
+                                </button>
+                            {% endif %}
+                            {% if product.download_file %}
+                                <button class="tab-btn" onclick="switchTab('download', event)">
+                                    <i class="fas fa-download" aria-hidden="true"></i> دانلود
+                                </button>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="tabs-content">
+                            <div id="tab-description" class="tab-pane active">
+                                <div class="text-white" style="line-height: 1.8;">
+                                    {{ product.description|safe }}
+                                </div>
+                            </div>
+                            
+                            {% if product.features %}
+                                <div id="tab-features" class="tab-pane">
+                                    <ul class="features-list">
+                                        {% for feature in product.features %}
+                                            <li class="text-white">
+                                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                                {{ feature }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            
+                            {% if product.video_url or product.media.all %}
+                                <div id="tab-video" class="tab-pane">
+                                    <div class="product-video">
+                                        {% for media in product.media.all %}
+                                            {% if media.media_type == 'video' %}
+                                                <video controls style="width: 100%; height: auto; max-height: 500px; border-radius: var(--radius-md);">
+                                                    <source src="{{ media.file.url }}" type="video/mp4">
+                                                    مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+                                                </video>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if product.video_url %}
+                                            <iframe src="{{ product.video_url }}" frameborder="0" allowfullscreen 
+                                                    style="width: 100%; height: 400px; border-radius: var(--radius-md); {% if product.media.all %}margin-top: var(--spacing-md);{% endif %}"></iframe>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if product.download_file %}
+                                <div id="tab-download" class="tab-pane">
+                                    <div class="download-section text-white">
+                                        <p><i class="fas fa-info-circle" aria-hidden="true"></i> برای دانلود فایل، ابتدا باید محصول را خریداری کنید.</p>
+                                        {% if user.is_authenticated %}
+                                            {% for order in user.orders.all %}
+                                                {% if order.product == product and order.status == 'paid' %}
+                                                    <a href="{{ product.download_file.url }}" class="btn btn-primary mt-3" download>
+                                                        <i class="fas fa-download" aria-hidden="true"></i> دانلود فایل
+                                                    </a>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <!-- بخش امتیازدهی و نظرات - یک کارت حرفه‌ای -->
+    <div class="reviews-section-fullscreen">
+        <div class="reviews-main-card">
+            <div class="reviews-section-header">
+                <div class="reviews-header-content">
+                    <h2 class="section-title">
+                        <i class="fas fa-star" aria-hidden="true"></i>
+                        نظرات و امتیازها
+                    </h2>
+                    {% if rating_count > 0 %}
+                    <div class="rating-summary-box">
+                        <div class="rating-display-large">
+                            <span class="rating-number">{{ average_rating|floatformat:1 }}</span>
+                            <div class="rating-stars-summary">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= average_rating|floatformat:0|add:0 %}
+                                        <i class="fas fa-star filled"></i>
+                                    {% elif forloop.counter|add:-1 < average_rating %}
+                                        <i class="fas fa-star-half-alt filled"></i>
+                                    {% else %}
+                                        <i class="fas fa-star" aria-hidden="true"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <span class="rating-count-text">از {{ rating_count }} امتیاز</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="reviews-content-wrapper">
+                <!-- توزیع امتیازها -->
+                {% if rating_count > 0 %}
+                <div class="rating-distribution-minimal">
+                    {% for rating_value, count in rating_distribution.items reversed %}
+                        <div class="distribution-row">
+                            <span class="dist-rating">{{ rating_value }}</span>
+                            <i class="fas fa-star dist-star"></i>
+                            <div class="dist-progress-wrapper">
+                                <div class="dist-progress-bar" style="width: {{ rating_percentages|get_item:rating_value }}%"></div>
+                            </div>
+                            <span class="dist-count">{{ count }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- بخش ثبت امتیاز و نظر -->
+                {% if user.is_authenticated %}
+                <div class="user-action-section">
+                    <div class="action-tabs">
+                        <button class="action-tab active" data-tab="rating" onclick="switchActionTab('rating')">
+                            <i class="fas fa-star" aria-hidden="true"></i> ثبت امتیاز
+                        </button>
+                        <button class="action-tab" data-tab="review" onclick="switchActionTab('review')">
+                            <i class="fas fa-question-circle" aria-hidden="true"></i> ثبت نظر
+                        </button>
+                    </div>
+
+                    <div class="action-content">
+                        <!-- فرم امتیازدهی -->
+                        <div id="rating-tab-content" class="tab-content active">
+                            <form id="ratingForm" class="rating-form-minimal">
+                                {% csrf_token %}
+                                <div class="star-rating-container">
+                                    <label class="rating-label-text">امتیاز شما:</label>
+                                    <div class="star-rating-wrapper">
+                                        {% for choice in rating_form.rating.field.choices %}
+                                            <input type="radio" name="rating" id="rating_{{ choice.0 }}" value="{{ choice.0 }}" 
+                                                   {% if user_rating and user_rating.rating == choice.0 %}checked{% endif %}>
+                                            <label for="rating_{{ choice.0 }}" class="star-rating-star" data-rating="{{ choice.0 }}">
+                                                <i class="{% if user_rating and user_rating.rating >= choice.0 %}fas{% else %}far{% endif %} fa-star"></i>
+                                            </label>
+                                        {% endfor %}
+                                    </div>
+                                    <span class="rating-value-display" id="ratingValueDisplay">
+                                        {% if user_rating %}{{ user_rating.rating }} ستاره{% else %}امتیاز خود را انتخاب کنید{% endif %}
+                                    </span>
+                                </div>
+                                <button type="submit" class="btn-submit-rating">
+                                    <i class="fas fa-check" aria-hidden="true"></i> ثبت امتیاز
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- فرم ثبت نظر -->
+                        <div id="review-tab-content" class="tab-content">
+                            <form id="reviewForm" class="review-form-minimal">
+                                {% csrf_token %}
+                                <div class="form-field">
+                                    <label for="id_title" class="field-label">عنوان نظر</label>
+                                    <input type="text" name="title" id="id_title" class="field-input" 
+                                           value="{% if user_review %}{{ user_review.title }}{% endif %}" 
+                                           placeholder="مثال: محصول عالی و کاربردی" required>
+                                </div>
+                                <div class="form-field">
+                                    <label for="id_content" class="field-label">متن نظر</label>
+                                    <textarea name="content" id="id_content" class="field-textarea" rows="5" 
+                                              placeholder="تجربه خود را از استفاده از این محصول به اشتراک بگذارید..." required>{% if user_review %}{{ user_review.content }}{% endif %}</textarea>
+                                </div>
+                                <button type="submit" class="btn-submit-review">
+                                    <i class="fas fa-paper-plane" aria-hidden="true"></i> 
+                                    {% if user_review %}به‌روزرسانی نظر{% else %}ثبت نظر{% endif %}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="login-prompt">
+                    <i class="fas fa-lock" aria-hidden="true"></i>
+                    <p>برای ثبت امتیاز و نظر، لطفاً <a href="{% url 'login' %}">وارد حساب کاربری</a> شوید.</p>
+                </div>
+                {% endif %}
+
+                <!-- لیست نظرات -->
+                <div class="reviews-list-section">
+                    <div class="reviews-list-header">
+                        <h3 class="reviews-list-title">
+                            <i class="fas fa-question-circle" aria-hidden="true"></i>
+                            نظرات کاربران
+                            <span class="reviews-count-badge">{{ reviews_count }}</span>
+                        </h3>
+                    </div>
+                    
+                    {% if reviews %}
+                        <div class="reviews-list-container">
+                            {% for review in reviews %}
+                                <div class="review-card-item">
+                                    <div class="review-card-header">
+                                        <div class="review-user-section">
+                                            <div class="user-avatar-circle">
+                                                <i class="fas fa-user" aria-hidden="true"></i>
+                                            </div>
+                                            <div class="user-info">
+                                                <h4 class="user-name">{{ review.user.username }}</h4>
+                                                <div class="review-meta-info">
+                                                    <span class="review-date-text">{{ review.created_at|date:"Y/m/d" }}</span>
+                                                    {% if review.is_verified_purchase %}
+                                                        <span class="verified-purchase-badge">
+                                                            <i class="fas fa-check-circle" aria-hidden="true"></i> خرید تایید شده
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% if review.rating %}
+                                        <div class="review-rating-display">
+                                            {% for i in "12345" %}
+                                                <i class="fas fa-star {% if forloop.counter <= review.rating.rating %}filled{% else %}empty{% endif %}"></i>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="review-card-body">
+                                        <h5 class="review-title">{{ review.title }}</h5>
+                                        <p class="review-text">{{ review.content|linebreaks }}</p>
+                                    </div>
+                                    <div class="review-card-footer">
+                                        <button class="helpful-button" data-review-id="{{ review.id }}" onclick="toggleHelpful({{ review.id }})">
+                                            <i class="fas fa-question-circle" aria-hidden="true"></i>
+                                            <span>مفید بود</span>
+                                            <span class="helpful-count">{{ review.helpful_count }}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-reviews-state">
+                            <i class="fas fa-question-circle" aria-hidden="true"></i>
+                            <p>هنوز نظری ثبت نشده است.</p>
+                            <span>اولین نفری باشید که نظر می‌دهد!</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div id="lightboxModal" class="lightbox-modal" onclick="closeLightbox(event)">
+    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+    <span class="lightbox-prev" onclick="changeLightboxImage(-1)">&#10094;</span>
+    <span class="lightbox-next" onclick="changeLightboxImage(1)">&#10095;</span>
+    <img id="lightboxImage" class="lightbox-content" src="" alt="">
+    <div class="lightbox-caption"></div>
+    <div class="lightbox-counter"></div>
+</div>
+
+<style>
+/* استایل‌های تمام صفحه برای صفحه محصول */
+/* حذف padding از main-content برای صفحه محصول */
+body:has(.product-detail-fullscreen) .main-content,
+.main-content:has(.product-detail-fullscreen) {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.product-detail-fullscreen {
+    width: 100vw;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    background: var(--cyber-black);
+    position: relative;
+}
+
+.product-detail-wrapper {
+    width: 100%;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.product-detail {
+    width: 100%;
+    background: var(--glass-cyber);
+    backdrop-filter: var(--glass-backdrop);
+    -webkit-backdrop-filter: var(--glass-backdrop);
+    border: 1px solid var(--glass-cyber-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-cyber-soft);
+}
+
+.reviews-section-fullscreen {
+    width: 100%;
+    padding: 0 var(--spacing-lg) var(--spacing-xl);
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.reviews-main-card {
+    width: 100%;
+    background: var(--glass-cyber);
+    backdrop-filter: var(--glass-backdrop);
+    -webkit-backdrop-filter: var(--glass-backdrop);
+    border: 1px solid var(--glass-cyber-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-cyber-soft);
+}
+
+.product-detail-header {
+    margin-bottom: var(--spacing-lg);
+}
+
+.product-detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+    width: 100%;
+}
+
+.product-gallery-section {
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+}
+
+.product-gallery-main {
+    position: relative;
+    margin-bottom: var(--spacing-sm);
+}
+
+.product-main-image {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    cursor: zoom-in;
+    transition: transform 0.3s;
+}
+
+.product-main-image:hover {
+    transform: scale(1.02);
+}
+
+.product-main-video {
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+    border-radius: var(--radius-md);
+    background: #000;
+}
+
+.image-zoom-hint {
+    position: absolute;
+    bottom: var(--spacing-sm);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.product-gallery-main:hover .image-zoom-hint {
+    opacity: 1;
+}
+
+.product-gallery-thumbnails {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: var(--spacing-xs);
+}
+
+.thumbnail-item {
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: var(--transition);
+    opacity: 0.7;
+}
+
+.thumbnail-item:hover,
+.thumbnail-item.active {
+    border-color: var(--color-primary);
+    opacity: 1;
+}
+
+.thumbnail-item img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+}
+
+.video-thumbnail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--color-white);
+    font-size: var(--font-size-sm);
+    gap: var(--spacing-xs);
+    min-height: 80px;
+}
+
+.video-thumbnail i {
+    font-size: var(--font-size-xl);
+    color: var(--color-primary);
+}
+
+.product-info-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.price-display {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-backdrop);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    text-align: center;
+}
+
+.price-label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-xs);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    font-weight: 500;
+}
+
+.price-value {
+    display: block;
+    color: var(--text-primary);
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Tabs */
+.product-tabs {
+    margin-top: var(--spacing-md);
+}
+
+.tabs-header {
+    display: flex;
+    gap: var(--spacing-xs);
+    border-bottom: 2px solid var(--glass-border);
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.05);
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: var(--transition);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.15);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tab-btn.active {
+    color: var(--text-primary);
+    background: linear-gradient(135deg, rgba(1, 107, 97, 0.3), rgba(112, 178, 178, 0.2));
+    border-bottom: 3px solid var(--color-primary);
+    font-weight: 800;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 -2px 12px rgba(1, 107, 97, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.tab-pane {
+    display: none;
+    animation: fadeIn 0.3s;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.features-list {
+    list-style: none;
+    padding: 0;
+}
+
+.features-list li {
+    padding: var(--spacing-xs) 0;
+    display: flex;
+    align-items: center;
+    color: var(--text-secondary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    font-weight: 500;
+}
+
+/* ============================================
+   Plans Compact - Inside Price Info Section
+   ============================================ */
+
+.plans-compact-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.plan-compact-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.plan-compact-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--color-primary);
+    transform: translateX(-4px);
+}
+
+.plan-compact-item.plan-compact-featured {
+    border-color: var(--color-primary);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.plan-compact-badge {
+    position: absolute;
+    top: -8px;
+    right: var(--spacing-sm);
+    background: var(--color-primary);
+    color: white;
+    padding: 2px var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.plan-compact-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.plan-compact-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.plan-compact-name {
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.plan-compact-type {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+}
+
+.plan-compact-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-xs);
+}
+
+.plan-compact-price {
+    font-size: var(--font-size-lg);
+    font-weight: 800;
+    color: var(--color-primary);
+}
+
+.plan-compact-currency {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.plan-compact-details {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.plan-compact-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.plan-compact-btn:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.plan-compact-btn:active {
+    transform: translateY(0);
+}
+
+.plan-compact-btn i {
+    font-size: var(--font-size-sm);
+}
+
+/* Lightbox */
+.lightbox-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    animation: fadeIn 0.3s;
+}
+
+.lightbox-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-content {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    animation: zoomIn 0.3s;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.8); }
+    to { transform: scale(1); }
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10000;
+}
+
+.lightbox-close:hover {
+    color: #bbb;
+}
+
+.lightbox-prev,
+.lightbox-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 16px;
+    user-select: none;
+    z-index: 10000;
+}
+
+.lightbox-prev {
+    right: 0;
+}
+
+.lightbox-next {
+    left: 0;
+}
+
+.lightbox-prev:hover,
+.lightbox-next:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.lightbox-caption {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #f1f1f1;
+    text-align: center;
+}
+
+.lightbox-counter {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #f1f1f1;
+    font-size: var(--font-size-lg);
+}
+
+/* ============================================
+   Reviews & Ratings Section - Minimal Design
+   ============================================ */
+
+.reviews-main-card {
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.reviews-section-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: var(--spacing-md) 0;
+    margin-bottom: var(--spacing-md);
+}
+
+.reviews-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.section-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin: 0;
+}
+
+.rating-summary-box {
+    display: flex;
+    align-items: center;
+}
+
+.rating-display-large {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.rating-number {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.rating-stars-summary {
+    display: flex;
+    gap: 2px;
+}
+
+.rating-stars-summary .fa-star,
+.rating-stars-summary .fa-star-half-alt {
+    font-size: var(--font-size-base);
+    color: #fbbf24;
+}
+
+.rating-stars-summary .far.fa-star {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.rating-count-text {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.reviews-content-wrapper {
+    padding: var(--spacing-md) 0;
+}
+
+/* Rating Distribution - Minimal */
+.rating-distribution-minimal {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: 0;
+    background: transparent;
+    border: none;
+    margin-bottom: var(--spacing-md);
+}
+
+.distribution-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+}
+
+.dist-rating {
+    min-width: 16px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.dist-star {
+    font-size: var(--font-size-xs);
+    color: #fbbf24;
+    width: 12px;
+}
+
+.dist-progress-wrapper {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.dist-progress-bar {
+    height: 100%;
+    background: #fbbf24;
+    border-radius: 2px;
+}
+
+.dist-count {
+    min-width: 24px;
+    text-align: left;
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+}
+
+/* User Action Section */
+.user-action-section {
+    margin-bottom: var(--spacing-md);
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.action-tabs {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    cursor: pointer;
+    transition: color 0.2s;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    margin-bottom: -1px;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.action-tab:hover {
+    color: var(--text-primary);
+}
+
+.action-tab.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--text-primary);
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Star Rating - Minimal */
+.star-rating-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: center;
+    padding: var(--spacing-md) 0;
+}
+
+.rating-label-text {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.star-rating-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    justify-content: center;
+}
+
+.star-rating-wrapper input[type="radio"] {
+    display: none;
+}
+
+.star-rating-star {
+    font-size: var(--font-size-xl);
+    color: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: color 0.2s;
+    display: inline-block;
+}
+
+.star-rating-star:hover {
+    color: #fbbf24;
+}
+
+/* Highlight all stars up to hovered one */
+.star-rating-star:hover ~ .star-rating-star {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+/* When a star is checked, highlight it and all previous stars */
+.star-rating-wrapper input[type="radio"]:checked + .star-rating-star,
+.star-rating-wrapper input[type="radio"]:checked + .star-rating-star ~ .star-rating-star {
+    color: #fbbf24;
+}
+
+/* Unchecked stars after checked one */
+.star-rating-wrapper input[type="radio"]:not(:checked) + .star-rating-star {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.rating-value-display {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    font-weight: 400;
+    min-height: 20px;
+}
+
+.btn-submit-rating,
+.btn-submit-review {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin: var(--spacing-sm) auto 0;
+}
+
+.btn-submit-rating:hover,
+.btn-submit-review:hover {
+    opacity: 0.9;
+}
+
+/* Review Form Minimal */
+.review-form-minimal {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.field-label {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.field-input,
+.field-textarea {
+    width: 100%;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    transition: border-color 0.2s;
+}
+
+.field-input:focus,
+.field-textarea:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.field-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.login-prompt {
+    text-align: center;
+    padding: var(--spacing-md) 0;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+}
+
+.login-prompt i {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+.login-prompt a {
+    color: var(--text-primary);
+    text-decoration: underline;
+    font-weight: 400;
+}
+
+.login-prompt a:hover {
+    opacity: 0.8;
+}
+
+/* Reviews List Section */
+.reviews-list-section {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reviews-list-header {
+    margin-bottom: var(--spacing-md);
+}
+
+.reviews-list-title {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin: 0;
+}
+
+.reviews-count-badge {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 0;
+    border: none;
+    font-size: var(--font-size-xs);
+    font-weight: 400;
+}
+
+.reviews-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.review-card-item {
+    padding: var(--spacing-md) 0;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: none;
+}
+
+.review-card-item:hover {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: none;
+    box-shadow: none;
+}
+
+.review-card-item:last-child {
+    border-bottom: none;
+}
+
+.review-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-xs);
+    gap: var(--spacing-sm);
+}
+
+.review-user-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    flex: 1;
+}
+
+.user-avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0 0 2px 0;
+}
+
+.review-meta-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.review-date-text {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.verified-purchase-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    font-size: var(--font-size-xs);
+    font-weight: 400;
+}
+
+.review-rating-display {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.review-rating-display .fa-star {
+    font-size: var(--font-size-xs);
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.review-rating-display .fa-star.filled {
+    color: #fbbf24;
+}
+
+.review-card-body {
+    margin-bottom: var(--spacing-xs);
+}
+
+.review-title {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.review-text {
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.review-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: var(--spacing-xs);
+    border-top: none;
+}
+
+.helpful-button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 0;
+    border-radius: 0;
+    cursor: pointer;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-family: var(--font-family);
+    font-size: var(--font-size-xs);
+}
+
+.helpful-button:hover {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+}
+
+.helpful-button.active {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+}
+
+.helpful-count {
+    font-weight: 600;
+    margin-right: 2px;
+}
+
+.empty-reviews-state {
+    text-align: center;
+    padding: var(--spacing-md) 0;
+    color: var(--text-muted);
+}
+
+.empty-reviews-state i {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-xs);
+    opacity: 0.3;
+    color: var(--text-muted);
+}
+
+.empty-reviews-state p {
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.empty-reviews-state span {
+    font-size: var(--font-size-xs);
+    opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+    .product-detail-fullscreen {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .product-detail-wrapper,
+    .reviews-section-fullscreen {
+        padding: var(--spacing-md) var(--spacing-sm);
+    }
+    
+    .product-detail {
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .product-detail-layout {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .product-gallery-section {
+        position: static;
+    }
+    
+    .plan-compact-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-sm);
+    }
+    
+    .plan-compact-btn {
+        width: 100%;
+    }
+    
+    .tabs-header {
+        flex-direction: column;
+    }
+    
+    .tab-btn {
+        width: 100%;
+        text-align: right;
+    }
+    
+    .review-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .star-rating-wrapper {
+        flex-wrap: wrap;
+    }
+    
+    .reviews-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .review-card-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+}
+</style>
+
+<script>
+let currentImageIndex = 0;
+let productImages = [];
+let productMedia = [];
+
+// ساخت آرایه media برای مدیریت بهتر
+{% for media in product.media.all %}
+    productMedia.push({
+        type: '{{ media.media_type }}',
+        src: '{{ media.file.url|escapejs }}',
+        alt: '{{ media.alt_text|default:product.title|escapejs }}',
+        index: {{ forloop.counter0 }}
+    });
+    {% if media.media_type == 'image' %}
+        productImages.push({
+            src: '{{ media.file.url|escapejs }}',
+            alt: '{{ media.alt_text|default:product.title|escapejs }}'
+        });
+    {% endif %}
+{% endfor %}
+
+function changeMainImage(src, alt, index) {
+    const mainVideo = document.getElementById('mainVideo');
+    const mainImageContainer = document.getElementById('mainImageContainer');
+    const mainImage = document.getElementById('mainImage');
+    
+    // Hide video if exists
+    if (mainVideo) {
+        mainVideo.style.display = 'none';
+        mainVideo.pause(); // توقف ویدیو
+    }
+    
+    // Show image
+    if (mainImage) {
+        mainImage.src = src;
+        mainImage.alt = alt;
+    }
+    if (mainImageContainer) {
+        mainImageContainer.style.display = 'block';
+    }
+    
+    currentImageIndex = index;
+    
+    // Update active thumbnail
+    document.querySelectorAll('.thumbnail-item').forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+    });
+}
+
+function changeMainVideo(src, index) {
+    const mainVideo = document.getElementById('mainVideo');
+    const mainImageContainer = document.getElementById('mainImageContainer');
+    
+    // Hide image if exists
+    if (mainImageContainer) {
+        mainImageContainer.style.display = 'none';
+    }
+    
+    // Show video
+    if (mainVideo) {
+        const source = mainVideo.querySelector('source');
+        if (source) {
+            source.src = src;
+            mainVideo.load(); // Reload video with new source
+        } else {
+            mainVideo.src = src;
+            mainVideo.load();
+        }
+        mainVideo.style.display = 'block';
+    }
+    
+    currentImageIndex = index;
+    
+    // Update active thumbnail
+    document.querySelectorAll('.thumbnail-item').forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+    });
+}
+
+function openLightbox(index) {
+    if (!productImages || productImages.length === 0) return;
+    if (index < 0 || index >= productImages.length) return;
+    
+    currentImageIndex = index;
+    const modal = document.getElementById('lightboxModal');
+    const img = document.getElementById('lightboxImage');
+    const caption = document.querySelector('.lightbox-caption');
+    const counter = document.querySelector('.lightbox-counter');
+    
+    if (!modal || !img) return;
+    
+    img.src = productImages[currentImageIndex].src;
+    img.alt = productImages[currentImageIndex].alt;
+    if (caption) caption.textContent = productImages[currentImageIndex].alt;
+    if (counter) counter.textContent = `${currentImageIndex + 1} / ${productImages.length}`;
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(event) {
+    if (event && event.target.id !== 'lightboxModal' && event.target.id !== 'lightboxImage') {
+        return;
+    }
+    const modal = document.getElementById('lightboxModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function changeLightboxImage(direction) {
+    currentImageIndex += direction;
+    if (currentImageIndex < 0) {
+        currentImageIndex = productImages.length - 1;
+    } else if (currentImageIndex >= productImages.length) {
+        currentImageIndex = 0;
+    }
+    openLightbox(currentImageIndex);
+}
+
+function switchTab(tabName, event) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    const tabPane = document.getElementById(`tab-${tabName}`);
+    if (tabPane) {
+        tabPane.classList.add('active');
+    }
+    
+    if (event && event.target) {
+        const btn = event.target.closest('.tab-btn');
+        if (btn) btn.classList.add('active');
+    }
+}
+
+// Keyboard navigation for lightbox
+document.addEventListener('keydown', function(e) {
+    const modal = document.getElementById('lightboxModal');
+    if (modal && modal.classList.contains('active')) {
+        if (e.key === 'Escape') {
+            closeLightbox();
+        } else if (e.key === 'ArrowRight') {
+            changeLightboxImage(-1);
+        } else if (e.key === 'ArrowLeft') {
+            changeLightboxImage(1);
+        }
+    }
+});
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+// Star Rating Interactive - Fixed Logic
+document.addEventListener('DOMContentLoaded', function() {
+    const starLabels = document.querySelectorAll('.star-rating-star');
+    const ratingValueDisplay = document.getElementById('ratingValueDisplay');
+    const ratingInputs = document.querySelectorAll('.star-rating-wrapper input[type="radio"]');
+    
+    if (starLabels.length === 0) return;
+    
+    // Update display when star is hovered or clicked
+    starLabels.forEach((label, index) => {
+        const input = document.getElementById(label.getAttribute('for'));
+        if (!input) return;
+        
+        const ratingValue = parseInt(input.value);
+        
+        label.addEventListener('mouseenter', function() {
+            // Highlight stars from 1 to this rating
+            starLabels.forEach((l, i) => {
+                const lInput = document.getElementById(l.getAttribute('for'));
+                if (lInput && parseInt(lInput.value) <= ratingValue) {
+                    l.querySelector('i').classList.remove('far');
+                    l.querySelector('i').classList.add('fas');
+                    l.style.color = '#fbbf24';
+                } else {
+                    l.querySelector('i').classList.remove('fas');
+                    l.querySelector('i').classList.add('far');
+                    l.style.color = 'rgba(255, 255, 255, 0.3)';
+                }
+            });
+            if (ratingValueDisplay) {
+                ratingValueDisplay.textContent = ratingValue + ' ستاره';
+            }
+        });
+        
+        label.addEventListener('mouseleave', function() {
+            // Reset to selected rating
+            const checkedInput = document.querySelector('.star-rating-wrapper input[type="radio"]:checked');
+            if (checkedInput) {
+                const checkedValue = parseInt(checkedInput.value);
+                updateStarDisplay(checkedValue);
+                if (ratingValueDisplay) {
+                    ratingValueDisplay.textContent = checkedValue + ' ستاره';
+                }
+            } else {
+                // Reset all stars
+                starLabels.forEach(l => {
+                    l.querySelector('i').classList.remove('fas');
+                    l.querySelector('i').classList.add('far');
+                    l.style.color = 'rgba(255, 255, 255, 0.3)';
+                });
+                if (ratingValueDisplay) {
+                    ratingValueDisplay.textContent = 'امتیاز خود را انتخاب کنید';
+                }
+            }
+        });
+        
+        label.addEventListener('click', function() {
+            input.checked = true;
+            updateStarDisplay(ratingValue);
+            if (ratingValueDisplay) {
+                ratingValueDisplay.textContent = ratingValue + ' ستاره';
+            }
+        });
+    });
+    
+    function updateStarDisplay(selectedValue) {
+        starLabels.forEach((label) => {
+            const input = document.getElementById(label.getAttribute('for'));
+            if (input) {
+                const ratingValue = parseInt(input.value);
+                if (ratingValue <= selectedValue) {
+                    label.querySelector('i').classList.remove('far');
+                    label.querySelector('i').classList.add('fas');
+                    label.style.color = '#fbbf24';
+                } else {
+                    label.querySelector('i').classList.remove('fas');
+                    label.querySelector('i').classList.add('far');
+                    label.style.color = 'rgba(255, 255, 255, 0.3)';
+                }
+            }
+        });
+    }
+    
+    // Initialize display if rating exists
+    const existingRating = document.querySelector('.star-rating-wrapper input[type="radio"]:checked');
+    if (existingRating && ratingValueDisplay) {
+        const existingValue = parseInt(existingRating.value);
+        updateStarDisplay(existingValue);
+        ratingValueDisplay.textContent = existingValue + ' ستاره';
+    }
+});
+
+// Rating Form Submission
+const ratingForm = document.getElementById('ratingForm');
+if (ratingForm) {
+    ratingForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const rating = formData.get('rating');
+        
+        if (!rating) {
+            alert('لطفاً یک امتیاز انتخاب کنید.');
+            return;
+        }
+        
+        fetch('{% url "submit_rating" product.slug %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('خطا در ثبت امتیاز: ' + Object.values(data.errors).join(', '));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('خطا در ارتباط با سرور.');
+        });
+    });
+}
+
+// Switch Action Tab
+function switchActionTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.action-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    const selectedContent = document.getElementById(tabName + '-tab-content');
+    if (selectedContent) {
+        selectedContent.classList.add('active');
+    }
+    
+    // Add active class to selected tab
+    const selectedTab = document.querySelector(`[data-tab="${tabName}"]`);
+    if (selectedTab) {
+        selectedTab.classList.add('active');
+    }
+}
+
+// Review Form Submission
+const reviewForm = document.getElementById('reviewForm');
+if (reviewForm) {
+    reviewForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch('{% url "submit_review" product.slug %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                if (data.review && data.review.is_approved) {
+                    location.reload();
+                } else {
+                    // اگر نظر تایید نشده، فقط پیام نمایش بده
+                    this.reset();
+                }
+            } else {
+                alert('خطا در ثبت نظر: ' + Object.values(data.errors).join(', '));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('خطا در ارتباط با سرور.');
+        });
+    });
+}
+
+// Toggle Helpful
+function toggleHelpful(reviewId) {
+    const btn = document.querySelector(`[data-review-id="${reviewId}"]`);
+    const formData = new FormData();
+    
+    fetch(`/reviews/${reviewId}/helpful/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrftoken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            btn.classList.toggle('active', data.is_helpful);
+            const countSpan = btn.querySelector('span');
+            if (countSpan) {
+                countSpan.textContent = `مفید بود (${data.helpful_count})`;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('خطا در ثبت نظر مفید.');
+    });
+}
+</script>
+{% endblock %}
+

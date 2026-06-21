@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% load static blog_tags %}
+
+{% block title %}{{ post.title }} — مقالات{% endblock %}
+{% block body_class %}mk-pub-page mk-blog-page mk-blog-detail{% endblock %}
+
+{% load seo_tags %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=3">
+{% endblock %}
+
+{% block content %}
+{% schema_article post request %}
+<div class="mk-pub-wrap mk-blog-detail-page">
+
+    <div class="mk-blog-read-progress" id="blog-read-progress" aria-hidden="true"></div>
+
+    <header class="mk-blog-detail-hero{% if post.featured_image %} mk-blog-detail-hero--cover{% endif %}"
+        {% if post.featured_image %}style="--mk-blog-hero-img: url('{{ post.featured_image.url }}')"{% endif %}>
+        {% if post.featured_image %}<div class="mk-blog-detail-hero-overlay" aria-hidden="true"></div>{% endif %}
+        <div class="mk-blog-detail-hero-bg" aria-hidden="true">
+            <span class="mk-blog-orb mk-blog-orb--1"></span>
+            <span class="mk-blog-orb mk-blog-orb--2"></span>
+        </div>
+        <div class="container mk-blog-detail-hero-inner">
+            <nav class="mk-blog-breadcrumb" aria-label="مسیر">
+                <a href="{% url 'home' %}"><i class="fas fa-home"></i></a>
+                <span aria-hidden="true">/</span>
+                <a href="{% url 'blog:post_list' %}">مقالات</a>
+                {% if post.category %}
+                <span aria-hidden="true">/</span>
+                <span class="mk-blog-breadcrumb-current">{{ post.category.name }}</span>
+                {% endif %}
+            </nav>
+
+            <div class="mk-blog-detail-hero-body">
+                <div class="mk-blog-detail-hero-tags">
+                    {% if post.category %}
+                    <span class="mk-blog-tag">
+                        <i class="fas {{ post.category.slug|category_icon }}" aria-hidden="true"></i>
+                        {{ post.category.name }}
+                    </span>
+                    {% endif %}
+                    {% for tag in post.tags.all|slice:":4" %}
+                    <span class="mk-blog-tag mk-blog-tag--muted">#{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+
+                <h1>{{ post.title }}</h1>
+
+                {% if post.excerpt %}
+                <p class="mk-blog-detail-lead">{{ post.excerpt }}</p>
+                {% endif %}
+
+                <div class="mk-blog-detail-meta-panel">
+                    <div class="mk-blog-detail-author">
+                        <span class="mk-blog-author-avatar" aria-hidden="true">
+                            {{ post.author.get_full_name|default:post.author.username|slice:":1"|upper }}
+                        </span>
+                        <div>
+                            <span class="mk-blog-aside-label">نویسنده</span>
+                            <span class="mk-blog-author-name">{{ post.author.get_full_name|default:post.author.username }}</span>
+                        </div>
+                    </div>
+                    <div class="mk-blog-meta-chips">
+                        <span class="mk-blog-meta-chip"><i class="fas fa-calendar"></i>{{ post.published_at|date:"Y/m/d" }}</span>
+                        <span class="mk-blog-meta-chip"><i class="fas fa-clock"></i>{{ reading_time }} دقیقه مطالعه</span>
+                        <span class="mk-blog-meta-chip"><i class="fas fa-eye"></i>{{ post.views_count }} بازدید</span>
+                        {% if post.updated_at and post.published_at and post.updated_at > post.published_at %}
+                        <span class="mk-blog-meta-chip"><i class="fas fa-pen"></i>به‌روز {{ post.updated_at|date:"Y/m/d" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mk-blog-detail-layout">
+
+        <main class="mk-blog-detail-main">
+            <div class="mk-blog-article-toolbar">
+                <button type="button" class="mk-blog-toolbar-btn" id="blog-toc-toggle" aria-expanded="false" aria-controls="blog-toc">
+                    <i class="fas fa-list-ul"></i> فهرست
+                </button>
+                <div class="mk-blog-toolbar-actions">
+                    <button type="button" class="mk-blog-toolbar-btn" id="blog-copy-link" title="کپی لینک">
+                        <i class="fas fa-link"></i>
+                    </button>
+                    <a href="https://t.me/share/url?url={{ request.build_absolute_uri|urlencode }}&text={{ post.title|urlencode }}"
+                       class="mk-blog-toolbar-btn" target="_blank" rel="noopener noreferrer" title="تلگرام">
+                        <i class="fab fa-telegram"></i>
+                    </a>
+                    <a href="https://wa.me/?text={{ post.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}"
+                       class="mk-blog-toolbar-btn" target="_blank" rel="noopener noreferrer" title="واتساپ">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+
+            <article class="mk-blog-article">
+                <div class="mk-blog-prose" id="blog-content">
+                    {{ post.content|safe }}
+                </div>
+
+                {% if post.tags.all %}
+                <div class="mk-blog-article-tags">
+                    <span class="mk-blog-article-tags-label"><i class="fas fa-tags"></i> برچسب‌ها</span>
+                    <div class="mk-blog-article-tags-list">
+                        {% for tag in post.tags.all %}
+                        <span class="mk-blog-tag mk-blog-tag--muted">#{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="mk-blog-share">
+                    <div class="mk-blog-share-copy">
+                        <span class="mk-blog-share-label">این مقاله مفید بود؟</span>
+                        <p>لینک را با همکاران خود به اشتراک بگذارید.</p>
+                    </div>
+                    <div class="mk-blog-share-actions">
+                        <button type="button" class="mk-blog-share-btn" id="blog-copy-link-footer">
+                            <i class="fas fa-link"></i> کپی لینک
+                        </button>
+                        <a href="https://t.me/share/url?url={{ request.build_absolute_uri|urlencode }}&text={{ post.title|urlencode }}"
+                           class="mk-blog-share-btn" target="_blank" rel="noopener noreferrer">
+                            <i class="fab fa-telegram"></i> تلگرام
+                        </a>
+                        <a href="https://wa.me/?text={{ post.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}"
+                           class="mk-blog-share-btn" target="_blank" rel="noopener noreferrer">
+                            <i class="fab fa-whatsapp"></i> واتساپ
+                        </a>
+                    </div>
+                </div>
+
+                <footer class="mk-blog-article-foot">
+                    <a href="{% url 'blog:post_list' %}" class="mk-blog-back">
+                        <i class="fas fa-arrow-right"></i>
+                        همه مقالات
+                    </a>
+                    <span class="mk-blog-read-estimate">
+                        <i class="fas fa-book-open"></i> {{ reading_time }} دقیقه مطالعه
+                    </span>
+                </footer>
+            </article>
+
+            {% if newer_post or older_post %}
+            <nav class="mk-blog-post-nav" aria-label="مقالات قبلی و بعدی">
+                {% if newer_post %}
+                <a href="{% url 'blog:post_detail' newer_post.slug %}" class="mk-blog-post-nav-link mk-blog-post-nav-link--newer">
+                    <span class="mk-blog-post-nav-dir"><i class="fas fa-arrow-right"></i> مقاله جدیدتر</span>
+                    <span class="mk-blog-post-nav-title">{{ newer_post.title }}</span>
+                </a>
+                {% else %}
+                <span class="mk-blog-post-nav-link is-empty"></span>
+                {% endif %}
+                {% if older_post %}
+                <a href="{% url 'blog:post_detail' older_post.slug %}" class="mk-blog-post-nav-link mk-blog-post-nav-link--older">
+                    <span class="mk-blog-post-nav-dir">مقاله قدیمی‌تر <i class="fas fa-arrow-left"></i></span>
+                    <span class="mk-blog-post-nav-title">{{ older_post.title }}</span>
+                </a>
+                {% endif %}
+            </nav>
+            {% endif %}
+
+            {% if related_posts %}
+            <section class="mk-blog-related mk-blog-related--rich" aria-labelledby="related-heading">
+                <header class="mk-blog-related-head">
+                    <span class="mk-blog-kicker"><i class="fas fa-compass"></i> ادامه مطالعه</span>
+                    <h2 id="related-heading">مقالات مرتبط</h2>
+                    <p>در همان موضوع، عمیق‌تر پیش بروید.</p>
+                </header>
+                <div class="mk-blog-related-grid">
+                    {% for related_post in related_posts %}
+                    <a href="{% url 'blog:post_detail' related_post.slug %}" class="mk-blog-related-card mk-blog-related-card--rich">
+                        <div class="mk-blog-related-media">
+                            {% if related_post.featured_image %}
+                            <img src="{{ related_post.featured_image.url }}" alt="" loading="lazy">
+                            {% else %}
+                            <span class="mk-blog-related-placeholder" aria-hidden="true">
+                                <i class="fas {{ related_post.category.slug|default:'article'|category_icon }}"></i>
+                            </span>
+                            {% endif %}
+                            <span class="mk-blog-card-readtime">
+                                {{ related_post.content|reading_time }} دقیقه
+                            </span>
+                        </div>
+                        <div class="mk-blog-related-body">
+                            {% if related_post.category %}
+                            <span class="mk-blog-tag">{{ related_post.category.name }}</span>
+                            {% endif %}
+                            <h3>{{ related_post.title }}</h3>
+                            <p>{{ related_post.excerpt|default:related_post.content|striptags|truncatewords:16 }}</p>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </main>
+
+        <aside class="mk-blog-detail-aside" aria-label="نوار کناری">
+            <div class="mk-blog-toc-card" id="blog-toc">
+                <header class="mk-blog-toc-head">
+                    <i class="fas fa-list-ul"></i>
+                    <h2>فهرست مطالب</h2>
+                    <span class="mk-blog-toc-progress" id="blog-toc-progress">۰٪</span>
+                </header>
+                <nav aria-label="فهرست">
+                    <ol class="mk-blog-toc-list" id="blog-toc-list"></ol>
+                </nav>
+                <p class="mk-blog-toc-empty">این مقاله سرتیتر بخش‌بندی ندارد.</p>
+            </div>
+
+            <div class="mk-blog-aside-card mk-blog-aside-author">
+                <span class="mk-blog-author-avatar mk-blog-author-avatar--lg" aria-hidden="true">
+                    {{ post.author.get_full_name|default:post.author.username|slice:":1"|upper }}
+                </span>
+                <div>
+                    <span class="mk-blog-aside-label">نویسنده</span>
+                    <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
+                    <p class="mk-blog-aside-author-note">محتوای تخصصی برای مشاوران و آژانس‌های املاک</p>
+                </div>
+            </div>
+
+            <div class="mk-blog-aside-card mk-blog-aside-summary">
+                <header class="mk-blog-aside-summary-head">
+                    <i class="fas fa-info-circle"></i>
+                    <span>خلاصه مقاله</span>
+                </header>
+                <ul class="mk-blog-aside-summary-list">
+                    <li><i class="fas fa-clock"></i> {{ reading_time }} دقیقه مطالعه</li>
+                    <li><i class="fas fa-calendar"></i> {{ post.published_at|date:"Y/m/d" }}</li>
+                    {% if post.category %}
+                    <li><i class="fas {{ post.category.slug|category_icon }}"></i> {{ post.category.name }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            {% if bot_product %}
+            <div class="mk-blog-aside-card mk-blog-aside-cta">
+                <span class="mk-blog-aside-cta-icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
+                <h3>ربات استخراج دیوار</h3>
+                <p>داده بازار را خودکار جمع کنید و در میزکار تحلیل کنید.</p>
+                <a href="{% url 'product_detail' bot_product.slug %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-shopping-cart"></i> مشاهده ربات
+                </a>
+            </div>
+            {% endif %}
+
+            <a href="{% url 'blog:post_list' %}" class="mk-blog-aside-link">
+                <i class="fas fa-arrow-right"></i> بازگشت به مقالات
+            </a>
+        </aside>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/mizkar-blog.js' %}?v=2" defer></script>
+{% endblock %}

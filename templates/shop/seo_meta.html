@@ -1,0 +1,49 @@
+{% comment %}
+Template برای Meta Tags SEO
+{% endcomment %}
+
+{# Basic Meta Tags #}
+<meta name="description" content="{{ description }}">
+<meta name="keywords" content="{{ keywords }}">
+<meta name="author" content="{{ author }}">
+<meta name="robots" content="index, follow">
+<meta name="language" content="Persian">
+<meta name="revisit-after" content="7 days">
+
+{# Open Graph Meta Tags #}
+<meta property="og:type" content="{{ og_type }}">
+<meta property="og:title" content="{{ title }}">
+<meta property="og:description" content="{{ description }}">
+<meta property="og:image" content="{{ image }}">
+<meta property="og:url" content="{{ url }}">
+<meta property="og:site_name" content="{{ site_name }}">
+<meta property="og:locale" content="{{ locale }}">
+
+{# Twitter Card Meta Tags #}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ title }}">
+<meta name="twitter:description" content="{{ description }}">
+<meta name="twitter:image" content="{{ image }}">
+{% if site_name %}
+<meta name="twitter:site" content="@{{ site_name|slugify }}">
+{% endif %}
+
+{# Additional Meta Tags #}
+{% if published_time %}
+<meta property="article:published_time" content="{{ published_time|date:'c' }}">
+{% endif %}
+{% if modified_time %}
+<meta property="article:modified_time" content="{{ modified_time|date:'c' }}">
+{% endif %}
+
+{# Canonical URL #}
+<link rel="canonical" href="{{ url }}">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="{{ site_url }}/sitemap.xml">
+
+{# Schema.org JSON-LD #}
+{% if schema_data %}
+<script type="application/ld+json">
+{{ schema_data|safe }}
+</script>
+{% endif %}
+

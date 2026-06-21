@@ -1,0 +1,22 @@
+{# Unified CRM list empty state — title, desc, icon, tone (success|primary|muted), CTA #}
+<div class="crm-empty-state crm-empty-state--{{ tone|default:'primary' }}{% if compact %} crm-empty-state--compact{% endif %}{% if extra_class %} {{ extra_class }}{% endif %}">
+    <div class="crm-empty-state-visual" aria-hidden="true">
+        <span class="crm-empty-state-ring"></span>
+        <i class="fas {{ icon|default:'fa-inbox' }}"></i>
+    </div>
+    <h2 class="crm-empty-state-title">{{ title }}</h2>
+    {% if desc %}
+    <p class="crm-empty-state-desc">{{ desc }}</p>
+    {% endif %}
+    {% if btn_text %}
+        {% if btn_href %}
+        <a href="{{ btn_href }}" class="crm-dash-act crm-dash-act--primary crm-empty-state-btn">
+            {% if btn_icon %}<i class="fas {{ btn_icon }}" aria-hidden="true"></i>{% endif %}<span>{{ btn_text }}</span>
+        </a>
+        {% else %}
+        <button type="button" class="crm-dash-act crm-dash-act--primary crm-empty-state-btn"{% if btn_drawer %} data-drawer-open="{{ btn_drawer }}"{% endif %}>
+            {% if btn_icon %}<i class="fas {{ btn_icon }}" aria-hidden="true"></i>{% endif %}<span>{{ btn_text }}</span>
+        </button>
+        {% endif %}
+    {% endif %}
+</div>

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static currency_tags %}
+
+{% block title %}انتقال به درگاه — {{ order.product.title }}{% endblock %}
+
+{% block body_class %}mk-checkout-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=9">
+{% endblock %}
+
+{% block content %}
+<div class="ck-page ck-pay-flow" data-pay-redirect>
+    <div class="ck-redirect-card" role="status" aria-live="polite">
+        <div class="ck-redirect-spinner" aria-hidden="true">
+            <span class="ck-redirect-ring"></span>
+            <span class="ck-redirect-icon"><i class="fas fa-credit-card"></i></span>
+        </div>
+
+        <h1>در حال انتقال به درگاه زیبال</h1>
+        <p class="ck-redirect-msg">
+            لطفاً صبر کنید. تا چند لحظه دیگر به صفحه پرداخت امن بانکی هدایت می‌شوید.
+        </p>
+
+        <div class="ck-redirect-meta">
+            <div class="ck-redirect-meta-row">
+                <span>مبلغ</span>
+                <strong>{{ order.amount|currency }} تومان</strong>
+            </div>
+            <div class="ck-redirect-meta-row">
+                <span>کد پیگیری</span>
+                <code>{{ track_id }}</code>
+            </div>
+        </div>
+
+        <p class="ck-redirect-fallback">
+            اگر به‌صورت خودکار منتقل نشدید،
+            <a href="{{ pay_url }}" id="pay-manual-link">اینجا کلیک کنید</a>.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var payUrl = "{{ pay_url|escapejs }}";
+    if (!payUrl) return;
+    window.setTimeout(function () {
+        window.location.href = payUrl;
+    }, 900);
+})();
+</script>
+{% endblock %}

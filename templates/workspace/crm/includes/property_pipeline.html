@@ -1,0 +1,105 @@
+{% load workspace_tags crm_tags %}
+
+<div class="crm-pipeline crm-pipeline--properties crm-prop-pipeline crm-pipeline--interactive"
+     data-tx-url="{{ tx_status_url_template }}"
+     data-reorder-url="{{ pipeline_reorder_url }}"
+     role="list">
+
+    {% for col in pipeline %}
+    <div class="crm-prop-pipeline-col{% if col.count >= 5 %} crm-prop-pipeline-col--dense{% endif %}{% if not col.count %} crm-prop-pipeline-col--empty{% endif %}"
+         data-tx-status="{{ col.status }}"
+         style="--tx-accent: {{ col.status|crm_tx_status_dot }}">
+
+        <header class="crm-prop-pipeline-head">
+            <span class="crm-prop-pipeline-head-accent" aria-hidden="true"></span>
+            <div class="crm-prop-pipeline-head-row">
+                <span class="crm-prop-pipeline-head-icon" aria-hidden="true">
+                    <i class="fas {{ col.status|crm_tx_status_icon }}"></i>
+                </span>
+                <span class="crm-prop-pipeline-head-title">{{ col.status }}</span>
+                <span class="crm-prop-pipeline-head-count" data-count>{{ col.count }}</span>
+            </div>
+            {% if col.total_value %}
+            <div class="crm-prop-pipeline-head-value">
+                <i class="fas fa-coins" aria-hidden="true"></i>
+                <span>{{ col.total_value|ws_money }}</span>
+            </div>
+            {% endif %}
+        </header>
+
+        <div class="crm-prop-pipeline-cards" data-drop-zone>
+            {% for p in col.properties %}
+            <article class="crm-prop-pipeline-card crm-pipe-card--draggable {% if p.deal_mode == 'فروش' %}crm-prop-pipeline-card--sale{% else %}crm-prop-pipeline-card--rent{% endif %}"
+                     draggable="true"
+                     data-property-id="{{ p.id }}"
+                     data-tx-status="{{ p.transaction_status }}">
+                <span class="crm-prop-pipeline-grip" aria-hidden="true"><i class="fas fa-grip-vertical"></i></span>
+
+                {% if p.images %}
+                <div class="crm-prop-pipeline-thumb" aria-hidden="true">
+                    <img src="{{ p.images.0 }}" alt="" loading="lazy">
+                    <span class="crm-prop-pipeline-thumb-shade"></span>
+                </div>
+                {% endif %}
+
+                <div class="crm-prop-pipeline-body">
+                    <div class="crm-prop-pipeline-top">
+                        <span class="crm-prop-pipeline-type crm-prop-pipeline-type--hue-{{ p.property_type|crm_avatar_hue }}" title="{{ p.property_type }}">
+                            <i class="fas {{ p.property_type|crm_property_type_icon }}"></i>
+                        </span>
+                        <span class="crm-prop-pipeline-deal">{{ p.deal_mode }}</span>
+                        <span class="crm-files-pub crm-files-pub--{{ p.publish_status }}" title="{{ p.publish_status }}"></span>
+                    </div>
+
+                    <h3 class="crm-prop-pipeline-name">{{ p.title }}</h3>
+
+                    {% if p.neighborhood or p.city %}
+                    <p class="crm-prop-pipeline-loc">
+                        <i class="fas fa-location-dot" aria-hidden="true"></i>
+                        {% if p.neighborhood %}{{ p.neighborhood }}{% endif %}{% if p.city %}{% if p.neighborhood %} · {% endif %}{{ p.city }}{% endif %}
+                    </p>
+                    {% endif %}
+
+                    {% if p.area or p.rooms or p.floor %}
+                    <div class="crm-prop-pipeline-chips">
+                        {% if p.area %}<span><i class="fas fa-ruler-combined"></i>{{ p.area|ws_area }}</span>{% endif %}
+                        {% if p.rooms %}<span><i class="fas fa-door-open"></i>{{ p.rooms }} اتاق</span>{% endif %}
+                        {% if p.floor %}<span><i class="fas fa-building"></i>{{ p.floor }}{% if p.total_floors %}/{{ p.total_floors }}{% endif %}</span>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <footer class="crm-prop-pipeline-foot">
+                    <div class="crm-prop-pipeline-price">
+                        {% if p.sale_price %}
+                        <strong>{{ p.sale_price|ws_money }}</strong>
+                        <em>فروش</em>
+                        {% elif p.deposit %}
+                        <strong>{{ p.deposit|ws_money }}</strong>
+                        {% if p.monthly_rent %}<small>+ {{ p.monthly_rent|ws_money }}</small>{% else %}<em>رهن</em>{% endif %}
+                        {% else %}
+                        <span class="crm-prop-pipeline-muted">قیمت ثبت نشده</span>
+                        {% endif %}
+                    </div>
+                    <div class="crm-prop-pipeline-meta">
+                        {% if p.contact_count %}<span title="مخاطب"><i class="fas fa-users"></i>{{ p.contact_count }}</span>{% endif %}
+                        <time>{{ p.updated_at|ws_jalali }}</time>
+                    </div>
+                </footer>
+
+                <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-prop-pipeline-open crm-files-kanban-open" title="پرونده ملک">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    <span>پرونده</span>
+                </a>
+            </article>
+            {% empty %}
+            <div class="crm-prop-pipeline-empty" data-empty>
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                <span>بدون فایل</span>
+                <small>فایل را اینجا رها کنید</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>

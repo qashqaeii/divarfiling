@@ -1,0 +1,301 @@
+{% extends 'workspace/crm/base_crm.html' %}
+{% load workspace_tags crm_tags %}
+
+{% block page_title %}معاملات CRM{% endblock %}
+{% block crm_title %}{% endblock %}
+{% block crm_desc %}{% endblock %}
+{% block crm_search %}{% endblock %}
+{% block crm_actions %}{% endblock %}
+
+{% block crm_content %}
+<div class="crm-shell-page crm-deals-page crm-deals-pro crm-page-chrome{% if view_mode == 'pipeline' %} crm-deals-pro--pipeline{% endif %}">
+
+    <header class="crm-dash-bar">
+        <div class="crm-dash-bar-main">
+            <h1 class="crm-dash-bar-title">معاملات</h1>
+            <p class="crm-dash-bar-sub">{{ stats.total }} معامله · {{ stats.active }} فعال</p>
+        </div>
+        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات معاملات">
+            <button type="button" class="crm-dash-act" data-drawer-open="drawer-deal-stages" title="تنظیم مراحل pipeline">
+                <i class="fas fa-sliders" aria-hidden="true"></i><span>مراحل</span>
+            </button>
+            <a href="{% url 'workspace:crm_contacts' %}" class="crm-dash-act" title="مخاطبین">
+                <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
+            </a>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-deal">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>معامله</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="crm-deals-kpis" aria-label="شاخص‌های معاملات">
+        <article class="crm-deal-kpi crm-deal-kpi--accent">
+            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--active" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+            <div class="crm-deal-kpi-body">
+                <span class="crm-deal-kpi-val">{{ stats.active }}</span>
+                <span class="crm-deal-kpi-lbl">فعال</span>
+            </div>
+        </article>
+        <article class="crm-deal-kpi">
+            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--pipeline" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+            <div class="crm-deal-kpi-body">
+                <span class="crm-deal-kpi-val">{{ stats.pipeline_value|ws_money }}</span>
+                <span class="crm-deal-kpi-lbl">ارزش pipeline</span>
+            </div>
+        </article>
+        <article class="crm-deal-kpi">
+            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--pipeline" aria-hidden="true"><i class="fas fa-scale-balanced"></i></span>
+            <div class="crm-deal-kpi-body">
+                <span class="crm-deal-kpi-val">{{ stats.weighted_forecast|ws_money }}</span>
+                <span class="crm-deal-kpi-lbl">پیش‌بینی وزنی</span>
+            </div>
+        </article>
+        <article class="crm-deal-kpi crm-deal-kpi--success">
+            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--commission" aria-hidden="true"><i class="fas fa-coins"></i></span>
+            <div class="crm-deal-kpi-body">
+                <span class="crm-deal-kpi-val">{{ stats.commission_total|ws_money }}</span>
+                <span class="crm-deal-kpi-lbl">کمیسیون بسته</span>
+            </div>
+        </article>
+        <article class="crm-deal-kpi">
+            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--closed" aria-hidden="true"><i class="fas fa-trophy"></i></span>
+            <div class="crm-deal-kpi-body">
+                <span class="crm-deal-kpi-val">{{ stats.win_rate }}%</span>
+                <span class="crm-deal-kpi-lbl">نرخ بستن</span>
+            </div>
+        </article>
+    </section>
+
+    {% if stats.total %}
+    <div class="crm-deals-funnel" aria-label="توزیع مراحل">
+        <div class="crm-deals-funnel-bar" aria-hidden="true">
+            {% for s in deal_stages %}
+            {% with cnt=stats.by_stage|dict_get:s|default:0 %}
+            {% if cnt %}
+            <span class="crm-deals-funnel-seg" style="flex: {{ cnt }}; background: {{ s|crm_deal_stage_dot }};" title="{{ s }}: {{ cnt }}"></span>
+            {% endif %}
+            {% endwith %}
+            {% endfor %}
+        </div>
+        <nav class="crm-deals-funnel-stages">
+            {% for s in deal_stages %}
+            {% with cnt=stats.by_stage|dict_get:s|default:0 %}
+            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}&stage={{ s|urlencode }}"
+               class="crm-deals-funnel-chip{% if request.GET.stage == s %} is-active{% endif %}{% if not cnt %} is-empty{% endif %}"
+               style="--stage-accent: {{ s|crm_deal_stage_dot }}">
+                <span class="crm-deals-funnel-dot" aria-hidden="true"></span>
+                <span class="crm-deals-funnel-name">{{ s }}</span>
+                <span class="crm-deals-funnel-count">{{ cnt }}</span>
+            </a>
+            {% endwith %}
+            {% endfor %}
+        </nav>
+    </div>
+    {% endif %}
+
+    <div class="crm-shell-body crm-deals-body">
+        <nav class="crm-deals-quick" aria-label="فیلتر سریع">
+            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
+               class="crm-deals-quick-btn{% if not request.GET.bucket %} is-active{% endif %}">همه</a>
+            <a href="?view={{ view_mode }}&bucket=active{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
+               class="crm-deals-quick-btn{% if request.GET.bucket == 'active' %} is-active{% endif %}">فعال</a>
+            <a href="?view={{ view_mode }}&bucket=closed{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
+               class="crm-deals-quick-btn{% if request.GET.bucket == 'closed' %} is-active{% endif %}">بسته‌شده</a>
+            <a href="?view={{ view_mode }}&bucket=lost{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
+               class="crm-deals-quick-btn{% if request.GET.bucket == 'lost' %} is-active{% endif %}">از دست رفته</a>
+        </nav>
+
+        <form method="get" class="crm-deals-filters crm-page-filters" id="crmDealFilters">
+            <input type="hidden" name="view" value="{{ view_mode }}">
+            {% if request.GET.bucket %}<input type="hidden" name="bucket" value="{{ request.GET.bucket }}">{% endif %}
+            <label class="crm-deals-search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو معامله، مخاطب..." autocomplete="off" aria-label="جستجو">
+            </label>
+            <select name="stage" class="crm-deals-select" aria-label="مرحله" onchange="this.form.submit()">
+                <option value="">همه مراحل</option>
+                {% for s in deal_stages %}<option value="{{ s }}" {% if request.GET.stage == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+            </select>
+            <select name="sort" class="crm-deals-select" aria-label="مرتب‌سازی" onchange="this.form.submit()">
+                <option value="-updated_at" {% if request.GET.sort == '-updated_at' or not request.GET.sort %}selected{% endif %}>جدیدترین</option>
+                <option value="updated_at" {% if request.GET.sort == 'updated_at' %}selected{% endif %}>قدیمی‌ترین</option>
+                <option value="-value" {% if request.GET.sort == '-value' %}selected{% endif %}>بیشترین ارزش</option>
+                <option value="value" {% if request.GET.sort == 'value' %}selected{% endif %}>کمترین ارزش</option>
+                <option value="expected_close_date" {% if request.GET.sort == 'expected_close_date' %}selected{% endif %}>نزدیک‌ترین بستن</option>
+                <option value="-expected_close_date" {% if request.GET.sort == '-expected_close_date' %}selected{% endif %}>دورترین بستن</option>
+                <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>عنوان A-Z</option>
+            </select>
+            <div class="crm-deals-filter-actions">
+                {% include 'workspace/crm/includes/saved_filters.html' %}
+                {% if request.GET.q or request.GET.stage or request.GET.bucket %}
+                <a href="{% url 'workspace:crm_deals' %}?view={{ view_mode }}" class="crm-dash-act crm-dash-act--icon" title="پاک کردن فیلتر"><i class="fas fa-times" aria-hidden="true"></i></a>
+                {% endif %}
+                <div class="crm-deals-view-toggle" role="tablist">
+                    <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-deals-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+                    <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-deals-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+                </div>
+            </div>
+        </form>
+
+        {% if view_mode == 'pipeline' %}
+        <section class="crm-deals-pipeline-wrap crm-deal-pipeline-stage" aria-label="کانبان معاملات">
+            {% include 'workspace/crm/includes/deal_pipeline.html' with pipeline_interactive=True deal_stage_url_template=deal_stage_url_template %}
+        </section>
+        {% else %}
+        <div class="crm-deals-table-card">
+            <div class="crm-deals-table-scroll">
+                <table class="crm-deals-table">
+                    <thead>
+                        <tr>
+                            <th class="crm-deals-col-deal" scope="col">معامله</th>
+                            <th class="crm-deals-col-contact" scope="col">مخاطب</th>
+                            <th class="crm-deals-col-stage" scope="col">مرحله</th>
+                            <th class="crm-deals-col-value" scope="col">ارزش</th>
+                            <th class="crm-deals-col-prob" scope="col">احتمال</th>
+                            <th class="crm-deals-col-commission" scope="col">کمیسیون</th>
+                            <th class="crm-deals-col-updated" scope="col">بروزرسانی</th>
+                            <th class="crm-deals-col-action" scope="col"><span class="visually-hidden">عملیات</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in deals %}
+                        <tr class="crm-deals-row" data-href="{% url 'workspace:crm_deal_detail' d.id %}">
+                            <td class="crm-deals-col-deal">
+                                <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deals-cell-deal">
+                                    <span class="crm-deals-deal-icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                                    <span class="crm-deals-deal-text">
+                                        <strong>{{ d.title }}</strong>
+                                        {% if d.expected_close_date %}
+                                        <span class="crm-deals-deal-meta{% if d.expected_close_date < today %} crm-deals-deal-meta--overdue{% endif %}">
+                                            <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                                            بستن {{ d.expected_close_date|ws_jalali }}
+                                        </span>
+                                        {% elif d.property %}
+                                        <span class="crm-deals-deal-meta crm-deals-deal-meta--muted">{{ d.property.title|truncatechars:32 }}</span>
+                                        {% endif %}
+                                    </span>
+                                </a>
+                            </td>
+                            <td class="crm-deals-col-contact">
+                                <a href="{% url 'workspace:crm_detail' d.customer_id %}" class="crm-deals-cell-contact" onclick="event.stopPropagation()">
+                                    <span class="crm-deals-avatar crm-deals-avatar--hue-{{ d.customer.name|crm_avatar_hue }}">{{ d.customer.name|crm_initials }}</span>
+                                    <span class="crm-deals-contact-name">{{ d.customer.name }}</span>
+                                </a>
+                            </td>
+                            <td class="crm-deals-col-stage"><span class="crm-pill crm-pill-sm crm-deals-stage" style="{% crm_deal_stage_style d.stage %}">{{ d.stage }}</span></td>
+                            <td class="crm-deals-money crm-deals-col-value">
+                                <div class="crm-deals-value-cell">
+                                    {% if d.value %}
+                                    <span class="crm-deals-value-amount">{{ d.value|ws_money }}</span>
+                                    <span class="crm-deals-value-bar" aria-hidden="true" title="احتمال {{ d.probability }}٪"><i style="width: {{ d.probability }}%"></i></span>
+                                    {% else %}
+                                    <span class="crm-muted">—</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="crm-deals-col-prob">
+                                <div class="crm-deals-prob" title="احتمال بستن معامله">
+                                    <span class="crm-deals-prob-val">{{ d.probability }}%</span>
+                                    <span class="crm-deals-prob-track" aria-hidden="true"><i style="width: {{ d.probability }}%"></i></span>
+                                </div>
+                            </td>
+                            <td class="crm-deals-money crm-deals-col-commission">
+                                {% if d.commission_amount %}
+                                <span class="crm-deals-commission-amount">{{ d.commission_amount|ws_money }}</span>
+                                {% else %}
+                                <span class="crm-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="crm-deals-col-updated"><time datetime="{{ d.updated_at|date:'c' }}">{{ d.updated_at|ws_jalali }}</time></td>
+                            <td class="crm-deals-col-action">
+                                <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deals-row-action" title="مشاهده جزئیات" onclick="event.stopPropagation()"><i class="fas fa-arrow-left" aria-hidden="true"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr class="crm-empty-state-row">
+                            <td colspan="8">
+                                {% if stats.total %}
+                                {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 icon='fa-handshake' title='معامله‌ای با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا معاملهٔ جدید ثبت کنید.' btn_text='ثبت معامله' btn_icon='fa-plus' btn_drawer='drawer-deal' extra_class='crm-empty-state--inline' %}
+                                {% else %}
+                                {% include 'workspace/crm/includes/list_empty_state.html' with compact=1 icon='fa-handshake' title='هنوز معامله‌ای ثبت نشده' desc='اولین معامله را ثبت کنید و قیف فروش خود را از مذاکره تا قرارداد مدیریت کنید.' btn_text='ثبت معامله' btn_icon='fa-plus' btn_drawer='drawer-deal' extra_class='crm-empty-state--inline' %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <footer class="crm-deals-pagination">
+            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&view={{ view_mode }}&{{ filter_qs }}" class="crm-dash-act">قبلی</a>{% endif %}
+            <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&view={{ view_mode }}&{{ filter_qs }}" class="crm-dash-act">بعدی</a>{% endif %}
+        </footer>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block crm_drawers %}
+<aside class="crm-drawer" id="drawer-deal">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg">
+        <div class="crm-drawer-head crm-drawer-head-accent">
+            <div><h2>معامله جدید</h2><p>ثبت فرصت فروش یا اجاره</p></div>
+            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:crm_deal_create' %}" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'workspace:crm_deals' %}">
+                <div class="crm-form-grid">{% render_fields deal_form 2 %}</div>
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ثبت معامله</button>
+            </div>
+        </form>
+    </div>
+</aside>
+
+<aside class="crm-drawer" id="drawer-deal-stages">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg">
+        <div class="crm-drawer-head">
+            <div>
+                <h2>مراحل pipeline</h2>
+                <p>مراحل میانی را اضافه، حذف یا مرتب کنید. دو مرحله آخر ثابت هستند.</p>
+            </div>
+            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <div class="crm-drawer-body crm-stages-editor" id="crmDealStagesEditor"
+             data-stages-url="{% url 'workspace:crm_deal_stages' %}">
+            {{ deal_stages_json|json_script:"crmDealStagesData" }}
+            <ul class="crm-stages-list" id="crmStagesList" aria-label="مراحل معامله"></ul>
+            <button type="button" class="crm-dash-act crm-stages-add" id="crmStagesAdd">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>مرحله جدید</span>
+            </button>
+            <p class="crm-stages-hint">
+                <i class="fas fa-lock" aria-hidden="true"></i>
+                «بسته‌شده» و «از دست رفته» همیشه در انتها می‌مانند.
+            </p>
+        </div>
+        <div class="crm-drawer-foot">
+            <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+            <button type="button" class="crm-btn crm-btn-primary" id="crmStagesSave">
+                <i class="fas fa-check" aria-hidden="true"></i> ذخیره مراحل
+            </button>
+        </div>
+    </div>
+</aside>
+{% endblock %}
+
+{% block crm_js %}
+<script>
+window.crmDealStageUrlTemplate = "{{ deal_stage_url_template }}";
+window.crmDealStagesUrl = "{% url 'workspace:crm_deal_stages' %}";
+</script>
+{% endblock %}

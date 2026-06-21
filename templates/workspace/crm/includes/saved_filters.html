@@ -1,0 +1,48 @@
+{% load workspace_tags %}
+{# فیلترهای ذخیره‌شده — A10 #}
+<div class="crm-saved-filters"
+     data-scope="{{ saved_filter_scope }}"
+     data-base="{{ saved_filter_base }}"
+     data-view="{{ view_mode }}"
+     data-can-save="{% if saved_filter_can_save %}1{% else %}0{% endif %}">
+    <details class="crm-saved-filters-trigger">
+        <summary class="crm-saved-filters-btn" title="فیلترهای ذخیره‌شده">
+            <i class="fas fa-bookmark" aria-hidden="true"></i>
+            <span>فیلترها</span>
+            {% if saved_filters %}<em class="crm-saved-filters-badge">{{ saved_filters|length }}</em>{% endif %}
+            <i class="fas fa-chevron-down crm-saved-filters-caret" aria-hidden="true"></i>
+        </summary>
+        <div class="crm-saved-filters-panel" role="menu">
+            <header class="crm-saved-filters-head">
+                <span>فیلترهای من</span>
+                {% if saved_filter_can_save %}
+                <button type="button" class="crm-saved-filters-save" data-saved-filter-save title="ذخیره فیلتر فعلی">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    <span>ذخیره</span>
+                </button>
+                {% endif %}
+            </header>
+            <div class="crm-saved-filters-list" data-saved-filter-list>
+                {% for f in saved_filters %}
+                <div class="crm-saved-filters-item{% if f.is_pinned %} is-pinned{% endif %}" data-filter-id="{{ f.id }}">
+                    <a href="{{ saved_filter_base }}?view={{ view_mode }}&{% for k,v in f.params.items %}{{ k }}={{ v|urlencode }}{% if not forloop.last %}&{% endif %}{% endfor %}"
+                       class="crm-saved-filters-link" role="menuitem">
+                        <span class="crm-saved-filters-name">{{ f.name }}</span>
+                        <span class="crm-saved-filters-meta">{{ f.params|length }} معیار</span>
+                    </a>
+                    <div class="crm-saved-filters-actions">
+                        <button type="button" class="crm-saved-filters-pin" data-saved-filter-pin title="{% if f.is_pinned %}برداشتن سنجاق{% else %}سنجاق{% endif %}">
+                            <i class="fas fa-thumbtack" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="crm-saved-filters-del" data-saved-filter-delete title="حذف">
+                            <i class="fas fa-trash-can" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="crm-saved-filters-empty" data-saved-filter-empty>هنوز فیلتری ذخیره نشده</p>
+                {% endfor %}
+            </div>
+        </div>
+    </details>
+</div>

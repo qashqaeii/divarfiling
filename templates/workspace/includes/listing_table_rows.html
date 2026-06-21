@@ -1,0 +1,127 @@
+{% load humanize workspace_tags %}
+{% for listing in listings %}
+{% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token %}
+<tr class="mk-listing-row" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' dataset.id listing.id %}">
+    <td class="mk-col-title">
+        <div class="mk-listing-title-cell">
+            <a href="{% url 'workspace:listing_detail' dataset.id listing.id %}" class="mk-listing-title" title="{{ listing.title }}">{{ listing.title }}</a>
+            <div class="mk-listing-meta">
+                <code class="mk-token" title="{{ listing.token }}">{{ listing.token|truncatechars:8 }}</code>
+                {% if lm.tag %}<span class="mk-tag">{{ lm.tag }}</span>{% endif %}
+                {% if lm.is_favorite %}<span class="mk-tag mk-tag-star" title="علاقه‌مند"><i class="fas fa-star" aria-hidden="true"></i></span>{% endif %}
+                {% if pf %}<span class="mk-tag mk-tag-folder" title="در فایل‌های شخصی"><i class="fas fa-folder" aria-hidden="true"></i></span>{% endif %}
+            </div>
+        </div>
+    </td>
+    {% if tx.show_price %}
+    <td class="mk-col-money mk-num">
+        {% if listing.price %}<span class="mk-money" title="{{ listing.price|ws_money }}">{{ listing.price|ws_money_compact }}</span>{% else %}<span class="mk-muted">—</span>{% endif %}
+    </td>
+    {% endif %}
+    {% if tx.show_deposit %}
+    <td class="mk-col-money mk-num">
+        {% if listing.deposit %}<span class="mk-money mk-money--deposit" title="{{ listing.deposit|ws_money }}">{{ listing.deposit|ws_money_compact }}</span>{% else %}<span class="mk-muted">—</span>{% endif %}
+    </td>
+    {% endif %}
+    {% if tx.show_rent %}
+    <td class="mk-col-money mk-num">
+        {% if listing.rent %}<span class="mk-money mk-money--rent" title="{{ listing.rent|ws_money }}">{{ listing.rent|ws_money_compact }}</span>
+        {% elif listing.deposit %}<span class="mk-rent-tag" title="رهن کامل">رهن</span>
+        {% else %}<span class="mk-muted">—</span>{% endif %}
+    </td>
+    {% endif %}
+    <td class="mk-col-num mk-col-area">
+        {% if listing.area %}
+        <span class="mk-area-pill">{{ listing.area|floatformat:0 }}<small>م²</small></span>
+        {% else %}<span class="mk-muted">—</span>{% endif %}
+    </td>
+    <td class="mk-col-specs">
+        <div class="mk-specs-grid">
+            {% if feat.rooms or listing.rooms %}
+            <span class="mk-spec-chip" title="اتاق"><i class="fas fa-door-open" aria-hidden="true"></i>{{ feat.rooms|default:listing.rooms }}</span>
+            {% endif %}
+            {% if feat.floor %}
+            <span class="mk-spec-chip" title="طبقه"><i class="fas fa-layer-group" aria-hidden="true"></i>{{ feat.floor }}</span>
+            {% endif %}
+            {% if feat.build_year %}
+            <span class="mk-spec-chip" title="سال ساخت"><i class="fas fa-calendar" aria-hidden="true"></i>{{ feat.build_year }}</span>
+            {% endif %}
+            {% if not feat.rooms and not listing.rooms and not feat.floor and not feat.build_year %}
+            {% if feat.highlights %}
+            {% for h in feat.highlights|slice:":2" %}
+            <span class="mk-spec-chip mk-spec-chip--muted" title="{{ h }}">{{ h|truncatechars:14 }}</span>
+            {% endfor %}
+            {% else %}
+            <span class="mk-muted">—</span>
+            {% endif %}
+            {% endif %}
+        </div>
+    </td>
+    <td class="mk-col-amenity">
+        {% amenity_icons feat %}
+    </td>
+    <td class="mk-col-publisher">
+        {% if feat.is_consultant %}
+        <span class="mk-pub-pill mk-pub-pill--consultant" title="مشاور املاک"><i class="fas fa-building" aria-hidden="true"></i><span>مشاور</span></span>
+        {% else %}
+        <span class="mk-pub-pill mk-pub-pill--personal" title="آگهی شخصی"><i class="fas fa-user" aria-hidden="true"></i><span>شخصی</span></span>
+        {% endif %}
+    </td>
+    <td class="mk-col-nb">
+        <span class="mk-nb-cell" title="{{ listing.neighborhood }}">
+            {% if listing.neighborhood %}<i class="fas fa-location-dot" aria-hidden="true"></i>{% endif %}
+            <span class="mk-cell-clip">{{ listing.neighborhood|default:"—"|truncatechars:18 }}</span>
+        </span>
+    </td>
+    <td class="mk-col-value">
+        {% with badge=score|ws_value_badge %}
+        {% if badge == 'below' %}<span class="mk-value-pill mk-value-pill--below" title="زیر بازار"><span class="mk-value-dot" aria-hidden="true"></span>زیر</span>
+        {% elif badge == 'above' %}<span class="mk-value-pill mk-value-pill--above" title="بالای بازار"><span class="mk-value-dot" aria-hidden="true"></span>بالا</span>
+        {% elif badge == 'fair' %}<span class="mk-value-pill mk-value-pill--fair" title="متعارف"><span class="mk-value-dot" aria-hidden="true"></span>میان</span>
+        {% else %}<span class="mk-muted">—</span>{% endif %}
+        {% endwith %}
+    </td>
+    <td class="mk-col-actions">
+        <div class="mk-row-actions mk-row-actions-compact" role="group" aria-label="عملیات آگهی">
+            <a href="{% url 'workspace:listing_detail' dataset.id listing.id %}" class="mk-row-btn mk-row-btn--view" title="مشاهده"><i class="fas fa-eye" aria-hidden="true"></i></a>
+            <details class="mk-action-menu">
+                <summary class="mk-row-btn mk-row-btn--more" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
+                <div class="mk-action-menu-panel" role="menu">
+                    <button type="button" class="mk-action-menu-item js-edit-listing"
+                        data-id="{{ listing.id }}"><i class="fas fa-pen" aria-hidden="true"></i> ویرایش</button>
+                    <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="mk-inline-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="mk-action-menu-item"><i class="fas fa-star" aria-hidden="true"></i> {% if lm.is_favorite %}علاقه‌مند{% else %}افزودن به علاقه‌مند{% endif %}</button>
+                    </form>
+                    {% if pf %}
+                    <a href="{% url 'workspace:crm_property_detail' pf.id %}" class="mk-action-menu-item"><i class="fas fa-folder-open" aria-hidden="true"></i> فایل شخصی</a>
+                    {% else %}
+                    <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="mk-inline-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="mk-action-menu-item"><i class="fas fa-folder-plus" aria-hidden="true"></i> افزودن به فایل شخصی</button>
+                    </form>
+                    {% endif %}
+                    <button type="button" class="mk-action-menu-item" data-copy="{{ listing.token }}"><i class="fas fa-copy" aria-hidden="true"></i> کپی شناسه</button>
+                    {% if listing.link %}
+                    <a href="{{ listing.link }}" target="_blank" rel="noopener" class="mk-action-menu-item"><i class="fas fa-external-link" aria-hidden="true"></i> دیوار</a>
+                    {% endif %}
+                    <button type="button" class="mk-action-menu-item mk-action-menu-danger js-delete-listing"
+                        data-id="{{ listing.id }}"
+                        data-title="{{ listing.title|truncatechars:40|escapejs }}"><i class="fas fa-trash" aria-hidden="true"></i> حذف</button>
+                </div>
+            </details>
+        </div>
+    </td>
+</tr>
+{% endwith %}
+{% empty %}
+<tr><td colspan="12" class="mk-table-empty-cell">
+    <div class="mk-table-empty">
+        <span class="mk-empty-icon" aria-hidden="true"><i class="fas fa-inbox"></i></span>
+        <p>آگهی‌ای با این فیلترها یافت نشد</p>
+        {% if filter_count %}<a href="{% url 'workspace:dataset_detail' dataset.id %}" class="ws-btn ws-btn-sm ws-btn-ghost">پاک کردن فیلترها</a>{% endif %}
+    </div>
+</td></tr>
+{% endfor %}

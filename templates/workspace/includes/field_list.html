@@ -1,0 +1,10 @@
+<div class="ws-field-list">
+    {% for field in fields %}
+    <div class="ws-field-row">
+        <div class="ws-field-key">{{ field.key }}</div>
+        <div class="ws-field-val">{% include 'workspace/includes/field_value.html' with field=field %}</div>
+    </div>
+    {% empty %}
+    <p class="ws-field-empty">فیلدی برای نمایش نیست.</p>
+    {% endfor %}
+</div>

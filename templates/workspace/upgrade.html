@@ -1,0 +1,123 @@
+{% extends 'workspace/base.html' %}
+{% load static %}
+
+{% block title %}فعال‌سازی امکانات ربات{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=10">
+{% endblock %}
+
+{% block content %}
+<div class="upg{% if feature %} upg--focused{% endif %}"
+     data-accent="{% if feature %}{{ feature.accent|default:'violet' }}{% else %}violet{% endif %}">
+
+    <section class="upg-stage" aria-labelledby="upg-title">
+        <div class="upg-stage-accent" aria-hidden="true"></div>
+        <div class="upg-stage-orbs" aria-hidden="true">
+            <span class="upg-orb upg-orb--1"></span>
+            <span class="upg-orb upg-orb--2"></span>
+            <span class="upg-orb upg-orb--3"></span>
+        </div>
+
+        <div class="upg-stage-grid">
+            <header class="upg-hero">
+                <div class="upg-lock">
+                    <i class="fas fa-lock" aria-hidden="true"></i>
+                    <span>نیاز به لایسنس ربات</span>
+                </div>
+                <div class="upg-hero-main">
+                    <span class="upg-icon" aria-hidden="true">
+                        <i class="fas {% if feature %}{{ feature.icon }}{% else %}fa-robot{% endif %}"></i>
+                    </span>
+                    <div class="upg-hero-copy">
+                        <h1 id="upg-title">{% if feature %}{{ feature.title }}{% else %}امکانات ربات استخراج دیوار{% endif %}</h1>
+                        <p class="upg-lead">{% if feature %}{{ feature.desc }}{% else %}فایلینگ، تحلیل بازار، نقشه و ابزارهای هوشمند — با یک لایسنس فعال{% endif %}</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="upg-aside">
+                <ol class="upg-steps" aria-label="مراحل فعال‌سازی">
+                    <li class="upg-step">
+                        <span class="upg-step-num">۱</span>
+                        <div class="upg-step-text">
+                            <strong>خرید ربات</strong>
+                            <span>از فروشگاه فایلینگ دیوار</span>
+                        </div>
+                    </li>
+                    <li class="upg-step">
+                        <span class="upg-step-num">۲</span>
+                        <div class="upg-step-text">
+                            <strong>فعال‌سازی لایسنس</strong>
+                            <span>در نرم‌افزار ربات</span>
+                        </div>
+                    </li>
+                    <li class="upg-step upg-step--last">
+                        <span class="upg-step-num">۳</span>
+                        <div class="upg-step-text">
+                            <strong>{% if feature_key == 'upload' %}آپلود در میزکار{% else %}دسترسی کامل{% endif %}</strong>
+                            <span>{% if feature_key == 'upload' %}تحلیل فایل‌های output{% else %}باز شدن همه امکانات{% endif %}</span>
+                        </div>
+                    </li>
+                </ol>
+
+                <div class="upg-aside-actions">
+                    <a href="{{ bot_buy_url }}" class="upg-cta">
+                        خرید ربات فایلینگ دیوار
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    </a>
+                    <div class="upg-meta">
+                        <a href="{% url 'license_guide' %}">راهنمای فعال‌سازی</a>
+                        <span aria-hidden="true">·</span>
+                        <a href="{% url 'workspace:crm_dashboard' %}">بازگشت به CRM</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="upg-stage-foot">
+            <i class="fas fa-gift" aria-hidden="true"></i>
+            CRM میزکار برای شما رایگان است
+        </footer>
+    </section>
+
+    <section class="upg-bottom" aria-labelledby="upg-features-title">
+        <div class="upg-bottom-block">
+            <h2 id="upg-features-title" class="upg-bottom-label">امکانات پریمیوم</h2>
+            <nav class="upg-chips" aria-label="قابلیت‌های ربات">
+                {% for key, feat in bot_features.items %}
+                <a href="{% url 'workspace:upgrade' %}?feature={{ key }}"
+                   class="upg-chip{% if feature_key == key %} is-current{% endif %}"
+                   data-accent="{{ feat.accent }}">
+                    <i class="fas {{ feat.icon }}" aria-hidden="true"></i>
+                    <span>{{ feat.title }}</span>
+                </a>
+                {% endfor %}
+            </nav>
+        </div>
+
+        <div class="upg-bottom-divider" aria-hidden="true"></div>
+
+        <div class="upg-bottom-block upg-bottom-block--free">
+            <h2 class="upg-bottom-label upg-bottom-label--free">رایگان</h2>
+            <nav class="upg-chips upg-chips--free" aria-label="امکانات رایگان CRM">
+                <a href="{% url 'workspace:crm_dashboard' %}" class="upg-chip upg-chip--free">
+                    <i class="fas fa-chart-pie" aria-hidden="true"></i><span>داشبورد</span>
+                </a>
+                <a href="{% url 'workspace:crm_contacts' %}" class="upg-chip upg-chip--free">
+                    <i class="fas fa-address-book" aria-hidden="true"></i><span>مخاطبین</span>
+                </a>
+                <a href="{% url 'workspace:crm_properties' %}" class="upg-chip upg-chip--free">
+                    <i class="fas fa-building" aria-hidden="true"></i><span>فایل‌ها</span>
+                </a>
+                <a href="{% url 'workspace:crm_reminders' %}" class="upg-chip upg-chip--free">
+                    <i class="fas fa-bell" aria-hidden="true"></i><span>یادآورها</span>
+                </a>
+                <a href="{% url 'workspace:crm_today' %}" class="upg-chip upg-chip--free">
+                    <i class="fas fa-list-check" aria-hidden="true"></i><span>کارهای امروز</span>
+                </a>
+            </nav>
+        </div>
+    </section>
+</div>
+{% endblock %}

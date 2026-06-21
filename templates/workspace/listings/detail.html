@@ -1,0 +1,293 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags %}
+
+{% block page_title %}{{ listing.title|truncatechars:40 }}{% endblock %}
+
+{% block content %}
+<div class="mk-page ws-ld">
+    <header class="mk-page-hero">
+        <div class="mk-page-hero-main">
+            <div class="mk-page-hero-kicker">
+                <span class="mk-page-hero-mark" aria-hidden="true"></span>
+                <span class="mk-page-hero-eyebrow">آگهی</span>
+            </div>
+            <h1 class="mk-page-hero-title">{{ listing.title }}</h1>
+            <p class="mk-page-hero-desc">
+                <code class="ws-token">{{ listing.token }}</code>
+                <button type="button" class="ws-fv-btn" data-copy="{{ listing.token }}" title="کپی"><i class="fas fa-copy" aria-hidden="true"></i></button>
+                <span class="ws-badge ws-badge-blue">{{ tx.badge }}</span>
+                {% if meta.is_favorite %}<span class="ws-badge ws-badge-amber">علاقه‌مند</span>{% endif %}
+                {% if crm_property %}<span class="ws-badge ws-badge-green">فایل شخصی</span>{% endif %}
+                {% if listing.is_expired %}<span class="ws-badge ws-badge-red">منقضی</span>{% endif %}
+            </p>
+        </div>
+        <div class="mk-page-hero-toolbar" role="toolbar" aria-label="عملیات">
+            <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="mk-inline-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="mk-hero-btn mk-hero-btn-ghost" title="{% if meta.is_favorite %}حذف از علاقه‌مندی{% else %}افزودن به علاقه‌مندی{% endif %}" aria-label="علاقه‌مندی">
+                    <i class="{% if meta.is_favorite %}fas fa-star{% else %}far fa-star{% endif %}" aria-hidden="true"></i>
+                </button>
+            </form>
+            {% if crm_property %}
+            <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="mk-hero-btn mk-hero-btn-ghost" title="مشاهده در فایل‌های شخصی">
+                <i class="fas fa-folder-open" aria-hidden="true"></i><span>فایل شخصی</span>
+            </a>
+            {% else %}
+            <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="mk-inline-form">
+                {% csrf_token %}
+                <input type="hidden" name="redirect" value="property">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="mk-hero-btn mk-hero-btn-accent" title="تبدیل آگهی دیوار به فایل شخصی">
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i><span>تبدیل به فایل شخصی</span>
+                </button>
+            </form>
+            {% endif %}
+            <button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-modal-open="modal-meta"><span>متادیتا</span></button>
+            <button type="button" class="mk-hero-btn mk-hero-btn-accent" data-copy="{{ whatsapp_text }}" title="واتساپ"><i class="fas fa-comment-dots" aria-hidden="true"></i></button>
+            {% if listing.link %}<a href="{{ listing.link }}" target="_blank" rel="noopener" class="mk-hero-btn mk-hero-btn-primary"><span>دیوار</span></a>{% endif %}
+        </div>
+    </header>
+
+    <section class="mk-stat-strip ws-ld-stats">
+            {% if tx.show_price and listing.price %}<div class="ws-ld-stat"><span>قیمت</span><strong>{{ listing.price|ws_money }}</strong></div>{% endif %}
+            {% if tx.show_price_per_sqm and listing.price_per_sqm %}<div class="ws-ld-stat"><span>قیمت/متر</span><strong>{{ listing.price_per_sqm|ws_money:'per_sqm' }}</strong></div>{% endif %}
+            {% if tx.show_deposit and listing.deposit %}<div class="ws-ld-stat"><span>ودیعه</span><strong>{{ listing.deposit|ws_money }}</strong></div>{% endif %}
+            {% if tx.show_rent and listing.rent %}<div class="ws-ld-stat"><span>اجاره</span><strong>{{ listing.rent|ws_money }}</strong></div>{% endif %}
+            {% if listing.area %}<div class="ws-ld-stat"><span>متراژ</span><strong>{{ listing.area|ws_area }}</strong></div>{% endif %}
+            {% if feat.rooms or listing.rooms %}<div class="ws-ld-stat"><span>اتاق</span><strong>{{ feat.rooms|default:listing.rooms }}</strong></div>{% endif %}
+            {% if feat.floor %}<div class="ws-ld-stat"><span>طبقه</span><strong>{{ feat.floor }}</strong></div>{% endif %}
+            {% if feat.build_year %}<div class="ws-ld-stat"><span>ساخت</span><strong>{{ feat.build_year }}</strong></div>{% endif %}
+            {% if listing.neighborhood %}<div class="ws-ld-stat"><span>محله</span><strong>{{ listing.neighborhood }}</strong></div>{% endif %}
+    </section>
+
+    {% if benchmark.verdict %}
+    <div class="ws-card ws-benchmark ws-ld-bench">
+        <h3 class="ws-card-title"><i class="fas fa-scale-balanced" aria-hidden="true"></i> مقایسه با بازار</h3>
+        <div class="ws-benchmark-grid">
+            <div class="ws-benchmark-item">
+                <span class="ws-stat-lbl">{{ benchmark.label|default:"قیمت/متر" }} این آگهی</span>
+                <strong>{{ benchmark.price_per_sqm_fmt }}</strong>
+            </div>
+            <div class="ws-benchmark-item">
+                <span class="ws-stat-lbl">میانه بازار</span>
+                <strong>{{ benchmark.market_median_fmt }}</strong>
+            </div>
+            <div class="ws-benchmark-item">
+                <span class="ws-stat-lbl">اختلاف</span>
+                <strong>{{ benchmark.diff_pct|ws_pct }}</strong>
+            </div>
+            <div class="ws-benchmark-verdict">
+                {{ benchmark.verdict }}
+                {% if benchmark.note %}<span class="ws-ld-bench-note">{{ benchmark.note }}</span>{% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="ws-ld-grid">
+        <div class="ws-ld-main">
+            <div class="ws-card ws-ld-fields">
+                <div class="ws-ld-tabs-bar">
+                    <nav class="ws-tabs ws-ld-tabs" role="tablist" aria-label="جزئیات آگهی">
+                        {% for section, fields in sections.items %}
+                        {% if fields %}
+                        <button type="button" role="tab" class="ws-tab ws-ld-tab {% if forloop.first %}active{% endif %}" data-tab="{{ section }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                            {% if section == 'مالی' %}<i class="fas fa-coins" aria-hidden="true"></i>
+                            {% elif section == 'ملک' %}<i class="fas fa-building" aria-hidden="true"></i>
+                            {% elif section == 'مکان' %}<i class="fas fa-location-dot" aria-hidden="true"></i>
+                            {% elif section == 'متن' %}<i class="fas fa-align-right" aria-hidden="true"></i>
+                            {% elif section == 'تماس' %}<i class="fas fa-phone" aria-hidden="true"></i>
+                            {% else %}<i class="fas fa-circle-info" aria-hidden="true"></i>{% endif %}
+                            <span>{{ section }}</span>
+                        </button>
+                        {% endif %}
+                        {% if section == 'ملک' and feature_profile.has_details %}
+                        <button type="button" role="tab" class="ws-tab ws-ld-tab" data-tab="features" aria-selected="false">
+                            <i class="fas fa-list-check" aria-hidden="true"></i>
+                            <span>ویژگی‌ها و امکانات</span>
+                            <em class="ws-ld-tab-badge">{{ feature_profile.detail_count }}</em>
+                        </button>
+                        {% endif %}
+                        {% endfor %}
+                        {% if feature_profile.has_details and 'ملک' not in sections %}
+                        <button type="button" role="tab" class="ws-tab ws-ld-tab {% if not sections %}active{% endif %}" data-tab="features" aria-selected="{% if not sections %}true{% else %}false{% endif %}">
+                            <i class="fas fa-list-check" aria-hidden="true"></i>
+                            <span>ویژگی‌ها و امکانات</span>
+                            <em class="ws-ld-tab-badge">{{ feature_profile.detail_count }}</em>
+                        </button>
+                        {% endif %}
+                        {% if supplementary_fields %}
+                        <button type="button" role="tab" class="ws-tab ws-ld-tab {% if not sections and not feature_profile.has_details %}active{% endif %}" data-tab="extra" aria-selected="{% if not sections and not feature_profile.has_details %}true{% else %}false{% endif %}">
+                            <i class="fas fa-layer-group" aria-hidden="true"></i>
+                            <span>اطلاعات تکمیلی</span>
+                        </button>
+                        {% endif %}
+                    </nav>
+                </div>
+
+                <div class="ws-ld-tab-panels">
+                    {% for section, fields in sections.items %}
+                    {% if fields %}
+                    <div role="tabpanel" data-panel="{{ section }}" {% if not forloop.first %}hidden{% endif %}>
+                        {% with section_rows|dict_get:section as rows %}
+                        {% include 'workspace/includes/field_list.html' with fields=rows %}
+                        {% endwith %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if feature_profile.has_details %}
+                    <div role="tabpanel" data-panel="features" {% if sections %}hidden{% endif %}>
+                        {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile embedded=True %}
+                    </div>
+                    {% endif %}
+
+                    {% if supplementary_groups %}
+                    <div role="tabpanel" data-panel="extra" {% if sections or feature_profile.has_details %}hidden{% endif %}>
+                        {% include 'workspace/includes/supplementary_fields.html' with groups=supplementary_groups %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if listing.images %}
+                <div class="ws-ld-gallery">
+                    <p class="ws-ld-gallery-title">تصاویر <span>{{ listing.images|length }}</span></p>
+                    <div class="ws-ld-gallery-grid">
+                        {% for img in listing.images|slice:":24" %}
+                        <a href="{{ img }}" target="_blank" rel="noopener"><img src="{{ img }}" alt="" loading="lazy"></a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <section class="ws-card ws-ld-crm">
+                <div class="ws-ld-crm-head">
+                    <h3><i class="fas fa-address-book" aria-hidden="true"></i> مخاطبین CRM</h3>
+                    <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="ws-ld-crm-new">+ مخاطب جدید</a>
+                </div>
+                {% if crm_links %}
+                <div class="ws-ld-crm-chips">
+                    {% for link in crm_links %}
+                    <a href="{% url 'workspace:crm_detail' link.customer_id %}" class="ws-ld-crm-chip">
+                        <span>{{ link.customer.name }}</span>
+                        <em>{{ link.role }}</em>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="ws-ld-crm-empty">هنوز مخاطبی به این آگهی پیوند نشده.</p>
+                {% endif %}
+                {% if crm_customers %}
+                <form method="post" class="ws-ld-crm-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="crm_link">
+                    <select name="customer_id" class="ws-select ws-ld-crm-sel" required aria-label="مخاطب">
+                        <option value="">مخاطب...</option>
+                        {% for c in crm_customers %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                    </select>
+                    <select name="role" class="ws-select ws-ld-crm-sel" aria-label="نقش">
+                        {% for r in crm_listing_roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+                    </select>
+                    <select name="deal_type" class="ws-select ws-ld-crm-sel" aria-label="معامله">
+                        {% for d in crm_deal_types %}<option value="{{ d }}" {% if d == crm_default_deal %}selected{% endif %}>{{ d }}</option>{% endfor %}
+                    </select>
+                    <button type="submit" class="ws-btn ws-btn-sm ws-btn-primary"><i class="fas fa-link" aria-hidden="true"></i> پیوند</button>
+                </form>
+                {% endif %}
+            </section>
+        </div>
+
+        <aside class="ws-ld-aside">
+            {% if listing.latitude and listing.longitude %}
+            <div class="ws-card ws-ld-map-card">
+                <p class="ws-card-title">موقعیت</p>
+                <div id="wsMap" class="ws-map ws-ld-map"></div>
+                {% if listing.neighborhood %}<p class="ws-ld-map-loc">{{ listing.neighborhood }}{% if listing.city %} · {{ listing.city }}{% endif %}</p>{% endif %}
+            </div>
+            {% endif %}
+
+            {% if meta.note %}
+            <div class="ws-card ws-ld-note">
+                <p class="ws-card-title">یادداشت</p>
+                <p class="ws-ld-note-body">{{ meta.note }}</p>
+            </div>
+            {% endif %}
+
+            {% if price_history %}
+            <div class="ws-card ws-ld-history">
+                <p class="ws-card-title">تاریخچه قیمت</p>
+                <table class="ws-table ws-ld-history-table">
+                    <thead>
+                        <tr>
+                            <th>تاریخ</th>
+                            {% if tx.show_price %}<th>قیمت</th>{% endif %}
+                            {% if tx.show_deposit %}<th>ودیعه</th>{% endif %}
+                            {% if tx.show_rent %}<th>اجاره</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ph in price_history %}
+                        <tr>
+                            <td>{{ ph.recorded_at|ws_jalali }}</td>
+                            {% if tx.show_price %}<td>{% if ph.price %}{{ ph.price|ws_money }}{% else %}—{% endif %}</td>{% endif %}
+                            {% if tx.show_deposit %}<td>{% if ph.deposit %}{{ ph.deposit|ws_money }}{% else %}—{% endif %}</td>{% endif %}
+                            {% if tx.show_rent %}<td>{% if ph.rent %}{{ ph.rent|ws_money }}{% else %}—{% endif %}</td>{% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </aside>
+    </div>
+
+    <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="ws-btn ws-btn-ghost ws-ld-back"><i class="fas fa-arrow-right" aria-hidden="true"></i> بازگشت به جدول</a>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="ws-modal" id="modal-meta" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel">
+        <div class="ws-modal-head">
+            <div><h2 class="ws-modal-title">متادیتای آگهی</h2><p class="ws-modal-sub">برچسب، یادداشت و علاقه‌مندی</p></div>
+            <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" class="ws-modal-body">
+            {% csrf_token %}
+            {% render_fields meta_form 1 %}
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-fv-prose-toggle]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var wrap = btn.closest('[data-fv-prose]');
+            if (!wrap) return;
+            var open = btn.getAttribute('aria-expanded') !== 'true';
+            var preview = wrap.querySelector('.ws-fv-prose-preview');
+            var full = wrap.querySelector('.ws-fv-prose-full');
+            if (preview) preview.hidden = open;
+            if (full) full.hidden = !open;
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            btn.textContent = open ? 'بستن' : '... ادامه';
+        });
+    });
+});
+</script>
+{% if listing.latitude and listing.longitude %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>document.addEventListener('DOMContentLoaded',()=>{initMap([{lat:{{ listing.latitude }},lng:{{ listing.longitude }},title:"{{ listing.title|escapejs }}",price_label:"{% if tx.show_price and listing.price %}{{ listing.price|ws_money }}{% elif tx.show_rent and listing.rent %}اجاره {{ listing.rent|ws_money }}{% endif %}",area:{{ listing.area|default:0 }},is_consultant:false}],{});});</script>
+{% endif %}
+{% endblock %}

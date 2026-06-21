@@ -1,0 +1,31 @@
+{% load static %}
+<figure class="mk-gallery-card {{ card_mod|default:'' }} mk-gallery-card--{{ item.accent }}">
+    <button
+        type="button"
+        class="mk-gallery-open"
+        data-mk-gallery
+        data-src="{% static item.image %}"
+        data-caption="{{ item.caption }}"
+        aria-label="بزرگنمایی: {{ item.caption }}"
+    >
+        <div class="mk-gallery-img-wrap">
+            <img
+                src="{% static item.image %}"
+                alt="{{ item.caption }}"
+                class="mk-gallery-img"
+                loading="lazy"
+                decoding="async"
+                width="800"
+                height="500"
+            >
+            <span class="mk-gallery-shine" aria-hidden="true"></span>
+            <span class="mk-gallery-zoom" aria-hidden="true">
+                <i class="fas fa-search-plus"></i>
+            </span>
+            <span class="mk-gallery-caption">
+                <i class="fas fa-circle" aria-hidden="true"></i>
+                {{ item.caption }}
+            </span>
+        </div>
+    </button>
+</figure>

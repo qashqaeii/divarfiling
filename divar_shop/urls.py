@@ -1,0 +1,60 @@
+"""
+URL configuration for divar_shop project.
+"""
+from django.contrib import admin
+from django.contrib.sitemaps.views import index as sitemap_index, sitemap
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+from divar_shop.robots import robots_txt
+from divar_shop.sitemaps import sitemaps
+
+urlpatterns = [
+    path('robots.txt', robots_txt, name='robots_txt'),
+    path('sitemap.xml', sitemap_index, {'sitemaps': sitemaps}, name='sitemap_index'),
+    path(
+        'sitemap-<section>.xml',
+        sitemap,
+        {'sitemaps': sitemaps},
+        name='django.contrib.sitemaps.views.sitemap',
+    ),
+    path('admin/', admin.site.urls),
+    path('', include('shop.urls')),
+    path('accounts/', include('accounts.urls')),
+    path('api/', include('licenses.api_urls')),
+    path('payment/', include('shop.payment_urls')),
+    path('affiliate/', include('affiliates.urls')),
+    path('blog/', include('blog.urls')),
+    path('workspace/', include('workspace.urls')),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+    from django.core.exceptions import PermissionDenied, SuspiciousOperation
+    from django.http import Http404
+    from divar_shop.error_views import (
+        bad_request, page_not_found, permission_denied, server_error,
+    )
+    from django.shortcuts import render
+
+    def _preview_503(request):
+        return render(request, 'errors/503.html', {
+            'path': request.get_full_path(),
+            'is_workspace': False,
+        }, status=503)
+
+    urlpatterns += [
+        path('__preview__/errors/400/', lambda r: bad_request(r, SuspiciousOperation())),
+        path('__preview__/errors/403/', lambda r: permission_denied(r, PermissionDenied())),
+        path('__preview__/errors/404/', lambda r: page_not_found(r, Http404())),
+        path('__preview__/errors/500/', server_error),
+        path('__preview__/errors/503/', _preview_503),
+    ]
+
+handler400 = 'divar_shop.error_views.bad_request'
+handler403 = 'divar_shop.error_views.permission_denied'
+handler404 = 'divar_shop.error_views.page_not_found'
+handler500 = 'divar_shop.error_views.server_error'

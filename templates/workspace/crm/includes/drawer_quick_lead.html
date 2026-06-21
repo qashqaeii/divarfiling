@@ -1,0 +1,52 @@
+{% load crm_tags %}
+<aside class="crm-drawer crm-drawer-quick" id="drawer-quick-lead" {% if open_modal == 'drawer-quick-lead' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-sm">
+        <div class="crm-drawer-head crm-drawer-head-accent">
+            <div>
+                <span class="crm-drawer-kicker"><i class="fas fa-bolt" aria-hidden="true"></i> ثبت سریع</span>
+                <h2>سرنخ جدید</h2>
+                <p>کمتر از ۳۰ ثانیه — بعداً تکمیل کنید</p>
+            </div>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:crm_quick_lead' %}" class="crm-drawer-form" id="crmQuickLeadForm" data-ajax="1">
+            <div class="crm-drawer-body">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <div class="crm-quick-fields">
+                    <label class="crm-field">
+                        <span class="crm-label">نام <em>*</em></span>
+                        <input type="text" name="name" class="crm-input crm-input-lg" placeholder="نام و نام خانوادگی" required autocomplete="name"
+                               value="{{ quick_lead_form.name.value|default:'' }}">
+                    </label>
+                    <label class="crm-field">
+                        <span class="crm-label">تلفن</span>
+                        <input type="tel" name="phone" class="crm-input crm-input-lg" placeholder="۰۹۱۲۳۴۵۶۷۸۹" dir="ltr" inputmode="tel" autocomplete="tel"
+                               value="{{ quick_lead_form.phone.value|default:'' }}">
+                    </label>
+                    <label class="crm-field">
+                        <span class="crm-label">منبع</span>
+                        <select name="source" class="crm-select">
+                            <option value="">—</option>
+                            {% for s in crm_sources %}
+                            <option value="{{ s }}" {% if quick_lead_form.source.value == s %}selected{% endif %}>{{ s }}</option>
+                            {% empty %}
+                            <option value="تماس ورودی">تماس ورودی</option>
+                            <option value="دیوار">دیوار</option>
+                            <option value="معرف">معرف</option>
+                            <option value="سایر">سایر</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary crm-btn-glow">
+                    <i class="fas fa-bolt" aria-hidden="true"></i> ثبت سرنخ
+                </button>
+            </div>
+        </form>
+    </div>
+</aside>

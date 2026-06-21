@@ -1,0 +1,42 @@
+{% load humanize %}
+{% if page_obj.has_other_pages %}
+<nav class="mk-pagination" aria-label="{{ aria_label }}">
+    <div class="mk-pagination-meta">
+        <span class="mk-pagination-range">{{ start_index|intcomma }}–{{ end_index|intcomma }}</span>
+        <span class="mk-pagination-total">از {{ total_count|intcomma }} مورد</span>
+    </div>
+    <div class="mk-pagination-nav">
+        {% if prev_url %}
+        <a href="{{ prev_url }}" class="mk-page-btn mk-page-btn-nav" aria-label="صفحه قبل" title="قبلی">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </a>
+        {% else %}
+        <span class="mk-page-btn mk-page-btn-nav is-disabled" aria-hidden="true">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </span>
+        {% endif %}
+
+        <div class="mk-page-list" role="group" aria-label="شماره صفحات">
+            {% for p in pages %}
+            {% if p.type == 'ellipsis' %}
+            <span class="mk-page-ellipsis" aria-hidden="true">…</span>
+            {% elif p.active %}
+            <span class="mk-page-num is-active" aria-current="page">{{ p.num }}</span>
+            {% else %}
+            <a href="{{ p.url }}" class="mk-page-num">{{ p.num }}</a>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if next_url %}
+        <a href="{{ next_url }}" class="mk-page-btn mk-page-btn-nav" aria-label="صفحه بعد" title="بعدی">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </a>
+        {% else %}
+        <span class="mk-page-btn mk-page-btn-nav is-disabled" aria-hidden="true">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </span>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}

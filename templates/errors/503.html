@@ -1,0 +1,31 @@
+{% extends 'errors/base_error.html' %}
+
+{% block err_title %}در حال نگهداری{% endblock %}
+{% block err_code %}503{% endblock %}
+{% block err_http %}503{% endblock %}
+{% block err_eyebrow %}خطای ۵۰۳ — موقتاً در دسترس نیست{% endblock %}
+{% block err_heading %}به‌زودی برمی‌گردیم{% endblock %}
+{% block err_lead %}
+در حال به‌روزرسانی یا نگهداری سرویس هستیم. لطفاً چند دقیقه دیگر دوباره سر بزنید — ممنون از صبر شما.
+{% endblock %}
+
+{% block err_visual %}
+<div class="err-scene err-scene--503">
+    <div class="err-code-display">503</div>
+    <div class="err-maintenance">
+        <i class="fas fa-gears err-gear err-gear--1" aria-hidden="true"></i>
+        <i class="fas fa-gears err-gear err-gear--2" aria-hidden="true"></i>
+    </div>
+</div>
+{% endblock %}
+
+{% block err_actions %}
+<button type="button" class="err-btn err-btn--primary" onclick="location.reload()">
+    <i class="fas fa-rotate-right" aria-hidden="true"></i>
+    <span>بررسی مجدد</span>
+</button>
+<a href="{% url 'home' %}" class="err-btn err-btn--soft">
+    <i class="fas fa-house" aria-hidden="true"></i>
+    <span>صفحه اصلی</span>
+</a>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}پرداخت موفق — فایلینگ دیوار{% endblock %}
+{% block body_class %}mk-pub-page{% endblock %}
+
+{% block content %}
+<div class="mk-pub-wrap">
+    <div class="container mk-pub-result">
+        <div class="mk-pub-result-card">
+            <div class="mk-pub-result-icon">
+                <span class="mk-icon mk-icon--lg mk-icon--emerald"><i class="fas fa-check-circle"></i></span>
+            </div>
+            <h1>پرداخت با موفقیت انجام شد!</h1>
+            {% if license %}
+            <p class="mk-pub-result-msg">سفارش شما با موفقیت ثبت و پرداخت شد. کلید لایسنس آماده است.</p>
+            {% else %}
+            <p class="mk-pub-result-msg">سفارش شما تأیید شد. برای دریافت کلید لایسنس، شناسه سخت‌افزاری را از ربات در داشبورد ثبت کنید.</p>
+            {% endif %}
+
+            {% if license %}
+            <div class="mk-pub-license-box">
+                <h2><i class="fas fa-key"></i> کلید لایسنس شما</h2>
+                <div class="mk-pub-license-key" id="license-key">{{ license.license_key }}</div>
+                <button type="button" class="mk-pub-copy-btn" onclick="copyLicenseKey()">
+                    <i class="fas fa-copy"></i> کپی کلید لایسنس
+                </button>
+                <div class="mk-pub-license-warn">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    لطفاً این کلید را در جای امنی نگهداری کنید.
+                </div>
+            </div>
+            {% endif %}
+
+            {% if not license %}
+            <div class="mk-pub-info-box mk-pub-claim-box">
+                <h2><i class="fas fa-microchip"></i> مرحله بعد: صدور لایسنس</h2>
+                <ol class="mk-pub-claim-steps" style="text-align: right; margin: 1rem 0; padding-right: 1.25rem;">
+                    <li>ربات استخراج را دانلود و اجرا کنید.</li>
+                    <li>در تب «لایسنس»، شناسه سخت‌افزاری را کپی کنید.</li>
+                    <li>در داشبورد → تب «لایسنس‌ها»، شناسه را وارد کنید تا کلید صادر شود.</li>
+                    <li>کلید را در ربات وارد کرده و «فعال‌سازی» را بزنید.</li>
+                </ol>
+                <a href="{% url 'dashboard' %}?tab=licenses#licenses" class="btn btn-primary">
+                    <i class="fas fa-key"></i> رفتن به صدور لایسنس
+                </a>
+            </div>
+            {% endif %}
+
+            {% if can_download %}
+            <div class="mk-pub-info-box mk-pub-download-box">
+                <h2><i class="fas fa-download"></i> دانلود ربات استخراج</h2>
+                <p class="mk-pub-result-msg" style="margin-bottom: 1rem;">
+                    فایل نصب آماده است. پس از دانلود، برنامه را نصب کنید و کلید لایسنس را در بخش لایسنس وارد کنید.
+                </p>
+                <a href="{% url 'payment:download' order.id %}" class="btn btn-primary">
+                    <i class="fas fa-file-archive"></i>
+                    دانلود {{ download_filename|default:"Robot.zip" }}
+                </a>
+            </div>
+            {% endif %}
+
+            {% if order %}
+            <div class="mk-pub-info-box">
+                <h2><i class="fas fa-receipt"></i> اطلاعات سفارش</h2>
+                <div class="mk-pub-info-row">
+                    <span>شماره سفارش:</span>
+                    <span>#{{ order.id }}</span>
+                </div>
+                {% if transaction and transaction.zibal_ref_number %}
+                <div class="mk-pub-info-row">
+                    <span>شماره مرجع بانکی:</span>
+                    <span><code>{{ transaction.zibal_ref_number }}</code></span>
+                </div>
+                {% endif %}
+                {% if transaction and transaction.zibal_track_id %}
+                <div class="mk-pub-info-row">
+                    <span>کد پیگیری زیبال:</span>
+                    <span><code>{{ transaction.zibal_track_id }}</code></span>
+                </div>
+                {% endif %}
+                <div class="mk-pub-info-row">
+                    <span>محصول:</span>
+                    <span>{{ order.product.title }}</span>
+                </div>
+                <div class="mk-pub-info-row">
+                    <span>پلن:</span>
+                    <span>{{ order.plan.name }}</span>
+                </div>
+                {% if order.discount_amount > 0 %}
+                <div class="mk-pub-info-row mk-pub-info-row--accent">
+                    <span>تخفیف:</span>
+                    <span>-{{ order.discount_amount|currency }} تومان</span>
+                </div>
+                {% endif %}
+                <div class="mk-pub-info-row mk-pub-info-row--accent">
+                    <span>مبلغ پرداخت شده:</span>
+                    <span>{{ order.amount|currency }} تومان</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mk-pub-result-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                    <i class="fas fa-tachometer-alt"></i> رفتن به داشبورد
+                </a>
+                <a href="{% url 'license_guide' %}" class="btn btn-secondary">
+                    <i class="fas fa-book"></i> راهنمای فعال‌سازی
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyLicenseKey() {
+    const licenseKey = document.getElementById('license-key').textContent;
+    const btn = event.target.closest('.mk-pub-copy-btn');
+    const originalText = btn.innerHTML;
+
+    const onSuccess = function() {
+        btn.innerHTML = '<i class="fas fa-check"></i> کپی شد!';
+        btn.style.background = 'rgba(16, 185, 129, 0.28)';
+        setTimeout(function() {
+            btn.innerHTML = originalText;
+            btn.style.background = '';
+        }, 2000);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(licenseKey).then(onSuccess).catch(function() {
+            alert('خطا در کپی کردن. لطفاً به صورت دستی کپی کنید.');
+        });
+    } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = licenseKey;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            onSuccess();
+        } catch (err) {
+            alert('خطا در کپی کردن. لطفاً به صورت دستی کپی کنید.');
+        }
+        document.body.removeChild(textArea);
+    }
+}
+</script>
+{% endblock %}

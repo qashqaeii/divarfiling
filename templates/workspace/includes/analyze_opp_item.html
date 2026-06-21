@@ -1,0 +1,66 @@
+<article class="ws-rpt-l2-opp-item{% if forloop.first and not compact %} is-top{% endif %}{% if compact %} ws-rpt-l2-opp-item--compact{% endif %}">
+    <div class="ws-rpt-l2-opp-item-rank">
+        <span class="ws-rpt-l2-opp-item-num">#{{ opp.rank }}</span>
+        {% if not compact %}<span class="ws-rpt-l2-opp-item-stars">{{ opp.stars }}</span>{% endif %}
+    </div>
+    <div class="ws-rpt-l2-opp-item-body">
+        <h3>
+            {% if opp.area_fmt %}{{ opp.area_fmt }}{% else %}{{ opp.title }}{% endif %}
+            {% if opp.neighborhood %}<small>{{ opp.neighborhood }}</small>{% endif %}
+        </h3>
+        <div class="ws-rpt-l2-opp-item-price">
+            {% if ctx.deal == 'rent' %}
+                {% if opp.deposit_fmt and opp.rent_fmt %}
+                    {{ opp.deposit_fmt }} رهن + {{ opp.rent_fmt }} اجاره
+                {% elif opp.rent_equiv_fmt %}
+                    {{ opp.rent_equiv_fmt }}
+                {% endif %}
+            {% else %}
+                {% if opp.price_fmt %}{{ opp.price_fmt }}{% endif %}
+                {% if opp.price_per_sqm_fmt %}<small>متری {{ opp.price_per_sqm_fmt }}</small>{% endif %}
+            {% endif %}
+        </div>
+        {% if opp.amenities %}
+        <div class="ws-rpt-l2-opp-item-amen" aria-label="امکانات">
+            {% if opp.amenity_tier == 'full' %}
+            <span class="ws-rpt-l2-opp-tier ws-rpt-l2-opp-tier--full">فول امکانات</span>
+            {% elif opp.amenity_tier == 'bare' %}
+            <span class="ws-rpt-l2-opp-tier ws-rpt-l2-opp-tier--bare">بدون امکانات پایه</span>
+            {% endif %}
+            {% for am in opp.amenities %}
+            <span class="ws-rpt-l2-opp-amen ws-rpt-l2-opp-amen--{{ am.state }}{% if am.tier == 'secondary' %} ws-rpt-l2-opp-amen--luxury{% endif %}" title="{{ am.label }}">
+                <i class="fas {{ am.icon }}" aria-hidden="true"></i>
+                <span>{{ am.label }}</span>
+                {% if am.state == 'yes' %}<em>دارد</em>
+                {% elif am.state == 'no' %}<em>ندارد</em>
+                {% else %}<em>؟</em>{% endif %}
+            </span>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if opp.value_diff_pct %}
+        <span class="ws-rpt-l2-opp-item-badge">{{ opp.value_diff_pct|floatformat:0 }}٪ زیر بازار</span>
+        {% endif %}
+        {% if not compact and opp.reasons %}
+        <ul class="ws-rpt-l2-opp-item-reasons">
+            {% for reason in opp.reasons %}
+            <li>{{ reason }}</li>
+            {% endfor %}
+        </ul>
+        {% elif compact and opp.reasons %}
+        <p class="ws-rpt-l2-opp-item-reason-compact">{{ opp.reasons.0 }}</p>
+        {% endif %}
+        {% if not compact and opp.expected_price_fmt %}
+        <p class="ws-rpt-l2-opp-item-expected">
+            <i class="fas fa-scale-balanced" aria-hidden="true"></i>
+            ارزش تخمینی بازار: <strong>{{ opp.expected_price_fmt }}</strong>
+            {% if opp.expected_range_fmt %}<span>(بازه {{ opp.expected_range_fmt }})</span>{% endif %}
+        </p>
+        {% endif %}
+    </div>
+    {% if opp.listing_id %}
+    <a href="{% url 'workspace:listing_detail' dataset.id opp.listing_id %}" class="ws-rpt-l2-opp-item-btn">
+        {% if compact %}ببین{% else %}مشاهده <i class="fas fa-arrow-left" aria-hidden="true"></i>{% endif %}
+    </a>
+    {% endif %}
+</article>

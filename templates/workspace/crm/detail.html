@@ -1,0 +1,101 @@
+{% extends 'workspace/base.html' %}
+{% load humanize workspace_tags %}
+
+{% block page_title %}{{ customer.name }}{% endblock %}
+
+{% block content %}
+<div class="mk-page">
+<header class="mk-page-hero">
+    <div class="mk-page-hero-main">
+        <div class="mk-page-hero-kicker">
+            <span class="mk-page-hero-mark" aria-hidden="true"></span>
+            <span class="mk-page-hero-eyebrow">CRM</span>
+        </div>
+        <h1 class="mk-page-hero-title">{{ customer.name }}</h1>
+        <p class="mk-page-hero-desc">{{ customer.customer_type }} · {{ customer.status }} · اولویت {{ customer.priority }}</p>
+    </div>
+    <div class="mk-page-hero-toolbar" role="toolbar" aria-label="عملیات">
+        <button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-modal-open="modal-customer-edit">
+            <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
+        </button>
+        <button type="button" class="mk-hero-btn mk-hero-btn-primary" data-modal-open="modal-activity">
+            <i class="fas fa-plus" aria-hidden="true"></i><span>فعالیت</span>
+        </button>
+    </div>
+</header>
+
+<div class="ws-card" style="margin-bottom:1rem">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;font-size:.8125rem">
+        <div><span class="ws-stat-lbl">تلفن</span><div>{{ customer.phone|default:"—" }}{% if customer.phone %} <button type="button" class="ws-btn ws-btn-sm ws-btn-ghost" data-copy="{{ customer.phone }}"><i class="fas fa-copy" aria-hidden="true"></i></button>{% endif %}</div></div>
+        {% if customer.budget_min or customer.budget_max %}<div><span class="ws-stat-lbl">بودجه</span><div>{% if customer.budget_min %}{{ customer.budget_min|ws_money }}{% else %}—{% endif %} — {% if customer.budget_max %}{{ customer.budget_max|ws_money }}{% else %}—{% endif %}</div></div>{% endif %}
+        {% if customer.areas %}<div><span class="ws-stat-lbl">محله‌ها</span><div>{{ customer.areas }}</div></div>{% endif %}
+        {% if customer.next_follow_up %}<div><span class="ws-stat-lbl">پیگیری بعدی</span><div>{{ customer.next_follow_up|ws_jalali }}</div></div>{% endif %}
+    </div>
+    {% if customer.notes %}<p style="margin-top:1rem;font-size:.8125rem;color:var(--ws-text-secondary)">{{ customer.notes }}</p>{% endif %}
+</div>
+
+<div class="ws-grid ws-grid-2">
+    <div class="ws-card">
+        <h3 class="ws-card-title" style="margin-bottom:1rem">فعالیت‌ها</h3>
+        {% if activities %}
+        {% for a in activities %}
+        <div class="ws-activity-item">
+            <span class="ws-badge ws-badge-blue">{{ a.activity_type }}</span>
+            {{ a.content }}
+            <span style="color:var(--ws-text-muted);float:left;font-size:.75rem">{{ a.created_at|ws_jalali }}</span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color:var(--ws-text-muted);font-size:.8125rem">فعالیتی ثبت نشده.</p>
+        {% endif %}
+    </div>
+    <div class="ws-card">
+        <h3 class="ws-card-title" style="margin-bottom:1rem">املاک مرتبط</h3>
+        {% if linked_listings %}
+        <div class="ws-table-wrap" style="border:none">
+            <table class="ws-table"><tr><th>عنوان</th><th>نقش</th><th>قیمت</th></tr>
+            {% for l in linked_listings %}<tr><td>{{ l.title|truncatechars:30 }}</td><td>{{ l.role }}</td><td>{{ l.price }}</td></tr>{% endfor %}
+            </table>
+        </div>
+        {% else %}
+        <p style="color:var(--ws-text-muted);font-size:.8125rem">ملکی مرتبط نشده.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="ws-modal" id="modal-customer-edit" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-lg">
+        <div class="ws-modal-head">
+            <div><h2 class="ws-modal-title">ویرایش مشتری</h2></div>
+            <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:crm_edit' customer.id %}" class="ws-modal-body">
+            {% csrf_token %}
+            {% render_fields customer_form 2 %}
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="ws-modal" id="modal-activity" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel">
+        <div class="ws-modal-head"><h2 class="ws-modal-title">ثبت فعالیت</h2><button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button></div>
+        <form method="post" class="ws-modal-body">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_activity">
+            <div class="ws-field"><label class="ws-label">نوع</label><select name="activity_type" class="ws-select"><option value="تماس">تماس</option><option value="بازدید">بازدید</option><option value="جلسه">جلسه</option><option value="یادداشت">یادداشت</option></select></div>
+            <div class="ws-field"><label class="ws-label">توضیحات</label><textarea name="content" class="ws-textarea" rows="3"></textarea></div>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary">ثبت</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

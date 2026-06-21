@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static blog_tags %}
+
+{% block title %}مقالات — فایلینگ دیوار{% endblock %}
+{% block body_class %}mk-pub-page mk-blog-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=3">
+{% endblock %}
+
+{% block content %}
+<div class="mk-pub-wrap mk-blog-hub">
+
+    {# ─── Hero ─── #}
+    <header class="mk-blog-hub-hero">
+        <div class="mk-blog-hub-hero-bg" aria-hidden="true">
+            <span class="mk-blog-orb mk-blog-orb--1"></span>
+            <span class="mk-blog-orb mk-blog-orb--2"></span>
+            <span class="mk-blog-orb mk-blog-orb--3"></span>
+        </div>
+        <div class="container">
+            <div class="mk-blog-hub-hero-grid">
+                <div class="mk-blog-hub-hero-copy">
+                    <span class="mk-blog-kicker mk-blog-kicker--glow">
+                        <i class="fas fa-sparkles" aria-hidden="true"></i>
+                        مرکز دانش مشاوران
+                    </span>
+                    <h1>مقالات تخصصی املاک</h1>
+                    <p class="mk-blog-hero-lead">
+                        راهنماهای عملی CRM، تحلیل بازار دیوار، استخراج هوشمند و گردش کار حرفه‌ای —
+                        برای مشاوران و آژانس‌هایی که با داده تصمیم می‌گیرند.
+                    </p>
+                    <div class="mk-blog-hub-stats">
+                        <div class="mk-blog-stat">
+                            <strong>{{ total_posts }}</strong>
+                            <span>مقاله منتشرشده</span>
+                        </div>
+                        <div class="mk-blog-stat">
+                            <strong>{{ categories|length }}</strong>
+                            <span>دسته موضوعی</span>
+                        </div>
+                        <div class="mk-blog-stat">
+                            <strong><i class="fas fa-infinity" aria-hidden="true"></i></strong>
+                            <span>به‌روزرسانی مستمر</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mk-blog-hub-hero-visual" aria-hidden="true">
+                    <div class="mk-blog-hero-card-stack">
+                        <div class="mk-blog-hero-card mk-blog-hero-card--back"></div>
+                        <div class="mk-blog-hero-card mk-blog-hero-card--mid"></div>
+                        <div class="mk-blog-hero-card mk-blog-hero-card--front">
+                            <i class="fas fa-chart-line"></i>
+                            <span>CRM · تحلیل · فایلینگ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {# ─── فیلتر دسته‌ها ─── #}
+    {% if categories %}
+    <div class="mk-blog-filter-bar">
+        <div class="container">
+            <nav class="mk-blog-filter-nav" aria-label="فیلتر دسته‌بندی">
+                <a href="{% url 'blog:post_list' %}"
+                   class="mk-blog-filter-pill{% if not active_category %} is-active{% endif %}">
+                    <i class="fas fa-layer-group" aria-hidden="true"></i>
+                    همه
+                </a>
+                {% for cat in categories %}
+                <a href="?cat={{ cat.slug }}"
+                   class="mk-blog-filter-pill{% if active_category == cat.slug %} is-active{% endif %}">
+                    <i class="fas {{ cat.slug|category_icon }}" aria-hidden="true"></i>
+                    {{ cat.name }}
+                    <span class="mk-blog-filter-count">{{ cat.post_count }}</span>
+                </a>
+                {% endfor %}
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    <section class="mk-blog-list-band">
+        <div class="container">
+
+            {# ─── مقاله ویژه (صفحه اول) ─── #}
+            {% if featured_post %}
+            <article class="mk-blog-featured mk-blog-reveal">
+                <a href="{% url 'blog:post_detail' featured_post.slug %}" class="mk-blog-featured-link">
+                    <div class="mk-blog-featured-media">
+                        {% if featured_post.featured_image %}
+                        <img src="{{ featured_post.featured_image.url }}" alt="{{ featured_post.title }}" loading="eager">
+                        {% else %}
+                        <div class="mk-blog-card-placeholder mk-blog-card-placeholder--featured">
+                            <i class="fas {{ featured_post.category.slug|default:'article'|category_icon }}"></i>
+                        </div>
+                        {% endif %}
+                        <span class="mk-blog-featured-badge">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            پیشنهاد مطالعه
+                        </span>
+                    </div>
+                    <div class="mk-blog-featured-body">
+                        {% if featured_post.category %}
+                        <span class="mk-blog-tag">{{ featured_post.category.name }}</span>
+                        {% endif %}
+                        <h2 class="mk-blog-featured-title">{{ featured_post.title }}</h2>
+                        <p class="mk-blog-featured-excerpt">
+                            {{ featured_post.excerpt|default:featured_post.content|striptags|truncatewords:36 }}
+                        </p>
+                        <div class="mk-blog-featured-meta">
+                            <span><i class="fas fa-user-pen"></i>{{ featured_post.author.get_full_name|default:featured_post.author.username }}</span>
+                            <span><i class="fas fa-calendar"></i>{{ featured_post.published_at|date:"Y/m/d" }}</span>
+                            <span><i class="fas fa-clock"></i>{{ featured_post.content|reading_time }} دقیقه</span>
+                            <span><i class="fas fa-eye"></i>{{ featured_post.views_count }} بازدید</span>
+                        </div>
+                        <span class="mk-blog-featured-cta">
+                            مطالعه کامل
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                </a>
+            </article>
+            {% endif %}
+
+            {# ─── شبکه مقالات ─── #}
+            <div class="mk-blog-grid">
+                {% for post in grid_posts %}
+                <article class="mk-blog-card mk-blog-reveal" style="--mk-reveal-delay: {{ forloop.counter0 }}">
+                    <a href="{% url 'blog:post_detail' post.slug %}" class="mk-blog-card-link">
+                        <div class="mk-blog-card-media">
+                            {% if post.featured_image %}
+                            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="mk-blog-card-img" loading="lazy">
+                            {% else %}
+                            <div class="mk-blog-card-placeholder">
+                                <i class="fas {{ post.category.slug|default:'article'|category_icon }}"></i>
+                            </div>
+                            {% endif %}
+                            <span class="mk-blog-card-readtime">
+                                <i class="fas fa-clock" aria-hidden="true"></i>
+                                {{ post.content|reading_time }} دقیقه
+                            </span>
+                        </div>
+                        <div class="mk-blog-card-body">
+                            {% if post.category %}
+                            <span class="mk-blog-tag">{{ post.category.name }}</span>
+                            {% endif %}
+                            <h2 class="mk-blog-card-title">{{ post.title }}</h2>
+                            <p class="mk-blog-card-excerpt">{{ post.excerpt|default:post.content|striptags|truncatewords:22 }}</p>
+                            <div class="mk-blog-card-foot">
+                                <div class="mk-blog-card-meta">
+                                    <span><i class="fas fa-calendar"></i>{{ post.published_at|date:"Y/m/d" }}</span>
+                                    <span><i class="fas fa-eye"></i>{{ post.views_count }}</span>
+                                </div>
+                                <span class="mk-blog-card-more">مطالعه <i class="fas fa-arrow-left"></i></span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+                {% empty %}
+                {% if not featured_post %}
+                <div class="mk-blog-empty mk-blog-reveal">
+                    <div class="mk-blog-empty-icon" aria-hidden="true"><i class="fas fa-newspaper"></i></div>
+                    <h2>هنوز مقاله‌ای منتشر نشده</h2>
+                    <p>به‌زودی راهنماهای تخصصی CRM، تحلیل بازار و فایلینگ دیوار اینجا قرار می‌گیرد.</p>
+                    <a href="{% url 'home' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-home"></i> بازگشت به خانه
+                    </a>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if is_paginated %}
+            <nav class="mk-blog-pagination" aria-label="صفحه‌بندی مقالات">
+                {% if page_obj.has_previous %}
+                <a href="?{% if active_category %}cat={{ active_category }}&{% endif %}page={{ page_obj.previous_page_number }}" class="mk-blog-page-btn">
+                    <i class="fas fa-arrow-right"></i> قبلی
+                </a>
+                {% endif %}
+                <span class="mk-blog-page-status">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                <a href="?{% if active_category %}cat={{ active_category }}&{% endif %}page={{ page_obj.next_page_number }}" class="mk-blog-page-btn">
+                    بعدی <i class="fas fa-arrow-left"></i>
+                </a>
+                {% endif %}
+            </nav>
+            {% endif %}
+        </div>
+    </section>
+
+    {# ─── CTA ─── #}
+    <section class="mk-blog-cta-band">
+        <div class="container">
+            <div class="mk-blog-cta-card mk-blog-reveal">
+                <div class="mk-blog-cta-copy">
+                    <span class="mk-blog-kicker"><i class="fas fa-rocket"></i> شروع سریع</span>
+                    <h2>از مطالعه تا اجرا — یک میزکار واحد</h2>
+                    <p>مقالات را بخوانید، سپس با ربات استخراج و CRM فایلینگ دیوار همان روش‌ها را در عمل پیاده کنید.</p>
+                </div>
+                <div class="mk-blog-cta-actions">
+                    {% if bot_product %}
+                    <a href="{% url 'product_detail' bot_product.slug %}" class="btn btn-primary">
+                        <i class="fas fa-robot"></i> ربات استخراج
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'workspace:home' %}" class="btn btn-outline">
+                        <i class="fas fa-layer-group"></i> ورود به میزکار
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/mizkar-blog.js' %}?v=2" defer></script>
+{% endblock %}

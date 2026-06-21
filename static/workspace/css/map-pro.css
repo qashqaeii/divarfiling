@@ -1,0 +1,1398 @@
+/* ─── Map Pro — consultant-grade layout & visuals ─── */
+
+.mk-map-pro {
+    --map-accent: #5b21b6;
+    --map-accent-soft: rgba(91, 33, 182, 0.1);
+    --map-glass: rgba(255, 255, 255, 0.88);
+    --map-glass-border: rgba(148, 163, 184, 0.22);
+    --map-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+    gap: 0.85rem;
+}
+
+[data-theme="dark"] .mk-map-pro {
+    --map-glass: rgba(15, 23, 42, 0.82);
+    --map-glass-border: rgba(148, 163, 184, 0.12);
+    --map-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Header shell ── */
+.mk-map-pro .mk-map-head {
+    border: 1px solid var(--map-glass-border);
+    border-radius: 18px;
+    border-inline-start: none;
+    background: var(--map-glass);
+    backdrop-filter: blur(14px);
+    box-shadow: var(--map-shadow);
+    overflow: hidden;
+}
+
+.mk-map-pro .mk-map-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.15rem;
+    background: linear-gradient(135deg, rgba(91, 33, 182, 0.04) 0%, transparent 55%);
+}
+
+.mk-map-pro .mk-map-head-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+}
+
+.mk-map-pro .mk-map-head-kicker {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    text-transform: none;
+}
+
+.mk-map-pro .mk-map-kicker-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--map-accent);
+    box-shadow: 0 0 0 3px var(--map-accent-soft);
+}
+
+.mk-map-pro .mk-map-back {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: var(--ws-surface);
+    border-color: var(--map-glass-border);
+}
+
+.mk-map-pro .mk-map-head-stats {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.mk-map-pro .mk-map-head-stat {
+    min-width: 0;
+    padding: 0.45rem 0.75rem;
+    border-radius: 12px;
+    background: var(--ws-surface);
+    border: 1px solid var(--map-glass-border);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.mk-map-pro .mk-map-head-stat-val {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.mk-map-pro .mk-map-head-stat-lbl {
+    font-size: 0.58rem;
+    font-weight: 600;
+    opacity: 0.85;
+}
+
+/* ── Control deck ── */
+.mk-map-pro .mk-map-deck {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-top: 1px solid var(--map-glass-border);
+    background: var(--ws-surface);
+}
+
+.mk-map-pro .mk-map-deck-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    flex-wrap: wrap;
+}
+
+.mk-map-pro .mk-map-deck-row + .mk-map-deck-row {
+    border-top: 1px solid var(--map-glass-border);
+    background: var(--ws-surface-2);
+}
+
+.mk-map-pro .mk-map-deck-group {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.mk-map-pro .mk-map-deck-group--grow {
+    flex: 1;
+    min-width: 0;
+}
+
+.mk-map-pro .mk-map-deck-label {
+    flex-shrink: 0;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ws-text-muted);
+    min-width: 3.5rem;
+}
+
+.mk-map-pro .mk-map-head-toolbar {
+    display: none;
+}
+
+/* Seller filter chips */
+.mk-map-pro .mk-map-filters {
+    padding: 0.2rem;
+    border-radius: 999px;
+    background: var(--ws-surface);
+    border: 1px solid var(--map-glass-border);
+    gap: 0.15rem;
+}
+
+.mk-map-pro .mk-map-filter {
+    min-height: 32px;
+    padding: 0.28rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.64rem;
+}
+
+.mk-map-pro .mk-map-filter.is-active {
+    background: var(--ws-text);
+    color: var(--ws-surface);
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+}
+
+.mk-map-pro .mk-map-filter--consultant.is-active {
+    background: #2563eb;
+    color: #fff;
+}
+
+.mk-map-pro .mk-map-filter--personal.is-active {
+    background: #e11d48;
+    color: #fff;
+}
+
+/* Mode chips — horizontal scroll */
+.mk-map-pro .mk-map-modes-scroll {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+
+[dir="rtl"] .mk-map-pro .mk-map-modes-scroll:not(.mk-map-modes-scroll--wrap) {
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+
+[dir="ltr"] .mk-map-pro .mk-map-modes-scroll:not(.mk-map-modes-scroll--wrap) {
+    mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+    -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+}
+
+.mk-map-pro .mk-map-modes {
+    display: inline-flex;
+    flex: none;
+    width: max-content;
+    gap: 0.35rem;
+    padding: 0.2rem 0.15rem;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+.mk-map-pro .mk-map-mode {
+    flex: none;
+    min-height: 34px;
+    padding: 0.32rem 0.75rem 0.32rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid var(--map-glass-border);
+    background: var(--ws-surface);
+    font-size: 0.63rem;
+    font-weight: 700;
+    color: var(--ws-text-secondary);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.mk-map-pro .mk-map-mode-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--ws-surface-2);
+    font-size: 0.62rem;
+}
+
+.mk-map-pro .mk-map-mode:hover {
+    border-color: rgba(91, 33, 182, 0.25);
+    background: var(--ws-surface);
+    transform: none;
+}
+
+.mk-map-pro .mk-map-mode.is-active {
+    background: var(--map-accent);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(91, 33, 182, 0.28);
+    transform: none;
+}
+
+.mk-map-pro .mk-map-mode.is-active .mk-map-mode-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+/* Basemap chips — بالای نمایش */
+.mk-map-pro .mk-map-deck-row--basemap {
+    background: var(--ws-surface);
+    border-bottom: 1px solid var(--map-glass-border);
+}
+
+.mk-map-pro .mk-map-basemap-bar {
+    display: inline-flex;
+    flex: none;
+    width: max-content;
+    gap: 0.35rem;
+    padding: 0.2rem 0.15rem;
+}
+
+.mk-map-pro .mk-map-basemap-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: none;
+    min-height: 34px;
+    padding: 0.28rem 0.7rem 0.28rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid var(--map-glass-border);
+    background: var(--ws-surface);
+    font-family: inherit;
+    font-size: 0.63rem;
+    font-weight: 700;
+    color: var(--ws-text-secondary);
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    transition: border-color 0.12s, background 0.12s, box-shadow 0.12s, color 0.12s;
+}
+
+.mk-map-pro .mk-map-basemap-chip:hover {
+    border-color: rgba(91, 33, 182, 0.28);
+    color: var(--ws-text);
+}
+
+.mk-map-pro .mk-map-basemap-chip.is-active {
+    background: var(--map-accent);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(91, 33, 182, 0.25);
+}
+
+.mk-map-pro .mk-map-basemap-chip .mk-map-basemap-preview {
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.mk-map-pro .mk-map-basemap-chip.is-active .mk-map-basemap-preview {
+    border-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.mk-map-pro .mk-map-basemap-chip-label {
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* Advanced filter */
+.mk-map-pro .mk-map-advanced-toggle {
+    margin-inline-start: auto;
+    min-height: 36px;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px dashed rgba(91, 33, 182, 0.35);
+    background: var(--map-accent-soft);
+    color: var(--map-accent);
+    font-size: 0.63rem;
+    font-weight: 800;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.mk-map-pro .mk-map-advanced-toggle:hover {
+    background: rgba(91, 33, 182, 0.14);
+    box-shadow: 0 2px 10px rgba(91, 33, 182, 0.12);
+}
+
+.mk-map-pro .mk-map-advanced-toggle[aria-expanded="true"] {
+    border-style: solid;
+    background: var(--map-accent);
+    color: #fff;
+}
+
+.mk-map-pro .mk-map-advanced {
+    margin: 0;
+    padding: 0.85rem 1rem 1rem;
+    border: none;
+    border-top: 1px solid var(--map-glass-border);
+    border-radius: 0;
+    background: linear-gradient(180deg, var(--ws-surface-2), var(--ws-surface));
+}
+
+.mk-map-pro .mk-map-advanced:not([hidden]) {
+    animation: mk-map-slide-down 0.22s ease-out;
+}
+
+@keyframes mk-map-slide-down {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.mk-map-pro .mk-map-advanced-grid {
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 0.65rem;
+}
+
+.mk-map-pro .mk-map-advanced-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.mk-map-pro .mk-map-advanced-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--ws-text-secondary);
+    margin-bottom: 0.28rem;
+}
+
+.mk-map-pro .mk-map-advanced-input {
+    min-height: 36px;
+    border-radius: 11px;
+    border-color: var(--map-glass-border);
+    background: var(--ws-surface);
+    font-size: 0.68rem;
+    transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.mk-map-pro .mk-map-advanced-input:focus {
+    outline: none;
+    border-color: rgba(91, 33, 182, 0.45);
+    box-shadow: 0 0 0 3px var(--map-accent-soft);
+}
+
+.mk-map-pro .mk-map-advanced-input.mk-filter-num {
+    font-variant-numeric: tabular-nums;
+}
+
+.mk-map-pro .mk-map-advanced-actions {
+    margin-top: 0.75rem;
+    padding-top: 0.7rem;
+    gap: 0.75rem 1.25rem;
+}
+
+.mk-map-pro .mk-map-advanced-check {
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: var(--ws-surface);
+    border: 1px solid var(--map-glass-border);
+    font-size: 0.62rem;
+}
+
+.mk-map-pro .mk-map-advanced-reset {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid var(--map-glass-border);
+}
+
+.mk-map-pro .mk-map-advanced-reset:hover {
+    background: var(--ws-surface-2);
+}
+
+/* ── Map panel & stage ── */
+.mk-map-pro .mk-map-panel {
+    border-radius: 18px;
+    border-color: var(--map-glass-border);
+    box-shadow: var(--map-shadow);
+    background: var(--ws-surface);
+    gap: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.mk-map-pro .mk-map-panel--split {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    grid-template-rows: 1fr;
+    gap: 0;
+    align-items: stretch;
+    height: calc(100vh - 280px);
+    min-height: 480px;
+    max-height: calc(100vh - 280px);
+}
+
+/* نقشه اول در DOM؛ در RTL لیست ستون راست (کنار نقشه) */
+.mk-map-pro .mk-map-panel--split .mk-map-list {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.mk-map-pro .mk-map-panel--split .mk-map-stage {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 0;
+    height: 100%;
+    border-radius: 18px 0 0 18px;
+}
+
+.mk-map-pro .mk-map-list {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.mk-map-pro .mk-map-list[hidden] {
+    display: none !important;
+}
+
+.mk-map-pro .mk-map-panel--split .mk-map-list {
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    border: none;
+    border-inline-end: 1px solid var(--map-glass-border);
+    border-radius: 0 18px 18px 0;
+}
+
+.mk-map-pro .mk-map-list-head {
+    flex-shrink: 0;
+    padding: 0.85rem 1rem;
+    background: linear-gradient(180deg, var(--ws-surface), var(--ws-surface-2));
+    border-bottom: 1px solid var(--map-glass-border);
+}
+
+.mk-map-pro .mk-map-list-head-text strong {
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.mk-map-pro .mk-map-list-head-text span {
+    font-size: 0.62rem;
+    font-weight: 600;
+}
+
+.mk-map-pro .mk-map-list-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 1px solid var(--map-glass-border);
+    background: var(--ws-surface);
+}
+
+.mk-map-pro .mk-map-list-body {
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.55rem;
+    gap: 0.45rem;
+    background: var(--ws-surface-2);
+    display: flex;
+    flex-direction: column;
+}
+
+.mk-map-pro .mk-map-list-item {
+    padding: 0.65rem 0.75rem;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    background: var(--ws-surface);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.mk-map-pro .mk-map-list-item:hover {
+    border-color: rgba(91, 33, 182, 0.2);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+}
+
+.mk-map-pro .mk-map-list-item-price {
+    font-size: 0.74rem;
+}
+
+.mk-map-pro .mk-map-list-item-title {
+    font-size: 0.68rem;
+}
+
+.mk-map-pro .mk-map-stage {
+    position: relative;
+    min-height: calc(100vh - 280px);
+    height: calc(100vh - 280px);
+    background: #0f172a;
+    overflow: hidden;
+    border-radius: 0 0 18px 18px;
+}
+
+.mk-map-pro .mk-map-canvas,
+.mk-map-pro .ws-map {
+    height: 100% !important;
+    min-height: 480px !important;
+}
+
+.mk-map-pro .mk-map-panel--split .mk-map-canvas,
+.mk-map-pro .mk-map-panel--split .ws-map {
+    min-height: 0 !important;
+    height: 100% !important;
+}
+
+/* Floating legend — single linear bar */
+.mk-map-pro .mk-map-legend-float,
+.mk-map-pro .mk-map-legend-bar {
+    position: absolute;
+    z-index: 480;
+    inset-inline: 0.75rem;
+    bottom: 0.65rem;
+    max-width: min(92%, 680px);
+    margin-inline: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+    padding: 0.32rem 0.65rem;
+    border-radius: 999px;
+    background: var(--map-glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--map-glass-border);
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.1);
+    pointer-events: none;
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    line-height: 1.2;
+    min-height: 28px;
+}
+
+.mk-map-pro .mk-map-legend-bar-label {
+    color: var(--map-accent);
+    font-size: 0.62rem;
+    flex-shrink: 0;
+}
+
+.mk-map-pro .mk-map-legend-bar-title {
+    font-weight: 800;
+    color: var(--ws-text);
+    flex-shrink: 0;
+}
+
+.mk-map-pro .mk-map-legend-bar-badge {
+    flex-shrink: 0;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background: var(--map-accent-soft);
+    color: var(--map-accent);
+    font-size: 0.55rem;
+    font-weight: 800;
+}
+
+.mk-map-pro .mk-map-legend-bar-sep {
+    opacity: 0.35;
+    flex-shrink: 0;
+}
+
+.mk-map-pro .mk-map-legend-bar-content {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mk-map-pro .mk-map-legend-bar-content .mk-map-guide-minimal-row {
+    display: inline;
+    font-size: inherit;
+    white-space: nowrap;
+}
+
+.mk-map-pro .mk-map-legend-bar-content .mk-map-guide-dot {
+    width: 7px;
+    height: 7px;
+    vertical-align: middle;
+    margin-inline-end: 0.15rem;
+}
+
+.mk-map-pro .mk-map-legend-bar-content .mk-map-guide-sep {
+    margin-inline: 0.2rem;
+}
+
+.mk-map-pro .mk-map-legend-bar-content .mk-map-guide-text-muted {
+    opacity: 0.75;
+}
+
+.mk-map-pro .mk-map-legend-bar-content .mk-map-guide-scale-hint {
+    display: none;
+}
+
+.mk-map-pro .mk-map-legend-bar-content .mk-map-legend-scale {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    vertical-align: middle;
+}
+
+.mk-map-pro .mk-map-legend-bar-content .mk-map-legend-scale-labels {
+    display: none;
+}
+
+.mk-map-pro .mk-map-legend-bar-content .mk-map-legend-scale-track {
+    width: 72px;
+    height: 6px;
+    flex-shrink: 0;
+}
+
+.mk-map-pro .mk-map-legend-bar-content .mk-map-legend-range {
+    display: inline;
+    margin: 0;
+    font-size: inherit;
+    opacity: 0.85;
+}
+
+/* Legacy legend wrappers (if any) */
+.mk-map-pro .mk-map-legend-float .mk-map-guide-minimal-head {
+    display: none;
+}
+
+.mk-map-pro .mk-map-legend-float .mk-map-guide-minimal-body {
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+/* HUD — compact glass toolbar */
+.mk-map-pro .mk-map-hud {
+    position: absolute;
+    z-index: 500;
+    top: 0.75rem;
+    inset-inline-start: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+    pointer-events: none;
+}
+
+.mk-map-pro .mk-map-hud-panel--main {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 0.12rem;
+    padding: 0.28rem;
+    border-radius: 12px;
+    background: var(--map-glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--map-glass-border);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+    width: max-content;
+    max-width: calc(100vw - 2rem);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.mk-map-pro .mk-map-hud-panel--main::-webkit-scrollbar {
+    display: none;
+}
+
+.mk-map-pro .mk-map-hud-divider {
+    display: none;
+}
+
+.mk-map-pro .mk-map-hud-btn {
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 32px;
+    padding: 0.28rem 0.5rem;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: var(--ws-text-secondary);
+    font-size: 0.6rem;
+    font-weight: 700;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.mk-map-pro .mk-map-hud-btn:hover {
+    background: var(--map-accent-soft);
+    color: var(--map-accent);
+}
+
+.mk-map-pro .mk-map-hud-btn--primary {
+    background: var(--map-accent);
+    color: #fff;
+}
+
+.mk-map-pro .mk-map-hud-btn--primary:hover {
+    background: #4c1d95;
+    color: #fff;
+}
+
+.mk-map-pro .mk-map-hud-btn.is-active {
+    background: var(--map-accent-soft);
+    color: var(--map-accent);
+}
+
+.mk-map-pro .mk-map-hud-status {
+    align-self: flex-start;
+    padding: 0.3rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    background: var(--map-glass);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--map-glass-border);
+    max-width: 220px;
+}
+
+.mk-map-pro .mk-map-basemap-wrap {
+    position: relative;
+}
+
+.mk-map-pro .mk-map-basemap-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    inset-inline-start: 0;
+    min-width: 220px;
+    border-radius: 14px;
+    background: var(--map-glass);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--map-glass-border);
+    box-shadow: var(--map-shadow);
+}
+
+/* Overlays */
+.mk-map-pro .mk-map-overlay {
+    border-radius: 999px;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.64rem;
+    font-weight: 700;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.12);
+}
+
+.mk-map-pro .mk-map-overlay--hint {
+    bottom: 4.5rem;
+}
+
+/* Clusters — toned down */
+.mk-map-pro .mk-map-cluster {
+    background: linear-gradient(145deg, #475569, #334155);
+    border: 2px solid rgba(255, 255, 255, 0.92);
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.28);
+    font-size: 0.68rem;
+}
+
+.mk-map-pro .mk-map-cluster--sm { width: 32px; height: 32px; }
+.mk-map-pro .mk-map-cluster--md { width: 38px; height: 38px; }
+.mk-map-pro .mk-map-cluster--lg { width: 44px; height: 44px; }
+
+/* Responsive — لیست همیشه کنار نقشه، هرگز بالا */
+@media (max-width: 900px) {
+    .mk-map-pro .mk-map-deck-label {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .mk-map-pro .mk-map-advanced-toggle {
+        margin-inline-start: 0;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .mk-map-pro .mk-map-panel--split {
+        grid-template-columns: minmax(140px, 40%) minmax(0, 1fr);
+        grid-template-rows: 1fr;
+        height: calc(100vh - 280px);
+        max-height: calc(100vh - 280px);
+    }
+
+    .mk-map-pro .mk-map-panel--split .mk-map-list {
+        max-height: 100%;
+        height: 100%;
+        border-bottom: none;
+        border-inline-end: 1px solid var(--map-glass-border);
+    }
+
+    .mk-map-pro .mk-map-panel--split .mk-map-stage {
+        min-height: 0;
+    }
+
+    .mk-map-pro .mk-map-list-head {
+        padding: 0.55rem 0.65rem;
+    }
+
+    .mk-map-pro .mk-map-list-head-text strong {
+        font-size: 0.68rem;
+    }
+
+    .mk-map-pro .mk-map-list-item {
+        padding: 0.5rem 0.55rem;
+    }
+
+    .mk-map-pro .mk-map-legend-float,
+    .mk-map-pro .mk-map-legend {
+        left: 50%;
+        right: auto;
+        bottom: 0.45rem;
+        width: min(calc(100% - 4.5rem), 420px);
+        transform: translateX(-50%);
+    }
+
+    .mk-map-pro .mk-map-hud-btn-label {
+        display: none;
+    }
+
+    .mk-map-pro .mk-map-hud-btn {
+        justify-content: center;
+        min-width: 32px;
+        padding: 0.28rem;
+    }
+}
+
+/* removed wide-screen column wrap — HUD stays one row */
+
+/* ── Immersive page shell ── */
+.ws-content:has(.mk-map-pro) {
+    max-width: none;
+    padding-inline: 1rem;
+    padding-block: 0.85rem 1rem;
+}
+
+.mk-map-pro {
+    max-width: 1680px;
+    margin-inline: auto;
+}
+
+/* ── Stat accents ── */
+.mk-map-pro .mk-map-head-stat--consultant .mk-map-head-stat-val { color: #2563eb; }
+.mk-map-pro .mk-map-head-stat--personal .mk-map-head-stat-val { color: #e11d48; }
+.mk-map-pro .mk-map-head-stat-val {
+    background: linear-gradient(135deg, var(--ws-text) 0%, var(--ws-text-secondary) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.mk-map-pro .mk-map-head-stat--consultant .mk-map-head-stat-val {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+.mk-map-pro .mk-map-head-stat--personal .mk-map-head-stat-val {
+    background: linear-gradient(135deg, #e11d48, #f43f5e);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+/* ── HUD interaction fix ── */
+.mk-map-pro .mk-map-hud > * { pointer-events: auto; }
+
+.mk-map-pro .mk-map-hud-panel {
+    pointer-events: auto;
+}
+
+.mk-map-pro .mk-map-basemap-menu {
+    padding: 0.35rem;
+}
+
+.mk-map-pro .mk-map-basemap-option {
+    border-radius: 11px;
+    gap: 0.55rem;
+}
+
+.mk-map-pro .mk-map-basemap-option.is-active {
+    background: var(--map-accent-soft);
+    outline: 1px solid rgba(91, 33, 182, 0.25);
+}
+
+.mk-map-pro .mk-map-basemap-preview {
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+}
+
+/* ── Stage & canvas polish ── */
+.mk-map-pro .mk-map-canvas,
+.mk-map-pro .ws-map {
+    border-radius: inherit;
+}
+
+.mk-map-pro .leaflet-control-attribution {
+    font-size: 0.55rem;
+    opacity: 0.65;
+    background: rgba(255, 255, 255, 0.75) !important;
+    border-radius: 8px 0 0 0;
+    padding: 2px 6px !important;
+}
+
+[data-theme="dark"] .mk-map-pro .leaflet-control-attribution {
+    background: rgba(15, 23, 42, 0.75) !important;
+}
+
+/* ── Overlays ── */
+.mk-map-pro .mk-map-overlay {
+    background: var(--map-glass);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--map-glass-border);
+    color: var(--ws-text-secondary);
+}
+
+.mk-map-pro .mk-map-overlay--hint i {
+    color: var(--map-accent);
+}
+
+.mk-map-pro .mk-map-overlay--note {
+    top: 0.75rem;
+    bottom: auto;
+    inset-inline-end: 0.75rem;
+    inset-inline-start: auto;
+    max-width: min(320px, calc(100% - 5rem));
+}
+
+/* ── Advanced badge ── */
+.mk-map-pro .mk-map-advanced-badge {
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--map-accent);
+    font-size: 0.58rem;
+    font-weight: 800;
+    line-height: 1.15rem;
+}
+
+.mk-map-pro .mk-map-advanced-toggle[aria-expanded="true"] .mk-map-advanced-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+/* ── List panel ── */
+/* Selected pin — map marker icon */
+.mk-map-pro .mk-map-pin--selected {
+    width: auto;
+    height: auto;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mk-map-pro .mk-map-pin--selected i {
+    font-size: 1.55rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.35));
+}
+
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--consultant i { color: #2563eb; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--personal i { color: #e11d48; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--market.mk-map-pin--under i { color: #059669; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--market.mk-map-pin--fair i { color: #6366f1; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--market.mk-map-pin--over i { color: #dc2626; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--market.mk-map-pin--unknown i { color: #64748b; }
+
+.mk-map-pro .mk-map-pin-wrap--selected {
+    z-index: 1200 !important;
+}
+
+.mk-map-pro .mk-map-list-item.is-selected {
+    border-color: rgba(91, 33, 182, 0.5);
+    box-shadow: 0 0 0 3px var(--map-accent-soft);
+    background: linear-gradient(135deg, rgba(91, 33, 182, 0.04), var(--ws-surface));
+}
+
+.mk-map-pro .mk-map-list-tier {
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+}
+
+/* ── Empty state ── */
+.mk-map-pro .mk-map-empty {
+    border-radius: 18px;
+    border: 1px solid var(--map-glass-border);
+    box-shadow: var(--map-shadow);
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.mk-map-pro .mk-map-empty .mk-filing-empty-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 1rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--map-accent-soft);
+    color: var(--map-accent);
+    font-size: 1.25rem;
+}
+
+/* ── Popups (scoped) ── */
+.mk-map-pro .mk-map-popup-shell .leaflet-popup-content-wrapper {
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(15, 23, 42, 0.18);
+    border: 1px solid var(--map-glass-border);
+    overflow: hidden;
+}
+
+.mk-map-pro .mk-map-popup-price {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.mk-map-pro .mk-map-popup-verdict {
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 800;
+    padding: 0.15rem 0.5rem;
+}
+
+/* ── Legend chips ── */
+.mk-map-pro .mk-map-guide-title {
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+
+.mk-map-pro .mk-map-guide-head-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--map-accent-soft);
+    color: var(--map-accent);
+    font-size: 0.62rem;
+}
+
+.mk-map-pro .mk-map-legend-market-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.65rem;
+    font-size: 0.6rem;
+    font-weight: 700;
+}
+
+.mk-map-pro .mk-map-legend-market-row span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.mk-map-pro .mk-map-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ── Export toast ── */
+.mk-map-pro .mk-map-export-toast {
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--map-glass-border);
+    box-shadow: var(--map-shadow);
+}
+
+/* غلبه بر minimal.css — لیست هرگز بالای نقشه */
+@media (max-width: 900px) {
+    .mk-map-pro .mk-map-panel--split .mk-map-list,
+    .mk-map-pro .mk-map-panel--split .mk-map-stage {
+        order: unset !important;
+    }
+}
+
+/* ── Legend v3 — centered bottom strip ── */
+.mk-map-pro .mk-map-legend-float.mk-map-legend,
+.mk-map-pro .mk-map-legend.mk-map-legend-float {
+    inset-inline: auto;
+    left: 50%;
+    right: auto;
+    bottom: 0.55rem;
+    transform: translateX(-50%);
+    width: min(calc(100% - 6.5rem), 540px);
+    max-width: min(calc(100% - 6.5rem), 540px);
+    margin: 0;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid var(--map-glass-border);
+    background: color-mix(in srgb, var(--ws-surface) 94%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.1);
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 490;
+}
+
+.mk-map-pro .mk-map-legend-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    min-width: 0;
+    min-height: 26px;
+    padding: 0.28rem 0.65rem;
+}
+
+.mk-map-pro .mk-map-legend-kicker {
+    flex-shrink: 0;
+    font-size: 0.54rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ws-text-muted);
+}
+.mk-map-pro .mk-map-legend-badge {
+    flex-shrink: 0;
+    padding: 0.08rem 0.35rem;
+    border-radius: 4px;
+    background: var(--map-accent-soft);
+    color: var(--map-accent);
+    font-size: 0.54rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+.mk-map-pro .mk-map-legend-count {
+    flex-shrink: 0;
+    font-size: 0.54rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ws-text-muted);
+}
+.mk-map-pro .mk-map-legend-count:empty { display: none; }
+
+.mk-map-pro .mk-map-legend-divider {
+    flex-shrink: 0;
+    width: 1px;
+    height: 14px;
+    background: var(--ws-border);
+    opacity: 0.7;
+}
+
+.mk-map-pro .mk-map-legend-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    overflow: hidden;
+}
+
+.mk-map-pro .mk-map-legend-body .mk-map-legend-scale--inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+    direction: ltr;
+}
+.mk-map-pro .mk-map-legend-scale-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 1;
+    min-width: 80px;
+    max-width: 260px;
+}
+.mk-map-pro .mk-map-legend-scale-end {
+    flex-shrink: 0;
+    font-size: 0.5rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+    white-space: nowrap;
+}
+.mk-map-pro .mk-map-legend-scale-end:last-child { text-align: end; }
+.mk-map-pro .mk-map-legend-body .mk-map-legend-scale-track {
+    flex: 1;
+    width: auto;
+    height: 4px;
+    min-width: 48px;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(148, 163, 184, 0.12);
+}
+.mk-map-pro .mk-map-legend-body .mk-map-legend-scale-bar {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+}
+.mk-map-pro .mk-map-legend-caption {
+    margin: 0;
+    font-size: 0.5rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    direction: rtl;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.mk-map-pro .mk-map-legend-items {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem 0.55rem;
+    min-width: 0;
+    overflow: hidden;
+}
+.mk-map-pro .mk-map-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.54rem;
+    font-weight: 700;
+    color: var(--ws-text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.mk-map-pro .mk-map-legend-item em {
+    font-style: normal;
+    font-size: 0.5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--ws-text-muted);
+    padding: 0.02rem 0.22rem;
+    border-radius: 3px;
+    background: var(--ws-surface-2);
+}
+.mk-map-pro .mk-map-legend-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.mk-map-pro .mk-map-legend-dot--consultant { background: #2563eb; }
+.mk-map-pro .mk-map-legend-dot--personal { background: #e11d48; }
+.mk-map-pro .mk-map-legend-dot--under { background: #059669; }
+.mk-map-pro .mk-map-legend-dot--fair { background: #6366f1; }
+.mk-map-pro .mk-map-legend-dot--over { background: #dc2626; }
+.mk-map-pro .mk-map-legend-hint {
+    margin-inline-start: auto;
+    font-size: 0.48rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    opacity: 0.8;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+    .mk-map-pro .mk-map-legend-float.mk-map-legend,
+    .mk-map-pro .mk-map-legend.mk-map-legend-float {
+        width: min(calc(100% - 4.5rem), 420px);
+        max-width: min(calc(100% - 4.5rem), 420px);
+        bottom: 0.45rem;
+    }
+    .mk-map-pro .mk-map-legend-strip {
+        padding: 0.24rem 0.45rem;
+        gap: 0.35rem;
+        min-height: 24px;
+    }
+    .mk-map-pro .mk-map-legend-kicker { display: none; }
+    .mk-map-pro .mk-map-legend-caption { display: none; }
+    .mk-map-pro .mk-map-legend-scale-row { max-width: 120px; }
+}
+
+/* ── Mobile: show all mode/basemap controls (no clipped scroll) ── */
+@media (max-width: 768px) {
+    .ws-content:has(.mk-map-pro) {
+        padding-inline: 0.65rem;
+    }
+
+    .mk-map-pro .mk-map-deck-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.55rem 0.75rem;
+    }
+
+    .mk-map-pro .mk-map-deck-group,
+    .mk-map-pro .mk-map-deck-group--grow {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 0.4rem;
+    }
+
+    .mk-map-pro .mk-map-deck-label {
+        width: auto;
+        min-width: 0;
+    }
+
+    .mk-map-pro .mk-map-modes-scroll {
+        overflow: visible;
+        mask-image: none !important;
+        -webkit-mask-image: none !important;
+        width: 100%;
+    }
+
+    .mk-map-pro .mk-map-modes,
+    .mk-map-pro .mk-map-basemap-bar {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        max-width: 100%;
+        gap: 0.35rem;
+        padding: 0;
+    }
+
+    .mk-map-pro .mk-map-mode,
+    .mk-map-pro .mk-map-basemap-chip {
+        flex: 1 1 calc(33.333% - 0.25rem);
+        min-width: calc(33.333% - 0.25rem);
+        min-height: 44px;
+        justify-content: center;
+        padding-inline: 0.45rem;
+    }
+
+    .mk-map-pro .mk-map-filters {
+        width: 100%;
+        border-radius: 12px;
+        flex-wrap: wrap;
+    }
+
+    .mk-map-pro .mk-map-filter {
+        flex: 1 1 auto;
+        min-height: 44px;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .mk-map-pro .mk-map-advanced-toggle {
+        width: 100%;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mk-map-pro .mk-map-mode,
+    .mk-map-pro .mk-map-basemap-chip {
+        flex: 1 1 calc(50% - 0.2rem);
+        min-width: calc(50% - 0.2rem);
+    }
+}

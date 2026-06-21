@@ -1,0 +1,11 @@
+<div class="ws-amenity-group" role="group" aria-label="امکانات ملک">
+    <span class="ws-amenity {% if feat.elevator is True %}is-on{% elif feat.elevator is False %}is-off{% else %}is-unknown{% endif %}" data-tip="آسانسور{% if feat.elevator is True %}: دارد{% elif feat.elevator is False %}: ندارد{% else %}: نامشخص{% endif %}" aria-label="آسانسور">
+        <i class="fas fa-arrows-alt-v" aria-hidden="true"></i>
+    </span>
+    <span class="ws-amenity {% if feat.parking is True %}is-on{% elif feat.parking is False %}is-off{% else %}is-unknown{% endif %}" data-tip="پارکینگ{% if feat.parking is True %}: دارد{% elif feat.parking is False %}: ندارد{% else %}: نامشخص{% endif %}" aria-label="پارکینگ">
+        <i class="fas fa-car" aria-hidden="true"></i>
+    </span>
+    <span class="ws-amenity {% if feat.storage is True %}is-on{% elif feat.storage is False %}is-off{% else %}is-unknown{% endif %}" data-tip="انباری{% if feat.storage is True %}: دارد{% elif feat.storage is False %}: ندارد{% else %}: نامشخص{% endif %}" aria-label="انباری">
+        <i class="fas fa-archive" aria-hidden="true"></i>
+    </span>
+</div>

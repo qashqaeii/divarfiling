@@ -1,0 +1,422 @@
+{% extends 'workspace/crm/base_crm.html' %}
+{% load workspace_tags crm_tags %}
+
+{% block page_title %}اتوماسیون CRM{% endblock %}
+{% block crm_title %}{% endblock %}
+{% block crm_desc %}{% endblock %}
+{% block crm_actions %}{% endblock %}
+{% block crm_search %}{% endblock %}
+
+{% block crm_content %}
+<div class="crm-shell-page crm-automation-pro crm-automation-pro-v2 crm-page-chrome">
+
+    <header class="crm-dash-bar">
+        <div class="crm-dash-bar-main">
+            <h1 class="crm-dash-bar-title">اتوماسیون</h1>
+            <p class="crm-dash-bar-sub">{{ stats.active }} قانون فعال · {{ stats.queue }} مخاطب در صف</p>
+        </div>
+        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات اتوماسیون">
+            <form method="post" class="crm-auto-run-all-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="run">
+                <button type="submit" class="crm-dash-act" title="اجرای دستی همه قوانین فعال">
+                    <i class="fas fa-play" aria-hidden="true"></i><span>اجرای الان</span>
+                </button>
+            </form>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-rule">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>قانون</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="crm-auto-kpis" aria-label="آمار اتوماسیون">
+        <article class="crm-auto-kpi crm-auto-kpi--all">
+            <span class="crm-auto-kpi-glow" aria-hidden="true"></span>
+            <span class="crm-auto-kpi-icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
+            <div class="crm-auto-kpi-body">
+                <span class="crm-auto-kpi-val">{{ stats.total }}</span>
+                <span class="crm-auto-kpi-lbl">کل قوانین</span>
+            </div>
+        </article>
+        <article class="crm-auto-kpi crm-auto-kpi--active">
+            <span class="crm-auto-kpi-glow" aria-hidden="true"></span>
+            <span class="crm-auto-kpi-icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+            <div class="crm-auto-kpi-body">
+                <span class="crm-auto-kpi-val">{{ stats.active }}</span>
+                <span class="crm-auto-kpi-lbl">فعال</span>
+            </div>
+        </article>
+        <article class="crm-auto-kpi crm-auto-kpi--queue">
+            <span class="crm-auto-kpi-glow" aria-hidden="true"></span>
+            <span class="crm-auto-kpi-icon" aria-hidden="true"><i class="fas fa-users"></i></span>
+            <div class="crm-auto-kpi-body">
+                <span class="crm-auto-kpi-val">{{ stats.queue }}</span>
+                <span class="crm-auto-kpi-lbl">مخاطب در صف</span>
+            </div>
+        </article>
+        <article class="crm-auto-kpi crm-auto-kpi--clock">
+            <span class="crm-auto-kpi-glow" aria-hidden="true"></span>
+            <span class="crm-auto-kpi-icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+            <div class="crm-auto-kpi-body">
+                <span class="crm-auto-kpi-val crm-auto-kpi-val--sm">{% if stats.last_run %}{{ stats.last_run|ws_jalali_date }}{% else %}—{% endif %}</span>
+                <span class="crm-auto-kpi-lbl">آخرین اجرا · خودکار هر ساعت</span>
+            </div>
+        </article>
+    </section>
+
+    <div class="crm-shell-body">
+        <div class="crm-auto-tip" role="note">
+            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+            <p>کارهای تکراری را به CRM بسپارید — اگر مخاطبی بدون فعالیت بماند، یادآور یا تغییر وضعیت خودکار انجام می‌شود.</p>
+        </div>
+
+        <section class="crm-auto-presets" aria-label="شروع سریع">
+            <div class="crm-auto-presets-head">
+                <h2>شروع سریع</h2>
+                <span>یک قالب آماده انتخاب کنید و در چند ثانیه فعال کنید</span>
+            </div>
+            <div class="crm-auto-preset-grid">
+                {% for p in automation_presets %}
+                <button type="button" class="crm-auto-preset crm-auto-preset--{{ p.tone }}"
+                    data-drawer-open="drawer-rule"
+                    data-preset-name="{{ p.name }}"
+                    data-preset-days="{{ p.trigger_days }}"
+                    data-preset-statuses="{{ p.trigger_statuses }}"
+                    data-preset-action="{{ p.action }}"
+                    data-preset-action-status="{{ p.action_status|default:'' }}"
+                    data-preset-reminder-title="{{ p.action_reminder_title|default:'' }}"
+                    data-preset-reminder-days="{{ p.action_reminder_days|default:0 }}">
+                    <span class="crm-auto-preset-icon"><i class="fas {{ p.icon }}" aria-hidden="true"></i></span>
+                    <span class="crm-auto-preset-main">{{ p.name }}</span>
+                    <span class="crm-auto-preset-sub">{{ p.desc }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </section>
+
+        <div class="crm-auto-result-bar">
+            <span>{{ rules|length }} قانون</span>
+            {% if stats.queue %}
+            <span class="crm-auto-result-hint"><i class="fas fa-circle" aria-hidden="true"></i> {{ stats.queue }} مخاطب منتظر اقدام خودکار</span>
+            {% endif %}
+        </div>
+
+        <div class="crm-auto-grid">
+            {% for r in rules %}
+            <article class="crm-auto-card-v2 {% if not r.is_active %}is-off{% endif %}">
+                <header class="crm-auto-card-v2-head">
+                    <div class="crm-auto-card-v2-title-wrap">
+                        <h3 class="crm-auto-card-v2-title">{{ r.name }}</h3>
+                        {% if r.match_count %}
+                        <span class="crm-auto-card-v2-queue" title="مخاطبین واجد شرط الان">
+                            <i class="fas fa-user-clock" aria-hidden="true"></i>
+                            {{ r.match_count }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <form method="post" class="crm-auto-toggle-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="toggle">
+                        <input type="hidden" name="rule_id" value="{{ r.id }}">
+                        <button type="submit" class="crm-auto-switch {% if r.is_active %}is-on{% endif %}" role="switch" aria-checked="{% if r.is_active %}true{% else %}false{% endif %}" aria-label="{% if r.is_active %}غیرفعال کردن{% else %}فعال کردن{% endif %} {{ r.name }}">
+                            <span class="crm-auto-switch-track"></span>
+                            <span class="crm-auto-switch-thumb"></span>
+                        </button>
+                    </form>
+                </header>
+
+                <div class="crm-auto-pipeline">
+                    <div class="crm-auto-pipeline-node crm-auto-pipeline-node--if">
+                        <span class="crm-auto-pipeline-tag">اگر</span>
+                        <div class="crm-auto-pipeline-body">
+                            <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+                            <div>
+                                <strong>{{ r.trigger_days }} روز بدون فعالیت</strong>
+                                <span class="crm-auto-pipeline-chips">
+                                    {% for s in r.trigger_statuses|split_tags %}
+                                    <em>{{ s }}</em>
+                                    {% endfor %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="crm-auto-pipeline-connector" aria-hidden="true">
+                        <span class="crm-auto-pipeline-line"></span>
+                        <i class="fas fa-chevron-left"></i>
+                    </div>
+                    <div class="crm-auto-pipeline-node crm-auto-pipeline-node--then">
+                        <span class="crm-auto-pipeline-tag">آنگاه</span>
+                        <div class="crm-auto-pipeline-body">
+                            <i class="fas fa-{% if r.action == 'create_reminder' %}bell{% else %}tags{% endif %}" aria-hidden="true"></i>
+                            <div>
+                                <strong>{{ r.get_action_display }}</strong>
+                                {% if r.action == 'create_reminder' %}
+                                <span>«{{ r.action_reminder_title }}»{% if r.action_reminder_days %} · +{{ r.action_reminder_days }} روز{% endif %}</span>
+                                {% elif r.action_status %}
+                                <span>→ {{ r.action_status }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="crm-auto-card-v2-foot">
+                    <div class="crm-auto-card-v2-meta">
+                        {% if r.last_run_at %}
+                        <span><i class="fas fa-history" aria-hidden="true"></i> {{ r.last_run_at|ws_jalali_date }}</span>
+                        {% else %}
+                        <span class="is-muted"><i class="fas fa-clock" aria-hidden="true"></i> هنوز اجرا نشده</span>
+                        {% endif %}
+                    </div>
+                    <div class="crm-auto-card-v2-actions">
+                        <form method="post" class="crm-auto-inline-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="run_rule">
+                            <input type="hidden" name="rule_id" value="{{ r.id }}">
+                            <button type="submit" class="crm-auto-act" title="اجرای این قانون" {% if not r.is_active %}disabled{% endif %}>
+                                <i class="fas fa-play" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                        <button type="button" class="crm-auto-act"
+                            data-drawer-open="drawer-rule"
+                            data-rule-id="{{ r.id }}"
+                            data-rule-name="{{ r.name }}"
+                            data-rule-active="{{ r.is_active|yesno:'1,0' }}"
+                            data-rule-days="{{ r.trigger_days }}"
+                            data-rule-statuses="{{ r.trigger_statuses }}"
+                            data-rule-action="{{ r.action }}"
+                            data-rule-action-status="{{ r.action_status }}"
+                            data-rule-reminder-title="{{ r.action_reminder_title }}"
+                            data-rule-reminder-days="{{ r.action_reminder_days }}"
+                            title="ویرایش">
+                            <i class="fas fa-pen" aria-hidden="true"></i>
+                        </button>
+                        <form method="post" class="crm-auto-inline-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="duplicate">
+                            <input type="hidden" name="rule_id" value="{{ r.id }}">
+                            <button type="submit" class="crm-auto-act" title="کپی قانون">
+                                <i class="fas fa-copy" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                        <form method="post" class="crm-auto-inline-form" onsubmit="return confirm('حذف این قانون؟')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="rule_id" value="{{ r.id }}">
+                            <button type="submit" class="crm-auto-act crm-auto-act--danger" title="حذف">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </div>
+                </footer>
+            </article>
+            {% empty %}
+            <div class="crm-auto-empty">
+                <div class="crm-auto-empty-visual" aria-hidden="true">
+                    <span class="crm-auto-empty-ring"></span>
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h2>هنوز قانونی ندارید</h2>
+                <p>از «شروع سریع» یک قالب انتخاب کنید یا قانون اختصاصی بسازید.</p>
+                <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-rule">
+                    <i class="fas fa-plus" aria-hidden="true"></i><span>ساخت قانون</span>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block crm_drawers %}
+<aside class="crm-drawer" id="drawer-rule" {% if open_drawer %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg crm-auto-drawer-v2">
+        <div class="crm-drawer-head">
+            <div>
+                <span class="crm-auto-drawer-kicker"><i class="fas fa-robot" aria-hidden="true"></i> اتوماسیون</span>
+                <h2 id="crmRuleDrawerTitle">قانون جدید</h2>
+                <p id="crmRuleDrawerDesc">شرط + عمل = پیگیری بدون فراموشی</p>
+            </div>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times"></i></button>
+        </div>
+        <form method="post" class="crm-drawer-form" id="crmRuleForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save">
+            <input type="hidden" name="rule_id" id="crmRuleId" value="">
+
+            <div class="crm-drawer-body crm-auto-drawer-v2-body">
+                <div class="crm-auto-preview" id="crmRulePreview" aria-live="polite">
+                    <span class="crm-auto-preview-label">پیش‌نمایش</span>
+                    <p class="crm-auto-preview-text">اگر مخاطب <strong>۳ روز</strong> بدون فعالیت بماند → <strong>یادآور</strong> ایجاد شود</p>
+                </div>
+
+                <section class="crm-auto-form-block">
+                    <h3><span>۱</span> نام و وضعیت</h3>
+                    <label class="crm-auto-field">
+                        <span>نام قانون</span>
+                        {{ rule_form.name }}
+                    </label>
+                    <label class="crm-auto-switch-v2">
+                        {{ rule_form.is_active }}
+                        <span class="crm-auto-switch-v2-ui" aria-hidden="true"></span>
+                        <span>قانون فعال باشد</span>
+                    </label>
+                </section>
+
+                <section class="crm-auto-form-block">
+                    <h3><span>۲</span> شرط (چه زمانی؟)</h3>
+                    <label class="crm-auto-field crm-auto-field--inline">
+                        <span>روز بدون فعالیت</span>
+                        {{ rule_form.trigger_days }}
+                    </label>
+                    <div class="crm-auto-field">
+                        <span>وضعیت‌های هدف</span>
+                        <div class="crm-auto-status-chips" id="crmStatusChips" role="group" aria-label="وضعیت‌های هدف">
+                            {% for s in crm_statuses %}
+                            <button type="button" class="crm-auto-status-chip" data-status="{{ s }}">{{ s }}</button>
+                            {% endfor %}
+                        </div>
+                        {{ rule_form.trigger_statuses }}
+                        <small>روی وضعیت‌ها کلیک کنید — چند انتخاب مجاز است</small>
+                    </div>
+                </section>
+
+                <section class="crm-auto-form-block">
+                    <h3><span>۳</span> عمل (چه کاری؟)</h3>
+                    <label class="crm-auto-field">
+                        <span>نوع عمل</span>
+                        {{ rule_form.action }}
+                    </label>
+                    <div class="crm-auto-action-fields">
+                        <label class="crm-auto-field crm-rule-extra" data-for="set_status">
+                            <span>وضعیت جدید</span>
+                            {{ rule_form.action_status }}
+                        </label>
+                        <label class="crm-auto-field crm-rule-extra" data-for="create_reminder">
+                            <span>عنوان یادآور</span>
+                            {{ rule_form.action_reminder_title }}
+                        </label>
+                        <label class="crm-auto-field crm-auto-field--inline crm-rule-extra" data-for="create_reminder">
+                            <span>سررسید (+روز)</span>
+                            {{ rule_form.action_reminder_days }}
+                        </label>
+                    </div>
+                </section>
+            </div>
+
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary"><i class="fas fa-check" aria-hidden="true"></i> ذخیره</button>
+            </div>
+        </form>
+    </div>
+</aside>
+{% endblock %}
+
+{% block crm_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('crmRuleForm');
+    if (!form) return;
+
+    const titleEl = document.getElementById('crmRuleDrawerTitle');
+    const descEl = document.getElementById('crmRuleDrawerDesc');
+    const previewEl = document.getElementById('crmRulePreview')?.querySelector('.crm-auto-preview-text');
+    const actionSel = form.querySelector('[data-automation-action]');
+    const extras = form.querySelectorAll('.crm-rule-extra');
+    const statusInput = form.querySelector('[name="trigger_statuses"]');
+    const chipsWrap = document.getElementById('crmStatusChips');
+    const chips = chipsWrap?.querySelectorAll('.crm-auto-status-chip') || [];
+
+    if (statusInput) {
+        statusInput.type = 'hidden';
+    }
+
+    function selectedStatuses() {
+        return Array.from(chips).filter(c => c.classList.contains('is-on')).map(c => c.dataset.status);
+    }
+
+    function syncStatusInput() {
+        if (statusInput) statusInput.value = selectedStatuses().join(',');
+        syncPreview();
+    }
+
+    function setStatusesFromString(str) {
+        const set = new Set((str || '').split(',').map(s => s.trim()).filter(Boolean));
+        chips.forEach(c => c.classList.toggle('is-on', set.has(c.dataset.status)));
+        syncStatusInput();
+    }
+
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chip.classList.toggle('is-on');
+            syncStatusInput();
+        });
+    });
+
+    function syncExtras() {
+        const a = actionSel?.value || '';
+        extras.forEach(el => { el.hidden = el.dataset.for !== a; });
+        syncPreview();
+    }
+
+    function syncPreview() {
+        if (!previewEl) return;
+        const days = form.querySelector('[name="trigger_days"]')?.value || '۳';
+        const statuses = selectedStatuses().join('، ') || 'مخاطب هدف';
+        const action = actionSel?.value || 'create_reminder';
+        let actionTxt = action === 'set_status'
+            ? `وضعیت به «${form.querySelector('[name="action_status"]')?.value || '…'}» تغییر کند`
+            : `یادآور «${form.querySelector('[name="action_reminder_title"]')?.value || 'پیگیری'}» ساخته شود`;
+        previewEl.innerHTML = `اگر مخاطب <strong>${days} روز</strong> بدون فعالیت (${statuses}) بماند → <strong>${actionTxt}</strong>`;
+    }
+
+    ['trigger_days', 'action_reminder_title', 'action_status'].forEach(name => {
+        form.querySelector(`[name="${name}"]`)?.addEventListener('input', syncPreview);
+    });
+    actionSel?.addEventListener('change', syncExtras);
+
+    function fillRuleForm(btn) {
+        const set = (n, v) => {
+            const el = form.querySelector(`[name="${n}"]:not([type="hidden"])`);
+            if (el) el.value = v ?? '';
+        };
+        const isEdit = Boolean(btn?.dataset?.ruleId);
+        const isPreset = Boolean(btn?.dataset?.presetName);
+        if (titleEl) titleEl.textContent = isEdit ? 'ویرایش قانون' : (isPreset ? 'قانون از قالب' : 'قانون جدید');
+        if (descEl) descEl.textContent = isPreset ? btn.dataset.presetName : (isEdit ? 'تغییرات را ذخیره کنید' : 'شرط + عمل = پیگیری بدون فراموشی');
+        document.getElementById('crmRuleId').value = btn?.dataset?.ruleId || '';
+
+        if (!isEdit && !isPreset) {
+            form.reset();
+            const active = form.querySelector('[name="is_active"]');
+            if (active) active.checked = true;
+            setStatusesFromString('جدید,در حال پیگیری');
+            syncExtras();
+            return;
+        }
+
+        const d = btn.dataset;
+        set('name', d.ruleName || d.presetName || '');
+        set('trigger_days', d.ruleDays || d.presetDays);
+        setStatusesFromString(d.ruleStatuses || d.presetStatuses || '');
+        set('action', d.ruleAction || d.presetAction);
+        set('action_status', d.ruleActionStatus || d.presetActionStatus || '');
+        set('action_reminder_title', d.ruleReminderTitle || d.presetReminderTitle || '');
+        set('action_reminder_days', d.ruleReminderDays || d.presetReminderDays || '0');
+        const active = form.querySelector('[name="is_active"]');
+        if (active) active.checked = isPreset ? true : (d.ruleActive === '1');
+        syncExtras();
+    }
+
+    document.querySelectorAll('[data-drawer-open="drawer-rule"]').forEach(btn => {
+        btn.addEventListener('click', () => fillRuleForm(btn));
+    });
+
+    syncExtras();
+    if (statusInput?.value) setStatusesFromString(statusInput.value);
+    else setStatusesFromString('جدید,در حال پیگیری');
+});
+</script>
+{% endblock %}

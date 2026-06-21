@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}تراکنش‌های کیف پول - فایلینگ دیوار{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="glass-card mt-4">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+            <h1 class="text-white">تراکنش‌های کیف پول</h1>
+            <a href="{% url 'affiliate_dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                بازگشت به داشبورد
+            </a>
+        </div>
+        
+        <div class="glass-card mb-4" style="background: rgba(40, 167, 69, 0.2);">
+            <p class="text-white mb-2">موجودی فعلی:</p>
+            <h2 class="text-white" style="font-size: var(--font-size-2xl); color: var(--color-success);">{{ wallet.balance|currency }} تومان</h2>
+        </div>
+        
+        {% if transactions %}
+            <div class="transactions-list">
+                {% for transaction in transactions %}
+                    <div class="glass-card mb-3">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1;">
+                                <h3 class="text-white">
+                                    {% if transaction.transaction_type == 'credit' %}
+                                        <span style="color: var(--color-success);">
+                                            <i class="fas fa-arrow-down" aria-hidden="true"></i> +{{ transaction.amount|currency }} تومان
+                                        </span>
+                                    {% else %}
+                                        <span style="color: var(--color-danger);">
+                                            <i class="fas fa-arrow-up" aria-hidden="true"></i> -{{ transaction.amount|currency }} تومان
+                                        </span>
+                                    {% endif %}
+                                </h3>
+                                <p class="text-white" style="font-size: var(--font-size-sm); margin-top: var(--spacing-xs);">
+                                    {{ transaction.description }}
+                                </p>
+                                <p class="text-white" style="font-size: var(--font-size-sm); margin-top: var(--spacing-xs);">
+                                    <i class="fas fa-clock" aria-hidden="true"></i> {{ transaction.created_at|date:"Y/m/d H:i" }}
+                                </p>
+                            </div>
+                            <div>
+                                <span class="badge badge-{{ transaction.transaction_type }}">
+                                    {{ transaction.get_transaction_type_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <div class="pagination mt-4" style="display: flex; justify-content: center; gap: var(--spacing-sm);">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline">
+                            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                            قبلی
+                        </a>
+                    {% endif %}
+                    
+                    <span class="text-white" style="display: flex; align-items: center;">
+                        صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}
+                    </span>
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline">
+                            بعدی
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <p class="text-white text-center">تراکنشی وجود ندارد.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

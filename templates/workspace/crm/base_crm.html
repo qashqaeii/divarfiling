@@ -1,0 +1,111 @@
+{% extends 'workspace/base.html' %}
+
+
+
+{% load static %}
+
+
+
+
+{% block extra_css %}
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.css">
+
+
+
+<link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=90">
+
+<link rel="stylesheet" href="{% static 'workspace/css/minimal.css' %}?v=59">
+<link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=2">
+
+
+
+{% endblock %}
+
+
+
+
+{% block content %}
+
+
+
+<div class="crm-app crm-app--shell-full crm-app--{{ crm_section|default:'default' }}{% if crm_section == 'dashboard' %} crm-app-dashboard{% endif %}">
+
+
+
+    <div class="crm-top">
+
+
+
+        {% block crm_header %}{% endblock %}
+
+        <div class="crm-top-nav-row">
+            {% include 'workspace/crm/includes/nav.html' %}
+        </div>
+
+
+
+        {% block crm_search %}{% endblock %}
+
+
+
+    </div>
+
+
+
+
+
+
+
+    <main class="crm-main">
+
+
+
+        {% block crm_content %}{% endblock %}
+
+
+
+    </main>
+
+
+
+</div>
+
+
+
+{% block crm_drawers %}{% endblock %}
+
+
+
+{% endblock %}
+
+
+
+
+{% block extra_js %}
+
+
+
+<script src="https://unpkg.com/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.js"></script>
+
+
+
+<script>
+window.crmFilterSaveUrl = '{% url "workspace:crm_filter_save" %}';
+window.crmFilterDeleteUrlBase = '{% url "workspace:crm_filter_delete" filter_id=0 %}'.replace('/0/', '/');
+window.crmFilterPinUrlBase = '{% url "workspace:crm_filter_pin" filter_id=0 %}'.replace('/0/', '/');
+</script>
+
+<script src="{% static 'workspace/js/crm.js' %}?v=37"></script>
+
+
+
+{% block crm_js %}{% endblock %}
+
+
+
+{% endblock %}
+
+

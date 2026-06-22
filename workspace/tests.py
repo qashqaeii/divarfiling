@@ -718,6 +718,45 @@ class FormattingCommercialTests(SimpleTestCase):
         self.assertTrue(ctx['scenario_range_first'])
 
 
+class SmartToolsTests(SimpleTestCase):
+    def test_mixed_rent_calc(self):
+        from workspace.services.tools import mixed_rent_calc
+
+        r = mixed_rent_calc(deposit=50_000_000, rent=5_000_000, rate=30)
+        self.assertEqual(r['full_deposit'], 200_000_000)
+        self.assertEqual(r['full_rent'], 6_666_666)
+
+    def test_compare_properties_sale(self):
+        from workspace.services.tools import compare_properties
+
+        r = compare_properties(
+            {'label': 'الف', 'price': 10_000_000_000, 'area': 100},
+            {'label': 'ب', 'price': 9_000_000_000, 'area': 100},
+        )
+        self.assertEqual(r['winner'], 'b')
+        self.assertEqual(r['a']['per_sqm'], 100_000_000)
+
+    def test_discount_calc(self):
+        from workspace.services.tools import discount_calc
+
+        r = discount_calc(10_000_000_000, 5)
+        self.assertEqual(r['final_price'], 9_500_000_000)
+        self.assertEqual(r['savings'], 500_000_000)
+
+    def test_budget_max_area(self):
+        from workspace.services.tools import budget_calc
+
+        r = budget_calc(5_000_000_000, price_per_sqm=50_000_000)
+        self.assertEqual(r['max_area'], 100.0)
+
+    def test_pricing_suggest(self):
+        from workspace.services.tools import pricing_suggest
+
+        r = pricing_suggest(80, 120_000_000, adjustment_pct=5)
+        self.assertEqual(r['suggested_pps'], 126_000_000)
+        self.assertEqual(r['suggested_total'], 10_080_000_000)
+
+
 class ConsultantLandscapeTests(SimpleTestCase):
     def test_analyze_consultant_landscape_top_agency(self):
         import pandas as pd

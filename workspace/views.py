@@ -951,9 +951,47 @@ class ToolsView(LicenseRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['active_dataset'] = Dataset.objects.filter(
+        active = Dataset.objects.filter(
             user=self.request.user, is_active=True,
         ).order_by('-last_opened_at').first()
+        ctx['active_dataset'] = active
+        ctx['market_snapshot'] = None
+        if active:
+            from workspace.services.analyzer import compute_statistics, listings_to_dataframe
+            from workspace.services.formatting import full_deposit_equiv
+            from workspace.services.valuation import market_deposit_rent_ratio, standard_deposit_rent_ratio
+
+            listings = list(active.listings.all())
+            df = listings_to_dataframe(listings)
+            stats = compute_statistics(df, active.transaction_type)
+            tx = stats.get('tx') or {}
+            ratio = market_deposit_rent_ratio(df) if len(df) >= 5 else standard_deposit_rent_ratio()
+            pps = stats.get('price_per_sqm') or {}
+            price = stats.get('price') or {}
+            area = stats.get('area') or {}
+            snapshot = {
+                'dataset_name': active.name,
+                'transaction_type': active.transaction_type or '',
+                'row_count': stats.get('row_count', 0),
+                'is_rent': bool(tx.get('is_rent')),
+                'show_price_per_sqm': bool(tx.get('show_price_per_sqm', True)),
+                'ratio': round(float(ratio), 1),
+                'median_pps': pps.get('median'),
+                'pps_p25': pps.get('p25'),
+                'pps_p75': pps.get('p75'),
+                'median_price': price.get('median'),
+                'median_area': area.get('median'),
+            }
+            if tx.get('is_rent'):
+                dep_med = (stats.get('deposit') or {}).get('median')
+                rent_med = (stats.get('rent') or {}).get('median')
+                snapshot['median_deposit'] = dep_med
+                snapshot['median_rent'] = rent_med
+                fd = full_deposit_equiv(dep_med, rent_med, ratio)
+                if fd:
+                    snapshot['median_full_deposit'] = fd
+            ctx['market_snapshot'] = snapshot
+        ctx['market_snapshot_json'] = json.dumps(ctx['market_snapshot'], ensure_ascii=False)
         return ctx
 
 

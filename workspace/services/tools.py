@@ -1,7 +1,9 @@
 """ابزارهای محاسباتی."""
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
+
+from workspace.services.formatting import full_deposit_equiv
 
 
 def deposit_rent_convert(
@@ -10,7 +12,7 @@ def deposit_rent_convert(
     rate: int = 30,
 ) -> Dict:
     """تبدیل ودیعه کامل ↔ اجاره با نرخ rate:1."""
-    result = {'rate': rate}
+    result: Dict[str, Any] = {'rate': rate}
     if full_deposit and rate:
         result['monthly_rent'] = int(full_deposit / rate)
         result['from'] = 'deposit'
@@ -20,12 +22,196 @@ def deposit_rent_convert(
     return result
 
 
+def mixed_rent_calc(
+    deposit: Optional[int] = None,
+    rent: Optional[int] = None,
+    rate: int = 30,
+) -> Dict:
+    """رهن ترکیبی → رهن کامل و اجاره کامل معادل."""
+    if deposit is None and rent is None:
+        return {}
+    if not rate:
+        return {}
+    d = deposit or 0
+    r = rent or 0
+    if d == 0 and r == 0:
+        return {}
+    full_dep = full_deposit_equiv(d, r, rate)
+    if full_dep is None:
+        return {}
+    return {
+        'deposit': d,
+        'rent': r,
+        'rate': rate,
+        'full_deposit': full_dep,
+        'full_rent': int(full_dep / rate),
+    }
+
+
+def _listing_compare_row(
+    *,
+    price: Optional[int] = None,
+    deposit: Optional[int] = None,
+    rent: Optional[int] = None,
+    area: Optional[float] = None,
+    label: str = '',
+    is_rent: bool = False,
+    rate: int = 30,
+) -> Optional[Dict]:
+    if not area or area <= 0:
+        return None
+    if is_rent:
+        fd = full_deposit_equiv(deposit, rent, rate)
+        if fd is None:
+            return None
+        return {
+            'label': label,
+            'area': area,
+            'full_deposit': fd,
+            'per_sqm': round(fd / area),
+            'metric': 'full_deposit',
+        }
+    if not price:
+        return None
+    return {
+        'label': label,
+        'area': area,
+        'price': price,
+        'per_sqm': round(price / area),
+        'metric': 'price',
+    }
+
+
+def compare_properties(
+    a: Dict[str, Any],
+    b: Dict[str, Any],
+    *,
+    is_rent: bool = False,
+    rate: int = 30,
+) -> Dict:
+    """مقایسه دو ملک — نرمال‌سازی با قیمت هر متر یا رهن کامل هر متر."""
+    keys = ('price', 'deposit', 'rent', 'area', 'label')
+    row_a = _listing_compare_row(is_rent=is_rent, rate=rate, **{k: a.get(k) for k in keys})
+    row_b = _listing_compare_row(is_rent=is_rent, rate=rate, **{k: b.get(k) for k in keys})
+    result: Dict[str, Any] = {
+        'is_rent': is_rent,
+        'rate': rate,
+        'a': row_a,
+        'b': row_b,
+    }
+    if not row_a or not row_b:
+        return result
+    pps_a = row_a['per_sqm']
+    pps_b = row_b['per_sqm']
+    if not pps_a or not pps_b:
+        return result
+    diff_pct = round((pps_b - pps_a) / pps_a * 100, 1) if pps_a else None
+    if diff_pct is None:
+        return result
+    if diff_pct < -1:
+        winner = 'b'
+        verdict = f'{b.get("label") or "آگهی ب"} ارزان‌تر است'
+    elif diff_pct > 1:
+        winner = 'a'
+        verdict = f'{a.get("label") or "آگهی الف"} ارزان‌تر است'
+    else:
+        winner = 'tie'
+        verdict = 'تقریباً برابر'
+    result.update({
+        'diff_pct': diff_pct,
+        'winner': winner,
+        'verdict': verdict,
+        'cheaper_per_sqm': min(pps_a, pps_b),
+    })
+    return result
+
+
+def discount_calc(list_price: int, discount_pct: float) -> Dict:
+    """تخفیف از قیمت آگهی."""
+    discount_pct = max(0.0, min(discount_pct, 100.0))
+    savings = int(list_price * discount_pct / 100)
+    final_price = list_price - savings
+    return {
+        'list_price': list_price,
+        'discount_pct': discount_pct,
+        'savings': savings,
+        'final_price': final_price,
+    }
+
+
+def rent_commission_calc(
+    monthly_rent: int,
+    tenant_share: float = 50.0,
+    landlord_share: float = 50.0,
+) -> Dict:
+    """کمیسیون اجاره — سهم مستأجر و مالک (پایه: نصف اجاره هر طرف)."""
+    tenant = int(monthly_rent * tenant_share / 100)
+    landlord = int(monthly_rent * landlord_share / 100)
+    return {
+        'monthly_rent': monthly_rent,
+        'tenant_commission': tenant,
+        'landlord_commission': landlord,
+        'total_commission': tenant + landlord,
+        'tenant_share': tenant_share,
+        'landlord_share': landlord_share,
+    }
+
+
+def budget_calc(
+    budget: int,
+    price_per_sqm: Optional[float] = None,
+    area: Optional[float] = None,
+) -> Dict:
+    """بودجه مشتری ↔ متراژ یا قیمت متر."""
+    result: Dict[str, Any] = {'budget': budget}
+    if budget and price_per_sqm and price_per_sqm > 0 and not area:
+        max_area = round(budget / price_per_sqm, 1)
+        result['mode'] = 'max_area'
+        result['max_area'] = max_area
+        result['price_per_sqm'] = price_per_sqm
+    elif budget and area and area > 0 and not price_per_sqm:
+        required_pps = int(budget / area)
+        result['mode'] = 'required_pps'
+        result['required_pps'] = required_pps
+        result['area'] = area
+    elif budget and price_per_sqm and area and price_per_sqm > 0 and area > 0:
+        total = int(price_per_sqm * area)
+        result['mode'] = 'affordability'
+        result['total_price'] = total
+        result['price_per_sqm'] = price_per_sqm
+        result['area'] = area
+        result['affordable'] = total <= budget
+        result['shortfall'] = max(0, total - budget)
+        result['surplus'] = max(0, budget - total)
+    return result
+
+
+def pricing_suggest(
+    area: float,
+    market_median_pps: float,
+    adjustment_pct: float = 0.0,
+) -> Dict:
+    """قیمت‌گذاری بر اساس میانه بازار."""
+    if not area or area <= 0 or not market_median_pps or market_median_pps <= 0:
+        return {}
+    adj = 1 + adjustment_pct / 100
+    suggested_pps = market_median_pps * adj
+    total = int(suggested_pps * area)
+    return {
+        'area': area,
+        'market_median_pps': market_median_pps,
+        'adjustment_pct': adjustment_pct,
+        'suggested_pps': round(suggested_pps),
+        'suggested_total': total,
+    }
+
+
 def area_price_calc(
     price_per_sqm: Optional[float] = None,
     area: Optional[float] = None,
     total_price: Optional[int] = None,
 ) -> Dict:
-    result = {}
+    result: Dict[str, Any] = {}
     if price_per_sqm and area:
         result['total_price'] = int(price_per_sqm * area)
         result['price_per_sqm'] = price_per_sqm

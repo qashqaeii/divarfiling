@@ -69,102 +69,202 @@
     </section>
     {% endif %}
 
-    <header class="crm-prop-hero" aria-label="خلاصه ملک">
-        <div class="crm-prop-hero-top">
-            <div class="crm-prop-hero-identity">
+    <header class="crm-prop-hero crm-prop-hero--{% if property.deal_mode == 'فروش' %}sale{% elif property.deal_mode == 'رهن و اجاره' %}deposit{% elif property.deal_mode == 'اجاره' %}rent{% else %}default{% endif %}" aria-label="خلاصه ملک">
+        <div class="crm-prop-hero-ambient" aria-hidden="true">
+            <span class="crm-prop-hero-orb crm-prop-hero-orb--1"></span>
+            <span class="crm-prop-hero-orb crm-prop-hero-orb--2"></span>
+        </div>
+
+        <div class="crm-prop-hero-inner">
+            <div class="crm-prop-hero-nav">
                 <a href="{% url 'workspace:crm_properties' %}" class="crm-prop-hero-back" title="بازگشت به فایل‌ها">
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
-                <span class="crm-prop-hero-icon" aria-hidden="true"><i class="fas fa-building"></i></span>
-                <div class="crm-prop-hero-copy">
-                    <div class="crm-prop-hero-title-row">
-                        <h1>{{ property.title }}</h1>
-                        <div class="crm-prop-hero-badges">
-                            <span class="crm-prop-badge crm-prop-badge--deal">{{ property.deal_mode }}</span>
-                            <span class="crm-prop-badge crm-prop-badge--status">{{ property.transaction_status }}</span>
-                            <span class="crm-prop-badge crm-prop-badge--type">{{ property.property_type }}</span>
-                            {% if property.publish_status %}
-                            <span class="crm-prop-badge crm-prop-badge--pub crm-prop-badge--pub-{{ property.publish_status }}">{{ property.publish_status }}</span>
-                            {% endif %}
-                        </div>
+                <nav class="crm-prop-hero-crumb" aria-label="مسیر">
+                    <a href="{% url 'workspace:crm_properties' %}">فایل‌های شخصی</a>
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    <span>{{ property.property_type }}</span>
+                </nav>
+                <div class="crm-prop-hero-actions" role="toolbar" aria-label="عملیات فایل">
+                    {% if not mask_sensitive %}
+                    {% if source_listing and source_listing.link %}
+                    <a href="{{ source_listing.link }}" target="_blank" rel="noopener" class="crm-prop-hero-act" title="مشاهده در دیوار">
+                        <i class="fas fa-external-link-alt"></i><span>دیوار</span>
+                    </a>
+                    {% elif property.link %}
+                    <a href="{{ property.link }}" target="_blank" rel="noopener" class="crm-prop-hero-act" title="لینک آگهی">
+                        <i class="fas fa-external-link-alt"></i><span>لینک</span>
+                    </a>
+                    {% endif %}
+                    {% endif %}
+                    {% if can_edit_property %}
+                    <button type="button" class="crm-prop-hero-act" data-drawer-open="drawer-document" title="آپلود مدرک">
+                        <i class="fas fa-paperclip"></i><span>مدرک</span>
+                    </button>
+                    <button type="button" class="crm-prop-hero-act crm-prop-hero-act--primary" data-drawer-open="drawer-edit">
+                        <i class="fas fa-pen"></i><span>ویرایش</span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="crm-prop-hero-main">
+                <div class="crm-prop-hero-visual">
+                    {% if property.images %}
+                    <a href="{{ property.images.0 }}" target="_blank" rel="noopener" class="crm-prop-hero-cover" aria-label="تصویر اصلی ملک">
+                        <img src="{{ property.images.0 }}" alt="" loading="eager">
+                    </a>
+                    {% if property.images|length > 1 %}
+                    <span class="crm-prop-hero-img-badge"><i class="fas fa-images"></i> {{ property.images|length }}</span>
+                    {% endif %}
+                    {% else %}
+                    <div class="crm-prop-hero-cover crm-prop-hero-cover--empty" aria-hidden="true">
+                        <i class="fas fa-building"></i>
                     </div>
-                    <p class="crm-prop-hero-meta">
+                    {% endif %}
+                    <span class="crm-prop-hero-deal-pill">{{ property.deal_mode }}</span>
+                </div>
+
+                <div class="crm-prop-hero-content">
+                    <div class="crm-prop-hero-status-row">
+                        <span class="crm-prop-badge crm-prop-badge--status">{{ property.transaction_status }}</span>
+                        <span class="crm-prop-badge crm-prop-badge--type">{{ property.property_type }}</span>
+                        {% if property.publish_status %}
+                        <span class="crm-prop-badge crm-prop-badge--pub crm-prop-badge--pub-{{ property.publish_status }}">{{ property.publish_status }}</span>
+                        {% endif %}
+                    </div>
+
+                    <h1 class="crm-prop-hero-title">{{ property.title }}</h1>
+
+                    <div class="crm-prop-hero-chips">
                         {% if property_location_display and property_location_display != "—" %}
-                        <span><i class="fas fa-location-dot" aria-hidden="true"></i> {{ property_location_display }}</span>
+                        <span class="crm-prop-hero-chip crm-prop-hero-chip--loc">
+                            <i class="fas fa-location-dot" aria-hidden="true"></i>{{ property_location_display }}
+                        </span>
                         {% endif %}
                         {% if property.token and not mask_sensitive %}
-                        <span class="crm-prop-hero-meta-sep">·</span>
-                        <span class="crm-prop-hero-token">
+                        <span class="crm-prop-hero-chip crm-prop-hero-chip--token">
+                            <i class="fas fa-fingerprint" aria-hidden="true"></i>
                             <code>{{ property.token }}</code>
-                            <button type="button" class="crm-prop-copy" data-copy="{{ property.token }}" title="کپی"><i class="fas fa-copy"></i></button>
+                            <button type="button" class="crm-prop-copy" data-copy="{{ property.token }}" title="کپی شناسه"><i class="fas fa-copy"></i></button>
                         </span>
                         {% endif %}
                         {% if is_property_owner %}
-                        <span class="crm-prop-hero-meta-sep">·</span>
-                        <span class="crm-prop-hero-owner-tag"><i class="fas fa-user"></i> مالک: شما</span>
+                        <span class="crm-prop-hero-chip"><i class="fas fa-user-check" aria-hidden="true"></i>مالک: شما</span>
                         {% elif property_owner_user %}
-                        <span class="crm-prop-hero-meta-sep">·</span>
-                        <span class="crm-prop-hero-owner-tag"><i class="fas fa-user"></i> مالک: {{ property_owner_user.get_full_name|default:property_owner_user.username }}</span>
+                        <span class="crm-prop-hero-chip"><i class="fas fa-user" aria-hidden="true"></i>مالک: {{ property_owner_user.get_full_name|default:property_owner_user.username }}</span>
                         {% endif %}
-                    </p>
+                        {% if property.address and not mask_sensitive %}
+                        <span class="crm-prop-hero-chip crm-prop-hero-chip--addr">
+                            <i class="fas fa-map-pin" aria-hidden="true"></i>{{ property.address }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="crm-prop-hero-board" aria-label="قیمت و مشخصات کلیدی">
+                        <div class="crm-prop-hero-pricezone">
+                            {% if property.sale_price %}
+                            <div class="crm-prop-hero-pricecard crm-prop-hero-pricecard--sale">
+                                <span class="crm-prop-hero-pricecard-lbl">قیمت فروش</span>
+                                <strong>{{ property.sale_price|ws_money }}</strong>
+                            </div>
+                            {% endif %}
+                            {% if property.deposit %}
+                            <div class="crm-prop-hero-pricecard crm-prop-hero-pricecard--dep">
+                                <span class="crm-prop-hero-pricecard-lbl">ودیعه</span>
+                                <strong>{{ property.deposit|ws_money }}</strong>
+                            </div>
+                            {% endif %}
+                            {% if property.monthly_rent %}
+                            <div class="crm-prop-hero-pricecard crm-prop-hero-pricecard--rent">
+                                <span class="crm-prop-hero-pricecard-lbl">اجاره ماهانه</span>
+                                <strong>{{ property.monthly_rent|ws_money }}</strong>
+                            </div>
+                            {% endif %}
+                            {% if not property.sale_price and not property.deposit and not property.monthly_rent %}
+                            <div class="crm-prop-hero-pricecard crm-prop-hero-pricecard--empty">
+                                <i class="fas fa-tag" aria-hidden="true"></i>
+                                <span>قیمت ثبت نشده</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="crm-prop-hero-kpis">
+                            {% if property.area %}
+                            <div class="crm-prop-hero-kpi">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-ruler-combined"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>متراژ</em>
+                                    <strong>{{ property.area|ws_area }}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% if property.rooms %}
+                            <div class="crm-prop-hero-kpi">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-door-open"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>اتاق</em>
+                                    <strong>{{ property.rooms }}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% if property.floor %}
+                            <div class="crm-prop-hero-kpi">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-layer-group"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>طبقه</em>
+                                    <strong>{{ property.floor }}{% if property.total_floors %}/{{ property.total_floors }}{% endif %}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% if property.build_year %}
+                            <div class="crm-prop-hero-kpi">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-calendar"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>ساخت</em>
+                                    <strong>{{ property.build_year }}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
+                            <div class="crm-prop-hero-kpi crm-prop-hero-kpi--accent">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-users"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>مخاطب</em>
+                                    <strong>{% if mask_sensitive %}—{% else %}{{ contact_links|length }}{% endif %}</strong>
+                                </span>
+                            </div>
+                            <div class="crm-prop-hero-kpi">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-clock"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>بروزرسانی</em>
+                                    <strong>{{ property.updated_at|ws_jalali }}</strong>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="crm-prop-hero-actions" role="toolbar">
-                {% if not mask_sensitive %}
-                {% if source_listing and source_listing.link %}
-                <a href="{{ source_listing.link }}" target="_blank" rel="noopener" class="crm-dash-act" title="دیوار">
-                    <i class="fas fa-external-link-alt"></i><span>دیوار</span>
-                </a>
-                {% elif property.link %}
-                <a href="{{ property.link }}" target="_blank" rel="noopener" class="crm-dash-act" title="لینک">
-                    <i class="fas fa-external-link-alt"></i><span>لینک</span>
-                </a>
-                {% endif %}
-                {% endif %}
-                {% if can_edit_property %}
-                <button type="button" class="crm-dash-act" data-drawer-open="drawer-document" title="آپلود مدرک">
-                    <i class="fas fa-paperclip"></i><span>مدرک</span>
-                </button>
-                <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-edit">
-                    <i class="fas fa-pen"></i><span>ویرایش</span>
-                </button>
-                {% endif %}
-            </div>
-        </div>
 
-        <div class="crm-prop-hero-metrics" aria-label="قیمت و مشخصات">
-            <div class="crm-prop-hero-prices">
-                {% if property.sale_price %}
-                <div class="crm-prop-hero-price crm-prop-hero-price--sale"><span>فروش</span><strong>{{ property.sale_price|ws_money }}</strong></div>
-                {% endif %}
-                {% if property.deposit %}
-                <div class="crm-prop-hero-price crm-prop-hero-price--dep"><span>رهن</span><strong>{{ property.deposit|ws_money }}</strong></div>
-                {% endif %}
-                {% if property.monthly_rent %}
-                <div class="crm-prop-hero-price crm-prop-hero-price--rent"><span>اجاره</span><strong>{{ property.monthly_rent|ws_money }}</strong></div>
-                {% endif %}
-                {% if not property.sale_price and not property.deposit and not property.monthly_rent %}
-                <div class="crm-prop-hero-price crm-prop-hero-price--empty"><span>قیمت ثبت نشده</span></div>
-                {% endif %}
+            {% if property.has_parking or property.has_storage or property.has_elevator or listing_highlights %}
+            <div class="crm-prop-hero-amenities">
+                <span class="crm-prop-hero-amenities-lbl"><i class="fas fa-sparkles"></i> امکانات</span>
+                <div class="crm-prop-hero-tags">
+                    {% if property.has_parking %}<span class="crm-prop-tag"><i class="fas fa-car"></i> پارکینگ</span>{% endif %}
+                    {% if property.has_storage %}<span class="crm-prop-tag"><i class="fas fa-box"></i> انباری</span>{% endif %}
+                    {% if property.has_elevator %}<span class="crm-prop-tag"><i class="fas fa-elevator"></i> آسانسور</span>{% endif %}
+                    {% for hl in listing_highlights %}<span class="crm-prop-tag crm-prop-tag--hl">{{ hl }}</span>{% endfor %}
+                </div>
             </div>
-            <div class="crm-prop-hero-specs">
-                {% if property.area %}<div class="crm-prop-hero-spec"><i class="fas fa-ruler-combined"></i><em>متراژ</em><strong>{{ property.area|ws_area }}</strong></div>{% endif %}
-                {% if property.rooms %}<div class="crm-prop-hero-spec"><i class="fas fa-door-open"></i><em>اتاق</em><strong>{{ property.rooms }}</strong></div>{% endif %}
-                {% if property.floor %}<div class="crm-prop-hero-spec"><i class="fas fa-building"></i><em>طبقه</em><strong>{{ property.floor }}{% if property.total_floors %}/{{ property.total_floors }}{% endif %}</strong></div>{% endif %}
-                {% if property.build_year %}<div class="crm-prop-hero-spec"><i class="fas fa-calendar"></i><em>ساخت</em><strong>{{ property.build_year }}</strong></div>{% endif %}
-                <div class="crm-prop-hero-spec crm-prop-hero-spec--accent"><i class="fas fa-users"></i><em>مخاطب</em><strong>{% if mask_sensitive %}—{% else %}{{ contact_links|length }}{% endif %}</strong></div>
-                <div class="crm-prop-hero-spec"><i class="fas fa-clock"></i><em>بروزرسانی</em><strong class="crm-prop-hero-spec-time">{{ property.updated_at|ws_jalali }}</strong></div>
+            {% endif %}
+
+            {% if property_is_shared and not can_edit_property and property_share %}
+            <div class="crm-prop-hero-share-view">
+                {% include 'workspace/crm/includes/shared_view_badge.html' with share=property_share %}
             </div>
-        </div>
+            {% endif %}
 
-        {% if property_is_shared and not can_edit_property and property_share %}
-        <div class="crm-prop-hero-share-view">
-            {% include 'workspace/crm/includes/shared_view_badge.html' with share=property_share %}
-        </div>
-        {% endif %}
-
-        {% if crm_agency and is_property_owner %}
-        <div class="crm-prop-hero-share-block" data-crm-property-team data-property-id="{{ property.pk }}">
+            {% if crm_agency and is_property_owner %}
+            <div class="crm-prop-hero-share-block" data-crm-property-team data-property-id="{{ property.pk }}">
             <div class="crm-prop-share-bar">
                 <span class="crm-prop-share-bar-label" title="فایل خصوصی شما — فقط با ارسال صریح در اختیار هم‌تیمی قرار می‌گیرد">
                     <i class="fas fa-lock" aria-hidden="true"></i>
@@ -217,26 +317,16 @@
         </div>
         {% endif %}
 
-        {% if property.has_parking or property.has_storage or property.has_elevator or listing_highlights %}
-        <div class="crm-prop-hero-tags">
-            {% if property.has_parking %}<span class="crm-prop-tag"><i class="fas fa-car"></i> پارکینگ</span>{% endif %}
-            {% if property.has_storage %}<span class="crm-prop-tag"><i class="fas fa-box"></i> انباری</span>{% endif %}
-            {% if property.has_elevator %}<span class="crm-prop-tag"><i class="fas fa-elevator"></i> آسانسور</span>{% endif %}
-            {% for hl in listing_highlights %}<span class="crm-prop-tag crm-prop-tag--hl">{{ hl }}</span>{% endfor %}
-        </div>
-        {% endif %}
-
-        {% if property.images %}
-        <div class="crm-prop-hero-gallery" aria-label="تصاویر">
+        {% if property.images|length > 1 %}
+        <div class="crm-prop-hero-gallery" aria-label="گالری تصاویر">
             {% for img in property.images|slice:":8" %}
-            <a href="{{ img }}" target="_blank" rel="noopener" class="crm-prop-gallery-item"><img src="{{ img }}" alt="" loading="lazy"></a>
+            <a href="{{ img }}" target="_blank" rel="noopener" class="crm-prop-gallery-item{% if forloop.first %} is-active{% endif %}">
+                <img src="{{ img }}" alt="" loading="lazy">
+            </a>
             {% endfor %}
         </div>
         {% endif %}
-
-        {% if property.address and not mask_sensitive %}
-        <p class="crm-prop-hero-address"><i class="fas fa-map-pin"></i> {{ property.address }}</p>
-        {% endif %}
+        </div>
     </header>
 
     <div class="crm-prop-detail-grid">

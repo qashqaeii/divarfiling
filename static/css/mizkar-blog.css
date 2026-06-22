@@ -888,28 +888,39 @@
 }
 
 .mk-blog-detail-hero--cover {
+    --mk-blog-hero-img-opacity: 0.28;
+    border-bottom: none;
+    padding-bottom: clamp(2rem, 5vw, 3rem);
+}
+
+.mk-blog-detail-hero--cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
     background-image: var(--mk-blog-hero-img);
     background-size: cover;
     background-position: center;
-    border-bottom: none;
-    padding-bottom: clamp(2rem, 5vw, 3rem);
+    opacity: var(--mk-blog-hero-img-opacity);
+    pointer-events: none;
 }
 
 .mk-blog-detail-hero-overlay {
     position: absolute;
     inset: 0;
+    z-index: 1;
     background: linear-gradient(
         to top,
-        rgba(7, 11, 20, 0.94) 0%,
-        rgba(7, 11, 20, 0.72) 45%,
-        rgba(7, 11, 20, 0.42) 100%
+        rgba(7, 11, 20, 0.96) 0%,
+        rgba(7, 11, 20, 0.82) 45%,
+        rgba(7, 11, 20, 0.62) 100%
     );
     pointer-events: none;
 }
 
 .mk-blog-detail-hero-inner {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     max-width: 52rem;
 }
 
@@ -2074,12 +2085,16 @@ html.mk-public[data-theme="light"] .mk-blog-prose blockquote {
     background: rgba(124, 58, 237, 0.05);
 }
 
+html.mk-public[data-theme="light"] .mk-blog-detail-hero--cover {
+    --mk-blog-hero-img-opacity: 0.22;
+}
+
 html.mk-public[data-theme="light"] .mk-blog-detail-hero--cover .mk-blog-detail-hero-overlay {
     background: linear-gradient(
         to top,
-        rgba(241, 245, 249, 0.96) 0%,
-        rgba(241, 245, 249, 0.78) 50%,
-        rgba(241, 245, 249, 0.35) 100%
+        rgba(241, 245, 249, 0.98) 0%,
+        rgba(241, 245, 249, 0.92) 45%,
+        rgba(241, 245, 249, 0.84) 100%
     );
 }
 

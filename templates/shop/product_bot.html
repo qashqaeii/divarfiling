@@ -6,7 +6,8 @@
 {% block body_class %}mk-product-bot-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=26">
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=27">
 {% endblock %}
 
 {% block content %}
@@ -108,12 +109,42 @@
                     <p class="pb-pricing-empty">پلن فعالی ثبت نشده. با پشتیبانی تماس بگیرید.</p>
                     {% endfor %}
                 </div>
-                <a href="{% url 'license_guide' %}" class="pb-pricing-deck-guide">
-                    راهنمای نصب و فعال‌سازی <i class="fas fa-arrow-left"></i>
+                <a href="{% if install_video.available %}#install-video{% else %}{% url 'license_guide' %}{% endif %}" class="pb-pricing-deck-guide">
+                    {% if install_video.available %}مشاهده ویدیوی نصب{% else %}راهنمای نصب و فعال‌سازی{% endif %} <i class="fas fa-arrow-left"></i>
                 </a>
             </section>
         </div>
     </section>
+
+    {% if install_video.available %}
+  {# ─── Install video ─── #}
+    <section class="pb-band pb-install-video-band" id="install-video" aria-labelledby="pb-install-video-title">
+        <div class="container">
+            <header class="pb-head">
+                <span class="pb-head-kicker">آموزش نصب</span>
+                <h2 id="pb-install-video-title">قبل از خرید، نصب را ببینید</h2>
+                <p>ویدیوی گام‌به‌گام — از دانلود فایل تا فعال‌سازی لایسنس روی ویندوز</p>
+            </header>
+            <div class="pb-install-video-shell pb-install-video-shell--split">
+                <div>
+                    {% include 'includes/bot_install_video.html' with variant='section' show_heading=False guide_link=True %}
+                </div>
+                <aside class="pb-install-video-aside">
+                    <p class="pb-value-lead" style="margin:0;">در این ویدیو یاد می‌گیرید:</p>
+                    <ol class="pb-install-video-steps">
+                        <li><strong>۱</strong><span>دانلود فایل نصب از داشبورد پس از خرید</span></li>
+                        <li><strong>۲</strong><span>اجرای نصب‌کننده روی ویندوز ۱۰ یا ۱۱</span></li>
+                        <li><strong>۳</strong><span>وارد کردن کلید لایسنس در اولین اجرای ربات</span></li>
+                        <li><strong>۴</strong><span>شروع اولین استخراج و آپلود در میزکار</span></li>
+                    </ol>
+                    <a href="{% url 'license_guide' %}" class="pb-pricing-deck-guide">
+                        راهنمای متنی کامل <i class="fas fa-arrow-left"></i>
+                    </a>
+                </aside>
+            </div>
+        </div>
+    </section>
+    {% endif %}
 
     {# ─── Value props ─── #}
     <section class="pb-band pb-value-band">
@@ -478,6 +509,9 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if install_video.available %}
+<script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
+{% endif %}
 <script>
 (function () {
     var panel = document.querySelector('[data-pb-faq]');

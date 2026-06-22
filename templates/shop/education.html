@@ -5,7 +5,8 @@
 {% block body_class %}mk-pub-page edu-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-education.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-education.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -61,6 +62,34 @@
             {% endfor %}
         </ul>
     </div>
+
+    {% if install_video.available %}
+    <section class="edu-video-band" aria-labelledby="edu-install-video-title">
+        <div class="container edu-video-shell">
+            <div class="edu-video-copy">
+                <span class="edu-eyebrow">ویدیوی نصب ربات</span>
+                <h2 id="edu-install-video-title">{{ install_video.title }}</h2>
+                <p>{{ install_video.subtitle }}</p>
+                <div class="edu-video-chips">
+                    <span class="edu-video-chip"><i class="fas fa-clock"></i> {{ install_video.duration }}</span>
+                    <span class="edu-video-chip"><i class="fab fa-windows"></i> ویندوز</span>
+                    <span class="edu-video-chip"><i class="fas fa-closed-captioning"></i> فارسی</span>
+                </div>
+                <div class="edu-video-actions">
+                    <a href="{% url 'license_guide' %}" class="edu-btn edu-btn--ghost">
+                        <i class="fas fa-book-open"></i> راهنمای متنی
+                    </a>
+                    <a href="{{ bot_buy_url }}" class="edu-btn edu-btn--primary">
+                        <i class="fas fa-shopping-cart"></i> خرید ربات
+                    </a>
+                </div>
+            </div>
+            <div>
+                {% include 'includes/bot_install_video.html' with variant='edu' show_heading=False guide_link=False %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
 
     <section class="edu-section edu-paths-band" aria-labelledby="edu-paths-title">
         <div class="container">
@@ -321,5 +350,8 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if install_video.available %}
+<script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
+{% endif %}
 <script src="{% static 'js/education.js' %}?v=3" defer></script>
 {% endblock %}

@@ -1,0 +1,54 @@
+{% load static %}
+{# ویدیوی آموزشی نصب ربات — نیاز به install_video در context #}
+{% if install_video.available %}
+<div class="mk-vid{% if variant %} mk-vid--{{ variant }}{% endif %}{% if extra_class %} {{ extra_class }}{% endif %}"
+     {% if section_id %}id="{{ section_id }}"{% endif %}
+     data-mk-vid-player>
+    {% if show_heading|default:True %}
+    <header class="mk-vid-head">
+        <span class="mk-vid-kicker">
+            <i class="fas fa-circle-play" aria-hidden="true"></i>
+            {{ kicker|default:"آموزش تصویری" }}
+        </span>
+        <h2 class="mk-vid-title">{{ install_video.title }}</h2>
+        {% if install_video.subtitle %}
+        <p class="mk-vid-lead">{{ install_video.subtitle }}</p>
+        {% endif %}
+    </header>
+    {% endif %}
+
+    <div class="mk-vid-wrap">
+        <div class="mk-vid-frame">
+            <video class="mk-vid-el"
+                   controls
+                   playsinline
+                   preload="metadata"
+                   {% if install_video.poster %}poster="{% static install_video.poster %}"{% endif %}
+                   title="{{ install_video.title }}">
+                <source src="{{ install_video.src }}" type="video/mp4">
+                مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+                <a href="{{ install_video.src }}">دانلود ویدیو</a>
+            </video>
+            <button type="button" class="mk-vid-play" data-mk-vid-play aria-label="پخش ویدیو">
+                <span class="mk-vid-play-ring" aria-hidden="true"></span>
+                <i class="fas fa-play" aria-hidden="true"></i>
+            </button>
+            <span class="mk-vid-badge" aria-hidden="true">
+                <i class="fas fa-video"></i> HD
+            </span>
+        </div>
+        {% if show_meta|default:True %}
+        <div class="mk-vid-meta">
+            <span><i class="fas fa-clock" aria-hidden="true"></i> {{ install_video.duration }}</span>
+            <span><i class="fas fa-closed-captioning" aria-hidden="true"></i> فارسی</span>
+            <span><i class="fab fa-windows" aria-hidden="true"></i> ویندوز ۱۰ و ۱۱</span>
+            {% if guide_link|default:True %}
+            <a href="{% url 'license_guide' %}" class="mk-vid-meta-link">
+                راهنمای کامل متنی <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

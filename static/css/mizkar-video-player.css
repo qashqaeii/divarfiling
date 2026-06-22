@@ -1,0 +1,335 @@
+/* ─── پخش‌کننده ویدیوی آموزشی نصب ربات (مشترک) ─── */
+
+.mk-vid {
+    --mk-vid-radius: 18px;
+    --mk-vid-shadow:
+        0 24px 60px -20px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.mk-vid-head {
+    margin-bottom: clamp(1rem, 2.5vw, 1.35rem);
+}
+
+.mk-vid-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(52, 211, 153, 0.22);
+    margin-bottom: 0.65rem;
+}
+
+html.mk-public[data-theme="light"] .mk-vid-kicker {
+    color: #047857;
+    background: rgba(5, 150, 105, 0.08);
+    border-color: rgba(5, 150, 105, 0.22);
+}
+
+.mk-vid-title {
+    margin: 0 0 0.5rem;
+    font-size: clamp(1.2rem, 2.8vw, 1.55rem);
+    font-weight: 800;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+    color: var(--mk-text, #f1f5f9);
+}
+
+.mk-vid-lead {
+    margin: 0;
+    max-width: 40rem;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: var(--mk-text-muted, #94a3b8);
+}
+
+.mk-vid-wrap {
+    width: 100%;
+}
+
+.mk-vid-frame {
+    position: relative;
+    border-radius: var(--mk-vid-radius);
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: #0a0f1a;
+    box-shadow: var(--mk-vid-shadow);
+    aspect-ratio: 16 / 9;
+}
+
+.mk-vid-el {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+    z-index: 1;
+}
+
+.mk-vid-play {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(15, 23, 42, 0.15) 0%,
+        rgba(15, 23, 42, 0.55) 100%
+    );
+    cursor: pointer;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.mk-vid-play i {
+    position: relative;
+    z-index: 2;
+    width: 4.25rem;
+    height: 4.25rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    border: 2px solid rgba(255, 255, 255, 0.32);
+    color: #fff;
+    font-size: 1.2rem;
+    padding-right: 0.15rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.mk-vid-play-ring {
+    position: absolute;
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    animation: mk-vid-pulse 2.4s ease-out infinite;
+}
+
+@keyframes mk-vid-pulse {
+    0% { transform: scale(0.92); opacity: 0.7; }
+    70% { transform: scale(1.12); opacity: 0; }
+    100% { transform: scale(1.12); opacity: 0; }
+}
+
+.mk-vid-play:hover i {
+    transform: scale(1.06);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.mk-vid-frame.is-playing .mk-vid-play,
+.mk-vid-frame.is-ended .mk-vid-play {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.mk-vid-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+}
+
+.mk-vid-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 1rem;
+    margin-top: 0.75rem;
+    font-size: 0.78rem;
+    color: var(--mk-text-secondary, #cbd5e1);
+}
+
+.mk-vid-meta > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.mk-vid-meta i {
+    opacity: 0.75;
+    font-size: 0.72rem;
+}
+
+.mk-vid-meta-link {
+    margin-right: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+    color: var(--mk-purple, #a78bfa);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.mk-vid-meta-link:hover {
+    color: #c4b5fd;
+}
+
+html.mk-public[data-theme="light"] .mk-vid-meta-link {
+    color: #6d28d9;
+}
+
+/* ─── variant: hero (دو ستونه در راهنما) ─── */
+.mk-vid--hero .mk-vid-head {
+    display: none;
+}
+
+/* ─── variant: section (صفحه ربات) ─── */
+.mk-vid--section {
+    max-width: 920px;
+    margin: 0 auto;
+}
+
+.pb-install-video-band {
+    padding-block: clamp(2rem, 4vw, 3rem);
+}
+
+.pb-install-video-shell {
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+.pb-install-video-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.pb-install-video-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.pb-install-video-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--mk-text-secondary, #cbd5e1);
+}
+
+.pb-install-video-steps strong {
+    flex-shrink: 0;
+    width: 1.35rem;
+    height: 1.35rem;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #c4b5fd;
+    background: rgba(124, 58, 237, 0.18);
+}
+
+@media (min-width: 900px) {
+    .pb-install-video-shell--split {
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+        align-items: start;
+    }
+}
+
+/* ─── variant: edu (مرکز آموزش) ─── */
+.edu-video-band {
+    padding: clamp(1.5rem, 3vw, 2.25rem) 0;
+    border-bottom: 1px solid var(--edu-border, rgba(148, 163, 184, 0.12));
+}
+
+.edu-video-shell {
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2rem);
+    align-items: center;
+}
+
+@media (min-width: 960px) {
+    .edu-video-shell {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    }
+}
+
+.edu-video-copy h2 {
+    margin: 0 0 0.65rem;
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    font-weight: 800;
+    color: var(--edu-text, #f1f5f9);
+}
+
+.edu-video-copy p {
+    margin: 0 0 1rem;
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: var(--edu-muted, #94a3b8);
+}
+
+.edu-video-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+}
+
+.edu-video-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.edu-video-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+@media (max-width: 640px) {
+    .mk-vid-play i {
+        width: 3.5rem;
+        height: 3.5rem;
+        font-size: 1rem;
+    }
+
+    .mk-vid-meta-link {
+        width: 100%;
+        margin-right: 0;
+        margin-top: 0.25rem;
+    }
+}

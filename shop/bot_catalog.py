@@ -656,9 +656,9 @@ def license_guide_content():
                 {'icon': 'fa-shield-halved', 'text': 'پشتیبانی در تمام مراحل'},
             ],
         },
-        # برای فعال‌سازی ویدیو: url را پر کنید —
+        # url خالی = ویدیوی پیش‌فرض media/Video/ROBOT-INSTALLING.mp4
         # embed: 'https://www.youtube.com/embed/VIDEO_ID'
-        # فایل محلی: 'videos/license-guide.mp4' (داخل static/)
+        # media: 'Video/custom.mp4'
         'video': {
             'title': 'آموزش ویدیویی نصب و فعال‌سازی',
             'subtitle': 'از خرید تا اولین استخراج — گام‌به‌گام',

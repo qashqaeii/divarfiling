@@ -5,7 +5,8 @@
 {% block body_class %}mk-pub-page lg-guide-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-license-guide.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-license-guide.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -38,8 +39,8 @@
                 </div>
             </div>
 
-            <div class="lg-video-wrap">
-                <div class="lg-video-frame">
+            <div class="lg-video-wrap" data-mk-vid-player>
+                <div class="lg-video-frame{% if video_mode == 'file' %} mk-vid-frame{% endif %}{% if video_mode != 'file' %} lg-video-frame--static{% endif %}">
                     {% if video_mode == 'embed' %}
                     <iframe src="{{ video_src }}"
                             title="{{ guide.video.title }}"
@@ -47,11 +48,20 @@
                             allowfullscreen
                             loading="lazy"></iframe>
                     {% elif video_mode == 'file' %}
-                    <video controls
+                    <video class="mk-vid-el lg-video-el"
+                           controls
+                           playsinline
                            {% if guide.video.poster %}poster="{% static guide.video.poster %}"{% endif %}
-                           preload="metadata">
-                        <source src="{% static video_src %}" type="video/mp4">
+                           preload="metadata"
+                           title="{{ guide.video.title }}">
+                        <source src="{{ video_src }}" type="video/mp4">
+                        مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
                     </video>
+                    <button type="button" class="mk-vid-play lg-video-play-btn" data-mk-vid-play aria-label="پخش ویدیو">
+                        <span class="mk-vid-play-ring" aria-hidden="true"></span>
+                        <i class="fas fa-play" aria-hidden="true"></i>
+                    </button>
+                    <span class="mk-vid-badge" aria-hidden="true"><i class="fas fa-video"></i> HD</span>
                     {% else %}
                     <div class="lg-video-placeholder" aria-label="جای ویدیو آموزشی">
                         <div class="lg-video-placeholder-bg" aria-hidden="true">
@@ -71,11 +81,13 @@
                     </div>
                     {% endif %}
                 </div>
-                <div class="lg-video-meta">
+                <div class="lg-video-meta mk-vid-meta">
                     <span><i class="fas fa-clock"></i> {{ guide.video.duration }}</span>
                     <span><i class="fas fa-closed-captioning"></i> فارسی</span>
-                    {% if video_mode == 'none' %}
-                    <span class="lg-video-meta-hint"><i class="fas fa-film"></i> آماده برای جای‌گذاری</span>
+                    {% if video_mode == 'file' %}
+                    <span><i class="fab fa-windows"></i> ویندوز ۱۰ و ۱۱</span>
+                    {% elif video_mode == 'none' %}
+                    <span class="lg-video-meta-hint"><i class="fas fa-film"></i> ویدیو به‌زودی</span>
                     {% endif %}
                 </div>
             </div>
@@ -222,4 +234,10 @@
     </footer>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if video_mode == 'file' %}
+<script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
+{% endif %}
 {% endblock %}

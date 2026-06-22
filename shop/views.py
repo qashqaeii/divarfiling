@@ -18,6 +18,7 @@ from .bot_catalog import (
     get_bot_product_url, home_display_stats, home_page_content, license_guide_content,
     product_fake_reviews, product_rating_display_stats,
 )
+from .bot_install_video import get_bot_install_video_context, resolve_guide_video
 from .sample_excel import get_sale_apartment_excel_preview
 from .education_content import education_hub_content
 from .models import Product, LicensePlan, Order, ProductRating, ProductReview, ReviewHelpful, DiscountCode
@@ -76,6 +77,7 @@ class ProductDetailView(DetailView):
         context['bot_page'] = bot_page_content()
         if product.slug == BOT_PRODUCT_SLUG:
             context['excel_sample'] = get_sale_apartment_excel_preview()
+            context['install_video'] = get_bot_install_video_context()
 
         # بررسی وجود ویدیو در media
         context['has_video_media'] = product.media.filter(media_type='video').exists()
@@ -400,16 +402,8 @@ class LicenseGuideView(TemplateView):
         ctx['bot_buy_url'] = get_bot_product_buy_url()
 
         video = ctx['guide'].get('video', {})
-        video_url = (video.get('url') or '').strip()
-        ctx['video_mode'] = 'none'
-        ctx['video_src'] = ''
-        if video_url:
-            if video_url.startswith('http://') or video_url.startswith('https://'):
-                ctx['video_mode'] = 'embed'
-                ctx['video_src'] = video_url
-            else:
-                ctx['video_mode'] = 'file'
-                ctx['video_src'] = video_url
+        ctx['video_mode'], ctx['video_src'] = resolve_guide_video(video)
+        ctx['install_video'] = get_bot_install_video_context()
 
         user = self.request.user
         if user.is_authenticated:
@@ -436,6 +430,7 @@ class EducationView(TemplateView):
         ctx['edu'] = education_hub_content()
         ctx['bot_product'] = get_bot_product()
         ctx['bot_buy_url'] = get_bot_product_buy_url()
+        ctx['install_video'] = get_bot_install_video_context()
         user = self.request.user
         if user.is_authenticated:
             from workspace.services.access import get_bot_access_state

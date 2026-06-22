@@ -518,8 +518,10 @@
         try { history.replaceState(null, '', buildToolsUrl(currentToolKey())); } catch (e) {}
     }
 
+    const STANDARD_RENT_RATE = 30;
+
     function getDefaultRate() {
-        return marketSnapshot?.ratio || 30;
+        return STANDARD_RENT_RATE;
     }
 
     function applyDefaultRates(force) {

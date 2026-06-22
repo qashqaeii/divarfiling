@@ -75,6 +75,21 @@ class WorkspaceAccessTests(TestCase):
         resp = self.client.get(reverse('workspace:dataset_list'))
         self.assertEqual(resp.status_code, 200)
 
+    def test_import_alias_opens_upload_modal(self):
+        """ربات دسکتاپ به /workspace/import/ لینک می‌دهد — نباید ۴۰۴ بدهد."""
+        self._create_active_license()
+        self.client.login(username='freeuser', password='pass1234')
+        resp = self.client.get(reverse('workspace:import'))
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn('open=modal-upload', resp.url)
+        self.assertIn('/workspace/datasets/', resp.url)
+
+    def test_import_blocked_without_license(self):
+        self.client.login(username='freeuser', password='pass1234')
+        resp = self.client.get(reverse('workspace:import'))
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn('/workspace/upgrade/', resp.url)
+
     def test_upgrade_redirects_when_licensed(self):
         self._create_active_license()
         self.client.login(username='freeuser', password='pass1234')

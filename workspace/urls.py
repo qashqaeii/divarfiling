@@ -11,6 +11,7 @@ urlpatterns = [
 
     # Datasets
     path('datasets/', views.DatasetListView.as_view(), name='dataset_list'),
+    path('import/', views.DatasetUploadView.as_view(), name='import'),
     path('datasets/upload/', views.DatasetUploadView.as_view(), name='dataset_upload'),
     path('datasets/upload/bulk/', views.DatasetBulkUploadView.as_view(), name='dataset_bulk_upload'),
     path('datasets/<uuid:dataset_id>/', views.DatasetDetailView.as_view(), name='dataset_detail'),

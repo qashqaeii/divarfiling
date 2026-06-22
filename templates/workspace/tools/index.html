@@ -2,7 +2,7 @@
 {% load static workspace_tags %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=4">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -26,6 +26,42 @@
         </div>
     </header>
 
+    {% if datasets %}
+    <section class="ws-tbx-dataset-bar" aria-label="انتخاب فایل بازار">
+        <div class="ws-tbx-dataset-bar-main">
+            <label class="ws-tbx-dataset-label" for="wsTbxDataset">
+                <i class="fas fa-database" aria-hidden="true"></i>
+                فایل بازار
+            </label>
+            <select id="wsTbxDataset" class="ws-tbx-dataset-select" aria-label="انتخاب فایل داده">
+                {% for ds in datasets %}
+                <option value="{{ ds.id }}" {% if selected_dataset and selected_dataset.id == ds.id %}selected{% endif %}>
+                    {{ ds.name }} — {{ ds.listing_count }} آگهی{% if ds.transaction_type %} ({{ ds.transaction_type }}){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="ws-tbx-dataset-bar-meta" id="wsTbxDatasetMeta">
+            {% if market_snapshot %}
+            <span class="ws-tbx-dataset-chip" id="tbxMetaType">{{ market_snapshot.transaction_type|default:"—" }}</span>
+            <span class="ws-tbx-dataset-chip" id="tbxMetaCount">{{ market_snapshot.row_count }} آگهی تحلیل‌شده</span>
+            {% endif %}
+        </div>
+        {% if selected_dataset %}
+        <a href="{% url 'workspace:dataset_analyze' selected_dataset.id %}" class="ws-tbx-dataset-analyze" id="tbxAnalyzeLink">
+            <i class="fas fa-chart-line" aria-hidden="true"></i> تحلیل کامل
+        </a>
+        {% endif %}
+    </section>
+    {% else %}
+    <section class="ws-tbx-dataset-bar ws-tbx-dataset-bar--empty">
+        <p>هنوز فایلی آپلود نشده — برای قیمت‌گذاری هوشمند ابتدا فایلینگ را آپلود کنید.</p>
+        <button type="button" class="ws-tbx-dataset-upload" data-modal-open="modal-upload">
+            <i class="fas fa-upload" aria-hidden="true"></i> آپلود فایل
+        </button>
+    </section>
+    {% endif %}
+
     <section class="ws-tbx-kpis" aria-label="خلاصه ابزارها">
         <article class="ws-tbx-kpi ws-tbx-kpi--purple">
             <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
@@ -39,7 +75,7 @@
             <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
             <span class="ws-tbx-kpi-icon" aria-hidden="true"><i class="fas fa-exchange-alt"></i></span>
             <div class="ws-tbx-kpi-body">
-                <span class="ws-tbx-kpi-val">{% if market_snapshot %}{{ market_snapshot.ratio }}:۱{% else %}۳۰:۱{% endif %}</span>
+                <span class="ws-tbx-kpi-val" id="tbxKpiRatio">{% if market_snapshot %}{{ market_snapshot.ratio }}:۱{% else %}۳۰:۱{% endif %}</span>
                 <span class="ws-tbx-kpi-lbl">نرخ رهن{% if market_snapshot %} بازار{% endif %}</span>
             </div>
         </article>
@@ -55,8 +91,8 @@
             <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
             <span class="ws-tbx-kpi-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
             <div class="ws-tbx-kpi-body">
-                <span class="ws-tbx-kpi-val">{% if active_dataset %}{{ market_snapshot.row_count|default:0 }}{% else %}۰{% endif %}</span>
-                <span class="ws-tbx-kpi-lbl">آگهی فایل فعال</span>
+                <span class="ws-tbx-kpi-val" id="tbxKpiListings">{% if selected_dataset %}{{ market_snapshot.row_count|default:0 }}{% else %}۰{% endif %}</span>
+                <span class="ws-tbx-kpi-lbl">آگهی فایل انتخابی</span>
             </div>
         </article>
     </section>
@@ -118,12 +154,12 @@
 
             <div class="ws-tbx-rail-foot">
                 <span class="ws-tbx-rail-label">تحلیل بازار</span>
-                {% if active_dataset %}
-                <a href="{% url 'workspace:dataset_analyze' active_dataset.id %}" class="ws-tbx-analysis-card">
+                {% if selected_dataset %}
+                <a href="{% url 'workspace:dataset_analyze' selected_dataset.id %}" class="ws-tbx-analysis-card" id="tbxRailAnalyzeLink">
                     <span class="ws-tbx-analysis-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
                     <span class="ws-tbx-analysis-body">
                         <strong>تحلیل املاک</strong>
-                        <em>{{ active_dataset.name|truncatechars:28 }}</em>
+                        <em id="tbxRailAnalyzeName">{{ selected_dataset.name|truncatechars:28 }}</em>
                     </span>
                     <i class="fas fa-arrow-left ws-tbx-analysis-arrow" aria-hidden="true"></i>
                 </a>
@@ -457,9 +493,7 @@
                             <div class="ws-field">
                                 <label class="ws-label" for="tbxBudgetPps">قیمت هر متر (میلیون)</label>
                                 <input type="text" inputmode="decimal" id="tbxBudgetPps" class="ws-input mk-filter-num" placeholder="۱۲۰">
-                                {% if market_snapshot and market_snapshot.median_pps %}
-                                <button type="button" class="ws-tbx-inline-preset" data-budget-pps="{{ market_snapshot.median_pps }}">میانه بازار</button>
-                                {% endif %}
+                                <div id="tbxBudgetPpsPreset"></div>
                             </div>
                             <div class="ws-field">
                                 <label class="ws-label" for="tbxBudgetArea">متراژ مورد نظر (متر)</label>
@@ -480,17 +514,15 @@
                     <div class="ws-tbx-panel-head-icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></div>
                     <div>
                         <h2>قیمت‌گذاری هوشمند</h2>
-                        <p>پیشنهاد قیمت بر اساس میانه بازار فایل فعال</p>
+                        <p>پیشنهاد قیمت بر اساس میانه فایل انتخاب‌شده</p>
                     </div>
                 </header>
                 <div class="ws-tbx-panel-grid">
                     <div class="ws-tbx-form-card">
-                        {% if market_snapshot and market_snapshot.median_pps %}
-                        <div class="ws-tbx-market-banner" id="tbxMarketBanner">
+                        <div class="ws-tbx-market-banner" id="tbxMarketBanner" {% if not market_snapshot or not market_snapshot.supports_pricing %}hidden{% endif %}>
                             <i class="fas fa-database" aria-hidden="true"></i>
-                            <span>{{ market_snapshot.dataset_name|truncatechars:32 }} — {{ market_snapshot.row_count }} آگهی</span>
+                            <span id="tbxMarketBannerText">{% if market_snapshot %}{{ market_snapshot.dataset_name|truncatechars:32 }} — {{ market_snapshot.row_count }} آگهی{% endif %}</span>
                         </div>
-                        {% endif %}
                         <div class="ws-field">
                             <label class="ws-label" for="tbxPricingArea">متراژ ملک (متر)</label>
                             <input type="text" inputmode="decimal" id="tbxPricingArea" class="ws-input mk-filter-num" placeholder="۸۵">
@@ -506,7 +538,7 @@
                         </div>
                     </div>
                     <div class="ws-tbx-result-card" id="tbxPricingResult">
-                        <div class="ws-tbx-result-empty"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><p>{% if market_snapshot and market_snapshot.median_pps %}متراژ را وارد کنید{% else %}ابتدا یک فایل داده آپلود و فعال کنید{% endif %}</p></div>
+                        <div class="ws-tbx-result-empty"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><p id="tbxPricingEmptyMsg">{% if datasets %}{% if market_snapshot and market_snapshot.supports_pricing %}متراژ را وارد کنید{% else %}فایل انتخابی داده کافی برای قیمت‌گذاری ندارد{% endif %}{% else %}ابتدا یک فایل داده آپلود کنید{% endif %}</p></div>
                     </div>
                 </div>
             </section>
@@ -516,8 +548,9 @@
 </div>
 
 <script id="wsTbxMarket" type="application/json">{{ market_snapshot_json|safe }}</script>
+<script id="wsTbxMarkets" type="application/json">{{ market_snapshots_json|safe }}</script>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/tools.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/tools.js' %}?v=3"></script>
 {% endblock %}

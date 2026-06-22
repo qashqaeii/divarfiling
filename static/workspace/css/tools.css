@@ -783,6 +783,110 @@
     font-size: 0.7rem;
 }
 
+/* ─── Dataset selector ─── */
+.ws-tbx-dataset-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+}
+
+.ws-tbx-dataset-bar--empty {
+    justify-content: space-between;
+}
+
+.ws-tbx-dataset-bar--empty p {
+    margin: 0;
+    font-size: 0.72rem;
+    color: var(--ws-text-muted);
+}
+
+.ws-tbx-dataset-bar-main {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.ws-tbx-dataset-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--ws-text-secondary);
+    white-space: nowrap;
+}
+
+.ws-tbx-dataset-label i {
+    color: var(--ws-primary);
+    font-size: 0.72rem;
+}
+
+.ws-tbx-dataset-select {
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.74rem;
+    font-family: inherit;
+    color: var(--ws-text);
+    background: var(--ws-surface-2);
+    border: 1px solid var(--ws-border);
+    border-radius: 10px;
+    outline: none;
+    cursor: pointer;
+}
+
+.ws-tbx-dataset-select:focus {
+    border-color: var(--ws-primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.ws-tbx-dataset-bar-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.ws-tbx-dataset-chip {
+    display: inline-flex;
+    padding: 0.22rem 0.55rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    background: var(--ws-surface-2);
+    border: 1px solid var(--ws-border);
+    border-radius: 999px;
+}
+
+.ws-tbx-dataset-analyze,
+.ws-tbx-dataset-upload {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.42rem 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    font-family: inherit;
+    text-decoration: none;
+    color: #B45309;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ws-tbx-dataset-analyze:hover,
+.ws-tbx-dataset-upload:hover {
+    border-color: rgba(245, 158, 11, 0.5);
+}
+
 .ws-tbx-result-hero-lbl {
     margin-top: 0.25rem;
     font-size: 0.68rem;

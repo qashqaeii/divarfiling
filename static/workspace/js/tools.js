@@ -11,16 +11,40 @@
     ];
 
     let marketSnapshot = null;
+    let marketSnapshots = {};
 
-    function loadMarket() {
-        const el = document.getElementById('wsTbxMarket');
+    function loadJsonScript(id) {
+        const el = document.getElementById(id);
         if (!el) return null;
         try {
-            const data = JSON.parse(el.textContent || 'null');
-            return data && typeof data === 'object' ? data : null;
+            return JSON.parse(el.textContent || 'null');
         } catch (e) {
             return null;
         }
+    }
+
+    function loadMarket() {
+        const data = loadJsonScript('wsTbxMarket');
+        return data && typeof data === 'object' ? data : null;
+    }
+
+    function loadAllMarkets() {
+        const data = loadJsonScript('wsTbxMarkets');
+        return data && typeof data === 'object' ? data : {};
+    }
+
+    function currentToolKey() {
+        const active = document.querySelector('.ws-tbx-panel.is-active');
+        return active?.dataset.toolPanel || TOOL_KEYS[0];
+    }
+
+    function buildToolsUrl(tool) {
+        const params = new URLSearchParams();
+        if (tool) params.set('tool', tool);
+        const ds = document.getElementById('wsTbxDataset')?.value;
+        if (ds) params.set('dataset', ds);
+        const q = params.toString();
+        return q ? '?' + q : window.location.pathname;
     }
 
     function parseNum(el) {
@@ -243,10 +267,13 @@
         const total = Math.round(suggestedPps * area);
         const ppsM = ppsToMillion(suggestedPps);
         const baseM = ppsToMillion(base);
+        const isRentMetric = marketSnapshot.is_rent && marketSnapshot.pps_metric === 'full_deposit_per_sqm';
+        const ppsLabel = isRentMetric ? 'رهن کامل/متر' : 'قیمت هر متر';
+        const totalLabel = isRentMetric ? 'رهن کامل پیشنهادی' : 'قیمت پیشنهادی';
         return {
-            hero: { val: formatToman(total), lbl: 'قیمت پیشنهادی' },
+            hero: { val: formatToman(total), lbl: totalLabel },
             items: [
-                { val: formatM(ppsM), lbl: 'قیمت هر متر' },
+                { val: formatM(ppsM), lbl: ppsLabel },
                 { val: formatArea(area), lbl: 'متراژ' },
                 { val: formatM(baseM), lbl: 'میانه بازار' },
             ],
@@ -383,18 +410,100 @@
             panel.classList.toggle('is-active', active);
             panel.hidden = !active;
         });
-        try { history.replaceState(null, '', '?tool=' + tool); } catch (e) {}
+        try { history.replaceState(null, '', buildToolsUrl(tool)); } catch (e) {}
+    }
+
+    function truncateName(name, max) {
+        if (!name) return '';
+        return name.length > max ? name.slice(0, max) + '…' : name;
+    }
+
+    function updateDatasetUI() {
+        const snap = marketSnapshot;
+        const ratioEl = document.getElementById('tbxKpiRatio');
+        if (ratioEl) ratioEl.textContent = snap ? `${snap.ratio}:۱` : '۳۰:۱';
+
+        const listEl = document.getElementById('tbxKpiListings');
+        if (listEl) listEl.textContent = snap ? String(snap.row_count) : '۰';
+
+        const meta = document.getElementById('wsTbxDatasetMeta');
+        if (meta) {
+            if (snap) {
+                meta.innerHTML = `
+                    <span class="ws-tbx-dataset-chip">${snap.transaction_type || '—'}</span>
+                    <span class="ws-tbx-dataset-chip">${snap.row_count} آگهی تحلیل‌شده</span>`;
+            } else {
+                meta.innerHTML = '';
+            }
+        }
+
+        const analyzeUrl = snap?.analyze_url || '#';
+        const analyzeName = truncateName(snap?.dataset_name || '', 28);
+        ['tbxAnalyzeLink', 'tbxRailAnalyzeLink'].forEach(id => {
+            const link = document.getElementById(id);
+            if (link && snap) link.href = analyzeUrl;
+        });
+        const railName = document.getElementById('tbxRailAnalyzeName');
+        if (railName) railName.textContent = analyzeName;
+
+        const banner = document.getElementById('tbxMarketBanner');
+        const bannerText = document.getElementById('tbxMarketBannerText');
+        if (banner) banner.hidden = !snap?.supports_pricing;
+        if (bannerText && snap) {
+            bannerText.textContent = `${truncateName(snap.dataset_name, 32)} — ${snap.row_count} آگهی`;
+        }
+
+        const emptyMsg = document.getElementById('tbxPricingEmptyMsg');
+        if (emptyMsg) {
+            if (!snap) {
+                emptyMsg.textContent = 'ابتدا یک فایل داده آپلود کنید';
+            } else if (!snap.supports_pricing) {
+                emptyMsg.textContent = 'فایل انتخابی داده کافی برای قیمت‌گذاری ندارد';
+            } else {
+                emptyMsg.textContent = 'متراژ را وارد کنید';
+            }
+        }
+
+        renderBudgetPreset();
+    }
+
+    function renderBudgetPreset() {
+        const wrap = document.getElementById('tbxBudgetPpsPreset');
+        if (!wrap) return;
+        wrap.innerHTML = '';
+        if (!marketSnapshot?.median_pps) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ws-tbx-inline-preset';
+        btn.textContent = marketSnapshot.is_rent ? 'میانه رهن/متر' : 'میانه بازار';
+        btn.addEventListener('click', () => {
+            const el = document.getElementById('tbxBudgetPps');
+            if (el) {
+                el.value = Math.round(marketSnapshot.median_pps / 1_000_000 * 10) / 10;
+                updateBudget();
+            }
+        });
+        wrap.appendChild(btn);
+    }
+
+    function selectDataset(id) {
+        marketSnapshot = marketSnapshots[id] || null;
+        updateDatasetUI();
+        applyDefaultRates(true);
+        updatePricing();
+        updateBudget();
+        try { history.replaceState(null, '', buildToolsUrl(currentToolKey())); } catch (e) {}
     }
 
     function getDefaultRate() {
         return marketSnapshot?.ratio || 30;
     }
 
-    function applyDefaultRates() {
+    function applyDefaultRates(force) {
         const rate = getDefaultRate();
         ['tbxMixRate', 'tbxRate', 'tbxCmpRate'].forEach(id => {
             const el = document.getElementById(id);
-            if (el && !el.dataset.userEdited) el.value = rate;
+            if (el && (force || !el.dataset.userEdited)) el.value = rate;
         });
     }
 
@@ -542,8 +651,8 @@
     function updatePricing() {
         const container = document.getElementById('tbxPricingResult');
         if (!container) return;
-        if (!marketSnapshot?.median_pps) {
-            renderEmpty(container, 'fa-upload', 'فایل داده آپلود کنید تا قیمت‌گذاری هوشمند فعال شود');
+        if (!marketSnapshot?.supports_pricing) {
+            renderEmpty(container, 'fa-wand-magic-sparkles', 'فایل انتخابی داده کافی برای قیمت‌گذاری ندارد');
             return;
         }
         const area = parseNum(document.getElementById('tbxPricingArea'));
@@ -571,7 +680,19 @@
         if (!root) return;
 
         marketSnapshot = loadMarket();
-        applyDefaultRates();
+        marketSnapshots = loadAllMarkets();
+        applyDefaultRates(false);
+        updateDatasetUI();
+
+        const datasetSelect = document.getElementById('wsTbxDataset');
+        if (datasetSelect) {
+            datasetSelect.addEventListener('change', () => selectDataset(datasetSelect.value));
+        }
+
+        ['tbxMixRate', 'tbxRate', 'tbxCmpRate'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', () => { el.dataset.userEdited = '1'; });
+        });
 
         document.querySelectorAll('.ws-tbx-nav-item').forEach(btn => {
             btn.addEventListener('click', () => switchTool(btn.dataset.tool));
@@ -708,6 +829,8 @@
         const initial = params.get('tool');
         if (initial && TOOL_KEYS.includes(initial)) {
             switchTool(initial);
+        } else {
+            try { history.replaceState(null, '', buildToolsUrl(currentToolKey())); } catch (e) {}
         }
 
         updateCompareModeUI();

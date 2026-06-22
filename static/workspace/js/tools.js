@@ -8,6 +8,7 @@
     const TOOL_KEYS = [
         'mixed', 'deposit', 'compare', 'area', 'discount',
         'commission', 'rent_commission', 'budget', 'pricing',
+        'evaluate', 'opportunities', 'neighborhood',
     ];
 
     let marketSnapshot = null;
@@ -280,27 +281,34 @@
         const adj = 1 + pct / 100;
         const suggestedPps = Math.round(base * adj);
         const total = Math.round(suggestedPps * area);
-        const medianTotal = Math.round(base * area);
-        const delta = total - medianTotal;
         const ppsM = ppsToMillion(suggestedPps);
-        const baseM = ppsToMillion(base);
+        const p25 = marketSnapshot.pps_p25 || Math.round(base * 0.92);
+        const p75 = marketSnapshot.pps_p75 || Math.round(base * 1.08);
+        const bandLow = Math.round(p25 * adj * area);
+        const bandHigh = Math.round(p75 * adj * area);
         const isRentMetric = marketSnapshot.is_rent && marketSnapshot.pps_metric === 'full_deposit_per_sqm';
         const ppsLabel = isRentMetric ? 'رهن کامل/متر' : 'قیمت هر متر';
         const totalLabel = isRentMetric ? 'رهن کامل پیشنهادی' : 'قیمت پیشنهادی';
-        const deltaLbl = delta >= 0 ? 'بیش از میانه' : 'کمتر از میانه';
+        const posPct = bandHigh > bandLow
+            ? Math.max(4, Math.min(96, ((total - bandLow) / (bandHigh - bandLow)) * 100))
+            : 50;
         return {
             hero: { val: formatToman(total), lbl: totalLabel },
             items: [
                 { val: formatM(ppsM), lbl: ppsLabel },
                 { val: formatAdjLabel(pct), lbl: 'تنظیم بازار' },
-                { val: formatM(baseM), lbl: 'میانه بازار' },
+                { val: formatM(ppsToMillion(p25)), lbl: 'P25 بازار' },
+                { val: formatM(ppsToMillion(p75)), lbl: 'P75 بازار' },
                 { val: formatArea(area), lbl: 'متراژ' },
-                {
-                    val: (delta >= 0 ? '+' : '') + formatToman(delta),
-                    lbl: deltaLbl,
-                },
             ],
-            copy: `پیشنهاد: ${formatToman(total)} (${formatAdjLabel(pct)} | ${formatM(ppsM)}/متر × ${formatArea(area)})`,
+            band: {
+                low: bandLow,
+                high: bandHigh,
+                lowFmt: formatToman(bandLow),
+                highFmt: formatToman(bandHigh),
+                posPct,
+            },
+            copy: `پیشنهاد: ${formatToman(total)} | باند بازار: ${formatToman(bandLow)} – ${formatToman(bandHigh)}`,
         };
     }
 
@@ -397,12 +405,25 @@
                 <span class="ws-tbx-result-item-lbl">${it.lbl}</span>
             </div>`).join('');
         const heroClass = data.verdictClass ? `ws-tbx-result-hero--${data.verdictClass}` : '';
+        const bandHtml = data.band ? `
+            <div class="ws-mkt-band">
+                <div class="ws-mkt-band-labels">
+                    <span>${data.band.lowFmt}</span>
+                    <span>باند بازار P25–P75</span>
+                    <span>${data.band.highFmt}</span>
+                </div>
+                <div class="ws-mkt-band-track">
+                    <div class="ws-mkt-band-fill"></div>
+                    <div class="ws-mkt-band-marker" style="inset-inline-start: ${data.band.posPct}%"></div>
+                </div>
+            </div>` : '';
         container.innerHTML = `
             <div class="ws-tbx-result-live">
                 <div class="ws-tbx-result-hero ${heroClass}">
                     <span class="ws-tbx-result-hero-val">${data.hero.val}</span>
                     <span class="ws-tbx-result-hero-lbl">${data.hero.lbl}</span>
                 </div>
+                ${bandHtml}
                 ${itemsHtml ? `<div class="ws-tbx-result-grid ws-tbx-result-grid--flex">${itemsHtml}</div>` : ''}
                 <div class="ws-tbx-result-actions">
                     <button type="button" class="ws-tbx-copy-btn" data-copy="${data.copy}">
@@ -515,6 +536,9 @@
         applyDefaultRates(true);
         updatePricing();
         updateBudget();
+        const root = document.getElementById('wsToolbox');
+        if (root) root.dataset.datasetId = id;
+        document.dispatchEvent(new CustomEvent('wsTbxDatasetChanged', { detail: { id, snapshot: marketSnapshot } }));
         try { history.replaceState(null, '', buildToolsUrl(currentToolKey())); } catch (e) {}
     }
 
@@ -897,6 +921,10 @@
 
         updateCompareModeUI();
     }
+
+    window.wsTbxSwitchTool = switchTool;
+
+    window.wsTbxSwitchTool = switchTool;
 
     document.addEventListener('DOMContentLoaded', initToolbox);
 })();

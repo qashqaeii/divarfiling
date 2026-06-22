@@ -975,6 +975,47 @@ class ToolsView(LicenseRequiredMixin, TemplateView):
         return ctx
 
 
+class ToolsMarketToolkitView(DatasetOwnerMixin, View):
+    """داده ابزارهای بازار برای یک فایل."""
+
+    def get(self, request, dataset_id):
+        from workspace.services.tools_market import build_market_toolkit
+
+        dataset = self.get_dataset()
+        return JsonResponse(build_market_toolkit(dataset))
+
+
+class ToolsEvaluateView(DatasetOwnerMixin, View):
+    """ارزیابی آنی آگهی نسبت به بازار فایل."""
+
+    def post(self, request, dataset_id):
+        from workspace.services.tools_market import evaluate_listing_market, search_listings
+
+        dataset = self.get_dataset()
+        try:
+            body = json.loads(request.body.decode() or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'درخواست نامعتبر است.'}, status=400)
+
+        action = body.get('action', 'evaluate')
+        if action == 'search':
+            items = search_listings(dataset, body.get('q', ''), limit=12)
+            return JsonResponse({'items': items})
+
+        result = evaluate_listing_market(
+            dataset,
+            listing_id=body.get('listing_id'),
+            area=body.get('area'),
+            price=body.get('price'),
+            deposit=body.get('deposit'),
+            rent=body.get('rent'),
+            neighborhood=body.get('neighborhood') or None,
+        )
+        if result.get('error'):
+            return JsonResponse(result, status=400)
+        return JsonResponse(result)
+
+
 # ─── Compare ──────────────────────────────────────────────────────────────────
 
 class CompareView(LicenseRequiredMixin, TemplateView):

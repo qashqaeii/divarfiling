@@ -3,12 +3,13 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/tools-market.css' %}?v=1">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
 
 {% block content %}
-<div class="mk-page ws-toolbox-pro" id="wsToolbox">
+<div class="mk-page ws-toolbox-pro" id="wsToolbox"{% if selected_dataset %} data-dataset-id="{{ selected_dataset.id }}"{% endif %}>
 
     <header class="ws-tbx-hero">
         <div class="ws-tbx-hero-main">
@@ -67,7 +68,7 @@
             <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
             <span class="ws-tbx-kpi-icon" aria-hidden="true"><i class="fas fa-toolbox"></i></span>
             <div class="ws-tbx-kpi-body">
-                <span class="ws-tbx-kpi-val">۹</span>
+                <span class="ws-tbx-kpi-val">۱۲</span>
                 <span class="ws-tbx-kpi-lbl">ابزار فعال</span>
             </div>
         </article>
@@ -148,7 +149,24 @@
                 <button type="button" class="ws-tbx-nav-item" data-tool="pricing" data-accent="amber" role="tab" aria-selected="false" aria-controls="wsTbxPanelPricing">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۹</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
-                    <span class="ws-tbx-nav-text"><strong>قیمت‌گذاری هوشمند</strong><em>بر اساس فایل بازار</em></span>
+                    <span class="ws-tbx-nav-text"><strong>قیمت‌گذاری هوشمند</strong><em>باند P25–P75 بازار</em></span>
+                </button>
+
+                <div class="ws-tbx-nav-divider" role="presentation">
+                    <span>ابزارهای بازار</span>
+                    <em>بر اساس فایل انتخابی</em>
+                </div>
+                <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--market" data-tool="evaluate" data-accent="rose" role="tab" aria-selected="false" aria-controls="wsTbxPanelEvaluate">
+                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-crosshairs"></i></span>
+                    <span class="ws-tbx-nav-text"><strong>ارزیابی آنی آگهی</strong><em>زیر یا بالای بازار؟</em></span>
+                </button>
+                <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--market" data-tool="opportunities" data-accent="emerald" role="tab" aria-selected="false" aria-controls="wsTbxPanelOpportunities">
+                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-gem"></i></span>
+                    <span class="ws-tbx-nav-text"><strong>فرصت‌های زیر بازار</strong><em>بهترین آگهی‌های فایل</em></span>
+                </button>
+                <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--market" data-tool="neighborhood" data-accent="sky" role="tab" aria-selected="false" aria-controls="wsTbxPanelNeighborhood">
+                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></span>
+                    <span class="ws-tbx-nav-text"><strong>بازه قیمت محله</strong><em>P25 تا P75 هر محله</em></span>
                 </button>
             </nav>
 
@@ -514,7 +532,7 @@
                     <div class="ws-tbx-panel-head-icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></div>
                     <div>
                         <h2>قیمت‌گذاری هوشمند</h2>
-                        <p>پیشنهاد قیمت بر اساس میانه فایل انتخاب‌شده</p>
+                        <p>پیشنهاد قیمت با باند P25–P75 بازار فایل انتخابی</p>
                     </div>
                 </header>
                 <div class="ws-tbx-panel-grid">
@@ -555,6 +573,109 @@
                 </div>
             </section>
 
+            {# ۱۰ — ارزیابی آنی #}
+            <section class="ws-tbx-panel" id="wsTbxPanelEvaluate" data-tool-panel="evaluate" data-accent="rose" role="tabpanel" hidden>
+                <header class="ws-tbx-panel-head">
+                    <div class="ws-tbx-panel-head-icon" aria-hidden="true"><i class="fas fa-crosshairs"></i></div>
+                    <div>
+                        <h2>ارزیابی آنی آگهی</h2>
+                        <p>یک آگهی را نسبت به بازار فایل انتخابی بسنجید — برای تماس و مذاکره</p>
+                    </div>
+                </header>
+                <div class="ws-tbx-panel-grid ws-tbx-panel-grid--market">
+                    <div class="ws-tbx-form-card">
+                        <div class="ws-mkt-tabs" role="tablist">
+                            <button type="button" class="ws-mkt-tab is-active" data-eval-tab="manual">ورود دستی</button>
+                            <button type="button" class="ws-mkt-tab" data-eval-tab="file">جستجو در فایل</button>
+                        </div>
+                        <div class="ws-mkt-tab-panel is-active" id="tbxEvalManual">
+                            <div class="ws-field">
+                                <label class="ws-label" for="tbxEvalArea">متراژ (متر)</label>
+                                <input type="text" inputmode="decimal" id="tbxEvalArea" class="ws-input mk-filter-num" placeholder="۸۵">
+                            </div>
+                            <div class="ws-field">
+                                <label class="ws-label" for="tbxEvalNb">محله (اختیاری — دقیق‌تر)</label>
+                                <select id="tbxEvalNb" class="ws-input ws-mkt-select"><option value="">کل فایل</option></select>
+                            </div>
+                            <div class="ws-tbx-cmp-sale" id="tbxEvalSaleFields">
+                                <div class="ws-field">
+                                    <label class="ws-label" for="tbxEvalPrice">قیمت (تومان)</label>
+                                    <input type="text" inputmode="numeric" id="tbxEvalPrice" class="ws-input mk-filter-num" placeholder="۱۲,۰۰۰,۰۰۰,۰۰۰">
+                                </div>
+                            </div>
+                            <div class="ws-tbx-cmp-rent" id="tbxEvalRentFields" hidden>
+                                <div class="ws-fields ws-fields-2">
+                                    <div class="ws-field">
+                                        <label class="ws-label" for="tbxEvalDeposit">ودیعه</label>
+                                        <input type="text" inputmode="numeric" id="tbxEvalDeposit" class="ws-input mk-filter-num">
+                                    </div>
+                                    <div class="ws-field">
+                                        <label class="ws-label" for="tbxEvalRent">اجاره</label>
+                                        <input type="text" inputmode="numeric" id="tbxEvalRent" class="ws-input mk-filter-num">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ws-mkt-tab-panel" id="tbxEvalFile" hidden>
+                            <div class="ws-field">
+                                <label class="ws-label" for="tbxEvalSearch">جستجو (عنوان، محله، شناسه)</label>
+                                <input type="search" id="tbxEvalSearch" class="ws-input" placeholder="حداقل ۲ حرف..." autocomplete="off">
+                            </div>
+                            <div class="ws-mkt-search-results" id="tbxEvalSearchResults"></div>
+                        </div>
+                        <button type="button" class="ws-mkt-action-btn" id="tbxEvalRun">
+                            <i class="fas fa-crosshairs" aria-hidden="true"></i> ارزیابی کن
+                        </button>
+                    </div>
+                    <div class="ws-tbx-result-card ws-mkt-result-card" id="tbxEvaluateResult">
+                        <div class="ws-tbx-result-empty"><i class="fas fa-crosshairs" aria-hidden="true"></i><p>مشخصات آگهی را وارد کنید یا از فایل انتخاب کنید</p></div>
+                    </div>
+                </div>
+            </section>
+
+            {# ۱۱ — فرصت‌ها #}
+            <section class="ws-tbx-panel" id="wsTbxPanelOpportunities" data-tool-panel="opportunities" data-accent="emerald" role="tabpanel" hidden>
+                <header class="ws-tbx-panel-head">
+                    <div class="ws-tbx-panel-head-icon" aria-hidden="true"><i class="fas fa-gem"></i></div>
+                    <div>
+                        <h2>فرصت‌های زیر بازار</h2>
+                        <p>آگهی‌هایی که نسبت به ارزش تعدیل‌شده بازار، پایین‌تر قیمت‌گذاری شده‌اند</p>
+                    </div>
+                </header>
+                <div class="ws-mkt-opps-wrap">
+                    <div class="ws-mkt-opps-head">
+                        <span class="ws-mkt-opps-count" id="tbxOppsCount">—</span>
+                        <span class="ws-mkt-opps-hint">کلیک روی هر آگهی → ارزیابی فوری</span>
+                    </div>
+                    <div class="ws-mkt-opps-list" id="tbxOppsList">
+                        <div class="ws-mkt-empty"><i class="fas fa-database" aria-hidden="true"></i><p>فایل بازار را انتخاب کنید</p></div>
+                    </div>
+                </div>
+            </section>
+
+            {# ۱۲ — محله #}
+            <section class="ws-tbx-panel" id="wsTbxPanelNeighborhood" data-tool-panel="neighborhood" data-accent="sky" role="tabpanel" hidden>
+                <header class="ws-tbx-panel-head">
+                    <div class="ws-tbx-panel-head-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></div>
+                    <div>
+                        <h2>بازه قیمت محله</h2>
+                        <p>توزیع قیمت در هر محله — میانه، P25 و P75</p>
+                    </div>
+                </header>
+                <div class="ws-tbx-panel-grid ws-tbx-panel-grid--market">
+                    <div class="ws-tbx-form-card">
+                        <div class="ws-field">
+                            <label class="ws-label" for="tbxNbSelect">انتخاب محله</label>
+                            <select id="tbxNbSelect" class="ws-input ws-mkt-select"><option value="">محله را انتخاب کنید</option></select>
+                        </div>
+                        <div class="ws-mkt-nb-list" id="tbxNbQuickList"></div>
+                    </div>
+                    <div class="ws-tbx-result-card ws-mkt-result-card" id="tbxNeighborhoodResult">
+                        <div class="ws-tbx-result-empty"><i class="fas fa-map-marker-alt" aria-hidden="true"></i><p>یک محله انتخاب کنید</p></div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 </div>
@@ -564,5 +685,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/tools.js' %}?v=5"></script>
+<script src="{% static 'workspace/js/tools.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/tools-market.js' %}?v=2"></script>
 {% endblock %}

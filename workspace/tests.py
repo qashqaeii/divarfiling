@@ -766,6 +766,14 @@ class SmartToolsTests(SimpleTestCase):
         self.assertLess(low['suggested_total'], base['suggested_total'])
         self.assertGreater(high['suggested_total'], base['suggested_total'])
 
+    def test_pricing_suggest_banded(self):
+        from workspace.services.tools_market import pricing_suggest_banded
+
+        snap = {'median_pps': 100_000_000, 'pps_p25': 90_000_000, 'pps_p75': 110_000_000}
+        r = pricing_suggest_banded(80, snap, 0)
+        self.assertEqual(r['band_low'], 7_200_000_000)
+        self.assertEqual(r['band_high'], 8_800_000_000)
+
 
 class ConsultantLandscapeTests(SimpleTestCase):
     def test_analyze_consultant_landscape_top_agency(self):

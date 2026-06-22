@@ -2,38 +2,20 @@
    ابزارهای بازار — فاز ۱
    ═══════════════════════════════════════════════════════════ */
 
-/* ─── Nav divider & market accents ─── */
-.ws-tbx-nav-divider {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    padding: 0.55rem 0.5rem 0.25rem;
-    margin-top: 0.25rem;
-    border-top: 1px dashed var(--ws-border);
-}
-
-.ws-tbx-nav-divider span {
-    font-size: 0.62rem;
-    font-weight: 800;
-    color: var(--ws-primary);
-    letter-spacing: 0.02em;
-}
-
-.ws-tbx-nav-divider em {
-    font-size: 0.55rem;
-    font-style: normal;
-    color: var(--ws-text-muted);
-}
-
+/* ─── Market nav accents ─── */
 .ws-tbx-nav-item--market .ws-tbx-nav-key { display: none; }
 
 .ws-tbx-nav-item[data-accent="rose"] .ws-tbx-nav-icon { background: rgba(244, 63, 94, 0.12); color: #F43F5E; }
 .ws-tbx-nav-item[data-accent="emerald"] .ws-tbx-nav-icon { background: rgba(16, 185, 129, 0.12); color: #10B981; }
 .ws-tbx-nav-item[data-accent="sky"] .ws-tbx-nav-icon { background: rgba(14, 165, 233, 0.12); color: #0EA5E9; }
 
-.ws-tbx-nav-item[data-accent="rose"].is-active::before { background: #F43F5E; }
-.ws-tbx-nav-item[data-accent="emerald"].is-active::before { background: #10B981; }
-.ws-tbx-nav-item[data-accent="sky"].is-active::before { background: #0EA5E9; }
+.ws-tbx-nav-item[data-accent="rose"].is-active { background: linear-gradient(135deg, rgba(244, 63, 94, 0.1), var(--ws-surface-2) 70%); border-color: rgba(244, 63, 94, 0.22); }
+.ws-tbx-nav-item[data-accent="emerald"].is-active { background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), var(--ws-surface-2) 70%); border-color: rgba(16, 185, 129, 0.22); }
+.ws-tbx-nav-item[data-accent="sky"].is-active { background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), var(--ws-surface-2) 70%); border-color: rgba(14, 165, 233, 0.22); }
+
+.ws-tbx-nav-item[data-accent="rose"].is-active::before { background: #F43F5E; box-shadow: 0 0 10px rgba(244, 63, 94, 0.45); }
+.ws-tbx-nav-item[data-accent="emerald"].is-active::before { background: #10B981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.45); }
+.ws-tbx-nav-item[data-accent="sky"].is-active::before { background: #0EA5E9; box-shadow: 0 0 10px rgba(14, 165, 233, 0.45); }
 
 .ws-tbx-panel[data-accent="rose"] .ws-tbx-panel-head-icon { background: rgba(244, 63, 94, 0.14); color: #F43F5E; }
 .ws-tbx-panel[data-accent="emerald"] .ws-tbx-panel-head-icon { background: rgba(16, 185, 129, 0.14); color: #10B981; }

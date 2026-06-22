@@ -442,12 +442,27 @@
             </div>`;
     }
 
+    function filterNavItems(query) {
+        const q = query.trim().toLowerCase();
+        document.querySelectorAll('.ws-tbx-nav-item').forEach(btn => {
+            const text = btn.textContent.toLowerCase();
+            btn.classList.toggle('is-hidden', q.length > 0 && !text.includes(q));
+        });
+        document.querySelectorAll('.ws-tbx-nav-group').forEach(group => {
+            const visible = group.querySelectorAll('.ws-tbx-nav-item:not(.is-hidden)').length;
+            group.classList.toggle('is-empty', q.length > 0 && visible === 0);
+        });
+    }
+
     function switchTool(tool) {
         if (!TOOL_KEYS.includes(tool)) tool = TOOL_KEYS[0];
         document.querySelectorAll('.ws-tbx-nav-item').forEach(btn => {
             const active = btn.dataset.tool === tool;
             btn.classList.toggle('is-active', active);
             btn.setAttribute('aria-selected', active ? 'true' : 'false');
+            if (active) {
+                btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
         });
         document.querySelectorAll('.ws-tbx-panel').forEach(panel => {
             const active = panel.dataset.toolPanel === tool;
@@ -780,12 +795,13 @@
 
         const search = document.getElementById('wsTbxSearch');
         if (search) {
-            search.addEventListener('input', () => {
-                const q = search.value.trim().toLowerCase();
-                document.querySelectorAll('.ws-tbx-nav-item').forEach(btn => {
-                    const text = btn.textContent.toLowerCase();
-                    btn.classList.toggle('is-hidden', q.length > 0 && !text.includes(q));
-                });
+            search.addEventListener('input', () => filterNavItems(search.value));
+            search.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    search.value = '';
+                    filterNavItems('');
+                    search.blur();
+                }
             });
         }
 
@@ -906,9 +922,14 @@
         }
 
         document.addEventListener('keydown', e => {
+            if (e.key === '/' && !e.target.matches('input, textarea, select')) {
+                e.preventDefault();
+                document.getElementById('wsTbxSearch')?.focus();
+                return;
+            }
             if (e.target.matches('input, textarea, select')) return;
             const n = parseInt(e.key, 10);
-            if (n >= 1 && n <= TOOL_KEYS.length) switchTool(TOOL_KEYS[n - 1]);
+            if (n >= 1 && n <= 9) switchTool(TOOL_KEYS[n - 1]);
         });
 
         const params = new URLSearchParams(window.location.search);
@@ -921,8 +942,6 @@
 
         updateCompareModeUI();
     }
-
-    window.wsTbxSwitchTool = switchTool;
 
     window.wsTbxSwitchTool = switchTool;
 

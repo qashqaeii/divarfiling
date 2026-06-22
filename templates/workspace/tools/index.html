@@ -2,8 +2,8 @@
 {% load static workspace_tags %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'workspace/css/tools-market.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/tools-market.css' %}?v=2">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -100,74 +100,109 @@
 
     <div class="ws-tbx-workspace">
         <aside class="ws-tbx-rail" aria-label="انتخاب ابزار">
+            <div class="ws-tbx-rail-head">
+                <div class="ws-tbx-rail-head-icon" aria-hidden="true">
+                    <i class="fas fa-toolbox"></i>
+                </div>
+                <div class="ws-tbx-rail-head-text">
+                    <strong>جعبه ابزار</strong>
+                    <span>۱۲ ابزار · کلیدهای ۱ تا ۹</span>
+                </div>
+            </div>
+
             <div class="ws-tbx-search-wrap">
                 <i class="fas fa-search" aria-hidden="true"></i>
                 <input type="search" id="wsTbxSearch" class="ws-tbx-search" placeholder="جستجوی ابزار..." autocomplete="off" aria-label="جستجوی ابزار">
+                <kbd class="ws-tbx-search-hint" aria-hidden="true">/</kbd>
             </div>
 
             <nav class="ws-tbx-nav" id="wsTbxNav" role="tablist">
+                <div class="ws-tbx-nav-group" data-nav-group="calc">
+                    <div class="ws-tbx-nav-group-head">
+                        <span class="ws-tbx-nav-group-title">محاسبات سریع</span>
+                        <span class="ws-tbx-nav-group-count">۹</span>
+                    </div>
+                    <div class="ws-tbx-nav-group-items">
                 <button type="button" class="ws-tbx-nav-item is-active" data-tool="mixed" data-accent="purple" role="tab" aria-selected="true" aria-controls="wsTbxPanelMixed">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۱</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
                     <span class="ws-tbx-nav-text"><strong>رهن ترکیبی</strong><em>ودیعه + اجاره → معادل کامل</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item" data-tool="deposit" data-accent="violet" role="tab" aria-selected="false" aria-controls="wsTbxPanelDeposit">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۲</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-exchange-alt"></i></span>
                     <span class="ws-tbx-nav-text"><strong>ودیعه ↔ اجاره</strong><em>تبدیل رهن کامل</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item" data-tool="compare" data-accent="cyan" role="tab" aria-selected="false" aria-controls="wsTbxPanelCompare">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۳</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-balance-scale"></i></span>
                     <span class="ws-tbx-nav-text"><strong>مقایسه دو آگهی</strong><em>کدام ارزان‌تر است؟</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item" data-tool="area" data-accent="blue" role="tab" aria-selected="false" aria-controls="wsTbxPanelArea">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۴</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
                     <span class="ws-tbx-nav-text"><strong>متراژ و قیمت</strong><em>قیمت متر، متراژ یا کل</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item" data-tool="discount" data-accent="orange" role="tab" aria-selected="false" aria-controls="wsTbxPanelDiscount">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۵</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-tags"></i></span>
                     <span class="ws-tbx-nav-text"><strong>تخفیف و مذاکره</strong><em>قیمت نهایی پس از تخفیف</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item" data-tool="commission" data-accent="green" role="tab" aria-selected="false" aria-controls="wsTbxPanelCommission">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۶</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
                     <span class="ws-tbx-nav-text"><strong>کمیسیون فروش</strong><em>خریدار و فروشنده</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item" data-tool="rent_commission" data-accent="teal" role="tab" aria-selected="false" aria-controls="wsTbxPanelRentCommission">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۷</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-key"></i></span>
                     <span class="ws-tbx-nav-text"><strong>کمیسیون اجاره</strong><em>مستأجر و مالک</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item" data-tool="budget" data-accent="indigo" role="tab" aria-selected="false" aria-controls="wsTbxPanelBudget">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۸</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-wallet"></i></span>
                     <span class="ws-tbx-nav-text"><strong>بودجه مشتری</strong><em>توان خرید و متراژ</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item" data-tool="pricing" data-accent="amber" role="tab" aria-selected="false" aria-controls="wsTbxPanelPricing">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۹</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
                     <span class="ws-tbx-nav-text"><strong>قیمت‌گذاری هوشمند</strong><em>باند P25–P75 بازار</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
-
-                <div class="ws-tbx-nav-divider" role="presentation">
-                    <span>ابزارهای بازار</span>
-                    <em>بر اساس فایل انتخابی</em>
+                    </div>
                 </div>
+
+                <div class="ws-tbx-nav-group ws-tbx-nav-group--market" data-nav-group="market">
+                    <div class="ws-tbx-nav-group-head">
+                        <span class="ws-tbx-nav-group-title">ابزارهای بازار</span>
+                        <span class="ws-tbx-nav-group-badge"><i class="fas fa-database" aria-hidden="true"></i> فایل</span>
+                    </div>
+                    <div class="ws-tbx-nav-group-items">
                 <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--market" data-tool="evaluate" data-accent="rose" role="tab" aria-selected="false" aria-controls="wsTbxPanelEvaluate">
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-crosshairs"></i></span>
                     <span class="ws-tbx-nav-text"><strong>ارزیابی آنی آگهی</strong><em>زیر یا بالای بازار؟</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--market" data-tool="opportunities" data-accent="emerald" role="tab" aria-selected="false" aria-controls="wsTbxPanelOpportunities">
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-gem"></i></span>
                     <span class="ws-tbx-nav-text"><strong>فرصت‌های زیر بازار</strong><em>بهترین آگهی‌های فایل</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--market" data-tool="neighborhood" data-accent="sky" role="tab" aria-selected="false" aria-controls="wsTbxPanelNeighborhood">
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></span>
                     <span class="ws-tbx-nav-text"><strong>بازه قیمت محله</strong><em>P25 تا P75 هر محله</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
+                    </div>
+                </div>
             </nav>
 
             <div class="ws-tbx-rail-foot">
@@ -685,6 +720,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/tools.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/tools.js' %}?v=7"></script>
 <script src="{% static 'workspace/js/tools-market.js' %}?v=3"></script>
 {% endblock %}

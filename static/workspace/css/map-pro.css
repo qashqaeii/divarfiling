@@ -36,6 +36,83 @@
     background: linear-gradient(135deg, rgba(91, 33, 182, 0.04) 0%, transparent 55%);
 }
 
+/* ── VPN tip (dismissible, below header controls) ── */
+.mk-map-pro .mk-map-vpn-tip {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 0 0.85rem 0.85rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: 14px;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(251, 191, 36, 0.08));
+    color: var(--ws-text);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.1);
+}
+
+.mk-map-pro .mk-map-vpn-tip[hidden] {
+    display: none !important;
+}
+
+.mk-map-pro .mk-map-vpn-tip-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.mk-map-pro .mk-map-vpn-tip-icon {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.18);
+    color: #d97706;
+    font-size: 0.95rem;
+}
+
+.mk-map-pro .mk-map-vpn-tip-copy {
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--ws-text-secondary);
+}
+
+.mk-map-pro .mk-map-vpn-tip-copy strong {
+    color: #b45309;
+    font-weight: 800;
+}
+
+.mk-map-pro .mk-map-vpn-tip-close {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.06);
+    color: var(--ws-text-muted);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.mk-map-pro .mk-map-vpn-tip-close:hover {
+    background: rgba(15, 23, 42, 0.12);
+    color: var(--ws-text);
+}
+
+[data-theme="dark"] .mk-map-pro .mk-map-vpn-tip {
+    border-color: rgba(251, 191, 36, 0.28);
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.06));
+}
+
+[data-theme="dark"] .mk-map-pro .mk-map-vpn-tip-close {
+    background: rgba(255, 255, 255, 0.08);
+}
+
 .mk-map-pro .mk-map-head-title {
     font-size: 1.05rem;
     font-weight: 800;
@@ -1004,6 +1081,12 @@
 .mk-map-pro .mk-map-pin--selected.mk-map-pin--market.mk-map-pin--fair i { color: #6366f1; }
 .mk-map-pro .mk-map-pin--selected.mk-map-pin--market.mk-map-pin--over i { color: #dc2626; }
 .mk-map-pro .mk-map-pin--selected.mk-map-pin--market.mk-map-pin--unknown i { color: #64748b; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--value.mk-map-pin--v1 i { color: #06b6d4; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--value.mk-map-pin--v2 i { color: #4f46e5; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--value.mk-map-pin--v3 i { color: #9333ea; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--value.mk-map-pin--v4 i { color: #d97706; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--value.mk-map-pin--v5 i { color: #b91c1c; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--value.mk-map-pin--v0 i { color: #64748b; }
 
 .mk-map-pro .mk-map-pin-wrap--selected {
     z-index: 1200 !important;

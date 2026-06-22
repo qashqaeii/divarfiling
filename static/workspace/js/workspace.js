@@ -1280,12 +1280,39 @@ function initFormattedNumericInputs(root = document) {
     });
 }
 
-const MAP_HEAT_GRADIENTS = {
-    density: { 0.15: '#c7d2fe', 0.35: '#818cf8', 0.55: '#a855f7', 0.72: '#f97316', 1: '#dc2626' },
-    price: { 0.12: '#22d3ee', 0.32: '#6366f1', 0.52: '#a855f7', 0.72: '#f59e0b', 1: '#dc2626' },
-    pps: { 0.12: '#6ee7b7', 0.32: '#22d3ee', 0.52: '#6366f1', 0.72: '#f59e0b', 1: '#dc2626' },
-    full_deposit: { 0.12: '#a7f3d0', 0.32: '#34d399', 0.52: '#6366f1', 0.72: '#f59e0b', 1: '#dc2626' },
-};
+const MAP_VPN_TIP_KEY = 'ws_map_vpn_tip_dismissed';
+
+const MAP_VALUE_TIER_COLORS = ['#94a3b8', '#06b6d4', '#4f46e5', '#9333ea', '#d97706', '#b91c1c'];
+
+function valueTierColor(tier) {
+    return MAP_VALUE_TIER_COLORS[tier] || MAP_VALUE_TIER_COLORS[0];
+}
+
+function setupMapVpnTip(mapLayer) {
+    const tip = document.getElementById('mkMapVpnTip');
+    const closeBtn = document.getElementById('mkMapVpnTipClose');
+    if (!tip || !closeBtn) return;
+
+    function showTip() {
+        tip.hidden = false;
+    }
+
+    function hideTip(persist = false) {
+        tip.hidden = true;
+        if (persist) {
+            try { localStorage.setItem(MAP_VPN_TIP_KEY, '1'); } catch (e) { /* ignore */ }
+        }
+    }
+
+    try {
+        if (localStorage.getItem(MAP_VPN_TIP_KEY) === '1') {
+            tip.hidden = true;
+        }
+    } catch (e) { /* ignore */ }
+
+    closeBtn.addEventListener('click', () => hideTip(true));
+    mapLayer?.on?.('tileerror', showTip);
+}
 
 const MAP_MARKET_COLORS = {
     under: '#059669',
@@ -1407,20 +1434,16 @@ function buildMapListItemHtml(m) {
 
 function buildMapLegendScale(mode, stats) {
     const barClass = {
-        heatmap: 'density',
-        price: 'price',
-        pps: 'pps',
-        grid: 'grid',
+        value: 'price',
         full_deposit: 'full-deposit',
-    }[mode] || 'density';
+        grid: 'grid',
+    }[mode] || 'price';
 
     const labels = {
-        heatmap: { low: 'کم', high: 'زیاد' },
-        price: { low: 'ارزان', high: 'گران' },
-        pps: { low: 'ارزان/متر', high: 'گران/متر' },
+        value: { low: 'ارزان', high: 'گران' },
         full_deposit: { low: 'رهن کم', high: 'رهن زیاد' },
         grid: { low: '۱', high: `${stats?.maxCount ?? '…'}` },
-    }[mode] || { low: 'کم', high: 'زیاد' };
+    }[mode] || { low: 'ارزان', high: 'گران' };
 
     const caption = stats?.rangeText
         ? `<span class="mk-map-legend-caption">${stats.rangeText}</span>`
@@ -1547,9 +1570,7 @@ const MAP_BASEMAPS = {
 
 const MAP_MODE_LABELS = {
     markers: 'نقاط',
-    heatmap: 'تراکم',
-    price: 'قیمت',
-    pps: 'هر متر',
+    value: 'رنگ قیمت',
     grid: 'شبکه',
     market: 'بازار',
     full_deposit: 'رهن کامل',
@@ -1682,6 +1703,7 @@ function setupMapProUI(map, options = {}) {
     let currentBasemapId = getDefaultBasemapId();
     let currentBasemapLayer = MAP_BASEMAPS[currentBasemapId].create();
     currentBasemapLayer.addTo(map);
+    setupMapVpnTip(currentBasemapLayer);
 
     const basemapBar = document.getElementById('mkMapBasemapBar');
     const basemapMenu = document.getElementById('mkMapBasemapMenu');
@@ -1759,6 +1781,7 @@ function setupMapProUI(map, options = {}) {
         currentBasemapId = id;
         currentBasemapLayer = cfg.create();
         currentBasemapLayer.addTo(map);
+        setupMapVpnTip(currentBasemapLayer);
         try { localStorage.setItem(MAP_BASEMAP_STORAGE_KEY, id); } catch (e) { /* ignore */ }
         updateBasemapUI(id);
         setBasemapMenuOpen(false);
@@ -1852,7 +1875,6 @@ function initMap(allMarkers, settings) {
     const map = L.map('wsMap', {
         zoomControl: false,
         scrollWheelZoom: true,
-        preferCanvas: true,
     });
     L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
@@ -1901,7 +1923,9 @@ function initMap(allMarkers, settings) {
     }
 
     function markerColorMode() {
-        return activeMode === 'market' ? 'market' : 'seller';
+        if (activeMode === 'market') return 'market';
+        if (activeMode === 'value' || activeMode === 'full_deposit') return 'value';
+        return 'seller';
     }
 
     function buildPinIcon(m, { selected = false, colorMode = null } = {}) {
@@ -1911,6 +1935,25 @@ function initMap(allMarkers, settings) {
             const tier = m.market_tier || 'unknown';
             pinClass = `mk-map-pin mk-map-pin--market mk-map-pin--${tier}`;
             if (m.is_consultant) pinClass += ' mk-map-pin--consultant-ring';
+        } else if (mode === 'value') {
+            const tier = m._valueTier ?? 0;
+            const bg = valueTierColor(tier);
+            pinClass = 'mk-map-pin mk-map-pin--value';
+            if (selected) pinClass += ' mk-map-pin--selected';
+            if (selected) {
+                return L.divIcon({
+                    className: 'mk-map-pin-wrap mk-map-pin-wrap--selected',
+                    html: `<div class="${pinClass}" style="background:${bg}"><i class="fas fa-location-dot" aria-hidden="true"></i></div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 26],
+                });
+            }
+            return L.divIcon({
+                className: 'mk-map-pin-wrap',
+                html: `<div class="${pinClass}" style="background:${bg}"></div>`,
+                iconSize: [18, 18],
+                iconAnchor: [9, 9],
+            });
         } else {
             pinClass += ` mk-map-pin--${m.is_consultant ? 'consultant' : 'personal'}`;
         }
@@ -1934,17 +1977,27 @@ function initMap(allMarkers, settings) {
 
     function selectMarker(id) {
         const layerColorMode = layers[activeMode]?._colorMode || markerColorMode();
+        const isCircleLayer = layers[activeMode]?._isValueLayer;
+
         if (selectedMarkerId != null && selectedMarkerId !== id) {
             const prev = markerRegistry[selectedMarkerId];
             if (prev?.marker) {
-                prev.marker.setIcon(buildPinIcon(prev.data, { colorMode: layerColorMode }));
+                if (isCircleLayer && prev.marker._mkCircleStyle) {
+                    prev.marker.setStyle(prev.marker._mkCircleStyle({ selected: false }));
+                } else {
+                    prev.marker.setIcon(buildPinIcon(prev.data, { colorMode: layerColorMode }));
+                }
                 prev.marker.setZIndexOffset(0);
             }
         }
         selectedMarkerId = id;
         const entry = markerRegistry[id];
         if (entry?.marker) {
-            entry.marker.setIcon(buildPinIcon(entry.data, { selected: true, colorMode: layerColorMode }));
+            if (isCircleLayer && entry.marker._mkCircleStyle) {
+                entry.marker.setStyle(entry.marker._mkCircleStyle({ selected: true }));
+            } else {
+                entry.marker.setIcon(buildPinIcon(entry.data, { selected: true, colorMode: layerColorMode }));
+            }
             entry.marker.setZIndexOffset(1200);
         }
         document.querySelectorAll('.mk-map-list-item').forEach((btn) => {
@@ -1955,9 +2008,13 @@ function initMap(allMarkers, settings) {
     function highlightMarker(id, on) {
         const entry = markerRegistry[id];
         if (!entry) return;
+        if (id === selectedMarkerId) return;
+        if (entry.marker._mkCircleStyle) {
+            entry.marker.setStyle(entry.marker._mkCircleStyle({ highlighted: !!on }));
+            return;
+        }
         const el = entry.marker.getElement?.();
         if (!el) return;
-        if (id === selectedMarkerId) return;
         el.classList.toggle('mk-map-pin-wrap--highlight', !!on);
     }
 
@@ -1983,7 +2040,7 @@ function initMap(allMarkers, settings) {
             listItem?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         };
 
-        if (clusterGroup && ['markers', 'market'].includes(activeMode)) {
+        if (clusterGroup && ['markers', 'market', 'value', 'full_deposit'].includes(activeMode)) {
             clusterGroup.zoomToShowLayer(entry.marker, finish);
         } else {
             map.flyTo([m.lat, m.lng], targetZoom, { duration: 0.5 });
@@ -1998,13 +2055,6 @@ function initMap(allMarkers, settings) {
         if (entry?.marker?.openPopup) {
             setTimeout(() => entry.marker.openPopup(), 380);
         }
-    }
-
-    function getHeatParams() {
-        const z = map.getZoom();
-        const radius = Math.max(11, Math.min(28, Math.round(9 + z * 1.25)));
-        const blur = Math.max(7, Math.round(radius * 0.52));
-        return { radius, blur };
     }
 
     function percentileIntensity(values, index) {
@@ -2072,65 +2122,93 @@ function initMap(allMarkers, settings) {
         return wrapper;
     }
 
-    function buildHeatLayer(source, mode) {
-        if (!window.L.heatLayer || !source.length) return { layer: L.layerGroup(), stats: {} };
-
-        const values = source.map(m => {
-            if (mode === 'full_deposit') return Number(m.full_deposit) || 0;
-            if (mode === 'pps') return Number(m.pps) || 0;
-            if (mode === 'price') return Number(m.value || m.price) || 0;
-            return 1;
+    function enrichWithValueTier(source, valueKey = 'filter_value') {
+        const values = source.map(m => Number(m[valueKey] || m.filter_value || m.price || 0) || 0);
+        return source.map((m, i) => {
+            const v = values[i];
+            let tier = 0;
+            if (v > 0 && values.some(x => x > 0)) {
+                tier = Math.min(5, Math.max(1, Math.ceil(percentileIntensity(values, i) * 5)));
+            }
+            return { ...m, _valueTier: tier };
         });
+    }
 
+    function valueCircleStyle(m, { selected = false, highlighted = false } = {}) {
+        const color = valueTierColor(m._valueTier ?? 0);
+        return {
+            radius: selected ? 12 : (highlighted ? 11 : 9),
+            fillColor: color,
+            fillOpacity: selected ? 0.95 : 0.85,
+            color: selected ? '#0f172a' : '#ffffff',
+            weight: selected ? 2.5 : 2,
+            opacity: 1,
+        };
+    }
+
+    function buildValueMarkerLayer(source, { valueKey = 'filter_value', perSqm = false } = {}) {
+        const enriched = enrichWithValueTier(source, valueKey);
+        const values = enriched.map(m => Number(m[valueKey] || m.filter_value || m.price || 0) || 0);
         const positives = values.filter(v => v > 0);
         const minVal = positives.length ? Math.min(...positives) : 0;
         const maxVal = positives.length ? Math.max(...positives) : 0;
 
-        const points = source.map((m, i) => {
-            let intensity = 0.42;
-            if (mode === 'price' || mode === 'pps' || mode === 'full_deposit') {
-                intensity = percentileIntensity(values, i);
-            }
-            return [m.lat, m.lng, intensity];
+        const localRegistry = {};
+        const wrapper = L.layerGroup();
+        const rings = L.layerGroup();
+        let clusterGroup = null;
+        const group = useCluster
+            ? (clusterGroup = L.markerClusterGroup({
+                disableClusteringAtZoom: clusterDisableZoom,
+                maxClusterRadius: 26,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                animateAddingMarkers: false,
+                iconCreateFunction(cluster) {
+                    const count = cluster.getChildCount();
+                    let size = 'mk-map-cluster--md';
+                    if (count < 12) size = 'mk-map-cluster--sm';
+                    else if (count > 60) size = 'mk-map-cluster--lg';
+                    return L.divIcon({
+                        html: `<div class="mk-map-cluster ${size}"><span>${count}</span></div>`,
+                        className: 'mk-map-cluster-wrap',
+                        iconSize: [48, 48],
+                    });
+                },
+            }))
+            : L.layerGroup();
+
+        enriched.forEach((m) => {
+            addAccuracyRings(rings, m, showRings);
+            const isSelected = m.id === selectedMarkerId;
+            const marker = L.circleMarker([m.lat, m.lng], valueCircleStyle(m, { selected: isSelected }));
+            marker._mkCircleStyle = (opts = {}) => valueCircleStyle(m, opts);
+            registerMarker(marker, m, localRegistry);
+            if (isSelected) marker.setZIndexOffset(1200);
+            marker.bindPopup(buildMapMarkerPopup(m), popupOpts);
+            marker.on('click', () => selectMarker(m.id));
+            marker.on('mouseover', () => highlightMarker(m.id, true));
+            marker.on('mouseout', () => {
+                if (highlightedMarkerId !== m.id && m.id !== selectedMarkerId) highlightMarker(m.id, false);
+            });
+            group.addLayer(marker);
         });
 
-        const { radius, blur } = getHeatParams();
-        const layer = L.heatLayer(points, {
-            radius,
-            blur,
-            maxZoom: 19,
-            minOpacity: 0.42,
-            max: mode === 'density' ? Math.min(1, 0.35 + source.length / 400) : 1,
-            gradient: MAP_HEAT_GRADIENTS[mode] || MAP_HEAT_GRADIENTS.density,
-        });
+        wrapper.addLayer(rings);
+        wrapper.addLayer(group);
+        wrapper._clusterGroup = clusterGroup;
+        wrapper._colorMode = 'value';
+        wrapper._isValueLayer = true;
+        wrapper._registry = localRegistry;
 
-        let stats = {};
-        if (mode === 'density') {
-            stats = {
-                maxCount: source.length,
-                rangeText: `هر نقطه = یک آگهی · ${source.length.toLocaleString('fa-IR')} آگهی در نمایش`,
-            };
-        } else if (mode === 'price') {
-            stats = {
+        return {
+            layer: wrapper,
+            stats: {
                 rangeText: minVal && maxVal
-                    ? `از ${formatMapMoney(minVal)} تا ${formatMapMoney(maxVal)}`
-                    : 'داده قیمت کافی نیست',
-            };
-        } else if (mode === 'pps') {
-            stats = {
-                rangeText: minVal && maxVal
-                    ? `از ${formatMapMoney(minVal, true)} تا ${formatMapMoney(maxVal, true)}`
-                    : 'داده قیمت هر متر کافی نیست',
-            };
-        } else if (mode === 'full_deposit') {
-            stats = {
-                rangeText: minVal && maxVal
-                    ? `از ${formatMapMoney(minVal)} تا ${formatMapMoney(maxVal)}`
-                    : 'داده رهن کامل کافی نیست',
-            };
-        }
-
-        return { layer, stats };
+                    ? `از ${formatMapMoney(minVal, perSqm)} تا ${formatMapMoney(maxVal, perSqm)}`
+                    : 'داده کافی برای رنگ‌بندی نیست',
+            },
+        };
     }
 
     function buildGridLayer(source) {
@@ -2203,16 +2281,12 @@ function initMap(allMarkers, settings) {
 
     function buildLayers() {
         const visible = getFilteredMarkers();
-        const heatmap = buildHeatLayer(visible, 'density');
-        const price = buildHeatLayer(visible, 'price');
-        const pps = buildHeatLayer(visible, 'pps');
-        const fullDeposit = buildHeatLayer(visible, 'full_deposit');
+        const value = buildValueMarkerLayer(visible);
+        const fullDeposit = buildValueMarkerLayer(visible, { valueKey: 'full_deposit' });
         const grid = buildGridLayer(visible);
 
         layerStats = {
-            heatmap: heatmap.stats,
-            price: price.stats,
-            pps: pps.stats,
+            value: value.stats,
             full_deposit: fullDeposit.stats,
             grid: grid.stats,
             market: {
@@ -2225,9 +2299,7 @@ function initMap(allMarkers, settings) {
         return {
             markers: buildMarkerLayer(visible, { colorMode: 'seller' }),
             market: buildMarkerLayer(visible, { colorMode: 'market' }),
-            heatmap: heatmap.layer,
-            price: price.layer,
-            pps: pps.layer,
+            value: value.layer,
             full_deposit: fullDeposit.layer,
             grid: grid.layer,
             _count: visible.length,
@@ -2434,7 +2506,9 @@ function initMap(allMarkers, settings) {
         if (layers[activeMode]) map.removeLayer(layers[activeMode]);
         layers = buildLayers();
         if (!layers[activeMode]) activeMode = 'markers';
-        if (layers[activeMode]) map.addLayer(layers[activeMode]);
+        if (layers[activeMode]) {
+            map.addLayer(layers[activeMode]);
+        }
         syncMarkerRegistry();
         if (keepId != null && markerRegistry[keepId]) selectMarker(keepId);
         updateMapChrome(activeMode);
@@ -2474,9 +2548,7 @@ function initMap(allMarkers, settings) {
     const legendMeta = {
         markers: { badge: 'نقاط' },
         market: { badge: 'بازار' },
-        heatmap: { badge: 'تراکم' },
-        price: { badge: 'قیمت' },
-        pps: { badge: 'هر متر' },
+        value: { badge: 'رنگ قیمت' },
         full_deposit: { badge: 'رهن کامل' },
         grid: { badge: 'شبکه' },
     };
@@ -2509,17 +2581,16 @@ function initMap(allMarkers, settings) {
     }
 
     const legendTemplates = {
-        heatmap: () => buildMapLegendScale('heatmap', layerStats.heatmap),
-        price: () => buildMapLegendScale('price', layerStats.price),
-        pps: () => buildMapLegendScale('pps', layerStats.pps),
-        full_deposit: () => buildMapLegendScale('full_deposit', layerStats.full_deposit),
+        value: () => `${buildMapLegendScale('value', layerStats.value)}<span class="mk-map-legend-hint">کلیک روی هر نقطه برای جزئیات</span>`,
+        full_deposit: () => `${buildMapLegendScale('full_deposit', layerStats.full_deposit)}<span class="mk-map-legend-hint">کلیک روی هر نقطه برای جزئیات</span>`,
         grid: () => buildMapLegendScale('grid', layerStats.grid),
         market: () => marketLegendHtml(),
     };
 
     function updateMapChrome(mode) {
         if (hint) {
-            hint.hidden = !['markers', 'market'].includes(mode) || map.getZoom() >= clusterDisableZoom;
+            hint.hidden = !['markers', 'market', 'value', 'full_deposit'].includes(mode)
+                || map.getZoom() >= clusterDisableZoom;
         }
         const meta = legendMeta[mode] || legendMeta.markers;
         const count = layers._count ?? getFilteredMarkers().length;
@@ -2573,9 +2644,9 @@ function initMap(allMarkers, settings) {
 
     let zoomRefreshTimer;
     map.on('zoomend', () => {
-        if (['markers', 'market'].includes(activeMode) && hint) {
+        if (['markers', 'market', 'value', 'full_deposit'].includes(activeMode) && hint) {
             hint.hidden = map.getZoom() >= clusterDisableZoom;
-        } else if (['heatmap', 'price', 'pps', 'full_deposit', 'grid'].includes(activeMode)) {
+        } else if (activeMode === 'grid') {
             clearTimeout(zoomRefreshTimer);
             zoomRefreshTimer = setTimeout(() => refreshLayers(), 120);
         }

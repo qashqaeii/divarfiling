@@ -25,14 +25,58 @@ def _metric_dist(row: Dict[str, Any], key: str) -> Dict[str, Any]:
     }
 
 
-def serialize_neighborhoods(rows: List[Dict[str, Any]], *, is_rent: bool) -> List[Dict[str, Any]]:
+def _resolve_market_mode(tx: Dict[str, Any], enriched, listing=None) -> str:
+    """تعیین حالت ارزش‌گذاری: فروش یا اجاره."""
+    if tx.get('is_mixed'):
+        if listing is not None:
+            has_rent = bool(listing.rent or listing.deposit)
+            has_price = bool(listing.price)
+            if has_rent and not has_price:
+                return 'rent'
+            if has_price and not has_rent:
+                return 'sale'
+        rent_n = 0
+        sale_n = 0
+        if hasattr(enriched, 'columns'):
+            if 'rent_equiv' in enriched.columns:
+                rent_n = int(enriched['rent_equiv'].notna().sum())
+            if 'price_per_sqm' in enriched.columns:
+                sale_n = int(enriched['price_per_sqm'].notna().sum())
+        if sale_n and not rent_n:
+            return 'sale'
+        if rent_n and not sale_n:
+            return 'rent'
+        return 'rent' if rent_n >= sale_n else 'sale'
+    if tx.get('is_rent') and not tx.get('show_price_per_sqm'):
+        return 'rent'
+    return 'sale'
+
+
+def _mode_labels(mode: str) -> Dict[str, str]:
+    if mode == 'rent':
+        return {
+            'actual_label': 'رهن کامل معادل',
+            'expected_label': 'میانه هم‌رده (رهن کامل)',
+            'pps_label': 'رهن کامل/متر',
+            'price_field': 'full_deposit',
+        }
+    return {
+        'actual_label': 'قیمت آگهی',
+        'expected_label': 'میانه هم‌رده',
+        'pps_label': 'قیمت هر متر',
+        'price_field': 'price',
+    }
+
+
+def serialize_neighborhoods(rows: List[Dict[str, Any]], *, mode: str) -> List[Dict[str, Any]]:
     out: List[Dict[str, Any]] = []
     for row in rows:
-        metric_key = 'full_deposit' if is_rent and row.get('full_deposit') else (
-            'price_per_sqm' if row.get('price_per_sqm') else (
-                'rent' if row.get('rent') else 'price'
+        if mode == 'rent':
+            metric_key = 'full_deposit' if row.get('full_deposit') else (
+                'rent' if row.get('rent') else 'deposit'
             )
-        )
+        else:
+            metric_key = 'price_per_sqm' if row.get('price_per_sqm') else 'price'
         metric = _metric_dist(row, metric_key)
         if not metric.get('p50'):
             continue
@@ -76,19 +120,15 @@ def build_market_toolkit(dataset) -> Dict[str, Any]:
     df_clean = filter_outliers(df, dataset.transaction_type or '') if len(df) >= 10 else df
     enriched = enrich_dataframe(df_clean, dataset.transaction_type or '')
 
-    mode = 'rent' if tx.get('is_rent') and not tx.get('show_price_per_sqm') else 'sale'
-    if tx.get('is_mixed'):
-        rent_n = enriched['rent_equiv'].notna().sum() if 'rent_equiv' in enriched.columns else 0
-        sale_n = enriched['price_per_sqm'].notna().sum() if 'price_per_sqm' in enriched.columns else 0
-        mode = 'rent' if rent_n >= sale_n else 'sale'
-
+    mode = _resolve_market_mode(tx, enriched)
     scored = compute_expected_values(enriched, mode=mode)
     opportunities = find_value_picks(scored, direction='below', limit=15)
     nb_rows = neighborhood_price_analysis(df_clean, dataset.transaction_type or '', min_count=2)
-    neighborhoods = serialize_neighborhoods(nb_rows, is_rent=bool(tx.get('is_rent')))
+    neighborhoods = serialize_neighborhoods(nb_rows, mode=mode)
 
     snapshot = build_market_snapshot(dataset)
     snapshot['mode'] = mode
+    labels = _mode_labels(mode)
 
     return {
         'snapshot': snapshot,
@@ -96,9 +136,11 @@ def build_market_toolkit(dataset) -> Dict[str, Any]:
         'opportunities_count': len(opportunities),
         'neighborhoods': neighborhoods,
         'neighborhood_names': [n['neighborhood'] for n in neighborhoods],
-        'is_rent': bool(tx.get('is_rent')),
+        'is_rent': mode == 'rent',
         'show_price_per_sqm': bool(tx.get('show_price_per_sqm', True)),
         'mode': mode,
+        'transaction_mode': tx.get('mode') or dataset.transaction_type or '',
+        'labels': labels,
     }
 
 
@@ -150,19 +192,27 @@ def evaluate_listing_market(
     df_clean = filter_outliers(df, dataset.transaction_type or '') if len(df) >= 10 else df
     enriched = enrich_dataframe(df_clean, dataset.transaction_type or '')
 
-    mode = 'rent' if tx.get('is_rent') and not tx.get('show_price_per_sqm') else 'sale'
-    if tx.get('is_mixed'):
-        rent_n = enriched['rent_equiv'].notna().sum() if 'rent_equiv' in enriched.columns else 0
-        sale_n = enriched['price_per_sqm'].notna().sum() if 'price_per_sqm' in enriched.columns else 0
-        mode = 'rent' if rent_n >= sale_n else 'sale'
-
-    scored = compute_expected_values(enriched, mode=mode)
-
+    listing = None
     if listing_id:
         listing = dataset.listings.filter(pk=listing_id).first()
         if not listing:
             return {'error': 'آگهی یافت نشد.'}
-        bench = benchmark_listing(listing, scored, dataset.transaction_type or '')
+
+    if not listing_id and tx.get('is_mixed'):
+        if price and not (deposit or rent):
+            mode = 'sale'
+        elif (deposit or rent) and not price:
+            mode = 'rent'
+        else:
+            mode = _resolve_market_mode(tx, enriched)
+    else:
+        mode = _resolve_market_mode(tx, enriched, listing=listing)
+
+    scored = compute_expected_values(enriched, mode=mode)
+    labels = _mode_labels(mode)
+
+    if listing_id and listing:
+        bench = benchmark_listing(listing, enriched, dataset.transaction_type or '')
         area = listing.area
         neighborhood = listing.neighborhood or neighborhood
         if mode == 'rent':
@@ -269,6 +319,7 @@ def evaluate_listing_market(
         'negotiate_hint': negotiate,
         'negotiate_hint_fmt': format_toman(negotiate) if negotiate else '',
         'peer_count': len(seg),
+        'labels': labels,
         'copy': _build_eval_copy(verdict, actual_metric, expected, score, area, neighborhood),
     }
 

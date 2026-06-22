@@ -131,9 +131,9 @@
                     </div>
                 </div>` : ''}
                 <div class="ws-tbx-result-grid ws-tbx-result-grid--flex">
-                    <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.actual_fmt}</span><span class="ws-tbx-result-item-lbl">قیمت آگهی</span></div>
-                    <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.expected_fmt}</span><span class="ws-tbx-result-item-lbl">میانه هم‌رده</span></div>
-                    <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.pps_actual_fmt || '—'}</span><span class="ws-tbx-result-item-lbl">هر متر</span></div>
+                    <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.actual_fmt}</span><span class="ws-tbx-result-item-lbl">${data.labels?.actual_label || 'قیمت آگهی'}</span></div>
+                    <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.expected_fmt}</span><span class="ws-tbx-result-item-lbl">${data.labels?.expected_label || 'میانه هم‌رده'}</span></div>
+                    <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.pps_actual_fmt || '—'}</span><span class="ws-tbx-result-item-lbl">${data.labels?.pps_label || 'هر متر'}</span></div>
                     <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.area_fmt || '—'}</span><span class="ws-tbx-result-item-lbl">متراژ</span></div>
                 </div>
                 ${data.negotiate_hint_fmt ? `<p class="ws-mkt-negotiate"><i class="fas fa-lightbulb" aria-hidden="true"></i> پیشنهاد مذاکره: <strong>${data.negotiate_hint_fmt}</strong></p>` : ''}
@@ -157,14 +157,26 @@
         }
     }
 
+    function oppPriceLine(o) {
+        if (o.price_fmt) return o.price_fmt;
+        if (o.full_deposit_fmt) return o.full_deposit_fmt;
+        if (o.deposit_fmt && o.rent_fmt) return `${o.deposit_fmt} + ${o.rent_fmt}`;
+        return o.rent_equiv_fmt || o.deposit_fmt || '';
+    }
+
     function renderOpportunities() {
         const list = document.getElementById('tbxOppsList');
         const count = document.getElementById('tbxOppsCount');
         if (!list) return;
         const opps = toolkit?.opportunities || [];
-        if (count) count.textContent = opps.length ? `${opps.length} فرصت` : 'فرصتی یافت نشد';
+        const modeLabel = toolkit?.transaction_mode || toolkit?.snapshot?.transaction_type || '';
+        if (count) {
+            count.textContent = opps.length
+                ? `${opps.length} فرصت${modeLabel ? ` · ${modeLabel}` : ''}`
+                : 'فرصتی یافت نشد';
+        }
         if (!opps.length) {
-            list.innerHTML = '<div class="ws-mkt-empty"><i class="fas fa-gem" aria-hidden="true"></i><p>آگهی زیر بازار در این فایل پیدا نشد</p></div>';
+            list.innerHTML = `<div class="ws-mkt-empty"><i class="fas fa-gem" aria-hidden="true"></i><p>آگهی زیر بازار در این فایل پیدا نشد</p><small>فایل: ${modeLabel || '—'} · حالت: ${toolkit?.mode === 'rent' ? 'اجاره' : 'فروش'}</small></div>`;
             return;
         }
         list.innerHTML = opps.map((o, i) => `
@@ -173,7 +185,7 @@
                 <div class="ws-mkt-opp-score">${o.value_score != null ? `${o.value_score}٪` : '—'}</div>
                 <div class="ws-mkt-opp-body">
                     <strong>${o.title || o.token}</strong>
-                    <em>${[o.neighborhood, o.area_fmt, o.price_fmt || o.rent_equiv_fmt || o.deposit_fmt].filter(Boolean).join(' · ')}</em>
+                    <em>${[o.neighborhood, o.area_fmt, oppPriceLine(o)].filter(Boolean).join(' · ')}</em>
                     <span class="ws-mkt-opp-reason">${o.reason || ''}</span>
                 </div>
                 <i class="fas fa-chevron-left ws-mkt-opp-arrow" aria-hidden="true"></i>
@@ -273,7 +285,7 @@
     }
 
     function updateEvalModeUI() {
-        const isRent = toolkit?.is_rent && !toolkit?.show_price_per_sqm;
+        const isRent = toolkit?.mode === 'rent';
         const sale = document.getElementById('tbxEvalSaleFields');
         const rent = document.getElementById('tbxEvalRentFields');
         if (sale) sale.hidden = !!isRent;
@@ -295,7 +307,7 @@
         } else {
             body.area = parseNumEl('tbxEvalArea');
             body.neighborhood = document.getElementById('tbxEvalNb')?.value || null;
-            if (toolkit?.is_rent && !toolkit?.show_price_per_sqm) {
+            if (toolkit?.mode === 'rent') {
                 body.deposit = parseIntEl('tbxEvalDeposit');
                 body.rent = parseIntEl('tbxEvalRent');
             } else {

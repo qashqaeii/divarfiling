@@ -306,7 +306,7 @@ def neighborhood_price_analysis(
             row['price_per_sqm'] = _fmt_dist(distribution_stats(grp['price_per_sqm']), per_sqm=True)
         if tx['show_rent'] and grp['rent'].notna().sum() >= min_count:
             row['rent'] = _fmt_dist(distribution_stats(grp['rent'].dropna()))
-        if tx['is_rent'] and 'full_deposit' in grp.columns and grp['full_deposit'].notna().sum() >= min_count:
+        if (tx['show_deposit'] or tx['show_rent']) and 'full_deposit' in grp.columns and grp['full_deposit'].notna().sum() >= min_count:
             row['full_deposit'] = _fmt_dist(distribution_stats(grp['full_deposit'].dropna()))
         if tx['show_deposit'] and grp['deposit'].notna().sum() >= min_count:
             row['deposit'] = _fmt_dist(distribution_stats(grp['deposit'].dropna()))

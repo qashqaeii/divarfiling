@@ -643,13 +643,21 @@ def find_value_picks(
     if df.empty:
         return []
 
-    # حذف موارد گمراه‌کننده: اجاره صفر با رهن پایین (داده ناقص)
+    # حذف موارد گمراه‌کننده اجاره: رهن مثبت ولی اجاره صفر و ودیعه پایین (داده ناقص)
+    # نه آگهی فروش — در فروش deposit/rent معمولاً ۰ است و نباید حذف شوند
     if 'rent' in df.columns and 'deposit' in df.columns:
-        bad = (df['rent'].fillna(0) == 0) & (df['deposit'].fillna(0) < min_deposit_for_zero_rent)
+        dep = df['deposit'].fillna(0)
+        rent = df['rent'].fillna(0)
+        bad = (rent == 0) & (dep > 0) & (dep < min_deposit_for_zero_rent)
         df = df[~bad]
 
     if direction == 'below':
         picks = df[df['value_score'] < -12].sort_values('value_score')
+        if picks.empty:
+            # اگر آستانه سخت نتیجه نداد، بهترین‌های نسبی زیر بازار
+            picks = df[df['value_score'] < -5].sort_values('value_score')
+        if picks.empty:
+            picks = df[df['value_score'] < 0].sort_values('value_score').head(limit)
         badge = 'زیر بازار'
     else:
         picks = df[df['value_score'] > 12].sort_values('value_score', ascending=False)
@@ -689,7 +697,11 @@ def find_value_picks(
                 format_toman(r.get('price_per_sqm'), per_sqm=True)
                 if pd.notna(r.get('price_per_sqm')) else ''
             ),
-            'value_score': score,
+            'full_deposit_fmt': (
+                format_toman(r.get('full_deposit'))
+                if pd.notna(r.get('full_deposit')) else ''
+            ),
+            'value_score': float(score) if score is not None and score == score else None,
             'badge': badge,
             'reason': ' — '.join(reason_parts),
         })

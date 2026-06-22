@@ -774,6 +774,27 @@ class SmartToolsTests(SimpleTestCase):
         self.assertEqual(r['band_low'], 7_200_000_000)
         self.assertEqual(r['band_high'], 8_800_000_000)
 
+    def test_find_value_picks_includes_sale_listings(self):
+        import pandas as pd
+        from workspace.services.valuation import find_value_picks
+
+        df = pd.DataFrame([
+            {
+                'listing_id': 1, 'token': 'a', 'title': 'فروش ارزان', 'price': 10_000_000_000,
+                'deposit': 0, 'rent': 0, 'area': 100, 'neighborhood': 'اکباتان',
+                'value_score': -76.1, 'price_per_sqm': 100_000_000,
+            },
+            {
+                'listing_id': 2, 'token': 'b', 'title': 'فروش گران', 'price': 50_000_000_000,
+                'deposit': 0, 'rent': 0, 'area': 100, 'neighborhood': 'اکباتان',
+                'value_score': 5.0, 'price_per_sqm': 500_000_000,
+            },
+        ])
+        picks = find_value_picks(df, direction='below', limit=15)
+        self.assertEqual(len(picks), 1)
+        self.assertEqual(picks[0]['listing_id'], 1)
+        self.assertIn('تومان', picks[0]['price_fmt'])
+
 
 class ConsultantLandscapeTests(SimpleTestCase):
     def test_analyze_consultant_landscape_top_agency(self):

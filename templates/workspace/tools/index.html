@@ -2,7 +2,7 @@
 {% load static workspace_tags %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=5">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -527,14 +527,26 @@
                             <label class="ws-label" for="tbxPricingArea">متراژ ملک (متر)</label>
                             <input type="text" inputmode="decimal" id="tbxPricingArea" class="ws-input mk-filter-num" placeholder="۸۵">
                         </div>
-                        <div class="ws-field">
-                            <label class="ws-label" for="tbxPricingAdj">تنظیم نسبت به بازار</label>
-                            <div class="ws-tbx-presets" role="group">
-                                <button type="button" class="ws-tbx-preset" data-pricing-adj="-5">۵٪ زیر بازار</button>
-                                <button type="button" class="ws-tbx-preset is-active" data-pricing-adj="0">میانه بازار</button>
-                                <button type="button" class="ws-tbx-preset" data-pricing-adj="5">۵٪ بالای بازار</button>
+                        <div class="ws-field ws-tbx-adj-field">
+                            <div class="ws-tbx-adj-head">
+                                <label class="ws-label" for="tbxPricingAdj">تنظیم نسبت به بازار</label>
+                                <output id="tbxPricingAdjOut" class="ws-tbx-adj-value" for="tbxPricingAdj">میانه بازار (۰٪)</output>
                             </div>
-                            <input type="hidden" id="tbxPricingAdj" value="0">
+                            <div class="ws-tbx-adj-slider-block">
+                                <span class="ws-tbx-adj-bound">−۲۰٪</span>
+                                <div class="ws-tbx-adj-slider-wrap">
+                                    <input type="range" id="tbxPricingAdj" class="ws-tbx-adj-slider" min="-20" max="20" step="0.5" value="0" aria-valuemin="-20" aria-valuemax="20" aria-valuenow="0" aria-label="درصد تنظیم نسبت به بازار">
+                                </div>
+                                <span class="ws-tbx-adj-bound">+۲۰٪</span>
+                            </div>
+                            <div class="ws-tbx-adj-mid" aria-hidden="true"><span>میانه بازار</span></div>
+                            <div class="ws-tbx-presets ws-tbx-adj-presets" role="group" aria-label="میانبرهای تنظیم">
+                                <button type="button" class="ws-tbx-preset" data-pricing-adj="-10">۱۰٪ زیر</button>
+                                <button type="button" class="ws-tbx-preset" data-pricing-adj="-5">۵٪ زیر</button>
+                                <button type="button" class="ws-tbx-preset is-active" data-pricing-adj="0">میانه</button>
+                                <button type="button" class="ws-tbx-preset" data-pricing-adj="5">۵٪ بالا</button>
+                                <button type="button" class="ws-tbx-preset" data-pricing-adj="10">۱۰٪ بالا</button>
+                            </div>
                         </div>
                     </div>
                     <div class="ws-tbx-result-card" id="tbxPricingResult">
@@ -552,5 +564,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/tools.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/tools.js' %}?v=4"></script>
 {% endblock %}

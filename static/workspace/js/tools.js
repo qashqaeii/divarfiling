@@ -49,11 +49,18 @@
 
     function parseNum(el) {
         if (!el) return null;
-        const raw = typeof readFormattedInput === 'function'
-            ? readFormattedInput(el)
-            : el.value.replace(/[^\d.]/g, '');
-        if (!raw && raw !== 0) return null;
-        const n = parseFloat(raw);
+        let raw;
+        if (typeof readFormattedInput === 'function' && el.type !== 'range' && el.type !== 'hidden') {
+            raw = readFormattedInput(el);
+        } else {
+            raw = el.value;
+        }
+        if (raw == null || raw === '') return null;
+        const s = String(raw).trim().replace(/,/g, '');
+        const negative = s.startsWith('-');
+        const cleaned = s.replace(/[^\d.]/g, '');
+        if (!cleaned) return null;
+        const n = parseFloat((negative ? '-' : '') + cleaned);
         return isNaN(n) ? null : n;
     }
 
@@ -258,26 +265,42 @@
         return null;
     }
 
+    function formatAdjLabel(pct) {
+        const v = Math.round(pct * 10) / 10;
+        if (v === 0) return 'میانه بازار (۰٪)';
+        if (v > 0) return `${v.toLocaleString('fa-IR', { maximumFractionDigits: 1 })}٪ بالای بازار`;
+        return `${Math.abs(v).toLocaleString('fa-IR', { maximumFractionDigits: 1 })}٪ زیر بازار`;
+    }
+
     function calcPricing(area, adjustmentPct) {
         if (!marketSnapshot || !marketSnapshot.median_pps) return null;
         if (!area || area <= 0) return null;
         const base = marketSnapshot.median_pps;
-        const adj = 1 + (adjustmentPct || 0) / 100;
+        const pct = adjustmentPct || 0;
+        const adj = 1 + pct / 100;
         const suggestedPps = Math.round(base * adj);
         const total = Math.round(suggestedPps * area);
+        const medianTotal = Math.round(base * area);
+        const delta = total - medianTotal;
         const ppsM = ppsToMillion(suggestedPps);
         const baseM = ppsToMillion(base);
         const isRentMetric = marketSnapshot.is_rent && marketSnapshot.pps_metric === 'full_deposit_per_sqm';
         const ppsLabel = isRentMetric ? 'رهن کامل/متر' : 'قیمت هر متر';
         const totalLabel = isRentMetric ? 'رهن کامل پیشنهادی' : 'قیمت پیشنهادی';
+        const deltaLbl = delta >= 0 ? 'بیش از میانه' : 'کمتر از میانه';
         return {
             hero: { val: formatToman(total), lbl: totalLabel },
             items: [
                 { val: formatM(ppsM), lbl: ppsLabel },
-                { val: formatArea(area), lbl: 'متراژ' },
+                { val: formatAdjLabel(pct), lbl: 'تنظیم بازار' },
                 { val: formatM(baseM), lbl: 'میانه بازار' },
+                { val: formatArea(area), lbl: 'متراژ' },
+                {
+                    val: (delta >= 0 ? '+' : '') + formatToman(delta),
+                    lbl: deltaLbl,
+                },
             ],
-            copy: `پیشنهاد: ${formatToman(total)} (${formatM(ppsM)}/متر × ${formatArea(area)})`,
+            copy: `پیشنهاد: ${formatToman(total)} (${formatAdjLabel(pct)} | ${formatM(ppsM)}/متر × ${formatArea(area)})`,
         };
     }
 
@@ -648,6 +671,37 @@
         renderGrid(container, r);
     }
 
+    function updateAdjSliderUI() {
+        const slider = document.getElementById('tbxPricingAdj');
+        const out = document.getElementById('tbxPricingAdjOut');
+        if (!slider) return;
+        const v = parseFloat(slider.value) || 0;
+        const min = parseFloat(slider.min) || -20;
+        const max = parseFloat(slider.max) || 20;
+        const fill = ((v - min) / (max - min)) * 100;
+        slider.style.setProperty('--adj-fill', `${fill}%`);
+        slider.setAttribute('aria-valuenow', String(v));
+        if (out) out.textContent = formatAdjLabel(v);
+    }
+
+    function syncPricingPresetsFromSlider() {
+        const slider = document.getElementById('tbxPricingAdj');
+        if (!slider) return;
+        const v = parseFloat(slider.value) || 0;
+        document.querySelectorAll('.ws-tbx-preset[data-pricing-adj]').forEach(btn => {
+            const match = parseFloat(btn.dataset.pricingAdj) === v;
+            btn.classList.toggle('is-active', match);
+        });
+    }
+
+    function setPricingAdjustment(pct) {
+        const slider = document.getElementById('tbxPricingAdj');
+        if (slider) slider.value = String(pct);
+        updateAdjSliderUI();
+        syncPricingPresetsFromSlider();
+        updatePricing();
+    }
+
     function updatePricing() {
         const container = document.getElementById('tbxPricingResult');
         if (!container) return;
@@ -764,14 +818,18 @@
         });
 
         document.querySelectorAll('.ws-tbx-preset[data-pricing-adj]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.ws-tbx-preset[data-pricing-adj]').forEach(b => b.classList.remove('is-active'));
-                btn.classList.add('is-active');
-                const el = document.getElementById('tbxPricingAdj');
-                if (el) el.value = btn.dataset.pricingAdj;
+            btn.addEventListener('click', () => setPricingAdjustment(parseFloat(btn.dataset.pricingAdj) || 0));
+        });
+
+        const pricingSlider = document.getElementById('tbxPricingAdj');
+        if (pricingSlider) {
+            pricingSlider.addEventListener('input', () => {
+                updateAdjSliderUI();
+                syncPricingPresetsFromSlider();
                 updatePricing();
             });
-        });
+            updateAdjSliderUI();
+        }
 
         document.querySelectorAll('.ws-tbx-mode-btn[data-compare-mode]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -807,6 +865,8 @@
         bindCalcInputs(['tbxRentCommRent', 'tbxTenantShare', 'tbxLandlordShare'], updateRentCommission);
         bindCalcInputs(['tbxBudget', 'tbxBudgetPps', 'tbxBudgetArea'], updateBudget);
         bindCalcInputs(['tbxPricingArea'], updatePricing);
+
+        updateAdjSliderUI();
 
         const depEl = document.getElementById('tbxFullDeposit');
         const rentEl = document.getElementById('tbxFullRent');

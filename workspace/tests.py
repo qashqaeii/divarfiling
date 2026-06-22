@@ -757,6 +757,16 @@ class SmartToolsTests(SimpleTestCase):
         self.assertEqual(r['suggested_total'], 10_080_000_000)
 
 
+    def test_pricing_suggest_negative(self):
+        from workspace.services.tools import pricing_suggest
+
+        base = pricing_suggest(80, 120_000_000, adjustment_pct=0)
+        low = pricing_suggest(80, 120_000_000, adjustment_pct=-5)
+        high = pricing_suggest(80, 120_000_000, adjustment_pct=5)
+        self.assertLess(low['suggested_total'], base['suggested_total'])
+        self.assertGreater(high['suggested_total'], base['suggested_total'])
+
+
 class ConsultantLandscapeTests(SimpleTestCase):
     def test_analyze_consultant_landscape_top_agency(self):
         import pandas as pd

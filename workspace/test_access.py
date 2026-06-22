@@ -232,3 +232,49 @@ class PersonalFileFromListingTests(TestCase):
         self.assertEqual(resp.status_code, 302)
         follow = self.client.get(resp.url)
         self.assertEqual(follow.status_code, 200)
+
+    def test_property_image_upload(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            agency=self.agency,
+            title='ملک تست تصویر',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+        )
+        url = reverse('workspace:crm_property_images', kwargs={'property_id': prop.pk})
+        self.client.login(username='agentuser', password='pass1234')
+        img = SimpleUploadedFile('photo.jpg', b'jpeg-content', content_type='image/jpeg')
+        resp = self.client.post(url, {'image': img})
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['ok'])
+        self.assertEqual(len(data['images']), 1)
+        prop.refresh_from_db()
+        self.assertEqual(len(prop.images), 1)
+
+    def test_property_edit_saves_images_json(self):
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            agency=self.agency,
+            title='ملک تست',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            images=['https://example.com/a.jpg'],
+        )
+        self.client.login(username='agentuser', password='pass1234')
+        edit_url = reverse('workspace:crm_property_edit', kwargs={'property_id': prop.pk})
+        payload = {
+            'title': prop.title,
+            'property_type': prop.property_type,
+            'deal_mode': prop.deal_mode,
+            'transaction_status': 'فعال',
+            'publish_status': 'پیش‌نویس',
+            'property_images_json': '["https://example.com/b.jpg","https://example.com/c.jpg"]',
+        }
+        resp = self.client.post(edit_url, payload)
+        self.assertEqual(resp.status_code, 302)
+        prop.refresh_from_db()
+        self.assertEqual(len(prop.images), 2)
+        self.assertEqual(prop.images[0], 'https://example.com/b.jpg')

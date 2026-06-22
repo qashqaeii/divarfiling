@@ -69,17 +69,41 @@
         </div>
     </section>
 
-    {% if form.instance.pk and form.instance.images %}
-    <section class="crm-prop-form-block crm-prop-form-block--readonly">
+    {% if form.instance.pk %}
+    {{ form.instance.images|json_script:"crm-prop-images-data" }}
+    <section class="crm-prop-form-block" data-form-section="pimages" id="crm-prop-images-section">
         <header class="crm-prop-form-block-head">
             <i class="fas fa-images" aria-hidden="true"></i>
             <h3>تصاویر</h3>
-            <span class="crm-prop-form-block-hint">{{ form.instance.images|length }} تصویر — از صفحه پرونده مدیریت می‌شود</span>
+            <span class="crm-prop-form-block-hint" data-crm-prop-img-count>
+                {% if form.instance.images %}{{ form.instance.images|length }} تصویر{% else %}بدون تصویر{% endif %}
+            </span>
         </header>
-        <div class="crm-prop-form-gallery">
-            {% for img in form.instance.images|slice:":6" %}
-            <a href="{{ img }}" target="_blank" rel="noopener"><img src="{{ img }}" alt="" loading="lazy"></a>
-            {% endfor %}
+        <div
+            class="crm-prop-img-mgr"
+            data-crm-prop-images
+            data-upload-url="{% url 'workspace:crm_property_images' form.instance.pk %}"
+            data-max-images="12"
+        >
+            <input type="hidden" name="property_images_json" data-crm-prop-images-json value="">
+            <div class="crm-prop-img-grid" data-crm-prop-img-grid aria-live="polite"></div>
+            <div class="crm-prop-img-tools">
+                <label class="crm-prop-img-upload">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-crm-prop-img-file hidden>
+                    <span class="crm-prop-img-upload-inner">
+                        <i class="fas fa-cloud-arrow-up" aria-hidden="true"></i>
+                        <strong>آپلود تصویر</strong>
+                        <em>JPG, PNG, WebP — حداکثر ۵ مگابایت</em>
+                    </span>
+                </label>
+                <div class="crm-prop-img-url-row">
+                    <input type="url" class="crm-input" placeholder="یا لینک تصویر را وارد کنید…" dir="ltr" data-crm-prop-img-url>
+                    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-crm-prop-img-url-btn>
+                        <i class="fas fa-link"></i> افزودن لینک
+                    </button>
+                </div>
+            </div>
+            <p class="crm-prop-img-help">اولین تصویر به‌عنوان کاور در صفحه پرونده نمایش داده می‌شود. پس از «ذخیره»، تغییرات نهایی ثبت می‌شوند.</p>
         </div>
     </section>
     {% endif %}

@@ -122,6 +122,7 @@ const CRMDrawer = {
         initCRMFormErrors();
         if (id === 'drawer-import') initCRMImportDrawer(drawer);
         else initCRMVisitOutcome(drawer);
+        initCRMPropertyImages(drawer);
     },
     close(drawer) {
         const el = typeof drawer === 'string' ? document.getElementById(drawer) : drawer;
@@ -1803,6 +1804,206 @@ function initCRMContactTeam() {
     });
 }
 
+function initCRMPropertyImages(scope) {
+    const root = (scope || document).querySelector('[data-crm-prop-images]');
+    if (!root || root.dataset.ready === '1') return;
+    root.dataset.ready = '1';
+
+    const uploadUrl = root.dataset.uploadUrl;
+    const maxImages = parseInt(root.dataset.maxImages || '12', 10);
+    const hidden = root.querySelector('[data-crm-prop-images-json]');
+    const grid = root.querySelector('[data-crm-prop-img-grid]');
+    const fileInput = root.querySelector('[data-crm-prop-img-file]');
+    const urlInput = root.querySelector('[data-crm-prop-img-url]');
+    const urlBtn = root.querySelector('[data-crm-prop-img-url-btn]');
+    const countEl = root.closest('#crm-prop-images-section')?.querySelector('[data-crm-prop-img-count]');
+    const dataEl = document.getElementById('crm-prop-images-data');
+
+    let images = [];
+    try {
+        images = dataEl ? JSON.parse(dataEl.textContent) : [];
+        if (!Array.isArray(images)) images = [];
+    } catch {
+        images = [];
+    }
+
+    function syncHidden() {
+        if (hidden) hidden.value = JSON.stringify(images);
+        if (countEl) {
+            countEl.textContent = images.length ? `${images.length} تصویر` : 'بدون تصویر';
+        }
+        syncHeroCover();
+    }
+
+    function syncHeroCover() {
+        const coverLink = document.querySelector('[data-crm-prop-hero-cover]');
+        const coverImg = coverLink?.querySelector('img');
+        const emptyCover = document.querySelector('.crm-prop-hero-cover--empty');
+        if (images.length && coverImg) {
+            coverImg.src = images[0];
+            coverLink.href = images[0];
+            coverLink.style.display = '';
+            emptyCover?.closest('.crm-prop-hero-visual')?.querySelector('.crm-prop-hero-cover--empty')?.remove();
+        } else if (!images.length && coverImg) {
+            coverImg.removeAttribute('src');
+        }
+    }
+
+    function render() {
+        if (!grid) return;
+        grid.innerHTML = '';
+        if (!images.length) {
+            grid.innerHTML = '<div class="crm-prop-img-empty"><i class="fas fa-image"></i><span>هنوز تصویری اضافه نشده</span></div>';
+            syncHidden();
+            return;
+        }
+        images.forEach((url, idx) => {
+            const item = document.createElement('div');
+            item.className = `crm-prop-img-item${idx === 0 ? ' is-cover' : ''}`;
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = '';
+            img.loading = 'lazy';
+            const actions = document.createElement('div');
+            actions.className = 'crm-prop-img-item-actions';
+            if (idx === 0) {
+                const badge = document.createElement('span');
+                badge.className = 'crm-prop-img-cover-badge';
+                badge.textContent = 'کاور';
+                actions.appendChild(badge);
+            } else {
+                const coverBtn = document.createElement('button');
+                coverBtn.type = 'button';
+                coverBtn.title = 'تنظیم به‌عنوان کاور';
+                coverBtn.innerHTML = '<i class="fas fa-star"></i>';
+                coverBtn.addEventListener('click', () => {
+                    images = [url, ...images.filter((_, i) => i !== idx)];
+                    render();
+                });
+                actions.appendChild(coverBtn);
+            }
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.title = 'حذف';
+            delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            delBtn.addEventListener('click', () => {
+                if (!window.confirm('این تصویر حذف شود؟')) return;
+                images = images.filter((_, i) => i !== idx);
+                render();
+            });
+            actions.appendChild(delBtn);
+            item.appendChild(img);
+            item.appendChild(actions);
+            grid.appendChild(item);
+        });
+        syncHidden();
+    }
+
+    async function uploadFile(file) {
+        if (!uploadUrl) return;
+        if (images.length >= maxImages) {
+            window.alert(`حداکثر ${maxImages} تصویر مجاز است.`);
+            return;
+        }
+        const fd = new FormData();
+        fd.append('image', file);
+        const res = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken(), 'X-Requested-With': 'XMLHttpRequest' },
+            body: fd,
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'آپلود ناموفق بود');
+        images = Array.isArray(data.images) ? data.images : images.concat([data.url]);
+        render();
+    }
+
+    function addUrl(raw) {
+        const url = String(raw || '').trim();
+        if (!url) return;
+        if (!/^https?:\/\//i.test(url)) {
+            window.alert('لینک باید با http یا https شروع شود.');
+            return;
+        }
+        if (images.includes(url)) {
+            window.alert('این تصویر قبلاً اضافه شده است.');
+            return;
+        }
+        if (images.length >= maxImages) {
+            window.alert(`حداکثر ${maxImages} تصویر مجاز است.`);
+            return;
+        }
+        images.push(url);
+        render();
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', async () => {
+            const files = Array.from(fileInput.files || []);
+            fileInput.value = '';
+            for (const file of files) {
+                try {
+                    await uploadFile(file);
+                } catch (err) {
+                    window.alert(err.message || 'آپلود ناموفق بود');
+                    break;
+                }
+            }
+        });
+    }
+
+    const uploadLabel = root.querySelector('.crm-prop-img-upload');
+    if (uploadLabel) {
+        ['dragenter', 'dragover'].forEach(evt => {
+            uploadLabel.addEventListener(evt, e => {
+                e.preventDefault();
+                uploadLabel.classList.add('is-dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+            uploadLabel.addEventListener(evt, e => {
+                e.preventDefault();
+                uploadLabel.classList.remove('is-dragover');
+            });
+        });
+        uploadLabel.addEventListener('drop', async e => {
+            const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+            for (const file of files) {
+                try {
+                    await uploadFile(file);
+                } catch (err) {
+                    window.alert(err.message || 'آپلود ناموفق بود');
+                    break;
+                }
+            }
+        });
+    }
+
+    if (urlBtn && urlInput) {
+        urlBtn.addEventListener('click', () => {
+            addUrl(urlInput.value);
+            urlInput.value = '';
+        });
+        urlInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addUrl(urlInput.value);
+                urlInput.value = '';
+            }
+        });
+    }
+
+    document.querySelectorAll('.crm-prop-hero-cover-edit').forEach(btn => {
+        btn.addEventListener('click', () => {
+            window.setTimeout(() => {
+                document.getElementById('crm-prop-images-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 280);
+        });
+    });
+
+    render();
+}
+
 function initCRMPropertyTeam() {
     const bar = document.querySelector('[data-crm-property-team]');
     if (!bar) return;
@@ -1957,8 +2158,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMDealChecklist();
     initCRMCommissionSplit();
     initCRMContactTeam();
-    initCRMPropertyTeam();
-    initCRMTeamPage();
+        initCRMPropertyTeam();
+        initCRMPropertyImages();
+        initCRMTeamPage();
     initCRMDealsPage();
     initCRMSidePanel();
     initCRMQuickLead();

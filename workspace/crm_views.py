@@ -25,6 +25,9 @@ from workspace.constants import (
     PROPERTY_TX_STATUSES, TYPE_PROFILES, VISIT_OUTCOMES, WEBHOOK_EVENTS,
     WEBHOOK_EVENT_LABELS,
 )
+from workspace.services.property_images import (
+    MAX_PROPERTY_IMAGES, parse_images_payload, store_property_image,
+)
 from workspace.forms import (
     ActivityForm, CRMAutomationRuleForm, CRMDealForm, CRMMessageTemplateForm,
     CRMPropertyForm, CRMReminderForm, ConvertLeadForm,
@@ -1216,8 +1219,40 @@ class CRMPropertyUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save()
+        raw_images = self.request.POST.get('property_images_json')
+        if raw_images is not None:
+            images = parse_images_payload(raw_images)
+            if images != (self.object.images or []):
+                self.object.images = images
+                self.object.save(update_fields=['images', 'updated_at'])
         messages.success(self.request, 'ملک به‌روز شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
+
+
+class CRMPropertyImagesView(LoginRequiredMixin, View):
+    """آپلود فوری تصویر برای فایل شخصی."""
+
+    def post(self, request, property_id):
+        prop = property_for_user(request.user, property_id)
+        if not prop or not can_edit_property(request.user, prop):
+            return JsonResponse({'ok': False, 'error': 'دسترسی ندارید.'}, status=403)
+        uploaded = request.FILES.get('image')
+        if not uploaded:
+            return JsonResponse({'ok': False, 'error': 'فایلی انتخاب نشده است.'}, status=400)
+        images = list(prop.images or [])
+        if len(images) >= MAX_PROPERTY_IMAGES:
+            return JsonResponse(
+                {'ok': False, 'error': f'حداکثر {MAX_PROPERTY_IMAGES} تصویر مجاز است.'},
+                status=400,
+            )
+        try:
+            url = store_property_image(request.user, prop, uploaded)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        images.append(url)
+        prop.images = images
+        prop.save(update_fields=['images', 'updated_at'])
+        return JsonResponse({'ok': True, 'url': url, 'images': prop.images})
 
 
 class CRMPropertyDeleteView(LoginRequiredMixin, View):

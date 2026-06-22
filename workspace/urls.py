@@ -75,6 +75,7 @@ urlpatterns = [
     path('crm/properties/new/', crm_views.CRMPropertyCreateView.as_view(), name='crm_property_create'),
     path('crm/properties/<int:property_id>/', crm_views.CRMPropertyDetailView.as_view(), name='crm_property_detail'),
     path('crm/properties/<int:property_id>/edit/', crm_views.CRMPropertyUpdateView.as_view(), name='crm_property_edit'),
+    path('crm/properties/<int:property_id>/images/', crm_views.CRMPropertyImagesView.as_view(), name='crm_property_images'),
     path('crm/properties/<int:property_id>/status/', crm_views.CRMPropertyStatusUpdateView.as_view(), name='crm_property_status'),
     path('crm/properties/pipeline-order/', crm_views.CRMPropertyPipelineOrderView.as_view(), name='crm_property_pipeline_order'),
     path('crm/properties/<int:property_id>/delete/', crm_views.CRMPropertyDeleteView.as_view(), name='crm_property_delete'),

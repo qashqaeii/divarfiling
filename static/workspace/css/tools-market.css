@@ -47,18 +47,26 @@
     color: var(--ws-text-muted);
 }
 
-.ws-mkt-band-labels span:first-child,
+.ws-mkt-band-labels span:first-child {
+    direction: ltr;
+    unicode-bidi: isolate;
+    color: #10B981;
+    font-weight: 700;
+}
+
 .ws-mkt-band-labels span:last-child {
     direction: ltr;
     unicode-bidi: isolate;
-    color: var(--ws-text-secondary);
+    color: #F97316;
+    font-weight: 700;
 }
 
 .ws-mkt-band-track {
     position: relative;
     height: 10px;
     border-radius: 999px;
-    background: linear-gradient(90deg, #10B981 0%, #F59E0B 50%, #F97316 100%);
+    /* ارزان (P25) سمت راست / inline-start — گران (P75) سمت چپ */
+    background: linear-gradient(to inline-start, #F97316 0%, #F59E0B 42%, #10B981 100%);
     border: 1px solid var(--ws-border);
     overflow: visible;
 }
@@ -83,6 +91,18 @@
     border: 2px solid #F59E0B;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 2;
+}
+
+.ws-mkt-band-marker--great,
+.ws-mkt-band-marker--good {
+    border-color: #10B981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.ws-mkt-band-marker--warn,
+.ws-mkt-band-marker--bad {
+    border-color: #F43F5E;
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.18);
 }
 
 .ws-mkt-band-marker--median {
@@ -245,7 +265,8 @@
     position: relative;
     height: 8px;
     border-radius: 999px;
-    background: linear-gradient(90deg, #10B981, #94A3B8, #F43F5E);
+    /* زیر بازار (سبز) سمت راست — بالای بازار (قرمز) سمت چپ */
+    background: linear-gradient(to inline-start, #F43F5E 0%, #94A3B8 50%, #10B981 100%);
 }
 
 .ws-mkt-gauge-marker {
@@ -257,8 +278,25 @@
     margin-inline-start: -8px;
     border-radius: 50%;
     background: #fff;
-    border: 2px solid var(--ws-text);
+    border: 2px solid #94A3B8;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ws-mkt-gauge-marker--great,
+.ws-mkt-gauge-marker--good {
+    border-color: #10B981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22);
+}
+
+.ws-mkt-gauge-marker--warn {
+    border-color: #F59E0B;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.ws-mkt-gauge-marker--bad {
+    border-color: #F43F5E;
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
 }
 
 .ws-mkt-gauge-labels {
@@ -267,6 +305,16 @@
     margin-top: 0.35rem;
     font-size: 0.55rem;
     color: var(--ws-text-muted);
+}
+
+.ws-mkt-gauge-labels span:first-child {
+    color: #10B981;
+    font-weight: 700;
+}
+
+.ws-mkt-gauge-labels span:last-child {
+    color: #F43F5E;
+    font-weight: 700;
 }
 
 .ws-mkt-negotiate {

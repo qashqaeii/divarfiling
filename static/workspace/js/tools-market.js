@@ -116,7 +116,7 @@
                 </div>
                 <div class="ws-mkt-gauge">
                     <div class="ws-mkt-gauge-track">
-                        <div class="ws-mkt-gauge-marker" style="inset-inline-start: ${gaugePct}%"></div>
+                        <div class="ws-mkt-gauge-marker ws-mkt-gauge-marker--${data.tone || 'neutral'}" style="inset-inline-start: ${gaugePct}%"></div>
                     </div>
                     <div class="ws-mkt-gauge-labels">
                         <span>زیر بازار</span><span>میانه</span><span>بالای بازار</span>
@@ -127,7 +127,7 @@
                     <div class="ws-mkt-band-labels"><span>${data.p25_fmt}</span><span>باند P25–P75</span><span>${data.p75_fmt}</span></div>
                     <div class="ws-mkt-band-track">
                         <div class="ws-mkt-band-fill"></div>
-                        <div class="ws-mkt-band-marker" style="inset-inline-start: ${posPct}%"></div>
+                        <div class="ws-mkt-band-marker ws-mkt-band-marker--${data.tone || 'neutral'}" style="inset-inline-start: ${posPct}%"></div>
                     </div>
                 </div>` : ''}
                 <div class="ws-tbx-result-grid ws-tbx-result-grid--flex">

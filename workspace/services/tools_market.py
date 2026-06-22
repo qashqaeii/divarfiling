@@ -291,8 +291,20 @@ def evaluate_listing_market(
     elif score is not None and score < -5 and expected:
         negotiate = int(expected * 1.02)
 
+    filing_url = ''
+    if listing:
+        from django.urls import reverse
+
+        filing_url = reverse(
+            'workspace:listing_detail',
+            kwargs={'dataset_id': dataset.pk, 'listing_id': listing.pk},
+        )
+
     return {
         'mode': mode,
+        'listing_id': listing.pk if listing else None,
+        'dataset_id': str(dataset.pk),
+        'filing_url': filing_url,
         'title': title,
         'token': token,
         'link': link,

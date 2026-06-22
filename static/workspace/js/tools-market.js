@@ -138,7 +138,8 @@
                 </div>
                 ${data.negotiate_hint_fmt ? `<p class="ws-mkt-negotiate"><i class="fas fa-lightbulb" aria-hidden="true"></i> پیشنهاد مذاکره: <strong>${data.negotiate_hint_fmt}</strong></p>` : ''}
                 <div class="ws-tbx-result-actions">
-                    ${data.link ? `<a href="${data.link}" target="_blank" rel="noopener" class="ws-mkt-link-btn"><i class="fas fa-external-link-alt"></i> دیوار</a>` : ''}
+                    ${data.filing_url ? `<a href="${data.filing_url}" class="ws-mkt-link-btn ws-mkt-link-btn--filing"><i class="fas fa-folder-open" aria-hidden="true"></i> فایلینگ</a>` : ''}
+                    ${data.link ? `<a href="${data.link}" target="_blank" rel="noopener noreferrer" class="ws-mkt-link-btn ws-mkt-link-btn--divar"><i class="fas fa-external-link-alt" aria-hidden="true"></i> دیوار</a>` : ''}
                     <button type="button" class="ws-tbx-copy-btn" data-copy="${data.copy || ''}"><i class="fas fa-copy"></i> کپی نتیجه</button>
                 </div>
             </div>`;

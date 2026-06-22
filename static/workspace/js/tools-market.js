@@ -73,9 +73,16 @@
     function parseNumEl(id) {
         const el = document.getElementById(id);
         if (!el) return null;
-        const raw = el.value.trim().replace(/,/g, '');
-        if (!raw) return null;
-        const n = parseFloat(raw.replace(/[^\d.]/g, ''));
+        let raw;
+        if (typeof readFormattedInput === 'function' && el.type !== 'range' && el.type !== 'hidden') {
+            raw = readFormattedInput(el);
+        } else if (typeof parseFormattedNumber === 'function') {
+            raw = parseFormattedNumber(el.value);
+        } else {
+            raw = el.value.trim().replace(/,/g, '');
+        }
+        if (raw == null || raw === '') return null;
+        const n = parseFloat(String(raw).replace(/,/g, ''));
         return isNaN(n) ? null : n;
     }
 

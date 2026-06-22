@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from licenses.models import License
 from shop.models import LicensePlan, Order, Product
+from workspace.models import CRMAgency, CRMAgencyMember, CRMProperty, Dataset, Listing
 
 User = get_user_model()
 
@@ -142,3 +143,92 @@ class WorkspaceAccessTests(TestCase):
         self.client.login(username='freeuser', password='pass1234')
         resp = self.client.get(reverse('workspace:dataset_list'))
         self.assertEqual(resp.status_code, 302)
+
+
+class PersonalFileFromListingTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='agentuser', password='pass1234', phone='09126666666',
+        )
+        self.product = Product.objects.create(
+            title='ربات تست',
+            slug='test-bot-personal',
+            description='محصول تست',
+            is_active=True,
+        )
+        self.plan = LicensePlan.objects.create(
+            product=self.product,
+            name='لایسنس یک‌ماهه',
+            plan_type='monthly',
+            price=100000,
+            duration_days=30,
+            is_active=True,
+        )
+        order = Order.objects.create(
+            user=self.user,
+            product=self.product,
+            plan=self.plan,
+            amount=self.plan.price,
+            status='paid',
+        )
+        License.objects.create(
+            order=order,
+            plan=self.plan,
+            license_key='PERS-1234-5678-9ABC',
+            status='active',
+            max_activations=1,
+        )
+        self.agency = CRMAgency.objects.create(
+            name='آژانس تست',
+            slug='test-agency-personal',
+            owner=self.user,
+        )
+        CRMAgencyMember.objects.create(agency=self.agency, user=self.user, role='owner')
+        self.dataset = Dataset.objects.create(
+            user=self.user,
+            name='تست',
+            original_filename='test.xlsx',
+            file_format='xlsx',
+        )
+        self.listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='divar-token-001',
+            title='آپارتمان تست',
+            area=85,
+            city='تهران',
+            neighborhood='ونک',
+        )
+
+    def test_property_from_listing_sets_agency(self):
+        from workspace.services.crm import add_listing_to_personal_files
+        from workspace.services.crm_scope import property_for_user, properties_qs
+
+        prop, created = add_listing_to_personal_files(self.user, self.listing)
+        self.assertTrue(created)
+        self.assertEqual(prop.agency_id, self.agency.pk)
+        self.assertIsNotNone(property_for_user(self.user, prop.pk))
+        self.assertIn(prop.pk, list(properties_qs(self.user).values_list('pk', flat=True)))
+
+    def test_legacy_null_agency_property_still_visible(self):
+        from workspace.services.crm_scope import property_for_user, properties_qs
+
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='ملک قدیمی',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+        )
+        self.assertIsNone(prop.agency_id)
+        self.assertIsNotNone(property_for_user(self.user, prop.pk))
+        self.assertIn(prop.pk, list(properties_qs(self.user).values_list('pk', flat=True)))
+
+    def test_add_personal_redirects_to_property_detail(self):
+        self.client.login(username='agentuser', password='pass1234')
+        url = reverse(
+            'workspace:listing_add_personal',
+            kwargs={'dataset_id': self.dataset.pk, 'listing_id': self.listing.pk},
+        )
+        resp = self.client.post(url, {'redirect': 'property'})
+        self.assertEqual(resp.status_code, 302)
+        follow = self.client.get(resp.url)
+        self.assertEqual(follow.status_code, 200)

@@ -263,7 +263,8 @@ def properties_qs(user) -> QuerySet:
 
         q |= Q(pk__in=shared)
 
-    return CRMProperty.objects.filter(agency=m.agency, deleted_at__isnull=True).filter(q)
+    scope = Q(agency=m.agency) | Q(user=user, agency__isnull=True)
+    return CRMProperty.objects.filter(deleted_at__isnull=True).filter(scope).filter(q)
 
 
 

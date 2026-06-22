@@ -18,7 +18,7 @@ from workspace.models import (
     CRMProperty, Customer, CustomerActivity, CustomerDocument,
     CustomerListing, Listing, PropertyContact, Reminder,
 )
-from workspace.services.crm_scope import customers_qs, properties_qs, reminders_qs
+from workspace.services.crm_scope import customers_qs, get_agency, properties_qs, reminders_qs
 
 
 def normalize_phone(phone: str) -> str:
@@ -279,6 +279,7 @@ def property_from_listing(user, listing) -> CRMProperty:
             pass
     return CRMProperty.objects.create(
         user=user,
+        agency=get_agency(user),
         title=listing.title or f'ملک {listing.token}',
         property_type='آپارتمان',
         deal_mode=deal_mode,

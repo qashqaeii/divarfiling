@@ -1,7 +1,13 @@
 {% extends 'workspace/base.html' %}
-{% load humanize workspace_tags %}
+{% load humanize static workspace_tags %}
 
 {% block page_title %}{% endblock %}
+
+{% block extra_css %}
+{% if filing_video.available %}
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="mk-page mk-filing-pro">
@@ -16,6 +22,11 @@
             </p>
         </div>
         <div class="mk-hub-head-actions" role="toolbar" aria-label="عملیات">
+            {% if filing_video.available %}
+            <a href="#filing-video" class="mk-hub-head-btn mk-hub-head-btn--video" title="آموزش فایلینگ، نقشه و تحلیل">
+                <i class="fas fa-circle-play" aria-hidden="true"></i><span>آموزش</span>
+            </a>
+            {% endif %}
             <a href="{% url 'workspace:compare' %}" class="mk-hub-head-btn" title="مقایسه آگهی">
                 <i class="fas fa-scale-balanced" aria-hidden="true"></i><span>مقایسه</span>
             </a>
@@ -62,6 +73,22 @@
             </span>
         </article>
     </section>
+
+    {% if filing_video.available %}
+    <details class="mk-filing-video-band" id="filing-video"{% if open_modal == 'video' %} open{% endif %}>
+        <summary class="mk-filing-video-summary">
+            <span class="mk-filing-video-summary-icon" aria-hidden="true"><i class="fas fa-circle-play"></i></span>
+            <span class="mk-filing-video-summary-text">
+                <strong>{{ filing_video.title }}</strong>
+                <em>{{ filing_video.subtitle }}</em>
+            </span>
+            <span class="mk-filing-video-summary-meta">{{ filing_video.duration }}</span>
+        </summary>
+        <div class="mk-filing-video-body">
+            {% include 'includes/mk_video_player.html' with video=filing_video variant='filing' show_heading=False %}
+        </div>
+    </details>
+    {% endif %}
 
     <section class="mk-filing-toolbar" aria-label="فیلتر و جستجو">
         <form method="get" class="mk-filter-form mk-filter-form--3 mk-filing-filter" id="dsFilterForm">
@@ -323,5 +350,21 @@
         </div>
     </div>
 </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if filing_video.available %}
+<script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var band = document.getElementById('filing-video');
+    document.querySelectorAll('a[href="#filing-video"]').forEach(function (link) {
+        link.addEventListener('click', function () {
+            if (band) band.setAttribute('open', '');
+        });
+    });
+});
+</script>
 {% endif %}
 {% endblock %}

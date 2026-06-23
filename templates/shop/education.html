@@ -5,7 +5,7 @@
 {% block body_class %}mk-pub-page edu-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-education.css' %}?v=4">
 {% endblock %}
 
@@ -86,6 +86,35 @@
             </div>
             <div>
                 {% include 'includes/bot_install_video.html' with variant='edu' show_heading=False guide_link=False %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if filing_video.available %}
+    <section class="edu-video-band edu-video-band--filing" aria-labelledby="edu-filing-video-title">
+        <div class="container edu-video-shell">
+            <div class="edu-video-copy">
+                <span class="edu-eyebrow">ویدیوی فایلینگ میزکار</span>
+                <h2 id="edu-filing-video-title">{{ filing_video.title }}</h2>
+                <p>{{ filing_video.subtitle }}</p>
+                <div class="edu-video-chips">
+                    <span class="edu-video-chip"><i class="fas fa-clock"></i> {{ filing_video.duration }}</span>
+                    <span class="edu-video-chip"><i class="fas fa-folder-open"></i> فایلینگ</span>
+                    <span class="edu-video-chip"><i class="fas fa-map-location-dot"></i> نقشه</span>
+                    <span class="edu-video-chip"><i class="fas fa-chart-line"></i> تحلیل</span>
+                </div>
+                <div class="edu-video-actions">
+                    <a href="{% url 'workspace:dataset_list' %}?open=video#filing-video" class="edu-btn edu-btn--primary">
+                        <i class="fas fa-database"></i> رفتن به فایلینگ
+                    </a>
+                    <a href="{% url 'workspace:help' %}" class="edu-btn edu-btn--ghost">
+                        <i class="fas fa-book-open"></i> راهنمای میزکار
+                    </a>
+                </div>
+            </div>
+            <div>
+                {% include 'includes/mk_video_player.html' with video=filing_video variant='filing' show_heading=False show_meta=True %}
             </div>
         </div>
     </section>
@@ -350,8 +379,9 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if install_video.available %}
+{% if install_video.available or filing_video.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
+{% endif %}
 {% endif %}
 <script src="{% static 'js/education.js' %}?v=3" defer></script>
 {% endblock %}

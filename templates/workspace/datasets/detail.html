@@ -32,6 +32,11 @@
                     </a>
                 </div>
                 <div class="mk-ds-action-group mk-ds-action-group-tools">
+                    {% if filing_video.available %}
+                    <a href="{% url 'workspace:dataset_list' %}?open=video#filing-video" class="mk-ds-action mk-ds-action-icon" title="آموزش فایلینگ، نقشه و تحلیل" aria-label="آموزش ویدیویی">
+                        <i class="fas fa-circle-play" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
                     <button type="button" class="mk-ds-action mk-ds-action-icon" data-modal-open="modal-rename" title="تغییر نام فایل" aria-label="تغییر نام">
                         <i class="fas fa-pen" aria-hidden="true"></i>
                     </button>

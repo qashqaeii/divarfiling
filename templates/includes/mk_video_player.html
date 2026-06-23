@@ -1,0 +1,62 @@
+{% load static %}
+{# پخش‌کننده ویدیوی آموزشی — نیاز به متغیر video در context #}
+{% if video.available %}
+<div class="mk-vid{% if variant %} mk-vid--{{ variant }}{% endif %}{% if extra_class %} {{ extra_class }}{% endif %}"
+     {% if section_id %}id="{{ section_id }}"{% endif %}
+     data-mk-vid-player>
+    {% if show_heading|default:True %}
+    <header class="mk-vid-head">
+        <span class="mk-vid-kicker">
+            <i class="fas fa-circle-play" aria-hidden="true"></i>
+            {{ kicker|default:"آموزش تصویری" }}
+        </span>
+        <h2 class="mk-vid-title">{{ video.title }}</h2>
+        {% if video.subtitle %}
+        <p class="mk-vid-lead">{{ video.subtitle }}</p>
+        {% endif %}
+    </header>
+    {% endif %}
+
+    <div class="mk-vid-wrap">
+        <div class="mk-vid-frame">
+            <video class="mk-vid-el"
+                   controls
+                   playsinline
+                   preload="metadata"
+                   {% if video.poster %}poster="{% static video.poster %}"{% endif %}
+                   title="{{ video.title }}">
+                <source src="{{ video.src }}" type="video/mp4">
+                مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+                <a href="{{ video.src }}">دانلود ویدیو</a>
+            </video>
+            <button type="button" class="mk-vid-play" data-mk-vid-play aria-label="پخش ویدیو">
+                <span class="mk-vid-play-ring" aria-hidden="true"></span>
+                <i class="fas fa-play" aria-hidden="true"></i>
+            </button>
+            <span class="mk-vid-badge" aria-hidden="true">
+                <i class="fas fa-video"></i> HD
+            </span>
+        </div>
+        {% if show_meta|default:True %}
+        <div class="mk-vid-meta">
+            <span><i class="fas fa-clock" aria-hidden="true"></i> {{ video.duration }}</span>
+            <span><i class="fas fa-closed-captioning" aria-hidden="true"></i> فارسی</span>
+            {% if meta_extra %}
+            {{ meta_extra }}
+            {% elif variant == 'filing' %}
+            <span><i class="fas fa-folder-open" aria-hidden="true"></i> فایلینگ</span>
+            <span><i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه</span>
+            <span><i class="fas fa-chart-line" aria-hidden="true"></i> تحلیل</span>
+            {% elif variant == 'edu' %}
+            <span><i class="fab fa-windows" aria-hidden="true"></i> ویندوز ۱۰ و ۱۱</span>
+            {% endif %}
+            {% if guide_url %}
+            <a href="{{ guide_url }}" class="mk-vid-meta-link">
+                {{ guide_label|default:"راهنمای کامل متنی" }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

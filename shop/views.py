@@ -19,6 +19,7 @@ from .bot_catalog import (
     product_fake_reviews, product_rating_display_stats,
 )
 from .bot_install_video import get_bot_install_video_context, resolve_guide_video
+from workspace.services.filing_video import get_filing_video_context
 from .sample_excel import get_sale_apartment_excel_preview
 from .education_content import education_hub_content
 from .models import Product, LicensePlan, Order, ProductRating, ProductReview, ReviewHelpful, DiscountCode
@@ -431,6 +432,7 @@ class EducationView(TemplateView):
         ctx['bot_product'] = get_bot_product()
         ctx['bot_buy_url'] = get_bot_product_buy_url()
         ctx['install_video'] = get_bot_install_video_context()
+        ctx['filing_video'] = get_filing_video_context()
         user = self.request.user
         if user.is_authenticated:
             from workspace.services.access import get_bot_access_state

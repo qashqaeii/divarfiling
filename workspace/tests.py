@@ -1,7 +1,10 @@
-from django.test import SimpleTestCase
+from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 
+from workspace.models import Dataset, Listing
 from workspace.services.columns import _parse_datetime
+from workspace.services.filters import sort_queryset
 
 from workspace.services.folder_import import (
     build_file_identity,
@@ -950,3 +953,41 @@ class AmenityValuationTests(SimpleTestCase):
         with_pool = scored[scored['pool'] == True].iloc[0]
         no_pool = scored[scored['pool'] == False].iloc[0]
         self.assertLess(with_pool['value_score'], no_pool['value_score'])
+
+
+class ListingAdvertiserSortTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='sortuser', password='pass', phone='09127777777')
+        self.dataset = Dataset.objects.create(
+            user=self.user,
+            name='sort-test',
+            original_filename='t.xlsx',
+            file_format='xlsx',
+        )
+        self.personal = Listing.objects.create(
+            dataset=self.dataset,
+            token='p1',
+            title='شخصی اول',
+            business_type='شخصی',
+            price=100,
+        )
+        self.consultant = Listing.objects.create(
+            dataset=self.dataset,
+            token='c1',
+            title='مشاور اول',
+            business_type='مشاور',
+            price=999_999,
+        )
+
+    def test_personal_listings_before_consultants(self):
+        qs = sort_queryset(self.dataset.listings.all(), '-price', '-price')
+        ordered = list(qs.values_list('token', flat=True))
+        self.assertEqual(ordered[0], 'p1')
+        self.assertEqual(ordered[1], 'c1')
+
+    def test_business_type_desc_puts_consultants_first(self):
+        qs = sort_queryset(self.dataset.listings.all(), '-business_type', '-price')
+        ordered = list(qs.values_list('token', flat=True))
+        self.assertEqual(ordered[0], 'c1')
+        self.assertEqual(ordered[1], 'p1')

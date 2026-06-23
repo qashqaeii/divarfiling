@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from django.db.models import Count, Q, QuerySet
+from django.db.models import Case, Count, IntegerField, Q, QuerySet, Value, When
 
 from workspace.services.columns import consultant_q
 
@@ -179,6 +179,22 @@ def get_neighborhoods(dataset) -> List[str]:
     )
 
 
+_CONSULTANT_FILTER_Q = (
+    Q(business_type__icontains='مشاور')
+    | Q(business_type__icontains='business')
+    | Q(business_type__icontains='agency')
+)
+
+
+def _advertiser_rank_annotation():
+    """۰ = شخصی/خالی، ۱ = مشاور — برای اولویت نمایش شخصی‌ها."""
+    return Case(
+        When(_CONSULTANT_FILTER_Q, then=Value(1)),
+        default=Value(0),
+        output_field=IntegerField(),
+    )
+
+
 def sort_queryset(qs: QuerySet, sort: str, default: str) -> QuerySet:
     allowed = {
         'price', '-price', 'deposit', '-deposit', 'rent', '-rent',
@@ -188,7 +204,14 @@ def sort_queryset(qs: QuerySet, sort: str, default: str) -> QuerySet:
     }
     if sort not in allowed:
         sort = default
-    return qs.order_by(sort)
+
+    qs = qs.annotate(_advertiser_rank=_advertiser_rank_annotation())
+    field = sort.lstrip('-')
+    if field == 'business_type':
+        if sort == 'business_type':
+            return qs.order_by('_advertiser_rank', default)
+        return qs.order_by('-_advertiser_rank', default)
+    return qs.order_by('_advertiser_rank', sort)
 
 
 def build_sort_url(base_params: Dict, field: str, current_sort: str) -> str:

@@ -15,7 +15,6 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 
-from workspace.services.filing_video import get_filing_video_context
 from workspace.constants import SUPPORTED_UPLOAD_EXTENSIONS, TABLE_COLUMNS_DEFAULT
 from workspace.forms import (
     CompareForm, DatasetRenameForm, DatasetUploadForm,
@@ -209,7 +208,6 @@ def _dataset_list_context(request, extra=None):
         'has_filters': any(filters.get(k) for k in ('q', 'tx', 'city', 'format')),
         'view_mode': filters.get('view') or 'table',
         'page_query': _dataset_page_query(request),
-        'filing_video': get_filing_video_context(),
     }
     if extra:
         ctx.update(extra)
@@ -244,7 +242,6 @@ class DatasetListView(LicenseRequiredMixin, ListView):
             'has_filters': any(filters.get(k) for k in ('q', 'tx', 'city', 'format')),
             'view_mode': filters.get('view') or 'table',
             'page_query': _dataset_page_query(self.request),
-            'filing_video': get_filing_video_context(),
         })
         return ctx
 
@@ -597,7 +594,6 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
         ctx['filter_pct'] = round(filtered * 100 / total) if total else 100
         ctx['is_listing_filtered'] = filtered < total or ctx['filter_count'] > 0
         ctx['listing_edit_form'] = ListingEditForm()
-        ctx['filing_video'] = get_filing_video_context()
         return ctx
 
 

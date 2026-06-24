@@ -4,6 +4,12 @@
 (function () {
     'use strict';
 
+    document.documentElement.classList.add('js');
+
+    function markVisible(el) {
+        el.classList.add('is-visible');
+    }
+
     function initReveal() {
         var els = document.querySelectorAll(
             '.seo-landing .mk-reveal, .seo-landing .mk-reveal-stagger, ' +
@@ -11,21 +17,33 @@
         );
         if (!els.length) return;
 
+        /* Hero / above-fold: show immediately */
+        els.forEach(function (el) {
+            var rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight * 0.92) {
+                markVisible(el);
+            }
+        });
+
         if (!('IntersectionObserver' in window)) {
-            els.forEach(function (el) { el.classList.add('is-visible'); });
+            els.forEach(markVisible);
             return;
         }
 
         var observer = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
+                    markVisible(entry.target);
                     observer.unobserve(entry.target);
                 }
             });
-        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+        }, { rootMargin: '0px 0px -5% 0px', threshold: 0.05 });
 
-        els.forEach(function (el) { observer.observe(el); });
+        els.forEach(function (el) {
+            if (!el.classList.contains('is-visible')) {
+                observer.observe(el);
+            }
+        });
     }
 
     function initLightbox() {

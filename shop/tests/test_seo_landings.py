@@ -1,0 +1,71 @@
+"""Tests for SEO landing pages (Wave 1)."""
+from django.test import TestCase, override_settings
+
+from shop.seo_landings import LANDING_SLUGS, get_landing
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class SeoLandingPageTests(TestCase):
+    def test_wave1_slugs_registered(self):
+        self.assertEqual(
+            set(LANDING_SLUGS),
+            {'real-estate-crm', 'real-estate-software', 'robot-divar'},
+        )
+
+    def test_all_landings_have_content(self):
+        for slug in LANDING_SLUGS:
+            landing = get_landing(slug)
+            self.assertIsNotNone(landing)
+            self.assertTrue(landing['hero']['h1'])
+            self.assertTrue(landing['meta_title'])
+            self.assertGreaterEqual(len(landing['faq']), 5)
+
+    def test_real_estate_crm_page(self):
+        resp = self.client.get('/real-estate-crm/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'CRM مشاور املاک')
+        self.assertContains(resp, 'سوالات متداول')
+        self.assertContains(resp, 'شروع رایگان میزکار')
+
+    def test_real_estate_software_page(self):
+        resp = self.client.get('/real-estate-software/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'نرم افزار مشاور املاک')
+
+    def test_robot_divar_page(self):
+        resp = self.client.get('/robot-divar/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'ربات دیوار')
+        self.assertContains(resp, 'divar-extraction-bot')
+
+    def test_unknown_landing_404(self):
+        resp = self.client.get('/divar-filing/')
+        self.assertEqual(resp.status_code, 404)
+
+    def test_home_links_to_crm_landing(self):
+        resp = self.client.get('/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, '/real-estate-crm/')
+        self.assertContains(resp, 'میزکار CRM املاک رایگان')
+        self.assertContains(resp, 'CRM مشاور املاک')
+        self.assertContains(resp, '/real-estate-software/')
+        self.assertContains(resp, '/robot-divar/')
+
+    def test_author_page(self):
+        resp = self.client.get('/author/hossein-qashqaeii/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'حسین قشقایی')
+        self.assertContains(resp, 'application/ld+json')
+        self.assertContains(resp, '"@type": "Person"')
+
+    def test_footer_seo_guides(self):
+        resp = self.client.get('/')
+        self.assertContains(resp, 'راهنماهای تخصصی')
+        self.assertContains(resp, 'نرم افزار مشاور املاک')
+
+    def test_sitemap_includes_landings(self):
+        resp = self.client.get('/sitemap-landings.xml')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode('utf-8')
+        self.assertIn('/real-estate-crm/', body)
+        self.assertIn('/robot-divar/', body)

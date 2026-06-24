@@ -7,7 +7,7 @@
 {% load seo_tags %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -62,7 +62,7 @@
                         </span>
                         <div>
                             <span class="mk-blog-aside-label">نویسنده</span>
-                            <span class="mk-blog-author-name">{{ post.author.get_full_name|default:post.author.username }}</span>
+                            <a href="{% url 'author_hossein_qashqaeii' %}" class="mk-blog-author-name">{{ post.author.get_full_name|default:post.author.username }}</a>
                         </div>
                     </div>
                     <div class="mk-blog-meta-chips">
@@ -216,14 +216,36 @@
             </div>
 
             <div class="mk-blog-aside-card mk-blog-aside-author">
-                <span class="mk-blog-author-avatar mk-blog-author-avatar--lg" aria-hidden="true">
-                    {{ post.author.get_full_name|default:post.author.username|slice:":1"|upper }}
-                </span>
-                <div>
-                    <span class="mk-blog-aside-label">نویسنده</span>
-                    <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
-                    <p class="mk-blog-aside-author-note">محتوای تخصصی برای مشاوران و آژانس‌های املاک</p>
-                </div>
+                <a href="{% url 'author_hossein_qashqaeii' %}" class="mk-blog-aside-author-link">
+                    <span class="mk-blog-author-avatar mk-blog-author-avatar--lg" aria-hidden="true">
+                        {{ post.author.get_full_name|default:post.author.username|slice:":1"|upper }}
+                    </span>
+                    <div>
+                        <span class="mk-blog-aside-label">نویسنده</span>
+                        <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
+                        <p class="mk-blog-aside-author-note">متخصص اتوماسیون املاک و سازنده فایلینگ دیوار</p>
+                    </div>
+                </a>
+            </div>
+
+            {% if post_seo_extras.pillar_url_name %}
+            <div class="mk-blog-aside-card mk-blog-aside-cta mk-blog-aside-cta--pillar">
+                <span class="mk-blog-aside-cta-icon" aria-hidden="true"><i class="fas fa-compass"></i></span>
+                <h3>{{ post_seo_extras.pillar_title }}</h3>
+                <p>{{ post_seo_extras.pillar_desc }}</p>
+                <a href="{% url post_seo_extras.pillar_url_name %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-arrow-left"></i> صفحه تخصصی
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="mk-blog-aside-card mk-blog-aside-cta mk-blog-aside-cta--register">
+                <span class="mk-blog-aside-cta-icon" aria-hidden="true"><i class="fas fa-gift"></i></span>
+                <h3>شروع رایگان میزکار</h3>
+                <p>CRM املاک، یادآور و قیف معامله — بدون هزینه ماهانه.</p>
+                <a href="{% url 'register' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-user-plus"></i> ثبت‌نام رایگان
+                </a>
             </div>
 
             <div class="mk-blog-aside-card mk-blog-aside-summary">

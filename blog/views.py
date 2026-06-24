@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.html import strip_tags
 from django.views.generic import ListView, DetailView
 from .models import Post, Category
+from .post_seo_extras import get_post_seo_extras
 from .seo_helpers import (
     format_iso_datetime,
     post_modified_at,
@@ -135,7 +136,15 @@ class PostDetailView(DetailView):
             pass
 
         related_qs = published.exclude(pk=post.pk).select_related('category', 'author')
-        if post.category_id:
+        extras = get_post_seo_extras(post.slug)
+        context['post_seo_extras'] = extras
+        if extras.get('related_slugs'):
+            slugs = extras['related_slugs']
+            related = list(related_qs.filter(slug__in=slugs)[:3])
+            slug_order = {s: i for i, s in enumerate(slugs)}
+            related.sort(key=lambda p: slug_order.get(p.slug, 99))
+            context['related_posts'] = related
+        elif post.category_id:
             context['related_posts'] = related_qs.filter(category=post.category)[:3]
         else:
             context['related_posts'] = related_qs[:3]

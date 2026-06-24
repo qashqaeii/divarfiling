@@ -22,6 +22,8 @@ from .bot_install_video import get_bot_install_video_context, resolve_guide_vide
 from workspace.services.filing_video import get_filing_video_context
 from .sample_excel import get_sale_apartment_excel_preview
 from .education_content import education_hub_content
+from .seo_landings import get_landing, landing_schema_json
+from .author_content import author_page_content, AUTHOR_SLUG
 from .models import Product, LicensePlan, Order, ProductRating, ProductReview, ReviewHelpful, DiscountCode
 from .forms import ContactForm, BuyForm, RatingForm, ReviewForm
 import requests
@@ -438,6 +440,56 @@ class LicenseGuideView(TemplateView):
         else:
             ctx['user_licenses'] = []
             ctx['has_active_license'] = False
+        return ctx
+
+
+class SeoLandingView(TemplateView):
+    """لندینگ سئو — محتوا از seo_landings.py"""
+    template_name = 'shop/seo_landing.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        slug = kwargs.get('landing_slug', '')
+        if not get_landing(slug):
+            from django.http import Http404
+            raise Http404('صفحه یافت نشد')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        slug = kwargs['landing_slug']
+        landing = get_landing(slug)
+        ctx['landing'] = landing
+        ctx['bot_product'] = get_bot_product()
+        ctx['meta_title'] = landing['meta_title']
+        ctx['meta_description'] = landing['meta_description']
+        ctx['meta_keywords'] = landing['meta_keywords']
+        ctx['schema_data'] = landing_schema_json(landing)
+        return ctx
+
+
+class AuthorPageView(TemplateView):
+    template_name = 'shop/author.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        author = author_page_content()
+        ctx['author'] = author
+        ctx['meta_title'] = author['meta_title']
+        ctx['meta_description'] = author['meta_description']
+        ctx['meta_keywords'] = author['meta_keywords']
+        from blog.models import Post
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        author_user = User.objects.filter(
+            models.Q(username__icontains='hossein') | models.Q(first_name__icontains='حسین')
+        ).first()
+        if author_user:
+            ctx['author_posts'] = (
+                Post.objects.filter(is_published=True, author=author_user)
+                .order_by('-published_at')[:12]
+            )
+        else:
+            ctx['author_posts'] = Post.objects.filter(is_published=True).order_by('-published_at')[:6]
         return ctx
 
 

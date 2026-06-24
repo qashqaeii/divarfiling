@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static seo_tags %}
+
+{% block title %}{{ author.meta_title }}{% endblock %}
+{% block body_class %}mk-pub-page author-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-seo-landing.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-pages.css' %}?v=6">
+{% endblock %}
+
+{% block content %}
+{% schema_author author %}
+<div class="mk-pub-wrap seo-landing author-page-wrap">
+
+    <header class="seo-hero seo-hero--violet author-hero">
+        <div class="seo-hero-bg" aria-hidden="true"></div>
+        <div class="container seo-hero-grid">
+            <div class="seo-hero-copy">
+                <span class="seo-kicker">
+                    <span class="mk-icon mk-icon--xs mk-icon--violet"><i class="fas fa-user-pen"></i></span>
+                    {{ author.role }}
+                </span>
+                <h1>{{ author.name_fa }}</h1>
+                <p class="author-name-en">{{ author.name }}</p>
+                <p class="seo-hero-lead">{{ author.tagline }}</p>
+                <p class="seo-prose">{{ author.bio }}</p>
+                <div class="author-expertise" aria-label="تخصص‌ها">
+                    {% for skill in author.expertise_fa %}
+                    <span class="author-skill-chip">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="seo-hero-visual">
+                <div class="author-avatar-card" aria-hidden="true">
+                    <span class="author-avatar-lg">{{ author.name_fa|slice:":1" }}</span>
+                    <strong>{{ author.name_fa }}</strong>
+                    <span>{{ author.role }}</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="seo-band" aria-labelledby="author-highlights-title">
+        <div class="container">
+            <h2 id="author-highlights-title" class="seo-section-title">حوزه‌های کاری</h2>
+            <div class="seo-feature-grid">
+                {% for h in author.highlights %}
+                <article class="seo-feature-card">
+                    <span class="mk-icon mk-icon--md mk-icon--violet">
+                        <i class="fas {{ h.icon }}"></i>
+                    </span>
+                    <h3>{{ h.title }}</h3>
+                    <p>{{ h.text }}</p>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="seo-band seo-band--alt" aria-labelledby="author-pillars-title">
+        <div class="container">
+            <h2 id="author-pillars-title" class="seo-section-title">محصولات و راهنماهای مرتبط</h2>
+            <div class="seo-related-grid">
+                {% for link in author.pillar_links %}
+                <a href="{% url link.landing_url_name %}" class="seo-related-card">
+                    <strong>{{ link.label }}</strong>
+                    <span>{{ link.desc }}</span>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                {% endfor %}
+                <a href="{% url 'blog:post_list' %}" class="seo-related-card">
+                    <strong>مقالات تخصصی</strong>
+                    <span>راهنماهای CRM و فایلینگ</span>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    {% if author_posts %}
+    <section class="seo-band" aria-labelledby="author-posts-title">
+        <div class="container">
+            <h2 id="author-posts-title" class="seo-section-title">مقالات</h2>
+            <ul class="author-post-list">
+                {% for post in author_posts %}
+                <li>
+                    <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                    <time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:'Y/m/d' }}</time>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="seo-cta-band" aria-label="تماس">
+        <div class="container seo-cta-inner">
+            <h2>سوال فنی یا همکاری دارید؟</h2>
+            <div class="seo-hero-actions">
+                <a href="{{ site_brand.creator_telegram_url }}" class="seo-btn seo-btn--primary seo-btn--lg" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram"></i> تلگرام {{ site_brand.creator_telegram }}
+                </a>
+                <a href="{% url 'contact' %}" class="seo-btn seo-btn--ghost seo-btn--lg">
+                    <i class="fas fa-envelope"></i> تماس با پشتیبانی
+                </a>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

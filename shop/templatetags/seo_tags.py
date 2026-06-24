@@ -233,6 +233,7 @@ def schema_article(context, post, request=None):
 
     description = (post.excerpt or strip_tags(post.content or ''))[:300]
     author_name = post.author.get_full_name() or post.author.username
+    author_url = f'{site_url}/author/hossein-qashqaeii/'
     image_url = post_og_image_url(post, req)
     keywords = post_keywords(post)
 
@@ -245,7 +246,7 @@ def schema_article(context, post, request=None):
         'image': [image_url],
         'datePublished': format_iso_datetime(post_published_at(post)),
         'dateModified': format_iso_datetime(post_modified_at(post)),
-        'author': {'@type': 'Person', 'name': author_name},
+        'author': {'@type': 'Person', 'name': author_name, 'url': author_url},
         'publisher': {
             '@type': 'Organization',
             'name': get_site_name(),
@@ -293,6 +294,37 @@ def schema_software_application(name=None, description=None, url=None):
             '@type': 'Offer',
             'priceCurrency': 'IRR',
             'availability': 'https://schema.org/InStock',
+        },
+    }
+    return mark_safe(f'<script type="application/ld+json">{json.dumps(schema, ensure_ascii=False)}</script>')
+
+
+@register.simple_tag(takes_context=True)
+def schema_author(context, author_data):
+    """Schema.org Person برای صفحه نویسنده."""
+    if not author_data:
+        return ''
+    req = context.get('request')
+    site_url = get_site_url()
+    site_name = get_site_name()
+    slug = author_data.get('slug', '')
+    page_url = f'{site_url}/author/{slug}/'
+    if req:
+        page_url = req.build_absolute_uri()
+
+    schema = {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        'name': author_data.get('name_fa') or author_data.get('name', ''),
+        'alternateName': author_data.get('name', ''),
+        'url': page_url,
+        'jobTitle': author_data.get('role', ''),
+        'description': author_data.get('tagline', ''),
+        'knowsAbout': author_data.get('expertise', []),
+        'worksFor': {
+            '@type': 'Organization',
+            'name': site_name,
+            'url': site_url,
         },
     }
     return mark_safe(f'<script type="application/ld+json">{json.dumps(schema, ensure_ascii=False)}</script>')

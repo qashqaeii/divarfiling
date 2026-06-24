@@ -7,7 +7,7 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=59">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=60">
 {% endblock %}
 
 {% block content %}
@@ -50,6 +50,10 @@
                     <a href="{% url 'product_list' %}" class="btn btn-secondary">
                         <i class="fas {{ home_page.hero.cta_bot_icon }}"></i>
                         {{ home_page.hero.cta_bot_label }}
+                    </a>
+                    <a href="{% url 'seo_landing_real_estate_crm' %}" class="btn btn-secondary mk-hero-cta-crm">
+                        <i class="fas fa-users"></i>
+                        میزکار CRM املاک رایگان
                     </a>
             </div>
         </div>
@@ -166,6 +170,9 @@
         </header>
         <div class="mk-eco-grid mk-reveal mk-reveal-stagger">
             {% for mod in home_page.platform_modules %}
+            {% if mod.landing_url_name %}
+            <a href="{% url mod.landing_url_name %}" class="mk-eco-card-link">
+            {% endif %}
             <article class="mk-eco-card mk-eco-card--{{ mod.size }} mk-eco-card--{{ mod.accent }}" data-mod="{{ mod.id }}">
                 <div class="mk-eco-card-top">
                     <span class="mk-eco-icon"><i class="fas {{ mod.icon }}"></i></span>
@@ -177,6 +184,9 @@
                 </div>
                 <span class="mk-eco-glow" aria-hidden="true"></span>
             </article>
+            {% if mod.landing_url_name %}
+            </a>
+            {% endif %}
             {% endfor %}
         </div>
     </div>
@@ -385,6 +395,9 @@
                     </span>
                     {% endfor %}
                 </div>
+                <a href="{% url 'seo_landing_real_estate_crm' %}" class="btn btn-primary mk-crm-landing-link">
+                    <i class="fas fa-arrow-left"></i> CRM مشاور املاک — راهنمای کامل
+                </a>
             </div>
             <div class="mk-crm-visual">
                 <figure class="mk-crm-screenshot">
@@ -431,6 +444,15 @@
                     <span class="mk-cap-cluster-count">{{ group.items|length }} ابزار</span>
                 </header>
                 <div class="mk-cap-cluster-grid">
+                    {% if group.pillar_link %}
+                    <a href="{% url group.pillar_link.landing_url_name %}" class="mk-cap-pillar-card mk-cap-pillar-card--{{ group.accent }}">
+                        <span class="mk-cap-icon" data-accent="{{ group.accent }}"><i class="fas fa-arrow-left"></i></span>
+                        <div class="mk-cap-card-body">
+                            <h4>{{ group.pillar_link.title }}</h4>
+                            <p>{{ group.pillar_link.desc }}</p>
+                        </div>
+                    </a>
+                    {% endif %}
                     {% for f in group.items %}
                     <article class="mk-cap-card">
                         <span class="mk-cap-card-num" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>

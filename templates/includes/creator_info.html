@@ -61,7 +61,9 @@
                 <div class="mk-creator-spotlight__avatar" aria-hidden="true">{{ site_brand.creator_name|slice:":1" }}</div>
                 <div class="mk-creator-spotlight__copy">
                     <span class="mk-creator-spotlight__kicker">سازنده {{ site_brand.site_display_name }}</span>
-                    <h2 class="mk-creator-spotlight__title">{{ site_brand.creator_name }}</h2>
+                    <h2 class="mk-creator-spotlight__title">
+                        <a href="{% url 'author_hossein_qashqaeii' %}">{{ site_brand.creator_name }}</a>
+                    </h2>
                     <p class="mk-creator-spotlight__desc">{{ subtitle|default:"طراحی و توسعه پلتفرم فایلینگ دیوار، ربات استخراج آگهی و میزکار CRM برای مشاوران و آژانس‌های املاک." }}</p>
                 </div>
             </div>

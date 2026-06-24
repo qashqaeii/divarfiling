@@ -1095,9 +1095,10 @@ def home_page_content():
         'platform_modules': [
             {
                 'id': 'crm', 'size': 'hero', 'accent': 'violet',
-                'icon': 'fa-chart-pie', 'title': 'داشبورد CRM',
+                'icon': 'fa-chart-pie', 'title': 'CRM مشاور املاک',
                 'desc': 'قیف وضعیت، روند ۷ روزه، کانال ارتباط و شاخص‌های زنده',
                 'stat': 'رایگان',
+                'landing_url_name': 'seo_landing_real_estate_crm',
             },
             {
                 'id': 'today', 'size': 'wide', 'accent': 'amber',
@@ -1197,6 +1198,11 @@ def home_page_content():
                 'desc': 'قیف فروش، پیگیری روزانه و اتوماسیون در یک جریان کاری',
                 'icon': 'fa-users',
                 'accent': 'violet',
+                'pillar_link': {
+                    'title': 'CRM مشاور املاک',
+                    'desc': 'راهنمای کامل CRM رایگان و میزکار',
+                    'landing_url_name': 'seo_landing_real_estate_crm',
+                },
                 'items': [
                     {'icon': 'fa-address-book', 'title': 'مخاطبین', 'desc': 'پروفایل، وضعیت، قیف و تاریخ پیگیری'},
                     {'icon': 'fa-handshake', 'title': 'معاملات', 'desc': 'ردیابی پرونده از سرنخ تا قرارداد'},

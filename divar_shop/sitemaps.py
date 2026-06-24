@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from blog.models import Post
 from shop.models import Product
+from shop.seo_landings import LANDING_SLUGS, landing_url_name
 
 
 def _site_protocol() -> str:
@@ -38,6 +39,7 @@ class StaticViewSitemap(SiteAwareSitemap):
         'license_guide': {'changefreq': 'monthly', 'priority': 0.7},
         'education': {'changefreq': 'monthly', 'priority': 0.7},
         'blog:post_list': {'changefreq': 'daily', 'priority': 0.8},
+        'author_hossein_qashqaeii': {'changefreq': 'monthly', 'priority': 0.65},
     }
 
     def items(self):
@@ -88,8 +90,22 @@ class BlogPostSitemap(SiteAwareSitemap):
         return obj.published_at or obj.updated_at
 
 
+class SeoLandingSitemap(SiteAwareSitemap):
+    """لندینگ‌های سئو — Wave 1 و بعدی."""
+
+    changefreq = 'weekly'
+    priority = 0.9
+
+    def items(self):
+        return list(LANDING_SLUGS)
+
+    def location(self, item):
+        return reverse(landing_url_name(item))
+
+
 sitemaps = {
     'static': StaticViewSitemap,
     'products': ProductSitemap,
     'blog': BlogPostSitemap,
+    'landings': SeoLandingSitemap,
 }

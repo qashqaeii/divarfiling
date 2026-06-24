@@ -3,6 +3,7 @@ URLهای فروشگاه
 """
 from django.urls import path
 from . import views
+from .seo_landings import landing_urlpatterns
 
 urlpatterns = [
     path('', views.HomeView.as_view(), name='home'),
@@ -18,6 +19,7 @@ urlpatterns = [
     path('terms/', views.TermsView.as_view(), name='terms'),
     path('license-guide/', views.LicenseGuideView.as_view(), name='license_guide'),
     path('amoozesh/', views.EducationView.as_view(), name='education'),
+    path('author/hossein-qashqaeii/', views.AuthorPageView.as_view(), name='author_hossein_qashqaeii'),
     path('66998772.txt', views.verification_file, name='verification_file'),
-]
+] + landing_urlpatterns()
 

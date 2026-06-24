@@ -238,6 +238,14 @@
                         </ul>
                     </div>
                     <div class="mk-ft-col">
+                        <h3 class="mk-ft-col-title">راهنماهای تخصصی</h3>
+                        <ul>
+                            <li><a href="{% url 'seo_landing_real_estate_crm' %}">CRM مشاور املاک</a></li>
+                            <li><a href="{% url 'seo_landing_real_estate_software' %}">نرم افزار مشاور املاک</a></li>
+                            <li><a href="{% url 'seo_landing_robot_divar' %}">ربات دیوار</a></li>
+                        </ul>
+                    </div>
+                    <div class="mk-ft-col">
                         <h3 class="mk-ft-col-title">شرکت</h3>
                         <ul>
                             <li><a href="{% url 'about' %}">درباره ما</a></li>
@@ -261,7 +269,10 @@
 
             <div class="mk-ft-bar">
                 <p class="mk-ft-copy">&copy; ۱۴۰۳ {{ site_brand.site_display_name }} — {{ footer_content.legal }}</p>
-                <p class="mk-ft-copy mk-ft-creator">{{ footer_content.creator_line }}</p>
+                <p class="mk-ft-copy mk-ft-creator">
+                    {{ footer_content.creator_line }}
+                    · <a href="{% url 'author_hossein_qashqaeii' %}">درباره نویسنده</a>
+                </p>
                 <nav class="mk-ft-bar-nav" aria-label="لینک‌های حقوقی">
                     <a href="{% url 'terms' %}">قوانین</a>
                     <span class="mk-ft-bar-dot" aria-hidden="true"></span>

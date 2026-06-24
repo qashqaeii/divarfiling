@@ -2156,3 +2156,91 @@ html.mk-public .mk-blog-featured-title,
 html.mk-public .mk-blog-detail-hero h1 {
     color: var(--mk-text);
 }
+
+/* Inline CTA inside article body */
+.mk-blog-prose .mk-blog-inline-cta {
+    margin: 1.75rem 0;
+    padding: 1.25rem 1.35rem;
+    border-radius: 14px;
+    border: 1px solid var(--mk-blog-accent-border);
+    background: linear-gradient(165deg, var(--mk-blog-accent-subtle), var(--mk-card));
+    text-align: center;
+}
+
+.mk-blog-prose .mk-blog-inline-cta strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 1rem;
+    color: var(--mk-text);
+}
+
+.mk-blog-prose .mk-blog-inline-cta p {
+    margin: 0 0 0.65rem;
+    font-size: 0.88rem;
+    line-height: 1.65;
+}
+
+.mk-blog-prose .mk-blog-inline-cta p:last-child {
+    margin-bottom: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.mk-blog-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.mk-blog-cta-btn--primary {
+    color: #fff;
+    background: var(--mk-blog-gradient);
+    box-shadow: 0 4px 14px -6px var(--mk-blog-accent-glow);
+}
+
+.mk-blog-cta-btn--primary:hover {
+    color: #fff;
+    filter: brightness(1.05);
+}
+
+.mk-blog-cta-btn--ghost {
+    color: var(--mk-blog-accent);
+    border: 1px solid var(--mk-blog-accent-border);
+    background: var(--mk-card);
+}
+
+.mk-blog-cta-btn--ghost:hover {
+    background: var(--mk-blog-accent-subtle);
+    color: var(--mk-blog-accent);
+}
+
+.mk-blog-aside-author-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.2s;
+}
+
+.mk-blog-aside-author-link:hover {
+    opacity: 0.9;
+    color: inherit;
+}
+
+.mk-blog-aside-cta--pillar {
+    text-align: right;
+}
+
+.mk-blog-aside-cta--pillar .btn,
+.mk-blog-aside-cta--register .btn {
+    width: 100%;
+}

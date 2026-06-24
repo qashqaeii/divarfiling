@@ -5,7 +5,10 @@
     'use strict';
 
     function initReveal() {
-        var els = document.querySelectorAll('.seo-landing .mk-reveal, .seo-landing .mk-reveal-stagger');
+        var els = document.querySelectorAll(
+            '.seo-landing .mk-reveal, .seo-landing .mk-reveal-stagger, ' +
+            '.author-page-wrap .mk-reveal, .author-page-wrap .mk-reveal-stagger'
+        );
         if (!els.length) return;
 
         if (!('IntersectionObserver' in window)) {

@@ -484,12 +484,17 @@ class AuthorPageView(TemplateView):
             models.Q(username__icontains='hossein') | models.Q(first_name__icontains='حسین')
         ).first()
         if author_user:
-            ctx['author_posts'] = (
+            posts_qs = (
                 Post.objects.filter(is_published=True, author=author_user)
-                .order_by('-published_at')[:12]
+                .select_related('category')
+                .order_by('-published_at')
             )
+            ctx['author_posts'] = posts_qs[:12]
+            ctx['author_post_count'] = posts_qs.count()
         else:
-            ctx['author_posts'] = Post.objects.filter(is_published=True).order_by('-published_at')[:6]
+            posts_qs = Post.objects.filter(is_published=True).select_related('category').order_by('-published_at')
+            ctx['author_posts'] = posts_qs[:6]
+            ctx['author_post_count'] = posts_qs.count()
         return ctx
 
 

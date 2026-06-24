@@ -34,20 +34,47 @@ def author_page_content() -> dict:
         'highlights': [
             {
                 'icon': 'fa-robot',
+                'accent': 'indigo',
                 'title': 'ربات استخراج دیوار',
                 'text': 'طراحی ربات ویندوز برای جمع‌آوری خودکار آگهی املاک',
             },
             {
                 'icon': 'fa-users',
+                'accent': 'violet',
                 'title': 'CRM املاک',
                 'text': 'میزکار CRM رایگان برای مشاوران و آژانس‌ها',
             },
             {
                 'icon': 'fa-chart-line',
+                'accent': 'amber',
                 'title': 'تحلیل بازار',
                 'text': 'تحلیل قیمت و روند محله بر اساس داده واقعی آگهی',
             },
         ],
+        'visuals': {
+            'hero_shots': [
+                {
+                    'image': 'images/help-workspace-home.png',
+                    'caption': 'میزکار یکپارچه فایلینگ دیوار',
+                    'accent': 'emerald',
+                },
+                {
+                    'image': 'images/help-crm-dashboard.png',
+                    'caption': 'CRM املاک — داشبورد مشاور',
+                    'accent': 'violet',
+                },
+                {
+                    'image': 'images/help-bot-extract-tab.png',
+                    'caption': 'ربات استخراج آگهی دیوار',
+                    'accent': 'indigo',
+                },
+            ],
+        },
+        'stats_labels': {
+            'articles': 'مقاله تخصصی',
+            'landings': 'راهنمای محصول',
+            'product': 'محصول نرم‌افزاری',
+        },
         'meta_title': 'حسین قشقایی | سازنده فایلینگ دیوار — توسعه‌دهنده CRM املاک',
         'meta_description': (
             'حسین قشقایی (Hossein Qashqaeii)، سازنده فایلینگ دیوار: متخصص Python، '

@@ -4,7 +4,6 @@ Template tags برای SEO و Meta Tags
 from django import template
 from django.conf import settings
 from django.utils.safestring import mark_safe
-from django.urls import reverse
 import json
 
 register = template.Library()
@@ -22,6 +21,14 @@ def get_site_name():
     return getattr(settings, 'SITE_NAME', 'فایلینگ دیوار')
 
 
+def get_twitter_site():
+    """هندل توییتر/X با @ — خالی اگر تنظیم نشده."""
+    handle = getattr(settings, 'TWITTER_SITE', '').strip()
+    if not handle:
+        return ''
+    return handle if handle.startswith('@') else f'@{handle}'
+
+
 @register.inclusion_tag('shop/seo_meta.html', takes_context=True)
 def seo_meta(context, **kwargs):
     """
@@ -31,9 +38,12 @@ def seo_meta(context, **kwargs):
         {% load seo_tags %}
         {% seo_meta title="عنوان صفحه" description="توضیحات" %}
     """
+    from blog.seo_helpers import format_iso_datetime
+
     request = context.get('request')
     site_url = get_site_url()
     site_name = get_site_name()
+    twitter_site = get_twitter_site()
     
     # دریافت مقادیر از context یا kwargs
     title = kwargs.get('title') or context.get('meta_title') or context.get('title', '')
@@ -52,7 +62,7 @@ def seo_meta(context, **kwargs):
         if not image.startswith('http'):
             image = f"{site_url}{image}"
     else:
-        image = f"{site_url}/static/images/og-default.jpg"
+        image = f"{site_url}/static/logo.png"
     
     # URL صفحه فعلی
     if request:
@@ -65,8 +75,12 @@ def seo_meta(context, **kwargs):
     
     # اطلاعات اضافی
     author = kwargs.get('author') or context.get('author', site_name)
-    published_time = kwargs.get('published_time') or context.get('published_time')
-    modified_time = kwargs.get('modified_time') or context.get('modified_time')
+    published_time = format_iso_datetime(
+        kwargs.get('published_time') or context.get('published_time')
+    )
+    modified_time = format_iso_datetime(
+        kwargs.get('modified_time') or context.get('modified_time')
+    )
     
     # Schema.org data
     schema_data = kwargs.get('schema') or context.get('schema_data')
@@ -79,6 +93,7 @@ def seo_meta(context, **kwargs):
         'url': current_url,
         'site_name': site_name,
         'site_url': site_url,
+        'twitter_site': twitter_site,
         'og_type': og_type,
         'author': author,
         'published_time': published_time,
@@ -197,6 +212,16 @@ def schema_article(context, post, request=None):
     """Schema.org Article برای صفحه بلاگ."""
     if not post:
         return ''
+    from blog.seo_helpers import (
+        format_iso_datetime,
+        post_keywords,
+        post_modified_at,
+        post_og_image_url,
+        post_published_at,
+        post_word_count,
+    )
+    from django.utils.html import strip_tags
+
     req = request or context.get('request')
     site_url = get_site_url()
     if req:
@@ -206,35 +231,38 @@ def schema_article(context, post, request=None):
         if not page_url.startswith('http'):
             page_url = f'{site_url}{page_url}'
 
-    from django.utils.html import strip_tags
-
     description = (post.excerpt or strip_tags(post.content or ''))[:300]
     author_name = post.author.get_full_name() or post.author.username
+    image_url = post_og_image_url(post, req)
+    keywords = post_keywords(post)
 
     schema = {
         '@context': 'https://schema.org',
         '@type': 'Article',
         'headline': post.title,
         'description': description,
+        'url': page_url,
+        'image': [image_url],
+        'datePublished': format_iso_datetime(post_published_at(post)),
+        'dateModified': format_iso_datetime(post_modified_at(post)),
         'author': {'@type': 'Person', 'name': author_name},
         'publisher': {
             '@type': 'Organization',
             'name': get_site_name(),
-            'logo': {'@type': 'ImageObject', 'url': f'{site_url}/static/logo.png'},
+            'url': site_url,
+            'logo': {
+                '@type': 'ImageObject',
+                'url': f'{site_url}/static/logo.png',
+            },
         },
         'mainEntityOfPage': {'@type': 'WebPage', '@id': page_url},
         'inLanguage': 'fa-IR',
+        'wordCount': post_word_count(post),
     }
-    if post.published_at:
-        schema['datePublished'] = post.published_at.isoformat()
-    if post.updated_at:
-        schema['dateModified'] = post.updated_at.isoformat()
-    if post.featured_image:
-        try:
-            img_url = post.featured_image.url
-            schema['image'] = req.build_absolute_uri(img_url) if req else f'{site_url}{img_url}'
-        except Exception:
-            pass
+    if post.category:
+        schema['articleSection'] = post.category.name
+    if keywords:
+        schema['keywords'] = keywords
 
     return mark_safe(f'<script type="application/ld+json">{json.dumps(schema, ensure_ascii=False)}</script>')
 
@@ -271,9 +299,10 @@ def schema_software_application(name=None, description=None, url=None):
 
 
 @register.simple_tag(takes_context=True)
-def schema_faq_page(context, html_content=None, request=None):
+def schema_faq_page(context, html_content=None, request=None, post=None):
     """Schema.org FAQPage از بخش سوالات متداول مقاله."""
     from blog.seo_schema import extract_faq_pairs
+    from django.utils.html import strip_tags
 
     html = html_content or ''
     pairs = extract_faq_pairs(html)
@@ -284,10 +313,21 @@ def schema_faq_page(context, html_content=None, request=None):
     site_url = get_site_url()
     page_url = req.build_absolute_uri() if req else site_url
 
+    if post:
+        page_title = post.title
+        description = (post.excerpt or strip_tags(post.content or ''))[:300]
+    else:
+        page_title = context.get('meta_title') or 'سوالات متداول'
+        description = context.get('meta_description') or ''
+
     schema = {
         '@context': 'https://schema.org',
         '@type': 'FAQPage',
+        'name': page_title,
+        'description': description,
         'url': page_url,
+        'inLanguage': 'fa-IR',
+        'isPartOf': {'@type': 'WebPage', '@id': page_url, 'name': page_title},
         'mainEntity': [
             {
                 '@type': 'Question',

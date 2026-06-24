@@ -191,6 +191,8 @@ SITE_ID = 1
 # Site Information for SEO
 SITE_NAME = 'فایلینگ دیوار'
 SITE_URL = config('SITE_URL', default='https://divarfiling.ir')
+# هندل توییتر/X — فقط اگر مقدار دارد در meta نمایش داده می‌شود (مثلاً divarfiling)
+TWITTER_SITE = config('TWITTER_SITE', default='').strip()
 
 # گفتینو — فقط در قالب عمومی (base.html) بارگذاری می‌شود
 GOFTINO_WIDGET_ID = config('GOFTINO_WIDGET_ID', default='')

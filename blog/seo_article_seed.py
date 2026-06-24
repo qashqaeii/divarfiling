@@ -8,6 +8,7 @@ SEO_ARTICLES = {
     9: {
         'keyword': 'نرم افزار CRM املاک',
         'slug_base': 'narm-afzar-crm-amlak-rahnama-kamel',
+        'og_image': 'images/og/blog/crm-amlak.jpg',
         'title': 'نرم افزار CRM املاک: چطور انتخاب کنیم و چرا میزکار فایلینگ دیوار متفاوت است؟',
         'excerpt': (
             'نرم افزار CRM املاک باید فراتر از دفترچه تماس باشد — قیف معامله، پیگیری روزانه '

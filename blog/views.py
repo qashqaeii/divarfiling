@@ -6,6 +6,12 @@ from django.urls import reverse
 from django.utils.html import strip_tags
 from django.views.generic import ListView, DetailView
 from .models import Post, Category
+from .seo_helpers import (
+    format_iso_datetime,
+    post_modified_at,
+    post_og_image_url,
+    post_published_at,
+)
 
 
 def _reading_time_minutes(html_content: str) -> int:
@@ -99,9 +105,11 @@ class PostDetailView(DetailView):
         if tag_names:
             context['meta_keywords'] = ', '.join(tag_names)
         context['og_type'] = 'article'
-        if post.published_at:
-            context['published_time'] = post.published_at.isoformat()
-        context['modified_time'] = post.updated_at.isoformat()
+        context['published_time'] = format_iso_datetime(post_published_at(post))
+        context['modified_time'] = format_iso_datetime(post_modified_at(post))
+        og_image = post_og_image_url(post, self.request)
+        context['meta_image'] = og_image
+        context['og_image'] = og_image
         context['author'] = post.author.get_full_name() or post.author.username
         context['breadcrumb_items'] = [
             {'name': 'خانه', 'url': '/'},

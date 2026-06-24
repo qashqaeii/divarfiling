@@ -24,16 +24,16 @@ Template برای Meta Tags SEO
 <meta name="twitter:title" content="{{ title }}">
 <meta name="twitter:description" content="{{ description }}">
 <meta name="twitter:image" content="{{ image }}">
-{% if site_name %}
-<meta name="twitter:site" content="@{{ site_name|slugify }}">
+{% if twitter_site %}
+<meta name="twitter:site" content="{{ twitter_site }}">
 {% endif %}
 
 {# Additional Meta Tags #}
 {% if published_time %}
-<meta property="article:published_time" content="{{ published_time|date:'c' }}">
+<meta property="article:published_time" content="{{ published_time }}">
 {% endif %}
 {% if modified_time %}
-<meta property="article:modified_time" content="{{ modified_time|date:'c' }}">
+<meta property="article:modified_time" content="{{ modified_time }}">
 {% endif %}
 
 {# Canonical URL #}

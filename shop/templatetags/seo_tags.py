@@ -238,3 +238,64 @@ def schema_article(context, post, request=None):
 
     return mark_safe(f'<script type="application/ld+json">{json.dumps(schema, ensure_ascii=False)}</script>')
 
+
+@register.simple_tag
+def schema_software_application(name=None, description=None, url=None):
+    """Schema.org SoftwareApplication — صفحه اصلی / ربات."""
+    site_url = get_site_url()
+    site_name = get_site_name()
+    schema = {
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        'name': name or site_name,
+        'applicationCategory': 'BusinessApplication',
+        'operatingSystem': 'Windows, Web',
+        'description': description or (
+            'میزکار هوشمند مشاوران املاک برای استخراج آگهی دیوار، '
+            'فایلینگ، CRM، تحلیل بازار و مدیریت مشتری.'
+        ),
+        'url': url or site_url,
+        'inLanguage': 'fa-IR',
+        'creator': {
+            '@type': 'Organization',
+            'name': site_name,
+            'url': site_url,
+        },
+        'offers': {
+            '@type': 'Offer',
+            'priceCurrency': 'IRR',
+            'availability': 'https://schema.org/InStock',
+        },
+    }
+    return mark_safe(f'<script type="application/ld+json">{json.dumps(schema, ensure_ascii=False)}</script>')
+
+
+@register.simple_tag(takes_context=True)
+def schema_faq_page(context, html_content=None, request=None):
+    """Schema.org FAQPage از بخش سوالات متداول مقاله."""
+    from blog.seo_schema import extract_faq_pairs
+
+    html = html_content or ''
+    pairs = extract_faq_pairs(html)
+    if not pairs:
+        return ''
+
+    req = request or context.get('request')
+    site_url = get_site_url()
+    page_url = req.build_absolute_uri() if req else site_url
+
+    schema = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'url': page_url,
+        'mainEntity': [
+            {
+                '@type': 'Question',
+                'name': q,
+                'acceptedAnswer': {'@type': 'Answer', 'text': a},
+            }
+            for q, a in pairs
+        ],
+    }
+    return mark_safe(f'<script type="application/ld+json">{json.dumps(schema, ensure_ascii=False)}</script>')
+

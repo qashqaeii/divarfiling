@@ -2,6 +2,7 @@
 ویوهای بلاگ
 """
 from django.db.models import Count, Q
+from django.urls import reverse
 from django.utils.html import strip_tags
 from django.views.generic import ListView, DetailView
 from .models import Post, Category
@@ -102,6 +103,16 @@ class PostDetailView(DetailView):
             context['published_time'] = post.published_at.isoformat()
         context['modified_time'] = post.updated_at.isoformat()
         context['author'] = post.author.get_full_name() or post.author.username
+        context['breadcrumb_items'] = [
+            {'name': 'خانه', 'url': '/'},
+            {'name': 'مقالات', 'url': reverse('blog:post_list')},
+        ]
+        if post.category:
+            context['breadcrumb_items'].append({
+                'name': post.category.name,
+                'url': f"{reverse('blog:post_list')}?cat={post.category.slug}",
+            })
+        context['breadcrumb_items'].append({'name': post.title, 'url': post.get_absolute_url()})
 
         published = Post.objects.filter(is_published=True).order_by('-published_at', '-created_at')
         post_ids = list(published.values_list('pk', flat=True))

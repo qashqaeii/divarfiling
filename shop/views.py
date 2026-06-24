@@ -45,8 +45,26 @@ class HomeView(TemplateView):
         )
         context['meta_keywords'] = (
             'فایلینگ دیوار, CRM املاک, ربات دیوار, استخراج آگهی, '
-            'تحلیل بازار املاک, میزکار مشاور'
+            'تحلیل بازار املاک, میزکار مشاور, نرم افزار CRM املاک'
         )
+        import json
+        from shop.templatetags.seo_tags import get_site_url, get_site_name
+        site_url = get_site_url()
+        context['schema_data'] = json.dumps({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            'name': get_site_name(),
+            'applicationCategory': 'BusinessApplication',
+            'operatingSystem': 'Windows, Web',
+            'description': context['meta_description'],
+            'url': site_url,
+            'inLanguage': 'fa-IR',
+            'offers': {
+                '@type': 'Offer',
+                'priceCurrency': 'IRR',
+                'availability': 'https://schema.org/InStock',
+            },
+        }, ensure_ascii=False)
         return context
 
 

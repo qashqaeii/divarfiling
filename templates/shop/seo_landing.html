@@ -5,25 +5,41 @@
 {% block body_class %}mk-pub-page seo-landing-page seo-landing--{{ landing.slug }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-seo-landing.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-seo-landing.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
-<div class="mk-pub-wrap seo-landing">
+{% with v=landing.visuals %}
+<div class="mk-pub-wrap seo-landing" style="--seo-accent: var(--seo-accent-{{ landing.hero.accent }}, #8b5cf6);">
 
-    {# ── Hero + CTA ── #}
+    {# ── Hero ── #}
     <header class="seo-hero seo-hero--{{ landing.hero.accent }}">
-        <div class="seo-hero-bg" aria-hidden="true"></div>
-        <div class="container seo-hero-grid">
-            <div class="seo-hero-copy">
+        <div class="seo-hero-mesh" aria-hidden="true"></div>
+        <div class="seo-hero-grid" aria-hidden="true"></div>
+        <div class="container seo-hero-stage">
+            <div class="seo-hero-copy mk-reveal">
                 <span class="seo-kicker">
-                    <span class="mk-icon mk-icon--xs mk-icon--{{ landing.hero.accent }}">
+                    <span class="seo-kicker-icon mk-icon mk-icon--xs mk-icon--{{ landing.hero.accent }}">
                         <i class="fas {{ landing.hero.icon }}"></i>
                     </span>
                     {{ landing.hero.eyebrow }}
                 </span>
                 <h1>{{ landing.hero.h1 }}</h1>
                 <p class="seo-hero-lead">{{ landing.hero.lead }}</p>
+
+                {% if v.hero_pills %}
+                <div class="seo-hero-pills">
+                    {% for pill in v.hero_pills %}
+                    <span class="seo-hero-pill">
+                        <span class="mk-icon mk-icon--sm mk-icon--{{ pill.accent }}">
+                            <i class="fas {{ pill.icon }}"></i>
+                        </span>
+                        {{ pill.text }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
                 <div class="seo-hero-actions">
                     {% if user.is_authenticated %}
                     <a href="{% url 'workspace:home' %}" class="seo-btn seo-btn--primary">
@@ -49,7 +65,25 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="seo-hero-visual" aria-hidden="true">
+
+            {% if v.hero_image %}
+            <button type="button" class="seo-hero-shot mk-reveal" data-seo-lightbox
+                data-src="{% static v.hero_image %}"
+                data-caption="{{ v.hero_caption }}"
+                aria-label="بزرگنمایی: {{ v.hero_caption }}">
+                <div class="seo-shot-chrome" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                    <span class="seo-shot-chrome-title">فایلینگ دیوار — میزکار</span>
+                </div>
+                <img src="{% static v.hero_image %}" alt="{{ v.hero_caption }}" class="seo-shot-img"
+                    loading="eager" decoding="async" width="1680" height="1000">
+                <span class="seo-shot-zoom" aria-hidden="true">
+                    <i class="fas fa-search-plus"></i>
+                    <span>بزرگنمایی</span>
+                </span>
+            </button>
+            {% else %}
+            <div class="seo-hero-fallback mk-reveal" aria-hidden="true">
                 <div class="seo-hero-card">
                     <span class="seo-hero-card-icon mk-icon mk-icon--lg mk-icon--{{ landing.hero.accent }}">
                         <i class="fas {{ landing.hero.icon }}"></i>
@@ -58,31 +92,50 @@
                     <span>میزکار + CRM + ربات</span>
                 </div>
             </div>
+            {% endif %}
         </div>
     </header>
 
     {# ── Problem ── #}
-    <section class="seo-band seo-band--problem" aria-labelledby="seo-problem-title">
-        <div class="container seo-band-inner">
-            <h2 id="seo-problem-title">{{ landing.problem.title }}</h2>
-            {% for p in landing.problem.paragraphs %}
-            <p class="seo-prose">{{ p }}</p>
-            {% endfor %}
-            <ul class="seo-bullets">
-                {% for b in landing.problem.bullets %}
-                <li><i class="fas fa-circle-xmark" aria-hidden="true"></i> {{ b }}</li>
+    <section class="seo-section seo-problem" aria-labelledby="seo-problem-title">
+        <div class="container seo-problem-grid mk-reveal">
+            <div class="seo-problem-copy">
+                <span class="seo-section-kicker seo-section-kicker--warn"><i class="fas fa-exclamation-triangle"></i> چالش روزانه</span>
+                <h2 id="seo-problem-title">{{ landing.problem.title }}</h2>
+                {% for p in landing.problem.paragraphs %}
+                <p class="seo-prose">{{ p }}</p>
                 {% endfor %}
-            </ul>
+                <ul class="seo-bullets">
+                    {% for b in landing.problem.bullets %}
+                    <li><i class="fas fa-circle-xmark" aria-hidden="true"></i> {{ b }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% if v.problem_image %}
+            <figure class="seo-problem-visual">
+                <button type="button" class="seo-shot-frame" data-seo-lightbox
+                    data-src="{% static v.problem_image %}"
+                    data-caption="{{ v.problem_caption }}"
+                    aria-label="بزرگنمایی: {{ v.problem_caption }}">
+                    <img src="{% static v.problem_image %}" alt="{{ v.problem_caption }}" loading="lazy" decoding="async">
+                    <span class="seo-shot-caption">{{ v.problem_caption }}</span>
+                </button>
+            </figure>
+            {% endif %}
         </div>
     </section>
 
     {# ── Features ── #}
-    <section class="seo-band" aria-labelledby="seo-features-title">
+    <section class="seo-section" aria-labelledby="seo-features-title">
         <div class="container">
-            <h2 id="seo-features-title" class="seo-section-title">ویژگی‌های کلیدی</h2>
-            <div class="seo-feature-grid">
+            <header class="seo-section-head mk-reveal">
+                <span class="seo-section-kicker"><i class="fas fa-star"></i> امکانات</span>
+                <h2 id="seo-features-title" class="seo-section-title">ویژگی‌های کلیدی</h2>
+            </header>
+            <div class="seo-feature-grid mk-reveal mk-reveal-stagger">
                 {% for f in landing.features %}
-                <article class="seo-feature-card">
+                <article class="seo-feature-card seo-feature-card--{{ f.accent }}">
+                    <span class="seo-feature-glow" aria-hidden="true"></span>
                     <span class="mk-icon mk-icon--md mk-icon--{{ f.accent }}">
                         <i class="fas {{ f.icon }}"></i>
                     </span>
@@ -94,25 +147,88 @@
         </div>
     </section>
 
-    {# ── Content sections (H2/H3) ── #}
+    {# ── Showcase gallery ── #}
+    {% if v.showcase %}
+    <section class="seo-section seo-showcase" aria-labelledby="seo-showcase-title">
+        <div class="container">
+            <header class="seo-section-head mk-reveal">
+                <span class="seo-section-kicker"><i class="fas fa-images"></i> {{ v.showcase.kicker }}</span>
+                <h2 id="seo-showcase-title" class="seo-section-title">{{ v.showcase.title }}</h2>
+                <p class="seo-section-desc">{{ v.showcase.desc }}</p>
+            </header>
+            <div class="seo-gallery mk-reveal mk-reveal-stagger">
+                <div class="seo-gallery-col seo-gallery-col--hero">
+                    {% for item in v.showcase.items %}
+                    {% if item.size == 'wide' %}
+                    <figure class="seo-gallery-card seo-gallery-card--hero seo-gallery-card--{{ item.accent }}">
+                        <button type="button" class="seo-gallery-open" data-seo-lightbox
+                            data-src="{% static item.image %}" data-caption="{{ item.caption }}"
+                            aria-label="بزرگنمایی: {{ item.caption }}">
+                            <img src="{% static item.image %}" alt="{{ item.caption }}" loading="lazy" decoding="async">
+                            <span class="seo-gallery-shine" aria-hidden="true"></span>
+                            <span class="seo-gallery-zoom"><i class="fas fa-search-plus"></i></span>
+                            <figcaption>{{ item.caption }}</figcaption>
+                        </button>
+                    </figure>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="seo-gallery-col seo-gallery-col--grid">
+                    {% for item in v.showcase.items %}
+                    {% if item.size != 'wide' %}
+                    <figure class="seo-gallery-card seo-gallery-card--compact seo-gallery-card--{{ item.accent }}">
+                        <button type="button" class="seo-gallery-open" data-seo-lightbox
+                            data-src="{% static item.image %}" data-caption="{{ item.caption }}"
+                            aria-label="بزرگنمایی: {{ item.caption }}">
+                            <img src="{% static item.image %}" alt="{{ item.caption }}" loading="lazy" decoding="async">
+                            <span class="seo-gallery-shine" aria-hidden="true"></span>
+                            <span class="seo-gallery-zoom"><i class="fas fa-search-plus"></i></span>
+                            <figcaption>{{ item.caption }}</figcaption>
+                        </button>
+                    </figure>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ── Content sections with alternating visuals ── #}
     {% for section in landing.sections %}
-    <section class="seo-band seo-band--alt" aria-labelledby="seo-sec-{{ forloop.counter }}">
-        <div class="container seo-prose-block">
-            <h2 id="seo-sec-{{ forloop.counter }}">{{ section.title }}</h2>
-            {% for p in section.paragraphs %}
-            <p class="seo-prose">{{ p }}</p>
-            {% endfor %}
-            {% for sub in section.subsections %}
-            <h3>{{ sub.title }}</h3>
-            <p class="seo-prose">{{ sub.text }}</p>
-            {% endfor %}
+    <section class="seo-section seo-section--split{% if forloop.counter0|divisibleby:2 %} seo-section--flip{% endif %}"
+        aria-labelledby="seo-sec-{{ forloop.counter }}">
+        <div class="container seo-split-grid mk-reveal">
+            <div class="seo-split-copy">
+                <h2 id="seo-sec-{{ forloop.counter }}">{{ section.title }}</h2>
+                {% for p in section.paragraphs %}
+                <p class="seo-prose">{{ p }}</p>
+                {% endfor %}
+                {% for sub in section.subsections %}
+                <div class="seo-sub-block">
+                    <h3>{{ sub.title }}</h3>
+                    <p class="seo-prose">{{ sub.text }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% if section.image %}
+            <figure class="seo-split-visual">
+                <button type="button" class="seo-shot-frame seo-shot-frame--tall" data-seo-lightbox
+                    data-src="{% static section.image.image %}" data-caption="{{ section.image.caption }}"
+                    aria-label="بزرگنمایی: {{ section.image.caption }}">
+                    <img src="{% static section.image.image %}" alt="{{ section.image.caption }}" loading="lazy" decoding="async">
+                    <span class="seo-shot-caption">{{ section.image.caption }}</span>
+                </button>
+            </figure>
+            {% endif %}
         </div>
     </section>
     {% endfor %}
 
     {# ── Mid CTA ── #}
     <section class="seo-cta-band" aria-label="دعوت به اقدام">
-        <div class="container seo-cta-inner">
+        <div class="seo-cta-mesh" aria-hidden="true"></div>
+        <div class="container seo-cta-inner mk-reveal">
             <h2>{{ landing.cta_mid_title }}</h2>
             <div class="seo-hero-actions">
                 <a href="{% url 'register' %}" class="seo-btn seo-btn--primary seo-btn--lg">
@@ -130,11 +246,14 @@
         </div>
     </section>
 
-    {# ── Comparison table ── #}
-    <section class="seo-band" aria-labelledby="seo-compare-title">
+    {# ── Comparison ── #}
+    <section class="seo-section" aria-labelledby="seo-compare-title">
         <div class="container">
-            <h2 id="seo-compare-title" class="seo-section-title">{{ landing.comparison.title }}</h2>
-            <div class="seo-table-wrap">
+            <header class="seo-section-head mk-reveal">
+                <span class="seo-section-kicker"><i class="fas fa-balance-scale"></i> مقایسه</span>
+                <h2 id="seo-compare-title" class="seo-section-title">{{ landing.comparison.title }}</h2>
+            </header>
+            <div class="seo-table-wrap mk-reveal">
                 <table class="seo-table">
                     <thead>
                         <tr>
@@ -147,7 +266,7 @@
                         {% for row in landing.comparison.rows %}
                         <tr>
                             {% for cell in row %}
-                            <td{% if forloop.first %} scope="row"{% endif %}>{{ cell }}</td>
+                            <td{% if forloop.first %} scope="row"{% elif forloop.last %} class="seo-table-win"{% endif %}>{{ cell }}</td>
                             {% endfor %}
                         </tr>
                         {% endfor %}
@@ -158,17 +277,21 @@
     </section>
 
     {# ── Steps ── #}
-    <section class="seo-band seo-band--alt" aria-labelledby="seo-steps-title">
+    <section class="seo-section seo-section--muted" aria-labelledby="seo-steps-title">
         <div class="container">
-            <h2 id="seo-steps-title" class="seo-section-title">{{ landing.steps.title }}</h2>
-            <ol class="seo-steps">
+            <header class="seo-section-head mk-reveal">
+                <span class="seo-section-kicker"><i class="fas fa-route"></i> مسیر شروع</span>
+                <h2 id="seo-steps-title" class="seo-section-title">{{ landing.steps.title }}</h2>
+            </header>
+            <ol class="seo-steps mk-reveal mk-reveal-stagger">
                 {% for step in landing.steps.items %}
                 <li class="seo-step">
                     <span class="seo-step-n">{{ step.n }}</span>
-                    <div>
+                    <div class="seo-step-body">
                         <strong>{{ step.title }}</strong>
                         <p>{{ step.text }}</p>
                     </div>
+                    {% if not forloop.last %}<span class="seo-step-connector" aria-hidden="true"></span>{% endif %}
                 </li>
                 {% endfor %}
             </ol>
@@ -176,15 +299,18 @@
     </section>
 
     {# ── Internal links ── #}
-    <section class="seo-band" aria-labelledby="seo-related-title">
+    <section class="seo-section" aria-labelledby="seo-related-title">
         <div class="container">
-            <h2 id="seo-related-title" class="seo-section-title">صفحات مرتبط</h2>
-            <div class="seo-related-grid">
+            <header class="seo-section-head mk-reveal">
+                <span class="seo-section-kicker"><i class="fas fa-compass"></i> ادامه مسیر</span>
+                <h2 id="seo-related-title" class="seo-section-title">صفحات مرتبط</h2>
+            </header>
+            <div class="seo-related-grid mk-reveal mk-reveal-stagger">
                 {% for link in landing.internal_links %}
                 <a href="{% if link.url_name == 'product_detail' %}{% url link.url_name slug=link.url_kwargs.slug %}{% else %}{% url link.url_name %}{% endif %}" class="seo-related-card">
+                    <span class="seo-related-icon" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
                     <strong>{{ link.label }}</strong>
                     {% if link.desc %}<span>{{ link.desc }}</span>{% endif %}
-                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 </a>
                 {% endfor %}
             </div>
@@ -192,13 +318,19 @@
     </section>
 
     {# ── FAQ ── #}
-    <section class="seo-band seo-band--faq" aria-labelledby="seo-faq-title">
+    <section class="seo-section seo-faq-section" aria-labelledby="seo-faq-title">
         <div class="container">
-            <h2 id="seo-faq-title" class="seo-section-title">سوالات متداول</h2>
-            <div class="seo-faq-list">
+            <header class="seo-section-head mk-reveal">
+                <span class="seo-section-kicker"><i class="fas fa-question-circle"></i> پرسش‌ها</span>
+                <h2 id="seo-faq-title" class="seo-section-title">سوالات متداول</h2>
+            </header>
+            <div class="seo-faq-list mk-reveal" data-seo-faq>
                 {% for q, a in landing.faq %}
                 <details class="seo-faq-item">
-                    <summary><h3>{{ q }}</h3></summary>
+                    <summary>
+                        <h3>{{ q }}</h3>
+                        <span class="seo-faq-toggle" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                    </summary>
                     <p>{{ a }}</p>
                 </details>
                 {% endfor %}
@@ -208,7 +340,8 @@
 
     {# ── Final CTA ── #}
     <section class="seo-cta-band seo-cta-band--final" aria-label="شروع">
-        <div class="container seo-cta-inner">
+        <div class="seo-cta-mesh seo-cta-mesh--final" aria-hidden="true"></div>
+        <div class="container seo-cta-inner mk-reveal">
             <h2>{{ landing.cta_final_title }}</h2>
             <p class="seo-cta-sub">میزکار CRM رایگان — بدون نیاز به کارت بانکی برای شروع</p>
             <div class="seo-hero-actions">
@@ -223,4 +356,9 @@
     </section>
 
 </div>
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/mizkar-seo-landing.js' %}?v=1" defer></script>
 {% endblock %}

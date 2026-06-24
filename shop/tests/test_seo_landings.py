@@ -19,6 +19,8 @@ class SeoLandingPageTests(TestCase):
             self.assertTrue(landing['hero']['h1'])
             self.assertTrue(landing['meta_title'])
             self.assertGreaterEqual(len(landing['faq']), 5)
+            self.assertIn('visuals', landing)
+            self.assertTrue(landing['visuals'].get('hero_image'))
 
     def test_real_estate_crm_page(self):
         resp = self.client.get('/real-estate-crm/')
@@ -26,17 +28,21 @@ class SeoLandingPageTests(TestCase):
         self.assertContains(resp, 'CRM مشاور املاک')
         self.assertContains(resp, 'سوالات متداول')
         self.assertContains(resp, 'شروع رایگان میزکار')
+        self.assertContains(resp, 'help-crm-dashboard.png')
+        self.assertContains(resp, 'seo-hero-shot')
 
     def test_real_estate_software_page(self):
         resp = self.client.get('/real-estate-software/')
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'نرم افزار مشاور املاک')
+        self.assertContains(resp, 'help-workspace-home.png')
 
     def test_robot_divar_page(self):
         resp = self.client.get('/robot-divar/')
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'ربات دیوار')
         self.assertContains(resp, 'divar-extraction-bot')
+        self.assertContains(resp, 'help-bot-extract-tab.png')
 
     def test_unknown_landing_404(self):
         resp = self.client.get('/divar-filing/')

@@ -45,6 +45,34 @@ def _subsection(title: str, text: str) -> dict:
     return {'title': title, 'text': text}
 
 
+def _pill(icon: str, accent: str, text: str) -> dict:
+    return {'icon': icon, 'accent': accent, 'text': text}
+
+
+def _shot(image: str, caption: str, accent: str = 'violet', size: str = 'compact') -> dict:
+    return {'image': image, 'caption': caption, 'accent': accent, 'size': size}
+
+
+def _visuals(
+    hero_image: str,
+    hero_caption: str,
+    hero_pills: list[dict],
+    problem_image: str,
+    problem_caption: str,
+    showcase: dict,
+    section_images: list[dict],
+) -> dict:
+    return {
+        'hero_image': hero_image,
+        'hero_caption': hero_caption,
+        'hero_pills': hero_pills,
+        'problem_image': problem_image,
+        'problem_caption': problem_caption,
+        'showcase': showcase,
+        'section_images': section_images,
+    }
+
+
 LANDINGS: dict[str, dict[str, Any]] = {
     'real-estate-crm': {
         'slug': 'real-estate-crm',
@@ -145,6 +173,36 @@ LANDINGS: dict[str, dict[str, Any]] = {
                 ],
             ),
         ],
+        'visuals': _visuals(
+            hero_image='images/help-crm-dashboard.png',
+            hero_caption='داشبورد CRM — خلاصه مشتریان، پیگیری‌های معوق و وضعیت روز',
+            hero_pills=[
+                _pill('fa-gift', 'emerald', 'CRM رایگان'),
+                _pill('fa-filter', 'violet', 'قیف کانبان'),
+                _pill('fa-bell', 'amber', 'صف امروز'),
+                _pill('fa-link', 'sky', 'اتصال دیوار'),
+            ],
+            problem_image='images/help-crm-today.png',
+            problem_caption='بدون CRM — تماس‌های امروز در حافظه و واتساپ پراکنده می‌مانند',
+            showcase={
+                'kicker': 'نمای میزکار',
+                'title': 'CRM املاک در عمل — نه فقط تبلیغ',
+                'desc': 'صف پیگیری، قیف معامله و پرونده مشتری — همان ابزاری که مشاوران حرفه‌ای هر روز باز می‌کنند.',
+                'items': [
+                    _shot('images/help-crm-deals.png', 'قیف معامله — از بازدید تا قرارداد', 'violet', 'wide'),
+                    _shot('images/help-crm-contacts.png', 'پرونده مشتری با بودجه و محله', 'rose'),
+                    _shot('images/help-crm-reminders.png', 'یادآور تماس — هیچ پیگیری گم نمی‌شود', 'amber'),
+                    _shot('images/help-crm-templates.png', 'قالب پیام آماده برای واتساپ', 'sky'),
+                    _shot('images/help-crm-calendar.png', 'تقویم بازدید و قرار', 'emerald'),
+                    _shot('images/help-crm-team.png', 'تیم آژانس — مشتری مشخص', 'indigo'),
+                ],
+            },
+            section_images=[
+                {'image': 'images/help-crm-contact-detail.png', 'caption': 'تاریخچه تماس و نیاز ملک'},
+                {'image': 'images/help-crm-properties.png', 'caption': 'فایل‌های ملک متصل به مشتری'},
+                {'image': 'images/help-crm-automation.png', 'caption': 'پیگیری خودکار و قالب پیام'},
+            ],
+        ),
         'steps': {
             'title': 'شروع در سه قدم',
             'items': [
@@ -253,6 +311,36 @@ LANDINGS: dict[str, dict[str, Any]] = {
                 ],
             ),
         ],
+        'visuals': _visuals(
+            hero_image='images/help-workspace-home.png',
+            hero_caption='میزکار یکپارچه — CRM، فایلینگ، تحلیل و ابزار در یک پنل',
+            hero_pills=[
+                _pill('fa-layer-group', 'violet', 'پلتفرم یکپارچه'),
+                _pill('fa-flag', 'emerald', 'نرم‌افزار ایرانی'),
+                _pill('fa-chart-line', 'amber', 'تحلیل بازار'),
+                _pill('fa-gift', 'sky', 'شروع رایگان'),
+            ],
+            problem_image='images/help-tools-panel.png',
+            problem_caption='ابزارهای پراکنده — سوئیچ مداوم بین دیوار، اکسل و واتساپ',
+            showcase={
+                'kicker': 'اکوسیستم میزکار',
+                'title': 'هر ماژول، یک تصویر از کار واقعی',
+                'desc': 'از آپلود فایل تا تحلیل قیمت و نقشه — همه در یک برند و یک حساب کاربری.',
+                'items': [
+                    _shot('images/help-analyze-dashboard.png', 'تحلیل قیمت و روند محله', 'amber', 'wide'),
+                    _shot('images/help-map-view.png', 'آگهی‌ها روی نقشه', 'sky'),
+                    _shot('images/help-dataset-table.png', 'فیلتر و جستجو در فایلینگ', 'emerald'),
+                    _shot('images/help-upload-bulk.png', 'آپلود گروهی چند محله', 'violet'),
+                    _shot('images/help-compare-files.png', 'مقایسه قیمت بین مناطق', 'rose'),
+                    _shot('images/help-crm-dashboard.png', 'CRM در کنار فایل و تحلیل', 'indigo'),
+                ],
+            },
+            section_images=[
+                {'image': 'images/help-bot-extract-tab.png', 'caption': 'ورود داده — استخراج از دیوار'},
+                {'image': 'images/help-listing-detail.png', 'caption': 'سازماندهی — جزئیات هر آگهی'},
+                {'image': 'images/help-crm-deals.png', 'caption': 'تصمیم‌گیری — قیف معامله'},
+            ],
+        ),
         'steps': {
             'title': 'از ثبت‌نام تا میزکار حرفه‌ای',
             'items': [
@@ -365,6 +453,36 @@ LANDINGS: dict[str, dict[str, Any]] = {
                 ],
             ),
         ],
+        'visuals': _visuals(
+            hero_image='images/help-bot-extract-tab.png',
+            hero_caption='ربات دیوار — فیلتر شهر و محله، پیشرفت زنده و خروجی ساختاریافته',
+            hero_pills=[
+                _pill('fab fa-windows', 'indigo', 'ویندوز ۱۰/۱۱'),
+                _pill('fa-file-excel', 'emerald', 'خروجی اکسل'),
+                _pill('fa-upload', 'amber', 'آپلود میزکار'),
+                _pill('fa-users', 'violet', 'اتصال CRM'),
+            ],
+            problem_image='images/help-bot-output-folder.png',
+            problem_caption='جمع‌آوری دستی — ساعت‌ها کپی و فایل اکسل که به‌روز نمی‌ماند',
+            showcase={
+                'kicker': 'مسیر استخراج',
+                'title': 'از نصب تا فایلینگ — گام‌به‌گام',
+                'desc': 'نصب ربات، فعال‌سازی لایسنس، استخراج و ورود داده به میزکار — با تصاویر واقعی محصول.',
+                'items': [
+                    _shot('images/help-bot-install.png', 'نصب و اولین اجرای ربات', 'indigo', 'wide'),
+                    _shot('images/help-bot-license.png', 'فعال‌سازی لایسنس', 'violet'),
+                    _shot('images/help-bot-extract-tab.png', 'انتخاب شهر و فیلتر محله', 'sky'),
+                    _shot('images/help-bot-output-folder.png', 'پوشه خروجی آماده آپلود', 'emerald'),
+                    _shot('images/help-upload-single.png', 'آپلود به فایلینگ میزکار', 'amber'),
+                    _shot('images/help-crm-contact-detail.png', 'تطبیق فایل با مشتری CRM', 'rose'),
+                ],
+            },
+            section_images=[
+                {'image': 'images/help-bot-license.png', 'caption': 'فعال‌سازی — آماده اولین استخراج'},
+                {'image': 'images/help-dataset-table.png', 'caption': 'فایلینگ — لیست آگهی‌های ساختاریافته'},
+                {'image': 'images/help-analyze-dashboard.png', 'caption': 'تحلیل — میانگین قیمت برای مذاکره'},
+            ],
+        ),
         'steps': {
             'title': 'راه‌اندازی در چهار قدم',
             'items': [
@@ -397,7 +515,20 @@ LANDINGS: dict[str, dict[str, Any]] = {
 
 
 def get_landing(slug: str) -> dict[str, Any] | None:
-    return LANDINGS.get(slug)
+    landing = LANDINGS.get(slug)
+    if not landing:
+        return None
+    landing = dict(landing)
+    visuals = landing.get('visuals') or {}
+    section_images = visuals.get('section_images') or []
+    sections = []
+    for i, sec in enumerate(landing.get('sections', [])):
+        s = dict(sec)
+        if i < len(section_images):
+            s['image'] = section_images[i]
+        sections.append(s)
+    landing['sections'] = sections
+    return landing
 
 
 def landing_schema_json(landing: dict[str, Any]) -> str:

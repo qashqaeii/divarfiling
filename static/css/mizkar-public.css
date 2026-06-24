@@ -1665,7 +1665,7 @@ html.mk-public .mk-footer-pro .enamad-logo img {
 
 .mk-ft-main {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.65fr) auto;
     gap: clamp(1.5rem, 4vw, 2.75rem);
     align-items: start;
     padding: clamp(2rem, 4vw, 2.75rem) 0 clamp(1.35rem, 3vw, 1.75rem);
@@ -1732,8 +1732,8 @@ html.mk-public .mk-footer-pro .enamad-logo img {
 
 .mk-ft-links {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(1rem, 2.5vw, 1.5rem);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(0.85rem, 2vw, 1.35rem);
 }
 
 .mk-ft-col-title {
@@ -2074,7 +2074,7 @@ html.mk-public .feature-card:hover {
     }
 
     .mk-ft-links {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .mk-ft-trust {

@@ -10,9 +10,9 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from blog.models import Category, Post, Tag
+from blog.models import Category, Post
 from blog.phase_b_content import PHASE_B_ARTICLES
-from blog.utils import persian_to_slug, unique_post_slug
+from blog.utils import get_or_create_tag, unique_post_slug
 
 User = get_user_model()
 
@@ -59,13 +59,7 @@ class Command(BaseCommand):
             },
         )
 
-        tags = []
-        for tag_name in article['tags']:
-            tag, _ = Tag.objects.get_or_create(
-                name=tag_name,
-                defaults={'slug': persian_to_slug(tag_name) or f'tag-{Tag.objects.count() + 1}'},
-            )
-            tags.append(tag)
+        tags = [get_or_create_tag(tag_name) for tag_name in article['tags']]
 
         slug_base = article['slug_base']
         existing = Post.objects.filter(slug=slug_base).first()

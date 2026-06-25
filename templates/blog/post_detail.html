@@ -7,7 +7,7 @@
 {% load seo_tags %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -82,8 +82,6 @@
             <div class="mk-blog-featured-figure-frame">
                 <img src="{{ post.featured_image.url }}"
                      alt="{{ post.title }}"
-                     width="1200"
-                     height="630"
                      loading="eager"
                      fetchpriority="high"
                      decoding="async">

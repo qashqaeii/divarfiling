@@ -7,7 +7,7 @@
 {% load seo_tags %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -18,9 +18,7 @@
 
     <div class="mk-blog-read-progress" id="blog-read-progress" aria-hidden="true"></div>
 
-    <header class="mk-blog-detail-hero{% if post.featured_image %} mk-blog-detail-hero--cover{% endif %}"
-        {% if post.featured_image %}style="--mk-blog-hero-img: url('{{ post.featured_image.url }}')"{% endif %}>
-        {% if post.featured_image %}<div class="mk-blog-detail-hero-overlay" aria-hidden="true"></div>{% endif %}
+    <header class="mk-blog-detail-hero">
         <div class="mk-blog-detail-hero-bg" aria-hidden="true">
             <span class="mk-blog-orb mk-blog-orb--1"></span>
             <span class="mk-blog-orb mk-blog-orb--2"></span>
@@ -77,6 +75,22 @@
             </div>
         </div>
     </header>
+
+    {% if post.featured_image %}
+    <div class="container mk-blog-featured-hero">
+        <figure class="mk-blog-featured-figure">
+            <div class="mk-blog-featured-figure-frame">
+                <img src="{{ post.featured_image.url }}"
+                     alt="{{ post.title }}"
+                     width="1200"
+                     height="630"
+                     loading="eager"
+                     fetchpriority="high"
+                     decoding="async">
+            </div>
+        </figure>
+    </div>
+    {% endif %}
 
     <div class="container mk-blog-detail-layout">
 

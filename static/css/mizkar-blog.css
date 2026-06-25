@@ -1056,6 +1056,47 @@
     color: var(--mk-blog-accent);
 }
 
+/* Featured image — بالای مقاله */
+.mk-blog-featured-hero {
+    margin: 0 auto clamp(1.25rem, 3vw, 1.85rem);
+}
+
+.mk-blog-featured-figure {
+    margin: 0;
+}
+
+.mk-blog-featured-figure-frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--mk-blog-radius-lg);
+    border: 1px solid var(--mk-border);
+    background: var(--mk-surface);
+    box-shadow: var(--mk-blog-card-shadow);
+    aspect-ratio: 21 / 9;
+}
+
+.mk-blog-featured-figure-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+        to top,
+        rgba(7, 11, 20, 0.22) 0%,
+        rgba(7, 11, 20, 0.04) 38%,
+        transparent 68%
+    );
+    pointer-events: none;
+}
+
+.mk-blog-featured-figure-frame img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
 /* Cover hero overrides */
 .mk-blog-detail-hero--cover .mk-blog-breadcrumb a,
 .mk-blog-detail-hero--cover .mk-blog-detail-lead,
@@ -1949,6 +1990,10 @@
         grid-template-columns: 1fr;
     }
 
+    .mk-blog-featured-figure-frame {
+        aspect-ratio: 16 / 9;
+    }
+
     .mk-blog-detail-aside {
         position: static;
         display: grid;
@@ -2069,6 +2114,7 @@ html.mk-public[data-theme="light"] .mk-blog-stat {
 html.mk-public[data-theme="light"] .mk-blog-card,
 html.mk-public[data-theme="light"] .mk-blog-article,
 html.mk-public[data-theme="light"] .mk-blog-featured,
+html.mk-public[data-theme="light"] .mk-blog-featured-figure-frame,
 html.mk-public[data-theme="light"] .mk-blog-related-card,
 html.mk-public[data-theme="light"] .mk-blog-toc-card,
 html.mk-public[data-theme="light"] .mk-blog-aside-card {
@@ -2083,6 +2129,15 @@ html.mk-public[data-theme="light"] .mk-blog-card-placeholder {
 
 html.mk-public[data-theme="light"] .mk-blog-prose blockquote {
     background: rgba(124, 58, 237, 0.05);
+}
+
+html.mk-public[data-theme="light"] .mk-blog-featured-figure-frame::after {
+    background: linear-gradient(
+        to top,
+        rgba(15, 23, 42, 0.1) 0%,
+        rgba(15, 23, 42, 0.02) 40%,
+        transparent 65%
+    );
 }
 
 html.mk-public[data-theme="light"] .mk-blog-detail-hero--cover {

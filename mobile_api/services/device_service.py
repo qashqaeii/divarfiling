@@ -1,0 +1,88 @@
+"""ثبت دستگاه موبایل و اسلات لایسنس."""
+from __future__ import annotations
+
+from typing import Any, Dict, Optional
+
+from django.db import transaction
+from django.utils import timezone
+
+from licenses.models import License, LicenseActivation
+from licenses.services.security import normalize_hardware_fingerprint
+from mobile_api.models import DEFAULT_NOTIFICATION_PREFS, MobileDevice
+from mobile_api.services.license_service import license_payload_for_user
+from workspace.services.access import _paid_license_qs
+
+
+def register_or_update_device(user, payload: Dict[str, Any]) -> Dict[str, Any]:
+    device_id = normalize_hardware_fingerprint(payload.get('device_id', ''))
+    if not device_id:
+        raise ValueError('شناسه دستگاه نامعتبر است.')
+
+    activation = _ensure_mobile_activation(user, device_id, payload)
+
+    prefs = DEFAULT_NOTIFICATION_PREFS.copy()
+    with transaction.atomic():
+        device, _ = MobileDevice.objects.update_or_create(
+            device_id=device_id,
+            defaults={
+                'user': user,
+                'device_model': (payload.get('device_model') or '')[:120],
+                'os_version': (payload.get('os_version') or '')[:40],
+                'app_version': (payload.get('app_version') or '')[:40],
+                'fcm_token': (payload.get('fcm_token') or '')[:512],
+                'license_activation': activation,
+                'last_seen_at': timezone.now(),
+            },
+        )
+        if not device.notification_prefs:
+            device.notification_prefs = prefs
+            device.save(update_fields=['notification_prefs'])
+
+    return {
+        'device_id': device.device_id,
+        'registered_at': device.registered_at.isoformat(),
+        'license': license_payload_for_user(user),
+    }
+
+
+def update_device_fcm(user, device_id: str, fcm_token: str) -> bool:
+    device_id = normalize_hardware_fingerprint(device_id)
+    updated = MobileDevice.objects.filter(user=user, device_id=device_id).update(
+        fcm_token=(fcm_token or '')[:512],
+        last_seen_at=timezone.now(),
+    )
+    return updated > 0
+
+
+def _ensure_mobile_activation(
+    user,
+    device_id: str,
+    payload: Dict[str, Any],
+) -> Optional[LicenseActivation]:
+    lic = (
+        _paid_license_qs(user)
+        .filter(status__in=['active', 'inactive'])
+        .order_by('-created_at')
+        .first()
+    )
+    if not lic:
+        return None
+
+    label = (payload.get('device_model') or 'Android')[:80]
+    activation, created = LicenseActivation.objects.get_or_create(
+        license=lic,
+        hardware_fingerprint=device_id,
+        defaults={
+            'label': f'موبایل: {label}',
+            'is_active': True,
+            'notes': 'device_type=mobile',
+        },
+    )
+    if not created:
+        activation.label = activation.label or f'موبایل: {label}'
+        activation.is_active = True
+        activation.save(update_fields=['label', 'is_active'])
+    if lic.status == 'inactive' and lic.can_be_activated():
+        lic.status = 'active'
+        lic.save(update_fields=['status'])
+    return activation

@@ -7,7 +7,11 @@ from typing import Any, Dict, List, Tuple
 from django.db import transaction
 from django.utils import timezone
 
-from mobile_api.services.divar_flatten import flatten_divar_detail, is_roommate_ad
+from mobile_api.services.divar_flatten import (
+    flatten_divar_detail,
+    is_consultant_ad,
+    is_roommate_ad,
+)
 from workspace.models import Dataset, Listing, PriceHistory
 from workspace.services.price_history import load_latest_snapshots, should_record_price
 
@@ -16,10 +20,18 @@ MAX_MOBILE_ITEMS = 100
 CATEGORY_LABELS = {
     'apartment-rent': ('اجاره مسکونی', 'آپارتمان'),
     'house-villa-rent': ('اجاره مسکونی', 'خانه و ویلا'),
-    'apartment-sell': ('فروش مسکونی', 'آپارتمان'),
+    'residential-sell': ('فروش مسکونی', 'آپارتمان'),
     'house-villa-sell': ('فروش مسکونی', 'خانه و ویلا'),
-    'office-rent': ('اجاره اداری', 'دفتر'),
-    'office-sell': ('فروش اداری', 'دفتر'),
+    'plot-old': ('فروش مسکونی', 'کلنگی'),
+    'office-rent': ('اجاره اداری و تجاری', 'دفتر کار'),
+    'shop-rent': ('اجاره اداری و تجاری', 'مغازه و غرفه'),
+    'industry-agriculture-business-rent': ('اجاره اداری و تجاری', 'صنعتی و تجاری'),
+    'office-sell': ('فروش اداری و تجاری', 'دفتر کار'),
+    'shop-sell': ('فروش اداری و تجاری', 'مغازه و غرفه'),
+    'industry-agriculture-business-sell': ('فروش اداری و تجاری', 'صنعتی و تجاری'),
+    'real-estate-services': ('پروژه‌های ساخت‌وساز', 'پروژه'),
+    # سازگاری با نام‌های قدیمی
+    'apartment-sell': ('فروش مسکونی', 'آپارتمان'),
 }
 
 
@@ -38,7 +50,8 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     filters = payload.get('filters') or {}
     category = str(filters.get('category') or 'apartment-rent')
     tx_type, subcat = CATEGORY_LABELS.get(category, ('استخراج موبایل', category))
-    city = str(filters.get('city_id') or '')
+    city = str(filters.get('city_name') or filters.get('city_id') or '')
+    advertiser_filter = str(filters.get('advertiser_filter') or 'all').strip().lower()
     max_items = int(filters.get('max_items') or len(items))
 
     now = timezone.now()
@@ -56,7 +69,10 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         if not flat.get('token'):
             skipped += 1
             continue
-        if is_roommate_ad(flat):
+        if is_roommate_ad(flat, category):
+            skipped += 1
+            continue
+        if advertiser_filter == 'personal' and is_consultant_ad(flat):
             skipped += 1
             continue
         flats.append(flat)

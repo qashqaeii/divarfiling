@@ -1,6 +1,7 @@
 """دریافت و ذخیره استخراج سبک موبایل — همان مسیر import اکسل."""
 from __future__ import annotations
 
+import logging
 import os
 import re
 from dataclasses import dataclass
@@ -23,6 +24,7 @@ from workspace.services.price_history import load_latest_snapshots, should_recor
 
 MAX_MOBILE_ITEMS = 100
 INGEST_VERSION = 4
+logger = logging.getLogger(__name__)
 
 CATEGORY_LABELS = {
     'apartment-rent': ('اجاره مسکونی', 'آپارتمان'),
@@ -260,11 +262,17 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         ])
 
     ingested_count = len(seen_tokens)
-    return IngestResult(
+    result = IngestResult(
         dataset=dataset,
         ingested_count=ingested_count,
         skipped_count=skipped + duplicate_skipped,
     )
+    try:
+        from mobile_api.services.notification_service import notify_extract_complete
+        notify_extract_complete(user, str(dataset.pk), dataset.name, ingested_count)
+    except Exception:
+        logger.exception('failed to send extract notification')
+    return result
 
 
 def extraction_limits_payload(user) -> Dict[str, Any]:
@@ -281,4 +289,4 @@ def extraction_limits_payload(user) -> Dict[str, Any]:
         'extractions_today': count_today,
         'extractions_daily_limit': 10,
     }
-
+

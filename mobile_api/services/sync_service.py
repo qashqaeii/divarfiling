@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Optional
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from mobile_api.serializers import contact_to_dict
-from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, Reminder
+from mobile_api.serializers import activity_to_dict, contact_to_dict, reminder_to_dict
+from workspace.models import CRMDeal, CRMProperty, CustomerActivity, Reminder
 from workspace.services.crm_scope import customers_qs, properties_qs, reminders_qs
 
 
@@ -71,7 +71,13 @@ def pull_sync(user, since: Optional[str], entities: List[str]) -> Dict[str, Any]
 
 
 def push_sync(user, operations: List[Dict[str, Any]]) -> Dict[str, Any]:
-    from mobile_api.services.crm_service import create_quick_lead
+    from mobile_api.services.crm_service import (
+        complete_reminder,
+        create_activity,
+        create_note,
+        create_quick_lead,
+        create_reminder,
+    )
 
     mapped = []
     conflicts = []
@@ -84,6 +90,25 @@ def push_sync(user, operations: List[Dict[str, Any]]) -> Dict[str, Any]:
             if entity == 'contact' and action == 'create':
                 c = create_quick_lead(user, payload)
                 mapped.append({'op_id': op_id, 'server_id': c.pk})
+            elif entity == 'activity' and action == 'create':
+                contact_id = int(payload.get('contact_id') or payload.get('customer_id') or 0)
+                activity = create_activity(user, contact_id, payload)
+                mapped.append({'op_id': op_id, 'server_id': activity.pk})
+            elif entity == 'note' and action == 'create':
+                contact_id = int(payload.get('contact_id') or payload.get('customer_id') or 0)
+                activity = create_note(user, contact_id, payload)
+                mapped.append({'op_id': op_id, 'server_id': activity.pk})
+            elif entity == 'reminder' and action == 'create':
+                contact_id = int(payload.get('contact_id') or payload.get('customer_id') or 0)
+                reminder = create_reminder(user, contact_id, payload)
+                mapped.append({'op_id': op_id, 'server_id': reminder.pk})
+            elif entity == 'reminder' and action == 'complete':
+                reminder_id = int(payload.get('reminder_id') or payload.get('id') or 0)
+                r = complete_reminder(user, reminder_id, note=payload.get('note', ''))
+                if r:
+                    mapped.append({'op_id': op_id, 'server_id': r.pk})
+                else:
+                    conflicts.append({'op_id': op_id, 'reason': 'not_found'})
             else:
                 conflicts.append({'op_id': op_id, 'reason': 'unsupported'})
         except Exception as exc:
@@ -122,10 +147,4 @@ def _reminder_sync_dict(r: Reminder) -> dict:
 
 
 def _activity_dict(a: CustomerActivity) -> dict:
-    return {
-        'id': a.pk,
-        'customer_id': a.customer_id,
-        'activity_type': a.activity_type,
-        'content': a.content,
-        'created_at': a.created_at.isoformat() if a.created_at else None,
-    }
+    return activity_to_dict(a)

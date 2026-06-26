@@ -91,3 +91,41 @@ class MobileAPITestCase(TestCase):
         client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
         resp = client.get('/api/mobile/v1/license/status')
         self.assertFalse(resp.data['data']['valid'])
+
+    def test_dashboard(self):
+        self._login()
+        Customer.objects.create(
+            user=self.user, name='تست', phone='09120000000',
+            customer_type='خریدار', status='جدید',
+        )
+        resp = self.client.get('/api/mobile/v1/dashboard')
+        self.assertTrue(resp.data['ok'], resp.data)
+        data = resp.data['data']
+        self.assertIn('stats', data)
+        self.assertIn('license', data)
+        self.assertGreaterEqual(data['stats']['contacts'], 1)
+
+    def test_contact_detail(self):
+        self._login()
+        c = Customer.objects.create(
+            user=self.user, name='علی', phone='09123334444',
+            customer_type='خریدار', status='جدید',
+        )
+        resp = self.client.get(f'/api/mobile/v1/crm/contacts/{c.pk}')
+        self.assertTrue(resp.data['ok'], resp.data)
+        self.assertIn('contact', resp.data['data'])
+        self.assertIn('activities', resp.data['data'])
+
+    def test_create_activity(self):
+        self._login()
+        c = Customer.objects.create(
+            user=self.user, name='علی', phone='09123334444',
+            customer_type='خریدار', status='جدید',
+        )
+        resp = self.client.post(
+            f'/api/mobile/v1/crm/contacts/{c.pk}/activities',
+            {'activity_type': 'call', 'content': 'تماس گرفته شد'},
+            format='json',
+        )
+        self.assertTrue(resp.data['ok'], resp.data)
+        self.assertEqual(resp.data['data']['activity_type'], 'call')

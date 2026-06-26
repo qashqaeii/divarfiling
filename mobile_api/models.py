@@ -45,3 +45,28 @@ DEFAULT_NOTIFICATION_PREFS = {
     'overdue_followup': True,
     'digest_hour': 8,
 }
+
+
+class MobileNotification(models.Model):
+    """اعلان in-app برای اپ موبایل."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='mobile_notifications',
+    )
+    notification_type = models.CharField(max_length=40, db_index=True)
+    title = models.CharField(max_length=200)
+    body = models.TextField(blank=True)
+    deep_link = models.CharField(max_length=300, blank=True)
+    data = models.JSONField(default=dict, blank=True)
+    is_read = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'اعلان موبایل'
+        verbose_name_plural = 'اعلان‌های موبایل'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user_id} — {self.title[:40]}'

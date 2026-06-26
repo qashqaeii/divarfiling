@@ -310,6 +310,14 @@ DATA_UPLOAD_MAX_NUMBER_FILES = 5000
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52_428_800  # 50 MB
 
+# Firebase Cloud Messaging — HTTP v1 (پروژه‌های جدید؛ Legacy غیرفعال است)
+FCM_PROJECT_ID = config('FCM_PROJECT_ID', default='divarfiling')
+FCM_SERVICE_ACCOUNT_FILE = config(
+    'FCM_SERVICE_ACCOUNT_FILE',
+    default=str(BASE_DIR / 'secrets' / 'firebase-service-account.json'),
+)
+FCM_SERVER_KEY = config('FCM_SERVER_KEY', default='')  # فقط اگر Legacy API فعال باشد
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

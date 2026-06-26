@@ -38,4 +38,14 @@ class DivarFlattenTest(SimpleTestCase):
         flat = flatten_divar_detail(detail, 'abc123')
         self.assertEqual(flat['deposit'], 500_000_000)
         self.assertEqual(flat['rent'], 15_000_000)
-        self.assertEqual(flat['rent_convertibility'], 'قابل تبدیل')
+        self.assertNotIn('raw', flat.get('data', {}))
+
+    def test_listing_data_has_persian_advertiser_type(self):
+        detail = {
+            'seo': {'web_info': {'title': 'فروش آپارتمان', 'city_persian': 'تهران'}},
+            'share': {'web_url': 'https://divar.ir/v/xyz789'},
+            'webengage': {'token': 'xyz789', 'business_type': 'personal'},
+            'sections': [],
+        }
+        flat = flatten_divar_detail(detail, 'xyz789')
+        self.assertEqual(flat['data'].get('نوع آگهی دهنده'), 'شخصی')

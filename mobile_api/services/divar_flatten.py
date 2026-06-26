@@ -1,8 +1,14 @@
-"""تبدیل JSON خام دیوار به فیلدهای Listing — هم‌تراز با export_divar_items."""
+"""تبدیل JSON خام دیوار به فیلدهای Listing — هم‌تراز با export_divar_items ویندوز."""
 from __future__ import annotations
 
 import re
+import sys
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+_SCRAPER_SRC = Path(__file__).resolve().parents[3] / 'src'
+_WINDOWS_FLATTEN = None
+_WINDOWS_IMPORT_TRIED = False
 
 _PERSIAN = '۰۱۲۳۴۵۶۷۸۹'
 _ARABIC = '٠١٢٣٤٥٦٧٨٩'
@@ -16,6 +22,26 @@ CONSULTANT_BUSINESS_TYPES = {
     'premium-panel', 'premium_panel', 'business', 'consultant', 'agency',
     'بنگاه', 'مشاور', 'آژانس',
 }
+
+_SKIP_DATA_KEYS = frozenset({
+    'raw', 'widget_list', 'business_lazy_widget_list', 'sections',
+})
+
+
+def _ensure_windows_flatten():
+    global _WINDOWS_FLATTEN, _WINDOWS_IMPORT_TRIED
+    if _WINDOWS_IMPORT_TRIED:
+        return _WINDOWS_FLATTEN
+    _WINDOWS_IMPORT_TRIED = True
+    src = str(_SCRAPER_SRC)
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    try:
+        from export_divar_items import flatten_post_detail  # noqa: WPS433
+        _WINDOWS_FLATTEN = flatten_post_detail
+    except Exception:
+        _WINDOWS_FLATTEN = None
+    return _WINDOWS_FLATTEN
 
 
 def _safe_get(d: Any, path: List[str], default=None):
@@ -50,24 +76,167 @@ def _parse_money(text: str) -> Optional[int]:
         return None
 
 
-def _extract_consultant_name(widget_list: List[Dict[str, Any]]) -> str:
-    for widget in widget_list or []:
-        if widget.get('widget_type') != 'EVENT_ROW':
+def _first_int(row: Dict[str, Any], *keys: str) -> Optional[int]:
+    for key in keys:
+        val = row.get(key)
+        if val is None or val == '':
             continue
-        action = _safe_get(widget, ['data', 'action']) or {}
-        if _safe_get(action, ['payload', 'web_info', 'title']) == 'PREMIUM_PANEL_BRAND_LANDING':
-            return str(_safe_get(widget, ['data', 'title']) or '').strip()
+        if isinstance(val, (int, float)) and not isinstance(val, bool):
+            return int(val)
+        parsed = _parse_money(str(val))
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def _first_float(row: Dict[str, Any], *keys: str) -> Optional[float]:
+    for key in keys:
+        val = row.get(key)
+        if val is None or val == '':
+            continue
+        if isinstance(val, (int, float)) and not isinstance(val, bool):
+            return float(val)
+        try:
+            return float(_to_en_digits(str(val)).replace('متر', '').strip())
+        except ValueError:
+            continue
+    return None
+
+
+def _first_str(row: Dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        val = row.get(key)
+        if val is None:
+            continue
+        text = str(val).strip()
+        if text and text not in ('-', '—', 'nan', 'None'):
+            return text
     return ''
 
 
-def flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dict[str, Any]:
+def _parse_attr_field(attrs: str, field: str) -> str:
+    for part in str(attrs or '').split('|'):
+        piece = part.strip()
+        if ':' not in piece:
+            continue
+        title, value = piece.split(':', 1)
+        if title.strip() == field:
+            return value.strip()
+    return ''
+
+
+def _advertiser_type_persian(row: Dict[str, Any]) -> str:
+    consultant = _first_str(row, 'مشاور_نام', 'نام مشاور / آژانس')
+    business = _first_str(row, 'فروشنده_business_type', 'business_type').lower()
+    if consultant or business in CONSULTANT_BUSINESS_TYPES or 'premium' in business:
+        return 'مشاور'
+    if business == 'personal' or not business:
+        return 'شخصی'
+    if 'مشاور' in business or 'آژانس' in business:
+        return 'مشاور'
+    return business or 'شخصی'
+
+
+def _sanitize_listing_data(row: Dict[str, Any]) -> Dict[str, Any]:
+    """دادهٔ Listing.data — فقط مقادیر تخت قابل نمایش (بدون raw JSON)."""
+    out: Dict[str, Any] = {}
+    for key, val in row.items():
+        if key in _SKIP_DATA_KEYS:
+            continue
+        if isinstance(val, (dict, list)):
+            continue
+        if val is None:
+            continue
+        text = str(val).strip()
+        if not text or text in ('-', '—', 'nan', 'None'):
+            continue
+        out[key] = val
+    advertiser = _advertiser_type_persian(row)
+    out['نوع آگهی دهنده'] = advertiser
+    out['نوع آگهی‌دهنده'] = advertiser
+    return out
+
+
+def _map_windows_row_to_listing(row: Dict[str, Any], token: str = '') -> Dict[str, Any]:
+    attrs = _first_str(row, 'attributes', 'ویژگی_ها_و_امکانات')
+    token_val = _first_str(row, 'token', 'شناسه') or token
+    images_raw = row.get('images') or row.get('رسانه_تصاویر') or ''
+    if isinstance(images_raw, list):
+        images = [str(u).strip() for u in images_raw if str(u).strip()]
+    else:
+        images = [u.strip() for u in str(images_raw).split('|') if u.strip()]
+
+    area = _first_float(row, 'متراژ', 'area')
+    if area is None:
+        area_text = _parse_attr_field(attrs, 'متراژ')
+        if area_text:
+            try:
+                area = float(_to_en_digits(area_text).replace('متر', '').strip())
+            except ValueError:
+                area = None
+
+    rooms = _first_str(row, 'اتاق', 'rooms') or _parse_attr_field(attrs, 'اتاق')
+    floor = _first_str(row, 'طبقه', 'floor') or _parse_attr_field(attrs, 'طبقه')
+    year = _first_str(row, 'ساخت', 'سال ساخت', 'build_year') or _parse_attr_field(attrs, 'ساخت')
+
+    price = _first_int(row, 'مالی_قیمت_کل_عدد', 'price', 'قیمت')
+    deposit = _first_int(row, 'اجاره_ودیعه_عدد', 'deposit', 'ودیعه')
+    rent = _first_int(row, 'اجاره_ماهانه_عدد', 'rent', 'اجاره')
+
+    lat_raw = _first_str(row, 'latitude', 'مکان_مختصات_lat', 'عرض جغرافیایی')
+    lng_raw = _first_str(row, 'longitude', 'مکان_مختصات_lng', 'طول جغرافیایی')
+    lat = float(lat_raw) if lat_raw else None
+    lng = float(lng_raw) if lng_raw else None
+
+    consultant_name = _first_str(row, 'مشاور_نام', 'نام مشاور / آژانس')
+    business_type = _advertiser_type_persian(row)
+
+    listing_data = _sanitize_listing_data(row)
+    if floor:
+        listing_data['طبقه'] = floor
+    if year:
+        listing_data['ساخت'] = year
+    if rooms:
+        listing_data['اتاق'] = rooms
+    if area is not None:
+        listing_data['متراژ'] = area
+
+    return {
+        'token': token_val,
+        'title': _first_str(row, 'عنوان', 'title'),
+        'description': _first_str(row, 'توضیحات', 'description'),
+        'price': price,
+        'price_per_meter': _first_int(row, 'مالی_قیمت_هر_متر_عدد', 'price_per_meter'),
+        'deposit': deposit,
+        'rent': rent,
+        'rent_convertibility': _first_str(row, 'اجاره_قابل_تبدیل', 'rent_convertibility'),
+        'area': area,
+        'rooms': rooms,
+        'floor': floor,
+        'year': year,
+        'city': _first_str(row, 'مکان_شهر', 'city_persian', 'شهر', 'city'),
+        'district': _first_str(row, 'مکان_منطقه', 'district_persian', 'محله', 'district'),
+        'neighborhood': _first_str(row, 'مکان_منطقه', 'district_persian', 'محله', 'neighborhood'),
+        'latitude': lat,
+        'longitude': lng,
+        'business_type': business_type,
+        'consultant_name': consultant_name,
+        'link': _first_str(row, 'لینک', 'link', 'share_link'),
+        'images': images,
+        'video_url': _first_str(row, 'رسانه_ویدیو', 'video_url'),
+        'tags': _first_str(row, 'برچسب‌ها', 'tags'),
+        'data': listing_data,
+    }
+
+
+def _legacy_flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dict[str, Any]:
+    """Fallback اگر import ویندوز ممکن نبود."""
     if not isinstance(detail, dict):
         detail = {}
 
     seo = detail.get('seo') or {}
     share = detail.get('share') or {}
     webengage = detail.get('webengage') or {}
-    analytics = detail.get('analytics') or {}
     sections = detail.get('sections') or []
 
     token_val = webengage.get('token') or token or ''
@@ -97,20 +266,11 @@ def flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dict[str, A
     district = _safe_get(seo, ['web_info', 'district_persian']) or ''
 
     price = deposit = rent = None
-    price_per_meter = None
     area = None
-    rooms = ''
-    floor = ''
-    year = ''
-    rent_convertibility = ''
-    has_rent_slider = False
-    attrs: List[str] = []
+    rooms = floor = year = ''
     features_kv: Dict[str, str] = {}
     lat = lng = None
     images: List[str] = []
-    video_url = ''
-    business_type = str(webengage.get('business_type') or '').strip()
-    tags: List[str] = []
 
     for s in sections:
         sec = s.get('section_name')
@@ -118,27 +278,12 @@ def flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dict[str, A
             for w in s.get('widgets') or []:
                 wtype = w.get('widget_type')
                 data = w.get('data') or {}
-                if wtype == 'GROUP_INFO_ROW':
-                    for it in data.get('items') or []:
-                        t = str(it.get('title') or '').strip()
-                        v = str(it.get('value') or '').strip()
-                        if t or v:
-                            attrs.append(f'{t}:{v}')
-                            if t == 'متراژ':
-                                try:
-                                    area = float(_to_en_digits(v).replace('متر', '').strip())
-                                except ValueError:
-                                    pass
-                            elif t == 'اتاق':
-                                rooms = v
-                elif wtype == 'UNEXPANDABLE_ROW':
+                if wtype == 'UNEXPANDABLE_ROW':
                     t = str(data.get('title') or '').strip()
                     v = str(data.get('value') or '').strip()
                     if t == 'قیمت کل':
                         price = _parse_money(v)
-                    elif t == 'قیمت هر متر':
-                        price_per_meter = _parse_money(v)
-                    elif t in ('ودیعه', 'رهن', 'رهن کامل', 'بیعانه'):
+                    elif t in ('ودیعه', 'رهن'):
                         deposit = _parse_money(v)
                     elif t in ('اجارهٔ ماهانه', 'اجاره ماهانه'):
                         rent = _parse_money(v)
@@ -153,53 +298,27 @@ def flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dict[str, A
                         floor = v
                     elif t in ('ساخت', 'سال ساخت'):
                         year = v
-                    elif t or v:
-                        attrs.append(f'{t}:{v}')
-                elif wtype == 'FEATURE_ROW':
-                    fr_title = str(data.get('title') or '').strip()
-                    if fr_title and not rent_convertibility:
-                        if 'قابل تبدیل' in fr_title and 'غیر' not in fr_title:
-                            rent_convertibility = 'قابل تبدیل'
-                        elif 'غیر قابل تبدیل' in fr_title or 'غیرقابل تبدیل' in fr_title:
-                            rent_convertibility = 'غیر قابل تبدیل'
-                elif wtype == 'RENT_SLIDER':
-                    has_rent_slider = True
-                    if deposit is None:
-                        deposit = _parse_money(str(_safe_get(data, ['credit', 'transformed_value']) or ''))
-                        if deposit is None:
-                            deposit = _parse_money(str(_safe_get(data, ['credit', 'value']) or ''))
-                    if rent is None:
-                        rent = _parse_money(str(_safe_get(data, ['rent', 'transformed_value']) or ''))
-                        if rent is None:
-                            rent = _parse_money(str(_safe_get(data, ['rent', 'value']) or ''))
                 elif wtype == 'GROUP_FEATURE_ROW':
                     for item in data.get('items') or []:
                         ft = str(item.get('title') or '')
                         fv = str(item.get('value') or '')
-                        if 'آگهی‌دهنده' in ft or 'آگهی دهنده' in ft:
-                            business_type = fv or business_type
                         if ft:
                             features_kv[ft] = fv
-
         elif sec == 'MAP':
             for w in s.get('widgets') or []:
-                if w.get('widget_type') != 'MAP_ROW':
-                    continue
-                loc = _safe_get(w, ['data', 'location']) or {}
-                lat_val = (
-                    _safe_get(loc, ['exact_data', 'point', 'latitude'])
-                    or _safe_get(loc, ['fuzzy_data', 'point', 'latitude'])
-                    or loc.get('latitude')
-                )
-                lng_val = (
-                    _safe_get(loc, ['exact_data', 'point', 'longitude'])
-                    or _safe_get(loc, ['fuzzy_data', 'point', 'longitude'])
-                    or loc.get('longitude')
-                )
-                if lat_val is not None and lng_val is not None:
-                    lat = float(lat_val)
-                    lng = float(lng_val)
-
+                if w.get('widget_type') == 'MAP_ROW':
+                    loc = _safe_get(w, ['data', 'location']) or {}
+                    lat_val = (
+                        _safe_get(loc, ['exact_data', 'point', 'latitude'])
+                        or _safe_get(loc, ['fuzzy_data', 'point', 'latitude'])
+                    )
+                    lng_val = (
+                        _safe_get(loc, ['exact_data', 'point', 'longitude'])
+                        or _safe_get(loc, ['fuzzy_data', 'point', 'longitude'])
+                    )
+                    if lat_val is not None and lng_val is not None:
+                        lat = float(lat_val)
+                        lng = float(lng_val)
         elif sec == 'IMAGE':
             for w in s.get('widgets') or []:
                 if w.get('widget_type') == 'IMAGE_CAROUSEL':
@@ -207,67 +326,72 @@ def flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dict[str, A
                         url = _safe_get(it, ['image', 'url']) or ''
                         if url:
                             images.append(url)
-                        vurl = _safe_get(it, ['video_url']) or ''
-                        if vurl:
-                            video_url = vurl
-                else:
-                    for img in _safe_get(w, ['data', 'images']) or []:
-                        url = img.get('url') if isinstance(img, dict) else str(img)
-                        if url:
-                            images.append(url)
 
-        elif sec == 'TAGS':
-            for w in s.get('widgets') or []:
-                if w.get('widget_type') == 'WRAPPER_ROW':
-                    for ch in _safe_get(w, ['data', 'chip_list', 'chips']) or []:
-                        t = ch.get('text')
-                        if t:
-                            tags.append(t)
+    widget_list = detail.get('business_lazy_widget_list') or []
+    consultant_name = ''
+    for widget in widget_list or []:
+        if widget.get('widget_type') != 'EVENT_ROW':
+            continue
+        action = _safe_get(widget, ['data', 'action']) or {}
+        if action.get('type') == 'PREMIUM_PANEL_BRAND_LANDING':
+            consultant_name = str(_safe_get(widget, ['data', 'title']) or '').strip()
+            break
 
-    if price is None and isinstance(webengage.get('price'), int):
-        price = webengage.get('price')
-    if deposit is None and isinstance(webengage.get('credit'), int):
-        deposit = webengage.get('credit')
-    if rent is None and isinstance(webengage.get('rent'), int):
-        rent = webengage.get('rent')
-    if rent_convertibility == '' and has_rent_slider:
-        rent_convertibility = 'قابل تبدیل'
+    for amenity in ('آسانسور', 'پارکینگ', 'انباری'):
+        if amenity in features_kv:
+            pass
 
-    widget_list = detail.get('business_lazy_widget_list') or detail.get('widget_list') or []
-    consultant_name = _extract_consultant_name(widget_list)
-
-    link = share.get('web_url') or (f'https://divar.ir/v/{token_val}' if token_val else '')
-
-    flat = {
+    row = {
         'token': token_val,
+        'شناسه': token_val,
+        'عنوان': title,
         'title': title,
+        'توضیحات': description,
         'description': description,
-        'price': price,
-        'price_per_meter': price_per_meter,
-        'deposit': deposit,
-        'rent': rent,
-        'rent_convertibility': rent_convertibility,
-        'area': area,
-        'rooms': rooms,
-        'floor': floor,
-        'year': year,
-        'city': city,
-        'district': district,
-        'neighborhood': district,
+        'مکان_شهر': city,
+        'مکان_منطقه': district,
+        'مالی_قیمت_کل_عدد': price,
+        'اجاره_ودیعه_عدد': deposit,
+        'اجاره_ماهانه_عدد': rent,
+        'متراژ': area,
+        'اتاق': rooms,
+        'طبقه': floor,
+        'ساخت': year,
         'latitude': lat,
         'longitude': lng,
-        'business_type': business_type,
-        'consultant_name': consultant_name,
-        'link': link,
-        'images': images,
-        'video_url': video_url,
-        'tags': tags,
-        'attributes': attrs,
-        'features': features_kv,
-        'category_slug': analytics.get('cat3') or analytics.get('cat2') or webengage.get('category') or '',
+        'مکان_مختصات_lat': str(lat) if lat else '',
+        'مکان_مختصات_lng': str(lng) if lng else '',
+        'فروشنده_business_type': webengage.get('business_type') or '',
+        'مشاور_نام': consultant_name,
+        'لینک': share.get('web_url') or (f'https://divar.ir/v/{token_val}' if token_val else ''),
+        'images': ' | '.join(images),
+        'رسانه_تصاویر': ' | '.join(images),
     }
-    flat['data'] = {**flat, 'raw': detail}
-    return flat
+    row.update(features_kv)
+    if features_kv:
+        parts = [
+            f'{k}: {v}' if v not in ('دارد', 'ندارد') else f'{k} {v}'
+            for k, v in features_kv.items()
+        ]
+        row['ویژگی_ها_و_امکانات'] = ' | '.join(parts)
+
+    return _map_windows_row_to_listing(row, token_val)
+
+
+def flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dict[str, Any]:
+    """Flatten کامل — اولویت با منطق ویندوز (`flatten_post_detail`)."""
+    if not isinstance(detail, dict):
+        detail = {}
+
+    windows_flatten = _ensure_windows_flatten()
+    if windows_flatten is not None:
+        try:
+            row = windows_flatten(detail)
+            return _map_windows_row_to_listing(row, token)
+        except Exception:
+            pass
+
+    return _legacy_flatten_divar_detail(detail, token)
 
 
 def is_roommate_ad(flat: Dict[str, Any], category_slug: str = '') -> bool:
@@ -279,7 +403,7 @@ def is_roommate_ad(flat: Dict[str, Any], category_slug: str = '') -> bool:
 
 def is_consultant_ad(flat: Dict[str, Any]) -> bool:
     business = str(flat.get('business_type') or '').strip().lower()
-    if business in CONSULTANT_BUSINESS_TYPES:
+    if business in CONSULTANT_BUSINESS_TYPES or business == 'مشاور':
         return True
     if flat.get('consultant_name'):
         return True

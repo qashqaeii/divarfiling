@@ -26,19 +26,36 @@ _YEAR_ONLY_RE = re.compile(r'^(13|14|19|20)\d{2}$')
 
 # کلیدهای متادیتا/مالی/مکان — نباید در پنل «ویژگی‌های ملک» نمایش داده شوند
 LISTING_METADATA_DATA_KEYS = frozenset({
-    'شناسه', 'token', 'عنوان', 'title', 'لینک', 'link', 'url',
-    'قیمت', 'price', 'ودیعه', 'deposit', 'رهن', 'اجاره', 'rent', 'اجاره ماهانه',
+    'شناسه', 'token', 'عنوان', 'title', 'لینک', 'link', 'url', 'share_link',
+    'قیمت', 'price', 'price_text', 'ودیعه', 'deposit', 'رهن', 'اجاره', 'rent', 'اجاره ماهانه',
     'ودیعه و اجاره', 'قیمت هر متر', 'متراژ', 'area', 'اتاق', 'rooms', 'تعداد اتاق',
-    'شهر', 'city', 'محله', 'neighborhood', 'منطقه', 'district', 'آدرس', 'address',
-    'نوع آگهی دهنده', 'business_type', 'دسته‌بندی', 'category',
+    'شهر', 'city', 'city_persian', 'محله', 'neighborhood', 'منطقه', 'district', 'district_persian',
+    'مکان_شهر', 'مکان_منطقه', 'مکان_آدرس', 'مکان_مختصات_lat', 'مکان_مختصات_lng',
+    'normalized_city', 'normalized_district', 'آدرس', 'address',
+    'نوع آگهی دهنده', 'نوع آگهی‌دهنده', 'business_type', 'فروشنده_business_type',
+    'فروشنده_نوع', 'فروشنده_تخفیف', 'status', 'دسته‌بندی', 'category', 'category_slug',
+    'دسته‌بندی_سطح۱', 'دسته‌بندی_سطح۲', 'دسته‌بندی_سطح۳', 'دسته‌بندی_عنوان',
     'توضیحات', 'description', 'زیرعنوان',
     'ایجاد آگهی', 'انقضا آگهی', 'published_at', 'expires_at', 'created_at',
+    'انتشار_تاریخ_شمسی', 'انتشار_تاریخ_میلادی', 'انتشار_unavailable_after',
     'عرض جغرافیایی', 'طول جغرافیایی', 'latitude', 'longitude', 'lat', 'lng',
-    'نوع مختصات', 'در شعاع (متر)',
-    'تعداد تصاویر', 'تصاویر', 'images', 'ویدیو دارد؟', 'video',
-    'اصالت تصویر', 'تصویر نقشه', 'mapimage',
-    'شماره تماس', 'phone', 'تماس', 'تلفن', 'موبایل',
-    'ویژگی‌ها و امکانات', 'ویژگی_ها_و_امکانات',
+    'نوع مختصات', 'در شعاع (متر)', 'نقشه_نوع', 'نقشه_شعاع_محدوده_متر', 'نقشه_تصویر',
+    'تعداد تصاویر', 'تصاویر', 'images', 'رسانه_تصاویر', 'رسانه_تعداد_تصویر',
+    'ویدیو دارد؟', 'video', 'رسانه_ویدیو', 'video_url',
+    'اصالت تصویر', 'رسانه_اصالت_تصویر_برای_همین_ملک', 'تصویر نقشه', 'mapimage',
+    'شماره تماس', 'phone', 'phone_text', 'تماس', 'تلفن', 'موبایل',
+    'تماس_چت_فعال', 'تماس_تماس_ایمن', 'تماس_contact_uuid',
+    'ویژگی‌ها و امکانات', 'ویژگی_ها_و_امکانات', 'attributes', 'features', 'tags', 'برچسب‌ها',
+    'مشاور_نام', 'مشاور_آگهی_فعال', 'مشاور_business_ref', 'نام مشاور / آژانس',
+    'consultant_name', 'مالی_قیمت_کل_نمایش', 'مالی_قیمت_کل_عدد', 'مالی_قیمت_هر_متر_نمایش',
+    'مالی_قیمت_هر_متر_عدد', 'مالی_ارز', 'مالی_منبع_قیمت_وب‌انگیج',
+    'اجاره_ودیعه_نمایش', 'اجاره_ودیعه_عدد', 'اجاره_ماهانه_نمایش', 'اجاره_ماهانه_عدد',
+    'اجاره_قابل_تبدیل', 'rent_convertibility',
+    'سیستمی_webengage_category', 'سیستمی_webengage_city', 'سیستمی_webengage_district',
+    'سیستمی_webengage_price', 'سیستمی_webengage_image_count',
+    'سیستمی_analytics_cat1', 'سیستمی_analytics_cat2', 'سیستمی_analytics_cat3',
+    'سیستمی_city_meta_city_id', 'سیستمی_city_meta_name',
+    'raw', 'widget_list', 'business_lazy_widget_list', 'sections',
     'ساخت', 'سال ساخت', 'build_year', 'طبقه', 'floor',
 })
 
@@ -165,6 +182,11 @@ def _collect_raw_features(data: dict) -> Dict[str, str]:
                     _store_feature(raw, k, v)
     for key, val in (data or {}).items():
         if key in raw or is_listing_metadata_key(key):
+            continue
+        if isinstance(val, (dict, list)):
+            continue
+        text = _clean_value(val)
+        if text.startswith('{') or text.startswith('['):
             continue
         _store_feature(raw, str(key), val)
     return raw

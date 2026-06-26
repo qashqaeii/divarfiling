@@ -115,7 +115,18 @@ def _export_normalize_row(raw_row: Dict[str, Any], category: str) -> Dict[str, A
     if export_fn is None:
         return raw_row
     try:
-        records = export_fn([raw_row], category=category)
+        try:
+            records = export_fn([raw_row], category=category)
+        except TypeError:
+            # نسخه‌های قدیمی export_divar_items فقط از CONFIG['category'] استفاده می‌کنند
+            import export_divar_items as scraper  # noqa: WPS433
+            old_cat = scraper.CONFIG.get('category')
+            try:
+                scraper.CONFIG['category'] = category or old_cat or 'apartment-rent'
+                records = export_fn([raw_row])
+            finally:
+                if old_cat is not None:
+                    scraper.CONFIG['category'] = old_cat
         return records[0] if records else raw_row
     except Exception as exc:
         logger.warning('export_rows_to_records failed: %s', exc)

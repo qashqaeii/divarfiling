@@ -1,10 +1,12 @@
 """نگاشت و نرمال‌سازی ستون‌های Divar."""
 from __future__ import annotations
 
+import json
 import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
+import numpy as np
 import pandas as pd
 from django.db.models import Q
 from django.utils import timezone as dj_tz
@@ -155,19 +157,60 @@ def _pick_row_value(row: Dict[str, Any], field: str) -> Any:
     return None
 
 
-def _export_data_from_row(row: Dict[str, Any]) -> Dict[str, Any]:
-    data: Dict[str, Any] = {}
-    for col, val in row.items():
+def _is_na(val: Any) -> bool:
+    if val is None:
+        return True
+    try:
+        return bool(pd.isna(val))
+    except (TypeError, ValueError):
+        return False
+
+
+def json_safe_value(val: Any) -> Any:
+    """تبدیل مقادیر pandas/numpy به انواع قابل ذخیره در JSONField."""
+    if _is_na(val):
+        return None
+    if isinstance(val, (np.integer,)):
+        return int(val)
+    if isinstance(val, (np.floating,)):
+        f = float(val)
+        return None if pd.isna(f) else f
+    if isinstance(val, (np.bool_,)):
+        return bool(val)
+    if isinstance(val, (datetime, pd.Timestamp)):
+        return val.isoformat()
+    if isinstance(val, dict):
+        return {str(k): json_safe_value(v) for k, v in val.items()}
+    if isinstance(val, (list, tuple, set)):
+        return [json_safe_value(v) for v in val]
+    if isinstance(val, str):
+        s = val.strip()
+        return None if s in ('', '-', '—', 'nan', 'None') else val
+    if isinstance(val, (int, float, bool)):
         if isinstance(val, float) and pd.isna(val):
-            data[col] = None
-        elif hasattr(val, 'isoformat'):
-            data[col] = val.isoformat()
-        elif isinstance(val, str):
-            s = val.strip()
-            data[col] = None if s in ('', '-', '—', 'nan', 'None') else val
-        else:
-            data[col] = val if not (isinstance(val, float) and pd.isna(val)) else None
-    return data
+            return None
+        return val
+    if hasattr(val, 'item') and not isinstance(val, (str, bytes, dict, list)):
+        try:
+            return json_safe_value(val.item())
+        except (ValueError, AttributeError):
+            pass
+    return val
+
+
+def json_safe_dict(data: Dict[str, Any]) -> Dict[str, Any]:
+    return {str(k): json_safe_value(v) for k, v in data.items()}
+
+
+def assert_json_serializable(data: Dict[str, Any]) -> Dict[str, Any]:
+    """اطمینان از سریال‌پذیری — برای ذخیره در JSONField."""
+    safe = json_safe_dict(data)
+    json.dumps(safe, ensure_ascii=False)
+    return safe
+
+
+def _export_data_from_row(row: Dict[str, Any]) -> Dict[str, Any]:
+    return assert_json_serializable(dict(row))
 
 
 def export_record_to_listing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
@@ -209,20 +252,8 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
                 token = _safe_str(row[c])
                 break
 
-    data = {}
-    for col in df.columns:
-        val = row[col]
-        if isinstance(val, float) and pd.isna(val):
-            data[col] = None
-        elif hasattr(val, 'isoformat'):
-            data[col] = val.isoformat()
-        else:
-            if isinstance(val, str):
-                s = val.strip()
-                if not s or s in ('-', '—', 'nan', 'None'):
-                    data[col] = None
-                    continue
-            data[col] = val if not (isinstance(val, float) and pd.isna(val)) else None
+    raw_data = {str(col): row[col] for col in df.columns}
+    data = assert_json_serializable(raw_data)
 
     return {
         'token': token or f'row_{hash(tuple(row.values)) % 10**8}',

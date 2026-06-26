@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -30,6 +31,7 @@ from mobile_api.services.sync_service import pull_sync, push_sync
 from mobile_api.serializers import contact_to_dict, listing_to_dict
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 def _tokens_for_user(user):
@@ -247,6 +249,15 @@ class ExtractionUploadView(APIView):
             })
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
+        except RuntimeError as exc:
+            return api_error(str(exc), code='INGEST_ERROR', status=400)
+        except Exception:
+            logger.exception('mobile extraction upload failed for user=%s', request.user.pk)
+            return api_error(
+                'خطای داخلی سرور در ذخیره استخراج.',
+                code='SERVER_ERROR',
+                status=500,
+            )
 
 
 class SyncPullView(APIView):

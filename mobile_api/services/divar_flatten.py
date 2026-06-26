@@ -25,7 +25,10 @@ CONSULTANT_BUSINESS_TYPES = {
 
 _SKIP_DATA_KEYS = frozenset({
     'raw', 'widget_list', 'business_lazy_widget_list', 'sections',
+    'attributes', 'features',
 })
+
+_JSON_BLOB_PREFIX = ('{', '[')
 
 
 def _ensure_windows_flatten():
@@ -149,6 +152,8 @@ def _sanitize_listing_data(row: Dict[str, Any]) -> Dict[str, Any]:
             continue
         text = str(val).strip()
         if not text or text in ('-', '—', 'nan', 'None'):
+            continue
+        if text.startswith(_JSON_BLOB_PREFIX):
             continue
         out[key] = val
     advertiser = _advertiser_type_persian(row)

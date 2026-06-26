@@ -664,11 +664,19 @@ def _collect_supplementary_rows(
         shown_keys.update(sec_fields.keys())
 
     feature_keys = {k for k in (data or {}) if is_listing_feature_key(k) and not _include_in_sections(k)}
+    _skip_supplementary = frozenset({'attributes', 'features', 'raw', 'tags'})
     rows: List[Dict[str, Any]] = []
     for k, v in (data or {}).items():
         if k in shown_keys or k in feature_keys or _is_features_supplementary_key(k):
             continue
+        if k.lower() in _skip_supplementary:
+            continue
+        if isinstance(v, (dict, list)):
+            continue
         if v is None or str(v).strip() in ('', 'nan', 'None', '-'):
+            continue
+        text = str(v).strip()
+        if text.startswith('{') or text.startswith('['):
             continue
         if not field_visible_for_transaction(k, profile):
             continue

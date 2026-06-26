@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
@@ -14,7 +15,12 @@ from mobile_api.services.divar_flatten import (
     is_roommate_ad,
 )
 from workspace.models import Dataset, Listing, PriceHistory
-from workspace.services.folder_import import build_dataset_name
+from workspace.services.folder_import import build_dataset_name, build_file_identity
+from workspace.services.importer import (
+    _listing_from_fields,
+    _update_listing_from_fields,
+    find_existing_dataset,
+)
 from workspace.services.price_history import load_latest_snapshots, should_record_price
 
 MAX_MOBILE_ITEMS = 100
@@ -69,7 +75,8 @@ def _resolve_location(filters: Dict[str, Any]) -> tuple[str, str]:
 def _resolve_original_filename(filters: Dict[str, Any]) -> str:
     hint = str(filters.get('output_name_hint') or '').strip()
     if hint:
-        base = hint if not hint.endswith(('.json', '.xlsx', '.xls')) else os.path.splitext(hint)[0]
+        base = hint.split('_')[0] if re.match(r'^.+_\d{8}_\d{6}$', hint) else hint
+        base = base if not base.endswith(('.json', '.xlsx', '.xls')) else os.path.splitext(base)[0]
         return f'{base}.json'
     return 'mobile_extraction.json'
 
@@ -86,6 +93,29 @@ def _resolve_dataset_display_name(path_info: Dict[str, Any], original_filename: 
     if path_info.get('subcategory'):
         parts.append(path_info['subcategory'])
     return ' — '.join(parts) if parts else built
+
+
+def _flat_to_fields(flat: Dict[str, Any], fallback_city: str) -> Dict[str, Any]:
+    return {
+        'token': flat['token'],
+        'title': flat.get('title') or '',
+        'price': flat.get('price'),
+        'deposit': flat.get('deposit'),
+        'rent': flat.get('rent'),
+        'area': flat.get('area'),
+        'rooms': str(flat.get('rooms') or ''),
+        'neighborhood': flat.get('district') or flat.get('neighborhood') or '',
+        'city': flat.get('city') or fallback_city,
+        'latitude': flat.get('latitude'),
+        'longitude': flat.get('longitude'),
+        'business_type': flat.get('business_type') or '',
+        'description': flat.get('description') or '',
+        'link': flat.get('link') or '',
+        'images': flat.get('images') or [],
+        'published_at': None,
+        'expires_at': None,
+        'data': flat.get('data') or {},
+    }
 
 
 def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
@@ -106,8 +136,12 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         'district': district,
         'transaction_type': tx_type,
         'subcategory': subcat,
+        'tx_slug': os.path.splitext(original_filename)[0],
+        'filename': original_filename,
+        'province': str(filters.get('province_name') or '').strip(),
     }
     name = _resolve_dataset_display_name(path_info, original_filename)
+    file_identity = build_file_identity(path_info, original_filename)
 
     now = timezone.now()
 
@@ -143,85 +177,118 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     price_cache = load_latest_snapshots(user, tokens)
 
     with transaction.atomic():
-        dataset = Dataset.objects.create(
-            user=user,
-            name=name,
-            original_filename=original_filename,
-            file_format='json',
-            file_size=0,
-            row_count=0,
-            column_count=0,
-            columns=[],
-            transaction_type=tx_type,
-            subcategory=subcat,
-            city=city,
-            district=district,
-            metadata={
-                'source': 'mobile',
-                'mobile_extraction': True,
-                'ingest_version': INGEST_VERSION,
-                'source_client': str(filters.get('source_client') or 'android_light'),
-                'filters': filters,
-                'started_at': payload.get('started_at'),
-                'finished_at': payload.get('finished_at'),
-                'province': filters.get('province_name') or '',
-                'transaction_type': tx_type,
-                'subcategory': subcat,
-                'city': city,
-                'district': district,
-            },
-            last_opened_at=now,
-        )
+        existing, _reactivating = find_existing_dataset(user, original_filename, path_info)
+        metadata = {
+            'source': 'mobile',
+            'mobile_extraction': True,
+            'ingest_version': INGEST_VERSION,
+            'source_client': str(filters.get('source_client') or 'android_light'),
+            'filters': filters,
+            'started_at': payload.get('started_at'),
+            'finished_at': payload.get('finished_at'),
+            'province': path_info.get('province', ''),
+            'transaction_type': tx_type,
+            'subcategory': subcat,
+            'city': city,
+            'district': district,
+            'file_identity': file_identity,
+        }
 
-        listings: List[Listing] = []
+        if existing:
+            dataset = existing
+            dataset.metadata = {**(dataset.metadata or {}), **metadata}
+            dataset.last_opened_at = now
+            dataset.is_active = True
+            if city:
+                dataset.city = city
+            if district:
+                dataset.district = district
+            existing_by_token = {
+                listing.token: listing
+                for listing in Listing.objects.filter(dataset=dataset)
+            }
+        else:
+            dataset = Dataset(
+                user=user,
+                name=name,
+                original_filename=original_filename,
+                file_format='json',
+                file_size=0,
+                row_count=0,
+                column_count=0,
+                columns=[],
+                transaction_type=tx_type,
+                subcategory=subcat,
+                city=city,
+                district=district,
+                metadata=metadata,
+                last_opened_at=now,
+            )
+            existing_by_token = {}
+
+        listings_to_create: List[Listing] = []
+        listings_to_update: List[Listing] = []
         price_records: List[PriceHistory] = []
+        seen_tokens: set = set()
+        duplicate_skipped = 0
 
         for flat in flats:
-            token = flat['token']
-            listing = Listing(
-                dataset=dataset,
-                token=token,
-                title=flat.get('title') or '',
-                price=flat.get('price'),
-                deposit=flat.get('deposit'),
-                rent=flat.get('rent'),
-                area=flat.get('area'),
-                rooms=str(flat.get('rooms') or ''),
-                neighborhood=flat.get('district') or flat.get('neighborhood') or '',
-                city=flat.get('city') or city,
-                latitude=flat.get('latitude'),
-                longitude=flat.get('longitude'),
-                business_type=flat.get('business_type') or '',
-                description=flat.get('description') or '',
-                link=flat.get('link') or '',
-                images=flat.get('images') or [],
-                data=flat.get('data') or {},
-            )
-            listings.append(listing)
+            fields = _flat_to_fields(flat, city)
+            token = fields['token']
+            if token in seen_tokens:
+                duplicate_skipped += 1
+                continue
+            seen_tokens.add(token)
 
-            if should_record_price(
-                price_cache,
-                token,
-                listing.price,
-                listing.deposit,
-                listing.rent,
-            ):
+            if token in existing_by_token:
+                listing = existing_by_token[token]
+                if _update_listing_from_fields(listing, fields):
+                    listings_to_update.append(listing)
+                else:
+                    duplicate_skipped += 1
+            else:
+                listings_to_create.append(_listing_from_fields(dataset, fields))
+
+            listing_for_price = existing_by_token.get(token)
+            price = fields['price']
+            deposit = fields['deposit']
+            rent = fields['rent']
+            if should_record_price(price_cache, token, price, deposit, rent):
                 price_records.append(PriceHistory(
                     user=user,
                     token=token,
-                    price=listing.price,
-                    deposit=listing.deposit,
-                    rent=listing.rent,
+                    price=price,
+                    deposit=deposit,
+                    rent=rent,
                 ))
 
-        Listing.objects.bulk_create(listings, batch_size=200)
+        if not existing:
+            dataset.save()
+
+        if listings_to_create:
+            Listing.objects.bulk_create(listings_to_create, batch_size=200)
+        if listings_to_update:
+            Listing.objects.bulk_update(
+                listings_to_update,
+                [
+                    'title', 'price', 'deposit', 'rent', 'area', 'rooms',
+                    'neighborhood', 'city', 'latitude', 'longitude',
+                    'business_type', 'description', 'link', 'images', 'data',
+                ],
+                batch_size=200,
+            )
         if price_records:
             PriceHistory.objects.bulk_create(price_records, batch_size=200)
 
-        dataset.row_count = len(listings)
-        dataset.save(update_fields=['row_count'])
+        dataset.row_count = Listing.objects.filter(dataset=dataset).count()
+        dataset.save(update_fields=['row_count', 'metadata', 'last_opened_at', 'is_active', 'city', 'district'])
 
-    return IngestResult(dataset=dataset, ingested_count=len(listings), skipped_count=skipped)
+    ingested_count = len(seen_tokens)
+    return IngestResult(
+        dataset=dataset,
+        ingested_count=ingested_count,
+        skipped_count=skipped + duplicate_skipped,
+    )
 
 
 def extraction_limits_payload(user) -> Dict[str, Any]:

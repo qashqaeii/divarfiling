@@ -1,7 +1,12 @@
 """تست flatten دیوار."""
 from django.test import SimpleTestCase
 
-from mobile_api.services.divar_flatten import flatten_divar_detail, is_consultant_ad, is_roommate_ad
+from mobile_api.services.divar_flatten import (
+    flatten_divar_detail,
+    is_consultant_ad,
+    is_roommate_ad,
+    items_to_export_records,
+)
 
 
 class DivarFlattenTest(SimpleTestCase):
@@ -35,12 +40,16 @@ class DivarFlattenTest(SimpleTestCase):
                 },
             ],
         }
-        flat = flatten_divar_detail(detail, 'abc123', 'apartment-rent')
-        self.assertEqual(flat['deposit'], 500_000_000)
-        self.assertEqual(flat['rent'], 15_000_000)
-        self.assertIn('ودیعه', flat.get('data', {}))
-        self.assertNotIn('description', flat.get('data', {}))
-        self.assertNotIn('raw', flat.get('data', {}))
+        records, _skipped = items_to_export_records(
+            [{'token': 'abc123', 'raw': detail}],
+            'apartment-rent',
+        )
+        self.assertEqual(len(records), 1)
+        rec = records[0]
+        self.assertIn('ودیعه', rec)
+        self.assertIn('اجاره ماهانه', rec)
+        self.assertNotIn('description', rec)
+        self.assertNotIn('latitude', rec)
 
     def test_listing_data_has_persian_advertiser_type(self):
         detail = {
@@ -49,24 +58,26 @@ class DivarFlattenTest(SimpleTestCase):
             'webengage': {'token': 'xyz789', 'business_type': 'personal'},
             'sections': [],
         }
-        flat = flatten_divar_detail(detail, 'xyz789', 'apartment-rent')
-        self.assertEqual(flat['data'].get('نوع آگهی دهنده'), 'شخصی')
+        records, _ = items_to_export_records(
+            [{'token': 'xyz789', 'raw': detail}],
+            'apartment-sell',
+        )
+        self.assertEqual(records[0].get('نوع آگهی دهنده'), 'شخصی')
 
-    def test_rent_fields_and_amenities_like_windows_export(self):
+    def test_sell_export_has_excel_columns(self):
         detail = {
             'seo': {
                 'web_info': {
-                    'title': 'آپارتمان ۱۲۵ متری',
+                    'title': 'آپارتمان ۶۵ متری',
                     'city_persian': 'تهران',
-                    'district_persian': 'باغ فیض',
+                    'district_persian': 'تجریش',
                 },
             },
-            'share': {'web_url': 'https://divar.ir/v/rent125'},
+            'share': {'web_url': 'https://divar.ir/v/sell65'},
             'webengage': {
-                'token': 'rent125',
-                'business_type': 'personal',
-                'credit': 1_000_000_000,
-                'rent': 40_000_000,
+                'token': 'sell65',
+                'business_type': 'premium-panel',
+                'price': 26_000_000_000,
             },
             'sections': [
                 {
@@ -74,15 +85,11 @@ class DivarFlattenTest(SimpleTestCase):
                     'widgets': [
                         {
                             'widget_type': 'UNEXPANDABLE_ROW',
-                            'data': {'title': 'متراژ', 'value': '۱۲۵ متر'},
+                            'data': {'title': 'متراژ', 'value': '۶۵ متر'},
                         },
                         {
                             'widget_type': 'UNEXPANDABLE_ROW',
-                            'data': {'title': 'ودیعه', 'value': '۱ میلیارد تومان'},
-                        },
-                        {
-                            'widget_type': 'UNEXPANDABLE_ROW',
-                            'data': {'title': 'اجاره ماهانه', 'value': '۴۰ میلیون تومان'},
+                            'data': {'title': 'قیمت کل', 'value': '۲۶٬۰۰۰٬۰۰۰٬۰۰۰ تومان'},
                         },
                         {
                             'widget_type': 'GROUP_FEATURE_ROW',
@@ -96,15 +103,51 @@ class DivarFlattenTest(SimpleTestCase):
                     ],
                 },
             ],
+            'business_lazy_widget_list': [
+                {
+                    'widget_type': 'EVENT_ROW',
+                    'data': {
+                        'title': 'املاک ارم شمرون',
+                        'action': {'type': 'PREMIUM_PANEL_BRAND_LANDING'},
+                    },
+                },
+            ],
         }
-        flat = flatten_divar_detail(detail, 'rent125', 'apartment-rent')
-        self.assertEqual(flat['deposit'], 1_000_000_000)
-        self.assertEqual(flat['rent'], 40_000_000)
-        self.assertEqual(flat['area'], 125.0)
-        data = flat['data']
-        self.assertIn('ودیعه', data)
-        self.assertIn('اجاره ماهانه', data)
-        self.assertIn('متراژ', data)
-        self.assertEqual(data.get('آسانسور'), 'دارد')
-        self.assertNotIn('description', data)
-        self.assertNotIn('latitude', data)
+        records, _ = items_to_export_records(
+            [{'token': 'sell65', 'raw': detail}],
+            'apartment-sell',
+        )
+        rec = records[0]
+        expected_keys = {
+            'شناسه', 'عنوان', 'لینک', 'شهر', 'محله', 'متراژ', 'قیمت',
+            'آسانسور', 'پارکینگ', 'نوع آگهی دهنده', 'نام مشاور / آژانس',
+            'ویژگی‌ها و امکانات', 'توضیحات',
+        }
+        for key in expected_keys:
+            self.assertIn(key, rec, msg=f'missing column {key}')
+        self.assertEqual(rec.get('آسانسور'), 'دارد')
+        self.assertEqual(rec.get('نوع آگهی دهنده'), 'مشاور')
+
+    def test_flatten_divar_detail_compat(self):
+        detail = {
+            'seo': {'web_info': {'title': 'اجاره آپارتمان', 'city_persian': 'تهران'}},
+            'share': {'web_url': 'https://divar.ir/v/abc123'},
+            'webengage': {'token': 'abc123', 'business_type': 'personal'},
+            'sections': [
+                {
+                    'section_name': 'LIST_DATA',
+                    'widgets': [
+                        {
+                            'widget_type': 'RENT_SLIDER',
+                            'data': {
+                                'credit': {'value': '۵۰۰٬۰۰۰٬۰۰۰ تومان'},
+                                'rent': {'value': '۱۵٬۰۰۰٬۰۰۰ تومان'},
+                            },
+                        },
+                    ],
+                },
+            ],
+        }
+        flat = flatten_divar_detail(detail, 'abc123', 'apartment-rent')
+        self.assertIn('ودیعه', flat.get('data', {}))
+

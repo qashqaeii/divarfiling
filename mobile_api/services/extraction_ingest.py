@@ -1,4 +1,4 @@
-"""دریافت و ذخیره استخراج سبک موبایل."""
+"""دریافت و ذخیره استخراج سبک موبایل — همان مسیر import اکسل."""
 from __future__ import annotations
 
 import os
@@ -6,15 +6,13 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
+import pandas as pd
 from django.db import transaction
 from django.utils import timezone
 
-from mobile_api.services.divar_flatten import (
-    flatten_divar_detail,
-    is_consultant_ad,
-    is_roommate_ad,
-)
+from mobile_api.services.divar_flatten import items_to_export_records
 from workspace.models import Dataset, Listing, PriceHistory
+from workspace.services.columns import detect_metadata, row_to_listing_fields
 from workspace.services.folder_import import build_dataset_name, build_file_identity
 from workspace.services.importer import (
     _listing_from_fields,
@@ -24,7 +22,7 @@ from workspace.services.importer import (
 from workspace.services.price_history import load_latest_snapshots, should_record_price
 
 MAX_MOBILE_ITEMS = 100
-INGEST_VERSION = 3
+INGEST_VERSION = 4
 
 CATEGORY_LABELS = {
     'apartment-rent': ('اجاره مسکونی', 'آپارتمان'),
@@ -95,29 +93,6 @@ def _resolve_dataset_display_name(path_info: Dict[str, Any], original_filename: 
     return ' — '.join(parts) if parts else built
 
 
-def _flat_to_fields(flat: Dict[str, Any], fallback_city: str) -> Dict[str, Any]:
-    return {
-        'token': flat['token'],
-        'title': flat.get('title') or '',
-        'price': flat.get('price'),
-        'deposit': flat.get('deposit'),
-        'rent': flat.get('rent'),
-        'area': flat.get('area'),
-        'rooms': str(flat.get('rooms') or ''),
-        'neighborhood': flat.get('district') or flat.get('neighborhood') or '',
-        'city': flat.get('city') or fallback_city,
-        'latitude': flat.get('latitude'),
-        'longitude': flat.get('longitude'),
-        'business_type': flat.get('business_type') or '',
-        'description': flat.get('description') or '',
-        'link': flat.get('link') or '',
-        'images': flat.get('images') or [],
-        'published_at': None,
-        'expires_at': None,
-        'data': flat.get('data') or {},
-    }
-
-
 def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     items = payload.get('items') or []
     if len(items) > MAX_MOBILE_ITEMS:
@@ -130,11 +105,26 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     advertiser_filter = str(filters.get('advertiser_filter') or 'all').strip().lower()
     max_items = int(filters.get('max_items') or len(items))
 
+    export_records, skipped = items_to_export_records(
+        items,
+        category,
+        advertiser_filter=advertiser_filter,
+        max_items=max_items,
+    )
+    if not export_records:
+        raise ValueError('آگهی معتبری برای ذخیره یافت نشد.')
+
+    # همان DataFrame و row_to_listing_fields که import اکسل/JSON ویندوز استفاده می‌کند
+    df = pd.DataFrame(export_records)
+    df = df.where(pd.notna(df), None)
+    file_meta = detect_metadata(df)
+    columns = list(df.columns.astype(str))
+
     original_filename = _resolve_original_filename(filters)
     path_info = {
-        'city': city,
-        'district': district,
-        'transaction_type': tx_type,
+        'city': city or file_meta.get('city', ''),
+        'district': district or file_meta.get('district', ''),
+        'transaction_type': tx_type or file_meta.get('transaction_type', ''),
         'subcategory': subcat,
         'tx_slug': os.path.splitext(original_filename)[0],
         'filename': original_filename,
@@ -144,36 +134,11 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     file_identity = build_file_identity(path_info, original_filename)
 
     now = timezone.now()
-
-    flats: List[Dict[str, Any]] = []
-    skipped = 0
-    for item in items:
-        token = str(item.get('token') or '').strip()
-        raw = item.get('raw') or item
-        if isinstance(raw, dict) and 'sections' in raw:
-            flat = flatten_divar_detail(raw, token, category)
-        else:
-            flat = flatten_divar_detail(raw if isinstance(raw, dict) else {}, token, category)
-        if not flat.get('token'):
-            skipped += 1
-            continue
-        if is_roommate_ad(flat, category):
-            skipped += 1
-            continue
-        if advertiser_filter == 'personal' and is_consultant_ad(flat):
-            skipped += 1
-            continue
-        if advertiser_filter == 'consultant' and not is_consultant_ad(flat):
-            skipped += 1
-            continue
-        flats.append(flat)
-        if len(flats) >= max_items:
-            break
-
-    if not flats:
-        raise ValueError('آگهی معتبری برای ذخیره یافت نشد.')
-
-    tokens = [f['token'] for f in flats]
+    tokens = [
+        str(row_to_listing_fields(df.iloc[i], df).get('token') or '').strip()
+        for i in range(len(df))
+    ]
+    tokens = [t for t in tokens if t]
     price_cache = load_latest_snapshots(user, tokens)
 
     with transaction.atomic():
@@ -187,10 +152,10 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             'started_at': payload.get('started_at'),
             'finished_at': payload.get('finished_at'),
             'province': path_info.get('province', ''),
-            'transaction_type': tx_type,
+            'transaction_type': path_info['transaction_type'],
             'subcategory': subcat,
-            'city': city,
-            'district': district,
+            'city': path_info['city'],
+            'district': path_info['district'],
             'file_identity': file_identity,
         }
 
@@ -199,10 +164,17 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             dataset.metadata = {**(dataset.metadata or {}), **metadata}
             dataset.last_opened_at = now
             dataset.is_active = True
-            if city:
-                dataset.city = city
-            if district:
-                dataset.district = district
+            dataset.column_count = len(columns)
+            merged_columns = list(dict.fromkeys(list((dataset.columns or [])) + columns))
+            dataset.columns = merged_columns
+            if path_info['city']:
+                dataset.city = path_info['city']
+            if path_info['district']:
+                dataset.district = path_info['district']
+            if tx_type:
+                dataset.transaction_type = tx_type
+            if subcat:
+                dataset.subcategory = subcat
             existing_by_token = {
                 listing.token: listing
                 for listing in Listing.objects.filter(dataset=dataset)
@@ -215,12 +187,12 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
                 file_format='json',
                 file_size=0,
                 row_count=0,
-                column_count=0,
-                columns=[],
-                transaction_type=tx_type,
+                column_count=len(columns),
+                columns=columns,
+                transaction_type=path_info['transaction_type'],
                 subcategory=subcat,
-                city=city,
-                district=district,
+                city=path_info['city'],
+                district=path_info['district'],
                 metadata=metadata,
                 last_opened_at=now,
             )
@@ -232,8 +204,8 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         seen_tokens: set = set()
         duplicate_skipped = 0
 
-        for flat in flats:
-            fields = _flat_to_fields(flat, city)
+        for idx in range(len(df)):
+            fields = row_to_listing_fields(df.iloc[idx], df)
             token = fields['token']
             if token in seen_tokens:
                 duplicate_skipped += 1
@@ -249,7 +221,6 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             else:
                 listings_to_create.append(_listing_from_fields(dataset, fields))
 
-            listing_for_price = existing_by_token.get(token)
             price = fields['price']
             deposit = fields['deposit']
             rent = fields['rent']
@@ -273,7 +244,8 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
                 [
                     'title', 'price', 'deposit', 'rent', 'area', 'rooms',
                     'neighborhood', 'city', 'latitude', 'longitude',
-                    'business_type', 'description', 'link', 'images', 'data',
+                    'business_type', 'description', 'link', 'images',
+                    'published_at', 'expires_at', 'data',
                 ],
                 batch_size=200,
             )
@@ -281,7 +253,11 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             PriceHistory.objects.bulk_create(price_records, batch_size=200)
 
         dataset.row_count = Listing.objects.filter(dataset=dataset).count()
-        dataset.save(update_fields=['row_count', 'metadata', 'last_opened_at', 'is_active', 'city', 'district'])
+        dataset.save(update_fields=[
+            'row_count', 'metadata', 'last_opened_at', 'is_active',
+            'city', 'district', 'columns', 'column_count',
+            'transaction_type', 'subcategory',
+        ])
 
     ingested_count = len(seen_tokens)
     return IngestResult(
@@ -305,3 +281,4 @@ def extraction_limits_payload(user) -> Dict[str, Any]:
         'extractions_today': count_today,
         'extractions_daily_limit': 10,
     }
+

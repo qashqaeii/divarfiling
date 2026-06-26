@@ -468,9 +468,47 @@ def _set_if_missing(data: dict, key: str, value: Any) -> None:
         data[key] = value
 
 
+def _dedupe_listing_data_keys(data: dict) -> dict:
+    """حذف کلیدهای تکراری انگلیسی/داخلی وقتی معادل فارسی export وجود دارد."""
+    if not data:
+        return data
+    out = dict(data)
+    drop_if_present = {
+        'description': ('توضیحات',),
+        'city': ('شهر', 'مکان_شهر'),
+        'city_persian': ('شهر', 'مکان_شهر'),
+        'مکان_شهر': ('شهر',),
+        'district': ('محله', 'مکان_منطقه'),
+        'district_persian': ('محله', 'مکان_منطقه'),
+        'مکان_منطقه': ('محله',),
+        'neighborhood': ('محله',),
+        'latitude': ('عرض جغرافیایی', 'مکان_مختصات_lat'),
+        'longitude': ('طول جغرافیایی', 'مکان_مختصات_lng'),
+        'مکان_مختصات_lat': ('عرض جغرافیایی',),
+        'مکان_مختصات_lng': ('طول جغرافیایی',),
+        'lat': ('عرض جغرافیایی',),
+        'lng': ('طول جغرافیایی',),
+        'title': ('عنوان',),
+        'token': ('شناسه',),
+        'link': ('لینک',),
+        'deposit': ('ودیعه',),
+        'rent': ('اجاره ماهانه', 'اجاره'),
+        'area': ('متراژ',),
+        'price': ('قیمت',),
+        'business_type': ('نوع آگهی دهنده', 'نوع آگهی‌دهنده'),
+        'فروشنده_business_type': ('نوع آگهی دهنده', 'نوع آگهی‌دهنده'),
+    }
+    for key, preferred in drop_if_present.items():
+        if key not in out:
+            continue
+        if any(p in out and out.get(p) not in (None, '', '-', '—') for p in preferred):
+            out.pop(key, None)
+    return out
+
+
 def build_listing_display_data(listing, feat: Optional[Dict[str, Any]] = None) -> dict:
     """ادغام فیلدهای مدل و استخراج‌شده در دیکشنری نمایش."""
-    data = dict(listing.data or {})
+    data = _dedupe_listing_data_keys(dict(listing.data or {}))
 
     _set_if_missing(data, 'شناسه', listing.token)
     _set_if_missing(data, 'عنوان', listing.title)

@@ -148,6 +148,56 @@ def _parse_images(val: Any) -> List[str]:
     return []
 
 
+def _pick_row_value(row: Dict[str, Any], field: str) -> Any:
+    for alias in COLUMN_ALIASES.get(field, []):
+        if alias in row:
+            return row[alias]
+    return None
+
+
+def _export_data_from_row(row: Dict[str, Any]) -> Dict[str, Any]:
+    data: Dict[str, Any] = {}
+    for col, val in row.items():
+        if isinstance(val, float) and pd.isna(val):
+            data[col] = None
+        elif hasattr(val, 'isoformat'):
+            data[col] = val.isoformat()
+        elif isinstance(val, str):
+            s = val.strip()
+            data[col] = None if s in ('', '-', '—', 'nan', 'None') else val
+        else:
+            data[col] = val if not (isinstance(val, float) and pd.isna(val)) else None
+    return data
+
+
+def export_record_to_listing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
+    """تبدیل یک ردیف export فارسی (اکسل/JSON) به فیلدهای Listing — بدون DataFrame."""
+    token = _safe_str(_pick_row_value(row, 'token'))
+    if not token:
+        token = f'row_{hash(tuple(row.values())) % 10**8}'
+
+    return {
+        'token': token,
+        'title': _safe_str(_pick_row_value(row, 'title')),
+        'price': _safe_int(_pick_row_value(row, 'price')),
+        'deposit': _safe_int(_pick_row_value(row, 'deposit')),
+        'rent': _safe_int(_pick_row_value(row, 'rent')),
+        'area': _safe_float(_pick_row_value(row, 'area')),
+        'rooms': _safe_str(_pick_row_value(row, 'rooms')),
+        'neighborhood': _safe_str(_pick_row_value(row, 'neighborhood')),
+        'city': _safe_str(_pick_row_value(row, 'city')),
+        'latitude': _safe_float(_pick_row_value(row, 'latitude')),
+        'longitude': _safe_float(_pick_row_value(row, 'longitude')),
+        'business_type': _safe_str(_pick_row_value(row, 'business_type')),
+        'description': _safe_str(_pick_row_value(row, 'description')),
+        'link': _safe_str(_pick_row_value(row, 'link')),
+        'images': _parse_images(_pick_row_value(row, 'images')),
+        'published_at': _parse_datetime(_pick_row_value(row, 'published_at')),
+        'expires_at': _parse_datetime(_pick_row_value(row, 'expires_at')),
+        'data': _export_data_from_row(row),
+    }
+
+
 def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
     """تبدیل یک ردیف DataFrame به فیلدهای Listing."""
     cols = {f: _find_column(df, f) for f in COLUMN_ALIASES}

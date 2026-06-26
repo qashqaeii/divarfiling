@@ -71,6 +71,8 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
         'token': lst.token,
         'title': lst.title or '',
         'price': lst.price,
+        'deposit': lst.deposit,
+        'rent': lst.rent,
         'area': int(lst.area) if lst.area else None,
         'rooms': rooms_val,
         'district': lst.neighborhood or '',

@@ -1,13 +1,19 @@
 """تبدیل JSON خام دیوار به فیلدهای Listing — هم‌تراز با export_divar_items ویندوز."""
 from __future__ import annotations
 
+import logging
 import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from workspace.services.columns import export_record_to_listing_fields, extract_consultant_name
+
+logger = logging.getLogger(__name__)
+
 _SCRAPER_SRC = Path(__file__).resolve().parents[3] / 'src'
 _WINDOWS_FLATTEN = None
+_WINDOWS_EXPORT = None
 _WINDOWS_IMPORT_TRIED = False
 
 _PERSIAN = '۰۱۲۳۴۵۶۷۸۹'
@@ -23,28 +29,24 @@ CONSULTANT_BUSINESS_TYPES = {
     'بنگاه', 'مشاور', 'آژانس',
 }
 
-_SKIP_DATA_KEYS = frozenset({
-    'raw', 'widget_list', 'business_lazy_widget_list', 'sections',
-    'attributes', 'features',
-})
 
-_JSON_BLOB_PREFIX = ('{', '[')
-
-
-def _ensure_windows_flatten():
-    global _WINDOWS_FLATTEN, _WINDOWS_IMPORT_TRIED
+def _ensure_windows_modules():
+    global _WINDOWS_FLATTEN, _WINDOWS_EXPORT, _WINDOWS_IMPORT_TRIED
     if _WINDOWS_IMPORT_TRIED:
-        return _WINDOWS_FLATTEN
+        return _WINDOWS_FLATTEN, _WINDOWS_EXPORT
     _WINDOWS_IMPORT_TRIED = True
     src = str(_SCRAPER_SRC)
     if src not in sys.path:
         sys.path.insert(0, src)
     try:
-        from export_divar_items import flatten_post_detail  # noqa: WPS433
+        from export_divar_items import export_rows_to_records, flatten_post_detail  # noqa: WPS433
         _WINDOWS_FLATTEN = flatten_post_detail
-    except Exception:
+        _WINDOWS_EXPORT = export_rows_to_records
+    except Exception as exc:
+        logger.warning('Windows scraper import failed: %s', exc)
         _WINDOWS_FLATTEN = None
-    return _WINDOWS_FLATTEN
+        _WINDOWS_EXPORT = None
+    return _WINDOWS_FLATTEN, _WINDOWS_EXPORT
 
 
 def _safe_get(d: Any, path: List[str], default=None):
@@ -68,69 +70,36 @@ def _to_en_digits(text: str) -> str:
 def _parse_money(text: str) -> Optional[int]:
     if not text:
         return None
-    t = _to_en_digits(str(text))
-    t = t.replace(' تومان', '').replace('تومان', '').replace('٬', '').replace(',', '')
-    digits = ''.join(ch for ch in t if ch in '0123456789')
-    if not digits:
+    raw = str(text)
+    t = _to_en_digits(raw)
+    t = t.replace(' تومان', '').replace('تومان', '').replace(' ریال', '').replace('ریال', '')
+    t = t.replace('٬', '').replace(',', '').replace('،', '')
+    digits = '0123456789'
+    cleaned = ''.join(ch for ch in t if ch in digits)
+    if not cleaned:
         return None
     try:
-        return int(digits)
+        amount = int(cleaned)
     except ValueError:
         return None
-
-
-def _first_int(row: Dict[str, Any], *keys: str) -> Optional[int]:
-    for key in keys:
-        val = row.get(key)
-        if val is None or val == '':
-            continue
-        if isinstance(val, (int, float)) and not isinstance(val, bool):
-            return int(val)
-        parsed = _parse_money(str(val))
-        if parsed is not None:
-            return parsed
-    return None
-
-
-def _first_float(row: Dict[str, Any], *keys: str) -> Optional[float]:
-    for key in keys:
-        val = row.get(key)
-        if val is None or val == '':
-            continue
-        if isinstance(val, (int, float)) and not isinstance(val, bool):
-            return float(val)
-        try:
-            return float(_to_en_digits(str(val)).replace('متر', '').strip())
-        except ValueError:
-            continue
-    return None
-
-
-def _first_str(row: Dict[str, Any], *keys: str) -> str:
-    for key in keys:
-        val = row.get(key)
-        if val is None:
-            continue
-        text = str(val).strip()
-        if text and text not in ('-', '—', 'nan', 'None'):
-            return text
-    return ''
-
-
-def _parse_attr_field(attrs: str, field: str) -> str:
-    for part in str(attrs or '').split('|'):
-        piece = part.strip()
-        if ':' not in piece:
-            continue
-        title, value = piece.split(':', 1)
-        if title.strip() == field:
-            return value.strip()
-    return ''
+    tl = _to_en_digits(raw).lower()
+    if 'میلیارد' in tl:
+        return amount * 1_000_000_000
+    if 'میلیون' in tl:
+        return amount * 1_000_000
+    if 'هزار' in tl:
+        return amount * 1_000
+    return amount
 
 
 def _advertiser_type_persian(row: Dict[str, Any]) -> str:
-    consultant = _first_str(row, 'مشاور_نام', 'نام مشاور / آژانس')
-    business = _first_str(row, 'فروشنده_business_type', 'business_type').lower()
+    consultant = str(row.get('نام مشاور / آژانس') or row.get('مشاور_نام') or '').strip()
+    business = str(
+        row.get('نوع آگهی دهنده')
+        or row.get('فروشنده_business_type')
+        or row.get('business_type')
+        or ''
+    ).strip().lower()
     if consultant or business in CONSULTANT_BUSINESS_TYPES or 'premium' in business:
         return 'مشاور'
     if business == 'personal' or not business:
@@ -140,102 +109,31 @@ def _advertiser_type_persian(row: Dict[str, Any]) -> str:
     return business or 'شخصی'
 
 
-def _sanitize_listing_data(row: Dict[str, Any]) -> Dict[str, Any]:
-    """دادهٔ Listing.data — فقط مقادیر تخت قابل نمایش (بدون raw JSON)."""
-    out: Dict[str, Any] = {}
-    for key, val in row.items():
-        if key in _SKIP_DATA_KEYS:
-            continue
-        if isinstance(val, (dict, list)):
-            continue
-        if val is None:
-            continue
-        text = str(val).strip()
-        if not text or text in ('-', '—', 'nan', 'None'):
-            continue
-        if text.startswith(_JSON_BLOB_PREFIX):
-            continue
-        out[key] = val
-    advertiser = _advertiser_type_persian(row)
-    out['نوع آگهی دهنده'] = advertiser
-    out['نوع آگهی‌دهنده'] = advertiser
-    return out
+def _export_normalize_row(raw_row: Dict[str, Any], category: str) -> Dict[str, Any]:
+    """همان نرمال‌سازی اکسل ویندوز — ستون‌های فارسی یکتا."""
+    _, export_fn = _ensure_windows_modules()
+    if export_fn is None:
+        return raw_row
+    try:
+        records = export_fn([raw_row], category=category)
+        return records[0] if records else raw_row
+    except Exception as exc:
+        logger.warning('export_rows_to_records failed: %s', exc)
+        return raw_row
 
 
-def _map_windows_row_to_listing(row: Dict[str, Any], token: str = '') -> Dict[str, Any]:
-    attrs = _first_str(row, 'attributes', 'ویژگی_ها_و_امکانات')
-    token_val = _first_str(row, 'token', 'شناسه') or token
-    images_raw = row.get('images') or row.get('رسانه_تصاویر') or ''
-    if isinstance(images_raw, list):
-        images = [str(u).strip() for u in images_raw if str(u).strip()]
-    else:
-        images = [u.strip() for u in str(images_raw).split('|') if u.strip()]
-
-    area = _first_float(row, 'متراژ', 'area')
-    if area is None:
-        area_text = _parse_attr_field(attrs, 'متراژ')
-        if area_text:
-            try:
-                area = float(_to_en_digits(area_text).replace('متر', '').strip())
-            except ValueError:
-                area = None
-
-    rooms = _first_str(row, 'اتاق', 'rooms') or _parse_attr_field(attrs, 'اتاق')
-    floor = _first_str(row, 'طبقه', 'floor') or _parse_attr_field(attrs, 'طبقه')
-    year = _first_str(row, 'ساخت', 'سال ساخت', 'build_year') or _parse_attr_field(attrs, 'ساخت')
-
-    price = _first_int(row, 'مالی_قیمت_کل_عدد', 'price', 'قیمت')
-    deposit = _first_int(row, 'اجاره_ودیعه_عدد', 'deposit', 'ودیعه')
-    rent = _first_int(row, 'اجاره_ماهانه_عدد', 'rent', 'اجاره')
-
-    lat_raw = _first_str(row, 'latitude', 'مکان_مختصات_lat', 'عرض جغرافیایی')
-    lng_raw = _first_str(row, 'longitude', 'مکان_مختصات_lng', 'طول جغرافیایی')
-    lat = float(lat_raw) if lat_raw else None
-    lng = float(lng_raw) if lng_raw else None
-
-    consultant_name = _first_str(row, 'مشاور_نام', 'نام مشاور / آژانس')
-    business_type = _advertiser_type_persian(row)
-
-    listing_data = _sanitize_listing_data(row)
-    if floor:
-        listing_data['طبقه'] = floor
-    if year:
-        listing_data['ساخت'] = year
-    if rooms:
-        listing_data['اتاق'] = rooms
-    if area is not None:
-        listing_data['متراژ'] = area
-
-    return {
-        'token': token_val,
-        'title': _first_str(row, 'عنوان', 'title'),
-        'description': _first_str(row, 'توضیحات', 'description'),
-        'price': price,
-        'price_per_meter': _first_int(row, 'مالی_قیمت_هر_متر_عدد', 'price_per_meter'),
-        'deposit': deposit,
-        'rent': rent,
-        'rent_convertibility': _first_str(row, 'اجاره_قابل_تبدیل', 'rent_convertibility'),
-        'area': area,
-        'rooms': rooms,
-        'floor': floor,
-        'year': year,
-        'city': _first_str(row, 'مکان_شهر', 'city_persian', 'شهر', 'city'),
-        'district': _first_str(row, 'مکان_منطقه', 'district_persian', 'محله', 'district'),
-        'neighborhood': _first_str(row, 'مکان_منطقه', 'district_persian', 'محله', 'neighborhood'),
-        'latitude': lat,
-        'longitude': lng,
-        'business_type': business_type,
-        'consultant_name': consultant_name,
-        'link': _first_str(row, 'لینک', 'link', 'share_link'),
-        'images': images,
-        'video_url': _first_str(row, 'رسانه_ویدیو', 'video_url'),
-        'tags': _first_str(row, 'برچسب‌ها', 'tags'),
-        'data': listing_data,
-    }
+def _raw_flatten_row(detail: Dict[str, Any], token: str = '') -> Dict[str, Any]:
+    flatten_fn, _ = _ensure_windows_modules()
+    if flatten_fn is not None:
+        try:
+            return flatten_fn(detail)
+        except Exception as exc:
+            logger.warning('flatten_post_detail failed, using legacy: %s', exc)
+    return _legacy_raw_row(detail, token)
 
 
-def _legacy_flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dict[str, Any]:
-    """Fallback اگر import ویندوز ممکن نبود."""
+def _legacy_raw_row(detail: Dict[str, Any], token: str = '') -> Dict[str, Any]:
+    """Fallback اگر import ویندوز ممکن نبود — خروجی خام مشابه flatten_post_detail."""
     if not isinstance(detail, dict):
         detail = {}
 
@@ -276,6 +174,8 @@ def _legacy_flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dic
     features_kv: Dict[str, str] = {}
     lat = lng = None
     images: List[str] = []
+    has_rent_slider = False
+    slider_credit = slider_rent = None
 
     for s in sections:
         sec = s.get('section_name')
@@ -288,7 +188,7 @@ def _legacy_flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dic
                     v = str(data.get('value') or '').strip()
                     if t == 'قیمت کل':
                         price = _parse_money(v)
-                    elif t in ('ودیعه', 'رهن'):
+                    elif t in ('ودیعه', 'رهن', 'رهن کامل'):
                         deposit = _parse_money(v)
                     elif t in ('اجارهٔ ماهانه', 'اجاره ماهانه'):
                         rent = _parse_money(v)
@@ -303,12 +203,16 @@ def _legacy_flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dic
                         floor = v
                     elif t in ('ساخت', 'سال ساخت'):
                         year = v
+                elif wtype == 'RENT_SLIDER':
+                    has_rent_slider = True
+                    slider_credit = _parse_money(str(data.get('credit', {}).get('value') or ''))
+                    slider_rent = _parse_money(str(data.get('rent', {}).get('value') or ''))
                 elif wtype == 'GROUP_FEATURE_ROW':
                     for item in data.get('items') or []:
                         ft = str(item.get('title') or '')
-                        fv = str(item.get('value') or '')
                         if ft:
-                            features_kv[ft] = fv
+                            available = item.get('available', True)
+                            features_kv[ft] = 'دارد' if available else 'ندارد'
         elif sec == 'MAP':
             for w in s.get('widgets') or []:
                 if w.get('widget_type') == 'MAP_ROW':
@@ -332,6 +236,15 @@ def _legacy_flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dic
                         if url:
                             images.append(url)
 
+    if deposit is None:
+        deposit = slider_credit
+    if rent is None:
+        rent = slider_rent
+    if deposit is None and isinstance(webengage.get('credit'), int):
+        deposit = webengage.get('credit')
+    if rent is None and isinstance(webengage.get('rent'), int):
+        rent = webengage.get('rent')
+
     widget_list = detail.get('business_lazy_widget_list') or []
     consultant_name = ''
     for widget in widget_list or []:
@@ -342,17 +255,11 @@ def _legacy_flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dic
             consultant_name = str(_safe_get(widget, ['data', 'title']) or '').strip()
             break
 
-    for amenity in ('آسانسور', 'پارکینگ', 'انباری'):
-        if amenity in features_kv:
-            pass
-
-    row = {
+    row: Dict[str, Any] = {
         'token': token_val,
         'شناسه': token_val,
         'عنوان': title,
-        'title': title,
         'توضیحات': description,
-        'description': description,
         'مکان_شهر': city,
         'مکان_منطقه': district,
         'مالی_قیمت_کل_عدد': price,
@@ -371,32 +278,62 @@ def _legacy_flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dic
         'لینک': share.get('web_url') or (f'https://divar.ir/v/{token_val}' if token_val else ''),
         'images': ' | '.join(images),
         'رسانه_تصاویر': ' | '.join(images),
+        'اجاره_قابل_تبدیل': 'قابل تبدیل' if has_rent_slider else '',
     }
     row.update(features_kv)
+    for amenity in ('آسانسور', 'پارکینگ', 'انباری'):
+        if amenity in features_kv:
+            row[amenity] = features_kv[amenity]
     if features_kv:
         parts = [
             f'{k}: {v}' if v not in ('دارد', 'ندارد') else f'{k} {v}'
             for k, v in features_kv.items()
         ]
         row['ویژگی_ها_و_امکانات'] = ' | '.join(parts)
+    return row
 
-    return _map_windows_row_to_listing(row, token_val)
+
+def _fields_to_flat_dict(fields: Dict[str, Any], export_row: Dict[str, Any]) -> Dict[str, Any]:
+    """شکل خروجی برای extraction_ingest و فیلترهای مشاور/همخانه."""
+    consultant_name = extract_consultant_name(export_row)
+    business_type = _advertiser_type_persian(export_row)
+    return {
+        'token': fields['token'],
+        'title': fields.get('title') or '',
+        'description': fields.get('description') or '',
+        'price': fields.get('price'),
+        'deposit': fields.get('deposit'),
+        'rent': fields.get('rent'),
+        'area': fields.get('area'),
+        'rooms': fields.get('rooms') or '',
+        'city': fields.get('city') or '',
+        'district': fields.get('neighborhood') or '',
+        'neighborhood': fields.get('neighborhood') or '',
+        'latitude': fields.get('latitude'),
+        'longitude': fields.get('longitude'),
+        'business_type': business_type,
+        'consultant_name': consultant_name,
+        'link': fields.get('link') or '',
+        'images': fields.get('images') or [],
+        'data': fields.get('data') or {},
+    }
 
 
-def flatten_divar_detail(detail: Dict[str, Any], token: str = '') -> Dict[str, Any]:
-    """Flatten کامل — اولویت با منطق ویندوز (`flatten_post_detail`)."""
+def flatten_divar_detail(
+    detail: Dict[str, Any],
+    token: str = '',
+    category: str = 'apartment-rent',
+) -> Dict[str, Any]:
+    """Flatten کامل — همان pipeline ویندوز: raw → export columns → Listing fields."""
     if not isinstance(detail, dict):
         detail = {}
 
-    windows_flatten = _ensure_windows_flatten()
-    if windows_flatten is not None:
-        try:
-            row = windows_flatten(detail)
-            return _map_windows_row_to_listing(row, token)
-        except Exception:
-            pass
-
-    return _legacy_flatten_divar_detail(detail, token)
+    raw_row = _raw_flatten_row(detail, token)
+    export_row = _export_normalize_row(raw_row, category)
+    fields = export_record_to_listing_fields(export_row)
+    if token and not fields.get('token'):
+        fields['token'] = token
+    return _fields_to_flat_dict(fields, export_row)
 
 
 def is_roommate_ad(flat: Dict[str, Any], category_slug: str = '') -> bool:

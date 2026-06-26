@@ -24,7 +24,7 @@ from workspace.services.importer import (
 from workspace.services.price_history import load_latest_snapshots, should_record_price
 
 MAX_MOBILE_ITEMS = 100
-INGEST_VERSION = 2
+INGEST_VERSION = 3
 
 CATEGORY_LABELS = {
     'apartment-rent': ('اجاره مسکونی', 'آپارتمان'),
@@ -151,9 +151,9 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         token = str(item.get('token') or '').strip()
         raw = item.get('raw') or item
         if isinstance(raw, dict) and 'sections' in raw:
-            flat = flatten_divar_detail(raw, token)
+            flat = flatten_divar_detail(raw, token, category)
         else:
-            flat = flatten_divar_detail(raw if isinstance(raw, dict) else {}, token)
+            flat = flatten_divar_detail(raw if isinstance(raw, dict) else {}, token, category)
         if not flat.get('token'):
             skipped += 1
             continue

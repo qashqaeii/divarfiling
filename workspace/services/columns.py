@@ -6,12 +6,13 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from workspace.services.property_images import normalize_external_image_url
+import numpy as np
 import pandas as pd
 from django.db.models import Q
 from django.utils import timezone as dj_tz
 
 from workspace.services.jalali_input import _normalize_digits, parse_jalali_datetime_string
+from workspace.services.property_images import normalize_external_image_url
 
 COLUMN_ALIASES: Dict[str, List[str]] = {
     'token': ['شناسه', 'token', 'id', 'آگهی_id', 'listing_id'],

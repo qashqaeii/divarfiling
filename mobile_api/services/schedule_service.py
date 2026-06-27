@@ -21,6 +21,7 @@ MIN_INTERVAL_HOURS = 0.5
 MAX_INTERVAL_HOURS = 168.0
 MAX_SCHEDULES_PER_USER = 10
 MAX_CONSECUTIVE_FAILURES = 5
+STALE_RUN_TIMEOUT = timedelta(minutes=45)
 
 
 def _clamp_interval(hours: float) -> float:
@@ -171,6 +172,33 @@ def _has_active_run(schedule: MobileExtractionSchedule) -> bool:
     ).exists()
 
 
+def _expire_stale_runs(schedule: MobileExtractionSchedule) -> int:
+    """اجراهای گیرکرده (مثلاً بعد از کرش اپ) را می‌بندد."""
+    cutoff = timezone.now() - STALE_RUN_TIMEOUT
+    stale = MobileExtractionRun.objects.filter(
+        schedule=schedule,
+        status=MobileExtractionSchedule.RUN_STATUS_RUNNING,
+        started_at__lt=cutoff,
+    )
+    count = stale.count()
+    if not count:
+        return 0
+    now = timezone.now()
+    stale.update(
+        status=MobileExtractionSchedule.RUN_STATUS_FAILED,
+        error='اجرای قبلی به‌صورت خودکار بسته شد (timeout).',
+        finished_at=now,
+    )
+    schedule.refresh_from_db()
+    if schedule.last_status == MobileExtractionSchedule.RUN_STATUS_RUNNING:
+        schedule.last_status = MobileExtractionSchedule.RUN_STATUS_FAILED
+        schedule.last_error = 'اجرای قبلی منقضی شد.'
+        schedule.next_run_at = compute_next_run_at(schedule, from_time=now)
+        schedule.save(update_fields=['last_status', 'last_error', 'next_run_at', 'updated_at'])
+    logger.info('Expired %s stale extraction run(s) for schedule=%s', count, schedule.pk)
+    return count
+
+
 def start_schedule_run(
     user,
     schedule_id: int,
@@ -183,6 +211,7 @@ def start_schedule_run(
         raise ValueError('زمان‌بندی یافت نشد.')
     if not schedule.is_enabled:
         raise ValueError('زمان‌بندی غیرفعال است.')
+    _expire_stale_runs(schedule)
     if _has_active_run(schedule):
         raise ValueError('اجرای قبلی هنوز تمام نشده است.')
     if schedule.consecutive_failures >= MAX_CONSECUTIVE_FAILURES:

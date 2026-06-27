@@ -7,6 +7,20 @@ from mobile_api.activity_types import workspace_type_to_api
 from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing, Dataset, Listing, Reminder
 
 
+def _dataset_thumbnail(ds: Dataset) -> str:
+    lst = (
+        Listing.objects.filter(dataset=ds)
+        .exclude(images=[])
+        .order_by('-created_at')
+        .only('images')
+        .first()
+    )
+    if not lst or not lst.images:
+        return ''
+    img = lst.images[0]
+    return img if isinstance(img, str) else str(img)
+
+
 def user_to_dict(user) -> Dict[str, Any]:
     agency_name = ''
     if hasattr(user, 'profile'):
@@ -57,6 +71,7 @@ def dataset_to_dict(ds: Dataset) -> Dict[str, Any]:
         'city': ds.city or '',
         'district': ds.district or '',
         'item_count': ds.row_count if ds.row_count is not None else 0,
+        'thumbnail_url': _dataset_thumbnail(ds),
         'created_at': ds.created_at.isoformat() if ds.created_at else None,
     }
 

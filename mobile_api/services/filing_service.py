@@ -86,3 +86,56 @@ def get_listing_detail(user, token: str) -> Optional[dict]:
     if not lst:
         return None
     return listing_detail_to_dict(lst)
+
+
+def search_listings(
+    user,
+    *,
+    page: int = 1,
+    page_size: int = 30,
+    q: str = '',
+    dataset_id: Optional[str] = None,
+    price_min: Optional[int] = None,
+    price_max: Optional[int] = None,
+    area_min: Optional[int] = None,
+    area_max: Optional[int] = None,
+    rooms: Optional[int] = None,
+) -> Tuple[List[dict], dict]:
+    if not has_active_bot_license(user):
+        return [], {'page': page, 'page_size': page_size, 'total': 0}
+    qs = (
+        Listing.objects.filter(dataset__user=user, dataset__is_active=True)
+        .select_related('dataset')
+        .order_by('-created_at')
+    )
+    if dataset_id:
+        qs = qs.filter(dataset_id=dataset_id)
+    if q:
+        qs = qs.filter(
+            Q(title__icontains=q)
+            | Q(neighborhood__icontains=q)
+            | Q(city__icontains=q)
+            | Q(token__icontains=q)
+        )
+    if price_min is not None:
+        qs = qs.filter(price__gte=price_min)
+    if price_max is not None:
+        qs = qs.filter(price__lte=price_max)
+    if area_min is not None:
+        qs = qs.filter(area__gte=area_min)
+    if area_max is not None:
+        qs = qs.filter(area__lte=area_max)
+    if rooms is not None:
+        qs = qs.filter(rooms__icontains=str(rooms))
+    paginator = Paginator(qs, page_size)
+    page_obj = paginator.get_page(page)
+    items: List[dict] = []
+    for lst in page_obj.object_list:
+        row = listing_to_dict(lst)
+        row['dataset_name'] = lst.dataset.name if lst.dataset else ''
+        items.append(row)
+    return items, {
+        'page': page,
+        'page_size': page_size,
+        'total': paginator.count,
+    }

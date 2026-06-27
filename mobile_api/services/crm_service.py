@@ -15,7 +15,7 @@ from mobile_api.serializers import (
     contact_to_dict,
     reminder_to_dict,
 )
-from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerListing, PropertyContact, Reminder
+from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing, PropertyContact, Reminder
 from workspace.services.crm import filter_contacts, link_customer_listing, log_activity
 from workspace.services.crm_scope import customers_qs, get_agency, properties_qs, reminders_qs
 from workspace.services.crm_today import get_today_queue
@@ -35,7 +35,7 @@ def get_contact(user, contact_id: int) -> Optional[Customer]:
     return filter_contacts(user, {}).filter(pk=contact_id).first()
 
 
-def contact_detail_payload(user, contact_id: int) -> Optional[dict]:
+def contact_detail_payload(user, contact_id: int, *, request=None) -> Optional[dict]:
     c = get_contact(user, contact_id)
     if not c:
         return None
@@ -49,6 +49,9 @@ def contact_detail_payload(user, contact_id: int) -> Optional[dict]:
     deals = list(CRMDeal.objects.filter(customer=c, user=user).order_by('-updated_at')[:20])
     prop_ids = PropertyContact.objects.filter(customer=c).values_list('property_id', flat=True)
     properties = list(properties_qs(user).filter(pk__in=prop_ids)[:20])
+    documents = list(
+        CustomerDocument.objects.filter(user=user, customer=c).order_by('-uploaded_at')[:30]
+    )
     return contact_detail_to_dict(
         c,
         activities=activities,
@@ -56,6 +59,8 @@ def contact_detail_payload(user, contact_id: int) -> Optional[dict]:
         linked_listings=linked,
         deals=deals,
         properties=properties,
+        documents=documents,
+        request=request,
     )
 
 

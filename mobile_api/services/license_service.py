@@ -46,11 +46,19 @@ def license_payload_for_user(user) -> Dict[str, Any]:
 
 def license_status_payload(user) -> Dict[str, Any]:
     p = license_payload_for_user(user)
+    lic = _primary_license(user) if p.get('valid') else _paid_license_qs(user).first()
+    days_remaining = None
+    if lic and lic.expires_at:
+        end_date = timezone.localtime(lic.expires_at).date()
+        today = timezone.localtime(timezone.now()).date()
+        days_remaining = max(0, (end_date - today).days)
     return {
         'valid': p['valid'],
         'plan': p.get('plan'),
         'features': p.get('features'),
         'expires_at': p.get('expires_at'),
+        'days_remaining': days_remaining,
+        'expiring_soon': days_remaining is not None and days_remaining <= 7,
     }
 
 

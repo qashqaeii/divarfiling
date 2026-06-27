@@ -15,6 +15,7 @@ NOTIFICATION_TYPES = {
     'today_digest': 'کارهای امروز',
     'overdue_followup': 'پیگیری معوق',
     'extract_complete': 'استخراج تمام شد',
+    'extract_schedule_due': 'زمان استخراج',
     'new_dataset': 'فایل جدید',
     'customer_match': 'آگهی مناسب',
     'price_drop': 'کاهش قیمت',
@@ -81,17 +82,19 @@ def create_notification(
         data=data or {},
     )
     if send_push:
-        send_push_to_user(
-            user,
-            title=title,
-            body=body or title,
-            data={
-                'notification_id': str(n.pk),
-                'type': notification_type,
-                'deep_link': deep_link,
-                **(data or {}),
-            },
-        )
+        from mobile_api.services.notification_scheduler import user_push_enabled
+        if user_push_enabled(user, notification_type):
+            send_push_to_user(
+                user,
+                title=title,
+                body=body or title,
+                data={
+                    'notification_id': str(n.pk),
+                    'type': notification_type,
+                    'deep_link': deep_link,
+                    **(data or {}),
+                },
+            )
     return n
 
 

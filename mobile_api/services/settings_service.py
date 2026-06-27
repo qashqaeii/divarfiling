@@ -36,7 +36,8 @@ def get_notification_prefs(user, device_id: str = '') -> Dict[str, Any]:
 
 def update_notification_prefs(user, device_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
     prefs = get_notification_prefs(user, device_id)
-    prefs.update({k: data[k] for k in data if k in prefs or k == 'digest_hour'})
+    allowed = set(DEFAULT_NOTIFICATION_PREFS.keys())
+    prefs.update({k: data[k] for k in data if k in allowed})
     if device_id:
         MobileDevice.objects.filter(user=user, device_id=device_id).update(
             notification_prefs=prefs,

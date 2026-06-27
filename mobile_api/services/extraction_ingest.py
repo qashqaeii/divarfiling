@@ -23,6 +23,7 @@ from workspace.services.importer import (
 from workspace.services.price_history import load_latest_snapshots, should_record_price
 
 MAX_MOBILE_ITEMS = 100
+EXTRACTIONS_DAILY_LIMIT = 10
 INGEST_VERSION = 4
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,10 @@ class IngestResult:
     dataset: Dataset
     ingested_count: int
     skipped_count: int
+    created_count: int = 0
+    updated_count: int = 0
+    duplicate_count: int = 0
+    dataset_merged: bool = False
 
 
 def _resolve_tx_subcategory(filters: Dict[str, Any], category: str) -> tuple[str, str]:
@@ -95,6 +100,31 @@ def _resolve_dataset_display_name(path_info: Dict[str, Any], original_filename: 
     return ' — '.join(parts) if parts else built
 
 
+def mobile_extractions_today_count(user) -> int:
+    from mobile_api.models import MobileExtractionRun
+    today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    run_count = MobileExtractionRun.objects.filter(
+        user=user,
+        status='success',
+        finished_at__gte=today_start,
+    ).count()
+    if run_count:
+        return run_count
+    return Dataset.objects.filter(
+        user=user,
+        metadata__mobile_extraction=True,
+        created_at__gte=today_start,
+    ).count()
+
+
+def check_mobile_extraction_allowed(user) -> None:
+    count = mobile_extractions_today_count(user)
+    if count >= EXTRACTIONS_DAILY_LIMIT:
+        raise ValueError(
+            f'سقف استخراج روزانه ({EXTRACTIONS_DAILY_LIMIT}) تکمیل شده است. فردا دوباره تلاش کنید.',
+        )
+
+
 def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     items = payload.get('items') or []
     if len(items) > MAX_MOBILE_ITEMS:
@@ -115,6 +145,15 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     )
     if not export_records:
         raise ValueError('آگهی معتبری برای ذخیره یافت نشد.')
+
+    run_id = payload.get('run_id')
+    if run_id:
+        try:
+            run_id = int(run_id)
+        except (TypeError, ValueError):
+            run_id = None
+    if not run_id:
+        check_mobile_extraction_allowed(user)
 
     # همان DataFrame و row_to_listing_fields که import اکسل/JSON ویندوز استفاده می‌کند
     df = pd.DataFrame(export_records)
@@ -266,27 +305,44 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         dataset=dataset,
         ingested_count=ingested_count,
         skipped_count=skipped + duplicate_skipped,
+        created_count=len(listings_to_create),
+        updated_count=len(listings_to_update),
+        duplicate_count=duplicate_skipped,
+        dataset_merged=bool(existing),
     )
     try:
         from mobile_api.services.notification_service import notify_extract_complete
         notify_extract_complete(user, str(dataset.pk), dataset.name, ingested_count)
     except Exception:
         logger.exception('failed to send extract notification')
+
+    if run_id:
+        try:
+            from mobile_api.services.schedule_service import complete_schedule_run
+            complete_schedule_run(
+                user,
+                run_id,
+                dataset_id=str(dataset.pk),
+                ingested_count=ingested_count,
+                created_count=len(listings_to_create),
+                updated_count=len(listings_to_update),
+                skipped_count=skipped + duplicate_skipped,
+            )
+        except Exception:
+            logger.exception('failed to complete schedule run %s', run_id)
+
     return result
 
 
 def extraction_limits_payload(user) -> Dict[str, Any]:
-    from django.utils import timezone as tz
-    today_start = tz.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    count_today = Dataset.objects.filter(
-        user=user,
-        metadata__mobile_extraction=True,
-        created_at__gte=today_start,
-    ).count()
+    count = mobile_extractions_today_count(user)
+    remaining = max(0, EXTRACTIONS_DAILY_LIMIT - count)
     return {
         'max_items': MAX_MOBILE_ITEMS,
         'max_concurrent_hint': 2,
-        'extractions_today': count_today,
-        'extractions_daily_limit': 10,
+        'extractions_today': count,
+        'extractions_daily_limit': EXTRACTIONS_DAILY_LIMIT,
+        'can_extract_now': remaining > 0,
+        'remaining_today': remaining,
     }
 

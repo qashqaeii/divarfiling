@@ -62,5 +62,7 @@ class ExtractionIngestJsonTest(TestCase):
             'items': [{'token': 'ingest1', 'raw': detail}],
         })
         self.assertEqual(result.ingested_count, 1)
+        self.assertEqual(result.created_count, 1)
+        self.assertEqual(result.updated_count, 0)
         listing = result.dataset.listings.get()
         json.dumps(listing.data, ensure_ascii=False)

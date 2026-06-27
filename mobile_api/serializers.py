@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from mobile_api.activity_types import workspace_type_to_api
-from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerListing, Dataset, Listing, Reminder
+from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing, Dataset, Listing, Reminder
 
 
 def user_to_dict(user) -> Dict[str, Any]:
@@ -171,32 +171,84 @@ def linked_listing_to_dict(cl: CustomerListing) -> Dict[str, Any]:
     }
 
 
-def deal_to_dict(d: CRMDeal) -> Dict[str, Any]:
+def document_to_dict(doc: CustomerDocument, *, request=None) -> Dict[str, Any]:
+    file_url = ''
+    if doc.file:
+        try:
+            file_url = request.build_absolute_uri(doc.file.url) if request else doc.file.url
+        except Exception:
+            file_url = doc.file.url or ''
     return {
+        'id': doc.pk,
+        'title': doc.title,
+        'doc_type': doc.doc_type or '',
+        'file_url': file_url,
+        'uploaded_at': doc.uploaded_at.isoformat() if doc.uploaded_at else None,
+    }
+
+
+def deal_to_dict(d: CRMDeal, *, detailed: bool = False) -> Dict[str, Any]:
+    data = {
         'id': d.pk,
         'title': d.title,
         'stage': d.stage,
         'amount': d.value,
         'listing_token': d.listing_token or '',
         'property_id': d.property_id,
+        'customer_id': d.customer_id,
+        'probability': d.probability,
+        'commission_rate': d.commission_rate,
+        'commission_amount': d.commission_amount,
+        'notes': d.notes or '',
         'updated_at': d.updated_at.isoformat() if d.updated_at else None,
     }
+    if detailed:
+        data.update({
+            'checklist': d.checklist or [],
+            'lost_reason': d.lost_reason or '',
+            'contract_number': d.contract_number or '',
+            'contract_amount': d.contract_amount,
+            'expected_close_date': d.expected_close_date.isoformat() if d.expected_close_date else None,
+            'customer_name': d.customer.name if getattr(d, 'customer', None) else '',
+            'property_title': d.property.title if getattr(d, 'property', None) else '',
+        })
+    return data
 
 
-def property_to_dict(p: CRMProperty) -> Dict[str, Any]:
-    return {
+def property_to_dict(p: CRMProperty, *, detailed: bool = False) -> Dict[str, Any]:
+    data = {
         'id': p.pk,
         'title': p.title,
         'deal_mode': p.deal_mode,
         'transaction_status': p.transaction_status,
+        'property_type': p.property_type,
+        'publish_status': p.publish_status,
         'city': p.city or '',
         'district': p.district or '',
+        'neighborhood': p.neighborhood or '',
         'sale_price': p.sale_price,
-        'rent': p.rent,
+        'rent': p.monthly_rent,
         'deposit': p.deposit,
         'area': p.area,
+        'rooms': p.rooms or '',
+        'token': p.token or '',
+        'link': p.link or '',
         'updated_at': p.updated_at.isoformat() if p.updated_at else None,
     }
+    if detailed:
+        data.update({
+            'address': p.address or '',
+            'floor': p.floor,
+            'total_floors': p.total_floors,
+            'build_year': p.build_year,
+            'has_parking': p.has_parking,
+            'has_storage': p.has_storage,
+            'has_elevator': p.has_elevator,
+            'amenities': p.amenities or '',
+            'notes': p.notes or '',
+            'images': p.images or [],
+        })
+    return data
 
 
 def contact_detail_to_dict(
@@ -207,6 +259,8 @@ def contact_detail_to_dict(
     linked_listings: Optional[List[CustomerListing]] = None,
     deals: Optional[List[CRMDeal]] = None,
     properties: Optional[List[CRMProperty]] = None,
+    documents: Optional[List[CustomerDocument]] = None,
+    request=None,
 ) -> Dict[str, Any]:
     return {
         'contact': contact_to_dict(c),
@@ -215,4 +269,44 @@ def contact_detail_to_dict(
         'linked_listings': [linked_listing_to_dict(cl) for cl in (linked_listings or [])],
         'deals': [deal_to_dict(d) for d in (deals or [])],
         'properties': [property_to_dict(p) for p in (properties or [])],
+        'documents': [document_to_dict(d, request=request) for d in (documents or [])],
+    }
+
+
+def schedule_to_dict(s) -> Dict[str, Any]:
+    return {
+        'id': s.pk,
+        'title': s.title,
+        'is_enabled': s.is_enabled,
+        'interval_hours': s.interval_hours,
+        'filters': s.filters or {},
+        'max_items': s.max_items,
+        'next_run_at': s.next_run_at.isoformat() if s.next_run_at else None,
+        'last_run_at': s.last_run_at.isoformat() if s.last_run_at else None,
+        'last_status': s.last_status,
+        'last_error': s.last_error or '',
+        'last_dataset_id': str(s.last_dataset_id) if s.last_dataset_id else '',
+        'run_count': s.run_count,
+        'consecutive_failures': s.consecutive_failures,
+        'primary_device_id': s.primary_device_id or '',
+        'created_at': s.created_at.isoformat() if s.created_at else None,
+        'updated_at': s.updated_at.isoformat() if s.updated_at else None,
+    }
+
+
+def run_to_dict(r) -> Dict[str, Any]:
+    return {
+        'id': r.pk,
+        'schedule_id': r.schedule_id,
+        'status': r.status,
+        'trigger': r.trigger,
+        'filters': r.filters_snapshot or {},
+        'dataset_id': str(r.dataset_id) if r.dataset_id else '',
+        'ingested_count': r.ingested_count,
+        'created_count': r.created_count,
+        'updated_count': r.updated_count,
+        'skipped_count': r.skipped_count,
+        'error': r.error or '',
+        'started_at': r.started_at.isoformat() if r.started_at else None,
+        'finished_at': r.finished_at.isoformat() if r.finished_at else None,
     }

@@ -5,6 +5,7 @@ import json
 import logging
 
 from django.contrib.auth import authenticate, get_user_model
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
@@ -27,8 +28,30 @@ from mobile_api.services.crm_service import (
     today_payload,
     update_contact,
 )
-from mobile_api.services.dashboard_service import dashboard_payload
+from mobile_api.services.deals_service import (
+    change_deal_stage,
+    create_deal_from_mobile,
+    get_deal_detail,
+    list_deals_paginated,
+    pipeline_payload,
+    stages_payload,
+    update_deal_from_mobile,
+)
+from mobile_api.services.properties_service import (
+    change_property_status,
+    create_property_from_mobile,
+    get_property_detail,
+    list_properties_paginated,
+    soft_delete_property,
+    update_property_from_mobile,
+)
 from mobile_api.services.device_service import register_or_update_device, update_device_fcm
+from mobile_api.services.documents_service import (
+    delete_contact_document,
+    list_contact_documents,
+    send_listing_to_contact,
+    upload_contact_document,
+)
 from mobile_api.services.extraction_ingest import extraction_limits_payload, ingest_mobile_extraction
 from mobile_api.services.filing_service import (
     dataset_detail_payload,
@@ -36,6 +59,7 @@ from mobile_api.services.filing_service import (
     get_listing_detail,
     list_datasets,
     list_listings,
+    search_listings,
 )
 from mobile_api.services.license_service import license_status_payload, require_light_extract
 from mobile_api.services.notification_service import (
@@ -43,14 +67,36 @@ from mobile_api.services.notification_service import (
     mark_read,
     unread_count,
 )
+from mobile_api.services.sync_service import pull_sync, push_sync
 from mobile_api.services.settings_service import (
     get_notification_prefs,
     get_profile,
     update_notification_prefs,
     update_profile,
 )
-from mobile_api.services.sync_service import pull_sync, push_sync
-from mobile_api.serializers import activity_to_dict, contact_to_dict, listing_to_dict, reminder_to_dict
+from mobile_api.services.schedule_service import (
+    create_schedule,
+    delete_schedule,
+    fail_schedule_run,
+    get_schedule,
+    list_due_schedules,
+    list_runs,
+    list_schedules,
+    start_schedule_run,
+    toggle_schedule,
+    update_schedule,
+)
+from mobile_api.serializers import (
+    activity_to_dict,
+    contact_to_dict,
+    deal_to_dict,
+    document_to_dict,
+    listing_to_dict,
+    property_to_dict,
+    reminder_to_dict,
+    run_to_dict,
+    schedule_to_dict,
+)
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -182,7 +228,7 @@ class ContactDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, contact_id):
-        payload = contact_detail_payload(request.user, contact_id)
+        payload = contact_detail_payload(request.user, contact_id, request=request)
         if not payload:
             return api_error('مخاطب یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
@@ -274,6 +320,39 @@ class ListingDetailView(APIView):
         return api_ok(payload)
 
 
+class FilingSearchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        page = int(request.GET.get('page', 1) or 1)
+        page_size = int(request.GET.get('page_size', 30) or 30)
+        q = request.GET.get('q', '') or ''
+        dataset_id = request.GET.get('dataset_id') or None
+
+        def _int_param(name: str):
+            val = request.GET.get(name)
+            if val is None or val == '':
+                return None
+            try:
+                return int(val)
+            except ValueError:
+                return None
+
+        items, meta = search_listings(
+            request.user,
+            page=page,
+            page_size=page_size,
+            q=q,
+            dataset_id=dataset_id,
+            price_min=_int_param('price_min'),
+            price_max=_int_param('price_max'),
+            area_min=_int_param('area_min'),
+            area_max=_int_param('area_max'),
+            rooms=_int_param('rooms'),
+        )
+        return api_ok(items, meta=meta)
+
+
 class ExtractionLimitsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -293,8 +372,14 @@ class ExtractionUploadView(APIView):
             result = ingest_mobile_extraction(request.user, data)
             return api_ok({
                 'dataset_id': str(result.dataset.pk),
+                'dataset_name': result.dataset.name,
                 'ingested_count': result.ingested_count,
                 'skipped_count': result.skipped_count,
+                'created_count': result.created_count,
+                'updated_count': result.updated_count,
+                'duplicate_count': result.duplicate_count,
+                'dataset_merged': result.dataset_merged,
+                'total_in_dataset': result.dataset.row_count,
                 'workspace_url': f'/workspace/datasets/{result.dataset.pk}/',
             })
         except ValueError as exc:
@@ -308,6 +393,116 @@ class ExtractionUploadView(APIView):
                 code='SERVER_ERROR',
                 status=500,
             )
+
+
+class ExtractionSchedulesListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        items = [schedule_to_dict(s) for s in list_schedules(request.user)]
+        return api_ok(items)
+
+    def post(self, request):
+        err = require_light_extract(request.user)
+        if err:
+            return api_error(err, code='LICENSE_REQUIRED', status=403)
+        data = _parse_body(request)
+        try:
+            schedule = create_schedule(request.user, data, device_id=_device_id(request))
+            return api_ok(schedule_to_dict(schedule), status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class ExtractionScheduleDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, schedule_id):
+        schedule = get_schedule(request.user, schedule_id)
+        if not schedule:
+            return api_error('زمان‌بندی یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(schedule_to_dict(schedule))
+
+    def patch(self, request, schedule_id):
+        data = _parse_body(request)
+        schedule = update_schedule(request.user, schedule_id, data)
+        if not schedule:
+            return api_error('زمان‌بندی یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(schedule_to_dict(schedule))
+
+    def delete(self, request, schedule_id):
+        if not delete_schedule(request.user, schedule_id):
+            return api_error('زمان‌بندی یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({'deleted': True})
+
+
+class ExtractionScheduleToggleView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, schedule_id):
+        data = _parse_body(request)
+        enabled = data.get('is_enabled') if 'is_enabled' in data else None
+        schedule = toggle_schedule(request.user, schedule_id, enabled=enabled)
+        if not schedule:
+            return api_error('زمان‌بندی یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(schedule_to_dict(schedule))
+
+
+class ExtractionScheduleRunsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, schedule_id):
+        page = int(request.GET.get('page', 1) or 1)
+        page_size = int(request.GET.get('page_size', 20) or 20)
+        runs, meta = list_runs(request.user, schedule_id, page=page, page_size=page_size)
+        if not get_schedule(request.user, schedule_id):
+            return api_error('زمان‌بندی یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok([run_to_dict(r) for r in runs], meta=meta)
+
+
+class ExtractionScheduleRunStartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, schedule_id):
+        err = require_light_extract(request.user)
+        if err:
+            return api_error(err, code='LICENSE_REQUIRED', status=403)
+        data = _parse_body(request)
+        trigger = (data.get('trigger') or 'device')[:20]
+        try:
+            run = start_schedule_run(
+                request.user,
+                schedule_id,
+                trigger=trigger,
+                device_id=_device_id(request),
+            )
+            schedule = get_schedule(request.user, schedule_id)
+            return api_ok({
+                'run': run_to_dict(run),
+                'schedule': schedule_to_dict(schedule) if schedule else None,
+                'filters': run.filters_snapshot,
+            })
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class ExtractionScheduleRunFailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, run_id):
+        data = _parse_body(request)
+        run = fail_schedule_run(request.user, run_id, data.get('error') or data.get('message') or '')
+        if not run:
+            return api_error('اجرای استخراج یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(run_to_dict(run))
+
+
+class ExtractionSchedulesDueView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        due = list_due_schedules(request.user, device_id=_device_id(request))
+        return api_ok([schedule_to_dict(s) for s in due])
 
 
 class SyncPullView(APIView):
@@ -410,6 +605,54 @@ class ContactListingsLinkView(APIView):
             return api_error(str(exc), code='VALIDATION_ERROR')
 
 
+class ContactDocumentsView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request, contact_id):
+        if not get_contact(request.user, contact_id):
+            return api_error('مخاطب یافت نشد.', code='NOT_FOUND', status=404)
+        docs = list_contact_documents(request.user, contact_id, request=request)
+        return api_ok(docs)
+
+    def post(self, request, contact_id):
+        uploaded = request.FILES.get('file')
+        try:
+            doc = upload_contact_document(
+                request.user,
+                contact_id,
+                title=(request.POST.get('title') or '').strip(),
+                uploaded_file=uploaded,
+                doc_type=(request.POST.get('doc_type') or '').strip(),
+                note=(request.POST.get('note') or '').strip(),
+                request=request,
+            )
+            return api_ok(document_to_dict(doc, request=request), status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class ContactDocumentDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, contact_id, document_id):
+        if not delete_contact_document(request.user, contact_id, document_id):
+            return api_error('مدرک یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({'deleted': True})
+
+
+class ContactSendListingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, contact_id):
+        data = _parse_body(request)
+        try:
+            result = send_listing_to_contact(request.user, contact_id, data)
+            return api_ok(result, status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
 class ReminderDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -481,3 +724,146 @@ class NotificationReadView(APIView):
         if not mark_read(request.user, notification_id):
             return api_error('اعلان یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok({})
+
+
+class DealsListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        page = int(request.GET.get('page', 1) or 1)
+        page_size = int(request.GET.get('page_size', 20) or 20)
+        query = {
+            'q': request.GET.get('q', ''),
+            'stage': request.GET.get('stage', ''),
+            'bucket': request.GET.get('bucket', ''),
+            'customer_id': request.GET.get('customer_id', ''),
+        }
+        items, meta = list_deals_paginated(request.user, page=page, page_size=page_size, query=query)
+        return api_ok(items, meta=meta)
+
+    def post(self, request):
+        data = _parse_body(request)
+        try:
+            deal = create_deal_from_mobile(request.user, data)
+            payload = get_deal_detail(request.user, deal.pk)
+            return api_ok(payload, status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class DealDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, deal_id):
+        payload = get_deal_detail(request.user, deal_id)
+        if not payload:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def patch(self, request, deal_id):
+        data = _parse_body(request)
+        deal = update_deal_from_mobile(request.user, deal_id, data)
+        if not deal:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        payload = get_deal_detail(request.user, deal_id)
+        return api_ok(payload)
+
+
+class DealStageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, deal_id):
+        data = _parse_body(request)
+        stage = (data.get('stage') or '').strip()
+        if not stage:
+            return api_error('مرحله الزامی است.', code='VALIDATION_ERROR')
+        try:
+            deal = change_deal_stage(
+                request.user,
+                deal_id,
+                stage,
+                lost_reason=(data.get('lost_reason') or '').strip(),
+            )
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        if not deal:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        payload = get_deal_detail(request.user, deal_id)
+        return api_ok(payload)
+
+
+class DealPipelineView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return api_ok(pipeline_payload(request.user))
+
+
+class DealStagesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return api_ok({'stages': stages_payload(request.user)})
+
+
+class PropertiesListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        page = int(request.GET.get('page', 1) or 1)
+        page_size = int(request.GET.get('page_size', 20) or 20)
+        query = {
+            'q': request.GET.get('q', ''),
+            'deal_mode': request.GET.get('deal_mode', ''),
+            'transaction_status': request.GET.get('transaction_status', ''),
+            'city': request.GET.get('city', ''),
+        }
+        items, meta = list_properties_paginated(request.user, page=page, page_size=page_size, query=query)
+        return api_ok(items, meta=meta)
+
+    def post(self, request):
+        data = _parse_body(request)
+        try:
+            prop = create_property_from_mobile(request.user, data)
+            return api_ok(property_to_dict(prop, detailed=True), status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class PropertyDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, property_id):
+        payload = get_property_detail(request.user, property_id)
+        if not payload:
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def patch(self, request, property_id):
+        data = _parse_body(request)
+        prop = update_property_from_mobile(request.user, property_id, data)
+        if not prop:
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(property_to_dict(prop, detailed=True))
+
+    def delete(self, request, property_id):
+        if not soft_delete_property(request.user, property_id):
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({})
+
+
+class PropertyStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, property_id):
+        data = _parse_body(request)
+        status = (data.get('transaction_status') or data.get('status') or '').strip()
+        if not status:
+            return api_error('وضعیت الزامی است.', code='VALIDATION_ERROR')
+        try:
+            prop = change_property_status(request.user, property_id, status)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        if not prop:
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(property_to_dict(prop, detailed=True))

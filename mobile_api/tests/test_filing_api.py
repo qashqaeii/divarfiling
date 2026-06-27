@@ -94,3 +94,23 @@ class FilingApiTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         for row in resp.json()['data']:
             self.assertEqual(row['dataset_id'], str(self.dataset.pk))
+
+    def test_dataset_insights(self, _license):
+        resp = self.client.get(f'/api/mobile/v1/filing/datasets/{self.dataset.pk}/insights')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertTrue(body['ok'])
+        self.assertIn('charts', body['data'])
+        self.assertIn('l2', body['data'])
+        self.assertGreaterEqual(body['data']['meta']['row_count'], 2)
+
+    def test_dataset_map(self, _license):
+        Listing.objects.filter(dataset=self.dataset).update(
+            latitude=35.7575,
+            longitude=51.41,
+        )
+        resp = self.client.get(f'/api/mobile/v1/filing/datasets/{self.dataset.pk}/map')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertTrue(body['ok'])
+        self.assertGreaterEqual(len(body['data']['markers']), 2)

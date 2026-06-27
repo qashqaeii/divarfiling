@@ -53,6 +53,8 @@ urlpatterns = [
     path('filing/datasets', views.DatasetsListView.as_view(), name='datasets'),
     path('filing/datasets/<uuid:dataset_id>', views.DatasetDetailView.as_view(), name='dataset_detail'),
     path('filing/datasets/<uuid:dataset_id>/listings', views.DatasetListingsView.as_view(), name='dataset_listings'),
+    path('filing/datasets/<uuid:dataset_id>/insights', views.DatasetInsightsView.as_view(), name='dataset_insights'),
+    path('filing/datasets/<uuid:dataset_id>/map', views.DatasetMapView.as_view(), name='dataset_map'),
     path('filing/search', views.FilingSearchView.as_view(), name='filing_search'),
     path('filing/listings/<str:token>', views.ListingDetailView.as_view(), name='listing_detail'),
 

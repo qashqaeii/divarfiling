@@ -62,6 +62,7 @@ from mobile_api.services.filing_service import (
     list_listings,
     search_listings,
 )
+from mobile_api.services.insights_service import dataset_insights_payload, dataset_map_payload
 from mobile_api.services.license_service import license_status_payload, require_light_extract
 from mobile_api.services.notification_service import (
     list_notifications_paginated,
@@ -307,6 +308,26 @@ class DatasetDetailView(APIView):
     def get(self, request, dataset_id):
         payload = dataset_detail_payload(request.user, dataset_id)
         if not payload:
+            return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class DatasetInsightsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, dataset_id):
+        payload = dataset_insights_payload(request.user, dataset_id)
+        if payload is None:
+            return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class DatasetMapView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, dataset_id):
+        payload = dataset_map_payload(request.user, dataset_id)
+        if payload is None:
             return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
 

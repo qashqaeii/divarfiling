@@ -28,6 +28,7 @@ from mobile_api.services.crm_service import (
     today_payload,
     update_contact,
 )
+from mobile_api.services.dashboard_service import dashboard_payload
 from mobile_api.services.deals_service import (
     change_deal_stage,
     create_deal_from_mobile,
@@ -555,8 +556,7 @@ class DashboardView(APIView):
     def get(self, request):
         try:
             return api_ok(dashboard_payload(request.user))
-        except Exception as exc:
-            import logging
+        except Exception:
             logging.getLogger(__name__).exception('dashboard_payload failed')
             return api_error('خطا در بارگذاری داشبورد', code='SERVER_ERROR', status=500)
 

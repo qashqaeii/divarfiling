@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from mobile_api.responses import api_error, api_ok
+from accounts.phone_utils import find_user_by_phone
 from mobile_api.services.crm_service import (
     complete_follow_up_task,
     complete_reminder,
@@ -138,10 +138,8 @@ class LoginView(APIView):
 
         user = authenticate(request, username=username, password=password)
         if user is None:
-            user = User.objects.filter(phone=username).first()
-            if user and user.check_password(password):
-                pass
-            else:
+            user = find_user_by_phone(username)
+            if not user or not user.check_password(password):
                 return api_error('نام کاربری یا رمز عبور اشتباه است.', code='AUTH_INVALID', status=401)
 
         tokens = _tokens_for_user(user)

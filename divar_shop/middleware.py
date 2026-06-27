@@ -15,8 +15,8 @@ class SSLRedirectMiddleware:
         self.get_response = get_response
     
     def __call__(self, request):
-        # بررسی اینکه آیا host یک IP است
-        host = request.get_host().split(':')[0]  # حذف پورت
+        # از META بخوانید؛ get_host() قبل از CommonMiddleware باعث DisallowedHost پرحجم در لاگ می‌شود.
+        host = (request.META.get('HTTP_HOST') or '').split(':')[0]
         
         # الگوی IP (IPv4)
         ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'

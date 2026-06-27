@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
+from workspace.services.property_images import normalize_external_image_url
 import pandas as pd
 from django.db.models import Q
 from django.utils import timezone as dj_tz
@@ -130,24 +130,43 @@ def _parse_datetime(val: Any) -> Optional[datetime]:
     return None
 
 
+def _split_image_tokens(s: str) -> List[str]:
+    if '|' in s:
+        return [part.strip() for part in s.split('|') if part.strip()]
+    if ',' in s:
+        return [part.strip() for part in s.split(',') if part.strip()]
+    return [s.strip()] if s.strip() else []
+
+
 def _parse_images(val: Any) -> List[str]:
     if val is None or (isinstance(val, float) and pd.isna(val)):
         return []
     if isinstance(val, list):
-        return [str(u) for u in val if u]
+        out: List[str] = []
+        for item in val:
+            url = normalize_external_image_url(str(item))
+            if url:
+                out.append(url)
+        return out
     s = _safe_str(val)
     if s.startswith('['):
         import json
         try:
             arr = json.loads(s.replace("'", '"'))
-            return [str(u) for u in arr if u]
+            out = []
+            for item in arr:
+                url = normalize_external_image_url(str(item))
+                if url:
+                    out.append(url)
+            return out
         except (json.JSONDecodeError, ValueError):
             pass
-    if ',' in s:
-        return [u.strip() for u in s.split(',') if u.strip().startswith('http')]
-    if s.startswith('http'):
-        return [s]
-    return []
+    out: List[str] = []
+    for token in _split_image_tokens(s):
+        url = normalize_external_image_url(token)
+        if url:
+            out.append(url)
+    return out
 
 
 def _pick_row_value(row: Dict[str, Any], field: str) -> Any:

@@ -5,20 +5,37 @@ from typing import Any, Dict, List, Optional
 
 from mobile_api.activity_types import workspace_type_to_api
 from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing, Dataset, Listing, Reminder
+from workspace.services.columns import _parse_images
+from workspace.services.property_images import normalize_external_image_url
+
+
+def _listing_image_urls(lst: Listing) -> List[str]:
+    images: List[str] = []
+    for img in (lst.images or []):
+        url = normalize_external_image_url(img if isinstance(img, str) else str(img))
+        if url:
+            images.append(url)
+    if images:
+        return images
+    data = lst.data or {}
+    for key in ('رسانه_تصاویر', 'images', 'تصاویر'):
+        raw = data.get(key)
+        if raw:
+            return _parse_images(raw)
+    return []
 
 
 def _dataset_thumbnail(ds: Dataset) -> str:
     lst = (
         Listing.objects.filter(dataset=ds)
-        .exclude(images=[])
         .order_by('-created_at')
-        .only('images')
+        .only('images', 'data')
         .first()
     )
-    if not lst or not lst.images:
+    if not lst:
         return ''
-    img = lst.images[0]
-    return img if isinstance(img, str) else str(img)
+    urls = _listing_image_urls(lst)
+    return urls[0] if urls else ''
 
 
 def user_to_dict(user) -> Dict[str, Any]:
@@ -77,10 +94,8 @@ def dataset_to_dict(ds: Dataset) -> Dict[str, Any]:
 
 
 def listing_to_dict(lst: Listing) -> Dict[str, Any]:
-    thumb = ''
-    images = lst.images or []
-    if images:
-        thumb = images[0] if isinstance(images[0], str) else str(images[0])
+    image_urls = _listing_image_urls(lst)
+    thumb = image_urls[0] if image_urls else ''
     adv = 'مشاور' if lst.business_type and 'مشاور' in lst.business_type else 'شخصی'
     rooms_val: Optional[int] = None
     if lst.rooms:
@@ -111,9 +126,7 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
 def listing_detail_to_dict(lst: Listing) -> Dict[str, Any]:
     base = listing_to_dict(lst)
     data = lst.data or {}
-    images: List[str] = []
-    for img in (lst.images or []):
-        images.append(img if isinstance(img, str) else str(img))
+    images = _listing_image_urls(lst)
 
     def _from_data(*keys: str) -> Optional[str]:
         for k in keys:

@@ -13,6 +13,7 @@ from mobile_api.models import MobileDevice
 logger = logging.getLogger(__name__)
 
 FCM_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging'
+UNREGISTERED_CODES = frozenset({'UNREGISTERED', 'INVALID_ARGUMENT', 'NOT_FOUND'})
 
 
 def _fcm_project_id() -> str:
@@ -44,6 +45,23 @@ def _get_v1_access_token() -> Optional[str]:
     except Exception:
         logger.exception('FCM v1 token refresh failed')
         return None
+
+
+def _invalidate_fcm_token(token: str) -> None:
+    updated = MobileDevice.objects.filter(fcm_token=token).update(fcm_token='')
+    if updated:
+        logger.info('Cleared %s stale FCM token(s)', updated)
+
+
+def _extract_fcm_error_code(payload: Dict[str, Any]) -> str:
+    details = payload.get('error', {}).get('details') or []
+    for item in details:
+        if not isinstance(item, dict):
+            continue
+        code = item.get('errorCode') or item.get('error_code')
+        if code:
+            return str(code)
+    return ''
 
 
 def send_push_to_user(
@@ -97,6 +115,15 @@ def _send_fcm_v1(token: str, title: str, body: str, data: Dict[str, str]) -> boo
         )
         if resp.status_code == 200:
             return True
+        try:
+            payload = resp.json()
+        except ValueError:
+            payload = {}
+        error_code = _extract_fcm_error_code(payload)
+        if resp.status_code in (404, 400) and error_code in UNREGISTERED_CODES:
+            logger.info('FCM token unregistered; clearing from database')
+            _invalidate_fcm_token(token)
+            return False
         logger.warning('FCM v1 HTTP %s: %s', resp.status_code, resp.text[:300])
     except Exception:
         logger.exception('FCM v1 send error')
@@ -130,6 +157,12 @@ def _send_fcm_legacy(token: str, title: str, body: str, data: Dict[str, str]) ->
             result = resp.json()
             if result.get('success', 0) > 0:
                 return True
+            failure = (result.get('results') or [{}])[0]
+            error = failure.get('error', '')
+            if error in ('InvalidRegistration', 'NotRegistered', 'MismatchSenderId'):
+                logger.info('FCM legacy token unregistered (%s); clearing from database', error)
+                _invalidate_fcm_token(token)
+                return False
             logger.warning('FCM legacy send failed: %s', result)
         else:
             logger.warning('FCM legacy HTTP %s: %s', resp.status_code, resp.text[:200])

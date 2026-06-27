@@ -61,3 +61,19 @@ def normalize_image_url(url: str) -> str:
     if url.startswith('http://') or url.startswith('https://'):
         return url
     raise ValueError('آدرس تصویر باید با http یا https شروع شود.')
+
+
+def normalize_external_image_url(url: str) -> str:
+    """نرمال‌سازی URL تصاویر خارجی (دیوار، CDN و ...)."""
+    url = str(url or '').strip()
+    if not url or url.lower() in ('nan', 'none', '-'):
+        return ''
+    if url.startswith('//'):
+        return f'https:{url}'
+    if url.startswith('/media/'):
+        return url
+    if url.startswith('http://') or url.startswith('https://'):
+        return url
+    if '.' in url:
+        return f'https://{url.lstrip("/")}'
+    return ''

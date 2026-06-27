@@ -19,7 +19,6 @@ from workspace.services.analyze_ui import build_l2_ui, build_l3_ui
 from workspace.services.charts import build_all_charts, map_markers
 from workspace.services.display import transaction_profile
 from workspace.services.market_agent import resolve_report_confidence
-from workspace.services.analyzer import analyze_market
 from workspace.services.property_images import normalize_external_image_url
 
 

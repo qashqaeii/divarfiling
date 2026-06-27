@@ -56,7 +56,7 @@ def dataset_to_dict(ds: Dataset) -> Dict[str, Any]:
         'transaction_type': ds.transaction_type or '',
         'city': ds.city or '',
         'district': ds.district or '',
-        'item_count': ds.row_count or ds.listings.count(),
+        'item_count': ds.row_count if ds.row_count is not None else 0,
         'created_at': ds.created_at.isoformat() if ds.created_at else None,
     }
 

@@ -553,7 +553,12 @@ class DashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return api_ok(dashboard_payload(request.user))
+        try:
+            return api_ok(dashboard_payload(request.user))
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).exception('dashboard_payload failed')
+            return api_error('خطا در بارگذاری داشبورد', code='SERVER_ERROR', status=500)
 
 
 class ContactActivitiesView(APIView):

@@ -980,6 +980,28 @@ def export_customers_excel_response(user, params: Optional[dict] = None):
     return response
 
 
+def export_customers_csv_response(user, params: Optional[dict] = None):
+    import csv
+    import io
+
+    from django.http import HttpResponse
+
+    rows = customers_to_export_rows(export_customers_queryset(user, params))
+    if not rows:
+        rows = [{'نام': ''}]
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=rows[0].keys())
+    writer.writeheader()
+    writer.writerows(rows)
+    filename = f'crm_contacts_{datetime.now().strftime("%Y%m%d")}.csv'
+    response = HttpResponse(
+        buf.getvalue().encode('utf-8-sig'),
+        content_type='text/csv; charset=utf-8',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
 def _bool_fa(value: Any) -> str:
     return 'بله' if value else 'خیر'
 

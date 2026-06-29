@@ -5,6 +5,8 @@ from django.http import HttpResponse
 
 from workspace.services.crm import (
     customers_to_export_rows,
+    export_customers_csv_response,
+    export_customers_excel_response,
     export_customers_queryset,
     export_properties_csv_response,
     export_properties_excel_response,
@@ -21,8 +23,8 @@ def export_contacts_response(user, params, fmt: str) -> HttpResponse:
         if not rows:
             rows = [{'نام': ''}]
         return rows_json_response(rows, 'crm_contacts.json')
-    from workspace.services.crm import export_customers_excel_response
-
+    if fmt == 'csv':
+        return export_customers_csv_response(user, params)
     return export_customers_excel_response(user, params)
 
 

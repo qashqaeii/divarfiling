@@ -31,6 +31,7 @@ CONFIG = {
     "excel_output": "divar_items.xlsx",
     "max_workers": 6,
     "search_filters": {},
+    "search_query": "",
     "network_error": None,
     "last_request_error": None,
 }
@@ -208,6 +209,167 @@ def _apply_geo_coord_format(cell: Any, header_text: str, numeric_alignment: Any)
     except Exception:
         pass
     return True
+
+
+IMAGE_LINK_SEPARATOR = " | "
+DIVAR_IMAGE_HOST_HINTS = ("divarcdn", "webimage.divar", "divar.ir")
+IMAGE_LINK_EXCEL_COLUMNS = ("لینک تصویر اول", "لینک تصاویر")
+
+
+def _is_likely_image_url(value: Any) -> bool:
+    trimmed = str(value or "").strip()
+    if not trimmed.startswith("http"):
+        return False
+    lower = trimmed.lower()
+    if any(hint in lower for hint in DIVAR_IMAGE_HOST_HINTS):
+        return True
+    return (
+        "/image" in lower
+        or lower.endswith((".jpg", ".jpeg", ".png", ".webp"))
+    )
+
+
+def _normalize_divar_image_url(url: Any) -> str:
+    trimmed = str(url or "").strip()
+    if trimmed.startswith("//"):
+        return f"https:{trimmed}"
+    return trimmed
+
+
+def _add_image_urls_from_item(item: Any, urls: List[str]) -> None:
+    if not isinstance(item, dict):
+        return
+    image = item.get("image") if isinstance(item.get("image"), dict) else {}
+    for key in ("url", "webp_url", "thumbnail_url", "thumbnail"):
+        raw = str((image or {}).get(key) or item.get(key) or "").strip()
+        normalized = _normalize_divar_image_url(raw)
+        if _is_likely_image_url(normalized) and normalized not in urls:
+            urls.append(normalized)
+
+
+def _extract_image_urls_from_detail(detail: Dict[str, Any]) -> List[str]:
+    """استخراج لینک تصاویر از JSON جزئیات دیوار (هم‌تراز با کلاینت اندروید)."""
+    urls: List[str] = []
+    sections = detail.get("sections", []) or []
+
+    for section in sections:
+        if section.get("section_name") != "IMAGE":
+            continue
+        for widget in section.get("widgets", []) or []:
+            wtype = str(widget.get("widget_type") or "")
+            if not any(token in wtype.upper() for token in ("IMAGE", "CAROUSEL", "GALLERY")):
+                continue
+            data = widget.get("data") or {}
+            for item in data.get("items") or []:
+                _add_image_urls_from_item(item, urls)
+            for item in data.get("images") or []:
+                if isinstance(item, dict):
+                    _add_image_urls_from_item(item, urls)
+                elif isinstance(item, str):
+                    normalized = _normalize_divar_image_url(item)
+                    if _is_likely_image_url(normalized) and normalized not in urls:
+                        urls.append(normalized)
+            for key in ("url", "webp_url", "image_url", "thumbnail"):
+                normalized = _normalize_divar_image_url(data.get(key))
+                if _is_likely_image_url(normalized) and normalized not in urls:
+                    urls.append(normalized)
+
+    if not urls:
+        for section in sections:
+            for widget in section.get("widgets", []) or []:
+                wtype = str(widget.get("widget_type") or "")
+                if "IMAGE" not in wtype and "CAROUSEL" not in wtype and "GALLERY" not in wtype:
+                    continue
+                data = widget.get("data") or {}
+                for item in data.get("items") or []:
+                    _add_image_urls_from_item(item, urls)
+                for key in ("url", "webp_url", "image_url", "thumbnail"):
+                    normalized = _normalize_divar_image_url(data.get(key))
+                    if _is_likely_image_url(normalized) and normalized not in urls:
+                        urls.append(normalized)
+
+    if not urls:
+        preview = detail.get("list_data") or detail.get("preview") or {}
+        if isinstance(preview, dict):
+            for key in ("image_url", "thumbnail", "url", "webp_url", "cover_image"):
+                normalized = _normalize_divar_image_url(preview.get(key))
+                if _is_likely_image_url(normalized) and normalized not in urls:
+                    urls.append(normalized)
+            image_obj = preview.get("image") if isinstance(preview.get("image"), dict) else {}
+            for key in ("url", "webp_url", "thumbnail_url", "thumbnail"):
+                normalized = _normalize_divar_image_url(image_obj.get(key))
+                if _is_likely_image_url(normalized) and normalized not in urls:
+                    urls.append(normalized)
+
+    return urls
+
+
+def _first_url_from_joined(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text or text == "-":
+        return "-"
+    parts = [part.strip() for part in text.split("|") if part.strip()]
+    return parts[0] if parts else "-"
+
+
+def _append_image_link_excel_columns(result_df: Any, df: Any, combine_excel_and_source) -> None:
+    """افزودن ستون‌های لینک تصویر به خروجی اکسل."""
+    import pandas as pd
+
+    if "لینک تصاویر" in df.columns or "رسانه_تصاویر" in df.columns or "images" in df.columns:
+        all_links = combine_excel_and_source("لینک تصاویر", "رسانه_تصاویر")
+        if "images" in df.columns:
+            mask = all_links.isna() | (all_links == "") | (all_links == "-")
+            if mask.any():
+                fallback = df["images"].fillna("-")
+                all_links = all_links.copy()
+                all_links.loc[mask] = fallback.loc[mask]
+    else:
+        all_links = pd.Series(["-"] * len(result_df), index=result_df.index)
+
+    result_df["لینک تصاویر"] = all_links
+    if "لینک تصویر اول" in df.columns:
+        first_links = combine_excel_and_source("لینک تصویر اول", "لینک تصویر اول")
+        mask = first_links.isna() | (first_links == "") | (first_links == "-")
+        if mask.any():
+            first_links = first_links.copy()
+            first_links.loc[mask] = all_links.loc[mask].apply(_first_url_from_joined)
+        result_df["لینک تصویر اول"] = first_links
+    else:
+        result_df["لینک تصویر اول"] = all_links.apply(_first_url_from_joined)
+
+
+def _apply_image_link_excel_format(ws: Any) -> None:
+    """عرض مناسب و هایپرلینک برای ستون‌های لینک تصویر."""
+    try:
+        from openpyxl.styles import Font
+        from openpyxl.utils import get_column_letter
+    except Exception:
+        return
+
+    link_font = Font(color="0563C1", underline="single")
+    target_cols: Dict[str, int] = {}
+    for col_idx in range(1, ws.max_column + 1):
+        header = ws.cell(row=1, column=col_idx).value
+        if header in IMAGE_LINK_EXCEL_COLUMNS:
+            target_cols[str(header)] = col_idx
+
+    for header, col_idx in target_cols.items():
+        width = 52 if header == "لینک تصاویر" else 42
+        ws.column_dimensions[get_column_letter(col_idx)].width = width
+        for row_idx in range(2, ws.max_row + 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            raw = str(cell.value or "").strip()
+            if not raw or raw == "-":
+                continue
+            url = _first_url_from_joined(raw) if header == "لینک تصاویر" and "|" in raw else raw
+            if not url.startswith("http"):
+                continue
+            try:
+                cell.hyperlink = url
+                cell.font = link_font
+            except Exception:
+                pass
 
 
 # ستون‌های شناخته‌شده ویژگی/امکانات برای خروجی اکسل (هر کدام در ستون جدا)
@@ -562,30 +724,39 @@ def build_search_payload(page: int, last_post_date: Optional[str], search_uid: O
     if viewed_tokens:
         pagination_data["viewed_tokens"] = viewed_tokens
 
+    search_query = str(CONFIG.get("search_query") or "").strip()
+
+    search_data: Dict[str, Any] = {
+        "form_data": {"data": form_data},
+        "server_payload": {
+            "@type": "type.googleapis.com/widgets.SearchData.ServerPayload",
+            "additional_form_data": {
+                "data": {"sort": {"str": {"value": CONFIG["sort"]}}}
+            },
+        },
+    }
+    if search_query:
+        search_data["query"] = search_query
+
     payload: Dict[str, Any] = {
         "city_ids": CONFIG["city_ids"],
         "pagination_data": pagination_data,
         "disable_recommendation": False,
         "map_state": {"camera_info": {"bbox": {}}},
-        "search_data": {
-            "form_data": {"data": form_data},
-            "server_payload": {
-                "@type": "type.googleapis.com/widgets.SearchData.ServerPayload",
-                "additional_form_data": {
-                    "data": {"sort": {"str": {"value": CONFIG["sort"]}}}
-                },
-            },
-        },
+        "search_data": search_data,
     }
 
-    # سازگاری با برخی دسته‌ها که نیاز به source_view/page_state دارند
-    commercial_categories = ("office-sell", "shop-sell", "industry-agriculture-business-sell")
-    if CONFIG.get("category") in ("house-villa-sell", "house-villa-rent") or CONFIG.get("category") in commercial_categories:
-        payload["source_view"] = "CATEGORY"
-        try:
-            payload["map_state"]["page_state"] = "HALF_STATE"
-        except Exception:
-            payload["map_state"] = {"camera_info": {"bbox": {}}, "page_state": "HALF_STATE"}
+    if search_query:
+        payload["source_view"] = "SEARCH_BAR_QUERY_SUGGESTION"
+    else:
+        # سازگاری با برخی دسته‌ها که نیاز به source_view/page_state دارند
+        commercial_categories = ("office-sell", "shop-sell", "industry-agriculture-business-sell")
+        if CONFIG.get("category") in ("house-villa-sell", "house-villa-rent") or CONFIG.get("category") in commercial_categories:
+            payload["source_view"] = "CATEGORY"
+            try:
+                payload["map_state"]["page_state"] = "HALF_STATE"
+            except Exception:
+                payload["map_state"] = {"camera_info": {"bbox": {}}, "page_state": "HALF_STATE"}
 
     return payload
 
@@ -1073,23 +1244,24 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
     out["نقشه_تصویر"] = map_image
 
     # تصاویر و ویدیو
-    image_urls: List[str] = []
+    image_urls = _extract_image_urls_from_detail(detail)
     video_url = ""
     for s in sections:
         if s.get("section_name") == "IMAGE":
             for w in s.get("widgets", []) or []:
-                if w.get("widget_type") == "IMAGE_CAROUSEL":
-                    items = safe_get(w, ["data", "items"]) or []
-                    for it in items or []:
-                        url = safe_get(it, ["image", "url"]) or ""
-                        if url:
-                            image_urls.append(url)
-                        vurl = safe_get(it, ["video_url"]) or ""
-                        if vurl:
-                            video_url = vurl
+                for it in safe_get(w, ["data", "items"]) or []:
+                    vurl = safe_get(it, ["video_url"]) or ""
+                    if vurl:
+                        video_url = vurl
+                        break
+                if video_url:
+                    break
             break
-    out["images"] = " | ".join(image_urls)
-    out["رسانه_تصاویر"] = " | ".join(image_urls)
+    joined_images = IMAGE_LINK_SEPARATOR.join(image_urls)
+    out["images"] = joined_images
+    out["رسانه_تصاویر"] = joined_images
+    out["لینک تصویر اول"] = image_urls[0] if image_urls else ""
+    out["لینک تصاویر"] = joined_images
     out["رسانه_تعداد_تصویر"] = len(image_urls) if image_urls else ""
     out["رسانه_ویدیو"] = video_url
     # اصالت تصویر
@@ -2071,6 +2243,9 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
     
     # 26. تصویر نقشه
     result_df["تصویر نقشه"] = combine_excel_and_source("تصویر نقشه", "نقشه_تصویر")
+
+    # 27–28. لینک تصاویر (در انتهای فایل)
+    _append_image_link_excel_columns(result_df, df, combine_excel_and_source)
     
     # ترتیب ستون‌ها — ویژگی‌های تفکیک‌شده بعد از امکانات پایه
     sell_column_order = [
@@ -2082,6 +2257,7 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
         "عرض جغرافیایی", "طول جغرافیایی", "نوع مختصات",
         "در شعاع (متر)", "تعداد تصاویر", "اصالت تصویر", "ویدیو دارد؟",
         "ویژگی‌ها و امکانات", "توضیحات", "تصویر نقشه",
+        *IMAGE_LINK_EXCEL_COLUMNS,
     ]
     ordered = [c for c in sell_column_order if c in result_df.columns]
     rest = [c for c in result_df.columns if c not in ordered]
@@ -2133,7 +2309,8 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
         
         # ستون‌هایی که نباید wrap_text داشته باشند (برای نمایش یک خطی)
         no_wrap_columns = [
-            "توضیحات", "ویژگی‌ها و امکانات", "تصویر نقشه"
+            "توضیحات", "ویژگی‌ها و امکانات", "تصویر نقشه",
+            *IMAGE_LINK_EXCEL_COLUMNS,
         ]
         
         # فرمت‌بندی هدر (ردیف اول)
@@ -2269,6 +2446,7 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
         ws.freeze_panes = 'A2'
 
         _fix_worksheet_geo_coordinates(ws, numeric_alignment)
+        _apply_image_link_excel_format(ws)
         
         wb.save(output_path)
     except Exception as e:
@@ -2281,6 +2459,7 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
             for col_idx in range(1, ws.max_column + 1):
                 ws.column_dimensions[get_column_letter(col_idx)].width = 15
             _fix_worksheet_geo_coordinates(ws)
+            _apply_image_link_excel_format(ws)
             wb.save(output_path)
         except:
             pass
@@ -2998,6 +3177,9 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
     
     # 27. شماره تماس (ستون خالی)
     result_df["شماره تماس"] = pd.Series(["-"] * len(df))
+
+    # 28–29. لینک تصاویر (در انتهای فایل)
+    _append_image_link_excel_columns(result_df, df, combine_excel_and_source)
     
     # تبدیل مقادیر خالی به "-"
     result_df = result_df.fillna("-")
@@ -3016,6 +3198,7 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
         "تعداد تصاویر", "ویدیو دارد؟",
         "عرض جغرافیایی", "طول جغرافیایی", "در شعاع (متر)", "نوع مختصات",
         "ویژگی‌ها و امکانات", "توضیحات",
+        *IMAGE_LINK_EXCEL_COLUMNS,
     ]
     
     # فقط ستون‌هایی که در result_df وجود دارند را اضافه می‌کنیم
@@ -3064,7 +3247,8 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
         
         # ستون‌هایی که نباید wrap_text داشته باشند (برای نمایش یک خطی)
         no_wrap_columns = [
-            "توضیحات", "ویژگی‌ها و امکانات"
+            "توضیحات", "ویژگی‌ها و امکانات",
+            *IMAGE_LINK_EXCEL_COLUMNS,
         ]
         
         # فرمت‌بندی هدر
@@ -3218,6 +3402,7 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
         ws.freeze_panes = 'A2'
 
         _fix_worksheet_geo_coordinates(ws, numeric_alignment)
+        _apply_image_link_excel_format(ws)
         
         wb.save(output_path)
     except Exception as e:
@@ -3229,6 +3414,7 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
             for col_idx in range(1, ws.max_column + 1):
                 ws.column_dimensions[get_column_letter(col_idx)].width = 15
             _fix_worksheet_geo_coordinates(ws)
+            _apply_image_link_excel_format(ws)
             wb.save(output_path)
         except:
             pass

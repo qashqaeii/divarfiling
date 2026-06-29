@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from mobile_api.activity_types import workspace_type_to_api
 from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing, Dataset, Listing, Reminder
-from workspace.services.columns import _parse_images
+from workspace.services.listing_features import feature_highlights_for_listing
 from workspace.services.property_images import normalize_external_image_url
 
 
@@ -103,6 +103,19 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
             rooms_val = int(str(lst.rooms).replace('،', '').strip().split()[0])
         except (ValueError, IndexError):
             rooms_val = None
+    data = lst.data or {}
+
+    def _from_data(*keys: str) -> Optional[str]:
+        for k in keys:
+            v = data.get(k)
+            if v is not None and str(v).strip():
+                return str(v).strip()
+        return None
+
+    year_built = _from_data('سال ساخت', 'year_built', 'construction_year')
+    floor = _from_data('طبقه', 'floor')
+    transaction_type = 'اجاره' if (lst.rent or lst.deposit) else ('فروش' if lst.price else '')
+
     return {
         'token': lst.token,
         'title': lst.title or '',
@@ -118,8 +131,14 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
         'thumbnail_url': thumb,
         'share_link': lst.link or '',
         'advertiser_type': adv,
+        'business_type': lst.business_type or '',
         'scraped_at': lst.created_at.isoformat() if lst.created_at else None,
         'dataset_id': str(lst.dataset_id) if lst.dataset_id else None,
+        'price_per_sqm': _calc_price_per_sqm(lst),
+        'year_built': year_built,
+        'floor': floor,
+        'transaction_type': transaction_type,
+        'feature_highlights': feature_highlights_for_listing(lst, limit=5),
     }
 
 

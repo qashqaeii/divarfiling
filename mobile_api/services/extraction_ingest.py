@@ -13,7 +13,7 @@ from django.utils import timezone
 
 from mobile_api.services.divar_flatten import items_to_export_records
 from workspace.models import Dataset, Listing, PriceHistory
-from workspace.services.columns import detect_metadata, row_to_listing_fields
+from workspace.services.columns import detect_metadata, normalize_location_label, row_to_listing_fields
 from workspace.services.folder_import import build_dataset_name, build_file_identity
 from workspace.services.importer import (
     _listing_from_fields,
@@ -65,15 +65,15 @@ def _resolve_tx_subcategory(filters: Dict[str, Any], category: str) -> tuple[str
 
 
 def _resolve_location(filters: Dict[str, Any]) -> tuple[str, str]:
-    city = str(filters.get('city_name') or '').strip()
+    city = normalize_location_label(filters.get('city_name'))
     if not city:
         city_id = str(filters.get('city_id') or '').strip()
-        city = city_id if city_id and not city_id.isdigit() else ''
+        city = normalize_location_label(city_id) if city_id and not city_id.isdigit() else ''
 
     district_names = filters.get('district_names') or []
     district = ''
     if isinstance(district_names, list) and district_names:
-        district = str(district_names[0] or '').strip()
+        district = normalize_location_label(district_names[0])
     return city, district
 
 
@@ -91,10 +91,12 @@ def _resolve_dataset_display_name(path_info: Dict[str, Any], original_filename: 
     if built and built != os.path.splitext(os.path.basename(original_filename))[0]:
         return built
     parts = []
-    if path_info.get('district'):
-        parts.append(path_info['district'])
-    elif path_info.get('city'):
-        parts.append(path_info['city'])
+    district = normalize_location_label(path_info.get('district'))
+    city = normalize_location_label(path_info.get('city'))
+    if district:
+        parts.append(district)
+    elif city:
+        parts.append(city)
     if path_info.get('subcategory'):
         parts.append(path_info['subcategory'])
     return ' — '.join(parts) if parts else built
@@ -125,6 +127,18 @@ def check_mobile_extraction_allowed(user) -> None:
         )
 
 
+def _validate_schedule_run_for_ingest(user, run_id: int) -> None:
+    from mobile_api.models import MobileExtractionRun, MobileExtractionSchedule
+
+    run = MobileExtractionRun.objects.filter(user=user, pk=run_id).select_related('schedule').first()
+    if not run:
+        raise ValueError('اجرای زمان‌بندی یافت نشد.')
+    if run.status != MobileExtractionSchedule.RUN_STATUS_RUNNING:
+        raise ValueError('این اجرای زمان‌بندی قبلاً تکمیل شده است.')
+    if run.finished_at is not None:
+        raise ValueError('اجرای زمان‌بندی معتبر نیست.')
+
+
 def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     items = payload.get('items') or []
     if len(items) > MAX_MOBILE_ITEMS:
@@ -152,8 +166,9 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             run_id = int(run_id)
         except (TypeError, ValueError):
             run_id = None
-    if not run_id:
-        check_mobile_extraction_allowed(user)
+    check_mobile_extraction_allowed(user)
+    if run_id:
+        _validate_schedule_run_for_ingest(user, run_id)
 
     # همان DataFrame و row_to_listing_fields که import اکسل/JSON ویندوز استفاده می‌کند
     df = pd.DataFrame(export_records)
@@ -163,8 +178,8 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
 
     original_filename = _resolve_original_filename(filters)
     path_info = {
-        'city': city or file_meta.get('city', ''),
-        'district': district or file_meta.get('district', ''),
+        'city': city or normalize_location_label(file_meta.get('city', '')),
+        'district': district or normalize_location_label(file_meta.get('district', '')),
         'transaction_type': tx_type or file_meta.get('transaction_type', ''),
         'subcategory': subcat,
         'tx_slug': os.path.splitext(original_filename)[0],

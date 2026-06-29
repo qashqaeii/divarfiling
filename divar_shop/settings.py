@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     
     # Local apps
@@ -266,6 +267,15 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'mobile_api.throttles.MobileUserThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'mobile_login': '10/minute',
+        'mobile_refresh': '30/minute',
+        'mobile_user': '1200/hour',
+        'mobile_extraction': '30/hour',
+    },
 }
 
 from datetime import timedelta
@@ -274,6 +284,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 

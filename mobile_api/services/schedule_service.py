@@ -21,7 +21,7 @@ MIN_INTERVAL_HOURS = 0.5
 MAX_INTERVAL_HOURS = 168.0
 MAX_SCHEDULES_PER_USER = 10
 MAX_CONSECUTIVE_FAILURES = 5
-STALE_RUN_TIMEOUT = timedelta(minutes=45)
+STALE_RUN_TIMEOUT = timedelta(minutes=15)
 
 
 def _clamp_interval(hours: float) -> float:
@@ -38,6 +38,9 @@ def schedule_title_from_filters(filters: Dict[str, Any]) -> str:
         str(filters.get('transaction_type_label') or '').strip(),
         str(filters.get('category_label') or '').strip(),
     ]
+    search_query = str(filters.get('search_query') or '').strip()
+    if search_query:
+        parts.append(f'«{search_query[:40]}»')
     parts = [p for p in parts if p]
     if parts:
         return ' — '.join(parts)[:200]
@@ -269,6 +272,8 @@ def complete_schedule_run(
 ) -> Optional[MobileExtractionRun]:
     run = MobileExtractionRun.objects.filter(user=user, pk=run_id).select_related('schedule').first()
     if not run:
+        return None
+    if run.status != MobileExtractionSchedule.RUN_STATUS_RUNNING or run.finished_at is not None:
         return None
     now = timezone.now()
     run.status = MobileExtractionSchedule.RUN_STATUS_SUCCESS

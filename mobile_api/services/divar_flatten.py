@@ -117,6 +117,89 @@ def _record_for_filters(export_row: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _has_meaningful_images(value: Any) -> bool:
+    s = str(value or '').strip()
+    return bool(s) and s.lower() not in ('-', '—', 'nan', 'none', 'null')
+
+
+def _image_urls_from_sections(raw: Dict[str, Any]) -> List[str]:
+    """استخراج مستقیم از IMAGE carousel در JSON خام."""
+    urls: List[str] = []
+    sections = raw.get('sections') or []
+    if not isinstance(sections, list):
+        return urls
+    for section in sections:
+        if not isinstance(section, dict) or section.get('section_name') != 'IMAGE':
+            continue
+        for widget in section.get('widgets') or []:
+            if not isinstance(widget, dict):
+                continue
+            data = widget.get('data') or {}
+            if not isinstance(data, dict):
+                continue
+            for item in data.get('items') or []:
+                if not isinstance(item, dict):
+                    continue
+                image = item.get('image') if isinstance(item.get('image'), dict) else {}
+                for key in ('url', 'webp_url', 'thumbnail_url', 'thumbnail'):
+                    val = str((image or {}).get(key) or item.get(key) or '').strip()
+                    if val.startswith('http') and val not in urls:
+                        urls.append(val)
+    return urls
+
+
+def _image_urls_from_raw_detail(raw: Dict[str, Any]) -> List[str]:
+    """استخراج URL تصویر از JSON خام دیوار وقتی flatten خالی یا placeholder برگردانده."""
+    urls = _image_urls_from_sections(raw)
+    if urls:
+        return urls
+    try:
+        row = _raw_flatten_row(raw, str(raw.get('token') or ''))
+    except Exception:
+        return []
+    joined = str(row.get('images') or row.get('رسانه_تصاویر') or '').strip()
+    if not _has_meaningful_images(joined):
+        return []
+    if '|' in joined:
+        return [part.strip() for part in joined.split('|') if part.strip()]
+    return [joined] if joined else []
+
+
+def _merge_client_images(row: Dict[str, Any], item: Dict[str, Any]) -> None:
+    """لینک تصویر ارسالی از کلاینت اندروید — وقتی flatten تصویر نداشت."""
+    existing = str(
+        row.get('images')
+        or row.get('رسانه_تصاویر')
+        or row.get('لینک تصاویر')
+        or ''
+    ).strip()
+    if _has_meaningful_images(existing):
+        return
+    thumb = str(item.get('thumbnail_url') or item.get('thumbnailUrl') or '').strip()
+    urls_raw = item.get('image_urls') or item.get('imageUrls') or []
+    urls: List[str] = []
+    if thumb:
+        urls.append(thumb)
+    if isinstance(urls_raw, list):
+        for entry in urls_raw:
+            value = str(entry or '').strip()
+            if value and value not in urls:
+                urls.append(value)
+    if not urls:
+        raw = item.get('raw')
+        if isinstance(raw, dict):
+            urls = _image_urls_from_raw_detail(raw)
+    if not urls:
+        return
+    joined = ' | '.join(urls)
+    row['images'] = joined
+    row['رسانه_تصاویر'] = joined
+    row['لینک تصاویر'] = joined
+    row['لینک تصویر اول'] = urls[0]
+    row['تصاویر'] = joined
+    row['رسانه_تعداد_تصویر'] = len(urls)
+
+
 def _advertiser_type_persian(row: Dict[str, Any]) -> str:
     consultant = extract_consultant_name(row)
     business = str(
@@ -170,6 +253,18 @@ def items_to_export_records(
         return [], skipped
 
     export_records = _export_records_from_raw_rows(raw_rows, category)
+
+    item_by_token: Dict[str, Dict[str, Any]] = {}
+    for item in items:
+        tok = str(item.get('token') or '').strip()
+        if tok:
+            item_by_token[tok] = item
+
+    for rec in export_records:
+        tok = str(rec.get('شناسه') or rec.get('token') or '').strip()
+        client_item = item_by_token.get(tok)
+        if client_item:
+            _merge_client_images(rec, client_item)
 
     filtered: List[Dict[str, Any]] = []
     adv = str(advertiser_filter or 'all').strip().lower()
@@ -232,4 +327,4 @@ def is_consultant_ad(flat: Dict[str, Any]) -> bool:
     if flat.get('consultant_name'):
         return True
     return 'مشاور' in business or 'آژانس' in business
-
+

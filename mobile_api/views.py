@@ -65,6 +65,13 @@ from mobile_api.services.filing_service import (
 )
 from mobile_api.services.insights_service import dataset_insights_payload, dataset_map_payload
 from mobile_api.services.license_service import license_status_payload, require_light_extract
+from mobile_api.pagination import clamp_page, clamp_page_size
+from mobile_api.throttles import (
+    MobileExtractionThrottle,
+    MobileLoginThrottle,
+    MobileRefreshThrottle,
+    MobileUserThrottle,
+)
 from mobile_api.services.notification_service import (
     list_notifications_paginated,
     mark_read,
@@ -129,6 +136,7 @@ def _device_id(request) -> str:
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [MobileLoginThrottle]
 
     def post(self, request):
         data = _parse_body(request)
@@ -150,6 +158,7 @@ class LoginView(APIView):
 
 class RefreshView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [MobileRefreshThrottle]
 
     def post(self, request):
         data = _parse_body(request)
@@ -176,7 +185,8 @@ class LogoutView(APIView):
         refresh_str = data.get('refresh') or ''
         if refresh_str:
             try:
-                RefreshToken(refresh_str)
+                token = RefreshToken(refresh_str)
+                token.blacklist()
             except Exception:
                 pass
         return api_ok({})
@@ -191,7 +201,10 @@ class DeviceRegisterView(APIView):
             result = register_or_update_device(request.user, data)
             return api_ok(result)
         except ValueError as exc:
-            return api_error(str(exc), code='VALIDATION_ERROR')
+            msg = str(exc)
+            if 'حداکثر تعداد دستگاه' in msg:
+                return api_error(msg, code='LICENSE_DEVICE_LIMIT', status=403)
+            return api_error(msg, code='VALIDATION_ERROR')
 
 
 class DevicePatchView(APIView):
@@ -219,8 +232,8 @@ class ContactsListView(APIView):
 
     def get(self, request):
         q = request.GET.get('q', '')
-        page = int(request.GET.get('page', 1) or 1)
-        page_size = int(request.GET.get('page_size', 50) or 50)
+        page = clamp_page(request.GET.get('page', 1))
+        page_size = clamp_page_size(request.GET.get('page_size', 50), default=50, maximum=100)
         items, meta = list_contacts(request.user, q=q, page=page, page_size=page_size)
         return api_ok(items, meta=meta)
 
@@ -265,8 +278,8 @@ class DatasetsListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        page = int(request.GET.get('page', 1) or 1)
-        page_size = int(request.GET.get('page_size', 20) or 20)
+        page = clamp_page(request.GET.get('page', 1))
+        page_size = clamp_page_size(request.GET.get('page_size', 20), default=20, maximum=100)
         items, meta = list_datasets(request.user, page=page, page_size=page_size)
         return api_ok(items, meta=meta)
 
@@ -277,8 +290,8 @@ class DatasetListingsView(APIView):
     def get(self, request, dataset_id):
         if not get_dataset(request.user, dataset_id):
             return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
-        page = int(request.GET.get('page', 1) or 1)
-        page_size = int(request.GET.get('page_size', 50) or 50)
+        page = clamp_page(request.GET.get('page', 1))
+        page_size = clamp_page_size(request.GET.get('page_size', 50), default=50, maximum=100)
         q = request.GET.get('q', '')
 
         def _int_param(name: str):
@@ -345,8 +358,8 @@ class FilingSearchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        page = int(request.GET.get('page', 1) or 1)
-        page_size = int(request.GET.get('page_size', 30) or 30)
+        page = clamp_page(request.GET.get('page', 1))
+        page_size = clamp_page_size(request.GET.get('page_size', 30), default=30, maximum=100)
         q = request.GET.get('q', '') or ''
         dataset_id = request.GET.get('dataset_id') or None
 
@@ -383,6 +396,7 @@ class ExtractionLimitsView(APIView):
 
 class ExtractionUploadView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [MobileExtractionThrottle]
 
     def post(self, request):
         err = require_light_extract(request.user)
@@ -445,6 +459,9 @@ class ExtractionScheduleDetailView(APIView):
         return api_ok(schedule_to_dict(schedule))
 
     def patch(self, request, schedule_id):
+        err = require_light_extract(request.user)
+        if err:
+            return api_error(err, code='LICENSE_REQUIRED', status=403)
         data = _parse_body(request)
         schedule = update_schedule(request.user, schedule_id, data)
         if not schedule:
@@ -452,6 +469,9 @@ class ExtractionScheduleDetailView(APIView):
         return api_ok(schedule_to_dict(schedule))
 
     def delete(self, request, schedule_id):
+        err = require_light_extract(request.user)
+        if err:
+            return api_error(err, code='LICENSE_REQUIRED', status=403)
         if not delete_schedule(request.user, schedule_id):
             return api_error('زمان‌بندی یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok({'deleted': True})
@@ -461,6 +481,9 @@ class ExtractionScheduleToggleView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, schedule_id):
+        err = require_light_extract(request.user)
+        if err:
+            return api_error(err, code='LICENSE_REQUIRED', status=403)
         data = _parse_body(request)
         enabled = data.get('is_enabled') if 'is_enabled' in data else None
         schedule = toggle_schedule(request.user, schedule_id, enabled=enabled)
@@ -473,8 +496,8 @@ class ExtractionScheduleRunsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, schedule_id):
-        page = int(request.GET.get('page', 1) or 1)
-        page_size = int(request.GET.get('page_size', 20) or 20)
+        page = clamp_page(request.GET.get('page', 1))
+        page_size = clamp_page_size(request.GET.get('page_size', 20), default=20, maximum=100)
         runs, meta = list_runs(request.user, schedule_id, page=page, page_size=page_size)
         if not get_schedule(request.user, schedule_id):
             return api_error('زمان‌بندی یافت نشد.', code='NOT_FOUND', status=404)
@@ -729,8 +752,8 @@ class NotificationsListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        page = int(request.GET.get('page', 1) or 1)
-        page_size = int(request.GET.get('page_size', 20) or 20)
+        page = clamp_page(request.GET.get('page', 1))
+        page_size = clamp_page_size(request.GET.get('page_size', 20), default=20, maximum=100)
         items, meta = list_notifications_paginated(request.user, page=page, page_size=page_size)
         return api_ok(items, meta=meta)
 
@@ -755,8 +778,8 @@ class DealsListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        page = int(request.GET.get('page', 1) or 1)
-        page_size = int(request.GET.get('page_size', 20) or 20)
+        page = clamp_page(request.GET.get('page', 1))
+        page_size = clamp_page_size(request.GET.get('page_size', 20), default=20, maximum=100)
         query = {
             'q': request.GET.get('q', ''),
             'stage': request.GET.get('stage', ''),
@@ -835,8 +858,8 @@ class PropertiesListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        page = int(request.GET.get('page', 1) or 1)
-        page_size = int(request.GET.get('page_size', 20) or 20)
+        page = clamp_page(request.GET.get('page', 1))
+        page_size = clamp_page_size(request.GET.get('page_size', 20), default=20, maximum=100)
         query = {
             'q': request.GET.get('q', ''),
             'deal_mode': request.GET.get('deal_mode', ''),

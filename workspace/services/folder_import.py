@@ -260,11 +260,15 @@ def parse_output_relative_path(relative_path: str) -> Dict[str, Any]:
 
 
 def build_dataset_name(path_info: Dict[str, Any], original_filename: str) -> str:
+    from workspace.services.columns import normalize_location_label
+
     parts: List[str] = []
-    if path_info.get('district'):
-        parts.append(path_info['district'])
-    elif path_info.get('city'):
-        parts.append(path_info['city'])
+    district = normalize_location_label(path_info.get('district'))
+    city = normalize_location_label(path_info.get('city'))
+    if district:
+        parts.append(district)
+    elif city:
+        parts.append(city)
     if path_info.get('subcategory'):
         parts.append(path_info['subcategory'])
     elif path_info.get('transaction_type'):

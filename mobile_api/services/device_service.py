@@ -69,19 +69,28 @@ def _ensure_mobile_activation(
         return None
 
     label = (payload.get('device_model') or 'Android')[:80]
-    activation, created = LicenseActivation.objects.get_or_create(
+    existing = LicenseActivation.objects.filter(
         license=lic,
         hardware_fingerprint=device_id,
-        defaults={
-            'label': f'موبایل: {label}',
-            'is_active': True,
-            'notes': 'device_type=mobile',
-        },
-    )
-    if not created:
-        activation.label = activation.label or f'موبایل: {label}'
-        activation.is_active = True
-        activation.save(update_fields=['label', 'is_active'])
+    ).first()
+    if existing:
+        existing.label = existing.label or f'موبایل: {label}'
+        existing.is_active = True
+        existing.save(update_fields=['label', 'is_active'])
+        activation = existing
+    else:
+        active_count = LicenseActivation.objects.filter(license=lic, is_active=True).count()
+        if active_count >= lic.max_activations:
+            raise ValueError(
+                f'حداکثر تعداد دستگاه ({lic.max_activations}) برای این لایسنس فعال شده است.',
+            )
+        activation = LicenseActivation.objects.create(
+            license=lic,
+            hardware_fingerprint=device_id,
+            label=f'موبایل: {label}',
+            is_active=True,
+            notes='device_type=mobile',
+        )
     if lic.status == 'inactive' and lic.can_be_activated():
         lic.status = 'active'
         lic.save(update_fields=['status'])

@@ -31,7 +31,7 @@ COLUMN_ALIASES: Dict[str, List[str]] = {
     'link': ['لینک', 'url', 'link', 'آدرس آگهی'],
     'published_at': ['ایجاد آگهی', 'تاریخ انتشار', 'published_at', 'created_at'],
     'expires_at': ['انقضا آگهی', 'expires_at', 'انتشار_unavailable_after'],
-    'images': ['تصاویر', 'images', 'عکس‌ها', 'رسانه_تصاویر'],
+    'images': ['لینک تصاویر', 'تصاویر', 'images', 'عکس‌ها', 'رسانه_تصاویر', 'لینک تصویر اول'],
     'build_year': ['ساخت', 'سال ساخت', 'build_year', 'سن بنا'],
     'floor': ['طبقه', 'floor'],
     'parking': ['پارکینگ', 'parking'],
@@ -56,10 +56,18 @@ def extract_consultant_name(data: Optional[Dict[str, Any]]) -> str:
         val = data.get(key)
         if val is None:
             continue
-        text = str(val).strip()
-        if text and text not in ('-', '—', 'nan', 'None'):
+        text = normalize_location_label(val)
+        if text:
             return text
     return ''
+
+
+def normalize_location_label(val: Any) -> str:
+    """نام شهر/محله/منطقه — placeholderهای خالی مثل '-' نادیده گرفته می‌شوند."""
+    s = _safe_str(val)
+    if not s or s.lower() in ('nan', 'none', '-', '—'):
+        return ''
+    return s
 
 
 def _find_column(df: pd.DataFrame, field: str) -> Optional[str]:
@@ -247,8 +255,8 @@ def export_record_to_listing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
         'rent': _safe_int(_pick_row_value(row, 'rent')),
         'area': _safe_float(_pick_row_value(row, 'area')),
         'rooms': _safe_str(_pick_row_value(row, 'rooms')),
-        'neighborhood': _safe_str(_pick_row_value(row, 'neighborhood')),
-        'city': _safe_str(_pick_row_value(row, 'city')),
+        'neighborhood': normalize_location_label(_pick_row_value(row, 'neighborhood')),
+        'city': normalize_location_label(_pick_row_value(row, 'city')),
         'latitude': _safe_float(_pick_row_value(row, 'latitude')),
         'longitude': _safe_float(_pick_row_value(row, 'longitude')),
         'business_type': _safe_str(_pick_row_value(row, 'business_type')),
@@ -283,8 +291,8 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
         'rent': _safe_int(row[cols['rent']]) if cols['rent'] else None,
         'area': _safe_float(row[cols['area']]) if cols['area'] else None,
         'rooms': _safe_str(row[cols['rooms']]) if cols['rooms'] else '',
-        'neighborhood': _safe_str(row[cols['neighborhood']]) if cols['neighborhood'] else '',
-        'city': _safe_str(row[cols['city']]) if cols['city'] else '',
+        'neighborhood': normalize_location_label(row[cols['neighborhood']]) if cols['neighborhood'] else '',
+        'city': normalize_location_label(row[cols['city']]) if cols['city'] else '',
         'latitude': _safe_float(row[cols['latitude']]) if cols['latitude'] else None,
         'longitude': _safe_float(row[cols['longitude']]) if cols['longitude'] else None,
         'business_type': _safe_str(row[cols['business_type']]) if cols['business_type'] else '',
@@ -297,10 +305,19 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
     }
 
 
+def _most_common_location_label(series: pd.Series) -> str:
+    from collections import Counter
+
+    labels = [normalize_location_label(v) for v in series.dropna()]
+    labels = [label for label in labels if label]
+    if not labels:
+        return ''
+    return Counter(labels).most_common(1)[0][0]
+
+
 def detect_metadata(df: pd.DataFrame) -> Dict[str, Any]:
     """تشخیص نوع معامله و مکان از داده."""
     meta: Dict[str, Any] = {}
-    cols_lower = [c.lower() for c in df.columns]
     has_rent = any('اجاره' in c or 'rent' in c for c in df.columns)
     has_deposit = any('ودیعه' in c or 'deposit' in c or 'رهن' in c for c in df.columns)
     has_price = any('قیمت' in c or c == 'price' for c in df.columns)
@@ -316,15 +333,15 @@ def detect_metadata(df: pd.DataFrame) -> Dict[str, Any]:
 
     city_col = _find_column(df, 'city')
     if city_col and len(df) > 0:
-        cities = df[city_col].dropna().astype(str).value_counts()
-        if len(cities):
-            meta['city'] = str(cities.index[0])
+        city = _most_common_location_label(df[city_col])
+        if city:
+            meta['city'] = city
 
     nb_col = _find_column(df, 'neighborhood')
     if nb_col and len(df) > 0:
-        nbs = df[nb_col].dropna().astype(str).value_counts()
-        if len(nbs):
-            meta['district'] = str(nbs.index[0])
+        district = _most_common_location_label(df[nb_col])
+        if district:
+            meta['district'] = district
 
     return meta
 

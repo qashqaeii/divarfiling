@@ -62,6 +62,13 @@ def license_status_payload(user) -> Dict[str, Any]:
     }
 
 
+def require_bot_license(user) -> Optional[str]:
+    """پیام خطا اگر لایسنس فعال نیست."""
+    if not has_active_bot_license(user):
+        return 'برای این قابلیت نیاز به لایسنس فعال دارید.'
+    return None
+
+
 def require_light_extract(user) -> Optional[str]:
     """پیام خطا اگر استخراج سبک مجاز نیست."""
     if not has_active_bot_license(user):

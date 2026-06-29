@@ -213,9 +213,10 @@ def complete_follow_up_task(user, contact_id: int, *, note: str = '') -> Optiona
 def postpone_follow_up(user, contact_id: int, *, days: int = 1) -> Optional[Customer]:
     from workspace.services.crm import set_next_follow_up
     c = get_contact(user, contact_id)
-    if not c or not c.next_follow_up:
+    if not c:
         return None
-    new_date = c.next_follow_up + timedelta(days=max(1, days))
+    base = c.next_follow_up or timezone.now().date()
+    new_date = base + timedelta(days=max(1, days))
     set_next_follow_up(c, new_date, auto_status=False)
     log_activity(c, 'پیگیری', content=f'پیگیری به {new_date.isoformat()} موکول شد.', title='تعویق پیگیری')
     return c

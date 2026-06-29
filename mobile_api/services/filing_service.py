@@ -28,6 +28,8 @@ def list_datasets(user, *, page: int = 1, page_size: int = 20) -> Tuple[List[dic
 
 
 def get_dataset(user, dataset_id: str) -> Dataset | None:
+    if not has_active_bot_license(user):
+        return None
     return _datasets_qs(user).filter(pk=dataset_id).first()
 
 
@@ -79,6 +81,8 @@ def list_listings(
 
 
 def get_listing_detail(user, token: str) -> Optional[dict]:
+    if not has_active_bot_license(user):
+        return None
     lst = Listing.objects.filter(
         dataset__user=user,
         token=token,

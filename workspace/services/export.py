@@ -51,3 +51,30 @@ def export_json_response(listings, filename: str = 'export.json') -> HttpRespons
     response = HttpResponse(content, content_type='application/json; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
+
+
+def export_excel_response(listings, filename: str = 'export.xlsx') -> HttpResponse:
+    import io
+
+    import pandas as pd
+
+    rows = listings_to_rows(listings)
+    if not rows:
+        rows = [{'عنوان': ''}]
+    df = pd.DataFrame(rows)
+    buf = io.BytesIO()
+    df.to_excel(buf, index=False, engine='openpyxl')
+    buf.seek(0)
+    response = HttpResponse(
+        buf.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+def rows_json_response(rows: List[dict], filename: str = 'export.json') -> HttpResponse:
+    content = json.dumps(rows, ensure_ascii=False, indent=2, default=str)
+    response = HttpResponse(content, content_type='application/json; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response

@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from mobile_api.activity_types import workspace_type_to_api
 from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing, Dataset, Listing, Reminder
 from workspace.services.listing_features import feature_highlights_for_listing
+from workspace.services.listing_edit import owner_phone_from_listing
 from workspace.services.property_images import normalize_external_image_url
 
 
@@ -165,6 +166,7 @@ def listing_detail_to_dict(lst: Listing) -> Dict[str, Any]:
         'floor': floor,
         'total_floors': total_floors,
         'business_type': lst.business_type or '',
+        'owner_phone': owner_phone_from_listing(lst),
         'published_at': lst.published_at.isoformat() if lst.published_at else None,
         'expires_at': lst.expires_at.isoformat() if lst.expires_at else None,
         'is_expired': lst.is_expired,

@@ -98,3 +98,54 @@ def apply_listing_edit_post(listing, post) -> None:
             data[data_key] = 'ندارد'
 
     listing.data = data
+
+
+OWNER_PHONE_KEYS = ('شماره تماس', 'owner_phone', 'phone', 'موبایل', 'تلفن', 'تماس')
+
+
+def owner_phone_from_listing(listing) -> str:
+    data = listing.data or {}
+    for key in OWNER_PHONE_KEYS:
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ''
+
+
+def _apply_owner_phone(listing, phone: str) -> None:
+    data = dict(listing.data or {})
+    phone = (phone or '').strip()
+    if phone:
+        data['شماره تماس'] = phone
+        data['owner_phone'] = phone
+    else:
+        for key in OWNER_PHONE_KEYS:
+            data.pop(key, None)
+    listing.data = data
+
+
+class _JsonPostAdapter:
+    """Map JSON body to the POST-like interface used by apply_listing_edit_post."""
+
+    def __init__(self, payload: Dict[str, Any]):
+        self._payload = payload
+
+    def __contains__(self, key: str) -> bool:
+        return key in self._payload
+
+    def get(self, key: str, default: str = '') -> str:
+        if key not in self._payload:
+            return default
+        value = self._payload[key]
+        if value is None:
+            return ''
+        if isinstance(value, bool):
+            return '1' if value else '0'
+        return str(value).strip()
+
+
+def apply_listing_edit_json(listing, payload: Dict[str, Any]) -> None:
+    """Apply listing edits from mobile JSON body."""
+    apply_listing_edit_post(listing, _JsonPostAdapter(payload))
+    if 'owner_phone' in payload:
+        _apply_owner_phone(listing, payload.get('owner_phone') or '')

@@ -57,12 +57,15 @@ from mobile_api.services.documents_service import (
 from mobile_api.services.extraction_ingest import extraction_limits_payload, ingest_mobile_extraction
 from mobile_api.services.filing_service import (
     dataset_detail_payload,
+    export_dataset_response,
     get_dataset,
     get_listing_detail,
     list_datasets,
     list_listings,
     search_listings,
+    update_listing,
 )
+from mobile_api.services.mobile_export import export_contacts_response, export_properties_response
 from mobile_api.services.insights_service import dataset_insights_payload, dataset_map_payload
 from mobile_api.services.license_service import license_status_payload, require_light_extract
 from mobile_api.pagination import clamp_page, clamp_page_size
@@ -352,6 +355,40 @@ class ListingDetailView(APIView):
         if not payload:
             return api_error('آگهی یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
+
+    def patch(self, request, token):
+        payload = update_listing(request.user, token, request.data)
+        if not payload:
+            return api_error('آگهی یافت نشد یا داده نامعتبر است.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class DatasetExportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, dataset_id):
+        response = export_dataset_response(
+            request.user,
+            str(dataset_id),
+            request.GET.get('format', 'xlsx'),
+        )
+        if response is None:
+            return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
+        return response
+
+
+class ContactsExportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return export_contacts_response(request.user, request.GET, request.GET.get('format', 'xlsx'))
+
+
+class PropertiesExportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return export_properties_response(request.user, request.GET, request.GET.get('format', 'xlsx'))
 
 
 class FilingSearchView(APIView):

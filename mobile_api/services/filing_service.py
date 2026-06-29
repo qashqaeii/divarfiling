@@ -92,6 +92,41 @@ def get_listing_detail(user, token: str) -> Optional[dict]:
     return listing_detail_to_dict(lst)
 
 
+def update_listing(user, token: str, payload: dict) -> Optional[dict]:
+    if not has_active_bot_license(user):
+        return None
+    lst = Listing.objects.filter(
+        dataset__user=user,
+        token=token,
+    ).select_related('dataset').first()
+    if not lst:
+        return None
+    from workspace.services.listing_edit import apply_listing_edit_json
+
+    try:
+        apply_listing_edit_json(lst, payload)
+        lst.save()
+    except (ValueError, TypeError):
+        return None
+    return listing_detail_to_dict(lst)
+
+
+def export_dataset_response(user, dataset_id: str, fmt: str):
+    from workspace.services.export import export_csv_response, export_excel_response, export_json_response
+
+    ds = get_dataset(user, dataset_id)
+    if not ds:
+        return None
+    listings = ds.listings.all()
+    safe_name = (ds.name or str(dataset_id)).replace('/', '-').replace('\\', '-')
+    fmt = (fmt or 'xlsx').lower()
+    if fmt == 'json':
+        return export_json_response(listings, f'{safe_name}.json')
+    if fmt == 'csv':
+        return export_csv_response(listings, f'{safe_name}.csv')
+    return export_excel_response(listings, f'{safe_name}.xlsx')
+
+
 def search_listings(
     user,
     *,

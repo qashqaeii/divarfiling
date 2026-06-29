@@ -28,6 +28,7 @@ urlpatterns = [
     path('sync/push', views.SyncPushView.as_view(), name='sync_push'),
 
     path('crm/contacts', views.ContactsListView.as_view(), name='contacts'),
+    path('crm/contacts/export', views.ContactsExportView.as_view(), name='contacts_export'),
     path('crm/contacts/quick-lead', views.QuickLeadView.as_view(), name='quick_lead'),
     path('crm/contacts/<int:contact_id>', views.ContactDetailView.as_view(), name='contact_detail'),
     path('crm/contacts/<int:contact_id>/activities', views.ContactActivitiesView.as_view(), name='contact_activities'),
@@ -47,11 +48,13 @@ urlpatterns = [
     path('crm/deals/<int:deal_id>', views.DealDetailView.as_view(), name='deal_detail'),
     path('crm/deals/<int:deal_id>/stage', views.DealStageView.as_view(), name='deal_stage'),
     path('crm/properties', views.PropertiesListView.as_view(), name='properties'),
+    path('crm/properties/export', views.PropertiesExportView.as_view(), name='properties_export'),
     path('crm/properties/<int:property_id>', views.PropertyDetailView.as_view(), name='property_detail'),
     path('crm/properties/<int:property_id>/status', views.PropertyStatusView.as_view(), name='property_status'),
 
     path('filing/datasets', views.DatasetsListView.as_view(), name='datasets'),
     path('filing/datasets/<uuid:dataset_id>', views.DatasetDetailView.as_view(), name='dataset_detail'),
+    path('filing/datasets/<uuid:dataset_id>/export', views.DatasetExportView.as_view(), name='dataset_export'),
     path('filing/datasets/<uuid:dataset_id>/listings', views.DatasetListingsView.as_view(), name='dataset_listings'),
     path('filing/datasets/<uuid:dataset_id>/insights', views.DatasetInsightsView.as_view(), name='dataset_insights'),
     path('filing/datasets/<uuid:dataset_id>/map', views.DatasetMapView.as_view(), name='dataset_map'),

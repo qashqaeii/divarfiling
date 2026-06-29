@@ -242,3 +242,102 @@ class ExtractionIngestJsonTest(TestCase):
         self.assertEqual(len(listing.images), 2)
         self.assertIn(img_a, listing.images)
         self.assertIn(img_b, listing.images)
+
+    def test_scheduled_ingest_skips_daily_limit_check(self):
+        from unittest.mock import patch
+
+        from mobile_api.models import MobileExtractionRun, MobileExtractionSchedule
+
+        user = User.objects.create_user(username='09126667788', password='x')
+        schedule = MobileExtractionSchedule.objects.create(
+            user=user,
+            title='زمان‌بندی تست',
+            filters={'category': 'apartment-rent', 'max_items': 1, 'city_id': '1'},
+            is_enabled=True,
+            next_run_at=timezone.now(),
+        )
+        run = MobileExtractionRun.objects.create(
+            user=user,
+            schedule=schedule,
+            status=MobileExtractionSchedule.RUN_STATUS_RUNNING,
+        )
+        detail = {
+            'seo': {'web_info': {'title': 'اجاره آپارتمان', 'city_persian': 'تهران'}},
+            'share': {'web_url': 'https://divar.ir/v/sched1'},
+            'webengage': {'token': 'sched1', 'business_type': 'personal'},
+            'sections': [
+                {
+                    'section_name': 'LIST_DATA',
+                    'widgets': [
+                        {
+                            'widget_type': 'RENT_SLIDER',
+                            'data': {
+                                'credit': {'value': '۵۰۰٬۰۰۰٬۰۰۰ تومان'},
+                                'rent': {'value': '۱۵٬۰۰۰٬۰۰۰ تومان'},
+                            },
+                        },
+                    ],
+                },
+            ],
+        }
+        payload = {
+            'run_id': run.pk,
+            'filters': {
+                'category': 'apartment-rent',
+                'category_label': 'آپارتمان',
+                'transaction_type_label': 'اجاره مسکونی',
+                'city_name': 'تهران',
+                'max_items': 1,
+            },
+            'started_at': timezone.now().isoformat(),
+            'finished_at': timezone.now().isoformat(),
+            'items': [{'token': 'sched1', 'raw': detail}],
+        }
+        with patch(
+            'mobile_api.services.extraction_ingest.check_mobile_extraction_allowed',
+            side_effect=ValueError('سقف استخراج روزانه تکمیل شده است.'),
+        ):
+            result = ingest_mobile_extraction(user, payload)
+        self.assertEqual(result.ingested_count, 1)
+
+    def test_manual_ingest_enforces_daily_limit_check(self):
+        from unittest.mock import patch
+
+        user = User.objects.create_user(username='09127778800', password='x')
+        detail = {
+            'seo': {'web_info': {'title': 'اجاره آپارتمان', 'city_persian': 'تهران'}},
+            'share': {'web_url': 'https://divar.ir/v/manual1'},
+            'webengage': {'token': 'manual1', 'business_type': 'personal'},
+            'sections': [
+                {
+                    'section_name': 'LIST_DATA',
+                    'widgets': [
+                        {
+                            'widget_type': 'RENT_SLIDER',
+                            'data': {
+                                'credit': {'value': '۵۰۰٬۰۰۰٬۰۰۰ تومان'},
+                                'rent': {'value': '۱۵٬۰۰۰٬۰۰۰ تومان'},
+                            },
+                        },
+                    ],
+                },
+            ],
+        }
+        payload = {
+            'filters': {
+                'category': 'apartment-rent',
+                'category_label': 'آپارتمان',
+                'transaction_type_label': 'اجاره مسکونی',
+                'city_name': 'تهران',
+                'max_items': 1,
+            },
+            'started_at': timezone.now().isoformat(),
+            'finished_at': timezone.now().isoformat(),
+            'items': [{'token': 'manual1', 'raw': detail}],
+        }
+        with patch(
+            'mobile_api.services.extraction_ingest.check_mobile_extraction_allowed',
+            side_effect=ValueError('سقف استخراج روزانه تکمیل شده است.'),
+        ):
+            with self.assertRaises(ValueError):
+                ingest_mobile_extraction(user, payload)

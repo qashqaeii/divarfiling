@@ -166,8 +166,9 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             run_id = int(run_id)
         except (TypeError, ValueError):
             run_id = None
-    check_mobile_extraction_allowed(user)
-    if run_id:
+    if not run_id:
+        check_mobile_extraction_allowed(user)
+    else:
         _validate_schedule_run_for_ingest(user, run_id)
 
     # همان DataFrame و row_to_listing_fields که import اکسل/JSON ویندوز استفاده می‌کند

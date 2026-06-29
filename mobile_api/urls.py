@@ -51,6 +51,9 @@ urlpatterns = [
     path('crm/properties/export', views.PropertiesExportView.as_view(), name='properties_export'),
     path('crm/properties/<int:property_id>', views.PropertyDetailView.as_view(), name='property_detail'),
     path('crm/properties/<int:property_id>/status', views.PropertyStatusView.as_view(), name='property_status'),
+    path('crm/properties/<int:property_id>/contacts', views.PropertyContactsView.as_view(), name='property_contacts'),
+    path('crm/properties/<int:property_id>/documents', views.PropertyDocumentsView.as_view(), name='property_documents'),
+    path('crm/properties/<int:property_id>/documents/<int:document_id>', views.PropertyDocumentDetailView.as_view(), name='property_document_detail'),
 
     path('filing/datasets', views.DatasetsListView.as_view(), name='datasets'),
     path('filing/datasets/<uuid:dataset_id>', views.DatasetDetailView.as_view(), name='dataset_detail'),

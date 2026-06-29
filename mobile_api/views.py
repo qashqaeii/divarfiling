@@ -43,6 +43,7 @@ from mobile_api.services.properties_service import (
     change_property_status,
     create_property_from_mobile,
     get_property_detail,
+    link_property_contact,
     list_properties_paginated,
     soft_delete_property,
     update_property_from_mobile,
@@ -50,9 +51,12 @@ from mobile_api.services.properties_service import (
 from mobile_api.services.device_service import register_or_update_device, update_device_fcm
 from mobile_api.services.documents_service import (
     delete_contact_document,
+    delete_property_document,
     list_contact_documents,
+    list_property_documents,
     send_listing_to_contact,
     upload_contact_document,
+    upload_property_document,
 )
 from mobile_api.services.extraction_ingest import extraction_limits_payload, ingest_mobile_extraction
 from mobile_api.services.filing_service import (
@@ -106,6 +110,7 @@ from mobile_api.serializers import (
     document_to_dict,
     listing_to_dict,
     property_to_dict,
+    property_contact_to_dict,
     reminder_to_dict,
     run_to_dict,
     schedule_to_dict,
@@ -919,7 +924,7 @@ class PropertyDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, property_id):
-        payload = get_property_detail(request.user, property_id)
+        payload = get_property_detail(request.user, property_id, request=request)
         if not payload:
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
@@ -952,3 +957,53 @@ class PropertyStatusView(APIView):
         if not prop:
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(property_to_dict(prop, detailed=True))
+
+
+class PropertyContactsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, property_id):
+        data = _parse_body(request)
+        try:
+            link = link_property_contact(request.user, property_id, data)
+            return api_ok(property_contact_to_dict(link), status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class PropertyDocumentsView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request, property_id):
+        from workspace.services.crm_scope import property_for_user
+        prop = property_for_user(request.user, property_id)
+        if not prop:
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        docs = list_property_documents(request.user, property_id, request=request)
+        return api_ok(docs)
+
+    def post(self, request, property_id):
+        uploaded = request.FILES.get('file')
+        try:
+            doc = upload_property_document(
+                request.user,
+                property_id,
+                title=(request.POST.get('title') or '').strip(),
+                uploaded_file=uploaded,
+                doc_type=(request.POST.get('doc_type') or '').strip(),
+                note=(request.POST.get('note') or '').strip(),
+                request=request,
+            )
+            return api_ok(document_to_dict(doc, request=request), status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class PropertyDocumentDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, property_id, document_id):
+        if not delete_property_document(request.user, property_id, document_id):
+            return api_error('مدرک یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({'deleted': True})

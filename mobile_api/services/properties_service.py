@@ -6,11 +6,14 @@ from typing import Any, Dict, List, Optional, Tuple
 from django.core.paginator import Paginator
 from django.utils import timezone
 
-from mobile_api.serializers import property_to_dict
+from mobile_api.serializers import property_detail_to_dict, property_to_dict
 from workspace.constants import CRM_PROPERTIES, PROPERTY_DEAL_MODES, PROPERTY_TX_STATUSES
-from workspace.models import CRMProperty, Customer, PropertyContact
-from workspace.services.crm import filter_properties, update_property_transaction_status
-from workspace.services.crm_scope import get_agency, properties_qs, property_for_user
+from workspace.models import CRMProperty, Customer, CustomerActivity, CustomerDocument, PropertyContact
+from workspace.services.crm import filter_properties, link_customer_property, resolve_listing_for_property, update_property_transaction_status
+from workspace.services.crm_property_share import build_property_share_context
+from workspace.services.crm_scope import can_edit_property, customers_qs, get_agency, properties_qs, property_for_user
+from workspace.services.features import extract_listing_features
+from workspace.services.listing_features import build_listing_feature_profile
 
 
 def list_properties_paginated(
@@ -29,11 +32,43 @@ def list_properties_paginated(
     return items, meta
 
 
-def get_property_detail(user, property_id: int) -> Optional[dict]:
+def get_property_detail(user, property_id: int, *, request=None) -> Optional[dict]:
     prop = properties_qs(user).filter(pk=property_id).first()
     if not prop:
         return None
-    return property_to_dict(prop, detailed=True)
+
+    share_ctx = build_property_share_context(user, prop)
+    contacts = list(
+        prop.contact_links.select_related('customer').all()
+    ) if not share_ctx.mask_sensitive else []
+    activities = list(
+        CustomerActivity.objects.filter(property=prop)
+        .select_related('customer')
+        .order_by('-created_at')[:30]
+    ) if not share_ctx.mask_sensitive else []
+    documents = list(
+        CustomerDocument.objects.filter(user=user, property=prop).order_by('-uploaded_at')
+    ) if not share_ctx.mask_sensitive else []
+
+    feature_profile = {'has_details': False, 'core': [], 'groups': []}
+    listing_highlights: List[str] = []
+    source_listing = resolve_listing_for_property(user, prop)
+    if source_listing:
+        feat = extract_listing_features(source_listing)
+        feature_profile = build_listing_feature_profile(source_listing, feat)
+        listing_highlights = feat.get('highlights') or []
+
+    return property_detail_to_dict(
+        prop,
+        contacts=contacts,
+        activities=activities,
+        documents=documents,
+        feature_profile=feature_profile,
+        listing_highlights=listing_highlights,
+        can_edit=can_edit_property(user, prop),
+        mask_sensitive=share_ctx.mask_sensitive,
+        request=request,
+    )
 
 
 def _parse_int(value) -> Optional[int]:
@@ -137,9 +172,39 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
         prop.floor = _parse_int(data.get('floor'))
     if 'build_year' in data:
         prop.build_year = _parse_int(data.get('build_year'))
+    for bool_field in ('has_parking', 'has_storage', 'has_elevator'):
+        if bool_field in data:
+            setattr(prop, bool_field, bool(data.get(bool_field)))
+    if 'publish_status' in data:
+        prop.publish_status = (data.get('publish_status') or prop.publish_status)[:30]
 
     prop.save()
     return prop
+
+
+def link_property_contact(user, property_id: int, data: Dict[str, Any]) -> PropertyContact:
+    prop = property_for_user(user, property_id)
+    if not prop:
+        raise ValueError('ملک یافت نشد.')
+    if not can_edit_property(user, prop):
+        raise ValueError('امکان ویرایش این ملک را ندارید.')
+
+    customer_id = data.get('customer_id') or data.get('contact_id')
+    if not customer_id:
+        raise ValueError('مخاطب الزامی است.')
+    customer = customers_qs(user).filter(pk=int(customer_id)).first()
+    if not customer:
+        raise ValueError('مخاطب یافت نشد.')
+
+    return link_customer_property(
+        customer,
+        prop,
+        (data.get('role') or 'پیشنهادی').strip(),
+        (data.get('deal_type') or 'سایر').strip(),
+        interest_level=(data.get('interest_level') or '').strip(),
+        is_primary=bool(data.get('is_primary', False)),
+        notes=(data.get('notes') or '').strip(),
+    )
 
 
 def change_property_status(user, property_id: int, status: str) -> Optional[CRMProperty]:

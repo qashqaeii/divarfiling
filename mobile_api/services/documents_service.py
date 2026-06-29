@@ -9,7 +9,7 @@ from mobile_api.serializers import document_to_dict
 from mobile_api.services.crm_service import get_contact
 from workspace.models import CustomerDocument
 from workspace.services.crm import log_activity
-from workspace.services.crm_scope import customers_qs
+from workspace.services.crm_scope import can_edit_property, customers_qs, property_for_user
 
 
 def list_contact_documents(user, contact_id: int, *, request=None) -> List[dict]:
@@ -54,6 +54,54 @@ def delete_contact_document(user, contact_id: int, document_id: int) -> bool:
         return False
     deleted, _ = CustomerDocument.objects.filter(
         user=user, customer=c, pk=document_id,
+    ).delete()
+    return deleted > 0
+
+
+def list_property_documents(user, property_id: int, *, request=None) -> List[dict]:
+    prop = property_for_user(user, property_id)
+    if not prop:
+        return []
+    qs = CustomerDocument.objects.filter(user=user, property=prop).order_by('-uploaded_at')
+    return [document_to_dict(doc, request=request) for doc in qs]
+
+
+def upload_property_document(
+    user,
+    property_id: int,
+    *,
+    title: str,
+    uploaded_file: UploadedFile,
+    doc_type: str = '',
+    note: str = '',
+    request=None,
+) -> CustomerDocument:
+    prop = property_for_user(user, property_id)
+    if not prop:
+        raise ValueError('ملک یافت نشد.')
+    if not can_edit_property(user, prop):
+        raise ValueError('امکان ویرایش این ملک را ندارید.')
+    if not uploaded_file:
+        raise ValueError('فایل الزامی است.')
+    doc_title = (title or uploaded_file.name or 'مدرک').strip()[:200]
+    doc = CustomerDocument.objects.create(
+        user=user,
+        property=prop,
+        title=doc_title,
+        file=uploaded_file,
+        doc_type=(doc_type or '')[:50],
+    )
+    return doc
+
+
+def delete_property_document(user, property_id: int, document_id: int) -> bool:
+    prop = property_for_user(user, property_id)
+    if not prop:
+        return False
+    if not can_edit_property(user, prop):
+        return False
+    deleted, _ = CustomerDocument.objects.filter(
+        user=user, property=prop, pk=document_id,
     ).delete()
     return deleted > 0
 

@@ -4,7 +4,10 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from mobile_api.activity_types import workspace_type_to_api
-from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing, Dataset, Listing, Reminder
+from workspace.models import (
+    CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument,
+    CustomerListing, Dataset, Listing, PropertyContact, Reminder,
+)
 from workspace.services.listing_features import feature_highlights_for_listing
 from workspace.services.listing_edit import owner_phone_from_listing
 from workspace.services.property_images import normalize_external_image_url
@@ -182,7 +185,7 @@ def _calc_price_per_sqm(lst: Listing) -> Optional[int]:
 
 
 def activity_to_dict(a: CustomerActivity) -> Dict[str, Any]:
-    return {
+    data = {
         'id': a.pk,
         'activity_type': workspace_type_to_api(a.activity_type),
         'activity_type_label': a.activity_type,
@@ -191,6 +194,11 @@ def activity_to_dict(a: CustomerActivity) -> Dict[str, Any]:
         'token': a.token or '',
         'created_at': a.created_at.isoformat() if a.created_at else None,
     }
+    customer = getattr(a, 'customer', None)
+    if customer is not None:
+        data['customer_id'] = customer.pk
+        data['customer_name'] = customer.name or ''
+    return data
 
 
 def reminder_to_dict(r: Reminder) -> Dict[str, Any]:
@@ -282,6 +290,7 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False) -> Dict[str, Any
         'rooms': p.rooms or '',
         'token': p.token or '',
         'link': p.link or '',
+        'created_at': p.created_at.isoformat() if p.created_at else None,
         'updated_at': p.updated_at.isoformat() if p.updated_at else None,
     }
     if detailed:
@@ -298,6 +307,53 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False) -> Dict[str, Any
             'images': p.images or [],
         })
     return data
+
+
+def property_contact_to_dict(link: PropertyContact) -> Dict[str, Any]:
+    customer = link.customer
+    return {
+        'id': link.pk,
+        'customer_id': customer.pk,
+        'customer_name': customer.name or '',
+        'phone': customer.phone or '',
+        'status': customer.status or '',
+        'role': link.role or '',
+        'deal_type': link.deal_type or '',
+        'interest_level': link.interest_level or '',
+        'is_primary': link.is_primary,
+        'notes': link.notes or '',
+        'created_at': link.created_at.isoformat() if link.created_at else None,
+    }
+
+
+def property_detail_to_dict(
+    prop: CRMProperty,
+    *,
+    contacts: Optional[List[PropertyContact]] = None,
+    activities: Optional[List[CustomerActivity]] = None,
+    documents: Optional[List[CustomerDocument]] = None,
+    feature_profile: Optional[Dict[str, Any]] = None,
+    listing_highlights: Optional[List[str]] = None,
+    can_edit: bool = True,
+    mask_sensitive: bool = False,
+    request=None,
+) -> Dict[str, Any]:
+    property_data = property_to_dict(prop, detailed=True)
+    if mask_sensitive:
+        property_data['address'] = ''
+        property_data['notes'] = ''
+        property_data['neighborhood'] = ''
+    return {
+        'property': property_data,
+        'contacts': [] if mask_sensitive else [property_contact_to_dict(c) for c in (contacts or [])],
+        'activities': [] if mask_sensitive else [activity_to_dict(a) for a in (activities or [])],
+        'documents': [] if mask_sensitive else [document_to_dict(d, request=request) for d in (documents or [])],
+        'feature_profile': feature_profile or {'has_details': False, 'core': [], 'groups': []},
+        'listing_highlights': listing_highlights or [],
+        'can_edit': can_edit,
+        'mask_sensitive': mask_sensitive,
+        'contact_count': 0 if mask_sensitive else len(contacts or []),
+    }
 
 
 def contact_detail_to_dict(

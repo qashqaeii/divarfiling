@@ -10,7 +10,7 @@
     <header class="mk-pub-hero mk-pub-hero--about">
         <div class="container">
             <span class="mk-pub-kicker">
-                <span class="mk-icon mk-icon--xs mk-icon--violet"><i class="fas fa-building"></i></span>
+                {% load decor_icons %}{% decor_icon 'sparkles' size='xs' boxed=True accent='violet' %}
                 {{ site_brand.site_display_name }}
             </span>
             <h1>ابزار حرفه‌ای برای بازار املاک</h1>
@@ -28,21 +28,21 @@
             </div>
             <div class="mk-about-pillars">
                 <article class="mk-about-pillar">
-                    <span class="mk-icon mk-icon--md mk-icon--violet"><i class="fas fa-robot"></i></span>
+                    <span class="mk-icon mk-icon--md mk-icon--violet">{% include 'includes/icon_slot.html' with decor='rocket' only %}</span>
                     <div>
                         <h3>ربات استخراج</h3>
                         <p>استخراج ساخت‌یافته آگهی‌ها با فیلتر و خروجی آماده</p>
                     </div>
                 </article>
                 <article class="mk-about-pillar">
-                    <span class="mk-icon mk-icon--md mk-icon--sky"><i class="fas fa-table-columns"></i></span>
+                    <span class="mk-icon mk-icon--md mk-icon--sky">{% include 'includes/icon_slot.html' with decor='layers' only %}</span>
                     <div>
                         <h3>میزکار CRM</h3>
                         <p>مدیریت فایلینگ، پیگیری مشتری و همکاری تیمی</p>
                     </div>
                 </article>
                 <article class="mk-about-pillar">
-                    <span class="mk-icon mk-icon--md mk-icon--emerald"><i class="fas fa-shield-alt"></i></span>
+                    <span class="mk-icon mk-icon--md mk-icon--emerald">{% include 'includes/icon_slot.html' with decor='clipboard_list' only %}</span>
                     <div>
                         <h3>امنیت و پشتیبانی</h3>
                         <p>لایسنس امن، به‌روزرسانی منظم و پاسخگویی مستقیم</p>

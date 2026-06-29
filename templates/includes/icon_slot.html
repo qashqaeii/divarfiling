@@ -1,0 +1,6 @@
+{% load decor_icons %}
+{% if decor %}
+{% decor_icon decor size=size|default:'sm' boxed=boxed accent=accent %}
+{% elif fa %}
+<i class="fas {{ fa }}" aria-hidden="true"></i>
+{% endif %}

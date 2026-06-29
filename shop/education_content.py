@@ -162,6 +162,7 @@ def education_hub_content():
             {
                 'id': 'starter',
                 'icon': 'fa-seedling',
+                'decor_icon': 'layers',
                 'accent': 'emerald',
                 'badge': 'رایگان',
                 'title': 'تازه‌کار',
@@ -204,6 +205,7 @@ def education_hub_content():
             {
                 'id': 'bot',
                 'icon': 'fa-robot',
+                'decor_icon': 'rocket',
                 'accent': 'violet',
                 'badge': 'ربات',
                 'title': 'استخراج از دیوار',
@@ -223,6 +225,7 @@ def education_hub_content():
                         'desc': 'ربات روی کامپیوتر شما اجرا می‌شود — اینترنت خانگی یا اداری کافی است.',
                         'url_name': 'license_guide',
                         'icon': 'fa-download',
+                        'decor_icon': 'download',
                     },
                     {
                         'num': '۳',
@@ -231,6 +234,7 @@ def education_hub_content():
                         'url_name': 'license_guide',
                         'anchor': 'steps',
                         'icon': 'fa-key',
+                        'decor_icon': 'rocket',
                     },
                     {
                         'num': '۴',
@@ -240,12 +244,14 @@ def education_hub_content():
                         'requires_auth': True,
                         'requires_bot': True,
                         'icon': 'fa-cloud-arrow-up',
+                        'decor_icon': 'upload',
                     },
                 ],
             },
             {
                 'id': 'pro',
                 'icon': 'fa-chart-line',
+                'decor_icon': 'sparkles',
                 'accent': 'sky',
                 'badge': 'پیشرفته',
                 'title': 'مشاور فعال',

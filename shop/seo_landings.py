@@ -88,6 +88,7 @@ LANDINGS: dict[str, dict[str, Any]] = {
         'hero': {
             'eyebrow': 'CRM املاک · میزکار فایلینگ دیوار',
             'icon': 'fa-users',
+            'decor_icon': 'clipboard_list',
             'accent': 'violet',
             'h1': 'CRM مشاور املاک: مدیریت مشتری، قیف معامله و پیگیری روزانه — رایگان',
             'lead': (
@@ -112,12 +113,12 @@ LANDINGS: dict[str, dict[str, Any]] = {
             ],
         },
         'features': [
-            {'icon': 'fa-address-book', 'accent': 'violet', 'title': 'پروفایل مشتری', 'text': 'نیاز ملک، بودجه، محله ترجیحی و تاریخچه تماس'},
-            {'icon': 'fa-filter', 'accent': 'rose', 'title': 'قیف معامله', 'text': 'مراحل از سرنخ تا قرارداد با نمای کانبان'},
-            {'icon': 'fa-bell', 'accent': 'amber', 'title': 'یادآور پیگیری', 'text': 'صف کار امروز و تقویم برای تماس به‌موقع'},
-            {'icon': 'fa-link', 'accent': 'emerald', 'title': 'اتصال به دیوار', 'text': 'تطبیق مشتری با فایل استخراج‌شده از آگهی'},
-            {'icon': 'fa-users-cog', 'accent': 'sky', 'title': 'تیم آژانس', 'text': 'سهم فایل و مشتری بین مشاوران'},
-            {'icon': 'fa-comment-dots', 'accent': 'cyan', 'title': 'قالب پیام', 'text': 'پیام‌های آماده فارسی برای پیگیری سریع'},
+            {'icon': 'fa-address-book', 'decor_icon': 'clipboard_list', 'accent': 'violet', 'title': 'پروفایل مشتری', 'text': 'نیاز ملک، بودجه، محله ترجیحی و تاریخچه تماس'},
+            {'icon': 'fa-filter', 'decor_icon': 'layers', 'accent': 'rose', 'title': 'قیف معامله', 'text': 'مراحل از سرنخ تا قرارداد با نمای کانبان'},
+            {'icon': 'fa-bell', 'decor_icon': 'sticky_note', 'accent': 'amber', 'title': 'یادآور پیگیری', 'text': 'صف کار امروز و تقویم برای تماس به‌موقع'},
+            {'icon': 'fa-link', 'decor_icon': 'map_pin', 'accent': 'emerald', 'title': 'اتصال به دیوار', 'text': 'تطبیق مشتری با فایل استخراج‌شده از آگهی'},
+            {'icon': 'fa-users-cog', 'decor_icon': 'share_2', 'accent': 'sky', 'title': 'تیم آژانس', 'text': 'سهم فایل و مشتری بین مشاوران'},
+            {'icon': 'fa-comment-dots', 'decor_icon': 'file_text', 'accent': 'cyan', 'title': 'قالب پیام', 'text': 'پیام‌های آماده فارسی برای پیگیری سریع'},
         ],
         'comparison': {
             'title': 'CRM فایلینگ دیوار در برابر روش سنتی',
@@ -241,6 +242,7 @@ LANDINGS: dict[str, dict[str, Any]] = {
         'hero': {
             'eyebrow': 'نرم افزار املاک · پلتفرم یکپارچه',
             'icon': 'fa-laptop-code',
+            'decor_icon': 'layers',
             'accent': 'emerald',
             'h1': 'نرم افزار مشاور املاک: میزکار ایرانی برای CRM، فایلینگ، استخراج و تحلیل بازار',
             'lead': (
@@ -263,12 +265,12 @@ LANDINGS: dict[str, dict[str, Any]] = {
             ],
         },
         'features': [
-            {'icon': 'fa-layer-group', 'accent': 'violet', 'title': 'میزکار یکپارچه', 'text': 'CRM، فایلینگ، تحلیل و ابزار در یک پنل'},
-            {'icon': 'fa-robot', 'accent': 'indigo', 'title': 'ربات دیوار', 'text': 'استخراج خودکار آگهی با خروجی ساختاریافته'},
-            {'icon': 'fa-chart-line', 'accent': 'amber', 'title': 'تحلیل بازار', 'text': 'میانگین قیمت و روند محله بر اساس داده دیوار'},
-            {'icon': 'fa-map', 'accent': 'sky', 'title': 'نقشه Pro', 'text': 'نمایش فایل و قیمت روی نقشه'},
-            {'icon': 'fa-gift', 'accent': 'emerald', 'title': 'شروع رایگان', 'text': 'CRM و میزکار بدون هزینه اولیه'},
-            {'icon': 'fa-flag', 'accent': 'rose', 'title': 'نرم افزار ایرانی', 'text': 'فارسی، پشتیبانی بومی، مناسب بازار داخل'},
+            {'icon': 'fa-layer-group', 'decor_icon': 'layers', 'accent': 'violet', 'title': 'میزکار یکپارچه', 'text': 'CRM، فایلینگ، تحلیل و ابزار در یک پنل'},
+            {'icon': 'fa-robot', 'decor_icon': 'rocket', 'accent': 'indigo', 'title': 'ربات دیوار', 'text': 'استخراج خودکار آگهی با خروجی ساختاریافته'},
+            {'icon': 'fa-chart-line', 'decor_icon': 'sparkles', 'accent': 'amber', 'title': 'تحلیل بازار', 'text': 'میانگین قیمت و روند محله بر اساس داده دیوار'},
+            {'icon': 'fa-map', 'decor_icon': 'map_pin', 'accent': 'sky', 'title': 'نقشه Pro', 'text': 'نمایش فایل و قیمت روی نقشه'},
+            {'icon': 'fa-gift', 'decor_icon': 'sticky_note', 'accent': 'emerald', 'title': 'شروع رایگان', 'text': 'CRM و میزکار بدون هزینه اولیه'},
+            {'icon': 'fa-flag', 'decor_icon': 'share_2', 'accent': 'rose', 'title': 'نرم افزار ایرانی', 'text': 'فارسی، پشتیبانی بومی، مناسب بازار داخل'},
         ],
         'comparison': {
             'title': 'یک نرم‌افزار در برابر ترکیب ابزارهای جدا',
@@ -378,6 +380,7 @@ LANDINGS: dict[str, dict[str, Any]] = {
         'hero': {
             'eyebrow': 'ربات استخراج · ویندوز + میزکار',
             'icon': 'fa-robot',
+            'decor_icon': 'rocket',
             'accent': 'indigo',
             'h1': 'ربات دیوار: استخراج خودکار آگهی املاک با خروجی اکسل و اتصال به میزکار',
             'lead': (
@@ -402,12 +405,12 @@ LANDINGS: dict[str, dict[str, Any]] = {
             ],
         },
         'features': [
-            {'icon': 'fa-sliders-h', 'accent': 'violet', 'title': 'فیلتر پیشرفته', 'text': 'شهر، محله، متراژ، قیمت و نوع ملک'},
-            {'icon': 'fa-file-excel', 'accent': 'emerald', 'title': 'خروجی اکسل', 'text': 'داده ساختاریافته برای تحلیل و اشتراک'},
-            {'icon': 'fa-sync', 'accent': 'sky', 'title': 'به‌روزرسانی دوره‌ای', 'text': 'اجرای مجدد برای آگهی‌های تازه'},
-            {'icon': 'fa-upload', 'accent': 'amber', 'title': 'آپلود به میزکار', 'text': 'ورود یک‌کلیکی به فایلینگ و CRM'},
-            {'icon': 'fab fa-windows', 'accent': 'indigo', 'title': 'نصب ویندوز', 'text': 'ویندوز ۱۰ و ۱۱ — راهنمای نصب فارسی'},
-            {'icon': 'fa-key', 'accent': 'rose', 'title': 'لایسنس شفاف', 'text': 'پلن ماهانه با فعال‌سازی سریع'},
+            {'icon': 'fa-sliders-h', 'decor_icon': 'ruler', 'accent': 'violet', 'title': 'فیلتر پیشرفته', 'text': 'شهر، محله، متراژ، قیمت و نوع ملک'},
+            {'icon': 'fa-file-excel', 'decor_icon': 'download', 'accent': 'emerald', 'title': 'خروجی اکسل', 'text': 'داده ساختاریافته برای تحلیل و اشتراک'},
+            {'icon': 'fa-sync', 'decor_icon': 'upload', 'accent': 'sky', 'title': 'به‌روزرسانی دوره‌ای', 'text': 'اجرای مجدد برای آگهی‌های تازه'},
+            {'icon': 'fa-upload', 'decor_icon': 'layers', 'accent': 'amber', 'title': 'آپلود به میزکار', 'text': 'ورود یک‌کلیکی به فایلینگ و CRM'},
+            {'icon': 'fab fa-windows', 'decor_icon': 'rocket', 'accent': 'indigo', 'title': 'نصب ویندوز', 'text': 'ویندوز ۱۰ و ۱۱ — راهنمای نصب فارسی'},
+            {'icon': 'fa-key', 'decor_icon': 'coins', 'accent': 'rose', 'title': 'لایسنس شفاف', 'text': 'پلن ماهانه با فعال‌سازی سریع'},
         ],
         'comparison': {
             'title': 'ربات دیوار در برابر روش دستی',

@@ -15,7 +15,7 @@
     <header class="edu-hero">
         <div class="container edu-hero-grid">
             <div class="edu-hero-copy">
-                <span class="edu-eyebrow">{{ edu.hero.eyebrow }}</span>
+                <span class="edu-eyebrow">{% load decor_icons %}{% decor_icon 'rocket' size='xs' boxed=True accent='violet' %} {{ edu.hero.eyebrow }}</span>
                 <h1>{{ edu.hero.title }}</h1>
                 <p class="edu-lead">{{ edu.hero.lead }}</p>
                 <div class="edu-hero-actions">
@@ -137,7 +137,7 @@
                         aria-controls="edu-panel-{{ path.id }}"
                         data-path="{{ path.id }}">
                     <span class="edu-path-tab-icon edu-path-tab-icon--{{ path.accent }}">
-                        <i class="fas {{ path.icon }}"></i>
+                        {% include 'includes/icon_slot.html' with decor=path.decor_icon fa=path.icon only %}
                     </span>
                     <span class="edu-path-tab-text">
                         <strong>{{ path.title }}</strong>

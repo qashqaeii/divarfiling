@@ -18,7 +18,7 @@
         <div class="container lg-hero-grid">
             <div class="lg-hero-copy">
                 <span class="mk-pub-kicker lg-kicker">
-                    <span class="mk-icon mk-icon--xs mk-icon--emerald"><i class="fas fa-book-open"></i></span>
+                    {% load decor_icons %}{% decor_icon 'rocket' size='xs' boxed=True accent='emerald' %}
                     {{ guide.hero.eyebrow }}
                 </span>
                 <h1>{{ guide.hero.title }}</h1>
@@ -100,7 +100,7 @@
             <div class="lg-flow">
                 {% for item in guide.flow %}
                 <article class="lg-flow-item">
-                    <span class="mk-icon mk-icon--md mk-icon--violet"><i class="fas {{ item.icon }}"></i></span>
+                    <span class="mk-icon mk-icon--md mk-icon--violet">{% include 'includes/icon_slot.html' with decor=item.decor_icon fa=item.icon only %}</span>
                     <strong>{{ item.label }}</strong>
                     <span>{{ item.desc }}</span>
                 </article>
@@ -149,7 +149,7 @@
                 <article class="lg-step-card" data-step="{{ step.num }}">
                     <div class="lg-step-top">
                         <span class="lg-step-num">{{ step.num }}</span>
-                        <span class="mk-icon mk-icon--sm mk-icon--emerald"><i class="fas {{ step.icon }}"></i></span>
+                        <span class="mk-icon mk-icon--sm mk-icon--emerald">{% include 'includes/icon_slot.html' with decor=step.decor_icon fa=step.icon only %}</span>
                     </div>
                     <h3>{{ step.title }}</h3>
                     <p class="lg-step-desc">{{ step.desc }}</p>

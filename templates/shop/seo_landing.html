@@ -20,7 +20,7 @@
             <div class="seo-hero-copy mk-reveal">
                 <span class="seo-kicker">
                     <span class="seo-kicker-icon mk-icon mk-icon--xs mk-icon--{{ landing.hero.accent }}">
-                        <i class="fas {{ landing.hero.icon }}"></i>
+                        {% include 'includes/icon_slot.html' with decor=landing.hero.decor_icon fa=landing.hero.icon only %}
                     </span>
                     {{ landing.hero.eyebrow }}
                 </span>
@@ -86,7 +86,7 @@
             <div class="seo-hero-fallback mk-reveal" aria-hidden="true">
                 <div class="seo-hero-card">
                     <span class="seo-hero-card-icon mk-icon mk-icon--lg mk-icon--{{ landing.hero.accent }}">
-                        <i class="fas {{ landing.hero.icon }}"></i>
+                        {% include 'includes/icon_slot.html' with decor=landing.hero.decor_icon fa=landing.hero.icon only %}
                     </span>
                     <strong>فایلینگ دیوار</strong>
                     <span>میزکار + CRM + ربات</span>
@@ -137,7 +137,7 @@
                 <article class="seo-feature-card seo-feature-card--{{ f.accent }}">
                     <span class="seo-feature-glow" aria-hidden="true"></span>
                     <span class="mk-icon mk-icon--md mk-icon--{{ f.accent }}">
-                        <i class="fas {{ f.icon }}"></i>
+                        {% include 'includes/icon_slot.html' with decor=f.decor_icon fa=f.icon only %}
                     </span>
                     <h3>{{ f.title }}</h3>
                     <p>{{ f.text }}</p>

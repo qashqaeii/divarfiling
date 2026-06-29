@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static humanize %}
+{% load static humanize decor_icons %}
 {% load currency_tags %}
 
 {% block title %}خانه — فایلینگ دیوار{% endblock %}
@@ -110,7 +110,7 @@
             {% for tier in home_page.pricing_tiers %}
             <article class="mk-tier-card mk-tier-card--{{ tier.accent }}" data-tier="{{ tier.id }}">
                 <header class="mk-tier-head">
-                    <span class="mk-tier-icon"><i class="fas {{ tier.icon }}"></i></span>
+                    <span class="mk-tier-icon">{% include 'includes/icon_slot.html' with decor=tier.decor_icon fa=tier.icon only %}</span>
                     <div class="mk-tier-title-wrap">
                         <h3 class="mk-tier-title">{{ tier.title }}</h3>
                         <span class="mk-tier-badge">{{ tier.badge }}</span>
@@ -148,7 +148,7 @@
         <div class="mk-workflow-strip mk-reveal">
             {% for step in home_page.workflow_steps %}
             <article class="mk-workflow-step" data-accent="{{ step.accent }}">
-                <span class="mk-workflow-icon"><i class="fas {{ step.icon }}"></i></span>
+                <span class="mk-workflow-icon">{% include 'includes/icon_slot.html' with decor=step.decor_icon fa=step.icon only %}</span>
                 <span class="mk-workflow-text">
                     <strong>{{ step.title }}</strong>
                     <em>{{ step.desc }}</em>
@@ -164,7 +164,7 @@
 <section class="mk-section mk-eco-bento">
     <div class="container">
         <header class="mk-section-head mk-reveal">
-            <span class="mk-section-kicker"><i class="fas fa-gem"></i> اکوسیستم</span>
+            <span class="mk-section-kicker">{% decor_icon 'sparkles' size='xs' %} اکوسیستم</span>
             <h2 class="mk-section-title">همه ابزارها، یک میزکار</h2>
             <p class="mk-section-desc">از CRM رایگان تا تحلیل پیشرفته — ماژول‌های یکپارچه برای مشاور حرفه‌ای</p>
         </header>
@@ -175,7 +175,7 @@
             {% endif %}
             <article class="mk-eco-card mk-eco-card--{{ mod.size }} mk-eco-card--{{ mod.accent }}" data-mod="{{ mod.id }}">
                 <div class="mk-eco-card-top">
-                    <span class="mk-eco-icon"><i class="fas {{ mod.icon }}"></i></span>
+                    <span class="mk-eco-icon">{% include 'includes/icon_slot.html' with decor=mod.decor_icon fa=mod.icon only %}</span>
                     {% if mod.stat %}<span class="mk-eco-badge">{{ mod.stat }}</span>{% endif %}
                 </div>
                 <div class="mk-eco-body">
@@ -235,7 +235,7 @@
                 <ul class="mk-nationwide-points">
                     {% for p in home_page.nationwide.points %}
                     <li>
-                        <span class="mk-nationwide-point-icon"><i class="fas {{ p.icon }}"></i></span>
+                        <span class="mk-nationwide-point-icon">{% include 'includes/icon_slot.html' with decor=p.decor_icon fa=p.icon only %}</span>
                         <div class="mk-nationwide-point-text">
                             <strong>{{ p.title }}</strong>
                             <span>{{ p.desc }}</span>
@@ -379,7 +379,7 @@
                 <ul class="mk-crm-features">
                     {% for f in home_page.crm_suite.features %}
                     <li>
-                        <span class="mk-crm-feat-icon"><i class="fas {{ f.icon }}"></i></span>
+                        <span class="mk-crm-feat-icon">{% include 'includes/icon_slot.html' with decor=f.decor_icon fa=f.icon only %}</span>
                         <div>
                             <strong>{{ f.title }}</strong>
                             <span>{{ f.desc }}</span>
@@ -422,7 +422,7 @@
 <section class="mk-section mk-cap-pro">
     <div class="container">
         <header class="mk-section-head mk-reveal">
-            <span class="mk-section-kicker"><i class="fas fa-layer-group"></i> میزکار</span>
+            <span class="mk-section-kicker">{% decor_icon 'layers' size='xs' %} میزکار</span>
             <h2 class="mk-section-title">امکانات میزکار</h2>
             <p class="mk-section-desc">ابزارهایی که روزانه به کار شما می‌آیند — در سه حوزه یکپارچه</p>
             <div class="mk-cap-meta" aria-label="خلاصه امکانات">
@@ -436,7 +436,7 @@
             {% for group in home_page.capability_groups %}
             <section class="mk-cap-cluster mk-cap-cluster--{{ group.id }} mk-cap-cluster--{{ group.accent }}" aria-labelledby="cap-group-{{ group.id }}">
                 <header class="mk-cap-cluster-head" id="cap-group-{{ group.id }}">
-                    <span class="mk-cap-cluster-icon" aria-hidden="true"><i class="fas {{ group.icon }}"></i></span>
+                    <span class="mk-cap-cluster-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor=group.decor_icon fa=group.icon only %}</span>
                     <div class="mk-cap-cluster-text">
                         <h3>{{ group.label }}</h3>
                         <p>{{ group.desc }}</p>
@@ -640,7 +640,7 @@
                             data-accent="{{ cluster.accent }}"
                         >
                             <header class="mk-data-bento-head">
-                                <span class="mk-data-bento-icon"><i class="fas {{ cluster.icon }}" aria-hidden="true"></i></span>
+                                <span class="mk-data-bento-icon">{% include 'includes/icon_slot.html' with decor=cluster.decor_icon fa=cluster.icon only %}</span>
                                 <h4>{{ cluster.title }}</h4>
                                 {% if forloop.counter == 2 %}
                                 <span class="mk-data-map-pin" aria-hidden="true"><i class="fas fa-location-crosshairs"></i></span>
@@ -674,8 +674,8 @@
                         </span>
                         <div class="mk-data-export-btns">
                             {% for fmt in home_page.data_sample.formats %}
-                            <span class="mk-data-export-btn">
-                                <i class="fas fa-file-{% if fmt == 'Excel' %}excel{% else %}csv{% endif %}" aria-hidden="true"></i>
+                            <span class="mk-data-export-btn mk-data-export-btn--decor">
+                                {% if fmt == 'Excel' %}{% decor_icon 'file_text' size='xs' %}{% else %}{% decor_icon 'download' size='xs' %}{% endif %}
                                 {{ fmt }}
                             </span>
                             {% endfor %}
@@ -687,7 +687,7 @@
                     <div class="mk-data-radar" aria-hidden="true">
                         <span class="mk-data-radar-ring mk-data-radar-ring--a"></span>
                         <span class="mk-data-radar-ring mk-data-radar-ring--b"></span>
-                        <span class="mk-data-radar-core"><i class="fas fa-layer-group"></i></span>
+                        <span class="mk-data-radar-core">{% decor_icon 'layers' size='sm' %}</span>
                     </div>
 
                     <header class="mk-data-satellite-head">
@@ -734,7 +734,7 @@
                         <li class="mk-bot-pipeline-step" data-accent="{{ bot_accent }}">
                             <span class="mk-bot-pipeline-rail" aria-hidden="true"></span>
                             <span class="mk-bot-pipeline-num">{{ forloop.counter|stringformat:"02d" }}</span>
-                            <span class="mk-bot-pipeline-icon"><i class="fas {{ step.icon }}"></i></span>
+                            <span class="mk-bot-pipeline-icon">{% include 'includes/icon_slot.html' with decor=step.decor_icon fa=step.icon only %}</span>
                             <span class="mk-bot-pipeline-text">
                                 {{ step.text }}{% if step.code %} <code>{{ step.code }}</code>{% endif %}
                             </span>

@@ -667,15 +667,16 @@ def license_guide_content():
             'duration': '~۵ دقیقه',
         },
         'flow': [
-            {'icon': 'fa-robot', 'label': 'ربات آگهی می‌کشد', 'desc': 'روی ویندوز شما'},
-            {'icon': 'fa-file-excel', 'label': 'فایل اکسل می‌سازد', 'desc': 'آگهی‌های همان محله'},
-            {'icon': 'fa-chart-line', 'label': 'میزکار تحلیل می‌کند', 'desc': 'قیمت، نقشه، مقایسه'},
+            {'icon': 'fa-robot', 'decor_icon': 'rocket', 'label': 'ربات آگهی می‌کشد', 'desc': 'روی ویندوز شما'},
+            {'icon': 'fa-file-excel', 'decor_icon': 'download', 'label': 'فایل اکسل می‌سازد', 'desc': 'آگهی‌های همان محله'},
+            {'icon': 'fa-chart-line', 'decor_icon': 'sparkles', 'label': 'میزکار تحلیل می‌کند', 'desc': 'قیمت، نقشه، مقایسه'},
         ],
         'steps': [
             {
                 'num': '۱',
                 'title': 'بخرید و کلید لایسنس را بردارید',
                 'icon': 'fa-cart-shopping',
+                'decor_icon': 'coins',
                 'desc': (
                     'از صفحه ربات، پلن مناسب را انتخاب کنید و پرداخت کنید. '
                     'بعد از پرداخت، وارد داشبورد شوید و در بخش «لایسنس‌ها» کلید خود را ببینید. '
@@ -687,6 +688,7 @@ def license_guide_content():
                 'num': '۲',
                 'title': 'ربات را روی کامپیوتر ویندوز نصب کنید',
                 'icon': 'fa-download',
+                'decor_icon': 'download',
                 'desc': (
                     'فایل ZIP را باز کنید و نصب‌کننده را اجرا کنید. '
                     'اگر ویندوز پرسید، «Run as Administrator» را بزنید. '
@@ -698,6 +700,7 @@ def license_guide_content():
                 'num': '۳',
                 'title': 'کلید را بزنید تا لایسنس روشن شود',
                 'icon': 'fa-key',
+                'decor_icon': 'rocket',
                 'desc': (
                     'اولین بار ربات را باز کنید. پنجره‌ای می‌آید که کلید لایسنس می‌خواهد — '
                     'همان کلیدی که از داشبورد کپی کردید را بچسبانید و تأیید کنید. '
@@ -709,6 +712,7 @@ def license_guide_content():
                 'num': '۴',
                 'title': 'آگهی بکشید و فایل را در میزکار بگذارید',
                 'icon': 'fa-cloud-upload-alt',
+                'decor_icon': 'upload',
                 'desc': (
                     'در ربات شهر، محله و نوع معامله (فروش یا اجاره) را انتخاب کنید و دکمه استخراج را بزنید. '
                     'ربات آگهی‌های دیوار را می‌خواند و یک فایل اکسل روی کامپیوترتان می‌سازد. '
@@ -904,6 +908,7 @@ def home_page_content():
             {
                 'id': 'free',
                 'icon': 'fa-gift',
+                'decor_icon': 'layers',
                 'title': 'میزکار رایگان',
                 'price': '۰ تومان',
                 'price_note': 'برای همیشه',
@@ -920,6 +925,7 @@ def home_page_content():
             {
                 'id': 'pro',
                 'icon': 'fa-robot',
+                'decor_icon': 'rocket',
                 'title': 'ربات + تحلیل',
                 'price': 'از ۱ میلیون',
                 'price_note': 'تومان / ماهانه',
@@ -1025,9 +1031,9 @@ def home_page_content():
                 'ربات می‌تواند آگهی‌ها را استخراج و در ساختار استان / شهر / محله ذخیره کند.'
             ),
             'points': [
-                {'icon': 'fa-map', 'title': '۳۱ استان', 'desc': 'پوشش تمام استان‌های کشور'},
-                {'icon': 'fa-city', 'title': 'هر شهر فعال', 'desc': 'هر جایی که دیوار آگهی دارد'},
-                {'icon': 'fa-folder-tree', 'title': 'فایلینگ منظم', 'desc': 'ساختار استان / شهر / محله'},
+                {'icon': 'fa-map', 'decor_icon': 'map_pin', 'title': '۳۱ استان', 'desc': 'پوشش تمام استان‌های کشور'},
+                {'icon': 'fa-city', 'decor_icon': 'layers', 'title': 'هر شهر فعال', 'desc': 'هر جایی که دیوار آگهی دارد'},
+                {'icon': 'fa-folder-tree', 'decor_icon': 'clipboard_list', 'title': 'فایلینگ منظم', 'desc': 'ساختار استان / شهر / محله'},
             ],
             'cities': [
                 'تهران', 'مشهد', 'اصفهان', 'شیراز', 'تبریز', 'اهواز', 'کرج', 'قم',
@@ -1095,79 +1101,79 @@ def home_page_content():
         'platform_modules': [
             {
                 'id': 'crm', 'size': 'hero', 'accent': 'violet',
-                'icon': 'fa-chart-pie', 'title': 'CRM مشاور املاک',
+                'icon': 'fa-chart-pie', 'decor_icon': 'clipboard_list', 'title': 'CRM مشاور املاک',
                 'desc': 'قیف وضعیت، روند ۷ روزه، کانال ارتباط و شاخص‌های زنده',
                 'stat': 'رایگان',
                 'landing_url_name': 'seo_landing_real_estate_crm',
             },
             {
                 'id': 'today', 'size': 'wide', 'accent': 'amber',
-                'icon': 'fa-list-check', 'title': 'صف کار امروز',
+                'icon': 'fa-list-check', 'decor_icon': 'sticky_note', 'title': 'صف کار امروز',
                 'desc': 'پیگیری‌های روزانه و یادآورها در یک نمای متمرکز',
                 'stat': None,
             },
             {
                 'id': 'analyze', 'size': 'tall', 'accent': 'emerald',
-                'icon': 'fa-chart-line', 'title': 'تحلیل چندلایه',
+                'icon': 'fa-chart-line', 'decor_icon': 'sparkles', 'title': 'تحلیل چندلایه',
                 'desc': 'عمق بازار، پرت‌ها، قیمت متر و گزارش سطح‌بندی‌شده',
                 'stat': None,
             },
             {
                 'id': 'map', 'size': 'normal', 'accent': 'sky',
-                'icon': 'fa-map-location-dot', 'title': 'نقشه Pro',
+                'icon': 'fa-map-location-dot', 'decor_icon': 'map_pin', 'title': 'نقشه Pro',
                 'desc': 'نمای جغرافیایی با فیلتر و خوشه‌بندی',
                 'stat': None,
             },
             {
                 'id': 'filing', 'size': 'normal', 'accent': 'indigo',
-                'icon': 'fa-database', 'title': 'فایلینگ دیوار',
+                'icon': 'fa-database', 'decor_icon': 'layers', 'title': 'فایلینگ دیوار',
                 'desc': 'آپلود، جستجو و مدیریت مجموعه‌داده',
                 'stat': None,
             },
             {
                 'id': 'compare', 'size': 'normal', 'accent': 'cyan',
-                'icon': 'fa-scale-balanced', 'title': 'مقایسه دوره‌ای',
+                'icon': 'fa-scale-balanced', 'decor_icon': 'ruler', 'title': 'مقایسه دوره‌ای',
                 'desc': 'تغییرات بازار بین دو استخراج',
                 'stat': None,
             },
             {
                 'id': 'tools', 'size': 'normal', 'accent': 'amber',
-                'icon': 'fa-wand-magic-sparkles', 'title': 'ابزار هوشمند',
+                'icon': 'fa-wand-magic-sparkles', 'decor_icon': 'sparkles', 'title': 'ابزار هوشمند',
                 'desc': 'ودیعه، متراژ، کمیسیون',
                 'stat': None,
             },
             {
                 'id': 'automation', 'size': 'normal', 'accent': 'rose',
-                'icon': 'fa-robot', 'title': 'اتوماسیون',
+                'icon': 'fa-robot', 'decor_icon': 'rocket', 'title': 'اتوماسیون',
                 'desc': 'قوانین خودکار پیگیری مخاطب',
                 'stat': None,
             },
             {
                 'id': 'templates', 'size': 'normal', 'accent': 'pink',
-                'icon': 'fa-message', 'title': 'قالب پیام',
+                'icon': 'fa-message', 'decor_icon': 'file_text', 'title': 'قالب پیام',
                 'desc': 'پیام‌های آماده واتساپ',
                 'stat': None,
             },
             {
                 'id': 'calendar', 'size': 'normal', 'accent': 'teal',
-                'icon': 'fa-calendar', 'title': 'تقویم',
+                'icon': 'fa-calendar', 'decor_icon': 'sticky_note', 'title': 'تقویم',
                 'desc': 'رویدادها و برنامه‌ریزی',
                 'stat': None,
             },
             {
                 'id': 'team', 'size': 'wide', 'accent': 'rose',
-                'icon': 'fa-users-gear', 'title': 'مدیریت تیم',
+                'icon': 'fa-users-gear', 'decor_icon': 'share_2', 'title': 'مدیریت تیم',
                 'desc': 'عملکرد اعضا، تخصیص مشتری و همگام‌سازی آژانس',
                 'stat': 'رایگان',
             },
         ],
         'workflow_steps': [
-            {'icon': 'fa-robot', 'title': 'استخراج', 'desc': 'ربات دیوار', 'accent': 'violet'},
-            {'icon': 'fa-upload', 'title': 'فایلینگ', 'desc': 'آپلود در میزکار', 'accent': 'indigo'},
-            {'icon': 'fa-chart-line', 'title': 'تحلیل', 'desc': 'بینش بازار', 'accent': 'emerald'},
-            {'icon': 'fa-map', 'title': 'نقشه', 'desc': 'نمای جغرافیایی', 'accent': 'sky'},
-            {'icon': 'fa-users', 'title': 'CRM', 'desc': 'مدیریت مشتری', 'accent': 'violet'},
-            {'icon': 'fa-handshake', 'title': 'معامله', 'desc': 'بستن قرارداد', 'accent': 'amber'},
+            {'icon': 'fa-robot', 'decor_icon': 'rocket', 'title': 'استخراج', 'desc': 'ربات دیوار', 'accent': 'violet'},
+            {'icon': 'fa-upload', 'decor_icon': 'upload', 'title': 'فایلینگ', 'desc': 'آپلود در میزکار', 'accent': 'indigo'},
+            {'icon': 'fa-chart-line', 'decor_icon': 'sparkles', 'title': 'تحلیل', 'desc': 'بینش بازار', 'accent': 'emerald'},
+            {'icon': 'fa-map', 'decor_icon': 'map_pin', 'title': 'نقشه', 'desc': 'نمای جغرافیایی', 'accent': 'sky'},
+            {'icon': 'fa-users', 'decor_icon': 'clipboard_list', 'title': 'CRM', 'desc': 'مدیریت مشتری', 'accent': 'violet'},
+            {'icon': 'fa-handshake', 'decor_icon': 'coins', 'title': 'معامله', 'desc': 'بستن قرارداد', 'accent': 'amber'},
         ],
         'crm_suite': {
             'kicker': 'مدیریت مشتری',
@@ -1178,12 +1184,12 @@ def home_page_content():
             ),
             'image': 'images/help-crm-dashboard.png',
             'features': [
-                {'icon': 'fa-address-book', 'title': 'مخاطبین و قیف', 'desc': 'وضعیت، اولویت، کانبان و تاریخ پیگیری'},
-                {'icon': 'fa-handshake', 'title': 'معاملات', 'desc': 'ردیابی پرونده از سرنخ تا قرارداد'},
-                {'icon': 'fa-list-check', 'title': 'صف کار امروز', 'desc': 'تمرکز روی کارهای روز — بدون فراموشی'},
-                {'icon': 'fa-robot', 'title': 'اتوماسیون', 'desc': 'هشدار مخاطب راکد و قوانین خودکار'},
-                {'icon': 'fa-message', 'title': 'قالب پیام', 'desc': 'ارسال سریع با متغیرهای شخصی‌سازی‌شده'},
-                {'icon': 'fa-calendar', 'title': 'تقویم', 'desc': 'قرارها، یادآورها و رویدادها'},
+                {'icon': 'fa-address-book', 'decor_icon': 'clipboard_list', 'title': 'مخاطبین و قیف', 'desc': 'وضعیت، اولویت، کانبان و تاریخ پیگیری'},
+                {'icon': 'fa-handshake', 'decor_icon': 'coins', 'title': 'معاملات', 'desc': 'ردیابی پرونده از سرنخ تا قرارداد'},
+                {'icon': 'fa-list-check', 'decor_icon': 'sticky_note', 'title': 'صف کار امروز', 'desc': 'تمرکز روی کارهای روز — بدون فراموشی'},
+                {'icon': 'fa-robot', 'decor_icon': 'sparkles', 'title': 'اتوماسیون', 'desc': 'هشدار مخاطب راکد و قوانین خودکار'},
+                {'icon': 'fa-message', 'decor_icon': 'share_2', 'title': 'قالب پیام', 'desc': 'ارسال سریع با متغیرهای شخصی‌سازی‌شده'},
+                {'icon': 'fa-calendar', 'decor_icon': 'upload', 'title': 'تقویم', 'desc': 'قرارها، یادآورها و رویدادها'},
             ],
             'metrics': [
                 {'label': 'وضعیت مخاطب', 'value': '۷ مرحله'},
@@ -1197,6 +1203,7 @@ def home_page_content():
                 'label': 'مدیریت مشتری',
                 'desc': 'قیف فروش، پیگیری روزانه و اتوماسیون در یک جریان کاری',
                 'icon': 'fa-users',
+                'decor_icon': 'clipboard_list',
                 'accent': 'violet',
                 'pillar_link': {
                     'title': 'CRM مشاور املاک',
@@ -1219,6 +1226,7 @@ def home_page_content():
                 'label': 'داده و فایلینگ',
                 'desc': 'استخراج، سازماندهی و نمایش جغرافیایی آگهی‌ها',
                 'icon': 'fa-database',
+                'decor_icon': 'layers',
                 'accent': 'sky',
                 'items': [
                     {'icon': 'fa-database', 'title': 'فایلینگ دیوار', 'desc': 'آپلود و سازماندهی مجموعه‌داده‌های استخراج‌شده'},
@@ -1231,6 +1239,7 @@ def home_page_content():
                 'label': 'تحلیل و ابزار',
                 'desc': 'تصمیم‌گیری مبتنی بر داده و محاسبات تخصصی',
                 'icon': 'fa-chart-line',
+                'decor_icon': 'sparkles',
                 'accent': 'emerald',
                 'items': [
                     {'icon': 'fa-chart-pie', 'title': 'تحلیل چندلایه', 'desc': 'سطح ۱ تا ۳ — از نگاه سریع تا عمق بازار'},
@@ -1299,6 +1308,7 @@ def home_page_content():
                 {
                     'title': 'قیمت‌گذاری',
                     'icon': 'fa-coins',
+                    'decor_icon': 'coins',
                     'accent': 'amber',
                     'fields': [
                         {'label': 'ودیعه', 'value': '—'},
@@ -1308,6 +1318,7 @@ def home_page_content():
                 {
                     'title': 'موقعیت',
                     'icon': 'fa-location-dot',
+                    'decor_icon': 'map_pin',
                     'accent': 'sky',
                     'fields': [
                         {'label': 'شهر', 'value': 'شیراز'},
@@ -1319,6 +1330,7 @@ def home_page_content():
                 {
                     'title': 'مشخصات ملک',
                     'icon': 'fa-ruler-combined',
+                    'decor_icon': 'ruler',
                     'accent': 'emerald',
                     'fields': [
                         {'label': 'متراژ', 'value': '۸۵ متر'},
@@ -1376,9 +1388,9 @@ def home_page_content():
         'bot_spotlight': {
             'eyebrow': 'ربات استخراج',
             'flow': [
-                {'icon': 'fa-windows', 'text': 'نصب روی ویندوز — استخراج خودکار'},
-                {'icon': 'fa-folder-tree', 'text': 'فایلینگ منظم در پوشه', 'code': 'output'},
-                {'icon': 'fa-layer-group', 'text': 'آپلود و تحلیل در میزکار'},
+                {'icon': 'fa-windows', 'decor_icon': 'rocket', 'text': 'نصب روی ویندوز — استخراج خودکار'},
+                {'icon': 'fa-folder-tree', 'decor_icon': 'layers', 'text': 'فایلینگ منظم در پوشه', 'code': 'output'},
+                {'icon': 'fa-layer-group', 'decor_icon': 'upload', 'text': 'آپلود و تحلیل در میزکار'},
             ],
             'guide_label': 'راهنمای نصب و فعال‌سازی',
         },

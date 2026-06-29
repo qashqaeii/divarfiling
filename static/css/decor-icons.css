@@ -1,0 +1,103 @@
+/* Decorative PNG icons — public marketing pages */
+.df-decor-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+.df-decor-icon img {
+    display: block;
+    width: var(--df-decor-size, 1.75rem);
+    height: var(--df-decor-size, 1.75rem);
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+}
+
+.df-decor-icon--xs { --df-decor-size: 1rem; }
+.df-decor-icon--sm { --df-decor-size: 1.25rem; }
+.df-decor-icon--md { --df-decor-size: 1.75rem; }
+.df-decor-icon--lg { --df-decor-size: 2.25rem; }
+.df-decor-icon--xl { --df-decor-size: 2.75rem; }
+.df-decor-icon--hero { --df-decor-size: 3.5rem; }
+
+.df-decor-icon--boxed {
+    width: calc(var(--df-decor-size, 1.75rem) + 0.65rem);
+    height: calc(var(--df-decor-size, 1.75rem) + 0.65rem);
+    border-radius: 10px;
+    background: rgba(124, 58, 237, 0.12);
+}
+
+.df-decor-icon--boxed.df-decor-icon--violet { background: rgba(124, 58, 237, 0.14); }
+.df-decor-icon--boxed.df-decor-icon--sky { background: rgba(14, 165, 233, 0.14); }
+.df-decor-icon--boxed.df-decor-icon--emerald { background: rgba(16, 185, 129, 0.14); }
+.df-decor-icon--boxed.df-decor-icon--amber { background: rgba(245, 158, 11, 0.14); }
+.df-decor-icon--boxed.df-decor-icon--indigo { background: rgba(79, 70, 229, 0.14); }
+.df-decor-icon--boxed.df-decor-icon--rose { background: rgba(244, 63, 94, 0.14); }
+.df-decor-icon--boxed.df-decor-icon--cyan { background: rgba(6, 182, 212, 0.14); }
+
+.df-decor-illustration img {
+    width: var(--df-decor-size, 3.5rem);
+    height: auto;
+    max-height: 5.5rem;
+}
+
+/* Fit inside existing marketing icon shells */
+.mk-eco-icon .df-decor-icon,
+.mk-workflow-icon .df-decor-icon,
+.mk-tier-icon .df-decor-icon,
+.mk-cap-icon .df-decor-icon,
+.mk-cap-cluster-icon .df-decor-icon,
+.mk-crm-feat-icon .df-decor-icon,
+.mk-nationwide-point-icon .df-decor-icon,
+.seo-feature-card .df-decor-icon,
+.seo-kicker-icon .df-decor-icon,
+.mk-pub-kicker .df-decor-icon,
+.edu-path-tab-icon .df-decor-icon,
+.edu-module-head-icon .df-decor-icon,
+.mk-bot-pipeline-icon .df-decor-icon,
+.mk-data-bento-icon .df-decor-icon,
+.mk-data-radar-core .df-decor-icon {
+    width: 100%;
+    height: 100%;
+}
+
+.mk-eco-icon .df-decor-icon img,
+.mk-workflow-icon .df-decor-icon img,
+.mk-tier-icon .df-decor-icon img {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.mk-cap-icon .df-decor-icon img,
+.mk-cap-cluster-icon .df-decor-icon img {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+.mk-crm-feat-icon .df-decor-icon img,
+.mk-nationwide-point-icon .df-decor-icon img {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.seo-feature-card > .df-decor-icon img,
+.seo-feature-card > .mk-icon .df-decor-icon img {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.mk-bot-pipeline-icon .df-decor-icon img {
+    width: 1rem;
+    height: 1rem;
+}
+
+.mk-data-export-btn .df-decor-icon img {
+    width: 0.85rem;
+    height: 0.85rem;
+    margin-inline-end: 0.25rem;
+    vertical-align: -0.15em;
+}

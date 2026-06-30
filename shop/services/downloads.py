@@ -9,7 +9,7 @@ from django.http import FileResponse, Http404
 
 from shop.models import DownloadLog, Order
 
-SETUP_INSTALLER_FILENAME = 'Divar-Real-Estate-Install.zip'
+SETUP_INSTALLER_FILENAME = 'DivarFilingExtractor_Setup_1.0.0.zip'
 
 
 def get_setup_installer_path() -> str:

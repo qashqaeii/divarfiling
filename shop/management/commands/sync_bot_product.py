@@ -33,6 +33,14 @@ class Command(BaseCommand):
 
     def _attach_installer(self, product):
         candidates = [
+            os.path.join(settings.BASE_DIR, 'files', 'DivarFilingExtractor_Setup_1.0.0.zip'),
+            os.path.join(
+                settings.BASE_DIR.parent,
+                'extractor-app',
+                'release',
+                'installer-out',
+                'DivarFilingExtractor_Setup_1.0.0.zip',
+            ),
             os.path.join(settings.BASE_DIR, 'files', 'Divar-Real-Estate-Install.zip'),
             os.path.join(settings.BASE_DIR, 'files', 'Divar-Basic-V1-Install.zip'),
             os.path.join(settings.BASE_DIR, 'files', 'Robot.zip'),

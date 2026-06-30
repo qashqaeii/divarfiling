@@ -17,7 +17,7 @@ from mobile_api.services.extraction_ingest import (
 
 logger = logging.getLogger(__name__)
 
-MIN_INTERVAL_HOURS = 0.5
+MIN_INTERVAL_HOURS = 0.25
 MAX_INTERVAL_HOURS = 168.0
 MAX_SCHEDULES_PER_USER = 10
 MAX_CONSECUTIVE_FAILURES = 5

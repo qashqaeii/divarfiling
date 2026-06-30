@@ -52,6 +52,19 @@ class ExtractionScheduleApiTests(TestCase):
             'max_items': 20,
         }
 
+    def test_create_schedule_with_15_minute_interval(self):
+        resp = self.client.post(
+            '/api/mobile/v1/extractions/schedules',
+            {
+                'interval_hours': 0.25,
+                'filters': self.filters,
+                'max_items': 20,
+            },
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(resp.json()['data']['interval_hours'], 0.25)
+
     def test_create_list_and_toggle_schedule(self):
         resp = self.client.post(
             '/api/mobile/v1/extractions/schedules',

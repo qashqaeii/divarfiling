@@ -118,6 +118,19 @@ def _listing_specs(lst: Listing) -> Dict[str, Any]:
     }
 
 
+def _listing_amenity_fields(lst: Listing) -> Dict[str, Any]:
+    """وضعیت واحد و امکانات اصلی — برای جزئیات آگهی در اپ موبایل."""
+    feat = extract_listing_features(lst)
+    data = lst.data or {}
+    unit_status = _data_value(data, 'وضعیت واحد', 'وضعیت سکونت')
+    return {
+        'has_parking': feat.get('parking'),
+        'has_storage': feat.get('storage'),
+        'has_elevator': feat.get('elevator'),
+        'unit_status': unit_status,
+    }
+
+
 def _listing_image_urls(lst: Listing) -> List[str]:
     images: List[str] = []
     for img in (lst.images or []):
@@ -253,6 +266,7 @@ def listing_detail_to_dict(lst: Listing) -> Dict[str, Any]:
         'expires_at': lst.expires_at.isoformat() if lst.expires_at else None,
         'is_expired': lst.is_expired,
         'price_per_sqm': _calc_price_per_sqm(lst),
+        **_listing_amenity_fields(lst),
     })
     return base
 

@@ -1,6 +1,7 @@
 """سریالایزرهای dict برای API موبایل."""
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List, Optional
 
 from mobile_api.activity_types import workspace_type_to_api
@@ -8,9 +9,113 @@ from workspace.models import (
     CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument,
     CustomerListing, Dataset, Listing, PropertyContact, Reminder,
 )
+from workspace.services.features import (
+    extract_listing_features,
+    parse_rooms_from_text,
+    parse_rooms_value,
+)
 from workspace.services.listing_features import feature_highlights_for_listing
 from workspace.services.listing_edit import owner_phone_from_listing
 from workspace.services.property_images import normalize_external_image_url
+
+_FA_DIGITS = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
+_EMPTY_DATA_VALUES = frozenset({'', '-', '—', 'nan', 'none', 'null'})
+
+
+def _data_value(data: Dict[str, Any], *keys: str) -> Optional[str]:
+    for key in keys:
+        value = data.get(key)
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text.lower() in _EMPTY_DATA_VALUES:
+            continue
+        return text
+    return None
+
+
+def _rooms_to_api_int(rooms: Optional[str]) -> Optional[int]:
+    if not rooms:
+        return None
+    normalized = parse_rooms_value(rooms)
+    if normalized == 'بدون اتاق':
+        return 0
+    if normalized.isdigit():
+        return int(normalized)
+    return None
+
+
+def _parse_floor_from_text(text: str) -> str:
+    if not text:
+        return ''
+    translated = text.translate(_FA_DIGITS)
+    match = re.search(r'طبقه\s*(\d+)', translated)
+    if match:
+        return match.group(1)
+    match = re.search(r'(\d+)\s*از\s*(\d+)', translated)
+    if match:
+        return match.group(1)
+    return ''
+
+
+def _non_empty_spec(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if text.lower() in _EMPTY_DATA_VALUES:
+        return None
+    return text.translate(_FA_DIGITS)
+
+
+def _listing_specs(lst: Listing) -> Dict[str, Any]:
+    """اتاق، طبقه، سال ساخت — با fallback از data، عنوان و توضیحات."""
+    data = lst.data or {}
+    feat = extract_listing_features(lst)
+
+    rooms_raw = (
+        parse_rooms_value(lst.rooms)
+        or _non_empty_spec(feat.get('rooms'))
+        or _data_value(data, 'اتاق', 'تعداد اتاق', 'rooms')
+        or parse_rooms_from_text(lst.title or '')
+        or parse_rooms_from_text(lst.description or '')
+        or parse_rooms_from_text(_data_value(data, 'توضیحات', 'description') or '')
+        or parse_rooms_from_text(_data_value(data, 'زیرعنوان') or '')
+    )
+
+    floor = (
+        _non_empty_spec(feat.get('floor'))
+        or _data_value(data, 'طبقه', 'floor')
+        or _parse_floor_from_text(lst.title or '')
+        or _parse_floor_from_text(lst.description or '')
+        or _parse_floor_from_text(_data_value(data, 'توضیحات', 'description') or '')
+        or _parse_floor_from_text(_data_value(data, 'زیرعنوان') or '')
+    )
+    if floor:
+        floor = floor.translate(_FA_DIGITS)
+
+    total_floors = _data_value(data, 'تعداد کل طبقات ساختمان', 'total_floors')
+    if not total_floors:
+        combined = ' '.join(filter(None, [
+            _data_value(data, 'زیرعنوان') or '',
+            lst.description or '',
+        ]))
+        match = re.search(r'(\d+)\s*از\s*(\d+)', combined.translate(_FA_DIGITS))
+        if match:
+            total_floors = match.group(2)
+    if total_floors:
+        total_floors = total_floors.translate(_FA_DIGITS)
+
+    build_year = feat.get('build_year')
+    year_built = (
+        str(build_year) if build_year else None
+    ) or _data_value(data, 'سال ساخت', 'ساخت', 'year_built', 'construction_year')
+
+    return {
+        'rooms_val': _rooms_to_api_int(rooms_raw),
+        'floor': floor or None,
+        'total_floors': total_floors or None,
+        'year_built': year_built,
+    }
 
 
 def _listing_image_urls(lst: Listing) -> List[str]:
@@ -101,23 +206,7 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
     image_urls = _listing_image_urls(lst)
     thumb = image_urls[0] if image_urls else ''
     adv = 'مشاور' if lst.business_type and 'مشاور' in lst.business_type else 'شخصی'
-    rooms_val: Optional[int] = None
-    if lst.rooms:
-        try:
-            rooms_val = int(str(lst.rooms).replace('،', '').strip().split()[0])
-        except (ValueError, IndexError):
-            rooms_val = None
-    data = lst.data or {}
-
-    def _from_data(*keys: str) -> Optional[str]:
-        for k in keys:
-            v = data.get(k)
-            if v is not None and str(v).strip():
-                return str(v).strip()
-        return None
-
-    year_built = _from_data('سال ساخت', 'year_built', 'construction_year')
-    floor = _from_data('طبقه', 'floor')
+    specs = _listing_specs(lst)
     transaction_type = 'اجاره' if (lst.rent or lst.deposit) else ('فروش' if lst.price else '')
 
     return {
@@ -127,7 +216,7 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
         'deposit': lst.deposit,
         'rent': lst.rent,
         'area': int(lst.area) if lst.area else None,
-        'rooms': rooms_val,
+        'rooms': specs['rooms_val'],
         'district': lst.neighborhood or '',
         'city': lst.city or '',
         'latitude': lst.latitude,
@@ -139,8 +228,8 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
         'scraped_at': lst.created_at.isoformat() if lst.created_at else None,
         'dataset_id': str(lst.dataset_id) if lst.dataset_id else None,
         'price_per_sqm': _calc_price_per_sqm(lst),
-        'year_built': year_built,
-        'floor': floor,
+        'year_built': specs['year_built'],
+        'floor': specs['floor'],
         'transaction_type': transaction_type,
         'feature_highlights': feature_highlights_for_listing(lst, limit=5),
     }
@@ -150,24 +239,14 @@ def listing_detail_to_dict(lst: Listing) -> Dict[str, Any]:
     base = listing_to_dict(lst)
     data = lst.data or {}
     images = _listing_image_urls(lst)
-
-    def _from_data(*keys: str) -> Optional[str]:
-        for k in keys:
-            v = data.get(k)
-            if v is not None and str(v).strip():
-                return str(v).strip()
-        return None
-
-    year_built = _from_data('سال ساخت', 'year_built', 'construction_year')
-    floor = _from_data('طبقه', 'floor')
-    total_floors = _from_data('تعداد کل طبقات ساختمان', 'total_floors')
+    specs = _listing_specs(lst)
 
     base.update({
-        'description': lst.description or _from_data('توضیحات', 'description') or '',
+        'description': lst.description or _data_value(data, 'توضیحات', 'description') or '',
         'images': images,
-        'year_built': year_built,
-        'floor': floor,
-        'total_floors': total_floors,
+        'year_built': specs['year_built'],
+        'floor': specs['floor'],
+        'total_floors': specs['total_floors'],
         'business_type': lst.business_type or '',
         'owner_phone': owner_phone_from_listing(lst),
         'published_at': lst.published_at.isoformat() if lst.published_at else None,

@@ -14,7 +14,7 @@ from workspace.services.features import (
     parse_rooms_from_text,
     parse_rooms_value,
 )
-from workspace.services.listing_features import feature_highlights_for_listing
+from workspace.services.listing_features import build_listing_feature_profile, feature_highlights_for_listing
 from workspace.services.listing_edit import owner_phone_from_listing
 from workspace.services.property_images import normalize_external_image_url
 
@@ -118,17 +118,34 @@ def _listing_specs(lst: Listing) -> Dict[str, Any]:
     }
 
 
+_CORE_AMENITY_API_KEYS = {
+    'پارکینگ': 'has_parking',
+    'انباری': 'has_storage',
+    'آسانسور': 'has_elevator',
+}
+
+
 def _listing_amenity_fields(lst: Listing) -> Dict[str, Any]:
-    """وضعیت واحد و امکانات اصلی — برای جزئیات آگهی در اپ موبایل."""
+    """وضعیت واحد و امکانات اصلی — همان منطق پلتفرم وب."""
     feat = extract_listing_features(lst)
+    profile = build_listing_feature_profile(lst, base_feat=feat)
     data = lst.data or {}
-    unit_status = _data_value(data, 'وضعیت واحد', 'وضعیت سکونت')
-    return {
-        'has_parking': feat.get('parking'),
-        'has_storage': feat.get('storage'),
-        'has_elevator': feat.get('elevator'),
-        'unit_status': unit_status,
+    result: Dict[str, Any] = {
+        'has_parking': None,
+        'has_storage': None,
+        'has_elevator': None,
+        'unit_status': _data_value(data, 'وضعیت واحد', 'وضعیت سکونت'),
     }
+    for item in profile.get('core') or []:
+        api_key = _CORE_AMENITY_API_KEYS.get(str(item.get('key') or '').strip())
+        if not api_key:
+            continue
+        state = item.get('state') or 'unknown'
+        if state == 'yes':
+            result[api_key] = True
+        elif state == 'no':
+            result[api_key] = False
+    return result
 
 
 def _listing_image_urls(lst: Listing) -> List[str]:
@@ -245,6 +262,7 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
         'floor': specs['floor'],
         'transaction_type': transaction_type,
         'feature_highlights': feature_highlights_for_listing(lst, limit=5),
+        **_listing_amenity_fields(lst),
     }
 
 

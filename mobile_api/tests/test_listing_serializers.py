@@ -73,6 +73,24 @@ class ListingSerializerFallbackTests(TestCase):
         row = listing_to_dict(listing)
         self.assertEqual(row['rooms'], 0)
 
+    def test_list_row_includes_amenity_fields(self):
+        listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='tok-list-amenities',
+            title='آپارتمان',
+            price=5_000_000_000,
+            area=90,
+            data={
+                'پارکینگ': 'دارد',
+                'انباری': 'دارد',
+                'آسانسور': 'دارد',
+            },
+        )
+        row = listing_to_dict(listing)
+        self.assertTrue(row['has_parking'])
+        self.assertTrue(row['has_storage'])
+        self.assertTrue(row['has_elevator'])
+
     def test_detail_includes_amenity_fields(self):
         listing = Listing.objects.create(
             dataset=self.dataset,

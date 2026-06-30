@@ -1,4 +1,6 @@
 """تست‌های امنیتی API لایسنس."""
+import io
+import json
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -9,6 +11,7 @@ from rest_framework.test import APIClient
 
 from licenses.models import License, LicenseActivation
 from shop.models import LicensePlan, Order, Product
+from workspace.models import Dataset
 
 User = get_user_model()
 
@@ -142,6 +145,55 @@ class LicenseAPITests(TestCase):
             'hardware_fingerprint': TEST_HW_B,
         }, format='json')
         self.assertEqual(resp.status_code, 400)
+
+    def test_bot_import_dataset_merges_into_existing(self):
+        act = self.client.post('/api/licenses/activate/', {
+            'license_key': TEST_KEY,
+            'hardware_fingerprint': TEST_HW,
+        }, format='json')
+        self.assertEqual(act.status_code, 200, act.content)
+
+        payload = json.dumps([
+            {'token': 'tok-001', 'title': 'آگهی تست'},
+        ], ensure_ascii=False).encode('utf-8')
+        rel_path = 'قم/فروش_آپارتمان/test_import.json'
+
+        first = self.client.post(
+            '/api/licenses/import-dataset/',
+            {
+                'license_key': TEST_KEY,
+                'hardware_fingerprint': TEST_HW,
+                'relative_path': rel_path,
+                'file': io.BytesIO(payload),
+            },
+            format='multipart',
+        )
+        self.assertEqual(first.status_code, 200, first.content)
+        first_data = first.json()
+        self.assertTrue(first_data.get('success'))
+        dataset_id = first_data['dataset_id']
+        self.assertEqual(Dataset.objects.filter(user=self.user).count(), 1)
+
+        payload2 = json.dumps([
+            {'token': 'tok-001', 'title': 'آگهی تست'},
+            {'token': 'tok-002', 'title': 'آگهی دوم'},
+        ], ensure_ascii=False).encode('utf-8')
+        second = self.client.post(
+            '/api/licenses/import-dataset/',
+            {
+                'license_key': TEST_KEY,
+                'hardware_fingerprint': TEST_HW,
+                'relative_path': rel_path,
+                'file': io.BytesIO(payload2),
+            },
+            format='multipart',
+        )
+        self.assertEqual(second.status_code, 200, second.content)
+        second_data = second.json()
+        self.assertTrue(second_data.get('success'))
+        self.assertTrue(second_data.get('is_update'))
+        self.assertEqual(second_data['dataset_id'], dataset_id)
+        self.assertEqual(Dataset.objects.filter(user=self.user).count(), 1)
 
 
 @override_settings(DEBUG=False, LICENSE_ALLOW_LOCAL_DEV=False, LICENSE_BOT_API_KEY='test-bot-key')

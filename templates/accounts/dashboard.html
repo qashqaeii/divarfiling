@@ -594,11 +594,9 @@
                                             <button type="button" class="lic-seat-btn" data-seat-save-label title="ذخیره نام">
                                                 <i class="fas fa-check"></i>
                                             </button>
-                                            {% if not seat.is_active %}
-                                            <button type="button" class="lic-seat-btn lic-seat-btn--danger" data-seat-remove title="حذف سیستم">
+                                            <button type="button" class="lic-seat-btn lic-seat-btn--danger" data-seat-remove{% if seat.is_active %} data-seat-remove-active{% endif %} title="حذف اسلات">
                                                 <i class="fas fa-trash"></i>
                                             </button>
-                                            {% endif %}
                                         </div>
                                     </td>
                                 </tr>
@@ -635,7 +633,7 @@
                         </div>
                     </form>
                     {% elif item.is_multi %}
-                    <p class="lic-slots-full"><i class="fas fa-info-circle"></i> تمام {{ lic.max_activations }} اسلات این پلن استفاده شده است.</p>
+                    <p class="lic-slots-full"><i class="fas fa-info-circle"></i> تمام {{ lic.max_activations }} اسلات این پلن استفاده شده است. برای ثبت دستگاه جدید، یکی از سیستم‌های جدول بالا را حذف کنید.</p>
                     {% endif %}
 
                     <footer class="lic-card-foot">
@@ -1603,7 +1601,10 @@ function copyAffiliateLinkOverview() {
         const removeBtn = row.querySelector('[data-seat-remove]');
         if (removeBtn) {
             removeBtn.addEventListener('click', async () => {
-                if (!window.confirm('این سیستم از لایسنس حذف شود؟')) return;
+                const confirmMsg = removeBtn.hasAttribute('data-seat-remove-active')
+                    ? 'این سیستم فعال است. با حذف اسلات، دسترسی آن (ربات ویندوز یا اپ اندروید) قطع می‌شود. ادامه می‌دهید؟'
+                    : 'این سیستم از لایسنس حذف شود؟';
+                if (!window.confirm(confirmMsg)) return;
                 removeBtn.disabled = true;
                 try {
                     const data = await postForm('{% url "license_remove_device" %}', { activation_id: activationId });

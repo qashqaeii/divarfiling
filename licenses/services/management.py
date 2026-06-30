@@ -206,11 +206,9 @@ def remove_device_slot(user, activation_id: int) -> None:
     activation = LicenseActivation.objects.select_related('license', 'license__order').get(pk=activation_id)
     if activation.license.order.user_id != user.id:
         raise PermissionDenied('دسترسی به این اسلات ندارید.')
-    if activation.is_active:
-        raise ValidationError(
-            'این سیستم در ربات فعال است. ابتدا از داخل ربات لایسنس را غیرفعال کنید.'
-        )
     license_obj = activation.license
+    was_active = activation.is_active
+    is_mobile = (activation.notes or '').startswith('device_type=mobile')
     AuditLog.objects.create(
         license=license_obj,
         action_type='deactivation',
@@ -218,6 +216,9 @@ def remove_device_slot(user, activation_id: int) -> None:
             'event': 'seat_removed',
             'activation_id': activation.pk,
             'hardware_fingerprint': activation.hardware_fingerprint[:32],
+            'was_active': was_active,
+            'device_type': 'mobile' if is_mobile else 'desktop',
+            'removed_by': user.username,
         },
     )
     activation.delete()

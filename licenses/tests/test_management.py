@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from licenses.models import License, LicenseActivation
-from licenses.services.management import assign_seat_to_member, register_device_slot
+from licenses.services.management import assign_seat_to_member, register_device_slot, remove_device_slot
 from shop.models import LicensePlan, Order, Product
 from workspace.models import CRMAgency, CRMAgencyMember
 from workspace.services.access import has_active_bot_license
@@ -92,3 +92,25 @@ class LicenseSeatManagementTests(TestCase):
         data = resp.json()
         self.assertTrue(data['ok'])
         self.assertEqual(self.license.activations.count(), 1)
+
+    def test_remove_pending_slot(self):
+        activation = register_device_slot(self.owner, self.license.pk, 'HW-REMOVE-PENDING')
+        remove_device_slot(self.owner, activation.pk)
+        self.assertEqual(self.license.activations.count(), 0)
+
+    def test_remove_active_slot(self):
+        activation = register_device_slot(self.owner, self.license.pk, 'HW-REMOVE-ACTIVE', label='PC فعال')
+        activation.is_active = True
+        activation.save()
+        remove_device_slot(self.owner, activation.pk)
+        self.assertEqual(self.license.activations.count(), 0)
+
+    def test_remove_active_slot_via_api(self):
+        activation = register_device_slot(self.owner, self.license.pk, 'HW-API-REMOVE')
+        activation.is_active = True
+        activation.save()
+        self.client.login(username='owner', password='pass1234')
+        resp = self.client.post(reverse('license_remove_device'), {'activation_id': activation.pk})
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()['ok'])
+        self.assertEqual(self.license.activations.count(), 0)

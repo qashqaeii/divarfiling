@@ -95,6 +95,6 @@ class RemoveDeviceSlotView(_LicenseActionView):
         activation_id = request.POST.get('activation_id', '').strip()
         try:
             remove_device_slot(request.user, int(activation_id))
-            return JsonResponse({'ok': True, 'message': 'سیستم از لایسنس حذف شد.'})
+            return JsonResponse({'ok': True, 'message': 'اسلات حذف شد. می‌توانید دستگاه جدید ثبت کنید.'})
         except Exception as exc:
             return self._json_error(exc)

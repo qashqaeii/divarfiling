@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import List, Optional, Tuple
 
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Q
 
 from mobile_api.serializers import dataset_to_dict, listing_detail_to_dict, listing_to_dict
@@ -31,6 +32,17 @@ def get_dataset(user, dataset_id: str) -> Dataset | None:
     if not has_active_bot_license(user):
         return None
     return _datasets_qs(user).filter(pk=dataset_id).first()
+
+
+def delete_dataset(user, dataset_id: str) -> bool:
+    """حذف نرم فایل و آگهی‌های وابسته."""
+    ds = get_dataset(user, dataset_id)
+    if not ds:
+        return False
+    with transaction.atomic():
+        Listing.objects.filter(dataset=ds).delete()
+        Dataset.objects.filter(pk=ds.pk, user=user).update(is_active=False)
+    return True
 
 
 def dataset_detail_payload(user, dataset_id: str) -> Optional[dict]:
@@ -114,17 +126,21 @@ def update_listing(user, token: str, payload: dict) -> Optional[dict]:
 def export_dataset_response(user, dataset_id: str, fmt: str):
     from workspace.services.export import export_csv_response, export_excel_response, export_json_response
 
-    ds = get_dataset(user, dataset_id)
+    if not has_active_bot_license(user):
+        return None, 'LICENSE_REQUIRED'
+
+    ds = _datasets_qs(user).filter(pk=dataset_id).first()
     if not ds:
-        return None
+        return None, 'NOT_FOUND'
+
     listings = ds.listings.all()
     safe_name = (ds.name or str(dataset_id)).replace('/', '-').replace('\\', '-')
     fmt = (fmt or 'xlsx').lower()
     if fmt == 'json':
-        return export_json_response(listings, f'{safe_name}.json')
+        return export_json_response(listings, f'{safe_name}.json'), None
     if fmt == 'csv':
-        return export_csv_response(listings, f'{safe_name}.csv')
-    return export_excel_response(listings, f'{safe_name}.xlsx')
+        return export_csv_response(listings, f'{safe_name}.csv'), None
+    return export_excel_response(listings, f'{safe_name}.xlsx'), None
 
 
 def search_listings(

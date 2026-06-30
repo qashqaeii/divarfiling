@@ -460,11 +460,12 @@
             <div class="license-claim-section" id="claim-license">
                 <div class="license-claim-header">
                     <h3 class="license-claim-title">
-                        <i class="fas fa-microchip" aria-hidden="true"></i>
-                        صدور لایسنس — ثبت اولین سیستم
+                        <i class="fas fa-key" aria-hidden="true"></i>
+                        دریافت کلید لایسنس
                     </h3>
                     <p class="license-claim-desc">
-                        شناسه سخت‌افزاری را از برنامه «ربات استخراج» (تب لایسنس) کپی کنید. برای پلن‌های چندسیستمی، پس از صدور می‌توانید سیستم‌های بیشتری اضافه کنید.
+                        پس از پرداخت، کلید لایسنس شما اینجا نمایش داده می‌شود. آن را کپی کنید و در ربات ویندوز وارد کنید — شناسه سخت‌افزار به‌صورت خودکار ثبت می‌شود.
+                        اگر فقط از اپ اندروید استفاده می‌کنید، با همان حساب کاربری وارد اپ شوید؛ نیازی به وارد کردن کلید نیست.
                     </p>
                 </div>
                 {% for order in orders_pending_claim %}
@@ -475,39 +476,15 @@
                             <i class="fas fa-layer-group" aria-hidden="true"></i>
                             پلن: {{ order.plan.name }}
                         </span>
-                        <span class="license-meta-item">
-                            <i class="fas fa-microchip" aria-hidden="true"></i>
-                            {{ order.plan.max_activations }} سیستم
-                        </span>
                         <span class="license-meta-item">سفارش #{{ order.id|slice:":8" }}</span>
                     </div>
                     <form method="post" action="{% url 'claim_license' %}" class="license-claim-form">
                         {% csrf_token %}
                         <input type="hidden" name="order_id" value="{{ order.id }}">
-                        <div class="lic-form-row">
-                            <div class="lic-form-field">
-                                <label class="license-claim-label" for="hw-label-{{ order.id }}">نام سیستم (اختیاری)</label>
-                                <input type="text" id="hw-label-{{ order.id }}" name="label" class="license-claim-input" placeholder="مثلاً لپ‌تاپ دفتر">
-                            </div>
-                            <div class="lic-form-field lic-form-field--grow">
-                                <label class="license-claim-label" for="hw-id-{{ order.id }}">شناسه سخت‌افزاری <span class="lic-required">*</span></label>
-                                <div class="license-claim-input-row">
-                                    <input
-                                        type="text"
-                                        id="hw-id-{{ order.id }}"
-                                        name="hardware_fingerprint"
-                                        class="license-claim-input"
-                                        placeholder="شناسه را از ربات کپی و اینجا بچسبانید"
-                                        required
-                                        dir="ltr"
-                                    >
-                                    <button type="submit" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-key" aria-hidden="true"></i>
-                                        صدور لایسنس
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-key" aria-hidden="true"></i>
+                            نمایش کلید لایسنس
+                        </button>
                     </form>
                     {% if order.product.download_file %}
                     <a href="{% url 'payment:download' order.id %}" class="btn btn-secondary btn-sm lic-claim-dl">
@@ -553,7 +530,7 @@
                                 <i class="fas fa-copy" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <p class="lic-card-key-hint">این کلید را در تمام سیستم‌های ثبت‌شده وارد کنید — هر سیستم شناسه سخت‌افزاری جداگانه دارد.</p>
+                        <p class="lic-card-key-hint">این کلید را در ربات ویندوز وارد کنید — شناسه سخت‌افزار خودکار ثبت می‌شود. برای اپ اندروید فقط با همان حساب وارد شوید.</p>
                     </div>
 
                     <div class="lic-slots-meter" aria-label="مصرف اسلات">

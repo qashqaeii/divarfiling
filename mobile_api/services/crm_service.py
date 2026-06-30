@@ -298,6 +298,7 @@ def _today_item_to_api(item: Dict[str, Any]) -> Dict[str, Any]:
             'phone': item.get('customer_phone', ''),
             'customer_type': item.get('customer_type', ''),
             'status': item.get('customer_status', ''),
+            'next_follow_up_at': item.get('due_date') or None,
         },
         'reminder': None,
     }

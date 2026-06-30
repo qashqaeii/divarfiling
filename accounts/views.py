@@ -116,20 +116,31 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )
         
         # لایسنس‌ها
+        from django.db.models import Exists, OuterRef
+        from licenses.services.claim import issue_license_for_paid_order
+        from licenses.services.management import build_license_dashboard
+
         licenses = License.objects.filter(order__user=user).select_related('order', 'order__product', 'plan').order_by('-created_at')
 
-        from licenses.services.management import build_license_dashboard
-        license_dashboard = build_license_dashboard(user)
-
-        # سفارش‌های paid بدون لایسنس — نیاز به ثبت شناسه سخت‌افزار
-        from django.db.models import Exists, OuterRef
+        # سفارش‌های paid قدیمی بدون لایسنس — صدور خودکار (سازگاری با خریدهای قبلی)
         orders_pending_claim = Order.objects.filter(
             user=user,
             status='paid',
         ).annotate(
             has_license=Exists(License.objects.filter(order_id=OuterRef('pk'))),
         ).filter(has_license=False).select_related('product', 'plan').order_by('-paid_at', '-created_at')
-        
+        for pending_order in list(orders_pending_claim):
+            issue_license_for_paid_order(pending_order)
+        if orders_pending_claim.exists():
+            licenses = License.objects.filter(order__user=user).select_related('order', 'order__product', 'plan').order_by('-created_at')
+            orders_pending_claim = Order.objects.filter(
+                user=user,
+                status='paid',
+            ).annotate(
+                has_license=Exists(License.objects.filter(order_id=OuterRef('pk'))),
+            ).filter(has_license=False).select_related('product', 'plan').order_by('-paid_at', '-created_at')
+
+        license_dashboard = build_license_dashboard(user)
         # فیلتر لایسنس‌ها
         license_status_filter = self.request.GET.get('license_status', '')
         if license_status_filter:
@@ -338,7 +349,7 @@ class ClaimLicenseView(LoginRequiredMixin, View):
                     update_device_slot(request.user, activation.pk, label=label)
             messages.success(
                 request,
-                f'لایسنس برای پلن «{license_obj.plan.name}» صادر شد. کلید را کپی کرده و در ربات وارد کنید.',
+                'کلید لایسنس شما آماده است. آن را از همین صفحه کپی کرده و در ربات وارد کنید.',
             )
         except ValidationError as exc:
             msg = exc.messages[0] if getattr(exc, 'messages', None) else str(exc)

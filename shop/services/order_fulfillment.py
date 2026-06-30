@@ -39,15 +39,17 @@ def _record_affiliate_commission(order) -> None:
 
 def fulfill_order_after_payment(order) -> License | None:
     """لایسنس، افیلیت و سایر اقدامات پس از پرداخت موفق — idempotent."""
+    from licenses.services.claim import issue_license_for_paid_order
+
     if order.status == 'paid':
-        return License.objects.filter(order=order).first()
+        return issue_license_for_paid_order(order)
 
     with transaction.atomic():
         from shop.models import Order
 
         order = Order.objects.select_for_update().get(pk=order.pk)
         if order.status == 'paid':
-            return License.objects.filter(order=order).first()
+            return issue_license_for_paid_order(order)
 
         order.status = 'paid'
         order.paid_at = timezone.now()
@@ -61,7 +63,7 @@ def fulfill_order_after_payment(order) -> License | None:
         Affiliate.objects.create(user=order.user, is_active=True)
         AffiliateWallet.objects.get_or_create(user=order.user)
 
-    return License.objects.filter(order=order).first()
+    return issue_license_for_paid_order(order)
 
 
 def approve_card_transfer(submission, reviewer) -> License | None:

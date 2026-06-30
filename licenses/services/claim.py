@@ -17,6 +17,48 @@ def _license_expires_at(plan):
     return None
 
 
+def issue_license_for_paid_order(order: Order) -> License | None:
+    """
+    صدور خودکار کلید لایسنس پس از پرداخت — بدون نیاز به شناسه سخت‌افزار.
+    idempotent: اگر لایسنس وجود داشته باشد همان را برمی‌گرداند.
+    """
+    if order.status != 'paid':
+        return None
+
+    existing = License.objects.filter(order=order).first()
+    if existing:
+        return existing
+
+    license_obj = License.objects.create(
+        order=order,
+        license_key=generate_license_key(order),
+        plan=order.plan,
+        max_activations=order.plan.max_activations,
+        expires_at=_license_expires_at(order.plan),
+        status='inactive',
+    )
+    AuditLog.objects.create(
+        license=license_obj,
+        action_type='activation',
+        details={
+            'event': 'license_issued_on_payment',
+            'plan': order.plan.name,
+        },
+    )
+    return license_obj
+
+
+def backfill_licenses_for_user(user) -> int:
+    """صدور لایسنس برای سفارش‌های paid قدیمی که هنوز کلید ندارند."""
+    created = 0
+    orders = Order.objects.filter(user=user, status='paid').select_related('plan')
+    for order in orders:
+        if issue_license_for_paid_order(order):
+            if License.objects.filter(order=order).count():
+                created += 1
+    return created
+
+
 def _register_hardware(license_obj: License, hardware_fingerprint: str) -> None:
     hw = (hardware_fingerprint or '').strip().lower()
     if len(hw) < 8:
@@ -39,9 +81,10 @@ def _register_hardware(license_obj: License, hardware_fingerprint: str) -> None:
     )
 
 
-def claim_license_for_order(user, order_id, hardware_fingerprint: str, *, label: str = '') -> License:
+def claim_license_for_order(user, order_id, hardware_fingerprint: str = '', *, label: str = '') -> License:
     """
-    صدور (یا بازیابی) لایسنس برای سفارش paid و ثبت شناسه سخت‌افزار کاربر.
+    بازیابی/صدور لایسنس برای سفارش paid.
+    شناسه سخت‌افزار اختیاری است — فقط برای پیش‌ثبت اسلات در داشبورد.
     """
     try:
         order = Order.objects.select_related('plan', 'product').get(
@@ -52,28 +95,21 @@ def claim_license_for_order(user, order_id, hardware_fingerprint: str, *, label:
     except Order.DoesNotExist as exc:
         raise ValidationError('سفارش پرداخت‌شده یافت نشد.') from exc
 
-    existing = License.objects.filter(order=order).first()
-    if existing:
-        _register_hardware(existing, hardware_fingerprint)
-        return existing
+    license_obj = issue_license_for_paid_order(order)
+    if not license_obj:
+        raise ValidationError('امکان صدور لایسنس برای این سفارش وجود ندارد.')
 
-    license_obj = License.objects.create(
-        order=order,
-        license_key=generate_license_key(order),
-        plan=order.plan,
-        max_activations=order.plan.max_activations,
-        expires_at=_license_expires_at(order.plan),
-        status='inactive',
-    )
-    _register_hardware(license_obj, hardware_fingerprint)
+    hw = (hardware_fingerprint or '').strip()
+    if hw:
+        _register_hardware(license_obj, hw)
 
-    AuditLog.objects.create(
-        license=license_obj,
-        action_type='activation',
-        details={
-            'event': 'license_claimed',
-            'hardware_fingerprint': hardware_fingerprint[:32],
-            'plan': order.plan.name,
-        },
-    )
+    if label and hw:
+        activation = LicenseActivation.objects.filter(
+            license=license_obj,
+            hardware_fingerprint=hw.strip().lower(),
+        ).first()
+        if activation and not activation.label:
+            activation.label = label.strip()[:80]
+            activation.save(update_fields=['label'])
+
     return license_obj

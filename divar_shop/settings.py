@@ -24,9 +24,9 @@ SECRET_KEY = config(
 
 # در production فقط دامنه‌های واقعی؛ localhost فقط در DEBUG
 _DEFAULT_ALLOWED_HOSTS = (
-    'divarfiling.ir,www.divarfiling.ir,212.80.29.56,localhost,127.0.0.1'
+    'divarfiling.ir,www.divarfiling.ir,212.80.29.56,62.60.204.73,localhost,127.0.0.1'
     if DEBUG
-    else 'divarfiling.ir,www.divarfiling.ir,212.80.29.56'
+    else 'divarfiling.ir,www.divarfiling.ir,212.80.29.56,62.60.204.73'
 )
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=_DEFAULT_ALLOWED_HOSTS, cast=Csv())
 
@@ -332,6 +332,11 @@ FCM_SERVER_KEY = config('FCM_SERVER_KEY', default='')  # فقط اگر Legacy AP
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'skip_disallowed_host': {
+            '()': 'divar_shop.logging_filters.SkipDisallowedHostFilter',
+        },
+    },
     'formatters': {
         'verbose': {
             'format': '{levelname} {asctime} {module} {message}',
@@ -346,11 +351,19 @@ LOGGING = {
             'maxBytes': 10 * 1024 * 1024,
             'backupCount': 5,
             'formatter': 'verbose',
+            'filters': ['skip_disallowed_host'],
         },
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'filters': ['skip_disallowed_host'],
+        },
+    },
+    'loggers': {
+        'django.security.DisallowedHost': {
+            'handlers': [],
+            'propagate': False,
         },
     },
     'root': {

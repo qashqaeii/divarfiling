@@ -61,6 +61,7 @@ from mobile_api.services.documents_service import (
 from mobile_api.services.extraction_ingest import extraction_limits_payload, ingest_mobile_extraction
 from mobile_api.services.filing_service import (
     dataset_detail_payload,
+    delete_dataset,
     export_dataset_response,
     get_dataset,
     get_listing_detail,
@@ -223,9 +224,26 @@ class DevicePatchView(APIView):
         device_id = _device_id(request)
         if not device_id:
             return api_error('شناسه دستگاه در هدر الزامی است.', code='VALIDATION_ERROR')
-        if not update_device_fcm(request.user, device_id, data.get('fcm_token', '')):
-            return api_error('دستگاه یافت نشد.', code='NOT_FOUND', status=404)
-        return api_ok({})
+        fcm_token = data.get('fcm_token', '')
+        if update_device_fcm(request.user, device_id, fcm_token):
+            return api_ok({})
+        # دستگاه هنوز ثبت نشده (مثلاً بعد از به‌روزرسانی اپ) — ثبت سبک
+        try:
+            register_or_update_device(
+                request.user,
+                {
+                    'device_id': device_id,
+                    'fcm_token': fcm_token,
+                    'device_model': request.headers.get('X-Device-Model', ''),
+                    'app_version': request.headers.get('X-App-Version', ''),
+                },
+            )
+            return api_ok({})
+        except ValueError as exc:
+            msg = str(exc)
+            if 'حداکثر تعداد دستگاه' in msg:
+                return api_error(msg, code='LICENSE_DEVICE_LIMIT', status=403)
+            return api_error(msg, code='VALIDATION_ERROR')
 
 
 class LicenseStatusView(APIView):
@@ -331,6 +349,11 @@ class DatasetDetailView(APIView):
             return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
 
+    def delete(self, request, dataset_id):
+        if not delete_dataset(request.user, str(dataset_id)):
+            return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({'deleted': True})
+
 
 class DatasetInsightsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -372,12 +395,18 @@ class DatasetExportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, dataset_id):
-        response = export_dataset_response(
+        response, error_code = export_dataset_response(
             request.user,
             str(dataset_id),
             request.GET.get('format', 'xlsx'),
         )
-        if response is None:
+        if error_code == 'LICENSE_REQUIRED':
+            return api_error(
+                'برای خروجی گرفتن از فایل، لایسنس فعال ربات نیاز است.',
+                code='LICENSE_REQUIRED',
+                status=403,
+            )
+        if error_code == 'NOT_FOUND' or response is None:
             return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
         return response
 

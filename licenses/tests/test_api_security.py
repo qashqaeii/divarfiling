@@ -197,10 +197,14 @@ class OrderFulfillmentIdempotencyTests(TestCase):
 
     def test_fulfill_twice_is_idempotent(self):
         from shop.services.order_fulfillment import fulfill_order_after_payment
+        from licenses.models import License
 
+        license_obj = fulfill_order_after_payment(self.order)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'paid')
+        self.assertIsNotNone(license_obj)
+        self.assertTrue(License.objects.filter(order=self.order).exists())
         fulfill_order_after_payment(self.order)
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, 'paid')
-        fulfill_order_after_payment(self.order)
-        self.order.refresh_from_db()
-        self.assertEqual(self.order.status, 'paid')
+        self.assertEqual(License.objects.filter(order=self.order).count(), 1)

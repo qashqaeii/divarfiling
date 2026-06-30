@@ -114,3 +114,24 @@ class FilingApiTests(TestCase):
         body = resp.json()
         self.assertTrue(body['ok'])
         self.assertGreaterEqual(len(body['data']['markers']), 2)
+
+    def test_dataset_export_ok(self, _license):
+        resp = self.client.get(
+            f'/api/mobile/v1/filing/datasets/{self.dataset.pk}/export',
+            {'format': 'json'},
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('application/json', resp.get('Content-Type', ''))
+
+    def test_dataset_export_requires_license(self, _license):
+        with patch('mobile_api.services.filing_service.has_active_bot_license', return_value=False):
+            resp = self.client.get(f'/api/mobile/v1/filing/datasets/{self.dataset.pk}/export')
+        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(resp.json()['code'], 'LICENSE_REQUIRED')
+
+    def test_dataset_export_not_found(self, _license):
+        import uuid
+
+        resp = self.client.get(f'/api/mobile/v1/filing/datasets/{uuid.uuid4()}/export')
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.json()['code'], 'NOT_FOUND')

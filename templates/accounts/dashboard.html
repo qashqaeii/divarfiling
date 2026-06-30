@@ -421,7 +421,7 @@
             <div class="licenses-page-header">
                 <div>
                     <h2 class="licenses-page-title">مدیریت لایسنس‌ها</h2>
-                    <p class="licenses-page-subtitle">صدور کلید، ثبت سیستم‌ها و تخصیص دسترسی به اعضای تیم</p>
+                    <p class="licenses-page-subtitle">صدور کلید، مدیریت دستگاه‌ها و تخصیص دسترسی به اعضای تیم</p>
                 </div>
                 {% if products %}
                     <a href="{% url 'product_list' %}" class="btn btn-primary btn-buy-license" title="ربات استخراج دیوار">
@@ -605,33 +605,19 @@
                         </table>
                     </div>
                     {% else %}
-                    <p class="lic-no-seats">هنوز سیستمی ثبت نشده — فرم زیر را پر کنید.</p>
+                    <p class="lic-no-seats">هنوز دستگاهی ثبت نشده — با فعال‌سازی کلید در ربات ویندوز یا ورود به اپ اندروید، سیستم اینجا ظاهر می‌شود.</p>
                     {% endif %}
 
                     {% if item.slots_available > 0 %}
-                    <form class="lic-add-device-form" data-add-device data-license-id="{{ lic.id }}">
-                        {% csrf_token %}
+                    <div class="lic-add-device-form lic-auto-register-info">
                         <h4 class="lic-add-device-title">
-                            <i class="fas fa-plus-circle" aria-hidden="true"></i>
-                            ثبت سیستم جدید
+                            <i class="fas fa-magic" aria-hidden="true"></i>
+                            ثبت خودکار دستگاه
                             <span class="lic-add-device-remaining">{{ item.slots_available }} اسلات باقی‌مانده</span>
                         </h4>
-                        <div class="lic-form-row">
-                            <div class="lic-form-field">
-                                <label>نام سیستم</label>
-                                <input type="text" name="label" class="license-claim-input" placeholder="مثلاً PC مشاور ۲">
-                            </div>
-                            <div class="lic-form-field lic-form-field--grow">
-                                <label>شناسه سخت‌افزاری <span class="lic-required">*</span></label>
-                                <div class="license-claim-input-row">
-                                    <input type="text" name="hardware_fingerprint" class="license-claim-input" placeholder="از تب لایسنس ربات کپی کنید" required dir="ltr">
-                                    <button type="submit" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-microchip"></i> ثبت سیستم
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+                        <p class="lic-auto-register-text">نیازی به وارد کردن شناسه سخت‌افزار در سایت نیست. کلید را در <strong>ربات ویندوز</strong> فعال کنید یا با همان حساب در <strong>اپ اندروید</strong> وارد شوید — دستگاه به‌طور خودکار در جدول بالا ثبت می‌شود.</p>
+                        <p class="lic-auto-register-note"><i class="fas fa-info-circle" aria-hidden="true"></i> شناسه سخت‌افزار فقط در تب لایسنس ربات (قابل کپی) نمایش داده می‌شود.</p>
+                    </div>
                     {% elif item.is_multi %}
                     <p class="lic-slots-full"><i class="fas fa-info-circle"></i> تمام {{ lic.max_activations }} اسلات این پلن استفاده شده است. برای ثبت دستگاه جدید، یکی از سیستم‌های جدول بالا را حذف کنید.</p>
                     {% endif %}
@@ -1553,31 +1539,6 @@ function copyAffiliateLinkOverview() {
         if (!json.ok) throw new Error(json.error || 'خطا در انجام عملیات');
         return json;
     };
-
-    root.querySelectorAll('[data-add-device]').forEach(form => {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = form.querySelector('button[type=submit]');
-            const licenseId = form.dataset.licenseId;
-            const hw = form.querySelector('[name=hardware_fingerprint]').value.trim();
-            const label = form.querySelector('[name=label]')?.value.trim() || '';
-            if (!hw) return;
-            btn.disabled = true;
-            try {
-                const data = await postForm('{% url "license_register_device" %}', {
-                    license_id: licenseId,
-                    hardware_fingerprint: hw,
-                    label,
-                });
-                showToast(data.message, 'success');
-                setTimeout(() => window.location.reload(), 800);
-            } catch (err) {
-                showToast(err.message, 'error');
-            } finally {
-                btn.disabled = false;
-            }
-        });
-    });
 
     root.querySelectorAll('[data-activation-id]').forEach(row => {
         const activationId = row.dataset.activationId;

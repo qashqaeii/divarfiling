@@ -69,3 +69,12 @@ class Command(BaseCommand):
         deactivated = product.plans.exclude(name__in=active_names).update(is_active=False)
         if deactivated:
             self.stdout.write(self.style.WARNING(f'  {deactivated} پلن قدیمی غیرفعال شد.'))
+
+        from licenses.models import License
+
+        bumped = License.objects.filter(
+            order__product=product,
+            max_activations=1,
+        ).update(max_activations=2)
+        if bumped:
+            self.stdout.write(self.style.SUCCESS(f'  {bumped} لایسنس موجود به ۲ اسلات (ویندوز+اندروید) ارتقا یافت.'))

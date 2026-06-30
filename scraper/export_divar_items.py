@@ -412,6 +412,44 @@ _FEATURE_ROW_PREFIXES = (
     "سرویس بهداشتی ",
 )
 
+_SPEC_FIELD_TITLES = frozenset({"متراژ", "اتاق", "طبقه", "ساخت", "سال ساخت"})
+
+
+def _assign_spec_field(out: Dict[str, Any], title: str, value: str) -> None:
+    """نگاشت مستقیم فیلدهای اصلی ملک از LIST_DATA به کلیدهای export."""
+    t = str(title or "").strip()
+    v = str(value or "").strip()
+    if not t or not v:
+        return
+    key = "ساخت" if t == "سال ساخت" else t
+    if key in _SPEC_FIELD_TITLES or key in ("متراژ", "اتاق", "طبقه", "ساخت"):
+        out[key] = v
+
+
+def _parse_subtitle_specs(text: str) -> Dict[str, str]:
+    """استخراج متراژ/اتاق/طبقه از زیرعنوان آگهی (مثلاً «۴۹ متر · ۱ اتاق · طبقه ۳»)."""
+    if not text:
+        return {}
+    t = str(text).translate(str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789"))
+    specs: Dict[str, str] = {}
+    m = re.search(r"(\d+)\s*متر", t)
+    if m:
+        specs["متراژ"] = m.group(1)
+    if "بدون اتاق" in text or "بدون اتاق" in t:
+        specs["اتاق"] = "بدون اتاق"
+    else:
+        m = re.search(r"(\d+)\s*اتاق", t)
+        if m:
+            specs["اتاق"] = m.group(1)
+    m = re.search(r"طبقه\s*(\d+)", t)
+    if m:
+        specs["طبقه"] = m.group(1)
+    m = re.search(r"(\d+)\s*از\s*(\d+)", t)
+    if m:
+        specs["طبقه"] = m.group(1)
+        specs["تعداد کل طبقات ساختمان"] = m.group(2)
+    return specs
+
 
 def _normalize_feature_row_title(title: str) -> tuple:
     """تبدیل عنوان FEATURE_ROW به (کلید ستون، مقدار)."""
@@ -1040,6 +1078,8 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
     out["title"] = final_title
     out["عنوان"] = final_title
     out["زیرعنوان"] = subtitle_text
+    for key, val in _parse_subtitle_specs(subtitle_text).items():
+        out.setdefault(key, val)
 
     # توضیحات
     description_text = ""
@@ -1103,6 +1143,7 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
                             v = str(it.get("value") or "").strip()
                             if t or v:
                                 attrs_list.append(f"{t}:{v}")
+                                _assign_spec_field(out, t, v)
                 elif wtype == "UNEXPANDABLE_ROW":
                     title = str(safe_get(w, ["data", "title"]) or "").strip()
                     value = str(safe_get(w, ["data", "value"]) or "").strip()
@@ -1122,6 +1163,7 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
                         rent_convertibility = value
                     elif title or value:
                         attrs_list.append(f"{title}:{value}")
+                        _assign_spec_field(out, title, value)
                 elif wtype == "FEATURE_ROW":
                     # برخی آگهی‌ها فقط یک متن دربارهٔ قابلیت تبدیل دارند
                     # فقط اگر rent_convertibility قبلاً تنظیم نشده باشد
@@ -2117,6 +2159,104 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
         else:
             metras = ["-"] * len(df)
         result_df["متراژ"] = pd.Series(metras)
+
+    def extract_from_attributes(attr_key, default="-"):
+        """استخراج مقدار از attributes بر اساس کلید."""
+        if "attributes" not in df.columns:
+            return pd.Series([default] * len(df))
+        results = []
+        for raw in df["attributes"].fillna(""):
+            val = default
+            try:
+                parts = [p.strip() for p in str(raw).split("|") if p.strip()]
+                for p in parts:
+                    if ":" in p:
+                        k, v = p.split(":", 1)
+                        if k.strip() == attr_key:
+                            val = v.strip()
+                            break
+            except Exception:
+                pass
+            results.append(val)
+        return pd.Series(results)
+
+    # 10b. ساخت
+    if "ساخت" in df.columns:
+        excel_col = get_col("ساخت").copy()
+        if "attributes" in df.columns:
+            mask = excel_col.isna() | (excel_col == "") | (excel_col == "-")
+            if mask.any():
+                for idx in df.index[mask]:
+                    if pd.notna(df.loc[idx, "attributes"]) and str(df.loc[idx, "attributes"]).strip():
+                        val = "-"
+                        try:
+                            raw = str(df.loc[idx, "attributes"]).strip()
+                            parts = [p.strip() for p in raw.split("|") if p.strip()]
+                            for p in parts:
+                                if ":" in p:
+                                    k, v = p.split(":", 1)
+                                    if k.strip() == "ساخت":
+                                        val = v.strip()
+                                        break
+                        except Exception:
+                            pass
+                        if val != "-":
+                            excel_col.iloc[idx] = val
+        result_df["ساخت"] = excel_col
+    else:
+        result_df["ساخت"] = extract_from_attributes("ساخت", "-")
+
+    # 10c. اتاق
+    if "اتاق" in df.columns:
+        excel_col = get_col("اتاق").copy()
+        if "attributes" in df.columns:
+            mask = excel_col.isna() | (excel_col == "") | (excel_col == "-")
+            if mask.any():
+                for idx in df.index[mask]:
+                    if pd.notna(df.loc[idx, "attributes"]) and str(df.loc[idx, "attributes"]).strip():
+                        val = "-"
+                        try:
+                            raw = str(df.loc[idx, "attributes"]).strip()
+                            parts = [p.strip() for p in raw.split("|") if p.strip()]
+                            for p in parts:
+                                if ":" in p:
+                                    k, v = p.split(":", 1)
+                                    if k.strip() == "اتاق":
+                                        val = v.strip()
+                                        break
+                        except Exception:
+                            pass
+                        if val != "-":
+                            excel_col.iloc[idx] = val
+        result_df["اتاق"] = excel_col
+    else:
+        result_df["اتاق"] = extract_from_attributes("اتاق", "-")
+
+    # 10d. طبقه
+    if "طبقه" in df.columns:
+        excel_col = get_col("طبقه").copy()
+        if "attributes" in df.columns:
+            mask = excel_col.isna() | (excel_col == "") | (excel_col == "-")
+            if mask.any():
+                for idx in df.index[mask]:
+                    if pd.notna(df.loc[idx, "attributes"]) and str(df.loc[idx, "attributes"]).strip():
+                        val = "-"
+                        try:
+                            raw = str(df.loc[idx, "attributes"]).strip()
+                            parts = [p.strip() for p in raw.split("|") if p.strip()]
+                            for p in parts:
+                                if ":" in p:
+                                    k, v = p.split(":", 1)
+                                    if k.strip() == "طبقه":
+                                        val = v.strip()
+                                        break
+                        except Exception:
+                            pass
+                        if val != "-":
+                            excel_col.iloc[idx] = val
+        result_df["طبقه"] = excel_col
+    else:
+        result_df["طبقه"] = extract_from_attributes("طبقه", "-")
     
     # 11. قیمت
     result_df["قیمت"] = combine_excel_and_source("قیمت", "مالی_قیمت_کل_عدد")
@@ -2250,7 +2390,8 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
     # ترتیب ستون‌ها — ویژگی‌های تفکیک‌شده بعد از امکانات پایه
     sell_column_order = [
         "شناسه", "عنوان", "لینک", "شماره تماس", "ایجاد آگهی", "انقضا آگهی",
-        "دسته‌بندی", "شهر", "محله", "متراژ", "قیمت", "قیمت هر متر",
+        "دسته‌بندی", "شهر", "محله", "متراژ", "ساخت", "اتاق", "طبقه",
+        "قیمت", "قیمت هر متر",
         "آسانسور", "پارکینگ", "انباری",
         *FEATURE_EXCEL_COLUMNS,
         "نوع آگهی دهنده", "نام مشاور / آژانس", "آگهی‌های فعال مشاور",
@@ -2297,7 +2438,7 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
         
         # تعریف ستون‌های عددی (که باید وسط‌چین باشند)
         integer_numeric_columns = [
-            "شناسه", "متراژ", "قیمت", "قیمت هر متر",
+            "شناسه", "متراژ", "ساخت", "اتاق", "طبقه", "قیمت", "قیمت هر متر",
             "در شعاع (متر)", "تعداد تصاویر"
         ]
         

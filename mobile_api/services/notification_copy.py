@@ -72,6 +72,57 @@ def extract_schedule_due(schedule_title: str) -> tuple[str, str]:
     )
 
 
+def extract_schedule_created(
+    location_label: str,
+    interval_hours: float,
+    max_items: int,
+) -> tuple[str, str]:
+    location = (location_label or 'فیلتر ذخیره‌شده').strip()
+    interval = _interval_label_fa(interval_hours)
+    return (
+        'زمان‌بندی فعال شد',
+        f'پایش خودکار استخراج برای {location} — {interval}، حداکثر {max_items} آگهی — از الان فعال است.',
+    )
+
+
+def _interval_label_fa(hours: float) -> str:
+    known = {
+        0.25: 'هر ۱۵ دقیقه',
+        0.5: 'هر ۳۰ دقیقه',
+        1.0: 'هر ۱ ساعت',
+        2.0: 'هر ۲ ساعت',
+        6.0: 'هر ۶ ساعت',
+        12.0: 'هر ۱۲ ساعت',
+        24.0: 'هر ۲۴ ساعت',
+    }
+    if hours in known:
+        return known[hours]
+    if hours >= 1:
+        value = str(int(hours)) if hours % 1 == 0 else str(hours)
+        return f'هر {value} ساعت'
+    minutes = int(hours * 60)
+    return f'هر {minutes} دقیقه'
+
+
+def schedule_location_label(filters: dict) -> str:
+    if not isinstance(filters, dict):
+        return ''
+    districts = [
+        str(n).strip()
+        for n in (filters.get('district_names') or [])
+        if str(n).strip()
+    ]
+    city = str(filters.get('city_name') or '').strip()
+    if districts and city:
+        return f'{"، ".join(districts)}، {city}'
+    if districts:
+        return '، '.join(districts)
+    if city:
+        return city
+    from mobile_api.services.schedule_service import schedule_title_from_filters
+    return schedule_title_from_filters(filters)
+
+
 def new_dataset(dataset_name: str, count: int) -> tuple[str, str]:
     return (
         'فایل جدید اومد',

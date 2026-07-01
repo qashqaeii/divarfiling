@@ -8,7 +8,9 @@ from django.utils import timezone
 from mobile_api.models import MobileNotification
 from mobile_api.services.notification_copy import (
     extract_complete as copy_extract_complete,
+    extract_schedule_created as copy_extract_schedule_created,
     new_dataset as copy_new_dataset,
+    schedule_location_label,
 )
 from mobile_api.services.push_service import send_push_to_user
 
@@ -20,6 +22,7 @@ NOTIFICATION_TYPES = {
     'overdue_followup': 'پیگیری معوق',
     'extract_complete': 'پایان استخراج',
     'extract_schedule_due': 'زمان استخراج',
+    'extract_schedule_created': 'زمان‌بندی استخراج',
     'new_dataset': 'فایل جدید',
     'customer_match': 'فایل مناسب مشتری',
     'price_drop': 'کاهش قیمت',
@@ -112,6 +115,25 @@ def notify_extract_complete(user, dataset_id: str, dataset_name: str, count: int
         body=body,
         deep_link=f'divarfiling://filing/{dataset_id}',
         data={'dataset_id': dataset_id, 'ingested_count': count},
+    )
+
+
+def notify_schedule_created(user, schedule) -> None:
+    """اعلان in-app هنگام ذخیره زمان‌بندی — push محلی از خود اپ نمایش داده می‌شود."""
+    location = schedule_location_label(schedule.filters or {})
+    title, body = copy_extract_schedule_created(
+        location,
+        float(schedule.interval_hours),
+        int(schedule.max_items),
+    )
+    create_notification(
+        user,
+        notification_type='extract_schedule_created',
+        title=title,
+        body=body,
+        deep_link='divarfiling://extract/schedules',
+        data={'schedule_id': schedule.pk},
+        send_push=False,
     )
 
 

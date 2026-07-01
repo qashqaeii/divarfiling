@@ -57,13 +57,26 @@ class ExtractionScheduleApiTests(TestCase):
             '/api/mobile/v1/extractions/schedules',
             {
                 'interval_hours': 0.25,
-                'filters': self.filters,
-                'max_items': 20,
+                'filters': {
+                    **self.filters,
+                    'district_names': ['زعفرانیه'],
+                    'city_name': 'تهران',
+                },
+                'max_items': 50,
             },
             format='json',
         )
         self.assertEqual(resp.status_code, 201)
         self.assertEqual(resp.json()['data']['interval_hours'], 0.25)
+        from mobile_api.models import MobileNotification
+        note = MobileNotification.objects.filter(
+            user=self.user,
+            notification_type='extract_schedule_created',
+        ).first()
+        self.assertIsNotNone(note)
+        self.assertIn('زعفرانیه', note.body)
+        self.assertIn('۱۵ دقیقه', note.body)
+        self.assertIn('50 آگهی', note.body)
 
     def test_create_list_and_toggle_schedule(self):
         resp = self.client.post(
@@ -109,6 +122,53 @@ class ExtractionScheduleApiTests(TestCase):
         self.assertEqual(fail.status_code, 200)
         schedule.refresh_from_db()
         self.assertEqual(schedule.last_status, 'failed')
+
+    def test_start_run_resumes_active_run_instead_of_400(self):
+        schedule = MobileExtractionSchedule.objects.create(
+            user=self.user,
+            title='تست',
+            filters=self.filters,
+            max_items=20,
+            is_enabled=True,
+            interval_hours=0.25,
+            next_run_at=timezone.now(),
+            last_status=MobileExtractionSchedule.RUN_STATUS_RUNNING,
+        )
+        run = MobileExtractionRun.objects.create(
+            user=self.user,
+            schedule=schedule,
+            status=MobileExtractionSchedule.RUN_STATUS_RUNNING,
+            filters_snapshot=self.filters,
+        )
+        second = self.client.post(f'/api/mobile/v1/extractions/schedules/{schedule.pk}/runs/start')
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(second.json()['data']['run']['id'], run.pk)
+
+    def test_stale_run_expires_on_list_for_short_interval(self):
+        schedule = MobileExtractionSchedule.objects.create(
+            user=self.user,
+            title='تست',
+            filters=self.filters,
+            max_items=20,
+            is_enabled=True,
+            interval_hours=0.25,
+            last_status=MobileExtractionSchedule.RUN_STATUS_RUNNING,
+        )
+        run = MobileExtractionRun.objects.create(
+            user=self.user,
+            schedule=schedule,
+            status=MobileExtractionSchedule.RUN_STATUS_RUNNING,
+            filters_snapshot=self.filters,
+        )
+        MobileExtractionRun.objects.filter(pk=run.pk).update(
+            started_at=timezone.now() - timezone.timedelta(minutes=7),
+        )
+        resp = self.client.get('/api/mobile/v1/extractions/schedules')
+        self.assertEqual(resp.status_code, 200)
+        item = resp.json()['data'][0]
+        self.assertEqual(item['last_status'], 'failed')
+        run.refresh_from_db()
+        self.assertEqual(run.status, 'failed')
 
     def test_due_schedules_endpoint(self):
         MobileExtractionSchedule.objects.create(

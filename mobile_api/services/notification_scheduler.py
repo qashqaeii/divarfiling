@@ -31,6 +31,7 @@ TYPE_TO_PREF = {
     'overdue_followup': 'overdue_followup',
     'extract_complete': 'extract_complete',
     'extract_schedule_due': 'extract_schedule_due',
+    'extract_schedule_created': 'extract_schedule_due',
     'new_dataset': 'new_dataset',
     'price_drop': 'price_drop',
     'customer_match': 'customer_match',

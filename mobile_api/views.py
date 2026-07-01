@@ -489,7 +489,9 @@ class ExtractionUploadView(APIView):
                 'workspace_url': f'/workspace/datasets/{result.dataset.pk}/',
             })
         except ValueError as exc:
-            return api_error(str(exc), code='VALIDATION_ERROR')
+            msg = str(exc)
+            code = 'RUN_ALREADY_FINISHED' if 'قبلاً تکمیل شده' in msg else 'VALIDATION_ERROR'
+            return api_error(msg, code=code)
         except RuntimeError as exc:
             return api_error(str(exc), code='INGEST_ERROR', status=400)
         except Exception:

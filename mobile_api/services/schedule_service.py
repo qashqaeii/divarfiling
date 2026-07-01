@@ -22,6 +22,7 @@ MAX_INTERVAL_HOURS = 168.0
 MAX_SCHEDULES_PER_USER = 10
 MAX_CONSECUTIVE_FAILURES = 5
 STALE_RUN_TIMEOUT = timedelta(minutes=15)
+STALE_RUN_MIN = timedelta(minutes=5)
 
 
 def _clamp_interval(hours: float) -> float:
@@ -113,6 +114,11 @@ def create_schedule(user, data: Dict[str, Any], *, device_id: str = '') -> Mobil
     if is_enabled:
         schedule.next_run_at = now
     schedule.save()
+    try:
+        from mobile_api.services.notification_service import notify_schedule_created
+        notify_schedule_created(user, schedule)
+    except Exception:
+        logger.exception('failed to create schedule notification for schedule=%s', schedule.pk)
     return schedule
 
 
@@ -179,16 +185,29 @@ def list_runs(user, schedule_id: int, *, page: int = 1, page_size: int = 20) -> 
     return list(page_obj.object_list), meta
 
 
-def _has_active_run(schedule: MobileExtractionSchedule) -> bool:
+def _stale_run_cutoff(schedule: MobileExtractionSchedule):
+    """زمان انقضای اجرای گیرکرده — متناسب با بازهٔ زمان‌بندی (۵ تا ۱۵ دقیقه)."""
+    interval_minutes = _clamp_interval(schedule.interval_hours) * 60.0
+    stale_minutes = max(
+        STALE_RUN_MIN.total_seconds() / 60.0,
+        min(
+            STALE_RUN_TIMEOUT.total_seconds() / 60.0,
+            interval_minutes * 0.4,
+        ),
+    )
+    return timezone.now() - timedelta(minutes=stale_minutes)
+
+
+def _get_active_run(schedule: MobileExtractionSchedule) -> Optional[MobileExtractionRun]:
     return MobileExtractionRun.objects.filter(
         schedule=schedule,
         status=MobileExtractionSchedule.RUN_STATUS_RUNNING,
-    ).exists()
+    ).order_by('-started_at').first()
 
 
 def _expire_stale_runs(schedule: MobileExtractionSchedule) -> int:
     """اجراهای گیرکرده (مثلاً بعد از کرش اپ) را می‌بندد."""
-    cutoff = timezone.now() - STALE_RUN_TIMEOUT
+    cutoff = _stale_run_cutoff(schedule)
     stale = MobileExtractionRun.objects.filter(
         schedule=schedule,
         status=MobileExtractionSchedule.RUN_STATUS_RUNNING,
@@ -226,8 +245,10 @@ def start_schedule_run(
     if not schedule.is_enabled:
         raise ValueError('زمان‌بندی غیرفعال است.')
     _expire_stale_runs(schedule)
-    if _has_active_run(schedule):
-        raise ValueError('اجرای قبلی هنوز تمام نشده است.')
+    active = _get_active_run(schedule)
+    if active:
+        # اگر اپ کرش کرده یا Worker قطع شده، همان run را برمی‌گردانیم تا ادامه دهد.
+        return active
     if schedule.consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
         raise ValueError('زمان‌بندی به‌دلیل خطاهای متوالی متوقف شده — دوباره فعال کنید.')
 

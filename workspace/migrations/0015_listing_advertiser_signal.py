@@ -4,7 +4,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('workspace', '0013_workspacesettings_onboarding_completed'),
+        ('workspace', '0014_alter_customer_source'),
     ]
 
     operations = [

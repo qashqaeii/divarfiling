@@ -61,6 +61,13 @@ _DISGUISED_CONSULTANT_PHRASES: tuple[str, ...] = (
     'فقط مستاجران',
     'real estate',
     'realtor',
+    'مشاور حرفه ای',
+    'مشاور حرفه ای منطقه',
+    'مشاور منطقه',
+    'مشاور حرفه',
+    'آدرس املاک',
+    'گروه املاک',
+    'املاک شما',
 )
 
 # «املاک» به‌تنهایی گسترده است؛ فقط در ترکیب‌های مشکوک بررسی می‌شود.
@@ -72,6 +79,23 @@ _DISGUISED_AMLAK_CONTEXTS: tuple[str, ...] = (
     'همکار املاک',
     'لطفا املاک',
     'لطفاً املاک',
+)
+
+# نام دفتر املاک: «املاک افشین»، «املاک بزرگ فردا» و مشابه.
+_AMLAK_AGENCY_NAME_RE = re.compile(
+    r'املاک\s+[\u0600-\u06FF]{2,}(?:\s+[\u0600-\u06FF]{2,}){0,2}'
+)
+_AMLAK_AGENCY_FALSE_POSITIVES: tuple[str, ...] = (
+    'تماس',
+    'نگیر',
+    'نگیرید',
+    'مسکونی',
+    'تجاری',
+    'اداری',
+    'مسکن',
+    'مستغلات',
+    'کشاورزی',
+    'صنعتی',
 )
 
 _ZWNJ_RE = re.compile(r'[\u200c\u200d\u200e\u200f\ufeff]')
@@ -121,6 +145,31 @@ def is_personal_category(business_type: str = '', data: Optional[Dict[str, Any]]
     return 'personal' in bt or bt == 'شخصی'
 
 
+def _has_amlak_agency_branding(text: str) -> bool:
+    """برند دفتر املاک با الگوی «املاک + نام» (مثلاً املاک افشین)."""
+    for match in _AMLAK_AGENCY_NAME_RE.finditer(text):
+        rest = match.group(0).split('املاک', 1)[-1].strip()
+        if not rest:
+            continue
+        if any(fp in rest for fp in _AMLAK_AGENCY_FALSE_POSITIVES):
+            continue
+        return True
+    return False
+
+
+def _description_from_data(data: Optional[Dict[str, Any]]) -> str:
+    if not data:
+        return ''
+    for key in ('توضیحات', 'description', 'متن آگهی'):
+        val = data.get(key)
+        if val is None:
+            continue
+        text = str(val).strip()
+        if text and text.lower() not in ('-', '—', 'nan', 'none'):
+            return text
+    return ''
+
+
 def has_disguised_consultant_markers(
     title: str = '',
     description: str = '',
@@ -128,6 +177,8 @@ def has_disguised_consultant_markers(
 ) -> bool:
     title_norm = normalize_ad_text(title)
     desc_norm = normalize_ad_text(description)
+    if not desc_norm.strip() and data:
+        desc_norm = normalize_ad_text(_description_from_data(data))
     combined = f'{title_norm} {desc_norm}'.strip()
     if not combined:
         return False
@@ -139,6 +190,9 @@ def has_disguised_consultant_markers(
     for ctx in _NORMALIZED_AMLAK_CONTEXTS:
         if ctx and ctx in combined:
             return True
+
+    if _has_amlak_agency_branding(combined):
+        return True
 
     if data:
         for key, val in data.items():
@@ -190,14 +244,16 @@ def count_signals(signals: Iterable[str]) -> Dict[str, int]:
 
 
 def listing_advertiser_signal(listing) -> str:
-    stored = str(getattr(listing, 'advertiser_signal', '') or '').strip()
-    if stored:
-        return stored
+    """همیشه از متن آگهی تشخیص می‌دهد — مقدار ذخیره‌شده ممکن است قدیمی باشد."""
+    data = getattr(listing, 'data', None) or {}
+    description = getattr(listing, 'description', '') or ''
+    if not str(description).strip():
+        description = _description_from_data(data)
     return detect_advertiser_signal(
         title=getattr(listing, 'title', '') or '',
-        description=getattr(listing, 'description', '') or '',
+        description=description,
         business_type=getattr(listing, 'business_type', '') or '',
-        data=getattr(listing, 'data', None) or {},
+        data=data,
     )
 
 

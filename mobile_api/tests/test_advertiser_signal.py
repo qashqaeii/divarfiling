@@ -41,6 +41,46 @@ class AdvertiserSignalDetectionTest(TestCase):
             description='',
         ))
 
+    def test_disguised_consultant_amlak_afshin_branding(self):
+        description = (
+            'یک واحد آپارتمان 65 متری\n'
+            'دو خواب\n'
+            '⬅️⬅️⬅️  املاک افشین  ➡️➡️➡️\n'
+            'آدرس املاک: خیابان حسام الدین. بعد از رنجبر. پلاک 11. املاک افشین.'
+        )
+        signal = detect_advertiser_signal(
+            title='اجاره آپارتمان',
+            description=description,
+            business_type='personal',
+        )
+        self.assertEqual(signal, ADVERTISER_SIGNAL_DISGUISED)
+
+    def test_disguised_consultant_amlak_bozorg_farda(self):
+        description = (
+            '۴۷متر تک خواب\n'
+            'مشاور حرفه ای منطقه:محمدی\n'
+            '⭐️⭐️⭐️املاک بزرگ فردا⭐️⭐️⭐️'
+        )
+        signal = detect_advertiser_signal(
+            title='اجاره آپارتمان',
+            description=description,
+            business_type='personal',
+        )
+        self.assertEqual(signal, ADVERTISER_SIGNAL_DISGUISED)
+
+    def test_stored_genuine_personal_reclassified_on_display(self):
+        from types import SimpleNamespace
+        from workspace.services.advertiser_signal import listing_advertiser_display
+
+        stale = SimpleNamespace(
+            advertiser_signal='genuine_personal',
+            title='اجاره آپارتمان',
+            description='آدرس املاک: پلاک 11. املاک افشین.',
+            business_type='personal',
+            data={},
+        )
+        self.assertEqual(listing_advertiser_display(stale)['label'], 'مشاور پنهان')
+
     def test_official_consultant_skips_personal_detection(self):
         signal = detect_advertiser_signal(
             title='اجاره آپارتمان',

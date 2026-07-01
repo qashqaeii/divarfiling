@@ -15,7 +15,11 @@ from workspace.services.features import (
     parse_rooms_value,
 )
 from workspace.services.listing_features import build_listing_feature_profile, feature_highlights_for_listing
-from workspace.services.advertiser_signal import advertiser_signal_label, detect_advertiser_signal, listing_advertiser_display
+from workspace.services.advertiser_signal import (
+    advertiser_signal_label,
+    listing_advertiser_display,
+    listing_advertiser_signal,
+)
 from workspace.services.listing_edit import owner_phone_from_listing
 from workspace.services.columns import _parse_images
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
@@ -239,12 +243,7 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
     thumb = image_urls[0] if image_urls else ''
     adv_display = listing_advertiser_display(lst)
     adv = adv_display['label']
-    signal = lst.advertiser_signal or detect_advertiser_signal(
-        title=lst.title or '',
-        description=lst.description or '',
-        business_type=lst.business_type or '',
-        data=lst.data or {},
-    )
+    signal = listing_advertiser_signal(lst)
     specs = _listing_specs(lst)
     transaction_type = 'اجاره' if (lst.rent or lst.deposit) else ('فروش' if lst.price else '')
 

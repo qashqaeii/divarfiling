@@ -1,19 +1,15 @@
-{% extends 'base.html' %}
+{% extends 'workspace/public/base_share.html' %}
 {% load static %}
 
 {% block title %}لینک غیرفعال{% endblock %}
 
 {% block content %}
-<div class="mk-pub-inactive">
-    <div class="mk-pub-inactive-card">
+<div class="ps-inactive-wrap">
+    <div class="ps-inactive-card">
         <i class="fas fa-link-slash" aria-hidden="true"></i>
         <h1>این لینک دیگر فعال نیست</h1>
         <p>مشاور اشتراک این ملک را لغو کرده است. برای اطلاعات بیشتر با مشاور خود تماس بگیرید.</p>
-        <a href="{% url 'home' %}" class="mk-pub-cta mk-pub-cta--call">بازگشت به سایت</a>
+        <a href="{% url 'home' %}" class="ps-btn ps-btn--primary">بازگشت به سایت</a>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/listing-public-share.css' %}?v=1">
 {% endblock %}

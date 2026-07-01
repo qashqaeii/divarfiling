@@ -50,6 +50,7 @@ urlpatterns = [
     path('crm/properties', views.PropertiesListView.as_view(), name='properties'),
     path('crm/properties/export', views.PropertiesExportView.as_view(), name='properties_export'),
     path('crm/properties/<int:property_id>', views.PropertyDetailView.as_view(), name='property_detail'),
+    path('crm/properties/<int:property_id>/public-share', views.PropertyPublicShareView.as_view(), name='property_public_share'),
     path('crm/properties/<int:property_id>/status', views.PropertyStatusView.as_view(), name='property_status'),
     path('crm/properties/<int:property_id>/contacts', views.PropertyContactsView.as_view(), name='property_contacts'),
     path('crm/properties/<int:property_id>/documents', views.PropertyDocumentsView.as_view(), name='property_documents'),
@@ -63,6 +64,7 @@ urlpatterns = [
     path('filing/datasets/<uuid:dataset_id>/map', views.DatasetMapView.as_view(), name='dataset_map'),
     path('filing/search', views.FilingSearchView.as_view(), name='filing_search'),
     path('filing/listings/<str:token>', views.ListingDetailView.as_view(), name='listing_detail'),
+    path('filing/listings/<str:token>/public-share', views.ListingPublicShareView.as_view(), name='listing_public_share'),
 
     path('extractions/limits', views.ExtractionLimitsView.as_view(), name='extraction_limits'),
     path('extractions/upload', views.ExtractionUploadView.as_view(), name='extraction_upload'),

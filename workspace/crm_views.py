@@ -1120,6 +1120,14 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['user_contacts'] = customers_qs(self.request.user).order_by('-updated_at')[:200]
             ctx['crm_sources'] = CRM_SOURCES
         ctx['active_tab'] = self.request.GET.get('tab', '')
+        if ctx.get('is_property_owner') and not ctx.get('property_is_deleted'):
+            from workspace.services.property_public_share import (
+                get_or_create_property_share,
+                property_public_share_url,
+            )
+            pub_share = get_or_create_property_share(self.request.user, p)
+            ctx['public_property_share'] = pub_share
+            ctx['public_property_share_url'] = property_public_share_url(self.request, pub_share)
         return ctx
 
     def _detail_redirect(self, property_id, *, tab='contacts', drawer=''):
@@ -1267,6 +1275,60 @@ class CRMPropertyDeleteView(LoginRequiredMixin, View):
         prop.save(update_fields=['deleted_at'])
         messages.success(request, f'ملک «{title}» حذف شد.')
         return redirect('workspace:crm_properties')
+
+
+class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
+    """مدیریت لینک عمومی اشتراک فایل شخصی با مشتری."""
+
+    def get(self, request, property_id):
+        prop = property_for_user(request.user, property_id)
+        if not prop or not is_property_owner(request.user, prop):
+            return JsonResponse({'ok': False, 'error': 'دسترسی ندارید.'}, status=403)
+        from workspace.services.property_public_share import (
+            get_or_create_property_share,
+            property_public_share_url,
+        )
+        share = get_or_create_property_share(request.user, prop)
+        return JsonResponse({
+            'ok': True,
+            'share_url': property_public_share_url(request, share),
+            'share_token': share.share_token,
+            'view_count': share.view_count,
+            'consultant_name': share.consultant_name,
+            'consultant_phone': share.consultant_phone,
+            'welcome_message': share.welcome_message,
+            'show_divar_link': share.show_divar_link,
+            'show_full_address': share.show_full_address,
+            'show_internal_notes': share.show_internal_notes,
+            'is_active': share.is_active,
+        })
+
+    def post(self, request, property_id):
+        prop = property_for_user(request.user, property_id)
+        if not prop or not is_property_owner(request.user, prop):
+            messages.error(request, 'دسترسی ندارید.')
+            return redirect('workspace:crm_property_detail', property_id=property_id)
+        from workspace.services.property_public_share import (
+            get_or_create_property_share,
+            property_public_share_url,
+        )
+        share = get_or_create_property_share(request.user, prop)
+        share.consultant_name = (request.POST.get('consultant_name') or '').strip()[:200]
+        share.consultant_phone = (request.POST.get('consultant_phone') or '').strip()[:20]
+        share.welcome_message = (request.POST.get('welcome_message') or '').strip()
+        share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
+        share.show_full_address = request.POST.get('show_full_address') in ('1', 'true', 'on')
+        share.show_internal_notes = request.POST.get('show_internal_notes') in ('1', 'true', 'on')
+        share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')
+        share.save()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'ok': True,
+                'share_url': property_public_share_url(request, share),
+                'message': 'تنظیمات اشتراک ذخیره شد.',
+            })
+        messages.success(request, 'تنظیمات لینک اشتراک ذخیره شد.')
+        return redirect('workspace:crm_property_detail', property_id=prop.pk)
 
 
 class CRMGlobalSearchView(LoginRequiredMixin, View):

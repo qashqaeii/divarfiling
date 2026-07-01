@@ -117,3 +117,19 @@ class ListingPublicShareTests(TestCase):
         data = resp.json()
         self.assertTrue(data['ok'])
         self.assertIn('share_url', data)
+
+    @patch('workspace.mixins.has_active_bot_license', return_value=True)
+    def test_share_manage_can_deactivate(self, _mock_license):
+        self.client.login(username='09121234567', password='testpass123')
+        url = reverse(
+            'workspace:listing_share',
+            kwargs={'dataset_id': self.dataset.pk, 'listing_id': self.listing.pk},
+        )
+        resp = self.client.post(url, {
+            'consultant_name': '',
+            'consultant_phone': '',
+            'welcome_message': '',
+        })
+        self.assertEqual(resp.status_code, 302)
+        share = ListingPublicShare.objects.get(listing=self.listing, created_by=self.user)
+        self.assertFalse(share.is_active)

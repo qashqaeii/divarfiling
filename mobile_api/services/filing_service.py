@@ -92,7 +92,7 @@ def list_listings(
     }
 
 
-def get_listing_detail(user, token: str) -> Optional[dict]:
+def get_listing_detail(user, token: str, request=None) -> Optional[dict]:
     if not has_active_bot_license(user):
         return None
     lst = Listing.objects.filter(
@@ -101,7 +101,37 @@ def get_listing_detail(user, token: str) -> Optional[dict]:
     ).select_related('dataset').first()
     if not lst:
         return None
-    return listing_detail_to_dict(lst)
+    return listing_detail_to_dict(lst, user=user, request=request)
+
+
+def get_listing_public_share(user, token: str, request=None) -> Optional[dict]:
+    if not has_active_bot_license(user):
+        return None
+    lst = Listing.objects.filter(dataset__user=user, token=token).first()
+    if not lst:
+        return None
+    from workspace.services.listing_public_share import (
+        get_or_create_listing_share,
+        listing_public_share_to_dict,
+    )
+    share = get_or_create_listing_share(user, lst)
+    return listing_public_share_to_dict(share, request)
+
+
+def update_listing_public_share(user, token: str, payload: dict, request=None) -> Optional[dict]:
+    if not has_active_bot_license(user):
+        return None
+    lst = Listing.objects.filter(dataset__user=user, token=token).first()
+    if not lst:
+        return None
+    from workspace.services.listing_public_share import (
+        get_or_create_listing_share,
+        listing_public_share_to_dict,
+        update_listing_public_share as _update_share,
+    )
+    share = get_or_create_listing_share(user, lst)
+    _update_share(share, payload)
+    return listing_public_share_to_dict(share, request)
 
 
 def update_listing(user, token: str, payload: dict) -> Optional[dict]:
@@ -120,7 +150,7 @@ def update_listing(user, token: str, payload: dict) -> Optional[dict]:
         lst.save()
     except (ValueError, TypeError):
         return None
-    return listing_detail_to_dict(lst)
+    return listing_detail_to_dict(lst, user=user, request=None)
 
 
 def export_dataset_response(user, dataset_id: str, fmt: str):

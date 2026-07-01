@@ -164,6 +164,42 @@ class ListingPublicShare(models.Model):
         return f'{self.share_token} → {self.listing_id}'
 
 
+class CRMPropertyPublicShare(models.Model):
+    """لینک عمومی اشتراک‌گذاری فایل شخصی CRM برای مشتریان."""
+    share_token = models.CharField(
+        max_length=32, unique=True, db_index=True, verbose_name='توکن لینک',
+    )
+    property = models.ForeignKey(
+        'CRMProperty', on_delete=models.CASCADE,
+        related_name='public_shares', verbose_name='ملک',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='property_public_shares', verbose_name='ایجادکننده',
+    )
+    is_active = models.BooleanField(default=True, verbose_name='فعال')
+    view_count = models.PositiveIntegerField(default=0, verbose_name='تعداد بازدید')
+    consultant_name = models.CharField(max_length=200, blank=True, verbose_name='نام مشاور')
+    consultant_phone = models.CharField(max_length=20, blank=True, verbose_name='شماره مشاور')
+    welcome_message = models.TextField(blank=True, verbose_name='پیام خوش‌آمد')
+    show_divar_link = models.BooleanField(default=False, verbose_name='نمایش لینک دیوار')
+    show_full_address = models.BooleanField(default=False, verbose_name='نمایش آدرس کامل')
+    show_internal_notes = models.BooleanField(default=False, verbose_name='نمایش یادداشت داخلی')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
+    last_viewed_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین بازدید')
+
+    class Meta:
+        verbose_name = 'اشتراک عمومی فایل شخصی'
+        verbose_name_plural = 'اشتراک‌های عمومی فایل شخصی'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['property', 'created_by']),
+        ]
+
+    def __str__(self):
+        return f'{self.share_token} → property:{self.property_id}'
+
+
 class PriceHistory(models.Model):
     """تاریخچه قیمت آگهی."""
     user = models.ForeignKey(

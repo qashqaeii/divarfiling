@@ -379,7 +379,7 @@ class ListingDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, token):
-        payload = get_listing_detail(request.user, token)
+        payload = get_listing_detail(request.user, token, request)
         if not payload:
             return api_error('آگهی یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
@@ -388,6 +388,24 @@ class ListingDetailView(APIView):
         payload = update_listing(request.user, token, request.data)
         if not payload:
             return api_error('آگهی یافت نشد یا داده نامعتبر است.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class ListingPublicShareView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, token):
+        from mobile_api.services.filing_service import get_listing_public_share
+        payload = get_listing_public_share(request.user, token, request)
+        if not payload:
+            return api_error('آگهی یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def patch(self, request, token):
+        from mobile_api.services.filing_service import update_listing_public_share
+        payload = update_listing_public_share(request.user, token, request.data, request)
+        if not payload:
+            return api_error('آگهی یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
 
 
@@ -973,6 +991,26 @@ class PropertyDetailView(APIView):
         if not soft_delete_property(request.user, property_id):
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok({})
+
+
+class PropertyPublicShareView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, property_id):
+        from mobile_api.services.properties_service import get_property_public_share
+        payload = get_property_public_share(request.user, property_id, request)
+        if not payload:
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def patch(self, request, property_id):
+        from mobile_api.services.properties_service import update_property_public_share
+        payload = update_property_public_share(
+            request.user, property_id, request.data, request,
+        )
+        if not payload:
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
 
 
 class PropertyStatusView(APIView):

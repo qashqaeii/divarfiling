@@ -71,6 +71,14 @@ def get_property_detail(user, property_id: int, *, request=None) -> Optional[dic
     )
     if source_listing:
         _enrich_property_dict_from_listing(payload['property'], source_listing)
+    from workspace.services.crm_scope import is_property_owner
+    if is_property_owner(user, prop) and prop.deleted_at is None:
+        from workspace.services.property_public_share import (
+            get_or_create_property_share,
+            property_public_share_to_dict,
+        )
+        share = get_or_create_property_share(user, prop)
+        payload['public_share'] = property_public_share_to_dict(share, request)
     return payload
 
 
@@ -320,3 +328,39 @@ def soft_delete_property(user, property_id: int) -> bool:
     prop.deleted_at = timezone.now()
     prop.save(update_fields=['deleted_at', 'updated_at'])
     return True
+
+
+def get_property_public_share(user, property_id: int, request=None) -> Optional[dict]:
+    from workspace.services.access import has_active_bot_license
+    if not has_active_bot_license(user):
+        return None
+    from workspace.services.crm_scope import is_property_owner, property_for_user
+    prop = property_for_user(user, property_id)
+    if not prop or not is_property_owner(user, prop) or prop.deleted_at is not None:
+        return None
+    from workspace.services.property_public_share import (
+        get_or_create_property_share,
+        property_public_share_to_dict,
+    )
+    share = get_or_create_property_share(user, prop)
+    return property_public_share_to_dict(share, request)
+
+
+def update_property_public_share(
+    user, property_id: int, payload: dict, request=None,
+) -> Optional[dict]:
+    from workspace.services.access import has_active_bot_license
+    if not has_active_bot_license(user):
+        return None
+    from workspace.services.crm_scope import is_property_owner, property_for_user
+    prop = property_for_user(user, property_id)
+    if not prop or not is_property_owner(user, prop) or prop.deleted_at is not None:
+        return None
+    from workspace.services.property_public_share import (
+        get_or_create_property_share,
+        property_public_share_to_dict,
+        update_property_public_share as _update_share,
+    )
+    share = get_or_create_property_share(user, prop)
+    _update_share(share, payload)
+    return property_public_share_to_dict(share, request)

@@ -80,6 +80,7 @@ urlpatterns = [
     path('crm/properties/<int:property_id>/status/', crm_views.CRMPropertyStatusUpdateView.as_view(), name='crm_property_status'),
     path('crm/properties/pipeline-order/', crm_views.CRMPropertyPipelineOrderView.as_view(), name='crm_property_pipeline_order'),
     path('crm/properties/<int:property_id>/delete/', crm_views.CRMPropertyDeleteView.as_view(), name='crm_property_delete'),
+    path('crm/properties/<int:property_id>/public-share/', crm_views.CRMPropertyPublicShareManageView.as_view(), name='crm_property_public_share'),
     path('crm/filters/', crm_views.CRMSavedFilterListView.as_view(), name='crm_filters'),
     path('crm/filters/save/', crm_views.CRMSavedFilterCreateView.as_view(), name='crm_filter_save'),
     path('crm/filters/<int:filter_id>/delete/', crm_views.CRMSavedFilterDeleteView.as_view(), name='crm_filter_delete'),

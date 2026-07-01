@@ -19,7 +19,10 @@ from workspace.services.display import (
     transaction_profile,
 )
 from workspace.services.features import extract_listing_features
-from workspace.services.listing_features import build_listing_feature_profile
+from workspace.services.listing_features import (
+    build_listing_feature_profile,
+    feature_highlights_for_listing,
+)
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 
 _PUBLIC_HIDDEN_SECTIONS = frozenset({'تماس'})
@@ -127,6 +130,35 @@ def public_share_url(request, share: ListingPublicShare) -> str:
     return request.build_absolute_uri(path)
 
 
+def listing_public_share_to_dict(share: ListingPublicShare, request=None) -> Dict[str, Any]:
+    """سریالایزر API موبایل / وب."""
+    return {
+        'share_url': public_share_url(request, share) if request else '',
+        'share_token': share.share_token,
+        'view_count': share.view_count,
+        'is_active': share.is_active,
+        'consultant_name': share.consultant_name,
+        'consultant_phone': share.consultant_phone,
+        'welcome_message': share.welcome_message,
+        'show_divar_link': share.show_divar_link,
+    }
+
+
+def update_listing_public_share(share: ListingPublicShare, payload: dict) -> ListingPublicShare:
+    if 'consultant_name' in payload:
+        share.consultant_name = str(payload.get('consultant_name') or '').strip()[:200]
+    if 'consultant_phone' in payload:
+        share.consultant_phone = str(payload.get('consultant_phone') or '').strip()[:20]
+    if 'welcome_message' in payload:
+        share.welcome_message = str(payload.get('welcome_message') or '').strip()
+    if 'show_divar_link' in payload:
+        share.show_divar_link = bool(payload.get('show_divar_link'))
+    if 'is_active' in payload:
+        share.is_active = bool(payload.get('is_active'))
+    share.save()
+    return share
+
+
 def gallery_images_for_listing(listing: Listing) -> list:
     return deduplicate_divar_image_urls(
         [normalize_external_image_url(img) for img in (listing.images or []) if img],
@@ -176,6 +208,25 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
         listing.neighborhood or dataset.district,
     ) if p]
 
+    description_text = desc
+    if not description_text:
+        for key in ('توضیحات', 'description', 'متن آگهی'):
+            val = (data.get(key) or '').strip()
+            if val and val.lower() not in ('-', 'nan', 'none'):
+                description_text = val
+                break
+
+    primary_price = ''
+    if tx.get('show_price') and listing.price:
+        from workspace.services.formatting import format_toman
+        primary_price = format_toman(listing.price)
+    elif tx.get('show_rent') and listing.rent:
+        from workspace.services.formatting import format_toman
+        primary_price = f'اجاره {format_toman(listing.rent)}'
+    elif tx.get('show_deposit') and listing.deposit:
+        from workspace.services.formatting import format_toman
+        primary_price = f'ودیعه {format_toman(listing.deposit)}'
+
     return {
         'share': share,
         'listing': listing,
@@ -187,7 +238,10 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
         'supplementary_fields': supplementary_fields,
         'supplementary_groups': supplementary_groups,
         'feature_profile': build_listing_feature_profile(listing, feat),
+        'feature_highlights': feature_highlights_for_listing(listing, limit=8),
         'gallery_images': gallery_images_for_listing(listing),
+        'description_text': description_text,
+        'primary_price_label': primary_price,
         'consultant': {
             'name': consultant_name,
             'phone': consultant_phone,

@@ -97,6 +97,16 @@
                     </a>
                     {% endif %}
                     {% endif %}
+                    {% if is_property_owner and not property_is_deleted %}
+                    <button type="button" class="crm-prop-hero-act crm-prop-hero-act--accent" data-modal-open="modal-property-share" title="اشتراک با مشتری">
+                        <i class="fas fa-share-alt"></i><span>اشتراک مشتری</span>
+                    </button>
+                    {% endif %}
+                    {% if is_property_owner and not property_is_deleted %}
+                    <button type="button" class="crm-prop-hero-act crm-prop-hero-act--accent" data-modal-open="modal-property-share" title="اشتراک با مشتری">
+                        <i class="fas fa-share-alt"></i><span>اشتراک مشتری</span>
+                    </button>
+                    {% endif %}
                     {% if can_edit_property %}
                     <button type="button" class="crm-prop-hero-act" data-drawer-open="drawer-document" title="آپلود مدرک">
                         <i class="fas fa-paperclip"></i><span>مدرک</span>
@@ -591,6 +601,69 @@
 {% endif %}
 {% endblock %}
 
+{% block modals %}
+{% if is_property_owner and public_property_share and not property_is_deleted %}
+<div class="ws-modal" id="modal-property-share" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel">
+        <div class="ws-modal-head">
+            <div>
+                <h2 class="ws-modal-title">اشتراک با مشتری</h2>
+                <p class="ws-modal-sub">لینک عمومی — مشتری بدون ورود، جزئیات فایل و اطلاعات شما را می‌بیند</p>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:crm_property_public_share' property.id %}" class="ws-modal-body" id="form-property-share">
+            {% csrf_token %}
+            <label class="ws-label">لینک اشتراک</label>
+            <div class="mk-share-url-row">
+                <input type="text" class="mk-share-url-input" id="property-share-url-input" value="{{ public_property_share_url }}" readonly aria-label="لینک اشتراک">
+                <button type="button" class="ws-btn ws-btn-primary" data-copy="{{ public_property_share_url }}"><i class="fas fa-copy"></i> کپی</button>
+            </div>
+            <a href="{{ public_property_share_url }}" target="_blank" rel="noopener" class="mk-share-preview-link">
+                <i class="fas fa-external-link-alt"></i> پیش‌نمایش صفحه عمومی
+            </a>
+            <button type="button" class="ws-btn ws-btn-ghost ws-btn-sm mk-share-wa-btn" data-share-wa
+                data-share-url="{{ public_property_share_url }}"
+                data-listing-title="{{ property.title|escape }}">
+                <i class="fab fa-whatsapp"></i> متن واتساپ برای مشتری
+            </button>
+            {% if public_property_share.view_count %}
+            <p class="mk-share-stats"><i class="fas fa-eye"></i> {{ public_property_share.view_count }} بازدید</p>
+            {% endif %}
+            <hr class="ws-modal-divider">
+            <label class="ws-label" for="property-share-consultant-name">نام نمایشی مشاور</label>
+            <input type="text" class="ws-input" id="property-share-consultant-name" name="consultant_name" value="{{ public_property_share.consultant_name }}" placeholder="خالی = نام آژانس یا نام کاربری">
+            <label class="ws-label" for="property-share-consultant-phone">شماره تماس مشاور</label>
+            <input type="text" class="ws-input" id="property-share-consultant-phone" name="consultant_phone" value="{{ public_property_share.consultant_phone }}" placeholder="خالی = شماره حساب کاربری" dir="ltr">
+            <label class="ws-label" for="property-share-welcome">پیام خوش‌آمد (اختیاری)</label>
+            <textarea class="ws-textarea" id="property-share-welcome" name="welcome_message" rows="2" placeholder="مثلاً: برای بازدید هماهنگ کنید">{{ public_property_share.welcome_message }}</textarea>
+            <label class="ws-check">
+                <input type="checkbox" name="show_divar_link" value="1" {% if public_property_share.show_divar_link %}checked{% endif %}>
+                نمایش لینک دیوار در صفحه عمومی
+            </label>
+            <label class="ws-check">
+                <input type="checkbox" name="show_full_address" value="1" {% if public_property_share.show_full_address %}checked{% endif %}>
+                نمایش آدرس کامل در صفحه عمومی
+            </label>
+            <label class="ws-check">
+                <input type="checkbox" name="show_internal_notes" value="1" {% if public_property_share.show_internal_notes %}checked{% endif %}>
+                نمایش یادداشت داخلی در صفحه عمومی
+            </label>
+            <label class="ws-check">
+                <input type="checkbox" name="is_active" value="1" {% if public_property_share.is_active %}checked{% endif %}>
+                لینک فعال است
+            </label>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>بستن</button>
+                <button type="submit" class="ws-btn ws-btn-primary">ذخیره تنظیمات</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
 {% block crm_js %}
 {% if crm_agency and is_property_owner %}
 <script>
@@ -603,6 +676,27 @@ window.crmShareRevokeUrlTemplate = "{% url 'workspace:crm_share_revoke' share_id
 document.addEventListener('DOMContentLoaded', () => {
     const tab = document.querySelector('.crm-tab[data-tab="{{ active_tab }}"]');
     if (tab) tab.click();
+});
+</script>
+{% endif %}
+{% if is_property_owner and public_property_share %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (new URLSearchParams(window.location.search).get('share') === '1') {
+        var shareBtn = document.querySelector('[data-modal-open="modal-property-share"]');
+        if (shareBtn) shareBtn.click();
+    }
+    document.querySelectorAll('[data-share-wa]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var url = btn.getAttribute('data-share-url') || '';
+            var title = btn.getAttribute('data-listing-title') || 'ملک';
+            var text = 'سلام،\nجزئیات «' + title + '» را در این لینک ببینید:\n' + url;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+            }
+            window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+        });
+    });
 });
 </script>
 {% endif %}

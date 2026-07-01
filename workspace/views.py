@@ -825,7 +825,7 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         share.consultant_phone = (request.POST.get('consultant_phone') or '').strip()[:20]
         share.welcome_message = (request.POST.get('welcome_message') or '').strip()
         share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
-        share.is_active = request.POST.get('is_active', '1') in ('1', 'true', 'on')
+        share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')
         share.save()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({

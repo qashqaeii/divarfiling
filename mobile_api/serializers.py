@@ -276,7 +276,7 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
     }
 
 
-def listing_detail_to_dict(lst: Listing) -> Dict[str, Any]:
+def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str, Any]:
     base = listing_to_dict(lst)
     data = lst.data or {}
     images = _listing_image_urls(lst)
@@ -296,6 +296,13 @@ def listing_detail_to_dict(lst: Listing) -> Dict[str, Any]:
         'price_per_sqm': _calc_price_per_sqm(lst),
         **_listing_amenity_fields(lst),
     })
+    if user is not None:
+        from workspace.services.listing_public_share import (
+            get_or_create_listing_share,
+            listing_public_share_to_dict,
+        )
+        share = get_or_create_listing_share(user, lst)
+        base['public_share'] = listing_public_share_to_dict(share, request)
     return base
 
 

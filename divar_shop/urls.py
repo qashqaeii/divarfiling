@@ -28,6 +28,7 @@ urlpatterns = [
     path('affiliate/', include('affiliates.urls')),
     path('blog/', include('blog.urls')),
     path('workspace/', include('workspace.urls')),
+    path('p/', include('workspace.public_urls')),
 ]
 
 if settings.DEBUG:

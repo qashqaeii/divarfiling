@@ -28,8 +28,11 @@ from workspace.mixins import DatasetOwnerMixin, LicenseRequiredMixin, WorkspaceL
 from workspace.services.access import BOT_LOCKED_FEATURES, get_bot_product_buy_url, has_active_bot_license
 from workspace.constants import DEAL_TYPES, LISTING_ROLES
 from workspace.models import (
-    CRMProperty, Customer, Dataset, Listing, ListingMeta, PriceHistory, Reminder,
-    WorkspaceSettings,
+    CRMProperty, Customer, Dataset, Listing, ListingMeta, ListingPublicShare,
+    PriceHistory, Reminder, WorkspaceSettings,
+)
+from workspace.services.listing_public_share import (
+    get_or_create_listing_share, public_share_url,
 )
 from workspace.services.crm_scope import can_edit_customer, customer_for_user, customers_qs
 from workspace.services.crm import (
@@ -744,6 +747,9 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['gallery_images'] = deduplicate_divar_image_urls(
             [normalize_external_image_url(img) for img in (listing.images or []) if img],
         )
+        share = get_or_create_listing_share(self.request.user, listing)
+        ctx['public_share'] = share
+        ctx['public_share_url'] = public_share_url(self.request, share)
         return ctx
 
     def _whatsapp_text(self, listing, tx):
@@ -790,6 +796,48 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
             form.save()
             messages.success(request, 'متادیتا ذخیره شد.')
         return redirect('workspace:listing_detail', dataset_id=dataset_id, listing_id=listing_id)
+
+
+class ListingShareManageView(DatasetOwnerMixin, View):
+    """مدیریت لینک عمومی اشتراک آگهی با مشتری."""
+
+    def get(self, request, dataset_id, listing_id):
+        dataset = self.get_dataset()
+        listing = get_object_or_404(dataset.listings, pk=listing_id)
+        share = get_or_create_listing_share(request.user, listing)
+        return JsonResponse({
+            'ok': True,
+            'share_url': public_share_url(request, share),
+            'share_token': share.share_token,
+            'view_count': share.view_count,
+            'consultant_name': share.consultant_name,
+            'consultant_phone': share.consultant_phone,
+            'welcome_message': share.welcome_message,
+            'show_divar_link': share.show_divar_link,
+            'is_active': share.is_active,
+        })
+
+    def post(self, request, dataset_id, listing_id):
+        dataset = self.get_dataset()
+        listing = get_object_or_404(dataset.listings, pk=listing_id)
+        share = get_or_create_listing_share(request.user, listing)
+        share.consultant_name = (request.POST.get('consultant_name') or '').strip()[:200]
+        share.consultant_phone = (request.POST.get('consultant_phone') or '').strip()[:20]
+        share.welcome_message = (request.POST.get('welcome_message') or '').strip()
+        share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
+        share.is_active = request.POST.get('is_active', '1') in ('1', 'true', 'on')
+        share.save()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'ok': True,
+                'share_url': public_share_url(request, share),
+                'message': 'تنظیمات اشتراک ذخیره شد.',
+            })
+        messages.success(request, 'تنظیمات لینک اشتراک ذخیره شد.')
+        return redirect(
+            'workspace:listing_detail',
+            dataset_id=dataset.pk, listing_id=listing.pk,
+        )
 
 
 class ListingUpdateView(DatasetOwnerMixin, View):

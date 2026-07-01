@@ -2,8 +2,8 @@ from django.contrib import admin
 
 from workspace.models import (
     CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing,
-    Dataset, Listing, ListingMeta, PriceHistory, PropertyContact, Reminder,
-    WorkspaceSettings,
+    Dataset, Listing, ListingMeta, ListingPublicShare, PriceHistory,
+    PropertyContact, Reminder, WorkspaceSettings,
 )
 
 
@@ -38,6 +38,14 @@ class CRMPropertyAdmin(admin.ModelAdmin):
     list_display = ('title', 'deal_mode', 'transaction_status', 'city', 'user')
     list_filter = ('deal_mode', 'transaction_status', 'property_type')
     search_fields = ('title', 'city', 'neighborhood', 'token')
+
+
+@admin.register(ListingPublicShare)
+class ListingPublicShareAdmin(admin.ModelAdmin):
+    list_display = ('share_token', 'listing', 'created_by', 'view_count', 'is_active', 'created_at')
+    list_filter = ('is_active',)
+    search_fields = ('share_token', 'listing__title', 'created_by__phone')
+    raw_id_fields = ('listing', 'created_by')
 
 
 admin.site.register(CustomerActivity)

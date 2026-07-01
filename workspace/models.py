@@ -130,6 +130,40 @@ class ListingMeta(models.Model):
         return f'{self.user_id}:{self.token}'
 
 
+class ListingPublicShare(models.Model):
+    """لینک عمومی اشتراک‌گذاری آگهی برای مشتریان."""
+    share_token = models.CharField(
+        max_length=32, unique=True, db_index=True, verbose_name='توکن لینک',
+    )
+    listing = models.ForeignKey(
+        Listing, on_delete=models.CASCADE,
+        related_name='public_shares', verbose_name='آگهی',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='listing_public_shares', verbose_name='ایجادکننده',
+    )
+    is_active = models.BooleanField(default=True, verbose_name='فعال')
+    view_count = models.PositiveIntegerField(default=0, verbose_name='تعداد بازدید')
+    consultant_name = models.CharField(max_length=200, blank=True, verbose_name='نام مشاور')
+    consultant_phone = models.CharField(max_length=20, blank=True, verbose_name='شماره مشاور')
+    welcome_message = models.TextField(blank=True, verbose_name='پیام خوش‌آمد')
+    show_divar_link = models.BooleanField(default=False, verbose_name='نمایش لینک دیوار')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
+    last_viewed_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین بازدید')
+
+    class Meta:
+        verbose_name = 'اشتراک عمومی آگهی'
+        verbose_name_plural = 'اشتراک‌های عمومی آگهی'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['listing', 'created_by']),
+        ]
+
+    def __str__(self):
+        return f'{self.share_token} → {self.listing_id}'
+
+
 class PriceHistory(models.Model):
     """تاریخچه قیمت آگهی."""
     user = models.ForeignKey(

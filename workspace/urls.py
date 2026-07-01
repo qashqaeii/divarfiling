@@ -30,6 +30,7 @@ urlpatterns = [
     path('datasets/<uuid:dataset_id>/listings/<int:listing_id>/personal/', views.ListingAddToPersonalFilesView.as_view(), name='listing_add_personal'),
     path('datasets/<uuid:dataset_id>/delete-consultants/', views.DeleteConsultantsView.as_view(), name='dataset_delete_consultants'),
     path('datasets/<uuid:dataset_id>/listings/<int:listing_id>/benchmark/', views.BenchmarkAPIView.as_view(), name='listing_benchmark'),
+    path('datasets/<uuid:dataset_id>/listings/<int:listing_id>/share/', views.ListingShareManageView.as_view(), name='listing_share'),
 
     # Tools & Compare
     path('tools/', views.ToolsView.as_view(), name='tools'),

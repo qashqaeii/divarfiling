@@ -23,6 +23,7 @@ from workspace.forms import (
 )
 from workspace.services.columns import consultant_q
 from workspace.services.price_history import dedupe_price_history
+from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 from workspace.mixins import DatasetOwnerMixin, LicenseRequiredMixin, WorkspaceLoginMixin, get_or_create_settings
 from workspace.services.access import BOT_LOCKED_FEATURES, get_bot_product_buy_url, has_active_bot_license
 from workspace.constants import DEAL_TYPES, LISTING_ROLES
@@ -722,6 +723,9 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['crm_deal_types'] = DEAL_TYPES
         ctx['crm_default_deal'] = guess_deal_type_from_listing(listing)
         ctx['crm_property'] = get_crm_property_by_token(self.request.user, listing.token)
+        ctx['gallery_images'] = deduplicate_divar_image_urls(
+            [normalize_external_image_url(img) for img in (listing.images or []) if img],
+        )
         return ctx
 
     def _whatsapp_text(self, listing, tx):

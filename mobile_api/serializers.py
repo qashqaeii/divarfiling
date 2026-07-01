@@ -17,7 +17,8 @@ from workspace.services.features import (
 from workspace.services.listing_features import build_listing_feature_profile, feature_highlights_for_listing
 from workspace.services.advertiser_signal import advertiser_signal_label, detect_advertiser_signal
 from workspace.services.listing_edit import owner_phone_from_listing
-from workspace.services.property_images import normalize_external_image_url
+from workspace.services.columns import _parse_images
+from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 
 _FA_DIGITS = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
 _EMPTY_DATA_VALUES = frozenset({'', '-', '—', 'nan', 'none', 'null'})
@@ -155,14 +156,14 @@ def _listing_image_urls(lst: Listing) -> List[str]:
         url = normalize_external_image_url(img if isinstance(img, str) else str(img))
         if url:
             images.append(url)
-    if images:
-        return images
-    data = lst.data or {}
-    for key in ('رسانه_تصاویر', 'images', 'تصاویر'):
-        raw = data.get(key)
-        if raw:
-            return _parse_images(raw)
-    return []
+    if not images:
+        data = lst.data or {}
+        for key in ('رسانه_تصاویر', 'images', 'تصاویر'):
+            raw = data.get(key)
+            if raw:
+                images = _parse_images(raw)
+                break
+    return deduplicate_divar_image_urls(images)
 
 
 def _dataset_thumbnail(ds: Dataset) -> str:

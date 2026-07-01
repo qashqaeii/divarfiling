@@ -77,3 +77,77 @@ def normalize_external_image_url(url: str) -> str:
     if '.' in url:
         return f'https://{url.lstrip("/")}'
     return ''
+
+
+_DIVAR_THUMBNAIL_MARKERS = ('/webp_thumbnail/', '/thumbnail/')
+
+
+def divar_image_file_id(url: str) -> str:
+    """شناسه فایل مشترک بین نسخه post و thumbnail یک عکس."""
+    clean = str(url or '').split('?', 1)[0].rstrip('/')
+    name = clean.rsplit('/', 1)[-1].lower()
+    return name if name and '.' in name else ''
+
+
+def divar_image_quality_score(url: str) -> int:
+    lower = str(url or '').lower()
+    if '/webp_post/' in lower:
+        return 0
+    if any(marker in lower for marker in _DIVAR_THUMBNAIL_MARKERS):
+        return 2
+    return 1
+
+
+def deduplicate_divar_image_urls(urls: List[str]) -> List[str]:
+    """یک URL برای هر عکس دیوار — نسخه با کیفیت (webp_post) بر thumbnail ترجیح دارد."""
+    best_by_file: dict[str, tuple[int, int, str]] = {}
+    passthrough: list[tuple[int, str]] = []
+
+    for idx, raw in enumerate(urls):
+        url = normalize_external_image_url(str(raw or ''))
+        if not url:
+            continue
+        file_id = divar_image_file_id(url)
+        if file_id and 'divar' in url.lower():
+            score = divar_image_quality_score(url)
+            cur = best_by_file.get(file_id)
+            if cur is None or score < cur[0] or (score == cur[0] and idx < cur[1]):
+                best_by_file[file_id] = (score, idx, url)
+        else:
+            passthrough.append((idx, url))
+
+    out: List[str] = []
+    seen_files: set[str] = set()
+    seen_urls: set[str] = set()
+
+    for idx, raw in enumerate(urls):
+        url = normalize_external_image_url(str(raw or ''))
+        if not url:
+            continue
+        file_id = divar_image_file_id(url)
+        if file_id and 'divar' in url.lower():
+            if file_id in seen_files:
+                continue
+            seen_files.add(file_id)
+            best = best_by_file[file_id][2]
+            if best not in seen_urls:
+                out.append(best)
+                seen_urls.add(best)
+            continue
+        if url not in seen_urls:
+            out.append(url)
+            seen_urls.add(url)
+
+    return out
+
+
+def best_divar_image_url_from_mapping(image: dict, item: dict | None = None) -> str:
+    """بهترین لینک از آبجکت image/item — url کامل قبل از thumbnail."""
+    item = item or {}
+    image = image or {}
+    for key in ('url', 'webp_url', 'image_url', 'thumbnail_url', 'thumbnail'):
+        raw = str(image.get(key) or item.get(key) or '').strip()
+        url = normalize_external_image_url(raw)
+        if url:
+            return url
+    return ''

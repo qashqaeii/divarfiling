@@ -12,7 +12,10 @@ from django.db.models import Q
 from django.utils import timezone as dj_tz
 
 from workspace.services.jalali_input import _normalize_digits, parse_jalali_datetime_string
-from workspace.services.property_images import normalize_external_image_url
+from workspace.services.property_images import (
+    deduplicate_divar_image_urls,
+    normalize_external_image_url,
+)
 
 COLUMN_ALIASES: Dict[str, List[str]] = {
     'token': ['شناسه', 'token', 'id', 'آگهی_id', 'listing_id'],
@@ -156,7 +159,7 @@ def _parse_images(val: Any) -> List[str]:
             url = normalize_external_image_url(str(item))
             if url:
                 out.append(url)
-        return out
+        return deduplicate_divar_image_urls(out)
     s = _safe_str(val)
     if s.startswith('['):
         import json
@@ -167,7 +170,7 @@ def _parse_images(val: Any) -> List[str]:
                 url = normalize_external_image_url(str(item))
                 if url:
                     out.append(url)
-            return out
+            return deduplicate_divar_image_urls(out)
         except (json.JSONDecodeError, ValueError):
             pass
     out: List[str] = []
@@ -175,7 +178,7 @@ def _parse_images(val: Any) -> List[str]:
         url = normalize_external_image_url(token)
         if url:
             out.append(url)
-    return out
+    return deduplicate_divar_image_urls(out)
 
 
 def _pick_row_value(row: Dict[str, Any], field: str) -> Any:

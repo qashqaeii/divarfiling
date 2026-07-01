@@ -240,11 +240,13 @@ def _add_image_urls_from_item(item: Any, urls: List[str]) -> None:
     if not isinstance(item, dict):
         return
     image = item.get("image") if isinstance(item.get("image"), dict) else {}
-    for key in ("url", "webp_url", "thumbnail_url", "thumbnail"):
+    for key in ("url", "webp_url", "image_url", "thumbnail_url", "thumbnail"):
         raw = str((image or {}).get(key) or item.get(key) or "").strip()
         normalized = _normalize_divar_image_url(raw)
-        if _is_likely_image_url(normalized) and normalized not in urls:
-            urls.append(normalized)
+        if _is_likely_image_url(normalized):
+            if normalized not in urls:
+                urls.append(normalized)
+            return
 
 
 def _extract_image_urls_from_detail(detail: Dict[str, Any]) -> List[str]:
@@ -301,7 +303,58 @@ def _extract_image_urls_from_detail(detail: Dict[str, Any]) -> List[str]:
                 if _is_likely_image_url(normalized) and normalized not in urls:
                     urls.append(normalized)
 
-    return urls
+    return _deduplicate_divar_image_urls(urls)
+
+
+def _divar_image_file_id(url: str) -> str:
+    clean = str(url or "").split("?", 1)[0].rstrip("/")
+    name = clean.rsplit("/", 1)[-1].lower()
+    return name if name and "." in name else ""
+
+
+def _divar_image_quality_score(url: str) -> int:
+    lower = str(url or "").lower()
+    if "/webp_post/" in lower:
+        return 0
+    if "/webp_thumbnail/" in lower or "/thumbnail/" in lower:
+        return 2
+    return 1
+
+
+def _deduplicate_divar_image_urls(urls: List[str]) -> List[str]:
+    best_by_file: Dict[str, tuple] = {}
+    for idx, raw in enumerate(urls):
+        normalized = _normalize_divar_image_url(raw)
+        if not _is_likely_image_url(normalized):
+            continue
+        file_id = _divar_image_file_id(normalized)
+        if file_id and "divar" in normalized.lower():
+            score = _divar_image_quality_score(normalized)
+            cur = best_by_file.get(file_id)
+            if cur is None or score < cur[0] or (score == cur[0] and idx < cur[1]):
+                best_by_file[file_id] = (score, idx, normalized)
+
+    out: List[str] = []
+    seen_files: Set[str] = set()
+    seen_urls: Set[str] = set()
+    for raw in urls:
+        normalized = _normalize_divar_image_url(raw)
+        if not _is_likely_image_url(normalized):
+            continue
+        file_id = _divar_image_file_id(normalized)
+        if file_id and "divar" in normalized.lower():
+            if file_id in seen_files:
+                continue
+            seen_files.add(file_id)
+            best = best_by_file[file_id][2]
+            if best not in seen_urls:
+                out.append(best)
+                seen_urls.add(best)
+            continue
+        if normalized not in seen_urls:
+            out.append(normalized)
+            seen_urls.add(normalized)
+    return out
 
 
 def _first_url_from_joined(value: Any) -> str:

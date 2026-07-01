@@ -8,6 +8,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from workspace.services.columns import extract_consultant_name
+from workspace.services.property_images import (
+    best_divar_image_url_from_mapping,
+    deduplicate_divar_image_urls,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -141,11 +145,10 @@ def _image_urls_from_sections(raw: Dict[str, Any]) -> List[str]:
                 if not isinstance(item, dict):
                     continue
                 image = item.get('image') if isinstance(item.get('image'), dict) else {}
-                for key in ('url', 'webp_url', 'thumbnail_url', 'thumbnail'):
-                    val = str((image or {}).get(key) or item.get(key) or '').strip()
-                    if val.startswith('http') and val not in urls:
-                        urls.append(val)
-    return urls
+                val = best_divar_image_url_from_mapping(image, item)
+                if val.startswith('http') and val not in urls:
+                    urls.append(val)
+    return deduplicate_divar_image_urls(urls)
 
 
 def _image_urls_from_raw_detail(raw: Dict[str, Any]) -> List[str]:
@@ -191,6 +194,7 @@ def _merge_client_images(row: Dict[str, Any], item: Dict[str, Any]) -> None:
             urls = _image_urls_from_raw_detail(raw)
     if not urls:
         return
+    urls = deduplicate_divar_image_urls(urls)
     joined = ' | '.join(urls)
     row['images'] = joined
     row['رسانه_تصاویر'] = joined

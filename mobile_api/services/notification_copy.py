@@ -128,5 +128,5 @@ def license_expiry(threshold: int, plan_label: str) -> tuple[str, str]:
 def test_push_message() -> tuple[str, str]:
     return (
         'تست اعلان',
-        'اگه این رو می‌بینی، push از سرور تا گوشیت درسته.',
+        'اگه اینو میبینی بدون دوستت دارم',
     )

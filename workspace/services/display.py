@@ -520,7 +520,14 @@ def build_listing_display_data(listing, feat: Optional[Dict[str, Any]] = None) -
     _set_if_missing(data, 'قیمت', listing.price)
     _set_if_missing(data, 'ودیعه', listing.deposit)
     _set_if_missing(data, 'اجاره', listing.rent)
-    _set_if_missing(data, 'نوع آگهی‌دهنده', listing.business_type)
+    advertiser_label = ''
+    if feat and feat.get('advertiser_label'):
+        advertiser_label = str(feat['advertiser_label']).strip()
+    if not advertiser_label:
+        from workspace.services.advertiser_signal import listing_advertiser_display
+        advertiser_label = listing_advertiser_display(listing)['label']
+    data['نوع آگهی‌دهنده'] = advertiser_label
+    data['نوع آگهی دهنده'] = advertiser_label
     _set_if_missing(data, 'عرض جغرافیایی', listing.latitude)
     _set_if_missing(data, 'طول جغرافیایی', listing.longitude)
 

@@ -207,7 +207,9 @@ def extract_listing_features(listing) -> Dict[str, Any]:
             balcony = parse_bool_feature(raw.get('بالکن'))
 
     from workspace.services.listing_features import feature_highlights_for_listing
+    from workspace.services.advertiser_signal import listing_advertiser_display
     highlights = feature_highlights_for_listing(listing)
+    advertiser = listing_advertiser_display(listing)
 
     amenities = []
     for flag, name in (
@@ -237,7 +239,9 @@ def extract_listing_features(listing) -> Dict[str, Any]:
         'amenities': amenities,
         'amenity_count': sum(1 for x in core_flags if x),
         'secondary_amenity_count': sum(1 for x in secondary_flags if x),
-        'is_consultant': is_consultant(listing.business_type or ''),
+        'is_consultant': advertiser['signal'] == 'consultant',
+        'advertiser': advertiser,
+        'advertiser_label': advertiser['label'],
         'has_amenity_data': any(x is not None for x in amenity_flags),
         'highlights': highlights,
     }

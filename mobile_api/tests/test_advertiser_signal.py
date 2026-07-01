@@ -96,6 +96,28 @@ class AdvertiserSignalDetectionTest(TestCase):
         self.assertEqual(result.genuine_personal_count, 1)
         self.assertEqual(result.disguised_consultant_count, 0)
 
+    def test_listing_advertiser_display_labels(self):
+        from types import SimpleNamespace
+        from workspace.services.advertiser_signal import listing_advertiser_display
+
+        genuine = SimpleNamespace(
+            advertiser_signal='genuine_personal',
+            title='فروش آپارتمان',
+            description='بدون واسطه',
+            business_type='personal',
+            data={},
+        )
+        self.assertEqual(listing_advertiser_display(genuine)['label'], 'مالک واقعی')
+
+        disguised = SimpleNamespace(
+            advertiser_signal='disguised_consultant',
+            title='اجاره',
+            description='مشاور شما',
+            business_type='personal',
+            data={},
+        )
+        self.assertEqual(listing_advertiser_display(disguised)['label'], 'مشاور پنهان')
+
     def test_ingest_sets_disguised_signal(self):
         user = User.objects.create_user(username='09129990011', password='x')
         detail = {

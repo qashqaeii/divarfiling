@@ -123,13 +123,19 @@
             <div class="mk-ds-mix" aria-label="ترکیب آگهی‌دهنده">
                 <div class="mk-ds-mix-head">
                     <span class="mk-ds-mix-title">ترکیب آگهی‌دهنده</span>
-                    <span class="mk-ds-mix-counts">{{ consultant_count|intcomma }} مشاور · {{ personal_count|intcomma }} شخصی</span>
+                    <span class="mk-ds-mix-counts">
+                        {% if genuine_personal_count %}{{ genuine_personal_count|intcomma }} مالک واقعی · {% endif %}
+                        {% if disguised_consultant_count %}{{ disguised_consultant_count|intcomma }} مشاور پنهان · {% endif %}
+                        {{ consultant_count|intcomma }} مشاور · {{ personal_count|intcomma }} شخصی
+                    </span>
                 </div>
                 <div class="mk-ds-mix-track" role="presentation">
                     {% if consultant_pct %}<span class="mk-ds-mix-seg mk-ds-mix-seg-consultant" style="width: {{ consultant_pct }}%;" title="مشاور {{ consultant_pct }}٪"></span>{% endif %}
                     {% if personal_pct %}<span class="mk-ds-mix-seg mk-ds-mix-seg-personal" style="width: {{ personal_pct }}%;" title="شخصی {{ personal_pct }}٪"></span>{% endif %}
                 </div>
                 <div class="mk-ds-mix-legend">
+                    {% if genuine_personal_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-genuine" aria-hidden="true"></i>مالک واقعی</span>{% endif %}
+                    {% if disguised_consultant_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-disguised" aria-hidden="true"></i>مشاور پنهان</span>{% endif %}
                     <span><i class="mk-ds-mix-dot mk-ds-mix-dot-consultant" aria-hidden="true"></i>مشاور</span>
                     <span><i class="mk-ds-mix-dot mk-ds-mix-dot-personal" aria-hidden="true"></i>شخصی</span>
                 </div>

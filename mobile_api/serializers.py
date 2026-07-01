@@ -15,7 +15,7 @@ from workspace.services.features import (
     parse_rooms_value,
 )
 from workspace.services.listing_features import build_listing_feature_profile, feature_highlights_for_listing
-from workspace.services.advertiser_signal import advertiser_signal_label, detect_advertiser_signal
+from workspace.services.advertiser_signal import advertiser_signal_label, detect_advertiser_signal, listing_advertiser_display
 from workspace.services.listing_edit import owner_phone_from_listing
 from workspace.services.columns import _parse_images
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
@@ -237,7 +237,8 @@ def dataset_to_dict(ds: Dataset) -> Dict[str, Any]:
 def listing_to_dict(lst: Listing) -> Dict[str, Any]:
     image_urls = _listing_image_urls(lst)
     thumb = image_urls[0] if image_urls else ''
-    adv = 'مشاور' if lst.business_type and 'مشاور' in lst.business_type else 'شخصی'
+    adv_display = listing_advertiser_display(lst)
+    adv = adv_display['label']
     signal = lst.advertiser_signal or detect_advertiser_signal(
         title=lst.title or '',
         description=lst.description or '',

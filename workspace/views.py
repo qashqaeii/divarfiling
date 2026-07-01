@@ -588,8 +588,12 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
         ctx['personal_files_map'] = {p.token: p for p in personal_props}
         ctx['tx'] = tx
         all_qs = dataset.listings.all()
-        ctx['consultant_count'] = consultant_q(all_qs).count()
-        ctx['personal_count'] = all_qs.count() - ctx['consultant_count']
+        from workspace.services.advertiser_signal import count_listings_by_advertiser_display
+        adv_counts = count_listings_by_advertiser_display(all_qs)
+        ctx['genuine_personal_count'] = adv_counts['genuine_personal']
+        ctx['disguised_consultant_count'] = adv_counts['disguised_consultant']
+        ctx['consultant_count'] = adv_counts['consultant']
+        ctx['personal_count'] = adv_counts['personal_other'] + adv_counts['genuine_personal'] + adv_counts['disguised_consultant']
         total = ctx['total_count']
         filtered = ctx['filtered_count']
         consultant = ctx['consultant_count']

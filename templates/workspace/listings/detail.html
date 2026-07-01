@@ -16,6 +16,11 @@
                 <code class="ws-token">{{ listing.token }}</code>
                 <button type="button" class="ws-fv-btn" data-copy="{{ listing.token }}" title="کپی">{% include 'includes/icon_slot.html' with decor='copy' size='inline' only %}</button>
                 <span class="ws-badge ws-badge-blue">{{ tx.badge }}</span>
+                {% if feat.advertiser %}
+                <span class="mk-pub-pill {{ feat.advertiser.pill_class }}" title="{{ feat.advertiser.title }}">
+                    <i class="fas {{ feat.advertiser.icon }}" aria-hidden="true"></i><span>{{ feat.advertiser.label }}</span>
+                </span>
+                {% endif %}
                 {% if meta.is_favorite %}<span class="ws-badge ws-badge-amber">علاقه‌مند</span>{% endif %}
                 {% if crm_property %}<span class="ws-badge ws-badge-green">فایل شخصی</span>{% endif %}
                 {% if listing.is_expired %}<span class="ws-badge ws-badge-red">منقضی</span>{% endif %}

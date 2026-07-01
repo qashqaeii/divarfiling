@@ -187,3 +187,78 @@ def count_signals(signals: Iterable[str]) -> Dict[str, int]:
         if signal in counts:
             counts[signal] += 1
     return counts
+
+
+def listing_advertiser_signal(listing) -> str:
+    stored = str(getattr(listing, 'advertiser_signal', '') or '').strip()
+    if stored:
+        return stored
+    return detect_advertiser_signal(
+        title=getattr(listing, 'title', '') or '',
+        description=getattr(listing, 'description', '') or '',
+        business_type=getattr(listing, 'business_type', '') or '',
+        data=getattr(listing, 'data', None) or {},
+    )
+
+
+def listing_advertiser_display(listing) -> Dict[str, str]:
+    """برچسب و استایل نمایش نوع آگهی‌دهنده برای جدول، هدر و اطلاعات تکمیلی."""
+    signal = listing_advertiser_signal(listing)
+    label = advertiser_signal_label(signal)
+
+    if signal == ADVERTISER_SIGNAL_GENUINE_PERSONAL:
+        return {
+            'signal': signal,
+            'label': label,
+            'pill_class': 'mk-pub-pill--genuine',
+            'icon': 'fa-user-check',
+            'title': 'آگهی شخصی بدون نشانه مشاور — مالک واقعی',
+        }
+    if signal == ADVERTISER_SIGNAL_DISGUISED:
+        return {
+            'signal': signal,
+            'label': label,
+            'pill_class': 'mk-pub-pill--disguised',
+            'icon': 'fa-user-secret',
+            'title': 'آگهی با برچسب شخصی اما نشانه‌های مشاور در متن',
+        }
+    if signal == ADVERTISER_SIGNAL_CONSULTANT or is_official_consultant(
+        getattr(listing, 'business_type', '') or '',
+        getattr(listing, 'data', None) or {},
+    ):
+        return {
+            'signal': ADVERTISER_SIGNAL_CONSULTANT,
+            'label': 'مشاور',
+            'pill_class': 'mk-pub-pill--consultant',
+            'icon': 'fa-building',
+            'title': 'مشاور / آژانس املاک',
+        }
+    return {
+        'signal': signal or '',
+        'label': 'شخصی',
+        'pill_class': 'mk-pub-pill--personal',
+        'icon': 'fa-user',
+        'title': 'آگهی شخصی',
+    }
+
+
+def count_listings_by_advertiser_display(qs) -> Dict[str, int]:
+    counts = {
+        ADVERTISER_SIGNAL_GENUINE_PERSONAL: 0,
+        ADVERTISER_SIGNAL_DISGUISED: 0,
+        ADVERTISER_SIGNAL_CONSULTANT: 0,
+        'personal_other': 0,
+    }
+    for listing in qs.only(
+        'advertiser_signal', 'title', 'description', 'business_type', 'data',
+    ).iterator():
+        signal = listing_advertiser_signal(listing)
+        if signal == ADVERTISER_SIGNAL_GENUINE_PERSONAL:
+            counts[ADVERTISER_SIGNAL_GENUINE_PERSONAL] += 1
+        elif signal == ADVERTISER_SIGNAL_DISGUISED:
+            counts[ADVERTISER_SIGNAL_DISGUISED] += 1
+        elif signal == ADVERTISER_SIGNAL_CONSULTANT:
+            counts[ADVERTISER_SIGNAL_CONSULTANT] += 1
+        else:
+            counts['personal_other'] += 1
+    return counts

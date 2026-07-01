@@ -2,8 +2,8 @@
 <span class="ws-fv-url">
     <span class="ws-fv-url-label" title="{{ field.raw }}">{{ field.short }}</span>
     <span class="ws-fv-url-actions">
-        <button type="button" class="ws-fv-btn" data-copy="{{ field.raw }}" title="کپی"><i class="fas fa-copy" aria-hidden="true"></i></button>
-        <a href="{{ field.raw }}" target="_blank" rel="noopener" class="ws-fv-btn" title="باز کردن"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+        <button type="button" class="ws-fv-btn" data-copy="{{ field.raw }}" title="کپی">{% include 'includes/icon_slot.html' with decor='copy' size='inline' only %}</button>
+        <a href="{{ field.raw }}" target="_blank" rel="noopener" class="ws-fv-btn" title="باز کردن">{% include 'includes/icon_slot.html' with decor='external_link' size='inline' only %}</a>
     </span>
 </span>
 {% elif field.kind == 'long' %}

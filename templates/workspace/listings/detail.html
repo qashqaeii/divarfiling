@@ -14,7 +14,7 @@
             <h1 class="mk-page-hero-title">{{ listing.title }}</h1>
             <p class="mk-page-hero-desc">
                 <code class="ws-token">{{ listing.token }}</code>
-                <button type="button" class="ws-fv-btn" data-copy="{{ listing.token }}" title="کپی"><i class="fas fa-copy" aria-hidden="true"></i></button>
+                <button type="button" class="ws-fv-btn" data-copy="{{ listing.token }}" title="کپی">{% include 'includes/icon_slot.html' with decor='copy' size='inline' only %}</button>
                 <span class="ws-badge ws-badge-blue">{{ tx.badge }}</span>
                 {% if meta.is_favorite %}<span class="ws-badge ws-badge-amber">علاقه‌مند</span>{% endif %}
                 {% if crm_property %}<span class="ws-badge ws-badge-green">فایل شخصی</span>{% endif %}
@@ -94,10 +94,10 @@
                         {% if fields %}
                         <button type="button" role="tab" class="ws-tab ws-ld-tab {% if forloop.first %}active{% endif %}" data-tab="{{ section }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
                             {% if section == 'مالی' %}<i class="fas fa-coins" aria-hidden="true"></i>
-                            {% elif section == 'ملک' %}<i class="fas fa-building" aria-hidden="true"></i>
-                            {% elif section == 'مکان' %}<i class="fas fa-location-dot" aria-hidden="true"></i>
+                            {% elif section == 'ملک' %}{% include 'includes/icon_slot.html' with decor='building' size='inline' only %}
+                            {% elif section == 'مکان' %}{% include 'includes/icon_slot.html' with decor='map_pin' size='inline' only %}
                             {% elif section == 'متن' %}<i class="fas fa-align-right" aria-hidden="true"></i>
-                            {% elif section == 'تماس' %}<i class="fas fa-phone" aria-hidden="true"></i>
+                            {% elif section == 'تماس' %}{% include 'includes/icon_slot.html' with decor='phone' size='inline' only %}
                             {% else %}<i class="fas fa-circle-info" aria-hidden="true"></i>{% endif %}
                             <span>{{ section }}</span>
                         </button>

@@ -19,5 +19,7 @@ class DecorIconTagTests(SimpleTestCase):
         html = template.render(Context())
         self.assertEqual(html.strip(), '')
 
-    def test_registry_has_twelve_decor_icons(self):
-        self.assertEqual(len(DECOR_ICONS), 12)
+    def test_registry_has_decor_icons(self):
+        self.assertGreaterEqual(len(DECOR_ICONS), 40)
+        self.assertIn('house', DECOR_ICONS)
+        self.assertIn('calculator', DECOR_ICONS)

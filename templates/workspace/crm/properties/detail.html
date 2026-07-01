@@ -89,11 +89,11 @@
                     {% if not mask_sensitive %}
                     {% if source_listing and source_listing.link %}
                     <a href="{{ source_listing.link }}" target="_blank" rel="noopener" class="crm-prop-hero-act" title="مشاهده در دیوار">
-                        <i class="fas fa-external-link-alt"></i><span>دیوار</span>
+                        {% include 'includes/icon_slot.html' with decor='external_link' size='inline' only %}<span>دیوار</span>
                     </a>
                     {% elif property.link %}
                     <a href="{{ property.link }}" target="_blank" rel="noopener" class="crm-prop-hero-act" title="لینک آگهی">
-                        <i class="fas fa-external-link-alt"></i><span>لینک</span>
+                        {% include 'includes/icon_slot.html' with decor='external_link' size='inline' only %}<span>لینک</span>
                     </a>
                     {% endif %}
                     {% endif %}

@@ -32,7 +32,8 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    <link rel="stylesheet" href="{% static 'workspace/css/design-system.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'css/decor-icons.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'workspace/css/ws-decor-icons.css' %}?v=1">
 
     <link rel="stylesheet" href="{% static 'workspace/css/workspace.css' %}?v=44">
     <link rel="stylesheet" href="{% static 'workspace/css/minimal.css' %}?v=67">
@@ -72,16 +73,16 @@
                 <div class="ws-nav-section">میزکار</div>
 
                 <a href="{% url 'workspace:home' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}" data-tour="nav-overview">
-                    <i class="fas fa-home"></i><span>نمای کلی</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='house' size='nav' only %}</span><span>نمای کلی</span>
                 </a>
 
                 {% if has_bot_license %}
                 <a href="{% url 'workspace:dataset_list' %}" class="ws-nav-item {% if 'dataset' in request.resolver_match.url_name or 'listing' in request.resolver_match.url_name %}active{% endif %}" data-tour="nav-filing">
-                    <i class="fas fa-database"></i><span>فایلینگ دیوار</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='folder' size='nav' only %}</span><span>فایلینگ دیوار</span>
                 </a>
                 {% else %}
                 <a href="{% url 'workspace:upgrade' %}?feature=datasets" class="ws-nav-item ws-nav-locked {% if request.resolver_match.url_name == 'upgrade' %}active{% endif %}" data-tour="nav-filing">
-                    <i class="fas fa-database"></i><span>فایلینگ دیوار</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='folder' size='nav' only %}</span><span>فایلینگ دیوار</span>
                     <i class="fas fa-lock ws-nav-lock" title="نیاز به لایسنس ربات"></i>
                 </a>
                 {% endif %}
@@ -89,36 +90,36 @@
                 <div class="ws-nav-section">مدیریت مشتری</div>
 
                 <a href="{% url 'workspace:crm_dashboard' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'crm_dashboard' %}active{% endif %}" data-tour="nav-crm">
-                    <i class="fas fa-chart-pie"></i><span>داشبورد CRM</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='trending_up' size='nav' only %}</span><span>داشبورد CRM</span>
                 </a>
 
                 <a href="{% url 'workspace:crm_today' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'crm_today' %}active{% endif %}" data-tour="nav-today">
-                    <i class="fas fa-list-check"></i><span>صف کار امروز</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='list_todo' size='nav' only %}</span><span>صف کار امروز</span>
                     {% if crm_nav_counts.today %}<span class="ws-nav-badge">{{ crm_nav_counts.today }}</span>{% endif %}
                 </a>
 
                 <a href="{% url 'workspace:crm_contacts' %}" class="ws-nav-item {% if '/crm/contacts' in request.path %}active{% endif %}" data-tour="nav-contacts">
-                    <i class="fas fa-users"></i><span>مخاطبین</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='users' size='nav' only %}</span><span>مخاطبین</span>
                     {% if crm_nav_counts.contacts %}<span class="ws-nav-badge ws-nav-badge--muted">{{ crm_nav_counts.contacts }}</span>{% endif %}
                 </a>
 
                 <a href="{% url 'workspace:crm_deals' %}" class="ws-nav-item {% if '/crm/deals' in request.path %}active{% endif %}" data-tour="nav-deals">
-                    <i class="fas fa-handshake"></i><span>معاملات</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='nav' only %}</span><span>معاملات</span>
                     {% if crm_nav_counts.deals %}<span class="ws-nav-badge">{{ crm_nav_counts.deals }}</span>{% endif %}
                 </a>
 
                 <a href="{% url 'workspace:crm_properties' %}" class="ws-nav-item {% if '/crm/properties' in request.path %}active{% endif %}" data-tour="nav-properties">
-                    <i class="fas fa-folder-open"></i><span>فایل‌های شخصی</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='nav' only %}</span><span>فایل‌های شخصی</span>
                     {% if crm_nav_counts.properties %}<span class="ws-nav-badge ws-nav-badge--muted">{{ crm_nav_counts.properties }}</span>{% endif %}
                 </a>
 
                 <a href="{% url 'workspace:crm_reminders' %}" class="ws-nav-item {% if '/crm/reminders' in request.path %}active{% endif %}" data-tour="nav-reminders">
-                    <i class="fas fa-bell"></i><span>یادآورها</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='bell' size='nav' only %}</span><span>یادآورها</span>
                     {% if crm_nav_counts.reminders %}<span class="ws-nav-badge">{{ crm_nav_counts.reminders }}</span>{% endif %}
                 </a>
 
                 <a href="{% url 'workspace:crm_calendar' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'crm_calendar' %}active{% endif %}" data-tour="nav-calendar">
-                    <i class="fas fa-calendar"></i><span>تقویم</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calendar' size='nav' only %}</span><span>تقویم</span>
                 </a>
 
                 <a href="{% url 'workspace:crm_templates' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'crm_templates' %}active{% endif %}" data-tour="nav-templates">
@@ -137,18 +138,18 @@
 
                 {% if has_bot_license %}
                 <a href="{% url 'workspace:compare' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'compare' %}active{% endif %}" data-tour="nav-compare">
-                    <i class="fas fa-code-compare"></i><span>مقایسه</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='scale' size='nav' only %}</span><span>مقایسه</span>
                 </a>
                 <a href="{% url 'workspace:tools' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'tools' %}active{% endif %}" data-tour="nav-tools">
-                    <i class="fas fa-wand-magic-sparkles"></i><span>ابزارهای هوشمند</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calculator' size='nav' only %}</span><span>ابزارهای هوشمند</span>
                 </a>
                 {% else %}
                 <a href="{% url 'workspace:upgrade' %}?feature=compare" class="ws-nav-item ws-nav-locked" data-tour="nav-compare">
-                    <i class="fas fa-code-compare"></i><span>مقایسه</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='scale' size='nav' only %}</span><span>مقایسه</span>
                     <i class="fas fa-lock ws-nav-lock"></i>
                 </a>
                 <a href="{% url 'workspace:upgrade' %}?feature=tools" class="ws-nav-item ws-nav-locked" data-tour="nav-tools">
-                    <i class="fas fa-wand-magic-sparkles"></i><span>ابزارهای هوشمند</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calculator' size='nav' only %}</span><span>ابزارهای هوشمند</span>
                     <i class="fas fa-lock ws-nav-lock"></i>
                 </a>
                 {% endif %}
@@ -161,7 +162,7 @@
 
                 <div class="ws-sidebar-util" data-tour="sidebar-util">
 
-                    <button type="button" class="ws-sidebar-util-btn" data-modal-open="modal-settings" title="تنظیمات" aria-label="تنظیمات"><i class="fas fa-cog"></i></button>
+                    <button type="button" class="ws-sidebar-util-btn" data-modal-open="modal-settings" title="تنظیمات" aria-label="تنظیمات"><span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='settings' size='nav' only %}</span></button>
 
                     <a href="{% url 'workspace:help' %}" class="ws-sidebar-util-btn {% if request.resolver_match.url_name == 'help' %}active{% endif %}" title="راهنما" aria-label="راهنما"><i class="fas fa-circle-question"></i></a>
 

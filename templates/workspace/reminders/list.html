@@ -48,7 +48,7 @@
         </div>
         {% else %}
         <div class="ws-empty">
-            <div class="ws-empty-icon"><i class="fas fa-bell" aria-hidden="true"></i></div>
+            <div class="ws-empty-icon">{% include 'includes/icon_slot.html' with decor='bell' size='lg' only %}</div>
             <p class="ws-empty-title">یادآوری نیست</p>
             <button type="button" class="ws-btn ws-btn-primary" data-modal-open="modal-reminder">ثبت یادآور</button>
         </div>

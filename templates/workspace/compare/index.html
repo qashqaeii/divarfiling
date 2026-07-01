@@ -16,7 +16,7 @@
         </div>
         <div class="mk-page-hero-toolbar" role="toolbar" aria-label="عملیات">
             <button type="button" class="mk-hero-btn mk-hero-btn-primary" data-modal-open="modal-compare">
-                <i class="fas fa-code-compare" aria-hidden="true"></i><span>مقایسه جدید</span>
+                {% include 'includes/icon_slot.html' with decor='scale' size='inline' only %}<span>مقایسه جدید</span>
             </button>
         </div>
     </header>
@@ -47,7 +47,7 @@
 {% else %}
 <section class="mk-panel">
     <div class="ws-empty">
-        <div class="ws-empty-icon"><i class="fas fa-code-compare" aria-hidden="true"></i></div>
+        <div class="ws-empty-icon">{% include 'includes/icon_slot.html' with decor='layout_grid' size='lg' only %}</div>
         <p class="ws-empty-title">مقایسه‌ای انجام نشده</p>
         <p class="ws-empty-desc">دو فایل داده را انتخاب کنید.</p>
         <button type="button" class="ws-btn ws-btn-sm ws-btn-primary" data-modal-open="modal-compare">شروع مقایسه</button>

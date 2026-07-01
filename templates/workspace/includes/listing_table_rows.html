@@ -88,7 +88,7 @@
                 <summary class="mk-row-btn mk-row-btn--more" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
                 <div class="mk-action-menu-panel" role="menu">
                     <button type="button" class="mk-action-menu-item js-edit-listing"
-                        data-id="{{ listing.id }}"><i class="fas fa-pen" aria-hidden="true"></i> ویرایش</button>
+                        data-id="{{ listing.id }}">{% include 'includes/icon_slot.html' with decor='file_edit' size='inline' only %} ویرایش</button>
                     <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="mk-inline-form">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -103,9 +103,9 @@
                         <button type="submit" class="mk-action-menu-item"><i class="fas fa-folder-plus" aria-hidden="true"></i> افزودن به فایل شخصی</button>
                     </form>
                     {% endif %}
-                    <button type="button" class="mk-action-menu-item" data-copy="{{ listing.token }}"><i class="fas fa-copy" aria-hidden="true"></i> کپی شناسه</button>
+                    <button type="button" class="mk-action-menu-item" data-copy="{{ listing.token }}">{% include 'includes/icon_slot.html' with decor='copy' size='inline' only %} کپی شناسه</button>
                     {% if listing.link %}
-                    <a href="{{ listing.link }}" target="_blank" rel="noopener" class="mk-action-menu-item"><i class="fas fa-external-link" aria-hidden="true"></i> دیوار</a>
+                    <a href="{{ listing.link }}" target="_blank" rel="noopener" class="mk-action-menu-item">{% include 'includes/icon_slot.html' with decor='external_link' size='inline' only %} دیوار</a>
                     {% endif %}
                     <button type="button" class="mk-action-menu-item mk-action-menu-danger js-delete-listing"
                         data-id="{{ listing.id }}"

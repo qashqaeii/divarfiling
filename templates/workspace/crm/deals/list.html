@@ -20,38 +20,38 @@
                 <i class="fas fa-sliders" aria-hidden="true"></i><span>مراحل</span>
             </button>
             <a href="{% url 'workspace:crm_contacts' %}" class="crm-dash-act" title="مخاطبین">
-                <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
+                {% include 'includes/icon_slot.html' with decor='users' size='inline' only %}<span>مخاطبین</span>
             </a>
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-deal">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>معامله</span>
+                {% include 'includes/icon_slot.html' with decor='handshake' size='inline' only %}<span>معامله</span>
             </button>
         </div>
     </header>
 
     <section class="crm-deals-kpis" aria-label="شاخص‌های معاملات">
         <article class="crm-deal-kpi crm-deal-kpi--accent">
-            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--active" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--active" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='zap' size='metric' only %}</span>
             <div class="crm-deal-kpi-body">
                 <span class="crm-deal-kpi-val">{{ stats.active }}</span>
                 <span class="crm-deal-kpi-lbl">فعال</span>
             </div>
         </article>
         <article class="crm-deal-kpi">
-            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--pipeline" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--pipeline" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='trending_up' size='metric' only %}</span>
             <div class="crm-deal-kpi-body">
                 <span class="crm-deal-kpi-val">{{ stats.pipeline_value|ws_money }}</span>
                 <span class="crm-deal-kpi-lbl">ارزش pipeline</span>
             </div>
         </article>
         <article class="crm-deal-kpi">
-            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--pipeline" aria-hidden="true"><i class="fas fa-scale-balanced"></i></span>
+            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--pipeline" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='scale' size='metric' only %}</span>
             <div class="crm-deal-kpi-body">
                 <span class="crm-deal-kpi-val">{{ stats.weighted_forecast|ws_money }}</span>
                 <span class="crm-deal-kpi-lbl">پیش‌بینی وزنی</span>
             </div>
         </article>
         <article class="crm-deal-kpi crm-deal-kpi--success">
-            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--commission" aria-hidden="true"><i class="fas fa-coins"></i></span>
+            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--commission" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='coins' size='metric' only %}</span>
             <div class="crm-deal-kpi-body">
                 <span class="crm-deal-kpi-val">{{ stats.commission_total|ws_money }}</span>
                 <span class="crm-deal-kpi-lbl">کمیسیون بسته</span>
@@ -109,7 +109,7 @@
             <input type="hidden" name="view" value="{{ view_mode }}">
             {% if request.GET.bucket %}<input type="hidden" name="bucket" value="{{ request.GET.bucket }}">{% endif %}
             <label class="crm-deals-search">
-                <i class="fas fa-search" aria-hidden="true"></i>
+                {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
                 <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو معامله، مخاطب..." autocomplete="off" aria-label="جستجو">
             </label>
             <select name="stage" class="crm-deals-select" aria-label="مرحله" onchange="this.form.submit()">
@@ -162,12 +162,12 @@
                         <tr class="crm-deals-row" data-href="{% url 'workspace:crm_deal_detail' d.id %}">
                             <td class="crm-deals-col-deal">
                                 <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deals-cell-deal">
-                                    <span class="crm-deals-deal-icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                                    <span class="crm-deals-deal-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='inline' only %}</span>
                                     <span class="crm-deals-deal-text">
                                         <strong>{{ d.title }}</strong>
                                         {% if d.expected_close_date %}
                                         <span class="crm-deals-deal-meta{% if d.expected_close_date < today %} crm-deals-deal-meta--overdue{% endif %}">
-                                            <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                                            {% include 'includes/icon_slot.html' with decor='calendar' size='inline' only %}
                                             بستن {{ d.expected_close_date|ws_jalali }}
                                         </span>
                                         {% elif d.property %}

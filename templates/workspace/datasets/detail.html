@@ -10,7 +10,7 @@
         <div class="mk-ds-command-top">
             <nav class="mk-ds-crumb" aria-label="مسیر">
                 <a href="{% url 'workspace:dataset_list' %}" class="mk-ds-crumb-link">
-                    <i class="fas fa-folder-open" aria-hidden="true"></i>
+                    {% include 'includes/icon_slot.html' with decor='folder' size='inline' only %}
                     <span>فایلینگ دیوار</span>
                 </a>
                 <i class="fas fa-chevron-left mk-ds-crumb-sep" aria-hidden="true"></i>
@@ -98,7 +98,7 @@
                 </div>
             </article>
             <article class="mk-ds-kpi">
-                <span class="mk-ds-kpi-icon mk-ds-kpi-icon-consultant"><i class="fas fa-building" aria-hidden="true"></i></span>
+                <span class="mk-ds-kpi-icon mk-ds-kpi-icon-consultant">{% include 'includes/icon_slot.html' with decor='building' size='metric' only %}</span>
                 <div class="mk-ds-kpi-body">
                     <strong class="mk-ds-kpi-val">{{ consultant_count|intcomma }}</strong>
                     <span class="mk-ds-kpi-lbl">مشاور <em>{{ consultant_pct }}٪</em></span>
@@ -113,7 +113,7 @@
             </article>
             {% if filter_count %}
             <article class="mk-ds-kpi mk-ds-kpi-accent">
-                <span class="mk-ds-kpi-icon mk-ds-kpi-icon-filter"><i class="fas fa-sliders" aria-hidden="true"></i></span>
+                <span class="mk-ds-kpi-icon mk-ds-kpi-icon-filter">{% include 'includes/icon_slot.html' with decor='filter' size='metric' only %}</span>
                 <div class="mk-ds-kpi-body">
                     <strong class="mk-ds-kpi-val">{{ filter_count }}</strong>
                     <span class="mk-ds-kpi-lbl">فیلتر فعال</span>
@@ -141,7 +141,7 @@
         <form method="get" class="mk-filter-bar mk-filter-bar-listing" id="wsFilterForm">
             <div class="mk-filter-primary">
                 <label class="mk-filter-search mk-filter-search-grow">
-                    <i class="fas fa-search" aria-hidden="true"></i>
+                    {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
                     <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو در عنوان…" autocomplete="off" aria-label="جستجو">
                 </label>
                 <select name="neighborhood" class="mk-filter-select" aria-label="محله">
@@ -155,7 +155,7 @@
                 </select>
                 <div class="mk-filter-actions">
                     <button type="button" class="mk-filter-toggle" id="wsAdvToggle" aria-expanded="{% if filters_open %}true{% else %}false{% endif %}" aria-controls="wsAdvPanel">
-                        <i class="fas fa-sliders-h" aria-hidden="true"></i>
+                        {% include 'includes/icon_slot.html' with decor='filter' size='inline' only %}
                         <span>فیلتر پیشرفته</span>
                         {% if advanced_filter_count %}<span class="mk-filter-badge">{{ advanced_filter_count }}</span>{% endif %}
                         <i class="fas fa-chevron-down mk-filter-chevron" aria-hidden="true"></i>
@@ -359,7 +359,7 @@
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
 
             <section class="mk-edit-section">
-                <h3 class="mk-edit-section-title"><i class="fas fa-tag" aria-hidden="true"></i> اطلاعات اصلی</h3>
+                <h3 class="mk-edit-section-title">{% include 'includes/icon_slot.html' with decor='tag' size='inline' only %} اطلاعات اصلی</h3>
                 <div class="ws-fields ws-fields-2">
                     <div class="ws-field ws-field-full">
                         <label class="ws-label" for="editTitle">عنوان آگهی</label>
@@ -398,7 +398,7 @@
             {% endif %}
 
             <section class="mk-edit-section">
-                <h3 class="mk-edit-section-title"><i class="fas fa-building" aria-hidden="true"></i> مشخصات ملک</h3>
+                <h3 class="mk-edit-section-title">{% include 'includes/icon_slot.html' with decor='building' size='inline' only %} مشخصات ملک</h3>
                 <div class="ws-fields ws-fields-2">
                     <div class="ws-field">
                         <label class="ws-label" for="editArea">متراژ (متر)</label>

@@ -766,7 +766,10 @@ body.crm-drawer-open { overflow: hidden; }
     font-size: .78rem;
     color: var(--ws-text-secondary);
 }
-.crm-nav-item i { font-size: .72rem; opacity: .75; }
+.crm-nav-item i,
+.crm-nav-item .ws-nav-icon .df-decor-icon { font-size: .72rem; opacity: .75; }
+.crm-nav-item.active .ws-nav-icon .df-decor-icon,
+.crm-nav-item:hover .ws-nav-icon .df-decor-icon { opacity: 1; }
 .crm-nav-item:hover { background: var(--crm-surface-muted); color: var(--ws-text); }
 .crm-nav-item.active {
     background: var(--crm-accent-soft);

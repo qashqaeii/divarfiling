@@ -25,6 +25,7 @@ DECOR_ICONS: dict[str, str] = {
     # Property amenities
     'car': 'car.png',
     'storage': 'storage.png',
+    'elevator': 'elevator.png',
     # Contact & links
     'phone': 'phone.png',
     'external_link': 'external_link.png',

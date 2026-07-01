@@ -22,4 +22,4 @@ class DecorIconTagTests(SimpleTestCase):
     def test_registry_has_decor_icons(self):
         self.assertGreaterEqual(len(DECOR_ICONS), 40)
         self.assertIn('house', DECOR_ICONS)
-        self.assertIn('calculator', DECOR_ICONS)
+        self.assertIn('elevator', DECOR_ICONS)

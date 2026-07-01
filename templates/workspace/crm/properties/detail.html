@@ -256,7 +256,7 @@
                 <div class="crm-prop-hero-tags">
                     {% if property.has_parking %}<span class="crm-prop-tag"><i class="fas fa-car"></i> پارکینگ</span>{% endif %}
                     {% if property.has_storage %}<span class="crm-prop-tag"><i class="fas fa-box"></i> انباری</span>{% endif %}
-                    {% if property.has_elevator %}<span class="crm-prop-tag"><i class="fas fa-elevator"></i> آسانسور</span>{% endif %}
+                    {% if property.has_elevator %}<span class="crm-prop-tag">{% include 'includes/icon_slot.html' with decor='elevator' size='inline' only %} آسانسور</span>{% endif %}
                     {% for hl in listing_highlights %}<span class="crm-prop-tag crm-prop-tag--hl">{{ hl }}</span>{% endfor %}
                 </div>
             </div>

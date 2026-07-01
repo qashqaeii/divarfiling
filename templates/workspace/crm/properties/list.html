@@ -234,7 +234,7 @@
                 <div class="crm-files-card-amenities" aria-label="امکانات">
                     {% if p.has_parking %}<span title="پارکینگ"><i class="fas fa-car" aria-hidden="true"></i></span>{% endif %}
                     {% if p.has_storage %}<span title="انباری"><i class="fas fa-box" aria-hidden="true"></i></span>{% endif %}
-                    {% if p.has_elevator %}<span title="آسانسور"><i class="fas fa-elevator" aria-hidden="true"></i></span>{% endif %}
+                    {% if p.has_elevator %}<span title="آسانسور">{% include 'includes/icon_slot.html' with decor='elevator' size='inline' only %}</span>{% endif %}
                 </div>
                 {% endif %}
                 <footer class="crm-files-card-foot">

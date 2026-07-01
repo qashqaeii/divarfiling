@@ -1,6 +1,6 @@
 <div class="ws-amenity-group" role="group" aria-label="امکانات ملک">
     <span class="ws-amenity {% if feat.elevator is True %}is-on{% elif feat.elevator is False %}is-off{% else %}is-unknown{% endif %}" data-tip="آسانسور{% if feat.elevator is True %}: دارد{% elif feat.elevator is False %}: ندارد{% else %}: نامشخص{% endif %}" aria-label="آسانسور">
-        <i class="fas fa-arrows-alt-v" aria-hidden="true"></i>
+        {% include 'includes/icon_slot.html' with decor='elevator' size='inline' only %}
     </span>
     <span class="ws-amenity {% if feat.parking is True %}is-on{% elif feat.parking is False %}is-off{% else %}is-unknown{% endif %}" data-tip="پارکینگ{% if feat.parking is True %}: دارد{% elif feat.parking is False %}: ندارد{% else %}: نامشخص{% endif %}" aria-label="پارکینگ">
         {% include 'includes/icon_slot.html' with decor='car' size='inline' only %}

@@ -1,0 +1,155 @@
+{% comment %}
+  مودال اشتراک عمومی — پارامترها:
+  modal_id, form_id, form_action, share_url, share, item_title, subtitle, id_prefix
+  is_personal_file (اختیاری، پیش‌فرض false)
+{% endcomment %}
+<div class="ws-modal" id="{{ modal_id }}" role="dialog" aria-modal="true" aria-labelledby="{{ id_prefix }}-modal-title">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel mk-share-modal-panel">
+        <div class="ws-modal-head mk-share-modal-head">
+            <div class="mk-share-modal-head-main">
+                <span class="mk-share-modal-icon" aria-hidden="true"><i class="fas fa-share-nodes"></i></span>
+                <div>
+                    <h2 class="ws-modal-title" id="{{ id_prefix }}-modal-title">اشتراک با مشتری</h2>
+                    <p class="ws-modal-sub">{{ subtitle|default:"لینک عمومی — مشتری بدون ورود جزئیات ملک و اطلاعات شما را می‌بیند" }}</p>
+                </div>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" action="{{ form_action }}" class="mk-share-form"{% if form_id %} id="{{ form_id }}"{% endif %}>
+            {% csrf_token %}
+            <div class="ws-modal-body mk-share-modal-body">
+                <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-link">
+                    <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-link">
+                        <i class="fas fa-link" aria-hidden="true"></i> لینک عمومی
+                    </h3>
+                    <div class="mk-share-link-card">
+                        <div class="mk-share-link-bar">
+                            <span class="mk-share-link-glyph" aria-hidden="true"><i class="fas fa-globe"></i></span>
+                            <input type="text"
+                                   class="mk-share-link-input"
+                                   id="{{ id_prefix }}-url-input"
+                                   value="{{ share_url }}"
+                                   readonly
+                                   dir="ltr"
+                                   aria-label="لینک اشتراک">
+                            <button type="button" class="mk-share-copy-btn" data-copy="{{ share_url }}">
+                                <i class="fas fa-copy" aria-hidden="true"></i>
+                                <span>کپی</span>
+                            </button>
+                        </div>
+                        {% if share.view_count or share.is_active is not None %}
+                        <div class="mk-share-meta-row">
+                            {% if share.view_count %}
+                            <span class="mk-share-view-badge"><i class="fas fa-eye" aria-hidden="true"></i> {{ share.view_count }} بازدید</span>
+                            {% endif %}
+                            {% if share.is_active %}
+                            <span class="mk-share-status-badge mk-share-status-badge--on"><i class="fas fa-circle" aria-hidden="true"></i> فعال</span>
+                            {% else %}
+                            <span class="mk-share-status-badge mk-share-status-badge--off"><i class="fas fa-circle" aria-hidden="true"></i> غیرفعال</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="mk-share-quick-actions">
+                            <a href="{{ share_url }}" target="_blank" rel="noopener" class="mk-share-qa-btn mk-share-qa-btn--preview">
+                                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                                <span>پیش‌نمایش</span>
+                            </a>
+                            <button type="button" class="mk-share-qa-btn mk-share-qa-btn--wa" data-share-wa
+                                data-share-url="{{ share_url }}"
+                                data-listing-title="{{ item_title|escape }}">
+                                <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                                <span>متن واتساپ</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-consultant">
+                    <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-consultant">
+                        <i class="fas fa-user-tie" aria-hidden="true"></i> اطلاعات مشاور
+                    </h3>
+                    <div class="mk-share-fields-grid">
+                        <div class="mk-share-field">
+                            <label class="ws-label" for="{{ id_prefix }}-consultant-name">نام نمایشی</label>
+                            <input type="text" class="ws-input" id="{{ id_prefix }}-consultant-name" name="consultant_name"
+                                   value="{{ share.consultant_name }}" placeholder="خالی = نام آژانس یا کاربری">
+                        </div>
+                        <div class="mk-share-field">
+                            <label class="ws-label" for="{{ id_prefix }}-consultant-phone">شماره تماس</label>
+                            <input type="text" class="ws-input" id="{{ id_prefix }}-consultant-phone" name="consultant_phone"
+                                   value="{{ share.consultant_phone }}" placeholder="خالی = شماره حساب" dir="ltr">
+                        </div>
+                    </div>
+                    <div class="mk-share-field mk-share-field--full">
+                        <label class="ws-label" for="{{ id_prefix }}-welcome">پیام خوش‌آمد</label>
+                        <textarea class="ws-textarea" id="{{ id_prefix }}-welcome" name="welcome_message" rows="2"
+                                  placeholder="مثلاً: برای بازدید هماهنگ کنید">{{ share.welcome_message }}</textarea>
+                    </div>
+                </section>
+
+                <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-display">
+                    <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-display">
+                        <i class="fas fa-sliders-h" aria-hidden="true"></i> نمایش در صفحه عمومی
+                    </h3>
+                    <div class="mk-share-toggles">
+                        <label class="mk-share-toggle-row">
+                            <span class="mk-share-toggle-info">
+                                <span class="mk-share-toggle-title">لینک دیوار</span>
+                                <span class="mk-share-toggle-desc">افزودن لینک آگهی به صفحه مشتری</span>
+                            </span>
+                            <span class="mk-share-switch">
+                                <input type="checkbox" name="show_divar_link" value="1"{% if share.show_divar_link %} checked{% endif %}>
+                                <span class="mk-share-switch-track" aria-hidden="true"></span>
+                            </span>
+                        </label>
+                        {% if is_personal_file %}
+                        <label class="mk-share-toggle-row">
+                            <span class="mk-share-toggle-info">
+                                <span class="mk-share-toggle-title">آدرس کامل</span>
+                                <span class="mk-share-toggle-desc">نمایش آدرس دقیق ملک در صفحه عمومی</span>
+                            </span>
+                            <span class="mk-share-switch">
+                                <input type="checkbox" name="show_full_address" value="1"{% if share.show_full_address %} checked{% endif %}>
+                                <span class="mk-share-switch-track" aria-hidden="true"></span>
+                            </span>
+                        </label>
+                        <label class="mk-share-toggle-row">
+                            <span class="mk-share-toggle-info">
+                                <span class="mk-share-toggle-title">یادداشت داخلی</span>
+                                <span class="mk-share-toggle-desc">یادداشت‌های محرمانه پرونده</span>
+                            </span>
+                            <span class="mk-share-switch">
+                                <input type="checkbox" name="show_internal_notes" value="1"{% if share.show_internal_notes %} checked{% endif %}>
+                                <span class="mk-share-switch-track" aria-hidden="true"></span>
+                            </span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <section class="mk-share-section mk-share-section--status" aria-labelledby="{{ id_prefix }}-sec-status">
+                    <label class="mk-share-status-card">
+                        <span class="mk-share-status-card-body">
+                            <span class="mk-share-status-card-icon" aria-hidden="true"><i class="fas fa-power-off"></i></span>
+                            <span class="mk-share-toggle-info">
+                                <span class="mk-share-toggle-title" id="{{ id_prefix }}-sec-status">لینک فعال است</span>
+                                <span class="mk-share-toggle-desc">با غیرفعال کردن، مشتری دیگر صفحه را نمی‌بیند</span>
+                            </span>
+                        </span>
+                        <span class="mk-share-switch mk-share-switch--lg">
+                            <input type="checkbox" name="is_active" value="1"{% if share.is_active %} checked{% endif %}>
+                            <span class="mk-share-switch-track" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                </section>
+            </div>
+            <div class="ws-modal-foot mk-share-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>بستن</button>
+                <button type="submit" class="ws-btn ws-btn-primary">
+                    <i class="fas fa-check" aria-hidden="true"></i> ذخیره تنظیمات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

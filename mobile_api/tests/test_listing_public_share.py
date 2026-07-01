@@ -53,3 +53,17 @@ class MobileListingPublicShareTests(TestCase):
         share = resp.json()['data']
         self.assertEqual(share['welcome_message'], 'سلام، برای بازدید تماس بگیرید')
         self.assertTrue(share['show_divar_link'])
+
+    @patch('mobile_api.services.filing_service.has_active_bot_license', return_value=True)
+    def test_listing_patch_includes_public_share_url(self, _mock):
+        resp = self.client.patch(
+            f'/api/mobile/v1/filing/listings/{self.listing.token}',
+            {'title': 'آپارتمان به‌روز'},
+            format='json',
+            HTTP_HOST='testserver',
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()['data']
+        self.assertIn('public_share', data)
+        self.assertTrue(data['public_share']['share_url'])
+        self.assertIn('/p/', data['public_share']['share_url'])

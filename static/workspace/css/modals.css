@@ -1551,3 +1551,407 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
         min-height: 72px;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Public share modal — listing & CRM property
+   ═══════════════════════════════════════════════════════════ */
+
+.mk-share-modal-panel {
+    max-width: min(540px, calc(100vw - 1.5rem)) !important;
+}
+
+.mk-share-modal-head {
+    align-items: flex-start !important;
+}
+
+.mk-share-modal-head-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.mk-share-modal-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 12px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.16), rgba(37, 99, 235, 0.12));
+    color: var(--ws-primary, #7C3AED);
+    font-size: 0.95rem;
+    border: 1px solid rgba(124, 58, 237, 0.22);
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12);
+}
+
+.mk-share-form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+}
+
+.mk-share-modal-body {
+    overflow-y: auto;
+    max-height: min(68vh, 560px);
+    padding-top: 0.65rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+.mk-share-section {
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--mk-modal-border);
+}
+
+.mk-share-section:last-child,
+.mk-share-section--status {
+    border-bottom: none;
+    padding-bottom: 0.15rem;
+}
+
+.mk-share-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--ws-text-secondary, #94A3B8);
+}
+
+.mk-share-section-title i {
+    color: var(--ws-primary, #7C3AED);
+    font-size: 0.68rem;
+    opacity: 0.9;
+}
+
+.mk-share-link-card {
+    padding: 0.85rem;
+    border-radius: 12px;
+    border: 1px solid var(--mk-input-border);
+    background: linear-gradient(145deg, var(--mk-input-bg) 0%, var(--mk-modal-bg) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="light"] .mk-share-link-card {
+    background: linear-gradient(145deg, #f8fafc 0%, #ffffff 100%);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.mk-share-link-bar {
+    display: flex;
+    align-items: stretch;
+    gap: 0.45rem;
+}
+
+.mk-share-link-glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--ws-primary, #7C3AED);
+    font-size: 0.8rem;
+}
+
+.mk-share-link-input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.55rem 0.7rem !important;
+    border: 1.5px solid var(--mk-input-border) !important;
+    border-radius: 8px !important;
+    font-size: 0.72rem !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+    direction: ltr;
+    text-align: left;
+    background: var(--mk-modal-bg) !important;
+    color: var(--ws-text, #E2E8F0) !important;
+}
+
+.mk-share-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    padding: 0 0.85rem;
+    min-height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #7C3AED, #6366F1);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+    transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.mk-share-copy-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+.mk-share-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.55rem;
+}
+
+.mk-share-view-badge,
+.mk-share-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+.mk-share-view-badge {
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--ws-text-muted, #64748B);
+    border: 1px solid var(--mk-input-border);
+}
+
+.mk-share-status-badge--on {
+    background: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.mk-share-status-badge--on i { font-size: 0.45rem; }
+
+.mk-share-status-badge--off {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.22);
+}
+
+.mk-share-status-badge--off i { font-size: 0.45rem; }
+
+.mk-share-quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+    margin-top: 0.65rem;
+}
+
+.mk-share-qa-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 36px;
+    padding: 0.45rem 0.65rem;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1.5px solid var(--mk-input-border);
+    background: var(--mk-modal-bg);
+    color: var(--ws-text-secondary, #94A3B8);
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.mk-share-qa-btn--preview:hover {
+    border-color: rgba(37, 99, 235, 0.45);
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.06);
+}
+
+.mk-share-qa-btn--wa {
+    border-color: rgba(22, 163, 74, 0.35);
+    color: #16a34a;
+    background: rgba(22, 163, 74, 0.06);
+}
+
+.mk-share-qa-btn--wa:hover {
+    border-color: rgba(22, 163, 74, 0.55);
+    background: rgba(22, 163, 74, 0.12);
+}
+
+.mk-share-fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+}
+
+.mk-share-field {
+    min-width: 0;
+}
+
+.mk-share-field--full {
+    margin-top: 0.65rem;
+}
+
+.mk-share-field .ws-label {
+    margin-bottom: 0.3rem !important;
+}
+
+.mk-share-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mk-share-toggle-row,
+.mk-share-status-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid var(--mk-input-border);
+    background: var(--mk-input-bg);
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.mk-share-toggle-row:hover,
+.mk-share-status-card:hover {
+    border-color: rgba(124, 58, 237, 0.35);
+}
+
+.mk-share-toggle-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.mk-share-toggle-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ws-text, #E2E8F0);
+    line-height: 1.35;
+}
+
+.mk-share-toggle-desc {
+    font-size: 0.62rem;
+    color: var(--ws-text-muted, #64748B);
+    line-height: 1.45;
+}
+
+.mk-share-switch {
+    position: relative;
+    flex-shrink: 0;
+    width: 42px;
+    height: 24px;
+}
+
+.mk-share-switch--lg {
+    width: 46px;
+    height: 26px;
+}
+
+.mk-share-switch input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 1;
+    margin: 0;
+}
+
+.mk-share-switch-track {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.35);
+    transition: background 0.2s;
+    position: relative;
+}
+
+.mk-share-switch-track::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+}
+
+.mk-share-switch--lg .mk-share-switch-track::after {
+    width: 20px;
+    height: 20px;
+}
+
+.mk-share-switch input:checked + .mk-share-switch-track {
+    background: linear-gradient(90deg, #7C3AED, #6366F1);
+}
+
+.mk-share-switch input:checked + .mk-share-switch-track::after {
+    transform: translateX(-18px);
+}
+
+.mk-share-switch--lg input:checked + .mk-share-switch-track::after {
+    transform: translateX(-20px);
+}
+
+.mk-share-status-card {
+    border-color: rgba(124, 58, 237, 0.28);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), rgba(37, 99, 235, 0.04));
+}
+
+.mk-share-status-card-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.mk-share-status-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background: rgba(124, 58, 237, 0.14);
+    color: var(--ws-primary, #7C3AED);
+    font-size: 0.72rem;
+}
+
+.mk-share-modal-foot {
+    position: sticky;
+    bottom: 0;
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.mk-share-modal-foot .ws-btn-primary i {
+    font-size: 0.72rem;
+}
+
+@media (max-width: 520px) {
+    .mk-share-fields-grid {
+        grid-template-columns: 1fr;
+    }
+    .mk-share-quick-actions {
+        grid-template-columns: 1fr;
+    }
+    .mk-share-link-bar {
+        flex-wrap: wrap;
+    }
+    .mk-share-copy-btn {
+        width: 100%;
+    }
+}

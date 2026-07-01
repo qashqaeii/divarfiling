@@ -87,8 +87,10 @@
             <p>تصویری برای این ملک ثبت نشده</p>
         </div>
         {% endif %}
+    </section>
 
-        <div class="ps-hero-overlay">
+    <div class="ps-container ps-container--hero">
+        <div class="ps-hero-sheet">
             <nav class="ps-crumb" aria-label="دسته‌بندی">
                 {% for part in category_breadcrumb %}
                 <span>{{ part }}</span>{% if not forloop.last %}<i class="fas fa-angle-left"></i>{% endif %}
@@ -105,17 +107,19 @@
                 {% if listing.is_expired %}<span class="ps-tag ps-tag--warn">منقضی</span>{% endif %}
             </div>
             <h1 class="ps-hero-title" itemprop="name">{{ listing.title }}</h1>
-            {% if listing.neighborhood or listing.city %}
-            <p class="ps-hero-loc"><i class="fas fa-location-dot"></i>
-                {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}
-                {% if listing.city %}{% if listing.neighborhood %}، {% endif %}{{ listing.city }}{% endif %}
-            </p>
-            {% endif %}
-            {% if primary_price_label %}
-            <p class="ps-hero-price" itemprop="price">{{ primary_price_label }}</p>
-            {% endif %}
+            <div class="ps-hero-meta">
+                {% if listing.neighborhood or listing.city %}
+                <p class="ps-hero-loc"><i class="fas fa-location-dot"></i>
+                    {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}
+                    {% if listing.city %}{% if listing.neighborhood %}، {% endif %}{{ listing.city }}{% endif %}
+                </p>
+                {% endif %}
+                {% if primary_price_label %}
+                <p class="ps-hero-price" itemprop="price">{{ primary_price_label }}</p>
+                {% endif %}
+            </div>
         </div>
-    </section>
+    </div>
 
     <div class="ps-container">
         {# ── Metrics ── #}
@@ -281,17 +285,20 @@
 
             <aside class="ps-sidebar">
                 <div class="ps-agent-card">
-                    <div class="ps-agent-glow"></div>
-                    {% if consultant.agency_logo %}
-                    <img src="{{ consultant.agency_logo.url }}" alt="" class="ps-agent-avatar">
-                    {% else %}
-                    <div class="ps-agent-avatar ps-agent-avatar--icon"><i class="fas fa-user-tie"></i></div>
-                    {% endif %}
-                    <p class="ps-agent-kicker">مشاور اختصاصی شما</p>
-                    <h3 class="ps-agent-name">{{ consultant.name }}</h3>
-                    {% if consultant.agency_name and consultant.agency_name != consultant.name %}
-                    <p class="ps-agent-agency">{{ consultant.agency_name }}</p>
-                    {% endif %}
+                    <div class="ps-agent-top">
+                        {% if consultant.agency_logo %}
+                        <img src="{{ consultant.agency_logo.url }}" alt="" class="ps-agent-avatar">
+                        {% else %}
+                        <div class="ps-agent-avatar ps-agent-avatar--icon"><i class="fas fa-user-tie"></i></div>
+                        {% endif %}
+                        <div class="ps-agent-intro">
+                            <p class="ps-agent-kicker">مشاور اختصاصی</p>
+                            <h3 class="ps-agent-name">{{ consultant.name }}</h3>
+                            {% if consultant.agency_name and consultant.agency_name != consultant.name %}
+                            <p class="ps-agent-agency">{{ consultant.agency_name }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
                     {% if consultant.has_phone %}
                     <a href="{{ consultant.tel_url }}" class="ps-agent-phone">{{ consultant.phone_display }}</a>
                     <div class="ps-agent-btns">
@@ -433,7 +440,7 @@ document.addEventListener('DOMContentLoaded', function () {
         maxZoom: 19
     }).addTo(map);
     L.circleMarker([{{ listing.latitude }}, {{ listing.longitude }}], {
-        radius: 12, color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.9, weight: 3
+        radius: 11, color: '#7c3aed', fillColor: '#8b5cf6', fillOpacity: 0.92, weight: 2
     }).addTo(map);
 });
 </script>

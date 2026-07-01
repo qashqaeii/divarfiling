@@ -134,7 +134,7 @@ def update_listing_public_share(user, token: str, payload: dict, request=None) -
     return listing_public_share_to_dict(share, request)
 
 
-def update_listing(user, token: str, payload: dict) -> Optional[dict]:
+def update_listing(user, token: str, payload: dict, request=None) -> Optional[dict]:
     if not has_active_bot_license(user):
         return None
     lst = Listing.objects.filter(
@@ -150,7 +150,7 @@ def update_listing(user, token: str, payload: dict) -> Optional[dict]:
         lst.save()
     except (ValueError, TypeError):
         return None
-    return listing_detail_to_dict(lst, user=user, request=None)
+    return listing_detail_to_dict(lst, user=user, request=request)
 
 
 def export_dataset_response(user, dataset_id: str, fmt: str):

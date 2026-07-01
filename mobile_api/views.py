@@ -385,7 +385,7 @@ class ListingDetailView(APIView):
         return api_ok(payload)
 
     def patch(self, request, token):
-        payload = update_listing(request.user, token, request.data)
+        payload = update_listing(request.user, token, request.data, request)
         if not payload:
             return api_error('آگهی یافت نشد یا داده نامعتبر است.', code='NOT_FOUND', status=404)
         return api_ok(payload)

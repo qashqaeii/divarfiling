@@ -1,0 +1,21 @@
+{% if field.kind == 'url' %}
+<span class="ps-fv-url">
+    <span class="ps-fv-url-label" title="{{ field.raw }}">{{ field.short }}</span>
+    <span class="ps-fv-url-actions">
+        <button type="button" class="ps-fv-btn" data-copy="{{ field.raw }}" title="کپی"><i class="fas fa-copy"></i></button>
+        <a href="{{ field.raw }}" target="_blank" rel="noopener" class="ps-fv-btn" title="باز کردن"><i class="fas fa-external-link-alt"></i></a>
+    </span>
+</span>
+{% elif field.kind == 'long' %}
+<div class="ps-fv-prose" data-fv-prose>
+    {% if field.raw|length > 280 %}
+    <div class="ps-fv-prose-preview">{{ field.display|slice:":280" }}</div>
+    <div class="ps-fv-prose-full" hidden>{{ field.display|linebreaksbr }}</div>
+    <button type="button" class="ps-fv-prose-more" data-fv-prose-toggle aria-expanded="false">ادامه متن</button>
+    {% else %}
+    <div class="ps-fv-prose-preview">{{ field.display|linebreaksbr }}</div>
+    {% endif %}
+</div>
+{% else %}
+<span class="ps-fv-text">{{ field.display }}</span>
+{% endif %}

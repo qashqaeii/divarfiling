@@ -115,9 +115,10 @@ def _send_fcm_v1(token: str, title: str, body: str, data: Dict[str, str]) -> boo
     message = {
         'message': {
             'token': token,
-            'notification': {'title': title, 'body': body or title},
             'data': data,
-            'android': {'priority': 'HIGH'},
+            'android': {
+                'priority': 'HIGH',
+            },
         },
     }
     try:
@@ -160,11 +161,6 @@ def _send_fcm_legacy(token: str, title: str, body: str, data: Dict[str, str]) ->
             },
             json={
                 'to': token,
-                'notification': {
-                    'title': title,
-                    'body': body,
-                    'sound': 'default',
-                },
                 'data': data,
                 'priority': 'high',
             },

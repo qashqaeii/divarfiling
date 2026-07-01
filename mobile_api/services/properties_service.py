@@ -58,7 +58,7 @@ def get_property_detail(user, property_id: int, *, request=None) -> Optional[dic
         feature_profile = build_listing_feature_profile(source_listing, feat)
         listing_highlights = feat.get('highlights') or []
 
-    return property_detail_to_dict(
+    payload = property_detail_to_dict(
         prop,
         contacts=contacts,
         activities=activities,
@@ -69,6 +69,9 @@ def get_property_detail(user, property_id: int, *, request=None) -> Optional[dic
         mask_sensitive=share_ctx.mask_sensitive,
         request=request,
     )
+    if source_listing:
+        _enrich_property_dict_from_listing(payload['property'], source_listing)
+    return payload
 
 
 def _parse_int(value) -> Optional[int]:
@@ -83,10 +86,98 @@ def _parse_float(value) -> Optional[float]:
     return float(value)
 
 
+def _apply_mobile_property_overrides(prop: CRMProperty, data: Dict[str, Any], *, title_required: bool = True) -> None:
+    """اعمال فیلدهای ارسالی موبایل روی ملک ساخته‌شده از آگهی."""
+    if (data.get('title') or '').strip():
+        prop.title = str(data['title']).strip()[:200]
+    elif title_required and not prop.title:
+        raise ValueError('عنوان ملک الزامی است.')
+
+    simple_fields = {
+        'deal_mode': 'deal_mode',
+        'transaction_status': 'transaction_status',
+        'property_type': 'property_type',
+        'city': 'city',
+        'district': 'district',
+        'neighborhood': 'neighborhood',
+        'address': 'address',
+        'rooms': 'rooms',
+        'notes': 'notes',
+        'link': 'link',
+    }
+    for api_key, model_field in simple_fields.items():
+        if api_key in data and data.get(api_key) not in (None, ''):
+            setattr(prop, model_field, str(data.get(api_key) or '')[:500])
+
+    if 'area' in data:
+        prop.area = _parse_float(data.get('area'))
+    if 'sale_price' in data:
+        prop.sale_price = _parse_int(data.get('sale_price'))
+    if 'deposit' in data:
+        prop.deposit = _parse_int(data.get('deposit'))
+    if 'rent' in data or 'monthly_rent' in data:
+        prop.monthly_rent = _parse_int(data.get('rent', data.get('monthly_rent')))
+    if 'floor' in data:
+        prop.floor = _parse_int(data.get('floor'))
+    if 'total_floors' in data:
+        prop.total_floors = _parse_int(data.get('total_floors'))
+    if 'build_year' in data:
+        prop.build_year = _parse_int(data.get('build_year'))
+    for bool_field in ('has_parking', 'has_storage', 'has_elevator'):
+        if bool_field in data:
+            setattr(prop, bool_field, bool(data.get(bool_field)))
+    if data.get('images'):
+        prop.images = list(data.get('images') or [])
+    prop.save()
+
+
+def _enrich_property_dict_from_listing(prop_dict: Dict[str, Any], listing) -> None:
+    """تکمیل نمایش ملک از آگهی منبع — بدون تغییر دیتابیس."""
+    from workspace.services.features import extract_listing_features
+
+    feat = extract_listing_features(listing)
+    parking_count = (listing.data or {}).get('تعداد پارکینگ')
+    if not prop_dict.get('has_parking') and (feat.get('parking') or parking_count):
+        prop_dict['has_parking'] = True
+    if not prop_dict.get('has_storage') and feat.get('storage'):
+        prop_dict['has_storage'] = True
+    if not prop_dict.get('has_elevator') and feat.get('elevator'):
+        prop_dict['has_elevator'] = True
+    if not prop_dict.get('rooms') and listing.rooms:
+        prop_dict['rooms'] = listing.rooms
+    if prop_dict.get('floor') in (None, '') and feat.get('floor'):
+        try:
+            import re
+            prop_dict['floor'] = int(re.search(r'\d+', str(feat.get('floor'))).group())
+        except (AttributeError, ValueError, TypeError):
+            pass
+    if prop_dict.get('build_year') in (None, '') and feat.get('build_year'):
+        prop_dict['build_year'] = feat.get('build_year')
+    if not prop_dict.get('neighborhood') and listing.neighborhood:
+        prop_dict['neighborhood'] = listing.neighborhood
+    if not prop_dict.get('images') and listing.images:
+        prop_dict['images'] = listing.images
+
+
 def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:
     title = (data.get('title') or '').strip()
     if not title:
         raise ValueError('عنوان ملک الزامی است.')
+
+    token = (data.get('token') or '').strip()
+    if token:
+        from workspace.models import Listing
+        from workspace.services.crm import add_listing_to_personal_files
+
+        listing = (
+            Listing.objects.filter(token=token, dataset__user=user)
+            .order_by('-published_at', '-id')
+            .first()
+        )
+        if listing:
+            prop, _created = add_listing_to_personal_files(user, listing)
+            _apply_mobile_property_overrides(prop, data, title_required=False)
+            return prop
 
     deal_mode = (data.get('deal_mode') or 'فروش').strip()
     if deal_mode not in PROPERTY_DEAL_MODES:
@@ -113,13 +204,20 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:
         address=(data.get('address') or ''),
         area=_parse_float(data.get('area')),
         rooms=(data.get('rooms') or '')[:20],
+        floor=_parse_int(data.get('floor')),
+        total_floors=_parse_int(data.get('total_floors')),
+        build_year=_parse_int(data.get('build_year')),
         sale_price=_parse_int(data.get('sale_price')),
         deposit=_parse_int(data.get('deposit')),
         monthly_rent=_parse_int(data.get('rent') if 'rent' in data else data.get('monthly_rent')),
         token=(data.get('token') or '')[:100],
         link=(data.get('link') or '')[:500],
         notes=(data.get('notes') or ''),
+        images=list(data.get('images') or []),
     )
+    for bool_field in ('has_parking', 'has_storage', 'has_elevator'):
+        if bool_field in data:
+            setattr(prop, bool_field, bool(data.get(bool_field)))
     prop.save()
 
     contact_id = data.get('contact_id') or data.get('customer_id')

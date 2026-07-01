@@ -335,15 +335,17 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     if run_id:
         try:
             from mobile_api.services.schedule_service import complete_schedule_run
-            complete_schedule_run(
+            completed = complete_schedule_run(
                 user,
                 run_id,
                 dataset_id=str(dataset.pk),
                 ingested_count=ingested_count,
-                created_count=len(listings_to_create),
-                updated_count=len(listings_to_update),
-                skipped_count=skipped + duplicate_skipped,
+                created_count=result.created_count,
+                updated_count=result.updated_count,
+                skipped_count=result.skipped_count,
             )
+            if completed is None:
+                logger.error('schedule run %s ingest succeeded but completion was skipped', run_id)
         except Exception:
             logger.exception('failed to complete schedule run %s', run_id)
 

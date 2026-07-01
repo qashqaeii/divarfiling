@@ -35,9 +35,16 @@ def _clamp_interval(hours: float) -> float:
 def schedule_title_from_filters(filters: Dict[str, Any]) -> str:
     parts = [
         str(filters.get('city_name') or '').strip(),
+    ]
+    district_names = filters.get('district_names') or []
+    if isinstance(district_names, list):
+        district_label = '، '.join(str(n).strip() for n in district_names if str(n).strip())
+        if district_label:
+            parts.append(district_label)
+    parts.extend([
         str(filters.get('transaction_type_label') or '').strip(),
         str(filters.get('category_label') or '').strip(),
-    ]
+    ])
     search_query = str(filters.get('search_query') or '').strip()
     if search_query:
         parts.append(f'«{search_query[:40]}»')
@@ -70,6 +77,10 @@ def get_schedule(user, schedule_id: int) -> Optional[MobileExtractionSchedule]:
 
 
 def list_schedules(user) -> List[MobileExtractionSchedule]:
+    schedules = list(MobileExtractionSchedule.objects.filter(user=user).order_by('-updated_at'))
+    for schedule in schedules:
+        if schedule.last_status == MobileExtractionSchedule.RUN_STATUS_RUNNING:
+            _expire_stale_runs(schedule)
     return list(MobileExtractionSchedule.objects.filter(user=user).order_by('-updated_at'))
 
 
@@ -252,11 +263,17 @@ def start_schedule_run(
         trigger=trigger,
         filters_snapshot=filters,
     )
+    now = timezone.now()
     schedule.last_status = MobileExtractionSchedule.RUN_STATUS_RUNNING
     schedule.last_error = ''
+    schedule.last_run_at = now
+    schedule.next_run_at = compute_next_run_at(schedule, from_time=now)
     if device_id:
         schedule.primary_device_id = device_id[:128]
-    schedule.save(update_fields=['last_status', 'last_error', 'primary_device_id', 'updated_at'])
+    schedule.save(update_fields=[
+        'last_status', 'last_error', 'last_run_at', 'next_run_at',
+        'primary_device_id', 'updated_at',
+    ])
     return run
 
 
@@ -273,6 +290,8 @@ def complete_schedule_run(
     run = MobileExtractionRun.objects.filter(user=user, pk=run_id).select_related('schedule').first()
     if not run:
         return None
+    if run.finished_at is not None and run.status == MobileExtractionSchedule.RUN_STATUS_SUCCESS:
+        return run
     if run.status != MobileExtractionSchedule.RUN_STATUS_RUNNING or run.finished_at is not None:
         return None
     now = timezone.now()
@@ -305,6 +324,13 @@ def fail_schedule_run(user, run_id: int, error: str) -> Optional[MobileExtractio
     run = MobileExtractionRun.objects.filter(user=user, pk=run_id).select_related('schedule').first()
     if not run:
         return None
+    terminal = {
+        MobileExtractionSchedule.RUN_STATUS_SUCCESS,
+        MobileExtractionSchedule.RUN_STATUS_FAILED,
+        MobileExtractionSchedule.RUN_STATUS_SKIPPED_LIMIT,
+    }
+    if run.status in terminal and run.finished_at is not None:
+        return run
     now = timezone.now()
     run.status = MobileExtractionSchedule.RUN_STATUS_FAILED
     run.error = (error or 'خطای نامشخص')[:2000]
@@ -330,6 +356,17 @@ def fail_schedule_run(user, run_id: int, error: str) -> Optional[MobileExtractio
 
 def list_due_schedules(user, *, device_id: str = '') -> List[MobileExtractionSchedule]:
     now = timezone.now()
+    candidates = list(
+        MobileExtractionSchedule.objects.filter(
+            user=user,
+            is_enabled=True,
+            next_run_at__lte=now,
+        ).exclude(
+            last_status=MobileExtractionSchedule.RUN_STATUS_RUNNING,
+        )
+    )
+    for schedule in candidates:
+        _expire_stale_runs(schedule)
     qs = MobileExtractionSchedule.objects.filter(
         user=user,
         is_enabled=True,

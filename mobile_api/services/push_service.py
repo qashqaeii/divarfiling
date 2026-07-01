@@ -91,6 +91,19 @@ def send_push_to_user(
     return sent
 
 
+def send_welcome_push(user) -> int:
+    """Push خوش‌آمدگویی — فقط وقتی fcm_token برای اولین‌بار ثبت می‌شود."""
+    return send_push_to_user(
+        user,
+        title='به فایلینگ دیوار خوش آمدید',
+        body='اعلان‌ها فعال شد. یادآورها، استخراج و کارهای امروز از اینجا به شما می‌رسد.',
+        data={
+            'type': 'welcome',
+            'deep_link': 'divarfiling://home',
+        },
+    )
+
+
 def _send_fcm_v1(token: str, title: str, body: str, data: Dict[str, str]) -> bool:
     access = _get_v1_access_token()
     if not access:

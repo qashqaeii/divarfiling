@@ -82,6 +82,8 @@ def send_push_to_user(
         return 0
 
     payload_data = {k: str(v) for k, v in (data or {}).items()}
+    payload_data.setdefault('title', title)
+    payload_data.setdefault('body', body or title)
     sent = 0
     for token in tokens:
         if _send_fcm_v1(token, title, body, payload_data) or _send_fcm_legacy(token, title, body, payload_data):

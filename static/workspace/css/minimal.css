@@ -6210,9 +6210,11 @@ button.mk-ds-act {
     overflow: hidden;
     background: var(--ws-border);
 }
-.mk-ds-mix-seg { height: 100%; min-width: 2px; transition: width 0.4s ease; }
+.mk-ds-mix-seg { height: 100%; min-width: 3px; transition: width 0.4s ease; flex-shrink: 0; }
+.mk-ds-mix-seg-genuine { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+.mk-ds-mix-seg-disguised { background: linear-gradient(90deg, #fb7185, #e11d48); }
 .mk-ds-mix-seg-consultant { background: linear-gradient(90deg, #3b82f6, #2563eb); }
-.mk-ds-mix-seg-personal { background: linear-gradient(90deg, #fbbf24, #d97706); }
+.mk-ds-mix-seg-personal { background: linear-gradient(90deg, #94a3b8, #64748b); }
 .mk-ds-mix-legend {
     display: flex;
     gap: 0.75rem;
@@ -6231,7 +6233,7 @@ button.mk-ds-act {
     display: inline-block;
 }
 .mk-ds-mix-dot-consultant { background: #2563eb; }
-.mk-ds-mix-dot-personal { background: #d97706; }
+.mk-ds-mix-dot-personal { background: #64748b; }
 .mk-ds-mix-dot-genuine { background: #7c3aed; }
 .mk-ds-mix-dot-disguised { background: #e11d48; }
 
@@ -6608,7 +6610,7 @@ button.mk-ds-act {
 .mk-data-table-listings .mk-col-w-area { width: 4rem; min-width: 3.75rem; }
 .mk-data-table-listings .mk-col-w-specs { width: 8.5rem; min-width: 7.5rem; }
 .mk-data-table-listings .mk-col-w-amenity { width: 5rem; min-width: 4.5rem; }
-.mk-data-table-listings .mk-col-w-pub { width: 5.25rem; min-width: 5rem; }
+.mk-data-table-listings .mk-col-w-pub { width: 3.5rem; min-width: 3.25rem; }
 .mk-data-table-listings .mk-col-w-nb { width: 7rem; min-width: 6rem; }
 .mk-data-table-listings .mk-col-w-value { width: 4.25rem; min-width: 4rem; }
 .mk-data-table-listings .mk-col-w-actions { width: 5rem; min-width: 4.75rem; }
@@ -6633,7 +6635,16 @@ button.mk-ds-act {
     position: relative;
 }
 
-.mk-data-table-listings .mk-col-publisher { text-align: center; }
+.mk-data-table-listings .mk-col-publisher {
+    text-align: center;
+    padding-inline: 0.3rem;
+    overflow: hidden;
+}
+
+.mk-data-table-listings .mk-col-specs {
+    overflow: hidden;
+    padding-inline: 0.45rem;
+}
 
 .mk-data-table-listings .mk-col-actions {
     text-align: center;
@@ -6681,10 +6692,17 @@ button.mk-ds-act {
 .mk-data-table-listings thead th.mk-col-amenity { overflow: visible; }
 
 .mk-data-table-listings .mk-col-amenity .ws-amenity[data-tip]::after {
-    top: calc(100% + 4px);
-    font-size: 0.72rem;
-    padding: 0.28rem 0.5rem;
+    top: auto;
+    bottom: calc(100% + 4px);
+    font-size: 0.68rem;
+    padding: 0.24rem 0.45rem;
     z-index: 300;
+    transform: translateX(50%) translateY(2px);
+}
+
+.mk-data-table-listings .mk-col-amenity .ws-amenity[data-tip]:hover::after,
+.mk-data-table-listings .mk-col-amenity .ws-amenity[data-tip]:focus-visible::after {
+    transform: translateX(50%) translateY(0);
 }
 
 .mk-sort-th {
@@ -6787,8 +6805,18 @@ button.mk-ds-act {
 .mk-specs-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.28rem;
+    gap: 0.22rem;
     justify-content: flex-start;
+}
+
+.mk-data-table-listings .mk-specs-grid {
+    gap: 0.18rem;
+}
+
+.mk-data-table-listings .mk-spec-chip {
+    padding: 0.16rem 0.34rem;
+    font-size: 0.66rem;
+    gap: 0.18rem;
 }
 
 .mk-spec-chip {
@@ -6856,6 +6884,42 @@ button.mk-ds-act {
     background: rgba(244, 63, 94, 0.1);
     border-color: rgba(244, 63, 94, 0.2);
 }
+
+/* Compact advertiser badge — listing table */
+.mk-adv-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    max-width: 100%;
+    font-size: 0.66rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.mk-adv-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.mk-adv-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--ws-text-secondary);
+}
+
+.mk-adv-tag--genuine .mk-adv-dot { background: #7c3aed; }
+.mk-adv-tag--genuine .mk-adv-label { color: #6d28d9; }
+
+.mk-adv-tag--disguised .mk-adv-dot { background: #e11d48; }
+.mk-adv-tag--disguised .mk-adv-label { color: #be123c; }
+
+.mk-adv-tag--consultant .mk-adv-dot { background: #64748b; }
+
+.mk-adv-tag--personal .mk-adv-dot { background: #94a3b8; }
 
 .mk-money {
     font-variant-numeric: tabular-nums;

@@ -38,13 +38,13 @@
     <td class="mk-col-specs">
         <div class="mk-specs-grid">
             {% if feat.rooms or listing.rooms %}
-            <span class="mk-spec-chip" title="اتاق"><i class="fas fa-door-open" aria-hidden="true"></i>{{ feat.rooms|default:listing.rooms }}</span>
+            <span class="mk-spec-chip" aria-label="اتاق {{ feat.rooms|default:listing.rooms }}"><i class="fas fa-door-open" aria-hidden="true"></i>{{ feat.rooms|default:listing.rooms }}</span>
             {% endif %}
             {% if feat.floor %}
-            <span class="mk-spec-chip" title="طبقه"><i class="fas fa-layer-group" aria-hidden="true"></i>{{ feat.floor }}</span>
+            <span class="mk-spec-chip" aria-label="طبقه {{ feat.floor }}"><i class="fas fa-layer-group" aria-hidden="true"></i>{{ feat.floor }}</span>
             {% endif %}
             {% if feat.build_year %}
-            <span class="mk-spec-chip" title="سال ساخت"><i class="fas fa-calendar" aria-hidden="true"></i>{{ feat.build_year }}</span>
+            <span class="mk-spec-chip" aria-label="سال ساخت {{ feat.build_year }}"><i class="fas fa-calendar" aria-hidden="true"></i>{{ feat.build_year }}</span>
             {% endif %}
             {% if not feat.rooms and not listing.rooms and not feat.floor and not feat.build_year %}
             {% if feat.highlights %}

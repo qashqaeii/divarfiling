@@ -266,7 +266,9 @@ def listing_advertiser_display(listing) -> Dict[str, str]:
         return {
             'signal': signal,
             'label': label,
+            'short_label': 'مالک',
             'pill_class': 'mk-pub-pill--genuine',
+            'tag_class': 'mk-adv-tag--genuine',
             'icon': 'fa-user-check',
             'title': 'آگهی شخصی بدون نشانه مشاور — مالک واقعی',
         }
@@ -274,7 +276,9 @@ def listing_advertiser_display(listing) -> Dict[str, str]:
         return {
             'signal': signal,
             'label': label,
+            'short_label': 'پنهان',
             'pill_class': 'mk-pub-pill--disguised',
+            'tag_class': 'mk-adv-tag--disguised',
             'icon': 'fa-user-secret',
             'title': 'آگهی با برچسب شخصی اما نشانه‌های مشاور در متن',
         }
@@ -285,14 +289,18 @@ def listing_advertiser_display(listing) -> Dict[str, str]:
         return {
             'signal': ADVERTISER_SIGNAL_CONSULTANT,
             'label': 'مشاور',
+            'short_label': 'مشاور',
             'pill_class': 'mk-pub-pill--consultant',
+            'tag_class': 'mk-adv-tag--consultant',
             'icon': 'fa-building',
             'title': 'مشاور / آژانس املاک',
         }
     return {
         'signal': signal or '',
         'label': 'شخصی',
+        'short_label': 'شخصی',
         'pill_class': 'mk-pub-pill--personal',
+        'tag_class': 'mk-adv-tag--personal',
         'icon': 'fa-user',
         'title': 'آگهی شخصی',
     }

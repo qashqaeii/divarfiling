@@ -593,11 +593,19 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
         ctx['genuine_personal_count'] = adv_counts['genuine_personal']
         ctx['disguised_consultant_count'] = adv_counts['disguised_consultant']
         ctx['consultant_count'] = adv_counts['consultant']
-        ctx['personal_count'] = adv_counts['personal_other'] + adv_counts['genuine_personal'] + adv_counts['disguised_consultant']
+        ctx['personal_other_count'] = adv_counts['personal_other']
+        ctx['personal_count'] = (
+            adv_counts['personal_other']
+            + adv_counts['genuine_personal']
+            + adv_counts['disguised_consultant']
+        )
         total = ctx['total_count']
         filtered = ctx['filtered_count']
         consultant = ctx['consultant_count']
         ctx['consultant_pct'] = round(consultant * 100 / total) if total else 0
+        ctx['genuine_personal_pct'] = round(ctx['genuine_personal_count'] * 100 / total) if total else 0
+        ctx['disguised_consultant_pct'] = round(ctx['disguised_consultant_count'] * 100 / total) if total else 0
+        ctx['personal_other_pct'] = round(ctx['personal_other_count'] * 100 / total) if total else 0
         ctx['personal_pct'] = round(ctx['personal_count'] * 100 / total) if total else 0
         ctx['filter_pct'] = round(filtered * 100 / total) if total else 100
         ctx['is_listing_filtered'] = filtered < total or ctx['filter_count'] > 0

@@ -6204,13 +6204,20 @@ button.mk-ds-act {
     color: var(--ws-text-muted);
 }
 .mk-ds-mix-track {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
     height: 0.45rem;
     border-radius: 999px;
     overflow: hidden;
     background: var(--ws-border);
+    min-width: 0;
 }
-.mk-ds-mix-seg { height: 100%; min-width: 3px; transition: width 0.4s ease; flex-shrink: 0; }
+.mk-ds-mix-seg {
+    height: 100%;
+    min-width: 2px;
+    transition: opacity 0.2s ease;
+}
+.mk-ds-mix-seg:hover { opacity: 0.88; }
 .mk-ds-mix-seg-genuine { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
 .mk-ds-mix-seg-disguised { background: linear-gradient(90deg, #fb7185, #e11d48); }
 .mk-ds-mix-seg-consultant { background: linear-gradient(90deg, #3b82f6, #2563eb); }
@@ -6527,25 +6534,33 @@ button.mk-ds-act {
     overflow-y: visible;
     max-width: 100%;
     border-radius: 0 0 var(--ws-radius-sm) var(--ws-radius-sm);
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124, 58, 237, 0.28) transparent;
 }
 .mk-table-wrap-fit::-webkit-scrollbar {
-    display: none;
+    display: block;
     width: 0;
-    height: 0;
+    height: 5px;
+}
+.mk-table-wrap-fit::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.28);
+    border-radius: 999px;
 }
 .mk-listing-panel .mk-table-wrap {
     overflow-x: auto;
     overflow-y: visible;
     margin-inline: 0;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124, 58, 237, 0.28) transparent;
 }
 .mk-listing-panel .mk-table-wrap::-webkit-scrollbar {
-    display: none;
+    display: block;
     width: 0;
-    height: 0;
+    height: 5px;
+}
+.mk-listing-panel .mk-table-wrap::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.28);
+    border-radius: 999px;
 }
 
 /* ─── Listing table (dataset detail) — premium pro UX ─── */
@@ -6613,7 +6628,35 @@ button.mk-ds-act {
 .mk-data-table-listings .mk-col-w-pub { width: 3.5rem; min-width: 3.25rem; }
 .mk-data-table-listings .mk-col-w-nb { width: 7rem; min-width: 6rem; }
 .mk-data-table-listings .mk-col-w-value { width: 4.25rem; min-width: 4rem; }
-.mk-data-table-listings .mk-col-w-actions { width: 5rem; min-width: 4.75rem; }
+.mk-data-table-listings .mk-col-w-actions { width: 5.5rem; min-width: 5.25rem; }
+
+.mk-data-table-listings .mk-col-actions {
+    text-align: center;
+    padding-inline: 0.35rem;
+    overflow: visible;
+    position: sticky;
+    inset-inline-end: 0;
+    z-index: 4;
+    background: var(--ws-surface);
+    box-shadow: -6px 0 12px rgba(15, 23, 42, 0.05);
+}
+
+.mk-data-table-listings--pro thead th.mk-col-actions {
+    overflow: visible;
+    position: sticky;
+    inset-inline-end: 0;
+    z-index: 5;
+    background: color-mix(in srgb, var(--ws-surface-2) 88%, var(--ws-surface));
+    box-shadow: -6px 0 12px rgba(15, 23, 42, 0.04);
+}
+
+.mk-data-table-listings--pro tbody tr:nth-child(even) td.mk-col-actions {
+    background: color-mix(in srgb, var(--ws-surface-2) 42%, var(--ws-surface));
+}
+
+.mk-data-table-listings--pro tbody tr.mk-listing-row:hover td.mk-col-actions {
+    background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+}
 
 .mk-data-table-listings .mk-col-title {
     min-width: 15rem;
@@ -6645,15 +6688,6 @@ button.mk-ds-act {
     overflow: hidden;
     padding-inline: 0.45rem;
 }
-
-.mk-data-table-listings .mk-col-actions {
-    text-align: center;
-    padding-inline: 0.35rem;
-    overflow: visible;
-    position: relative;
-}
-
-.mk-data-table-listings thead th.mk-col-actions { overflow: visible; }
 
 .mk-data-table-listings tbody tr:has(.mk-action-menu[open]) {
     position: relative;
@@ -7067,6 +7101,14 @@ button.mk-ds-act {
     border: 1px solid var(--ws-border);
     border-radius: 8px;
     background: var(--ws-surface);
+}
+
+.mk-data-table-listings--pro .mk-row-btn--more {
+    color: var(--ws-text-secondary);
+}
+
+.mk-data-table-listings--pro .mk-row-btn--more:hover {
+    color: var(--ws-primary);
 }
 
 .mk-action-menu { position: relative; display: inline-block; z-index: 1; }

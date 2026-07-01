@@ -58,7 +58,28 @@ def overdue_followup(overdue: int) -> tuple[str, str]:
     )
 
 
-def extract_complete(dataset_name: str, count: int) -> tuple[str, str]:
+def extract_complete(
+    dataset_name: str,
+    count: int,
+    *,
+    genuine_personal_count: int = 0,
+    disguised_consultant_count: int = 0,
+) -> tuple[str, str]:
+    if genuine_personal_count > 0:
+        title = 'استخراج تموم شد — فرصت تماس!'
+        body = (
+            f'«{dataset_name}» آماده‌ست — {count} آگهی ذخیره شد. '
+            f'{genuine_personal_count} تا آگهی مالک واقعی پیدا شد؛ ارزش تماس داره!'
+        )
+        if disguised_consultant_count > 0:
+            body += f' ({disguised_consultant_count} تا هم مشاور پنهان بود.)'
+        return title, body
+    if disguised_consultant_count > 0:
+        return (
+            'استخراج تموم شد',
+            f'«{dataset_name}» آماده‌ست — {count} آگهی ذخیره شد. '
+            f'{disguised_consultant_count} تا آگهی مشاور در پوشش شخصی شناسایی شد.',
+        )
     return (
         'استخراج تموم شد',
         f'فایل «{dataset_name}» آماده‌ست — {count} آگهی توش ذخیره شد.',

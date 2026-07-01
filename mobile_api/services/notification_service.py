@@ -106,15 +106,33 @@ def create_notification(
     return n
 
 
-def notify_extract_complete(user, dataset_id: str, dataset_name: str, count: int) -> None:
-    title, body = copy_extract_complete(dataset_name, count)
+def notify_extract_complete(
+    user,
+    dataset_id: str,
+    dataset_name: str,
+    count: int,
+    *,
+    genuine_personal_count: int = 0,
+    disguised_consultant_count: int = 0,
+) -> None:
+    title, body = copy_extract_complete(
+        dataset_name,
+        count,
+        genuine_personal_count=genuine_personal_count,
+        disguised_consultant_count=disguised_consultant_count,
+    )
     create_notification(
         user,
         notification_type='extract_complete',
         title=title,
         body=body,
         deep_link=f'divarfiling://filing/{dataset_id}',
-        data={'dataset_id': dataset_id, 'ingested_count': count},
+        data={
+            'dataset_id': dataset_id,
+            'ingested_count': count,
+            'genuine_personal_count': genuine_personal_count,
+            'disguised_consultant_count': disguised_consultant_count,
+        },
     )
 
 

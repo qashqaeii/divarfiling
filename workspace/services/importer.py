@@ -340,6 +340,7 @@ def _listing_from_fields(dataset: Dataset, fields: dict) -> Listing:
         latitude=fields['latitude'],
         longitude=fields['longitude'],
         business_type=fields['business_type'],
+        advertiser_signal=fields.get('advertiser_signal') or '',
         description=fields['description'],
         link=fields['link'],
         images=fields['images'],
@@ -352,7 +353,7 @@ def _listing_from_fields(dataset: Dataset, fields: dict) -> Listing:
 _LISTING_SCALAR_FIELDS = (
     'title', 'price', 'deposit', 'rent', 'area', 'rooms',
     'neighborhood', 'city', 'latitude', 'longitude',
-    'business_type', 'description', 'link',
+    'business_type', 'advertiser_signal', 'description', 'link',
     'published_at', 'expires_at',
 )
 
@@ -570,7 +571,7 @@ def import_dataset(
                 [
                     'title', 'price', 'deposit', 'rent', 'area', 'rooms',
                     'neighborhood', 'city', 'latitude', 'longitude',
-                    'business_type', 'description', 'link', 'images',
+                    'business_type', 'advertiser_signal', 'description', 'link', 'images',
                     'published_at', 'expires_at', 'data',
                 ],
                 batch_size=BATCH_SIZE,

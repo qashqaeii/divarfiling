@@ -15,6 +15,7 @@ from workspace.services.features import (
     parse_rooms_value,
 )
 from workspace.services.listing_features import build_listing_feature_profile, feature_highlights_for_listing
+from workspace.services.advertiser_signal import advertiser_signal_label, detect_advertiser_signal
 from workspace.services.listing_edit import owner_phone_from_listing
 from workspace.services.property_images import normalize_external_image_url
 
@@ -236,6 +237,12 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
     image_urls = _listing_image_urls(lst)
     thumb = image_urls[0] if image_urls else ''
     adv = 'مشاور' if lst.business_type and 'مشاور' in lst.business_type else 'شخصی'
+    signal = lst.advertiser_signal or detect_advertiser_signal(
+        title=lst.title or '',
+        description=lst.description or '',
+        business_type=lst.business_type or '',
+        data=lst.data or {},
+    )
     specs = _listing_specs(lst)
     transaction_type = 'اجاره' if (lst.rent or lst.deposit) else ('فروش' if lst.price else '')
 
@@ -254,6 +261,8 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
         'thumbnail_url': thumb,
         'share_link': lst.link or '',
         'advertiser_type': adv,
+        'advertiser_signal': signal,
+        'advertiser_signal_label': advertiser_signal_label(signal),
         'business_type': lst.business_type or '',
         'scraped_at': lst.created_at.isoformat() if lst.created_at else None,
         'dataset_id': str(lst.dataset_id) if lst.dataset_id else None,

@@ -74,6 +74,10 @@ class Listing(models.Model):
     latitude = models.FloatField(null=True, blank=True, verbose_name='عرض جغرافیایی')
     longitude = models.FloatField(null=True, blank=True, verbose_name='طول جغرافیایی')
     business_type = models.CharField(max_length=50, blank=True, verbose_name='نوع آگهی‌دهنده')
+    advertiser_signal = models.CharField(
+        max_length=32, blank=True, default='', db_index=True,
+        verbose_name='سیگنال آگهی‌دهنده',
+    )
     description = models.TextField(blank=True, verbose_name='توضیحات')
     link = models.URLField(max_length=500, blank=True, verbose_name='لینک')
     images = models.JSONField(default=list, blank=True, verbose_name='تصاویر')

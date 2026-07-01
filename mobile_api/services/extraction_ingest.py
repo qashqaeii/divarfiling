@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from mobile_api.services.divar_flatten import items_to_export_records
 from workspace.models import Dataset, Listing, PriceHistory
+from workspace.services.advertiser_signal import count_signals
 from workspace.services.columns import detect_metadata, normalize_location_label, row_to_listing_fields
 from workspace.services.folder_import import build_dataset_name, build_file_identity
 from workspace.services.importer import (
@@ -24,7 +25,7 @@ from workspace.services.price_history import load_latest_snapshots, should_recor
 
 MAX_MOBILE_ITEMS = 100
 EXTRACTIONS_DAILY_LIMIT = 10
-INGEST_VERSION = 4
+INGEST_VERSION = 5
 logger = logging.getLogger(__name__)
 
 CATEGORY_LABELS = {
@@ -53,6 +54,8 @@ class IngestResult:
     updated_count: int = 0
     duplicate_count: int = 0
     dataset_merged: bool = False
+    genuine_personal_count: int = 0
+    disguised_consultant_count: int = 0
 
 
 def _resolve_tx_subcategory(filters: Dict[str, Any], category: str) -> tuple[str, str]:
@@ -260,6 +263,7 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         price_records: List[PriceHistory] = []
         seen_tokens: set = set()
         duplicate_skipped = 0
+        ingested_signals: List[str] = []
 
         for idx in range(len(df)):
             fields = row_to_listing_fields(df.iloc[idx], df)
@@ -268,6 +272,9 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
                 duplicate_skipped += 1
                 continue
             seen_tokens.add(token)
+            signal = fields.get('advertiser_signal') or ''
+            if signal:
+                ingested_signals.append(signal)
 
             if token in existing_by_token:
                 listing = existing_by_token[token]
@@ -301,7 +308,7 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
                 [
                     'title', 'price', 'deposit', 'rent', 'area', 'rooms',
                     'neighborhood', 'city', 'latitude', 'longitude',
-                    'business_type', 'description', 'link', 'images',
+                    'business_type', 'advertiser_signal', 'description', 'link', 'images',
                     'published_at', 'expires_at', 'data',
                 ],
                 batch_size=200,
@@ -317,6 +324,7 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         ])
 
     ingested_count = len(seen_tokens)
+    signal_counts = count_signals(ingested_signals)
     result = IngestResult(
         dataset=dataset,
         ingested_count=ingested_count,
@@ -325,10 +333,19 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         updated_count=len(listings_to_update),
         duplicate_count=duplicate_skipped,
         dataset_merged=bool(existing),
+        genuine_personal_count=signal_counts['genuine_personal'],
+        disguised_consultant_count=signal_counts['disguised_consultant'],
     )
     try:
         from mobile_api.services.notification_service import notify_extract_complete
-        notify_extract_complete(user, str(dataset.pk), dataset.name, ingested_count)
+        notify_extract_complete(
+            user,
+            str(dataset.pk),
+            dataset.name,
+            ingested_count,
+            genuine_personal_count=result.genuine_personal_count,
+            disguised_consultant_count=result.disguised_consultant_count,
+        )
     except Exception:
         logger.exception('failed to send extract notification')
 

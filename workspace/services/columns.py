@@ -283,9 +283,21 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
     raw_data = {str(col): row[col] for col in df.columns}
     data = assert_json_serializable(raw_data)
 
+    title = _safe_str(row[cols['title']]) if cols['title'] else ''
+    description = _safe_str(row[cols['description']]) if cols['description'] else ''
+    business_type = _safe_str(row[cols['business_type']]) if cols['business_type'] else ''
+
+    from workspace.services.advertiser_signal import detect_advertiser_signal
+    advertiser_signal = detect_advertiser_signal(
+        title=title,
+        description=description,
+        business_type=business_type,
+        data=data,
+    )
+
     return {
         'token': token or f'row_{hash(tuple(row.values)) % 10**8}',
-        'title': _safe_str(row[cols['title']]) if cols['title'] else '',
+        'title': title,
         'price': _safe_int(row[cols['price']]) if cols['price'] else None,
         'deposit': _safe_int(row[cols['deposit']]) if cols['deposit'] else None,
         'rent': _safe_int(row[cols['rent']]) if cols['rent'] else None,
@@ -295,8 +307,9 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
         'city': normalize_location_label(row[cols['city']]) if cols['city'] else '',
         'latitude': _safe_float(row[cols['latitude']]) if cols['latitude'] else None,
         'longitude': _safe_float(row[cols['longitude']]) if cols['longitude'] else None,
-        'business_type': _safe_str(row[cols['business_type']]) if cols['business_type'] else '',
-        'description': _safe_str(row[cols['description']]) if cols['description'] else '',
+        'business_type': business_type,
+        'advertiser_signal': advertiser_signal,
+        'description': description,
         'link': _safe_str(row[cols['link']]) if cols['link'] else '',
         'images': _parse_images(row[cols['images']]) if cols['images'] else [],
         'published_at': _parse_datetime(row[cols['published_at']]) if cols['published_at'] else None,

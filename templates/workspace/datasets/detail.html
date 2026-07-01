@@ -124,17 +124,25 @@
                 <div class="mk-ds-mix-head">
                     <span class="mk-ds-mix-title">ترکیب آگهی‌دهنده</span>
                     <span class="mk-ds-mix-counts">
+                        {% if total_count %}
                         {% if genuine_personal_count %}{{ genuine_personal_count|intcomma }} مالک واقعی{% if disguised_consultant_count or consultant_count or personal_other_count %} · {% endif %}{% endif %}
                         {% if disguised_consultant_count %}{{ disguised_consultant_count|intcomma }} مشاور پنهان{% if consultant_count or personal_other_count %} · {% endif %}{% endif %}
                         {{ consultant_count|intcomma }} مشاور{% if personal_other_count %} · {{ personal_other_count|intcomma }} شخصی{% endif %}
+                        {% else %}
+                        بدون آگهی
+                        {% endif %}
                     </span>
                 </div>
+                {% if total_count %}
                 <div class="mk-ds-mix-track" role="presentation" style="grid-template-columns: {% if genuine_personal_count %}{{ genuine_personal_count }}fr {% endif %}{% if disguised_consultant_count %}{{ disguised_consultant_count }}fr {% endif %}{% if personal_other_count %}{{ personal_other_count }}fr {% endif %}{% if consultant_count %}{{ consultant_count }}fr{% endif %};">
                     {% if genuine_personal_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-genuine" title="مالک واقعی {{ genuine_personal_count|intcomma }} · {{ genuine_personal_pct }}٪"></span>{% endif %}
                     {% if disguised_consultant_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-disguised" title="مشاور پنهان {{ disguised_consultant_count|intcomma }} · {{ disguised_consultant_pct }}٪"></span>{% endif %}
                     {% if personal_other_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-personal" title="شخصی {{ personal_other_count|intcomma }} · {{ personal_other_pct }}٪"></span>{% endif %}
                     {% if consultant_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-consultant" title="مشاور {{ consultant_count|intcomma }} · {{ consultant_pct }}٪"></span>{% endif %}
                 </div>
+                {% else %}
+                <div class="mk-ds-mix-track mk-ds-mix-track--empty" role="presentation" aria-hidden="true"></div>
+                {% endif %}
                 <div class="mk-ds-mix-legend">
                     {% if genuine_personal_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-genuine" aria-hidden="true"></i>مالک واقعی</span>{% endif %}
                     {% if disguised_consultant_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-disguised" aria-hidden="true"></i>مشاور پنهان</span>{% endif %}
@@ -314,7 +322,7 @@
                         <th class="mk-col-amenity">امکانات</th>
                         <th class="mk-col-publisher"><a href="{% ws_sort_url filters 'business_type' filters.sort filter_qs %}" class="mk-sort-th">آگهی‌دهنده {% if filters.sort == 'business_type' %}↑{% elif filters.sort == '-business_type' %}↓{% endif %}</a></th>
                         <th><a href="{% ws_sort_url filters 'neighborhood' filters.sort filter_qs %}" class="mk-sort-th">محله {% if filters.sort == 'neighborhood' %}↑{% elif filters.sort == '-neighborhood' %}↓{% endif %}</a></th>
-                        <th class="mk-col-value">ارزش</th>
+                        <th class="mk-col-value" title="مقایسه با ارزش بازار — زیر / میان / بالا">ارزش</th>
                         <th class="mk-col-actions" aria-label="عملیات"></th>
                     </tr>
                 </thead>

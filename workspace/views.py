@@ -600,6 +600,12 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
             + adv_counts['disguised_consultant']
         )
         total = ctx['total_count']
+        if not total:
+            ctx['genuine_personal_count'] = 0
+            ctx['disguised_consultant_count'] = 0
+            ctx['consultant_count'] = 0
+            ctx['personal_other_count'] = 0
+            ctx['personal_count'] = 0
         filtered = ctx['filtered_count']
         consultant = ctx['consultant_count']
         ctx['consultant_pct'] = round(consultant * 100 / total) if total else 0

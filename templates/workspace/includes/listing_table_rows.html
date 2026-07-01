@@ -71,10 +71,24 @@
     </td>
     <td class="mk-col-value">
         {% with badge=score|ws_value_badge %}
-        {% if badge == 'below' %}<span class="mk-value-pill mk-value-pill--below" title="زیر بازار"><span class="mk-value-dot" aria-hidden="true"></span>زیر</span>
-        {% elif badge == 'above' %}<span class="mk-value-pill mk-value-pill--above" title="بالای بازار"><span class="mk-value-dot" aria-hidden="true"></span>بالا</span>
-        {% elif badge == 'fair' %}<span class="mk-value-pill mk-value-pill--fair" title="متعارف"><span class="mk-value-dot" aria-hidden="true"></span>میان</span>
-        {% else %}<span class="mk-muted">—</span>{% endif %}
+        {% if badge == 'below' %}
+        <span class="mk-value-pill mk-value-pill--below" title="زیر بازار{% if score %} · {{ score|floatformat:0 }}٪{% endif %}">
+            <span class="mk-value-dot" aria-hidden="true"></span>
+            <span class="mk-value-label">زیر</span>
+        </span>
+        {% elif badge == 'above' %}
+        <span class="mk-value-pill mk-value-pill--above" title="بالای بازار{% if score %} · {{ score|floatformat:0 }}٪{% endif %}">
+            <span class="mk-value-dot" aria-hidden="true"></span>
+            <span class="mk-value-label">بالا</span>
+        </span>
+        {% elif badge == 'fair' %}
+        <span class="mk-value-pill mk-value-pill--fair" title="متعارف{% if score %} · {{ score|floatformat:0 }}٪{% endif %}">
+            <span class="mk-value-dot" aria-hidden="true"></span>
+            <span class="mk-value-label">میان</span>
+        </span>
+        {% else %}
+        <span class="mk-value-empty" title="داده کافی برای ارزش‌گذاری نیست">—</span>
+        {% endif %}
         {% endwith %}
     </td>
     <td class="mk-col-actions">

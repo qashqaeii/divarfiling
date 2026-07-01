@@ -6218,6 +6218,9 @@ button.mk-ds-act {
     transition: opacity 0.2s ease;
 }
 .mk-ds-mix-seg:hover { opacity: 0.88; }
+.mk-ds-mix-track--empty {
+    background: var(--ws-border);
+}
 .mk-ds-mix-seg-genuine { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
 .mk-ds-mix-seg-disguised { background: linear-gradient(90deg, #fb7185, #e11d48); }
 .mk-ds-mix-seg-consultant { background: linear-gradient(90deg, #3b82f6, #2563eb); }
@@ -6627,8 +6630,34 @@ button.mk-ds-act {
 .mk-data-table-listings .mk-col-w-amenity { width: 5rem; min-width: 4.5rem; }
 .mk-data-table-listings .mk-col-w-pub { width: 3.5rem; min-width: 3.25rem; }
 .mk-data-table-listings .mk-col-w-nb { width: 7rem; min-width: 6rem; }
-.mk-data-table-listings .mk-col-w-value { width: 4.25rem; min-width: 4rem; }
+.mk-data-table-listings .mk-col-w-value { width: 4.75rem; min-width: 4.5rem; }
 .mk-data-table-listings .mk-col-w-actions { width: 5.5rem; min-width: 5.25rem; }
+
+.mk-data-table-listings .mk-col-value {
+    text-align: center;
+    white-space: nowrap;
+    position: sticky;
+    inset-inline-end: 5.5rem;
+    z-index: 3;
+    background: var(--ws-surface);
+    box-shadow: -4px 0 10px rgba(15, 23, 42, 0.04);
+}
+
+.mk-data-table-listings--pro thead th.mk-col-value {
+    position: sticky;
+    inset-inline-end: 5.5rem;
+    z-index: 5;
+    background: color-mix(in srgb, var(--ws-surface-2) 88%, var(--ws-surface));
+    box-shadow: -4px 0 10px rgba(15, 23, 42, 0.03);
+}
+
+.mk-data-table-listings--pro tbody tr:nth-child(even) td.mk-col-value {
+    background: color-mix(in srgb, var(--ws-surface-2) 42%, var(--ws-surface));
+}
+
+.mk-data-table-listings--pro tbody tr.mk-listing-row:hover td.mk-col-value {
+    background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+}
 
 .mk-data-table-listings .mk-col-actions {
     text-align: center;
@@ -6669,7 +6698,6 @@ button.mk-ds-act {
 }
 
 .mk-data-table-listings .mk-col-num { text-align: center; white-space: nowrap; }
-.mk-data-table-listings .mk-col-value { text-align: center; }
 
 .mk-data-table-listings .mk-col-amenity {
     text-align: center;
@@ -7041,6 +7069,26 @@ button.mk-ds-act {
     color: #dc2626;
 }
 .mk-value-pill--above .mk-value-dot { background: #ef4444; }
+
+.mk-data-table-listings .mk-col-value .mk-value-pill {
+    min-width: 3.1rem;
+    justify-content: center;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.5rem;
+}
+
+.mk-data-table-listings .mk-col-value .mk-value-dot {
+    width: 7px;
+    height: 7px;
+}
+
+.mk-value-empty {
+    display: inline-block;
+    min-width: 3.1rem;
+    text-align: center;
+    color: var(--ws-text-muted);
+    font-size: 0.75rem;
+}
 
 /* Legacy aliases */
 .mk-value { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.45rem; border-radius: 6px; white-space: nowrap; }

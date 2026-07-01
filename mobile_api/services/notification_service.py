@@ -6,20 +6,25 @@ from typing import Any, Dict, List, Optional
 from django.utils import timezone
 
 from mobile_api.models import MobileNotification
+from mobile_api.services.notification_copy import (
+    extract_complete as copy_extract_complete,
+    new_dataset as copy_new_dataset,
+)
 from mobile_api.services.push_service import send_push_to_user
 
 
 NOTIFICATION_TYPES = {
     'reminder_call': 'یادآور تماس',
     'reminder_visit': 'یادآور بازدید',
-    'today_digest': 'کارهای امروز',
+    'today_digest': 'برنامه امروز',
     'overdue_followup': 'پیگیری معوق',
-    'extract_complete': 'استخراج تمام شد',
+    'extract_complete': 'پایان استخراج',
     'extract_schedule_due': 'زمان استخراج',
     'new_dataset': 'فایل جدید',
-    'customer_match': 'آگهی مناسب',
+    'customer_match': 'فایل مناسب مشتری',
     'price_drop': 'کاهش قیمت',
-    'license_expiry': 'انقضای لایسنس',
+    'license_expiry': 'لایسنس',
+    'welcome': 'خوش‌آمد',
 }
 
 
@@ -99,22 +104,24 @@ def create_notification(
 
 
 def notify_extract_complete(user, dataset_id: str, dataset_name: str, count: int) -> None:
+    title, body = copy_extract_complete(dataset_name, count)
     create_notification(
         user,
         notification_type='extract_complete',
-        title='استخراج تمام شد',
-        body=f'فایل «{dataset_name}» با {count} آگهی ذخیره شد.',
+        title=title,
+        body=body,
         deep_link=f'divarfiling://filing/{dataset_id}',
         data={'dataset_id': dataset_id, 'ingested_count': count},
     )
 
 
 def notify_new_dataset(user, dataset_id: str, dataset_name: str, count: int) -> None:
+    title, body = copy_new_dataset(dataset_name, count)
     create_notification(
         user,
         notification_type='new_dataset',
-        title='فایل جدید ساخته شد',
-        body=f'«{dataset_name}» — {count} آگهی',
+        title=title,
+        body=body,
         deep_link=f'divarfiling://filing/{dataset_id}',
         data={'dataset_id': dataset_id},
     )

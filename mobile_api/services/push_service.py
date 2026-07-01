@@ -9,6 +9,7 @@ import requests
 from django.conf import settings
 
 from mobile_api.models import MobileDevice
+from mobile_api.services.notification_copy import welcome_message
 
 logger = logging.getLogger(__name__)
 
@@ -93,10 +94,11 @@ def send_push_to_user(
 
 def send_welcome_push(user) -> int:
     """Push خوش‌آمدگویی — فقط وقتی fcm_token برای اولین‌بار ثبت می‌شود."""
+    title, body = welcome_message()
     return send_push_to_user(
         user,
-        title='به فایلینگ دیوار خوش آمدید',
-        body='اعلان‌ها فعال شد. یادآورها، استخراج و کارهای امروز از اینجا به شما می‌رسد.',
+        title=title,
+        body=body,
         data={
             'type': 'welcome',
             'deep_link': 'divarfiling://home',

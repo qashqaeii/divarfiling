@@ -10,6 +10,14 @@ from django.utils import timezone
 
 from mobile_api.models import DEFAULT_NOTIFICATION_PREFS, MobileDevice, MobileNotification
 from mobile_api.services.notification_service import create_notification
+from mobile_api.services.notification_copy import (
+    extract_schedule_due as copy_extract_schedule_due,
+    license_expiry as copy_license_expiry,
+    overdue_followup as copy_overdue_followup,
+    reminder_call as copy_reminder_call,
+    reminder_visit as copy_reminder_visit,
+    today_digest as copy_today_digest,
+)
 from workspace.models import Reminder
 from workspace.services.crm_today import get_today_queue
 
@@ -118,11 +126,16 @@ def process_due_reminders(*, window_minutes: int = 90) -> int:
         if not user_push_enabled(user, ntype):
             continue
         contact_name = reminder.customer.name if reminder.customer else ''
-        body = contact_name or (reminder.note or '')[:120]
+        reminder_title = (reminder.title or '').strip()
+        note = (reminder.note or '').strip()
+        if ntype == 'reminder_visit':
+            title, body = copy_reminder_visit(contact_name, reminder_title, note)
+        else:
+            title, body = copy_reminder_call(contact_name, reminder_title, note)
         create_notification(
             user,
             notification_type=ntype,
-            title=reminder.title,
+            title=title,
             body=body,
             deep_link=_reminder_deep_link(reminder),
             data={
@@ -151,13 +164,11 @@ def process_today_digest(*, force: bool = False) -> int:
         if total <= 0:
             continue
         overdue = stats.get('overdue', 0)
-        body = f'{total} کار امروز'
-        if overdue:
-            body += f' ({overdue} معوق)'
+        title, body = copy_today_digest(total, overdue)
         create_notification(
             user,
             notification_type='today_digest',
-            title='کارهای امروز',
+            title=title,
             body=body,
             deep_link='divarfiling://crm/today',
             data={'total': total, 'overdue': overdue},
@@ -182,11 +193,12 @@ def process_overdue_followups(*, digest_hour_only: bool = True) -> int:
         overdue = stats.get('overdue', 0)
         if overdue <= 0:
             continue
+        title, body = copy_overdue_followup(overdue)
         create_notification(
             user,
             notification_type='overdue_followup',
-            title='پیگیری معوق',
-            body=f'{overdue} مورد نیاز به پیگیری فوری دارد',
+            title=title,
+            body=body,
             deep_link='divarfiling://crm/today',
             data={'overdue': overdue},
             send_push=True,
@@ -229,13 +241,8 @@ def process_license_expiry() -> int:
             data__threshold=threshold,
         ).exists():
             continue
-        plan_label = lic.plan.name if lic.plan_id else 'شما'
-        if threshold == 0:
-            title = 'لایسنس منقضی شد'
-            body = 'برای ادامه استفاده از CRM و استخراج، لایسنس را تمدید کنید.'
-        else:
-            title = f'لایسنس تا {threshold} روز دیگر'
-            body = f'پلن {plan_label} به‌زودی منقضی می‌شود.'
+        plan_label = lic.plan.name if lic.plan_id else 'پلن شما'
+        title, body = copy_license_expiry(threshold, plan_label)
         create_notification(
             user,
             notification_type='license_expiry',
@@ -259,11 +266,12 @@ def process_due_extraction_schedules() -> int:
             continue
         if _sent_today(schedule.user, 'extract_schedule_due', data_key='schedule_id', data_value=schedule.pk):
             continue
+        title, body = copy_extract_schedule_due(schedule.title)
         create_notification(
             schedule.user,
             notification_type='extract_schedule_due',
-            title='زمان استخراج رسید',
-            body=f'«{schedule.title}» آماده اجراست',
+            title=title,
+            body=body,
             deep_link='divarfiling://extract/schedules',
             data={
                 'schedule_id': schedule.pk,

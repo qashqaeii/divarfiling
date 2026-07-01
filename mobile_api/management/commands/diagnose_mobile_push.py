@@ -9,6 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from mobile_api.models import MobileDevice
 from mobile_api.services.push_service import _get_v1_access_token, send_push_to_user
+from mobile_api.services.notification_copy import test_push_message
 
 User = get_user_model()
 
@@ -86,10 +87,11 @@ class Command(BaseCommand):
         if options['send_test']:
             if not has_token:
                 raise CommandError('fcm_token خالی است — ابتدا login از اپ release.')
+            title, body = test_push_message()
             sent = send_push_to_user(
                 user,
-                title='تست push دیوار فایلینگ',
-                body='اگر این را می‌بینید، FCM از سرور تا گوشی کار می‌کند.',
+                title=title,
+                body=body,
                 data={'type': 'test', 'deep_link': 'divarfiling://home'},
             )
             if sent:

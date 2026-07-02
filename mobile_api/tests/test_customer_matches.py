@@ -89,9 +89,53 @@ class CustomerMatchesApiTests(APITestCase):
         self.assertGreaterEqual(len(matches), 1)
         sent = process_user_customer_matches(self.user, divar_enabled=False)
         self.assertGreaterEqual(sent, 1)
-        self.assertTrue(
+        notes = MobileNotification.objects.filter(
+            user=self.user,
+            notification_type='customer_match',
+        )
+        self.assertEqual(notes.count(), 1)
+        self.assertIn('خریدار تست', notes.first().title)
+
+    def test_digest_single_push_for_multiple_contacts(self):
+        from mobile_api.models import MobileDevice, MobileNotification
+
+        MobileDevice.objects.create(
+            user=self.user,
+            device_id='match-digest-device',
+            fcm_token='fake',
+            notification_prefs={'customer_match': True},
+        )
+        customer2 = Customer.objects.create(
+            user=self.user,
+            name='مریم تست',
+            phone='09125556677',
+            customer_type='متقاضی اجاره',
+            status='در حال پیگیری',
+            deposit_min=200_000_000,
+            rent_max=25_000_000,
+            areas='ونک',
+        )
+        CRMProperty.objects.create(
+            user=self.user,
+            title='اجاره ونک',
+            deal_mode='رهن و اجاره',
+            transaction_status='فعال',
+            deposit=300_000_000,
+            monthly_rent=20_000_000,
+            neighborhood='ونک',
+            city='تهران',
+            area=85,
+            rooms='2',
+            property_type='آپارتمان',
+        )
+        sent = process_user_customer_matches(self.user, divar_enabled=False)
+        self.assertGreaterEqual(sent, 2)
+        notes = list(
             MobileNotification.objects.filter(
                 user=self.user,
                 notification_type='customer_match',
-            ).exists()
+            ).order_by('-created_at')
         )
+        self.assertEqual(len(notes), 1)
+        self.assertIn('مخاطب', notes[0].title)
+        self.assertTrue(notes[0].data.get('digest'))

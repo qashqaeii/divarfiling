@@ -1,6 +1,7 @@
 """متن اعلان‌های push — لحن محاوره‌ای برای مشاور املاک."""
 from __future__ import annotations
 
+from typing import List
 
 def welcome_message() -> tuple[str, str]:
     return (
@@ -153,16 +154,43 @@ def new_dataset(dataset_name: str, count: int) -> tuple[str, str]:
 
 def customer_match(contact_name: str, listing_title: str, *, count: int = 1) -> tuple[str, str]:
     name = (contact_name or 'مشتری').strip()
-    listing = (listing_title or 'یک آگهی').strip()
+    listing = (listing_title or 'یک ملک').strip()
+    title = f'ملک مناسب برای {name}'
     if count > 1:
         return (
-            'فایل مناسب پیدا شد',
-            f'برای «{name}» {count} ملک مناسب پیدا شد. یه نگاه بنداز.',
+            title,
+            f'{count} فایل با بودجه و محله‌ش می‌خوره. ببین کدوم بهتره.',
         )
     return (
-        'فایل مناسب پیدا شد',
-        f'برای «{name}» آگهی «{listing}» خوب می‌خوره. یه نگاه بنداز.',
+        title,
+        f'«{listing}» خوب می‌خوره. یه نگاه بنداز.',
     )
+
+
+def customer_match_digest(
+    contacts: List[tuple[str, int]],
+    *,
+    total_matches: int,
+) -> tuple[str, str]:
+    """خلاصهٔ یک اعلان وقتی چند مخاطب در یک دور اسکن تطبیق دارند."""
+    n_contacts = len(contacts)
+    if n_contacts <= 1 and contacts:
+        name, count = contacts[0]
+        return customer_match(name, '', count=count)
+    names = [name for name, _ in contacts[:3]]
+    title = f'{n_contacts} مخاطب — ملک مناسب'
+    if n_contacts == 2:
+        body = (
+            f'برای «{names[0]}» و «{names[1]}» فایل مناسب پیدا شد '
+            f'({total_matches} ملک). همه رو یکجا ببین.'
+        )
+    else:
+        extra = n_contacts - 2
+        body = (
+            f'برای «{names[0]}»، «{names[1]}» و {extra} مخاطب دیگر '
+            f'({total_matches} ملک) فایل مناسب پیدا شد. همه رو یکجا ببین.'
+        )
+    return title, body
 
 
 def price_drop(listing_title: str, old_price: str, new_price: str) -> tuple[str, str]:

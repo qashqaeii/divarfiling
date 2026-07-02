@@ -124,6 +124,8 @@ def _notify_customer_matches(
     user,
     customer: Customer,
     matches: List[Dict[str, Any]],
+    *,
+    send_push: bool = True,
 ) -> bool:
     from mobile_api.services.notification_copy import customer_match as copy_customer_match
     from mobile_api.services.notification_service import create_notification
@@ -150,12 +152,63 @@ def _notify_customer_matches(
         deep_link=f'divarfiling://crm/contacts/{customer.pk}/matches',
         data={
             'contact_id': customer.pk,
+            'contact_name': customer.name,
             'match_count': len(matches),
             'top_score': top.get('score'),
             'top_title': top.get('title', ''),
             'source': top.get('source', ''),
+            'digest': False,
         },
-        send_push=True,
+        send_push=send_push,
+    )
+    return True
+
+
+def _notify_customer_match_digest(
+    user,
+    batch: List[Tuple[Customer, List[Dict[str, Any]]]],
+    *,
+    send_push: bool = True,
+) -> bool:
+    from mobile_api.services.notification_copy import customer_match_digest
+    from mobile_api.services.notification_service import create_notification
+
+    if not batch:
+        return False
+    now = timezone.now()
+    contacts_summary: List[Tuple[str, int]] = []
+    total_matches = 0
+    contact_ids: List[int] = []
+    for customer, matches in batch:
+        record_match_alerts(
+            user, customer, matches,
+            status=PropertyMatchAlert.STATUS_NOTIFIED,
+            notified_at=now,
+        )
+        contacts_summary.append((customer.name, len(matches)))
+        total_matches += len(matches)
+        contact_ids.append(customer.pk)
+
+    title, body = customer_match_digest(contacts_summary, total_matches=total_matches)
+    top_customer, top_matches = batch[0]
+    top = top_matches[0] if top_matches else {}
+    create_notification(
+        user,
+        notification_type='customer_match',
+        title=title,
+        body=body,
+        deep_link='divarfiling://crm/contacts',
+        data={
+            'digest': True,
+            'contact_count': len(batch),
+            'contact_ids': contact_ids,
+            'match_count': total_matches,
+            'top_contact_id': top_customer.pk,
+            'top_contact_name': top_customer.name,
+            'top_score': top.get('score'),
+            'top_title': top.get('title', ''),
+        },
+        send_push=send_push,
     )
     return True
 
@@ -166,7 +219,7 @@ def process_user_customer_matches(user, *, divar_enabled: bool) -> int:
     if not user_push_enabled(user, 'customer_match'):
         return 0
 
-    sent = 0
+    batch: List[Tuple[Customer, List[Dict[str, Any]]]] = []
     customers = (
         Customer.objects.filter(user=user)
         .exclude(status='بایگانی')
@@ -174,14 +227,25 @@ def process_user_customer_matches(user, *, divar_enabled: bool) -> int:
         .order_by('-updated_at')[:200]
     )
     for customer in customers:
-        if sent >= AUTO_NOTIFY_MAX_PER_USER:
+        if len(batch) >= AUTO_NOTIFY_MAX_PER_USER:
             break
         matches = discover_customer_matches(customer, user, divar_enabled=divar_enabled)
         if not matches:
             continue
-        if _notify_customer_matches(user, customer, matches[:3]):
-            sent += 1
-    return sent
+        batch.append((customer, matches[:3]))
+    if not batch:
+        return 0
+
+    push_enabled = user_push_enabled(user, 'customer_match')
+    if len(batch) == 1:
+        customer, matches = batch[0]
+        if _notify_customer_matches(user, customer, matches, send_push=push_enabled):
+            return 1
+        return 0
+
+    if _notify_customer_match_digest(user, batch, send_push=push_enabled):
+        return len(batch)
+    return 0
 
 
 def process_customer_matches(*, match_hour: int = 2) -> int:

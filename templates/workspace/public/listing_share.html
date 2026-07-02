@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function () {
 {% if listing.latitude and listing.longitude %}
 {{ listing_map_marker|json_script:"listing-map-marker" }}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{% static 'workspace/js/listing-map.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/listing-map.js' %}?v=4"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var markerEl = document.getElementById('listing-map-marker');

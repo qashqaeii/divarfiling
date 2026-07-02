@@ -405,14 +405,12 @@
 
         fitBtn?.addEventListener('click', () => fitMapView(true), { signal });
 
-        function onFullscreenResize() {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    map.invalidateSize();
-                    fitMapView(false);
-                    updateZoomBadge();
-                });
-            });
+        function refreshMapSize() {
+            setTimeout(() => {
+                map.invalidateSize();
+                fitMapView(false);
+                updateZoomBadge();
+            }, 120);
         }
 
         fullscreenBtn?.addEventListener('click', async () => {
@@ -422,7 +420,7 @@
                 if (!document.fullscreenElement) {
                     await target.requestFullscreen();
                     fullscreenBtn.querySelector('i')?.classList.replace('fa-expand', 'fa-compress');
-                    onFullscreenResize();
+                    refreshMapSize();
                 } else {
                     await document.exitFullscreen();
                     fullscreenBtn.querySelector('i')?.classList.replace('fa-compress', 'fa-expand');
@@ -434,16 +432,8 @@
             if (!document.fullscreenElement) {
                 fullscreenBtn?.querySelector('i')?.classList.replace('fa-compress', 'fa-expand');
             }
-            onFullscreenResize();
+            refreshMapSize();
         }, { signal });
-
-        function refreshMapSize() {
-            setTimeout(() => {
-                map.invalidateSize();
-                fitMapView(false);
-                updateZoomBadge();
-            }, 120);
-        }
 
         const locationPanel = el.closest('[data-panel="مکان"]');
         if (locationPanel?.hidden) {

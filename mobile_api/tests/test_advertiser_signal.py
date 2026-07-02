@@ -41,6 +41,18 @@ class AdvertiserSignalDetectionTest(TestCase):
             description='',
         ))
 
+    def test_disguised_consultant_with_standalone_moshaver(self):
+        signal = detect_advertiser_signal(
+            title='اجاره آپارتمان',
+            description='واحد تمیز. تماس مشاور.',
+            business_type='personal',
+        )
+        self.assertEqual(signal, ADVERTISER_SIGNAL_DISGUISED)
+        self.assertTrue(has_disguised_consultant_markers(
+            title='',
+            description='مشاور',
+        ))
+
     def test_disguised_consultant_amlak_afshin_branding(self):
         description = (
             'یک واحد آپارتمان 65 متری\n'

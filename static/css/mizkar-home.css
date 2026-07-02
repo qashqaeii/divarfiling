@@ -469,7 +469,7 @@ html.mk-public[data-theme="dark"] .mk-home-body > .mk-section:nth-of-type(even):
     z-index: 2;
     isolation: isolate;
     overflow: visible;
-    margin-top: -1.25rem;
+    margin-top: clamp(0.85rem, 2.2vw, 1.5rem);
     padding-top: 0;
     padding-bottom: clamp(0.5rem, 1.5vw, 1rem);
     background: transparent;
@@ -514,6 +514,10 @@ html.mk-public[data-theme="dark"] .mk-home-body > .mk-section:nth-of-type(even):
     z-index: 3;
     border: none;
     background: transparent;
+}
+
+.mk-home-stats > .container {
+    padding-top: clamp(0.35rem, 1.2vw, 0.75rem);
 }
 
 html.mk-public[data-theme="dark"] .mk-home-intro-band {
@@ -3552,7 +3556,7 @@ html.mk-public[data-theme="dark"] .mk-home-intro-band::before {
 
 @media (max-width: 640px) {
     .mk-home-stats { margin-top: 0; }
-    .mk-home-intro-band { margin-top: -2rem; }
+    .mk-home-intro-band { margin-top: clamp(0.65rem, 2vw, 1.1rem); }
 
     .mk-stats-strip {
         flex-wrap: wrap;

@@ -161,7 +161,7 @@
                         <tr class="crm-deals-row" data-href="{% url 'workspace:crm_deal_detail' d.id %}">
                             <td class="crm-deals-col-deal">
                                 <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deals-cell-deal">
-                                    <span class="crm-deals-deal-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with .decor='handshake' size='inline' only %}</span>
+                                    <span class="crm-deals-deal-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='inline' only %}</span>
                                     <span class="crm-deals-deal-text">
                                         <strong>{{ d.title }}</strong>
                                         {% if d.expected_close_date %}

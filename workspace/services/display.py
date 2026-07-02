@@ -71,16 +71,22 @@ def _parse_radius_meters(value: Any) -> Optional[int]:
     return v if v > 0 else None
 
 
-def location_accuracy_for_map(data: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
+def _normalize_coord_type(raw: Any) -> str:
+    s = str(raw or '').strip()
+    s = s.replace('ي', 'ی').replace('ى', 'ی').replace('ك', 'ک')
+    return s.upper().replace(' ', '')
+
+
+def location_accuracy_for_map(data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """دقت موقعیت آگهی — برای tooltip نقشه."""
     data = data or {}
     raw_type = str(data.get('نوع مختصات') or '').strip()
-    norm = raw_type.upper().replace(' ', '')
+    norm = _normalize_coord_type(raw_type)
     radius = _parse_radius_meters(data.get('در شعاع (متر)'))
 
-    if norm in _EXACT_COORD_MARKERS:
+    if norm in _EXACT_COORD_MARKERS or raw_type in _EXACT_COORD_MARKERS:
         return {'label': 'موقعیت دقیق روی نقشه', 'kind': 'exact', 'radius_m': 0}
-    if norm in _FUZZY_COORD_MARKERS or radius:
+    if norm in _FUZZY_COORD_MARKERS or raw_type in _FUZZY_COORD_MARKERS or 'تقری' in raw_type or radius:
         if radius:
             return {
                 'label': f'موقعیت تقریبی — در شعاع حدود {to_persian_digits(radius)} متر',

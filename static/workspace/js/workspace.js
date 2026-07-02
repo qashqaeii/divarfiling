@@ -1943,6 +1943,22 @@ function setupMapProUI(map, options = {}) {
     return { setBasemap, getBasemapId: () => currentBasemapId, updateZoomBadge };
 }
 
+function isListingApproxLocation(options = {}) {
+    if (options.accuracyKind === 'exact') return false;
+    if (options.accuracyKind === 'approx') return true;
+    return Number(options.radiusM) > 0;
+}
+
+function estimateZoomForRadiusMeters(lat, radiusM, mapWidthPx) {
+    const safeLat = Math.max(-85, Math.min(85, lat));
+    const width = Math.max(Number(mapWidthPx) || 320, 160);
+    const diameter = Math.max(Number(radiusM) * 2.6, 200);
+    const metersPerPixel = diameter / width;
+    const zoom = Math.log2((156543.03392 * Math.cos((safeLat * Math.PI) / 180)) / metersPerPixel);
+    if (!Number.isFinite(zoom)) return 14;
+    return Math.min(17, Math.max(11, Math.round(zoom)));
+}
+
 function initListingDetailMap(options = {}) {
     const el = document.getElementById('wsLdLocationMap');
     if (!el || !window.L) return null;
@@ -1963,18 +1979,45 @@ function initListingDetailMap(options = {}) {
     currentBasemapLayer.addTo(map);
     setupMapVpnTip(currentBasemapLayer);
 
-    const basemapBar = document.getElementById('wsLdMapBasemapBar');
+    const basemapMenu = document.getElementById('wsLdBasemapMenu');
+    const basemapToggle = document.getElementById('wsLdBasemapToggle');
+    const basemapPreview = document.getElementById('wsLdBasemapPreview');
+    const basemapLabel = document.getElementById('wsLdBasemapLabel');
+    const basemapWrap = document.getElementById('wsLdBasemapWrap');
     const zoomBadge = document.getElementById('wsLdMapZoomBadge');
     const fitBtn = document.getElementById('wsLdMapFitBtn');
     const fullscreenBtn = document.getElementById('wsLdMapFullscreenBtn');
     const stage = document.getElementById('wsLdLocationMapStage');
 
     function updateBasemapUI(activeId) {
-        basemapBar?.querySelectorAll('[data-basemap]').forEach((btn) => {
+        const cfg = MAP_BASEMAPS[activeId];
+        basemapMenu?.querySelectorAll('[data-basemap]').forEach((btn) => {
             const on = btn.dataset.basemap === activeId;
             btn.classList.toggle('is-active', on);
             btn.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
+        if (basemapPreview && cfg) {
+            basemapPreview.className = `ws-ld-basemap-preview mk-map-basemap-preview mk-map-basemap-preview--${cfg.preview}`;
+        }
+        if (basemapLabel && cfg) {
+            basemapLabel.textContent = cfg.label;
+        }
+        if (basemapToggle && cfg) {
+            basemapToggle.title = `نوع نقشه: ${cfg.label}`;
+        }
+    }
+
+    function setBasemapMenuOpen(open) {
+        if (!basemapMenu) return;
+        if (open) {
+            basemapMenu.removeAttribute('hidden');
+            basemapToggle?.setAttribute('aria-expanded', 'true');
+            basemapWrap?.classList.add('is-open');
+        } else {
+            basemapMenu.setAttribute('hidden', '');
+            basemapToggle?.setAttribute('aria-expanded', 'false');
+            basemapWrap?.classList.remove('is-open');
+        }
     }
 
     function setBasemap(id) {
@@ -1987,20 +2030,44 @@ function initListingDetailMap(options = {}) {
         setupMapVpnTip(currentBasemapLayer);
         try { localStorage.setItem(MAP_BASEMAP_STORAGE_KEY, id); } catch (e) { /* ignore */ }
         updateBasemapUI(id);
+        setBasemapMenuOpen(false);
     }
 
-    if (basemapBar) {
-        basemapBar.innerHTML = Object.entries(MAP_BASEMAPS)
-            .map(([id, cfg]) => buildBasemapChipHtml(id, cfg, id === currentBasemapId))
-            .join('');
-        basemapBar.querySelectorAll('[data-basemap]').forEach((btn) => {
+    if (basemapMenu) {
+        basemapMenu.innerHTML = Object.entries(MAP_BASEMAPS).map(([id, cfg]) => `
+            <button type="button" class="ws-ld-basemap-option${id === currentBasemapId ? ' is-active' : ''}"
+                data-basemap="${id}" role="menuitem" aria-pressed="${id === currentBasemapId ? 'true' : 'false'}"
+                title="${wsEscapeHtml(cfg.hint)}">
+                <span class="mk-map-basemap-preview mk-map-basemap-preview--${cfg.preview}" aria-hidden="true"></span>
+                <span class="ws-ld-basemap-option-text">
+                    <strong>${wsEscapeHtml(cfg.label)}</strong>
+                    <span>${wsEscapeHtml(cfg.hint)}</span>
+                </span>
+            </button>
+        `).join('');
+        basemapMenu.querySelectorAll('[data-basemap]').forEach((btn) => {
             btn.addEventListener('click', () => setBasemap(btn.dataset.basemap));
         });
     }
 
-    const isApprox = options.accuracyKind === 'approx';
-    const radiusM = Number(options.radiusM) > 0 ? Number(options.radiusM) : (isApprox ? 500 : 0);
-    const focusBounds = L.latLngBounds();
+    basemapToggle?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!basemapMenu) return;
+        setBasemapMenuOpen(basemapMenu.hasAttribute('hidden'));
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!basemapMenu || basemapMenu.hasAttribute('hidden')) return;
+        if (e.target.closest('#wsLdBasemapWrap')) return;
+        setBasemapMenuOpen(false);
+    });
+
+    updateBasemapUI(currentBasemapId);
+
+    const isApprox = isListingApproxLocation(options);
+    const radiusM = Number(options.radiusM) > 0
+        ? Number(options.radiusM)
+        : (isApprox ? 500 : 0);
 
     let locationLayer;
     if (isApprox && radiusM > 0) {
@@ -2008,10 +2075,17 @@ function initListingDetailMap(options = {}) {
             radius: radiusM,
             color: '#7c3aed',
             fillColor: '#7c3aed',
-            fillOpacity: 0.14,
-            weight: 2,
+            fillOpacity: 0.16,
+            weight: 2.5,
+            opacity: 0.85,
         }).addTo(map);
-        focusBounds.extend(locationLayer.getBounds());
+        L.circleMarker([lat, lng], {
+            radius: 6,
+            color: '#ffffff',
+            weight: 2,
+            fillColor: '#7c3aed',
+            fillOpacity: 1,
+        }).addTo(map);
     } else {
         locationLayer = L.circleMarker([lat, lng], {
             radius: 10,
@@ -2020,7 +2094,6 @@ function initListingDetailMap(options = {}) {
             fillColor: '#dc2626',
             fillOpacity: 1,
         }).addTo(map);
-        focusBounds.extend([lat, lng]);
     }
 
     const locParts = [options.neighborhood, options.city].filter(Boolean);
@@ -2037,12 +2110,32 @@ function initListingDetailMap(options = {}) {
         });
     }
 
+    function approxBounds() {
+        return L.circle([lat, lng], { radius: radiusM }).getBounds();
+    }
+
+    function mapHasLayout() {
+        return el.clientWidth > 0 && el.clientHeight > 0;
+    }
+
     function fitMapView(animate) {
-        if (!focusBounds.isValid()) return;
+        const anim = !!animate;
         if (isApprox && radiusM > 0) {
-            map.fitBounds(focusBounds, { padding: [48, 48], maxZoom: 17, animate: !!animate });
+            const bounds = approxBounds();
+            if (mapHasLayout() && bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [44, 44], maxZoom: 17, animate: anim });
+            } else {
+                map.setView(
+                    [lat, lng],
+                    estimateZoomForRadiusMeters(lat, radiusM, el.clientWidth),
+                    { animate: anim },
+                );
+            }
         } else {
-            map.setView([lat, lng], options.zoom || 17, { animate: !!animate });
+            map.setView([lat, lng], options.zoom || 17, { animate: anim });
+        }
+        if (!Number.isFinite(map.getZoom())) {
+            map.setView([lat, lng], options.zoom || 15, { animate: false });
         }
     }
 
@@ -2078,14 +2171,30 @@ function initListingDetailMap(options = {}) {
         if (!document.fullscreenElement) {
             fullscreenBtn?.querySelector('i')?.classList.replace('fa-compress', 'fa-expand');
         }
-        setTimeout(() => map.invalidateSize(), 120);
+        setTimeout(() => {
+            map.invalidateSize();
+            fitMapView(false);
+            updateZoomBadge();
+        }, 120);
     });
 
     function refreshMapSize() {
         setTimeout(() => {
             map.invalidateSize();
+            fitMapView(false);
             updateZoomBadge();
         }, 120);
+    }
+
+    const locationPanel = el.closest('[data-panel="مکان"]');
+    if (locationPanel?.hidden) {
+        const panelObserver = new MutationObserver(() => {
+            if (!locationPanel.hidden) {
+                panelObserver.disconnect();
+                refreshMapSize();
+            }
+        });
+        panelObserver.observe(locationPanel, { attributes: true, attributeFilter: ['hidden'] });
     }
 
     document.querySelector('.ws-ld-tabs [data-tab="مکان"]')?.addEventListener('click', refreshMapSize);

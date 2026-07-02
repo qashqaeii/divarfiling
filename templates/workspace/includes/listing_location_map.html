@@ -1,4 +1,4 @@
-<div class="ws-ld-location-map-wrap" id="wsLdLocationMapPanel">
+<div class="ws-ld-location-map-wrap" id="{{ map_wrap_id|default:'wsLdLocationMapPanel' }}">
     <div class="ws-ld-location-map-head">
         <div class="ws-ld-location-map-head-main">
             <p class="ws-ld-location-map-title">نقشه موقعیت ملک</p>
@@ -6,25 +6,35 @@
             <span class="ws-ld-location-accuracy ws-ld-location-accuracy--{{ location_accuracy.kind|default:'exact' }}">{{ location_accuracy.label }}</span>
             {% endif %}
         </div>
-        <div class="ws-ld-basemap-wrap" id="wsLdBasemapWrap">
-            <button type="button" class="ws-ld-basemap-toggle" id="wsLdBasemapToggle" aria-expanded="false" aria-haspopup="true" aria-controls="wsLdBasemapMenu" title="نوع نقشه">
-                <span class="ws-ld-basemap-preview mk-map-basemap-preview mk-map-basemap-preview--voyager" id="wsLdBasemapPreview" aria-hidden="true"></span>
-                <span class="ws-ld-basemap-label" id="wsLdBasemapLabel">نوع نقشه</span>
+        <div class="ws-ld-basemap-wrap" id="{{ map_prefix|default:'wsLd' }}BasemapWrap">
+            <button type="button" class="ws-ld-basemap-toggle" id="{{ map_prefix|default:'wsLd' }}BasemapToggle" aria-expanded="false" aria-haspopup="true" aria-controls="{{ map_prefix|default:'wsLd' }}BasemapMenu" title="نوع نقشه">
+                <span class="ws-ld-basemap-preview mk-map-basemap-preview mk-map-basemap-preview--voyager" id="{{ map_prefix|default:'wsLd' }}BasemapPreview" aria-hidden="true"></span>
+                <span class="ws-ld-basemap-label" id="{{ map_prefix|default:'wsLd' }}BasemapLabel">نوع نقشه</span>
                 <i class="fas fa-chevron-down ws-ld-basemap-chevron" aria-hidden="true"></i>
             </button>
-            <div class="ws-ld-basemap-menu" id="wsLdBasemapMenu" role="menu" aria-label="انتخاب نوع نقشه" hidden></div>
+            <div class="ws-ld-basemap-menu" id="{{ map_prefix|default:'wsLd' }}BasemapMenu" role="menu" aria-label="انتخاب نوع نقشه" hidden></div>
         </div>
     </div>
-    <div class="ws-ld-location-map-stage" id="wsLdLocationMapStage">
-        <div id="wsLdLocationMap" class="ws-ld-location-map ws-map" role="application" aria-label="نقشه موقعیت ملک"></div>
+    <div class="ws-ld-location-map-stage" id="{{ map_stage_id|default:'wsLdLocationMapStage' }}">
+        <div id="{{ map_id|default:'wsLdLocationMap' }}" class="ws-ld-location-map ws-map" role="application" aria-label="نقشه موقعیت ملک"></div>
         <div class="ws-ld-location-map-chrome">
-            <span class="ws-ld-location-map-badge" id="wsLdMapZoomBadge" aria-live="polite">زوم —</span>
-            <button type="button" class="ws-ld-location-map-tool" id="wsLdMapFitBtn" title="تنظیم نمای نقشه" aria-label="تنظیم نمای نقشه">
+            <span class="ws-ld-location-map-badge" id="{{ map_prefix|default:'wsLd' }}MapZoomBadge" aria-live="polite">زوم —</span>
+            <button type="button" class="ws-ld-location-map-tool" id="{{ map_prefix|default:'wsLd' }}MapFitBtn" title="تنظیم نمای نقشه" aria-label="تنظیم نمای نقشه">
                 <i class="fas fa-crosshairs" aria-hidden="true"></i>
             </button>
-            <button type="button" class="ws-ld-location-map-tool" id="wsLdMapFullscreenBtn" title="تمام‌صفحه" aria-label="تمام‌صفحه">
+            <button type="button" class="ws-ld-location-map-tool" id="{{ map_prefix|default:'wsLd' }}MapFullscreenBtn" title="تمام‌صفحه" aria-label="تمام‌صفحه">
                 <i class="fas fa-expand" aria-hidden="true"></i>
             </button>
         </div>
     </div>
+    {% if map_navigation %}
+    <div class="ps-map-nav-actions">
+        <a href="{{ map_navigation.google_url }}" class="ps-btn ps-btn--nav ps-btn--block" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-location-arrow" aria-hidden="true"></i> مسیریابی
+        </a>
+        <a href="{{ map_navigation.neshan_url }}" class="ps-btn ps-btn--nav-alt ps-btn--block" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-map-location-dot" aria-hidden="true"></i> نشان
+        </a>
+    </div>
+    {% endif %}
 </div>

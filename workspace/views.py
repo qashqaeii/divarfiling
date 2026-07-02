@@ -62,6 +62,7 @@ from workspace.services.display import (
 )
 from workspace.services.features import extract_listing_features
 from workspace.services.listing_features import build_listing_feature_profile
+from workspace.services.listing_map import build_listing_map_marker
 from workspace.services.listing_edit import apply_listing_edit_post, listing_edit_payload
 from workspace.services.filters import (
     active_filter_count, advanced_filter_count, apply_amenity_filters,
@@ -750,6 +751,20 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['crm_property'] = get_crm_property_by_token(self.request.user, listing.token)
         ctx['gallery_images'] = deduplicate_divar_image_urls(
             [normalize_external_image_url(img) for img in (listing.images or []) if img],
+        )
+        gallery = ctx['gallery_images']
+        ctx['listing_map_marker'] = build_listing_map_marker(
+            listing,
+            tx,
+            ctx['feat'],
+            data=data,
+            location_accuracy=ctx['location_accuracy'],
+            thumb=gallery[0] if gallery else '',
+            platform_url=reverse(
+                'workspace:listing_detail',
+                kwargs={'dataset_id': dataset.id, 'listing_id': listing.id},
+            ),
+            benchmark=ctx['benchmark'],
         )
         share = get_or_create_listing_share(self.request.user, listing)
         ctx['public_share'] = share

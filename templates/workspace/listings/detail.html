@@ -5,6 +5,9 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/listing-public-share.css' %}?v=2">
+{% if listing.latitude and listing.longitude %}
+<link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=1">
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -330,22 +333,16 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% if listing.latitude and listing.longitude %}
+{{ listing_map_marker|json_script:"listing-map-marker" }}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'workspace/js/listing-map.js' %}?v=2"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    initListingDetailMap({
-        lat: {{ listing.latitude }},
-        lng: {{ listing.longitude }},
-        title: "{{ listing.title|escapejs }}",
-        priceLabel: "{% if tx.show_price and listing.price %}{{ listing.price|ws_money }}{% elif tx.show_rent and listing.rent %}اجاره {{ listing.rent|ws_money }}{% endif %}",
-        neighborhood: "{{ listing.neighborhood|default:''|escapejs }}",
-        city: "{{ listing.city|default:''|escapejs }}",
-        accuracyKind: "{{ location_accuracy.kind|default:''|escapejs }}",
-        accuracyLabel: "{{ location_accuracy.label|default:''|escapejs }}",
-        radiusM: {{ location_accuracy.radius_m|default:0 }},
-        zoom: 17,
-    });
+    var markerEl = document.getElementById('listing-map-marker');
+    if (!markerEl || typeof initListingDetailMap !== 'function') return;
+    var marker = JSON.parse(markerEl.textContent);
+    initListingDetailMap({ marker: marker, uiPrefix: 'wsLd', zoom: 17 });
 });
 </script>
 {% endif %}

@@ -16,8 +16,10 @@ from workspace.services.display import (
     format_sections,
     format_supplementary_fields,
     format_supplementary_groups,
+    location_accuracy_for_map,
     transaction_profile,
 )
+from workspace.services.listing_map import build_listing_map_marker
 from workspace.services.features import extract_listing_features
 from workspace.services.listing_features import (
     build_listing_feature_profile,
@@ -229,6 +231,8 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
         primary_price = f'ودیعه {format_toman(listing.deposit)}'
 
     feature_profile = build_listing_feature_profile(listing, feat)
+    gallery_images = gallery_images_for_listing(listing)
+    location_accuracy = location_accuracy_for_map(data)
     return {
         'share': share,
         'listing': listing,
@@ -244,9 +248,20 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
             feature_profile,
             feature_highlights_for_listing(listing, limit=8),
         ),
-        'gallery_images': gallery_images_for_listing(listing),
+        'gallery_images': gallery_images,
         'description_text': description_text,
         'primary_price_label': primary_price,
+        'location_accuracy': location_accuracy,
+        'listing_map_marker': build_listing_map_marker(
+            listing,
+            tx,
+            feat,
+            data=data,
+            location_accuracy=location_accuracy,
+            thumb=gallery_images[0] if gallery_images else '',
+            show_divar_link=share.show_divar_link,
+            public=True,
+        ),
         'consultant': {
             'name': consultant_name,
             'phone': consultant_phone,

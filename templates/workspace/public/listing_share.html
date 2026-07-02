@@ -18,6 +18,10 @@
 {% if gallery_images %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 {% endif %}
+{% if listing.latitude and listing.longitude %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=1">
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -306,24 +310,7 @@
 
                 {% if listing.latitude and listing.longitude %}
                 <div class="ps-card ps-map-card">
-                    <header class="ps-card-head ps-card-head--sm">
-                        <span class="ps-card-icon"><i class="fas fa-map"></i></span>
-                        <h2>موقعیت تقریبی</h2>
-                    </header>
-                    <div id="pubMap" class="ps-map"></div>
-                    {% if listing.neighborhood %}
-                    <p class="ps-map-cap">{{ listing.neighborhood }}{% if listing.city %} · {{ listing.city }}{% endif %}</p>
-                    {% endif %}
-                    {% if map_navigation %}
-                    <div class="ps-map-actions">
-                        <a href="{{ map_navigation.google_url }}" class="ps-btn ps-btn--nav ps-btn--block" target="_blank" rel="noopener noreferrer">
-                            <i class="fas fa-location-arrow" aria-hidden="true"></i> مسیریابی
-                        </a>
-                        <a href="{{ map_navigation.neshan_url }}" class="ps-btn ps-btn--nav-alt ps-btn--block" target="_blank" rel="noopener noreferrer">
-                            <i class="fas fa-map-location-dot" aria-hidden="true"></i> نشان
-                        </a>
-                    </div>
-                    {% endif %}
+                    {% include 'workspace/includes/listing_location_map.html' with map_prefix='pubLd' map_id='pubLocationMap' map_stage_id='pubLocationMapStage' map_wrap_id='pubLocationMapPanel' map_navigation=map_navigation %}
                 </div>
                 {% endif %}
             </aside>
@@ -429,21 +416,21 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% if listing.latitude and listing.longitude %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{{ listing_map_marker|json_script:"listing-map-marker" }}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'workspace/js/listing-map.js' %}?v=2"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    if (!window.L) return;
-    var map = L.map('pubMap', { scrollWheelZoom: false, zoomControl: false })
-        .setView([{{ listing.latitude }}, {{ listing.longitude }}], 15);
-    L.control.zoom({ position: 'bottomleft' }).addTo(map);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
-        maxZoom: 19
-    }).addTo(map);
-    L.circleMarker([{{ listing.latitude }}, {{ listing.longitude }}], {
-        radius: 11, color: '#7c3aed', fillColor: '#8b5cf6', fillOpacity: 0.92, weight: 2
-    }).addTo(map);
+    var markerEl = document.getElementById('listing-map-marker');
+    if (!markerEl || typeof initListingDetailMap !== 'function') return;
+    var marker = JSON.parse(markerEl.textContent);
+    initListingDetailMap({
+        marker: marker,
+        uiPrefix: 'pubLd',
+        mapId: 'pubLocationMap',
+        stageId: 'pubLocationMapStage',
+        zoom: 17,
+    });
 });
 </script>
 {% endif %}

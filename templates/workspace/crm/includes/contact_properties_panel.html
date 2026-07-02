@@ -1,0 +1,187 @@
+{% load humanize workspace_tags crm_tags %}
+
+<section class="crm-portfolio" id="crmContactPortfolio" data-customer-id="{{ customer.pk }}"{% if customer.phone %} data-customer-phone="98{{ customer.phone|slice:'1:' }}"{% endif %}>
+    {% if suggested %}
+    <div class="crm-portfolio-toast" role="status">
+        <span class="crm-portfolio-toast-icon"><i class="fas fa-circle-check" aria-hidden="true"></i></span>
+        <div>
+            <strong>پیشنهادها ثبت شد</strong>
+            <p>املاک انتخاب‌شده به پرونده مخاطب پیوند خوردند و در لیست زیر قابل پیگیری‌اند.</p>
+        </div>
+        <button type="button" class="crm-portfolio-toast-close" data-portfolio-toast-close aria-label="بستن"><i class="fas fa-times"></i></button>
+    </div>
+    {% endif %}
+
+    <header class="crm-portfolio-hero">
+        <div class="crm-portfolio-hero-glow" aria-hidden="true"></div>
+        <div class="crm-portfolio-hero-inner">
+            <div class="crm-portfolio-hero-text">
+                <span class="crm-portfolio-kicker"><i class="fas fa-layer-group" aria-hidden="true"></i> پرونده املاک مخاطب</span>
+                <h2>املاک مرتبط</h2>
+                <p>فایل‌های شخصی، آگهی‌های دیوار و پیشنهادهای ثبت‌شده — همه در یک نگاه</p>
+            </div>
+            <div class="crm-portfolio-hero-stats">
+                <div class="crm-portfolio-stat">
+                    <em>کل</em>
+                    <strong>{% with pl=property_links|length ll=linked_listings|length %}{{ pl|add:ll }}{% endwith %}</strong>
+                </div>
+                <div class="crm-portfolio-stat crm-portfolio-stat--accent">
+                    <em>پیشنهادی</em>
+                    <strong>{% crm_portfolio_suggested_count property_links linked_listings %}</strong>
+                </div>
+                <div class="crm-portfolio-stat">
+                    <em>فایل شخصی</em>
+                    <strong>{{ property_links|length }}</strong>
+                </div>
+                <div class="crm-portfolio-stat">
+                    <em>دیوار</em>
+                    <strong>{{ linked_listings|length }}</strong>
+                </div>
+            </div>
+            <button type="button" class="crm-portfolio-cta" data-drawer-open="drawer-link-property">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>پیوند ملک جدید</span>
+            </button>
+        </div>
+    </header>
+
+    {% if property_links or linked_listings %}
+    <nav class="crm-portfolio-filters" aria-label="فیلتر نقش ملک" data-portfolio-filters>
+        <button type="button" class="crm-portfolio-filter is-active" data-filter="all">همه</button>
+        <button type="button" class="crm-portfolio-filter" data-filter="پیشنهادی">پیشنهادی</button>
+        <button type="button" class="crm-portfolio-filter" data-filter="موجر">موجر</button>
+        <button type="button" class="crm-portfolio-filter" data-filter="مالک">مالک</button>
+        <button type="button" class="crm-portfolio-filter" data-filter="خریدار">خریدار</button>
+        <button type="button" class="crm-portfolio-filter" data-filter="مستاجر">مستاجر</button>
+    </nav>
+
+    <div class="crm-portfolio-grid" data-portfolio-grid>
+        {% for link in property_links %}
+        {% with p=link.property %}
+        <article class="crm-portfolio-card{% if link.role == 'پیشنهادی' %} crm-portfolio-card--suggested{% endif %}" data-role="{{ link.role }}" data-source="crm" data-portfolio-card>
+            <label class="crm-portfolio-check" title="انتخاب برای اشتراک">
+                <input type="checkbox" class="crm-portfolio-select"
+                       data-source="crm"
+                       data-property-id="{{ p.pk }}"
+                       data-title="{{ p.title|escape }}"
+                       data-price-label="{% crm_property_price_label p %}"
+                       data-area="{{ p.area|default:'' }}"
+                       data-neighborhood="{{ p.neighborhood|default:'' }}">
+            </label>
+            <div class="crm-portfolio-card-visual" style="{% crm_role_style link.role %}">
+                <span class="crm-portfolio-card-source"><i class="fas fa-folder-open" aria-hidden="true"></i> فایل شخصی</span>
+                <span class="crm-portfolio-card-role">{{ link.role }}</span>
+                <span class="crm-portfolio-card-type"><i class="fas fa-building" aria-hidden="true"></i> {{ p.property_type|default:'ملک' }}</span>
+            </div>
+            <div class="crm-portfolio-card-body">
+                <h3 class="crm-portfolio-card-title">
+                    <a href="{% url 'workspace:crm_property_detail' p.pk %}">{{ p.title }}</a>
+                </h3>
+                {% if p.neighborhood or p.city %}
+                <p class="crm-portfolio-card-loc">
+                    <i class="fas fa-location-dot" aria-hidden="true"></i>
+                    {% if p.neighborhood %}{{ p.neighborhood }}{% endif %}{% if p.city %}{% if p.neighborhood %} · {% endif %}{{ p.city }}{% endif %}
+                </p>
+                {% endif %}
+                <div class="crm-portfolio-card-price">{% crm_property_price_label p %}</div>
+                <div class="crm-portfolio-card-specs">
+                    <span class="crm-portfolio-chip">{{ p.deal_mode }}</span>
+                    {% if p.area %}<span class="crm-portfolio-chip">{{ p.area|floatformat:0 }} متر</span>{% endif %}
+                    {% if p.rooms %}<span class="crm-portfolio-chip">{{ p.rooms }} خواب</span>{% endif %}
+                    <span class="crm-portfolio-chip crm-portfolio-chip--muted">{{ p.transaction_status }}</span>
+                </div>
+            </div>
+            <footer class="crm-portfolio-card-foot">
+                <a href="{% url 'workspace:crm_property_detail' p.pk %}" class="crm-portfolio-act" title="مشاهده فایل"><i class="fas fa-arrow-up-right-from-square"></i></a>
+                <form method="post" class="crm-inline-form crm-portfolio-unlink">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="unlink_property">
+                    <input type="hidden" name="link_id" value="{{ link.id }}">
+                    <button type="submit" class="crm-portfolio-act crm-portfolio-act--danger" title="حذف پیوند"><i class="fas fa-link-slash"></i></button>
+                </form>
+            </footer>
+        </article>
+        {% endwith %}
+        {% endfor %}
+
+        {% for l in linked_listings %}
+        <article class="crm-portfolio-card crm-portfolio-card--divar{% if l.role == 'پیشنهادی' %} crm-portfolio-card--suggested{% endif %}" data-role="{{ l.role }}" data-source="divar" data-portfolio-card>
+            <label class="crm-portfolio-check" title="انتخاب برای اشتراک">
+                <input type="checkbox" class="crm-portfolio-select"
+                       data-source="divar"
+                       data-listing-id="{{ l.id }}"
+                       data-token="{{ l.token }}"
+                       data-title="{{ l.title|escape }}"
+                       data-price-label="{{ l.price|escape }}"
+                       data-area="{{ l.area|default:'' }}">
+            </label>
+            <div class="crm-portfolio-card-visual crm-portfolio-card-visual--divar" style="{% crm_role_style l.role %}">
+                <span class="crm-portfolio-card-source"><i class="fas fa-folder-tree" aria-hidden="true"></i> فایلینگ دیوار</span>
+                <span class="crm-portfolio-card-role">{{ l.role }}</span>
+                {% if l.area %}<span class="crm-portfolio-card-type">{{ l.area }} متر</span>{% endif %}
+            </div>
+            <div class="crm-portfolio-card-body">
+                <h3 class="crm-portfolio-card-title">
+                    {% if l.link %}<a href="{{ l.link }}" target="_blank" rel="noopener">{{ l.title|truncatechars:52 }}</a>{% else %}<span>{{ l.title|truncatechars:52 }}</span>{% endif %}
+                </h3>
+                <div class="crm-portfolio-card-price">{% if l.price %}{{ l.price }}{% else %}<span class="crm-portfolio-muted">قیمت نامشخص</span>{% endif %}</div>
+                <div class="crm-portfolio-card-specs">
+                    <span class="crm-portfolio-chip">{{ l.deal_type }}</span>
+                    {% if l.token %}<span class="crm-portfolio-chip crm-portfolio-chip--code">{{ l.token|truncatechars:12 }}</span>{% endif %}
+                </div>
+                {% with hl=linked_listing_highlights|dict_get:l.token %}
+                {% if hl %}
+                <div class="crm-portfolio-feats">
+                    {% for h in hl %}<span class="crm-portfolio-feat">{{ h|truncatechars:20 }}</span>{% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+            <footer class="crm-portfolio-card-foot">
+                {% if l.link %}
+                <a href="{{ l.link }}" target="_blank" rel="noopener" class="crm-portfolio-act" title="دیوار (داخلی)"><i class="fas fa-arrow-up-right-from-square"></i></a>
+                {% endif %}
+                <form method="post" class="crm-inline-form crm-portfolio-unlink">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="unlink_listing">
+                    <input type="hidden" name="listing_id" value="{{ l.id }}">
+                    <button type="submit" class="crm-portfolio-act crm-portfolio-act--danger" title="حذف پیوند"><i class="fas fa-link-slash"></i></button>
+                </form>
+            </footer>
+        </article>
+        {% endfor %}
+    </div>
+    <p class="crm-portfolio-empty-filter" data-portfolio-empty hidden>ملکی با این نقش یافت نشد.</p>
+
+    <div class="crm-portfolio-share-dock" id="crmPortfolioShareDock">
+        <div class="crm-portfolio-share-inner">
+            <div class="crm-portfolio-share-meta">
+                <span class="crm-portfolio-share-icon" aria-hidden="true"><i class="fas fa-paper-plane"></i></span>
+                <div>
+                    <span><strong id="crmPortfolioShareCount">0</strong> ملک برای اشتراک</span>
+                    <small>فقط لینک عمومی فایلینگ — بدون لینک دیوار</small>
+                </div>
+            </div>
+            <div class="crm-portfolio-share-actions">
+                <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" id="crmPortfolioSelectAll">انتخاب همه</button>
+                <button type="button" class="crm-btn crm-btn-accent crm-btn-sm" id="crmPortfolioCopy" disabled><i class="fas fa-copy"></i> کپی متن</button>
+                {% if customer.phone %}
+                <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" id="crmPortfolioWhatsApp" disabled><i class="fab fa-whatsapp"></i> واتساپ</button>
+                {% endif %}
+                <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" id="crmPortfolioShareLog" disabled><i class="fas fa-check"></i> ثبت و اشتراک</button>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="crm-portfolio-empty">
+        <div class="crm-portfolio-empty-art" aria-hidden="true"><i class="fas fa-house-chimney"></i></div>
+        <strong>هنوز ملکی پیوند نشده</strong>
+        <p>پس از تطبیق هوشمند یا پیوند دستی، پرونده املاک مخاطب اینجا شکل می‌گیرد.</p>
+        <div class="crm-portfolio-empty-actions">
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-link-property"><i class="fas fa-link"></i> پیوند ملک</button>
+            {% if match_data.eligible %}
+            <button type="button" class="crm-dash-act" data-tab-jump="matches"><i class="fas fa-wand-magic-sparkles"></i> تطبیق هوشمند</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</section>

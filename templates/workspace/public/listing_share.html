@@ -314,6 +314,16 @@
                     {% if listing.neighborhood %}
                     <p class="ps-map-cap">{{ listing.neighborhood }}{% if listing.city %} · {{ listing.city }}{% endif %}</p>
                     {% endif %}
+                    {% if map_navigation %}
+                    <div class="ps-map-actions">
+                        <a href="{{ map_navigation.google_url }}" class="ps-btn ps-btn--nav ps-btn--block" target="_blank" rel="noopener noreferrer">
+                            <i class="fas fa-location-arrow" aria-hidden="true"></i> مسیریابی
+                        </a>
+                        <a href="{{ map_navigation.neshan_url }}" class="ps-btn ps-btn--nav-alt ps-btn--block" target="_blank" rel="noopener noreferrer">
+                            <i class="fas fa-map-location-dot" aria-hidden="true"></i> نشان
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
                 {% endif %}
             </aside>

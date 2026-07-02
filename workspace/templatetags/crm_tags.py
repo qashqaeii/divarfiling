@@ -145,12 +145,38 @@ def crm_match_tab_count(match_data):
     """تعداد کل پیشنهادهای تطبیق — برای badge تب."""
     if not match_data or not match_data.get('eligible'):
         return 0
-    if match_data.get('total_count') is not None:
-        return int(match_data.get('total_count') or 0)
+    if 'total_count' in match_data:
+        return int(match_data['total_count'])
     groups = match_data.get('match_groups') or []
     if groups:
-        return sum(int(g.get('total_count') or 0) for g in groups)
+        return sum(
+            len(g.get('crm_matches') or []) + len(g.get('divar_matches') or [])
+            for g in groups
+        )
     return len(match_data.get('crm_matches') or []) + len(match_data.get('divar_matches') or [])
+
+
+@register.simple_tag
+def crm_property_price_label(prop):
+    """برچسب قیمت ملک CRM برای کارت‌های پورتفولیو."""
+    from workspace.services.formatting import format_toman
+    if not prop:
+        return ''
+    if prop.deal_mode == 'فروش' and prop.sale_price:
+        return format_toman(prop.sale_price)
+    parts = []
+    if prop.deposit:
+        parts.append(f'رهن {format_toman(prop.deposit)}')
+    if prop.monthly_rent:
+        parts.append(f'اجاره {format_toman(prop.monthly_rent)}')
+    return ' · '.join(parts) if parts else ''
+
+
+@register.simple_tag
+def crm_portfolio_suggested_count(property_links, linked_listings):
+    n = sum(1 for l in property_links if l.role == 'پیشنهادی')
+    n += sum(1 for l in linked_listings if l.role == 'پیشنهادی')
+    return n
 
 
 @register.inclusion_tag('workspace/crm/includes/crm_field.html')

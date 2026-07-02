@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from workspace.constants import LEAD_TYPES
 from workspace.models import Customer, PropertyMatchAlert
-from workspace.services.crm_matching import MATCH_TYPES, get_customer_matches
+from workspace.services.crm_matching import MATCH_TYPES, compute_match_total_count, get_customer_matches
 
 logger = logging.getLogger(__name__)
 
@@ -288,6 +288,14 @@ def contact_matches_payload(user, contact_id: int) -> Optional[Dict[str, Any]]:
     data = get_customer_matches(customer, user, divar_enabled=divar_enabled)
     crm_matches = data.get('crm_matches', [])
     divar_matches = data.get('divar_matches', [])
+    if 'total_count' in data:
+        total_count = int(data['total_count'])
+    else:
+        total_count = compute_match_total_count({
+            **data,
+            'crm_matches': crm_matches,
+            'divar_matches': divar_matches,
+        })
     return {
         'eligible': bool(data.get('eligible')),
         'is_builder': bool(data.get('is_builder')),
@@ -296,7 +304,7 @@ def contact_matches_payload(user, contact_id: int) -> Optional[Dict[str, Any]]:
         'match_groups': data.get('match_groups', []),
         'crm_matches': crm_matches,
         'divar_matches': divar_matches,
-        'total_count': int(data.get('total_count') or len(crm_matches) + len(divar_matches)),
+        'total_count': total_count,
         'customer': {
             'id': customer.pk,
             'full_name': customer.name,
@@ -311,6 +319,7 @@ def suggest_contact_matches(
     selected: List[Dict[str, Any]],
     *,
     note: str = '',
+    request=None,
 ) -> Tuple[Optional[str], int]:
     from workspace.services.crm import apply_property_suggestions
     from workspace.services.crm_scope import customer_for_user
@@ -325,7 +334,7 @@ def suggest_contact_matches(
         selected = [m for m in selected if m.get('source') != 'divar']
     if not selected:
         raise ValueError('تطبیق فایلینگ دیوار نیاز به لایسنس فعال دارد.')
-    text = apply_property_suggestions(customer, user, selected, note=note)
+    text = apply_property_suggestions(customer, user, selected, note=note, request=request)
     now = timezone.now()
     for m in selected:
         key = _match_key(m)

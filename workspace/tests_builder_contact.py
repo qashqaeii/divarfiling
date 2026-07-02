@@ -5,6 +5,7 @@ from django.test import TestCase
 from workspace.forms import CustomerForm
 from workspace.models import CRMProperty, Customer
 from workspace.services.crm_matching import (
+    compute_match_total_count,
     get_builder_customer_matches,
     get_customer_matches,
     is_builder_customer,
@@ -108,3 +109,18 @@ class BuilderMatchingTests(TestCase):
         data = get_customer_matches(self.builder, self.user, divar_enabled=False)
         self.assertTrue(data['is_builder'])
         self.assertTrue(data['match_groups'])
+        visible = sum(
+            len(g['crm_matches']) + len(g['divar_matches'])
+            for g in data['match_groups']
+        )
+        self.assertEqual(data['total_count'], visible)
+
+    def test_compute_match_total_count_ignores_stale_group_totals(self):
+        data = {
+            'match_groups': [{
+                'crm_matches': [{'title': 'a'}, {'title': 'b'}],
+                'divar_matches': [{'title': 'c'}],
+                'total_count': 99,
+            }],
+        }
+        self.assertEqual(compute_match_total_count(data), 3)

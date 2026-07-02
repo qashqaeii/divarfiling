@@ -75,6 +75,29 @@ def public_share_to_dict(share, request, *, url_name: str) -> Dict[str, Any]:
     }
 
 
+def build_map_navigation(latitude, longitude) -> Dict[str, Any] | None:
+    """لینک مسیریابی برای صفحه عمومی — وقتی مختصات معتبر است."""
+    if latitude is None or longitude is None:
+        return None
+    try:
+        lat = float(latitude)
+        lng = float(longitude)
+    except (TypeError, ValueError):
+        return None
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return None
+    if lat == 0 and lng == 0:
+        return None
+    dest = f'{lat},{lng}'
+    return {
+        'latitude': lat,
+        'longitude': lng,
+        'google_url': f'https://www.google.com/maps/dir/?api=1&destination={dest}',
+        'neshan_url': f'https://neshan.org/maps/routing/car/destination/{lat},{lng}',
+        'waze_url': f'https://waze.com/ul?ll={lat},{lng}&navigate=yes',
+    }
+
+
 def filter_public_feature_highlights(feature_profile: dict, highlights: list) -> list:
     """برچسب‌های تکراری با feature_profile.core را از نوار highlights حذف می‌کند."""
     skip: set[str] = set()

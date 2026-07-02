@@ -583,9 +583,14 @@ def _match_builder_group(
 
 
 def compute_match_total_count(data: Dict[str, Any]) -> int:
+    """تعداد واقعی آیتم‌های برگشتی — نه مجموع قبل از slice."""
     groups = data.get('match_groups') or []
     if groups:
-        return sum(int(g.get('total_count') or 0) for g in groups)
+        total = 0
+        for g in groups:
+            total += len(g.get('crm_matches') or [])
+            total += len(g.get('divar_matches') or [])
+        return total
     return len(data.get('crm_matches') or []) + len(data.get('divar_matches') or [])
 
 
@@ -629,11 +634,7 @@ def get_builder_customer_matches(customer: Customer, user, *, divar_enabled: boo
         'crm_matches': crm_matches,
         'divar_matches': divar_matches,
         'divar_locked': not divar_enabled,
-        'total_count': compute_match_total_count({
-            'match_groups': groups,
-            'crm_matches': crm_matches,
-            'divar_matches': divar_matches,
-        }),
+        'total_count': compute_match_total_count({'match_groups': groups}),
         'message': '',
     }
 

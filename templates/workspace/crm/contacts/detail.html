@@ -176,73 +176,9 @@
                 </div>
             </div>
 
-            <div data-panel="properties" class="crm-contact-panel" hidden>
-                <header class="crm-contact-panel-head">
-                    <div class="crm-contact-panel-head-text">
-                        <h2>املاک مرتبط</h2>
-                        <p>فایل‌های CRM و آگهی‌های پیوندشده</p>
-                    </div>
-                    <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-link-property">
-                        <i class="fas fa-link" aria-hidden="true"></i><span>پیوند ملک</span>
-                    </button>
-                </header>
-                <div class="crm-contact-panel-body">
-                    {% if property_links or linked_listings %}
-                    <div class="crm-property-grid crm-property-grid-pro">
-                    {% for link in property_links %}
-                    <div class="crm-property-card">
-                        <div class="crm-property-card-head">
-                            <a href="{% url 'workspace:crm_property_detail' link.property_id %}">{{ link.property.title }}</a>
-                            <span class="crm-pill" style="{% crm_role_style link.role %}">{{ link.role }}</span>
-                        </div>
-                        <div class="crm-property-card-meta">
-                            <span>{{ link.property.deal_mode }}</span>
-                            {% if link.property.area %}<span>{{ link.property.area }} متر</span>{% endif %}
-                            {% if link.property.sale_price %}<span>{{ link.property.sale_price|ws_money }}</span>{% endif %}
-                        </div>
-                        <form method="post" class="crm-inline-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="unlink_property">
-                            <input type="hidden" name="link_id" value="{{ link.id }}">
-                            <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">حذف پیوند</button>
-                        </form>
-                    </div>
-                    {% endfor %}
-                    {% for l in linked_listings %}
-                    <div class="crm-property-card crm-property-card-muted">
-                        <div class="crm-property-card-head">
-                            {% if l.link %}<a href="{{ l.link }}" target="_blank">{{ l.title|truncatechars:40 }}</a>{% else %}<span>{{ l.title|truncatechars:40 }}</span>{% endif %}
-                            <span class="crm-pill">{{ l.role }}</span>
-                        </div>
-                        <div class="crm-property-card-meta">
-                            <span>{{ l.deal_type }}</span>
-                            {% if l.price %}<span>{{ l.price }}</span>{% endif %}
-                            {% if l.token %}<code class="crm-token">{{ l.token }}</code>{% endif %}
-                        </div>
-                        {% with hl=linked_listing_highlights|dict_get:l.token %}
-                        {% if hl %}
-                        <div class="mk-feat-chips crm-feat-chips">
-                            {% for h in hl %}<span class="mk-feat-chip" title="{{ h }}">{{ h|truncatechars:18 }}</span>{% endfor %}
-                        </div>
-                        {% endif %}
-                        {% endwith %}
-                        <form method="post" class="crm-inline-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="unlink_listing">
-                            <input type="hidden" name="listing_id" value="{{ l.id }}">
-                            <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">حذف پیوند</button>
-                        </form>
-                    </div>
-                    {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="crm-contact-empty">
-                        <span class="crm-contact-empty-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
-                        <strong>ملکی پیوند نشده</strong>
-                        <p>مالک چند ملک، خریدار علاقه‌مند به چند فایل و... از اینجا مدیریت می‌شود.</p>
-                        <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-link-property">پیوند ملک</button>
-                    </div>
-                    {% endif %}
+            <div data-panel="properties" class="crm-contact-panel crm-contact-panel--flush" {% if active_tab != 'properties' %}hidden{% endif %}>
+                <div class="crm-contact-panel-body crm-contact-panel-body--flush">
+                    {% include 'workspace/crm/includes/contact_properties_panel.html' %}
                 </div>
             </div>
 

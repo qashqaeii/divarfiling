@@ -1149,7 +1149,15 @@ function initCRMMatches() {
     const jsonInput = document.getElementById('crmMatchesJson');
     const countEl = document.getElementById('crmSuggestCount');
     const submitBtn = document.getElementById('crmSuggestSubmit');
+    const dock = document.getElementById('crmSuggestDock');
     const selects = () => [...document.querySelectorAll('.crm-match-select:checked')];
+
+    function syncCardState() {
+        document.querySelectorAll('[data-match-card]').forEach(card => {
+            const cb = card.querySelector('.crm-match-select');
+            card.classList.toggle('is-selected', !!(cb && cb.checked));
+        });
+    }
 
     function payloadFromCheckbox(cb) {
         const d = cb.dataset;
@@ -1174,6 +1182,8 @@ function initCRMMatches() {
         if (jsonInput) jsonInput.value = JSON.stringify(items);
         if (countEl) countEl.textContent = items.length;
         if (submitBtn) submitBtn.disabled = items.length === 0;
+        if (dock) dock.classList.toggle('is-active', items.length > 0);
+        syncCardState();
     }
 
     document.querySelectorAll('.crm-match-select').forEach(cb => {
@@ -1191,6 +1201,153 @@ function initCRMMatches() {
     }
 
     updateSelection();
+}
+
+function initCRMContactPortfolio() {
+    const root = document.getElementById('crmContactPortfolio');
+    if (!root) return;
+
+    const customerId = root.dataset.customerId;
+    const filters = root.querySelector('[data-portfolio-filters]');
+    const emptyMsg = root.querySelector('[data-portfolio-empty]');
+    const dock = document.getElementById('crmPortfolioShareDock');
+    const countEl = document.getElementById('crmPortfolioShareCount');
+    const copyBtn = document.getElementById('crmPortfolioCopy');
+    const waBtn = document.getElementById('crmPortfolioWhatsApp');
+    const logBtn = document.getElementById('crmPortfolioShareLog');
+    const selectAllBtn = document.getElementById('crmPortfolioSelectAll');
+    const cards = () => [...root.querySelectorAll('[data-portfolio-card]')];
+    const selects = () => [...root.querySelectorAll('.crm-portfolio-select:checked')];
+
+    function applyFilter(role) {
+        let visible = 0;
+        cards().forEach(card => {
+            const show = role === 'all' || card.dataset.role === role;
+            card.hidden = !show;
+            if (show) visible += 1;
+        });
+        if (emptyMsg) emptyMsg.hidden = visible > 0;
+    }
+
+    function payloadFromCheckbox(cb) {
+        const d = cb.dataset;
+        const item = {
+            source: d.source,
+            title: d.title || '',
+            price_label: d.priceLabel || '',
+            neighborhood: d.neighborhood || '',
+        };
+        if (d.area) item.area = d.area;
+        if (d.source === 'crm' && d.propertyId) item.property_id = parseInt(d.propertyId, 10);
+        if (d.source === 'divar') {
+            if (d.listingId) item.listing_id = parseInt(d.listingId, 10);
+            if (d.token) item.token = d.token;
+        }
+        return item;
+    }
+
+    function syncSelectionUi() {
+        const n = selects().length;
+        if (countEl) countEl.textContent = n;
+        if (dock) dock.classList.toggle('is-active', n > 0);
+        [copyBtn, waBtn, logBtn].forEach(btn => {
+            if (btn) btn.disabled = n === 0;
+        });
+        cards().forEach(card => {
+            const cb = card.querySelector('.crm-portfolio-select');
+            card.classList.toggle('is-selected', !!(cb && cb.checked));
+        });
+    }
+
+    async function fetchShareText(logActivity) {
+        const items = selects().map(payloadFromCheckbox);
+        if (!items.length || !customerId) return null;
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        const res = await fetch(`/workspace/crm/contacts/${customerId}/share-properties/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf,
+            },
+            body: JSON.stringify({ items, log: !!logActivity }),
+        });
+        const data = await res.json();
+        if (!data.ok) {
+            window.alert(data.error || 'خطا در ساخت متن اشتراک');
+            return null;
+        }
+        return data;
+    }
+
+    filters?.querySelectorAll('.crm-portfolio-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+            filters.querySelectorAll('.crm-portfolio-filter').forEach(b => b.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            applyFilter(btn.dataset.filter || 'all');
+        });
+    });
+
+    root.querySelectorAll('.crm-portfolio-select').forEach(cb => {
+        cb.addEventListener('change', syncSelectionUi);
+    });
+
+    selectAllBtn?.addEventListener('click', () => {
+        const visibleBoxes = cards()
+            .filter(card => !card.hidden)
+            .map(card => card.querySelector('.crm-portfolio-select'))
+            .filter(Boolean);
+        const allChecked = visibleBoxes.length > 0 && visibleBoxes.every(b => b.checked);
+        visibleBoxes.forEach(b => { b.checked = !allChecked; });
+        syncSelectionUi();
+    });
+
+    copyBtn?.addEventListener('click', async () => {
+        const data = await fetchShareText(false);
+        if (!data?.text) return;
+        await navigator.clipboard?.writeText(data.text);
+    });
+
+    waBtn?.addEventListener('click', async () => {
+        const data = await fetchShareText(false);
+        if (!data?.whatsapp_url) return;
+        window.open(data.whatsapp_url, '_blank');
+    });
+
+    logBtn?.addEventListener('click', async () => {
+        const data = await fetchShareText(true);
+        if (!data?.text) return;
+        if (data.whatsapp_url && window.confirm('پیشنهاد ثبت شد. واتساپ باز شود؟')) {
+            window.open(data.whatsapp_url, '_blank');
+        }
+        window.location.reload();
+    });
+
+    root.querySelector('[data-portfolio-toast-close]')?.addEventListener('click', (e) => {
+        e.target.closest('.crm-portfolio-toast')?.remove();
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('suggested') === '1') {
+        const suggestedBtn = filters?.querySelector('[data-filter="پیشنهادی"]');
+        if (suggestedBtn) {
+            filters.querySelectorAll('.crm-portfolio-filter').forEach(b => b.classList.remove('is-active'));
+            suggestedBtn.classList.add('is-active');
+            applyFilter('پیشنهادی');
+        }
+    }
+
+    syncSelectionUi();
+}
+
+function initCRMTabJump() {
+    document.querySelectorAll('[data-tab-jump]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tabJump;
+            const shell = btn.closest('.crm-detail-main') || document.querySelector('.crm-detail-main');
+            const tabBtn = shell?.querySelector(`.crm-tab[data-tab="${tab}"]`);
+            tabBtn?.click();
+        });
+    });
 }
 
 function initCRMTabs() {
@@ -2192,6 +2349,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMQuickLead();
     initCRMImportDrawer();
     initCRMMatches();
+    initCRMContactPortfolio();
+    initCRMTabJump();
     initCRMVisitOutcome(document);
     initCRMNotifications();
 

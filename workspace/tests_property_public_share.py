@@ -87,6 +87,22 @@ class PropertyPublicShareTests(TestCase):
         self.assertContains(resp, 'فایل شخصی')
         self.assertContains(resp, '09129876543')
 
+    def test_public_page_shows_navigation_when_coords_exist(self):
+        self.prop.latitude = 35.781
+        self.prop.longitude = 51.412
+        self.prop.save(update_fields=['latitude', 'longitude'])
+        share = CRMPropertyPublicShare.objects.create(
+            share_token='proptokenmap',
+            property=self.prop,
+            created_by=self.user,
+        )
+        url = reverse('listing_public:property_view', kwargs={'share_token': share.share_token})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'مسیریابی')
+        self.assertContains(resp, 'google.com/maps/dir')
+        self.assertContains(resp, 'neshan.org/maps/routing')
+
     def test_inactive_share_returns_410(self):
         share = CRMPropertyPublicShare.objects.create(
             share_token='proptoken789',

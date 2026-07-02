@@ -92,6 +92,7 @@ urlpatterns = [
     path('crm/calendar/', crm_views.CRMCalendarView.as_view(), name='crm_calendar'),
     path('crm/notifications/due/', crm_views.CRMNotificationsView.as_view(), name='crm_notifications'),
     path('crm/contacts/<int:customer_id>/message-preview/', crm_views.CRMMessagePreviewView.as_view(), name='crm_message_preview'),
+    path('crm/contacts/<int:customer_id>/share-properties/', crm_views.CRMPropertySharePreviewView.as_view(), name='crm_share_properties'),
     # سازگاری
     path('crm/list/', crm_views.CustomerListView.as_view(), name='crm_list'),
     path('crm/<int:customer_id>/', crm_views.CustomerDetailView.as_view(), name='crm_detail_legacy'),

@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from workspace.models import CRMProperty, Customer
+from workspace.services.crm_match_notifications import contact_matches_payload
 from workspace.services.crm_matching import get_customer_matches
 
 User = get_user_model()
@@ -84,3 +85,11 @@ class TenantMatchingTests(TestCase):
         titles = [m['title'] for m in data['crm_matches']]
         self.assertIn(self.sale_file.title, titles)
         self.assertNotIn(self.rent_match.title, titles)
+
+    def test_total_count_zero_when_no_matches(self):
+        CRMProperty.objects.filter(user=self.user).delete()
+        data = get_customer_matches(self.tenant, self.user, divar_enabled=False)
+        self.assertEqual(data['total_count'], 0)
+        self.assertEqual(data['total_count'], len(data['crm_matches']) + len(data['divar_matches']))
+        payload = contact_matches_payload(self.user, self.tenant.pk)
+        self.assertEqual(payload['total_count'], 0)

@@ -812,8 +812,8 @@ def update_customer_status(customer: Customer, new_status: str) -> None:
 
 
 def build_suggestions_whatsapp_text(customer, matches: List[Dict[str, Any]]) -> str:
-    """متن واتساپ برای لیست پیشنهاد ملک."""
-    from workspace.services.formatting import format_toman
+    """متن واتساپ برای لیست پیشنهاد ملک — فقط لینک عمومی."""
+    from workspace.services.property_suggestion_share import sharing_link_for_match
 
     lines = [f'سلام {customer.name}،', '', 'چند ملک مناسب برای شما:', '']
     for i, m in enumerate(matches, 1):
@@ -830,8 +830,9 @@ def build_suggestions_whatsapp_text(customer, matches: List[Dict[str, Any]]) -> 
         hood = m.get('neighborhood') or m.get('city')
         if hood:
             lines.append(f'   📍 {hood}')
-        if m.get('link'):
-            lines.append(f'   🔗 {m["link"]}')
+        share_link = sharing_link_for_match(m)
+        if share_link:
+            lines.append(f'   🔗 {share_link}')
         lines.append('')
     lines.append('در صورت تمایل برای بازدید هماهنگ می‌کنیم.')
     lines.append('با احترام')
@@ -844,10 +845,14 @@ def apply_property_suggestions(
     matches: List[Dict[str, Any]],
     *,
     note: str = '',
+    request=None,
 ) -> str:
     """ثبت پیشنهادها در activity و پیوند ملک‌ها."""
     if not matches:
         return ''
+    if request is not None:
+        from workspace.services.property_suggestion_share import enrich_matches_with_public_urls
+        matches = enrich_matches_with_public_urls(user, request, matches)
     titles = []
     for m in matches:
         title = m.get('title') or 'ملک'

@@ -820,6 +820,7 @@ class ContactSuggestView(APIView):
                 contact_id,
                 selected,
                 note=(data.get('note') or ''),
+                request=request,
             )
             if count <= 0:
                 return api_error('مخاطب یافت نشد.', code='NOT_FOUND', status=404)

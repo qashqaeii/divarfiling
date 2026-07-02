@@ -765,10 +765,11 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 text = apply_property_suggestions(
                     customer, request.user, selected,
                     note=request.POST.get('suggest_note', ''),
+                    request=request,
                 )
                 request.session['crm_last_suggestion_text'] = text
                 messages.success(request, f'{len(selected)} ملک پیشنهاد و ثبت شد.')
-                redirect_url += '?tab=matches&suggested=1'
+                redirect_url += '?tab=properties&suggested=1'
 
         return redirect(redirect_url)
 
@@ -1862,6 +1863,59 @@ class CRMMessagePreviewView(LoginRequiredMixin, View):
         if phone_wa:
             wa_url = f'https://wa.me/98{phone_wa}?text={quote(text)}'
         return JsonResponse({'ok': True, 'text': text, 'whatsapp_url': wa_url})
+
+
+class CRMPropertySharePreviewView(LoginRequiredMixin, View):
+    """پیش‌نمایش متن اشتراک املاک انتخاب‌شده — فقط لینک عمومی."""
+
+    def post(self, request, customer_id):
+        from workspace.services.crm import build_suggestions_whatsapp_text, log_activity
+        from workspace.services.property_suggestion_share import (
+            resolve_portfolio_share_items,
+            whatsapp_url_for_customer,
+        )
+
+        customer = customer_for_user(request.user, customer_id)
+        if not customer:
+            return JsonResponse({'ok': False, 'error': 'مخاطب یافت نشد'}, status=404)
+        if not can_edit_customer(request.user, customer):
+            return JsonResponse({'ok': False, 'error': 'دسترسی ویرایش ندارید'}, status=403)
+        try:
+            if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+                body = json.loads(request.body.decode() or '{}')
+            else:
+                body = json.loads(request.POST.get('items_json', '[]'))
+                body = {'items': body, 'log': request.POST.get('log') == '1'}
+        except json.JSONDecodeError:
+            return JsonResponse({'ok': False, 'error': 'داده نامعتبر'}, status=400)
+
+        items = body.get('items') or []
+        if not isinstance(items, list) or not items:
+            return JsonResponse({'ok': False, 'error': 'حداقل یک ملک انتخاب کنید'}, status=400)
+
+        matches = resolve_portfolio_share_items(request.user, customer, items, request)
+        if not matches:
+            return JsonResponse({'ok': False, 'error': 'ملک معتبری یافت نشد'}, status=400)
+
+        text = build_suggestions_whatsapp_text(customer, matches)
+        wa_url = whatsapp_url_for_customer(customer, text)
+
+        if body.get('log'):
+            titles = [m.get('title') or 'ملک' for m in matches]
+            log_activity(
+                customer,
+                'املاک',
+                content=f'اشتراک {len(matches)} ملک: ' + '، '.join(titles[:5]),
+                title='ارسال پیشنهاد ملک',
+                metadata={'suggestion_count': len(matches), 'titles': titles, 'share_only': True},
+            )
+
+        return JsonResponse({
+            'ok': True,
+            'text': text,
+            'whatsapp_url': wa_url,
+            'count': len(matches),
+        })
 
 
 class CRMSavedFilterListView(LoginRequiredMixin, View):

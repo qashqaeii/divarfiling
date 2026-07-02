@@ -21,6 +21,7 @@ from workspace.services.listing_public_share import format_sections_public
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 from workspace.services.public_share_common import (
     build_consultant_block,
+    build_map_navigation,
     filter_public_feature_highlights,
     public_share_to_dict,
     unique_share_token,
@@ -281,6 +282,7 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         'show_divar_link': share.show_divar_link and bool(prop.link),
         'meta_description': ' — '.join(meta_parts)[:300],
         'dossier_badge': 'فایل شخصی',
+        'map_navigation': build_map_navigation(prop.latitude, prop.longitude),
     }
 
 

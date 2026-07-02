@@ -23,7 +23,7 @@ from workspace.services.listing_features import (
     build_listing_feature_profile,
     feature_highlights_for_listing,
 )
-from workspace.services.public_share_common import filter_public_feature_highlights
+from workspace.services.public_share_common import filter_public_feature_highlights, build_map_navigation
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 
 _PUBLIC_HIDDEN_SECTIONS = frozenset({'تماس'})
@@ -260,6 +260,7 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
         'category_breadcrumb': category_parts,
         'show_divar_link': share.show_divar_link,
         'meta_description': _meta_description(listing, tx, category_parts),
+        'map_navigation': build_map_navigation(listing.latitude, listing.longitude),
     }
 
 

@@ -921,41 +921,6 @@ def home_page_content():
                 },
             ],
             'trust_note': 'بدون نیاز به کارت بانکی برای شروع',
-            'float_cards': [
-                {
-                    'id': 'extracted',
-                    'label': 'آگهی‌های استخراج‌شده',
-                    'value': '۱۲,۴۳۵',
-                    'delta': '+۲۴٪',
-                    'delta_tone': 'up',
-                    'visual': 'sparkline',
-                    'pos': 'tl',
-                },
-                {
-                    'id': 'pps',
-                    'label': 'میانگین قیمت هر متر',
-                    'value': '۸۷.۵ میلیون تومان',
-                    'visual': 'bars',
-                    'pos': 'tr',
-                },
-                {
-                    'id': 'coverage',
-                    'label': 'مناطق پوشش‌داده‌شده',
-                    'value': 'استان ۳۱',
-                    'sub': 'شهر ۱,۲۸۷',
-                    'visual': 'map',
-                    'pos': 'bl',
-                },
-                {
-                    'id': 'active',
-                    'label': 'فایل‌های فعال شما',
-                    'value': '۲۴۸',
-                    'delta': '+۱۸٪',
-                    'delta_tone': 'up',
-                    'visual': 'sparkline',
-                    'pos': 'br',
-                },
-            ],
             'deck_features': [
                 {
                     'icon': 'fa-bullseye',

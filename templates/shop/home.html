@@ -7,7 +7,7 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=61">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=63">
 {% endblock %}
 
 {% block content %}
@@ -17,30 +17,6 @@
     <div class="mk-hero-bg" aria-hidden="true"></div>
     <div class="container mk-hero-container">
         <div class="mk-hero-split">
-            <div class="mk-hero-showcase" aria-hidden="true">
-                <div class="mk-hero-floats">
-                    {% for card in home_page.hero.float_cards %}
-                    <article class="mk-hero-float mk-hero-float--{{ card.pos }}" data-card="{{ card.id }}">
-                        <span class="mk-hero-float-label">{{ card.label }}</span>
-                        <strong class="mk-hero-float-value">{{ card.value }}</strong>
-                        {% if card.sub %}<span class="mk-hero-float-sub">{{ card.sub }}</span>{% endif %}
-                        {% if card.delta %}
-                        <span class="mk-hero-float-delta mk-hero-float-delta--{{ card.delta_tone|default:'up' }}">{{ card.delta }}</span>
-                        {% endif %}
-                        {% if card.visual == 'sparkline' %}
-                        <span class="mk-hero-float-viz mk-hero-float-viz--spark" aria-hidden="true"></span>
-                        {% elif card.visual == 'bars' %}
-                        <span class="mk-hero-float-viz mk-hero-float-viz--bars" aria-hidden="true">
-                            <span style="--h:42%"></span><span style="--h:68%"></span><span style="--h:55%"></span><span style="--h:82%"></span>
-                        </span>
-                        {% elif card.visual == 'map' %}
-                        <span class="mk-hero-float-viz mk-hero-float-viz--map" aria-hidden="true"><i class="fas fa-map"></i></span>
-                        {% endif %}
-                    </article>
-                    {% endfor %}
-                </div>
-            </div>
-
             <div class="mk-hero-inner">
                 <div class="mk-hero-stack">
                     <p class="mk-hero-eyebrow mk-hero-eyebrow--pill">

@@ -4950,27 +4950,15 @@ html.mk-public[data-theme="light"] .mk-hero-highlights--band {
 }
 
 .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-title-main {
-    color: #0f172a;
-}
-
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-title-main {
-    color: #f8fafc;
+    color: var(--mk-hero-title-color);
 }
 
 .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-subtitle--pro {
-    color: #5b21b6;
-}
-
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-subtitle--pro {
-    color: #e9d5ff;
+    color: var(--mk-hero-subtitle-color);
 }
 
 .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-lead {
-    color: #1e293b;
-}
-
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-lead {
-    color: #cbd5e1;
+    color: var(--mk-hero-lead-color);
 }
 
 .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-eyebrow {
@@ -5061,44 +5049,43 @@ html.mk-public[data-theme="dark"] .mk-hero--split.mk-hero--pro::after {
     padding: 0;
 }
 
-html.mk-public[data-theme="light"] .mk-hero--split .mk-hero-title {
+html.mk-public[data-theme="light"] .mk-hero--split:not(.mk-hero--deck) .mk-hero-title {
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 20px rgba(255, 255, 255, 0.75);
 }
 
-html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-title,
-html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-title-main {
-    text-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.95),
-        0 2px 24px rgba(255, 255, 255, 0.88),
-        0 0 48px rgba(255, 255, 255, 0.55);
+html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title,
+html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title-main,
+html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title-accent,
+html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-subtitle--pro,
+html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-lead {
+    text-shadow: none;
 }
 
-html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-subtitle--pro,
-html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-lead,
-html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-eyebrow,
-html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-coverage {
-    text-shadow:
-        0 1px 14px rgba(255, 255, 255, 0.92),
-        0 0 32px rgba(255, 255, 255, 0.65);
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title,
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title-main,
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title-accent,
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-subtitle--pro,
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-lead {
+    text-shadow: none;
 }
 
-html.mk-public[data-theme="light"] .mk-hero--split .mk-hero-subtitle,
-html.mk-public[data-theme="light"] .mk-hero--split .mk-hero-lead {
+html.mk-public[data-theme="light"] .mk-hero--split:not(.mk-hero--deck) .mk-hero-subtitle,
+html.mk-public[data-theme="light"] .mk-hero--split:not(.mk-hero--deck) .mk-hero-lead {
     text-shadow: 0 1px 14px rgba(255, 255, 255, 0.8);
 }
 
-html.mk-public[data-theme="dark"] .mk-hero--split .mk-hero-title,
-html.mk-public[data-theme="dark"] .mk-hero--split .mk-hero-subtitle,
-html.mk-public[data-theme="dark"] .mk-hero--split .mk-hero-lead {
+html.mk-public[data-theme="dark"] .mk-hero--split:not(.mk-hero--deck) .mk-hero-title,
+html.mk-public[data-theme="dark"] .mk-hero--split:not(.mk-hero--deck) .mk-hero-subtitle,
+html.mk-public[data-theme="dark"] .mk-hero--split:not(.mk-hero--deck) .mk-hero-lead {
     text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
 }
 
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-title,
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-title-main,
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-subtitle--pro,
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-lead,
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-eyebrow,
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-coverage {
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro:not(.mk-hero--deck) .mk-hero-title,
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro:not(.mk-hero--deck) .mk-hero-title-main,
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro:not(.mk-hero--deck) .mk-hero-subtitle--pro,
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro:not(.mk-hero--deck) .mk-hero-lead,
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro:not(.mk-hero--deck) .mk-hero-eyebrow,
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro:not(.mk-hero--deck) .mk-hero-coverage {
     text-shadow: 0 2px 20px rgba(0, 0, 0, 0.65), 0 0 40px rgba(0, 0, 0, 0.35);
 }
 
@@ -6445,17 +6432,36 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-
     font-size: clamp(1.55rem, 3.4vw, 2.35rem);
     line-height: 1.28;
     margin-bottom: 0.55rem;
+    text-shadow: none;
+}
+
+.mk-home-page .mk-hero--deck .mk-hero-title-main {
+    color: var(--mk-hero-title-color);
+    text-shadow: none;
+}
+
+.mk-home-page .mk-hero--deck .mk-hero-title-accent {
+    text-shadow: none;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+}
+
+html.mk-public[data-theme="light"] .mk-home-page .mk-hero--deck .mk-hero-title-accent {
+    background-image: linear-gradient(135deg, #5b21b6 0%, #7c3aed 48%, #6d28d9 100%);
+}
+
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--deck .mk-hero-title-accent {
+    background-image: linear-gradient(135deg, #f5f3ff 0%, #ddd6fe 35%, #c4b5fd 68%, #a78bfa 100%);
 }
 
 .mk-home-page .mk-hero--deck .mk-hero-subtitle--pro {
     margin-bottom: 0.65rem;
     font-size: clamp(0.92rem, 1.85vw, 1.08rem);
     font-weight: 700;
-    color: #5b21b6;
-}
-
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--deck .mk-hero-subtitle--pro {
-    color: #ddd6fe;
+    color: var(--mk-hero-subtitle-color);
+    text-shadow: none;
 }
 
 .mk-home-page .mk-hero--deck .mk-hero-lead {
@@ -6463,11 +6469,8 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--deck .mk-hero-subtitle
     max-width: 36em;
     font-size: clamp(0.84rem, 1.55vw, 0.94rem);
     line-height: 1.85;
-    color: #475569;
-}
-
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--deck .mk-hero-lead {
-    color: #cbd5e1;
+    color: var(--mk-hero-lead-color);
+    text-shadow: none;
 }
 
 .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-cta {
@@ -6499,14 +6502,8 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--deck .mk-hero-lead {
 
 .mk-hero--deck .mk-hero-cta-bot {
     border-color: rgba(124, 58, 237, 0.35);
-    background: rgba(255, 255, 255, 0.88);
-    color: #5b21b6;
-}
-
-html.mk-public[data-theme="dark"] .mk-hero--deck .mk-hero-cta-bot {
-    background: rgba(15, 23, 42, 0.55);
-    color: #e9d5ff;
-    border-color: rgba(167, 139, 250, 0.28);
+    background: var(--mk-hero-btn-secondary-bg);
+    color: var(--mk-hero-btn-secondary-color);
 }
 
 .mk-hero--deck .mk-hero-trust {
@@ -6582,22 +6579,14 @@ html.mk-public[data-theme="dark"] .mk-hero-deck {
     font-size: 0.74rem;
     font-weight: 800;
     line-height: 1.35;
-    color: #0f172a;
+    color: var(--mk-text);
 }
 
 .mk-hero-deck-text em {
     font-style: normal;
     font-size: 0.64rem;
     line-height: 1.45;
-    color: #64748b;
-}
-
-html.mk-public[data-theme="dark"] .mk-hero-deck-text strong {
-    color: #f8fafc;
-}
-
-html.mk-public[data-theme="dark"] .mk-hero-deck-text em {
-    color: #94a3b8;
+    color: var(--mk-text-muted);
 }
 
 .mk-home-page .mk-hero--deck .mk-hero-bg {

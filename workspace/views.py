@@ -57,7 +57,8 @@ from workspace.services.folder_import import (
 from workspace.services.importer import import_dataset, import_message
 from workspace.services.display import (
     build_listing_display_data, format_field_rows, format_sections,
-    format_supplementary_fields, format_supplementary_groups, transaction_profile,
+    format_supplementary_fields, format_supplementary_groups, location_accuracy_for_map,
+    transaction_profile,
 )
 from workspace.services.features import extract_listing_features
 from workspace.services.listing_features import build_listing_feature_profile
@@ -723,10 +724,13 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['tx'] = tx
         sections = format_sections(data, tx)
         sections.pop('سایر', None)
+        if listing.latitude and listing.longitude:
+            sections.setdefault('مکان', {})
         ctx['sections'] = sections
         ctx['section_rows'] = {
             name: format_field_rows(fields, data) for name, fields in sections.items()
         }
+        ctx['location_accuracy'] = location_accuracy_for_map(data)
         ctx['supplementary_fields'] = format_supplementary_fields(data, tx, sections)
         ctx['supplementary_groups'] = format_supplementary_groups(data, tx, sections)
         ctx['feature_profile'] = build_listing_feature_profile(listing, ctx['feat'])

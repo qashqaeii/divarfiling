@@ -1943,6 +1943,161 @@ function setupMapProUI(map, options = {}) {
     return { setBasemap, getBasemapId: () => currentBasemapId, updateZoomBadge };
 }
 
+function initListingDetailMap(options = {}) {
+    const el = document.getElementById('wsLdLocationMap');
+    if (!el || !window.L) return null;
+
+    const lat = Number(options.lat);
+    const lng = Number(options.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+    const map = L.map(el, {
+        zoomControl: false,
+        scrollWheelZoom: true,
+    });
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
+    L.control.scale({ imperial: false, metric: true, position: 'bottomright' }).addTo(map);
+
+    let currentBasemapId = getDefaultBasemapId();
+    let currentBasemapLayer = MAP_BASEMAPS[currentBasemapId].create();
+    currentBasemapLayer.addTo(map);
+    setupMapVpnTip(currentBasemapLayer);
+
+    const basemapBar = document.getElementById('wsLdMapBasemapBar');
+    const zoomBadge = document.getElementById('wsLdMapZoomBadge');
+    const fitBtn = document.getElementById('wsLdMapFitBtn');
+    const fullscreenBtn = document.getElementById('wsLdMapFullscreenBtn');
+    const stage = document.getElementById('wsLdLocationMapStage');
+
+    function updateBasemapUI(activeId) {
+        basemapBar?.querySelectorAll('[data-basemap]').forEach((btn) => {
+            const on = btn.dataset.basemap === activeId;
+            btn.classList.toggle('is-active', on);
+            btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+    }
+
+    function setBasemap(id) {
+        const cfg = MAP_BASEMAPS[id];
+        if (!cfg || id === currentBasemapId) return;
+        map.removeLayer(currentBasemapLayer);
+        currentBasemapId = id;
+        currentBasemapLayer = cfg.create();
+        currentBasemapLayer.addTo(map);
+        setupMapVpnTip(currentBasemapLayer);
+        try { localStorage.setItem(MAP_BASEMAP_STORAGE_KEY, id); } catch (e) { /* ignore */ }
+        updateBasemapUI(id);
+    }
+
+    if (basemapBar) {
+        basemapBar.innerHTML = Object.entries(MAP_BASEMAPS)
+            .map(([id, cfg]) => buildBasemapChipHtml(id, cfg, id === currentBasemapId))
+            .join('');
+        basemapBar.querySelectorAll('[data-basemap]').forEach((btn) => {
+            btn.addEventListener('click', () => setBasemap(btn.dataset.basemap));
+        });
+    }
+
+    const isApprox = options.accuracyKind === 'approx';
+    const radiusM = Number(options.radiusM) > 0 ? Number(options.radiusM) : (isApprox ? 500 : 0);
+    const focusBounds = L.latLngBounds();
+
+    let locationLayer;
+    if (isApprox && radiusM > 0) {
+        locationLayer = L.circle([lat, lng], {
+            radius: radiusM,
+            color: '#7c3aed',
+            fillColor: '#7c3aed',
+            fillOpacity: 0.14,
+            weight: 2,
+        }).addTo(map);
+        focusBounds.extend(locationLayer.getBounds());
+    } else {
+        locationLayer = L.circleMarker([lat, lng], {
+            radius: 10,
+            color: '#ffffff',
+            weight: 2.5,
+            fillColor: '#dc2626',
+            fillOpacity: 1,
+        }).addTo(map);
+        focusBounds.extend([lat, lng]);
+    }
+
+    const locParts = [options.neighborhood, options.city].filter(Boolean);
+    const popupLines = [
+        options.title ? `<strong>${wsEscapeHtml(options.title)}</strong>` : '',
+        options.priceLabel ? wsEscapeHtml(options.priceLabel) : '',
+        locParts.length ? wsEscapeHtml(locParts.join(' · ')) : '',
+        options.accuracyLabel ? `<span class="ws-ld-map-popup-acc">${wsEscapeHtml(options.accuracyLabel)}</span>` : '',
+    ].filter(Boolean);
+    if (popupLines.length) {
+        locationLayer.bindPopup(`<div class="mk-map-popup-shell ws-ld-map-popup">${popupLines.join('<br>')}</div>`, {
+            className: 'mk-map-popup-shell',
+            maxWidth: 280,
+        });
+    }
+
+    function fitMapView(animate) {
+        if (!focusBounds.isValid()) return;
+        if (isApprox && radiusM > 0) {
+            map.fitBounds(focusBounds, { padding: [48, 48], maxZoom: 17, animate: !!animate });
+        } else {
+            map.setView([lat, lng], options.zoom || 17, { animate: !!animate });
+        }
+    }
+
+    function updateZoomBadge() {
+        if (!zoomBadge) return;
+        const z = map.getZoom();
+        zoomBadge.textContent = (z != null && !Number.isNaN(z))
+            ? `زوم ${z.toLocaleString('fa-IR')}`
+            : 'زوم —';
+    }
+
+    fitMapView(false);
+    updateZoomBadge();
+    map.on('zoomend', updateZoomBadge);
+
+    fitBtn?.addEventListener('click', () => fitMapView(true));
+
+    fullscreenBtn?.addEventListener('click', async () => {
+        const target = stage || el;
+        if (!target) return;
+        try {
+            if (!document.fullscreenElement) {
+                await target.requestFullscreen();
+                fullscreenBtn.querySelector('i')?.classList.replace('fa-expand', 'fa-compress');
+            } else {
+                await document.exitFullscreen();
+                fullscreenBtn.querySelector('i')?.classList.replace('fa-compress', 'fa-expand');
+            }
+        } catch (e) { /* ignore */ }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            fullscreenBtn?.querySelector('i')?.classList.replace('fa-compress', 'fa-expand');
+        }
+        setTimeout(() => map.invalidateSize(), 120);
+    });
+
+    function refreshMapSize() {
+        setTimeout(() => {
+            map.invalidateSize();
+            updateZoomBadge();
+        }, 120);
+    }
+
+    document.querySelector('.ws-ld-tabs [data-tab="مکان"]')?.addEventListener('click', refreshMapSize);
+    document.querySelector('[data-ld-map-jump]')?.addEventListener('click', () => {
+        setTimeout(refreshMapSize, 180);
+    });
+
+    refreshMapSize();
+    window.wsLdDetailMap = map;
+    return map;
+}
+
 function initMap(allMarkers, settings) {
     if (!allMarkers || !allMarkers.length || !window.L) return;
     const el = document.getElementById('wsMap');

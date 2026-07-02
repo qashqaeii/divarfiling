@@ -1,0 +1,30 @@
+<div class="ws-ld-location-map-wrap mk-map-pro" id="wsLdLocationMapPanel">
+    <div class="ws-ld-location-map-head">
+        <p class="ws-ld-location-map-title">نقشه موقعیت ملک</p>
+        {% if location_accuracy.label %}
+        <span class="ws-ld-location-accuracy ws-ld-location-accuracy--{{ location_accuracy.kind|default:'exact' }}">{{ location_accuracy.label }}</span>
+        {% endif %}
+    </div>
+    <div class="ws-ld-location-map-deck">
+        <div class="mk-map-deck-row mk-map-deck-row--basemap">
+            <div class="mk-map-deck-group mk-map-deck-group--grow">
+                <span class="mk-map-deck-label">نوع نقشه</span>
+                <div class="mk-map-modes-scroll">
+                    <div class="mk-map-basemap-bar" id="wsLdMapBasemapBar" role="group" aria-label="انتخاب نوع نقشه"></div>
+                </div>
+            </div>
+        </div>
+        <div class="ws-ld-location-map-stage" id="wsLdLocationMapStage">
+            <div id="wsLdLocationMap" class="ws-ld-location-map ws-map" role="application" aria-label="نقشه موقعیت ملک"></div>
+            <div class="ws-ld-location-map-chrome">
+                <span class="ws-ld-location-map-badge" id="wsLdMapZoomBadge" aria-live="polite">زوم —</span>
+                <button type="button" class="ws-ld-location-map-tool" id="wsLdMapFitBtn" title="تنظیم نمای نقشه" aria-label="تنظیم نمای نقشه">
+                    <i class="fas fa-crosshairs" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="ws-ld-location-map-tool" id="wsLdMapFullscreenBtn" title="تمام‌صفحه" aria-label="تمام‌صفحه">
+                    <i class="fas fa-expand" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

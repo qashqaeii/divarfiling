@@ -5,6 +5,9 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/listing-public-share.css' %}?v=2">
+{% if listing.latitude and listing.longitude %}
+<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=15">
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -103,7 +106,7 @@
                 <div class="ws-ld-tabs-bar">
                     <nav class="ws-tabs ws-ld-tabs" role="tablist" aria-label="جزئیات آگهی">
                         {% for section, fields in sections.items %}
-                        {% if fields %}
+                        {% if fields or section == 'مکان' and listing.latitude and listing.longitude %}
                         <button type="button" role="tab" class="ws-tab ws-ld-tab {% if forloop.first %}active{% endif %}" data-tab="{{ section }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
                             {% if section == 'مالی' %}<i class="fas fa-coins" aria-hidden="true"></i>
                             {% elif section == 'ملک' %}{% include 'includes/icon_slot.html' with decor='building' size='inline' only %}
@@ -140,11 +143,16 @@
 
                 <div class="ws-ld-tab-panels">
                     {% for section, fields in sections.items %}
-                    {% if fields %}
+                    {% if fields or section == 'مکان' and listing.latitude and listing.longitude %}
                     <div role="tabpanel" data-panel="{{ section }}" {% if not forloop.first %}hidden{% endif %}>
+                        {% if fields %}
                         {% with section_rows|dict_get:section as rows %}
                         {% include 'workspace/includes/field_list.html' with fields=rows %}
                         {% endwith %}
+                        {% endif %}
+                        {% if section == 'مکان' and listing.latitude and listing.longitude %}
+                        {% include 'workspace/includes/listing_location_map.html' %}
+                        {% endif %}
                     </div>
                     {% endif %}
                     {% endfor %}
@@ -215,8 +223,11 @@
             {% if listing.latitude and listing.longitude %}
             <div class="ws-card ws-ld-map-card">
                 <p class="ws-card-title">موقعیت</p>
-                <div id="wsMap" class="ws-map ws-ld-map"></div>
                 {% if listing.neighborhood %}<p class="ws-ld-map-loc">{{ listing.neighborhood }}{% if listing.city %} · {{ listing.city }}{% endif %}</p>{% endif %}
+                {% if location_accuracy.label %}<p class="ws-ld-map-accuracy">{{ location_accuracy.label }}</p>{% endif %}
+                <button type="button" class="ws-btn ws-btn-sm ws-btn-secondary ws-ld-map-jump" data-ld-map-jump="مکان">
+                    <i class="fas fa-map" aria-hidden="true"></i> مشاهده نقشه
+                </button>
             </div>
             {% endif %}
 
@@ -312,11 +323,33 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.textContent = open ? 'بستن' : '... ادامه';
         });
     });
+    document.querySelectorAll('[data-ld-map-jump]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var tab = btn.getAttribute('data-ld-map-jump');
+            var tabBtn = document.querySelector('.ws-ld-tabs [data-tab="' + tab + '"]');
+            if (tabBtn) tabBtn.click();
+        });
+    });
 });
 </script>
 {% if listing.latitude and listing.longitude %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>document.addEventListener('DOMContentLoaded',()=>{initMap([{lat:{{ listing.latitude }},lng:{{ listing.longitude }},title:"{{ listing.title|escapejs }}",price_label:"{% if tx.show_price and listing.price %}{{ listing.price|ws_money }}{% elif tx.show_rent and listing.rent %}اجاره {{ listing.rent|ws_money }}{% endif %}",area:{{ listing.area|default:0 }},is_consultant:false}],{});});</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    initListingDetailMap({
+        lat: {{ listing.latitude }},
+        lng: {{ listing.longitude }},
+        title: "{{ listing.title|escapejs }}",
+        priceLabel: "{% if tx.show_price and listing.price %}{{ listing.price|ws_money }}{% elif tx.show_rent and listing.rent %}اجاره {{ listing.rent|ws_money }}{% endif %}",
+        neighborhood: "{{ listing.neighborhood|default:''|escapejs }}",
+        city: "{{ listing.city|default:''|escapejs }}",
+        accuracyKind: "{{ location_accuracy.kind|default:''|escapejs }}",
+        accuracyLabel: "{{ location_accuracy.label|default:''|escapejs }}",
+        radiusM: {{ location_accuracy.radius_m|default:0 }},
+        zoom: 17,
+    });
+});
+</script>
 {% endif %}
 {% endblock %}

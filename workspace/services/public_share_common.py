@@ -75,6 +75,28 @@ def public_share_to_dict(share, request, *, url_name: str) -> Dict[str, Any]:
     }
 
 
+def filter_public_feature_highlights(feature_profile: dict, highlights: list) -> list:
+    """برچسب‌های تکراری با feature_profile.core را از نوار highlights حذف می‌کند."""
+    skip: set[str] = set()
+    for item in feature_profile.get('core', []):
+        if not (item.get('known') and item.get('state') == 'yes'):
+            continue
+        for field in ('label', 'key'):
+            val = str(item.get(field) or '').strip()
+            if val:
+                skip.add(val)
+    filtered: list = []
+    for text in highlights:
+        label = str(text or '').strip()
+        if not label:
+            continue
+        base = label.split(':')[0].replace(' ندارد', '').strip()
+        if label in skip or base in skip:
+            continue
+        filtered.append(label)
+    return filtered
+
+
 def build_consultant_block(user, share, *, title: str = 'ملک') -> Dict[str, Any]:
     settings = get_or_create_settings(user)
     name = consultant_name(user, settings, share)

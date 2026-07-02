@@ -23,6 +23,7 @@ from workspace.services.listing_features import (
     build_listing_feature_profile,
     feature_highlights_for_listing,
 )
+from workspace.services.public_share_common import filter_public_feature_highlights
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 
 _PUBLIC_HIDDEN_SECTIONS = frozenset({'تماس'})
@@ -227,6 +228,7 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
         from workspace.services.formatting import format_toman
         primary_price = f'ودیعه {format_toman(listing.deposit)}'
 
+    feature_profile = build_listing_feature_profile(listing, feat)
     return {
         'share': share,
         'listing': listing,
@@ -237,8 +239,11 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
         'section_rows': section_rows,
         'supplementary_fields': supplementary_fields,
         'supplementary_groups': supplementary_groups,
-        'feature_profile': build_listing_feature_profile(listing, feat),
-        'feature_highlights': feature_highlights_for_listing(listing, limit=8),
+        'feature_profile': feature_profile,
+        'feature_highlights': filter_public_feature_highlights(
+            feature_profile,
+            feature_highlights_for_listing(listing, limit=8),
+        ),
         'gallery_images': gallery_images_for_listing(listing),
         'description_text': description_text,
         'primary_price_label': primary_price,

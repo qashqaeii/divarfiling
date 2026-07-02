@@ -48,6 +48,22 @@ class PropertyPublicShareTests(TestCase):
         self.assertEqual(ctx['dossier_badge'], 'فایل شخصی')
         self.assertNotIn('یادداشت محرمانه', ctx['description_text'])
 
+    def test_highlights_do_not_duplicate_core_amenities(self):
+        self.prop.has_parking = True
+        self.prop.has_storage = True
+        self.prop.has_elevator = True
+        self.prop.property_type = 'آپارتمان'
+        self.prop.save(update_fields=['has_parking', 'has_storage', 'has_elevator', 'property_type'])
+        share = get_or_create_property_share(self.user, self.prop)
+        ctx = build_public_property_context(share)
+        core_labels = [
+            item['label']
+            for item in ctx['feature_profile']['core']
+            if item.get('known') and item.get('state') == 'yes'
+        ]
+        self.assertEqual(set(core_labels), {'پارکینگ', 'انباری', 'آسانسور'})
+        self.assertEqual(ctx['feature_highlights'], ['آپارتمان'])
+
     def test_build_context_shows_notes_when_enabled(self):
         share = CRMPropertyPublicShare.objects.create(
             share_token='proptoken123',

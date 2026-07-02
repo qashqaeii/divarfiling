@@ -21,6 +21,7 @@ from workspace.services.listing_public_share import format_sections_public
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 from workspace.services.public_share_common import (
     build_consultant_block,
+    filter_public_feature_highlights,
     public_share_to_dict,
     unique_share_token,
 )
@@ -268,7 +269,10 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         'supplementary_fields': [],
         'supplementary_groups': [],
         'feature_profile': feature_profile,
-        'feature_highlights': _property_highlights(prop),
+        'feature_highlights': filter_public_feature_highlights(
+            feature_profile,
+            _property_highlights(prop),
+        ),
         'gallery_images': images,
         'description_text': description_text,
         'primary_price_label': primary_price,

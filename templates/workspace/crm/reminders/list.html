@@ -178,9 +178,21 @@
             <div class="crm-drawer-body">
             {% csrf_token %}
             <div class="ws-fields">
-                <div class="ws-field"><label class="ws-label">عنوان</label>{{ reminder_form.title }}</div>
-                <div class="ws-field"><label class="ws-label">یادداشت</label>{{ reminder_form.note }}</div>
-                <div class="ws-field"><label class="ws-label">سررسید</label>{{ reminder_form.due_at }}</div>
+                <div class="ws-field{% if reminder_form.title.errors %} ws-field-error{% endif %}">
+                    <label class="ws-label">عنوان</label>
+                    {{ reminder_form.title }}
+                    {% for error in reminder_form.title.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="ws-field{% if reminder_form.note.errors %} ws-field-error{% endif %}">
+                    <label class="ws-label">یادداشت</label>
+                    {{ reminder_form.note }}
+                    {% for error in reminder_form.note.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="ws-field{% if reminder_form.due_at.errors %} ws-field-error{% endif %}">
+                    <label class="ws-label">سررسید</label>
+                    {{ reminder_form.due_at }}
+                    {% for error in reminder_form.due_at.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                </div>
                 <div class="ws-field">
                     <label class="ws-label">مخاطب (اختیاری)</label>
                     <select name="customer_id" class="ws-select">

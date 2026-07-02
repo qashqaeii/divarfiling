@@ -592,7 +592,7 @@
 </aside>
 
 <!-- Drawer: یادآور -->
-<aside class="crm-drawer" id="drawer-reminder">
+<aside class="crm-drawer" id="drawer-reminder" {% if open_drawer == 'reminder' %}data-open="1"{% endif %}>
     <div class="crm-drawer-overlay" data-drawer-close></div>
     <div class="crm-drawer-panel">
         <div class="crm-drawer-head"><h2>یادآور جدید</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button></div>

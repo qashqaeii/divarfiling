@@ -1,5 +1,6 @@
 """فرم‌های workspace."""
 from django import forms
+from django.utils import timezone
 
 from workspace.constants import ACTIVITY_TYPES, DEAL_TYPES, INTEREST_LEVELS, LISTING_ROLES
 from workspace.constants import (
@@ -410,22 +411,51 @@ class CustomerDocumentForm(forms.ModelForm):
         }
 
 
+_JALALI_DATETIME_WIDGET = forms.TextInput(attrs={
+    'class': 'crm-input crm-jalali-datetime',
+    'data-jdp': '',
+    'placeholder': '۱۴۰۴/۰۶/۱۵ ۱۴:۳۰',
+    'autocomplete': 'off',
+})
+
+
+def _clean_jalali_due_at(raw, *, required: bool = True):
+    if not raw:
+        if required:
+            raise forms.ValidationError('تاریخ و ساعت یادآور الزامی است.')
+        return None
+    if hasattr(raw, 'hour'):
+        parsed = raw
+    else:
+        parsed = parse_jalali_datetime_string(str(raw))
+        if parsed is None:
+            raise forms.ValidationError('تاریخ و ساعت شمسی نامعتبر است. مثال: ۱۴۰۴/۰۶/۱۵ ۱۴:۳۰')
+    if timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+    return parsed
+
+
+def _default_reminder_due_initial():
+    from datetime import timedelta
+    return format_jalali_datetime(timezone.now() + timedelta(hours=1))
+
+
 class ReminderForm(forms.ModelForm):
+    due_at = forms.CharField(
+        label='سررسید',
+        required=True,
+        widget=_JALALI_DATETIME_WIDGET,
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk and self.instance.due_at:
             self.fields['due_at'].initial = format_jalali_datetime(self.instance.due_at)
+        elif not self.data:
+            self.fields['due_at'].initial = _default_reminder_due_initial()
 
     def clean_due_at(self):
-        raw = self.cleaned_data.get('due_at')
-        if not raw:
-            return None
-        if hasattr(raw, 'hour'):
-            return raw
-        parsed = parse_jalali_datetime_string(str(raw))
-        if parsed is None:
-            raise forms.ValidationError('تاریخ و ساعت شمسی نامعتبر است.')
-        return parsed
+        return _clean_jalali_due_at(self.cleaned_data.get('due_at'), required=True)
 
     class Meta:
         model = Reminder
@@ -433,12 +463,6 @@ class ReminderForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={'class': 'crm-input'}),
             'note': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
-            'due_at': forms.TextInput(attrs={
-                'class': 'crm-input crm-jalali-datetime',
-                'data-jdp': '',
-                'placeholder': '۱۴۰۴/۰۶/۱۵ ۱۴:۳۰',
-                'autocomplete': 'off',
-            }),
             'token': forms.TextInput(attrs={'class': 'crm-input'}),
         }
 
@@ -446,22 +470,21 @@ class ReminderForm(forms.ModelForm):
 class CRMReminderForm(forms.ModelForm):
     """یادآور با انتخاب مخاطب."""
 
+    due_at = forms.CharField(
+        label='سررسید',
+        required=True,
+        widget=_JALALI_DATETIME_WIDGET,
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk and self.instance.due_at:
             self.fields['due_at'].initial = format_jalali_datetime(self.instance.due_at)
-        self.fields['due_at'].required = True
+        elif not self.data:
+            self.fields['due_at'].initial = _default_reminder_due_initial()
 
     def clean_due_at(self):
-        raw = self.cleaned_data.get('due_at')
-        if not raw:
-            raise forms.ValidationError('تاریخ و ساعت یادآور الزامی است.')
-        if hasattr(raw, 'hour'):
-            return raw
-        parsed = parse_jalali_datetime_string(str(raw))
-        if parsed is None:
-            raise forms.ValidationError('تاریخ و ساعت شمسی نامعتبر است. مثال: ۱۴۰۴/۰۶/۱۵ ۱۴:۳۰')
-        return parsed
+        return _clean_jalali_due_at(self.cleaned_data.get('due_at'), required=True)
 
     class Meta:
         model = Reminder
@@ -469,12 +492,6 @@ class CRMReminderForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={'class': 'crm-input'}),
             'note': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
-            'due_at': forms.TextInput(attrs={
-                'class': 'crm-input crm-jalali-datetime',
-                'data-jdp': '',
-                'placeholder': '۱۴۰۴/۰۶/۱۵ ۱۴:۳۰',
-                'autocomplete': 'off',
-            }),
             'recurrence': forms.Select(attrs={'class': 'crm-select'}),
         }
 

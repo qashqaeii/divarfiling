@@ -880,6 +880,9 @@ class CRMReminderListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx = self.get_context_data(object_list=self.object_list)
         ctx['reminder_form'] = form
         ctx['open_drawer'] = 'reminder'
+        for errors in form.errors.values():
+            for err in errors:
+                messages.error(request, str(err))
         return render(request, self.template_name, ctx)
 
 

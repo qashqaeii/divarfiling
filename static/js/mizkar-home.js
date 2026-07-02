@@ -359,7 +359,7 @@
 
         var ZOOM = 2.12;
         var LERP = 0.16;
-        var IMAGE_ZONE_START = 0.4;
+        var IMAGE_ZONE_START = 0.37;
         var metrics = null;
         var lensSize = 0;
         var targetX = 0;

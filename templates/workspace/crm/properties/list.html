@@ -193,9 +193,9 @@
                     <tr class="crm-empty-state-row">
                         <td colspan="7">
                             {% if stats.total %}
-                            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 icon='fa-folder-open' title='ملکی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا ملک جدید ثبت کنید.' btn_text='ثبت ملک' btn_icon='fa-plus' btn_drawer='drawer-property' extra_class='crm-empty-state--inline' %}
+                            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 decor='building' title='ملکی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا ملک جدید ثبت کنید.' btn_text='ثبت ملک' btn_icon='fa-plus' btn_drawer='drawer-property' extra_class='crm-empty-state--inline' %}
                             {% else %}
-                            {% include 'workspace/crm/includes/list_empty_state.html' with compact=1 icon='fa-folder-open' title='هنوز فایلی ثبت نشده' desc='اولین ملک خود را اضافه کنید و مخاطبین را به آن پیوند دهید.' btn_text='ثبت اولین ملک' btn_icon='fa-plus' btn_drawer='drawer-property' extra_class='crm-empty-state--inline' %}
+                            {% include 'workspace/crm/includes/list_empty_state.html' with compact=1 decor='building' title='هنوز فایلی ثبت نشده' desc='اولین ملک خود را اضافه کنید و مخاطبین را به آن پیوند دهید.' btn_text='ثبت اولین ملک' btn_icon='fa-plus' btn_drawer='drawer-property' extra_class='crm-empty-state--inline' %}
                             {% endif %}
                         </td>
                     </tr>
@@ -257,9 +257,9 @@
             </a>
             {% empty %}
             {% if stats.total %}
-            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' icon='fa-folder-open' title='ملکی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا ملک جدید ثبت کنید.' btn_text='ثبت ملک' btn_icon='fa-plus' btn_drawer='drawer-property' %}
+            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' decor='building' title='ملکی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا ملک جدید ثبت کنید.' btn_text='ثبت ملک' btn_icon='fa-plus' btn_drawer='drawer-property' %}
             {% else %}
-            {% include 'workspace/crm/includes/list_empty_state.html' with icon='fa-folder-open' title='هنوز فایلی ثبت نشده' desc='اولین ملک خود را اضافه کنید و مخاطبین را به آن پیوند دهید.' btn_text='ثبت اولین ملک' btn_icon='fa-plus' btn_drawer='drawer-property' %}
+            {% include 'workspace/crm/includes/list_empty_state.html' with decor='building' title='هنوز فایلی ثبت نشده' desc='اولین ملک خود را اضافه کنید و مخاطبین را به آن پیوند دهید.' btn_text='ثبت اولین ملک' btn_icon='fa-plus' btn_drawer='drawer-property' %}
             {% endif %}
             {% endfor %}
         </div>

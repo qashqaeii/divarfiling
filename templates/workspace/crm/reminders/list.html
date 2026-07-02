@@ -140,14 +140,14 @@
         {% else %}
         {% if stats.active or stats.done %}
             {% if show == 'done' %}
-            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' icon='fa-bell-slash' title='یادآوری در این بخش نیست' desc='هنوز یادآوری را انجام‌شده علامت نزده‌اید.' btn_text='ثبت یادآور' btn_icon='fa-plus' btn_drawer='drawer-reminder' %}
+            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' decor='bell' title='یادآوری در این بخش نیست' desc='هنوز یادآوری را انجام‌شده علامت نزده‌اید.' btn_text='ثبت یادآور' btn_icon='fa-plus' btn_drawer='drawer-reminder' %}
             {% elif show == 'all' %}
-            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' icon='fa-bell-slash' title='یادآوری در این بخش نیست' desc='فیلتر فعلی نتیجه‌ای ندارد.' btn_text='ثبت یادآور' btn_icon='fa-plus' btn_drawer='drawer-reminder' %}
+            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' decor='bell' title='یادآوری در این بخش نیست' desc='فیلتر فعلی نتیجه‌ای ندارد.' btn_text='ثبت یادآور' btn_icon='fa-plus' btn_drawer='drawer-reminder' %}
             {% else %}
-            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' icon='fa-bell-slash' title='یادآوری در این بخش نیست' desc='همه چیز تحت کنترل است — یا یادآور جدید بسازید.' btn_text='ثبت یادآور' btn_icon='fa-plus' btn_drawer='drawer-reminder' %}
+            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' decor='bell' title='یادآوری در این بخش نیست' desc='همه چیز تحت کنترل است — یا یادآور جدید بسازید.' btn_text='ثبت یادآور' btn_icon='fa-plus' btn_drawer='drawer-reminder' %}
             {% endif %}
         {% else %}
-        {% include 'workspace/crm/includes/list_empty_state.html' with icon='fa-bell' title='یادآوری ثبت نشده' desc='اولین یادآور خود را ثبت کنید تا هیچ پیگیری یا قرار ملاقاتی از قلم نیفتد.' btn_text='ثبت یادآور' btn_icon='fa-plus' btn_drawer='drawer-reminder' %}
+        {% include 'workspace/crm/includes/list_empty_state.html' with decor='bell' title='یادآوری ثبت نشده' desc='اولین یادآور خود را ثبت کنید تا هیچ پیگیری یا قرار ملاقاتی از قلم نیفتد.' btn_text='ثبت یادآور' btn_icon='fa-plus' btn_drawer='drawer-reminder' %}
         {% endif %}
         {% endif %}
 

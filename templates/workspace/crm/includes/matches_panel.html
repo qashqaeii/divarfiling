@@ -51,16 +51,16 @@
                 <span class="crm-matches-count crm-matches-count-v2">{{ group.total_count }}</span>
             </header>
             <div class="crm-matches-grid crm-matches-grid-v2">
-                {% include 'workspace/crm/includes/matches_column.html' with matches=group.crm_matches title='فایل‌های شخصی' icon='fa-folder-open' source='crm' has_bot_license=has_bot_license %}
-                {% include 'workspace/crm/includes/matches_column.html' with matches=group.divar_matches title='فایلینگ دیوار' icon='fa-folder' source='divar' divar_locked=match_data.divar_locked has_bot_license=has_bot_license %}
+                {% include 'workspace/crm/includes/matches_column.html' with matches=group.crm_matches title='فایل‌های شخصی' decor='building' source='crm' has_bot_license=has_bot_license %}
+                {% include 'workspace/crm/includes/matches_column.html' with matches=group.divar_matches title='فایلینگ دیوار' decor='folder' source='divar' divar_locked=match_data.divar_locked has_bot_license=has_bot_license %}
             </div>
         </section>
         {% endfor %}
     </div>
     {% else %}
     <div class="crm-matches-grid crm-matches-grid-v2">
-        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.crm_matches title='فایل‌های شخصی' icon='fa-folder-open' source='crm' %}
-        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.divar_matches title='فایلینگ دیوار' icon='fa-folder' source='divar' divar_locked=match_data.divar_locked %}
+        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.crm_matches title='فایل‌های شخصی' decor='building' source='crm' %}
+        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.divar_matches title='فایلینگ دیوار' decor='folder' source='divar' divar_locked=match_data.divar_locked %}
     </div>
     {% endif %}
 

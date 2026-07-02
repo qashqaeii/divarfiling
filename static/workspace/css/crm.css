@@ -3595,6 +3595,20 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
     font-size: 1.1rem;
     opacity: .35;
 }
+
+.crm-kanban-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    opacity: 0.85;
+}
+
+.crm-kanban-empty-icon .df-decor-icon img {
+    width: 1.35rem;
+    height: 1.35rem;
+    object-fit: contain;
+}
 .crm-kanban-more {
     display: flex;
     align-items: center;
@@ -14941,13 +14955,37 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
     color: #7c3aed;
 }
 
-.crm-empty-state--success .crm-empty-state-ring {
-    background: linear-gradient(145deg, #ecfdf5, #a7f3d0);
-    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0.06);
+.crm-empty-state-icon {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.crm-empty-state-icon .df-decor-icon img {
+    width: 2.55rem;
+    height: 2.55rem;
+    object-fit: contain;
+}
+
+.crm-empty-state--compact .crm-empty-state-icon .df-decor-icon img {
+    width: 2.2rem;
+    height: 2.2rem;
 }
 
 .crm-empty-state--success .crm-empty-state-visual > i {
     color: #059669;
+}
+
+.crm-empty-state--success .crm-empty-state-icon .df-decor-icon {
+    opacity: 1;
+}
+
+.crm-empty-state--success .crm-empty-state-ring {
+    background: linear-gradient(145deg, #ecfdf5, #a7f3d0);
+    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0.06);
 }
 
 .crm-empty-state--muted .crm-empty-state-ring {
@@ -14958,6 +14996,10 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
 .crm-empty-state--muted .crm-empty-state-visual > i {
     color: var(--ws-text-muted);
     opacity: 0.65;
+}
+
+.crm-empty-state--muted .crm-empty-state-icon .df-decor-icon {
+    opacity: 0.78;
 }
 
 .crm-empty-state-title {
@@ -15813,6 +15855,21 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
     opacity: 0.5;
+}
+
+.crm-match-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.55rem;
+    line-height: 0;
+}
+
+.crm-match-empty-icon .df-decor-icon img {
+    width: 2rem;
+    height: 2rem;
+    object-fit: contain;
+    opacity: 0.88;
 }
 .crm-match-locked-card-v2 {
     margin: 0.65rem;

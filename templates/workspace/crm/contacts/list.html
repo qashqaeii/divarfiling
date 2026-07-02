@@ -160,9 +160,9 @@
                         <tr class="crm-empty-state-row">
                             <td colspan="8">
                                 {% if stats.total %}
-                                {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 icon='fa-users' title='مخاطبی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا مخاطب جدید ثبت کنید.' btn_text='ثبت مخاطب' btn_icon='fa-user-plus' btn_drawer='drawer-contact' extra_class='crm-empty-state--inline' %}
+                                {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 decor='users' title='مخاطبی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا مخاطب جدید ثبت کنید.' btn_text='ثبت مخاطب' btn_icon='fa-user-plus' btn_drawer='drawer-contact' extra_class='crm-empty-state--inline' %}
                                 {% else %}
-                                {% include 'workspace/crm/includes/list_empty_state.html' with compact=1 icon='fa-users' title='مخاطبی ثبت نشده' desc='اولین مخاطب یا سرنخ خود را ثبت کنید و پیگیری حرفه‌ای را از همین‌جا شروع کنید.' btn_text='ثبت اولین مخاطب' btn_icon='fa-user-plus' btn_drawer='drawer-contact' extra_class='crm-empty-state--inline' %}
+                                {% include 'workspace/crm/includes/list_empty_state.html' with compact=1 decor='users' title='مخاطبی ثبت نشده' desc='اولین مخاطب یا سرنخ خود را ثبت کنید و پیگیری حرفه‌ای را از همین‌جا شروع کنید.' btn_text='ثبت اولین مخاطب' btn_icon='fa-user-plus' btn_drawer='drawer-contact' extra_class='crm-empty-state--inline' %}
                                 {% endif %}
                             </td>
                         </tr>

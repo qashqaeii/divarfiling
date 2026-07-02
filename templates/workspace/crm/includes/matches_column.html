@@ -1,7 +1,13 @@
 <div class="crm-matches-col crm-matches-col-v2{% if divar_locked %} crm-matches-col--locked{% endif %}">
     <header class="crm-matches-col-head">
         <h4 class="crm-matches-col-title">
-            <span class="crm-matches-col-icon"><i class="fas {{ icon }}" aria-hidden="true"></i></span>
+            <span class="crm-matches-col-icon">
+                {% if decor %}
+                {% include 'includes/icon_slot.html' with decor=decor size='sm' only %}
+                {% else %}
+                <i class="fas {{ icon }}" aria-hidden="true"></i>
+                {% endif %}
+            </span>
             <span>{{ title }}</span>
             {% if divar_locked %}
             <span class="crm-match-lock"><i class="fas fa-lock"></i> نیاز به لایسنس</span>
@@ -60,7 +66,15 @@
     </ul>
     {% else %}
     <div class="crm-match-empty crm-match-empty-v2">
-        <i class="fas fa-inbox" aria-hidden="true"></i>
+        <span class="crm-match-empty-icon" aria-hidden="true">
+            {% if empty_decor %}
+            {% include 'includes/icon_slot.html' with decor=empty_decor size='md' only %}
+            {% elif decor %}
+            {% include 'includes/icon_slot.html' with decor=decor size='md' only %}
+            {% else %}
+            {% include 'includes/icon_slot.html' with decor='search' size='md' only %}
+            {% endif %}
+        </span>
         <p>فایل مناسبی در این بخش یافت نشد.</p>
         {% if source == 'divar' and not has_bot_license %}
         <a href="{% url 'workspace:upgrade' %}?feature=upload" class="crm-match-upgrade-link">آپلود فایلینگ دیوار</a>

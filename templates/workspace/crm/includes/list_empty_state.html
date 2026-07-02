@@ -1,8 +1,14 @@
-{# Unified CRM list empty state — title, desc, icon, tone (success|primary|muted), CTA #}
+{# Unified CRM list empty state — title, desc, decor (PNG), tone (success|primary|muted), CTA #}
 <div class="crm-empty-state crm-empty-state--{{ tone|default:'primary' }}{% if compact %} crm-empty-state--compact{% endif %}{% if extra_class %} {{ extra_class }}{% endif %}">
     <div class="crm-empty-state-visual" aria-hidden="true">
         <span class="crm-empty-state-ring"></span>
-        <i class="fas {{ icon|default:'fa-inbox' }}"></i>
+        <span class="crm-empty-state-icon">
+            {% if decor %}
+            {% include 'includes/icon_slot.html' with decor=decor size='xl' only %}
+            {% else %}
+            <i class="fas {{ icon|default:'fa-inbox' }}"></i>
+            {% endif %}
+        </span>
     </div>
     <h2 class="crm-empty-state-title">{{ title }}</h2>
     {% if desc %}

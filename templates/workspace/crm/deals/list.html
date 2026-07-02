@@ -161,7 +161,7 @@
                         <tr class="crm-deals-row" data-href="{% url 'workspace:crm_deal_detail' d.id %}">
                             <td class="crm-deals-col-deal">
                                 <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deals-cell-deal">
-                                    <span class="crm-deals-deal-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='inline' only %}</span>
+                                    <span class="crm-deals-deal-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with .decor='handshake' size='inline' only %}</span>
                                     <span class="crm-deals-deal-text">
                                         <strong>{{ d.title }}</strong>
                                         {% if d.expected_close_date %}
@@ -214,9 +214,9 @@
                         <tr class="crm-empty-state-row">
                             <td colspan="8">
                                 {% if stats.total %}
-                                {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 icon='fa-handshake' title='معامله‌ای با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا معاملهٔ جدید ثبت کنید.' btn_text='ثبت معامله' btn_icon='fa-plus' btn_drawer='drawer-deal' extra_class='crm-empty-state--inline' %}
+                                {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 decor='handshake' title='معامله‌ای با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا معاملهٔ جدید ثبت کنید.' btn_text='ثبت معامله' btn_icon='fa-plus' btn_drawer='drawer-deal' extra_class='crm-empty-state--inline' %}
                                 {% else %}
-                                {% include 'workspace/crm/includes/list_empty_state.html' with compact=1 icon='fa-handshake' title='هنوز معامله‌ای ثبت نشده' desc='اولین معامله را ثبت کنید و قیف فروش خود را از مذاکره تا قرارداد مدیریت کنید.' btn_text='ثبت معامله' btn_icon='fa-plus' btn_drawer='drawer-deal' extra_class='crm-empty-state--inline' %}
+                                {% include 'workspace/crm/includes/list_empty_state.html' with compact=1 decor='handshake' title='هنوز معامله‌ای ثبت نشده' desc='اولین معامله را ثبت کنید و قیف فروش خود را از مذاکره تا قرارداد مدیریت کنید.' btn_text='ثبت معامله' btn_icon='fa-plus' btn_drawer='drawer-deal' extra_class='crm-empty-state--inline' %}
                                 {% endif %}
                             </td>
                         </tr>

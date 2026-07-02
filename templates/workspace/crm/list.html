@@ -58,7 +58,7 @@
                 <td><a href="{% url 'workspace:crm_detail' c.id %}" class="ws-btn ws-btn-sm ws-btn-ghost">مشاهده</a></td>
             </tr>
             {% empty %}
-            <tr><td colspan="7"><div class="ws-empty" style="padding:2rem"><p class="ws-empty-title">مشتری‌ای ثبت نشده</p><button type="button" class="ws-btn ws-btn-primary ws-btn-sm" data-modal-open="modal-customer">ثبت اولین مشتری</button></div></td></tr>
+            <tr><td colspan="7"><div class="ws-empty" style="padding:2rem"><div class="ws-empty-icon">{% include 'includes/icon_slot.html' with decor='users' size='lg' only %}</div><p class="ws-empty-title">مشتری‌ای ثبت نشده</p><button type="button" class="ws-btn ws-btn-primary ws-btn-sm" data-modal-open="modal-customer">ثبت اولین مشتری</button></div></td></tr>
             {% endfor %}
         </tbody>
     </table>

@@ -90,7 +90,7 @@
             {% endif %}
             {% empty %}
             <div class="crm-kanban-empty" data-empty>
-                <i class="fas fa-inbox" aria-hidden="true"></i>
+                <span class="crm-kanban-empty-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='users' size='sm' only %}</span>
                 <span>خالی</span>
             </div>
             {% endfor %}

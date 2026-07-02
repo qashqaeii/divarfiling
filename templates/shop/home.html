@@ -7,7 +7,7 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=64">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=67">
 {% endblock %}
 
 {% block content %}
@@ -19,11 +19,6 @@
         <div class="mk-hero-split">
             <div class="mk-hero-inner">
                 <div class="mk-hero-stack">
-                    <p class="mk-hero-eyebrow mk-hero-eyebrow--pill">
-                        <i class="fas {{ home_page.hero.eyebrow_icon }}" aria-hidden="true"></i>
-                        {{ home_page.hero.eyebrow }}
-                    </p>
-
                     <h1 class="mk-hero-title">
                         <span class="mk-hero-title-main">{{ home_page.hero.title_main }}</span>
                         <span class="mk-hero-title-accent">{{ home_page.hero.title_accent }}</span>
@@ -53,11 +48,6 @@
                         {{ home_page.hero.cta_bot_label }}
                     </a>
                 </div>
-
-                <p class="mk-hero-trust">
-                    <i class="fas fa-shield-check" aria-hidden="true"></i>
-                    {{ home_page.hero.trust_note }}
-                </p>
             </div>
         </div>
 

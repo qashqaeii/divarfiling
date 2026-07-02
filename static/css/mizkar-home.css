@@ -4751,7 +4751,7 @@ html.mk-public[data-theme="light"] .mk-hero-orbit-chip {
 }
 
 /* ═══════════════════════════════════════════
-   Hero — متن چپ، پس‌زمینه hero.png راست
+   Hero — متن چپ، پس‌زمینه hero.webp راست
    ═══════════════════════════════════════════ */
 .mk-hero--split {
     min-height: clamp(28rem, 78vh, 42rem);
@@ -6359,7 +6359,7 @@ body.mk-gallery-lightbox-open {
 }
 
 /* ═══════════════════════════════════════════
-   Hero deck — mockup layout (hero.png kept)
+   Hero deck — mockup layout (hero.webp)
    ═══════════════════════════════════════════ */
 .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck {
     height: auto;
@@ -6382,11 +6382,12 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-
     height: auto;
     min-height: calc(100% - 0.5rem);
     grid-template-columns: none;
+    padding-left: clamp(0.25rem, 1vw, 0.65rem);
 }
 
 .mk-hero-split {
     display: grid;
-    grid-template-columns: minmax(0, 1.08fr) minmax(0, min(34rem, 44vw));
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, min(33rem, 42vw));
     align-items: center;
     gap: clamp(0.65rem, 2vw, 1.35rem);
     flex: 1 1 auto;
@@ -6404,8 +6405,9 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-
     height: auto;
     margin: 0;
     justify-self: end;
-    padding-inline-end: 0;
-    padding-inline-start: clamp(0.35rem, 1.5vw, 1rem);
+    margin-inline-end: clamp(-0.35rem, -1.8vw, -1.35rem);
+    padding-inline-end: clamp(0.25rem, 1.2vw, 0.85rem);
+    padding-inline-start: 0;
     padding-top: clamp(0.5rem, 2vh, 1.25rem);
     padding-bottom: 0;
 }

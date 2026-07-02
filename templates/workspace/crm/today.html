@@ -10,67 +10,42 @@
 
 {% block extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=4">
 {% endblock %}
 
 {% block crm_content %}
 <div class="crm-queue-app crm-page-chrome crm-today-pro">
 
-    <header class="crm-today-hero">
-        <div class="crm-today-hero-ambient" aria-hidden="true">
-            <span class="crm-today-orb crm-today-orb--1"></span>
-            <span class="crm-today-orb crm-today-orb--2"></span>
+    <header class="crm-dash-bar">
+        <div class="crm-dash-bar-main">
+            <h1 class="crm-dash-bar-title">کارهای امروز</h1>
         </div>
-        <div class="crm-today-hero-inner">
-            <div class="crm-today-hero-copy">
-                <span class="crm-today-eyebrow"><i class="fas fa-list-check" aria-hidden="true"></i> صف کار روزانه</span>
-                <h1 class="crm-today-title">کارهای امروز</h1>
-                <p class="crm-today-sub">
-                    {% if queue_stats.total %}
-                    <span class="crm-today-sub-dot is-live" aria-hidden="true"></span>
-                    {% endif %}
-                    {{ queue_stats.total }} کار در صف
-                </p>
-            </div>
-            <div class="crm-today-hero-actions" role="toolbar" aria-label="عملیات صف">
-                <button type="button" class="crm-today-btn crm-today-btn--primary" data-drawer-open="drawer-quick-lead">
-                    <i class="fas fa-plus" aria-hidden="true"></i><span>سرنخ جدید</span>
-                </button>
-                <a href="{% url 'workspace:crm_contacts' %}" class="crm-today-btn crm-today-btn--icon" title="مخاطبین">
-                    <i class="fas fa-users" aria-hidden="true"></i>
-                </a>
-            </div>
+        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات صف">
+            <button type="button" class="crm-dash-act" data-drawer-open="drawer-quick-lead">
+                <i class="fas fa-bolt" aria-hidden="true"></i><span>سرنخ</span>
+            </button>
+            <a href="{% url 'workspace:crm_contacts' %}" class="crm-dash-act crm-dash-act--icon" title="مخاطبین">
+                <i class="fas fa-users" aria-hidden="true"></i>
+            </a>
         </div>
     </header>
 
-    <section class="crm-today-stats" aria-label="آمار صف">
-        <article class="crm-today-stat crm-today-stat--overdue{% if queue_stats.overdue %} has-value{% endif %}">
-            <span class="crm-today-stat-icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
-            <span class="crm-today-stat-body">
-                <span class="crm-today-stat-val">{{ queue_stats.overdue }}</span>
-                <span class="crm-today-stat-lbl">معوق</span>
-            </span>
+    <section class="crm-dash-kpis" aria-label="آمار صف">
+        <article class="crm-dash-kpi crm-dash-kpi--warn">
+            <span class="crm-dash-kpi-val">{{ queue_stats.overdue }}</span>
+            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">معوق</span></span>
         </article>
-        <article class="crm-today-stat crm-today-stat--today{% if queue_stats.today %} has-value{% endif %}">
-            <span class="crm-today-stat-icon" aria-hidden="true"><i class="fas fa-calendar-day"></i></span>
-            <span class="crm-today-stat-body">
-                <span class="crm-today-stat-val">{{ queue_stats.today }}</span>
-                <span class="crm-today-stat-lbl">امروز</span>
-            </span>
+        <article class="crm-dash-kpi crm-dash-kpi--accent">
+            <span class="crm-dash-kpi-val">{{ queue_stats.today }}</span>
+            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">امروز</span></span>
         </article>
-        <article class="crm-today-stat crm-today-stat--follow{% if queue_stats.followups %} has-value{% endif %}">
-            <span class="crm-today-stat-icon" aria-hidden="true"><i class="fas fa-phone-volume"></i></span>
-            <span class="crm-today-stat-body">
-                <span class="crm-today-stat-val">{{ queue_stats.followups }}</span>
-                <span class="crm-today-stat-lbl">پیگیری</span>
-            </span>
+        <article class="crm-dash-kpi">
+            <span class="crm-dash-kpi-val">{{ queue_stats.followups }}</span>
+            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">پیگیری</span></span>
         </article>
-        <article class="crm-today-stat crm-today-stat--remind{% if queue_stats.reminders %} has-value{% endif %}">
-            <span class="crm-today-stat-icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
-            <span class="crm-today-stat-body">
-                <span class="crm-today-stat-val">{{ queue_stats.reminders }}</span>
-                <span class="crm-today-stat-lbl">یادآور</span>
-            </span>
+        <article class="crm-dash-kpi">
+            <span class="crm-dash-kpi-val">{{ queue_stats.reminders }}</span>
+            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">یادآور</span></span>
         </article>
     </section>
 

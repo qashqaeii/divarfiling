@@ -151,9 +151,14 @@ def new_dataset(dataset_name: str, count: int) -> tuple[str, str]:
     )
 
 
-def customer_match(contact_name: str, listing_title: str) -> tuple[str, str]:
+def customer_match(contact_name: str, listing_title: str, *, count: int = 1) -> tuple[str, str]:
     name = (contact_name or 'مشتری').strip()
     listing = (listing_title or 'یک آگهی').strip()
+    if count > 1:
+        return (
+            'فایل مناسب پیدا شد',
+            f'برای «{name}» {count} ملک مناسب پیدا شد. یه نگاه بنداز.',
+        )
     return (
         'فایل مناسب پیدا شد',
         f'برای «{name}» آگهی «{listing}» خوب می‌خوره. یه نگاه بنداز.',

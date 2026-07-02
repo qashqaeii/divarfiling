@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static blog_tags %}
+{% load static blog_tags persian_tags %}
 
 {% block title %}{{ post.title }} — مقالات{% endblock %}
 {% block body_class %}mk-pub-page mk-blog-page mk-blog-detail{% endblock %}
@@ -64,11 +64,11 @@
                         </div>
                     </div>
                     <div class="mk-blog-meta-chips">
-                        <span class="mk-blog-meta-chip"><i class="fas fa-calendar"></i>{{ post.published_at|date:"Y/m/d" }}</span>
+                        <span class="mk-blog-meta-chip"><i class="fas fa-calendar"></i>{{ post.published_at|to_jalali_date:"%Y/%m/%d" }}</span>
                         <span class="mk-blog-meta-chip"><i class="fas fa-clock"></i>{{ reading_time }} دقیقه مطالعه</span>
                         <span class="mk-blog-meta-chip"><i class="fas fa-eye"></i>{{ post.views_count }} بازدید</span>
                         {% if post.updated_at and post.published_at and post.updated_at > post.published_at %}
-                        <span class="mk-blog-meta-chip"><i class="fas fa-pen"></i>به‌روز {{ post.updated_at|date:"Y/m/d" }}</span>
+                        <span class="mk-blog-meta-chip"><i class="fas fa-pen"></i>به‌روز {{ post.updated_at|to_jalali_date:"%Y/%m/%d" }}</span>
                         {% endif %}
                     </div>
                 </div>
@@ -267,7 +267,7 @@
                 </header>
                 <ul class="mk-blog-aside-summary-list">
                     <li><i class="fas fa-clock"></i> {{ reading_time }} دقیقه مطالعه</li>
-                    <li><i class="fas fa-calendar"></i> {{ post.published_at|date:"Y/m/d" }}</li>
+                    <li><i class="fas fa-calendar"></i> {{ post.published_at|to_jalali_date:"%Y/%m/%d" }}</li>
                     {% if post.category %}
                     <li><i class="fas {{ post.category.slug|category_icon }}"></i> {{ post.category.name }}</li>
                     {% endif %}

@@ -794,6 +794,43 @@ class ContactSendListingView(APIView):
             return api_error(str(exc), code='VALIDATION_ERROR')
 
 
+class ContactMatchesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, contact_id):
+        from workspace.services.crm_match_notifications import contact_matches_payload
+        payload = contact_matches_payload(request.user, contact_id)
+        if not payload:
+            return api_error('مخاطب یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class ContactSuggestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, contact_id):
+        from workspace.services.crm_match_notifications import suggest_contact_matches
+        data = _parse_body(request)
+        selected = data.get('matches') or data.get('selected') or []
+        if not isinstance(selected, list):
+            return api_error('لیست ملک‌ها نامعتبر است.', code='VALIDATION_ERROR')
+        try:
+            text, count = suggest_contact_matches(
+                request.user,
+                contact_id,
+                selected,
+                note=(data.get('note') or ''),
+            )
+            if count <= 0:
+                return api_error('مخاطب یافت نشد.', code='NOT_FOUND', status=404)
+            return api_ok({
+                'suggested_count': count,
+                'whatsapp_text': text,
+            }, status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
 class ReminderDetailView(APIView):
     permission_classes = [IsAuthenticated]
 

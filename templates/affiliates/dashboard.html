@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load currency_tags %}
+{% load persian_tags %}
 
 {% block title %}داشبورد مشاور - فایلینگ دیوار{% endblock %}
 
@@ -87,7 +88,7 @@
                                 <i class="fas fa-user" aria-hidden="true"></i> {{ user_data.user.username|default:user_data.user.email }}
                             </div>
                             <div class="text-white" style="font-size: var(--font-size-sm); opacity: 0.8;">
-                                <i class="fas fa-calendar" aria-hidden="true"></i> تاریخ ثبت‌نام: {{ user_data.user.date_joined|date:"Y/m/d" }}
+                                <i class="fas fa-calendar" aria-hidden="true"></i> تاریخ ثبت‌نام: {{ user_data.user.date_joined|to_jalali_date:"%Y/%m/%d" }}
                             </div>
                             {% if user_data.has_paid_order %}
                                 <div class="text-white" style="font-size: var(--font-size-sm); color: var(--color-success); margin-top: var(--spacing-xs);">
@@ -125,7 +126,7 @@
                                     کمیسیون: {{ sale.commission_amount|currency }} تومان ({{ sale.commission_rate }}%)
                                 </p>
                                 <p class="text-white" style="font-size: var(--font-size-sm);">
-                                    تاریخ: {{ sale.created_at|date:"Y/m/d H:i" }} - وضعیت: 
+                                    تاریخ: {{ sale.created_at|to_jalali:"%Y/%m/%d %H:%M" }} - وضعیت: 
                                     <span class="badge badge-{{ sale.status }}">{{ sale.get_status_display }}</span>
                                 </p>
                             </div>
@@ -150,7 +151,7 @@
                                     بانک: {{ withdrawal.bank_name }} - حساب: {{ withdrawal.bank_account }}
                                 </p>
                                 <p class="text-white" style="font-size: var(--font-size-sm);">
-                                    تاریخ: {{ withdrawal.created_at|date:"Y/m/d H:i" }} - وضعیت: 
+                                    تاریخ: {{ withdrawal.created_at|to_jalali:"%Y/%m/%d %H:%M" }} - وضعیت: 
                                     <span class="badge badge-{{ withdrawal.status }}">{{ withdrawal.get_status_display }}</span>
                                 </p>
                             </div>
@@ -181,7 +182,7 @@
                                     {{ transaction.description }}
                                 </p>
                                 <p class="text-white" style="font-size: var(--font-size-sm);">
-                                    تاریخ: {{ transaction.created_at|date:"Y/m/d H:i" }}
+                                    تاریخ: {{ transaction.created_at|to_jalali:"%Y/%m/%d %H:%M" }}
                                 </p>
                             </div>
                         </div>

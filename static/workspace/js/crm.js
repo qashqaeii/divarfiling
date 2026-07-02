@@ -1035,6 +1035,7 @@ function initCRMSidePanel() {
             ${data.notes ? `<div class="crm-preview-notes"><p>${data.notes}</p></div>` : ''}
             ${activities ? `<div class="crm-preview-timeline"><h3>فعالیت اخیر</h3><ul>${activities}</ul></div>` : ''}
             <div class="crm-preview-foot">
+                ${data.match_eligible ? `<a href="${data.matches_url || data.detail_url + '?tab=matches'}" class="crm-preview-btn crm-preview-btn--accent"><i class="fas fa-wand-magic-sparkles"></i> پیشنهاد ملک${data.match_count ? ` (${data.match_count})` : ''}</a>` : ''}
                 <a href="${data.detail_url}" class="crm-preview-btn crm-preview-btn--primary">پروفایل کامل</a>
                 <a href="${data.edit_url}" class="crm-preview-btn crm-preview-btn--secondary">ویرایش</a>
             </div>`;

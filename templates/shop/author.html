@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static seo_tags %}
+{% load static seo_tags persian_tags %}
 
 {% block title %}{{ author.meta_title }}{% endblock %}
 {% block body_class %}mk-pub-page author-page{% endblock %}
@@ -197,7 +197,7 @@
                         <p>{{ post.excerpt|truncatewords:18 }}</p>
                         {% endif %}
                         <footer class="author-post-foot">
-                            <time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:'Y/m/d' }}</time>
+                            <time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|to_jalali_date:"%Y/%m/%d" }}</time>
                             <span class="author-post-more">مطالعه <i class="fas fa-arrow-left"></i></span>
                         </footer>
                     </a>

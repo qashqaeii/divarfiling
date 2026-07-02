@@ -293,7 +293,17 @@ def run_all_scheduled(*, force_digest: bool = False) -> dict:
         'overdue_followup': process_overdue_followups(digest_hour_only=not force_digest),
         'license_expiry': process_license_expiry(),
         'extraction_schedules': process_due_extraction_schedules(),
+        'customer_matches': _process_customer_matches_safe(),
     }
+
+
+def _process_customer_matches_safe() -> int:
+    try:
+        from workspace.services.crm_match_notifications import process_customer_matches
+        return process_customer_matches()
+    except Exception:
+        logger.exception('customer match notification job failed')
+        return 0
 
 
 def _users_with_mobile_devices() -> Iterable:

@@ -13,27 +13,23 @@
     <header class="crm-dash-bar">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">داشبورد CRM</h1>
-            <p class="crm-dash-bar-sub">{{ request.user.get_full_name|default:request.user.username }}</p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات سریع">
-            <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act crm-dash-act--today">
-                {% include 'includes/icon_slot.html' with decor='list_todo' size='inline' only %}<span>امروز{% if today_count %} ({{ today_count }}){% endif %}</span>
+            <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act" title="صف کار امروز">
+                <i class="fas fa-list-check" aria-hidden="true"></i><span>امروز{% if today_count %} ({{ today_count }}){% endif %}</span>
             </a>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-quick-lead">
-                {% include 'includes/icon_slot.html' with decor='zap' size='inline' only %}<span>سرنخ</span>
+            <button type="button" class="crm-dash-act" data-drawer-open="drawer-quick-lead">
+                <i class="fas fa-bolt" aria-hidden="true"></i><span>سرنخ</span>
             </button>
             <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="crm-dash-act crm-dash-act--primary">
-                {% include 'includes/icon_slot.html' with decor='user' size='inline' only %}<span>مخاطب</span>
+                <i class="fas fa-user-plus" aria-hidden="true"></i><span>مخاطب</span>
             </a>
             <a href="{% url 'workspace:crm_properties' %}?drawer=property" class="crm-dash-act">
-                {% include 'includes/icon_slot.html' with decor='building' size='inline' only %}<span>ملک</span>
+                <i class="fas fa-building" aria-hidden="true"></i><span>ملک</span>
             </a>
-            <button type="button" class="crm-dash-act" data-modal-open="modal-reminder">
-                {% include 'includes/icon_slot.html' with decor='bell' size='inline' only %}<span>یادآور</span>
+            <button type="button" class="crm-dash-act crm-dash-act--icon" data-modal-open="modal-reminder" title="یادآور جدید">
+                <i class="fas fa-bell" aria-hidden="true"></i>
             </button>
-            <a href="{% url 'workspace:crm_contacts' %}?due=today" class="crm-dash-act">
-                {% include 'includes/icon_slot.html' with decor='calendar' size='inline' only %}<span>امروز</span>
-            </a>
         </div>
     </header>
 
@@ -159,7 +155,7 @@
                 {% for r in upcoming_reminders %}
                 <li class="crm-feed-v2-item">
                     <div class="crm-feed-v2-main">
-                        <span class="crm-feed-v2-time">{{ r.due_at|date:"H:i" }}</span>
+                        <span class="crm-feed-v2-time">{{ r.due_at|ws_time }}</span>
                         <span class="crm-feed-v2-text">
                             <strong>{{ r.title }}</strong>
                             {% if r.customer %}<em>{{ r.customer.name }}</em>{% endif %}

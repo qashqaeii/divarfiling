@@ -1,0 +1,283 @@
+"""اعلان خودکار تطبیق مخاطب با املاک — فایل شخصی و فایلینگ دیوار."""
+from __future__ import annotations
+
+import logging
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from django.utils import timezone
+
+from workspace.constants import LEAD_TYPES
+from workspace.models import Customer, PropertyMatchAlert
+from workspace.services.crm_matching import MATCH_TYPES, get_customer_matches
+
+logger = logging.getLogger(__name__)
+
+MATCH_ELIGIBLE_TYPES = MATCH_TYPES | LEAD_TYPES
+AUTO_NOTIFY_MIN_SCORE = 55
+AUTO_NOTIFY_MAX_PER_USER = 8
+AUTO_NOTIFY_MAX_PER_CUSTOMER = 1
+
+
+def is_match_eligible(customer: Customer) -> bool:
+    return customer.customer_type in MATCH_ELIGIBLE_TYPES
+
+
+def _match_key(match: Dict[str, Any]) -> str:
+    if match.get('source') == 'crm':
+        return f'crm:{match.get("property_id")}'
+    return f'divar:{match.get("token")}'
+
+
+def _existing_keys(user, customer: Customer) -> Set[str]:
+    return set(
+        PropertyMatchAlert.objects.filter(
+            user=user,
+            customer=customer,
+        ).exclude(status=PropertyMatchAlert.STATUS_DISMISSED).values_list('match_key', flat=True)
+    )
+
+
+def _already_suggested_keys(customer: Customer) -> Set[str]:
+    keys: Set[str] = set()
+    for link in customer.property_links.filter(role='پیشنهادی').select_related('property'):
+        if link.property_id:
+            keys.add(f'crm:{link.property_id}')
+    for listing in customer.linked_listings.filter(role='پیشنهادی'):
+        if listing.token:
+            keys.add(f'divar:{listing.token}')
+    return keys
+
+
+def filter_new_matches(
+    customer: Customer,
+    user,
+    matches: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """ملک‌هایی که هنوز اعلان/پیشنهاد نشده‌اند."""
+    skip = _existing_keys(user, customer) | _already_suggested_keys(customer)
+    fresh = []
+    for m in matches:
+        key = _match_key(m)
+        if key in skip:
+            continue
+        fresh.append({**m, 'match_key': key})
+    return fresh
+
+
+def record_match_alerts(
+    user,
+    customer: Customer,
+    matches: List[Dict[str, Any]],
+    *,
+    status: str = PropertyMatchAlert.STATUS_PENDING,
+    notified_at=None,
+) -> List[PropertyMatchAlert]:
+    created: List[PropertyMatchAlert] = []
+    for m in matches:
+        key = m.get('match_key') or _match_key(m)
+        alert, was_created = PropertyMatchAlert.objects.get_or_create(
+            user=user,
+            customer=customer,
+            match_key=key,
+            defaults={
+                'source': m.get('source', 'crm'),
+                'crm_property_id': m.get('property_id') if m.get('source') == 'crm' else None,
+                'listing_token': (m.get('token') or '') if m.get('source') == 'divar' else '',
+                'score': int(m.get('score') or 0),
+                'match_snapshot': {
+                    'title': m.get('title', ''),
+                    'price_label': m.get('price_label', ''),
+                    'neighborhood': m.get('neighborhood', ''),
+                    'reasons': m.get('reasons', [])[:4],
+                    'score': m.get('score', 0),
+                },
+                'status': status,
+                'notified_at': notified_at,
+            },
+        )
+        if was_created:
+            created.append(alert)
+    return created
+
+
+def discover_customer_matches(
+    customer: Customer,
+    user,
+    *,
+    divar_enabled: bool,
+    min_score: int = AUTO_NOTIFY_MIN_SCORE,
+) -> List[Dict[str, Any]]:
+    if not is_match_eligible(customer):
+        return []
+    if customer.status == 'بایگانی':
+        return []
+    data = get_customer_matches(customer, user, divar_enabled=divar_enabled)
+    if not data.get('eligible'):
+        return []
+    all_matches = list(data.get('crm_matches', [])) + list(data.get('divar_matches', []))
+    strong = [m for m in all_matches if int(m.get('score') or 0) >= min_score]
+    strong.sort(key=lambda x: int(x.get('score') or 0), reverse=True)
+    return filter_new_matches(customer, user, strong)
+
+
+def _notify_customer_matches(
+    user,
+    customer: Customer,
+    matches: List[Dict[str, Any]],
+) -> bool:
+    from mobile_api.services.notification_copy import customer_match as copy_customer_match
+    from mobile_api.services.notification_service import create_notification
+
+    if not matches:
+        return False
+    top = matches[0]
+    title, body = copy_customer_match(
+        customer.name,
+        top.get('title') or 'ملک',
+        count=len(matches),
+    )
+    now = timezone.now()
+    record_match_alerts(
+        user, customer, matches,
+        status=PropertyMatchAlert.STATUS_NOTIFIED,
+        notified_at=now,
+    )
+    create_notification(
+        user,
+        notification_type='customer_match',
+        title=title,
+        body=body,
+        deep_link=f'divarfiling://crm/contacts/{customer.pk}/matches',
+        data={
+            'contact_id': customer.pk,
+            'match_count': len(matches),
+            'top_score': top.get('score'),
+            'top_title': top.get('title', ''),
+            'source': top.get('source', ''),
+        },
+        send_push=True,
+    )
+    return True
+
+
+def process_user_customer_matches(user, *, divar_enabled: bool) -> int:
+    from mobile_api.services.notification_scheduler import user_push_enabled
+
+    if not user_push_enabled(user, 'customer_match'):
+        return 0
+
+    sent = 0
+    customers = (
+        Customer.objects.filter(user=user)
+        .exclude(status='بایگانی')
+        .filter(customer_type__in=MATCH_ELIGIBLE_TYPES)
+        .order_by('-updated_at')[:200]
+    )
+    for customer in customers:
+        if sent >= AUTO_NOTIFY_MAX_PER_USER:
+            break
+        matches = discover_customer_matches(customer, user, divar_enabled=divar_enabled)
+        if not matches:
+            continue
+        if _notify_customer_matches(user, customer, matches[:3]):
+            sent += 1
+    return sent
+
+
+def process_customer_matches(*, match_hour: int = 2) -> int:
+    """اسکن شبانه مخاطبین و ارسال اعلان تطبیق — یک‌بار در ساعت match_hour."""
+    from django.contrib.auth import get_user_model
+
+    from mobile_api.services.notification_scheduler import _users_with_mobile_devices
+    from workspace.services.access import has_active_bot_license
+
+    now = timezone.localtime(timezone.now())
+    if now.hour != match_hour:
+        return 0
+
+    User = get_user_model()
+    sent = 0
+    for user_id in _users_with_mobile_devices().values_list('pk', flat=True):
+        user = User.objects.filter(pk=user_id, is_active=True).first()
+        if not user:
+            continue
+        divar_enabled = has_active_bot_license(user)
+        sent += process_user_customer_matches(user, divar_enabled=divar_enabled)
+    return sent
+
+
+def notify_matches_after_extract(user, *, dataset_id: str = '') -> int:
+    """پس از استخراج/آپلود فایلینگ — بررسی فوری تطبیق‌ها."""
+    from workspace.services.access import has_active_bot_license
+
+    return process_user_customer_matches(user, divar_enabled=has_active_bot_license(user))
+
+
+def contact_matches_payload(user, contact_id: int) -> Optional[Dict[str, Any]]:
+    from workspace.services.access import has_active_bot_license
+    from workspace.services.crm_scope import customer_for_user
+
+    customer = customer_for_user(user, contact_id)
+    if not customer:
+        return None
+    divar_enabled = has_active_bot_license(user)
+    data = get_customer_matches(customer, user, divar_enabled=divar_enabled)
+    crm_matches = data.get('crm_matches', [])
+    divar_matches = data.get('divar_matches', [])
+    return {
+        'eligible': bool(data.get('eligible')),
+        'message': data.get('message', ''),
+        'divar_locked': bool(data.get('divar_locked')),
+        'crm_matches': crm_matches,
+        'divar_matches': divar_matches,
+        'total_count': len(crm_matches) + len(divar_matches),
+        'customer': {
+            'id': customer.pk,
+            'full_name': customer.name,
+            'customer_type': customer.customer_type,
+        },
+    }
+
+
+def suggest_contact_matches(
+    user,
+    contact_id: int,
+    selected: List[Dict[str, Any]],
+    *,
+    note: str = '',
+) -> Tuple[Optional[str], int]:
+    from workspace.services.crm import apply_property_suggestions
+    from workspace.services.crm_scope import customer_for_user
+
+    customer = customer_for_user(user, contact_id)
+    if not customer:
+        return None, 0
+    if not selected:
+        raise ValueError('حداقل یک ملک انتخاب کنید.')
+    from workspace.services.access import has_active_bot_license
+    if not has_active_bot_license(user):
+        selected = [m for m in selected if m.get('source') != 'divar']
+    if not selected:
+        raise ValueError('تطبیق فایلینگ دیوار نیاز به لایسنس فعال دارد.')
+    text = apply_property_suggestions(customer, user, selected, note=note)
+    now = timezone.now()
+    for m in selected:
+        key = _match_key(m)
+        PropertyMatchAlert.objects.update_or_create(
+            user=user,
+            customer=customer,
+            match_key=key,
+            defaults={
+                'source': m.get('source', 'crm'),
+                'crm_property_id': m.get('property_id') if m.get('source') == 'crm' else None,
+                'listing_token': (m.get('token') or '') if m.get('source') == 'divar' else '',
+                'score': int(m.get('score') or 0),
+                'match_snapshot': {
+                    'title': m.get('title', ''),
+                    'price_label': m.get('price_label', ''),
+                },
+                'status': PropertyMatchAlert.STATUS_SUGGESTED,
+                'notified_at': now,
+            },
+        )
+    return text, len(selected)

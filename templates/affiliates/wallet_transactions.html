@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load currency_tags %}
+{% load persian_tags %}
 
 {% block title %}تراکنش‌های کیف پول - فایلینگ دیوار{% endblock %}
 
@@ -41,7 +42,7 @@
                                     {{ transaction.description }}
                                 </p>
                                 <p class="text-white" style="font-size: var(--font-size-sm); margin-top: var(--spacing-xs);">
-                                    <i class="fas fa-clock" aria-hidden="true"></i> {{ transaction.created_at|date:"Y/m/d H:i" }}
+                                    <i class="fas fa-clock" aria-hidden="true"></i> {{ transaction.created_at|to_jalali:"%Y/%m/%d %H:%M" }}
                                 </p>
                             </div>
                             <div>

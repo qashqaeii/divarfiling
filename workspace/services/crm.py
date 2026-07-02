@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 import jdatetime
 
-from workspace.services.jalali_input import format_jalali_date
+from workspace.services.jalali_input import format_jalali_date, to_persian_digits
 
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -535,7 +535,7 @@ def get_activity_trends(user, days: int = 7) -> Dict[str, Any]:
             labels.append(_PERSIAN_DAYS[d.weekday()])
         else:
             j = jdatetime.date.fromgregorian(date=d)
-            labels.append(j.strftime('%m/%d'))
+            labels.append(to_persian_digits(f'{j.day:02d}/{j.month:02d}'))
         contacts.append(customers_qs(user).filter(created_at__date=d).count())
         properties.append(properties_qs(user).filter(created_at__date=d).count())
         contracts.append(

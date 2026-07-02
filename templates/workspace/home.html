@@ -309,7 +309,7 @@
                         {% for r in upcoming_reminders %}
                         <li class="mk-hub-feed-item">
                             <div class="mk-hub-feed-main">
-                                <span class="mk-hub-time">{{ r.due_at|date:"H:i" }}</span>
+                                <span class="mk-hub-time">{{ r.due_at|ws_time }}</span>
                                 <span class="mk-hub-feed-text">
                                     <strong>{{ r.title }}</strong>
                                     {% if r.customer %}<em>{{ r.customer.name }}</em>{% endif %}

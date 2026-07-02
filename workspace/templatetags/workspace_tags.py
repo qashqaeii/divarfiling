@@ -73,6 +73,27 @@ def ws_jalali_date(value):
 
 
 @register.filter
+def ws_time(value):
+    """ساعت محلی با ارقام فارسی."""
+    from django.utils import timezone
+    from workspace.services.jalali_input import to_persian_digits
+
+    if not value:
+        return '—'
+    dt = timezone.localtime(value) if hasattr(value, 'hour') else value
+    try:
+        import jdatetime
+        if hasattr(dt, 'hour'):
+            j = jdatetime.datetime.fromgregorian(datetime=dt)
+            return to_persian_digits(f'{j.hour:02d}:{j.minute:02d}')
+    except Exception:
+        pass
+    if hasattr(dt, 'hour'):
+        return to_persian_digits(f'{dt.hour:02d}:{dt.minute:02d}')
+    return '—'
+
+
+@register.filter
 def ws_tx_profile(transaction_type):
     return transaction_profile(transaction_type)
 

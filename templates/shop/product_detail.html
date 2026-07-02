@@ -3,6 +3,7 @@
 {% load seo_tags %}
 {% load breadcrumbs %}
 {% load currency_tags %}
+{% load persian_tags %}
 
 {% block title %}{{ product.title }} - فایلینگ دیوار{% endblock %}
 
@@ -366,7 +367,7 @@ Breadcrumbs removed for fullscreen design
                                             <div class="user-info">
                                                 <h4 class="user-name">{{ review.user.username }}</h4>
                                                 <div class="review-meta-info">
-                                                    <span class="review-date-text">{{ review.created_at|date:"Y/m/d" }}</span>
+                                                    <span class="review-date-text">{{ review.created_at|to_jalali_date:"%Y/%m/%d" }}</span>
                                                     {% if review.is_verified_purchase %}
                                                         <span class="verified-purchase-badge">
                                                             <i class="fas fa-check-circle" aria-hidden="true"></i> خرید تایید شده

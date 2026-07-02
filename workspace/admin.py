@@ -2,10 +2,18 @@ from django.contrib import admin
 
 from workspace.models import (
     CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing,
-    CRMPropertyPublicShare,
+    CRMPropertyPublicShare, PropertyMatchAlert,
     Dataset, Listing, ListingMeta, ListingPublicShare, PriceHistory,
     PropertyContact, Reminder, WorkspaceSettings,
 )
+
+
+@admin.register(PropertyMatchAlert)
+class PropertyMatchAlertAdmin(admin.ModelAdmin):
+    list_display = ('customer', 'source', 'match_key', 'score', 'status', 'user', 'created_at')
+    list_filter = ('source', 'status')
+    search_fields = ('customer__name', 'match_key', 'listing_token')
+    raw_id_fields = ('user', 'customer', 'crm_property')
 
 
 @admin.register(Dataset)

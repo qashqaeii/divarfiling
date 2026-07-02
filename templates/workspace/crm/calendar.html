@@ -8,7 +8,20 @@
 {% block crm_actions %}{% endblock %}
 
 {% block crm_content %}
-<div class="crm-shell-page crm-cal-page">
+<div class="crm-shell-page crm-cal-page crm-page-chrome">
+    <header class="crm-dash-bar">
+        <div class="crm-dash-bar-main">
+            <h1 class="crm-dash-bar-title">تقویم</h1>
+        </div>
+        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات تقویم">
+            <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act">
+                <i class="fas fa-list-check" aria-hidden="true"></i><span>صف کار</span>
+            </a>
+            <a href="{% url 'workspace:crm_reminders' %}" class="crm-dash-act crm-dash-act--icon" title="یادآورها">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+            </a>
+        </div>
+    </header>
     <div class="crm-shell-body crm-shell-body--flush">
     <div class="crm-cal-layout">
         <section class="crm-cal-board" aria-label="تقویم {{ calendar.title }}">

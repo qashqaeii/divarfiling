@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static blog_tags %}
+{% load static blog_tags persian_tags %}
 
 {% block title %}مقالات — فایلینگ دیوار{% endblock %}
 {% block body_class %}mk-pub-page mk-blog-page{% endblock %}
@@ -112,7 +112,7 @@
                         </p>
                         <div class="mk-blog-featured-meta">
                             <span><i class="fas fa-user-pen"></i>{{ featured_post.author.get_full_name|default:featured_post.author.username }}</span>
-                            <span><i class="fas fa-calendar"></i>{{ featured_post.published_at|date:"Y/m/d" }}</span>
+                            <span><i class="fas fa-calendar"></i>{{ featured_post.published_at|to_jalali_date:"%Y/%m/%d" }}</span>
                             <span><i class="fas fa-clock"></i>{{ featured_post.content|reading_time }} دقیقه</span>
                             <span><i class="fas fa-eye"></i>{{ featured_post.views_count }} بازدید</span>
                         </div>
@@ -151,7 +151,7 @@
                             <p class="mk-blog-card-excerpt">{{ post.excerpt|default:post.content|striptags|truncatewords:22 }}</p>
                             <div class="mk-blog-card-foot">
                                 <div class="mk-blog-card-meta">
-                                    <span><i class="fas fa-calendar"></i>{{ post.published_at|date:"Y/m/d" }}</span>
+                                    <span><i class="fas fa-calendar"></i>{{ post.published_at|to_jalali_date:"%Y/%m/%d" }}</span>
                                     <span><i class="fas fa-eye"></i>{{ post.views_count }}</span>
                                 </div>
                                 <span class="mk-blog-card-more">مطالعه <i class="fas fa-arrow-left"></i></span>

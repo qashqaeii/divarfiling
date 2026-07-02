@@ -24,6 +24,7 @@ from .sample_excel import get_sale_apartment_excel_preview
 from .education_content import education_hub_content
 from .seo_landings import get_landing, landing_schema_json
 from .author_content import author_page_content, AUTHOR_SLUG
+from workspace.services.jalali_input import format_jalali_datetime
 from .models import Product, LicensePlan, Order, ProductRating, ProductReview, ReviewHelpful, DiscountCode
 from .forms import ContactForm, BuyForm, RatingForm, ReviewForm
 import requests
@@ -606,7 +607,7 @@ def submit_review(request, slug):
                 'title': review.title,
                 'content': review.content,
                 'user': review.user.username,
-                'created_at': review.created_at.strftime('%Y-%m-%d %H:%M'),
+                'created_at': format_jalali_datetime(review.created_at),
                 'is_approved': review.is_approved,
                 'is_verified_purchase': review.is_verified_purchase
             }

@@ -980,6 +980,62 @@ class CRMSavedFilter(models.Model):
         return f'{self.name} ({self.scope})'
 
 
+class PropertyMatchAlert(models.Model):
+    """ثبت تطبیق‌های کشف‌شده — جلوگیری از اعلان تکراری و تاریخچه پیشنهاد."""
+    MATCH_SOURCES = [('crm', 'فایل شخصی'), ('divar', 'فایلینگ دیوار')]
+    STATUS_PENDING = 'pending'
+    STATUS_NOTIFIED = 'notified'
+    STATUS_SUGGESTED = 'suggested'
+    STATUS_DISMISSED = 'dismissed'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'در انتظار'),
+        (STATUS_NOTIFIED, 'اعلان‌شده'),
+        (STATUS_SUGGESTED, 'پیشنهاد ثبت‌شده'),
+        (STATUS_DISMISSED, 'رد شده'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='property_match_alerts', verbose_name='کاربر',
+    )
+    customer = models.ForeignKey(
+        'Customer', on_delete=models.CASCADE,
+        related_name='match_alerts', verbose_name='مخاطب',
+    )
+    source = models.CharField(max_length=10, choices=MATCH_SOURCES, verbose_name='منبع')
+    match_key = models.CharField(max_length=120, verbose_name='کلید یکتا')
+    crm_property = models.ForeignKey(
+        CRMProperty, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='match_alerts', verbose_name='ملک CRM',
+    )
+    listing_token = models.CharField(max_length=100, blank=True, verbose_name='توکن آگهی')
+    score = models.PositiveSmallIntegerField(default=0, verbose_name='امتیاز')
+    match_snapshot = models.JSONField(default=dict, blank=True, verbose_name='خلاصه تطبیق')
+    status = models.CharField(
+        max_length=12, choices=STATUS_CHOICES, default=STATUS_PENDING, verbose_name='وضعیت',
+    )
+    notified_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان اعلان')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'هشدار تطبیق ملک'
+        verbose_name_plural = 'هشدارهای تطبیق ملک'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'customer', 'match_key'],
+                name='uniq_property_match_alert',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['user', 'status', '-created_at']),
+            models.Index(fields=['customer', 'status']),
+        ]
+
+    def __str__(self):
+        return f'{self.customer_id} · {self.match_key} ({self.score})'
+
+
 class WorkspaceSettings(models.Model):
     """تنظیمات workspace کاربر."""
     THEME_CHOICES = [('light', 'روشن'), ('cheerful', 'شاد'), ('dark', 'تیره')]

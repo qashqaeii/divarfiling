@@ -17,6 +17,7 @@ from mobile_api.serializers import (
 )
 from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing, PropertyContact, Reminder
 from workspace.services.crm import filter_contacts, link_customer_listing, log_activity
+from workspace.services.crm_match_notifications import is_match_eligible
 from workspace.services.crm_scope import customers_qs, get_agency, properties_qs, reminders_qs
 from workspace.services.crm_today import get_today_queue
 from accounts.phone_utils import normalize_phone
@@ -82,10 +83,34 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
         c.priority = data['priority']
     if 'notes' in data:
         c.notes = data['notes'] or ''
-    if 'budget' in data:
-        c.budget_max = data['budget']
+    if 'property_type' in data:
+        c.property_type = (data['property_type'] or '').strip()
+    if 'rooms' in data:
+        c.rooms = (data['rooms'] or '').strip()
+    if 'areas' in data:
+        c.areas = (data['areas'] or '').strip()
+    for field in ('budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max'):
+        if field in data:
+            setattr(c, field, _optional_bigint(data[field]))
+    if 'budget' in data and 'budget_max' not in data:
+        c.budget_max = _optional_bigint(data['budget'])
+    for field in ('min_area', 'max_area'):
+        if field in data:
+            setattr(c, field, _optional_int(data[field]))
     c.save()
     return c
+
+
+def _optional_bigint(value):
+    if value is None or value == '':
+        return None
+    return int(value)
+
+
+def _optional_int(value):
+    if value is None or value == '':
+        return None
+    return int(value)
 
 
 def create_quick_lead(user, data: Dict[str, Any]) -> Customer:

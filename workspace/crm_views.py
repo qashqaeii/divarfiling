@@ -62,7 +62,7 @@ from workspace.services.crm_property_share import (
 from workspace.services.crm_sync import export_crm_payload, import_crm_payload
 from workspace.services.crm_webhooks import create_lead_from_api, dispatch_webhook, verify_api_key
 from workspace.services.display import to_jalali_display
-from workspace.services.jalali_input import to_persian_digits
+from workspace.services.jalali_input import format_jalali_date, to_persian_digits
 from workspace.services.listing_features import feature_highlights_for_listing, build_listing_feature_profile
 
 logger = logging.getLogger(__name__)
@@ -115,7 +115,9 @@ from workspace.services.crm_deal_stages import (
 from workspace.services.crm_deal_checklist import (
     checklist_progress, ensure_deal_checklist, toggle_checklist_item,
 )
-from workspace.services.crm_matching import get_customer_matches
+from workspace.services.crm_matching import MATCH_TYPES, get_customer_matches
+from workspace.constants import LEAD_TYPES
+from workspace.services.crm_match_notifications import is_match_eligible
 from workspace.services.crm_import import (
     import_contacts_from_file, import_column_specs, import_template_excel_response, import_template_headers,
 )
@@ -310,6 +312,7 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['saved_filter_base'] = reverse('workspace:crm_contacts')
         ctx['saved_filter_params'] = current_params_from_request(self.request, 'contacts')
         ctx['saved_filter_can_save'] = bool(ctx['saved_filter_params'])
+        ctx['match_eligible_types'] = MATCH_TYPES | LEAD_TYPES
         return ctx
 
 
@@ -427,13 +430,15 @@ class CustomerPanelView(LoginRequiredMixin, View):
             'status': customer.status,
             'priority': customer.priority,
             'source': customer.source,
-            'next_follow_up': fu.isoformat() if fu else '',
+            'next_follow_up': to_persian_digits(format_jalali_date(fu)) if fu else '',
             'follow_state': follow_state,
             'notes': (customer.notes or '')[:280],
             'areas': customer.areas or '',
             'budget_label': _panel_budget_label(customer),
             'detail_url': reverse('workspace:crm_detail', kwargs={'customer_id': customer.pk}),
             'edit_url': f"{reverse('workspace:crm_detail', kwargs={'customer_id': customer.pk})}?drawer=edit",
+            'matches_url': f"{reverse('workspace:crm_detail', kwargs={'customer_id': customer.pk})}?tab=matches",
+            'match_eligible': is_match_eligible(customer),
             'whatsapp_url': f'https://wa.me/98{phone_wa}' if phone_wa else '',
             'tel_url': f'tel:{customer.phone}' if customer.phone else '',
             'match_count': match_count,

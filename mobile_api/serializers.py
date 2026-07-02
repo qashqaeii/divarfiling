@@ -15,6 +15,7 @@ from workspace.services.features import (
     parse_rooms_value,
 )
 from workspace.services.listing_features import build_listing_feature_profile, feature_highlights_for_listing
+from workspace.services.crm_match_notifications import is_match_eligible
 from workspace.services.advertiser_signal import (
     advertiser_signal_label,
     listing_advertiser_display,
@@ -209,6 +210,15 @@ def contact_to_dict(c: Customer) -> Dict[str, Any]:
         'budget': budget,
         'budget_min': c.budget_min,
         'budget_max': c.budget_max,
+        'deposit_min': c.deposit_min,
+        'deposit_max': c.deposit_max,
+        'rent_min': c.rent_min,
+        'rent_max': c.rent_max,
+        'property_type': c.property_type or '',
+        'min_area': c.min_area,
+        'max_area': c.max_area,
+        'rooms': c.rooms or '',
+        'areas': c.areas or '',
         'notes': c.notes or '',
         'address': c.city or '',
         'city': c.city or '',
@@ -218,6 +228,7 @@ def contact_to_dict(c: Customer) -> Dict[str, Any]:
         'next_follow_up_at': c.next_follow_up.isoformat() if c.next_follow_up else None,
         'updated_at': c.updated_at.isoformat() if c.updated_at else None,
         'created_at': c.created_at.isoformat() if c.created_at else None,
+        'match_eligible': is_match_eligible(c),
     }
 
 

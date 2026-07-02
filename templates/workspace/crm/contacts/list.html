@@ -148,6 +148,9 @@
                             </td>
                             <td class="crm-contacts-col-actions">
                                 <div class="crm-contacts-row-actions">
+                                    {% if c.customer_type in match_eligible_types %}
+                                    <a href="{% url 'workspace:crm_detail' c.id %}?tab=matches" class="crm-contacts-row-act crm-contacts-row-act--match" title="پیشنهاد ملک"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></a>
+                                    {% endif %}
                                     <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-row-act" title="پروفایل"><i class="fas fa-arrow-left" aria-hidden="true"></i></a>
                                     {% if c.phone %}<a href="tel:{{ c.phone }}" class="crm-contacts-row-act" title="تماس"><i class="fas fa-phone" aria-hidden="true"></i></a>{% endif %}
                                 </div>

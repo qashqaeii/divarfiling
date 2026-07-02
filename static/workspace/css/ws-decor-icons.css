@@ -37,7 +37,6 @@
 .mk-hub-head-btn .df-decor-icon,
 .mk-ds-kpi-icon .df-decor-icon,
 .ws-stat-icon .df-decor-icon,
-.crm-dash-act .df-decor-icon,
 .crm-deal-kpi-icon .df-decor-icon,
 .ws-tbx-kpi-icon .df-decor-icon,
 .ws-tbx-nav-icon .df-decor-icon,
@@ -75,9 +74,24 @@
     height: 1.1rem;
 }
 
+.crm-dash-act .df-decor-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    flex-shrink: 0;
+    line-height: 0;
+}
+
 .crm-dash-act .df-decor-icon img {
-    width: 0.9rem;
-    height: 0.9rem;
+    width: 0.72rem;
+    height: 0.72rem;
+    display: block;
+}
+
+.crm-dash-act--primary .df-decor-icon img {
+    filter: brightness(0) invert(1);
 }
 
 .crm-deal-kpi-icon .df-decor-icon img {

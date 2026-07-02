@@ -6,7 +6,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/listing-public-share.css' %}?v=2">
 {% if listing.latitude and listing.longitude %}
-<link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=4">
 {% endif %}
 {% endblock %}
 
@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function () {
 {{ listing_map_marker|json_script:"listing-map-marker" }}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{% static 'workspace/js/listing-map.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/listing-map.js' %}?v=3"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var markerEl = document.getElementById('listing-map-marker');

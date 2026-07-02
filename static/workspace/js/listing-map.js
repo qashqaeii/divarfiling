@@ -399,18 +399,21 @@
                 : 'زوم —';
         }
 
-        function maybeOpenPopup() {
-            if (!mapHasLayout()) return;
-            setTimeout(() => {
-                try { locationLayer.openPopup(); } catch (e) { /* ignore */ }
-            }, 280);
-        }
-
         fitMapView(false);
         updateZoomBadge();
         map.on('zoomend', updateZoomBadge);
 
         fitBtn?.addEventListener('click', () => fitMapView(true), { signal });
+
+        function onFullscreenResize() {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    map.invalidateSize();
+                    fitMapView(false);
+                    updateZoomBadge();
+                });
+            });
+        }
 
         fullscreenBtn?.addEventListener('click', async () => {
             const target = stage || el;
@@ -419,6 +422,7 @@
                 if (!document.fullscreenElement) {
                     await target.requestFullscreen();
                     fullscreenBtn.querySelector('i')?.classList.replace('fa-expand', 'fa-compress');
+                    onFullscreenResize();
                 } else {
                     await document.exitFullscreen();
                     fullscreenBtn.querySelector('i')?.classList.replace('fa-compress', 'fa-expand');
@@ -430,19 +434,14 @@
             if (!document.fullscreenElement) {
                 fullscreenBtn?.querySelector('i')?.classList.replace('fa-compress', 'fa-expand');
             }
-            setTimeout(() => {
-                map.invalidateSize();
-                fitMapView(false);
-                updateZoomBadge();
-            }, 120);
+            onFullscreenResize();
         }, { signal });
 
-        function refreshMapSize(openPopup) {
+        function refreshMapSize() {
             setTimeout(() => {
                 map.invalidateSize();
                 fitMapView(false);
                 updateZoomBadge();
-                if (openPopup) maybeOpenPopup();
             }, 120);
         }
 
@@ -452,20 +451,18 @@
                 if (!locationPanel.hidden) {
                     panelObserver?.disconnect();
                     panelObserver = null;
-                    refreshMapSize(true);
+                    refreshMapSize();
                 }
             });
             panelObserver.observe(locationPanel, { attributes: true, attributeFilter: ['hidden'] });
-        } else {
-            maybeOpenPopup();
         }
 
         document.querySelector('.ws-ld-tabs [data-tab="مکان"]')
-            ?.addEventListener('click', () => refreshMapSize(true), { signal });
+            ?.addEventListener('click', () => refreshMapSize(), { signal });
         document.querySelector('[data-ld-map-jump]')
-            ?.addEventListener('click', () => setTimeout(() => refreshMapSize(true), 180), { signal });
+            ?.addEventListener('click', () => setTimeout(refreshMapSize, 180), { signal });
 
-        refreshMapSize(false);
+        refreshMapSize();
         listingMapInstances.set(mapId, { cleanup, map });
         global.wsLdDetailMap = map;
         return { map, destroy: cleanup };

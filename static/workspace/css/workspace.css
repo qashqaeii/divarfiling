@@ -1829,6 +1829,23 @@ body.ws-modal-open { overflow: hidden; }
     border-radius: 0 0 var(--ws-radius-sm) var(--ws-radius-sm);
     z-index: 1;
 }
+.ws-ld-location-map-stage:fullscreen,
+.ws-ld-location-map-stage:-webkit-full-screen {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+}
+.ws-ld-location-map-stage:fullscreen .ws-ld-location-map,
+.ws-ld-location-map-stage:-webkit-full-screen .ws-ld-location-map {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100% !important;
+    min-height: 0;
+    max-height: none;
+}
 .ws-ld-location-map {
     height: min(52vh, 420px);
     min-height: 280px;

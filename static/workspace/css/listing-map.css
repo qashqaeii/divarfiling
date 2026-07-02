@@ -134,6 +134,28 @@
     border-radius: 0 0 10px 10px;
     z-index: 1;
 }
+.ws-ld-location-map-stage:fullscreen,
+.ws-ld-location-map-stage:-webkit-full-screen {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    background: #e8edf2;
+}
+.ws-ld-location-map-stage:fullscreen .ws-ld-location-map,
+.ws-ld-location-map-stage:-webkit-full-screen .ws-ld-location-map {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100% !important;
+    min-height: 0;
+    max-height: none;
+}
+.ws-ld-location-map-stage:fullscreen .ws-ld-location-map-chrome,
+.ws-ld-location-map-stage:-webkit-full-screen .ws-ld-location-map-chrome {
+    z-index: 1000;
+}
 .ws-ld-location-map-wrap .leaflet-container {
     z-index: 1;
 }

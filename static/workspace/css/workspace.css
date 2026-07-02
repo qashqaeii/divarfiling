@@ -1675,8 +1675,9 @@ body.ws-modal-open { overflow: hidden; }
     margin-top: 1.1rem;
     border: 1px solid var(--ws-border);
     border-radius: var(--ws-radius-sm);
-    overflow: hidden;
+    overflow: visible;
     background: var(--ws-surface);
+    position: relative;
 }
 .ws-ld-location-map-head {
     display: flex;
@@ -1687,6 +1688,9 @@ body.ws-modal-open { overflow: hidden; }
     padding: .55rem .75rem;
     border-bottom: 1px solid var(--ws-border);
     background: var(--ws-surface-elevated, var(--ws-surface));
+    position: relative;
+    z-index: 30;
+    border-radius: var(--ws-radius-sm) var(--ws-radius-sm) 0 0;
 }
 .ws-ld-location-map-head-main {
     display: flex;
@@ -1719,7 +1723,7 @@ body.ws-modal-open { overflow: hidden; }
     flex-shrink: 0;
 }
 .ws-ld-basemap-wrap.is-open {
-    z-index: 30;
+    z-index: 650;
 }
 .ws-ld-basemap-toggle {
     display: inline-flex;
@@ -1774,6 +1778,7 @@ body.ws-modal-open { overflow: hidden; }
     border-radius: var(--ws-radius-sm);
     background: var(--ws-surface);
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+    z-index: 660;
 }
 .ws-ld-basemap-option {
     display: flex;
@@ -1820,6 +1825,9 @@ body.ws-modal-open { overflow: hidden; }
 .ws-ld-location-map-stage {
     position: relative;
     background: #e8edf2;
+    overflow: hidden;
+    border-radius: 0 0 var(--ws-radius-sm) var(--ws-radius-sm);
+    z-index: 1;
 }
 .ws-ld-location-map {
     height: min(52vh, 420px);

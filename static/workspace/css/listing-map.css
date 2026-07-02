@@ -13,13 +13,14 @@
     margin-top: 1.1rem;
     border: 1px solid var(--lm-border);
     border-radius: 10px;
-    overflow: hidden;
+    overflow: visible;
     background: var(--lm-surface);
+    position: relative;
 }
 .ps-page .ws-ld-location-map-wrap { margin-top: 0; }
 .ps-map-card {
     padding: 0;
-    overflow: hidden;
+    overflow: visible;
 }
 .ps-map-card .ws-ld-location-map-head {
     padding-top: .65rem;
@@ -35,6 +36,9 @@
     padding: .55rem .75rem;
     border-bottom: 1px solid var(--lm-border);
     background: var(--lm-surface-2);
+    position: relative;
+    z-index: 30;
+    border-radius: 10px 10px 0 0;
 }
 .ws-ld-location-map-head-main {
     display: flex;
@@ -62,8 +66,8 @@
     background: rgba(245, 158, 11, 0.12);
     color: #b45309;
 }
-.ws-ld-basemap-wrap { position: relative; flex-shrink: 0; }
-.ws-ld-basemap-wrap.is-open { z-index: 30; }
+.ws-ld-basemap-wrap { position: relative; flex-shrink: 0; z-index: 1; }
+.ws-ld-basemap-wrap.is-open { z-index: 650; }
 .ws-ld-basemap-toggle {
     display: inline-flex;
     align-items: center;
@@ -103,7 +107,7 @@
     border-radius: 10px;
     background: var(--lm-surface);
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
-    z-index: 40;
+    z-index: 660;
 }
 .ws-ld-basemap-option {
     display: flex;
@@ -123,7 +127,16 @@
 .ws-ld-basemap-option-text { display: flex; flex-direction: column; gap: .08rem; }
 .ws-ld-basemap-option-text strong { font-size: .7rem; }
 .ws-ld-basemap-option-text span { font-size: .62rem; color: var(--lm-text-muted); }
-.ws-ld-location-map-stage { position: relative; background: #e8edf2; }
+.ws-ld-location-map-stage {
+    position: relative;
+    background: #e8edf2;
+    overflow: hidden;
+    border-radius: 0 0 10px 10px;
+    z-index: 1;
+}
+.ws-ld-location-map-wrap .leaflet-container {
+    z-index: 1;
+}
 .ws-ld-location-map {
     height: min(52vh, 420px);
     min-height: 280px;

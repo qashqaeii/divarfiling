@@ -1,7 +1,6 @@
 """داده نقشه تک‌ملکی — جزئیات میزکار و صفحه عمومی."""
 from __future__ import annotations
 
-import json
 import math
 from typing import Any, Dict, Optional
 
@@ -59,6 +58,9 @@ def build_listing_map_marker(
         verdict = (benchmark.get('verdict') or '').strip()
         market_tier = market_tier_from_score(score)
 
+    area_value = _json_safe_float(listing.area)
+    pps_value = _json_safe_float(listing.price_per_sqm)
+
     marker = {
         'lat': _json_safe_float(listing.latitude),
         'lng': _json_safe_float(listing.longitude),
@@ -66,10 +68,10 @@ def build_listing_map_marker(
         'price_label': listing_map_price_label(listing, tx),
         'deposit_label': listing_map_deposit_label(listing),
         'rent_label': listing_map_rent_label(listing),
-        'area': _json_safe_float(listing.area) or 0,
-        'area_label': format_area(listing.area) if listing.area else '',
+        'area': area_value or 0,
+        'area_label': format_area(area_value) if area_value else '',
         'rooms': listing.rooms or '',
-        'pps_label': format_toman(listing.price_per_sqm, per_sqm=True) if listing.price_per_sqm else '',
+        'pps_label': format_toman(pps_value, per_sqm=True) if pps_value else '',
         'neighborhood': listing.neighborhood or '',
         'city': listing.city or '',
         'is_consultant': is_consultant,

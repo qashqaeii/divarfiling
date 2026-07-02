@@ -62,3 +62,16 @@ class ListingMapMarkerTests(SimpleTestCase):
         encoded = json.dumps(marker, ensure_ascii=False)
         self.assertNotIn('NaN', encoded)
         self.assertIn('"value_score": null', encoded)
+
+    def test_nan_area_is_sanitized_consistently(self):
+        listing = FakeListing()
+        listing.area = float('nan')
+        listing.price_per_sqm = float('nan')
+        tx = transaction_profile('فروش')
+        marker = build_listing_map_marker(listing, tx)
+
+        self.assertEqual(marker['area'], 0)
+        self.assertEqual(marker['area_label'], '')
+        self.assertEqual(marker['pps_label'], '')
+        encoded = json.dumps(marker, ensure_ascii=False)
+        self.assertNotIn('nan', encoded.lower())

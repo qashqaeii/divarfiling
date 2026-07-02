@@ -209,7 +209,63 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-mk-table]').forEach(initMkDataTable);
     initDatasetBulkSelect();
     initFormattedNumericInputs();
+    initPublicShareForms();
 });
+
+function getCsrfToken() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (el && el.value) return el.value;
+    const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+}
+
+function initPublicShareForms() {
+    document.querySelectorAll('.mk-share-form').forEach((form) => {
+        if (form.dataset.shareAjaxBound === '1') return;
+        form.dataset.shareAjaxBound = '1';
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = form.querySelector('[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+            try {
+                const body = new FormData(form);
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body,
+                    credentials: 'same-origin',
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.ok) {
+                    window.alert(data.error || data.message || 'ذخیره تنظیمات انجام نشد.');
+                    return;
+                }
+                const urlInput = form.querySelector('.mk-share-link-input');
+                if (urlInput && data.share_url) urlInput.value = data.share_url;
+                form.querySelectorAll('[data-copy]').forEach((btn) => {
+                    if (data.share_url) btn.dataset.copy = data.share_url;
+                });
+                form.querySelectorAll('[data-share-wa]').forEach((btn) => {
+                    if (data.share_url) btn.dataset.shareUrl = data.share_url;
+                });
+                const modal = form.closest('.ws-modal');
+                if (typeof WSModal !== 'undefined' && modal) WSModal.close(modal);
+                if (typeof window.showWsToast === 'function') {
+                    window.showWsToast(data.message || 'تنظیمات اشتراک ذخیره شد.', 'success');
+                } else {
+                    window.alert(data.message || 'تنظیمات اشتراک ذخیره شد.');
+                }
+            } catch (err) {
+                window.alert('خطای شبکه — دوباره تلاش کنید.');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+    });
+}
 
 function initDatasetBulkSelect() {
     const selectAll = document.getElementById('dsSelectAll');

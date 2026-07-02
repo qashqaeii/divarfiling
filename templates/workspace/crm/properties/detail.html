@@ -599,7 +599,7 @@
 {% block modals %}
 {% if is_property_owner and public_property_share and not property_is_deleted %}
 {% url 'workspace:crm_property_public_share' property.id as property_share_action %}
-{% include 'workspace/includes/public_share_modal.html' with modal_id='modal-property-share' form_id='form-property-share' form_action=property_share_action share_url=public_property_share_url share=public_property_share item_title=property.title id_prefix='property-share' subtitle='لینک عمومی — مشتری بدون ورود، جزئیات فایل و اطلاعات شما را می‌بیند' is_personal_file=True only %}
+{% include 'workspace/includes/public_share_modal.html' with modal_id='modal-property-share' form_id='form-property-share' form_action=property_share_action share_url=public_property_share_url share=public_property_share item_title=property.title id_prefix='property-share' subtitle='لینک عمومی — مشتری بدون ورود، جزئیات فایل و اطلاعات شما را می‌بیند' is_personal_file=True %}
 {% endif %}
 {% endblock %}
 

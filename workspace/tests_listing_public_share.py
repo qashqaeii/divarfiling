@@ -119,6 +119,19 @@ class ListingPublicShareTests(TestCase):
         self.assertIn('share_url', data)
 
     @patch('workspace.mixins.has_active_bot_license', return_value=True)
+    def test_listing_detail_share_form_has_csrf(self, _mock_license):
+        self.client.login(username='09121234567', password='testpass123')
+        url = reverse(
+            'workspace:listing_detail',
+            kwargs={'dataset_id': self.dataset.pk, 'listing_id': self.listing.pk},
+        )
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'id="form-listing-share"')
+        self.assertContains(resp, 'name="csrfmiddlewaretoken"')
+        self.assertRegex(resp.content.decode(), r'name="csrfmiddlewaretoken"\s+value="[^"]+"')
+
+    @patch('workspace.mixins.has_active_bot_license', return_value=True)
     def test_share_manage_can_deactivate(self, _mock_license):
         self.client.login(username='09121234567', password='testpass123')
         url = reverse(

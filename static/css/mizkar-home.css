@@ -6630,6 +6630,92 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--deck .mk-hero-bg::befo
     display: none;
 }
 
+/* Hero background — magnifying glass (desktop pointer) */
+.mk-hero-mag {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.mk-hero-mag-lens {
+    --mk-hero-mag-size: clamp(7.5rem, 11vw, 9.25rem);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--mk-hero-mag-size);
+    height: var(--mk-hero-mag-size);
+    border-radius: 50%;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    will-change: left, top, opacity;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    box-shadow:
+        0 0 0 1px rgba(124, 58, 237, 0.28),
+        0 18px 48px rgba(91, 33, 182, 0.28),
+        0 6px 20px rgba(15, 23, 42, 0.22),
+        inset 0 0 28px rgba(167, 139, 250, 0.12);
+    transition: opacity 0.38s ease, visibility 0.38s ease;
+}
+
+.mk-hero-mag.is-active .mk-hero-mag-lens {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mk-hero-mag-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: none;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.mk-hero-mag-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--mk-hero-mag-size, 9.25rem);
+    height: var(--mk-hero-mag-size, 9.25rem);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    background: radial-gradient(circle at 30% 26%, rgba(255, 255, 255, 0.42) 0%, transparent 52%);
+    box-shadow: inset 0 -12px 24px rgba(124, 58, 237, 0.08);
+    transition: opacity 0.38s ease, visibility 0.38s ease;
+}
+
+.mk-hero-mag.is-active .mk-hero-mag-shine {
+    opacity: 1;
+    visibility: visible;
+}
+
+html.mk-public[data-theme="dark"] .mk-hero-mag-lens {
+    border-color: rgba(233, 213, 255, 0.45);
+    box-shadow:
+        0 0 0 1px rgba(167, 139, 250, 0.35),
+        0 20px 52px rgba(0, 0, 0, 0.45),
+        0 8px 24px rgba(91, 33, 182, 0.35),
+        inset 0 0 32px rgba(196, 181, 253, 0.14);
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+    .mk-hero-mag {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mk-hero-mag {
+        display: none;
+    }
+}
+
 @media (max-width: 1100px) {
     .mk-hero-deck {
         grid-template-columns: repeat(3, minmax(0, 1fr));

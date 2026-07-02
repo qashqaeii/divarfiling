@@ -7,14 +7,28 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=68">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=69">
 {% endblock %}
 
 {% block content %}
 
 {# ─── Hero ─── #}
-<section class="mk-hero mk-hero--split mk-hero--pro mk-hero--deck">
-    <div class="mk-hero-bg" aria-hidden="true"></div>
+<section class="mk-hero mk-hero--split mk-hero--pro mk-hero--deck" data-hero-magnifier>
+    <div class="mk-hero-bg" aria-hidden="true">
+        <div class="mk-hero-mag" data-hero-mag>
+            <div class="mk-hero-mag-lens" data-hero-mag-lens>
+                <img
+                    class="mk-hero-mag-img"
+                    data-hero-mag-img
+                    src="{% static 'hero.webp' %}"
+                    alt=""
+                    decoding="async"
+                    draggable="false"
+                >
+            </div>
+            <span class="mk-hero-mag-shine" aria-hidden="true"></span>
+        </div>
+    </div>
     <div class="container mk-hero-container">
         <div class="mk-hero-split">
             <div class="mk-hero-inner">
@@ -879,5 +893,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-home.js' %}?v=6" defer></script>
+<script src="{% static 'js/mizkar-home.js' %}?v=7" defer></script>
 {% endblock %}

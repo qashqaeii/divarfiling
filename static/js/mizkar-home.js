@@ -343,6 +343,163 @@
         });
     }
 
+    /* ─── Hero magnifier ─── */
+    function initHeroMagnifier() {
+        var hero = document.querySelector('[data-hero-magnifier]');
+        if (!hero || prefersReduced) return;
+        if (!window.matchMedia('(pointer: fine)').matches) return;
+        if (window.matchMedia('(max-width: 900px)').matches) return;
+
+        var bg = hero.querySelector('.mk-hero-bg');
+        var mag = hero.querySelector('[data-hero-mag]');
+        var lens = hero.querySelector('[data-hero-mag-lens]');
+        var shine = hero.querySelector('.mk-hero-mag-shine');
+        var magImg = hero.querySelector('[data-hero-mag-img]');
+        if (!bg || !mag || !lens || !magImg) return;
+
+        var ZOOM = 2.12;
+        var LERP = 0.16;
+        var IMAGE_ZONE_START = 0.4;
+        var metrics = null;
+        var lensSize = 0;
+        var targetX = 0;
+        var targetY = 0;
+        var currentX = 0;
+        var currentY = 0;
+        var visible = false;
+        var rafId = null;
+
+        function parseBgAxis(value, elSize, bgSize) {
+            if (!value) return (elSize - bgSize) / 2;
+            if (value.indexOf('%') !== -1) {
+                return (elSize - bgSize) * (parseFloat(value, 10) / 100);
+            }
+            if (value === 'left' || value === 'top') return 0;
+            if (value === 'right' || value === 'bottom') return elSize - bgSize;
+            if (value === 'center') return (elSize - bgSize) / 2;
+            var px = parseFloat(value, 10);
+            return isNaN(px) ? (elSize - bgSize) / 2 : px;
+        }
+
+        function readMetrics() {
+            var rect = bg.getBoundingClientRect();
+            var imgW = magImg.naturalWidth;
+            var imgH = magImg.naturalHeight;
+            if (!rect.width || !rect.height || !imgW || !imgH) return null;
+
+            var elW = rect.width;
+            var elH = rect.height;
+            var scale = Math.max(elW / imgW, elH / imgH);
+            var w = imgW * scale;
+            var h = imgH * scale;
+            var style = window.getComputedStyle(bg);
+            var parts = style.backgroundPosition.split(/\s+/);
+            var posX = parseBgAxis(parts[0], elW, w);
+            var posY = parseBgAxis(parts[1] || parts[0], elH, h);
+
+            lensSize = lens.offsetWidth || 132;
+            return { elW: elW, elH: elH, w: w, h: h, posX: posX, posY: posY };
+        }
+
+        function syncZoomedImage(mx, my) {
+            if (!metrics) return;
+            var half = lensSize / 2;
+            magImg.style.width = (metrics.w * ZOOM) + 'px';
+            magImg.style.height = (metrics.h * ZOOM) + 'px';
+            magImg.style.transform = 'translate(' +
+                (half - (mx - metrics.posX) * ZOOM) + 'px, ' +
+                (half - (my - metrics.posY) * ZOOM) + 'px)';
+        }
+
+        function placeLens(x, y) {
+            var half = lensSize / 2;
+            lens.style.left = (x - half) + 'px';
+            lens.style.top = (y - half) + 'px';
+            if (shine) {
+                shine.style.left = (x - half) + 'px';
+                shine.style.top = (y - half) + 'px';
+            }
+        }
+
+        function tick() {
+            currentX += (targetX - currentX) * LERP;
+            currentY += (targetY - currentY) * LERP;
+            placeLens(currentX, currentY);
+            syncZoomedImage(currentX, currentY);
+
+            var moving = Math.abs(targetX - currentX) > 0.35 || Math.abs(targetY - currentY) > 0.35;
+            if (visible || moving) {
+                rafId = window.requestAnimationFrame(tick);
+            } else {
+                rafId = null;
+            }
+        }
+
+        function ensureTick() {
+            if (!rafId) rafId = window.requestAnimationFrame(tick);
+        }
+
+        function clampPoint(x, y) {
+            if (!metrics) return { x: x, y: y };
+            var half = lensSize / 2;
+            return {
+                x: Math.max(half, Math.min(metrics.elW - half, x)),
+                y: Math.max(half, Math.min(metrics.elH - half, y)),
+            };
+        }
+
+        function onMove(e) {
+            var heroRect = hero.getBoundingClientRect();
+            var bgRect = bg.getBoundingClientRect();
+            var heroRelX = e.clientX - heroRect.left;
+            var inImageZone = heroRelX > heroRect.width * IMAGE_ZONE_START;
+
+            var x = e.clientX - bgRect.left;
+            var y = e.clientY - bgRect.top;
+
+            if (!inImageZone || x < 0 || y < 0 || x > bgRect.width || y > bgRect.height) {
+                if (visible) {
+                    visible = false;
+                    mag.classList.remove('is-active');
+                }
+                return;
+            }
+
+            if (!metrics) metrics = readMetrics();
+            if (!metrics) return;
+
+            if (!visible) {
+                visible = true;
+                currentX = x;
+                currentY = y;
+                mag.classList.add('is-active');
+            }
+
+            var point = clampPoint(x, y);
+            targetX = point.x;
+            targetY = point.y;
+            ensureTick();
+        }
+
+        function onLeave() {
+            visible = false;
+            mag.classList.remove('is-active');
+        }
+
+        function refreshMetrics() {
+            metrics = readMetrics();
+            if (visible) syncZoomedImage(currentX, currentY);
+        }
+
+        magImg.addEventListener('load', refreshMetrics);
+        if (magImg.complete) refreshMetrics();
+
+        hero.addEventListener('mousemove', onMove, { passive: true });
+        hero.addEventListener('mouseleave', onLeave);
+        window.addEventListener('resize', refreshMetrics, { passive: true });
+        window.addEventListener('scroll', refreshMetrics, { passive: true });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initReveal();
         initShowcase();
@@ -351,5 +508,6 @@
         initCrmMock();
         animateStatCounts();
         initGalleryLightbox();
+        initHeroMagnifier();
     });
 })();

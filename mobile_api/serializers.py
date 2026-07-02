@@ -229,6 +229,13 @@ def contact_to_dict(c: Customer) -> Dict[str, Any]:
         'updated_at': c.updated_at.isoformat() if c.updated_at else None,
         'created_at': c.created_at.isoformat() if c.created_at else None,
         'match_eligible': is_match_eligible(c),
+        'builder_buy_property_types': c.builder_buy_property_types or '',
+        'builder_buy_budget_min': c.builder_buy_budget_min,
+        'builder_buy_budget_max': c.builder_buy_budget_max,
+        'builder_buy_areas': c.builder_buy_areas or '',
+        'builder_buy_min_area': c.builder_buy_min_area,
+        'builder_buy_max_area': c.builder_buy_max_area,
+        'is_builder': c.customer_type == 'سازنده',
     }
 
 

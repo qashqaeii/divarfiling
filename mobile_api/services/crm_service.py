@@ -89,9 +89,27 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
         c.rooms = (data['rooms'] or '').strip()
     if 'areas' in data:
         c.areas = (data['areas'] or '').strip()
-    for field in ('budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max'):
+    for field in ('budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max',
+                  'builder_buy_budget_min', 'builder_buy_budget_max'):
         if field in data:
             setattr(c, field, _optional_bigint(data[field]))
+    if 'builder_buy_property_types' in data:
+        raw = data['builder_buy_property_types']
+        if isinstance(raw, list):
+            c.builder_buy_property_types = ', '.join(str(x).strip() for x in raw if str(x).strip())
+        else:
+            c.builder_buy_property_types = (raw or '').strip()
+    if 'builder_buy_types' in data:
+        raw = data['builder_buy_types']
+        if isinstance(raw, list):
+            c.builder_buy_property_types = ', '.join(str(x).strip() for x in raw if str(x).strip())
+        else:
+            c.builder_buy_property_types = (raw or '').strip()
+    if 'builder_buy_areas' in data:
+        c.builder_buy_areas = (data['builder_buy_areas'] or '').strip()
+    for field in ('builder_buy_min_area', 'builder_buy_max_area'):
+        if field in data:
+            setattr(c, field, _optional_int(data[field]))
     if 'budget' in data and 'budget_max' not in data:
         c.budget_max = _optional_bigint(data['budget'])
     for field in ('min_area', 'max_area'):

@@ -319,6 +319,29 @@
                     <h3>خلاصه مالی</h3>
                 </header>
                 <div class="crm-contact-side-stats">
+                    {% if customer.customer_type == 'سازنده' %}
+                    <div class="crm-contact-side-stat crm-contact-side-stat--builder">
+                        <span class="crm-contact-side-stat-lbl">خط فروش (آپارتمان)</span>
+                        <strong>
+                            {% if customer.budget_min or customer.budget_max %}
+                            {{ customer.budget_min|ws_money|default:"—" }} — {{ customer.budget_max|ws_money|default:"—" }}
+                            {% else %}—{% endif %}
+                        </strong>
+                        {% if customer.areas %}<small>{{ customer.areas|truncatechars:48 }}</small>{% endif %}
+                    </div>
+                    <div class="crm-contact-side-stat crm-contact-side-stat--builder">
+                        <span class="crm-contact-side-stat-lbl">تأمین پروژه (خرید)</span>
+                        <strong>
+                            {% if customer.builder_buy_budget_min or customer.builder_buy_budget_max %}
+                            {{ customer.builder_buy_budget_min|ws_money|default:"—" }} — {{ customer.builder_buy_budget_max|ws_money|default:"—" }}
+                            {% else %}—{% endif %}
+                        </strong>
+                        <small>
+                            {% if customer.builder_buy_property_types %}{{ customer.builder_buy_property_types }}{% else %}ویلا، کلنگی، زمین{% endif %}
+                            {% if customer.builder_buy_areas %} · {{ customer.builder_buy_areas|truncatechars:32 }}{% endif %}
+                        </small>
+                    </div>
+                    {% else %}
                     {% if customer.budget_min or customer.budget_max %}
                     <div class="crm-contact-side-stat">
                         <span class="crm-contact-side-stat-lbl">بودجه</span>
@@ -343,8 +366,9 @@
                         <strong>{{ customer.min_area|default:"—" }} — {{ customer.max_area|default:"—" }} متر</strong>
                     </div>
                     {% endif %}
-                    {% if not customer.budget_min and not customer.budget_max and not customer.deposit_min and not customer.deposit_max and not customer.rent_min and not customer.rent_max and not customer.min_area and not customer.max_area %}
+                    {% if not customer.budget_min and not customer.budget_max and not customer.deposit_min and not customer.deposit_max and not customer.rent_min and not customer.rent_max and not customer.min_area and not customer.max_area and customer.customer_type != 'سازنده' %}
                     <p class="crm-contact-side-muted">اطلاعات مالی ثبت نشده</p>
+                    {% endif %}
                     {% endif %}
                 </div>
             </div>

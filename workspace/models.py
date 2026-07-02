@@ -277,6 +277,22 @@ class Customer(models.Model):
     rooms = models.CharField(max_length=50, blank=True, verbose_name='اتاق')
     areas = models.TextField(blank=True, verbose_name='محله‌های مورد نظر')
     tags = models.CharField(max_length=500, blank=True, verbose_name='برچسب‌ها')
+    builder_buy_property_types = models.CharField(
+        max_length=120, blank=True, verbose_name='انواع ملک هدف خرید (سازنده)',
+    )
+    builder_buy_budget_min = models.BigIntegerField(
+        null=True, blank=True, verbose_name='بودجه خرید از (سازنده)',
+    )
+    builder_buy_budget_max = models.BigIntegerField(
+        null=True, blank=True, verbose_name='بودجه خرید تا (سازنده)',
+    )
+    builder_buy_areas = models.TextField(blank=True, verbose_name='محله‌های هدف خرید (سازنده)')
+    builder_buy_min_area = models.IntegerField(
+        null=True, blank=True, verbose_name='متراژ خرید از (سازنده)',
+    )
+    builder_buy_max_area = models.IntegerField(
+        null=True, blank=True, verbose_name='متراژ خرید تا (سازنده)',
+    )
     notes = models.TextField(blank=True, verbose_name='یادداشت')
     next_follow_up = models.DateField(null=True, blank=True, verbose_name='پیگیری بعدی')
     created_at = models.DateTimeField(auto_now_add=True)

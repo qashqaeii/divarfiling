@@ -1,0 +1,62 @@
+<div class="crm-matches-col{% if divar_locked %} crm-matches-col--locked{% endif %}">
+    <h4 class="crm-matches-col-title">
+        <i class="fas {{ icon }}" aria-hidden="true"></i> {{ title }}
+        {% if divar_locked %}
+        <span class="crm-match-lock"><i class="fas fa-lock"></i> نیاز به لایسنس</span>
+        {% else %}
+        <span class="crm-matches-count">{{ matches|length }}</span>
+        {% endif %}
+    </h4>
+
+    {% if divar_locked %}
+    <div class="crm-match-locked-card">
+        <div class="crm-match-locked-icon"><i class="fas fa-robot"></i></div>
+        <p>تطبیق با آگهی‌های استخراج‌شده دیوار نیاز به لایسنس فعال ربات دارد.</p>
+        <a href="{% url 'workspace:upgrade' %}?feature=crm_divar" class="crm-btn crm-btn-primary crm-btn-sm">فعال‌سازی</a>
+    </div>
+    {% elif matches %}
+    <ul class="crm-match-list">
+        {% for m in matches %}
+        <li class="crm-match-card">
+            <label class="crm-match-check">
+                <input type="checkbox" class="crm-match-select"
+                       data-source="{{ source }}"
+                       {% if source == 'crm' %}data-property-id="{{ m.property_id }}"{% else %}data-token="{{ m.token }}"{% endif %}
+                       data-title="{{ m.title }}"
+                       data-price-label="{{ m.price_label }}"
+                       data-area="{{ m.area|default:'' }}"
+                       data-neighborhood="{{ m.neighborhood }}"
+                       data-link="{{ m.link }}"
+                       {% if m.match_intent %}data-match-intent="{{ m.match_intent }}"{% endif %}>
+                <span class="crm-match-score" data-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}">{{ m.score }}</span>
+            </label>
+            <div class="crm-match-body">
+                <div class="crm-match-title-row">
+                    <strong>{{ m.title }}</strong>
+                    {% if m.intent_label %}<span class="crm-match-intent">{{ m.intent_label }}</span>{% endif %}
+                </div>
+                <div class="crm-match-meta">
+                    {% if m.property_type %}<span>{{ m.property_type }}</span>{% endif %}
+                    {% if m.price_label %}<span>{{ m.price_label }}</span>{% endif %}
+                    {% if m.area %}<span>{{ m.area|floatformat:0 }} متر</span>{% endif %}
+                    {% if m.neighborhood %}<span>{{ m.neighborhood }}</span>{% endif %}
+                </div>
+                {% if m.reasons %}
+                <div class="crm-match-reasons">{% for r in m.reasons %}<em>{{ r }}</em>{% endfor %}</div>
+                {% endif %}
+            </div>
+            {% if source == 'crm' %}
+            <a href="{% url 'workspace:crm_property_detail' m.property_id %}" class="crm-match-link" title="مشاهده"><i class="fas fa-external-link-alt"></i></a>
+            {% elif m.link %}
+            <a href="{{ m.link }}" target="_blank" class="crm-match-link" title="دیوار"><i class="fas fa-external-link-alt"></i></a>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="crm-match-empty">فایل مناسبی در این بخش یافت نشد.</p>
+    {% if source == 'divar' and not has_bot_license %}
+    <a href="{% url 'workspace:upgrade' %}?feature=upload" class="crm-match-upgrade-link">آپلود فایلینگ دیوار</a>
+    {% endif %}
+    {% endif %}
+</div>

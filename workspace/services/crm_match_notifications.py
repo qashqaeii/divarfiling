@@ -290,8 +290,10 @@ def contact_matches_payload(user, contact_id: int) -> Optional[Dict[str, Any]]:
     divar_matches = data.get('divar_matches', [])
     return {
         'eligible': bool(data.get('eligible')),
+        'is_builder': bool(data.get('is_builder')),
         'message': data.get('message', ''),
         'divar_locked': bool(data.get('divar_locked')),
+        'match_groups': data.get('match_groups', []),
         'crm_matches': crm_matches,
         'divar_matches': divar_matches,
         'total_count': len(crm_matches) + len(divar_matches),

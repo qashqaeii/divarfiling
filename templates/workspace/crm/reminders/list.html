@@ -189,8 +189,9 @@
                     {% for error in reminder_form.note.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
                 </div>
                 <div class="ws-field{% if reminder_form.due_at.errors %} ws-field-error{% endif %}">
-                    <label class="ws-label">سررسید</label>
+                    <label class="ws-label">تاریخ و ساعت سررسید</label>
                     {{ reminder_form.due_at }}
+                    <p class="ws-hint">بعد از انتخاب روز، ساعت را هم تنظیم کنید</p>
                     {% for error in reminder_form.due_at.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
                 </div>
                 <div class="ws-field">

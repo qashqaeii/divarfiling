@@ -136,6 +136,11 @@
 
         <p class="crm-form-hint" id="crmMoneyHint">محدوده مالی بر اساس نوع مخاطب</p>
 
+        <div class="crm-builder-sell-head crm-builder-section hidden">
+            <h4 class="crm-builder-section-title" id="crmBuilderSellTitle">خط فروش — آپارتمان</h4>
+            <p class="crm-builder-section-hint" id="crmBuilderSellHint">محدوده قیمت و محله واحدهای فروش</p>
+        </div>
+
 
 
         <div class="crm-fields crm-fields-2">
@@ -170,6 +175,24 @@
 
 
 
+        <div class="crm-builder-buy crm-builder-section hidden">
+            <h4 class="crm-builder-section-title" id="crmBuilderBuyTitle">تأمین پروژه — خرید زمین و کلنگی</h4>
+            <p class="crm-builder-section-hint" id="crmBuilderBuyHint">بودجه و منطقه خرید ویلا، کلنگی و زمین</p>
+            <div class="crm-fields crm-fields-2">
+                {% crm_field form.builder_buy_budget_min 'بودجه خرید از' 'crm-money-builder-buy' %}
+                {% crm_field form.builder_buy_budget_max 'بودجه خرید تا' 'crm-money-builder-buy' %}
+                {% crm_field form.builder_buy_min_area 'متراژ خرید از' 'crm-builder-buy-field' %}
+                {% crm_field form.builder_buy_max_area 'متراژ خرید تا' 'crm-builder-buy-field' %}
+                {% crm_field form.builder_buy_areas 'محله‌های هدف خرید' 'crm-field-full crm-builder-buy-field' %}
+            </div>
+            <div class="crm-field crm-field-full crm-builder-buy-field">
+                <span class="crm-label">انواع ملک هدف خرید</span>
+                <div class="crm-check-list">{{ form.builder_buy_types }}</div>
+            </div>
+        </div>
+
+
+
     </div>
 
 
@@ -182,27 +205,33 @@
 
 
 
+        <div class="crm-builder-sell-prefs crm-builder-section hidden">
+            <h4 class="crm-builder-section-title">مشخصات واحد فروش (آپارتمان)</h4>
+        </div>
+
+
+
         <div class="crm-fields crm-fields-2">
 
 
 
-            {% crm_field form.property_type 'نوع ملک' %}
+            {% crm_field form.property_type 'نوع ملک' 'crm-builder-sell-field' %}
 
 
 
-            {% crm_field form.rooms 'اتاق' %}
+            {% crm_field form.rooms 'اتاق' 'crm-builder-sell-field' %}
 
 
 
-            {% crm_field form.min_area 'متراژ از' %}
+            {% crm_field form.min_area 'متراژ از' 'crm-builder-sell-field' %}
 
 
 
-            {% crm_field form.max_area 'متراژ تا' %}
+            {% crm_field form.max_area 'متراژ تا' 'crm-builder-sell-field' %}
 
 
 
-            {% crm_field form.areas 'محله‌های مورد نظر' 'crm-field-full' %}
+            {% crm_field form.areas 'محله‌های فروش / پروژه' 'crm-field-full crm-builder-sell-field' %}
 
 
 

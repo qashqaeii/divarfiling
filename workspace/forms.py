@@ -2,9 +2,10 @@
 from django import forms
 from django.utils import timezone
 
-from workspace.constants import ACTIVITY_TYPES, DEAL_TYPES, INTEREST_LEVELS, LISTING_ROLES
+from workspace.constants import BUILDER_BUY_PROPERTY_TYPES
 from workspace.constants import (
-    AUTOMATION_ACTIONS, AUTOMATION_TRIGGERS, DEAL_STAGES, LOST_REASONS, MESSAGE_CHANNELS,
+    ACTIVITY_TYPES, AUTOMATION_ACTIONS, AUTOMATION_TRIGGERS, DEAL_STAGES, DEAL_TYPES,
+    INTEREST_LEVELS, LISTING_ROLES, LOST_REASONS, MESSAGE_CHANNELS,
     MESSAGE_TEMPLATE_CATEGORIES, REMINDER_RECURRENCE, VISIT_OUTCOMES, VISIT_REJECT_REASONS,
 )
 from workspace.services.jalali_input import (
@@ -134,6 +135,14 @@ class ListingEditForm(forms.ModelForm):
 class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
     money_fields = (
         'budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max',
+        'builder_buy_budget_min', 'builder_buy_budget_max',
+    )
+
+    builder_buy_types = forms.MultipleChoiceField(
+        label='انواع ملک هدف خرید',
+        choices=[(t, t) for t in BUILDER_BUY_PROPERTY_TYPES],
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'crm-check-list'}),
     )
 
     next_follow_up = forms.CharField(
@@ -153,6 +162,15 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
         if self.instance.pk and self.instance.next_follow_up and not self.is_bound:
             jalali = format_jalali_date(self.instance.next_follow_up)
             self.initial['next_follow_up'] = jalali
+        if not self.is_bound:
+            raw_types = (self.instance.builder_buy_property_types or '').replace('،', ',')
+            selected = [t.strip() for t in raw_types.split(',') if t.strip()]
+            if selected:
+                self.initial['builder_buy_types'] = selected
+            elif self.instance.customer_type == 'سازنده':
+                self.initial['builder_buy_types'] = list(BUILDER_BUY_PROPERTY_TYPES)
+            if self.instance.customer_type == 'سازنده' and not self.instance.property_type:
+                self.initial.setdefault('property_type', 'آپارتمان')
 
     def clean_next_follow_up(self):
         raw = self.cleaned_data.get('next_follow_up')
@@ -165,6 +183,17 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             raise forms.ValidationError('تاریخ شمسی نامعتبر است. مثال: ۱۴۰۴/۰۶/۱۵')
         return parsed
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        selected = self.cleaned_data.get('builder_buy_types') or []
+        instance.builder_buy_property_types = ', '.join(selected)
+        if instance.customer_type == 'سازنده' and not instance.property_type:
+            instance.property_type = 'آپارتمان'
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
     class Meta:
         model = Customer
         fields = [
@@ -173,6 +202,8 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'customer_type', 'status', 'priority', 'property_type', 'source',
             'budget_min', 'budget_max', 'deposit_min', 'deposit_max',
             'rent_min', 'rent_max', 'min_area', 'max_area', 'rooms', 'areas',
+            'builder_buy_budget_min', 'builder_buy_budget_max',
+            'builder_buy_areas', 'builder_buy_min_area', 'builder_buy_max_area',
             'tags', 'notes', 'next_follow_up',
         ]
         widgets = {
@@ -204,7 +235,12 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'min_area': forms.NumberInput(attrs={'class': 'crm-input'}),
             'max_area': forms.NumberInput(attrs={'class': 'crm-input'}),
             'rooms': forms.TextInput(attrs={'class': 'crm-input'}),
-            'areas': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
+            'areas': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2, 'data-builder-sell-areas': '1'}),
+            'builder_buy_budget_min': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
+            'builder_buy_budget_max': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
+            'builder_buy_areas': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
+            'builder_buy_min_area': forms.NumberInput(attrs={'class': 'crm-input'}),
+            'builder_buy_max_area': forms.NumberInput(attrs={'class': 'crm-input'}),
             'tags': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'با کاما جدا کنید'}),
             'notes': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 3}),
             'is_legal_entity': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),

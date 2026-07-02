@@ -101,7 +101,10 @@ function initCRMJalaliPickers(root) {
         separatorChars: { date: '/', between: ' ', time: ':' },
         persianDigits: true,
         autoHide: true,
-        hideAfterChange: true,
+        // زمان فقط برای inputهای datetime (بدون data-jdp-only-date) فعال می‌شود
+        time: true,
+        hasSecond: false,
+        hideAfterChange: false,
     });
 }
 
@@ -145,17 +148,23 @@ function initCRMTypeProfiles() {
     const budgetFields = document.querySelectorAll('.crm-money-budget');
     const depositFields = document.querySelectorAll('.crm-money-deposit');
     const rentFields = document.querySelectorAll('.crm-money-rent');
+    const builderSections = document.querySelectorAll('.crm-builder-section');
+    const builderBuyMoney = document.querySelectorAll('.crm-money-builder-buy');
+    const propertyTypeSelect = document.querySelector('[name="property_type"]');
 
     function applyProfile(type) {
         const p = profiles[type] || profiles['سرنخ'] || {};
         const mode = p.money_mode || 'flexible';
+        const isBuilder = mode === 'builder';
         if (hint && p.section_hint) hint.textContent = p.section_hint;
 
         const show = (els, on) => els.forEach(el => el.classList.toggle('hidden', !on));
+        builderSections.forEach(el => el.classList.toggle('hidden', !isBuilder));
 
-        show(budgetFields, mode === 'budget' || mode === 'both' || mode === 'flexible');
+        show(budgetFields, mode === 'budget' || mode === 'both' || mode === 'flexible' || isBuilder);
         show(depositFields, mode === 'rent' || mode === 'both' || mode === 'flexible');
         show(rentFields, mode === 'rent' || mode === 'both' || mode === 'flexible');
+        show(builderBuyMoney, isBuilder);
 
         const bl = p.budget_labels || ['بودجه از', 'بودجه تا'];
         const dl = p.deposit_labels || ['ودیعه از', 'ودیعه تا'];
@@ -166,6 +175,22 @@ function initCRMTypeProfiles() {
         document.querySelectorAll('[data-label-deposit-max]').forEach(el => { el.textContent = dl[1]; });
         document.querySelectorAll('[data-label-rent-min]').forEach(el => { el.textContent = rl[0]; });
         document.querySelectorAll('[data-label-rent-max]').forEach(el => { el.textContent = rl[1]; });
+
+        const sellTitle = document.getElementById('crmBuilderSellTitle');
+        const sellHint = document.getElementById('crmBuilderSellHint');
+        const buyTitle = document.getElementById('crmBuilderBuyTitle');
+        const buyHint = document.getElementById('crmBuilderBuyHint');
+        if (sellTitle && p.sell_section_title) sellTitle.textContent = p.sell_section_title;
+        if (sellHint && p.sell_section_hint) sellHint.textContent = p.sell_section_hint;
+        if (buyTitle && p.buy_section_title) buyTitle.textContent = p.buy_section_title;
+        if (buyHint && p.buy_section_hint) buyHint.textContent = p.buy_section_hint;
+
+        if (isBuilder && propertyTypeSelect && p.default_property_type) {
+            const hasOption = Array.from(propertyTypeSelect.options).some(o => o.value === p.default_property_type);
+            if (hasOption && (!propertyTypeSelect.value || propertyTypeSelect.value === 'سایر')) {
+                propertyTypeSelect.value = p.default_property_type;
+            }
+        }
     }
 
     applyProfile(typeSelect.value);

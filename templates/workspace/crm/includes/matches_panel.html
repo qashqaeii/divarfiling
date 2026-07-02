@@ -4,7 +4,11 @@
     <header class="crm-matches-head">
         <div>
             <h3><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> تطبیق هوشمند</h3>
+            {% if match_data.is_builder %}
+            <p>پیشنهاد دوگانه برای سازنده — تأمین پروژه (خرید) و بازار آپارتمان (فروش)</p>
+            {% else %}
             <p>پیشنهاد ملک بر اساس بودجه، محله و متراژ مخاطب</p>
+            {% endif %}
         </div>
     </header>
 
@@ -12,101 +16,30 @@
     <p class="crm-empty-text">{{ match_data.message }}</p>
     {% else %}
 
-    <div class="crm-matches-grid">
-        <div class="crm-matches-col">
-            <h4 class="crm-matches-col-title">
-                <i class="fas fa-folder-open" aria-hidden="true"></i> فایل‌های شخصی
-                <span class="crm-matches-count">{{ match_data.crm_matches|length }}</span>
-            </h4>
-            {% if match_data.crm_matches %}
-            <ul class="crm-match-list">
-                {% for m in match_data.crm_matches %}
-                <li class="crm-match-card">
-                    <label class="crm-match-check">
-                        <input type="checkbox" class="crm-match-select"
-                               data-source="crm"
-                               data-property-id="{{ m.property_id }}"
-                               data-title="{{ m.title }}"
-                               data-price-label="{{ m.price_label }}"
-                               data-area="{{ m.area|default:'' }}"
-                               data-neighborhood="{{ m.neighborhood }}"
-                               data-link="{{ m.link }}">
-                        <span class="crm-match-score" data-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}">{{ m.score }}</span>
-                    </label>
-                    <div class="crm-match-body">
-                        <strong>{{ m.title }}</strong>
-                        <div class="crm-match-meta">
-                            {% if m.price_label %}<span>{{ m.price_label }}</span>{% endif %}
-                            {% if m.area %}<span>{{ m.area|floatformat:0 }} متر</span>{% endif %}
-                            {% if m.neighborhood %}<span>{{ m.neighborhood }}</span>{% endif %}
-                        </div>
-                        {% if m.reasons %}
-                        <div class="crm-match-reasons">{% for r in m.reasons %}<em>{{ r }}</em>{% endfor %}</div>
-                        {% endif %}
-                    </div>
-                    <a href="{% url 'workspace:crm_property_detail' m.property_id %}" class="crm-match-link" title="مشاهده"><i class="fas fa-external-link-alt"></i></a>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="crm-match-empty">فایل فعالی برای تطبیق یافت نشد.</p>
-            {% endif %}
-        </div>
-
-        <div class="crm-matches-col{% if match_data.divar_locked %} crm-matches-col--locked{% endif %}">
-            <h4 class="crm-matches-col-title">
-                <i class="fas fa-folder-tree" aria-hidden="true"></i> فایلینگ دیوار
-                {% if match_data.divar_locked %}
-                <span class="crm-match-lock"><i class="fas fa-lock"></i> نیاز به لایسنس</span>
-                {% else %}
-                <span class="crm-matches-count">{{ match_data.divar_matches|length }}</span>
-                {% endif %}
-            </h4>
-
-            {% if match_data.divar_locked %}
-            <div class="crm-match-locked-card">
-                <div class="crm-match-locked-icon"><i class="fas fa-robot"></i></div>
-                <p>تطبیق با آگهی‌های استخراج‌شده دیوار نیاز به لایسنس فعال ربات دارد.</p>
-                <a href="{% url 'workspace:upgrade' %}?feature=crm_divar" class="crm-btn crm-btn-primary crm-btn-sm">فعال‌سازی</a>
+    {% if match_data.is_builder and match_data.match_groups %}
+    <div class="crm-matches-builder">
+        {% for group in match_data.match_groups %}
+        <section class="crm-matches-group" id="crmMatchGroup-{{ group.id }}">
+            <header class="crm-matches-group-head">
+                <div>
+                    <h4>{{ group.title }}</h4>
+                    <p>{{ group.hint }}</p>
+                </div>
+                <span class="crm-matches-count">{{ group.total_count }}</span>
+            </header>
+            <div class="crm-matches-grid">
+                {% include 'workspace/crm/includes/matches_column.html' with matches=group.crm_matches title='فایل‌های شخصی' icon='fa-folder-open' source='crm' has_bot_license=has_bot_license %}
+                {% include 'workspace/crm/includes/matches_column.html' with matches=group.divar_matches title='فایلینگ دیوار' icon='fa-folder-tree' source='divar' divar_locked=match_data.divar_locked has_bot_license=has_bot_license %}
             </div>
-            {% elif match_data.divar_matches %}
-            <ul class="crm-match-list">
-                {% for m in match_data.divar_matches %}
-                <li class="crm-match-card">
-                    <label class="crm-match-check">
-                        <input type="checkbox" class="crm-match-select"
-                               data-source="divar"
-                               data-token="{{ m.token }}"
-                               data-title="{{ m.title }}"
-                               data-price-label="{{ m.price_label }}"
-                               data-area="{{ m.area|default:'' }}"
-                               data-neighborhood="{{ m.neighborhood }}"
-                               data-link="{{ m.link }}">
-                        <span class="crm-match-score" data-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}">{{ m.score }}</span>
-                    </label>
-                    <div class="crm-match-body">
-                        <strong>{{ m.title|truncatechars:48 }}</strong>
-                        <div class="crm-match-meta">
-                            {% if m.price_label %}<span>{{ m.price_label }}</span>{% endif %}
-                            {% if m.area %}<span>{{ m.area|floatformat:0 }} متر</span>{% endif %}
-                            {% if m.neighborhood %}<span>{{ m.neighborhood }}</span>{% endif %}
-                        </div>
-                        {% if m.reasons %}
-                        <div class="crm-match-reasons">{% for r in m.reasons %}<em>{{ r }}</em>{% endfor %}</div>
-                        {% endif %}
-                    </div>
-                    {% if m.link %}<a href="{{ m.link }}" target="_blank" class="crm-match-link" title="دیوار"><i class="fas fa-external-link-alt"></i></a>{% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="crm-match-empty">آگهی مناسبی در فایلینگ یافت نشد.</p>
-            {% if not has_bot_license %}
-            <a href="{% url 'workspace:upgrade' %}?feature=upload" class="crm-match-upgrade-link">آپلود فایلینگ دیوار</a>
-            {% endif %}
-            {% endif %}
-        </div>
+        </section>
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="crm-matches-grid">
+        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.crm_matches title='فایل‌های شخصی' icon='fa-folder-open' source='crm' %}
+        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.divar_matches title='فایلینگ دیوار' icon='fa-folder-tree' source='divar' divar_locked=match_data.divar_locked %}
+    </div>
+    {% endif %}
 
     <form method="post" class="crm-suggest-form" id="crmSuggestForm">
         {% csrf_token %}

@@ -88,9 +88,9 @@
         <div class="crm-detail-main crm-contact-main">
             <nav class="crm-tabs crm-tabs-pro crm-contact-tabs" role="tablist" aria-label="بخش‌های مخاطب">
                 <button type="button" class="crm-tab crm-tab-pro active" data-tab="timeline" role="tab" aria-selected="true"><i class="fas fa-stream" aria-hidden="true"></i><span>تایم‌لاین</span><em>{{ activities|length }}</em></button>
-                <button type="button" class="crm-tab crm-tab-pro" data-tab="matches" role="tab"><i class="fas fa-house" aria-hidden="true"></i><span>پیشنهاد ملک</span><em>{% if match_data.eligible %}{{ match_data.crm_matches|length|add:match_data.divar_matches|length }}{% else %}0{% endif %}</em></button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="matches" role="tab"><i class="fas fa-house" aria-hidden="true"></i><span>پیشنهاد ملک</span><em>{% crm_match_tab_count match_data %}</em></button>
                 <button type="button" class="crm-tab crm-tab-pro" data-tab="visits" role="tab"><i class="fas fa-door-open" aria-hidden="true"></i><span>بازدیدها</span><em>{{ visits|length }}</em></button>
-                <button type="button" class="crm-tab crm-tab-pro" data-tab="properties" role="tab"><i class="fas fa-link" aria-hidden="true"></i><span>املاک</span><em>{{ property_links|length|add:linked_listings|length }}</em></button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="properties" role="tab"><i class="fas fa-link" aria-hidden="true"></i><span>املاک</span><em>{% with pl=property_links|length ll=linked_listings|length %}{{ pl|add:ll }}{% endwith %}</em></button>
                 <button type="button" class="crm-tab crm-tab-pro" data-tab="docs" role="tab"><i class="fas fa-file" aria-hidden="true"></i><span>مدارک</span><em>{{ documents|length }}</em></button>
                 <button type="button" class="crm-tab crm-tab-pro" data-tab="notes" role="tab"><i class="fas fa-note-sticky" aria-hidden="true"></i><span>یادداشت</span><em>{% if customer.notes or customer.tags %}1{% else %}0{% endif %}</em></button>
             </nav>

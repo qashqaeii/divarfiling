@@ -140,6 +140,19 @@ def crm_deal_stage_icon(stage):
     return DEAL_STAGE_ICONS.get(stage, 'fa-handshake')
 
 
+@register.simple_tag
+def crm_match_tab_count(match_data):
+    """تعداد کل پیشنهادهای تطبیق — برای badge تب."""
+    if not match_data or not match_data.get('eligible'):
+        return 0
+    if match_data.get('total_count') is not None:
+        return int(match_data.get('total_count') or 0)
+    groups = match_data.get('match_groups') or []
+    if groups:
+        return sum(int(g.get('total_count') or 0) for g in groups)
+    return len(match_data.get('crm_matches') or []) + len(match_data.get('divar_matches') or [])
+
+
 @register.inclusion_tag('workspace/crm/includes/crm_field.html')
 def crm_field(field, label=None, extra_class='', label_class='', show_label=True):
     return {

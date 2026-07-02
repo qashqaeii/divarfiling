@@ -296,7 +296,7 @@ def contact_matches_payload(user, contact_id: int) -> Optional[Dict[str, Any]]:
         'match_groups': data.get('match_groups', []),
         'crm_matches': crm_matches,
         'divar_matches': divar_matches,
-        'total_count': len(crm_matches) + len(divar_matches),
+        'total_count': int(data.get('total_count') or len(crm_matches) + len(divar_matches)),
         'customer': {
             'id': customer.pk,
             'full_name': customer.name,

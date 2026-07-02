@@ -582,6 +582,13 @@ def _match_builder_group(
     }
 
 
+def compute_match_total_count(data: Dict[str, Any]) -> int:
+    groups = data.get('match_groups') or []
+    if groups:
+        return sum(int(g.get('total_count') or 0) for g in groups)
+    return len(data.get('crm_matches') or []) + len(data.get('divar_matches') or [])
+
+
 def get_builder_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Dict[str, Any]:
     acquisition_types = set(parse_builder_buy_types(customer.builder_buy_property_types))
     supply_types = set(BUILDER_SELL_PROPERTY_TYPES)
@@ -622,6 +629,11 @@ def get_builder_customer_matches(customer: Customer, user, *, divar_enabled: boo
         'crm_matches': crm_matches,
         'divar_matches': divar_matches,
         'divar_locked': not divar_enabled,
+        'total_count': compute_match_total_count({
+            'match_groups': groups,
+            'crm_matches': crm_matches,
+            'divar_matches': divar_matches,
+        }),
         'message': '',
     }
 
@@ -635,6 +647,7 @@ def get_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Di
             'crm_matches': [],
             'divar_matches': [],
             'divar_locked': not divar_enabled,
+            'total_count': 0,
             'message': 'تطبیق خودکار برای این نوع مخاطب فعال نیست.',
         }
 
@@ -644,8 +657,7 @@ def get_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Di
     crm_matches = match_crm_properties(customer, user)
     divar_matches = match_divar_listings(customer, user) if divar_enabled else []
     divar_locked = not divar_enabled
-
-    return {
+    payload = {
         'eligible': True,
         'is_builder': False,
         'match_groups': [],
@@ -654,3 +666,5 @@ def get_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Di
         'divar_locked': divar_locked,
         'message': '',
     }
+    payload['total_count'] = compute_match_total_count(payload)
+    return payload

@@ -69,6 +69,7 @@ class TenantMatchingTests(TestCase):
         data = get_customer_matches(self.tenant, self.user, divar_enabled=False)
         titles = [m['title'] for m in data['crm_matches']]
         self.assertIn(self.rent_match.title, titles)
+        self.assertEqual(data['total_count'], len(data['crm_matches']) + len(data['divar_matches']))
 
     def test_buyer_does_not_see_rent_only_files(self):
         buyer = Customer.objects.create(

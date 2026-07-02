@@ -7,7 +7,7 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=63">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=64">
 {% endblock %}
 
 {% block content %}
@@ -32,18 +32,6 @@
                     <p class="mk-hero-subtitle mk-hero-subtitle--pro">{{ home_page.hero.subtitle }}</p>
 
                     <p class="mk-hero-lead">{{ home_page.hero.lead }}</p>
-
-                    <ul class="mk-hero-highlights mk-hero-highlights--pro mk-hero-highlights--mini">
-                        {% for feat in home_page.hero.mini_features %}
-                        <li class="mk-hero-highlight mk-hero-highlight--{{ feat.accent }}">
-                            <span class="mk-hero-highlight-icon"><i class="fas {{ feat.icon }}" aria-hidden="true"></i></span>
-                            <span class="mk-hero-highlight-text">
-                                <strong>{{ feat.title }}</strong>
-                                <em>{{ feat.desc }}</em>
-                            </span>
-                        </li>
-                        {% endfor %}
-                    </ul>
                 </div>
 
                 <div class="mk-hero-cta">

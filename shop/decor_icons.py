@@ -51,6 +51,13 @@ DECOR_ICONS: dict[str, str] = {
     'sparkles': 'sparkles.png',
     'sticky_note': 'sticky_note.png',
     'upload': 'upload.png',
+    # Sidebar utilities & CRM extras
+    'automation': 'automation.png',
+    'message_template': 'message_template.png',
+    'team': 'team.png',
+    'help_center': 'help_center.png',
+    'api_docs': 'api_documentation.png',
+    'theme_switch': 'theme_switch.png',
 }
 
 CRM_ILLUSTRATIONS: dict[str, str] = {

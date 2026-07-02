@@ -4,7 +4,7 @@
 {% block title %}فعال‌سازی امکانات ربات{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=12">
 {% endblock %}
 
 {% block content %}
@@ -95,7 +95,13 @@
                 <a href="{% url 'workspace:upgrade' %}?feature={{ key }}"
                    class="upg-chip{% if feature_key == key %} is-current{% endif %}"
                    data-accent="{{ feat.accent }}">
-                    <i class="fas {{ feat.icon }}" aria-hidden="true"></i>
+                    <span class="upg-chip-icon" aria-hidden="true">
+                        {% if feat.decor_icon %}
+                            {% decor_icon feat.decor_icon size='sm' %}
+                        {% else %}
+                            <i class="fas {{ feat.icon }}"></i>
+                        {% endif %}
+                    </span>
                     <span>{{ feat.title }}</span>
                 </a>
                 {% endfor %}

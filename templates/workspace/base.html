@@ -33,12 +33,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <link rel="stylesheet" href="{% static 'css/decor-icons.css' %}?v=2">
-    <link rel="stylesheet" href="{% static 'workspace/css/ws-decor-icons.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'workspace/css/ws-decor-icons.css' %}?v=5">
 
     <link rel="stylesheet" href="{% static 'workspace/css/workspace.css' %}?v=47">
     <link rel="stylesheet" href="{% static 'workspace/css/minimal.css' %}?v=69">
     <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=9">
-    <link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=11">
+    <link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=12">
     <link rel="stylesheet" href="{% static 'workspace/css/cheerful-theme.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/responsive-base.css' %}?v=1">
 
@@ -123,15 +123,15 @@
                 </a>
 
                 <a href="{% url 'workspace:crm_templates' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'crm_templates' %}active{% endif %}" data-tour="nav-templates">
-                    <i class="fas fa-message"></i><span>قالب پیام</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='message_template' size='nav' only %}</span><span>قالب پیام</span>
                 </a>
 
                 <a href="{% url 'workspace:crm_automation' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'crm_automation' %}active{% endif %}" data-tour="nav-automation">
-                    <i class="fas fa-robot"></i><span>اتوماسیون</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='automation' size='nav' only %}</span><span>اتوماسیون</span>
                 </a>
 
                 <a href="{% url 'workspace:crm_team' %}" class="ws-nav-item {% if '/crm/team' in request.path %}active{% endif %}" data-tour="nav-team">
-                    <i class="fas fa-people-group"></i><span>تیم</span>
+                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}</span><span>تیم</span>
                 </a>
 
                 <div class="ws-nav-section">ابزارها</div>
@@ -164,11 +164,11 @@
 
                     <button type="button" class="ws-sidebar-util-btn" data-modal-open="modal-settings" title="تنظیمات" aria-label="تنظیمات"><span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='settings' size='nav' only %}</span></button>
 
-                    <a href="{% url 'workspace:help' %}" class="ws-sidebar-util-btn {% if request.resolver_match.url_name == 'help' %}active{% endif %}" title="راهنما" aria-label="راهنما"><i class="fas fa-circle-question"></i></a>
+                    <a href="{% url 'workspace:help' %}" class="ws-sidebar-util-btn {% if request.resolver_match.url_name == 'help' %}active{% endif %}" title="راهنما" aria-label="راهنما"><span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='help_center' size='nav' only %}</span></a>
 
-                    <a href="{% url 'workspace:docs_api' %}" class="ws-sidebar-util-btn {% if request.resolver_match.url_name == 'docs_api' %}active{% endif %}" title="مستندات API" aria-label="مستندات API"><i class="fas fa-book"></i></a>
+                    <a href="{% url 'workspace:docs_api' %}" class="ws-sidebar-util-btn {% if request.resolver_match.url_name == 'docs_api' %}active{% endif %}" title="مستندات API" aria-label="مستندات API"><span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='api_docs' size='nav' only %}</span></a>
 
-                    <button type="button" class="ws-sidebar-util-btn" id="themeToggle" title="تم تاریک" aria-label="فعال‌سازی تم تاریک"><i class="fas fa-sun"></i></button>
+                    <button type="button" class="ws-sidebar-util-btn" id="themeToggle" title="تم تاریک" aria-label="فعال‌سازی تم تاریک"><span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='theme_switch' size='nav' only %}</span></button>
 
                     <a href="{% url 'dashboard' %}" class="ws-sidebar-util-btn" title="بازگشت به سایت" aria-label="بازگشت به سایت"><i class="fas fa-arrow-right"></i></a>
 

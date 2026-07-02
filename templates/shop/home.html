@@ -7,55 +7,106 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=60">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=61">
 {% endblock %}
 
 {% block content %}
 
 {# ─── Hero ─── #}
-<section class="mk-hero mk-hero--split mk-hero--pro">
+<section class="mk-hero mk-hero--split mk-hero--pro mk-hero--deck">
     <div class="mk-hero-bg" aria-hidden="true"></div>
     <div class="container mk-hero-container">
-        <div class="mk-hero-inner">
-            <div class="mk-hero-stack">
-                <p class="mk-hero-eyebrow">{{ home_page.hero.eyebrow }}</p>
-
-                <h1 class="mk-hero-title">
-                    <span class="mk-hero-title-main">{{ home_page.hero.title_main }}</span>
-                    <span class="mk-hero-title-accent">{{ home_page.hero.title_accent }}</span>
-                </h1>
-
-                <p class="mk-hero-subtitle mk-hero-subtitle--pro">{{ home_page.hero.subtitle }}</p>
-
-                <p class="mk-hero-lead">{{ home_page.hero.lead }}</p>
-
-                <p class="mk-hero-coverage">
-                    <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
-                    {{ home_page.hero.coverage }}
-                </p>
+        <div class="mk-hero-split">
+            <div class="mk-hero-showcase" aria-hidden="true">
+                <div class="mk-hero-floats">
+                    {% for card in home_page.hero.float_cards %}
+                    <article class="mk-hero-float mk-hero-float--{{ card.pos }}" data-card="{{ card.id }}">
+                        <span class="mk-hero-float-label">{{ card.label }}</span>
+                        <strong class="mk-hero-float-value">{{ card.value }}</strong>
+                        {% if card.sub %}<span class="mk-hero-float-sub">{{ card.sub }}</span>{% endif %}
+                        {% if card.delta %}
+                        <span class="mk-hero-float-delta mk-hero-float-delta--{{ card.delta_tone|default:'up' }}">{{ card.delta }}</span>
+                        {% endif %}
+                        {% if card.visual == 'sparkline' %}
+                        <span class="mk-hero-float-viz mk-hero-float-viz--spark" aria-hidden="true"></span>
+                        {% elif card.visual == 'bars' %}
+                        <span class="mk-hero-float-viz mk-hero-float-viz--bars" aria-hidden="true">
+                            <span style="--h:42%"></span><span style="--h:68%"></span><span style="--h:55%"></span><span style="--h:82%"></span>
+                        </span>
+                        {% elif card.visual == 'map' %}
+                        <span class="mk-hero-float-viz mk-hero-float-viz--map" aria-hidden="true"><i class="fas fa-map"></i></span>
+                        {% endif %}
+                    </article>
+                    {% endfor %}
+                </div>
             </div>
 
-            <div class="mk-hero-cta">
+            <div class="mk-hero-inner">
+                <div class="mk-hero-stack">
+                    <p class="mk-hero-eyebrow mk-hero-eyebrow--pill">
+                        <i class="fas {{ home_page.hero.eyebrow_icon }}" aria-hidden="true"></i>
+                        {{ home_page.hero.eyebrow }}
+                    </p>
+
+                    <h1 class="mk-hero-title">
+                        <span class="mk-hero-title-main">{{ home_page.hero.title_main }}</span>
+                        <span class="mk-hero-title-accent">{{ home_page.hero.title_accent }}</span>
+                    </h1>
+
+                    <p class="mk-hero-subtitle mk-hero-subtitle--pro">{{ home_page.hero.subtitle }}</p>
+
+                    <p class="mk-hero-lead">{{ home_page.hero.lead }}</p>
+
+                    <ul class="mk-hero-highlights mk-hero-highlights--pro mk-hero-highlights--mini">
+                        {% for feat in home_page.hero.mini_features %}
+                        <li class="mk-hero-highlight mk-hero-highlight--{{ feat.accent }}">
+                            <span class="mk-hero-highlight-icon"><i class="fas {{ feat.icon }}" aria-hidden="true"></i></span>
+                            <span class="mk-hero-highlight-text">
+                                <strong>{{ feat.title }}</strong>
+                                <em>{{ feat.desc }}</em>
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="mk-hero-cta">
                     {% if user.is_authenticated %}
                     <a href="{% url 'workspace:home' %}" class="btn btn-primary mk-hero-cta-primary">
                         <i class="fas {{ home_page.hero.cta_primary_icon }}"></i>
                         {{ home_page.hero.cta_primary_label }}
+                        <i class="fas fa-arrow-left mk-hero-cta-arrow" aria-hidden="true"></i>
                     </a>
                     {% else %}
                     <a href="{% url 'register' %}" class="btn btn-primary mk-hero-cta-primary">
                         <i class="fas {{ home_page.hero.cta_guest_icon }}"></i>
                         {{ home_page.hero.cta_guest_label }}
+                        <i class="fas fa-arrow-left mk-hero-cta-arrow" aria-hidden="true"></i>
                     </a>
                     {% endif %}
-                    <a href="{% url 'product_list' %}" class="btn btn-secondary">
+                    <a href="{% url 'product_list' %}" class="btn btn-secondary mk-hero-cta-bot">
                         <i class="fas {{ home_page.hero.cta_bot_icon }}"></i>
                         {{ home_page.hero.cta_bot_label }}
                     </a>
-                    <a href="{% url 'seo_landing_real_estate_crm' %}" class="btn btn-secondary mk-hero-cta-crm">
-                        <i class="fas fa-users"></i>
-                        میزکار CRM املاک رایگان
-                    </a>
+                </div>
+
+                <p class="mk-hero-trust">
+                    <i class="fas fa-shield-check" aria-hidden="true"></i>
+                    {{ home_page.hero.trust_note }}
+                </p>
             </div>
+        </div>
+
+        <div class="mk-hero-deck mk-reveal" aria-label="امکانات کلیدی">
+            {% for feat in home_page.hero.deck_features %}
+            <article class="mk-hero-deck-item" data-accent="{{ feat.accent }}">
+                <span class="mk-hero-deck-icon">{% include 'includes/icon_slot.html' with decor=feat.decor_icon fa=feat.icon only %}</span>
+                <span class="mk-hero-deck-text">
+                    <strong>{{ feat.title }}</strong>
+                    <em>{{ feat.desc }}</em>
+                </span>
+            </article>
+            {% endfor %}
         </div>
     </div>
 </section>

@@ -889,19 +889,117 @@ def home_page_content():
     """محتوای صفحه اصلی — فایلینگ دیوار."""
     return {
         'hero': {
-            'eyebrow': 'فایلینگ دیوار · میزکار تخصصی مشاوران املاک',
-            'title_main': 'هر آگهی دیوار، یک فرصت معامله است؛',
-            'title_accent': 'از دستش ندهید',
-            'title': 'هر آگهی دیوار، یک فرصت معامله است؛ از دستش ندهید',
-            'subtitle': (
-                'فایلینگ هوشمند املاک برای مشاورانی که سریع‌تر فایل های شخصی رو میخواهند'
-            ),
+            'eyebrow': 'میزکار تخصصی مشاوران املاک',
+            'eyebrow_icon': 'fa-sparkles',
+            'title_main': 'هر آگهی دیوار، یک',
+            'title_accent': 'فرصت معامله است!',
+            'title': 'هر آگهی دیوار، یک فرصت معامله است!',
+            'subtitle': 'فایلینگ هوشمند املاک بر پایه داده‌های واقعی دیوار',
             'lead': (
-                'دیگر لازم نیست ساعت‌ها بین آگهی‌ها بگردید. ربات استخراج، فایل‌های جدید دیوار را '
-                'جمع‌آوری می‌کند؛ میزکار، آن‌ها را مرتب می‌کند؛ CRM، مشتری و مالک را جلوی چشم '
-                'نگه می‌دارد؛ و تحلیل بازار به شما نشان می‌دهد هر محله واقعاً چه قیمتی دارد.'
+                'دیگر لازم نیست ساعت‌ها بین آگهی‌ها بگردید. ربات استخراج، آگهی‌های جدید دیوار را '
+                'جمع‌آوری می‌کند؛ CRM شما آن‌ها را مرتب می‌کند؛ و تحلیل بازار به شما نشان می‌دهد '
+                'هر محله واقعاً چه قیمتی دارد.'
             ),
-            'coverage': 'پوشش ملی — هر شهری که دیوار در آن فعال است',
+            'mini_features': [
+                {
+                    'icon': 'fa-building',
+                    'title': 'تحلیل حرفه‌ای بازار',
+                    'desc': 'قیمت واقعی در هر محله',
+                    'accent': 'violet',
+                },
+                {
+                    'icon': 'fa-compass',
+                    'title': 'داده‌های دقیق و واقعی',
+                    'desc': 'تصمیم‌گیری هوشمند',
+                    'accent': 'sky',
+                },
+                {
+                    'icon': 'fa-bolt',
+                    'title': 'صرفه‌جویی در زمان',
+                    'desc': 'استخراج خودکار و سریع',
+                    'accent': 'amber',
+                },
+            ],
+            'trust_note': 'بدون نیاز به کارت بانکی برای شروع',
+            'float_cards': [
+                {
+                    'id': 'extracted',
+                    'label': 'آگهی‌های استخراج‌شده',
+                    'value': '۱۲,۴۳۵',
+                    'delta': '+۲۴٪',
+                    'delta_tone': 'up',
+                    'visual': 'sparkline',
+                    'pos': 'tl',
+                },
+                {
+                    'id': 'pps',
+                    'label': 'میانگین قیمت هر متر',
+                    'value': '۸۷.۵ میلیون تومان',
+                    'visual': 'bars',
+                    'pos': 'tr',
+                },
+                {
+                    'id': 'coverage',
+                    'label': 'مناطق پوشش‌داده‌شده',
+                    'value': 'استان ۳۱',
+                    'sub': 'شهر ۱,۲۸۷',
+                    'visual': 'map',
+                    'pos': 'bl',
+                },
+                {
+                    'id': 'active',
+                    'label': 'فایل‌های فعال شما',
+                    'value': '۲۴۸',
+                    'delta': '+۱۸٪',
+                    'delta_tone': 'up',
+                    'visual': 'sparkline',
+                    'pos': 'br',
+                },
+            ],
+            'deck_features': [
+                {
+                    'icon': 'fa-bullseye',
+                    'decor_icon': 'rocket',
+                    'title': 'استخراج خودکار',
+                    'desc': 'آگهی‌های جدید دیوار',
+                    'accent': 'violet',
+                },
+                {
+                    'icon': 'fa-folder-tree',
+                    'decor_icon': 'folder',
+                    'title': 'فایلینگ هوشمند',
+                    'desc': 'مرتب‌سازی و دسته‌بندی',
+                    'accent': 'indigo',
+                },
+                {
+                    'icon': 'fa-chart-pie',
+                    'decor_icon': 'sparkles',
+                    'title': 'تحلیل بازار',
+                    'desc': 'نمودارها و مقایسه محله‌ها',
+                    'accent': 'sky',
+                },
+                {
+                    'icon': 'fa-users',
+                    'decor_icon': 'clipboard_list',
+                    'title': 'CRM حرفه‌ای',
+                    'desc': 'مدیریت مشتریان و مالکین',
+                    'accent': 'emerald',
+                },
+                {
+                    'icon': 'fa-bell',
+                    'decor_icon': 'sticky_note',
+                    'title': 'یادآورها و پیگیری‌ها',
+                    'desc': 'هیچ فرصتی را از دست ندهید',
+                    'accent': 'amber',
+                },
+                {
+                    'icon': 'fa-map-location-dot',
+                    'decor_icon': 'map_pin',
+                    'title': 'نقشه و بنچمارک',
+                    'desc': 'قیمت و امتیاز محله‌ها',
+                    'accent': 'rose',
+                },
+            ],
             'cta_primary_label': 'ورود به میزکار',
             'cta_primary_icon': 'fa-layer-group',
             'cta_guest_label': 'شروع رایگان میزکار',

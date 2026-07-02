@@ -187,7 +187,7 @@ def workspace_help_content():
                     },
                     {
                         'title': 'خروجی و ساختار پوشه‌ها',
-                        'icon': 'fa-folder-tree',
+                        'icon': 'fa-folder',
                         'steps': [
                             {
                                 'title': 'پوشه output',

@@ -55,8 +55,24 @@
 
 .mk-hub-metric-icon .df-decor-icon img,
 .mk-hub-head-btn .df-decor-icon img {
-    width: 1.05rem;
-    height: 1.05rem;
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.mk-hub-head-btn .df-decor-icon {
+    opacity: 1;
+    flex-shrink: 0;
+}
+
+.mk-hub-head-btn--primary .df-decor-icon img {
+    filter: brightness(0) invert(1);
+}
+
+@media (max-width: 640px) {
+    .mk-hub-head-btn .df-decor-icon img {
+        width: 1.2rem;
+        height: 1.2rem;
+    }
 }
 
 .ws-home--compact .mk-hub-metric-icon .df-decor-icon img {

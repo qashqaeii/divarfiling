@@ -371,7 +371,7 @@ def education_hub_content():
                         'desc': 'فایل‌ها کجا ذخیره می‌شوند و چطور برای آپلود آماده کنید.',
                         'duration': '۴ دقیقه',
                         'level': 'مقدماتی',
-                        'icon': 'fa-folder-tree',
+                        'icon': 'fa-folder',
                         'url_name': 'workspace:help',
                         'requires_auth': True,
                         'requires_bot': True,

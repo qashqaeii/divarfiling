@@ -452,7 +452,7 @@ def bot_page_content():
                 'desc': 'به‌جای ساعت‌ها کار دستی، آگهی‌ها به‌صورت خودکار استخراج می‌شوند.',
             },
             {
-                'icon': 'fa-folder-tree',
+                'icon': 'fa-folder',
                 'title': 'فایلینگ منظم روی سیستم شما',
                 'desc': 'خروجی در پوشه output با تفکیک استان، شهر، محله و نوع معامله ذخیره می‌شود.',
             },
@@ -907,7 +907,7 @@ def home_page_content():
                     'accent': 'violet',
                 },
                 {
-                    'icon': 'fa-folder-tree',
+                    'icon': 'fa-folder',
                     'decor_icon': 'folder',
                     'title': 'فایلینگ هوشمند',
                     'desc': 'مرتب‌سازی و دسته‌بندی',
@@ -1078,7 +1078,7 @@ def home_page_content():
             'points': [
                 {'icon': 'fa-map', 'decor_icon': 'map_pin', 'title': '۳۱ استان', 'desc': 'پوشش تمام استان‌های کشور'},
                 {'icon': 'fa-city', 'decor_icon': 'layers', 'title': 'هر شهر فعال', 'desc': 'هر جایی که دیوار آگهی دارد'},
-                {'icon': 'fa-folder-tree', 'decor_icon': 'clipboard_list', 'title': 'فایلینگ منظم', 'desc': 'ساختار استان / شهر / محله'},
+                {'icon': 'fa-folder', 'decor_icon': 'clipboard_list', 'title': 'فایلینگ منظم', 'desc': 'ساختار استان / شهر / محله'},
             ],
             'cities': [
                 'تهران', 'مشهد', 'اصفهان', 'شیراز', 'تبریز', 'اهواز', 'کرج', 'قم',
@@ -1434,7 +1434,7 @@ def home_page_content():
             'eyebrow': 'ربات استخراج',
             'flow': [
                 {'icon': 'fa-windows', 'decor_icon': 'rocket', 'text': 'نصب روی ویندوز — استخراج خودکار'},
-                {'icon': 'fa-folder-tree', 'decor_icon': 'layers', 'text': 'فایلینگ منظم در پوشه', 'code': 'output'},
+                {'icon': 'fa-folder', 'decor_icon': 'layers', 'text': 'فایلینگ منظم در پوشه', 'code': 'output'},
                 {'icon': 'fa-layer-group', 'decor_icon': 'upload', 'text': 'آپلود و تحلیل در میزکار'},
             ],
             'guide_label': 'راهنمای نصب و فعال‌سازی',

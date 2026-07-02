@@ -1,10 +1,10 @@
 {% extends 'workspace/base.html' %}
-{% load static %}
+{% load static decor_icons %}
 
 {% block title %}فعال‌سازی امکانات ربات{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=11">
 {% endblock %}
 
 {% block content %}
@@ -26,8 +26,14 @@
                     <span>نیاز به لایسنس ربات</span>
                 </div>
                 <div class="upg-hero-main">
-                    <span class="upg-icon" aria-hidden="true">
-                        <i class="fas {% if feature %}{{ feature.icon }}{% else %}fa-robot{% endif %}"></i>
+                    <span class="upg-icon{% if feature and feature.decor_icon %} upg-icon--decor{% endif %}" aria-hidden="true">
+                        {% if feature and feature.decor_icon %}
+                            {% decor_icon feature.decor_icon size='lg' %}
+                        {% elif feature %}
+                            <i class="fas {{ feature.icon }}"></i>
+                        {% else %}
+                            <i class="fas fa-robot"></i>
+                        {% endif %}
                     </span>
                     <div class="upg-hero-copy">
                         <h1 id="upg-title">{% if feature %}{{ feature.title }}{% else %}امکانات ربات استخراج دیوار{% endif %}</h1>

@@ -83,6 +83,7 @@ BOT_LOCKED_FEATURES = {
         'title': 'فایلینگ دیوار',
         'desc': 'آپلود و مدیریت فایل‌های استخراج‌شده از دیوار',
         'icon': 'fa-folder',
+        'decor_icon': 'folder',
         'accent': 'violet',
     },
     'analyze': {

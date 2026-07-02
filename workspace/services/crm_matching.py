@@ -133,6 +133,8 @@ def _property_type_match_profile(profile, prop_type: str) -> Tuple[float, str]:
 
 def _price_match_sale_profile(profile, price: Optional[int]) -> Tuple[float, str]:
     if not price:
+        if _profile_has_sale_criteria(profile):
+            return 0.05, ''
         return 0.4, ''
     lo, hi = profile.budget_min, profile.budget_max
     if lo is None and hi is None:
@@ -179,6 +181,8 @@ def _price_match_rent_profile(
         parts.append(f'اجاره {format_toman(rent)}')
 
     if not score_parts:
+        if _profile_has_rent_criteria(profile):
+            return 0.05, ''
         return 0.5, ''
     return sum(score_parts) / len(score_parts), ' · '.join(parts)
 
@@ -217,6 +221,74 @@ def _is_rent_customer(customer: Customer) -> bool:
 
 def _is_rent_profile(profile) -> bool:
     return getattr(profile, 'customer_type', '') in {'مستاجر', 'متقاضی اجاره', 'موجر'}
+
+
+def _is_sale_customer(customer: Customer) -> bool:
+    return customer.customer_type in {
+        'خریدار', 'متقاضی خرید', 'فروشنده', 'فروشنده ملک', 'سرمایه‌گذار',
+    }
+
+
+def _profile_has_rent_criteria(profile) -> bool:
+    return any(
+        getattr(profile, field, None) is not None
+        for field in ('deposit_min', 'deposit_max', 'rent_min', 'rent_max')
+    )
+
+
+def _profile_has_sale_criteria(profile) -> bool:
+    return getattr(profile, 'budget_min', None) is not None or getattr(profile, 'budget_max', None) is not None
+
+
+def _crm_property_is_rent_listing(prop: CRMProperty) -> bool:
+    return (
+        prop.deal_mode in {'رهن و اجاره', 'اجاره'}
+        and (prop.deposit or prop.monthly_rent)
+    )
+
+
+def _crm_property_is_sale_listing(prop: CRMProperty) -> bool:
+    return prop.deal_mode in {'فروش', 'پیش‌فروش'} and bool(prop.sale_price)
+
+
+def _listing_is_rent_listing(listing: Listing) -> bool:
+    return bool(listing.deposit or listing.rent)
+
+
+def _listing_is_sale_listing(listing: Listing) -> bool:
+    return bool(listing.price) and not _listing_is_rent_listing(listing)
+
+
+def _crm_match_compatible(customer: Customer, prop: CRMProperty) -> bool:
+    if is_builder_customer(customer):
+        return True
+    if customer.customer_type in LEAD_TYPES or customer.customer_type == 'سرنخ':
+        return _crm_property_is_rent_listing(prop) or _crm_property_is_sale_listing(prop)
+    if customer.customer_type == 'مالک':
+        if _profile_has_rent_criteria(customer):
+            return _crm_property_is_rent_listing(prop) or _crm_property_is_sale_listing(prop)
+        return _crm_property_is_sale_listing(prop) or _crm_property_is_rent_listing(prop)
+    if _is_rent_customer(customer):
+        return _crm_property_is_rent_listing(prop)
+    if _is_sale_customer(customer):
+        return _crm_property_is_sale_listing(prop)
+    return _crm_property_is_rent_listing(prop) or _crm_property_is_sale_listing(prop)
+
+
+def _listing_match_compatible(customer: Customer, listing: Listing) -> bool:
+    if is_builder_customer(customer):
+        return True
+    if customer.customer_type in LEAD_TYPES or customer.customer_type == 'سرنخ':
+        return _listing_is_rent_listing(listing) or _listing_is_sale_listing(listing)
+    if customer.customer_type == 'مالک':
+        if _profile_has_rent_criteria(customer):
+            return _listing_is_rent_listing(listing) or _listing_is_sale_listing(listing)
+        return _listing_is_sale_listing(listing) or _listing_is_rent_listing(listing)
+    if _is_rent_customer(customer):
+        return _listing_is_rent_listing(listing)
+    if _is_sale_customer(customer):
+        return _listing_is_sale_listing(listing)
+    return _listing_is_rent_listing(listing) or _listing_is_sale_listing(listing)
 
 
 def _compute_score(*, price_s: float, area_s: float, hood_s: float, type_s: float, room_s: float) -> int:
@@ -286,11 +358,16 @@ def _score_crm_property_with_profile(
     match_intent: str = '',
     intent_label: str = '',
 ) -> Dict[str, Any]:
-    is_rent = prop.deal_mode in {'رهن و اجاره', 'اجاره'}
-    if is_rent or _is_rent_profile(profile):
+    is_rent_listing = _crm_property_is_rent_listing(prop)
+    is_sale_listing = _crm_property_is_sale_listing(prop)
+    rent_customer = _is_rent_profile(profile)
+
+    if rent_customer and not is_rent_listing:
+        price_s, price_label = 0.0, ''
+    elif not rent_customer and is_rent_listing and not is_sale_listing:
+        price_s, price_label = 0.0, ''
+    elif is_rent_listing and (rent_customer or not is_sale_listing):
         price_s, price_label = _price_match_rent_profile(profile, prop.deposit, prop.monthly_rent)
-        if not price_label and prop.sale_price:
-            price_s, price_label = _price_match_sale_profile(profile, prop.sale_price)
     else:
         price_s, price_label = _price_match_sale_profile(profile, prop.sale_price)
 
@@ -321,7 +398,8 @@ def _score_crm_property_with_profile(
         'rooms': prop.rooms or '',
         'property_type': prop.property_type or '',
         'price_label': price_label or (
-            format_toman(prop.sale_price) if prop.sale_price else ''
+            format_toman(prop.monthly_rent or prop.deposit or prop.sale_price)
+            if (prop.monthly_rent or prop.deposit or prop.sale_price) else ''
         ),
         'link': prop.link or '',
         'image': (prop.images or [None])[0] if prop.images else '',
@@ -345,8 +423,15 @@ def _score_listing_with_profile(
     intent_label: str = '',
 ) -> Dict[str, Any]:
     inferred = prop_type or _infer_listing_property_type(listing)
-    is_rent = bool(listing.rent or listing.deposit)
-    if is_rent or _is_rent_profile(profile):
+    is_rent_listing = _listing_is_rent_listing(listing)
+    is_sale_listing = _listing_is_sale_listing(listing)
+    rent_customer = _is_rent_profile(profile)
+
+    if rent_customer and not is_rent_listing:
+        price_s, price_label = 0.0, ''
+    elif not rent_customer and is_rent_listing and not is_sale_listing:
+        price_s, price_label = 0.0, ''
+    elif is_rent_listing and (rent_customer or not is_sale_listing):
         price_s, price_label = _price_match_rent_profile(profile, listing.deposit, listing.rent)
     else:
         price_s, price_label = _price_match_sale_profile(profile, listing.price)
@@ -430,16 +515,28 @@ def _filter_builder_listings(listings, allowed_types: Set[str], *, sale_only: bo
 
 def match_crm_properties(customer: Customer, user, *, limit: int = 12) -> List[Dict[str, Any]]:
     qs = _crm_properties_qs(user)
-    scored = [_score_crm_property(customer, p) for p in qs[:200]]
+    scored = []
+    for prop in qs[:200]:
+        if not _crm_match_compatible(customer, prop):
+            continue
+        item = _score_crm_property(customer, prop)
+        if item['score'] >= 25:
+            scored.append(item)
     scored.sort(key=lambda x: x['score'], reverse=True)
-    return [m for m in scored if m['score'] >= 25][:limit]
+    return scored[:limit]
 
 
 def match_divar_listings(customer: Customer, user, *, limit: int = 12) -> List[Dict[str, Any]]:
     qs = _divar_listings_qs(user)
-    scored = [_score_listing(customer, lst) for lst in qs]
+    scored = []
+    for lst in qs:
+        if not _listing_match_compatible(customer, lst):
+            continue
+        item = _score_listing(customer, lst)
+        if item['score'] >= 30:
+            scored.append(item)
     scored.sort(key=lambda x: x['score'], reverse=True)
-    return [m for m in scored if m['score'] >= 30][:limit]
+    return scored[:limit]
 
 
 def _match_builder_group(

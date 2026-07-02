@@ -1,6 +1,8 @@
 """داده نقشه تک‌ملکی — جزئیات میزکار و صفحه عمومی."""
 from __future__ import annotations
 
+import json
+import math
 from typing import Any, Dict, Optional
 
 from workspace.services.display import (
@@ -12,6 +14,19 @@ from workspace.services.display import (
     to_jalali_display,
 )
 from workspace.services.formatting import format_area, format_toman
+
+
+def _json_safe_float(value: Any) -> Optional[float]:
+    """تبدیل عدد به مقدار قابل سریال‌سازی JSON (بدون NaN/Inf)."""
+    if value is None or value == '':
+        return None
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        return None
+    if math.isnan(num) or math.isinf(num):
+        return None
+    return num
 
 
 def build_listing_map_marker(
@@ -40,18 +55,18 @@ def build_listing_map_marker(
     verdict = ''
     market_tier = 'unknown'
     if benchmark:
-        score = benchmark.get('diff_pct')
+        score = _json_safe_float(benchmark.get('diff_pct'))
         verdict = (benchmark.get('verdict') or '').strip()
         market_tier = market_tier_from_score(score)
 
     marker = {
-        'lat': listing.latitude,
-        'lng': listing.longitude,
+        'lat': _json_safe_float(listing.latitude),
+        'lng': _json_safe_float(listing.longitude),
         'title': listing.title or '',
         'price_label': listing_map_price_label(listing, tx),
         'deposit_label': listing_map_deposit_label(listing),
         'rent_label': listing_map_rent_label(listing),
-        'area': listing.area or 0,
+        'area': _json_safe_float(listing.area) or 0,
         'area_label': format_area(listing.area) if listing.area else '',
         'rooms': listing.rooms or '',
         'pps_label': format_toman(listing.price_per_sqm, per_sqm=True) if listing.price_per_sqm else '',

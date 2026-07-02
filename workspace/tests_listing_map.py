@@ -1,4 +1,6 @@
 """تست payload نقشه جزئیات ملک."""
+import json
+
 from django.test import SimpleTestCase
 
 from workspace.services.display import location_accuracy_for_map, transaction_profile
@@ -45,3 +47,18 @@ class ListingMapMarkerTests(SimpleTestCase):
 
         self.assertEqual(marker['location_kind'], 'exact')
         self.assertEqual(marker['location_radius_m'], 0)
+
+    def test_nan_benchmark_score_serializes_as_null(self):
+        listing = FakeListing()
+        tx = transaction_profile('فروش')
+        marker = build_listing_map_marker(
+            listing,
+            tx,
+            benchmark={'diff_pct': float('nan'), 'verdict': ''},
+        )
+
+        self.assertIsNone(marker['value_score'])
+        self.assertEqual(marker['market_tier'], 'unknown')
+        encoded = json.dumps(marker, ensure_ascii=False)
+        self.assertNotIn('NaN', encoded)
+        self.assertIn('"value_score": null', encoded)

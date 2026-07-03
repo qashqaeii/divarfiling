@@ -23,6 +23,8 @@ from .bot_install_video import get_bot_install_video_context, resolve_guide_vide
 from workspace.services.filing_video import get_filing_video_context
 from .sample_excel import get_sale_apartment_excel_preview
 from .education_content import education_hub_content
+from .android_tutorial_content import android_tutorial_content, android_tutorial_schema_json
+from .android_tutorial_video import get_android_video_context, resolve_android_video
 from .seo_landings import get_landing, landing_schema_json
 from .services.app_downloads import build_android_apk_response
 from .author_content import author_page_content, AUTHOR_SLUG
@@ -534,6 +536,41 @@ class EducationView(TemplateView):
             'آموزش فایلینگ دیوار, راهنمای CRM املاک, آموزش ربات دیوار, '
             'تحلیل بازار املاک, میزکار مشاور'
         )
+        return ctx
+
+
+class AndroidTutorialView(TemplateView):
+    template_name = 'shop/android_tutorial.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        tutorial = android_tutorial_content()
+        ctx['tutorial'] = tutorial
+        ctx['bot_buy_url'] = get_bot_product_buy_url()
+
+        ctx['video_mode'], ctx['video_src'] = resolve_android_video({'url': ''})
+        ctx['overview_video'] = get_android_video_context('overview')
+
+        user = self.request.user
+        if user.is_authenticated:
+            from workspace.services.access import get_bot_access_state
+            access = get_bot_access_state(user)
+            ctx['has_bot_license'] = access['has_bot_license']
+        else:
+            ctx['has_bot_license'] = False
+
+        ctx['meta_title'] = 'آموزش اپ اندروید — راهنمای کامل فایلینگ دیوار'
+        ctx['meta_description'] = (
+            'آموزش حرفه‌ای نصب، ورود، استخراج آگهی دیوار، فایلینگ، CRM و اعلان‌ها '
+            'در اپ موبایل فایلینگ دیوار. ویدیو و تصویر گام‌به‌گام برای مشاوران املاک.'
+        )
+        ctx['meta_keywords'] = (
+            'آموزش اپ اندروید فایلینگ دیوار, نصب APK دیوار فایلینگ, '
+            'اپ مشاور املاک اندروید, CRM موبایل املاک, استخراج دیوار موبایل, '
+            'Play Protect نصب APK, آموزش فایلینگ موبایل'
+        )
+        ctx['meta_image'] = '/static/images/android/posters/android-video-overview.jpg'
+        ctx['schema_data'] = android_tutorial_schema_json(self.request)
         return ctx
 
 

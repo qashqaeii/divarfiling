@@ -38,6 +38,7 @@ class StaticViewSitemap(SiteAwareSitemap):
         'terms': {'changefreq': 'yearly', 'priority': 0.4},
         'license_guide': {'changefreq': 'monthly', 'priority': 0.7},
         'education': {'changefreq': 'monthly', 'priority': 0.7},
+        'android_tutorial': {'changefreq': 'monthly', 'priority': 0.75},
         'blog:post_list': {'changefreq': 'daily', 'priority': 0.8},
         'author_hossein_qashqaeii': {'changefreq': 'monthly', 'priority': 0.65},
     }

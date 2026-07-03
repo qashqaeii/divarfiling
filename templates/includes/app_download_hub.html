@@ -48,7 +48,7 @@
                         <i class="fab fa-android" aria-hidden="true"></i>
                         دانلود APK
                     </a>
-                    <a href="{% if compact and not show_install_guide %}{% url 'license_guide' %}#mk-dl-android-install{% else %}#mk-dl-android-install{% endif %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
+                    <a href="{% if compact and not show_install_guide %}{% url 'android_tutorial' %}#chapter-install{% else %}{% url 'android_tutorial' %}#chapter-install{% endif %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
                     {% else %}
                     <span class="mk-dl-unavailable"><i class="fas fa-clock"></i> به‌زودی در سرور قرار می‌گیرد</span>
                     {% endif %}

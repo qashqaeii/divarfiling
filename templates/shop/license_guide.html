@@ -210,6 +210,14 @@
                     </span>
                     <i class="fas fa-arrow-left lg-related-arrow"></i>
                 </a>
+                <a href="{% url 'android_tutorial' %}" class="lg-related-card">
+                    <span class="mk-icon mk-icon--md mk-icon--emerald"><i class="fab fa-android"></i></span>
+                    <span class="lg-related-copy">
+                        <strong>آموزش اپ اندروید</strong>
+                        <span>نصب، استخراج، CRM و اعلان‌ها — ویدیو و تصویر</span>
+                    </span>
+                    <i class="fas fa-arrow-left lg-related-arrow"></i>
+                </a>
                 <a href="{% if user.is_authenticated %}{% url 'workspace:help' %}{% else %}{% url 'register' %}{% endif %}" class="lg-related-card">
                     <span class="mk-icon mk-icon--md mk-icon--sky"><i class="fas fa-book-open"></i></span>
                     <span class="lg-related-copy">

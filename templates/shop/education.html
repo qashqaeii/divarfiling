@@ -26,12 +26,18 @@
                     <a href="{% url 'workspace:help' %}" class="edu-btn edu-btn--ghost">
                         <i class="fas fa-book-open"></i> راهنمای تصویری
                     </a>
+                    <a href="{% url 'android_tutorial' %}" class="edu-btn edu-btn--ghost">
+                        <i class="fab fa-android"></i> آموزش اپ اندروید
+                    </a>
                     {% else %}
                     <a href="{% url 'register' %}" class="edu-btn edu-btn--primary">
                         <i class="fas fa-user-plus"></i> ثبت‌نام رایگان
                     </a>
                     <a href="{% url 'license_guide' %}" class="edu-btn edu-btn--ghost">
                         <i class="fas fa-robot"></i> راهنمای ربات
+                    </a>
+                    <a href="{% url 'android_tutorial' %}" class="edu-btn edu-btn--ghost">
+                        <i class="fab fa-android"></i> آموزش اپ اندروید
                     </a>
                     {% endif %}
                 </div>

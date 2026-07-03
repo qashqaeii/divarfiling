@@ -7,7 +7,7 @@
     <div class="and-phone-vid-shell" aria-hidden="false">
         <div class="and-phone-vid-device">
             <span class="and-phone-vid-speaker" aria-hidden="true"></span>
-            <div class="and-phone-vid-screen{% if v.available or video_mode == 'file' %} mk-vid-frame{% endif %}">
+            <div class="and-phone-vid-screen{% if v.available or video_mode == 'file' %} mk-vid-frame and-phone-vid-screen--video{% elif v.poster_available and v.poster %} and-phone-vid-screen--poster{% endif %}">
                 {% if video_mode == 'embed' and video_src %}
                 <iframe src="{{ video_src }}"
                         title="{{ v.title }}"

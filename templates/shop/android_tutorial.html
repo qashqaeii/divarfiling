@@ -19,7 +19,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-android-tutorial.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/mizkar-android-tutorial.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -177,6 +177,7 @@
                 <h2 id="and-tut-videos-title">کتابخانه ویدیو</h2>
                 <p>{{ tutorial.sections.videos.subtitle }}</p>
             </header>
+            <div class="and-tut-video-library">
             <div class="and-tut-video-scroll" role="list">
                 {% for video in tutorial.videos %}
                 <article class="and-tut-video-tile{% if forloop.first %} and-tut-video-tile--featured{% endif %}{% if video.state == 'video' %} and-tut-video-tile--ready{% elif video.state == 'poster' %} and-tut-video-tile--poster{% endif %}"
@@ -198,6 +199,7 @@
                     </div>
                 </article>
                 {% endfor %}
+            </div>
             </div>
         </div>
     </section>

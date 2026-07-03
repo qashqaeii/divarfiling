@@ -463,7 +463,7 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
 
 .and-tut-cinema-panel {
     display: grid;
-    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 300px);
     gap: clamp(1.5rem, 3vw, 2.25rem);
     align-items: center;
     padding: clamp(1.25rem, 3vw, 1.75rem);
@@ -494,26 +494,31 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0.5rem;
+    padding: 0.75rem 0.5rem 2rem;
+    min-width: 0;
+    overflow: visible;
 }
 
 /* ─── Phone video player (عمودی — اسکرین‌رکورد موبایل) ─── */
 .and-phone-vid {
     position: relative;
     width: 100%;
+    max-width: var(--and-phone-w, 220px);
+    margin-inline: auto;
 }
 
 .and-phone-vid-shell {
     position: relative;
     display: flex;
     justify-content: center;
+    width: 100%;
 }
 
 .and-phone-vid-device {
     position: relative;
     z-index: 2;
     width: 100%;
-    max-width: var(--and-phone-w, 220px);
+    max-width: 100%;
     padding: 10px;
     border-radius: 34px;
     background: linear-gradient(155deg, #3f4f63 0%, #1a2332 42%, #0a0f18 100%);
@@ -552,9 +557,48 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
 }
 
 .and-phone-vid-screen.mk-vid-frame .mk-vid-el,
+.and-phone-vid-screen--video .mk-vid-el,
 .and-phone-vid-el {
     object-fit: cover;
-    object-position: top center;
+    object-position: center center;
+}
+
+.and-phone-vid-screen--poster {
+    background: #0b1220;
+}
+
+.and-phone-vid-poster,
+.and-phone-vid-empty {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.and-phone-vid-poster {
+    display: block;
+}
+
+.and-phone-vid-poster img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center center;
+    background: #0b1220;
+}
+
+.and-phone-vid-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    color: var(--and-muted);
+    font-size: 0.76rem;
+    background:
+        radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--and-purple) 14%, transparent), transparent 58%),
+        #0b1220;
 }
 
 .and-phone-vid-play {
@@ -567,23 +611,6 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
     left: 0.65rem;
     right: auto;
     font-size: 0.62rem;
-}
-
-.and-phone-vid-poster,
-.and-phone-vid-empty {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.and-phone-vid-poster img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;
 }
 
 .and-phone-vid-poster-badge {
@@ -603,15 +630,7 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
     background: rgba(15, 23, 42, 0.82);
     border: 1px solid rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(8px);
-}
-
-.and-phone-vid-empty {
-    gap: 0.45rem;
-    color: var(--and-muted);
-    font-size: 0.76rem;
-    background:
-        radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--and-purple) 14%, transparent), transparent 58%),
-        #0b1220;
+    z-index: 2;
 }
 
 .and-phone-vid-empty-icon {
@@ -647,8 +666,8 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
     pointer-events: none;
 }
 
-.and-phone-vid--lg { --and-phone-w: 260px; }
-.and-phone-vid--md { --and-phone-w: 200px; }
+.and-phone-vid--lg { --and-phone-w: 240px; }
+.and-phone-vid--md { --and-phone-w: 168px; }
 
 .and-phone-vid--lg .and-phone-vid-device {
     padding: 12px;
@@ -657,10 +676,6 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
 
 .and-phone-vid--lg .and-phone-vid-screen {
     border-radius: 30px;
-}
-
-.and-tut-video-tile--featured .and-phone-vid {
-    --and-phone-w: 230px;
 }
 
 .and-tut-chip--live {
@@ -917,14 +932,18 @@ html.mk-public[data-theme="light"] .and-tut-section--alt {
     background: linear-gradient(180deg, rgba(124, 58, 237, 0.04), transparent 50%), #f8fafc;
 }
 
-/* ─── Video library (اسکرول افقی — قاب موبایل) ─── */
+/* ─── Video library ─── */
+.and-tut-video-library {
+    position: relative;
+}
+
 .and-tut-video-scroll {
     display: flex;
-    gap: 1rem;
+    gap: 0.85rem;
     overflow-x: auto;
     padding: 0.5rem 0.25rem 1.25rem;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: 0.25rem;
+    scroll-padding-inline: 1rem;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
 }
@@ -939,13 +958,14 @@ html.mk-public[data-theme="light"] .and-tut-section--alt {
 }
 
 .and-tut-video-tile {
-    flex: 0 0 min(260px, 78vw);
+    flex: 0 0 min(200px, 72vw);
+    min-width: 0;
     scroll-snap-align: start;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.85rem;
-    padding: 1.1rem 1rem 1.15rem;
+    gap: 0.75rem;
+    padding: 1rem 0.65rem 1.1rem;
     border-radius: var(--and-radius-lg);
     border: 1px solid var(--and-border);
     background: var(--and-glass);
@@ -959,11 +979,19 @@ html.mk-public[data-theme="light"] .and-tut-section--alt {
 }
 
 .and-tut-video-tile--featured {
-    flex: 0 0 min(300px, 86vw);
+    flex: 0 0 min(220px, 78vw);
     background:
         radial-gradient(ellipse 90% 70% at 50% 0%, color-mix(in srgb, var(--and-purple) 12%, transparent), transparent 55%),
         var(--and-glass);
     border-color: color-mix(in srgb, var(--and-purple) 22%, transparent);
+}
+
+.and-tut-video-tile .and-phone-vid {
+    --and-phone-w: 168px;
+}
+
+.and-tut-video-tile--featured .and-phone-vid {
+    --and-phone-w: 188px;
 }
 
 .and-tut-video-tile--ready {
@@ -1004,6 +1032,46 @@ html.mk-public[data-theme="light"] .and-tut-section--alt {
     line-height: 1.7;
     color: var(--and-muted);
     margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (min-width: 900px) {
+    .and-tut-video-scroll {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.85rem;
+        overflow: visible;
+        padding: 0;
+        scroll-snap-type: none;
+    }
+
+    .and-tut-video-tile,
+    .and-tut-video-tile--featured {
+        flex: unset;
+        scroll-snap-align: unset;
+    }
+}
+
+@media (min-width: 1200px) {
+    .and-tut-video-scroll {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .and-tut-video-tile .and-phone-vid,
+    .and-tut-video-tile--featured .and-phone-vid {
+        --and-phone-w: min(100%, 132px);
+    }
+
+    .and-tut-video-tile-body h3 {
+        font-size: 0.8rem;
+    }
+
+    .and-tut-video-tile-body p {
+        font-size: 0.7rem;
+    }
 }
 
 /* ─── Curriculum rail ─── */
@@ -1815,7 +1883,7 @@ img[data-and-tut-fallback].is-missing {
     .and-tut-device { transform: none; }
     .and-tut-video-tile,
     .and-tut-video-tile--featured {
-        flex: 0 0 min(88vw, 280px);
+        flex: 0 0 min(78vw, 200px);
     }
 }
 

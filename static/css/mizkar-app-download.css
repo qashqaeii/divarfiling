@@ -1,0 +1,500 @@
+/* ─── مرکز دانلود اپ (اندروید + ویندوز) ─── */
+
+.mk-dl-hub {
+    position: relative;
+    padding: clamp(2rem, 5vw, 3.25rem) 0;
+    overflow: hidden;
+}
+
+.mk-dl-hub-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 70% 55% at 12% 20%, rgba(124, 58, 237, 0.14), transparent 58%),
+        radial-gradient(ellipse 60% 50% at 88% 75%, rgba(34, 197, 94, 0.1), transparent 55%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.35), transparent 40%, rgba(15, 23, 42, 0.2));
+    pointer-events: none;
+}
+
+html.mk-public[data-theme="light"] .mk-dl-hub-bg {
+    background:
+        radial-gradient(ellipse 70% 55% at 12% 20%, rgba(124, 58, 237, 0.08), transparent 58%),
+        radial-gradient(ellipse 60% 50% at 88% 75%, rgba(5, 150, 105, 0.07), transparent 55%),
+        linear-gradient(180deg, rgba(241, 245, 249, 0.9), transparent 45%);
+}
+
+.mk-dl-hub-inner {
+    position: relative;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 clamp(1rem, 3vw, 1.5rem);
+}
+
+.mk-dl-hub-head {
+    text-align: center;
+    max-width: 40rem;
+    margin: 0 auto clamp(1.75rem, 4vw, 2.5rem);
+}
+
+.mk-dl-hub-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.75rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #c4b5fd;
+    background: rgba(124, 58, 237, 0.12);
+    border: 1px solid rgba(167, 139, 250, 0.22);
+}
+
+html.mk-public[data-theme="light"] .mk-dl-hub-kicker {
+    color: #6d28d9;
+    background: rgba(124, 58, 237, 0.07);
+}
+
+.mk-dl-hub-head h2 {
+    margin: 0 0 0.65rem;
+    font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--mk-text);
+}
+
+.mk-dl-hub-lead {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: var(--mk-text-muted);
+}
+
+.mk-dl-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1rem, 2.5vw, 1.35rem);
+}
+
+.mk-dl-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: clamp(1.15rem, 2.5vw, 1.45rem);
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(15, 23, 42, 0.45);
+    box-shadow: 0 20px 50px -28px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+}
+
+html.mk-public[data-theme="light"] .mk-dl-card {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(148, 163, 184, 0.22);
+    box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.12);
+}
+
+.mk-dl-card-glow {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    filter: blur(48px);
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.mk-dl-card--android .mk-dl-card-glow {
+    top: -80px;
+    left: -40px;
+    background: rgba(124, 58, 237, 0.55);
+}
+
+.mk-dl-card--windows .mk-dl-card-glow {
+    bottom: -90px;
+    right: -30px;
+    background: rgba(34, 197, 94, 0.45);
+}
+
+.mk-dl-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+}
+
+.mk-dl-card-icon {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mk-dl-card-icon--android {
+    background: linear-gradient(145deg, rgba(124, 58, 237, 0.25), rgba(15, 23, 42, 0.6));
+    padding: 4px;
+}
+
+.mk-dl-card-icon--android img {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+.mk-dl-card-icon--windows {
+    background: linear-gradient(145deg, rgba(34, 197, 94, 0.18), rgba(15, 23, 42, 0.5));
+}
+
+.mk-dl-platform {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mk-text-muted);
+    margin-bottom: 0.2rem;
+}
+
+.mk-dl-card-meta h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--mk-text);
+}
+
+.mk-dl-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.mk-dl-badge {
+    display: inline-flex;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #ddd6fe;
+    background: rgba(124, 58, 237, 0.2);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
+.mk-dl-badge--muted {
+    color: var(--mk-text-secondary);
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.18);
+}
+
+.mk-dl-badge--license {
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(52, 211, 153, 0.22);
+}
+
+html.mk-public[data-theme="light"] .mk-dl-badge {
+    color: #5b21b6;
+    background: rgba(124, 58, 237, 0.08);
+}
+
+.mk-dl-features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.45rem;
+}
+
+.mk-dl-features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--mk-text-secondary);
+}
+
+.mk-dl-features li i {
+    color: #34d399;
+    margin-top: 0.2rem;
+    font-size: 0.7rem;
+}
+
+.mk-dl-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+    margin-top: auto;
+    padding-top: 0.25rem;
+}
+
+.mk-dl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.62rem 1.1rem;
+    border-radius: 12px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.mk-dl-btn:hover {
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.mk-dl-btn--android {
+    color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    box-shadow: 0 10px 28px -12px rgba(124, 58, 237, 0.75);
+}
+
+.mk-dl-btn--windows {
+    color: #fff;
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 10px 28px -12px rgba(5, 150, 105, 0.65);
+}
+
+.mk-dl-btn--ghost {
+    color: var(--mk-text-secondary);
+    background: rgba(148, 163, 184, 0.1);
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+.mk-dl-file-hint {
+    font-size: 0.68rem;
+    color: var(--mk-text-muted);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mk-dl-unavailable {
+    font-size: 0.82rem;
+    color: var(--mk-text-muted);
+}
+
+/* ─── Install + Play Protect ─── */
+.mk-dl-install {
+    margin-top: clamp(1.25rem, 3vw, 1.75rem);
+    padding: clamp(1.1rem, 2.5vw, 1.45rem);
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    background: rgba(15, 23, 42, 0.35);
+}
+
+html.mk-public[data-theme="light"] .mk-dl-install {
+    background: rgba(248, 250, 252, 0.95);
+}
+
+.mk-dl-install-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: clamp(1rem, 3vw, 1.5rem);
+    align-items: start;
+}
+
+.mk-dl-install-steps h3 {
+    margin: 0 0 0.85rem;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--mk-text);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.mk-dl-install-steps ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.mk-dl-install-steps li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.65rem;
+    align-items: start;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--mk-text-secondary);
+}
+
+.mk-dl-install-steps li strong {
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 0.72rem;
+    color: #c4b5fd;
+    background: rgba(124, 58, 237, 0.18);
+    border: 1px solid rgba(167, 139, 250, 0.22);
+}
+
+.mk-dl-shield {
+    padding: 1rem 1.05rem;
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.1), rgba(124, 58, 237, 0.08));
+    border: 1px solid rgba(245, 158, 11, 0.22);
+}
+
+.mk-dl-shield-head {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.mk-dl-shield-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.mk-dl-shield-head h4 {
+    margin: 0 0 0.35rem;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--mk-text);
+}
+
+.mk-dl-shield-head p {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--mk-text-secondary);
+}
+
+.mk-dl-shield-action {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.35);
+    border: 1px dashed rgba(251, 191, 36, 0.35);
+}
+
+html.mk-public[data-theme="light"] .mk-dl-shield-action {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.mk-dl-shield-cta {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #fbbf24;
+}
+
+.mk-dl-shield-sub {
+    font-size: 0.72rem;
+    color: var(--mk-text-muted);
+    line-height: 1.5;
+}
+
+.mk-dl-shield-reasons {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.mk-dl-shield-reasons li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-size: 0.76rem;
+    line-height: 1.55;
+    color: var(--mk-text-secondary);
+}
+
+.mk-dl-shield-reasons i {
+    color: #34d399;
+    margin-top: 0.15rem;
+    font-size: 0.72rem;
+}
+
+/* ─── Compact (داشبورد) ─── */
+.mk-dl-hub--compact {
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.mk-dl-hub--compact .mk-dl-hub-bg {
+    display: none;
+}
+
+.mk-dl-hub--compact .mk-dl-hub-inner {
+    padding: 0;
+    max-width: none;
+}
+
+.mk-dl-hub--compact .mk-dl-hub-head {
+    text-align: right;
+    margin-inline: 0;
+    margin-bottom: 1.15rem;
+}
+
+.mk-dl-hub--compact .mk-dl-hub-head h2 {
+    font-size: 1.15rem;
+}
+
+.mk-dl-hub--compact .mk-dl-install {
+    margin-top: 1rem;
+}
+
+.mk-dashboard-page .mk-dl-card {
+    background: var(--dash-card-bg, rgba(15, 23, 42, 0.35));
+}
+
+.mk-pub-download-hub-wrap {
+    margin: 1.5rem 0;
+    text-align: right;
+}
+
+.mk-pub-download-hub-wrap .mk-dl-hub--compact .mk-dl-hub-head {
+    text-align: center;
+}
+
+@media (max-width: 860px) {
+    .mk-dl-grid,
+    .mk-dl-install-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .mk-dl-card-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mk-dl-btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mk-dl-btn:hover {
+        transform: none;
+    }
+}

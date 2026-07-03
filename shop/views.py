@@ -10,6 +10,7 @@ from django.urls import reverse_lazy
 from django.conf import settings
 from django.db import models
 from django.http import JsonResponse, HttpResponse, FileResponse
+from django.views import View
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from pathlib import Path
@@ -23,6 +24,7 @@ from workspace.services.filing_video import get_filing_video_context
 from .sample_excel import get_sale_apartment_excel_preview
 from .education_content import education_hub_content
 from .seo_landings import get_landing, landing_schema_json
+from .services.app_downloads import build_android_apk_response
 from .author_content import author_page_content, AUTHOR_SLUG
 from workspace.services.jalali_input import format_jalali_datetime
 from .models import Product, LicensePlan, Order, ProductRating, ProductReview, ReviewHelpful, DiscountCode
@@ -412,6 +414,13 @@ class ContactView(FormView):
 
 class TermsView(TemplateView):
     template_name = 'shop/terms.html'
+
+
+class AndroidAppDownloadView(View):
+    """دانلود عمومی APK اندروید از django/files/."""
+
+    def get(self, request):
+        return build_android_apk_response()
 
 
 class LicenseGuideView(TemplateView):

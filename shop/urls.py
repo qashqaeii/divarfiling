@@ -18,6 +18,7 @@ urlpatterns = [
     path('contact/', views.ContactView.as_view(), name='contact'),
     path('terms/', views.TermsView.as_view(), name='terms'),
     path('license-guide/', views.LicenseGuideView.as_view(), name='license_guide'),
+    path('download/android/', views.AndroidAppDownloadView.as_view(), name='android_app_download'),
     path('amoozesh/', views.EducationView.as_view(), name='education'),
     path('author/hossein-qashqaeii/', views.AuthorPageView.as_view(), name='author_hossein_qashqaeii'),
     path('66998772.txt', views.verification_file, name='verification_file'),

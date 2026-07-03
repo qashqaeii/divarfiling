@@ -34,7 +34,8 @@ def shop_context(request):
         if banner.is_visible():
             visible_banners.append(banner)
     
-    from shop.bot_catalog import footer_content, get_bot_product
+    from shop.bot_catalog import footer_content, get_bot_product, app_download_hub_content
+    from shop.services.app_downloads import build_app_download_context
 
     bot = get_bot_product()
     goftino_id = getattr(settings, 'GOFTINO_WIDGET_ID', '') or ''
@@ -47,5 +48,7 @@ def shop_context(request):
         'banners': visible_banners,
         'goftino_widget_id': goftino_id,
         'show_goftino': bool(goftino_id) and _is_public_site_request(request),
+        'app_downloads': build_app_download_context(request),
+        'app_download_hub': app_download_hub_content(),
     }
 

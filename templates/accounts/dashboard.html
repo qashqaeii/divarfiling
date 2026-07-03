@@ -7,6 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=2">
 {% endblock %}
 
@@ -389,9 +390,14 @@
                                                 <a href="{% url 'payment:success' order.id %}" class="btn-icon" title="لایسنس و جزئیات">
                                                     <i class="fas fa-key" aria-hidden="true"></i>
                                                 </a>
-                                                <a href="{% url 'payment:download' order.id %}" class="btn-icon btn-icon--accent" title="دانلود ربات">
+                                                <a href="{% url 'payment:download' order.id %}" class="btn-icon btn-icon--accent" title="دانلود ربات ویندوز">
                                                     <i class="fas fa-download" aria-hidden="true"></i>
                                                 </a>
+                                                {% if app_downloads.android.available %}
+                                                <a href="{% url 'android_app_download' %}" class="btn-icon btn-icon--accent" title="دانلود اپ اندروید">
+                                                    <i class="fab fa-android" aria-hidden="true"></i>
+                                                </a>
+                                                {% endif %}
                                             {% elif order.status == 'pending_verification' %}
                                                 <a href="{% url 'payment:card_pending' order.id %}" class="btn-icon btn-icon--amber" title="پیگیری پرداخت">
                                                     <i class="fas fa-hourglass-half" aria-hidden="true"></i>
@@ -430,6 +436,8 @@
                     </a>
                 {% endif %}
             </div>
+
+            {% include 'includes/app_download_hub.html' with compact=1 %}
 
             {% if license_dashboard.assigned_seats %}
             <section class="lic-seat-shared" aria-label="لایسنس‌های تخصیص‌یافته به من">
@@ -625,7 +633,12 @@
                     <footer class="lic-card-foot">
                         {% if lic.order.status == 'paid' and lic.order.product.download_file %}
                         <a href="{% url 'payment:download' lic.order.id %}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-download" aria-hidden="true"></i> دانلود ربات
+                            <i class="fas fa-download" aria-hidden="true"></i> دانلود ربات ویندوز
+                        </a>
+                        {% endif %}
+                        {% if app_downloads.android.available %}
+                        <a href="{% url 'android_app_download' %}" class="btn btn-secondary btn-sm">
+                            <i class="fab fa-android" aria-hidden="true"></i> دانلود اپ اندروید
                         </a>
                         {% endif %}
                         <a href="{% url 'license_guide' %}" class="btn btn-secondary btn-sm">

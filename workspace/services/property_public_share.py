@@ -14,7 +14,7 @@ from workspace.services.display import (
     format_sections,
     transaction_profile,
 )
-from workspace.services.features import extract_listing_features
+from workspace.services.features import extract_listing_features, parse_bool_feature
 from workspace.services.formatting import format_toman
 from workspace.services.listing_features import build_listing_feature_profile
 from workspace.services.listing_public_share import format_sections_public
@@ -84,41 +84,92 @@ def _property_feat(prop: CRMProperty) -> Dict[str, Any]:
     }
 
 
-def _property_feature_profile(user, prop: CRMProperty, feat: Dict[str, Any]) -> Dict[str, Any]:
-    source = resolve_listing_for_property(user, prop)
-    if source:
-        return build_listing_feature_profile(source, extract_listing_features(source))
-    core: List[Dict[str, Any]] = []
+_CORE_AMENITY_KEYS = frozenset(spec['key'] for spec in LISTING_CORE_AMENITIES)
+
+
+def _parse_amenity_token(token: str) -> tuple[str, Optional[bool]]:
+    """برچسب امکان و مقدار بولین (در صورت مشخص بودن)."""
+    text = str(token or '').strip()
+    if not text:
+        return '', None
+    if ':' in text:
+        label, value = text.split(':', 1)
+        label, value = label.strip(), value.strip()
+        if not label:
+            return '', None
+        parsed = parse_bool_feature(value)
+        if parsed is not None:
+            return label, parsed
+        return label, True
+    if text.endswith(' ندارد'):
+        return text[:-len(' ندارد')].strip(), False
+    if text.endswith(' دارد'):
+        return text[:-len(' دارد')].strip(), True
+    return text, True
+
+
+def _parse_property_amenities_text(text: str) -> tuple[Dict[str, bool], List[Dict[str, Any]]]:
+    """امکانات اصلی از متن + آیتم‌های تکمیلی غیرتکراری."""
+    core_states: Dict[str, bool] = {}
+    extras: List[Dict[str, Any]] = []
+    if not text or not str(text).strip():
+        return core_states, extras
+    for token in re.split(r'[\n،,|]+', str(text).strip()):
+        label, has_val = _parse_amenity_token(token)
+        if not label:
+            continue
+        if label in _CORE_AMENITY_KEYS:
+            if has_val is not None:
+                core_states[label] = has_val
+            elif label not in core_states:
+                core_states[label] = True
+            continue
+        if has_val is False:
+            continue
+        extras.append({
+            'key': label,
+            'label': label,
+            'value': 'دارد',
+            'state': 'yes',
+            'icon': 'fa-check',
+            'chips': [],
+            'is_chip': False,
+        })
+    return core_states, extras
+
+
+def _resolve_core_amenity_state(prop: CRMProperty, key: str, parsed_core: Dict[str, bool]) -> bool:
+    """اولویت: متن امکانات، سپس چک‌باکس CRM."""
+    if key in parsed_core:
+        return parsed_core[key]
     bool_map = {
         'پارکینگ': prop.has_parking,
         'انباری': prop.has_storage,
         'آسانسور': prop.has_elevator,
     }
+    return bool(bool_map.get(key))
+
+
+def _property_feature_profile(user, prop: CRMProperty, feat: Dict[str, Any]) -> Dict[str, Any]:
+    source = resolve_listing_for_property(user, prop)
+    if source:
+        profile = build_listing_feature_profile(source, extract_listing_features(source))
+        profile['source_label'] = 'ثبت‌شده از دیوار'
+        return profile
+
+    parsed_core, extra_items = _parse_property_amenities_text(prop.amenities or '')
+    core: List[Dict[str, Any]] = []
     for spec in LISTING_CORE_AMENITIES:
         key = spec['key']
-        if key in bool_map:
-            val = bool_map[key]
-            core.append({
-                'key': key,
-                'label': key,
-                'value': 'دارد' if val else 'ندارد',
-                'state': 'yes' if val else 'no',
-                'icon': spec['icon'],
-                'known': True,
-            })
-    extra_items: List[Dict[str, Any]] = []
-    if prop.amenities:
-        for part in re.split(r'[،,|]\s*', prop.amenities.strip()):
-            if part.strip():
-                extra_items.append({
-                    'key': part.strip(),
-                    'label': part.strip(),
-                    'value': 'دارد',
-                    'state': 'yes',
-                    'icon': 'fa-check',
-                    'chips': [],
-                    'is_chip': False,
-                })
+        val = _resolve_core_amenity_state(prop, key, parsed_core)
+        core.append({
+            'key': key,
+            'label': key,
+            'value': 'دارد' if val else 'ندارد',
+            'state': 'yes' if val else 'no',
+            'icon': spec['icon'],
+            'known': True,
+        })
     groups = []
     if extra_items:
         groups.append({
@@ -128,7 +179,7 @@ def _property_feature_profile(user, prop: CRMProperty, feat: Dict[str, Any]) -> 
             'accent': 'emerald',
             'items': extra_items,
         })
-    detail_count = len(core) + len(extra_items)
+    detail_count = sum(1 for c in core if c['known']) + len(extra_items)
     return {
         'core': core,
         'groups': groups,
@@ -136,16 +187,21 @@ def _property_feature_profile(user, prop: CRMProperty, feat: Dict[str, Any]) -> 
         'has_details': detail_count > 0,
         'detail_count': detail_count,
         'raw': {},
+        'source_label': 'ثبت‌شده در فایل شخصی',
     }
 
 
 def _property_highlights(prop: CRMProperty) -> List[str]:
     items: List[str] = []
-    if prop.has_parking:
+    parsed_core, _ = _parse_property_amenities_text(prop.amenities or '')
+    for key, has_val in parsed_core.items():
+        if has_val and key not in items:
+            items.append(key)
+    if prop.has_parking and 'پارکینگ' not in items:
         items.append('پارکینگ')
-    if prop.has_storage:
+    if prop.has_storage and 'انباری' not in items:
         items.append('انباری')
-    if prop.has_elevator:
+    if prop.has_elevator and 'آسانسور' not in items:
         items.append('آسانسور')
     if prop.property_type:
         items.append(prop.property_type)

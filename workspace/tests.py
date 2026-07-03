@@ -385,6 +385,24 @@ class ListingFeatureTests(SimpleTestCase):
         self.assertIn('سند و مجوزها', group_titles)
         self.assertIn('امکانات رفاهی', group_titles)
 
+    def test_core_prefers_raw_positive_over_false_base_feat(self):
+        from workspace.services.listing_features import build_listing_feature_profile
+
+        class Listing:
+            data = {'آسانسور': 'دارد', 'پارکینگ': 'دارد', 'انباری': 'دارد'}
+            token = 'abc'
+            title = 'تست'
+            business_type = ''
+
+        profile = build_listing_feature_profile(
+            Listing(),
+            {'elevator': False, 'parking': False, 'storage': False},
+        )
+        core = {item['label']: item['state'] for item in profile['core']}
+        self.assertEqual(core['آسانسور'], 'yes')
+        self.assertEqual(core['پارکینگ'], 'yes')
+        self.assertEqual(core['انباری'], 'yes')
+
 
 class ListingFeatureMatchTests(SimpleTestCase):
     def test_parse_bool_negative_before_positive(self):

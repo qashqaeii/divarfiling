@@ -6,12 +6,12 @@
             <span class="ws-ld-features-icon" aria-hidden="true"><i class="fas fa-list-ul"></i></span>
             <div>
                 <h2 class="ws-ld-features-title">ویژگی‌ها و امکانات</h2>
-                <p class="ws-ld-features-sub">{{ feature_profile.detail_count }} مورد ثبت‌شده از دیوار</p>
+                <p class="ws-ld-features-sub">{{ feature_profile.detail_count }} مورد {{ feature_profile.source_label|default:"ثبت‌شده از دیوار" }}</p>
             </div>
         </div>
     </header>
     {% else %}
-    <p class="ws-ld-features-embedded-meta">{{ feature_profile.detail_count }} مورد ثبت‌شده از دیوار</p>
+    <p class="ws-ld-features-embedded-meta">{{ feature_profile.detail_count }} مورد {{ feature_profile.source_label|default:"ثبت‌شده از دیوار" }}</p>
     {% endif %}
 
     <div class="ws-ld-features-core">

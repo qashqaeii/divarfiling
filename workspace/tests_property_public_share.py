@@ -64,6 +64,28 @@ class PropertyPublicShareTests(TestCase):
         self.assertEqual(set(core_labels), {'پارکینگ', 'انباری', 'آسانسور'})
         self.assertEqual(ctx['feature_highlights'], ['آپارتمان'])
 
+    def test_amenities_text_overrides_false_core_flags(self):
+        self.prop.amenities = 'آسانسور، پارکینگ، انباری، لابی'
+        self.prop.has_parking = False
+        self.prop.has_storage = False
+        self.prop.has_elevator = False
+        self.prop.save(update_fields=[
+            'amenities', 'has_parking', 'has_storage', 'has_elevator',
+        ])
+        share = get_or_create_property_share(self.user, self.prop)
+        ctx = build_public_property_context(share)
+        core = {item['label']: item['state'] for item in ctx['feature_profile']['core']}
+        self.assertEqual(core['آسانسور'], 'yes')
+        self.assertEqual(core['پارکینگ'], 'yes')
+        self.assertEqual(core['انباری'], 'yes')
+        extra_labels = [
+            item['label']
+            for group in ctx['feature_profile']['groups']
+            for item in group['items']
+        ]
+        self.assertEqual(extra_labels, ['لابی'])
+        self.assertEqual(ctx['feature_profile']['source_label'], 'ثبت‌شده در فایل شخصی')
+
     def test_build_context_shows_notes_when_enabled(self):
         share = CRMPropertyPublicShare.objects.create(
             share_token='proptoken123',

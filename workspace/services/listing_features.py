@@ -324,8 +324,11 @@ def build_listing_feature_profile(listing, base_feat: Optional[Dict[str, Any]] =
         key = spec['key']
         field = spec['field']
         bool_val = base_feat.get(field)
+        raw_text = raw.get(key)
         if bool_val is None:
-            bool_val = parse_bool_feature(raw.get(key))
+            bool_val = parse_bool_feature(raw_text)
+        elif bool_val is False and parse_bool_feature(raw_text) is True:
+            bool_val = True
         if bool_val is True:
             display = 'دارد'
             state = 'yes'
@@ -391,4 +394,5 @@ def build_listing_feature_profile(listing, base_feat: Optional[Dict[str, Any]] =
         'has_details': bool(groups) or core_known > 0,
         'detail_count': detail_count + core_known,
         'raw': raw,
+        'source_label': 'ثبت‌شده از دیوار',
     }

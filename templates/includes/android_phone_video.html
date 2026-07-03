@@ -8,6 +8,7 @@
         <div class="and-phone-vid-device">
             <span class="and-phone-vid-speaker" aria-hidden="true"></span>
             <div class="and-phone-vid-screen{% if v.available or video_mode == 'file' %} mk-vid-frame and-phone-vid-screen--video{% elif v.poster_available and v.poster %} and-phone-vid-screen--poster{% endif %}">
+                <div class="and-phone-vid-viewport">
                 {% if video_mode == 'embed' and video_src %}
                 <iframe src="{{ video_src }}"
                         title="{{ v.title }}"
@@ -16,6 +17,7 @@
                 {% elif v.available or video_mode == 'file' %}
                 <video class="mk-vid-el and-phone-vid-el"
                        controls
+                       controlsList="nodownload"
                        playsinline
                        preload="{% if size == 'lg' %}metadata{% else %}none{% endif %}"
                        {% if v.poster %}poster="{% static v.poster %}"{% endif %}
@@ -40,6 +42,7 @@
                     <span>به‌زودی</span>
                 </div>
                 {% endif %}
+                </div>
             </div>
             <span class="and-phone-vid-home" aria-hidden="true"></span>
         </div>

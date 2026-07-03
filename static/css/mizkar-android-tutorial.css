@@ -14,7 +14,8 @@
     --and-android-deep: #1faa59;
     --and-purple: var(--mk-purple, #7c3aed);
     --and-ease: cubic-bezier(0.22, 1, 0.36, 1);
-    --and-rail-top: calc(var(--mk-site-header-h, 3.55rem) + 0.85rem);
+    --mk-site-header-h: 3.55rem;
+    --and-rail-top: 4.75rem;
 }
 
 .and-tut-page .main-content { padding: 0; }
@@ -531,14 +532,15 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
 
 .and-phone-vid-speaker {
     position: absolute;
-    top: 14px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 34%;
-    height: 16px;
-    border-radius: 0 0 10px 10px;
+    width: 28%;
+    height: 12px;
+    border-radius: 0 0 8px 8px;
     background: #0a0f18;
-    z-index: 4;
+    z-index: 5;
+    pointer-events: none;
 }
 
 .and-phone-vid-screen {
@@ -547,7 +549,25 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
     aspect-ratio: 9 / 19.5;
     border-radius: 26px;
     overflow: hidden;
+    background: #0a0f18;
+    isolation: isolate;
+}
+
+/* ناحیه امن — محتوا زیر لبه و ناچ نرود */
+.and-phone-vid-viewport {
+    position: absolute;
+    top: 22px;
+    right: 7px;
+    bottom: 14px;
+    left: 7px;
+    z-index: 1;
+    border-radius: 18px;
+    overflow: hidden;
     background: #0b1220;
+}
+
+.and-phone-vid-screen--video .and-phone-vid-viewport {
+    bottom: 18px;
 }
 
 .and-phone-vid-screen.mk-vid-frame {
@@ -557,15 +577,34 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
     box-shadow: none;
 }
 
+.and-phone-vid-screen--video .and-phone-vid-viewport,
+.and-phone-vid-screen--poster .and-phone-vid-viewport {
+    display: block;
+}
+
 .and-phone-vid-screen.mk-vid-frame .mk-vid-el,
 .and-phone-vid-screen--video .mk-vid-el,
 .and-phone-vid-el {
-    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
     object-position: center center;
+    background: #0b1220;
+}
+
+.and-phone-vid-screen--video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #0b1220;
 }
 
 .and-phone-vid-screen--poster {
-    background: #0b1220;
+    background: #0a0f18;
 }
 
 .and-phone-vid-poster,
@@ -616,22 +655,25 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
 
 .and-phone-vid-poster-badge {
     position: absolute;
-    bottom: 0.75rem;
+    bottom: 0.5rem;
     left: 50%;
     transform: translateX(-50%);
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.35rem 0.65rem;
+    padding: 0.3rem 0.55rem;
     border-radius: 999px;
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: 600;
     color: #fff;
     white-space: nowrap;
-    background: rgba(15, 23, 42, 0.82);
+    background: rgba(15, 23, 42, 0.88);
     border: 1px solid rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(8px);
     z-index: 2;
+    max-width: calc(100% - 0.75rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .and-phone-vid-empty-icon {
@@ -677,6 +719,19 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
 
 .and-phone-vid--lg .and-phone-vid-screen {
     border-radius: 30px;
+}
+
+.and-phone-vid--lg .and-phone-vid-viewport {
+    top: 24px;
+    right: 8px;
+    bottom: 16px;
+    left: 8px;
+    border-radius: 20px;
+}
+
+.and-phone-vid--lg .and-phone-vid-speaker {
+    top: 12px;
+    height: 13px;
 }
 
 .and-tut-chip--live {
@@ -1041,8 +1096,9 @@ html.mk-public[data-theme="light"] .and-tut-section--alt {
 
 @media (min-width: 768px) {
     .and-tut-video-scroll {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 1.25rem;
         overflow: visible;
         padding: 0;
@@ -1051,14 +1107,16 @@ html.mk-public[data-theme="light"] .and-tut-section--alt {
 
     .and-tut-video-tile,
     .and-tut-video-tile--featured {
-        flex: unset;
+        flex: 0 1 calc((100% - 2.5rem) / 3);
+        max-width: calc((100% - 2.5rem) / 3);
+        min-width: 0;
         scroll-snap-align: unset;
         padding: 1.35rem 1.15rem 1.4rem;
     }
 
     .and-tut-video-tile .and-phone-vid,
     .and-tut-video-tile--featured .and-phone-vid {
-        --and-phone-w: min(100%, 240px);
+        --and-phone-w: min(100%, 220px);
     }
 
     .and-tut-video-tile-body h3 {
@@ -1073,10 +1131,23 @@ html.mk-public[data-theme="light"] .and-tut-section--alt {
         font-size: 0.84rem;
         -webkit-line-clamp: 3;
     }
+}
 
-    /* آیتم آخر اگر تنها در ردیف باشد — وسط‌چین */
-    .and-tut-video-tile:last-child:nth-child(3n + 1):not(:only-child) {
-        grid-column: 2;
+@media (min-width: 1200px) {
+    .and-tut-video-library {
+        max-width: 1080px;
+        margin-inline: auto;
+    }
+
+    .and-tut-video-tile,
+    .and-tut-video-tile--featured {
+        flex: 0 1 calc((100% - 2.5rem) / 3);
+        max-width: 340px;
+    }
+
+    .and-tut-video-tile .and-phone-vid,
+    .and-tut-video-tile--featured .and-phone-vid {
+        --and-phone-w: 220px;
     }
 }
 

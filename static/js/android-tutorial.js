@@ -6,6 +6,7 @@
     initLightbox();
     initChapterNav();
     initScrollProgress();
+    initReveal();
 
     function initImageFallback() {
         document.querySelectorAll('[data-and-tut-fallback]').forEach(function (img) {
@@ -18,8 +19,8 @@
     }
 
     function initGalleryFilters() {
-        var filters = document.querySelectorAll('.and-tut-gallery-filter');
-        var cards = document.querySelectorAll('.and-tut-gallery-card');
+        var filters = document.querySelectorAll('.and-tut-gallery-pill');
+        var cards = document.querySelectorAll('.and-tut-masonry-item');
         if (!filters.length || !cards.length) return;
 
         filters.forEach(function (filter) {
@@ -33,9 +34,12 @@
                 cards.forEach(function (card) {
                     var show = cat === 'all' || card.dataset.andTutGalleryCat === cat;
                     card.classList.toggle('is-hidden', !show);
+                    if (show) card.classList.add('is-visible');
                 });
             });
         });
+
+        cards.forEach(function (card) { card.classList.add('is-visible'); });
     }
 
     function initLightbox() {
@@ -51,7 +55,6 @@
 
         if (!items.length) return;
 
-        var current = 0;
         var lightbox = document.createElement('div');
         lightbox.className = 'and-tut-lightbox';
         lightbox.setAttribute('role', 'dialog');
@@ -71,8 +74,7 @@
         var titleEl = lightbox.querySelector('#andTutLbTitle');
 
         function openAt(index) {
-            current = index;
-            var item = items[current];
+            var item = items[index];
             imgEl.src = item.src;
             imgEl.alt = item.caption;
             titleEl.textContent = item.caption;
@@ -103,9 +105,9 @@
     }
 
     function initChapterNav() {
-        var pills = document.querySelectorAll('.and-tut-chapter-pill');
-        var modules = document.querySelectorAll('.and-tut-module');
-        var sidebarLinks = document.querySelectorAll('.and-tut-sidebar-link');
+        var pills = document.querySelectorAll('.and-tut-dock-item');
+        var modules = document.querySelectorAll('.and-tut-chapter');
+        var sidebarLinks = document.querySelectorAll('.and-tut-rail-link');
         if (!modules.length) return;
 
         var observer = new IntersectionObserver(function (entries) {
@@ -119,7 +121,7 @@
                     link.classList.toggle('is-active', link.dataset.andTutSidebar === id);
                 });
             });
-        }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+        }, { rootMargin: '-35% 0px -52% 0px', threshold: 0 });
 
         modules.forEach(function (mod) { observer.observe(mod); });
     }
@@ -131,13 +133,35 @@
 
         function update() {
             var rect = wrap.getBoundingClientRect();
-            var total = wrap.scrollHeight - window.innerHeight;
+            var total = wrap.scrollHeight - window.innerHeight * 0.5;
             if (total <= 0) return;
-            var scrolled = Math.min(Math.max(-rect.top, 0), total);
+            var scrolled = Math.min(Math.max(-rect.top + 120, 0), total);
             bar.style.width = ((scrolled / total) * 100).toFixed(1) + '%';
         }
 
         window.addEventListener('scroll', update, { passive: true });
         update();
+    }
+
+    function initReveal() {
+        var nodes = document.querySelectorAll('[data-and-tut-reveal]');
+        if (!nodes.length || !('IntersectionObserver' in window)) {
+            nodes.forEach(function (n) { n.classList.add('is-visible'); });
+            return;
+        }
+
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+        nodes.forEach(function (node, i) {
+            node.style.transitionDelay = (i % 5) * 60 + 'ms';
+            observer.observe(node);
+        });
     }
 })();

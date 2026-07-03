@@ -19,7 +19,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-android-tutorial.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-android-tutorial.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -27,140 +27,169 @@
 
     <header class="and-tut-hero">
         <div class="and-tut-hero-bg" aria-hidden="true">
-            <span class="and-tut-hero-orb and-tut-hero-orb--1"></span>
-            <span class="and-tut-hero-orb and-tut-hero-orb--2"></span>
-            <span class="and-tut-hero-pattern"></span>
+            <span class="and-tut-mesh and-tut-mesh--1"></span>
+            <span class="and-tut-mesh and-tut-mesh--2"></span>
+            <span class="and-tut-mesh and-tut-mesh--3"></span>
+            <span class="and-tut-hero-noise"></span>
         </div>
-        <div class="container and-tut-hero-grid">
-            <div class="and-tut-hero-copy">
-                <span class="and-tut-kicker">
-                    {% decor_icon 'sparkles' size='xs' boxed=True accent='emerald' %}
-                    {{ tutorial.hero.eyebrow }}
-                </span>
-                <h1>{{ tutorial.hero.title }}</h1>
-                <p class="and-tut-lead">{{ tutorial.hero.lead }}</p>
-                <ul class="and-tut-highlights" aria-label="ویژگی‌های آموزش">
-                    {% for h in tutorial.hero.highlights %}
-                    <li><i class="fas {{ h.icon }}" aria-hidden="true"></i> {{ h.text }}</li>
-                    {% endfor %}
-                </ul>
-                <div class="and-tut-hero-actions">
-                    {% if app_downloads.android.available %}
-                    <a href="{% url 'android_app_download' %}" class="and-tut-btn and-tut-btn--android">
-                        <i class="fab fa-android"></i> دانلود APK
-                    </a>
+
+        <div class="container and-tut-hero-shell">
+            <div class="and-tut-hero-grid">
+                <div class="and-tut-hero-copy">
+                    <div class="and-tut-hero-meta">
+                        <span class="and-tut-kicker">
+                            {% decor_icon 'sparkles' size='xs' boxed=True accent='emerald' %}
+                            {{ tutorial.hero.eyebrow }}
+                        </span>
+                        {% if app_downloads.android.available %}
+                        <span class="and-tut-version-pill" dir="ltr">
+                            <i class="fab fa-android"></i> {{ app_downloads.android.version_label }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h1>
+                        {{ tutorial.hero.title }}
+                        <span class="and-tut-title-accent">{{ tutorial.hero.title_accent }}</span>
+                    </h1>
+                    <p class="and-tut-lead">{{ tutorial.hero.lead }}</p>
+
+                    <ul class="and-tut-highlights" aria-label="ویژگی‌های آموزش">
+                        {% for h in tutorial.hero.highlights %}
+                        <li class="and-tut-highlight">
+                            <span class="and-tut-highlight-icon"><i class="fas {{ h.icon }}"></i></span>
+                            <span>{{ h.text }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <div class="and-tut-hero-actions">
+                        {% if app_downloads.android.available %}
+                        <a href="{% url 'android_app_download' %}" class="and-tut-btn and-tut-btn--android">
+                            <span class="and-tut-btn-glow" aria-hidden="true"></span>
+                            <i class="fab fa-android"></i> دانلود APK
+                        </a>
+                        {% endif %}
+                        <a href="#chapter-install" class="and-tut-btn and-tut-btn--primary">
+                            <i class="fas fa-play"></i> شروع آموزش
+                        </a>
+                        <a href="{% url 'education' %}" class="and-tut-btn and-tut-btn--ghost">
+                            <i class="fas fa-graduation-cap"></i> مرکز آموزش
+                        </a>
+                    </div>
+                </div>
+
+                <div class="and-tut-device-stage" aria-hidden="true">
+                    <span class="and-tut-orbit and-tut-orbit--outer"></span>
+                    <span class="and-tut-orbit and-tut-orbit--inner"></span>
+                    <div class="and-tut-device">
+                        <div class="and-tut-device-frame">
+                            <div class="and-tut-device-status">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <div class="and-tut-device-screen">
+                                {% with shot=tutorial.hero_visual.0 %}
+                                <img src="{% static 'images/' %}{{ shot.image }}"
+                                     alt="{{ shot.caption }}"
+                                     loading="eager"
+                                     class="and-tut-device-shot"
+                                     data-and-tut-fallback>
+                                {% endwith %}
+                                <span class="and-tut-device-shine"></span>
+                            </div>
+                        </div>
+                    </div>
+                    {% for shot in tutorial.hero_visual %}
+                    {% if not forloop.first %}
+                    <figure class="and-tut-orbit-card and-tut-orbit-card--{{ forloop.counter }} and-tut-orbit-card--{{ shot.accent }}">
+                        <button type="button" class="and-tut-shot-btn" data-and-tut-lightbox
+                                data-src="{% static 'images/' %}{{ shot.image }}"
+                                data-caption="{{ shot.caption }}">
+                            <img src="{% static 'images/' %}{{ shot.image }}" alt="{{ shot.caption }}" loading="lazy" data-and-tut-fallback>
+                            <span class="and-tut-shot-zoom"><i class="fas fa-expand"></i></span>
+                        </button>
+                        <figcaption>{{ shot.caption }}</figcaption>
+                    </figure>
                     {% endif %}
-                    <a href="#chapter-install" class="and-tut-btn and-tut-btn--primary">
-                        <i class="fas fa-play"></i> شروع آموزش
-                    </a>
-                    <a href="{% url 'education' %}" class="and-tut-btn and-tut-btn--ghost">
-                        <i class="fas fa-graduation-cap"></i> مرکز آموزش
-                    </a>
+                    {% endfor %}
                 </div>
             </div>
 
-            <div class="and-tut-phone-stage" aria-hidden="true">
-                <div class="and-tut-phone">
-                    <div class="and-tut-phone-notch"></div>
-                    <div class="and-tut-phone-screen">
-                        {% with shot=tutorial.hero_visual.0 %}
-                        <img src="{% static 'images/' %}{{ shot.image }}"
-                             alt="{{ shot.caption }}"
-                             loading="eager"
-                             class="and-tut-phone-shot"
-                             data-and-tut-fallback>
-                        {% endwith %}
-                    </div>
-                    <div class="and-tut-phone-btn"></div>
-                </div>
-                {% for shot in tutorial.hero_visual %}
-                {% if not forloop.first %}
-                <figure class="and-tut-float-shot and-tut-float-shot--{{ forloop.counter }} and-tut-float-shot--{{ shot.accent }}">
-                    <button type="button" class="and-tut-shot-btn" data-and-tut-lightbox
-                            data-src="{% static 'images/' %}{{ shot.image }}"
-                            data-caption="{{ shot.caption }}">
-                        <img src="{% static 'images/' %}{{ shot.image }}" alt="{{ shot.caption }}" loading="lazy" data-and-tut-fallback>
-                        <span class="and-tut-shot-zoom"><i class="fas fa-expand"></i></span>
-                    </button>
-                    <figcaption>{{ shot.caption }}</figcaption>
-                </figure>
-                {% endif %}
+            <ul class="and-tut-stats and-tut-stats--hero" aria-label="خلاصه آموزش">
+                {% for stat in tutorial.stats %}
+                <li class="and-tut-stat">
+                    <strong>{{ stat.num }}</strong>
+                    <span>{{ stat.label }}</span>
+                </li>
                 {% endfor %}
-            </div>
+            </ul>
         </div>
     </header>
 
-    <div class="container">
-        <ul class="and-tut-stats" aria-label="خلاصه آموزش">
-            {% for stat in tutorial.stats %}
-            <li class="and-tut-stat">
-                <strong>{{ stat.num }}</strong>
-                <span>{{ stat.label }}</span>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <section class="and-tut-overview-video" id="overview-video" aria-labelledby="and-tut-overview-title">
-        <div class="container and-tut-overview-shell">
-            <div class="and-tut-overview-copy">
-                <span class="and-tut-kicker">ویدیوی معرفی</span>
-                <h2 id="and-tut-overview-title">{{ overview_video.title }}</h2>
-                <p>{{ overview_video.subtitle }}</p>
-                <div class="and-tut-chips">
-                    <span class="and-tut-chip"><i class="fas fa-clock"></i> {{ overview_video.duration }}</span>
-                    <span class="and-tut-chip"><i class="fab fa-android"></i> اندروید</span>
-                    <span class="and-tut-chip"><i class="fas fa-closed-captioning"></i> فارسی</span>
-                </div>
-            </div>
-            <div class="and-tut-overview-player" data-mk-vid-player>
-                <div class="and-tut-vid-frame{% if video_mode == 'file' %} mk-vid-frame{% endif %}{% if video_mode != 'file' %} and-tut-vid-frame--static{% endif %}">
-                    {% if video_mode == 'embed' %}
-                    <iframe src="{{ video_src }}"
-                            title="{{ overview_video.title }}"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen loading="lazy"></iframe>
-                    {% elif video_mode == 'file' %}
-                    <video class="mk-vid-el and-tut-vid-el"
-                           controls playsinline preload="metadata"
-                           {% if overview_video.poster %}poster="{% static overview_video.poster %}"{% endif %}
-                           title="{{ overview_video.title }}">
-                        <source src="{{ video_src }}" type="video/mp4">
-                    </video>
-                    <button type="button" class="mk-vid-play and-tut-vid-play" data-mk-vid-play aria-label="پخش ویدیو">
-                        <span class="mk-vid-play-ring" aria-hidden="true"></span>
-                        <i class="fas fa-play" aria-hidden="true"></i>
-                    </button>
-                    <span class="mk-vid-badge" aria-hidden="true"><i class="fas fa-video"></i> HD</span>
-                    {% else %}
-                    <div class="and-tut-vid-placeholder">
-                        <div class="and-tut-vid-placeholder-bg" aria-hidden="true"></div>
-                        <div class="and-tut-vid-placeholder-body">
-                            <span class="and-tut-vid-play-icon"><i class="fas fa-play"></i></span>
-                            <strong>{{ overview_video.title }}</strong>
-                            <span>{{ overview_video.subtitle }}</span>
-                            <em><i class="fas fa-film"></i> ویدیو به‌زودی — فایل: media/Video/android/ANDROID-OVERVIEW.mp4</em>
-                        </div>
+    <section class="and-tut-cinema" id="overview-video" aria-labelledby="and-tut-overview-title">
+        <div class="container">
+            <div class="and-tut-cinema-panel">
+                <div class="and-tut-cinema-copy">
+                    <span class="and-tut-section-kicker">۰۱ · ویدیوی معرفی</span>
+                    <h2 id="and-tut-overview-title">{{ overview_video.title }}</h2>
+                    <p>{{ overview_video.subtitle }}</p>
+                    <div class="and-tut-chips">
+                        <span class="and-tut-chip"><i class="fas fa-clock"></i> {{ overview_video.duration }}</span>
+                        <span class="and-tut-chip"><i class="fab fa-android"></i> اندروید</span>
+                        <span class="and-tut-chip"><i class="fas fa-closed-captioning"></i> فارسی</span>
                     </div>
-                    {% endif %}
+                </div>
+                <div class="and-tut-cinema-screen" data-mk-vid-player>
+                    <div class="and-tut-vid-frame{% if video_mode == 'file' %} mk-vid-frame{% endif %}{% if video_mode != 'file' %} and-tut-vid-frame--static{% endif %}">
+                        {% if video_mode == 'embed' %}
+                        <iframe src="{{ video_src }}"
+                                title="{{ overview_video.title }}"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen loading="lazy"></iframe>
+                        {% elif video_mode == 'file' %}
+                        <video class="mk-vid-el and-tut-vid-el"
+                               controls playsinline preload="metadata"
+                               {% if overview_video.poster %}poster="{% static overview_video.poster %}"{% endif %}
+                               title="{{ overview_video.title }}">
+                            <source src="{{ video_src }}" type="video/mp4">
+                        </video>
+                        <button type="button" class="mk-vid-play and-tut-vid-play" data-mk-vid-play aria-label="پخش ویدیو">
+                            <span class="mk-vid-play-ring" aria-hidden="true"></span>
+                            <i class="fas fa-play" aria-hidden="true"></i>
+                        </button>
+                        <span class="mk-vid-badge" aria-hidden="true"><i class="fas fa-video"></i> HD</span>
+                        {% else %}
+                        <div class="and-tut-vid-placeholder">
+                            <div class="and-tut-vid-placeholder-bg" aria-hidden="true"></div>
+                            <div class="and-tut-vid-placeholder-body">
+                                <span class="and-tut-vid-play-icon"><i class="fas fa-play"></i></span>
+                                <strong>{{ overview_video.title }}</strong>
+                                <span>{{ overview_video.subtitle }}</span>
+                                <em><i class="fas fa-film"></i> ویدیو به‌زودی</em>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <nav class="and-tut-chapters-nav" aria-label="فصل‌های آموزش">
+    <nav class="and-tut-dock" aria-label="فصل‌های آموزش">
         <div class="container">
-            <div class="and-tut-chapters-track" role="tablist">
-                {% for ch in tutorial.chapters %}
-                <a href="#{{ ch.anchor }}" class="and-tut-chapter-pill and-tut-chapter-pill--{{ ch.accent }}"
-                   role="tab" data-and-tut-chapter="{{ ch.id }}">
-                    <span class="and-tut-chapter-num">{{ ch.num }}</span>
-                    <span class="and-tut-chapter-text">
-                        <strong>{{ ch.title }}</strong>
-                        <span>{{ ch.subtitle }}</span>
-                    </span>
-                </a>
-                {% endfor %}
+            <div class="and-tut-dock-inner">
+                <span class="and-tut-dock-label"><i class="fas fa-layer-group"></i> مسیر یادگیری</span>
+                <div class="and-tut-dock-track" role="tablist">
+                    {% for ch in tutorial.chapters %}
+                    <a href="#{{ ch.anchor }}" class="and-tut-dock-item and-tut-dock-item--{{ ch.accent }}"
+                       role="tab" data-and-tut-chapter="{{ ch.id }}">
+                        <span class="and-tut-dock-num">{{ ch.num }}</span>
+                        <span class="and-tut-dock-icon">
+                            {% include 'includes/icon_slot.html' with decor=ch.decor_icon fa=ch.icon only %}
+                        </span>
+                        <span class="and-tut-dock-text">{{ ch.title }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </nav>
@@ -168,14 +197,15 @@
     <section class="and-tut-section" aria-labelledby="and-tut-videos-title">
         <div class="container">
             <header class="and-tut-section-head">
-                <h2 id="and-tut-videos-title">{{ tutorial.sections.videos.title }}</h2>
+                <span class="and-tut-section-kicker">۰۲ · {{ tutorial.sections.videos.title }}</span>
+                <h2 id="and-tut-videos-title">کتابخانه ویدیو</h2>
                 <p>{{ tutorial.sections.videos.subtitle }}</p>
             </header>
             <div class="and-tut-video-bento">
                 {% for video in tutorial.videos %}
-                <article class="and-tut-video-card{% if video.available %} and-tut-video-card--ready{% endif %}"
+                <article class="and-tut-video-tile{% if forloop.first %} and-tut-video-tile--featured{% endif %}{% if video.available %} and-tut-video-tile--ready{% endif %}"
                          id="video-{{ video.key }}">
-                    <div class="and-tut-video-card-media" data-mk-vid-player>
+                    <div class="and-tut-video-tile-media" data-mk-vid-player>
                         {% if video.available %}
                         <div class="mk-vid-frame and-tut-video-mini-frame">
                             <video class="mk-vid-el"
@@ -189,14 +219,18 @@
                             </button>
                         </div>
                         {% else %}
-                        <div class="and-tut-video-card-placeholder">
+                        <div class="and-tut-video-tile-soon">
+                            <span class="and-tut-video-tile-soon-ring" aria-hidden="true"></span>
                             <i class="fas fa-clapperboard"></i>
                             <span>به‌زودی</span>
                         </div>
                         {% endif %}
                     </div>
-                    <div class="and-tut-video-card-body">
-                        <span class="and-tut-chip and-tut-chip--sm"><i class="fas fa-clock"></i> {{ video.duration }}</span>
+                    <div class="and-tut-video-tile-body">
+                        <div class="and-tut-video-tile-meta">
+                            <span class="and-tut-chip and-tut-chip--sm"><i class="fas fa-clock"></i> {{ video.duration }}</span>
+                            {% if forloop.first %}<span class="and-tut-chip and-tut-chip--accent">پیشنهادی</span>{% endif %}
+                        </div>
                         <h3>{{ video.title }}</h3>
                         <p>{{ video.subtitle }}</p>
                         {% if not video.available %}
@@ -211,67 +245,79 @@
 
     <section class="and-tut-section and-tut-section--alt" aria-labelledby="and-tut-curriculum-title">
         <div class="container and-tut-curriculum-layout">
-            <aside class="and-tut-sidebar" aria-label="فهرست فصل‌ها">
-                <div class="and-tut-sidebar-sticky">
-                    <p class="and-tut-sidebar-label">فهرست</p>
-                    <ol class="and-tut-sidebar-list">
-                        {% for mod in tutorial.modules %}
-                        <li>
-                            <a href="#{{ mod.anchor }}" class="and-tut-sidebar-link" data-and-tut-sidebar="{{ mod.id }}">
-                                <span class="and-tut-sidebar-badge and-tut-sidebar-badge--{{ mod.accent }}">{{ mod.badge }}</span>
-                                {{ mod.title }}
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ol>
-                    <div class="and-tut-sidebar-progress" aria-hidden="true">
-                        <span class="and-tut-sidebar-progress-bar" id="andTutProgressBar"></span>
+            <aside class="and-tut-rail" aria-label="فهرست فصل‌ها">
+                <div class="and-tut-rail-sticky">
+                    <div class="and-tut-rail-card">
+                        <p class="and-tut-rail-label">فهرست دروس</p>
+                        <ol class="and-tut-rail-list">
+                            {% for mod in tutorial.modules %}
+                            <li>
+                                <a href="#{{ mod.anchor }}" class="and-tut-rail-link" data-and-tut-sidebar="{{ mod.id }}">
+                                    <span class="and-tut-rail-dot and-tut-rail-dot--{{ mod.accent }}"></span>
+                                    <span class="and-tut-rail-text">
+                                        <em>{{ mod.badge }}</em>
+                                        <strong>{{ mod.title }}</strong>
+                                    </span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ol>
+                        <div class="and-tut-rail-progress" aria-hidden="true">
+                            <span class="and-tut-rail-progress-fill" id="andTutProgressBar"></span>
+                        </div>
+                        <p class="and-tut-rail-hint"><i class="fas fa-arrow-down"></i> با اسکرول پیشرفت ثبت می‌شود</p>
                     </div>
                 </div>
             </aside>
 
             <div class="and-tut-curriculum-main">
-                <header class="and-tut-section-head">
-                    <h2 id="and-tut-curriculum-title">{{ tutorial.sections.curriculum.title }}</h2>
+                <header class="and-tut-section-head and-tut-section-head--left">
+                    <span class="and-tut-section-kicker">۰۳ · {{ tutorial.sections.curriculum.title }}</span>
+                    <h2 id="and-tut-curriculum-title">سرفصل گام‌به‌گام</h2>
                     <p>{{ tutorial.sections.curriculum.subtitle }}</p>
                 </header>
 
                 {% for mod in tutorial.modules %}
-                <article class="and-tut-module and-tut-module--{{ mod.accent }}" id="{{ mod.anchor }}">
-                    <header class="and-tut-module-head">
+                <article class="and-tut-chapter and-tut-chapter--{{ mod.accent }}" id="{{ mod.anchor }}">
+                    <div class="and-tut-chapter-glow" aria-hidden="true"></div>
+                    <header class="and-tut-chapter-head">
+                        <div class="and-tut-chapter-head-main">
+                            <span class="and-tut-chapter-badge">{{ mod.badge }}</span>
+                            <h3>{{ mod.title }}</h3>
+                            <p>{{ mod.desc }}</p>
+                            <a href="#video-{{ mod.video_key }}" class="and-tut-link">
+                                <i class="fas fa-circle-play"></i> تماشای ویدیوی فصل
+                            </a>
+                        </div>
                         {% if mod.cover_image %}
-                        <button type="button" class="and-tut-module-cover" data-and-tut-lightbox
+                        <button type="button" class="and-tut-chapter-cover" data-and-tut-lightbox
                                 data-src="{% static 'images/' %}{{ mod.cover_image }}"
                                 data-caption="{{ mod.cover_caption }}">
                             <img src="{% static 'images/' %}{{ mod.cover_image }}" alt="{{ mod.cover_caption }}" loading="lazy" data-and-tut-fallback>
                             <span class="and-tut-shot-zoom"><i class="fas fa-expand"></i></span>
+                            <span class="and-tut-chapter-cover-cap">{{ mod.cover_caption }}</span>
                         </button>
                         {% endif %}
-                        <div class="and-tut-module-head-copy">
-                            <span class="and-tut-module-badge and-tut-module-badge--{{ mod.accent }}">{{ mod.badge }}</span>
-                            <h3>{{ mod.title }}</h3>
-                            <p>{{ mod.desc }}</p>
-                            <a href="#video-{{ mod.video_key }}" class="and-tut-link">
-                                <i class="fas fa-circle-play"></i> ویدیوی این فصل
-                            </a>
-                        </div>
                     </header>
 
-                    <ol class="and-tut-lessons">
+                    <ol class="and-tut-timeline">
                         {% for lesson in mod.lessons %}
-                        <li class="and-tut-lesson">
-                            {% if lesson.image %}
-                            <button type="button" class="and-tut-lesson-thumb" data-and-tut-lightbox
-                                    data-src="{% static 'images/' %}{{ lesson.image }}"
-                                    data-caption="{{ lesson.image_caption }}">
-                                <img src="{% static 'images/' %}{{ lesson.image }}" alt="{{ lesson.image_caption }}" loading="lazy" data-and-tut-fallback>
-                            </button>
-                            {% endif %}
-                            <div class="and-tut-lesson-body">
-                                <span class="and-tut-lesson-num">{{ lesson.num }}</span>
-                                <div>
+                        <li class="and-tut-timeline-step" data-and-tut-reveal>
+                            <span class="and-tut-timeline-node">{{ lesson.num }}</span>
+                            <div class="and-tut-timeline-card">
+                                {% if lesson.image %}
+                                <button type="button" class="and-tut-timeline-thumb" data-and-tut-lightbox
+                                        data-src="{% static 'images/' %}{{ lesson.image }}"
+                                        data-caption="{{ lesson.image_caption }}">
+                                    <img src="{% static 'images/' %}{{ lesson.image }}" alt="{{ lesson.image_caption }}" loading="lazy" data-and-tut-fallback>
+                                </button>
+                                {% endif %}
+                                <div class="and-tut-timeline-body">
                                     <strong>{{ lesson.title }}</strong>
                                     <p>{{ lesson.desc }}</p>
+                                    {% if lesson.image_caption %}
+                                    <span class="and-tut-timeline-cap">{{ lesson.image_caption }}</span>
+                                    {% endif %}
                                 </div>
                             </div>
                         </li>
@@ -286,14 +332,15 @@
     <section class="and-tut-section" aria-labelledby="and-tut-gallery-title">
         <div class="container">
             <header class="and-tut-section-head">
+                <span class="and-tut-section-kicker">۰۴ · گالری</span>
                 <h2 id="and-tut-gallery-title">{{ tutorial.gallery.title }}</h2>
                 <p>{{ tutorial.gallery.subtitle }}</p>
             </header>
 
-            <div class="and-tut-gallery-filters" role="tablist">
+            <div class="and-tut-gallery-toolbar" role="tablist">
                 {% for cat in tutorial.gallery.categories %}
                 <button type="button"
-                        class="and-tut-gallery-filter{% if forloop.first %} is-active{% endif %}"
+                        class="and-tut-gallery-pill{% if forloop.first %} is-active{% endif %}"
                         role="tab"
                         data-and-tut-gallery="{{ cat.id }}"
                         aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
@@ -302,15 +349,19 @@
                 {% endfor %}
             </div>
 
-            <div class="and-tut-gallery-grid">
+            <div class="and-tut-masonry">
                 {% for item in tutorial.gallery.items %}
-                <article class="and-tut-gallery-card and-tut-gallery-card--{{ item.accent }}"
-                         data-and-tut-gallery-cat="{{ item.category }}">
-                    <button type="button" class="and-tut-gallery-shot" data-and-tut-lightbox
+                <article class="and-tut-masonry-item and-tut-masonry-item--{{ item.accent }}"
+                         data-and-tut-gallery-cat="{{ item.category }}"
+                         data-and-tut-reveal>
+                    <button type="button" class="and-tut-masonry-shot" data-and-tut-lightbox
                             data-src="{% static 'images/' %}{{ item.image }}"
                             data-caption="{{ item.caption }}">
                         <img src="{% static 'images/' %}{{ item.image }}" alt="{{ item.caption }}" loading="lazy" data-and-tut-fallback>
-                        <span class="and-tut-gallery-caption">{{ item.caption }}</span>
+                        <span class="and-tut-masonry-overlay">
+                            <i class="fas fa-expand"></i>
+                            <span>{{ item.caption }}</span>
+                        </span>
                     </button>
                 </article>
                 {% endfor %}
@@ -321,12 +372,13 @@
     <section class="and-tut-section and-tut-section--alt">
         <div class="container">
             <header class="and-tut-section-head">
-                <h2>نکات حرفه‌ای</h2>
+                <span class="and-tut-section-kicker">۰۵ · نکات</span>
+                <h2>نکات حرفه‌ای برای مشاوران</h2>
             </header>
-            <div class="and-tut-tips-grid">
+            <div class="and-tut-insights">
                 {% for tip in tutorial.tips %}
-                <article class="and-tut-tip-card">
-                    <span class="and-tut-tip-icon"><i class="fas {{ tip.icon }}"></i></span>
+                <article class="and-tut-insight" data-and-tut-reveal>
+                    <span class="and-tut-insight-icon"><i class="fas {{ tip.icon }}"></i></span>
                     <h3>{{ tip.title }}</h3>
                     <p>{{ tip.text }}</p>
                 </article>
@@ -335,18 +387,24 @@
         </div>
     </section>
 
-    {% include 'includes/app_download_hub.html' %}
+    <div class="and-tut-download-wrap">
+        {% include 'includes/app_download_hub.html' %}
+    </div>
 
     <section class="and-tut-section">
         <div class="container and-tut-faq-wrap">
             <header class="and-tut-section-head">
+                <span class="and-tut-section-kicker">۰۶ · FAQ</span>
                 <h2>سوالات پرتکرار</h2>
             </header>
             <div class="and-tut-faq">
                 {% for item in tutorial.faq %}
                 <details class="and-tut-faq-item"{% if forloop.first %} open{% endif %}>
-                    <summary>{{ item.q }}</summary>
-                    <p>{{ item.a }}</p>
+                    <summary>
+                        <span class="and-tut-faq-q">{{ item.q }}</span>
+                        <span class="and-tut-faq-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                    </summary>
+                    <div class="and-tut-faq-a"><p>{{ item.a }}</p></div>
                 </details>
                 {% endfor %}
             </div>
@@ -357,26 +415,27 @@
         <div class="container">
             <div class="and-tut-related-grid">
                 <a href="{% url 'education' %}" class="and-tut-related-card">
-                    <span class="mk-icon mk-icon--md mk-icon--violet"><i class="fas fa-graduation-cap"></i></span>
+                    <span class="and-tut-related-icon and-tut-related-icon--violet"><i class="fas fa-graduation-cap"></i></span>
                     <span class="and-tut-related-copy">
                         <strong>مرکز آموزش</strong>
                         <span>CRM، ربات ویندوز و تحلیل بازار</span>
                     </span>
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="fas fa-arrow-left and-tut-related-arrow"></i>
                 </a>
                 <a href="{% url 'license_guide' %}" class="and-tut-related-card">
-                    <span class="mk-icon mk-icon--md mk-icon--emerald"><i class="fas fa-key"></i></span>
+                    <span class="and-tut-related-icon and-tut-related-icon--emerald"><i class="fas fa-key"></i></span>
                     <span class="and-tut-related-copy">
                         <strong>راهنمای فعال‌سازی</strong>
                         <span>لایسنس، ربات ویندوز و دانلود</span>
                     </span>
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="fas fa-arrow-left and-tut-related-arrow"></i>
                 </a>
             </div>
         </div>
     </section>
 
     <footer class="and-tut-cta">
+        <div class="and-tut-cta-bg" aria-hidden="true"></div>
         <div class="container and-tut-cta-inner">
             <h2>{{ tutorial.sections.cta.title }}</h2>
             <p>{{ tutorial.sections.cta.subtitle }}</p>
@@ -409,5 +468,5 @@
 {% if video_mode == 'file' or overview_video.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
 {% endif %}
-<script src="{% static 'js/android-tutorial.js' %}?v=1" defer></script>
+<script src="{% static 'js/android-tutorial.js' %}?v=2" defer></script>
 {% endblock %}

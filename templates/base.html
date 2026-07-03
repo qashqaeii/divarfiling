@@ -193,8 +193,6 @@
         {% block content %}{% endblock %}
     </main>
 
-    {% block page_overlays %}{% endblock %}
-
     <!-- Footer -->
     <footer class="footer mk-footer mk-footer-pro">
         <div class="container">
@@ -288,6 +286,8 @@
             </div>
         </div>
     </footer>
+
+    {% block page_overlays %}{% endblock %}
 
     <!-- Scripts -->
     <script src="{% static 'js/main.js' %}"></script>

@@ -1,7 +1,7 @@
 /* ═══ Checkout — international single-page pattern ═══ */
 .mk-checkout-page .main-content {
     padding: 0 !important;
-    overflow-x: clip;
+    overflow: visible;
 }
 
 .mk-checkout-page {
@@ -950,16 +950,91 @@
     display: none;
 }
 
-/* Mobile bar */
+/* Mobile bar — outside main (page_overlays) for reliable fixed positioning */
 .ck-mobile-bar {
     display: none;
+}
+
+@media (max-width: 960px) {
+    body.mk-checkout-page .ck-mobile-bar {
+        display: flex !important;
+        align-items: stretch;
+        position: fixed !important;
+        inset-inline: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 1200;
+        padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+        background: rgba(7, 11, 23, 0.96);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(148, 163, 184, 0.15);
+        box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.4);
+        pointer-events: auto;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    html.mk-public[data-theme="light"] body.mk-checkout-page .ck-mobile-bar {
+        background: rgba(255, 255, 255, 0.98);
+        border-top-color: var(--mk-border);
+        box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.1);
+    }
+
+    body.mk-checkout-page .ck-mobile-bar .ck-mobile-bar-inner {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        max-width: 920px;
+        margin: 0 auto;
+    }
+
+    body.mk-checkout-page .ck-mobile-total {
+        flex: 1;
+        min-width: 0;
+    }
+
+    body.mk-checkout-page .ck-mobile-total span {
+        display: block;
+        font-size: 0.62rem;
+        color: var(--mk-text-muted, #64748b);
+    }
+
+    body.mk-checkout-page .ck-mobile-total strong {
+        display: block;
+        font-size: 1rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: #4ade80;
+        line-height: 1.35;
+        word-break: break-word;
+    }
+
+    html.mk-public[data-theme="light"] body.mk-checkout-page .ck-mobile-total strong {
+        color: #059669;
+    }
+
+    body.mk-checkout-page .ck-pay-btn--compact {
+        flex-shrink: 0;
+        min-height: 2.75rem;
+        padding-inline: 1.25rem;
+    }
+
+    body.mk-checkout-page .ck-page {
+        padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    body.mk-checkout-page footer.mk-footer-pro {
+        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
 }
 
 /* Responsive */
 @media (max-width: 800px) {
     .ck-page {
         padding-inline: 0.75rem;
-        padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
     }
 
     .ck-topbar {
@@ -1163,55 +1238,6 @@
     .ck-foot-dot {
         display: none;
     }
-
-    .ck-mobile-bar {
-        display: block;
-        position: fixed;
-        inset-inline: 0;
-        bottom: 0;
-        z-index: 200;
-        padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
-        background: rgba(7, 11, 23, 0.94);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-top: 1px solid rgba(148, 163, 184, 0.12);
-        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
-    }
-
-    .ck-mobile-bar-inner {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        max-width: 920px;
-        margin: 0 auto;
-    }
-
-    .ck-mobile-total {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .ck-mobile-total span {
-        display: block;
-        font-size: 0.62rem;
-        color: var(--mk-text-muted, #64748b);
-    }
-
-    .ck-mobile-total strong {
-        display: block;
-        font-size: 1rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        color: #4ade80;
-        line-height: 1.35;
-        word-break: break-word;
-    }
-
-    .ck-pay-btn--compact {
-        flex-shrink: 0;
-        min-height: 2.75rem;
-        padding-inline: 1.25rem;
-    }
 }
 
 @media (min-width: 801px) {
@@ -1316,14 +1342,6 @@ html.mk-public[data-theme="light"] .ck-promo-input {
     background: var(--mk-card);
     border-color: var(--mk-border);
     color: var(--mk-text);
-}
-
-@media (max-width: 720px) {
-    html.mk-public[data-theme="light"] .ck-mobile-bar {
-        background: rgba(255, 255, 255, 0.96);
-        border-top-color: var(--mk-border);
-        box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
-    }
 }
 
 /* ─── Contrast guard ─── */

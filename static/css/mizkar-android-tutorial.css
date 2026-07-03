@@ -490,11 +490,188 @@ html.mk-public[data-theme="light"] .and-tut-kicker {
     margin: 0 0 1rem;
 }
 
-.and-tut-cinema-screen .and-tut-vid-frame {
-    border-radius: var(--and-radius-lg);
+.and-tut-cinema-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem;
+}
+
+/* ─── Phone video player (عمودی — اسکرین‌رکورد موبایل) ─── */
+.and-phone-vid {
+    position: relative;
+    width: 100%;
+}
+
+.and-phone-vid-shell {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.and-phone-vid-device {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: var(--and-phone-w, 220px);
+    padding: 10px;
+    border-radius: 34px;
+    background: linear-gradient(155deg, #3f4f63 0%, #1a2332 42%, #0a0f18 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 28px 56px -24px rgba(0, 0, 0, 0.65);
+}
+
+.and-phone-vid-speaker {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 34%;
+    height: 16px;
+    border-radius: 0 0 10px 10px;
+    background: #0a0f18;
+    z-index: 4;
+}
+
+.and-phone-vid-screen {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 9 / 19.5;
+    border-radius: 26px;
     overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--and-purple) 22%, transparent);
-    box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.55);
+    background: #0b1220;
+}
+
+.and-phone-vid-screen.mk-vid-frame {
+    aspect-ratio: 9 / 19.5;
+    border: none;
+    border-radius: 26px;
+    box-shadow: none;
+}
+
+.and-phone-vid-screen.mk-vid-frame .mk-vid-el,
+.and-phone-vid-el {
+    object-fit: cover;
+    object-position: top center;
+}
+
+.and-phone-vid-play {
+    font-size: 0.85rem;
+}
+
+.and-phone-vid-badge {
+    top: auto;
+    bottom: 0.65rem;
+    left: 0.65rem;
+    right: auto;
+    font-size: 0.62rem;
+}
+
+.and-phone-vid-poster,
+.and-phone-vid-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.and-phone-vid-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+}
+
+.and-phone-vid-poster-badge {
+    position: absolute;
+    bottom: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    background: rgba(15, 23, 42, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+}
+
+.and-phone-vid-empty {
+    gap: 0.45rem;
+    color: var(--and-muted);
+    font-size: 0.76rem;
+    background:
+        radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--and-purple) 14%, transparent), transparent 58%),
+        #0b1220;
+}
+
+.and-phone-vid-empty-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 1rem;
+    opacity: 0.55;
+    border: 1px dashed color-mix(in srgb, var(--and-purple) 35%, transparent);
+}
+
+.and-phone-vid-home {
+    display: block;
+    width: 32%;
+    height: 4px;
+    margin: 7px auto 2px;
+    border-radius: 4px;
+    background: rgba(148, 163, 184, 0.35);
+}
+
+.and-phone-vid-shadow {
+    position: absolute;
+    bottom: -8%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 18%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(0, 0, 0, 0.35), transparent 70%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.and-phone-vid--lg { --and-phone-w: 260px; }
+.and-phone-vid--md { --and-phone-w: 200px; }
+
+.and-phone-vid--lg .and-phone-vid-device {
+    padding: 12px;
+    border-radius: 38px;
+}
+
+.and-phone-vid--lg .and-phone-vid-screen {
+    border-radius: 30px;
+}
+
+.and-tut-video-tile--featured .and-phone-vid {
+    --and-phone-w: 230px;
+}
+
+.and-tut-chip--live {
+    color: #22c55e;
+    border-color: color-mix(in srgb, #22c55e 35%, transparent);
+    background: color-mix(in srgb, #22c55e 10%, transparent);
+}
+
+.and-tut-chip--live .fa-circle {
+    font-size: 0.45rem;
+    vertical-align: middle;
 }
 
 /* ─── Section heads ─── */
@@ -740,90 +917,78 @@ html.mk-public[data-theme="light"] .and-tut-section--alt {
     background: linear-gradient(180deg, rgba(124, 58, 237, 0.04), transparent 50%), #f8fafc;
 }
 
-/* ─── Video bento ─── */
-.and-tut-video-bento {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+/* ─── Video library (اسکرول افقی — قاب موبایل) ─── */
+.and-tut-video-scroll {
+    display: flex;
     gap: 1rem;
+    overflow-x: auto;
+    padding: 0.5rem 0.25rem 1.25rem;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.and-tut-video-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.and-tut-video-scroll::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--and-purple) 35%, transparent);
+    border-radius: 999px;
 }
 
 .and-tut-video-tile {
+    flex: 0 0 min(260px, 78vw);
+    scroll-snap-align: start;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1.1rem 1rem 1.15rem;
     border-radius: var(--and-radius-lg);
     border: 1px solid var(--and-border);
     background: var(--and-glass);
-    overflow: hidden;
     transition: transform 0.25s var(--and-ease), border-color 0.25s, box-shadow 0.25s;
 }
 
 .and-tut-video-tile:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
     border-color: color-mix(in srgb, var(--and-purple) 28%, transparent);
-    box-shadow: 0 20px 40px -28px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 22px 44px -28px rgba(0, 0, 0, 0.48);
 }
 
 .and-tut-video-tile--featured {
-    grid-column: span 2;
-    grid-row: span 2;
-}
-
-.and-tut-video-tile--featured .and-tut-video-mini-frame {
-    aspect-ratio: 16 / 10;
-}
-
-.and-tut-video-mini-frame { aspect-ratio: 16 / 9; }
-
-.and-tut-vid-play--sm {
-    width: 2.6rem;
-    height: 2.6rem;
-    font-size: 0.75rem;
-}
-
-.and-tut-video-tile-soon {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    color: var(--and-muted);
-    font-size: 0.78rem;
+    flex: 0 0 min(300px, 86vw);
     background:
-        radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--and-purple) 12%, transparent), transparent 65%),
-        color-mix(in srgb, var(--mk-bg, #070b17) 60%, transparent);
+        radial-gradient(ellipse 90% 70% at 50% 0%, color-mix(in srgb, var(--and-purple) 12%, transparent), transparent 55%),
+        var(--and-glass);
+    border-color: color-mix(in srgb, var(--and-purple) 22%, transparent);
 }
 
-.and-tut-video-tile--featured .and-tut-video-tile-soon { aspect-ratio: 16 / 10; }
-
-.and-tut-video-tile-soon-ring {
-    position: absolute;
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: 50%;
-    border: 2px dashed color-mix(in srgb, var(--and-purple) 35%, transparent);
-    animation: and-tut-spin 20s linear infinite;
+.and-tut-video-tile--ready {
+    border-color: color-mix(in srgb, #22c55e 25%, transparent);
 }
 
-.and-tut-video-tile-soon i { font-size: 1.35rem; opacity: 0.55; z-index: 1; }
+.and-tut-video-tile--poster {
+    border-color: color-mix(in srgb, var(--and-android) 22%, transparent);
+}
 
 .and-tut-video-tile-body {
-    padding: 1rem 1.15rem 1.2rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+    width: 100%;
+    text-align: center;
 }
 
 .and-tut-video-tile-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
+    justify-content: center;
     margin-bottom: 0.45rem;
 }
 
 .and-tut-video-tile-body h3 {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 700;
     margin: 0 0 0.35rem;
     color: var(--and-text);
@@ -831,15 +996,14 @@ html.mk-public[data-theme="light"] .and-tut-section--alt {
 }
 
 .and-tut-video-tile--featured .and-tut-video-tile-body h3 {
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .and-tut-video-tile-body p {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     line-height: 1.7;
     color: var(--and-muted);
     margin: 0;
-    flex: 1;
 }
 
 /* ─── Curriculum rail ─── */
@@ -1632,8 +1796,7 @@ img[data-and-tut-fallback].is-missing {
     .and-tut-stat { border-inline-end: none; border-bottom: 1px solid var(--and-border); padding-bottom: 0.75rem; }
     .and-tut-stat:nth-last-child(-n+2) { border-bottom: none; }
     .and-tut-cinema-panel { grid-template-columns: 1fr; }
-    .and-tut-video-bento { grid-template-columns: repeat(2, 1fr); }
-    .and-tut-video-tile--featured { grid-column: span 2; grid-row: span 1; }
+    .and-tut-cinema-screen { order: -1; }
     .and-tut-curriculum-layout { grid-template-columns: 1fr; }
     .and-tut-rail { display: none; }
     .and-tut-masonry { columns: 3; }
@@ -1642,8 +1805,6 @@ img[data-and-tut-fallback].is-missing {
 
 @media (max-width: 720px) {
     .and-tut-stats--hero { grid-template-columns: 1fr 1fr; }
-    .and-tut-video-bento { grid-template-columns: 1fr; }
-    .and-tut-video-tile--featured { grid-column: span 1; }
     .and-tut-chapter-head { grid-template-columns: 1fr; }
     .and-tut-chapter-cover { max-width: 140px; }
     .and-tut-timeline-card { grid-template-columns: 1fr; }
@@ -1652,14 +1813,17 @@ img[data-and-tut-fallback].is-missing {
     .and-tut-related-grid { grid-template-columns: 1fr; }
     .and-tut-orbit-card { width: 88px; }
     .and-tut-device { transform: none; }
+    .and-tut-video-tile,
+    .and-tut-video-tile--featured {
+        flex: 0 0 min(88vw, 280px);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .and-tut-mesh,
     .and-tut-orbit,
     .and-tut-orbit-card,
-    .and-tut-btn-glow,
-    .and-tut-video-tile-soon-ring { animation: none; }
+    .and-tut-btn-glow { animation: none; }
     .and-tut-timeline-step,
     .and-tut-masonry-item,
     .and-tut-insight { opacity: 1; transform: none; }

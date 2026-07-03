@@ -19,7 +19,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-android-tutorial.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-android-tutorial.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -134,41 +134,17 @@
                     <p>{{ overview_video.subtitle }}</p>
                     <div class="and-tut-chips">
                         <span class="and-tut-chip"><i class="fas fa-clock"></i> {{ overview_video.duration }}</span>
+                        {% if overview_video.state == 'video' %}
+                        <span class="and-tut-chip and-tut-chip--live"><i class="fas fa-circle"></i> آماده پخش</span>
+                        {% elif overview_video.state == 'poster' %}
+                        <span class="and-tut-chip and-tut-chip--accent"><i class="fas fa-image"></i> پیش‌نمایش</span>
+                        {% endif %}
                         <span class="and-tut-chip"><i class="fab fa-android"></i> اندروید</span>
                         <span class="and-tut-chip"><i class="fas fa-closed-captioning"></i> فارسی</span>
                     </div>
                 </div>
-                <div class="and-tut-cinema-screen" data-mk-vid-player>
-                    <div class="and-tut-vid-frame{% if video_mode == 'file' %} mk-vid-frame{% endif %}{% if video_mode != 'file' %} and-tut-vid-frame--static{% endif %}">
-                        {% if video_mode == 'embed' %}
-                        <iframe src="{{ video_src }}"
-                                title="{{ overview_video.title }}"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowfullscreen loading="lazy"></iframe>
-                        {% elif video_mode == 'file' %}
-                        <video class="mk-vid-el and-tut-vid-el"
-                               controls playsinline preload="metadata"
-                               {% if overview_video.poster %}poster="{% static overview_video.poster %}"{% endif %}
-                               title="{{ overview_video.title }}">
-                            <source src="{{ video_src }}" type="video/mp4">
-                        </video>
-                        <button type="button" class="mk-vid-play and-tut-vid-play" data-mk-vid-play aria-label="پخش ویدیو">
-                            <span class="mk-vid-play-ring" aria-hidden="true"></span>
-                            <i class="fas fa-play" aria-hidden="true"></i>
-                        </button>
-                        <span class="mk-vid-badge" aria-hidden="true"><i class="fas fa-video"></i> HD</span>
-                        {% else %}
-                        <div class="and-tut-vid-placeholder">
-                            <div class="and-tut-vid-placeholder-bg" aria-hidden="true"></div>
-                            <div class="and-tut-vid-placeholder-body">
-                                <span class="and-tut-vid-play-icon"><i class="fas fa-play"></i></span>
-                                <strong>{{ overview_video.title }}</strong>
-                                <span>{{ overview_video.subtitle }}</span>
-                                <em><i class="fas fa-film"></i> ویدیو به‌زودی</em>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
+                <div class="and-tut-cinema-screen">
+                    {% include 'includes/android_phone_video.html' with video=overview_video size='lg' video_mode=video_mode video_src=video_src %}
                 </div>
             </div>
         </div>
@@ -201,34 +177,20 @@
                 <h2 id="and-tut-videos-title">کتابخانه ویدیو</h2>
                 <p>{{ tutorial.sections.videos.subtitle }}</p>
             </header>
-            <div class="and-tut-video-bento">
+            <div class="and-tut-video-scroll" role="list">
                 {% for video in tutorial.videos %}
-                <article class="and-tut-video-tile{% if forloop.first %} and-tut-video-tile--featured{% endif %}{% if video.available %} and-tut-video-tile--ready{% endif %}"
-                         id="video-{{ video.key }}">
-                    <div class="and-tut-video-tile-media" data-mk-vid-player>
-                        {% if video.available %}
-                        <div class="mk-vid-frame and-tut-video-mini-frame">
-                            <video class="mk-vid-el"
-                                   controls playsinline preload="none"
-                                   {% if video.poster %}poster="{% static video.poster %}"{% endif %}
-                                   title="{{ video.title }}">
-                                <source src="{{ video.src }}" type="video/mp4">
-                            </video>
-                            <button type="button" class="mk-vid-play and-tut-vid-play--sm" data-mk-vid-play aria-label="پخش {{ video.title }}">
-                                <i class="fas fa-play"></i>
-                            </button>
-                        </div>
-                        {% else %}
-                        <div class="and-tut-video-tile-soon">
-                            <span class="and-tut-video-tile-soon-ring" aria-hidden="true"></span>
-                            <i class="fas fa-clapperboard"></i>
-                            <span>به‌زودی</span>
-                        </div>
-                        {% endif %}
-                    </div>
+                <article class="and-tut-video-tile{% if forloop.first %} and-tut-video-tile--featured{% endif %}{% if video.state == 'video' %} and-tut-video-tile--ready{% elif video.state == 'poster' %} and-tut-video-tile--poster{% endif %}"
+                         id="video-{{ video.key }}"
+                         role="listitem">
+                    {% include 'includes/android_phone_video.html' with video=video size='md' %}
                     <div class="and-tut-video-tile-body">
                         <div class="and-tut-video-tile-meta">
                             <span class="and-tut-chip and-tut-chip--sm"><i class="fas fa-clock"></i> {{ video.duration }}</span>
+                            {% if video.state == 'video' %}
+                            <span class="and-tut-chip and-tut-chip--live"><i class="fas fa-circle"></i> آماده پخش</span>
+                            {% elif video.state == 'poster' %}
+                            <span class="and-tut-chip and-tut-chip--accent"><i class="fas fa-image"></i> پیش‌نمایش</span>
+                            {% endif %}
                             {% if forloop.first %}<span class="and-tut-chip and-tut-chip--accent">پیشنهادی</span>{% endif %}
                         </div>
                         <h3>{{ video.title }}</h3>
@@ -462,8 +424,6 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if video_mode == 'file' or overview_video.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
-{% endif %}
 <script src="{% static 'js/android-tutorial.js' %}?v=3" defer></script>
 {% endblock %}

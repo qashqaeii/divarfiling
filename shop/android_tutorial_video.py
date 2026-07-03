@@ -95,23 +95,42 @@ def get_android_video_url(key: str) -> str:
     return f"{settings.MEDIA_URL.rstrip('/')}/{rel}"
 
 
+def _poster_exists(static_rel: str) -> bool:
+    if not static_rel:
+        return False
+    from django.contrib.staticfiles.finders import find
+    return find(static_rel) is not None
+
+
 def get_android_video_context(key: str) -> dict:
-    """Context برای قالب — available, src, title, subtitle, duration, poster."""
+    """Context برای قالب — available, poster_available, state, src, ..."""
     meta = ANDROID_VIDEOS.get(key)
     if not meta:
-        return {'available': False, 'mode': 'none', 'src': '', 'key': key}
+        return {
+            'available': False,
+            'poster_available': False,
+            'state': 'soon',
+            'mode': 'none',
+            'src': '',
+            'key': key,
+        }
     url = get_android_video_url(key)
+    poster = meta.get('poster', '')
+    poster_available = _poster_exists(poster)
     ctx = {
         'key': key,
         'title': meta['title'],
         'subtitle': meta['subtitle'],
         'duration': meta['duration'],
-        'poster': meta.get('poster', ''),
+        'poster': poster,
+        'poster_available': poster_available,
         'filename': meta['file'],
     }
     if url:
-        return {'available': True, 'mode': 'file', 'src': url, **ctx}
-    return {'available': False, 'mode': 'none', 'src': '', **ctx}
+        return {'available': True, 'state': 'video', 'mode': 'file', 'src': url, **ctx}
+    if poster_available:
+        return {'available': False, 'state': 'poster', 'mode': 'poster', 'src': '', **ctx}
+    return {'available': False, 'state': 'soon', 'mode': 'none', 'src': '', **ctx}
 
 
 def get_all_android_videos_context() -> list[dict]:

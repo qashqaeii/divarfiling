@@ -67,3 +67,22 @@ class AndroidTutorialPageTests(TestCase):
             subdir_file.unlink(missing_ok=True)
             root_file.unlink(missing_ok=True)
 
+    @override_settings(MEDIA_ROOT='/tmp/test-media')
+    def test_poster_state_when_video_missing(self):
+        from django.conf import settings
+        poster_rel = 'images/android/posters/android-video-install.jpg'
+        poster_path = Path(settings.BASE_DIR) / 'static' / poster_rel
+        poster_path.parent.mkdir(parents=True, exist_ok=True)
+        poster_path.write_bytes(b'\xff\xd8\xff\xd9')
+        try:
+            ctx = get_android_video_context('install')
+            self.assertFalse(ctx['available'])
+            self.assertTrue(ctx['poster_available'])
+            self.assertEqual(ctx['state'], 'poster')
+            self.assertEqual(ctx['mode'], 'poster')
+            response = self.client.get(reverse('android_tutorial'))
+            self.assertContains(response, 'پیش‌نمایش')
+            self.assertContains(response, 'ویدیو به‌زودی')
+        finally:
+            poster_path.unlink(missing_ok=True)
+

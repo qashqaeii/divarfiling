@@ -1,8 +1,14 @@
+from unittest.mock import mock_open, patch
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from shop.services.app_downloads import ANDROID_APK_FILENAME, android_apk_available
+from shop.services.app_downloads import (
+    ANDROID_APK_FILENAME,
+    android_apk_available,
+    build_android_apk_response,
+)
 
 
 class AndroidAppDownloadTests(TestCase):
@@ -35,3 +41,11 @@ class AndroidAppDownloadTests(TestCase):
         response = self.client.get(reverse('dashboard'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse('android_app_download'))
+
+    @patch('shop.services.app_downloads.os.path.isfile', return_value=True)
+    @patch('shop.services.app_downloads.FileResponse', side_effect=RuntimeError('response failed'))
+    def test_closes_file_if_file_response_raises(self, _mock_response, _mock_isfile):
+        with patch('builtins.open', mock_open(read_data=b'apk')) as mocked_open:
+            with self.assertRaises(RuntimeError):
+                build_android_apk_response()
+            mocked_open.return_value.close.assert_called_once()

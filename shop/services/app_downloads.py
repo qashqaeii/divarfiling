@@ -86,11 +86,18 @@ def build_android_apk_response() -> FileResponse:
     path = android_apk_path()
     if not os.path.isfile(path):
         raise Http404('فایل اپ اندروید در سرور موجود نیست.')
-    file_handle = open(path, 'rb')
-    response = FileResponse(
-        file_handle,
-        as_attachment=True,
-        filename=ANDROID_APK_FILENAME,
-    )
-    response['Content-Type'] = 'application/vnd.android.package-archive'
+    try:
+        file_handle = open(path, 'rb')
+    except OSError as exc:
+        raise Http404('فایل اپ اندروید در سرور موجود نیست.') from exc
+    try:
+        response = FileResponse(
+            file_handle,
+            as_attachment=True,
+            filename=ANDROID_APK_FILENAME,
+        )
+        response['Content-Type'] = 'application/vnd.android.package-archive'
+    except Exception:
+        file_handle.close()
+        raise
     return response

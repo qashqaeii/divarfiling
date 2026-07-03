@@ -2,11 +2,8 @@
     'use strict';
 
     initImageFallback();
-    initGalleryFilters();
-    initLightbox();
-    initChapterNav();
-    initScrollProgress();
     initReveal();
+    initGalleryFilters();
 
     function initImageFallback() {
         document.querySelectorAll('[data-and-tut-fallback]').forEach(function (img) {
@@ -15,6 +12,22 @@
                 img.removeAttribute('src');
                 img.setAttribute('alt', img.getAttribute('alt') || 'تصویر به‌زودی');
             });
+        });
+    }
+
+    initLightbox();
+    initChapterNav();
+    initScrollProgress();
+
+    function applyGalleryFilter(cards, cat) {
+        cards.forEach(function (card) {
+            var show = cat === 'all' || card.dataset.andTutGalleryCat === cat;
+            card.classList.toggle('is-hidden', !show);
+            if (!show) {
+                card.classList.remove('is-visible');
+            } else if (card.dataset.andTutRevealed === 'true') {
+                card.classList.add('is-visible');
+            }
         });
     }
 
@@ -31,15 +44,9 @@
                     f.classList.toggle('is-active', active);
                     f.setAttribute('aria-selected', active ? 'true' : 'false');
                 });
-                cards.forEach(function (card) {
-                    var show = cat === 'all' || card.dataset.andTutGalleryCat === cat;
-                    card.classList.toggle('is-hidden', !show);
-                    if (show) card.classList.add('is-visible');
-                });
+                applyGalleryFilter(cards, cat);
             });
         });
-
-        cards.forEach(function (card) { card.classList.add('is-visible'); });
     }
 
     function initLightbox() {
@@ -152,10 +159,11 @@
 
         var observer = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                    observer.unobserve(entry.target);
-                }
+                if (!entry.isIntersecting) return;
+                if (entry.target.classList.contains('is-hidden')) return;
+                entry.target.classList.add('is-visible');
+                entry.target.dataset.andTutRevealed = 'true';
+                observer.unobserve(entry.target);
             });
         }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
 

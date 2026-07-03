@@ -5,8 +5,9 @@ from pathlib import Path
 
 from django.conf import settings
 
-# فایل‌ها را در media/Video/android/ قرار دهید (نام دقیق زیر).
-ANDROID_VIDEO_DIR = 'Video/android'
+# ترجیح: media/Video/android/ — جایگزین: media/Video/ (همان پوشه ویدیوهای ربات)
+ANDROID_VIDEO_SUBDIR = 'Video/android'
+ANDROID_VIDEO_FALLBACK_SUBDIR = 'Video'
 
 ANDROID_VIDEOS = {
     'overview': {
@@ -61,23 +62,36 @@ ANDROID_VIDEOS = {
 }
 
 
-def _video_path(rel: str) -> Path:
+def _media_path(rel: str) -> Path:
     return Path(settings.MEDIA_ROOT) / rel
+
+
+def _resolve_video_rel(filename: str) -> str | None:
+    """مسیر نسبی فایل — اول android/ سپس Video/ مستقیم."""
+    candidates = (
+        f'{ANDROID_VIDEO_SUBDIR}/{filename}',
+        f'{ANDROID_VIDEO_FALLBACK_SUBDIR}/{filename}',
+    )
+    for rel in candidates:
+        if _media_path(rel).is_file():
+            return rel
+    return None
 
 
 def android_video_exists(key: str) -> bool:
     meta = ANDROID_VIDEOS.get(key)
     if not meta:
         return False
-    rel = f'{ANDROID_VIDEO_DIR}/{meta["file"]}'
-    return _video_path(rel).is_file()
+    return _resolve_video_rel(meta['file']) is not None
 
 
 def get_android_video_url(key: str) -> str:
-    if not android_video_exists(key):
+    meta = ANDROID_VIDEOS.get(key)
+    if not meta:
         return ''
-    meta = ANDROID_VIDEOS[key]
-    rel = f'{ANDROID_VIDEO_DIR}/{meta["file"]}'
+    rel = _resolve_video_rel(meta['file'])
+    if not rel:
+        return ''
     return f"{settings.MEDIA_URL.rstrip('/')}/{rel}"
 
 
@@ -113,7 +127,7 @@ def resolve_android_video(video_config: dict | None = None) -> tuple[str, str]:
             return 'embed', custom
         if custom.startswith('media:'):
             rel = custom[6:].lstrip('/')
-            if _video_path(rel).is_file():
+            if _media_path(rel).is_file():
                 return 'file', f"{settings.MEDIA_URL.rstrip('/')}/{rel}"
             return 'none', ''
         return 'file', custom

@@ -1,9 +1,10 @@
 """تست صفحه آموزش اپ اندروید."""
-from django.test import TestCase
+from pathlib import Path
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from shop.android_tutorial_content import android_tutorial_content, android_tutorial_schema_json
-from shop.android_tutorial_video import get_android_video_context
+from shop.android_tutorial_video import get_android_video_context, get_android_video_url
 
 
 class AndroidTutorialPageTests(TestCase):
@@ -12,7 +13,7 @@ class AndroidTutorialPageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'آموزش اپ اندروید')
         self.assertContains(response, 'chapter-install')
-        self.assertContains(response, 'ANDROID-OVERVIEW.mp4')
+        self.assertNotContains(response, 'media/Video/android/')
 
     def test_schema_json_valid(self):
         import json
@@ -34,3 +35,35 @@ class AndroidTutorialPageTests(TestCase):
         ctx = get_android_video_context('overview')
         self.assertFalse(ctx['available'])
         self.assertEqual(ctx['filename'], 'ANDROID-OVERVIEW.mp4')
+
+    @override_settings(MEDIA_ROOT='/tmp/test-media')
+    def test_video_resolves_from_video_root_fallback(self):
+        media_root = Path('/tmp/test-media')
+        install_file = media_root / 'Video' / 'ANDROID-INSTALL.mp4'
+        install_file.parent.mkdir(parents=True, exist_ok=True)
+        install_file.write_bytes(b'fake-mp4')
+        try:
+            url = get_android_video_url('install')
+            self.assertTrue(url.endswith('/media/Video/ANDROID-INSTALL.mp4'))
+            ctx = get_android_video_context('install')
+            self.assertTrue(ctx['available'])
+            self.assertEqual(ctx['mode'], 'file')
+        finally:
+            if install_file.is_file():
+                install_file.unlink()
+
+    @override_settings(MEDIA_ROOT='/tmp/test-media')
+    def test_video_prefers_android_subdir_when_both_exist(self):
+        media_root = Path('/tmp/test-media')
+        subdir_file = media_root / 'Video' / 'android' / 'ANDROID-INSTALL.mp4'
+        root_file = media_root / 'Video' / 'ANDROID-INSTALL.mp4'
+        subdir_file.parent.mkdir(parents=True, exist_ok=True)
+        subdir_file.write_bytes(b'sub')
+        root_file.write_bytes(b'root')
+        try:
+            url = get_android_video_url('install')
+            self.assertIn('/Video/android/ANDROID-INSTALL.mp4', url)
+        finally:
+            subdir_file.unlink(missing_ok=True)
+            root_file.unlink(missing_ok=True)
+

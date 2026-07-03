@@ -233,9 +233,6 @@
                         </div>
                         <h3>{{ video.title }}</h3>
                         <p>{{ video.subtitle }}</p>
-                        {% if not video.available %}
-                        <code class="and-tut-file-hint" dir="ltr">media/Video/android/{{ video.filename }}</code>
-                        {% endif %}
                     </div>
                 </article>
                 {% endfor %}
@@ -468,5 +465,5 @@
 {% if video_mode == 'file' or overview_video.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
 {% endif %}
-<script src="{% static 'js/android-tutorial.js' %}?v=2" defer></script>
+<script src="{% static 'js/android-tutorial.js' %}?v=3" defer></script>
 {% endblock %}

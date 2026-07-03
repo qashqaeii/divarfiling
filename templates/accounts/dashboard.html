@@ -437,7 +437,7 @@
                 {% endif %}
             </div>
 
-            {% include 'includes/app_download_hub.html' with compact=1 %}
+            {% include 'includes/app_download_hub.html' with compact=1 show_install_guide=1 %}
 
             {% if license_dashboard.assigned_seats %}
             <section class="lic-seat-shared" aria-label="لایسنس‌های تخصیص‌یافته به من">
@@ -1421,10 +1421,24 @@ function showTab(tabName, event) {
 document.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
-    const hashTab = window.location.hash.replace('#', '');
-    const tabName = tabParam || hashTab;
+    const hash = window.location.hash.replace('#', '');
+    const downloadAnchors = new Set(['download-apps', 'mk-dl-android-install']);
+    let tabName = tabParam;
+    if (!tabName && downloadAnchors.has(hash)) {
+        tabName = 'licenses';
+    } else if (!tabName && hash) {
+        tabName = hash;
+    }
     if (tabName) {
         showTab(tabName, null);
+    }
+    if (hash) {
+        const anchor = document.getElementById(hash);
+        if (anchor) {
+            window.requestAnimationFrame(function() {
+                anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
     }
 });
 

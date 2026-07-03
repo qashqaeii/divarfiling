@@ -6,7 +6,7 @@
 {% block body_class %}mk-checkout-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -65,68 +65,9 @@
                             <strong id="summary-final-price">—</strong>
                         </div>
 
-                        <div class="ck-order-actions">
-                            <fieldset class="ck-fieldset ck-fieldset--compact">
-                                <legend class="ck-legend ck-legend--compact">
-                                    <span>کد تخفیف</span>
-                                    <em>(اختیاری)</em>
-                                </legend>
-                                <div class="ck-promo">
-                                    <div class="ck-promo-row ck-promo-row--stack">
-                                        <input
-                                            type="text"
-                                            name="discount_code"
-                                            id="id_discount_code"
-                                            class="ck-promo-input"
-                                            placeholder="مثال: SUMMER1404"
-                                            autocomplete="off"
-                                            aria-describedby="discount-message"
-                                        >
-                                        <button type="button" id="apply-discount-btn" class="ck-promo-btn">اعمال</button>
-                                    </div>
-                                    <div id="discount-message" class="ck-promo-msg" role="status" aria-live="polite"></div>
-                                    {% if form.discount_code.errors %}
-                                    <div class="ck-promo-msg is-error" role="alert">
-                                        {{ form.discount_code.errors.0 }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </fieldset>
-
-                            {% if payment_methods %}
-                            <fieldset class="ck-fieldset ck-fieldset--compact">
-                                <legend class="ck-legend ck-legend--compact">
-                                    <span>روش پرداخت</span>
-                                </legend>
-                                <div class="ck-pay-methods ck-pay-methods--compact" role="radiogroup" aria-label="روش پرداخت">
-                                    {% if 'zibal' in payment_methods %}
-                                    <label class="ck-pay-method{% if payment_methods.0 == 'zibal' %} is-selected{% endif %}">
-                                        <input type="radio" name="payment_method" value="zibal"{% if payment_methods.0 == 'zibal' %} checked{% endif %}>
-                                        <span class="ck-pay-method-icon"><i class="fas fa-credit-card"></i></span>
-                                        <span class="ck-pay-method-body">
-                                            <strong>درگاه آنلاین زیبال</strong>
-                                            <small>پرداخت فوری با کارت بانکی</small>
-                                        </span>
-                                    </label>
-                                    {% endif %}
-                                    {% if 'card_transfer' in payment_methods %}
-                                    <label class="ck-pay-method{% if payment_methods.0 == 'card_transfer' %} is-selected{% endif %}">
-                                        <input type="radio" name="payment_method" value="card_transfer"{% if payment_methods.0 == 'card_transfer' %} checked{% endif %}>
-                                        <span class="ck-pay-method-icon"><i class="fas fa-money-bill-transfer"></i></span>
-                                        <span class="ck-pay-method-body">
-                                            <strong>کارت به کارت</strong>
-                                            <small>واریز دستی و تایید پشتیبانی</small>
-                                        </span>
-                                    </label>
-                                    {% endif %}
-                                </div>
-                            </fieldset>
-                            {% endif %}
-                        </div>
-
-                        <button type="button" class="ck-pay-btn" data-pay-btn>
+                        <button type="button" class="ck-pay-btn ck-pay-btn--sidebar" data-pay-btn>
                             <span class="ck-pay-btn-main"><i class="fas fa-lock"></i> پرداخت و دریافت لایسنس</span>
-                            <span class="ck-pay-btn-sub" id="pay-btn-hint">{% if show_payment_choice %}انتخاب روش پرداخت بالا{% elif 'card_transfer' in payment_methods %}ثبت واریز کارت به کارت{% else %}انتقال به درگاه زیبال{% endif %}</span>
+                            <span class="ck-pay-btn-sub" id="pay-btn-hint">{% if show_payment_choice %}انتخاب روش پرداخت{% elif 'card_transfer' in payment_methods %}ثبت واریز کارت به کارت{% else %}انتقال به درگاه زیبال{% endif %}</span>
                         </button>
 
                         <ul class="ck-order-trust">
@@ -218,6 +159,67 @@
                             <li><i class="fas fa-cloud-upload-alt"></i> آپلود در میزکار</li>
                         </ul>
                     </section>
+
+                    <div class="ck-checkout-extras">
+                        <fieldset class="ck-fieldset ck-fieldset--extras">
+                            <legend class="ck-legend ck-legend--extras">
+                                <span class="ck-legend-num">۲</span>
+                                <span>کد تخفیف</span>
+                                <em>(اختیاری)</em>
+                            </legend>
+                            <div class="ck-promo">
+                                <div class="ck-promo-row ck-promo-row--stack">
+                                    <input
+                                        type="text"
+                                        name="discount_code"
+                                        id="id_discount_code"
+                                        class="ck-promo-input"
+                                        placeholder="مثال: SUMMER1404"
+                                        autocomplete="off"
+                                        aria-describedby="discount-message"
+                                    >
+                                    <button type="button" id="apply-discount-btn" class="ck-promo-btn">اعمال</button>
+                                </div>
+                                <div id="discount-message" class="ck-promo-msg" role="status" aria-live="polite"></div>
+                                {% if form.discount_code.errors %}
+                                <div class="ck-promo-msg is-error" role="alert">
+                                    {{ form.discount_code.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </fieldset>
+
+                        {% if payment_methods and show_payment_choice %}
+                        <fieldset class="ck-fieldset ck-fieldset--extras">
+                            <legend class="ck-legend ck-legend--extras">
+                                <span class="ck-legend-num">۳</span>
+                                <span>روش پرداخت</span>
+                            </legend>
+                            <div class="ck-pay-methods ck-pay-methods--mobile" role="radiogroup" aria-label="روش پرداخت">
+                                {% if 'zibal' in payment_methods %}
+                                <label class="ck-pay-method ck-pay-method--chip{% if payment_methods.0 == 'zibal' %} is-selected{% endif %}">
+                                    <input type="radio" name="payment_method" value="zibal"{% if payment_methods.0 == 'zibal' %} checked{% endif %}>
+                                    <span class="ck-pay-method-icon"><i class="fas fa-credit-card"></i></span>
+                                    <span class="ck-pay-method-body">
+                                        <strong>درگاه زیبال</strong>
+                                    </span>
+                                </label>
+                                {% endif %}
+                                {% if 'card_transfer' in payment_methods %}
+                                <label class="ck-pay-method ck-pay-method--chip{% if payment_methods.0 == 'card_transfer' %} is-selected{% endif %}">
+                                    <input type="radio" name="payment_method" value="card_transfer"{% if payment_methods.0 == 'card_transfer' %} checked{% endif %}>
+                                    <span class="ck-pay-method-icon"><i class="fas fa-money-bill-transfer"></i></span>
+                                    <span class="ck-pay-method-body">
+                                        <strong>کارت به کارت</strong>
+                                    </span>
+                                </label>
+                                {% endif %}
+                            </div>
+                        </fieldset>
+                        {% elif payment_methods %}
+                        <input type="hidden" name="payment_method" value="{{ payment_methods.0 }}">
+                        {% endif %}
+                    </div>
 
                     <footer class="ck-form-foot">
                         <a href="{% url 'license_guide' %}" class="ck-foot-link"><i class="fas fa-book-open"></i> راهنمای فعال‌سازی</a>

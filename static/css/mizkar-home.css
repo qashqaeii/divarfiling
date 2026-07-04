@@ -4846,7 +4846,7 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro .mk
     );
 }
 
-html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro .mk-hero-bg {
+html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro:not(.mk-hero--deck) .mk-hero-bg {
     filter: saturate(0.78) contrast(0.9) brightness(1.14);
     transform: none;
     opacity: 0.82;
@@ -6639,40 +6639,56 @@ html.mk-public[data-theme="dark"] .mk-hero-deck {
     color: var(--mk-text-muted);
 }
 
-.mk-home-page .mk-hero--deck .mk-hero-bg {
+.mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg {
+    background-image: url('../hero.webp');
     background-position: 78% 42%;
     background-size: cover;
-    opacity: 0.92;
-    filter: saturate(0.92) contrast(0.96) brightness(1.06);
+    background-repeat: no-repeat;
+    opacity: 1;
+    filter: saturate(1.04) contrast(1.06) brightness(1.02);
 }
 
-.mk-home-page .mk-hero--deck .mk-hero-bg::before {
+html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg {
+    opacity: 1;
+    filter: saturate(1.04) contrast(1.06) brightness(1.02);
+}
+
+.mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg::before {
     background: linear-gradient(
         90deg,
-        rgba(248, 250, 252, 0.94) 0%,
-        rgba(248, 250, 252, 0.72) 34%,
-        rgba(248, 250, 252, 0.18) 58%,
-        rgba(248, 250, 252, 0.04) 100%
+        rgba(248, 250, 252, 0.62) 0%,
+        rgba(248, 250, 252, 0.28) 32%,
+        rgba(248, 250, 252, 0.04) 58%,
+        transparent 100%
     );
 }
 
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--deck .mk-hero-bg::before {
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg::before {
     background: linear-gradient(
         90deg,
-        rgba(7, 11, 20, 0.94) 0%,
-        rgba(7, 11, 20, 0.72) 36%,
-        rgba(7, 11, 20, 0.22) 60%,
-        rgba(7, 11, 20, 0.06) 100%
+        rgba(7, 11, 20, 0.78) 0%,
+        rgba(7, 11, 20, 0.48) 38%,
+        rgba(7, 11, 20, 0.14) 64%,
+        transparent 100%
     );
 }
 
-.mk-home-page .mk-hero--deck .mk-hero-bg::after {
-    height: 38%;
+.mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg::after {
+    height: 28%;
     background: linear-gradient(
         to bottom,
         transparent 0%,
-        rgba(248, 250, 252, 0.35) 55%,
-        #f8fafc 100%
+        rgba(248, 250, 252, 0.12) 55%,
+        rgba(248, 250, 252, 0.52) 100%
+    );
+}
+
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg::after {
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(7, 11, 20, 0.28) 55%,
+        rgba(7, 11, 20, 0.82) 100%
     );
 }
 
@@ -6786,7 +6802,8 @@ html.mk-public[data-theme="dark"] .mk-hero-mag-lens {
         padding-top: 0;
     }
 
-    .mk-home-page .mk-hero--deck .mk-hero-bg {
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg {
+        background-image: url('../hero.webp');
         background-position: center 38%;
     }
 }
@@ -6813,44 +6830,54 @@ html.mk-public[data-theme="dark"] .mk-hero-mag-lens {
         right: 0;
         left: 0;
         bottom: auto;
-        height: clamp(10.5rem, 36vw, 14.5rem);
+        height: clamp(12rem, 42vw, 16.5rem);
         border-radius: 0 0 22px 22px;
-        background-position: center 42%;
+        background-image: url('../hero.webp');
+        background-repeat: no-repeat;
+        background-position: 72% 42%;
         background-size: cover;
         opacity: 1;
-        filter: saturate(1.02) contrast(1.02) brightness(1.03);
+        filter: saturate(1.05) contrast(1.06) brightness(1.03);
     }
 
     .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg::before {
         background: linear-gradient(
             180deg,
-            rgba(248, 250, 252, 0.08) 0%,
-            rgba(248, 250, 252, 0.42) 52%,
-            rgba(248, 250, 252, 0.96) 100%
+            rgba(248, 250, 252, 0) 0%,
+            rgba(248, 250, 252, 0.1) 42%,
+            rgba(248, 250, 252, 0.48) 100%
         );
     }
 
     html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg::before {
         background: linear-gradient(
             180deg,
-            rgba(7, 11, 20, 0.1) 0%,
-            rgba(7, 11, 20, 0.5) 52%,
-            rgba(7, 11, 20, 0.96) 100%
+            rgba(7, 11, 20, 0.06) 0%,
+            rgba(7, 11, 20, 0.28) 45%,
+            rgba(7, 11, 20, 0.78) 100%
         );
     }
 
     .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg::after {
-        height: 55%;
+        height: 36%;
         background: linear-gradient(
             to bottom,
             transparent 0%,
-            rgba(248, 250, 252, 0.55) 100%
+            rgba(248, 250, 252, 0.2) 100%
+        );
+    }
+
+    html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg::after {
+        background: linear-gradient(
+            to bottom,
+            transparent 0%,
+            rgba(7, 11, 20, 0.45) 100%
         );
     }
 
     .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-container {
         min-height: 0;
-        padding: calc(clamp(10.5rem, 36vw, 14.5rem) - 1.75rem) 1rem 0;
+        padding: calc(clamp(12rem, 42vw, 16.5rem) - 1.75rem) 1rem 0;
         gap: 0.85rem;
     }
 
@@ -6997,12 +7024,14 @@ html.mk-public[data-theme="dark"] .mk-hero-mag-lens {
 
 @media (max-width: 640px) {
     .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-bg {
-        height: clamp(9.5rem, 34vw, 12.5rem);
+        height: clamp(10.5rem, 38vw, 14rem);
         border-radius: 0 0 18px 18px;
+        background-image: url('../hero.webp');
+        background-position: 66% 36%;
     }
 
     .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-container {
-        padding-top: calc(clamp(9.5rem, 34vw, 12.5rem) - 1.5rem);
+        padding-top: calc(clamp(10.5rem, 38vw, 14rem) - 1.5rem);
     }
 
     .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-inner {

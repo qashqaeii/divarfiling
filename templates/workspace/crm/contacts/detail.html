@@ -737,8 +737,9 @@
                         <span>لحن پیام</span>
                     </label>
                     <select id="aiCrmTone" class="crm-select crm-ai-compose-select">
-                        <option value="رسمی">رسمی</option>
-                        <option value="صمیمی">صمیمی</option>
+                        {% for value, label in crm_message_tones %}
+                        <option value="{{ value }}"{% if value == 'رسمی' %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>

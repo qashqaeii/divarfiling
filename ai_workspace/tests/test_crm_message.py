@@ -8,6 +8,7 @@ from ai_workspace.context_builders.contact_context import (
     _format_match_line,
     _top_matches_text,
 )
+from ai_workspace.constants import normalize_crm_tone
 from ai_workspace.fallbacks.crm_message import build as build_crm_message
 
 User = get_user_model()
@@ -78,6 +79,41 @@ class CrmMessageFallbackTests(TestCase):
         self.assertIn('2 پیشنهاد', text)
         self.assertIn('واحد ۸۰ متری', text)
         self.assertIn('واحد ۹۰ متری', text)
+
+    def test_emoji_tone_includes_emojis(self):
+        text = build_crm_message({
+            'name': 'سارا',
+            'customer_type': 'خریدار',
+            'areas': 'پونک',
+            'tone': 'ایموجی‌دار',
+            'channel': 'واتساپ',
+            'top_matches': [{
+                'title': 'آپارتمان ۹۰ متری',
+                'neighborhood': 'پونک',
+                'public_url': 'https://divarfiling.ir/p/x/',
+            }],
+        })
+        self.assertIn('👋', text)
+        self.assertIn('✨', text)
+
+    def test_short_tone_is_compact(self):
+        text = build_crm_message({
+            'name': 'رضا',
+            'areas': 'سعادت‌آباد',
+            'customer_type': 'متقاضی اجاره',
+            'tone': 'کوتاه',
+            'channel': 'واتساپ',
+            'top_matches': [{
+                'title': 'واحد ۶۰ متری',
+                'neighborhood': 'سعادت‌آباد',
+            }],
+        })
+        self.assertIn('پیشنهاد:', text)
+        self.assertLess(len(text.splitlines()), 12)
+
+    def test_normalize_crm_tone_fallback(self):
+        self.assertEqual(normalize_crm_tone('نامعتبر'), 'رسمی')
+        self.assertEqual(normalize_crm_tone('ایموجی‌دار'), 'ایموجی‌دار')
 
     def test_followup_without_matches(self):
         text = build_crm_message({

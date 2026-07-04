@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 from workspace.models import Customer
 
-from ai_workspace.constants import FEATURE_CRM_MESSAGE
+from ai_workspace.constants import FEATURE_CRM_MESSAGE, normalize_crm_tone
 from ai_workspace.context_builders import contact_context
 from ai_workspace.services.gateway import GatewayResult, run
 
@@ -17,6 +17,7 @@ def generate_message(
     channel: str = 'واتساپ',
     tone: str = 'رسمی',
 ) -> GatewayResult:
+    tone = normalize_crm_tone(tone)
     context = contact_context.build(
         customer, user, channel=channel, tone=tone, include_matches=True,
     )

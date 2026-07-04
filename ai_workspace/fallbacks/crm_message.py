@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List
 
+from ai_workspace.constants import normalize_crm_tone
+
 
 def build(context: Dict[str, Any]) -> str:
     matches = context.get('top_matches') or []
@@ -28,17 +30,87 @@ def _effective_match_count(
 
 def _greeting(context: Dict[str, Any]) -> str:
     name = (context.get('name') or '').strip() or 'مشتری'
-    tone = context.get('tone') or 'رسمی'
-    if tone == 'صمیمی':
-        return f'سلام {name} عزیز،'
-    return f'سلام، وقت بخیر؛ خدمت {name}،'
+    tone = normalize_crm_tone(context.get('tone'))
+    greetings = {
+        'رسمی': f'سلام، وقت بخیر؛ خدمت {name}،',
+        'صمیمی': f'سلام {name} عزیز،',
+        'ایموجی‌دار': f'سلام {name} عزیز 👋',
+        'کوتاه': f'سلام {name}،',
+        'مشاورانه': f'سلام {name}،',
+        'پیگیری': f'سلام {name}،',
+    }
+    return greetings.get(tone, greetings['رسمی'])
 
 
 def _closing(context: Dict[str, Any]) -> str:
-    tone = context.get('tone') or 'رسمی'
+    tone = normalize_crm_tone(context.get('tone'))
+    closings = {
+        'رسمی': 'با احترام',
+        'صمیمی': 'هر وقت سوالی داشتید در خدمتم.',
+        'ایموجی‌دار': 'هر وقت خواستید در خدمتم 🙏✨',
+        'کوتاه': 'در خدمتم.',
+        'مشاورانه': 'برای بررسی دقیق‌تر هر گزینه در کنار شما هستم.',
+        'پیگیری': 'هر زمان آماده بودید، با خیال راحت اطلاع دهید.',
+    }
+    return closings.get(tone, closings['رسمی'])
+
+
+def _intro_line(context: Dict[str, Any], match_count: int, intro_bits: List[str]) -> str:
+    tone = normalize_crm_tone(context.get('tone'))
+    if not intro_bits:
+        defaults = {
+            'رسمی': 'پیشنهادهای زیر بیشترین تطابق را با درخواست شما دارند:',
+            'صمیمی': 'چند گزینه خوب پیدا کردم که به درخواستتون می‌خوره:',
+            'ایموجی‌دار': 'چند پیشنهاد عالی براتون انتخاب کردم ✨🏠',
+            'کوتاه': f'{match_count or ""} پیشنهاد مناسب:'.strip(),
+            'مشاورانه': 'با توجه به نیاز شما، این گزینه‌ها را پیشنهاد می‌کنم:',
+            'پیگیری': 'گزینه‌های زیر هنوز برای شما باز است:',
+        }
+        return defaults.get(tone, defaults['رسمی'])
+
+    prefix = 'با توجه به ' + ' '.join(intro_bits) + '، '
+    if tone == 'کوتاه':
+        return prefix + (f'{match_count} پیشنهاد:' if match_count else 'پیشنهادها:')
+    if tone == 'ایموجی‌دار':
+        count_bit = f'{match_count} پیشنهاد' if match_count else 'پیشنهادها'
+        return prefix + f'{count_bit} با بالاترین تطابق را خدمتتان معرفی می‌کنم ✨'
     if tone == 'صمیمی':
-        return 'هر وقت سوالی داشتید در خدمتم.'
-    return 'با احترام'
+        count_bit = f'{match_count} پیشنهاد' if match_count else 'پیشنهادها'
+        return prefix + f'{count_bit} مناسب رو خدمتتون معرفی می‌کنم:'
+    if tone == 'مشاورانه':
+        count_bit = f'{match_count} گزینه' if match_count else 'گزینه‌های'
+        return prefix + f'این {count_bit} را با اولویت تطابق سیستم پیشنهاد می‌کنم:'
+    if tone == 'پیگیری':
+        count_bit = f'{match_count} پیشنهاد' if match_count else 'پیشنهادهای'
+        return prefix + f'{count_bit} زیر هنوز برای بررسی شما آماده است:'
+    if match_count:
+        return prefix + f'{match_count} پیشنهاد با بالاترین تطابق سیستم را خدمتتان معرفی می‌کنم:'
+    return prefix + 'پیشنهادهای زیر را با بالاترین تطابق سیستم خدمتتان معرفی می‌کنم:'
+
+
+def _cta_line(context: Dict[str, Any]) -> str:
+    channel = context.get('channel') or 'واتساپ'
+    tone = normalize_crm_tone(context.get('tone'))
+    if channel == 'تماس':
+        if tone == 'کوتاه':
+            return 'برای بازدید تماس بگیرید.'
+        if tone == 'ایموجی‌دار':
+            return 'برای هماهنگی بازدید خوشحال می‌شم تماس بگیرید 📞'
+        return 'لطفاً برای هماهنگی بازدید یا دریافت جزئیات بیشتر با من تماس بگیرید.'
+    if channel == 'پیامک':
+        return 'برای هماهنگی بازدید لطفاً تماس بگیرید.'
+    ctas = {
+        'رسمی': (
+            'برای هماهنگی بازدید یا پرسش درباره هر ملک، '
+            'می‌توانید از لینک‌های بالا جزئیات را ببینید و با من در ارتباط باشید.'
+        ),
+        'صمیمی': 'برای بازدید یا سوال درباره هر کدوم، از لینک‌ها جزئیات رو ببینید و پیام بدید.',
+        'ایموجی‌دار': 'برای بازدید یا سوال، لینک هر ملک رو ببینید و بهم پیام بدید 🏡✨',
+        'کوتاه': 'جزئیات در لینک‌هاست؛ برای بازدید خبر بدید.',
+        'مشاورانه': 'پیشنهاد می‌کنم لینک هر ملک را ببینید تا بتوانیم بهترین گزینه را انتخاب کنیم.',
+        'پیگیری': 'هر وقت فرصت کردید لینک‌ها را ببینید؛ برای هماهنگی بازدید در خدمتم.',
+    }
+    return ctas.get(tone, ctas['رسمی'])
 
 
 def _format_match_body(index: int, match: Dict[str, Any]) -> str:
@@ -89,18 +161,9 @@ def _matches_message(
     if budget:
         intro_bits.append(f'با بودجه {budget}')
     if intro_bits:
-        if match_count:
-            lines.append(
-                'با توجه به ' + ' '.join(intro_bits) + '، '
-                f'{match_count} پیشنهاد با بالاترین تطابق سیستم را خدمتتان معرفی می‌کنم:'
-            )
-        else:
-            lines.append(
-                'با توجه به ' + ' '.join(intro_bits) + '، '
-                'پیشنهادهای زیر را با بالاترین تطابق سیستم خدمتتان معرفی می‌کنم:'
-            )
+        lines.append(_intro_line(context, match_count, intro_bits))
     else:
-        lines.append('پیشنهادهای زیر بیشترین تطابق را با درخواست شما دارند:')
+        lines.append(_intro_line(context, match_count, []))
     lines.append('')
 
     if matches:
@@ -111,16 +174,7 @@ def _matches_message(
         lines.append(top_matches_text.strip())
         lines.append('')
 
-    channel = context.get('channel') or 'واتساپ'
-    if channel == 'تماس':
-        lines.append('لطفاً برای هماهنگی بازدید یا دریافت جزئیات بیشتر با من تماس بگیرید.')
-    elif channel == 'پیامک':
-        lines.append('برای هماهنگی بازدید لطفاً تماس بگیرید.')
-    else:
-        lines.append(
-            'برای هماهنگی بازدید یا پرسش درباره هر ملک، '
-            'می‌توانید از لینک‌های بالا جزئیات را ببینید و با من در ارتباط باشید.'
-        )
+    lines.append(_cta_line(context))
     lines.append('')
     lines.append(_closing(context))
     return '\n'.join(lines).strip()
@@ -131,12 +185,26 @@ def _followup_message(context: Dict[str, Any]) -> str:
     areas = (context.get('areas') or '').strip()
     customer_type = (context.get('customer_type') or '').strip()
     status = (context.get('status') or '').strip()
+    tone = normalize_crm_tone(context.get('tone'))
 
     if customer_type and areas:
-        lines.append(
+        body = (
             f'درخواست {customer_type} شما در محدوده {areas} در وضعیت «{status or "پیگیری"}» '
             'همچنان در اولویت پیگیری من است.'
         )
+        if tone == 'کوتاه':
+            body = f'درخواست {customer_type} در {areas} — وضعیت: {status or "پیگیری"}.'
+        elif tone == 'ایموجی‌دار':
+            body = (
+                f'درخواست {customer_type} شما در {areas} هنوز پیگیری می‌شه '
+                f'(وضعیت: {status or "پیگیری"}) ✨'
+            )
+        elif tone == 'صمیمی':
+            body = (
+                f'درخواست {customer_type}تون برای {areas} رو با دقت پیگیری می‌کنم '
+                f'(وضعیت: {status or "پیگیری"}).'
+            )
+        lines.append(body)
     elif areas:
         lines.append(f'درخواست شما برای منطقه {areas} را با دقت پیگیری می‌کنم.')
     else:

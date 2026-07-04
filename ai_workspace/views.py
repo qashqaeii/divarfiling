@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views import View
 
-from ai_workspace.constants import is_ai_enabled
+from ai_workspace.constants import normalize_crm_tone
 from ai_workspace.services.crm_message import generate_message, result_to_dict as crm_result_to_dict
 from ai_workspace.services.gateway import FeatureDisabledError
 from ai_workspace.services.listing_summary import generate_summary, result_to_dict as listing_result_to_dict
@@ -56,7 +56,7 @@ class CRMMessageView(AIEnabledMixin, View):
         except json.JSONDecodeError:
             body = {}
         channel = body.get('channel') or 'واتساپ'
-        tone = body.get('tone') or 'رسمی'
+        tone = normalize_crm_tone(body.get('tone'))
         try:
             result = generate_message(
                 request.user, customer, channel=channel, tone=tone,

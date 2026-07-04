@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from ai_workspace.constants import crm_tone_meta, normalize_crm_tone
 from workspace.models import Customer, CustomerActivity, Listing
 from workspace.services.crm_matching import get_customer_matches
 from workspace.services.crm_scope import properties_qs
@@ -131,6 +132,9 @@ def build(
             top_matches = []
             top_matches_text = ''
 
+    tone_key = normalize_crm_tone(tone)
+    tone_info = crm_tone_meta(tone_key)
+
     return {
         'name': customer.name or '',
         'customer_type': customer.customer_type or '',
@@ -139,7 +143,13 @@ def build(
         'property_type': customer.property_type or '',
         'budget_range': _budget_range(customer),
         'channel': channel,
-        'tone': tone,
+        'tone': tone_key,
+        'tone_guide': tone_info['guide'],
+        'emoji_rule': (
+            'می‌توانید از ایموجی‌های مناسب واتساپ استفاده کنید.'
+            if tone_info['emoji']
+            else 'بدون ایموجی بنویسید.'
+        ),
         'recent_activities': '\n'.join(activity_lines) if activity_lines else '—',
         'top_matches': top_matches,
         'top_matches_text': top_matches_text,

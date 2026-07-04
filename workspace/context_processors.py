@@ -1,5 +1,5 @@
 """Context processor برای workspace."""
-from ai_workspace.constants import is_ai_enabled
+from ai_workspace.constants import CRM_MESSAGE_TONE_CHOICES, is_ai_enabled
 from workspace.forms import DatasetUploadForm, ReminderForm, WorkspaceSettingsForm
 from workspace.mixins import get_or_create_settings
 from workspace.services.access import get_bot_access_state, get_bot_product_buy_url
@@ -19,6 +19,7 @@ def workspace_context(request):
         'bot_buy_url': get_bot_product_buy_url(),
         'crm_nav_counts': _crm_nav_counts(user),
         'ai_enabled': is_ai_enabled(),
+        'crm_message_tones': CRM_MESSAGE_TONE_CHOICES,
         **access,
     })
     if request.path.startswith('/workspace'):

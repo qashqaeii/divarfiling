@@ -27,15 +27,24 @@
         else if (btn.dataset.aiOrigText) btn.innerHTML = btn.dataset.aiOrigText;
     }
 
-    function renderBadge(isFallback) {
-        if (!isFallback) return '';
-        return '<span class="ws-ai-badge ws-ai-badge--fallback">حالت پایه</span>';
+    function renderBadge(data) {
+        const provider = data && data.provider;
+        if (provider === 'rule_based') {
+            return '<span class="ws-ai-badge ws-ai-badge--fallback">حالت پایه</span>';
+        }
+        if (provider === 'openrouter') {
+            return '<span class="ws-ai-badge ws-ai-badge--backup">هوش مصنوعی (پشتیبان)</span>';
+        }
+        if (data && data.from_cache) {
+            return '<span class="ws-ai-badge ws-ai-badge--cache">از کش</span>';
+        }
+        return '';
     }
 
-    function renderListingSummary(data, isFallback) {
+    function renderListingSummary(data) {
         const d = data.data || {};
         const highlights = (d.highlights || []).map(h => `<li>${escapeHtml(h)}</li>`).join('');
-        let html = renderBadge(isFallback);
+        let html = renderBadge(data);
         if (d.summary) html += `<p class="ws-ai-summary">${escapeHtml(d.summary)}</p>`;
         if (highlights) html += `<ul class="ws-ai-highlights">${highlights}</ul>`;
         if (d.negotiation_tip) html += `<p class="ws-ai-tip"><strong>مذاکره:</strong> ${escapeHtml(d.negotiation_tip)}</p>`;
@@ -43,9 +52,9 @@
         return html || `<p>${escapeHtml(d.summary || data.text || '')}</p>`;
     }
 
-    function renderUploadBrief(data, isFallback) {
+    function renderUploadBrief(data) {
         const d = data.data || {};
-        let html = renderBadge(isFallback);
+        let html = renderBadge(data);
         if (d.executive_summary) html += `<p class="ws-ai-summary">${escapeHtml(d.executive_summary)}</p>`;
         const lists = [
             ['فرصت‌ها', d.opportunities],
@@ -97,7 +106,7 @@
         if (result) result.hidden = false;
         try {
             const data = await postJson(btn.dataset.aiUrl);
-            showResult(result, renderListingSummary(data, data.is_fallback));
+            showResult(result, renderListingSummary(data));
         } catch (e) {
             showResult(result, `<p class="ws-ai-error">${escapeHtml(e.message)}</p>`);
         } finally {
@@ -114,7 +123,7 @@
         }
         try {
             const data = await postJson(btn.dataset.aiUrl);
-            showResult(result, renderUploadBrief(data, data.is_fallback));
+            showResult(result, renderUploadBrief(data));
         } catch (e) {
             showResult(result, `<p class="ws-ai-error">${escapeHtml(e.message)}</p>`);
         } finally {
@@ -139,7 +148,7 @@
             if (copyBtn) copyBtn.disabled = !text;
             const meta = compose.querySelector('.ws-ai-result');
             if (meta) {
-                showResult(meta, renderBadge(data.is_fallback));
+                showResult(meta, renderBadge(data));
             }
         } catch (e) {
             if (preview) preview.value = '';

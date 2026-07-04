@@ -92,10 +92,17 @@ class GeminiProvider:
                 retryable=True,
                 code=str(resp.status_code),
             )
-        if resp.status_code in (400, 401, 403):
+        if resp.status_code in (400, 401):
             raise ProviderError(
                 f'Gemini HTTP {resp.status_code}',
                 retryable=False,
+                code=str(resp.status_code),
+            )
+        if resp.status_code == 403:
+            # ممکن است مخصوص یک مدل باشد — Gateway به Lite/OpenRouter می‌رود.
+            raise ProviderError(
+                f'Gemini HTTP {resp.status_code}',
+                retryable=True,
                 code=str(resp.status_code),
             )
         if not resp.ok:

@@ -126,6 +126,34 @@ class GatewayTests(TestCase):
         self.assertEqual(result.model, 'gemini-2.5-flash-lite')
         chain[2].complete.assert_not_called()
 
+    def test_primary_403_still_tries_openrouter(self):
+        primary = MagicMock()
+        lite = MagicMock()
+        openrouter = MagicMock()
+        primary.complete.side_effect = ProviderError('403', retryable=False, code='403')
+        lite.complete.side_effect = ProviderError('403', retryable=False, code='403')
+        openrouter.complete.return_value = ProviderResult(
+            text='{"summary":"or","highlights":[],"negotiation_tip":"","advertiser_note":""}',
+            provider='openrouter',
+            model='openai/gpt-oss-20b:free',
+            input_tokens=10,
+            output_tokens=5,
+            latency_ms=200,
+            is_fallback=True,
+        )
+        chain = [primary, lite, openrouter]
+        with patch('ai_workspace.services.gateway.HTTP_PROVIDER_CHAIN', chain):
+            result = run(
+                'listing_summary',
+                self.user,
+                context={**_LISTING_CTX, 'content_version': '6'},
+                entity_type='listing',
+                entity_id='6',
+            )
+        self.assertEqual(result.provider, 'openrouter')
+        lite.complete.assert_called_once()
+        openrouter.complete.assert_called_once()
+
     def test_validation_skip_never_calls_providers(self):
         chain = _make_chain_mock(primary_ok=True)
         with patch('ai_workspace.services.gateway.HTTP_PROVIDER_CHAIN', chain):

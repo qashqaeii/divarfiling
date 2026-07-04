@@ -204,8 +204,7 @@ def run(
                 break
             except ProviderError as exc:
                 last_code = exc.code or 'provider_error'
-                if not exc.retryable:
-                    break
+                # Gateway به provider بعدی می‌رود — retry فقط داخل هر Provider است.
                 continue
 
     if provider_result is None:

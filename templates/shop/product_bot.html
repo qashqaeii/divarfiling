@@ -7,7 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=27">
+<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=28">
 {% endblock %}
 
 {% block content %}
@@ -25,17 +25,21 @@
                     <h1 class="pb-title">{{ product.title }}</h1>
                     <p class="pb-lead">{{ product.short_description|default:bot_page.hero_lead }}</p>
                     <div class="pb-hero-pills">
+                        <span class="pb-hero-pill pb-hero-pill--license">
+                            <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fas fa-key"></i></span>
+                            {{ bot_page.license_badge }}
+                        </span>
                         <span class="pb-hero-pill">
                             <span class="pb-icon pb-icon--sm pb-icon--sky"><i class="fab fa-windows"></i></span>
-                            ویندوز
+                            ربات ویندوز
                         </span>
                         <span class="pb-hero-pill">
-                            <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fas fa-folder"></i></span>
-                            فایلینگ خودکار
+                            <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fab fa-android"></i></span>
+                            اپ اندروید
                         </span>
                         <span class="pb-hero-pill">
-                            <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fas fa-layer-group"></i></span>
-                            اتصال به میزکار
+                            <span class="pb-icon pb-icon--sm pb-icon--amber"><i class="fas fa-layer-group"></i></span>
+                            میزکار یکپارچه
                         </span>
                     </div>
                     {% if average_rating > 0 %}
@@ -53,31 +57,47 @@
                     {% endif %}
                 </div>
 
-                <button type="button" class="pb-hero-preview pb-app-shot" data-pb-lightbox-open aria-label="بزرگنمایی تصویر برنامه">
-                    <div class="pb-app-shot-chrome" aria-hidden="true">
-                        <span></span><span></span><span></span>
-                        <span class="pb-app-shot-title">دیوار — استخراج حرفه‌ای</span>
-                    </div>
-                    <img
-                        src="{% static 'images/help-bot-extract-tab.png' %}"
-                        alt="نمای برنامه استخراج دیوار — تب استخراج با فیلتر شهر و محله، پیشرفت زنده و گزارش عملیات"
-                        class="pb-app-shot-img"
-                        loading="eager"
-                        decoding="async"
-                        width="1680"
-                        height="1000"
-                    >
-                    <span class="pb-app-shot-zoom" aria-hidden="true">
-                        <i class="fas fa-search-plus"></i>
-                        <span>برای بزرگنمایی کلیک کنید</span>
-                    </span>
-                </button>
+                <div class="pb-hero-visual" aria-hidden="false">
+                    <button type="button" class="pb-hero-preview pb-app-shot pb-hero-preview--desktop" data-pb-lightbox-open aria-label="بزرگنمایی ربات ویندوز">
+                        <div class="pb-app-shot-chrome" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                            <span class="pb-app-shot-title">ربات ویندوز — استخراج حرفه‌ای</span>
+                        </div>
+                        <img
+                            src="{% static 'images/help-bot-extract-tab.png' %}"
+                            alt="نمای برنامه استخراج دیوار — تب استخراج با فیلتر شهر و محله"
+                            class="pb-app-shot-img"
+                            loading="eager"
+                            decoding="async"
+                            width="1680"
+                            height="1000"
+                        >
+                        <span class="pb-hero-device-badge pb-hero-device-badge--win"><i class="fab fa-windows"></i> ویندوز</span>
+                        <span class="pb-app-shot-zoom" aria-hidden="true">
+                            <i class="fas fa-search-plus"></i>
+                        </span>
+                    </button>
+                    <button type="button" class="pb-hero-phone pb-app-shot" data-pb-lightbox-open data-pb-lightbox-src="{% static 'android/android-02-home.png' %}" data-pb-lightbox-caption="اپ اندروید — داشبورد فایلینگ" aria-label="بزرگنمایی اپ اندروید">
+                        <div class="pb-hero-phone-frame">
+                            <img
+                                src="{% static 'android/android-02-home.png' %}"
+                                alt="اپ فایلینگ دیوار — داشبورد و استخراج موبایل"
+                                class="pb-hero-phone-img"
+                                loading="eager"
+                                decoding="async"
+                                width="390"
+                                height="844"
+                            >
+                        </div>
+                        <span class="pb-hero-device-badge pb-hero-device-badge--android"><i class="fab fa-android"></i> اندروید</span>
+                    </button>
+                </div>
             </div>
 
             <section class="pb-pricing-deck" aria-label="پلن‌های لایسنس">
                 <div class="pb-pricing-deck-head">
                     <h2>انتخاب پلن لایسنس</h2>
-                    <p>پس از خرید، ربات را نصب کنید و لایسنس را در همان روز فعال نمایید.</p>
+                    <p>{{ bot_page.pricing_note }}</p>
                 </div>
                 <div class="pb-plan-deck">
                     {% for plan in plans %}
@@ -97,7 +117,7 @@
                             <span class="pb-plan-card-unit">تومان</span>
                         </div>
                         <ul class="pb-plan-card-feats">
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ plan.max_activations }} دستگاه فعال</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> ۱ ویندوز + ۱ اندروید</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> فعال‌سازی فوری پس از خرید</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> پشتیبانی نصب و راه‌اندازی</li>
                         </ul>
@@ -109,9 +129,14 @@
                     <p class="pb-pricing-empty">پلن فعالی ثبت نشده. با پشتیبانی تماس بگیرید.</p>
                     {% endfor %}
                 </div>
-                <a href="{% if install_video.available %}#install-video{% else %}{% url 'license_guide' %}{% endif %}" class="pb-pricing-deck-guide">
-                    {% if install_video.available %}مشاهده ویدیوی نصب{% else %}راهنمای نصب و فعال‌سازی{% endif %} <i class="fas fa-arrow-left"></i>
-                </a>
+                <div class="pb-pricing-deck-foot">
+                    <a href="{% url 'android_tutorial' %}" class="pb-pricing-deck-guide pb-pricing-deck-guide--secondary">
+                        <i class="fab fa-android"></i> آموزش اپ اندروید
+                    </a>
+                    <a href="{% if install_video.available %}#install-video{% else %}{% url 'license_guide' %}{% endif %}" class="pb-pricing-deck-guide">
+                        {% if install_video.available %}ویدیوی نصب ویندوز{% else %}راهنمای نصب ویندوز{% endif %} <i class="fas fa-arrow-left"></i>
+                    </a>
+                </div>
             </section>
         </div>
     </section>
@@ -123,7 +148,7 @@
             <header class="pb-head">
                 <span class="pb-head-kicker">آموزش نصب</span>
                 <h2 id="pb-install-video-title">قبل از خرید، نصب را ببینید</h2>
-                <p>ویدیوی گام‌به‌گام — از دانلود فایل تا فعال‌سازی لایسنس روی ویندوز</p>
+                <p>ویدیوی گام‌به‌گام نصب ویندوز — برای اندروید <a href="{% url 'android_tutorial' %}" class="pb-inline-link">آموزش اپ</a> را ببینید</p>
             </header>
             <div class="pb-install-video-shell pb-install-video-shell--split">
                 <div>
@@ -146,14 +171,88 @@
     </section>
     {% endif %}
 
+    {# ─── Platforms: Windows + Android ─── #}
+    <section class="pb-band pb-platform-band" id="platforms" aria-labelledby="pb-platform-title">
+        <div class="container">
+            <header class="pb-head">
+                <span class="pb-head-kicker">{{ bot_page.platforms.eyebrow }}</span>
+                <h2 id="pb-platform-title">{{ bot_page.platforms.title }}</h2>
+                <p>{{ bot_page.platforms.subtitle }}</p>
+            </header>
+            <div class="pb-platform-grid">
+                {% for plat in bot_page.platforms.items %}
+                <article class="pb-platform-card" data-accent="{{ plat.accent }}">
+                    <div class="pb-platform-card-top">
+                        <span class="pb-platform-icon pb-icon pb-icon--lg pb-icon--{{ plat.accent }}">
+                            <i class="{{ plat.icon }}"></i>
+                        </span>
+                        <div>
+                            <h3>{{ plat.title }}</h3>
+                            <p class="pb-platform-tagline">{{ plat.tagline }}</p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        class="pb-platform-shot pb-app-shot"
+                        data-pb-lightbox-open
+                        data-pb-lightbox-src="{% static plat.image %}"
+                        data-pb-lightbox-caption="{{ plat.lightbox_caption }}"
+                        aria-label="بزرگنمایی {{ plat.title }}"
+                    >
+                        <img
+                            src="{% static plat.image %}"
+                            alt="{{ plat.image_alt }}"
+                            class="pb-platform-shot-img{% if plat.id == 'android' %} pb-platform-shot-img--phone{% endif %}"
+                            loading="lazy"
+                            decoding="async"
+                        >
+                        <span class="pb-app-shot-zoom" aria-hidden="true"><i class="fas fa-search-plus"></i></span>
+                    </button>
+                    <ul class="pb-platform-feats">
+                        {% for feat in plat.highlights %}
+                        <li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p class="pb-platform-best">
+                        <i class="fas fa-star" aria-hidden="true"></i>
+                        <span>مناسب برای: {{ plat.best_for }}</span>
+                    </p>
+                    {% if plat.id == 'android' %}
+                    <div class="pb-platform-actions">
+                        {% if app_downloads.android.available %}
+                        <a href="{% url 'android_app_download' %}" class="pb-btn pb-btn--line pb-btn--android">
+                            <i class="fab fa-android"></i> دانلود APK
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'android_tutorial' %}" class="pb-btn pb-btn--ghost">آموزش اندروید</a>
+                    </div>
+                    {% else %}
+                    <div class="pb-platform-actions">
+                        <a href="{% url 'license_guide' %}" class="pb-btn pb-btn--ghost">راهنمای نصب ویندوز</a>
+                    </div>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+            <div class="pb-platform-bridge" aria-hidden="true">
+                <span class="pb-platform-bridge-line"></span>
+                <span class="pb-platform-bridge-chip">
+                    <i class="fas fa-link"></i>
+                    یک لایسنس · یک میزکار · داده همگام
+                </span>
+                <span class="pb-platform-bridge-line"></span>
+            </div>
+        </div>
+    </section>
+
     {# ─── Value props ─── #}
     <section class="pb-band pb-value-band">
         <div class="container">
             <div class="pb-value-layout">
                 <header class="pb-value-intro">
                     <span class="pb-head-kicker">ارزش پیشنهادی</span>
-                    <h2>ربات برای شما چه می‌کند؟</h2>
-                    <p class="pb-value-lead">جایگزین کار دستی — فایلینگ منظم روی سیستم خودتان</p>
+                    <h2>ویندوز + اندروید چه می‌کنند؟</h2>
+                    <p class="pb-value-lead">جایگزین کار دستی — استخراج خودکار، CRM موبایل و فایلینگ حرفه‌ای</p>
                     <div class="pb-value-rail" aria-hidden="true">
                         {% for item in bot_page.value_props %}
                         {% cycle 'violet' 'sky' 'emerald' 'amber' as value_accent silent %}
@@ -163,7 +262,7 @@
                         {% if not forloop.last %}<span class="pb-value-rail-line"></span>{% endif %}
                         {% endfor %}
                     </div>
-                    <p class="pb-value-tagline">از استخراج خودکار تا میزکار — یک مسیر یکپارچه روی سیستم شما</p>
+                    <p class="pb-value-tagline">از خرید لایسنس تا تحلیل در میزکار — یک مسیر یکپارچه</p>
                 </header>
                 {% resetcycle value_accent %}
                 <div class="pb-value-bento">
@@ -190,22 +289,22 @@
                 <header class="pb-flow-head">
                     <div class="pb-flow-head-copy">
                         <span class="pb-head-kicker">مسیر کار</span>
-                        <h2>از استخراج تا تحلیل</h2>
-                        <p>ربات روی ویندوز → پوشه <code>output</code> → میزکار</p>
+                        <h2>از خرید تا تحلیل</h2>
+                        <p>ویندوز + اندروید → میزکار</p>
                     </div>
                     <div class="pb-flow-pipeline" aria-hidden="true">
                         <span class="pb-flow-hub pb-flow-hub--bot">
-                            <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fab fa-windows"></i></span>
-                            <span>ربات ویندوز</span>
+                            <span class="pb-icon pb-icon--sm pb-icon--sky"><i class="fab fa-windows"></i></span>
+                            <span>ویندوز</span>
                         </span>
                         <span class="pb-flow-hub-line"></span>
-                        <span class="pb-flow-hub pb-flow-hub--output">
-                            <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fas fa-folder"></i></span>
-                            <span>output</span>
+                        <span class="pb-flow-hub pb-flow-hub--android">
+                            <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fab fa-android"></i></span>
+                            <span>اندروید</span>
                         </span>
                         <span class="pb-flow-hub-line"></span>
                         <span class="pb-flow-hub pb-flow-hub--desk">
-                            <span class="pb-icon pb-icon--sm pb-icon--sky"><i class="fas fa-layer-group"></i></span>
+                            <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fas fa-layer-group"></i></span>
                             <span>میزکار</span>
                         </span>
                     </div>
@@ -215,12 +314,12 @@
                     <div class="pb-flow-phase">
                         <div class="pb-flow-phase-head">
                             <span class="pb-flow-phase-badge pb-flow-phase-badge--bot">فاز ۱</span>
-                            <h3 class="pb-flow-phase-title">ربات روی ویندوز</h3>
-                            <p class="pb-flow-phase-desc">خرید، تنظیم، استخراج و فایلینگ خودکار</p>
+                            <h3 class="pb-flow-phase-title">خرید و فعال‌سازی</h3>
+                            <p class="pb-flow-phase-desc">لایسنس، اپ اندروید و ربات ویندوز — در همان روز</p>
                         </div>
-                        <div class="pb-flow-grid pb-flow-grid--quad">
+                        <div class="pb-flow-grid pb-flow-grid--trio">
                             {% for step in bot_page.workflow_steps %}
-                            {% if forloop.counter <= 4 %}
+                            {% if forloop.counter <= 3 %}
                             {% cycle 'violet' 'sky' 'emerald' 'amber' as flow_accent silent %}
                             <article class="pb-flow-step" data-accent="{{ flow_accent }}">
                                 <header class="pb-flow-step-head">
@@ -239,7 +338,7 @@
                         <span class="pb-flow-bridge-rail"></span>
                         <span class="pb-flow-bridge-chip">
                             <i class="fas fa-arrow-down" aria-hidden="true"></i>
-                            <span>انتقال پوشه output</span>
+                            <span>استخراج و همگام‌سازی</span>
                         </span>
                         <span class="pb-flow-bridge-rail"></span>
                     </div>
@@ -247,13 +346,13 @@
                     <div class="pb-flow-phase pb-flow-phase--desk">
                         <div class="pb-flow-phase-head">
                             <span class="pb-flow-phase-badge pb-flow-phase-badge--desk">فاز ۲</span>
-                            <h3 class="pb-flow-phase-title">میزکار فایلینگ دیوار</h3>
-                            <p class="pb-flow-phase-desc">آپلود داده و فعال‌سازی تحلیل و CRM</p>
+                            <h3 class="pb-flow-phase-title">استخراج و میزکار</h3>
+                            <p class="pb-flow-phase-desc">استخراج، آپلود output و تحلیل + CRM</p>
                         </div>
-                        <div class="pb-flow-grid pb-flow-grid--duo">
+                        <div class="pb-flow-grid pb-flow-grid--trio">
                             {% resetcycle flow_accent %}
                             {% for step in bot_page.workflow_steps %}
-                            {% if forloop.counter > 4 %}
+                            {% if forloop.counter > 3 %}
                             {% cycle 'rose' 'violet' as flow_accent silent %}
                             <article class="pb-flow-step pb-flow-step--wide" data-accent="{{ flow_accent }}">
                                 <header class="pb-flow-step-head">
@@ -278,8 +377,8 @@
             <div class="pb-filing-copy">
                 <header class="pb-head pb-head--left">
                     <span class="pb-head-kicker">فایلینگ</span>
-                    <h2>ساختار پوشه output</h2>
-                    <p>ربات پوشه <code>output</code> را با ساختار درختی می‌سازد — هر فایل مربوط به شهر/محله و نوع معامله است.</p>
+                    <h2>ساختار پوشه output <span class="pb-head-note">(ربات ویندوز)</span></h2>
+                    <p>ربات ویندوز پوشه <code>output</code> را با ساختار درختی می‌سازد. اپ اندروید فایلینگ را در میزکار همگام می‌کند.</p>
                 </header>
                 <ul class="pb-checklist">
                     {% for note in bot_page.folder_notes %}
@@ -438,9 +537,13 @@
                     <div class="pb-faq-head-copy">
                         <span class="pb-head-kicker">پشتیبانی</span>
                         <h2>سوالات متداول</h2>
-                        <p>پاسخ سریع درباره ربات، فایلینگ روی ویندوز و اتصال به میزکار</p>
+                        <p>پاسخ سریع درباره لایسنس، ویندوز، اندروید و میزکار</p>
                     </div>
                     <div class="pb-faq-head-actions">
+                        <a href="{% url 'android_tutorial' %}" class="pb-faq-action">
+                            <i class="fab fa-android" aria-hidden="true"></i>
+                            <span>آموزش اندروید</span>
+                        </a>
                         <a href="{% url 'license_guide' %}" class="pb-faq-action">
                             <i class="fas fa-book-open" aria-hidden="true"></i>
                             <span>راهنمای نصب</span>
@@ -474,12 +577,12 @@
         <div class="container">
             <article class="pb-cta-card">
                 <div>
-                    <h2>آماده ساخت فایلینگ حرفه‌ای هستید؟</h2>
-                    <p>ربات را بخرید، روی ویندوز نصب کنید و اولین خروجی را در میزکار تحلیل کنید.</p>
+                    <h2>آماده شروع با ویندوز و اندروید هستید؟</h2>
+                    <p>یک لایسنس بخرید — اپ را نصب کنید، ربات را فعال کنید و اولین فایلینگ را در میزکار ببینید.</p>
                 </div>
                 {% if plans.first %}
                 <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pb-btn pb-btn--primary">
-                    <i class="fas fa-shopping-cart"></i> خرید ربات استخراج
+                    <i class="fas fa-shopping-cart"></i> خرید لایسنس
                 </a>
                 {% endif %}
             </article>

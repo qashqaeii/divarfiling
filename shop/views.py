@@ -147,8 +147,11 @@ class ProductDetailView(DetailView):
         
         # SEO Meta Tags
         context['meta_title'] = f'{product.title} - فروشگاه ربات دیوار'
-        context['meta_description'] = product.short_description or product.description[:200] if product.description else 'محصول ربات دیوار'
-        context['meta_keywords'] = f'{product.title}, ربات دیوار, تحلیل املاک'
+        context['meta_description'] = (
+            product.short_description
+            or 'ربات استخراج دیوار و اپ اندروید — یک لایسنس، ویندوز + موبایل، فایلینگ و CRM'
+        )
+        context['meta_keywords'] = f'{product.title}, ربات دیوار, اپ اندروید, فایلینگ دیوار'
         
         # تصویر برای Open Graph
         if product.media.exists():

@@ -32,6 +32,8 @@ def crm_initials(name):
     if not name:
         return '؟'
     parts = str(name).strip().split()
+    if not parts:
+        return '؟'
     if len(parts) >= 2:
         return f'{parts[0][0]}{parts[1][0]}'
     return parts[0][0]
@@ -42,7 +44,10 @@ def crm_avatar_hue(name):
     """شاخص رنگ آواتار (۰–۵) از روی نام."""
     if not name:
         return 0
-    return sum(ord(c) for c in str(name)) % 6
+    stripped = str(name).strip()
+    if not stripped:
+        return 0
+    return sum(ord(c) for c in stripped) % 6
 
 
 @register.filter

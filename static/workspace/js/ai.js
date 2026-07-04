@@ -97,18 +97,29 @@
         return data;
     }
 
+    function toggleAiEmpty(card, show) {
+        if (!card) return;
+        const empty = card.querySelector('[data-ai-empty]');
+        if (empty) empty.hidden = !show;
+    }
+
     function showResult(container, html) {
         if (!container) return;
         container.innerHTML = html;
         container.hidden = false;
+        const card = container.closest('[data-ai-card]');
+        if (card) toggleAiEmpty(card, false);
     }
 
     async function handleListingSummary(btn) {
         const card = btn.closest('[data-ai-card]') || document.getElementById('wsAiListingSummary');
         const result = card ? card.querySelector('.ws-ai-result') : null;
         setLoading(btn, true);
-        if (result) result.innerHTML = '<p class="ws-ai-loading-text">در حال تحلیل…</p>';
-        if (result) result.hidden = false;
+        toggleAiEmpty(card, false);
+        if (result) {
+            result.innerHTML = '<div class="ws-ai-card__loading"><span class="ws-ai-card__loading-dot"></span><span class="ws-ai-card__loading-dot"></span><span class="ws-ai-card__loading-dot"></span><p>در حال تحلیل هوشمند فایل…</p></div>';
+            result.hidden = false;
+        }
         try {
             const data = await postJson(btn.dataset.aiUrl);
             showResult(result, renderListingSummary(data));

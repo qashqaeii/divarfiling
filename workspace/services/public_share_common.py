@@ -5,6 +5,7 @@ import secrets
 from typing import Any, Dict
 from urllib.parse import quote
 
+from django.conf import settings
 from django.urls import reverse
 
 from workspace.mixins import get_or_create_settings
@@ -58,9 +59,16 @@ def consultant_contact_urls(phone: str, message: str = '') -> Dict[str, str]:
     return urls
 
 
+def absolute_public_share_url(url_name: str, *, share_token: str) -> str:
+    """آدرس کامل صفحه عمومی — بدون نیاز به request."""
+    path = reverse(url_name, kwargs={'share_token': share_token})
+    base = (getattr(settings, 'SITE_URL', '') or '').strip().rstrip('/')
+    return f'{base}{path}' if base else path
+
+
 def public_share_to_dict(share, request, *, url_name: str) -> Dict[str, Any]:
     path = reverse(url_name, kwargs={'share_token': share.share_token})
-    share_url = request.build_absolute_uri(path) if request else ''
+    share_url = request.build_absolute_uri(path) if request else absolute_public_share_url(url_name, share_token=share.share_token)
     return {
         'share_url': share_url,
         'share_token': share.share_token,

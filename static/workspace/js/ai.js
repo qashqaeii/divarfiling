@@ -34,14 +34,14 @@
         if (provider === 'rule_based') {
             return '<span class="ws-ai-badge ws-ai-badge--fallback">حالت پایه</span>';
         }
-        if (data.from_cache || provider === 'cache') {
-            return '<span class="ws-ai-badge ws-ai-badge--cache">از کش</span>';
-        }
         if (provider === 'openrouter') {
             return '<span class="ws-ai-badge ws-ai-badge--backup">هوش مصنوعی (پشتیبان)</span>';
         }
         if (provider === 'gemini' && data.is_fallback) {
             return '<span class="ws-ai-badge ws-ai-badge--lite">هوش مصنوعی (مدل جایگزین)</span>';
+        }
+        if (data.from_cache || provider === 'cache') {
+            return '<span class="ws-ai-badge ws-ai-badge--cache">از کش</span>';
         }
         return '';
     }

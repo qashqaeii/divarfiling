@@ -10020,6 +10020,38 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
 }
 .crm-rm-result-hint i { font-size: 0.35rem; }
 
+.crm-rm-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin: 0.35rem 0 0.65rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.03) 100%);
+}
+.crm-rm-tip-icon {
+    flex-shrink: 0;
+    width: 1.65rem;
+    height: 1.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    color: #059669;
+    background: rgba(16, 185, 129, 0.14);
+}
+.crm-rm-tip-text {
+    font-size: 0.68rem;
+    line-height: 1.65;
+    color: var(--ws-text-secondary);
+}
+.crm-rm-tip-text strong {
+    color: #047857;
+    font-weight: 800;
+}
+
 /* Timeline */
 .crm-rm-timeline {
     display: flex;
@@ -10116,9 +10148,10 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
 
 .crm-rm-panel {
     display: flex;
-    gap: 0.7rem;
-    align-items: flex-start;
-    padding: 0.55rem 0.75rem;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
     background: var(--ws-surface);
     border: 1px solid var(--ws-border);
     border-radius: 14px;
@@ -10144,7 +10177,92 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
 }
 .crm-rm-card--done:hover .crm-rm-panel { transform: none; box-shadow: none; }
 
-.crm-rm-check-form { flex-shrink: 0; padding-top: 0.1rem; }
+.crm-rm-check-form { flex-shrink: 0; margin: 0; }
+
+.crm-rm-action-col {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    padding-inline-start: 0.7rem;
+    border-inline-start: 1px dashed color-mix(in srgb, var(--ws-border) 85%, transparent);
+}
+
+.crm-rm-complete-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    min-width: 4.35rem;
+    min-height: 100%;
+    padding: 0.55rem 0.65rem;
+    border: 1.5px solid rgba(16, 185, 129, 0.38);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.04) 100%);
+    color: #047857;
+    cursor: pointer;
+    font: inherit;
+    transition: transform 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s, color 0.15s;
+}
+.crm-rm-complete-btn:hover {
+    transform: translateY(-1px);
+    border-color: rgba(16, 185, 129, 0.55);
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.16) 0%, rgba(16, 185, 129, 0.08) 100%);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.18);
+    color: #065f46;
+}
+.crm-rm-complete-btn:active {
+    transform: translateY(0);
+}
+.crm-rm-complete-btn:focus-visible {
+    outline: 2px solid rgba(16, 185, 129, 0.45);
+    outline-offset: 2px;
+}
+.crm-rm-complete-icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid rgba(16, 185, 129, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+    font-size: 0.72rem;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.crm-rm-complete-label {
+    font-size: 0.58rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+.crm-rm-complete-btn.is-done {
+    border-color: rgba(148, 163, 184, 0.35);
+    background: var(--ws-surface-2);
+    color: var(--ws-text-muted);
+    box-shadow: none;
+}
+.crm-rm-complete-btn.is-done:hover {
+    border-color: rgba(124, 58, 237, 0.35);
+    background: rgba(124, 58, 237, 0.06);
+    color: #6d28d9;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12);
+}
+.crm-rm-complete-btn.is-done .crm-rm-complete-icon {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    border-color: #10b981;
+    color: #fff;
+}
+.crm-rm-complete-btn.is-done:hover .crm-rm-complete-icon {
+    background: #fff;
+    border-color: rgba(124, 58, 237, 0.4);
+    color: #7c3aed;
+}
+
+/* Legacy circle check — kept for other pages */
 .crm-rm-check {
     position: relative;
     width: 1.65rem;
@@ -10343,7 +10461,34 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
         gap: 0.35rem 0.3rem;
     }
     .crm-rm-time { font-size: 0.78rem; }
-    .crm-rm-panel { padding: 0.5rem 0.6rem; border-radius: 12px; }
+    .crm-rm-panel {
+        flex-direction: column;
+        padding: 0.55rem 0.6rem;
+        border-radius: 12px;
+    }
+    .crm-rm-action-col {
+        border-inline-start: none;
+        border-top: 1px dashed color-mix(in srgb, var(--ws-border) 85%, transparent);
+        padding-inline-start: 0;
+        padding-top: 0.55rem;
+        margin-top: 0.15rem;
+    }
+    .crm-rm-complete-btn {
+        flex-direction: row;
+        width: 100%;
+        min-height: 2.65rem;
+        min-width: 0;
+        justify-content: center;
+        gap: 0.55rem;
+    }
+    .crm-rm-complete-icon {
+        width: 1.55rem;
+        height: 1.55rem;
+        font-size: 0.65rem;
+    }
+    .crm-rm-complete-label {
+        font-size: 0.72rem;
+    }
     .crm-rm-segment { width: 100%; justify-content: stretch; }
     .crm-rm-seg-btn { flex: 1; justify-content: center; padding-inline: 0.4rem; }
     .crm-rm-result-bar { flex-direction: column; align-items: flex-start; gap: 0.25rem; }

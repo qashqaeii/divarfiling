@@ -5075,16 +5075,14 @@ html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro:no
 }
 
 html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title,
-html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title-main,
-html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title-accent,
+html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title-line,
 html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-subtitle--pro,
 html.mk-public[data-theme="light"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-lead {
     text-shadow: none;
 }
 
 html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title,
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title-main,
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title-accent,
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title-line,
 html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-subtitle--pro,
 html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-lead {
     text-shadow: none;
@@ -6456,25 +6454,22 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-
     text-shadow: none;
 }
 
-.mk-home-page .mk-hero--deck .mk-hero-title-main {
+.mk-home-page .mk-hero--deck .mk-hero-title-line {
+    display: block;
     color: var(--mk-hero-title-color);
     text-shadow: none;
 }
 
-.mk-home-page .mk-hero--deck .mk-hero-title-accent {
-    text-shadow: none;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    -webkit-background-clip: text;
+.mk-home-page .mk-hero--deck .mk-hero-title-brand {
+    color: #dc2626;
+    -webkit-text-fill-color: #dc2626;
+    background: none;
+    font-weight: inherit;
 }
 
-html.mk-public[data-theme="light"] .mk-home-page .mk-hero--deck .mk-hero-title-accent {
-    background-image: linear-gradient(135deg, #5b21b6 0%, #7c3aed 48%, #6d28d9 100%);
-}
-
-html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--deck .mk-hero-title-accent {
-    background-image: linear-gradient(135deg, #f5f3ff 0%, #ddd6fe 35%, #c4b5fd 68%, #a78bfa 100%);
+html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--deck .mk-hero-title-brand {
+    color: #f87171;
+    -webkit-text-fill-color: #f87171;
 }
 
 .mk-home-page .mk-hero--deck .mk-hero-subtitle--pro {

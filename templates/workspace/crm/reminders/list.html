@@ -13,6 +13,7 @@
     <header class="crm-dash-bar">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">یادآورها</h1>
+            <p class="crm-dash-bar-sub">برای تکمیل هر مورد، دکمهٔ «انجام شد» را بزنید</p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات یادآورها">
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-reminder">
@@ -81,6 +82,13 @@
             {% endif %}
         </div>
 
+        {% if show == 'active' and reminders %}
+        <div class="crm-rm-tip" role="note">
+            <span class="crm-rm-tip-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+            <span class="crm-rm-tip-text">هر یادآور با دکمهٔ سبز <strong>انجام شد</strong> در سمت چپ کارت بسته می‌شود — می‌توانید بعداً از تب «انجام‌شده» بازگردانی کنید.</span>
+        </div>
+        {% endif %}
+
         {% if reminders %}
         <div class="crm-rm-timeline" role="list">
             {% for r in reminders %}
@@ -98,15 +106,6 @@
                 </div>
 
                 <div class="crm-rm-panel">
-                    <form method="post" action="{% url 'workspace:crm_reminder_toggle' r.id %}" class="crm-rm-check-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                        <button type="submit" class="crm-rm-check {% if r.is_done %}is-done{% endif %}" aria-label="{% if r.is_done %}بازگردانی یادآور{% else %}علامت‌گذاری انجام‌شده{% endif %}">
-                            <span class="crm-rm-check-ring"></span>
-                            <i class="fas fa-check" aria-hidden="true"></i>
-                        </button>
-                    </form>
-
                     <div class="crm-rm-content">
                         <div class="crm-rm-head">
                             <h3 class="crm-rm-title {% if r.is_done %}is-done{% endif %}">{{ r.title }}</h3>
@@ -131,6 +130,24 @@
                             </span>
                             {% endif %}
                         </div>
+                    </div>
+
+                    <div class="crm-rm-action-col">
+                        <form method="post" action="{% url 'workspace:crm_reminder_toggle' r.id %}" class="crm-rm-check-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button
+                                type="submit"
+                                class="crm-rm-complete-btn {% if r.is_done %}is-done{% endif %}"
+                                aria-label="{% if r.is_done %}بازگردانی یادآور{% else %}علامت‌گذاری به‌عنوان انجام‌شده{% endif %}"
+                                title="{% if r.is_done %}بازگردانی{% else %}انجام شد{% endif %}"
+                            >
+                                <span class="crm-rm-complete-icon" aria-hidden="true">
+                                    <i class="fas fa-{% if r.is_done %}rotate-left{% else %}check{% endif %}"></i>
+                                </span>
+                                <span class="crm-rm-complete-label">{% if r.is_done %}بازگردانی{% else %}انجام شد{% endif %}</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </article>

@@ -128,6 +128,32 @@ class CrmMessageFallbackTests(TestCase):
         self.assertIn('سعادت‌آباد', text)
         self.assertNotIn('مشاهده جزئیات', text)
 
+    def test_followup_consultative_tone(self):
+        text = build_crm_message({
+            'name': 'مینا',
+            'areas': 'ولنجک',
+            'customer_type': 'خریدار',
+            'status': 'در حال پیگیری',
+            'tone': 'مشاورانه',
+            'channel': 'واتساپ',
+            'recent_activities': '—',
+        })
+        self.assertIn('گزینه‌های مناسب را بررسی می‌کنم', text)
+        self.assertIn('پیشنهادها را دقیق‌تر تنظیم کنم', text)
+
+    def test_followup_gentle_tone(self):
+        text = build_crm_message({
+            'name': 'امیر',
+            'areas': 'پونک',
+            'customer_type': 'متقاضی اجاره',
+            'status': 'پیگیری',
+            'tone': 'پیگیری',
+            'channel': 'واتساپ',
+            'recent_activities': '—',
+        })
+        self.assertIn('همچنان باز است', text)
+        self.assertIn('هر زمان مناسب بود', text)
+
 
 class ContactContextFormatTests(TestCase):
     def test_top_matches_text_includes_public_link(self):

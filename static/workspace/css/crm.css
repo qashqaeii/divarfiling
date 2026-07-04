@@ -16614,6 +16614,35 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
     align-items: center;
     gap: 0.35rem;
 }
+.crm-ai-compose-wa {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid rgba(37, 211, 102, 0.35);
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.28);
+    transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+}
+.crm-ai-compose-wa:hover {
+    color: #fff;
+    filter: brightness(1.04);
+    transform: translateY(-1px);
+}
+.crm-ai-compose-wa.is-disabled,
+.crm-ai-compose-wa[aria-disabled="true"] {
+    opacity: 0.45;
+    pointer-events: none;
+    transform: none;
+    box-shadow: none;
+}
+.crm-ai-compose-wa i { font-size: 0.95rem; }
 .crm-ai-compose-cta {
     position: relative;
     display: inline-flex;

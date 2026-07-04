@@ -710,7 +710,8 @@
         </div>
         <div class="crm-drawer-body ws-ai-crm-compose"
              data-ai-feature="crm_message"
-             data-ai-url="{% url 'workspace:ai_workspace:crm_message' customer.id %}">
+             data-ai-url="{% url 'workspace:ai_workspace:crm_message' customer.id %}"
+             {% if customer.phone %}data-wa-phone="{{ customer.phone }}"{% endif %}>
             <p class="crm-ai-compose-lead">
                 پیام حرفه‌ای برای ارسال به مشتری — بر پایه تطبیق‌های فایل، لینک عمومی ملک‌ها و پروفایل همین مخاطب.
             </p>
@@ -770,6 +771,18 @@
                     <i class="fas fa-copy" aria-hidden="true"></i>
                     <span>کپی متن</span>
                 </button>
+                {% if customer.phone %}
+                <a href="#"
+                   id="aiCrmWhatsApp"
+                   class="crm-ai-compose-wa"
+                   target="_blank"
+                   rel="noopener"
+                   aria-disabled="true"
+                   title="ارسال پیام در واتساپ">
+                    <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                    <span>ارسال به واتساپ</span>
+                </a>
+                {% endif %}
             </div>
             <button type="button" class="crm-ai-compose-cta ws-ai-trigger" data-ai-compose>
                 <span class="crm-ai-compose-cta-glow" aria-hidden="true"></span>
@@ -785,7 +798,7 @@
 {% endblock %}
 
 {% block crm_js %}
-<script src="{% static 'workspace/js/ai.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/ai.js' %}?v=4"></script>
 <script>window.crmTypeProfiles = {{ type_profiles_json|safe }};</script>
 {% if crm_agency and is_customer_owner %}
 <script>

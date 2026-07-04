@@ -180,35 +180,86 @@ def _matches_message(
     return '\n'.join(lines).strip()
 
 
-def _followup_message(context: Dict[str, Any]) -> str:
-    lines = [_greeting(context), '']
+def _followup_status_line(context: Dict[str, Any]) -> str:
     areas = (context.get('areas') or '').strip()
     customer_type = (context.get('customer_type') or '').strip()
     status = (context.get('status') or '').strip()
     tone = normalize_crm_tone(context.get('tone'))
+    status_label = status or 'پیگیری'
 
     if customer_type and areas:
-        body = (
-            f'درخواست {customer_type} شما در محدوده {areas} در وضعیت «{status or "پیگیری"}» '
-            'همچنان در اولویت پیگیری من است.'
-        )
-        if tone == 'کوتاه':
-            body = f'درخواست {customer_type} در {areas} — وضعیت: {status or "پیگیری"}.'
-        elif tone == 'ایموجی‌دار':
-            body = (
-                f'درخواست {customer_type} شما در {areas} هنوز پیگیری می‌شه '
-                f'(وضعیت: {status or "پیگیری"}) ✨'
-            )
-        elif tone == 'صمیمی':
-            body = (
+        bodies = {
+            'رسمی': (
+                f'درخواست {customer_type} شما در محدوده {areas} در وضعیت «{status_label}» '
+                'همچنان در اولویت پیگیری من است.'
+            ),
+            'صمیمی': (
                 f'درخواست {customer_type}تون برای {areas} رو با دقت پیگیری می‌کنم '
-                f'(وضعیت: {status or "پیگیری"}).'
-            )
-        lines.append(body)
-    elif areas:
-        lines.append(f'درخواست شما برای منطقه {areas} را با دقت پیگیری می‌کنم.')
-    else:
-        lines.append('درخواست شما را پیگیری می‌کنم و به‌محض یافتن گزینه مناسب اطلاع می‌دهم.')
+                f'(وضعیت: {status_label}).'
+            ),
+            'ایموجی‌دار': (
+                f'درخواست {customer_type} شما در {areas} هنوز پیگیری می‌شه '
+                f'(وضعیت: {status_label}) ✨'
+            ),
+            'کوتاه': f'درخواست {customer_type} در {areas} — وضعیت: {status_label}.',
+            'مشاورانه': (
+                f'با توجه به درخواست {customer_type} شما در {areas}، '
+                f'وضعیت فعلی «{status_label}» است و گزینه‌های مناسب را بررسی می‌کنم.'
+            ),
+            'پیگیری': (
+                f'درخواست {customer_type} شما برای {areas} همچنان باز است '
+                f'(وضعیت: {status_label})؛ هر وقت آماده بودید در خدمتم.'
+            ),
+        }
+        return bodies[tone]
+
+    if areas:
+        bodies = {
+            'رسمی': f'درخواست شما برای منطقه {areas} را با دقت پیگیری می‌کنم.',
+            'صمیمی': f'درخواستتون برای {areas} رو پیگیری می‌کنم.',
+            'ایموجی‌دار': f'درخواست شما برای {areas} هنوز پیگیری می‌شه 📍',
+            'کوتاه': f'پیگیری {areas} — در جریان.',
+            'مشاورانه': (
+                f'نیازمندی شما در محدوده {areas} را بررسی می‌کنم '
+                'و مناسب‌ترین گزینه را پیشنهاد می‌دهم.'
+            ),
+            'پیگیری': (
+                f'درخواست شما برای {areas} هنوز باز است؛ '
+                'هر زمان خواستید هماهنگ می‌کنیم.'
+            ),
+        }
+        return bodies[tone]
+
+    bodies = {
+        'رسمی': 'درخواست شما را پیگیری می‌کنم و به‌محض یافتن گزینه مناسب اطلاع می‌دهم.',
+        'صمیمی': 'درخواستتون رو پیگیری می‌کنم و به‌محض پیدا کردن گزینه خوب خبر می‌دم.',
+        'ایموجی‌دار': 'درخواست شما رو پیگیری می‌کنم و به‌محض یافتن گزینه مناسب خبر می‌دم ✨',
+        'کوتاه': 'در حال پیگیری — به‌محض یافتن گزینه اطلاع می‌دهم.',
+        'مشاورانه': (
+            'درخواست شما را بررسی می‌کنم و به‌محض یافتن گزینه مناسب '
+            'با جزئیات پیشنهاد می‌دهم.'
+        ),
+        'پیگیری': 'هر وقت آماده بودید، درخواست شما همچنان در صف پیگیری من است.',
+    }
+    return bodies[tone]
+
+
+def _followup_invitation(context: Dict[str, Any]) -> str:
+    tone = normalize_crm_tone(context.get('tone'))
+    invitations = {
+        'رسمی': 'در صورت تمایل برای هماهنگی بازدید یا به‌روزرسانی نیازمندی‌ها در خدمتم.',
+        'صمیمی': 'هر وقت خواستید برای بازدید یا به‌روزرسانی نیازمندی‌ها خبر بدید.',
+        'ایموجی‌دار': 'برای بازدید یا به‌روزرسانی نیازمندی‌ها خوشحال می‌شم کمکتون کنم 🙏',
+        'کوتاه': 'برای بازدید یا به‌روزرسانی در خدمتم.',
+        'مشاورانه': 'اگر نیازمندی‌ها تغییر کرده، بگویید تا پیشنهادها را دقیق‌تر تنظیم کنم.',
+        'پیگیری': 'هر زمان مناسب بود برای هماهنگی بازدید یا به‌روزرسانی در ارتباط باشیم.',
+    }
+    return invitations[tone]
+
+
+def _followup_message(context: Dict[str, Any]) -> str:
+    lines = [_greeting(context), '']
+    lines.append(_followup_status_line(context))
 
     activities = (context.get('recent_activities') or '').strip()
     if activities and activities != '—':
@@ -217,7 +268,7 @@ def _followup_message(context: Dict[str, Any]) -> str:
         lines.append(activities)
 
     lines.append('')
-    lines.append('در صورت تمایل برای هماهنگی بازدید یا به‌روزرسانی نیازمندی‌ها در خدمتم.')
+    lines.append(_followup_invitation(context))
     lines.append('')
     lines.append(_closing(context))
     return '\n'.join(lines).strip()

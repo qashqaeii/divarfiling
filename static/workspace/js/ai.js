@@ -154,6 +154,31 @@
         const hasContent = !!(preview.value || '').trim();
         if (box) box.classList.toggle('has-content', hasContent);
         if (empty) empty.hidden = hasContent;
+        syncCrmWhatsAppButton(preview);
+    }
+
+    function normalizeWaPhone(phone) {
+        let digits = String(phone || '').replace(/\D/g, '');
+        if (digits.startsWith('0')) digits = digits.slice(1);
+        if (digits.startsWith('98')) digits = digits.slice(2);
+        return digits ? `98${digits}` : '';
+    }
+
+    function buildWhatsAppUrl(phone, text) {
+        const cc = normalizeWaPhone(phone);
+        const body = (text || '').trim();
+        if (!cc || !body || body.startsWith('در حال ساخت')) return '';
+        return `https://wa.me/${cc}?text=${encodeURIComponent(body)}`;
+    }
+
+    function syncCrmWhatsAppButton(preview) {
+        const waBtn = document.getElementById('aiCrmWhatsApp');
+        if (!waBtn || !preview) return;
+        const phone = preview.closest('.ws-ai-crm-compose')?.dataset.waPhone || '';
+        const url = buildWhatsAppUrl(phone, preview.value);
+        waBtn.href = url || '#';
+        waBtn.setAttribute('aria-disabled', url ? 'false' : 'true');
+        waBtn.classList.toggle('is-disabled', !url);
     }
 
     async function handleCrmCompose(btn) {
@@ -222,6 +247,13 @@
 
         document.querySelectorAll('#aiCrmPreview').forEach(preview => {
             syncCrmPreviewState(preview);
+        });
+
+        document.getElementById('aiCrmWhatsApp')?.addEventListener('click', (e) => {
+            const btn = e.currentTarget;
+            if (btn.getAttribute('aria-disabled') === 'true') {
+                e.preventDefault();
+            }
         });
     });
 })();

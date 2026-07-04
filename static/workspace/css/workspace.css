@@ -4289,3 +4289,54 @@ body.ws-modal-open { overflow: hidden; }
     .ws-rpt-l3-verdict-conf span { margin-top: 0; }
     .ws-rpt-l3-playbook-row { grid-template-columns: 1fr; gap: .25rem; }
 }
+
+/* ── AI Workspace (فاز صفر) ── */
+.ws-ai-card {
+    margin: 1rem 0 1.25rem;
+    padding: 1rem 1.1rem;
+    border-radius: var(--ws-radius, 12px);
+    border: 1px solid color-mix(in srgb, var(--ws-accent, #7c3aed) 25%, transparent);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--ws-accent, #7c3aed) 6%, transparent), transparent);
+}
+.ws-ai-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: .5rem;
+}
+.ws-ai-card-head .ws-card-title { margin: 0; font-size: 1rem; }
+.ws-ai-disclaimer {
+    margin: .65rem 0 0;
+    font-size: .75rem;
+    color: var(--ws-text-muted, #64748b);
+}
+.ws-ai-result {
+    margin-top: .75rem;
+    padding: .85rem 1rem;
+    border-radius: 10px;
+    background: var(--ws-surface-2, rgba(0,0,0,.04));
+    font-size: .92rem;
+    line-height: 1.65;
+}
+.ws-ai-result--inline { margin-top: .5rem; text-align: right; }
+.ws-ai-summary { margin: 0 0 .5rem; }
+.ws-ai-highlights { margin: .35rem 0 .5rem; padding-right: 1.1rem; }
+.ws-ai-tip, .ws-ai-note { margin: .35rem 0 0; font-size: .88rem; }
+.ws-ai-subtitle { margin: .5rem 0 .25rem; font-weight: 600; font-size: .85rem; }
+.ws-ai-badge {
+    display: inline-block;
+    margin-bottom: .5rem;
+    padding: .15rem .5rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 600;
+}
+.ws-ai-badge--fallback {
+    background: color-mix(in srgb, #f59e0b 18%, transparent);
+    color: #b45309;
+}
+.ws-ai-error { color: #dc2626; margin: 0; }
+.ws-ai-loading-text { color: var(--ws-text-muted); margin: 0; }
+.ws-ai-trigger.ws-ai-loading { opacity: .7; pointer-events: none; }

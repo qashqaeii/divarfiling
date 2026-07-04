@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'affiliates',
     'blog',
     'workspace',
+    'ai_workspace',
     'mobile_api',
 ]
 
@@ -219,6 +220,22 @@ LICENSE_BOT_API_KEY = config('LICENSE_BOT_API_KEY', default='')
 
 # میزکار — فقط با سفارش paid و لایسنس active (بدون bypass خودکار staff)
 WORKSPACE_LICENSE_STAFF_BYPASS = config('WORKSPACE_LICENSE_STAFF_BYPASS', default=False, cast=bool)
+
+# AI Workspace — فاز صفر (Gemini + OpenRouter backup)
+AI_ENABLED = config('AI_ENABLED', default=False, cast=bool)
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+GEMINI_MODEL = config('GEMINI_MODEL', default='gemini-3.1-flash-lite')
+GEMINI_FALLBACK_MODEL = config('GEMINI_FALLBACK_MODEL', default='gemini-2.5-flash-lite')
+GEMINI_TIMEOUT_SECONDS = config('GEMINI_TIMEOUT_SECONDS', default=10, cast=int)
+OPENROUTER_API_KEY = config('OPENROUTER_API_KEY', default='')
+OPENROUTER_BASE_URL = config('OPENROUTER_BASE_URL', default='https://openrouter.ai/api/v1')
+OPENROUTER_FREE_MODELS = config(
+    'OPENROUTER_FREE_MODELS',
+    default='',
+)
+OPENROUTER_TIMEOUT_SECONDS = config('OPENROUTER_TIMEOUT_SECONDS', default=8, cast=int)
+AI_GLOBAL_DAILY_CAP = config('AI_GLOBAL_DAILY_CAP', default=350, cast=int)
+AI_DAILY_TOKEN_LIMIT = config('AI_DAILY_TOKEN_LIMIT', default=30000, cast=int)
 
 # Cache — برای rate limit لایسنس (در production از Redis استفاده کنید)
 CACHES = {

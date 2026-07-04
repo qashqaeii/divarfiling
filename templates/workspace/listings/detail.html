@@ -100,6 +100,21 @@
     </div>
     {% endif %}
 
+    {% if ai_enabled and has_bot_license %}
+    <section class="ws-ai-card" id="wsAiListingSummary" data-ai-card>
+        <div class="ws-ai-card-head">
+            <h3 class="ws-card-title"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> خلاصه هوشمند فایل</h3>
+            <button type="button" class="mk-hero-btn mk-hero-btn-accent ws-ai-trigger"
+                    data-ai-feature="listing_summary"
+                    data-ai-url="{% url 'ai_workspace:listing_summary' dataset.id listing.id %}">
+                <i class="fas fa-sparkles" aria-hidden="true"></i><span>تولید خلاصه</span>
+            </button>
+        </div>
+        <div class="ws-ai-result" hidden></div>
+        <p class="ws-ai-disclaimer">مکمل تحلیل آماری — اعداد از سیستم فایلینگ؛ AI فقط توضیح می‌دهد.</p>
+    </section>
+    {% endif %}
+
     <div class="ws-ld-grid">
         <div class="ws-ld-main">
             <div class="ws-card ws-ld-fields">
@@ -345,5 +360,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initListingDetailMap({ marker: marker, uiPrefix: 'wsLd', zoom: 17 });
 });
 </script>
+{% endif %}
+{% if ai_enabled and has_bot_license %}
+<script src="{% static 'workspace/js/ai.js' %}?v=1"></script>
 {% endif %}
 {% endblock %}

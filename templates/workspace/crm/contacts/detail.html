@@ -11,6 +11,9 @@
 {% if customer.phone %}
 <a href="https://wa.me/98{{ customer.phone|slice:'1:' }}" target="_blank" class="mk-hero-btn mk-hero-btn-accent" title="واتساپ"><i class="fas fa-comment-dots" aria-hidden="true"></i></a>
 <button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-copy="{{ whatsapp_text }}" title="قالب پیام"><i class="fas fa-comment-dots" aria-hidden="true"></i><span>قالب</span></button>
+{% if ai_enabled and has_bot_license %}
+<button type="button" class="mk-hero-btn mk-hero-btn-accent" data-drawer-open="drawer-ai-message" title="پیام هوشمند"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>پیام هوشمند</span></button>
+{% endif %}
 <a href="tel:{{ customer.phone }}" class="mk-hero-btn mk-hero-btn-ghost" title="تماس"><i class="fas fa-phone" aria-hidden="true"></i></a>
 <form method="post" class="mk-inline-form" title="ثبت تماس">
     {% csrf_token %}
@@ -658,9 +661,53 @@
         </form>
     </div>
 </aside>
+
+{% if ai_enabled and has_bot_license %}
+<aside class="crm-drawer" id="drawer-ai-message">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head">
+            <div><h2>پیام هوشمند</h2><p>{{ customer.name }}</p></div>
+            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <div class="crm-drawer-body ws-ai-crm-compose"
+             data-ai-feature="crm_message"
+             data-ai-url="{% url 'ai_workspace:crm_message' customer.id %}">
+            <div class="ws-fields">
+                <div class="ws-field">
+                    <label class="ws-label" for="aiCrmChannel">کانال</label>
+                    <select id="aiCrmChannel" class="ws-select">
+                        <option value="واتساپ">واتساپ</option>
+                        <option value="پیامک">پیامک</option>
+                        <option value="تماس">تماس تلفنی</option>
+                    </select>
+                </div>
+                <div class="ws-field">
+                    <label class="ws-label" for="aiCrmTone">لحن</label>
+                    <select id="aiCrmTone" class="ws-select">
+                        <option value="رسمی">رسمی</option>
+                        <option value="صمیمی">صمیمی</option>
+                    </select>
+                </div>
+                <div class="ws-field">
+                    <label class="ws-label" for="aiCrmPreview">پیش‌نمایش</label>
+                    <textarea id="aiCrmPreview" class="ws-textarea" rows="8" readonly placeholder="دکمه تولید را بزنید…"></textarea>
+                </div>
+            </div>
+            <div class="ws-ai-result" hidden></div>
+        </div>
+        <div class="crm-drawer-foot">
+            <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>بستن</button>
+            <button type="button" class="crm-btn crm-btn-primary ws-ai-trigger" data-ai-compose>تولید پیام</button>
+            <button type="button" class="crm-btn crm-btn-accent" id="aiCrmCopy" disabled>کپی</button>
+        </div>
+    </div>
+</aside>
+{% endif %}
 {% endblock %}
 
 {% block crm_js %}
+<script src="{% static 'workspace/js/ai.js' %}?v=1"></script>
 <script>window.crmTypeProfiles = {{ type_profiles_json|safe }};</script>
 {% if crm_agency and is_customer_owner %}
 <script>

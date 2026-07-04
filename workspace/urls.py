@@ -1,5 +1,5 @@
 """URLهای workspace."""
-from django.urls import path
+from django.urls import include, path
 
 from workspace import crm_views, views
 
@@ -8,6 +8,7 @@ app_name = 'workspace'
 urlpatterns = [
     path('', views.WorkspaceHomeView.as_view(), name='home'),
     path('api/onboarding/complete/', views.OnboardingCompleteView.as_view(), name='onboarding_complete'),
+    path('ai/', include('ai_workspace.urls')),
 
     # Datasets
     path('datasets/', views.DatasetListView.as_view(), name='dataset_list'),

@@ -1,0 +1,725 @@
+================================================================================
+  فایلینگ دیوار — پلن پیاده‌سازی فاز صفر AI
+  تاریخ: ۱۴۰۵/۰۱/۱۵ (۲۰۲۶-۰۴-۰۴)
+  آخرین به‌روزرسانی: ۱۴۰۵/۰۱/۱۴ (۲۰۲۶-۰۷-۰۴) — اصلاحات ChatGPT + داشبورد Gemini
+  هدف: هزینه صفر — Gemini Free + OpenRouter Backup + Rule-based Fallback
+  وضعیت پیاده‌سازی: ✅ migration 0002 + ۲۰ تست — آماده فعال‌سازی
+================================================================================
+
+⚠️  امنیت: کلید API را هرگز در کد یا این فایل ننویسید.
+    فقط در فایل .env سرور:
+      GEMINI_API_KEY=...
+      OPENROUTER_API_KEY=...   (اختیاری — فقط برای backup)
+
+================================================================================
+۱. خلاصه معماری
+================================================================================
+
+                    Request (Web / Mobile)
+                              │
+                              ▼
+                    ai_workspace/services/gateway.py
+                              │
+         ┌────────────────────┼────────────────────┐
+         │                    │                    │
+    Feature Flag?        Quota OK?           Cache hit?
+         │                    │                    │
+         └────────────────────┼────────────────────┘
+                              ▼
+              ┌───────────────────────────────────┐
+              │PROVIDER_CHAIN (فقط در صورت نیاز) │
+              └───────────────────────────────────┘
+                              │
+         ┌────────────────────┴────────────────────┐
+         │  ۱. GeminiProvider — GEMINI_MODEL      │
+         │     gemini-3.1-flash-lite (Primary)    │
+         │     Singleton — retry داخلی: ۱ بار     │
+         └────────────────────┬────────────────────┘
+                              │ فقط در صورت خطای retryable:
+                              │   • Timeout (~۱۰s)
+                              │   • HTTP 429 / 5xx
+                              │   • RESOURCE_EXHAUSTED
+                              ▼
+         ┌─────────────────────────────────────────┐
+         │  ۲. GeminiProvider — GEMINI_FALLBACK    │
+         │     gemini-2.5-flash-lite (Lite)        │
+         └────────────────────┬────────────────────┘
+                              ▼
+         ┌─────────────────────────────────────────┐
+         │  ۳. OpenRouterProvider (Backup ONLY)    │
+         │     مدل‌های :free از API هر ۲۴h         │
+         │     Timeout ~۸s — هرگز در حالت عادی     │
+         └────────────────────┬────────────────────┘
+                              │ اگر باز هم خطا
+                              ▼
+         ┌─────────────────────────────────────────┐
+         │  ۴. RuleBasedProvider (همیشه موفق)     │
+         │     از fallbacks/*.py — بدون HTTP       │
+         └─────────────────────────────────────────┘
+
+  Singleton در providers/registry.py:
+    GEMINI_PRIMARY, GEMINI_LITE, OPENROUTER, RULE_BASED
+    HTTP_PROVIDER_CHAIN = [PRIMARY, LITE, OPENROUTER]
+  Gateway Retry ندارد — فقط Provider بعدی را صدا می‌زند.
+
+قوانین طلایی:
+  • Viewها هرگز gemini یا openrouter را import نمی‌کنند — فقط gateway.run()
+  • AI عدد، قیمت، امتیاز Match یا verdict تحلیلی تولید نمی‌کند
+  • همه اعداد از analyzer / crm_matching / benchmark گرفته می‌شوند
+  • AI فقط توضیح، خلاصه و متن انسانی تولید می‌کند
+  • منطق CRM، Matching، Market Analysis، Upload دست نخورده می‌ماند
+
+================================================================================
+۱.۵. نتایج تست API — تأیید شده (۱۴۰۵/۰۱/۱۵)
+================================================================================
+
+تست‌ها قبل از پیاده‌سازی انجام شد. کلیدها فقط در .env سرور — نه در این فایل.
+
+── تست Gemini (Primary) ─────────────────────────────────────────────────────
+
+  پروژه: DivarFiling (Google AI Studio)
+  Endpoint: generativelanguage.googleapis.com/v1beta
+  مدل: gemini-2.5-flash
+  فرمت کلید: با AQ. شروع می‌شود (نه AIza معمول) — با API استاندارد کار می‌کند
+
+  ┌────────────────────┬──────────────────────────────────────────────────────┐
+  │ تست                │ نتیجه                                                │
+  ├────────────────────┼──────────────────────────────────────────────────────┤
+  │ سلام ساده فارسی    │ ✅ OK — پاسخ: «API کار می‌کند.»                       │
+  │ زمان پاسخ          │ ~۸ ثانیه                                             │
+  │ توکن               │ ۱۴ ورودی + ۴ خروجی (total گزارش‌شده: ۳۵۸)           │
+  ├────────────────────┼──────────────────────────────────────────────────────┤
+  │ خلاصه آگهی املاک   │ ✅ OK — کیفیت فارسی عالی                             │
+  │ سناریو             │ آپارتمان ۸۵m سعادت‌آباد، ۱۲.۵ میلیارد، ۸٪ زیر میانه  │
+  │                    │ سیگنال: مشاور پنهان                                  │
+  │ زمان پاسخ          │ ~۱۱ ثانیه                                            │
+  │ توکن               │ ~۱۲۴۷ total                                          │
+  │ کیفیت              │ اعداد CONTEXT حفظ شد؛ نکته مذاکره و مشاور پنهان درست  │
+  └────────────────────┴──────────────────────────────────────────────────────┘
+
+  نمونه خروجی (خلاصه آگهی):
+    «آپارتمان 85 متری در سعادت‌آباد به قیمت 12.5 میلیارد تومان عرضه شده است.
+     این ملک حدود 8٪ زیر میانه قیمت بازار قرار دارد...
+     توجه: آگهی‌دهنده مشاور پنهان است...»
+
+  نتیجه: Gemini به‌عنوان Provider اصلی تأیید شد.
+
+── تست OpenRouter (Backup ONLY) ─────────────────────────────────────────────
+
+  Endpoint: openrouter.ai/api/v1/chat/completions
+  هدرها: Authorization, HTTP-Referer, X-Title
+
+  ┌────────────────────────────────────────┬──────────┬─────────────────────────┐
+  │ مدل                                    │ وضعیت    │ توضیح                   │
+  ├────────────────────────────────────────┼──────────┼─────────────────────────┤
+  │ openrouter/free                        │ ✅ جزئی  │ route به gpt-oss-20b:free │
+  │                                        │          │ cost=0، ~۲۲ ثانیه       │
+  │                                        │          │ فارسی ضعیف/نامرتب       │
+  ├────────────────────────────────────────┼──────────┼─────────────────────────┤
+  │ openai/gpt-oss-20b:free (routed)       │ ✅       │ پاسخ داد — backup قابل   │
+  │                                        │          │ استفاده، نه جایگزین Gemini│
+  ├────────────────────────────────────────┼──────────┼─────────────────────────┤
+  │ deepseek/deepseek-r1:free              │ ❌ 404   │ دیگر رایگان نیست         │
+  ├────────────────────────────────────────┼──────────┼─────────────────────────┤
+  │ qwen/qwen-2.5-7b-instruct:free         │ ❌ 404   │ دیگر رایگان نیست         │
+  ├────────────────────────────────────────┼──────────┼─────────────────────────┤
+  │ meta-llama/llama-3.3-70b-instruct:free │ ❌ 429   │ rate-limit موقت upstream │
+  ├────────────────────────────────────────┼──────────┼─────────────────────────┤
+  │ qwen/qwen3-next-80b-a3b-instruct:free  │ ❌ 429   │ rate-limit موقت upstream │
+  ├────────────────────────────────────────┼──────────┼─────────────────────────┤
+  │ openrouter/free (سوال ساده)            │ ⚠️       │ Timeout یا content=null  │
+  │                                        │          │ (مدل reasoning-only)   │
+  └────────────────────────────────────────┴──────────┴─────────────────────────┘
+
+  لیست مدل‌های :free موجود (از GET /api/v1/models — ۲۳ مدل، نمونه):
+    meta-llama/llama-3.3-70b-instruct:free
+    meta-llama/llama-3.2-3b-instruct:free
+    qwen/qwen3-next-80b-a3b-instruct:free
+    google/gemma-4-26b-a4b-it:free
+    openai/gpt-oss-20b:free
+    openai/gpt-oss-120b:free
+    openrouter/free
+    ... (لیست کامل از API — مدل‌ها مرتب تغییر می‌کنند)
+
+  نکات عملی OpenRouter:
+    • کلید معتبر است — API کار می‌کند
+    • فقط وقتی Gemini fail شود فراخوانی شود (نه در حالت عادی)
+    • مدل‌های :free ناپایدار — 429 و timeout شایع
+    • کیفیت فارسی پایین‌تر از Gemini — rule_based اغلب بهتر از خروجی بد OR
+    • پاسخ ممکن است در message.reasoning باشد نه content — parser هر دو را چک کند
+    • max_tokens کافی بگذارید (حداقل ۴۰۰) تا reasoning-only خالی نماند
+
+  نتیجه: OpenRouter به‌عنوان Backup تأیید شد — Gemini اولویت مطلق.
+
+── جمع‌بندی تست ──────────────────────────────────────────────────────────────
+
+  تست اولیه: gemini-2.5-flash — فارسی عالی، ~۸–۱۲ ثانیه
+  Primary فعلی: gemini-3.1-flash-lite (RPD=500 — بخش ۱.۶)
+  Backup داخلی: gemini-2.5-flash-lite
+  Backup خارجی: OpenRouter (:free) — فقط بعد از خطای Gemini
+  Fallback: Rule-based — همیشه — مهم‌تر از OR بد
+
+  ⚠️  امنیت: هر دو کلید در چت/تست لو رفته — قبل از production در پنل‌ها rotate کنید.
+
+================================================================================
+۱.۶. محدودیت واقعی Gemini — داشبورد Google AI Studio (پروژه Divarfiling)
+================================================================================
+
+  منبع: Google AI Studio → Rate Limit → Free tier → پروژه Divarfiling
+  بازه گزارش: ۲۸ روز (اسکرین‌شات ۱۴۰۵/۰۱/۱۴)
+
+  ┌─────────────────────────────┬─────┬────────┬─────┬──────────────────────────┐
+  │ مدل                         │ RPM │ TPM    │ RPD │ نتیجه برای فاز صفر       │
+  ├─────────────────────────────┼─────┼────────┼─────┼──────────────────────────┤
+  │ Gemini 2.5 Flash            │  5  │ 250K   │  20 │ ❌ فقط ~۱ کاربر پرمصرف  │
+  │ Gemini 2.5 Flash Lite       │ 10  │ 250K   │  20 │ ❌ RPD خیلی کم            │
+  │ Gemini 3.1 Flash Lite       │ 15  │ 250K   │ 500 │ ✅ Primary پیشنهادی      │
+  │ Gemini 3 Flash              │  5  │ 250K   │  20 │ —                        │
+  │ Gemini 3.5 Flash            │  5  │ 250K   │  20 │ —                        │
+  └─────────────────────────────┴─────┴────────┴─────┴──────────────────────────┘
+
+  نکته کلیدی:
+    اگر سقف کاربر ۲۰ درخواست/روز + مدل Primary = gemini-2.5-flash (RPD=20)
+    → کل سهمیه پروژه فقط برای ۱ کاربر پرمصرف تمام می‌شود.
+
+  با gemini-3.1-flash-lite (RPD=500) + سقف ۱۰ درخواست/کاربر + cap سراسری ۴۰۰:
+
+  ┌────────────────────────┬────────────────────────────────────────────────┐
+  │ میانگین مصرف/کاربر/روز │ کاربر فعال قابل پشتیبانی (تقریبی)             │
+  ├────────────────────────┼────────────────────────────────────────────────┤
+  │ ۲۰ درخواست             │ ~۲۵ کاربر                                      │
+  │ ۱۰ درخواست             │ ~۵۰ کاربر                                      │
+  │  ۵ درخواست             │ ~۱۰۰ کاربر                                     │
+  │  ۲ درخواست             │ ~۲۵۰ کاربر                                     │
+  └────────────────────────┴────────────────────────────────────────────────┘
+
+  تنظیمات تأییدشده در کد:
+    GEMINI_MODEL=gemini-3.1-flash-lite
+    GEMINI_FALLBACK_MODEL=gemini-2.5-flash-lite
+    DEFAULT_DAILY_LIMIT=10
+    AI_GLOBAL_DAILY_CAP=350
+    AI_DAILY_TOKEN_LIMIT=30000
+
+================================================================================
+۱.۷. اصلاحات معماری — بازخورد ChatGPT (۹.۷/۱۰) — اعمال‌شده در کد
+================================================================================
+
+  ┌────┬──────────────────────────────────────────────┬────────────────────────┐
+  │ #  │ پیشنهاد                                      │ وضعیت                  │
+  ├────┼──────────────────────────────────────────────┼────────────────────────┤
+  │  1 │ Singleton Providerها (نه new در هر request)   │ ✅ registry.py         │
+  │  2 │ OpenRouter مدل‌ها از GET /models هر ۲۴h     │ ✅ openrouter_models.py│
+  │  3 │ Quota: Request + Token (هر کدام زودتر)      │ ✅ quota.py + models   │
+  │  4 │ Cache key شامل prompt_hash (+ provider/model)│ ✅ cache.py            │
+  │  5 │ لاگ: prompt_hash + prompt_version نه متن    │ ✅ AIUsageLog          │
+  │  6 │ System/User prompt جدا (system/ + user/)    │ ⏳ فاز بعد — فعلاً txt │
+  │  7 │ Timeout: Gemini 10s، OpenRouter 8s          │ ✅ settings.py         │
+  │  8 │ Retry فقط داخل Provider، نه Gateway         │ ✅ gemini.py (۱ retry) │
+  │  9 │ مدل از settings.py نه hardcode              │ ✅ GEMINI_MODEL env    │
+  │ 10 │ زنجیره: Flash → Lite → OR → Rule            │ ✅ HTTP_PROVIDER_CHAIN │
+  └────┴──────────────────────────────────────────────┴────────────────────────┘
+
+  بازبینی دوم (۹.۸/۱۰) — اعمال‌شده:
+  • total_tokens + provider_attempt در AIUsageLog
+  • PROMPT_VERSIONS دستی (listing_summary_v1 و ...)
+  • AI_GLOBAL_DAILY_CAP=350 (۱۰۰ RPD بافر از سقف ۵۰۰)
+  • validation.py قبل از LLM (trim + skip بدون قیمت/آپلود خالی)
+  • parse_json_text مقاوم (```json``` و متن اضافه)
+  • OpenRouter: refresh روزانه + امتحان مدل بعدی روی 429 همان لحظه
+
+================================================================================
+۲. چیزهایی که در فاز صفر اضافه نمی‌شوند
+================================================================================
+
+  ✗ Celery / Redis (async)
+  ✗ pgvector / ListingEmbedding / Semantic Search
+  ✗ Cost Dashboard (ستون cost در log — nullable برای آینده)
+  ✗ Groq / Cloudflare
+  ✗ Prompt registry.yaml / چند نسخه prompt
+  ✗ JSON Schema validation سنگین (فقط parse ساده JSON برای listing_summary)
+
+================================================================================
+۳. ساختار پوشه — اپ جدید ai_workspace
+================================================================================
+
+django/
+├── ai_workspace/
+│   ├── __init__.py
+│   ├── apps.py
+│   ├── admin.py
+│   ├── models.py                 # AIQuota, AIUsageLog, AICache
+│   ├── constants.py              # AI_FEATURES, سقف‌ها, PROVIDER_ERRORS
+│   ├── urls.py
+│   ├── views.py                  # JSON endpoints برای وب
+│   │
+│   ├── providers/
+│   │   ├── __init__.py
+│   │   ├── base.py               # ProviderResult + ProviderError
+│   │   ├── registry.py           # ✅ Singleton + HTTP_PROVIDER_CHAIN
+│   │   ├── gemini.py             # Primary + Lite (model_setting)
+│   │   ├── openrouter.py         # Backup — :free models
+│   │   └── rule_based.py         # آخرین لایه — بدون HTTP
+│   │
+│   ├── prompts/                  # هیچ prompt داخل .py نیست
+│   │   ├── listing_summary.txt
+│   │   ├── crm_message.txt
+│   │   └── upload_brief.txt
+│   │
+│   ├── context_builders/
+│   │   ├── __init__.py
+│   │   ├── base.py               # truncate, mask_phone, budget_tokens
+│   │   ├── listing_context.py
+│   │   ├── contact_context.py
+│   │   └── upload_context.py
+│   │
+│   ├── services/
+│   │   ├── gateway.py            # orchestration + provider chain
+│   │   ├── quota.py              # بررسی و مصرف سهمیه
+│   │   ├── cache.py              # AICache + prompt_hash در کلید
+│   │   ├── prompts.py            # render + prompt_hash + prompt_version
+│   │   ├── openrouter_models.py  # refresh مدل‌های :free هر ۲۴h
+│   │   ├── validation.py         # trim + skip_llm قبل از Provider
+│   │   ├── listing_summary.py
+│   │   ├── crm_message.py
+│   │   └── upload_brief.py
+│   │
+│   ├── fallbacks/                # منطق rule-based جدا از provider
+│   │   ├── listing_summary.py    # listing_features + advertiser_signal
+│   │   ├── crm_message.py        # crm_templates.render_message_template
+│   │   └── upload_brief.py       # آمار upload_batch + outliers
+│   │
+│   ├── migrations/
+│   └── tests/
+│       ├── test_gateway.py
+│       ├── test_quota.py
+│       ├── test_listing_summary.py
+│       └── (test_crm_message / test_upload_brief — فاز بعد)
+│
+├── divar_shop/settings.py        # + ai_workspace در INSTALLED_APPS
+├── divar_shop/urls.py            # (اختیاری) include ai_workspace.urls
+├── workspace/urls.py             # + path('ai/', include('ai_workspace.urls'))
+├── .env.example                  # + GEMINI_API_KEY, OPENROUTER_API_KEY, AI_ENABLED
+└── requirements.txt              # + google-genai (یا requests کافی است)
+
+================================================================================
+۴. تنظیمات محیط (.env)
+================================================================================
+
+AI_ENABLED=true
+
+# Primary — Google AI Studio (پروژه Divarfiling)
+GEMINI_API_KEY=<کلید — فقط در .env سرور>
+GEMINI_MODEL=gemini-3.1-flash-lite
+GEMINI_FALLBACK_MODEL=gemini-2.5-flash-lite
+GEMINI_TIMEOUT_SECONDS=10
+
+# Backup — فقط وقتی هر دو Gemini fail شوند
+OPENROUTER_API_KEY=<کلید — فقط در .env سرور>
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+# خالی = مدل‌های :free از GET /models هر ۲۴h (ترجیحی)
+OPENROUTER_FREE_MODELS=
+OPENROUTER_TIMEOUT_SECONDS=8
+
+# سقف‌ها
+AI_GLOBAL_DAILY_CAP=350
+AI_DAILY_TOKEN_LIMIT=30000
+
+================================================================================
+۵. مدل‌های دیتابیس
+================================================================================
+
+── AIQuota ──────────────────────────────────────────────────────────────────
+  user              OneToOneField → accounts.User
+  daily_limit       PositiveSmallIntegerField  default=10
+  used_today        PositiveSmallIntegerField  default=0
+  tokens_used_today PositiveIntegerField       default=0
+  reset_date        DateField
+
+  listing_summary_used    PositiveSmallIntegerField  default=0  max=10
+  crm_message_used        PositiveSmallIntegerField  default=0  max=8
+  upload_brief_used       PositiveSmallIntegerField  default=0  max=2
+  is_unlimited      BooleanField  default=False  # staff/superuser
+
+── AIUsageLog ───────────────────────────────────────────────────────────────
+  user, feature_code, provider, model
+  input_tokens, output_tokens, total_tokens, latency_ms, cache_hit, status
+  provider_attempt    # 0=کش/validation، 1=Primary، 2=Lite، 3=OR، 4=Rule
+  prompt_hash, prompt_version (دستی از PROMPT_VERSIONS)
+  created_at
+
+── AICache ──────────────────────────────────────────────────────────────────
+  cache_key         sha256(feature:entity_id:content_version:prompt_hash:provider:model)
+  feature_code, result_text, result_json (JSONField)
+  created_at, expires_at
+
+================================================================================
+۶. سهمیه مصرف (محافظه‌کارانه — تأیید شده)
+================================================================================
+
+┌─────────────────────────────┬────────────────────────────────────────────┐
+│ نوع کاربر                   │ سقف                                        │
+├─────────────────────────────┼────────────────────────────────────────────┤
+│ بدون لایسنس فعال            │ ۰ درخواست AI در روز                        │
+│ has_active_bot_license=True │ ۱۰ درخواست کل + ۳۰٬۰۰۰ توکن در روز        │
+│                             │ (هر کدام زودتر تمام شود)                   │
+│ staff / superuser           │ نامحدود (is_unlimited=True)                │
+├─────────────────────────────┼────────────────────────────────────────────┤
+│ listing_summary             │ حداکثر ۱۰ درخواست در روز                   │
+│ crm_message                 │ حداکثر ۸ درخواست در روز                    │
+│ upload_brief                │ حداکثر ۲ درخواست در روز                    │
+└─────────────────────────────┴────────────────────────────────────────────┘
+
+منطق quota.py:
+  1. staff/superuser → بدون محدودیت
+  2. بدون لایسنس → quota_exceeded (code=no_license)
+  3. used_today >= daily_limit (10) → daily_limit
+  4. tokens_used_today >= AI_DAILY_TOKEN_LIMIT → token_limit
+  5. feature_used >= feature_max → feature_limit
+  6. AI_GLOBAL_DAILY_CAP (350) → rule_based مستقیم + log
+  7. cache hit → بدون کسر سهمیه
+
+اتصال به کد موجود:
+  from workspace.services.access import has_active_bot_license
+
+================================================================================
+۷. Feature Flag
+================================================================================
+
+── constants.py ─────────────────────────────────────────────────────────────
+AI_FEATURES = {
+    'listing_summary': True,
+    'crm_message': True,
+    'upload_brief': True,
+}
+
+── settings.py ──────────────────────────────────────────────────────────────
+AI_ENABLED = config('AI_ENABLED', default=False, cast=bool)
+
+── تابع is_feature_enabled(feature, user) ───────────────────────────────────
+  if not settings.AI_ENABLED: return False
+  if feature not in AI_FEATURES: return False
+  if not AI_FEATURES[feature]: return False
+  if not has_active_bot_license(user) and not user.is_staff: return False
+  return True
+
+================================================================================
+۸. Provider Chain — جزئیات پیاده‌سازی
+================================================================================
+
+── providers/base.py ────────────────────────────────────────────────────────
+
+@dataclass
+class ProviderResult:
+    text: str
+    provider: str           # gemini | openrouter | rule_based
+    model: str
+    input_tokens: int | None
+    output_tokens: int | None
+    latency_ms: int
+    is_fallback: bool
+
+class AIProvider(Protocol):
+    name: str
+    def complete(self, *, system: str, user: str, json_mode: bool = False) -> ProviderResult: ...
+
+class ProviderError(Exception):
+    retryable: bool = True   # True → برو provider بعدی
+
+── providers/gemini.py ────────────────────────────────────────────────────────
+  • مدل از settings: GEMINI_MODEL یا GEMINI_FALLBACK_MODEL (model_setting)
+  • Timeout: GEMINI_TIMEOUT_SECONDS (پیش‌فرض ۱۰ ثانیه)
+  • Retry داخلی: حداکثر ۱ بار (نه در Gateway)
+  • خطاهای retryable: Timeout, 429, 5xx, RESOURCE_EXHAUSTED
+  • خطاهای non-retryable: 400, 401, 403
+
+── providers/openrouter.py ────────────────────────────────────────────────────
+  ⚠️  فقط وقتی هر دو Gemini خطای retryable دادند.
+
+  مدل‌ها از services/openrouter_models.get_free_models():
+    • GET /api/v1/models هر ۲۴h → cache
+    • فقط idهای :free یا openrouter/free
+    • fallback: OPENROUTER_FREE_MODELS env یا لیست ثابت
+
+  Timeout: OPENROUTER_TIMEOUT_SECONDS (پیش‌فرض ۸ ثانیه)
+  خروجی: message.content یا message.reasoning
+
+── providers/registry.py ─────────────────────────────────────────────────────
+  GEMINI_PRIMARY = GeminiProvider(model_setting='GEMINI_MODEL')
+  GEMINI_LITE = GeminiProvider(model_setting='GEMINI_FALLBACK_MODEL')
+  OPENROUTER = OpenRouterProvider()
+  RULE_BASED = RuleBasedProvider()
+  HTTP_PROVIDER_CHAIN = [GEMINI_PRIMARY, GEMINI_LITE, OPENROUTER]
+
+── services/gateway.py ──────────────────────────────────────────────────────
+
+def run(feature, user, *, context, entity_type, entity_id) -> GatewayResult:
+    # 1. feature flag
+    # 2. render prompt → system, user_prompt; p_hash = prompt_hash(...)
+    # 3. cache.get(feature, entity_id, content_version, p_hash)
+    # 4. quota check (request + token) — staff skip
+    # 5. for provider in HTTP_PROVIDER_CHAIN:  # Singleton — بدون Retry در Gateway
+    #        try: provider.complete(...); break
+    #        except ProviderError: continue if retryable
+    # 6. اگر همه fail → RULE_BASED.complete_for_feature(...)
+    # 7. consume_quota(user, feature, input_tokens, output_tokens)
+    # 8. cache.store(..., prompt_hash=p_hash, provider=..., model=...)
+    # 9. AIUsageLog با prompt_hash و prompt_version — بدون متن prompt
+
+================================================================================
+۹. Context Builders — چه داده‌ای به LLM می‌رود
+================================================================================
+
+── listing_context.py ───────────────────────────────────────────────────────
+ورودی: Listing, benchmark dict, advertiser_signal, dataset.transaction_type
+خروجی: dict برای جایگزینی در prompt (~۸۰۰ توکن)
+
+فیلدها (از سیستم موجود — نه AI):
+  title, price, price_per_sqm, area, rooms, neighborhood, city
+  deal_mode (از transaction_profile)
+  benchmark.verdict, benchmark.median_label (از benchmark_listing)
+  advertiser.label (از advertiser_signal / workspace.services.features.extract_listing_features)
+  description_excerpt: ۳۰۰ کاراکتر اول listing.description
+  token
+
+── contact_context.py ───────────────────────────────────────────────────────
+ورودی: Customer, اختیاری top-2 match از get_customer_matches (بدون embed)
+فیلدها:
+  name, customer_type, status, budget_range, areas, property_type
+  last_activities: ۲ مورد آخر CustomerActivity (خلاصه)
+  top_matches: عنوان + price_label + match_score (از crm_matching — AI توضیح می‌دهد نه محاسبه)
+  channel, tone (از request POST)
+
+── upload_context.py ────────────────────────────────────────────────────────
+ورودی: upload_batch dict از session، Dataset اختیاری
+فیلدها (از importer/analyzer):
+  total_files, total_added, new_files, updated_files, errors_count
+  اگر dataset_id داده شد:
+    outlier_count, duplicate_count (از compute_outliers_report / filters)
+    median_price, median_per_sqm (از compute_statistics)
+  — هرگز کل dataframe
+
+================================================================================
+۱۰. Promptها (فقط فایل txt)
+================================================================================
+
+── prompts/listing_summary.txt ──────────────────────────────────────────────
+نقش: دستیار مشاور املاک ایرانی
+دستور: بر اساس CONTEXT زیر، خلاصه‌ای ۴-۶ خطی فارسی بنویس.
+قوانین:
+  - اعداد و verdict در CONTEXT داده شده — تغییر نده
+  - نکته مذاکره، سیگنال آگهی‌دهنده، ریسک‌های احتمالی
+  - خروجی JSON: {"summary":"...", "highlights":["..."], "negotiation_tip":"...", "advertiser_note":"..."}
+
+── prompts/crm_message.txt ──────────────────────────────────────────────────
+نقش: نویسنده پیام حرفه‌ای مشاور املاک
+دستور: پیام {channel} به زبان {tone} برای مشتری بنویس.
+قوانید:
+  - حداکثر ۶ خط
+  - بدون اختراع قیمت یا ملک
+  - اگر top_matches دارد، فقط به آن‌ها اشاره کن
+خروجی: plain text فارسی (بدون JSON)
+
+── prompts/upload_brief.txt ─────────────────────────────────────────────────
+دستور: گزارش کوتاه مشاور از نتیجه آپلود
+قوانین:
+  - اعداد فقط از CONTEXT
+  - فرصت‌ها، outliers، تکراری‌ها، ۳ اقدام پیشنهادی
+خروجی JSON: {"executive_summary":"...", "opportunities":[], "outliers_note":"...", "duplicates_note":"...", "action_items":[]}
+
+── services/prompts.py ──────────────────────────────────────────────────────
+def render(feature, context) -> tuple[str, str]:
+    # system از فایل txt + جایگزینی {placeholders}
+    # user = 'CONTEXT:\n' + json.dumps(public_context)
+
+def prompt_hash(system, user) -> str:
+    # sha256 برای cache و log
+
+def prompt_version(feature) -> str:
+    # mtime فایل prompts/{feature}.txt
+
+================================================================================
+۱۱. Rule-based Fallback — اتصال به کد موجود
+================================================================================
+
+── fallbacks/listing_summary.py ─────────────────────────────────────────────
+از:
+  workspace.services.features.extract_listing_features
+  workspace.services.advertiser_signal (از context)
+  benchmark verdict موجود در context
+خروجی: همان ساختار JSON listing_summary با متن ساده
+
+── fallbacks/crm_message.py ─────────────────────────────────────────────────
+از:
+  workspace.services.crm_templates.ensure_default_templates
+  workspace.services.crm_templates.render_message_template
+  قالب پیش‌فرض «پیگیری اولیه» یا «ارسال پیشنهاد»
+
+── fallbacks/upload_brief.py ────────────────────────────────────────────────
+از:
+  آمار upload_batch (همان session dict)
+  اگر dataset موجود: compute_outliers_report, compute_statistics
+خروجی: JSON با executive_summary از اعداد واقعی
+
+================================================================================
+۱۲. API و URLها
+================================================================================
+
+── workspace/urls.py — اضافه شود ──────────────────────────────────────────────
+path('ai/', include('ai_workspace.urls')),
+
+── ai_workspace/urls.py ─────────────────────────────────────────────────────
+POST  ai/listings/<uuid:dataset_id>/<int:listing_id>/summary/
+POST  ai/crm/contacts/<int:customer_id>/message/
+      Body: {"channel": "واتساپ", "tone": "رسمی"}
+POST  ai/datasets/upload-brief/
+      Body: {"dataset_id": "uuid"} یا خواندن از session upload_batch
+GET   ai/quota/
+      → {"daily_limit":10, "used_today":5, "remaining":5,
+         "daily_token_limit":30000, "tokens_used_today":1200, "tokens_remaining":28800,
+         "features":{...}, "has_license":true}
+
+همه: LoginRequiredMixin + بررسی مالکیت dataset/listing/customer
+الگو: DatasetOwnerMixin از workspace/mixins.py
+
+── mobile_api (فاز ۱.۵ — اختیاری در هفته ۳) ─────────────────────────────────
+POST  /api/mobile/v1/ai/listings/<token>/summary
+POST  /api/mobile/v1/ai/contacts/<id>/message
+GET   /api/mobile/v1/ai/quota
+
+================================================================================
+۱۳. تغییرات UI — ✅ پیاده‌سازی شده
+================================================================================
+
+── templates/workspace/listings/detail.html ─────────────────────────────────
+محل: بعد از ws-ld-bench (benchmark verdict) — حدود خط ۷۹
+
+  <section class="ws-ai-card" id="wsAiListingSummary">
+    <button type="button" class="mk-hero-btn" data-ai-feature="listing_summary"
+            data-url="{% url 'ai_workspace:listing_summary' dataset.id listing.id %}">
+      ✨ خلاصه هوشمند فایل
+    </button>
+    <div class="ws-ai-result" hidden></div>
+    <p class="ws-ai-disclaimer">مکمل تحلیل آماری — اعداد از سیستم فایلینگ</p>
+  </section>
+
+JS: static/workspace/js/ai.js (فایل جدید کوچک)
+  - fetch POST + CSRF
+  - loading state
+  - نمایش summary + highlights
+  - اگر status=fallback → badge «حالت پایه»
+
+── templates/workspace/crm/contacts/detail.html ─────────────────────────────
+محل: crm_actions block — کنار دکمه «قالب» (خط ۱۳)
+
+  <button type="button" class="mk-hero-btn" data-ai-feature="crm_message"
+          data-drawer-open="drawer-ai-message">
+    ✨ پیام هوشمند
+  </button>
+
+Drawer جدید: کانال (واتساپ/تماس/پیامک) + لحن (رسمی/صمیمی) + پیش‌نمایش + کپی
+
+── templates/workspace/datasets/list.html ───────────────────────────────────
+محل: بعد از upload_batch banner (خط ۲۸۱+)
+
+  {% if upload_batch %}
+    <section class="ws-ai-upload-brief">
+      <button data-ai-feature="upload_brief" data-url="...">
+        ✨ تحلیل هوشمند این آپلود
+      </button>
+      <div class="ws-ai-result"></div>
+    </section>
+  {% endif %}
+
+── CSS ────────────────────────────────────────────────────────────────────────
+اضافه به static/workspace/css/workspace.css (نه crm.css ۱۶K خطی — بخش جدید ~۸۰ خط)
+کلاس‌ها: .ws-ai-card, .ws-ai-result, .ws-ai-disclaimer, .ws-ai-badge--fallback
+
+================================================================================
+۱۴. وابستگی‌ها
+================================================================================
+
+django/requirements.txt — اضافه:
+  google-genai>=1.0.0          # SDK رسمی Gemini (ترجیحی)
+  # یا فقط requests موجود کافی است برای REST مستقیم
+
+requests>=2.31.0               # از قبل موجود — برای OpenRouter
+
+================================================================================
+۱۵. تست‌ها — وضعیت پیاده‌سازی (۲۰ تست پاس)
+================================================================================
+
+test_gateway.py: ✅ (+ validation skip)
+test_quota.py: ✅
+test_listing_summary.py: ✅
+test_parse.py: ✅
+test_validation.py: ✅
+
+================================================================================
+۱۶. نقشه اجرا — وضعیت (۱۴۰۵/۰۱/۱۴)
+================================================================================
+
+┌─────────┬──────────────────────────────────────────────────────────────────┐
+│ هفته ۱  │ زیرساخت + خلاصه آگهی                              ✅ انجام شد   │
+├─────────┼──────────────────────────────────────────────────────────────────┤
+│ هفته ۲  │ پیام CRM                                          ✅ انجام شد   │
+├─────────┼──────────────────────────────────────────────────────────────────┤
+│ هفته ۳  │ تحلیل آپلود + UI + تست‌ها                         ✅ انجام شد   │
+├─────────┼──────────────────────────────────────────────────────────────────┤
+│ باقی‌مانده│ تست دستی E2E با کلید واقعی، mobile API، prompt system/user │
+└─────────┴──────────────────────────────────────────────────────────────────┘
+
+================================================================================
+۱۷. چک‌لیست قبل از deploy
+================================================================================
+
+  [ ] GEMINI_API_KEY در .env — rotate اگر لو رفته
+  [ ] OPENROUTER_API_KEY در .env — rotate اگر لو رفته
+  [ ] GEMINI_MODEL=gemini-3.1-flash-lite (نه 2.5-flash)
+  [ ] GEMINI_FALLBACK_MODEL=gemini-2.5-flash-lite
+  [ ] AI_ENABLED=true در production
+  [x] migrate ai_workspace (0001_initial)
+  [x] تست واحد: ۹/۹ پاس
+  [ ] تست E2E: خلاصه آگهی + پیام CRM + آپلود با کلید واقعی
+  [ ] تست: کاربر بدون لایسنس → پیام ارتقا
+  [ ] تست: Primary fail → Lite → OR → rule_based
+  [ ] تست: CRM/matching/analyze خراب نشده
+  [ ] Admin: AIUsageLog + prompt_hash قابل مشاهده
+  [ ] بررسی ۲ هفته Usage Log → تنظیم AI_GLOBAL_DAILY_CAP و سقف کاربر
+
+================================================================================
+۱۸. مسیر ارتقا (فاز بعد — بدون تغییر View)
+================================================================================
+
+  • افزایش سقف quota پس از ۲ هفته monitoring
+  • اضافه کردن Provider پولی به ابتدای chain (قبل از Gemini)
+  • Conversation Memory (فاز ۱.۱) — چند سؤال پیاپی بدون ارسال مجدد کل context
+  • Celery برای upload_brief datasetهای بزرگ
+  • ListingEmbedding + semantic search
+  • Cost column در AIUsageLog
+  • محصول add-on AI در shop/models.py LicensePlan
+
+================================================================================
+۱۹. فایل‌های موجود که دست می‌خورند (فقط integrate — نه refactor)
+================================================================================
+
+  django/divar_shop/settings.py          → INSTALLED_APPS, AI_* settings
+  django/workspace/urls.py               → include ai urls
+  django/.env.example                    → کلیدها
+  django/requirements.txt                → google-genai
+  django/templates/workspace/listings/detail.html
+  django/templates/workspace/crm/contacts/detail.html
+  django/templates/workspace/datasets/list.html
+  django/static/workspace/js/ai.js       → جدید
+  django/static/workspace/css/workspace.css → بخش کوچک ws-ai-*
+
+  بدون تغییر منطق:
+  django/workspace/services/crm_matching.py
+  django/workspace/services/market_analytics.py
+  django/workspace/services/market_agent.py
+  django/workspace/services/analyzer.py
+  django/workspace/services/importer.py
+  django/workspace/services/access.py      (فقط import has_active_bot_license)
+
+================================================================================
+پایان پلن — پیاده‌سازی انجام شد؛ آماده فعال‌سازی با AI_ENABLED=true
+================================================================================

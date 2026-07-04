@@ -34,15 +34,16 @@ class AndroidAppDownloadTests(TestCase):
         self.assertContains(response, 'دانلود APK')
         self.assertContains(response, 'Play Protect')
 
-    def test_dashboard_install_link_uses_in_page_fragment_when_guide_shown(self):
+    def test_dashboard_install_link_points_to_android_tutorial(self):
         user = get_user_model().objects.create_user(
             username='dlguide',
             password='test-pass-123',
         )
         self.client.force_login(user)
         response = self.client.get(reverse('dashboard'))
-        self.assertContains(response, 'href="#mk-dl-android-install"')
-        self.assertNotContains(response, f'href="{reverse("android_tutorial")}#chapter-install"')
+        self.assertContains(response, f'href="{reverse("android_tutorial")}#chapter-install"')
+        self.assertNotContains(response, 'id="mk-dl-android-install"')
+        self.assertNotContains(response, 'Play Protect')
 
     def test_dashboard_shows_android_link_for_authenticated_user(self):
         if not android_apk_available():

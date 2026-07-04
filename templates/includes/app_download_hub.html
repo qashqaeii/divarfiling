@@ -48,7 +48,7 @@
                         <i class="fab fa-android" aria-hidden="true"></i>
                         دانلود APK
                     </a>
-                    <a href="{% if compact and not show_install_guide %}{% url 'android_tutorial' %}#chapter-install{% else %}#mk-dl-android-install{% endif %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
+                    <a href="{% if compact %}{% url 'android_tutorial' %}#chapter-install{% else %}#mk-dl-android-install{% endif %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
                     {% else %}
                     <span class="mk-dl-unavailable"><i class="fas fa-clock"></i> به‌زودی در سرور قرار می‌گیرد</span>
                     {% endif %}
@@ -112,7 +112,7 @@
         </div>
 
         {% if app_downloads.android.available %}
-        {% if not compact or show_install_guide %}
+        {% if not compact %}
         <div class="mk-dl-install" id="mk-dl-android-install">
             <div class="mk-dl-install-grid">
                 <div class="mk-dl-install-steps">

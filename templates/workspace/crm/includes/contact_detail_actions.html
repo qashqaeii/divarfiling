@@ -1,10 +1,11 @@
+{% load static %}
 {% if not customer_is_shared %}
 <div class="crm-contact-hero__actions" role="toolbar" aria-label="عملیات مخاطب">
     <div class="crm-contact-hero__actions-primary">
         {% if customer.phone %}
         {% if ai_enabled and has_bot_license %}
-        <button type="button" class="crm-dash-act crm-dash-act--ai" data-drawer-open="drawer-ai-message" title="تولید پیام با هوش مصنوعی">
-            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+        <button type="button" class="crm-dash-act crm-dash-act--ai" data-drawer-open="drawer-ai-message" title="ساخت پیام با هوش مصنوعی">
+            <img src="{% static 'icons/Ai.png' %}" alt="" class="crm-dash-act__ai-icon" width="20" height="20" loading="lazy" decoding="async">
             <span>پیام هوشمند</span>
         </button>
         {% endif %}

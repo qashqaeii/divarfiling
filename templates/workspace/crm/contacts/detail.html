@@ -690,43 +690,93 @@
 </aside>
 
 {% if ai_enabled and has_bot_license %}
-<aside class="crm-drawer" id="drawer-ai-message">
+<aside class="crm-drawer crm-drawer-ai" id="drawer-ai-message">
     <div class="crm-drawer-overlay" data-drawer-close></div>
-    <div class="crm-drawer-panel">
-        <div class="crm-drawer-head">
-            <div><h2>پیام هوشمند</h2><p>{{ customer.name }}</p></div>
-            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button>
+    <div class="crm-drawer-panel crm-drawer-panel-ai">
+        <div class="crm-drawer-head crm-drawer-head-ai">
+            <div class="crm-drawer-head-ai-brand">
+                <span class="crm-drawer-head-ai-icon" aria-hidden="true">
+                    <img src="{% static 'icons/Ai.png' %}" alt="" width="48" height="48" loading="lazy" decoding="async">
+                </span>
+                <div class="crm-drawer-head-ai-text">
+                    <span class="crm-drawer-kicker">هوش مصنوعی فایلینگ دیوار</span>
+                    <h2>پیام هوشمند</h2>
+                    <p>برای <strong>{{ customer.name }}</strong></p>
+                </div>
+            </div>
+            <button type="button" class="crm-drawer-close crm-drawer-close--on-accent" data-drawer-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
         </div>
         <div class="crm-drawer-body ws-ai-crm-compose"
              data-ai-feature="crm_message"
              data-ai-url="{% url 'workspace:ai_workspace:crm_message' customer.id %}">
-            <div class="ws-fields">
-                <div class="ws-field">
-                    <label class="ws-label" for="aiCrmChannel">کانال</label>
-                    <select id="aiCrmChannel" class="ws-select">
+            <p class="crm-ai-compose-lead">
+                پیام حرفه‌ای برای ارسال به مشتری — بر پایه تطبیق‌های فایل، لینک عمومی ملک‌ها و پروفایل همین مخاطب.
+            </p>
+            <div class="crm-ai-compose-chips" aria-hidden="true">
+                <span class="crm-ai-compose-chip"><i class="fas fa-link" aria-hidden="true"></i> لینک عمومی ملک</span>
+                <span class="crm-ai-compose-chip"><i class="fas fa-chart-line" aria-hidden="true"></i> تطبیق هوشمند</span>
+                <span class="crm-ai-compose-chip"><i class="fas fa-sliders" aria-hidden="true"></i> لحن قابل تنظیم</span>
+            </div>
+            <div class="crm-ai-compose-settings">
+                <div class="crm-ai-compose-field">
+                    <label class="crm-ai-compose-label" for="aiCrmChannel">
+                        <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                        <span>کانال ارسال</span>
+                    </label>
+                    <select id="aiCrmChannel" class="crm-select crm-ai-compose-select">
                         <option value="واتساپ">واتساپ</option>
                         <option value="پیامک">پیامک</option>
                         <option value="تماس">تماس تلفنی</option>
                     </select>
                 </div>
-                <div class="ws-field">
-                    <label class="ws-label" for="aiCrmTone">لحن</label>
-                    <select id="aiCrmTone" class="ws-select">
+                <div class="crm-ai-compose-field">
+                    <label class="crm-ai-compose-label" for="aiCrmTone">
+                        <i class="fas fa-comment-dots" aria-hidden="true"></i>
+                        <span>لحن پیام</span>
+                    </label>
+                    <select id="aiCrmTone" class="crm-select crm-ai-compose-select">
                         <option value="رسمی">رسمی</option>
                         <option value="صمیمی">صمیمی</option>
                     </select>
                 </div>
-                <div class="ws-field">
-                    <label class="ws-label" for="aiCrmPreview">پیش‌نمایش</label>
-                    <textarea id="aiCrmPreview" class="ws-textarea" rows="8" readonly placeholder="دکمه تولید را بزنید…"></textarea>
+            </div>
+            <div class="crm-ai-compose-preview">
+                <label class="crm-ai-compose-label" for="aiCrmPreview">
+                    <i class="fas fa-eye" aria-hidden="true"></i>
+                    <span>پیش‌نمایش پیام</span>
+                </label>
+                <div class="crm-ai-compose-preview-box" data-ai-preview-box>
+                    <div class="crm-ai-compose-preview-empty" data-ai-preview-empty>
+                        <img src="{% static 'icons/sparkles.png' %}" alt="" width="28" height="28" loading="lazy" decoding="async">
+                        <p>پیام آماده ارسال اینجا نمایش داده می‌شود</p>
+                        <span>دکمه «ساخت پیام هوشمند» را بزنید</span>
+                    </div>
+                    <textarea id="aiCrmPreview" class="crm-textarea crm-ai-compose-textarea" rows="9" readonly placeholder=""></textarea>
                 </div>
             </div>
-            <div class="ws-ai-result" hidden></div>
+            <div class="ws-ai-result crm-ai-compose-meta" hidden></div>
+            <p class="crm-ai-compose-note">
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                اعداد و امتیاز تطابق از سیستم فایلینگ است؛ AI فقط متن پیشنهادی می‌سازد.
+            </p>
         </div>
-        <div class="crm-drawer-foot">
-            <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>بستن</button>
-            <button type="button" class="crm-btn crm-btn-primary ws-ai-trigger" data-ai-compose>تولید پیام</button>
-            <button type="button" class="crm-btn crm-btn-accent" id="aiCrmCopy" disabled>کپی</button>
+        <div class="crm-drawer-foot crm-drawer-foot-ai">
+            <div class="crm-drawer-foot-ai-side">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="button" class="crm-btn crm-btn-secondary crm-ai-compose-copy" id="aiCrmCopy" disabled>
+                    <i class="fas fa-copy" aria-hidden="true"></i>
+                    <span>کپی متن</span>
+                </button>
+            </div>
+            <button type="button" class="crm-ai-compose-cta ws-ai-trigger" data-ai-compose>
+                <span class="crm-ai-compose-cta-glow" aria-hidden="true"></span>
+                <span class="crm-ai-compose-cta-icon" aria-hidden="true">
+                    <img src="{% static 'icons/sparkles.png' %}" alt="" width="18" height="18" loading="lazy" decoding="async">
+                </span>
+                <span class="crm-ai-compose-cta-label">ساخت پیام هوشمند</span>
+            </button>
         </div>
     </div>
 </aside>
@@ -734,7 +784,7 @@
 {% endblock %}
 
 {% block crm_js %}
-<script src="{% static 'workspace/js/ai.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/ai.js' %}?v=3"></script>
 <script>window.crmTypeProfiles = {{ type_profiles_json|safe }};</script>
 {% if crm_agency and is_customer_owner %}
 <script>

@@ -147,6 +147,15 @@
         }
     }
 
+    function syncCrmPreviewState(preview) {
+        if (!preview) return;
+        const box = preview.closest('[data-ai-preview-box]');
+        const empty = box?.querySelector('[data-ai-preview-empty]');
+        const hasContent = !!(preview.value || '').trim();
+        if (box) box.classList.toggle('has-content', hasContent);
+        if (empty) empty.hidden = hasContent;
+    }
+
     async function handleCrmCompose(btn) {
         const panel = btn.closest('.crm-drawer-panel');
         const compose = panel ? panel.querySelector('.ws-ai-crm-compose') : null;
@@ -156,18 +165,27 @@
         const preview = panel.querySelector('#aiCrmPreview');
         const copyBtn = panel.querySelector('#aiCrmCopy');
         setLoading(btn, true);
-        if (preview) preview.value = 'در حال تولید…';
+        if (preview) {
+            preview.value = 'در حال ساخت پیام هوشمند…';
+            syncCrmPreviewState(preview);
+        }
         try {
             const data = await postJson(compose.dataset.aiUrl, { channel, tone });
             const text = data.text || '';
-            if (preview) preview.value = text;
+            if (preview) {
+                preview.value = text;
+                syncCrmPreviewState(preview);
+            }
             if (copyBtn) copyBtn.disabled = !text;
             const meta = compose.querySelector('.ws-ai-result');
             if (meta) {
                 showResult(meta, renderBadge(data));
             }
         } catch (e) {
-            if (preview) preview.value = '';
+            if (preview) {
+                preview.value = '';
+                syncCrmPreviewState(preview);
+            }
             alert(e.message || 'خطا');
         } finally {
             setLoading(btn, false);
@@ -190,10 +208,20 @@
         const copyBtn = document.getElementById('aiCrmCopy');
         copyBtn?.addEventListener('click', () => {
             const text = document.getElementById('aiCrmPreview')?.value || '';
-            if (!text) return;
+            if (!text || text.startsWith('در حال ساخت')) return;
             if (navigator.clipboard?.writeText) {
-                navigator.clipboard.writeText(text);
+                navigator.clipboard.writeText(text).then(() => {
+                    const label = copyBtn.querySelector('span');
+                    if (!label) return;
+                    const orig = label.textContent;
+                    label.textContent = 'کپی شد';
+                    setTimeout(() => { label.textContent = orig; }, 1600);
+                });
             }
+        });
+
+        document.querySelectorAll('#aiCrmPreview').forEach(preview => {
+            syncCrmPreviewState(preview);
         });
     });
 })();

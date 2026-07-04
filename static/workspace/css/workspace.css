@@ -4299,6 +4299,8 @@ body.ws-modal-open { overflow: hidden; }
     isolation: isolate;
 }
 .ws-ai-card--listing {
+    margin-top: 1.35rem;
+    margin-bottom: 0.75rem;
     border: 1px solid color-mix(in srgb, #7c3aed 22%, var(--ws-border, #e2e8f0));
     background: linear-gradient(
         145deg,
@@ -4457,33 +4459,13 @@ body.ws-modal-open { overflow: hidden; }
     margin-top: 0.85rem;
 }
 .ws-ai-card__empty {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.65rem 0.85rem;
-    align-items: start;
-    padding: 0.85rem 0.95rem;
+    padding: 1rem 1.1rem;
     border-radius: 12px;
     border: 1px dashed color-mix(in srgb, #7c3aed 22%, var(--ws-border, #e2e8f0));
     background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, transparent);
+    text-align: center;
 }
 .ws-ai-card__empty[hidden] { display: none !important; }
-.ws-ai-card__empty-icon {
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.15rem;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(237, 233, 254, 0.85));
-    border: 1px solid color-mix(in srgb, #7c3aed 14%, var(--ws-border, #e2e8f0));
-}
-.ws-ai-card__empty-icon img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
 .ws-ai-card__empty-title {
     margin: 0;
     font-size: 0.82rem;
@@ -4492,8 +4474,7 @@ body.ws-modal-open { overflow: hidden; }
     line-height: 1.5;
 }
 .ws-ai-card__empty-desc {
-    margin: 0.2rem 0 0;
-    grid-column: 2;
+    margin: 0.35rem 0 0;
     font-size: 0.72rem;
     line-height: 1.65;
     color: var(--ws-text-muted, #64748b);
@@ -4575,12 +4556,6 @@ body.ws-modal-open { overflow: hidden; }
 @media (max-width: 640px) {
     .ws-ai-card__header { flex-direction: column; align-items: stretch; }
     .ws-ai-card__cta { width: 100%; justify-content: center; }
-    .ws-ai-card__empty {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-    .ws-ai-card__empty-icon { margin: 0 auto; }
-    .ws-ai-card__empty-desc { grid-column: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
     .ws-ai-card__cta-glow { animation: none; }

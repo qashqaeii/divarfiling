@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 _JSON_FENCE_RE = re.compile(
     r'```(?:json|JSON)?\s*([\s\S]*?)```',
@@ -64,3 +64,46 @@ def parse_json_text(text: str) -> Optional[Dict[str, Any]]:
             return parsed
 
     return _extract_braced_object(text)
+
+
+_SUMMARY_FIELD_RE = re.compile(r'"summary"\s*:\s*"((?:[^"\\]|\\.)*)"', re.DOTALL)
+_NEGOTIATION_FIELD_RE = re.compile(r'"negotiation_tip"\s*:\s*"((?:[^"\\]|\\.)*)"', re.DOTALL)
+_ADVERTISER_FIELD_RE = re.compile(r'"advertiser_note"\s*:\s*"((?:[^"\\]|\\.)*)"', re.DOTALL)
+_HIGHLIGHTS_BLOCK_RE = re.compile(r'"highlights"\s*:\s*\[([\s\S]*)', re.DOTALL)
+_HIGHLIGHT_ITEM_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')
+
+
+def salvage_listing_json(text: str) -> Optional[Dict[str, Any]]:
+    """استخراج فیلدها از JSON ناقص/بریده‌شده."""
+    text = (text or '').strip()
+    if not text:
+        return None
+
+    summary_match = _SUMMARY_FIELD_RE.search(text)
+    if not summary_match:
+        return None
+
+    result: Dict[str, Any] = {'summary': summary_match.group(1).strip()}
+    highlights: List[str] = []
+    highlights_match = _HIGHLIGHTS_BLOCK_RE.search(text)
+    if highlights_match:
+        chunk = highlights_match.group(1)
+        for item_match in _HIGHLIGHT_ITEM_RE.finditer(chunk):
+            val = item_match.group(1).strip()
+            if not val or val in ('summary', 'highlights', 'negotiation_tip', 'advertiser_note'):
+                continue
+            highlights.append(val)
+            if len(highlights) >= 8:
+                break
+    if highlights:
+        result['highlights'] = highlights
+
+    negotiation_match = _NEGOTIATION_FIELD_RE.search(text)
+    if negotiation_match:
+        result['negotiation_tip'] = negotiation_match.group(1).strip()
+
+    advertiser_match = _ADVERTISER_FIELD_RE.search(text)
+    if advertiser_match:
+        result['advertiser_note'] = advertiser_match.group(1).strip()
+
+    return result

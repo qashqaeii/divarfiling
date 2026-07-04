@@ -59,7 +59,7 @@ class OpenRouterProvider:
             body: Dict[str, Any] = {
                 'model': model,
                 'messages': messages,
-                'max_tokens': 800,
+                'max_tokens': 1200,
                 'temperature': 0.4,
             }
             if json_mode:

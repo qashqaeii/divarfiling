@@ -1,19 +1,23 @@
 """Gateway مرکزی AI — Provider Chain."""
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from django.conf import settings
 from django.core.cache import cache as django_cache
 
-from ai_workspace.constants import feature_uses_json, is_feature_enabled
+from ai_workspace.constants import FEATURE_LISTING_SUMMARY, feature_uses_json, is_feature_enabled
 from ai_workspace.models import AIUsageLog
 from ai_workspace.providers.registry import HTTP_PROVIDER_CHAIN, RULE_BASED
 from ai_workspace.providers.base import ProviderError
 from ai_workspace.services import cache as ai_cache
-from ai_workspace.services.parse import parse_json_text
+from ai_workspace.services.parse import parse_json_text, salvage_listing_json
+from ai_workspace.services.payload import (
+    dumps_payload,
+    is_valid_payload,
+    normalize_payload,
+)
 from ai_workspace.services.prompts import prompt_hash, prompt_version, render
 from ai_workspace.services.quota import QuotaExceededError, check_quota, consume_quota
 from ai_workspace.services.validation import prepare_context
@@ -116,11 +120,13 @@ def _bump_global_counter() -> None:
 def _finalize_payload(feature: str, text: str, fallback_payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if feature_uses_json(feature):
         parsed = parse_json_text(text)
+        if not parsed and feature == FEATURE_LISTING_SUMMARY:
+            parsed = salvage_listing_json(text)
         if parsed:
-            return parsed
+            return normalize_payload(feature, parsed, text)
         if fallback_payload and fallback_payload.get('data'):
-            return fallback_payload['data']
-        return {'summary': text, 'raw': text}
+            return normalize_payload(feature, fallback_payload['data'], text)
+        return normalize_payload(feature, {'summary': text, 'raw': text}, text)
     return {'text': text}
 
 
@@ -146,36 +152,42 @@ def run(
 
     cached = ai_cache.get(feature, entity_id, content_version, p_hash)
     if cached:
-        _log_usage(
-            user=user,
-            feature=feature,
-            provider='cache',
-            model='cache',
-            status=AIUsageLog.STATUS_CACHED,
-            latency_ms=0,
-            cache_hit=True,
-            entity_type=entity_type,
-            entity_id=entity_id,
-            prompt_hash_val=p_hash,
-            prompt_version_val=p_ver,
-            provider_attempt=0,
+        data = normalize_payload(
+            feature,
+            cached.get('data') or {},
+            cached.get('text') or '',
         )
-        data = cached.get('data') or {}
-        if not data and cached.get('text'):
-            data = _finalize_payload(feature, cached['text'])
-        return GatewayResult(
-            feature=feature,
-            provider='cache',
-            model='cache',
-            text=cached.get('text') or '',
-            data=data,
-            is_fallback=False,
-            from_cache=True,
-            latency_ms=0,
-            input_tokens=None,
-            output_tokens=None,
-            status=AIUsageLog.STATUS_CACHED,
-        )
+        if feature_uses_json(feature) and not is_valid_payload(feature, data):
+            ai_cache.invalidate(feature, entity_id, content_version, p_hash)
+            cached = None
+        else:
+            _log_usage(
+                user=user,
+                feature=feature,
+                provider='cache',
+                model='cache',
+                status=AIUsageLog.STATUS_CACHED,
+                latency_ms=0,
+                cache_hit=True,
+                entity_type=entity_type,
+                entity_id=entity_id,
+                prompt_hash_val=p_hash,
+                prompt_version_val=p_ver,
+                provider_attempt=0,
+            )
+            return GatewayResult(
+                feature=feature,
+                provider='cache',
+                model='cache',
+                text=dumps_payload(data) if feature_uses_json(feature) else (cached.get('text') or ''),
+                data=data,
+                is_fallback=False,
+                from_cache=True,
+                latency_ms=0,
+                input_tokens=None,
+                output_tokens=None,
+                status=AIUsageLog.STATUS_CACHED,
+            )
 
     use_rule_only = _global_cap_reached()
     if not use_rule_only:
@@ -219,18 +231,26 @@ def run(
         status = AIUsageLog.STATUS_OK if not provider_result.is_fallback else AIUsageLog.STATUS_FALLBACK
 
     data = _finalize_payload(feature, provider_result.text, rule_payload)
-    text_out = provider_result.text
-    if feature_uses_json(feature) and data:
-        text_out = json.dumps(data, ensure_ascii=False)
+    if feature_uses_json(feature) and not is_valid_payload(feature, data):
+        provider_result, rule_payload = RULE_BASED.complete_for_feature(feature, context)
+        data = normalize_payload(feature, rule_payload['data'], rule_payload.get('raw_text', ''))
+        text_out = dumps_payload(data)
+        status = AIUsageLog.STATUS_FALLBACK
+        provider_attempt = RULE_BASED_ATTEMPT
+    else:
+        text_out = provider_result.text
+        if feature_uses_json(feature) and data:
+            text_out = dumps_payload(data)
 
     consume_quota(user, feature, provider_result.input_tokens, provider_result.output_tokens)
     if 1 <= provider_attempt <= 3:
         _bump_global_counter()
 
-    ai_cache.store(
-        feature, entity_id, content_version, p_hash,
-        text=text_out, data=data,
-    )
+    if not feature_uses_json(feature) or is_valid_payload(feature, data):
+        ai_cache.store(
+            feature, entity_id, content_version, p_hash,
+            text=text_out, data=data,
+        )
 
     _log_usage(
         user=user,

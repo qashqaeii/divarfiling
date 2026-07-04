@@ -17,6 +17,12 @@ _LISTING_CTX = {
 }
 
 
+_MOCK_SUMMARY_JSON = (
+    '{"summary":"خلاصه تست آگهی برای واحد نمونه در محله","highlights":[],'
+    '"negotiation_tip":"","advertiser_note":""}'
+)
+
+
 def _make_chain_mock(*, primary_ok=True, secondary_ok=False, openrouter_ok=False):
     primary = MagicMock()
     lite = MagicMock()
@@ -24,7 +30,7 @@ def _make_chain_mock(*, primary_ok=True, secondary_ok=False, openrouter_ok=False
 
     if primary_ok:
         primary.complete.return_value = ProviderResult(
-            text='{"summary":"ok","highlights":[],"negotiation_tip":"","advertiser_note":""}',
+            text=_MOCK_SUMMARY_JSON,
             provider='gemini',
             model='gemini-3.1-flash-lite',
             input_tokens=10,
@@ -36,7 +42,7 @@ def _make_chain_mock(*, primary_ok=True, secondary_ok=False, openrouter_ok=False
 
     if secondary_ok:
         lite.complete.return_value = ProviderResult(
-            text='{"summary":"lite","highlights":[],"negotiation_tip":"","advertiser_note":""}',
+            text='{"summary":"خلاصه lite برای آگهی نمونه تست","highlights":[],"negotiation_tip":"","advertiser_note":""}',
             provider='gemini',
             model='gemini-2.5-flash-lite',
             input_tokens=10,
@@ -49,7 +55,7 @@ def _make_chain_mock(*, primary_ok=True, secondary_ok=False, openrouter_ok=False
 
     if openrouter_ok:
         openrouter.complete.return_value = ProviderResult(
-            text='{"summary":"backup","highlights":[],"negotiation_tip":"","advertiser_note":""}',
+            text='{"summary":"خلاصه پشتیبان openrouter برای آگهی نمونه","highlights":[],"negotiation_tip":"","advertiser_note":""}',
             provider='openrouter',
             model='openai/gpt-oss-20b:free',
             input_tokens=10,
@@ -133,7 +139,7 @@ class GatewayTests(TestCase):
         primary.complete.side_effect = ProviderError('403', retryable=False, code='403')
         lite.complete.side_effect = ProviderError('403', retryable=False, code='403')
         openrouter.complete.return_value = ProviderResult(
-            text='{"summary":"or","highlights":[],"negotiation_tip":"","advertiser_note":""}',
+            text='{"summary":"خلاصه openrouter بعد از خطای gemini","highlights":[],"negotiation_tip":"","advertiser_note":""}',
             provider='openrouter',
             model='openai/gpt-oss-20b:free',
             input_tokens=10,
@@ -153,6 +159,32 @@ class GatewayTests(TestCase):
         self.assertEqual(result.provider, 'openrouter')
         lite.complete.assert_called_once()
         openrouter.complete.assert_called_once()
+
+    def test_malformed_llm_json_uses_rule_based(self):
+        chain = _make_chain_mock(primary_ok=False, secondary_ok=False, openrouter_ok=True)
+        chain[2].complete.return_value = ProviderResult(
+            text='not-json',
+            provider='openrouter',
+            model='openai/gpt-oss-20b:free',
+            input_tokens=10,
+            output_tokens=5,
+            latency_ms=200,
+            is_fallback=True,
+        )
+        with patch('ai_workspace.services.gateway.HTTP_PROVIDER_CHAIN', chain):
+            result = run(
+                'listing_summary',
+                self.user,
+                context={
+                    **_LISTING_CTX,
+                    'content_version': '7',
+                    'benchmark_verdict': 'زیر میانه',
+                },
+                entity_type='listing',
+                entity_id='7',
+            )
+        self.assertEqual(result.provider, 'rule_based')
+        self.assertNotIn('{', result.data.get('summary', ''))
 
     def test_validation_skip_never_calls_providers(self):
         chain = _make_chain_mock(primary_ok=True)

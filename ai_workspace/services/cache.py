@@ -39,6 +39,16 @@ def get(
     }
 
 
+def invalidate(
+    feature: str,
+    entity_id: str,
+    content_version: str,
+    prompt_hash: str,
+) -> None:
+    key = _cache_key(feature, entity_id, content_version, prompt_hash)
+    AICache.objects.filter(cache_key=key).delete()
+
+
 def store(
     feature: str,
     entity_id: str,

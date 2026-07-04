@@ -93,6 +93,114 @@ function initCrmMobileMenuDock() {
     mq.addEventListener('change', dock);
 }
 
+function initWSGalleryLightbox() {
+    const galleries = document.querySelectorAll('[data-ws-gallery]');
+    if (!galleries.length) return;
+
+    let lightbox = document.getElementById('wsGalleryLightbox');
+    if (!lightbox) {
+        lightbox = document.createElement('div');
+        lightbox.id = 'wsGalleryLightbox';
+        lightbox.className = 'ws-lightbox';
+        lightbox.setAttribute('role', 'dialog');
+        lightbox.setAttribute('aria-modal', 'true');
+        lightbox.setAttribute('aria-hidden', 'true');
+        lightbox.innerHTML = `
+            <button type="button" class="ws-lightbox-backdrop" data-ws-lightbox-close aria-label="بستن"></button>
+            <div class="ws-lightbox-panel">
+                <div class="ws-lightbox-toolbar">
+                    <p class="ws-lightbox-title" id="wsLightboxTitle"></p>
+                    <div class="ws-lightbox-actions">
+                        <span class="ws-lightbox-counter" id="wsLightboxCounter" aria-hidden="true"></span>
+                        <button type="button" class="ws-lightbox-btn" id="wsLightboxPrev" aria-label="تصویر قبلی"><i class="fas fa-chevron-right"></i></button>
+                        <button type="button" class="ws-lightbox-btn" id="wsLightboxNext" aria-label="تصویر بعدی"><i class="fas fa-chevron-left"></i></button>
+                        <button type="button" class="ws-lightbox-btn" id="wsLightboxClose" aria-label="بستن"><i class="fas fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="ws-lightbox-stage">
+                    <img class="ws-lightbox-img" id="wsLightboxImg" src="" alt="">
+                </div>
+            </div>`;
+        document.body.appendChild(lightbox);
+    }
+
+    const imgEl = document.getElementById('wsLightboxImg');
+    const titleEl = document.getElementById('wsLightboxTitle');
+    const counterEl = document.getElementById('wsLightboxCounter');
+    const prevBtn = document.getElementById('wsLightboxPrev');
+    const nextBtn = document.getElementById('wsLightboxNext');
+    const closeBtn = document.getElementById('wsLightboxClose');
+    const backdrop = lightbox.querySelector('[data-ws-lightbox-close]');
+
+    let items = [];
+    let current = 0;
+    let lastFocus = null;
+
+    function render(index) {
+        if (!items.length) return;
+        current = (index + items.length) % items.length;
+        const item = items[current];
+        imgEl.src = item.src;
+        imgEl.alt = item.alt;
+        titleEl.textContent = item.alt;
+        counterEl.textContent = items.length > 1 ? `${current + 1} / ${items.length}` : '';
+        prevBtn.disabled = items.length <= 1;
+        nextBtn.disabled = items.length <= 1;
+        lightbox.setAttribute('aria-label', item.alt || 'بزرگ‌نمایی تصویر');
+    }
+
+    function open(index, galleryItems) {
+        items = galleryItems;
+        lastFocus = document.activeElement;
+        render(index);
+        lightbox.classList.add('is-open');
+        lightbox.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('ws-lightbox-open');
+        closeBtn.focus();
+    }
+
+    function close() {
+        lightbox.classList.remove('is-open');
+        lightbox.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('ws-lightbox-open');
+        imgEl.removeAttribute('src');
+        if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+    }
+
+    galleries.forEach(gallery => {
+        const triggers = Array.from(gallery.querySelectorAll('[data-ws-lightbox]'));
+        const galleryItems = triggers.map((btn, idx) => {
+            const src = btn.getAttribute('data-ws-lightbox') || '';
+            const thumb = btn.querySelector('img');
+            const alt = thumb?.getAttribute('alt') || `تصویر ${idx + 1}`;
+            return { src, alt };
+        }).filter(item => item.src);
+
+        triggers.forEach((btn, index) => {
+            btn.addEventListener('click', () => open(index, galleryItems));
+        });
+    });
+
+    prevBtn.addEventListener('click', () => render(current - 1));
+    nextBtn.addEventListener('click', () => render(current + 1));
+    closeBtn.addEventListener('click', close);
+    backdrop.addEventListener('click', close);
+
+    document.addEventListener('keydown', e => {
+        if (!lightbox.classList.contains('is-open')) return;
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            close();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            render(current + 1);
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            render(current - 1);
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Sidebar mobile
     const toggle = document.getElementById('sidebarToggle');
@@ -210,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDatasetBulkSelect();
     initFormattedNumericInputs();
     initPublicShareForms();
+    initWSGalleryLightbox();
 });
 
 function getCsrfToken() {

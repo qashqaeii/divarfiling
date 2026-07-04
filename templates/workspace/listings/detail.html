@@ -171,11 +171,13 @@
                 </div>
 
                 {% if gallery_images %}
-                <div class="ws-ld-gallery">
+                <div class="ws-ld-gallery" data-ws-gallery>
                     <p class="ws-ld-gallery-title">تصاویر <span>{{ gallery_images|length }}</span></p>
                     <div class="ws-ld-gallery-grid">
                         {% for img in gallery_images|slice:":24" %}
-                        <a href="{{ img }}" target="_blank" rel="noopener"><img src="{{ img }}" alt="" loading="lazy"></a>
+                        <button type="button" class="ws-ld-gallery-thumb" data-ws-lightbox="{{ img }}" aria-label="نمایش تصویر {{ forloop.counter }} از {{ gallery_images|length }}">
+                            <img src="{{ img }}" alt="تصویر {{ forloop.counter }}" loading="lazy" decoding="async">
+                        </button>
                         {% endfor %}
                     </div>
                 </div>

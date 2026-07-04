@@ -1,14 +1,29 @@
 """Fallback پیام CRM — rule-based حرفه‌ای با لینک صفحه عمومی."""
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List
 
 
 def build(context: Dict[str, Any]) -> str:
     matches = context.get('top_matches') or []
-    if matches or (context.get('top_matches_text') or '').strip():
-        return _matches_message(context, matches)
+    top_matches_text = (context.get('top_matches_text') or '').strip()
+    if matches or top_matches_text:
+        return _matches_message(context, matches, top_matches_text)
     return _followup_message(context)
+
+
+def _effective_match_count(
+    matches: List[Dict[str, Any]],
+    top_matches_text: str,
+) -> int:
+    if matches:
+        return min(len(matches), 2)
+    text = (top_matches_text or '').strip()
+    if not text:
+        return 0
+    numbered = re.findall(r'^\d+\.', text, re.MULTILINE)
+    return len(numbered) or 1
 
 
 def _greeting(context: Dict[str, Any]) -> str:
@@ -54,12 +69,17 @@ def _format_match_body(index: int, match: Dict[str, Any]) -> str:
     return line
 
 
-def _matches_message(context: Dict[str, Any], matches: List[Dict[str, Any]]) -> str:
+def _matches_message(
+    context: Dict[str, Any],
+    matches: List[Dict[str, Any]],
+    top_matches_text: str = '',
+) -> str:
     lines = [_greeting(context), '']
 
     areas = (context.get('areas') or '').strip()
     customer_type = (context.get('customer_type') or '').strip()
     budget = (context.get('budget_range') or '').strip()
+    match_count = _effective_match_count(matches, top_matches_text)
 
     intro_bits = []
     if customer_type:
@@ -69,10 +89,16 @@ def _matches_message(context: Dict[str, Any], matches: List[Dict[str, Any]]) -> 
     if budget:
         intro_bits.append(f'با بودجه {budget}')
     if intro_bits:
-        lines.append(
-            'با توجه به ' + ' '.join(intro_bits) + '، '
-            f'{len(matches) or 2} پیشنهاد با بالاترین تطابق سیستم را خدمتتان معرفی می‌کنم:'
-        )
+        if match_count:
+            lines.append(
+                'با توجه به ' + ' '.join(intro_bits) + '، '
+                f'{match_count} پیشنهاد با بالاترین تطابق سیستم را خدمتتان معرفی می‌کنم:'
+            )
+        else:
+            lines.append(
+                'با توجه به ' + ' '.join(intro_bits) + '، '
+                'پیشنهادهای زیر را با بالاترین تطابق سیستم خدمتتان معرفی می‌کنم:'
+            )
     else:
         lines.append('پیشنهادهای زیر بیشترین تطابق را با درخواست شما دارند:')
     lines.append('')
@@ -81,8 +107,8 @@ def _matches_message(context: Dict[str, Any], matches: List[Dict[str, Any]]) -> 
         for i, match in enumerate(matches[:2], start=1):
             lines.append(_format_match_body(i, match))
             lines.append('')
-    elif context.get('top_matches_text'):
-        lines.append(context['top_matches_text'].strip())
+    elif top_matches_text:
+        lines.append(top_matches_text.strip())
         lines.append('')
 
     channel = context.get('channel') or 'واتساپ'

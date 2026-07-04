@@ -4423,6 +4423,7 @@ body.ws-modal-open { overflow: hidden; }
     100% { transform: translateX(120%); }
 }
 .ws-ai-card__cta-icon {
+    flex-shrink: 0;
     width: 1.35rem;
     height: 1.35rem;
     border-radius: 8px;
@@ -4430,7 +4431,13 @@ body.ws-modal-open { overflow: hidden; }
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.16);
-    font-size: 0.72rem;
+    padding: 0.1rem;
+}
+.ws-ai-card__cta-icon-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 .ws-ai-card__chips {
     display: flex;

@@ -47,6 +47,38 @@ class CrmMessageFallbackTests(TestCase):
         self.assertIn('امتیاز تطابق سیستم: 88٪', text)
         self.assertIn('یوسف‌آباد', text)
 
+    def test_text_only_matches_uses_correct_count(self):
+        text = build_crm_message({
+            'name': 'پریسا',
+            'tone': 'رسمی',
+            'channel': 'واتساپ',
+            'customer_type': 'متقاضی اجاره',
+            'areas': 'یوسف‌آباد',
+            'top_matches': [],
+            'top_matches_text': (
+                '1. آپارتمان ۷۵ متری — یوسف‌آباد — اجاره ۱۶M\n'
+                '   لینک صفحه عمومی: https://divarfiling.ir/p/abc123/'
+            ),
+        })
+        self.assertIn('1 پیشنهاد', text)
+        self.assertIn('آپارتمان ۷۵ متری', text)
+        self.assertNotIn('2 پیشنهاد', text)
+
+    def test_text_only_two_matches_announces_two(self):
+        text = build_crm_message({
+            'name': 'علی',
+            'customer_type': 'خریدار',
+            'areas': 'پونک',
+            'top_matches': [],
+            'top_matches_text': (
+                '1. واحد ۸۰ متری — پونک\n'
+                '2. واحد ۹۰ متری — ولنجک'
+            ),
+        })
+        self.assertIn('2 پیشنهاد', text)
+        self.assertIn('واحد ۸۰ متری', text)
+        self.assertIn('واحد ۹۰ متری', text)
+
     def test_followup_without_matches(self):
         text = build_crm_message({
             'name': 'علی',

@@ -1006,64 +1006,162 @@ function initCRMVisitOutcome(root) {
     });
 }
 
+function crmEscapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function crmAvatarInitials(name) {
+    if (!name) return '؟';
+    const parts = String(name).trim().split(/\s+/);
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`;
+    return parts[0][0] || '؟';
+}
+
+function crmAvatarHue(name) {
+    if (!name) return 0;
+    let sum = 0;
+    for (const ch of String(name)) sum += ch.charCodeAt(0);
+    return sum % 6;
+}
+
 function initCRMSidePanel() {
     const layout = document.getElementById('crmContactsLayout');
     const panel = document.getElementById('crmSidePanel');
     const content = document.getElementById('crmSideContent');
     const loading = document.getElementById('crmSideLoading');
     const closeBtn = document.getElementById('crmSideClose');
+    const backdrop = document.getElementById('crmSideBackdrop');
     if (!layout || !panel || !content) return;
 
     const baseUrl = window.crmPanelBase || '/workspace/crm/contacts/';
     let activeRow = null;
 
+    function isMobilePanel() {
+        return window.matchMedia('(max-width: 900px)').matches;
+    }
+
+    function setBodyLock(locked) {
+        document.body.classList.toggle('crm-side-open', locked && isMobilePanel());
+    }
+
     function closePanel() {
-        panel.hidden = true;
+        panel.classList.remove('is-open');
+        if (backdrop) backdrop.hidden = true;
+        setBodyLock(false);
+        window.setTimeout(() => {
+            if (!panel.classList.contains('is-open')) {
+                panel.hidden = true;
+            }
+        }, 280);
         layout.classList.remove('has-side-panel');
         if (activeRow) activeRow.classList.remove('is-panel-active');
         activeRow = null;
     }
 
+    function followLabel(state, date) {
+        if (!date) return { text: 'بدون پیگیری', cls: 'crm-sp-follow--none' };
+        if (state === 'overdue') return { text: `معوق · ${date}`, cls: 'crm-sp-follow--overdue' };
+        if (state === 'today') return { text: `امروز · ${date}`, cls: 'crm-sp-follow--today' };
+        return { text: `پیگیری · ${date}`, cls: 'crm-sp-follow--upcoming' };
+    }
+
+    function insightCard(icon, label, value, extraClass) {
+        if (!value) return '';
+        return `<article class="crm-sp-insight ${extraClass || ''}">
+            <span class="crm-sp-insight-icon" aria-hidden="true"><i class="${icon}"></i></span>
+            <div class="crm-sp-insight-copy">
+                <span class="crm-sp-insight-lbl">${label}</span>
+                <strong class="crm-sp-insight-val">${crmEscapeHtml(value)}</strong>
+            </div>
+        </article>`;
+    }
+
     function renderPanel(data) {
-        const acts = [];
-        if (data.tel_url) acts.push(`<a href="${data.tel_url}" class="crm-preview-act" title="تماس"><i class="fas fa-phone"></i></a>`);
-        if (data.whatsapp_url) acts.push(`<a href="${data.whatsapp_url}" target="_blank" class="crm-preview-act crm-preview-act--wa" title="واتساپ"><i class="fab fa-whatsapp"></i></a>`);
+        const hue = data.avatar_hue ?? crmAvatarHue(data.name);
+        const initials = data.initials || crmAvatarInitials(data.name);
+        const follow = followLabel(data.follow_state, data.next_follow_up);
+        const statusDot = data.status_dot || '#94a3b8';
+
+        const actions = [];
+        if (data.tel_url) {
+            actions.push(`<a href="${data.tel_url}" class="crm-sp-action crm-sp-action--call"><i class="fas fa-phone"></i><span>تماس</span></a>`);
+        }
+        if (data.whatsapp_url) {
+            actions.push(`<a href="${data.whatsapp_url}" target="_blank" rel="noopener" class="crm-sp-action crm-sp-action--wa"><i class="fab fa-whatsapp"></i><span>واتساپ</span></a>`);
+        }
+        if (data.email) {
+            actions.push(`<a href="mailto:${crmEscapeHtml(data.email)}" class="crm-sp-action crm-sp-action--mail"><i class="fas fa-envelope"></i><span>ایمیل</span></a>`);
+        }
+
+        const insights = [
+            insightCard('fas fa-wallet', 'بودجه', data.budget_label),
+            insightCard('fas fa-map-location-dot', 'محله', data.areas),
+            insightCard('fas fa-bullseye', 'منبع', data.source),
+            insightCard('fas fa-wand-magic-sparkles', 'تطبیق', data.match_count ? `${data.match_count} ملک` : '', data.match_count ? 'crm-sp-insight--accent' : ''),
+        ].filter(Boolean).join('');
 
         const activities = (data.activities || []).map(a =>
-            `<li class="crm-preview-timeline-item">
-                <span class="crm-preview-timeline-dot"></span>
-                <div class="crm-preview-timeline-body">
-                    <div class="crm-preview-timeline-head">
-                        <span class="crm-preview-timeline-type">${a.activity_type}</span>
-                        <time>${crmFormatJalaliDatetime(a.created_at)}</time>
+            `<li class="crm-sp-tl-item">
+                <span class="crm-sp-tl-rail" aria-hidden="true"><span class="crm-sp-tl-dot"></span></span>
+                <div class="crm-sp-tl-body">
+                    <div class="crm-sp-tl-head">
+                        <span class="crm-sp-tl-type">${crmEscapeHtml(a.activity_type)}</span>
+                        <time>${crmEscapeHtml(crmFormatJalaliDatetime(a.created_at))}</time>
                     </div>
-                    ${a.content || a.title ? `<p>${a.content || a.title}</p>` : ''}
+                    ${a.content || a.title ? `<p>${crmEscapeHtml(a.content || a.title)}</p>` : ''}
                 </div>
             </li>`
         ).join('');
 
+        const timelineBlock = activities
+            ? `<section class="crm-sp-section"><h3 class="crm-sp-section-title"><i class="fas fa-clock-rotate-left"></i> فعالیت اخیر</h3><ol class="crm-sp-timeline">${activities}</ol></section>`
+            : `<section class="crm-sp-section crm-sp-section--empty"><div class="crm-sp-empty"><i class="fas fa-inbox"></i><p>هنوز فعالیتی ثبت نشده</p></div></section>`;
+
         content.innerHTML = `
-            <div class="crm-preview-hero">
-                <div class="crm-preview-hero-text">
-                    <h2>${data.name}</h2>
-                    <p><span class="crm-preview-type">${data.customer_type}</span><span class="crm-preview-sep">·</span><span class="crm-preview-status">${data.status}</span></p>
-                </div>
-            </div>
-            ${acts.length ? `<div class="crm-preview-quick">${acts.join('')}</div>` : ''}
-            <dl class="crm-preview-meta">
-                ${data.phone ? `<div><dt>تلفن</dt><dd dir="ltr">${data.phone}</dd></div>` : ''}
-                ${data.budget_label ? `<div><dt>بودجه</dt><dd>${data.budget_label}</dd></div>` : ''}
-                ${data.areas ? `<div><dt>محله</dt><dd>${data.areas}</dd></div>` : ''}
-                ${data.source ? `<div><dt>منبع</dt><dd>${data.source}</dd></div>` : ''}
-                ${data.match_count ? `<div><dt>تطبیق</dt><dd>${data.match_count} ملک</dd></div>` : ''}
-            </dl>
-            ${data.notes ? `<div class="crm-preview-notes"><p>${data.notes}</p></div>` : ''}
-            ${activities ? `<div class="crm-preview-timeline"><h3>فعالیت اخیر</h3><ul>${activities}</ul></div>` : ''}
-            <div class="crm-preview-foot">
-                ${data.match_eligible ? `<a href="${data.matches_url || data.detail_url + '?tab=matches'}" class="crm-preview-btn crm-preview-btn--accent"><i class="fas fa-wand-magic-sparkles"></i> پیشنهاد ملک${data.match_count ? ` (${data.match_count})` : ''}</a>` : ''}
-                <a href="${data.detail_url}" class="crm-preview-btn crm-preview-btn--primary">پروفایل کامل</a>
-                <a href="${data.edit_url}" class="crm-preview-btn crm-preview-btn--secondary">ویرایش</a>
-            </div>`;
+            <article class="crm-sp">
+                <header class="crm-sp-hero">
+                    <div class="crm-sp-hero-glow" aria-hidden="true"></div>
+                    <div class="crm-sp-hero-main">
+                        <span class="crm-sp-avatar crm-sp-avatar--hue-${hue}" aria-hidden="true">${crmEscapeHtml(initials)}</span>
+                        <div class="crm-sp-hero-copy">
+                            <h2 class="crm-sp-name">${crmEscapeHtml(data.name)}</h2>
+                            ${data.company_name ? `<p class="crm-sp-company"><i class="fas fa-building"></i> ${crmEscapeHtml(data.company_name)}</p>` : ''}
+                            <div class="crm-sp-badges">
+                                <span class="crm-sp-badge crm-sp-badge--type">${crmEscapeHtml(data.customer_type)}</span>
+                                <span class="crm-sp-badge crm-sp-badge--status">
+                                    <span class="crm-sp-status-dot" style="background:${crmEscapeHtml(statusDot)}"></span>
+                                    ${crmEscapeHtml(data.status)}
+                                </span>
+                                ${data.priority === 'بالا' ? '<span class="crm-sp-badge crm-sp-badge--priority">اولویت بالا</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="crm-sp-follow ${follow.cls}">
+                        <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                        <span>${crmEscapeHtml(follow.text)}</span>
+                    </div>
+                </header>
+
+                ${actions.length ? `<div class="crm-sp-actions">${actions.join('')}</div>` : ''}
+
+                ${insights ? `<section class="crm-sp-section"><h3 class="crm-sp-section-title"><i class="fas fa-chart-simple"></i> خلاصه نیاز</h3><div class="crm-sp-insights">${insights}</div></section>` : ''}
+
+                ${data.phone ? `<section class="crm-sp-section crm-sp-section--compact"><div class="crm-sp-phone"><span>تلفن</span><strong dir="ltr">${crmEscapeHtml(data.phone)}</strong></div></section>` : ''}
+
+                ${data.notes ? `<section class="crm-sp-section"><div class="crm-sp-notes"><i class="fas fa-note-sticky"></i><p>${crmEscapeHtml(data.notes)}</p></div></section>` : ''}
+
+                ${timelineBlock}
+
+                <footer class="crm-sp-foot">
+                    ${data.match_eligible ? `<a href="${data.matches_url || data.detail_url + '?tab=matches'}" class="crm-sp-btn crm-sp-btn--accent"><i class="fas fa-wand-magic-sparkles"></i><span>پیشنهاد ملک${data.match_count ? ` (${data.match_count})` : ''}</span></a>` : ''}
+                    <a href="${data.detail_url}" class="crm-sp-btn crm-sp-btn--primary"><i class="fas fa-user"></i><span>پروفایل کامل</span></a>
+                    <a href="${data.edit_url}" class="crm-sp-btn crm-sp-btn--ghost"><i class="fas fa-pen"></i><span>ویرایش</span></a>
+                </footer>
+            </article>`;
         loading.hidden = true;
         panel.removeAttribute('aria-busy');
     }
@@ -1079,13 +1177,19 @@ function initCRMSidePanel() {
         content.innerHTML = '';
         loading.hidden = false;
         panel.setAttribute('aria-busy', 'true');
+        requestAnimationFrame(() => {
+            panel.classList.add('is-open');
+            if (backdrop && isMobilePanel()) backdrop.hidden = false;
+            setBodyLock(true);
+        });
 
         try {
             const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             const data = await res.json();
+            if (!data.name && data.error) throw new Error(data.error);
             renderPanel(data);
         } catch (e) {
-            content.innerHTML = '<p class="crm-empty-text">خطا در بارگذاری</p>';
+            content.innerHTML = `<div class="crm-sp-error"><i class="fas fa-triangle-exclamation"></i><p>${crmEscapeHtml(e.message || 'خطا در بارگذاری')}</p></div>`;
             loading.hidden = true;
             panel.removeAttribute('aria-busy');
         }
@@ -1099,10 +1203,10 @@ function initCRMSidePanel() {
     });
 
     const firstRow = layout.querySelector('tbody .crm-row-selectable[data-panel-url]');
-    const sidePanelDocked = window.matchMedia('(min-width: 901px)').matches;
-    if (firstRow && sidePanelDocked) openPanel(firstRow);
+    if (firstRow && !isMobilePanel()) openPanel(firstRow);
 
     if (closeBtn) closeBtn.addEventListener('click', closePanel);
+    if (backdrop) backdrop.addEventListener('click', closePanel);
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && !panel.hidden) closePanel();
     });

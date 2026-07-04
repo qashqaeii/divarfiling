@@ -181,11 +181,34 @@
         </div>
 
         <aside class="crm-contacts-preview" id="crmSidePanel" hidden aria-label="پیش‌نمایش مخاطب">
-            <div class="crm-contacts-preview-inner">
-                <button type="button" class="crm-contacts-preview-close" id="crmSideClose" aria-label="بستن"><i class="fas fa-times"></i></button>
-                <div class="crm-contacts-preview-body" id="crmSideContent"></div>
-                <div class="crm-contacts-preview-loading" id="crmSideLoading" hidden>
-                    <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
+            <div class="crm-contacts-preview-backdrop" id="crmSideBackdrop" hidden aria-hidden="true"></div>
+            <div class="crm-contacts-preview-shell">
+                <header class="crm-contacts-preview-head">
+                    <div class="crm-contacts-preview-head-label">
+                        <span class="crm-contacts-preview-head-icon" aria-hidden="true"><i class="fas fa-id-card-clip"></i></span>
+                        <div class="crm-contacts-preview-head-text">
+                            <strong>پیش‌نمایش مخاطب</strong>
+                            <span>خلاصه سریع بدون ترک لیست</span>
+                        </div>
+                    </div>
+                    <button type="button" class="crm-contacts-preview-close" id="crmSideClose" aria-label="بستن پنل">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                </header>
+                <div class="crm-contacts-preview-inner">
+                    <div class="crm-contacts-preview-loading" id="crmSideLoading" hidden aria-live="polite" aria-busy="true">
+                        <div class="crm-sp-skeleton">
+                            <div class="crm-sp-skeleton-hero">
+                                <span class="crm-sp-skeleton-avatar"></span>
+                                <div class="crm-sp-skeleton-lines">
+                                    <span></span><span></span><span></span>
+                                </div>
+                            </div>
+                            <div class="crm-sp-skeleton-actions"></div>
+                            <div class="crm-sp-skeleton-cards"></div>
+                        </div>
+                    </div>
+                    <div class="crm-contacts-preview-body" id="crmSideContent"></div>
                 </div>
             </div>
         </aside>

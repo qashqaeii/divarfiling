@@ -18,6 +18,12 @@ _TEXT_FIELDS_BY_FEATURE = {
     FEATURE_LISTING_SUMMARY: (
         'description_excerpt',
         'benchmark_note',
+        'tab_financial',
+        'tab_property',
+        'tab_location',
+        'tab_text',
+        'tab_features',
+        'tab_extra',
     ),
     FEATURE_CRM_MESSAGE: (
         'recent_activities',

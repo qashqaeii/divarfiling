@@ -421,9 +421,15 @@ class CustomerPanelView(LoginRequiredMixin, View):
             if phone_wa.startswith('98'):
                 phone_wa = phone_wa[2:]
 
+        from workspace.templatetags.crm_tags import crm_avatar_hue, crm_initials, crm_status_dot
+
         return JsonResponse({
             'id': customer.pk,
             'name': customer.name,
+            'company_name': customer.company_name or '',
+            'initials': crm_initials(customer.name),
+            'avatar_hue': crm_avatar_hue(customer.name),
+            'status_dot': crm_status_dot(customer.status),
             'phone': customer.phone,
             'email': customer.email,
             'customer_type': customer.customer_type,

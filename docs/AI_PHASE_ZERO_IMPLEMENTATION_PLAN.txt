@@ -348,7 +348,7 @@ AI_DAILY_TOKEN_LIMIT=30000
   created_at
 
 ── AICache ──────────────────────────────────────────────────────────────────
-  cache_key         sha256(feature:entity_id:content_version:prompt_hash:provider:model)
+  cache_key         sha256(feature:entity_id:content_version:prompt_hash)
   feature_code, result_text, result_json (JSONField)
   created_at, expires_at
 
@@ -595,7 +595,7 @@ GET   /api/mobile/v1/ai/quota
 
   <section class="ws-ai-card" id="wsAiListingSummary">
     <button type="button" class="mk-hero-btn" data-ai-feature="listing_summary"
-            data-url="{% url 'ai_workspace:listing_summary' dataset.id listing.id %}">
+            data-url="{% url 'workspace:ai_workspace:listing_summary' dataset.id listing.id %}">
       ✨ خلاصه هوشمند فایل
     </button>
     <div class="ws-ai-result" hidden></div>

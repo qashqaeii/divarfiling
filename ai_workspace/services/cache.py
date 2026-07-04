@@ -16,11 +16,9 @@ def _cache_key(
     entity_id: str,
     content_version: str,
     prompt_hash: str,
-    *,
-    provider: str = '',
-    model: str = '',
 ) -> str:
-    raw = f'{feature}:{entity_id}:{content_version}:{prompt_hash}:{provider}:{model}'
+    """کلید کش — فقط feature/entity/version/prompt (نه provider/model)."""
+    raw = f'{feature}:{entity_id}:{content_version}:{prompt_hash}'
     return hashlib.sha256(raw.encode('utf-8')).hexdigest()
 
 
@@ -49,11 +47,9 @@ def store(
     *,
     text: str,
     data: Optional[Dict[str, Any]] = None,
-    provider: str = '',
-    model: str = '',
     ttl_hours: int = 168,
 ) -> None:
-    key = _cache_key(feature, entity_id, content_version, prompt_hash, provider=provider, model=model)
+    key = _cache_key(feature, entity_id, content_version, prompt_hash)
     expires = timezone.now() + timedelta(hours=ttl_hours)
     payload = data if data is not None else {}
     if not payload and text:

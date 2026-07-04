@@ -231,8 +231,6 @@ def run(
     ai_cache.store(
         feature, entity_id, content_version, p_hash,
         text=text_out, data=data,
-        provider=provider_result.provider,
-        model=provider_result.model,
     )
 
     _log_usage(

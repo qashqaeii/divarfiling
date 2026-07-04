@@ -85,6 +85,15 @@ class GeminiProvider:
             raise ProviderError(str(exc), retryable=True, code='network') from exc
 
         latency_ms = int((time.perf_counter() - started) * 1000)
+        content_type = (resp.headers.get('Content-Type') or '').lower()
+        body_preview = (resp.text or '')[:200].lower()
+        if 'text/html' in content_type or body_preview.startswith('<!doctype'):
+            # صفحه HTML گوگل — معمولاً IP سرور به generativelanguage.googleapis.com دسترسی ندارد.
+            raise ProviderError(
+                'Gemini unreachable (HTML 403 — likely IP/geo block on server)',
+                retryable=True,
+                code='geo_blocked',
+            )
 
         if resp.status_code in _RETRYABLE_HTTP:
             raise ProviderError(

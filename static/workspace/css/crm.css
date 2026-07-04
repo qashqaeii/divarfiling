@@ -7929,6 +7929,12 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
     gap: 1rem;
     flex-wrap: wrap;
     padding: 1rem 1.1rem 0.9rem;
+    background: linear-gradient(
+        128deg,
+        color-mix(in srgb, #7c3aed 7%, var(--ws-surface)) 0%,
+        color-mix(in srgb, var(--ws-surface-2) 28%, var(--ws-surface)) 42%,
+        color-mix(in srgb, #3b82f6 6%, var(--ws-surface)) 100%
+    );
 }
 .crm-contact-hero__identity {
     display: flex;
@@ -16406,11 +16412,11 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
 
 /* ── AI message drawer (CRM) ── */
 .crm-drawer-panel-ai { max-width: 520px; }
-.crm-drawer-head-ai {
-    background: linear-gradient(135deg, #5b21b6 0%, #4f46e5 42%, #0ea5e9 100%);
-    color: #fff;
+.crm-drawer.crm-drawer-ai .crm-drawer-head.crm-drawer-head-ai {
+    background: linear-gradient(135deg, #5b21b6 0%, #4f46e5 42%, #0ea5e9 100%) !important;
+    color: #fff !important;
     padding: 1.1rem 1.25rem;
-    border-bottom: none;
+    border-bottom: none !important;
     align-items: flex-start;
 }
 .crm-drawer-head-ai-brand {
@@ -16439,25 +16445,29 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
     object-fit: contain;
 }
 .crm-drawer-head-ai-text { min-width: 0; }
+.crm-drawer.crm-drawer-ai .crm-drawer-head.crm-drawer-head-ai .crm-drawer-kicker,
 .crm-drawer-head-ai .crm-drawer-kicker {
-    color: rgba(255, 255, 255, 0.88);
+    color: rgba(255, 255, 255, 0.9) !important;
     font-size: 0.62rem;
     letter-spacing: 0.03em;
 }
+.crm-drawer.crm-drawer-ai .crm-drawer-head.crm-drawer-head-ai h2,
 .crm-drawer-head-ai h2 {
-    color: #fff;
+    color: #fff !important;
     font-size: 1.05rem;
     font-weight: 800;
     margin: 0.1rem 0 0;
     line-height: 1.35;
 }
+.crm-drawer.crm-drawer-ai .crm-drawer-head.crm-drawer-head-ai p,
 .crm-drawer-head-ai p {
-    color: rgba(255, 255, 255, 0.86);
+    color: rgba(255, 255, 255, 0.9) !important;
     font-size: 0.72rem;
     margin: 0.2rem 0 0;
     line-height: 1.5;
 }
-.crm-drawer-head-ai p strong { color: #fff; font-weight: 700; }
+.crm-drawer.crm-drawer-ai .crm-drawer-head.crm-drawer-head-ai p strong,
+.crm-drawer-head-ai p strong { color: #fff !important; font-weight: 700; }
 .crm-drawer-body.ws-ai-crm-compose {
     display: flex;
     flex-direction: column;
@@ -16596,18 +16606,25 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
 .crm-drawer-foot-ai {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-    padding: 0.85rem 1.15rem;
+    justify-content: flex-start;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+    padding: 0.75rem 1rem;
     background: color-mix(in srgb, #7c3aed 3%, var(--ws-surface));
     border-top: 1px solid var(--ws-border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
-.crm-drawer-foot-ai-side {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    flex-wrap: wrap;
+.crm-drawer-foot-ai .crm-btn,
+.crm-drawer-foot-ai .crm-ai-compose-wa,
+.crm-drawer-foot-ai .crm-ai-compose-cta {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.crm-drawer-foot-ai .crm-ai-compose-cancel,
+.crm-drawer-foot-ai .crm-ai-compose-copy {
+    padding: 0.48rem 0.7rem;
+    font-size: 0.72rem;
 }
 .crm-ai-compose-copy {
     display: inline-flex;
@@ -16617,8 +16634,8 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
 .crm-ai-compose-wa {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.5rem 0.85rem;
+    gap: 0.35rem;
+    padding: 0.48rem 0.7rem;
     border-radius: 10px;
     border: 1px solid rgba(37, 211, 102, 0.35);
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
@@ -16647,14 +16664,14 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.4rem;
     margin-inline-start: auto;
-    padding: 0.58rem 1rem;
+    padding: 0.52rem 0.85rem;
     border: none;
     border-radius: 12px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     font-weight: 700;
     color: #fff;
     background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #0ea5e9 100%);
@@ -16715,17 +16732,20 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
 @media (max-width: 520px) {
     .crm-ai-compose-settings { grid-template-columns: 1fr; }
     .crm-drawer-foot-ai {
-        flex-direction: column;
-        align-items: stretch;
+        gap: 0.35rem;
+        padding: 0.65rem 0.75rem;
     }
-    .crm-drawer-foot-ai-side {
-        width: 100%;
-        justify-content: space-between;
+    .crm-drawer-foot-ai .crm-ai-compose-cancel span,
+    .crm-drawer-foot-ai .crm-ai-compose-copy span {
+        display: none;
     }
-    .crm-ai-compose-cta {
-        width: 100%;
-        margin-inline-start: 0;
-        justify-content: center;
+    .crm-drawer-foot-ai .crm-ai-compose-copy::after {
+        content: 'کپی';
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+    .crm-ai-compose-cta-label {
+        font-size: 0.7rem;
     }
 }
 @media (prefers-reduced-motion: reduce) {

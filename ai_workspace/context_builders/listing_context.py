@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from workspace.services.advertiser_signal import listing_advertiser_display
 from workspace.services.formatting import format_area, format_toman
 from workspace.services.features import extract_listing_features
 from workspace.services.display import transaction_profile
@@ -15,7 +14,6 @@ def build(listing, dataset, benchmark: Dict[str, Any] | None = None) -> Dict[str
     benchmark = benchmark or {}
     feat = extract_listing_features(listing)
     tx = transaction_profile(dataset.transaction_type)
-    adv = listing_advertiser_display(listing)
 
     desc = (getattr(listing, 'description', '') or '').strip()
     if not desc and getattr(listing, 'data', None):
@@ -46,8 +44,6 @@ def build(listing, dataset, benchmark: Dict[str, Any] | None = None) -> Dict[str
         'benchmark_note': benchmark.get('note') or '',
         'benchmark_diff': benchmark.get('diff_pct_fmt') or '',
         'market_median': benchmark.get('market_median_fmt') or '',
-        'advertiser_label': adv.get('label') or '',
-        'advertiser_title': adv.get('title') or '',
         'description_excerpt': truncate(desc, 300),
         'content_version': f'{listing.id}:{listing.created_at.isoformat() if listing.created_at else ""}',
         '_listing': listing,

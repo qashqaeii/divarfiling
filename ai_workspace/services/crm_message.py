@@ -7,6 +7,7 @@ from workspace.models import Customer
 
 from ai_workspace.constants import FEATURE_CRM_MESSAGE, normalize_crm_tone
 from ai_workspace.context_builders import contact_context
+from ai_workspace.services.crm_text import sanitize_message_text
 from ai_workspace.services.gateway import GatewayResult, run
 
 
@@ -31,7 +32,7 @@ def generate_message(
 
 
 def result_to_dict(result: GatewayResult) -> Dict[str, Any]:
-    text = result.data.get('text') or result.text
+    text = sanitize_message_text(result.data.get('text') or result.text or '')
     return {
         'ok': True,
         'feature': result.feature,

@@ -53,7 +53,6 @@
         if (d.summary) html += `<p class="ws-ai-summary">${escapeHtml(d.summary)}</p>`;
         if (highlights) html += `<ul class="ws-ai-highlights">${highlights}</ul>`;
         if (d.negotiation_tip) html += `<p class="ws-ai-tip"><strong>مذاکره:</strong> ${escapeHtml(d.negotiation_tip)}</p>`;
-        if (d.advertiser_note) html += `<p class="ws-ai-note"><strong>آگهی‌دهنده:</strong> ${escapeHtml(d.advertiser_note)}</p>`;
         return html || `<p>${escapeHtml(d.summary || data.text || '')}</p>`;
     }
 
@@ -159,9 +158,16 @@
 
     function normalizeWaPhone(phone) {
         let digits = String(phone || '').replace(/\D/g, '');
-        if (digits.startsWith('0')) digits = digits.slice(1);
-        if (digits.startsWith('98')) digits = digits.slice(2);
-        return digits ? `98${digits}` : '';
+        if (!digits) return '';
+        if (digits.startsWith('00')) {
+            digits = digits.slice(2);
+        } else if (digits.startsWith('0')) {
+            digits = digits.slice(1);
+        }
+        if (digits.startsWith('98')) {
+            return digits;
+        }
+        return `98${digits}`;
     }
 
     function buildWhatsAppUrl(phone, text) {

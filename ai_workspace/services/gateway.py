@@ -1,17 +1,19 @@
 """Gateway مرکزی AI — Provider Chain."""
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from django.conf import settings
 from django.core.cache import cache as django_cache
 
-from ai_workspace.constants import FEATURE_LISTING_SUMMARY, feature_uses_json, is_feature_enabled
+from ai_workspace.constants import FEATURE_CRM_MESSAGE, FEATURE_LISTING_SUMMARY, feature_uses_json, is_feature_enabled
 from ai_workspace.models import AIUsageLog
 from ai_workspace.providers.registry import HTTP_PROVIDER_CHAIN, RULE_BASED
 from ai_workspace.providers.base import ProviderError
 from ai_workspace.services import cache as ai_cache
+from ai_workspace.services.crm_text import sanitize_message_text
 from ai_workspace.services.parse import parse_json_text, salvage_listing_json
 from ai_workspace.services.payload import (
     dumps_payload,
@@ -23,6 +25,8 @@ from ai_workspace.services.quota import QuotaExceededError, check_quota, consume
 from ai_workspace.services.validation import prepare_context
 
 RULE_BASED_ATTEMPT = 4
+
+logger = logging.getLogger(__name__)
 
 
 class FeatureDisabledError(Exception):
@@ -242,15 +246,22 @@ def run(
         if feature_uses_json(feature) and data:
             text_out = dumps_payload(data)
 
+    if feature == FEATURE_CRM_MESSAGE:
+        text_out = sanitize_message_text(text_out)
+        data = {'text': text_out}
+
     consume_quota(user, feature, provider_result.input_tokens, provider_result.output_tokens)
     if 1 <= provider_attempt <= 3:
         _bump_global_counter()
 
     if not feature_uses_json(feature) or is_valid_payload(feature, data):
-        ai_cache.store(
-            feature, entity_id, content_version, p_hash,
-            text=text_out, data=data,
-        )
+        try:
+            ai_cache.store(
+                feature, entity_id, content_version, p_hash,
+                text=text_out, data=data,
+            )
+        except Exception:
+            logger.exception('ai_cache_store_failed feature=%s entity_id=%s', feature, entity_id)
 
     _log_usage(
         user=user,

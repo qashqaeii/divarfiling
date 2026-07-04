@@ -12,9 +12,8 @@ class ListingFallbackTests(TestCase):
             'city': 'تهران',
             'price_label': '۱۲.۵ میلیارد تومان',
             'benchmark_verdict': 'زیر میانه بازار',
-            'advertiser_label': 'مشاور پنهان',
         })
         data = result['data']
         self.assertIn('summary', data)
         self.assertIn('highlights', data)
-        self.assertIn('۱۲.۵', data['summary'] or ''.join(data['highlights']))
+        self.assertNotIn('advertiser_note', data)

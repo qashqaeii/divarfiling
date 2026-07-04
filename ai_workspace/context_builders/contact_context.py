@@ -145,11 +145,7 @@ def build(
         'channel': channel,
         'tone': tone_key,
         'tone_guide': tone_info['guide'],
-        'emoji_rule': (
-            'می‌توانید از ایموجی‌های مناسب واتساپ استفاده کنید.'
-            if tone_info['emoji']
-            else 'بدون ایموجی بنویسید.'
-        ),
+        'emoji_rule': 'بدون ایموجی بنویسید.',
         'recent_activities': '\n'.join(activity_lines) if activity_lines else '—',
         'top_matches': top_matches,
         'top_matches_text': top_matches_text,

@@ -765,25 +765,23 @@
             </p>
         </div>
         <div class="crm-drawer-foot crm-drawer-foot-ai">
-            <div class="crm-drawer-foot-ai-side">
-                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
-                <button type="button" class="crm-btn crm-btn-secondary crm-ai-compose-copy" id="aiCrmCopy" disabled>
-                    <i class="fas fa-copy" aria-hidden="true"></i>
-                    <span>کپی متن</span>
-                </button>
-                {% if customer.phone %}
-                <a href="#"
-                   id="aiCrmWhatsApp"
-                   class="crm-ai-compose-wa"
-                   target="_blank"
-                   rel="noopener"
-                   aria-disabled="true"
-                   title="ارسال پیام در واتساپ">
-                    <i class="fab fa-whatsapp" aria-hidden="true"></i>
-                    <span>ارسال به واتساپ</span>
-                </a>
-                {% endif %}
-            </div>
+            <button type="button" class="crm-btn crm-btn-ghost crm-ai-compose-cancel" data-drawer-close>انصراف</button>
+            <button type="button" class="crm-btn crm-btn-secondary crm-ai-compose-copy" id="aiCrmCopy" disabled>
+                <i class="fas fa-copy" aria-hidden="true"></i>
+                <span>کپی متن</span>
+            </button>
+            {% if customer.phone %}
+            <a href="#"
+               id="aiCrmWhatsApp"
+               class="crm-ai-compose-wa"
+               target="_blank"
+               rel="noopener"
+               aria-disabled="true"
+               title="ارسال پیام در واتساپ">
+                <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                <span>واتساپ</span>
+            </a>
+            {% endif %}
             <button type="button" class="crm-ai-compose-cta ws-ai-trigger" data-ai-compose>
                 <span class="crm-ai-compose-cta-glow" aria-hidden="true"></span>
                 <span class="crm-ai-compose-cta-icon" aria-hidden="true">
@@ -798,7 +796,7 @@
 {% endblock %}
 
 {% block crm_js %}
-<script src="{% static 'workspace/js/ai.js' %}?v=4"></script>
+<script src="{% static 'workspace/js/ai.js' %}?v=6"></script>
 <script>window.crmTypeProfiles = {{ type_profiles_json|safe }};</script>
 {% if crm_agency and is_customer_owner %}
 <script>

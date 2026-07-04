@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 
 from django.http import JsonResponse
@@ -18,6 +19,7 @@ from workspace.mixins import LicenseRequiredMixin
 from workspace.models import Dataset, Listing
 from workspace.services.crm_scope import customer_for_user
 
+logger = logging.getLogger(__name__)
 
 class AIEnabledMixin(LicenseRequiredMixin):
     """نیاز به لایسنس + AI_ENABLED."""
@@ -66,6 +68,12 @@ class CRMMessageView(AIEnabledMixin, View):
             return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
         except QuotaExceededError as exc:
             return JsonResponse({'ok': False, 'error': str(exc), 'code': exc.code}, status=429)
+        except Exception:
+            logger.exception('crm_message_failed customer_id=%s tone=%s', customer_id, tone)
+            return JsonResponse(
+                {'ok': False, 'error': 'خطا در سرویس AI. لطفاً دوباره تلاش کنید.'},
+                status=500,
+            )
 
 
 class UploadBriefView(AIEnabledMixin, View):

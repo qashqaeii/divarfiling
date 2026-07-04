@@ -29,7 +29,7 @@ def _coerce_str_list(value: Any) -> List[str]:
 
 def _merge_listing_fields(target: Dict[str, Any], source: Dict[str, Any]) -> Dict[str, Any]:
     merged = dict(target)
-    for key in ('summary', 'negotiation_tip', 'advertiser_note'):
+    for key in ('summary', 'negotiation_tip'):
         val = source.get(key)
         if isinstance(val, str) and val.strip() and not _looks_like_json_blob(val):
             merged[key] = val.strip()
@@ -55,11 +55,12 @@ def normalize_listing_payload(data: Optional[Dict[str, Any]], raw_text: str = ''
         if parsed:
             payload = _merge_listing_fields(payload, parsed)
 
-    for key in ('summary', 'negotiation_tip', 'advertiser_note'):
+    for key in ('summary', 'negotiation_tip'):
         val = payload.get(key)
         if isinstance(val, str):
             payload[key] = val.strip()
     payload['highlights'] = _coerce_str_list(payload.get('highlights'))
+    payload.pop('advertiser_note', None)
     payload.pop('raw', None)
     return payload
 

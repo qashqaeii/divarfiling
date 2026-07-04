@@ -80,7 +80,8 @@ class CrmMessageFallbackTests(TestCase):
         self.assertIn('واحد ۸۰ متری', text)
         self.assertIn('واحد ۹۰ متری', text)
 
-    def test_emoji_tone_includes_emojis(self):
+    def test_emoji_tone_maps_to_friendly_without_emoji(self):
+        self.assertEqual(normalize_crm_tone('ایموجی‌دار'), 'صمیمی')
         text = build_crm_message({
             'name': 'سارا',
             'customer_type': 'خریدار',
@@ -93,8 +94,8 @@ class CrmMessageFallbackTests(TestCase):
                 'public_url': 'https://divarfiling.ir/p/x/',
             }],
         })
-        self.assertIn('👋', text)
-        self.assertIn('✨', text)
+        self.assertIn('عزیز', text)
+        self.assertNotRegex(text, r'[\U0001F300-\U0001FAFF]')
 
     def test_short_tone_is_compact(self):
         text = build_crm_message({
@@ -113,7 +114,8 @@ class CrmMessageFallbackTests(TestCase):
 
     def test_normalize_crm_tone_fallback(self):
         self.assertEqual(normalize_crm_tone('نامعتبر'), 'رسمی')
-        self.assertEqual(normalize_crm_tone('ایموجی‌دار'), 'ایموجی‌دار')
+        self.assertEqual(normalize_crm_tone('ایموجی‌دار'), 'صمیمی')
+        self.assertEqual(normalize_crm_tone('مشاورانه'), 'مشاورانه')
 
     def test_followup_without_matches(self):
         text = build_crm_message({

@@ -11,39 +11,42 @@ def build(context: Dict[str, Any]) -> Dict[str, Any]:
     city = context.get('city') or ''
     price_label = context.get('price_label') or ''
     area_label = context.get('area_label') or ''
+    price_per_sqm = context.get('price_per_sqm_label') or ''
+    rooms = context.get('rooms') or ''
+    deal_mode = context.get('deal_mode') or ''
     verdict = context.get('benchmark_verdict') or ''
-    advertiser = context.get('advertiser_label') or ''
 
     loc = ' — '.join(p for p in (neighborhood, city) if p)
-    summary_parts = [f'{title}']
+    summary_parts = [title]
     if loc:
         summary_parts.append(f'در {loc}')
+    if deal_mode:
+        summary_parts.append(f'({deal_mode})')
     if price_label:
         summary_parts.append(f'قیمت: {price_label}')
     if area_label:
         summary_parts.append(f'متراژ: {area_label}')
 
     highlights: List[str] = []
+    if area_label:
+        highlights.append(f'متراژ: {area_label}')
+    if rooms:
+        highlights.append(f'اتاق: {rooms}')
+    if price_per_sqm:
+        highlights.append(f'قیمت هر متر: {price_per_sqm}')
     if verdict:
         highlights.append(verdict)
-    if advertiser:
-        highlights.append(f'نوع آگهی‌دهنده: {advertiser}')
 
     negotiation = ''
     if 'زیر' in verdict:
         negotiation = 'قیمت نسبت به بازار مناسب‌تر است — فرصت مذاکره قبل از بازدید.'
     elif 'بالا' in verdict:
-        negotiation = 'قیمت بالاتر از میانه بازار — قبل از بازدید با مالک مذاکره کنید.'
-
-    advertiser_note = ''
-    if 'پنهان' in advertiser or 'مشاور' in advertiser:
-        advertiser_note = 'در تماس، نوع آگهی‌دهنده را در نظر بگیرید.'
+        negotiation = 'قیمت بالاتر از میانه بازار — قبل از بازدید برای تخفیف منطقی مذاکره کنید.'
 
     payload = {
         'summary': ' · '.join(summary_parts),
-        'highlights': highlights,
+        'highlights': highlights[:6],
         'negotiation_tip': negotiation,
-        'advertiser_note': advertiser_note,
     }
     return {
         'data': payload,

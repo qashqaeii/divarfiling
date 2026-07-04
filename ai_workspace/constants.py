@@ -42,11 +42,6 @@ CRM_MESSAGE_TONES = {
         'guide': 'دوستانه ولی حرفه‌ای؛ از «شما» استفاده کنید و لحن گفت‌وگویی داشته باشید.',
         'emoji': False,
     },
-    'ایموجی‌دار': {
-        'label': 'صمیمی با ایموجی',
-        'guide': 'گرم و کاربرپسند؛ ۳ تا ۶ ایموجی مناسب واتساپ (مثل 🏠 ✨ 📍 👋) در جای درست؛ اغراق نکنید.',
-        'emoji': True,
-    },
     'کوتاه': {
         'label': 'کوتاه و مستقیم',
         'guide': 'حداکثر ۵ خط؛ مستقیم به معرفی ملک‌ها و دعوت به اقدام برسید؛ بدون مقدمه طولانی.',
@@ -72,8 +67,8 @@ JSON_FEATURES = frozenset({FEATURE_LISTING_SUMMARY, FEATURE_UPLOAD_BRIEF})
 
 # نسخه دستی prompt — فقط وقتی محتوا عوض شد افزایش دهید (نه mtime)
 PROMPT_VERSIONS = {
-    FEATURE_LISTING_SUMMARY: 'listing_summary_v2',
-    FEATURE_CRM_MESSAGE: 'crm_message_v3',
+    FEATURE_LISTING_SUMMARY: 'listing_summary_v3',
+    FEATURE_CRM_MESSAGE: 'crm_message_v4',
     FEATURE_UPLOAD_BRIEF: 'upload_brief_v1',
 }
 
@@ -100,6 +95,9 @@ def feature_uses_json(feature: str) -> bool:
 
 def normalize_crm_tone(tone: str | None) -> str:
     key = (tone or '').strip()
+    # لحن قدیمی ایموجی — به صمیمی نگاشت می‌شود
+    if key in {'ایموجی‌دار', 'ایموجیدار', 'ایموجی دار'}:
+        return 'صمیمی'
     if key in CRM_MESSAGE_TONES:
         return key
     return DEFAULT_CRM_TONE

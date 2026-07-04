@@ -18,7 +18,6 @@ _TEXT_FIELDS_BY_FEATURE = {
     FEATURE_LISTING_SUMMARY: (
         'description_excerpt',
         'benchmark_note',
-        'advertiser_title',
     ),
     FEATURE_CRM_MESSAGE: (
         'recent_activities',

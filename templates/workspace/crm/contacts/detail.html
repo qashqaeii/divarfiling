@@ -10,24 +10,73 @@
 
 {% block crm_content %}
     <div class="crm-contact-detail-pro crm-page-chrome">
-    <div class="crm-detail-header crm-detail-header-pro">
-        <div class="crm-detail-avatar">{{ customer.name|slice:":1" }}</div>
-        <div class="crm-detail-info">
-            <div class="crm-detail-top">
-                <h1>{{ customer.name }}</h1>
-                <span class="crm-pill" style="{% crm_role_style customer.customer_type %}">{{ customer.customer_type }}</span>
-                <span class="crm-status-badge">{{ customer.status }}</span>
-                {% if customer.priority == 'بالا' %}<span class="crm-priority high">اولویت بالا</span>{% endif %}
+    <section class="crm-contact-hero" aria-label="پروفایل مخاطب">
+        <div class="crm-contact-hero__accent" aria-hidden="true"></div>
+        <div class="crm-contact-hero__top">
+            <div class="crm-contact-hero__identity">
+                <a href="{% url 'workspace:crm_contacts' %}" class="crm-contact-hero__back" title="بازگشت به مخاطبین">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <span class="crm-contact-hero__avatar crm-contact-hero__avatar--hue-{{ customer.name|crm_avatar_hue }}" aria-hidden="true">
+                    {{ customer.name|crm_initials }}
+                </span>
+                <div class="crm-contact-hero__copy">
+                    <nav class="crm-contact-hero__crumb" aria-label="مسیر">
+                        <a href="{% url 'workspace:crm_contacts' %}">مخاطبین</a>
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        <span>{{ customer.name|truncatechars:36 }}</span>
+                    </nav>
+                    <div class="crm-contact-hero__badges">
+                        <span class="crm-contact-hero__type" style="{% crm_role_style customer.customer_type %}">{{ customer.customer_type }}</span>
+                        <span class="crm-contact-hero__status">{{ customer.status }}</span>
+                        {% if customer.priority == 'بالا' %}<span class="crm-contact-hero__priority">اولویت بالا</span>{% endif %}
+                    </div>
+                    <h1 class="crm-contact-hero__title">{{ customer.name }}</h1>
+                    <div class="crm-contact-hero__meta">
+                        {% if customer.phone %}
+                        <a href="tel:{{ customer.phone }}" class="crm-contact-hero__chip">
+                            <i class="fas fa-phone" aria-hidden="true"></i>
+                            <span dir="ltr">{{ customer.phone }}</span>
+                        </a>
+                        <button type="button" class="crm-contact-hero__chip crm-contact-hero__chip--btn" data-copy="{{ customer.phone }}" title="کپی شماره">
+                            <i class="fas fa-copy" aria-hidden="true"></i>
+                            <span>کپی</span>
+                        </button>
+                        {% endif %}
+                        {% if customer.phone_alt %}
+                        <span class="crm-contact-hero__chip">
+                            <i class="fas fa-phone" aria-hidden="true"></i>
+                            <span dir="ltr">{{ customer.phone_alt }}</span>
+                        </span>
+                        {% endif %}
+                        {% if customer.email %}
+                        <a href="mailto:{{ customer.email }}" class="crm-contact-hero__chip">
+                            <i class="fas fa-envelope" aria-hidden="true"></i>
+                            <span>{{ customer.email|truncatechars:28 }}</span>
+                        </a>
+                        {% endif %}
+                        {% if customer.city %}
+                        <span class="crm-contact-hero__chip">
+                            <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                            <span>{{ customer.city }}{% if customer.district %} — {{ customer.district }}{% endif %}</span>
+                        </span>
+                        {% endif %}
+                        {% if customer.source %}
+                        <span class="crm-contact-hero__chip crm-contact-hero__chip--muted">
+                            <i class="fas fa-bullhorn" aria-hidden="true"></i>
+                            <span>{{ customer.source }}</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% if customer.is_legal_entity and customer.company_name %}
+                    <p class="crm-contact-hero__company"><i class="fas fa-building" aria-hidden="true"></i> {{ customer.company_name }}</p>
+                    {% endif %}
+                </div>
             </div>
-            <div class="crm-detail-meta">
-                {% if customer.phone %}<span><i class="fas fa-phone" aria-hidden="true"></i> {{ customer.phone }} <button type="button" class="crm-btn crm-btn-icon" data-copy="{{ customer.phone }}"><i class="fas fa-copy" aria-hidden="true"></i></button></span>{% endif %}
-                {% if customer.phone_alt %}<span><i class="fas fa-phone" aria-hidden="true"></i> {{ customer.phone_alt }}</span>{% endif %}
-                {% if customer.email %}<span><i class="fas fa-envelope" aria-hidden="true"></i> {{ customer.email }}</span>{% endif %}
-                {% if customer.city %}<span><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ customer.city }}{% if customer.district %} — {{ customer.district }}{% endif %}</span>{% endif %}
-                {% if customer.source %}<span><i class="fas fa-question-circle" aria-hidden="true"></i> {{ customer.source }}</span>{% endif %}
-            </div>
-            {% if crm_agency %}
-            <div class="crm-contact-team-bar" data-crm-contact-team data-customer-id="{{ customer.pk }}">
+            {% include 'workspace/crm/includes/contact_detail_actions.html' %}
+        </div>
+        {% if crm_agency %}
+        <div class="crm-contact-hero__team crm-contact-team-bar" data-crm-contact-team data-customer-id="{{ customer.pk }}">
                 {% if customer_is_shared %}
                 {% include 'workspace/crm/includes/shared_view_badge.html' with share=customer_share %}
                 {% elif is_customer_owner %}
@@ -62,13 +111,8 @@
                 {% endif %}
                 {% endif %}
             </div>
-            {% endif %}
-            {% if customer.is_legal_entity and customer.company_name %}
-            <div class="crm-detail-company"><i class="fas fa-building" aria-hidden="true"></i> {{ customer.company_name }}</div>
-            {% endif %}
-        </div>
-        {% include 'workspace/crm/includes/contact_detail_actions.html' %}
-    </div>
+        {% endif %}
+    </section>
 
     <div class="crm-detail-grid">
         <div class="crm-detail-main crm-contact-main">

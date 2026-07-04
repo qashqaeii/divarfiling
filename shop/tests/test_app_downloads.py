@@ -41,7 +41,7 @@ class AndroidAppDownloadTests(TestCase):
         )
         self.client.force_login(user)
         response = self.client.get(reverse('dashboard'))
-        self.assertContains(response, f'href="{reverse("android_tutorial")}#chapter-install"')
+        self.assertContains(response, f'href="{reverse("android_tutorial")}"')
         self.assertNotContains(response, 'id="mk-dl-android-install"')
         self.assertNotContains(response, 'Play Protect')
 

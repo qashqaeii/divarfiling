@@ -205,8 +205,18 @@
 
 
 
+        <p class="crm-form-hint" id="crmPrefsHint">نوع ملک، متراژ و محله‌های مورد نظر</p>
+
+
+
         <div class="crm-builder-sell-prefs crm-builder-section hidden">
-            <h4 class="crm-builder-section-title">مشخصات واحد فروش (آپارتمان)</h4>
+            <h4 class="crm-builder-section-title" id="crmPrefsBuilderTitle">مشخصات واحد فروش (آپارتمان)</h4>
+        </div>
+
+
+
+        <div class="crm-prefs-standard hidden">
+            <h4 class="crm-prefs-section-title" id="crmPrefsTitle">ترجیحات ملک</h4>
         </div>
 
 
@@ -215,23 +225,23 @@
 
 
 
-            {% crm_field form.property_type 'نوع ملک' 'crm-builder-sell-field' %}
+            {% crm_field form.property_type 'نوع ملک' 'crm-prefs-field' %}
 
 
 
-            {% crm_field form.rooms 'اتاق' 'crm-builder-sell-field' %}
+            {% crm_field form.rooms 'اتاق' 'crm-prefs-field' %}
 
 
 
-            {% crm_field form.min_area 'متراژ از' 'crm-builder-sell-field' %}
+            {% crm_field form.min_area 'متراژ از' 'crm-prefs-field' %}
 
 
 
-            {% crm_field form.max_area 'متراژ تا' 'crm-builder-sell-field' %}
+            {% crm_field form.max_area 'متراژ تا' 'crm-prefs-field' %}
 
 
 
-            {% crm_field form.areas 'محله‌های فروش / پروژه' 'crm-field-full crm-builder-sell-field' %}
+            {% crm_field form.areas 'محله‌های مورد نظر' 'crm-field-full crm-prefs-field' %}
 
 
 

@@ -122,6 +122,7 @@ const CRMDrawer = {
         initCRMJalaliPickers(drawer);
         initCRMMoneyInputs(drawer);
         initPropertyDealMode(drawer);
+        initCRMTypeProfiles(drawer);
         initCRMFormErrors();
         if (id === 'drawer-import') initCRMImportDrawer(drawer);
         else initCRMVisitOutcome(drawer);
@@ -139,62 +140,106 @@ const CRMDrawer = {
     },
 };
 
-function initCRMTypeProfiles() {
+function crmSetFieldLabel(section, fieldName, text) {
+    const lbl = section.querySelector(`[data-field="${fieldName}"] .crm-label`);
+    if (lbl && text) lbl.textContent = text;
+}
+
+function initCRMTypeProfiles(root) {
     const profiles = window.crmTypeProfiles || {};
-    const typeSelect = document.querySelector('[data-crm-type]') || document.querySelector('[name="customer_type"]');
-    if (!typeSelect) return;
+    const scope = root || document;
 
-    const hint = document.getElementById('crmMoneyHint');
-    const budgetFields = document.querySelectorAll('.crm-money-budget');
-    const depositFields = document.querySelectorAll('.crm-money-deposit');
-    const rentFields = document.querySelectorAll('.crm-money-rent');
-    const builderSections = document.querySelectorAll('.crm-builder-section');
-    const builderBuyMoney = document.querySelectorAll('.crm-money-builder-buy');
-    const propertyTypeSelect = document.querySelector('[name="property_type"]');
+    scope.querySelectorAll('.crm-form-sections').forEach(section => {
+        const typeSelect = section.querySelector('[data-crm-type]') || section.querySelector('[name="customer_type"]');
+        if (!typeSelect) return;
 
-    function applyProfile(type) {
-        const p = profiles[type] || profiles['سرنخ'] || {};
-        const mode = p.money_mode || 'flexible';
-        const isBuilder = mode === 'builder';
-        if (hint && p.section_hint) hint.textContent = p.section_hint;
+        const hint = section.querySelector('#crmMoneyHint');
+        const prefsHint = section.querySelector('#crmPrefsHint');
+        const budgetFields = section.querySelectorAll('.crm-money-budget');
+        const depositFields = section.querySelectorAll('.crm-money-deposit');
+        const rentFields = section.querySelectorAll('.crm-money-rent');
+        const builderSections = section.querySelectorAll('.crm-builder-section');
+        const builderBuyFields = section.querySelectorAll('.crm-builder-buy-field');
+        const builderBuyMoney = section.querySelectorAll('.crm-money-builder-buy');
+        const prefsStandard = section.querySelectorAll('.crm-prefs-standard');
+        const propertyTypeSelect = section.querySelector('[name="property_type"]');
 
-        const show = (els, on) => els.forEach(el => el.classList.toggle('hidden', !on));
-        builderSections.forEach(el => el.classList.toggle('hidden', !isBuilder));
+        function applyProfile(type) {
+            const p = profiles[type] || profiles['سرنخ'] || {};
+            const mode = p.money_mode || 'flexible';
+            const isBuilder = mode === 'builder';
+            const showBudget = mode === 'budget' || mode === 'both' || mode === 'flexible' || isBuilder;
+            const showRent = mode === 'rent' || mode === 'both' || mode === 'flexible';
 
-        show(budgetFields, mode === 'budget' || mode === 'both' || mode === 'flexible' || isBuilder);
-        show(depositFields, mode === 'rent' || mode === 'both' || mode === 'flexible');
-        show(rentFields, mode === 'rent' || mode === 'both' || mode === 'flexible');
-        show(builderBuyMoney, isBuilder);
+            if (hint) hint.textContent = p.section_hint || 'محدوده مالی بر اساس نوع مخاطب';
+            if (prefsHint) {
+                prefsHint.textContent = isBuilder
+                    ? 'مشخصات واحدهای آپارتمان در حال فروش و محله‌های پروژه'
+                    : 'نوع ملک، متراژ و محله‌های مورد نظر';
+            }
 
-        const bl = p.budget_labels || ['بودجه از', 'بودجه تا'];
-        const dl = p.deposit_labels || ['ودیعه از', 'ودیعه تا'];
-        const rl = p.rent_labels || ['اجاره از', 'اجاره تا'];
-        document.querySelectorAll('[data-label-budget-min]').forEach(el => { el.textContent = bl[0]; });
-        document.querySelectorAll('[data-label-budget-max]').forEach(el => { el.textContent = bl[1]; });
-        document.querySelectorAll('[data-label-deposit-min]').forEach(el => { el.textContent = dl[0]; });
-        document.querySelectorAll('[data-label-deposit-max]').forEach(el => { el.textContent = dl[1]; });
-        document.querySelectorAll('[data-label-rent-min]').forEach(el => { el.textContent = rl[0]; });
-        document.querySelectorAll('[data-label-rent-max]').forEach(el => { el.textContent = rl[1]; });
+            const show = (els, on) => els.forEach(el => el.classList.toggle('hidden', !on));
+            show(builderSections, isBuilder);
+            show(prefsStandard, !isBuilder);
+            show(budgetFields, showBudget);
+            show(depositFields, showRent);
+            show(rentFields, showRent);
+            show(builderBuyFields, isBuilder);
+            show(builderBuyMoney, isBuilder);
 
-        const sellTitle = document.getElementById('crmBuilderSellTitle');
-        const sellHint = document.getElementById('crmBuilderSellHint');
-        const buyTitle = document.getElementById('crmBuilderBuyTitle');
-        const buyHint = document.getElementById('crmBuilderBuyHint');
-        if (sellTitle && p.sell_section_title) sellTitle.textContent = p.sell_section_title;
-        if (sellHint && p.sell_section_hint) sellHint.textContent = p.sell_section_hint;
-        if (buyTitle && p.buy_section_title) buyTitle.textContent = p.buy_section_title;
-        if (buyHint && p.buy_section_hint) buyHint.textContent = p.buy_section_hint;
+            const bl = p.budget_labels || ['بودجه از', 'بودجه تا'];
+            const dl = p.deposit_labels || ['ودیعه از', 'ودیعه تا'];
+            const rl = p.rent_labels || ['اجاره از', 'اجاره تا'];
+            crmSetFieldLabel(section, 'budget_min', bl[0]);
+            crmSetFieldLabel(section, 'budget_max', bl[1]);
+            crmSetFieldLabel(section, 'deposit_min', dl[0]);
+            crmSetFieldLabel(section, 'deposit_max', dl[1]);
+            crmSetFieldLabel(section, 'rent_min', rl[0]);
+            crmSetFieldLabel(section, 'rent_max', rl[1]);
+            crmSetFieldLabel(
+                section,
+                'areas',
+                isBuilder ? 'محله‌های فروش / پروژه' : 'محله‌های مورد نظر',
+            );
 
-        if (isBuilder && propertyTypeSelect && p.default_property_type) {
-            const hasOption = Array.from(propertyTypeSelect.options).some(o => o.value === p.default_property_type);
-            if (hasOption && (!propertyTypeSelect.value || propertyTypeSelect.value === 'سایر')) {
-                propertyTypeSelect.value = p.default_property_type;
+            section.querySelectorAll('[data-label-budget-min]').forEach(el => { el.textContent = bl[0]; });
+            section.querySelectorAll('[data-label-budget-max]').forEach(el => { el.textContent = bl[1]; });
+            section.querySelectorAll('[data-label-deposit-min]').forEach(el => { el.textContent = dl[0]; });
+            section.querySelectorAll('[data-label-deposit-max]').forEach(el => { el.textContent = dl[1]; });
+            section.querySelectorAll('[data-label-rent-min]').forEach(el => { el.textContent = rl[0]; });
+            section.querySelectorAll('[data-label-rent-max]').forEach(el => { el.textContent = rl[1]; });
+
+            const sellTitle = section.querySelector('#crmBuilderSellTitle');
+            const sellHint = section.querySelector('#crmBuilderSellHint');
+            const buyTitle = section.querySelector('#crmBuilderBuyTitle');
+            const buyHint = section.querySelector('#crmBuilderBuyHint');
+            const prefsBuilderTitle = section.querySelector('#crmPrefsBuilderTitle');
+            const prefsTitle = section.querySelector('#crmPrefsTitle');
+            if (sellTitle && p.sell_section_title) sellTitle.textContent = p.sell_section_title;
+            if (sellHint && p.sell_section_hint) sellHint.textContent = p.sell_section_hint;
+            if (buyTitle && p.buy_section_title) buyTitle.textContent = p.buy_section_title;
+            if (buyHint && p.buy_section_hint) buyHint.textContent = p.buy_section_hint;
+            if (prefsBuilderTitle) {
+                prefsBuilderTitle.textContent = p.sell_section_title
+                    ? p.sell_section_title.replace('خط فروش — ', 'مشخصات ')
+                    : 'مشخصات واحد فروش (آپارتمان)';
+            }
+            if (prefsTitle) prefsTitle.textContent = 'ترجیحات ملک';
+
+            if (isBuilder && propertyTypeSelect && p.default_property_type) {
+                const hasOption = Array.from(propertyTypeSelect.options).some(o => o.value === p.default_property_type);
+                if (hasOption && (!propertyTypeSelect.value || propertyTypeSelect.value === 'سایر')) {
+                    propertyTypeSelect.value = p.default_property_type;
+                }
             }
         }
-    }
 
-    applyProfile(typeSelect.value);
-    typeSelect.addEventListener('change', () => applyProfile(typeSelect.value));
+        applyProfile(typeSelect.value);
+        if (typeSelect.dataset.crmTypeBound !== '1') {
+            typeSelect.dataset.crmTypeBound = '1';
+            typeSelect.addEventListener('change', () => applyProfile(typeSelect.value));
+        }
+    });
 }
 
 function initPropertyDealMode(root) {

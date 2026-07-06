@@ -5,6 +5,9 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/help.css' %}?v=8">
+{% if crm_video.available %}
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -117,6 +120,18 @@
 
             {# ── Guide sections ── #}
             {% for guide in help.guides %}
+            {% if crm_video.available and guide.id == 'crm-overview' %}
+            <section class="hlp-section hlp-section--video" aria-labelledby="hlp-crm-video-title">
+                <div class="hlp-crm-video-shell">
+                    <header class="hlp-crm-video-head">
+                        <span class="hlp-badge hlp-badge--free"><i class="fas fa-circle-play" aria-hidden="true"></i> ویدیوی آموزشی</span>
+                        <h2 id="hlp-crm-video-title">{{ crm_video.title }}</h2>
+                        <p>{{ crm_video.subtitle }}</p>
+                    </header>
+                    {% include 'includes/mk_video_player.html' with video=crm_video variant='crm' show_heading=False %}
+                </div>
+            </section>
+            {% endif %}
             <section id="{{ guide.id }}" class="hlp-section hlp-guide">
                 <header class="hlp-guide-head">
                     <div class="hlp-guide-head-icon">
@@ -245,4 +260,7 @@
 
 {% block extra_js %}
 <script src="{% static 'workspace/js/help.js' %}?v=2" defer></script>
+{% if crm_video.available %}
+<script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
+{% endif %}
 {% endblock %}

@@ -146,9 +146,13 @@ def _crm_nav_counts(user):
 
 class CRMContextMixin:
     def get_context_data(self, **kwargs):
+        from workspace.services.crm_video import get_crm_video_context
+
         ctx = super().get_context_data(**kwargs)
         user = self.request.user
         membership = get_membership(user)
+        ctx['crm_video'] = get_crm_video_context()
+        ctx['open_modal'] = self.request.GET.get('open', ctx.get('open_modal', ''))
         ctx['crm_nav_counts'] = _crm_nav_counts(user)
         ctx['has_bot_license'] = has_active_bot_license(user)
         ctx['crm_membership'] = membership
@@ -194,7 +198,6 @@ class CRMDashboardView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['today_count'] = count_today_queue(user)
         ctx['quick_lead_form'] = QuickLeadForm()
         ctx['crm_sources'] = CRM_SOURCES
-        ctx['open_modal'] = self.request.GET.get('open', '')
         run_automation_for_user(user)
         ctx['conversion_funnel'] = get_conversion_funnel(user)
         ctx['stagnant_contacts'] = get_stagnant_contacts(user, DEFAULT_STAGNANT_DAYS, 6)
@@ -214,7 +217,6 @@ class CRMTodayView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['crm_section'] = 'today'
         ctx['quick_lead_form'] = QuickLeadForm()
         ctx['crm_sources'] = CRM_SOURCES
-        ctx['open_modal'] = self.request.GET.get('open', '')
         return ctx
 
     def post(self, request):

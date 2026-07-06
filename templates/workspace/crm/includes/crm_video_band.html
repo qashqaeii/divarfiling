@@ -1,0 +1,17 @@
+{% load static %}
+{# نوار ویدیوی آموزشی CRM — نیاز به crm_video در context #}
+{% if crm_video.available %}
+<details class="mk-crm-video-band" id="crm-video"{% if open_modal == 'video' %} open{% endif %}>
+    <summary class="mk-crm-video-summary">
+        <span class="mk-crm-video-summary-icon" aria-hidden="true"><i class="fas fa-circle-play"></i></span>
+        <span class="mk-crm-video-summary-text">
+            <strong>{{ crm_video.title }}</strong>
+            <em>{{ crm_video.subtitle }}</em>
+        </span>
+        <span class="mk-crm-video-summary-meta">{{ crm_video.duration }}</span>
+    </summary>
+    <div class="mk-crm-video-body">
+        {% include 'includes/mk_video_player.html' with video=crm_video variant='crm' show_heading=False %}
+    </div>
+</details>
+{% endif %}

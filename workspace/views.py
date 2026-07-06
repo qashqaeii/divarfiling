@@ -1227,9 +1227,11 @@ class HelpView(WorkspaceLoginMixin, TemplateView):
     template_name = 'workspace/help.html'
 
     def get_context_data(self, **kwargs):
+        from workspace.services.crm_video import get_crm_video_context
         from workspace.help_content import workspace_help_content
         ctx = super().get_context_data(**kwargs)
         ctx['help'] = workspace_help_content()
+        ctx['crm_video'] = get_crm_video_context()
         return ctx
 
 

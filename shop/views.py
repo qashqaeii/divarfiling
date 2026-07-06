@@ -21,6 +21,7 @@ from .bot_catalog import (
 )
 from .bot_install_video import get_bot_install_video_context, resolve_guide_video
 from workspace.services.filing_video import get_filing_video_context
+from workspace.services.crm_video import get_crm_video_context
 from .sample_excel import get_sale_apartment_excel_preview
 from .education_content import education_hub_content
 from .android_tutorial_content import android_tutorial_content, android_tutorial_schema_json
@@ -523,6 +524,7 @@ class EducationView(TemplateView):
         ctx['bot_buy_url'] = get_bot_product_buy_url()
         ctx['install_video'] = get_bot_install_video_context()
         ctx['filing_video'] = get_filing_video_context()
+        ctx['crm_video'] = get_crm_video_context()
         user = self.request.user
         if user.is_authenticated:
             from workspace.services.access import get_bot_access_state

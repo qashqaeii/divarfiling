@@ -30,8 +30,15 @@
             <a href="{% url 'workspace:crm_reminders' %}?drawer=reminder" class="crm-dash-act crm-dash-act--icon" title="یادآور جدید">
                 <i class="fas fa-bell" aria-hidden="true"></i>
             </a>
+            {% if crm_video.available %}
+            <a href="#crm-video" class="crm-dash-act crm-dash-act--icon" title="آموزش CRM" aria-label="آموزش ویدیویی CRM">
+                <i class="fas fa-circle-play" aria-hidden="true"></i>
+            </a>
+            {% endif %}
         </div>
     </header>
+
+    {% include 'workspace/crm/includes/crm_video_band.html' %}
 
     {% if stagnant_count %}
     <div class="crm-dash-alert crm-dash-alert--stagnant">

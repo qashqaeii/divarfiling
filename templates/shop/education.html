@@ -126,6 +126,35 @@
     </section>
     {% endif %}
 
+    {% if crm_video.available %}
+    <section class="edu-video-band edu-video-band--crm" aria-labelledby="edu-crm-video-title">
+        <div class="container edu-video-shell">
+            <div class="edu-video-copy">
+                <span class="edu-eyebrow">ویدیوی CRM میزکار</span>
+                <h2 id="edu-crm-video-title">{{ crm_video.title }}</h2>
+                <p>{{ crm_video.subtitle }}</p>
+                <div class="edu-video-chips">
+                    <span class="edu-video-chip"><i class="fas fa-clock"></i> {{ crm_video.duration }}</span>
+                    <span class="edu-video-chip"><i class="fas fa-address-book"></i> مخاطبین</span>
+                    <span class="edu-video-chip"><i class="fas fa-handshake"></i> معاملات</span>
+                    <span class="edu-video-chip"><i class="fas fa-gift"></i> رایگان</span>
+                </div>
+                <div class="edu-video-actions">
+                    <a href="{% url 'workspace:crm_dashboard' %}?open=video#crm-video" class="edu-btn edu-btn--primary">
+                        <i class="fas fa-gauge-high"></i> رفتن به CRM
+                    </a>
+                    <a href="{% url 'workspace:help' %}#crm-overview" class="edu-btn edu-btn--ghost">
+                        <i class="fas fa-book-open"></i> راهنمای متنی CRM
+                    </a>
+                </div>
+            </div>
+            <div>
+                {% include 'includes/mk_video_player.html' with video=crm_video variant='crm' show_heading=False show_meta=True %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <section class="edu-section edu-paths-band" aria-labelledby="edu-paths-title">
         <div class="container">
             <header class="edu-section-head">
@@ -385,7 +414,7 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if install_video.available or filing_video.available %}
+{% if install_video.available or filing_video.available or crm_video.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
 {% endif %}
 <script src="{% static 'js/education.js' %}?v=3" defer></script>

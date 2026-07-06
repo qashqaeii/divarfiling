@@ -88,6 +88,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # آمار کلی
         total_orders = Order.objects.filter(user=user).count()
         paid_orders = Order.objects.filter(user=user, status='paid').count()
+        pending_orders_count = Order.objects.filter(
+            user=user,
+            status__in=('pending', 'pending_verification'),
+        ).count()
         total_licenses = License.objects.filter(order__user=user).count()
         active_licenses = License.objects.filter(
             order__user=user,
@@ -193,6 +197,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             # آمار
             'total_orders': total_orders,
             'paid_orders': paid_orders,
+            'pending_orders_count': pending_orders_count,
             'total_licenses': total_licenses,
             'active_licenses': active_licenses,
             'total_spent': total_spent,

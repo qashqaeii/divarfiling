@@ -2748,6 +2748,36 @@ body.ws-body::before { opacity: 0.45; }
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 
+/* Responsive default: table on desktop, cards on mobile */
+.mk-ds-layout--grid-only .mk-ds-layout-table { display: none !important; }
+.mk-ds-layout--table-only .mk-ds-layout-grid { display: none !important; }
+
+@media (max-width: 768px) {
+    .mk-ds-layout--auto .mk-ds-layout-table { display: none !important; }
+    .mk-ds-layout--auto .mk-ds-layout-grid { display: block; }
+
+    .mk-filing-pro[data-view-mode="auto"] .mk-filing-panel-hint--table { display: none; }
+
+    .mk-filing-pro[data-view-mode="auto"] .mk-filing-view-btn.is-active { background: transparent; color: var(--ws-text-muted); box-shadow: none; }
+    .mk-filing-pro[data-view-mode="auto"] .mk-filing-view-btn--grid {
+        background: var(--ws-surface);
+        color: var(--ws-primary);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    }
+}
+
+@media (min-width: 769px) {
+    .mk-ds-layout--auto .mk-ds-layout-grid { display: none !important; }
+    .mk-ds-layout--auto .mk-ds-layout-table { display: block; }
+
+    .mk-filing-pro[data-view-mode="auto"] .mk-filing-view-btn.is-active { background: transparent; color: var(--ws-text-muted); box-shadow: none; }
+    .mk-filing-pro[data-view-mode="auto"] .mk-filing-view-btn--table {
+        background: var(--ws-surface);
+        color: var(--ws-primary);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    }
+}
+
 .mk-filing-chips {
     display: flex;
     flex-wrap: wrap;

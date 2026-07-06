@@ -175,8 +175,8 @@ def _dataset_filter_qs(request):
 def _dataset_page_query(request):
     filters = _dataset_filter_params(request)
     params = {k: v for k, v in filters.items() if v and k != 'view'}
-    view = filters.get('view') or 'table'
-    if view != 'table':
+    view = filters.get('view') or 'auto'
+    if view not in ('table', 'auto'):
         params['view'] = view
     return params
 
@@ -213,7 +213,7 @@ def _dataset_list_context(request, extra=None):
         'filters': filters,
         'filter_qs': _dataset_filter_qs(request),
         'has_filters': any(filters.get(k) for k in ('q', 'tx', 'city', 'format')),
-        'view_mode': filters.get('view') or 'table',
+        'view_mode': filters.get('view') or 'auto',
         'page_query': _dataset_page_query(request),
         'filing_video': get_filing_video_context(),
     }
@@ -248,7 +248,7 @@ class DatasetListView(LicenseRequiredMixin, ListView):
             'filters': filters,
             'filter_qs': _dataset_filter_qs(self.request),
             'has_filters': any(filters.get(k) for k in ('q', 'tx', 'city', 'format')),
-            'view_mode': filters.get('view') or 'table',
+            'view_mode': filters.get('view') or 'auto',
             'page_query': _dataset_page_query(self.request),
             'filing_video': get_filing_video_context(),
         })

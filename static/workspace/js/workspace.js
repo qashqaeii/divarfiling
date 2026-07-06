@@ -405,27 +405,47 @@ function initPublicShareForms() {
 
 function initDatasetBulkSelect() {
     const selectAll = document.getElementById('dsSelectAll');
-    const checks = document.querySelectorAll('.mk-ds-check');
     const bulkBar = document.getElementById('dsBulkBar');
     const bulkCount = document.getElementById('dsBulkCount');
     const bulkClear = document.getElementById('dsBulkClear');
     const bulkDelete = document.getElementById('dsBulkDelete');
     const bulkForm = document.getElementById('dsBulkDeleteForm');
     const bulkIds = document.getElementById('dsBulkDeleteIds');
-    if (!checks.length) return;
+    const layoutRoot = document.querySelector('.mk-ds-layout');
+
+    function isVisible(el) {
+        return !!(el && el.offsetParent !== null);
+    }
+
+    function activeLayoutSection() {
+        if (!layoutRoot) return document;
+        const grid = layoutRoot.querySelector('.mk-ds-layout-grid');
+        const table = layoutRoot.querySelector('.mk-ds-layout-table');
+        if (isVisible(grid)) return grid;
+        if (isVisible(table)) return table;
+        return layoutRoot;
+    }
+
+    function getChecks() {
+        const scope = activeLayoutSection();
+        return [...scope.querySelectorAll('.mk-ds-check')];
+    }
+
+    if (!document.querySelector('.mk-ds-check')) return;
 
     function selected() {
-        return [...checks].filter(c => c.checked);
+        return getChecks().filter(c => c.checked);
     }
 
     function syncRowHighlight() {
-        checks.forEach(c => {
+        getChecks().forEach(c => {
             const row = c.closest('tr[data-id], .mk-ds-card[data-id]');
             if (row) row.classList.toggle('is-selected', c.checked);
         });
     }
 
     function updateBulk() {
+        const checks = getChecks();
         const picked = selected();
         const n = picked.length;
         if (bulkBar) {
@@ -433,24 +453,27 @@ function initDatasetBulkSelect() {
             bulkBar.classList.toggle('is-visible', n > 0);
         }
         if (bulkCount) bulkCount.textContent = n;
-        if (selectAll) {
+        if (selectAll && isVisible(selectAll.closest('.mk-ds-layout-table'))) {
             selectAll.checked = n > 0 && n === checks.length;
             selectAll.indeterminate = n > 0 && n < checks.length;
+        } else if (selectAll) {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
         }
         syncRowHighlight();
     }
 
     if (selectAll) {
         selectAll.addEventListener('change', () => {
-            checks.forEach(c => { c.checked = selectAll.checked; });
+            getChecks().forEach(c => { c.checked = selectAll.checked; });
             updateBulk();
         });
     }
-    checks.forEach(c => c.addEventListener('change', updateBulk));
+    document.querySelectorAll('.mk-ds-check').forEach(c => c.addEventListener('change', updateBulk));
 
     if (bulkClear) {
         bulkClear.addEventListener('click', () => {
-            checks.forEach(c => { c.checked = false; });
+            document.querySelectorAll('.mk-ds-check').forEach(c => { c.checked = false; });
             if (selectAll) selectAll.checked = false;
             updateBulk();
         });

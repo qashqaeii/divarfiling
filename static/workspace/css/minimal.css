@@ -7768,6 +7768,12 @@ button.mk-ds-card-act {
     overflow: hidden;
 }
 
+.mk-data-table-listings .mk-col-publisher .mk-adv-label {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 3.25rem;
+}
+
 .mk-data-table-listings .mk-col-specs {
     overflow: hidden;
     padding-inline: 0.45rem;
@@ -8024,6 +8030,8 @@ button.mk-ds-card-act {
 }
 
 .mk-adv-label {
+    flex-shrink: 0;
+    min-width: min-content;
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--ws-text-secondary);
@@ -8036,8 +8044,10 @@ button.mk-ds-card-act {
 .mk-adv-tag--disguised .mk-adv-label { color: #be123c; }
 
 .mk-adv-tag--consultant .mk-adv-dot { background: #64748b; }
+.mk-adv-tag--consultant .mk-adv-label { color: #475569; }
 
 .mk-adv-tag--personal .mk-adv-dot { background: #94a3b8; }
+.mk-adv-tag--personal .mk-adv-label { color: var(--ws-text-secondary); }
 
 .mk-money {
     font-variant-numeric: tabular-nums;
@@ -8400,16 +8410,45 @@ button.mk-ds-card-act {
 
 .mk-lcard-head-aside {
     flex-shrink: 0;
-    max-width: 38%;
+    min-width: min-content;
+    max-width: none;
 }
 
 .mk-lcard-head-aside .mk-adv-tag {
-    padding: 0.2rem 0.48rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    padding: 0.22rem 0.52rem;
     border-radius: 999px;
     font-size: 0.68rem;
     font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
     background: color-mix(in srgb, var(--ws-surface-2) 88%, transparent);
     border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+}
+
+.mk-lcard-head-aside .mk-adv-dot {
+    width: 6px;
+    height: 6px;
+}
+
+.mk-lcard-head-aside .mk-adv-label {
+    overflow: visible;
+    text-overflow: unset;
+    flex-shrink: 0;
+    min-width: min-content;
+    font-weight: 700;
+}
+
+.mk-lcard-head-aside .mk-adv-tag--genuine {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.16);
+}
+
+.mk-lcard-head-aside .mk-adv-tag--disguised {
+    background: rgba(244, 63, 94, 0.07);
+    border-color: rgba(244, 63, 94, 0.14);
 }
 
 .mk-lcard-metrics {
@@ -8814,3 +8853,4 @@ button.mk-ds-card-act {
     .mk-data-table-listings .mk-col-w-specs,
     .mk-data-table-listings thead th:nth-child(6) { min-width: 6.5rem; }
 }
+

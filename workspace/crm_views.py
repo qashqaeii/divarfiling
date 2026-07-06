@@ -313,6 +313,7 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['saved_filter_params'] = current_params_from_request(self.request, 'contacts')
         ctx['saved_filter_can_save'] = bool(ctx['saved_filter_params'])
         ctx['match_eligible_types'] = MATCH_TYPES | LEAD_TYPES
+        ctx['today'] = today
         return ctx
 
 

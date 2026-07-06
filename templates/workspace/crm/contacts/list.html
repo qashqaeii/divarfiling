@@ -9,9 +9,27 @@
 {% block status_bar %}{% endblock %}
 
 {% block crm_content %}
-<div class="crm-contacts-pro crm-page-chrome">
+<div class="crm-contacts-pro crm-page-chrome crm-contacts-mobile">
 
-    <header class="crm-dash-bar">
+    <header class="crm-contacts-mob-header">
+        <div class="crm-contacts-mob-header-main">
+            <h1 class="crm-contacts-mob-title">مخاطبین</h1>
+            <p class="crm-contacts-mob-sub">{{ stats.total }} مخاطب{% if stats.due_today %} · <strong>{{ stats.due_today }}</strong> پیگیری امروز{% endif %}</p>
+        </div>
+        <div class="crm-contacts-mob-header-actions" role="toolbar" aria-label="عملیات مخاطبین">
+            <button type="button" class="crm-contacts-mob-icon-btn" data-drawer-open="drawer-quick-lead" title="سرنخ سریع">
+                <i class="fas fa-bolt" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="crm-contacts-mob-icon-btn" data-drawer-open="drawer-import" title="ورود فایل">
+                <i class="fas fa-file-import" aria-hidden="true"></i>
+            </button>
+            <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-contacts-mob-icon-btn" title="خروجی Excel">
+                <i class="fas fa-file-excel" aria-hidden="true"></i>
+            </a>
+        </div>
+    </header>
+
+    <header class="crm-dash-bar crm-contacts-desk-header">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">مخاطبین</h1>
         </div>
@@ -30,6 +48,25 @@
             </button>
         </div>
     </header>
+
+    <section class="crm-contacts-mob-kpis" aria-label="آمار مخاطبین">
+        <article class="crm-contacts-mob-kpi">
+            <span class="crm-contacts-mob-kpi-val">{{ stats.total }}</span>
+            <span class="crm-contacts-mob-kpi-lbl">کل</span>
+        </article>
+        <article class="crm-contacts-mob-kpi">
+            <span class="crm-contacts-mob-kpi-val">{{ stats.new }}</span>
+            <span class="crm-contacts-mob-kpi-lbl">جدید</span>
+        </article>
+        <article class="crm-contacts-mob-kpi crm-contacts-mob-kpi--accent">
+            <span class="crm-contacts-mob-kpi-val">{{ stats.in_progress }}</span>
+            <span class="crm-contacts-mob-kpi-lbl">پیگیری</span>
+        </article>
+        <article class="crm-contacts-mob-kpi{% if stats.due_today %} crm-contacts-mob-kpi--warn{% endif %}">
+            <span class="crm-contacts-mob-kpi-val">{{ stats.due_today }}</span>
+            <span class="crm-contacts-mob-kpi-lbl">امروز</span>
+        </article>
+    </section>
 
     <section class="crm-dash-kpis" aria-label="آمار مخاطبین">
         <article class="crm-dash-kpi">
@@ -118,15 +155,25 @@
                     </thead>
                     <tbody>
                         {% for c in customers %}
-                        <tr data-id="{{ c.id }}" class="crm-row-selectable" data-panel-url="{% url 'workspace:crm_contact_panel' c.id %}">
+                        <tr data-id="{{ c.id }}" class="crm-row-selectable{% if c.next_follow_up %} crm-row-has-followup{% endif %}" data-panel-url="{% url 'workspace:crm_contact_panel' c.id %}">
                             <td class="crm-contacts-col-check"><input type="checkbox" class="crm-checkbox crm-row-check" value="{{ c.id }}"></td>
                             <td>
-                                <div class="crm-contacts-person">
+                                <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-person crm-contacts-person-link">
+                                    <span class="crm-contacts-avatar crm-contacts-avatar--hue-{{ c.name|crm_avatar_hue }}" aria-hidden="true">{{ c.name|crm_initials }}</span>
                                     <div class="crm-contacts-person-text">
                                         <span class="crm-contacts-name">{{ c.name }}</span>
                                         {% if c.company_name %}<span class="crm-contacts-sub">{{ c.company_name }}</span>{% endif %}
+                                        <span class="crm-contacts-mob-meta">
+                                            <span class="crm-contacts-type">{{ c.customer_type }}</span>
+                                            <span class="crm-contacts-status">
+                                                <span class="crm-contacts-dot" style="background:{{ c.status|crm_status_dot }}"></span>
+                                                {{ c.status }}
+                                            </span>
+                                            {% if c.priority == 'بالا' %}<span class="crm-contacts-priority crm-contacts-priority--high">بالا</span>{% endif %}
+                                        </span>
                                     </div>
-                                </div>
+                                    <i class="fas fa-chevron-left crm-contacts-mob-chevron" aria-hidden="true"></i>
+                                </a>
                             </td>
                             <td class="crm-contacts-col-phone" dir="ltr">{{ c.phone|default:"—" }}</td>
                             <td class="crm-contacts-col-type"><span class="crm-contacts-type">{{ c.customer_type }}</span></td>
@@ -144,7 +191,9 @@
                                 {% else %}<span class="crm-contacts-muted">—</span>{% endif %}
                             </td>
                             <td class="crm-contacts-col-date">
-                                {% if c.next_follow_up %}{{ c.next_follow_up|ws_jalali }}{% else %}<span class="crm-contacts-muted">—</span>{% endif %}
+                                {% if c.next_follow_up %}
+                                <span class="crm-contacts-followup{% if c.next_follow_up == today %} crm-contacts-followup--today{% endif %}">{{ c.next_follow_up|ws_jalali }}</span>
+                                {% else %}<span class="crm-contacts-muted">—</span>{% endif %}
                             </td>
                             <td class="crm-contacts-col-actions">
                                 <div class="crm-contacts-row-actions">
@@ -244,6 +293,11 @@
     </div>
 
     {% endif %}
+
+    <button type="button" class="crm-contacts-fab" data-drawer-open="drawer-contact" aria-label="مخاطب جدید">
+        <i class="fas fa-user-plus" aria-hidden="true"></i>
+        <span>مخاطب</span>
+    </button>
 </div>
 {% endblock %}
 

@@ -9,7 +9,7 @@
 {% block crm_actions %}{% endblock %}
 
 {% block crm_content %}
-    <div class="crm-contact-detail-pro crm-page-chrome">
+    <div class="crm-contact-detail-pro crm-page-chrome crm-contact-mobile">
     <section class="crm-contact-hero" aria-label="پروفایل مخاطب">
         <div class="crm-contact-hero__accent" aria-hidden="true"></div>
         <div class="crm-contact-hero__top">
@@ -111,6 +111,34 @@
                 {% endif %}
                 {% endif %}
             </div>
+        {% endif %}
+    </section>
+
+    <section class="crm-contact-mobile-glance" aria-label="خلاصه سریع">
+        <article class="crm-contact-glance-card crm-contact-glance-card--followup{% if follow_up_state == 'overdue' %} is-overdue{% elif follow_up_state == 'today' %} is-today{% endif %}">
+            <span class="crm-contact-glance-icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+            <div class="crm-contact-glance-copy">
+                <span class="crm-contact-glance-label">پیگیری بعدی</span>
+                <strong>{% if customer.next_follow_up %}{{ customer.next_follow_up|ws_jalali }}{% else %}ثبت نشده{% endif %}</strong>
+            </div>
+            {% if follow_up_state == 'overdue' %}<span class="crm-contact-glance-badge is-warn">معوق</span>
+            {% elif follow_up_state == 'today' %}<span class="crm-contact-glance-badge is-accent">امروز</span>{% endif %}
+        </article>
+        <article class="crm-contact-glance-card">
+            <span class="crm-contact-glance-icon" aria-hidden="true"><i class="fas fa-stream"></i></span>
+            <div class="crm-contact-glance-copy">
+                <span class="crm-contact-glance-label">آخرین فعالیت</span>
+                <strong>{% if activities %}{{ activities.0.created_at|ws_jalali }}{% else %}—{% endif %}</strong>
+            </div>
+        </article>
+        {% if deals %}
+        <article class="crm-contact-glance-card">
+            <span class="crm-contact-glance-icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+            <div class="crm-contact-glance-copy">
+                <span class="crm-contact-glance-label">معاملات</span>
+                <strong>{{ deals|length }} فعال</strong>
+            </div>
+        </article>
         {% endif %}
     </section>
 
@@ -506,6 +534,29 @@
             </form>
         </aside>
     </div>
+
+    <nav class="crm-contact-mobile-dock" aria-label="عملیات سریع موبایل">
+        {% if customer.phone %}
+        <a href="tel:{{ customer.phone }}" class="crm-contact-dock-btn" title="تماس">
+            <i class="fas fa-phone" aria-hidden="true"></i>
+            <span>تماس</span>
+        </a>
+        <a href="https://wa.me/98{{ customer.phone|slice:'1:' }}" target="_blank" rel="noopener" class="crm-contact-dock-btn crm-contact-dock-btn--wa" title="واتساپ">
+            <i class="fab fa-whatsapp" aria-hidden="true"></i>
+            <span>واتساپ</span>
+        </a>
+        {% endif %}
+        {% if not customer_is_shared %}
+        <button type="button" class="crm-contact-dock-btn crm-contact-dock-btn--primary" data-drawer-open="drawer-edit" title="ویرایش">
+            <i class="fas fa-pen" aria-hidden="true"></i>
+            <span>ویرایش</span>
+        </button>
+        {% endif %}
+        <button type="button" class="crm-contact-dock-btn crm-contact-dock-btn--menu" data-drawer-open="drawer-activity" title="فعالیت جدید">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            <span>فعالیت</span>
+        </button>
+    </nav>
     </div>
 {% endblock %}
 

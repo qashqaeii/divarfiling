@@ -2912,6 +2912,42 @@ body.ws-body::before { opacity: 0.45; }
     .mk-filing-head .mk-hub-head-btn span { display: none; }
     .mk-filing-head .mk-hub-head-btn { padding: 0.45rem 0.55rem; }
 }
+
+@media (max-width: 768px) {
+    .mk-filing-head.mk-hub-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+    }
+
+    .mk-filing-head .mk-hub-head-main {
+        width: 100%;
+    }
+
+    .mk-filing-head .mk-hub-head-actions {
+        display: grid;
+        width: 100%;
+        flex: none;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem;
+        padding: 0.4rem;
+    }
+
+    .mk-filing-head .mk-hub-head-btn {
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0.5rem 0.6rem;
+        justify-content: center;
+    }
+
+    .mk-filing-head .mk-hub-head-btn span {
+        display: inline !important;
+    }
+
+    .mk-filing-head .mk-hub-head-btn--primary {
+        grid-column: 1 / -1;
+    }
+}
 @media (max-width: 640px) {
     .mk-filing-filter { grid-template-columns: 1fr; }
     .mk-filing-metrics { grid-template-columns: 1fr 1fr; }

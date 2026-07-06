@@ -218,17 +218,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (toggle && sidebar) {
-        toggle.addEventListener('click', () => setSidebarOpen(!sidebar.classList.contains('open')));
-        document.querySelector('[data-ws-bottom-more]')?.addEventListener('click', () => {
-            setSidebarOpen(true);
+    const bottomMore = document.querySelector('[data-ws-bottom-more]');
+    const bottomNav = document.getElementById('wsBottomNav');
+
+    if (sidebar) {
+        if (toggle) {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                setSidebarOpen(!sidebar.classList.contains('open'));
+            });
+        }
+
+        bottomMore?.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setSidebarOpen(!sidebar.classList.contains('open'));
         });
-        document.addEventListener('click', e => {
+
+        document.addEventListener('click', (e) => {
             if (!sidebar.classList.contains('open')) return;
-            if (sidebar.contains(e.target) || toggle.contains(e.target)) return;
+            if (
+                sidebar.contains(e.target)
+                || toggle?.contains(e.target)
+                || bottomMore?.contains(e.target)
+                || bottomNav?.contains(e.target)
+            ) return;
             setSidebarOpen(false);
         });
-        document.addEventListener('keydown', e => {
+
+        document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && sidebar.classList.contains('open')) {
                 setSidebarOpen(false);
             }

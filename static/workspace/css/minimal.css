@@ -6543,6 +6543,265 @@ button.mk-ds-act {
     .mk-ds-command-stats { grid-template-columns: 1fr 1fr; }
 }
 
+/* Listing detail page — mobile polish */
+@media (max-width: 768px) {
+    .mk-listing-page {
+        gap: 0.65rem;
+        min-width: 0;
+    }
+
+    .mk-listing-page .mk-ds-command {
+        padding: 0.75rem;
+        gap: 0.65rem;
+        border-radius: 14px;
+    }
+
+    .mk-listing-page .mk-ds-command-top {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+        padding-inline-start: 0;
+    }
+
+    .mk-listing-page .mk-ds-crumb {
+        font-size: 0.72rem;
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.1rem;
+    }
+
+    .mk-listing-page .mk-ds-crumb::-webkit-scrollbar { display: none; }
+
+    .mk-listing-page .mk-ds-command-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0.4rem;
+        align-items: stretch;
+    }
+
+    .mk-listing-page .mk-ds-action-group-primary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.2rem;
+        padding: 0.25rem;
+        flex: none;
+    }
+
+    .mk-listing-page .mk-ds-action-group-primary .mk-ds-action {
+        flex-direction: column;
+        gap: 0.2rem;
+        padding: 0.45rem 0.3rem;
+        min-height: 2.75rem;
+        font-size: 0.65rem;
+    }
+
+    .mk-listing-page .mk-ds-action-group-primary .mk-ds-action span {
+        display: inline !important;
+    }
+
+    .mk-listing-page .mk-ds-action-group-primary .mk-ds-action i {
+        font-size: 0.82rem;
+    }
+
+    .mk-listing-page .mk-ds-action-group-tools {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.2rem;
+        padding: 0.2rem;
+    }
+
+    .mk-listing-page .mk-ds-action-icon {
+        width: 2.35rem;
+        height: 2.35rem;
+        min-height: 2.35rem;
+    }
+
+    .mk-listing-page .mk-ds-command-main {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 0.65rem;
+        padding-inline-start: 0;
+    }
+
+    .mk-listing-page .mk-ds-command-identity {
+        flex: 1;
+        min-width: 0;
+        gap: 0.65rem;
+    }
+
+    .mk-listing-page .mk-ds-command-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        flex-shrink: 0;
+    }
+
+    .mk-listing-page .mk-ds-command-title {
+        font-size: 1.05rem;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .mk-listing-page .mk-ds-command-chips {
+        gap: 0.25rem;
+        margin-top: 0.35rem;
+    }
+
+    .mk-listing-page .mk-ds-chip {
+        font-size: 0.62rem;
+        padding: 0.15rem 0.45rem;
+    }
+
+    .mk-listing-page .mk-ds-filter-gauge {
+        display: none;
+    }
+
+    .mk-listing-page .mk-ds-command-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem;
+        padding-inline-start: 0;
+    }
+
+    .mk-listing-page .mk-ds-command-stats:has(.mk-ds-kpi-accent) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mk-listing-page .mk-ds-kpi {
+        padding: 0.5rem 0.55rem;
+        gap: 0.45rem;
+    }
+
+    .mk-listing-page .mk-ds-kpi-icon {
+        width: 1.65rem;
+        height: 1.65rem;
+        font-size: 0.68rem;
+    }
+
+    .mk-listing-page .mk-ds-kpi-val {
+        font-size: 0.92rem;
+    }
+
+    .mk-listing-page .mk-ds-kpi-lbl {
+        font-size: 0.58rem;
+    }
+
+    .mk-listing-page .mk-ds-mix {
+        grid-column: 1 / -1;
+        padding: 0.5rem 0.6rem;
+        gap: 0.3rem;
+    }
+
+    .mk-listing-page .mk-ds-mix-counts {
+        display: none;
+    }
+
+    .mk-listing-page .mk-ds-mix-legend {
+        flex-wrap: wrap;
+        gap: 0.45rem 0.65rem;
+    }
+
+    .mk-listing-page .mk-filter-shell {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .mk-listing-page .mk-filter-bar-listing {
+        padding: 0.65rem;
+        gap: 0.45rem;
+    }
+
+    .mk-listing-page .mk-filter-primary {
+        grid-template-columns: 1fr;
+        gap: 0.45rem;
+    }
+
+    .mk-listing-page .mk-filter-search-grow,
+    .mk-listing-page .mk-filter-actions {
+        grid-column: 1 / -1;
+    }
+
+    .mk-listing-page .mk-filter-search {
+        min-height: 2.75rem;
+    }
+
+    .mk-listing-page .mk-filter-select,
+    .mk-listing-page .mk-filter-toggle,
+    .mk-listing-page .mk-filter-apply,
+    .mk-listing-page .mk-filter-reset {
+        min-height: 2.75rem;
+    }
+
+    .mk-listing-page .mk-filter-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 0.35rem;
+        justify-content: stretch;
+    }
+
+    .mk-listing-page .mk-filter-toggle {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .mk-listing-page .mk-filter-active {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .mk-listing-page .mk-listing-panel .mk-panel-head-table {
+        padding: 0.75rem 0.85rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.25rem;
+    }
+
+    .mk-listing-page .mk-listing-panel .mk-panel-head-table h2 {
+        font-size: 0.92rem;
+    }
+
+    .mk-listing-page .mk-panel-count-hint {
+        display: none;
+    }
+
+    .mk-listing-page .mk-panel-count-sep {
+        display: none;
+    }
+
+    .mk-listing-page .mk-filter-adv-section-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mk-listing-page .mk-filter-ranges {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mk-listing-page .mk-range {
+        width: 100%;
+        flex-wrap: wrap;
+        height: auto;
+        min-height: 2.75rem;
+        padding: 0.4rem 0.45rem;
+    }
+
+    .mk-listing-page .mk-filter-advanced.is-open {
+        max-height: none;
+    }
+
+    .mk-listing-page .mk-filter-pills {
+        flex-wrap: wrap;
+    }
+
+    .mk-listing-page .mk-listing-panel .mk-pagination {
+        padding: 0.75rem 0.85rem 1rem;
+        margin: 0;
+    }
+}
+
 .mk-hero-btn-danger {
     background: rgba(239, 68, 68, 0.1);
     color: #dc2626;
@@ -7532,51 +7791,273 @@ button.mk-ds-act {
     color: var(--ws-text-muted);
 }
 
-/* ─── Listing table — mobile horizontal scroll ─── */
+/* ─── Listing table — mobile card layout ─── */
 @media (max-width: 768px) {
-    .mk-listing-panel {
+    .mk-listing-page .mk-listing-panel {
         min-width: 0;
         overflow: visible;
+        border-radius: 14px;
     }
 
-    .mk-listing-panel .mk-table-wrap,
-    .mk-listing-panel .mk-table-wrap-fit {
-        overflow-x: auto !important;
+    .mk-listing-page .mk-listing-panel .mk-table-wrap,
+    .mk-listing-page .mk-listing-panel .mk-table-wrap-fit {
+        overflow-x: visible !important;
         overflow-y: visible;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-x: contain;
-        touch-action: pan-x pan-y;
         max-width: 100%;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(124, 58, 237, 0.4) transparent;
+        margin: 0;
+        padding: 0.35rem 0.5rem 0.65rem;
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
+        border-radius: 0 0 14px 14px;
     }
 
-    .mk-listing-panel .mk-table-wrap::-webkit-scrollbar,
-    .mk-listing-panel .mk-table-wrap-fit::-webkit-scrollbar {
+    .mk-listing-page .mk-data-table-listings--pro,
+    .mk-listing-page .mk-data-table-listings {
         display: block;
-        height: 6px;
-    }
-
-    .mk-listing-panel .mk-table-wrap::-webkit-scrollbar-thumb,
-    .mk-listing-panel .mk-table-wrap-fit::-webkit-scrollbar-thumb {
-        background: rgba(124, 58, 237, 0.35);
-        border-radius: 999px;
-    }
-
-    .mk-data-table-listings--pro,
-    .mk-data-table-listings {
         table-layout: auto;
-        width: max-content;
-        min-width: 100%;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100%;
     }
 
-    .mk-data-table-listings .mk-listing-title,
-    .mk-data-table-listings--pro .mk-listing-title {
-        white-space: normal;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+    .mk-listing-page .mk-data-table-listings--pro thead,
+    .mk-listing-page .mk-data-table-listings thead {
+        display: none;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro tbody,
+    .mk-listing-page .mk-data-table-listings tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro tbody tr.mk-listing-row,
+    .mk-listing-page .mk-data-table-listings tbody tr.mk-listing-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: auto !important;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: 0.5rem 0;
+        border: 1px solid var(--ws-border);
+        border-radius: 12px;
+        background: var(--ws-surface);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
         overflow: hidden;
+        cursor: pointer;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro tbody tr.mk-listing-row:hover td,
+    .mk-listing-page .mk-data-table-listings--pro tbody tr.mk-listing-row:hover .mk-col-title {
+        box-shadow: none;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro tbody tr.mk-listing-row:active {
+        transform: scale(0.995);
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro tbody tr:has(.mk-table-empty-cell) {
+        display: block;
+        margin: 0.5rem 0;
+        border: 1px dashed var(--ws-border);
+        border-radius: 12px;
+        background: var(--ws-surface);
+        box-shadow: none;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-table-empty-cell {
+        display: block;
+        width: 100% !important;
+        padding: 1.5rem 1rem;
+        border: none;
+        background: transparent;
+    }
+
+    .mk-listing-page .mk-data-table-listings .mk-col-value,
+    .mk-listing-page .mk-data-table-listings .mk-col-actions,
+    .mk-listing-page .mk-data-table-listings--pro thead th.mk-col-value,
+    .mk-listing-page .mk-data-table-listings--pro thead th.mk-col-actions {
+        position: static;
+        inset: auto;
+        box-shadow: none;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro tbody td {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100%;
+        box-sizing: border-box;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+        background: transparent !important;
+        transition: none;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-title {
+        order: 0;
+        grid-column: 1 / -1;
+        display: block;
+        padding: 0.8rem 0.85rem 0.7rem;
+        border-bottom: 1px solid var(--ws-border);
+        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface)) !important;
+        direction: rtl;
+        text-align: right;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-title::before {
+        content: none;
+        display: none;
+    }
+
+    .mk-listing-page .mk-data-table-listings .mk-listing-title {
+        white-space: normal;
+        display: block;
+        -webkit-line-clamp: unset;
+        -webkit-box-orient: unset;
+        overflow: visible;
+        font-size: 0.88rem;
+        line-height: 1.45;
+    }
+
+    .mk-listing-page .mk-listing-meta {
+        margin-top: 0.4rem;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-money,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-num.mk-col-area {
+        order: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        padding: 0.55rem 0.4rem;
+        text-align: center;
+        direction: rtl;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface)) !important;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-money::before,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-num.mk-col-area::before {
+        content: attr(data-label);
+        flex: none;
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+        text-align: center;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-money > *,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-num.mk-col-area > * {
+        flex: none;
+        text-align: center;
+    }
+
+    .mk-listing-page .mk-data-table-listings .mk-col-money {
+        text-align: center;
+        white-space: normal;
+    }
+
+    .mk-listing-page .mk-data-table-listings .mk-money {
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-specs,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-amenity,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-publisher,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-nb,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-value {
+        order: 2;
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.65rem;
+        padding: 0.5rem 0.85rem;
+        text-align: right;
+        direction: rtl;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-specs::before,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-amenity::before,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-publisher::before,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-nb::before,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-value::before {
+        content: attr(data-label);
+        flex: 0 0 4.5rem;
+        font-size: 0.66rem;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-specs > *,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-amenity > *,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-publisher > *,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-nb > *,
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-value > * {
+        flex: 1 1 auto;
+        min-width: 0;
+        text-align: right;
+    }
+
+    .mk-listing-page .mk-data-table-listings .mk-col-amenity {
+        overflow: visible;
+        padding-inline: 0.85rem;
+    }
+
+    .mk-listing-page .mk-data-table-listings .mk-col-amenity .ws-amenity-group {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .mk-listing-page .mk-data-table-listings .mk-cell-clip {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-actions {
+        order: 3;
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 0.85rem 0.65rem;
+        border-bottom: none;
+        background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-surface)) !important;
+        direction: rtl;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro td.mk-col-actions::before {
+        content: none;
+        display: none;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro .mk-row-actions-compact {
+        width: 100%;
+        justify-content: center;
+        gap: 0.45rem;
+    }
+
+    .mk-listing-page .mk-data-table-listings--pro .mk-row-btn {
+        width: 2.5rem;
+        height: 2.5rem;
+        min-height: 2.5rem;
+        border-radius: 10px;
+    }
+
+    .mk-listing-page .mk-data-table-listings .mk-col-value {
+        text-align: right;
+        white-space: normal;
+    }
+
+    .mk-listing-page .mk-data-table-listings .mk-specs-grid {
+        justify-content: flex-end;
+        flex-wrap: wrap;
     }
 }
 

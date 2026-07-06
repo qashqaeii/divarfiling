@@ -2,7 +2,7 @@
 {% for listing in listings %}
 {% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token %}
 <tr class="mk-listing-row" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' dataset.id listing.id %}">
-    <td class="mk-col-title">
+    <td class="mk-col-title" data-label="">
         <div class="mk-listing-title-cell">
             <a href="{% url 'workspace:listing_detail' dataset.id listing.id %}" class="mk-listing-title" title="{{ listing.title }}">{{ listing.title }}</a>
             <div class="mk-listing-meta">
@@ -14,28 +14,28 @@
         </div>
     </td>
     {% if tx.show_price %}
-    <td class="mk-col-money mk-num">
+    <td class="mk-col-money mk-num" data-label="قیمت">
         {% if listing.price %}<span class="mk-money" title="{{ listing.price|ws_money }}">{{ listing.price|ws_money_compact }}</span>{% else %}<span class="mk-muted">—</span>{% endif %}
     </td>
     {% endif %}
     {% if tx.show_deposit %}
-    <td class="mk-col-money mk-num">
+    <td class="mk-col-money mk-num" data-label="ودیعه">
         {% if listing.deposit %}<span class="mk-money mk-money--deposit" title="{{ listing.deposit|ws_money }}">{{ listing.deposit|ws_money_compact }}</span>{% else %}<span class="mk-muted">—</span>{% endif %}
     </td>
     {% endif %}
     {% if tx.show_rent %}
-    <td class="mk-col-money mk-num">
+    <td class="mk-col-money mk-num" data-label="اجاره">
         {% if listing.rent %}<span class="mk-money mk-money--rent" title="{{ listing.rent|ws_money }}">{{ listing.rent|ws_money_compact }}</span>
         {% elif listing.deposit %}<span class="mk-rent-tag" title="رهن کامل">رهن</span>
         {% else %}<span class="mk-muted">—</span>{% endif %}
     </td>
     {% endif %}
-    <td class="mk-col-num mk-col-area">
+    <td class="mk-col-num mk-col-area" data-label="متراژ">
         {% if listing.area %}
         <span class="mk-area-pill">{{ listing.area|floatformat:0 }}<small>م²</small></span>
         {% else %}<span class="mk-muted">—</span>{% endif %}
     </td>
-    <td class="mk-col-specs">
+    <td class="mk-col-specs" data-label="مشخصات">
         <div class="mk-specs-grid">
             {% if feat.rooms or listing.rooms %}
             <span class="mk-spec-chip" aria-label="اتاق {{ feat.rooms|default:listing.rooms }}"><i class="fas fa-door-open" aria-hidden="true"></i>{{ feat.rooms|default:listing.rooms }}</span>
@@ -57,19 +57,19 @@
             {% endif %}
         </div>
     </td>
-    <td class="mk-col-amenity">
+    <td class="mk-col-amenity" data-label="امکانات">
         {% amenity_icons feat %}
     </td>
-    <td class="mk-col-publisher">
+    <td class="mk-col-publisher" data-label="آگهی‌دهنده">
         {% include 'workspace/includes/listing_advertiser_pill.html' %}
     </td>
-    <td class="mk-col-nb">
+    <td class="mk-col-nb" data-label="محله">
         <span class="mk-nb-cell" title="{{ listing.neighborhood }}">
             {% if listing.neighborhood %}<i class="fas fa-location-dot" aria-hidden="true"></i>{% endif %}
             <span class="mk-cell-clip">{{ listing.neighborhood|default:"—"|truncatechars:18 }}</span>
         </span>
     </td>
-    <td class="mk-col-value">
+    <td class="mk-col-value" data-label="ارزش">
         {% with badge=score|ws_value_badge %}
         {% if badge == 'below' %}
         <span class="mk-value-pill mk-value-pill--below" title="زیر بازار{% if score %} · {{ score|floatformat:0 }}٪{% endif %}">
@@ -91,7 +91,7 @@
         {% endif %}
         {% endwith %}
     </td>
-    <td class="mk-col-actions">
+    <td class="mk-col-actions" data-label="">
         <div class="mk-row-actions mk-row-actions-compact" role="group" aria-label="عملیات آگهی">
             <a href="{% url 'workspace:listing_detail' dataset.id listing.id %}" class="mk-row-btn mk-row-btn--view" title="مشاهده"><i class="fas fa-eye" aria-hidden="true"></i></a>
             <details class="mk-action-menu">

@@ -2534,6 +2534,11 @@ body.ws-body::before { opacity: 0.45; }
     background: var(--ws-primary-soft);
 }
 
+/* Home files table — action labels desktop-hidden */
+.mk-home-file-btn span {
+    display: none;
+}
+
 .mk-table-empty {
     padding: 2rem 1rem;
     text-align: center;
@@ -4601,6 +4606,349 @@ button.mk-ds-card-act {
         background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface));
         border-color: color-mix(in srgb, var(--ws-primary) 16%, transparent);
         color: var(--ws-primary);
+    }
+
+    /* ─── Workspace home — homeFilesTable mobile cards (نمای کلی) ─── */
+    #homeFilesTable.mk-home-files-table {
+        display: block;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100%;
+        table-layout: auto;
+    }
+    #homeFilesTable.mk-home-files-table thead {
+        display: none;
+    }
+    #homeFilesTable.mk-home-files-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+        padding: 0.35rem 0.65rem 0.55rem;
+        box-sizing: border-box;
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100% !important;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: 0 0 0.65rem;
+        padding: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 78%, transparent);
+        border-radius: 16px;
+        background: var(--ws-surface);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 4px 14px rgba(15, 23, 42, 0.025);
+        overflow: hidden;
+        direction: rtl;
+        text-align: right;
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row:last-child {
+        margin-bottom: 0;
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row:hover td {
+        background: transparent;
+    }
+
+    /* Card cells — reset table-row layout */
+    #homeFilesTable.mk-home-files-table tbody td {
+        display: block;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 0;
+        border: none !important;
+        background: transparent !important;
+        text-align: right;
+        direction: rtl;
+    }
+    #homeFilesTable.mk-home-files-table tbody td::before {
+        display: none !important;
+        content: none !important;
+    }
+
+    /* Header: name (right) + format badge (left) */
+    #homeFilesTable.mk-home-files-table td.mk-col-file {
+        margin-bottom: 0.55rem;
+        padding-bottom: 0.55rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent) !important;
+    }
+    #homeFilesTable.mk-home-files-table .mk-file-cell {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.55rem;
+        width: 100%;
+        direction: rtl;
+    }
+    #homeFilesTable.mk-home-files-table .mk-file-text {
+        flex: 1 1 auto;
+        min-width: 0;
+        order: 1;
+        text-align: right;
+    }
+    #homeFilesTable.mk-home-files-table .mk-file-icon {
+        flex-shrink: 0;
+        order: 2;
+        width: 2.15rem;
+        height: 2.15rem;
+        border-radius: 10px;
+        font-size: 0.58rem;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+    }
+    #homeFilesTable.mk-home-files-table .mk-file-name {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        max-width: 100%;
+        width: 100%;
+        white-space: normal;
+        font-size: 0.88rem;
+        font-weight: 800;
+        line-height: 1.35;
+        letter-spacing: -0.02em;
+        color: var(--ws-text);
+        text-overflow: unset;
+        overflow-wrap: anywhere;
+    }
+    #homeFilesTable.mk-home-files-table .mk-file-sub {
+        display: none;
+    }
+
+    /* Info chips row */
+    #homeFilesTable.mk-home-files-table .mk-home-file-chips {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.35rem;
+        margin-bottom: 0.55rem;
+        direction: rtl;
+    }
+    #homeFilesTable.mk-home-files-table td.mk-col-location,
+    #homeFilesTable.mk-home-files-table td.mk-col-subject,
+    #homeFilesTable.mk-home-files-table td.mk-col-tx,
+    #homeFilesTable.mk-home-files-table td.mk-col-num,
+    #homeFilesTable.mk-home-files-table td.mk-col-date {
+        display: inline-flex !important;
+        width: auto !important;
+        flex: 0 0 auto;
+        align-items: center;
+        padding: 0;
+        margin: 0;
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row {
+        flex-wrap: wrap;
+        flex-direction: row;
+        align-items: center;
+        row-gap: 0.35rem;
+    }
+    #homeFilesTable.mk-home-files-table td.mk-col-file {
+        flex: 0 0 100%;
+        width: 100% !important;
+    }
+    #homeFilesTable.mk-home-files-table td.mk-col-actions {
+        flex: 0 0 100%;
+        width: 100% !important;
+        margin-top: 0.15rem;
+        padding-top: 0.55rem !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent) !important;
+    }
+
+    #homeFilesTable.mk-home-files-table .mk-location {
+        display: inline-flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.28rem;
+    }
+    #homeFilesTable.mk-home-files-table .mk-location-city,
+    #homeFilesTable.mk-home-files-table .mk-location-district {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.2rem 0.48rem;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 600;
+        line-height: 1.25;
+        white-space: nowrap;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background: color-mix(in srgb, var(--ws-surface-2) 88%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
+        color: var(--ws-text-secondary);
+    }
+    #homeFilesTable.mk-home-files-table .mk-location-city i {
+        font-size: 0.52rem;
+        margin: 0;
+        color: var(--ws-text-muted);
+    }
+    #homeFilesTable.mk-home-files-table .mk-subject {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.48rem;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 600;
+        background: color-mix(in srgb, var(--ws-surface-2) 88%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
+        color: var(--ws-text-secondary);
+    }
+    #homeFilesTable.mk-home-files-table .mk-tx-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.48rem;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+    #homeFilesTable.mk-home-files-table .mk-tx-فروش,
+    #homeFilesTable.mk-home-files-table .mk-tx-sale {
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        color: var(--ws-primary);
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, transparent);
+    }
+    #homeFilesTable.mk-home-files-table .mk-tx-اجاره,
+    #homeFilesTable.mk-home-files-table .mk-tx-rent {
+        background: rgba(59, 130, 246, 0.08);
+        color: #2563eb;
+        border: 1px solid rgba(59, 130, 246, 0.14);
+    }
+    #homeFilesTable.mk-home-files-table .mk-tx-ترکیبی,
+    #homeFilesTable.mk-home-files-table .mk-tx-mixed {
+        background: rgba(245, 158, 11, 0.08);
+        color: #b45309;
+        border: 1px solid rgba(245, 158, 11, 0.14);
+    }
+    #homeFilesTable.mk-home-files-table td.mk-col-num {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 0.22rem;
+        padding: 0.2rem 0.48rem !important;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: var(--ws-text);
+        background: color-mix(in srgb, var(--ws-surface-2) 88%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
+    }
+    #homeFilesTable.mk-home-files-table td.mk-col-num::after {
+        content: 'آگهی';
+        font-size: 0.54rem;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+    }
+    #homeFilesTable.mk-home-files-table td.mk-col-date {
+        display: inline-flex !important;
+        align-items: center;
+        padding: 0.2rem 0.48rem !important;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--ws-text-muted);
+        background: color-mix(in srgb, var(--ws-surface-2) 88%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
+    }
+    #homeFilesTable.mk-home-files-table .mk-muted {
+        font-size: 0.62rem;
+        padding: 0.15rem 0.4rem;
+        border-radius: 999px;
+        background: var(--ws-surface-2);
+    }
+
+    /* Action buttons */
+    #homeFilesTable.mk-home-files-table .mk-home-file-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.35rem;
+        width: 100%;
+        direction: rtl;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.18rem;
+        width: 100%;
+        min-width: 0;
+        min-height: 40px;
+        height: auto;
+        padding: 0.38rem 0.3rem;
+        border-radius: 10px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent);
+        background: var(--ws-surface);
+        color: var(--ws-text-secondary);
+        font-family: inherit;
+        font-size: 0.58rem;
+        font-weight: 600;
+        line-height: 1.2;
+        text-decoration: none;
+        transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn i {
+        font-size: 0.82rem;
+        line-height: 1;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn--primary {
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface));
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent);
+        color: var(--ws-primary);
+        font-weight: 700;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn:active {
+        transform: scale(0.98);
+        background: var(--ws-surface-2);
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn--primary:active {
+        background: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface));
+    }
+
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn span {
+        display: inline;
+    }
+
+    .mk-hub-filing .mk-table-wrap:has(#homeFilesTable) {
+        margin: 0;
+        overflow-x: visible !important;
+        border-top: none;
+    }
+}
+
+@media (max-width: 430px) {
+    #homeFilesTable.mk-home-files-table tbody {
+        padding-inline: 0.55rem;
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row {
+        padding: 11px;
+        margin-bottom: 0.55rem;
+    }
+    #homeFilesTable.mk-home-files-table .mk-file-name {
+        font-size: 0.84rem;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn {
+        min-height: 38px;
+        padding: 0.32rem 0.2rem;
+        font-size: 0.54rem;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn i {
+        font-size: 0.78rem;
     }
 }
 

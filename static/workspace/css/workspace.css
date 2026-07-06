@@ -195,6 +195,10 @@ body.ws-body::before {
     display: none;
 }
 
+.ws-bottom-nav {
+    display: none;
+}
+
 .ws-mobile-menu {
     display: none;
     width: 2.75rem;
@@ -505,37 +509,122 @@ body.ws-body::before {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.75rem;
+        flex-direction: row;
+        gap: 0.65rem;
         position: sticky;
         top: 0;
         z-index: 150;
         flex-shrink: 0;
-        padding: max(0.55rem, env(safe-area-inset-top, 0px)) 0.85rem 0.55rem;
-        margin: 0 0 0.5rem;
-        background: color-mix(in srgb, var(--ws-bg) 88%, transparent);
-        border-bottom: 1px solid var(--ws-border);
-        backdrop-filter: blur(14px) saturate(1.1);
-        -webkit-backdrop-filter: blur(14px) saturate(1.1);
+        min-height: 3.5rem;
+        padding: max(0.5rem, env(safe-area-inset-top, 0px)) 0.75rem 0.5rem;
+        margin: 0;
+        background: color-mix(in srgb, var(--ws-surface) 94%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+        box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+        backdrop-filter: blur(18px) saturate(1.15);
+        -webkit-backdrop-filter: blur(18px) saturate(1.15);
     }
     .ws-mobile-topbar-title {
         flex: 1;
         min-width: 0;
-        font-size: 0.92rem;
+        font-size: 1rem;
         font-weight: 700;
         color: var(--ws-text);
         letter-spacing: -0.02em;
+        text-align: right;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        line-height: 1.35;
     }
-    .ws-mobile-menu { display: inline-flex; }
+    .ws-mobile-menu {
+        display: inline-flex;
+        width: 2.5rem;
+        height: 2.5rem;
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        border-radius: 12px;
+        border-color: color-mix(in srgb, var(--ws-border) 70%, transparent);
+        background: var(--ws-surface);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    }
+    .ws-mobile-menu:active {
+        transform: scale(0.96);
+    }
     .ws-content {
-        padding: 0.75rem 0.85rem 1rem;
+        padding: 0.65rem 0.75rem calc(4.75rem + env(safe-area-inset-bottom, 0px));
         max-width: 100%;
         width: 100%;
         box-sizing: border-box;
         min-width: 0;
         overflow-x: clip;
+    }
+    body.ws-body .ws-main {
+        background:
+            radial-gradient(ellipse 90% 55% at 50% -8%, rgba(124, 58, 237, 0.07), transparent 58%),
+            var(--ws-bg);
+    }
+    [data-theme="dark"] body.ws-body .ws-main {
+        background: var(--ws-bg);
+    }
+    .ws-status-bar {
+        display: none;
+    }
+    .ws-bottom-nav {
+        display: flex;
+        align-items: stretch;
+        justify-content: space-around;
+        gap: 0.1rem;
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 160;
+        min-height: 3.65rem;
+        padding: 0.3rem 0.35rem max(0.4rem, env(safe-area-inset-bottom, 0px));
+        background: color-mix(in srgb, var(--ws-surface) 94%, transparent);
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
+        box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.06);
+        backdrop-filter: blur(20px) saturate(1.12);
+        -webkit-backdrop-filter: blur(20px) saturate(1.12);
+    }
+    .ws-bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.18rem;
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 2.75rem;
+        padding: 0.28rem 0.15rem;
+        border: none;
+        border-radius: 12px;
+        background: transparent;
+        color: var(--ws-text-muted);
+        font-family: inherit;
+        font-size: 0.62rem;
+        font-weight: 600;
+        line-height: 1.2;
+        text-decoration: none;
+        cursor: pointer;
+        transition: color 0.15s, background 0.15s, transform 0.12s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .ws-bottom-nav-item i {
+        font-size: 1.05rem;
+        line-height: 1;
+        transition: transform 0.15s;
+    }
+    .ws-bottom-nav-item.is-active {
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 10%, transparent);
+    }
+    .ws-bottom-nav-item.is-active i {
+        transform: translateY(-1px);
+    }
+    .ws-bottom-nav-item:active {
+        transform: scale(0.94);
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface-2));
     }
 }
 

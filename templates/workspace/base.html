@@ -35,7 +35,7 @@
     <link rel="stylesheet" href="{% static 'css/decor-icons.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'workspace/css/ws-decor-icons.css' %}?v=7">
 
-    <link rel="stylesheet" href="{% static 'workspace/css/workspace.css' %}?v=53">
+    <link rel="stylesheet" href="{% static 'workspace/css/workspace.css' %}?v=54">
     <link rel="stylesheet" href="{% static 'workspace/css/minimal.css' %}?v=70">
     <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=9">
     <link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=12">
@@ -229,6 +229,36 @@
 
             {% block status_bar %}
 
+            <nav class="ws-bottom-nav" id="wsBottomNav" aria-label="ناوبری پایین صفحه">
+                <a href="{% url 'workspace:home' %}" class="ws-bottom-nav-item{% if request.resolver_match.url_name == 'home' %} is-active{% endif %}">
+                    <i class="fas fa-house" aria-hidden="true"></i>
+                    <span>خانه</span>
+                </a>
+                {% if has_bot_license %}
+                <a href="{% url 'workspace:dataset_list' %}" class="ws-bottom-nav-item{% if 'dataset' in request.resolver_match.url_name or 'listing' in request.resolver_match.url_name %} is-active{% endif %}">
+                    <i class="fas fa-folder" aria-hidden="true"></i>
+                    <span>فایلینگ</span>
+                </a>
+                {% else %}
+                <a href="{% url 'workspace:upgrade' %}?feature=datasets" class="ws-bottom-nav-item{% if request.resolver_match.url_name == 'upgrade' %} is-active{% endif %}">
+                    <i class="fas fa-folder" aria-hidden="true"></i>
+                    <span>فایلینگ</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'workspace:crm_dashboard' %}" class="ws-bottom-nav-item{% if request.resolver_match.url_name == 'crm_dashboard' %} is-active{% endif %}">
+                    <i class="fas fa-chart-line" aria-hidden="true"></i>
+                    <span>CRM</span>
+                </a>
+                <a href="{% url 'workspace:crm_calendar' %}" class="ws-bottom-nav-item{% if request.resolver_match.url_name == 'crm_calendar' %} is-active{% endif %}">
+                    <i class="fas fa-calendar" aria-hidden="true"></i>
+                    <span>تقویم</span>
+                </a>
+                <button type="button" class="ws-bottom-nav-item" data-ws-bottom-more aria-label="منوی بیشتر">
+                    <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                    <span>بیشتر</span>
+                </button>
+            </nav>
+
             <footer class="ws-status-bar">
 
                 <span class="ws-status-item"><span class="ws-status-dot"></span> سرور: آنلاین</span>
@@ -259,7 +289,7 @@
 
 
 
-    <script src="{% static 'workspace/js/workspace.js' %}?v=61"></script>
+    <script src="{% static 'workspace/js/workspace.js' %}?v=62"></script>
 
     {% include 'workspace/includes/onboarding_tour.html' %}
 

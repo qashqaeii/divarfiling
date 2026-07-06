@@ -220,6 +220,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (toggle && sidebar) {
         toggle.addEventListener('click', () => setSidebarOpen(!sidebar.classList.contains('open')));
+        document.querySelector('[data-ws-bottom-more]')?.addEventListener('click', () => {
+            setSidebarOpen(true);
+        });
         document.addEventListener('click', e => {
             if (!sidebar.classList.contains('open')) return;
             if (sidebar.contains(e.target) || toggle.contains(e.target)) return;
@@ -1035,6 +1038,7 @@ function initCharts(chartsData) {
     if (!chartsData || !window.Chart) return;
     const theme = chartThemeColors();
     const isHub = window.wsChartsHub === true || document.querySelector('.mk-hub-pro');
+    const isMobileChart = window.matchMedia('(max-width: 768px)').matches;
 
     chartsData.forEach((chart, idx) => {
         const canvas = document.getElementById('chart-' + idx) || document.getElementById('chart-' + (chart.id || idx));
@@ -1092,9 +1096,9 @@ function initCharts(chartsData) {
                             grid: { display: useTrendStyle ? false : true, color: theme.grid },
                             ticks: {
                                 color: theme.text,
-                                font: { family: 'Vazirmatn', size: useTrendStyle ? 10 : 11 },
-                                maxRotation: 0,
-                                maxTicksLimit: useTrendStyle ? 7 : undefined,
+                                font: { family: 'Vazirmatn', size: useTrendStyle ? (isMobileChart ? 9 : 10) : 11 },
+                                maxRotation: isMobileChart && useTrendStyle ? 40 : 0,
+                                maxTicksLimit: useTrendStyle ? (isMobileChart ? 5 : 7) : undefined,
                                 autoSkip: true,
                             },
                             border: { display: false },

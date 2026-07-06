@@ -35,12 +35,12 @@
     <link rel="stylesheet" href="{% static 'css/decor-icons.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'workspace/css/ws-decor-icons.css' %}?v=7">
 
-    <link rel="stylesheet" href="{% static 'workspace/css/workspace.css' %}?v=52">
+    <link rel="stylesheet" href="{% static 'workspace/css/workspace.css' %}?v=53">
     <link rel="stylesheet" href="{% static 'workspace/css/minimal.css' %}?v=70">
     <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=9">
     <link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=12">
     <link rel="stylesheet" href="{% static 'workspace/css/cheerful-theme.css' %}?v=1">
-    <link rel="stylesheet" href="{% static 'css/responsive-base.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/responsive-base.css' %}?v=2">
 
     {% block extra_css %}{% endblock %}
 
@@ -182,7 +182,10 @@
 
         <main class="ws-main">
 
-            <button type="button" class="ws-mobile-menu" id="sidebarToggle" aria-label="منو"><i class="fas fa-bars"></i></button>
+            <div class="ws-mobile-topbar">
+                <span class="ws-mobile-topbar-title">{% block mobile_bar_title %}میزکار{% endblock %}</span>
+                <button type="button" class="ws-mobile-menu" id="sidebarToggle" aria-label="باز کردن منو" aria-expanded="false"><i class="fas fa-bars" aria-hidden="true"></i></button>
+            </div>
 
             <div id="wsToastContainer" class="ws-toast-container"></div>
 

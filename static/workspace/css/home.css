@@ -353,75 +353,429 @@
     padding: 0.2rem 0;
 }
 
-/* ─── Mobile: workspace home ─── */
+/* ─── Mobile & tablet — workspace home (app-style) ─── */
 @media (max-width: 768px) {
+    .ws-home.mk-hub-pro {
+        gap: 0.6rem;
+        max-width: 100%;
+        overflow-x: clip;
+    }
+
+    /* Welcome card */
     .ws-home .mk-hub-head {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.75rem;
+        gap: 0.65rem;
+        padding: 0.75rem 0.85rem;
+        margin-top: 0;
+        border-radius: 12px;
     }
 
     .ws-home .mk-hub-head-main {
         width: 100%;
+        padding-inline-start: 0;
     }
 
     .ws-home .mk-hub-head-title {
         font-size: 1rem;
-        line-height: 1.35;
+        line-height: 1.45;
+        letter-spacing: -0.02em;
         word-break: normal;
-        overflow-wrap: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .ws-home .mk-hub-head-meta {
+        flex-wrap: wrap;
+        gap: 0.35rem 0.5rem;
+        margin-top: 0.35rem;
+        font-size: 0.72rem;
+        line-height: 1.55;
     }
 
     .ws-home .mk-hub-head-actions {
         width: 100%;
         flex: none;
-    }
-
-    .ws-home .mk-hub-metrics {
+        display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem;
+        padding: 0.35rem;
+        max-width: none;
     }
 
+    .ws-home .mk-hub-head-btn {
+        min-height: 2.75rem;
+        padding: 0.5rem 0.55rem;
+        font-size: 0.76rem;
+        border-radius: 9px;
+    }
+
+    .ws-home .mk-hub-head-btn span {
+        display: inline !important;
+    }
+
+    /* Compact metrics — 4 columns */
+    .ws-home .mk-hub-metrics {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.4rem;
+    }
+
+    .ws-home .mk-hub-metric,
+    .ws-home--compact .mk-hub-metric {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 0.3rem;
+        padding: 0.5rem 0.3rem;
+        border-radius: 10px;
+        min-height: 0;
+    }
+
+    .ws-home .mk-hub-metric:hover,
+    .ws-home--compact .mk-hub-metric:hover {
+        transform: none;
+    }
+
+    .ws-home .mk-hub-metric-icon,
+    .ws-home--compact .mk-hub-metric-icon {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.72rem;
+        border-radius: 8px;
+    }
+
+    .ws-home .mk-hub-metric-body {
+        align-items: center;
+        gap: 0.02rem;
+    }
+
+    .ws-home .mk-hub-metric-val,
+    .ws-home--compact .mk-hub-metric-val {
+        font-size: 0.92rem;
+        line-height: 1.15;
+    }
+
+    .ws-home .mk-hub-metric-lbl {
+        font-size: 0.58rem;
+        font-weight: 600;
+        line-height: 1.3;
+        white-space: normal;
+    }
+
+    /* Quick shortcuts — 3-column grid */
+    .ws-home .mk-hub-quick--bar .mk-hub-quick-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1px;
+        background: var(--ws-border);
+        border-radius: 12px;
+        overflow: hidden;
+        flex-direction: unset;
+    }
+
+    .ws-home .mk-hub-quick--bar .mk-hub-quick-list > li {
+        flex: none;
+        min-width: 0;
+        background: var(--ws-surface);
+        border: none !important;
+    }
+
+    .ws-home .mk-hub-quick--bar .mk-hub-quick-list > li + li {
+        border-inline-start: none !important;
+    }
+
+    .ws-home .mk-hub-quick--bar .mk-hub-quick-item {
+        min-height: 4.25rem;
+        padding: 0.45rem 0.35rem;
+        gap: 0.32rem;
+    }
+
+    .ws-home .mk-hub-quick--bar .mk-hub-quick-item-icon {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.78rem;
+        border-radius: 9px;
+    }
+
+    .ws-home .mk-hub-quick--bar .mk-hub-quick-item-text {
+        font-size: 0.66rem;
+        line-height: 1.35;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Main layout */
     .ws-home .mk-hub-main {
         grid-template-columns: 1fr;
+        gap: 0.6rem;
     }
 
+    .ws-home-queue {
+        gap: 0.45rem;
+    }
+
+    .ws-home-queue-card {
+        padding: 0.65rem 0.75rem;
+        border-radius: 12px;
+    }
+
+    /* Filing table → cards */
     .ws-home .mk-hub-filing .mk-panel-head-table {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.65rem;
-        padding-inline: 0.85rem;
+        gap: 0.55rem;
+        padding-inline: 0.75rem;
     }
 
     .ws-home .mk-hub-filing .mk-table-toolbar {
         width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.45rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.4rem;
     }
 
     .ws-home .mk-hub-filing .mk-table-search {
+        flex: 1 1 100%;
         width: 100%;
     }
 
     .ws-home .mk-hub-filing .mk-table-wrap {
         margin: 0;
+        overflow-x: visible !important;
     }
 
     .ws-home .mk-hub-filing .mk-data-table tbody tr {
         margin-inline: 0.65rem;
+        border-radius: 11px;
+    }
+
+    .ws-home .mk-hub-filing .mk-file-name {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 0.8rem;
+        font-weight: 600;
+        line-height: 1.45;
+    }
+
+    .ws-home .mk-hub-filing .mk-file-sub {
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 0.68rem;
+        margin-top: 0.12rem;
+    }
+
+    .ws-home .mk-hub-filing .mk-row-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.4rem;
+        width: 100%;
+    }
+
+    .ws-home .mk-hub-filing .mk-row-btn {
+        width: 100%;
+        min-width: 0;
+        min-height: 2.75rem;
+        height: auto;
+        font-size: 0.82rem;
+        border-radius: 9px;
+    }
+
+    /* Sidebar queue — properties */
+    .ws-home .ws-home-prop-item {
+        padding: 0.55rem 0.45rem;
+        min-height: 2.85rem;
+        border-radius: 9px;
+        gap: 0.55rem;
+    }
+
+    .ws-home .ws-home-prop-icon {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.72rem;
+        border-radius: 8px;
+    }
+
+    .ws-home .ws-home-prop-text strong {
+        font-size: 0.78rem;
+        line-height: 1.45;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .ws-home .ws-home-prop-text em {
+        font-size: 0.68rem;
+        line-height: 1.4;
+        margin-top: 0.1rem;
+        white-space: normal;
+    }
+
+    .ws-home .ws-home-queue-head h3 {
+        font-size: 0.78rem;
+    }
+
+    .ws-home .ws-home-queue-link {
+        font-size: 0.68rem;
+        padding: 0.2rem 0.35rem;
+    }
+
+    /* Charts & insights */
+    .ws-home .mk-hub-insights,
+    .ws-home .ws-home-insights {
+        gap: 0.55rem;
+    }
+
+    .ws-home .mk-insight {
+        padding: 0.75rem 0.85rem;
+        border-radius: 12px;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .ws-home .mk-insight-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        margin-bottom: 0.65rem;
+    }
+
+    .ws-home .mk-insight-head-tools {
+        align-items: stretch;
+        margin-inline-start: 0;
+        width: 100%;
+    }
+
+    .ws-home .mk-insight-range {
+        align-self: flex-start;
+    }
+
+    .ws-home .mk-insight-legend {
+        justify-content: flex-start;
+    }
+
+    .ws-home .mk-insight-title h2 {
+        font-size: 0.88rem;
+        line-height: 1.4;
+    }
+
+    .ws-home--compact .mk-insight-title p,
+    .ws-home .mk-insight-title p {
+        display: block;
+        font-size: 0.68rem;
+        line-height: 1.5;
+    }
+
+    .ws-home .mk-insight--trend .mk-insight-chart-wrap,
+    .ws-home--compact .mk-insight--trend .mk-insight-chart-wrap {
+        height: 200px;
+        min-height: 180px;
+        max-height: 220px;
+        width: 100%;
+        padding: 0.35rem 0;
+        overflow: hidden;
+    }
+
+    .ws-home .mk-insight-chart-wrap canvas {
+        max-width: 100% !important;
+    }
+
+    .ws-home .mk-insight-donut-layout {
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+
+    .ws-home .mk-insight-donut-chart,
+    .ws-home--compact .mk-insight-donut-chart {
+        width: 100%;
+        max-width: 11rem;
+        height: 9.5rem;
+        margin-inline: auto;
+    }
+
+    .ws-home .mk-insight-status-list li {
+        font-size: 0.72rem;
+        padding: 0.35rem 0.4rem;
+    }
+
+    .ws-home .mk-insight-channel {
+        padding: 0.55rem 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .ws-home .mk-insight-channel-name {
+        font-size: 0.74rem;
+    }
+
+    .ws-home .mk-hub-alert {
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        padding: 0.65rem 0.75rem;
+    }
+
+    .ws-home .mk-hub-alert-btn {
+        min-height: 2.5rem;
+        padding-inline: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .ws-home .ws-home-queue-card--split {
+        grid-template-columns: 1fr;
+    }
+
+    .ws-home .ws-home-split-col + .ws-home-split-col {
+        border-inline-start: none;
+        padding-inline-start: 0;
+        border-top: 1px solid var(--ws-border);
+        padding-top: 0.6rem;
+        margin-top: 0.25rem;
+    }
+
+    .ws-home .ws-home-split-col:first-child {
+        padding-inline-end: 0;
     }
 }
 
 @media (max-width: 480px) {
-    .ws-home .mk-hub-head-actions {
+    .ws-home .mk-hub-metrics {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.35rem;
     }
 
-    .ws-home .mk-hub-metrics {
+    .ws-home .mk-hub-head-title {
+        font-size: 0.94rem;
+    }
+
+    .ws-home .mk-hub-filing .mk-data-table tbody tr {
+        margin-inline: 0.5rem;
+    }
+
+    .ws-home .mk-insight--trend .mk-insight-chart-wrap {
+        height: 185px;
+        min-height: 170px;
+    }
+}
+
+@media (max-width: 360px) {
+    .ws-home .mk-hub-head-actions {
         grid-template-columns: 1fr;
     }
 
-    .ws-home--compact .mk-hub-quick--bar .mk-hub-quick-list > li {
-        flex: 1 1 calc(33.333% - 1px);
+    .ws-home .mk-hub-quick--bar .mk-hub-quick-item {
+        min-height: 3.85rem;
+    }
+
+    .ws-home .mk-hub-metric-val {
+        font-size: 0.86rem;
     }
 }

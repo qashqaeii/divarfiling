@@ -49,6 +49,22 @@ html.mk-public .mk-announce-inner {
     max-width: 100%;
 }
 
+/* ─── Workspace — prevent horizontal scroll ─── */
+body.ws-body,
+body.ws-body .ws-layout,
+body.ws-body .ws-main,
+body.ws-body .ws-content {
+    max-width: 100%;
+    overflow-x: clip;
+}
+
+body.ws-body .mk-page,
+body.ws-body .mk-hub-pro,
+body.ws-body .ws-home {
+    min-width: 0;
+    max-width: 100%;
+}
+
 img,
 video,
 svg:not(.mk-icon-fixed),

@@ -210,6 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!sidebar) return;
         sidebar.classList.toggle('open', open);
         document.body.classList.toggle('ws-sidebar-open', open);
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            toggle.setAttribute('aria-label', open ? 'بستن منو' : 'باز کردن منو');
+            const icon = toggle.querySelector('i');
+            if (icon) icon.className = open ? 'fas fa-times' : 'fas fa-bars';
+        }
     }
 
     if (toggle && sidebar) {

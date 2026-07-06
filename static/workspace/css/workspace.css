@@ -191,20 +191,32 @@ body.ws-body::before {
 
 .ws-logo-sub { display: none; }
 
+.ws-mobile-topbar {
+    display: none;
+}
+
 .ws-mobile-menu {
     display: none;
-    position: fixed;
-    top: .75rem;
-    right: .75rem;
-    z-index: 150;
-    width: 36px; height: 36px;
+    width: 2.75rem;
+    height: 2.75rem;
     border: 1px solid var(--ws-border);
     border-radius: var(--ws-radius-xs);
     background: var(--ws-surface);
     color: var(--ws-text-secondary);
     cursor: pointer;
-    align-items: center; justify-content: center;
-    font-size: .9rem;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    padding: 0;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.ws-mobile-menu:hover {
+    color: var(--ws-text);
+    border-color: rgba(124, 58, 237, 0.28);
+    background: var(--ws-primary-soft);
 }
 
 .ws-nav {
@@ -472,15 +484,58 @@ body.ws-body::before {
 }
 @media (max-width: 768px) {
     .ws-grid-2, .ws-grid-3, .ws-grid-4 { grid-template-columns: 1fr; }
-    .ws-sidebar { transform: translateX(100%); }
-    .ws-sidebar.open { transform: translateX(0); }
-    .ws-main { margin-right: 0; min-width: 0; width: 100%; }
-    .ws-mobile-menu { display: flex; }
+    .ws-sidebar {
+        transform: translateX(100%);
+        width: min(88vw, 300px);
+        box-shadow: none;
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ws-sidebar.open {
+        transform: translateX(0);
+        box-shadow: -12px 0 40px rgba(0, 0, 0, 0.22);
+    }
+    .ws-main {
+        margin-right: 0;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: clip;
+    }
+    .ws-mobile-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        position: sticky;
+        top: 0;
+        z-index: 150;
+        flex-shrink: 0;
+        padding: max(0.55rem, env(safe-area-inset-top, 0px)) 0.85rem 0.55rem;
+        margin: 0 0 0.5rem;
+        background: color-mix(in srgb, var(--ws-bg) 88%, transparent);
+        border-bottom: 1px solid var(--ws-border);
+        backdrop-filter: blur(14px) saturate(1.1);
+        -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    }
+    .ws-mobile-topbar-title {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--ws-text);
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .ws-mobile-menu { display: inline-flex; }
     .ws-content {
-        padding: 3.25rem 0.85rem 1rem;
+        padding: 0.75rem 0.85rem 1rem;
         max-width: 100%;
         width: 100%;
         box-sizing: border-box;
+        min-width: 0;
+        overflow-x: clip;
     }
 }
 

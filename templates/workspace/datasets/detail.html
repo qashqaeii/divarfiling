@@ -2,6 +2,7 @@
 {% load humanize workspace_tags %}
 
 {% block page_title %}{{ dataset.name }}{% endblock %}
+{% block mobile_bar_title %}{{ dataset.name|truncatechars:26 }}{% endblock %}
 
 {% block content %}
 <div class="mk-page mk-filing-page mk-listing-page">
@@ -9,15 +10,15 @@
     <section class="mk-ds-command mk-ds-command--{{ tx.mode|default:'other' }}" aria-label="خلاصه فایل">
         <div class="mk-ds-command-top">
             <nav class="mk-ds-crumb" aria-label="مسیر">
-                <a href="{% url 'workspace:dataset_list' %}" class="mk-ds-crumb-link">
-                    {% include 'includes/icon_slot.html' with decor='folder' size='inline' only %}
-                    <span>فایلینگ دیوار</span>
+                <a href="{% url 'workspace:dataset_list' %}" class="mk-ds-crumb-link mk-ds-crumb-back">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    <span>فایلینگ</span>
                 </a>
-                <i class="fas fa-chevron-left mk-ds-crumb-sep" aria-hidden="true"></i>
-                <span class="mk-ds-crumb-current">جدول آگهی</span>
+                <span class="mk-ds-crumb-sep mk-ds-crumb-sep--desk" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                <span class="mk-ds-crumb-current mk-ds-crumb-sep--desk">جدول آگهی</span>
             </nav>
             <div class="mk-ds-command-actions" role="toolbar" aria-label="عملیات فایل">
-                <div class="mk-ds-action-group mk-ds-action-group-primary">
+                <div class="mk-ds-actions-scroll">
                     <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="mk-ds-action mk-ds-action-cta" title="تحلیل بازار">
                         <i class="fas fa-chart-line" aria-hidden="true"></i>
                         <span>تحلیل</span>
@@ -30,18 +31,16 @@
                         <i class="fas fa-download" aria-hidden="true"></i>
                         <span>خروجی</span>
                     </a>
-                </div>
-                <div class="mk-ds-action-group mk-ds-action-group-tools">
                     {% if filing_video.available %}
-                    <a href="{% url 'workspace:dataset_list' %}?open=video#filing-video" class="mk-ds-action mk-ds-action-icon" title="آموزش فایلینگ، نقشه و تحلیل" aria-label="آموزش ویدیویی">
+                    <a href="{% url 'workspace:dataset_list' %}?open=video#filing-video" class="mk-ds-action mk-ds-action-tool" title="آموزش" aria-label="آموزش ویدیویی">
                         <i class="fas fa-circle-play" aria-hidden="true"></i>
                     </a>
                     {% endif %}
-                    <button type="button" class="mk-ds-action mk-ds-action-icon" data-modal-open="modal-rename" title="تغییر نام فایل" aria-label="تغییر نام">
+                    <button type="button" class="mk-ds-action mk-ds-action-tool" data-modal-open="modal-rename" title="تغییر نام" aria-label="تغییر نام">
                         <i class="fas fa-pen" aria-hidden="true"></i>
                     </button>
                     {% if consultant_count %}
-                    <button type="button" class="mk-ds-action mk-ds-action-icon mk-ds-action-danger" data-modal-open="modal-delete-consultants" title="حذف آگهی‌های مشاور" aria-label="حذف مشاورین">
+                    <button type="button" class="mk-ds-action mk-ds-action-tool mk-ds-action-danger" data-modal-open="modal-delete-consultants" title="حذف مشاورین" aria-label="حذف مشاورین">
                         <i class="fas fa-user-slash" aria-hidden="true"></i>
                     </button>
                     {% endif %}
@@ -55,7 +54,12 @@
                     {% if dataset.file_format == 'xlsx' %}XLS{% elif dataset.file_format == 'csv' %}CSV{% else %}JSON{% endif %}
                 </div>
                 <div class="mk-ds-command-text">
-                    <h1 class="mk-ds-command-title">{{ dataset.name }}</h1>
+                    <div class="mk-ds-command-title-row">
+                        <h1 class="mk-ds-command-title">{{ dataset.name }}</h1>
+                        <span class="mk-ds-mobile-count" aria-label="{{ filtered_count|intcomma }} از {{ total_count|intcomma }} آگهی">
+                            <strong>{{ filtered_count|intcomma }}</strong><span>از {{ total_count|intcomma }}</span>
+                        </span>
+                    </div>
                     <div class="mk-ds-command-chips">
                         {% if dataset.city %}
                         <span class="mk-ds-chip mk-ds-chip-loc">

@@ -253,27 +253,21 @@ html.mk-public[data-theme="light"] .mk-hero-coverage {
         grid-template-columns: 1fr;
     }
 
-    .mk-hero--pro .mk-hero-cta {
-        flex-direction: row;
-        flex-wrap: nowrap;
-        gap: 0.4rem;
-    }
-
-    .mk-hero--pro .mk-hero-cta .btn {
-        flex: 1 1 0;
-        width: auto;
-        font-size: 0.72rem !important;
-        padding-inline: 0.5rem !important;
-    }
-}
-
-@media (max-width: 340px) {
-    .mk-hero--pro .mk-hero-cta {
+    /* deck variant has dedicated column CTAs at ≤768px */
+    .mk-hero--pro:not(.mk-hero--deck) .mk-hero-cta {
         flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 0.55rem;
     }
 
-    .mk-hero--pro .mk-hero-cta .btn {
+    .mk-hero--pro:not(.mk-hero--deck) .mk-hero-cta .btn {
+        flex: none;
         width: 100%;
+        min-height: 2.85rem;
+        font-size: 0.86rem !important;
+        padding-inline: 0.85rem !important;
+        white-space: normal;
+        line-height: 1.35;
     }
 }
 
@@ -3575,7 +3569,7 @@ html.mk-public[data-theme="dark"] .mk-home-intro-band::before {
     .mk-cap-cluster-count { display: none; }
 
     .mk-data-bento-fields {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
     }
 
     .mk-faq-wrap {
@@ -3593,9 +3587,11 @@ html.mk-public[data-theme="dark"] .mk-home-intro-band::before {
     .mk-cta-actions { width: 100%; }
 
     .mk-cta-btn {
-        flex: 1;
+        flex: none;
+        width: 100%;
+        min-width: 0;
         justify-content: center;
-        min-width: calc(50% - 0.25rem);
+        min-height: 2.75rem;
     }
 }
 
@@ -7047,5 +7043,268 @@ html.mk-public[data-theme="dark"] .mk-hero-mag-lens {
     .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-cta .btn {
         min-height: 2.7rem;
         font-size: 0.82rem;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Mobile & tablet polish — home page sections
+   Breakpoints: 768 (tablet), 640 (large phone), 480 (phone), 430 (narrow)
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .mk-home-page .mk-section {
+        padding-block: clamp(1.1rem, 3.2vw, 1.65rem);
+    }
+
+    .mk-home-page .mk-section-head {
+        margin-bottom: 0.95rem;
+    }
+
+    .mk-home-page .mk-nationwide-desc,
+    .mk-home-page .mk-crm-desc {
+        font-size: 0.84rem;
+        line-height: 1.72;
+        max-width: none;
+    }
+
+    .mk-workflow-strip {
+        max-width: 100%;
+        margin-inline: 0;
+        padding: 0.55rem 0.65rem;
+        scroll-padding-inline: 0.65rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .mk-workflow-step {
+        padding: 0.4rem 0.55rem;
+    }
+
+    .mk-workflow-text strong {
+        font-size: 0.74rem;
+    }
+
+    .mk-cmp-split {
+        border-radius: 14px;
+    }
+
+    .mk-cmp-col-head {
+        padding: 0.85rem 0.95rem;
+    }
+
+    .mk-cmp-row-item {
+        padding: 0.7rem 0.85rem;
+        gap: 0.55rem;
+    }
+
+    .mk-cmp-row-text strong,
+    .mk-cmp-row-text p {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .mk-showcase-controls {
+        gap: 0.45rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .mk-showcase-btn {
+        min-height: 2.5rem;
+        min-width: 2.5rem;
+        padding: 0.45rem 0.65rem;
+    }
+
+    .mk-crm-mock {
+        transform: none;
+        padding: 0.85rem;
+    }
+
+    .mk-crm-visual:hover .mk-crm-mock,
+    .mk-crm-mock.is-live {
+        transform: none;
+        animation: none;
+    }
+
+    .mk-crm-mock-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .mk-eco-grid {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+    }
+
+    .mk-eco-card--hero,
+    .mk-eco-card--wide,
+    .mk-eco-card--tall {
+        grid-column: span 1;
+        grid-row: span 1;
+        min-height: 0;
+    }
+
+    .mk-eco-card {
+        min-height: 0;
+        padding: 0.9rem 1rem;
+    }
+
+    .mk-tier-card {
+        padding: 1rem 1.05rem;
+    }
+
+    .mk-tier-cta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0.65rem 1rem;
+        font-size: 0.82rem;
+        border-radius: 11px;
+    }
+
+    .mk-stat-item {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: 0;
+    }
+
+    .mk-stat-val {
+        font-size: 0.88rem;
+    }
+
+    .mk-stat-lbl {
+        font-size: 0.6rem;
+        white-space: normal;
+        line-height: 1.35;
+    }
+
+    .mk-cta-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    .mk-cta-btn {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+        min-height: 2.75rem;
+        justify-content: center;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.35;
+    }
+
+    .mk-faq-item summary {
+        min-height: 2.75rem;
+        padding: 0.75rem 0.85rem;
+        font-size: 0.84rem;
+        line-height: 1.5;
+    }
+
+    .mk-gallery-card--hero .mk-gallery-caption,
+    .mk-gallery-card--compact .mk-gallery-caption {
+        font-size: 0.72rem;
+        padding: 0.55rem 0.65rem;
+    }
+
+    .mk-nationwide-points li {
+        padding: 0.65rem 0.75rem;
+    }
+
+    .mk-nationwide-visual {
+        padding: 0.5rem;
+        border-radius: 16px;
+    }
+
+    .mk-edu-shell {
+        gap: 1.15rem;
+    }
+
+    .mk-edu-btn {
+        width: 100%;
+        min-height: 2.75rem;
+        justify-content: center;
+    }
+
+    .mk-bot-teaser-card {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .mk-stat-item {
+        flex: 1 1 100%;
+    }
+
+    .mk-stats-strip {
+        padding: 0.4rem;
+    }
+
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-container {
+        padding-inline: 0.85rem;
+    }
+
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-deck {
+        padding-inline: 0.65rem;
+        border-radius: 14px;
+    }
+
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-deck-item {
+        flex-basis: min(88vw, 14rem);
+    }
+
+    .mk-cap-card {
+        padding: 0.85rem 0.9rem;
+    }
+
+    .mk-cap-meta {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .mk-data-record,
+    .mk-data-bento-cell {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .mk-cmp-showcase-shell {
+        border-radius: 12px;
+    }
+
+    .mk-team-visual {
+        border-radius: 14px;
+    }
+}
+
+@media (max-width: 430px) {
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-title {
+        font-size: clamp(1.28rem, 6.8vw, 1.48rem);
+    }
+
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-subtitle--pro,
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-lead {
+        max-width: none;
+    }
+
+    .mk-tier-price-val {
+        font-size: 1.15rem;
+    }
+
+    .mk-tier-features li {
+        font-size: 0.78rem;
+        line-height: 1.55;
+    }
+}
+
+@media (max-width: 320px) {
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-inner {
+        padding: 0.85rem 0.9rem 0.95rem;
+    }
+
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-deck-item {
+        flex-basis: 92vw;
     }
 }

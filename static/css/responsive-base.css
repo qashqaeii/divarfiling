@@ -26,6 +26,29 @@ body {
     max-width: 100%;
 }
 
+/* ─── Public site — prevent horizontal page scroll ─── */
+html.mk-public {
+    overflow-x: clip;
+}
+
+html.mk-public body {
+    overflow-x: clip;
+}
+
+html.mk-public .main-content,
+html.mk-public .mk-home-body {
+    overflow-x: clip;
+    max-width: 100%;
+}
+
+html.mk-public .container,
+html.mk-public .mk-nav-inner,
+html.mk-public .mk-hero-container,
+html.mk-public .mk-announce-inner {
+    min-width: 0;
+    max-width: 100%;
+}
+
 img,
 video,
 svg:not(.mk-icon-fixed),

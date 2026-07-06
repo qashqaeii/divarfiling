@@ -98,9 +98,9 @@
                 </div>
 
                 {% if form.non_field_errors %}
-                <div class="auth-alert-v2" role="alert">
-                    <i class="fas fa-triangle-exclamation"></i>
-                    <span>{{ form.non_field_errors.0 }}</span>
+                <div class="mk-notice mk-notice--error mk-notice--inline mk-notice--compact" role="alert">
+                    <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span>
+                    <div class="mk-notice__body"><span class="mk-notice__text">{{ form.non_field_errors.0 }}</span></div>
                 </div>
                 {% endif %}
 

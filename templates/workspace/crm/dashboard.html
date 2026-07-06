@@ -41,18 +41,26 @@
     {% include 'workspace/crm/includes/crm_video_band.html' %}
 
     {% if stagnant_count %}
-    <div class="crm-dash-alert crm-dash-alert--stagnant">
-        <i class="fas fa-bed" aria-hidden="true"></i>
-        <span><strong>{{ stagnant_count }}</strong> مخاطب بیش از ۷ روز بدون فعالیت</span>
-        <a href="{% url 'workspace:crm_automation' %}">اتوماسیون</a>
+    <div class="mk-notice mk-notice--error mk-notice--inline mk-notice--compact">
+        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-bed"></i></span>
+        <div class="mk-notice__body">
+            <span class="mk-notice__text"><strong>{{ stagnant_count }}</strong> مخاطب بیش از ۷ روز بدون فعالیت</span>
+        </div>
+        <div class="mk-notice__actions">
+            <a href="{% url 'workspace:crm_automation' %}" class="mk-notice__cta">اتوماسیون</a>
+        </div>
     </div>
     {% endif %}
 
     {% if overdue_contacts %}
-    <div class="crm-dash-alert">
-        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
-        <span><strong>{{ overdue_contacts|length }}</strong> پیگیری معوق</span>
-        <a href="{% url 'workspace:crm_contacts' %}?due=overdue">مشاهده</a>
+    <div class="mk-notice mk-notice--warning mk-notice--inline mk-notice--compact">
+        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></span>
+        <div class="mk-notice__body">
+            <span class="mk-notice__text"><strong>{{ overdue_contacts|length }}</strong> پیگیری معوق</span>
+        </div>
+        <div class="mk-notice__actions">
+            <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="mk-notice__cta">مشاهده</a>
+        </div>
     </div>
     {% endif %}
 

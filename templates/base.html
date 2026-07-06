@@ -48,6 +48,7 @@
     <link rel="stylesheet" href="{% static 'css/mizkar-pages.css' %}?v=6">
     <link rel="stylesheet" href="{% static 'css/decor-icons.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/responsive-base.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/mk-notices.css' %}?v=1">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -101,89 +102,14 @@
         </nav>
     </header>
 
-    <!-- Announcements Section -->
-    {% if announcements %}
-        <div class="announcements-section mk-announce" role="region" aria-label="اطلاعیه‌ها">
-            <div class="mk-announce-inner">
-                {% for announcement in announcements %}
-                    <div class="announcement-bar mk-announce-bar">
-                        <span class="mk-announce-badge" aria-hidden="true">
-                            <i class="fas fa-bullhorn"></i>
-                            <span class="mk-announce-badge-label">اطلاعیه</span>
-                        </span>
-                        <div class="announcement-bar-content mk-announce-body">
-                            <p class="announcement-bar-text mk-announce-message">
-                                <strong class="announcement-title">{{ announcement.title }}</strong>
-                                <span class="announcement-desc">{{ announcement.content|highlight_promo_codes }}</span>
-                            </p>
-                            {% if announcement.link %}
-                                <a href="{{ announcement.link }}" class="announcement-bar-link mk-announce-cta">
-                                    <span>{{ announcement.link_text|default:"مشاهده" }}</span>
-                                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                                </a>
-                            {% endif %}
-                        </div>
-                        <button type="button" class="announcement-bar-close mk-announce-dismiss" onclick="closeAnnouncement(this)" aria-label="بستن اطلاعیه">
-                            <i class="fas fa-xmark" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
+    <!-- Announcements -->
+    {% include 'includes/announcements.html' %}
 
-    <!-- Banners Section -->
-    {% if banners %}
-        <div class="banners-section">
-            <div class="container">
-                {% for banner in banners %}
-                    <div class="banner-card">
-                        {% if banner.banner_type == 'image' and banner.image %}
-                            <a href="{% if banner.link %}{{ banner.link }}{% else %}#{% endif %}" class="banner-card-link">
-                                <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="banner-card-image">
-                                {% if banner.link_text %}
-                                    <div class="banner-card-overlay">
-                                        <span class="banner-card-cta">{{ banner.link_text }}</span>
-                                    </div>
-                                {% endif %}
-                            </a>
-                        {% elif banner.banner_type == 'text' and banner.text_content %}
-                            <div class="banner-card-text">
-                                <div class="banner-card-content">
-                                    {{ banner.text_content|safe }}
-                                </div>
-                                {% if banner.link %}
-                                    <a href="{{ banner.link }}" class="banner-card-button">
-                                        {{ banner.link_text|default:"مشاهده" }}
-                                    </a>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                        <button class="banner-card-close" onclick="closeBanner(this)" aria-label="بستن">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
+    <!-- Banners -->
+    {% include 'includes/banners.html' %}
 
     <!-- Messages -->
-    {% if messages %}
-        <div class="messages-container">
-            <div class="container">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">
-                        <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
-                        {{ message }}
-                        <button class="alert-close" onclick="this.parentElement.remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
+    {% include 'includes/messages.html' with layout='flash' %}
 
     <!-- Breadcrumbs -->
     {% block breadcrumbs %}{% endblock %}
@@ -290,73 +216,8 @@
     {% block page_overlays %}{% endblock %}
 
     <!-- Scripts -->
+    <script src="{% static 'js/mk-notices.js' %}?v=1"></script>
     <script src="{% static 'js/main.js' %}"></script>
-    <script>
-        // تابع بستن اطلاعیه
-        function closeAnnouncement(button) {
-            const announcementBar = button.closest('.announcement-bar');
-            const announcementsSection = button.closest('.announcements-section');
-            
-            // حذف با انیمیشن
-            announcementBar.style.transition = 'opacity 0.3s, max-height 0.3s, margin 0.3s, padding 0.3s';
-            announcementBar.style.opacity = '0';
-            announcementBar.style.maxHeight = '0';
-            announcementBar.style.margin = '0';
-            announcementBar.style.padding = '0';
-            announcementBar.style.overflow = 'hidden';
-            
-            setTimeout(() => {
-                announcementBar.remove();
-                
-                // بررسی اینکه آیا دیگر اطلاعیه‌ای باقی مانده یا نه
-                const remainingAnnouncements = announcementsSection.querySelectorAll('.announcement-bar');
-                if (remainingAnnouncements.length === 0) {
-                    // حذف کل بخش با انیمیشن
-                    announcementsSection.style.transition = 'opacity 0.3s, max-height 0.3s, margin 0.3s, padding 0.3s';
-                    announcementsSection.style.opacity = '0';
-                    announcementsSection.style.maxHeight = '0';
-                    announcementsSection.style.margin = '0';
-                    announcementsSection.style.padding = '0';
-                    announcementsSection.style.overflow = 'hidden';
-                    setTimeout(() => {
-                        announcementsSection.remove();
-                    }, 300);
-                }
-            }, 300);
-        }
-        
-        // تابع بستن بنر
-        function closeBanner(button) {
-            const bannerCard = button.closest('.banner-card');
-            const bannersSection = button.closest('.banners-section');
-            
-            // حذف با انیمیشن
-            bannerCard.style.transition = 'opacity 0.3s, max-height 0.3s, margin 0.3s';
-            bannerCard.style.opacity = '0';
-            bannerCard.style.maxHeight = '0';
-            bannerCard.style.margin = '0';
-            bannerCard.style.overflow = 'hidden';
-            
-            setTimeout(() => {
-                bannerCard.remove();
-                
-                // بررسی اینکه آیا دیگر بنری باقی مانده یا نه
-                const remainingBanners = bannersSection.querySelectorAll('.banner-card');
-                if (remainingBanners.length === 0) {
-                    // حذف کل بخش با انیمیشن
-                    bannersSection.style.transition = 'opacity 0.3s, max-height 0.3s, margin 0.3s, padding 0.3s';
-                    bannersSection.style.opacity = '0';
-                    bannersSection.style.maxHeight = '0';
-                    bannersSection.style.margin = '0';
-                    bannersSection.style.padding = '0';
-                    bannersSection.style.overflow = 'hidden';
-                    setTimeout(() => {
-                        bannersSection.remove();
-                    }, 300);
-                }
-            }, 300);
-        }
-    </script>
     {% if show_goftino %}
     {% include 'includes/goftino.html' %}
     {% endif %}

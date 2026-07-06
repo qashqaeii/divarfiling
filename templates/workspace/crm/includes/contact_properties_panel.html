@@ -2,13 +2,13 @@
 
 <section class="crm-portfolio" id="crmContactPortfolio" data-customer-id="{{ customer.pk }}"{% if customer.phone %} data-customer-phone="98{{ customer.phone|slice:'1:' }}"{% endif %}>
     {% if suggested %}
-    <div class="crm-portfolio-toast" role="status">
-        <span class="crm-portfolio-toast-icon"><i class="fas fa-circle-check" aria-hidden="true"></i></span>
-        <div>
-            <strong>پیشنهادها ثبت شد</strong>
-            <p>املاک انتخاب‌شده به پرونده مخاطب پیوند خوردند و در لیست زیر قابل پیگیری‌اند.</p>
+    <div class="mk-notice mk-notice--success mk-notice--inline" role="status">
+        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+        <div class="mk-notice__body">
+            <strong class="mk-notice__title">پیشنهادها ثبت شد</strong>
+            <span class="mk-notice__text">املاک انتخاب‌شده به پرونده مخاطب پیوند خوردند و در لیست زیر قابل پیگیری‌اند.</span>
         </div>
-        <button type="button" class="crm-portfolio-toast-close" data-portfolio-toast-close aria-label="بستن"><i class="fas fa-times"></i></button>
+        <button type="button" class="mk-notice__close" data-portfolio-toast-close data-mk-notice-close aria-label="بستن"><i class="fas fa-xmark" aria-hidden="true"></i></button>
     </div>
     {% endif %}
 

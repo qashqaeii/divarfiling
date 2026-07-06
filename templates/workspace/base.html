@@ -40,6 +40,8 @@
     <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=9">
     <link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=12">
     <link rel="stylesheet" href="{% static 'workspace/css/cheerful-theme.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'workspace/css/design-system.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/mk-notices.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/responsive-base.css' %}?v=2">
 
     {% block extra_css %}{% endblock %}
@@ -187,31 +189,9 @@
                 <button type="button" class="ws-mobile-menu" id="sidebarToggle" aria-label="باز کردن منو" aria-expanded="false"><i class="fas fa-bars" aria-hidden="true"></i></button>
             </div>
 
-            <div id="wsToastContainer" class="ws-toast-container"></div>
+            <div id="mkToastStack" class="mk-notices mk-notices--toast" aria-live="polite"></div>
 
-
-
-            {% if messages %}
-
-            <div class="ws-messages">
-
-                {% for message in messages %}
-
-                <div class="ws-toast ws-toast-{{ message.tags }}" data-auto-dismiss>
-
-                    <i class="fas fa-{% if 'success' in message.tags %}check-circle{% elif 'error' in message.tags %}exclamation-circle{% else %}info-circle{% endif %}"></i>
-
-                    <span>{{ message }}</span>
-
-                    <button type="button" class="ws-toast-close" onclick="this.parentElement.remove()">×</button>
-
-                </div>
-
-                {% endfor %}
-
-            </div>
-
-            {% endif %}
+            {% include 'includes/messages.html' with layout='inline' %}
 
 
 
@@ -289,6 +269,7 @@
 
 
 
+    <script src="{% static 'js/mk-notices.js' %}?v=1"></script>
     <script src="{% static 'workspace/js/workspace.js' %}?v=64"></script>
 
     {% include 'workspace/includes/onboarding_tour.html' %}

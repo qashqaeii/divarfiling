@@ -2165,40 +2165,7 @@ html.mk-public:not([data-theme="light"]) .mk-dashboard-page .dash-hero-btn--ghos
     color: #fff;
 }
 
-/* ─── Notifications ─── */
-.mk-dashboard-page ~ .notification,
-body .notification {
-    position: fixed;
-    bottom: 1.25rem;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.65rem 1rem;
-    border-radius: 10px;
-    background: var(--mk-card);
-    border: 1px solid var(--mk-border);
-    color: var(--mk-text);
-    font-size: 0.76rem;
-    box-shadow: 0 8px 28px -12px rgba(0, 0, 0, 0.4);
-    z-index: 10000;
-    opacity: 0;
-    transition: transform 0.25s, opacity 0.25s;
-}
-
-body .notification.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-}
-
-body .notification-success {
-    border-color: rgba(16, 185, 129, 0.3);
-}
-
-body .notification-success i {
-    color: #34d399;
-}
+/* ─── Notifications — see mk-notices.css ─── */
 
 /* ─── Utilities ─── */
 .mk-dashboard-page .mb-4 { margin-bottom: 1rem; }

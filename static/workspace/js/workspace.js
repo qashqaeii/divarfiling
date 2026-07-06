@@ -292,10 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openId = document.body.dataset.openModal;
     if (openId) WSModal.open(openId);
 
-    // Auto-dismiss toasts
-    document.querySelectorAll('[data-auto-dismiss]').forEach(el => {
-        setTimeout(() => el.remove(), 5000);
-    });
+    // Auto-dismiss toasts — handled by mk-notices.js
 
     // Upload zone
     initUploadZone();

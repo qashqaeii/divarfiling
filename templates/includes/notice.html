@@ -1,0 +1,31 @@
+{% comment %}
+  Reusable notice component — Mizkar Notice System
+
+  Required: type (success|error|warning|info|promo|update|discount|education)
+  Optional: layout (inline|flash|banner|toast|compact), title, message, badge,
+            icon, action_url, action_text, dismissible (default true), extra_class
+
+  Example:
+  {% include 'includes/notice.html' with type='warning' title='۳ پیگیری معوق' message='نیاز به اقدام فوری' action_url=url action_text='پیگیری' %}
+{% endcomment %}
+<div class="mk-notice mk-notice--{{ type|default:'info' }}{% if layout %} mk-notice--{{ layout }}{% else %} mk-notice--inline{% endif %}{% if compact %} mk-notice--compact{% endif %}{% if extra_class %} {{ extra_class }}{% endif %}"{% if auto_dismiss %} data-auto-dismiss{% endif %} role="{% if type == 'error' %}alert{% else %}status{% endif %}">
+    <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-{% if icon %}{{ icon }}{% elif type == 'success' %}check-circle{% elif type == 'error' %}circle-xmark{% elif type == 'warning' %}triangle-exclamation{% elif type == 'promo' %}bullhorn{% elif type == 'update' %}arrow-up-from-bracket{% elif type == 'discount' %}tag{% elif type == 'education' %}graduation-cap{% else %}circle-info{% endif %}"></i></span>
+    <div class="mk-notice__body">
+        {% if badge %}<span class="mk-notice__badge">{{ badge|safe }}</span>{% endif %}
+        {% if title %}<strong class="mk-notice__title">{{ title }}</strong>{% endif %}
+        {% if message %}<span class="mk-notice__text">{{ message|safe }}</span>{% endif %}
+        {% if content %}{{ content }}{% endif %}
+    </div>
+    {% if action_url or action_text %}
+    <div class="mk-notice__actions">
+        {% if action_url %}
+        <a href="{{ action_url }}" class="mk-notice__cta">{% if action_text %}{{ action_text }}{% else %}مشاهده{% endif %}</a>
+        {% elif action_text %}
+        <button type="button" class="mk-notice__cta">{{ action_text }}</button>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% if dismissible %}
+    <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+    {% endif %}
+</div>

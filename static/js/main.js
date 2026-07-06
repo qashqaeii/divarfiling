@@ -91,29 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     initPublicMobileMenu();
     
-    // Close alerts
-    const alertCloses = document.querySelectorAll('.alert-close');
-    alertCloses.forEach(btn => {
-        btn.addEventListener('click', function() {
-            this.parentElement.style.transition = 'opacity 0.3s';
-            this.parentElement.style.opacity = '0';
-            setTimeout(() => {
-                this.parentElement.remove();
-            }, 300);
-        });
-    });
-    
-    // Auto-hide alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.transition = 'opacity 0.3s';
-            alert.style.opacity = '0';
-            setTimeout(() => {
-                alert.remove();
-            }, 300);
-        }, 5000);
-    });
+    // Alerts handled by mk-notices.js
     
     // Lazy Loading برای تصاویر
     const lazyImages = document.querySelectorAll('img.lazy-load[data-src]');

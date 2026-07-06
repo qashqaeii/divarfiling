@@ -50,13 +50,15 @@
     </header>
 
     {% if crm_stats.overdue_followups %}
-    <div class="mk-hub-alert">
-        <div class="mk-hub-alert-icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></div>
-        <div class="mk-hub-alert-body">
-            <strong>{{ crm_stats.overdue_followups }} پیگیری معوق</strong>
-            <span>نیاز به اقدام فوری</span>
+    <div class="mk-notice mk-notice--warning mk-notice--inline mk-notice--compact">
+        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span>
+        <div class="mk-notice__body">
+            <strong class="mk-notice__title">{{ crm_stats.overdue_followups }} پیگیری معوق</strong>
+            <span class="mk-notice__text">نیاز به اقدام فوری</span>
         </div>
-        <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="mk-hub-alert-btn">پیگیری</a>
+        <div class="mk-notice__actions">
+            <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="mk-notice__cta">پیگیری</a>
+        </div>
     </div>
     {% endif %}
 

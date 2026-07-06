@@ -30,9 +30,11 @@
     {% else %}
 
     {% if suggested %}
-    <div class="crm-matches-toast" role="status">
-        <i class="fas fa-circle-check" aria-hidden="true"></i>
-        <span>پیشنهادها ثبت شد — برای مشاهده پرونده به تب <button type="button" class="crm-matches-toast-link" data-tab-jump="properties">املاک</button> بروید.</span>
+    <div class="mk-notice mk-notice--success mk-notice--inline mk-notice--compact" role="status">
+        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+        <div class="mk-notice__body">
+            <span class="mk-notice__text">پیشنهادها ثبت شد — برای مشاهده پرونده به تب <button type="button" class="crm-matches-toast-link" data-tab-jump="properties">املاک</button> بروید.</span>
+        </div>
     </div>
     {% endif %}
 

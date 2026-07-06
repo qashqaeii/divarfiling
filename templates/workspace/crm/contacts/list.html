@@ -88,10 +88,14 @@
     </section>
 
     {% if duplicate_groups %}
-    <div class="crm-contacts-alert">
-        <i class="fas fa-clone" aria-hidden="true"></i>
-        <span><strong>{{ duplicate_groups|length }}</strong> گروه تکراری (تلفن یکسان)</span>
-        <button type="button" class="crm-dash-act" data-drawer-open="drawer-merge">ادغام</button>
+    <div class="mk-notice mk-notice--warning mk-notice--inline mk-notice--compact">
+        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-clone"></i></span>
+        <div class="mk-notice__body">
+            <span class="mk-notice__text"><strong>{{ duplicate_groups|length }}</strong> گروه تکراری (تلفن یکسان)</span>
+        </div>
+        <div class="mk-notice__actions">
+            <button type="button" class="mk-notice__cta" data-drawer-open="drawer-merge">ادغام</button>
+        </div>
     </div>
     {% endif %}
 

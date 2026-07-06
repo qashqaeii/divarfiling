@@ -1,0 +1,46 @@
+{% comment %}
+  Unified Django flash messages — Mizkar Notice System
+  Usage: {% include 'includes/messages.html' with layout='flash' %}
+  layout: flash | inline (default: flash for public, inline for workspace)
+{% endcomment %}
+{% if messages %}
+<div class="mk-notices mk-notices--{% if layout %}{{ layout }}{% else %}flash{% endif %}" aria-live="polite">
+    <div class="mk-notices__inner">
+        {% for message in messages %}
+        {% if 'success' in message.tags %}
+            {% with notice_type='success' notice_icon='check-circle' %}
+            <div class="mk-notice mk-notice--{{ notice_type }} mk-notice--{% if layout %}{{ layout }}{% else %}flash{% endif %}" data-auto-dismiss role="status">
+                <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-{{ notice_icon }}"></i></span>
+                <div class="mk-notice__body"><span class="mk-notice__text">{{ message }}</span></div>
+                <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            {% endwith %}
+        {% elif 'error' in message.tags %}
+            {% with notice_type='error' notice_icon='circle-xmark' %}
+            <div class="mk-notice mk-notice--{{ notice_type }} mk-notice--{% if layout %}{{ layout }}{% else %}flash{% endif %}" data-auto-dismiss role="alert">
+                <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-{{ notice_icon }}"></i></span>
+                <div class="mk-notice__body"><span class="mk-notice__text">{{ message }}</span></div>
+                <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            {% endwith %}
+        {% elif 'warning' in message.tags %}
+            {% with notice_type='warning' notice_icon='triangle-exclamation' %}
+            <div class="mk-notice mk-notice--{{ notice_type }} mk-notice--{% if layout %}{{ layout }}{% else %}flash{% endif %}" data-auto-dismiss role="status">
+                <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-{{ notice_icon }}"></i></span>
+                <div class="mk-notice__body"><span class="mk-notice__text">{{ message }}</span></div>
+                <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            {% endwith %}
+        {% else %}
+            {% with notice_type='info' notice_icon='circle-info' %}
+            <div class="mk-notice mk-notice--{{ notice_type }} mk-notice--{% if layout %}{{ layout }}{% else %}flash{% endif %}" data-auto-dismiss role="status">
+                <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-{{ notice_icon }}"></i></span>
+                <div class="mk-notice__body"><span class="mk-notice__text">{{ message }}</span></div>
+                <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            {% endwith %}
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

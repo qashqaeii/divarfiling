@@ -1,0 +1,34 @@
+{% if banners %}
+<div class="banners-section">
+    <div class="container">
+        {% for banner in banners %}
+        <div class="banner-card">
+            {% if banner.banner_type == 'image' and banner.image %}
+            <a href="{% if banner.link %}{{ banner.link }}{% else %}#{% endif %}" class="banner-card-link">
+                <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="banner-card-image">
+                {% if banner.link_text %}
+                <div class="banner-card-overlay">
+                    <span class="banner-card-cta">{{ banner.link_text }}</span>
+                </div>
+                {% endif %}
+            </a>
+            {% elif banner.banner_type == 'text' and banner.text_content %}
+            <div class="banner-card-text">
+                <div class="banner-card-content">
+                    {{ banner.text_content|safe }}
+                </div>
+                {% if banner.link %}
+                <a href="{{ banner.link }}" class="banner-card-button">
+                    {{ banner.link_text|default:"مشاهده" }}
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+            <button type="button" class="banner-card-close" data-mk-notice-close onclick="closeBanner(this)" aria-label="بستن">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

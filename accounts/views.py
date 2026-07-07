@@ -163,11 +163,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 affiliate = Affiliate.objects.filter(user=user).first()
                 
                 if affiliate:
-                    from affiliates.services.referral import build_referral_url
-                    # دریافت یا ایجاد کیف پول
+                    from affiliates.services.referral import build_referral_url, get_referred_users_data
+                    referred = get_referred_users_data(affiliate, limit=50)
                     affiliate_wallet, created = Wallet.objects.get_or_create(user=user)
                     
-                    # آمار افیلیت
                     total_sales = AffiliateSale.objects.filter(affiliate=affiliate)
                     from django.conf import settings
                     affiliate_stats = {
@@ -178,6 +177,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                         'referral_url': build_referral_url(self.request, affiliate),
                         'recent_sales': total_sales.order_by('-created_at')[:5],
                         'min_withdrawal': settings.AFFILIATE_MIN_WITHDRAWAL,
+                        'referred_users_count': referred['total'],
+                        'referred_users_with_orders': referred['with_orders'],
+                        'referred_users_without_orders': referred['without_orders'],
+                        'referred_users': referred['items'],
+                        'referred_users_has_more': referred['has_more'],
                     }
             except Exception:
                 pass

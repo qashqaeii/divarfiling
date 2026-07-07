@@ -279,6 +279,17 @@
                             <span class="affiliate-modern-stat-value success">{{ affiliate_wallet.balance|currency }} <span class="affiliate-modern-stat-unit">تومان</span></span>
                         </div>
                     </div>
+
+                    <div class="affiliate-modern-stat-card">
+                        <div class="affiliate-modern-stat-icon sales">
+                            <i class="fas fa-users" aria-hidden="true"></i>
+                        </div>
+                        <div class="affiliate-modern-stat-info">
+                            <span class="affiliate-modern-stat-label">زیرمجموعه</span>
+                            <span class="affiliate-modern-stat-value">{{ affiliate_stats.referred_users_count|default:0 }}</span>
+                            <span class="affiliate-modern-stat-sub">{{ affiliate_stats.referred_users_without_orders|default:0 }} در انتظار خرید</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="affiliate-modern-link-section">
@@ -804,7 +815,25 @@
                         <div class="stat-value-modern">{{ affiliate_wallet.total_earned|floatformat:0 }}</div>
                         <div class="stat-currency">تومان</div>
                     </div>
+
+                    <div class="stat-card-modern warn">
+                        <div class="stat-header-modern">
+                            <span class="stat-label-modern">زیرمجموعه</span>
+                            <div class="stat-icon-modern">
+                                <i class="fas fa-users" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value-modern">{{ affiliate_stats.referred_users_count|default:0 }}</div>
+                        <div class="stat-currency">{{ affiliate_stats.referred_users_without_orders|default:0 }} بدون خرید</div>
+                    </div>
                 </div>
+                
+                <!-- زیرمجموعه‌ها -->
+                {% with referred_users=affiliate_stats.referred_users referred_users_count=affiliate_stats.referred_users_count referred_users_with_orders=affiliate_stats.referred_users_with_orders referred_users_without_orders=affiliate_stats.referred_users_without_orders referred_users_has_more=affiliate_stats.referred_users_has_more %}
+                <div class="section-card mb-4 mk-affiliate-dashboard-embed">
+                    {% include 'includes/affiliate_referred_users.html' %}
+                </div>
+                {% endwith %}
                 
                 <!-- لینک معرف -->
                 <div class="section-card mb-4">

@@ -129,6 +129,15 @@ class AffiliateReferralFlowTests(TestCase):
         captured = capture_referral_from_request(request)
         self.assertEqual(captured.pk, self.affiliate.pk)
 
+    def test_referred_users_list_includes_no_purchase(self):
+        assign_referred_user(self.buyer, self.affiliate)
+        from affiliates.services.referral import get_referred_users_data
+        data = get_referred_users_data(self.affiliate)
+        self.assertEqual(data['total'], 1)
+        self.assertEqual(data['without_orders'], 1)
+        self.assertEqual(data['items'][0]['phone'], '09122222222')
+        self.assertFalse(data['items'][0]['has_paid_order'])
+
     def test_register_sets_referred_by(self):
         client = Client()
         client.cookies[settings.AFFILIATE_COOKIE_NAME] = self.affiliate.code

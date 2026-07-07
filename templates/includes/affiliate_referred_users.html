@@ -1,0 +1,63 @@
+{% load persian_tags %}
+<section class="mk-affiliate-panel mk-affiliate-referred-panel" aria-label="زیرمجموعه‌ها">
+    <div class="mk-affiliate-panel-head">
+        <div>
+            <h2><i class="fas fa-users"></i> زیرمجموعه‌ها (کاربران دعوت‌شده)</h2>
+            <p class="mk-affiliate-panel-sub">
+                {{ referred_users_count }} نفر ثبت‌نام کرده‌اند
+                · {{ referred_users_with_orders }} خرید موفق
+                · {{ referred_users_without_orders }} در انتظار خرید
+            </p>
+        </div>
+    </div>
+
+    {% if referred_users %}
+    <div class="mk-affiliate-table-wrap">
+        <table class="mk-affiliate-table mk-affiliate-table--referred">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>شماره تماس</th>
+                    <th>نام</th>
+                    <th>تاریخ ثبت‌نام</th>
+                    <th>وضعیت</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in referred_users %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        {% if item.phone %}
+                        <a href="tel:{{ item.phone }}" class="mk-affiliate-phone" dir="ltr">{{ item.phone }}</a>
+                        {% else %}
+                        <span class="mk-affiliate-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.display_name|default:"—" }}</td>
+                    <td>{{ item.date_joined|to_jalali_date }}</td>
+                    <td>
+                        {% if item.has_paid_order %}
+                        <span class="mk-affiliate-badge mk-affiliate-badge--success">خرید موفق</span>
+                        {% else %}
+                        <span class="mk-affiliate-badge mk-affiliate-badge--pending">بدون خرید</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if referred_users_has_more %}
+    <p class="mk-affiliate-panel-note">
+        <a href="{% url 'affiliate_dashboard' %}">مشاهده همه {{ referred_users_count }} زیرمجموعه در داشبورد همکاری</a>
+    </p>
+    {% endif %}
+    {% else %}
+    <div class="mk-affiliate-empty">
+        <i class="fas fa-user-plus" aria-hidden="true"></i>
+        <p>هنوز زیرمجموعه‌ای ثبت نشده است.</p>
+        <span>لینک معرف خود را به اشتراک بگذارید تا کاربران با کد شما ثبت‌نام کنند.</span>
+    </div>
+    {% endif %}
+</section>

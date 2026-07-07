@@ -169,3 +169,44 @@ def get_referral_banner_context(request) -> dict | None:
         'cta_text': cta_text,
         'is_authenticated': user.is_authenticated,
     }
+
+
+def get_referred_users_data(affiliate, limit: int | None = None) -> dict:
+    """
+    List referred users (subordinates) for affiliate dashboard.
+    Includes users without purchase — phone + signup date for follow-up.
+    """
+    from django.contrib.auth import get_user_model
+    from django.db.models import Exists, OuterRef
+    from shop.models import Order
+
+    User = get_user_model()
+    paid_order = Order.objects.filter(user=OuterRef('pk'), status='paid')
+    qs = (
+        User.objects.filter(referred_by=affiliate)
+        .annotate(has_paid_order=Exists(paid_order))
+        .order_by('-date_joined')
+    )
+    total = qs.count()
+    with_orders = qs.filter(has_paid_order=True).count()
+    without_orders = total - with_orders
+
+    display_qs = qs if limit is None else qs[:limit]
+    items = []
+    for user in display_qs:
+        phone = (user.phone or '').strip()
+        items.append({
+            'user': user,
+            'phone': phone,
+            'display_name': user.get_full_name().strip() if user.get_full_name() else '',
+            'date_joined': user.date_joined,
+            'has_paid_order': user.has_paid_order,
+        })
+
+    return {
+        'total': total,
+        'with_orders': with_orders,
+        'without_orders': without_orders,
+        'items': items,
+        'has_more': limit is not None and total > limit,
+    }

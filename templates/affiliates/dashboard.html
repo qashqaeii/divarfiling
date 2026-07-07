@@ -10,12 +10,24 @@
     <header class="mk-affiliate-hero">
         <div>
             <h1>همکاری در فروش</h1>
-            <p>لینک معرف، کاربران دعوت‌شده، کمیسیون‌ها و کیف پول — همه در یک نگاه</p>
+            <p>لینک معرف، زیرمجموعه‌ها، کمیسیون‌ها و کیف پول — همه در یک نگاه</p>
         </div>
         <span class="mk-affiliate-code-pill"><i class="fas fa-hashtag"></i> {{ affiliate.code }}</span>
     </header>
 
     <section class="mk-affiliate-kpis" aria-label="شاخص‌ها">
+        <article class="mk-affiliate-kpi mk-affiliate-kpi--warn">
+            <span class="mk-affiliate-kpi-val">{{ referred_users_count }}</span>
+            <span class="mk-affiliate-kpi-lbl">کل زیرمجموعه</span>
+        </article>
+        <article class="mk-affiliate-kpi mk-affiliate-kpi--accent">
+            <span class="mk-affiliate-kpi-val">{{ referred_users_with_orders }}</span>
+            <span class="mk-affiliate-kpi-lbl">خرید موفق</span>
+        </article>
+        <article class="mk-affiliate-kpi">
+            <span class="mk-affiliate-kpi-val">{{ referred_users_without_orders }}</span>
+            <span class="mk-affiliate-kpi-lbl">در انتظار خرید</span>
+        </article>
         <article class="mk-affiliate-kpi">
             <span class="mk-affiliate-kpi-val">{{ total_sales_count }}</span>
             <span class="mk-affiliate-kpi-lbl">فروش ثبت‌شده</span>
@@ -27,18 +39,6 @@
         <article class="mk-affiliate-kpi mk-affiliate-kpi--accent">
             <span class="mk-affiliate-kpi-val">{{ wallet.balance|currency }}</span>
             <span class="mk-affiliate-kpi-lbl">موجودی کیف پول</span>
-        </article>
-        <article class="mk-affiliate-kpi">
-            <span class="mk-affiliate-kpi-val">{{ wallet.total_earned|currency }}</span>
-            <span class="mk-affiliate-kpi-lbl">کل درآمد</span>
-        </article>
-        <article class="mk-affiliate-kpi mk-affiliate-kpi--warn">
-            <span class="mk-affiliate-kpi-val">{{ referred_users_count }}</span>
-            <span class="mk-affiliate-kpi-lbl">کاربر دعوت‌شده</span>
-        </article>
-        <article class="mk-affiliate-kpi mk-affiliate-kpi--accent">
-            <span class="mk-affiliate-kpi-val">{{ referred_users_with_orders }}</span>
-            <span class="mk-affiliate-kpi-lbl">خرید موفق</span>
         </article>
     </section>
 
@@ -52,11 +52,13 @@
                 <i class="fas fa-copy"></i> کپی
             </button>
         </div>
-        <p style="margin:0.55rem 0 0;font-size:0.75rem;color:var(--mk-text-muted,#94a3b8);">
+        <p class="mk-affiliate-panel-sub">
             کاربران با این لینک ثبت‌نام می‌کنند و در اولین خرید {{ affiliate.discount_percentage|floatformat:0 }}٪ تخفیف دریافت می‌کنند.
             کمیسیون شما: {{ affiliate.commission_rate|floatformat:0 }}٪ از مبلغ اصلی سفارش.
         </p>
     </section>
+
+    {% include 'includes/affiliate_referred_users.html' %}
 
     <section class="mk-affiliate-panel">
         <div class="mk-affiliate-panel-head">
@@ -68,42 +70,8 @@
                 <a href="{% url 'affiliate_transactions' %}" class="mk-affiliate-btn mk-affiliate-btn--ghost">تراکنش‌ها</a>
             </div>
         </div>
-        <p style="margin:0;font-size:0.8125rem;">حداقل برداشت: {{ min_withdrawal|currency }} تومان</p>
+        <p style="margin:0;font-size:0.8125rem;">حداقل برداشت: {{ min_withdrawal|currency }} تومان · موجودی: {{ wallet.balance|currency }} تومان</p>
     </section>
-
-    {% if referred_users %}
-    <section class="mk-affiliate-panel">
-        <div class="mk-affiliate-panel-head">
-            <h2><i class="fas fa-users"></i> کاربران دعوت‌شده</h2>
-        </div>
-        <div class="mk-affiliate-table-wrap">
-            <table class="mk-affiliate-table">
-                <thead>
-                    <tr>
-                        <th>کاربر</th>
-                        <th>تاریخ ثبت‌نام</th>
-                        <th>وضعیت خرید</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in referred_users %}
-                    <tr>
-                        <td>{{ item.user.phone|default:item.user.username }}</td>
-                        <td>{{ item.user.date_joined|to_jalali_date }}</td>
-                        <td>
-                            {% if item.has_paid_order %}
-                            <span class="mk-affiliate-badge mk-affiliate-badge--success">خرید موفق</span>
-                            {% else %}
-                            <span class="mk-affiliate-badge mk-affiliate-badge--muted">بدون خرید</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
-    {% endif %}
 
     {% if recent_sales %}
     <section class="mk-affiliate-panel">

@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.db.models import Sum, Count
 from django.conf import settings
-from affiliates.services.referral import build_referral_url
+from affiliates.services.referral import build_referral_url, get_referred_users_data
 from .models import Affiliate, AffiliateSale, AffiliatePayout, Wallet, WalletTransaction, Withdrawal
 from .forms import WithdrawalForm
 
@@ -64,31 +64,11 @@ class AffiliateDashboardView(LoginRequiredMixin, TemplateView):
         payouts = AffiliatePayout.objects.filter(affiliate=affiliate).order_by('-created_at')[:10]
         
         referral_url = build_referral_url(self.request, affiliate)
+        referred = get_referred_users_data(affiliate)
         
         # آمار کیف پول
         recent_transactions = wallet.transactions.order_by('-created_at')[:10]
         recent_withdrawals = wallet.withdrawals.order_by('-created_at')[:10]
-        
-        # آمار کاربران دعوت شده
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        referred_users_count = User.objects.filter(referred_by=affiliate).count()
-        referred_users_queryset = User.objects.filter(referred_by=affiliate).order_by('-date_joined')[:10]
-        
-        # اضافه کردن اطلاعات خرید موفق برای هر کاربر
-        referred_users = []
-        for user in referred_users_queryset:
-            has_paid_order = user.orders.filter(status='paid').exists()
-            referred_users.append({
-                'user': user,
-                'has_paid_order': has_paid_order,
-            })
-        
-        # کاربرانی که خرید انجام داده‌اند
-        referred_users_with_orders = User.objects.filter(
-            referred_by=affiliate,
-            orders__status='paid'
-        ).distinct().count()
         
         context.update({
             'affiliate': affiliate,
@@ -103,9 +83,10 @@ class AffiliateDashboardView(LoginRequiredMixin, TemplateView):
             'recent_transactions': recent_transactions,
             'recent_withdrawals': recent_withdrawals,
             'min_withdrawal': settings.AFFILIATE_MIN_WITHDRAWAL,
-            'referred_users_count': referred_users_count,
-            'referred_users': referred_users,
-            'referred_users_with_orders': referred_users_with_orders,
+            'referred_users_count': referred['total'],
+            'referred_users_with_orders': referred['with_orders'],
+            'referred_users_without_orders': referred['without_orders'],
+            'referred_users': referred['items'],
         })
         
         return context

@@ -2730,7 +2730,111 @@ html.mk-public:not([data-theme="light"]) .mk-dashboard-page .dash-profile-card {
     }
 }
 
-/* Affiliate tab stat cards */
+/* Affiliate tab — compact 5-up stats strip */
+.mk-dashboard-page .dash-stats-grid--affiliate {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+}
+
+.mk-dashboard-page .dash-stats-grid--affiliate .dash-stat-card {
+    padding: 0.5rem 0.55rem;
+    gap: 0.4rem;
+    border-radius: 10px;
+    min-height: 0;
+}
+
+.mk-dashboard-page .dash-stats-grid--affiliate .dash-stat-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 7px;
+    font-size: 0.58rem;
+}
+
+.mk-dashboard-page .dash-stats-grid--affiliate .dash-stat-lbl {
+    font-size: 0.56rem;
+    margin-bottom: 0.08rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.mk-dashboard-page .dash-stats-grid--affiliate .dash-stat-val {
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.mk-dashboard-page .dash-stats-grid--affiliate .dash-stat-val small {
+    display: block;
+    font-size: 0.52rem;
+    font-weight: 500;
+    color: var(--mk-text-muted);
+    margin-top: 0.06rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mk-dashboard-page .dash-stats-grid--affiliate .dash-stat-val > small:first-child {
+    display: inline;
+    margin-inline-start: 0.15rem;
+    margin-top: 0;
+}
+
+.mk-dashboard-page .dash-stat-card[data-accent="amber"] .dash-stat-icon {
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+}
+
+@media (max-width: 1024px) {
+    .mk-dashboard-page .dash-stats-grid--affiliate {
+        gap: 0.3rem;
+    }
+
+    .mk-dashboard-page .dash-stats-grid--affiliate .dash-stat-card {
+        padding: 0.45rem 0.4rem;
+    }
+
+    .mk-dashboard-page .dash-stats-grid--affiliate .dash-stat-val {
+        font-size: 0.76rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .mk-dashboard-page .dash-stats-grid--affiliate {
+        display: flex;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        gap: 0.45rem;
+        padding-bottom: 0.15rem;
+        scrollbar-width: none;
+    }
+
+    .mk-dashboard-page .dash-stats-grid--affiliate::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mk-dashboard-page .dash-stats-grid--affiliate .dash-stat-card {
+        flex: 0 0 min(34vw, 9.5rem);
+        scroll-snap-align: start;
+    }
+}
+
+@media (max-width: 480px) {
+    .mk-dashboard-page .dash-stats-grid--affiliate .dash-stat-card {
+        flex: 0 0 38vw;
+        min-width: 7.5rem;
+    }
+}
+
+/* Affiliate tab stat cards (legacy) */
 .mk-dashboard-page .stats-grid-modern {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2866,7 +2970,7 @@ body.mk-account-dashboard .mk-ft-accordion ul {
 }
 
 @media (max-width: 900px) {
-    .mk-dashboard-page .dash-stats-grid {
+    .mk-dashboard-page .dash-stats-grid:not(.dash-stats-grid--affiliate) {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -2932,7 +3036,7 @@ body.mk-account-dashboard .mk-ft-accordion ul {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .mk-dashboard-page .stats-grid-modern {
+    .mk-dashboard-page .stats-grid-modern:not(.dash-stats-grid--affiliate) {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

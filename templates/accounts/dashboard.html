@@ -8,7 +8,7 @@
 {% block body_class %}mk-account-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=2">
 {% endblock %}
@@ -772,60 +772,42 @@
             
             {% if affiliate %}
                 <!-- آمار افیلیت -->
-                <div class="stats-grid-modern mb-4">
-                    <div class="stat-card-modern success">
-                        <div class="stat-header-modern">
-                            <span class="stat-label-modern">تعداد فروش</span>
-                            <div class="stat-icon-modern">
-                                <i class="fas fa-shopping-bag" aria-hidden="true"></i>
-                            </div>
-                        </div>
-                        <div class="stat-value-modern">{{ affiliate_stats.total_sales_count }}</div>
-                    </div>
-                    
-                    <div class="stat-card-modern primary">
-                        <div class="stat-header-modern">
-                            <span class="stat-label-modern">کل کمیسیون</span>
-                            <div class="stat-icon-modern">
-                                <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
-                            </div>
-                        </div>
-                        <div class="stat-value-modern">{{ affiliate_stats.total_commission|floatformat:0 }}</div>
-                        <div class="stat-currency">تومان</div>
-                    </div>
-                    
-                    <div class="stat-card-modern success">
-                        <div class="stat-header-modern">
-                            <span class="stat-label-modern">موجودی کیف پول</span>
-                            <div class="stat-icon-modern">
-                                <i class="fas fa-wallet" aria-hidden="true"></i>
-                            </div>
-                        </div>
-                        <div class="stat-value-modern">{{ affiliate_wallet.balance|floatformat:0 }}</div>
-                        <div class="stat-currency">تومان</div>
-                    </div>
-                    
-                    <div class="stat-card-modern">
-                        <div class="stat-header-modern">
-                            <span class="stat-label-modern">کل درآمد</span>
-                            <div class="stat-icon-modern">
-                                <i class="fas fa-chart-line" aria-hidden="true"></i>
-                            </div>
-                        </div>
-                        <div class="stat-value-modern">{{ affiliate_wallet.total_earned|floatformat:0 }}</div>
-                        <div class="stat-currency">تومان</div>
-                    </div>
-
-                    <div class="stat-card-modern warn">
-                        <div class="stat-header-modern">
-                            <span class="stat-label-modern">زیرمجموعه</span>
-                            <div class="stat-icon-modern">
-                                <i class="fas fa-users" aria-hidden="true"></i>
-                            </div>
-                        </div>
-                        <div class="stat-value-modern">{{ affiliate_stats.referred_users_count|default:0 }}</div>
-                        <div class="stat-currency">{{ affiliate_stats.referred_users_without_orders|default:0 }} بدون خرید</div>
-                    </div>
+                <div class="dash-stats-grid dash-stats-grid--affiliate mb-4" aria-label="آمار همکاری در فروش">
+                    <article class="dash-stat-card" data-accent="emerald">
+                        <span class="dash-stat-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
+                        <span class="dash-stat-body">
+                            <span class="dash-stat-lbl">فروش</span>
+                            <span class="dash-stat-val">{{ affiliate_stats.total_sales_count }}</span>
+                        </span>
+                    </article>
+                    <article class="dash-stat-card" data-accent="violet">
+                        <span class="dash-stat-icon"><i class="fas fa-money-bill-wave" aria-hidden="true"></i></span>
+                        <span class="dash-stat-body">
+                            <span class="dash-stat-lbl">کمیسیون</span>
+                            <span class="dash-stat-val">{{ affiliate_stats.total_commission|floatformat:0 }}<small>ت</small></span>
+                        </span>
+                    </article>
+                    <article class="dash-stat-card" data-accent="emerald">
+                        <span class="dash-stat-icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
+                        <span class="dash-stat-body">
+                            <span class="dash-stat-lbl">موجودی</span>
+                            <span class="dash-stat-val">{{ affiliate_wallet.balance|floatformat:0 }}<small>ت</small></span>
+                        </span>
+                    </article>
+                    <article class="dash-stat-card" data-accent="sky">
+                        <span class="dash-stat-icon"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
+                        <span class="dash-stat-body">
+                            <span class="dash-stat-lbl">درآمد</span>
+                            <span class="dash-stat-val">{{ affiliate_wallet.total_earned|floatformat:0 }}<small>ت</small></span>
+                        </span>
+                    </article>
+                    <article class="dash-stat-card" data-accent="amber">
+                        <span class="dash-stat-icon"><i class="fas fa-users" aria-hidden="true"></i></span>
+                        <span class="dash-stat-body">
+                            <span class="dash-stat-lbl">زیرمجموعه</span>
+                            <span class="dash-stat-val">{{ affiliate_stats.referred_users_count|default:0 }}<small>{{ affiliate_stats.referred_users_without_orders|default:0 }} بدون خرید</small></span>
+                        </span>
+                    </article>
                 </div>
                 
                 <!-- زیرمجموعه‌ها -->

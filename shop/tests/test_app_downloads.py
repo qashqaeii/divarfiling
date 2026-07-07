@@ -57,6 +57,15 @@ class AndroidAppDownloadTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse('android_app_download'))
 
+    def test_build_app_download_context_without_user_attribute(self):
+        from types import SimpleNamespace
+
+        from shop.services.app_downloads import build_app_download_context
+
+        request = SimpleNamespace()
+        context = build_app_download_context(request)
+        self.assertIsNone(context['windows_download'])
+
     @patch('shop.services.app_downloads.os.path.isfile', return_value=True)
     @patch('shop.services.app_downloads.FileResponse', side_effect=RuntimeError('response failed'))
     def test_closes_file_if_file_response_raises(self, _mock_response, _mock_isfile):

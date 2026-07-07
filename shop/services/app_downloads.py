@@ -42,7 +42,7 @@ def android_apk_size_label() -> str:
 
 
 def resolve_windows_download_for_user(user) -> Optional[Dict[str, Any]]:
-    if not user.is_authenticated:
+    if user is None or not getattr(user, 'is_authenticated', False):
         return None
     from shop.models import Order
     from shop.services.downloads import get_order_download_filename, order_can_download
@@ -62,6 +62,7 @@ def resolve_windows_download_for_user(user) -> Optional[Dict[str, Any]]:
 
 
 def build_app_download_context(request) -> Dict[str, Any]:
+    user = getattr(request, 'user', None)
     return {
         'android': {
             'available': android_apk_available(),
@@ -78,7 +79,7 @@ def build_app_download_context(request) -> Dict[str, Any]:
             'requires_license': True,
             'min_os': 'Windows 10 / 11',
         },
-        'windows_download': resolve_windows_download_for_user(request.user),
+        'windows_download': resolve_windows_download_for_user(user),
     }
 
 

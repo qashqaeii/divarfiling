@@ -132,7 +132,8 @@ def get_referral_banner_context(request) -> dict | None:
     affiliate = capture_referral_from_request(request)
     if not affiliate:
         return None
-    if request.user.is_authenticated and not is_valid_attribution(request.user, affiliate):
+    user = getattr(request, 'user', None)
+    if user is not None and user.is_authenticated and not is_valid_attribution(user, affiliate):
         return None
 
     discount = affiliate.discount_percentage or Decimal(str(settings.AFFILIATE_DEFAULT_DISCOUNT))
@@ -144,8 +145,7 @@ def get_referral_banner_context(request) -> dict | None:
         or 'همکار فایلینگ دیوار'
     )
 
-    user = request.user
-    if user.is_authenticated:
+    if user is not None and user.is_authenticated:
         from shop.models import Order
         has_paid = Order.objects.filter(user=user, status='paid').exists()
         if has_paid:

@@ -291,6 +291,7 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         model = CRMProperty
         fields = [
             'title', 'property_type', 'deal_mode', 'transaction_status', 'publish_status',
+            'business_type', 'phone',
             'address', 'city', 'district', 'neighborhood',
             'latitude', 'longitude', 'area', 'rooms', 'floor', 'total_floors',
             'has_parking', 'has_storage', 'has_elevator', 'build_year',
@@ -302,6 +303,11 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'deal_mode': forms.Select(attrs={'class': 'crm-select', 'data-deal-mode': '1'}),
             'transaction_status': forms.Select(attrs={'class': 'crm-select'}),
             'publish_status': forms.Select(attrs={'class': 'crm-select'}),
+            'business_type': forms.Select(
+                choices=[('', '—'), ('شخصی', 'شخصی'), ('مشاور', 'مشاور املاک'), ('business', 'بنگاه / Business')],
+                attrs={'class': 'crm-select'},
+            ),
+            'phone': forms.TextInput(attrs={'class': 'crm-input', 'dir': 'ltr', 'inputmode': 'tel'}),
             'address': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
             'city': forms.TextInput(attrs={'class': 'crm-input'}),
             'district': forms.TextInput(attrs={'class': 'crm-input'}),
@@ -662,6 +668,15 @@ class PropertyVisitForm(forms.ModelForm):
 class CustomerImportForm(forms.Form):
     file = forms.FileField(
         label='فایل مخاطبین',
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'crm-input', 'accept': '.xlsx,.xls,.csv',
+        }),
+    )
+
+
+class CRMPropertyImportForm(forms.Form):
+    file = forms.FileField(
+        label='فایل املاک',
         widget=forms.ClearableFileInput(attrs={
             'class': 'crm-input', 'accept': '.xlsx,.xls,.csv',
         }),

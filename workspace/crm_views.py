@@ -21,7 +21,7 @@ from django.views.generic import CreateView, DetailView, ListView, TemplateView,
 from workspace.constants import (
     AGENCY_ROLES, CRM_PRIORITIES, CRM_PROPERTIES, CRM_SOURCES, CRM_STATUSES, CRM_TYPES,
     DEAL_STAGES, DEFAULT_STAGNANT_DAYS, LOST_REASONS, MESSAGE_PLACEHOLDERS,
-    MESSAGE_TEMPLATE_CATEGORIES, PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES,
+    MESSAGE_TEMPLATE_CATEGORIES, PROPERTY_ADVERTISER_TYPES, PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES,
     PROPERTY_TX_STATUSES, TYPE_PROFILES, VISIT_OUTCOMES, WEBHOOK_EVENTS,
     WEBHOOK_EVENT_LABELS,
 )
@@ -30,7 +30,7 @@ from workspace.services.property_images import (
 )
 from workspace.forms import (
     ActivityForm, CRMAutomationRuleForm, CRMDealForm, CRMMessageTemplateForm,
-    CRMPropertyForm, CRMReminderForm, ConvertLeadForm,
+    CRMPropertyForm, CRMPropertyImportForm, CRMReminderForm, ConvertLeadForm,
     CustomerDocumentForm, CustomerForm, CustomerImportForm, FollowUpForm,
     PropertyLinkForm, PropertyVisitForm, QuickLeadForm,
 )
@@ -120,6 +120,10 @@ from workspace.constants import LEAD_TYPES
 from workspace.services.crm_match_notifications import is_match_eligible
 from workspace.services.crm_import import (
     import_contacts_from_file, import_column_specs, import_template_excel_response, import_template_headers,
+)
+from workspace.services.crm_property_import import (
+    import_properties_from_file, property_import_column_specs,
+    property_import_template_excel_response, property_import_template_headers,
 )
 from workspace.services.crm_merge import (
     find_duplicate_groups, find_duplicates_for_customer_strict, merge_customers,
@@ -977,6 +981,17 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['saved_filter_base'] = reverse('workspace:crm_properties')
         ctx['saved_filter_params'] = current_params_from_request(self.request, 'properties')
         ctx['saved_filter_can_save'] = bool(ctx['saved_filter_params'])
+        ctx['property_import_form'] = ctx.get('property_import_form', CRMPropertyImportForm())
+        ctx['property_import_headers'] = property_import_template_headers()
+        ctx['property_import_column_specs'] = property_import_column_specs()
+        ctx['property_import_allowed_values'] = {
+            'property_types': list(CRM_PROPERTIES),
+            'deal_modes': list(PROPERTY_DEAL_MODES),
+            'tx_statuses': list(PROPERTY_TX_STATUSES),
+            'publish_statuses': list(PROPERTY_PUBLISH_STATUSES),
+            'advertiser_types': list(PROPERTY_ADVERTISER_TYPES),
+        }
+        ctx['open_modal'] = ctx.get('open_modal', self.request.GET.get('open', ''))
         return ctx
 
 
@@ -1631,6 +1646,35 @@ class CustomerImportView(LoginRequiredMixin, View):
         ctx['import_form'] = form
         ctx['open_modal'] = 'drawer-import'
         return render(request, 'workspace/crm/contacts/list.html', ctx)
+
+
+class CRMPropertyImportTemplateView(LoginRequiredMixin, View):
+    def get(self, request):
+        return property_import_template_excel_response()
+
+
+class CRMPropertyImportView(LoginRequiredMixin, View):
+    def post(self, request):
+        form = CRMPropertyImportForm(request.POST, request.FILES)
+        nxt = request.POST.get('next') or reverse('workspace:crm_properties')
+        if form.is_valid():
+            created, skipped, errors = import_properties_from_file(request.user, form.cleaned_data['file'])
+            if errors:
+                for err in errors[:3]:
+                    messages.error(request, err)
+            if created:
+                messages.success(request, f'{created} فایل شخصی import شد ({skipped} رد شد).')
+            elif not errors:
+                messages.info(request, f'ملک جدیدی یافت نشد ({skipped} رد شد).')
+            return redirect(nxt)
+        messages.error(request, 'فایل نامعتبر است.')
+        view = CRMPropertyListView()
+        view.setup(request)
+        view.object_list = view.get_queryset()
+        ctx = view.get_context_data(object_list=view.object_list)
+        ctx['property_import_form'] = form
+        ctx['open_modal'] = 'drawer-property-import'
+        return render(request, 'workspace/crm/properties/list.html', ctx)
 
 
 class CustomerMergeView(LoginRequiredMixin, View):

@@ -15,6 +15,9 @@
             <h1 class="crm-dash-bar-title">فایل‌های شخصی</h1>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات فایل‌ها">
+            <button type="button" class="crm-dash-act" data-drawer-open="drawer-property-import" title="ورود گروهی فایل‌های شخصی">
+                <i class="fas fa-file-import" aria-hidden="true"></i><span>ورود فایل</span>
+            </button>
             <details class="crm-files-export">
                 <summary class="crm-dash-act" title="خروجی فایل‌های {% if has_filters %}{{ filtered_count }} فیلترشده{% else %}{{ stats.total }}{% endif %}">
                     <i class="fas fa-file-export" aria-hidden="true"></i><span>خروجی</span>
@@ -300,4 +303,6 @@
         </form>
     </div>
 </aside>
+
+{% include 'workspace/crm/includes/drawer_property_import.html' %}
 {% endblock %}

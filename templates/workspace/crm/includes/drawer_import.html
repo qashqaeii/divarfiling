@@ -12,7 +12,7 @@
             </button>
         </div>
 
-        <form method="post" action="{% url 'workspace:crm_import' %}" enctype="multipart/form-data" class="crm-drawer-form" id="crmImportForm">
+        <form method="post" action="{% url 'workspace:crm_import' %}" enctype="multipart/form-data" class="crm-drawer-form" id="crmImportForm" data-crm-import-form>
             <div class="crm-drawer-body">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">

@@ -124,7 +124,7 @@ const CRMDrawer = {
         initPropertyDealMode(drawer);
         initCRMTypeProfiles(drawer);
         initCRMFormErrors();
-        if (id === 'drawer-import') initCRMImportDrawer(drawer);
+        if (id === 'drawer-import' || id === 'drawer-property-import') initCRMImportDrawer(drawer);
         else initCRMVisitOutcome(drawer);
         initCRMPropertyImages(drawer);
     },
@@ -1656,7 +1656,7 @@ function initCRMImportDrawer(root) {
     const filesizeEl = scope.querySelector('[data-import-filesize]');
     const clearBtn = scope.querySelector('[data-import-clear]');
     const submitBtn = scope.querySelector('[data-import-submit]');
-    const form = scope.querySelector('#crmImportForm');
+    const form = scope.querySelector('[data-crm-import-form]');
 
     if (!zone || !input) return;
 

@@ -251,6 +251,7 @@ def link_customer_listing(
 def property_from_listing(user, listing) -> CRMProperty:
     """ساخت ملک CRM از آگهی اسکرپ‌شده."""
     from workspace.services.features import extract_listing_features
+    from workspace.services.listing_edit import owner_phone_from_listing
     from workspace.services.listing_features import build_listing_feature_profile
 
     deal_mode = 'فروش'
@@ -258,6 +259,10 @@ def property_from_listing(user, listing) -> CRMProperty:
         deal_mode = 'رهن و اجاره' if listing.deposit else 'اجاره'
     feat = extract_listing_features(listing)
     profile = build_listing_feature_profile(listing, feat)
+    biz = (listing.business_type or '').strip()
+    if feat.get('is_consultant') and not biz:
+        biz = 'مشاور'
+    owner_phone = normalize_phone(owner_phone_from_listing(listing))
     amenity_lines = []
     for group in profile.get('groups', []):
         for item in group.get('items', []):
@@ -303,6 +308,8 @@ def property_from_listing(user, listing) -> CRMProperty:
         images=listing.images or [],
         token=listing.token,
         link=listing.link or '',
+        business_type=biz or 'شخصی',
+        phone=owner_phone,
         publish_status='منتشرشده',
     )
 
@@ -1038,6 +1045,8 @@ def properties_to_export_rows(properties) -> List[Dict[str, Any]]:
             'نوع معامله': p.deal_mode,
             'وضعیت معامله': p.transaction_status,
             'وضعیت انتشار': p.publish_status,
+            'نوع آگهی دهنده': p.business_type,
+            'شماره تماس': p.phone,
             'شهر': p.city,
             'منطقه': p.district,
             'محله': p.neighborhood,

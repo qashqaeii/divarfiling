@@ -360,6 +360,8 @@ class CRMProperty(models.Model):
     videos = models.JSONField(default=list, blank=True, verbose_name='ویدئوها')
     token = models.CharField(max_length=100, blank=True, db_index=True, verbose_name='شناسه آگهی')
     link = models.URLField(max_length=500, blank=True, verbose_name='لینک')
+    business_type = models.CharField(max_length=50, blank=True, verbose_name='نوع آگهی‌دهنده')
+    phone = models.CharField(max_length=20, blank=True, verbose_name='شماره تماس')
     notes = models.TextField(blank=True, verbose_name='یادداشت')
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان حذف')
     pipeline_order = models.PositiveIntegerField(default=0, verbose_name='ترتیب کانبان')

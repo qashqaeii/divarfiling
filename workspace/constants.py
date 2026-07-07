@@ -8,6 +8,7 @@ CRM_TYPES = [
 CRM_STATUSES = ['جدید', 'در حال پیگیری', 'بازدید انجام شد', 'قرارداد', 'بایگانی']
 CRM_PRIORITIES = ['بالا', 'متوسط', 'پایین']
 CRM_PROPERTIES = ['آپارتمان', 'ویلا', 'کلنگی', 'اداری', 'مغازه', 'زمین', 'سایر']
+PROPERTY_ADVERTISER_TYPES = ['شخصی', 'مشاور', 'مشاور املاک', 'business', 'مالک']
 CRM_SOURCES = ['دیوار', 'معرف', 'ورود به املاک', 'تماس ورودی', 'اینستاگرام', 'سایت', 'تلگرام', 'موبایل', 'سایر']
 ACTIVITY_TYPES = [
     'تماس', 'پیامک', 'واتساپ', 'پیام', 'بازدید', 'جلسه', 'پیگیری',
@@ -343,6 +344,45 @@ IMPORT_CONTACT_COLUMNS = {
     'منطقه': 'district',
     'یادداشت': 'notes',
     'برچسب‌ها': 'tags',
+}
+
+IMPORT_PROPERTY_COLUMNS = {
+    'عنوان': 'title',
+    'نوع ملک': 'property_type',
+    'نوع معامله': 'deal_mode',
+    'وضعیت معامله': 'transaction_status',
+    'وضعیت انتشار': 'publish_status',
+    'نوع آگهی دهنده': 'business_type',
+    'شماره تماس': 'phone',
+    'شهر': 'city',
+    'منطقه': 'district',
+    'محله': 'neighborhood',
+    'آدرس': 'address',
+    'متراژ (متر)': 'area',
+    'اتاق': 'rooms',
+    'طبقه': 'floor',
+    'تعداد طبقات': 'total_floors',
+    'سال ساخت': 'build_year',
+    'پارکینگ': 'has_parking',
+    'انباری': 'has_storage',
+    'آسانسور': 'has_elevator',
+    'قیمت فروش (تومان)': 'sale_price',
+    'رهن (تومان)': 'deposit',
+    'اجاره ماهانه (تومان)': 'monthly_rent',
+    'امکانات': 'amenities',
+    'شناسه آگهی': 'token',
+    'لینک': 'link',
+    'عرض جغرافیایی': 'latitude',
+    'طول جغرافیایی': 'longitude',
+    'یادداشت': 'notes',
+}
+
+IMPORT_PROPERTY_HEADER_ALIASES = {
+    'نوع آگهی‌دهنده': 'business_type',
+    'business_type': 'business_type',
+    'تلفن': 'phone',
+    'موبایل': 'phone',
+    'تماس': 'phone',
 }
 
 # ── اتوماسیون CRM (فاز ۳) ──

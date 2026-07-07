@@ -4,7 +4,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('workspace', '0019_customer_builder_profile'),
+        ('workspace', '0020_alter_customer_customer_type_and_more'),
     ]
 
     operations = [

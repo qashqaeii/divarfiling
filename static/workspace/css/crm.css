@@ -4303,6 +4303,11 @@ body.crm-side-open { overflow: hidden; }
 .crm-import-dropzone-empty {
     display: flex; flex-direction: column; gap: .2rem; align-items: center;
     font-size: .72rem; color: var(--ws-text-muted);
+    pointer-events: none;
+}
+.crm-import-dropzone-empty[hidden],
+.crm-import-dropzone-preview[hidden] {
+    display: none !important;
 }
 .crm-import-dropzone-empty strong { font-size: .8rem; color: var(--ws-text); }
 .crm-import-dropzone-formats {
@@ -4311,6 +4316,7 @@ body.crm-side-open { overflow: hidden; }
 }
 .crm-import-dropzone-preview {
     display: flex; align-items: center; gap: .65rem;
+    pointer-events: none;
 }
 .crm-import-file-icon {
     width: 40px; height: 40px; flex-shrink: 0;
@@ -4330,6 +4336,7 @@ body.crm-side-open { overflow: hidden; }
     border: 1px solid var(--ws-border); border-radius: 8px;
     background: var(--ws-surface-2); color: var(--ws-text-muted);
     cursor: pointer; transition: background .12s, color .12s;
+    pointer-events: auto;
 }
 .crm-import-file-clear:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
 .crm-import-table-wrap {

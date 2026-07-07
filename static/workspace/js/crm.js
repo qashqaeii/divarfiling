@@ -1644,9 +1644,10 @@ function formatFileSize(bytes) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function initCRMImportDrawer(root) {
-    const scope = root || document.getElementById('drawer-import');
-    if (!scope) return;
+const CRM_IMPORT_ACCEPT_RE = /\.(xlsx|xls|csv)$/i;
+
+function bindCRMImportDrawer(scope) {
+    if (!scope || scope.dataset.crmImportBound === '1') return;
 
     const zone = scope.querySelector('[data-import-dropzone]');
     const input = scope.querySelector('[data-import-file]');
@@ -1659,9 +1660,26 @@ function initCRMImportDrawer(root) {
     const form = scope.querySelector('[data-crm-import-form]');
 
     if (!zone || !input) return;
+    scope.dataset.crmImportBound = '1';
+
+    function isImportFile(file) {
+        return !!(file && CRM_IMPORT_ACCEPT_RE.test(file.name || ''));
+    }
+
+    function assignInputFile(file) {
+        if (!file) return;
+        if (input.files?.[0] === file) return;
+        try {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+        } catch (err) {
+            /* native picker already set input.files */
+        }
+    }
 
     function setFile(file) {
-        if (!file) {
+        if (!file || !isImportFile(file)) {
             input.value = '';
             zone.classList.remove('has-file');
             empty?.removeAttribute('hidden');
@@ -1669,9 +1687,7 @@ function initCRMImportDrawer(root) {
             if (submitBtn) submitBtn.disabled = true;
             return;
         }
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        input.files = dt.files;
+        assignInputFile(file);
         zone.classList.add('has-file');
         empty?.setAttribute('hidden', '');
         preview?.removeAttribute('hidden');
@@ -1700,12 +1716,14 @@ function initCRMImportDrawer(root) {
     ['dragenter', 'dragover'].forEach((ev) => {
         zone.addEventListener(ev, (e) => {
             e.preventDefault();
+            e.stopPropagation();
             zone.classList.add('is-dragover');
         });
     });
     ['dragleave', 'drop'].forEach((ev) => {
         zone.addEventListener(ev, (e) => {
             e.preventDefault();
+            e.stopPropagation();
             zone.classList.remove('is-dragover');
         });
     });
@@ -1716,8 +1734,7 @@ function initCRMImportDrawer(root) {
     });
 
     input.addEventListener('change', () => {
-        const file = input.files?.[0];
-        if (file) setFile(file);
+        setFile(input.files?.[0] || null);
     });
 
     clearBtn?.addEventListener('click', (e) => {
@@ -1733,8 +1750,15 @@ function initCRMImportDrawer(root) {
         }
     });
 
-    if (input.files?.[0]) setFile(input.files[0]);
-    else setFile(null);
+    setFile(input.files?.[0] || null);
+}
+
+function initCRMImportDrawer(root) {
+    if (root) {
+        bindCRMImportDrawer(root);
+        return;
+    }
+    document.querySelectorAll('#drawer-import, #drawer-property-import').forEach(bindCRMImportDrawer);
 }
 
 function initCRMDealStagesEditor() {

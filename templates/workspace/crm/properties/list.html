@@ -189,7 +189,21 @@
                             <span class="crm-ft-empty">—</span>
                             {% endif %}
                         </td>
-                        <td class="crm-ft-td-num">{% if p.contact_count %}{{ p.contact_count }}{% else %}<span class="crm-ft-empty">—</span>{% endif %}</td>
+                        <td class="crm-ft-td-num">
+                            <div class="crm-ft-contact-cell">
+                                {% if p.contact_count %}
+                                <span class="crm-ft-contact-count" title="مخاطب مرتبط">
+                                    <i class="fas fa-users" aria-hidden="true"></i>{{ p.contact_count }}
+                                </span>
+                                {% endif %}
+                                {% if p.phone %}
+                                <a href="tel:{{ p.phone }}" class="crm-files-phone-link" dir="ltr" title="تماس">
+                                    <i class="fas fa-phone" aria-hidden="true"></i>{{ p.phone }}
+                                </a>
+                                {% endif %}
+                                {% if not p.contact_count and not p.phone %}<span class="crm-ft-empty">—</span>{% endif %}
+                            </div>
+                        </td>
                         <td class="crm-ft-td-time"><time>{{ p.updated_at|ws_jalali }}</time></td>
                     </tr>
                     {% empty %}
@@ -209,9 +223,10 @@
         {% else %}
         <div class="crm-files-grid crm-files-grid-v2">
             {% for p in properties %}
-            <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card {% if p.deal_mode == 'فروش' %}crm-files-card--sale{% else %}crm-files-card--rent{% endif %}" style="--tx-accent: {{ p.transaction_status|crm_tx_status_dot }};">
+            <article class="crm-files-card {% if p.deal_mode == 'فروش' %}crm-files-card--sale{% else %}crm-files-card--rent{% endif %}" style="--tx-accent: {{ p.transaction_status|crm_tx_status_dot }};">
                 <span class="crm-files-card-bg" aria-hidden="true"><i class="fas {{ p.transaction_status|crm_tx_status_icon }}"></i></span>
                 <div class="crm-files-card-accent" aria-hidden="true"></div>
+                <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-hit" aria-label="{{ p.title }}"></a>
                 <header class="crm-files-card-head">
                     <span class="crm-files-card-type" aria-hidden="true">
                         <i class="fas {{ p.property_type|crm_property_type_icon }}"></i>
@@ -253,11 +268,16 @@
                     </div>
                     <div class="crm-files-card-meta">
                         {% if p.contact_count %}<span class="crm-files-meta-chip" title="مخاطب مرتبط"><i class="fas fa-users" aria-hidden="true"></i>{{ p.contact_count }}</span>{% endif %}
+                        {% if p.phone %}
+                        <a href="tel:{{ p.phone }}" class="crm-files-meta-chip crm-files-meta-chip--phone" dir="ltr" title="تماس">
+                            <i class="fas fa-phone" aria-hidden="true"></i>{{ p.phone }}
+                        </a>
+                        {% endif %}
                         <span class="crm-files-pub crm-files-pub--{{ p.publish_status }}" title="{{ p.publish_status }}"></span>
                         <time>{{ p.updated_at|ws_jalali }}</time>
                     </div>
                 </footer>
-            </a>
+            </article>
             {% empty %}
             {% if stats.total %}
             {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' decor='building' title='ملکی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا ملک جدید ثبت کنید.' btn_text='ثبت ملک' btn_icon='fa-plus' btn_drawer='drawer-property' %}

@@ -7304,6 +7304,7 @@ body.crm-side-open { overflow: hidden; }
     transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
     isolation: isolate;
+    cursor: pointer;
 }
 .crm-files-card-bg {
     position: absolute;
@@ -7323,7 +7324,7 @@ body.crm-side-open { overflow: hidden; }
     transform: none;
     transition: opacity 0.18s, transform 0.18s;
 }
-.crm-files-card > :not(.crm-files-card-bg):not(.crm-files-card-accent) {
+.crm-files-card > :not(.crm-files-card-bg):not(.crm-files-card-accent):not(.crm-files-card-hit) {
     position: relative;
     z-index: 1;
 }
@@ -7491,6 +7492,8 @@ body.crm-side-open { overflow: hidden; }
     font-size: 0.56rem;
     font-weight: 600;
     color: var(--ws-text-muted);
+    position: relative;
+    z-index: 2;
 }
 .crm-files-meta-chip {
     display: inline-flex;
@@ -7501,6 +7504,60 @@ body.crm-side-open { overflow: hidden; }
     background: var(--ws-surface-2);
     border: 1px solid var(--ws-border-light);
     font-size: 0.56rem;
+}
+.crm-files-meta-chip--phone {
+    position: relative;
+    z-index: 2;
+    color: #059669;
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.2);
+    text-decoration: none;
+    font-variant-numeric: tabular-nums;
+    transition: background 0.12s, border-color 0.12s;
+}
+.crm-files-meta-chip--phone:hover {
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.35);
+}
+.crm-files-card-hit {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+}
+.crm-ft-contact-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+.crm-ft-contact-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+}
+.crm-files-phone-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.12rem 0.4rem;
+    border-radius: 999px;
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: #059669;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    text-decoration: none;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    transition: background 0.12s, border-color 0.12s;
+}
+.crm-files-phone-link:hover {
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.35);
 }
 .crm-files-pub {
     width: 6px;

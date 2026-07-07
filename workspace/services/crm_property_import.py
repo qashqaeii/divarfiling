@@ -16,6 +16,7 @@ from workspace.constants import (
 from workspace.forms import parse_money_input
 from workspace.models import CRMProperty
 from workspace.services.crm import normalize_phone
+from workspace.services.crm_scope import properties_qs
 from workspace.services.features import parse_bool_feature, parse_rooms_value
 
 _FA_DIGITS = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
@@ -128,14 +129,15 @@ def import_properties_from_file(user, uploaded_file) -> Tuple[int, int, List[str
     if df.empty:
         return 0, 0, ['فایل خالی است.']
 
+    active_props = properties_qs(user)
     existing_tokens = {
         t.strip()
-        for t in CRMProperty.objects.filter(user=user).exclude(token='').values_list('token', flat=True)
+        for t in active_props.exclude(token='').values_list('token', flat=True)
         if t and str(t).strip()
     }
     existing_keys = {
         _dedup_key(p.title or '', p.city or '', p.district or '')
-        for p in CRMProperty.objects.filter(user=user).only('title', 'city', 'district')
+        for p in active_props.only('title', 'city', 'district')
     }
 
     for _, row in df.iterrows():

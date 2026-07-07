@@ -58,15 +58,9 @@ class RegisterView(CreateView):
         password = form.cleaned_data.get('password1')
         user = authenticate(username=phone, password=password)
         if user:
-            # بررسی کد افیلیت از cookie
-            from affiliates.middleware import AffiliateTrackingMiddleware
-            from django.conf import settings
-            affiliate = AffiliateTrackingMiddleware.get_affiliate_from_request(self.request)
-            
-            if affiliate:
-                user.referred_by = affiliate
-                user.save()
-            
+            from affiliates.services import assign_referred_user, capture_referral_from_request
+            affiliate = capture_referral_from_request(self.request)
+            assign_referred_user(user, affiliate)
             login(self.request, user)
             # ایجاد پروفایل
             UserProfile.objects.get_or_create(user=user)
@@ -169,6 +163,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 affiliate = Affiliate.objects.filter(user=user).first()
                 
                 if affiliate:
+                    from affiliates.services.referral import build_referral_url
                     # دریافت یا ایجاد کیف پول
                     affiliate_wallet, created = Wallet.objects.get_or_create(user=user)
                     
@@ -180,7 +175,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                         'total_commission': sum(sale.commission_amount for sale in total_sales) or 0,
                         'wallet_balance': affiliate_wallet.balance,
                         'total_earned': affiliate_wallet.total_earned,
-                        'referral_url': self.request.build_absolute_uri('/') + f'?ref={affiliate.code}',
+                        'referral_url': build_referral_url(self.request, affiliate),
                         'recent_sales': total_sales.order_by('-created_at')[:5],
                         'min_withdrawal': settings.AFFILIATE_MIN_WITHDRAWAL,
                     }

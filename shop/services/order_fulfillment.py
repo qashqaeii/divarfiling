@@ -1,40 +1,10 @@
 """تکمیل سفارش پس از تایید پرداخت (درگاه یا کارت به کارت)."""
 from __future__ import annotations
 
-from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
 from licenses.models import License
-
-
-def _record_affiliate_commission(order) -> None:
-    if not order.affiliate_id:
-        return
-    from affiliates.models import Affiliate, AffiliateSale, Wallet
-
-    commission_rate = order.affiliate.commission_rate or settings.AFFILIATE_DEFAULT_COMMISSION
-    original_price = order.original_price or order.plan.price
-    commission_amount = (original_price * commission_rate) // 100
-
-    sale, created = AffiliateSale.objects.get_or_create(
-        order=order,
-        defaults={
-            'affiliate': order.affiliate,
-            'commission_rate': commission_rate,
-            'commission_amount': commission_amount,
-            'status': 'paid',
-        },
-    )
-    if not created:
-        return
-
-    wallet, _ = Wallet.objects.get_or_create(user=order.affiliate.user)
-    wallet.add_balance(
-        commission_amount,
-        f'کمیسیون فروش - سفارش {order.id}',
-        related_sale=sale,
-    )
 
 
 def fulfill_order_after_payment(order) -> License | None:
@@ -55,13 +25,13 @@ def fulfill_order_after_payment(order) -> License | None:
         order.paid_at = timezone.now()
         order.save(update_fields=['status', 'paid_at'])
 
-        _record_affiliate_commission(order)
+        from affiliates.services.commission import (
+            ensure_buyer_affiliate_account,
+            record_affiliate_commission,
+        )
 
-    from affiliates.models import Affiliate, Wallet as AffiliateWallet
-
-    if not Affiliate.objects.filter(user=order.user).exists():
-        Affiliate.objects.create(user=order.user, is_active=True)
-        AffiliateWallet.objects.get_or_create(user=order.user)
+        record_affiliate_commission(order)
+        ensure_buyer_affiliate_account(order.user)
 
     return issue_license_for_paid_order(order)
 

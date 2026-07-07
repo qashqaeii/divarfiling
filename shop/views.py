@@ -261,6 +261,17 @@ class BuyView(LoginRequiredMixin, CreateView):
                 discount_amount += repeat_discount
                 final_price -= repeat_discount
                 discount_reasons.append(f'{int(repeat_discount_percentage)}% تخفیف خرید مجدد')
+
+            # تخفیف معرف
+            if self.request.user.is_authenticated:
+                from affiliates.services import apply_affiliate_discount
+                aff_disc, final_price, aff_label = apply_affiliate_discount(
+                    self.request.user, self.request, self.product, final_price
+                )
+                if aff_disc > 0:
+                    discount_amount += aff_disc
+                    if aff_label:
+                        discount_reasons.append(aff_label)
             
             plans_with_prices.append({
                 'plan': plan,
@@ -335,8 +346,19 @@ class BuyView(LoginRequiredMixin, CreateView):
             repeat_discount = (original_price * repeat_discount_percentage) // 100
             total_discount_amount += repeat_discount
             price_after_discounts -= repeat_discount
+
+        # تخفیف معرف (قبل از کد تخفیف)
+        from affiliates.services import apply_affiliate_discount, resolve_order_affiliate
+        affiliate = resolve_order_affiliate(self.request.user, self.request)
+        if affiliate:
+            order.affiliate = affiliate
+        affiliate_discount, price_after_discounts, _affiliate_label = apply_affiliate_discount(
+            self.request.user, self.request, self.product, price_after_discounts
+        )
+        if affiliate_discount > 0:
+            total_discount_amount += affiliate_discount
         
-        # اعمال کد تخفیف (بعد از تخفیف خریدهای بعدی)
+        # اعمال کد تخفیف
         discount_code = form.cleaned_data.get('discount_code')
         if discount_code:
             is_valid, message = discount_code.is_valid(self.request.user)
@@ -749,6 +771,18 @@ def apply_discount_code(request, slug):
                 'type': 'repeat_purchase',
                 'label': f'{int(repeat_discount_percentage)}% تخفیف خرید مجدد',
                 'amount': int(repeat_discount)
+            })
+
+        from affiliates.services import apply_affiliate_discount
+        aff_disc, price_after_discounts, aff_label = apply_affiliate_discount(
+            request.user, request, product, price_after_discounts
+        )
+        if aff_disc > 0:
+            total_discount_amount += aff_disc
+            discount_details.append({
+                'type': 'affiliate',
+                'label': aff_label or 'تخفیف معرف',
+                'amount': int(aff_disc),
             })
         
         # بررسی کد تخفیف

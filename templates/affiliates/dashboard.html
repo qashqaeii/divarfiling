@@ -3,208 +3,146 @@
 {% load currency_tags %}
 {% load persian_tags %}
 
-{% block title %}داشبورد مشاور - فایلینگ دیوار{% endblock %}
+{% block title %}داشبورد همکاری در فروش | فایلینگ دیوار{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="glass-card mt-4">
-        <h1 class="text-white mb-4">داشبورد مشاور فروش</h1>
-        
-        <!-- Stats -->
-        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
-            <div class="glass-card text-center">
-                <h3 class="text-white" style="font-size: var(--font-size-2xl); color: var(--color-accent);">{{ total_sales_count }}</h3>
-                <p class="text-white">تعداد فروش</p>
-            </div>
-            <div class="glass-card text-center">
-                <h3 class="text-white" style="font-size: var(--font-size-2xl); color: var(--color-accent);">{{ total_commission|currency }}</h3>
-                <p class="text-white">کل کمیسیون (تومان)</p>
-            </div>
-            <div class="glass-card text-center" style="background: rgba(40, 167, 69, 0.3);">
-                <h3 class="text-white" style="font-size: var(--font-size-2xl); color: var(--color-success);">{{ wallet.balance|currency }}</h3>
-                <p class="text-white">موجودی کیف پول (تومان)</p>
-            </div>
-            <div class="glass-card text-center">
-                <h3 class="text-white" style="font-size: var(--font-size-2xl); color: var(--color-accent);">{{ wallet.total_earned|currency }}</h3>
-                <p class="text-white">کل درآمد (تومان)</p>
-            </div>
-            <div class="glass-card text-center" style="background: rgba(1, 107, 97, 0.3);">
-                <h3 class="text-white" style="font-size: var(--font-size-2xl); color: var(--color-accent);">{{ referred_users_count }}</h3>
-                <p class="text-white">کاربران دعوت شده</p>
-            </div>
-            <div class="glass-card text-center" style="background: rgba(1, 107, 97, 0.3);">
-                <h3 class="text-white" style="font-size: var(--font-size-2xl); color: var(--color-success);">{{ referred_users_with_orders }}</h3>
-                <p class="text-white">کاربران با خرید موفق</p>
-            </div>
+<div class="mk-affiliate-page">
+    <header class="mk-affiliate-hero">
+        <div>
+            <h1>همکاری در فروش</h1>
+            <p>لینک معرف، کاربران دعوت‌شده، کمیسیون‌ها و کیف پول — همه در یک نگاه</p>
         </div>
-        
-        <!-- Wallet Actions -->
-        <div class="glass-card mb-4" style="background: rgba(1, 107, 97, 0.3);">
-            <h2 class="text-white mb-3">کیف پول</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-md);">
-                <div>
-                    <p class="text-white mb-2">موجودی قابل برداشت:</p>
-                    <h2 class="text-white" style="font-size: var(--font-size-3xl); color: var(--color-success);">{{ wallet.balance|currency }} تومان</h2>
-                </div>
-                <div style="display: flex; gap: var(--spacing-sm); align-items: flex-end;">
-                    <a href="{% url 'affiliate_withdrawal' %}" class="btn btn-primary">
-                        <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
-                        درخواست برداشت
-                    </a>
-                    <a href="{% url 'affiliate_transactions' %}" class="btn btn-outline">
-                        <i class="fas fa-list" aria-hidden="true"></i>
-                        تراکنش‌ها
-                    </a>
-                </div>
-            </div>
-            <p class="text-white mt-3" style="font-size: var(--font-size-sm);">
-                حداقل مبلغ برداشت: {{ min_withdrawal|currency }} تومان
-            </p>
+        <span class="mk-affiliate-code-pill"><i class="fas fa-hashtag"></i> {{ affiliate.code }}</span>
+    </header>
+
+    <section class="mk-affiliate-kpis" aria-label="شاخص‌ها">
+        <article class="mk-affiliate-kpi">
+            <span class="mk-affiliate-kpi-val">{{ total_sales_count }}</span>
+            <span class="mk-affiliate-kpi-lbl">فروش ثبت‌شده</span>
+        </article>
+        <article class="mk-affiliate-kpi">
+            <span class="mk-affiliate-kpi-val">{{ total_commission|currency }}</span>
+            <span class="mk-affiliate-kpi-lbl">کل کمیسیون (تومان)</span>
+        </article>
+        <article class="mk-affiliate-kpi mk-affiliate-kpi--accent">
+            <span class="mk-affiliate-kpi-val">{{ wallet.balance|currency }}</span>
+            <span class="mk-affiliate-kpi-lbl">موجودی کیف پول</span>
+        </article>
+        <article class="mk-affiliate-kpi">
+            <span class="mk-affiliate-kpi-val">{{ wallet.total_earned|currency }}</span>
+            <span class="mk-affiliate-kpi-lbl">کل درآمد</span>
+        </article>
+        <article class="mk-affiliate-kpi mk-affiliate-kpi--warn">
+            <span class="mk-affiliate-kpi-val">{{ referred_users_count }}</span>
+            <span class="mk-affiliate-kpi-lbl">کاربر دعوت‌شده</span>
+        </article>
+        <article class="mk-affiliate-kpi mk-affiliate-kpi--accent">
+            <span class="mk-affiliate-kpi-val">{{ referred_users_with_orders }}</span>
+            <span class="mk-affiliate-kpi-lbl">خرید موفق</span>
+        </article>
+    </section>
+
+    <section class="mk-affiliate-panel">
+        <div class="mk-affiliate-panel-head">
+            <h2><i class="fas fa-link"></i> لینک معرف شما</h2>
         </div>
-        
-        <!-- Referral Link -->
-        <div class="glass-card mb-4" style="background: rgba(1, 107, 97, 0.3);">
-            <h2 class="text-white mb-3">لینک معرف شما</h2>
-            <div style="display: flex; gap: var(--spacing-sm); align-items: center;">
-                <input type="text" value="{{ referral_url }}" readonly class="form-control" id="referralLink">
-                <button class="btn btn-primary" onclick="copyReferralLink()">
-                    <i class="fas fa-copy" aria-hidden="true"></i>
-                    کپی
-                </button>
-            </div>
-            <p class="text-white mt-2" style="font-size: var(--font-size-sm);">
-                کد معرف شما: <strong>{{ affiliate.code }}</strong>
-            </p>
+        <div class="mk-affiliate-link-row">
+            <input type="text" value="{{ referral_url }}" readonly class="mk-affiliate-link-input" id="referralLink" aria-label="لینک معرف">
+            <button type="button" class="mk-affiliate-btn mk-affiliate-btn--primary" onclick="copyReferralLink()">
+                <i class="fas fa-copy"></i> کپی
+            </button>
         </div>
-        
-        <!-- Referred Users -->
-        <h2 class="text-white mb-3">کاربران دعوت شده</h2>
-        {% if referred_users %}
-            <div class="glass-card mb-4">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-sm);">
-                    {% for user_data in referred_users %}
-                        <div style="padding: var(--spacing-sm); background: rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm);">
-                            <div class="text-white" style="font-weight: 600; margin-bottom: var(--spacing-xs);">
-                                <i class="fas fa-user" aria-hidden="true"></i> {{ user_data.user.username|default:user_data.user.email }}
-                            </div>
-                            <div class="text-white" style="font-size: var(--font-size-sm); opacity: 0.8;">
-                                <i class="fas fa-calendar" aria-hidden="true"></i> تاریخ ثبت‌نام: {{ user_data.user.date_joined|to_jalali_date:"%Y/%m/%d" }}
-                            </div>
-                            {% if user_data.has_paid_order %}
-                                <div class="text-white" style="font-size: var(--font-size-sm); color: var(--color-success); margin-top: var(--spacing-xs);">
-                                    <i class="fas fa-check-circle" aria-hidden="true"></i> خرید موفق انجام داده
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-                {% if referred_users_count > 10 %}
-                    <div class="text-center mt-3">
-                        <p class="text-white">و {{ referred_users_count|add:"-10" }} کاربر دیگر...</p>
-                    </div>
+        <p style="margin:0.55rem 0 0;font-size:0.75rem;color:var(--mk-text-muted,#94a3b8);">
+            کاربران با این لینک ثبت‌نام می‌کنند و در اولین خرید {{ affiliate.discount_percentage|floatformat:0 }}٪ تخفیف دریافت می‌کنند.
+            کمیسیون شما: {{ affiliate.commission_rate|floatformat:0 }}٪ از مبلغ اصلی سفارش.
+        </p>
+    </section>
+
+    <section class="mk-affiliate-panel">
+        <div class="mk-affiliate-panel-head">
+            <h2><i class="fas fa-wallet"></i> کیف پول</h2>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                {% if wallet.balance >= min_withdrawal %}
+                <a href="{% url 'affiliate_withdrawal' %}" class="mk-affiliate-btn mk-affiliate-btn--primary">درخواست برداشت</a>
                 {% endif %}
+                <a href="{% url 'affiliate_transactions' %}" class="mk-affiliate-btn mk-affiliate-btn--ghost">تراکنش‌ها</a>
             </div>
-        {% else %}
-            <div class="glass-card mb-4">
-                <p class="text-white text-center">هنوز کاربری از طریق لینک شما ثبت‌نام نکرده است.</p>
-            </div>
-        {% endif %}
-        
-        <!-- Recent Sales -->
-        <h2 class="text-white mb-3">فروش‌های اخیر</h2>
-        {% if recent_sales %}
-            <div class="sales-list">
-                {% for sale in recent_sales %}
-                    <div class="glass-card mb-3">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <h3 class="text-white">{{ sale.order.product.title }}</h3>
-                                <p class="text-white" style="font-size: var(--font-size-sm);">
-                                    مبلغ سفارش: {{ sale.order.amount|currency }} تومان
-                                </p>
-                                <p class="text-white" style="font-size: var(--font-size-sm);">
-                                    کمیسیون: {{ sale.commission_amount|currency }} تومان ({{ sale.commission_rate }}%)
-                                </p>
-                                <p class="text-white" style="font-size: var(--font-size-sm);">
-                                    تاریخ: {{ sale.created_at|to_jalali:"%Y/%m/%d %H:%M" }} - وضعیت: 
-                                    <span class="badge badge-{{ sale.status }}">{{ sale.get_status_display }}</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-white text-center">هنوز فروشی ثبت نشده است.</p>
-        {% endif %}
-        
-        <!-- Recent Withdrawals -->
-        <h2 class="text-white mb-3 mt-4">درخواست‌های برداشت اخیر</h2>
-        {% if recent_withdrawals %}
-            <div class="withdrawals-list">
-                {% for withdrawal in recent_withdrawals %}
-                    <div class="glass-card mb-3">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <h3 class="text-white">{{ withdrawal.amount|currency }} تومان</h3>
-                                <p class="text-white" style="font-size: var(--font-size-sm);">
-                                    بانک: {{ withdrawal.bank_name }} - حساب: {{ withdrawal.bank_account }}
-                                </p>
-                                <p class="text-white" style="font-size: var(--font-size-sm);">
-                                    تاریخ: {{ withdrawal.created_at|to_jalali:"%Y/%m/%d %H:%M" }} - وضعیت: 
-                                    <span class="badge badge-{{ withdrawal.status }}">{{ withdrawal.get_status_display }}</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-white text-center">درخواست برداشتی وجود ندارد.</p>
-        {% endif %}
-        
-        <!-- Recent Transactions -->
-        <h2 class="text-white mb-3 mt-4">تراکنش‌های اخیر کیف پول</h2>
-        {% if recent_transactions %}
-            <div class="transactions-list">
-                {% for transaction in recent_transactions %}
-                    <div class="glass-card mb-3">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <h3 class="text-white">
-                                    {% if transaction.transaction_type == 'credit' %}
-                                        <span style="color: var(--color-success);">+{{ transaction.amount|currency }} تومان</span>
-                                    {% else %}
-                                        <span style="color: var(--color-danger);">-{{ transaction.amount|currency }} تومان</span>
-                                    {% endif %}
-                                </h3>
-                                <p class="text-white" style="font-size: var(--font-size-sm);">
-                                    {{ transaction.description }}
-                                </p>
-                                <p class="text-white" style="font-size: var(--font-size-sm);">
-                                    تاریخ: {{ transaction.created_at|to_jalali:"%Y/%m/%d %H:%M" }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <div class="text-center mt-3">
-                <a href="{% url 'affiliate_transactions' %}" class="btn btn-outline">مشاهده همه تراکنش‌ها</a>
-            </div>
-        {% else %}
-            <p class="text-white text-center">تراکنشی وجود ندارد.</p>
-        {% endif %}
-    </div>
+        </div>
+        <p style="margin:0;font-size:0.8125rem;">حداقل برداشت: {{ min_withdrawal|currency }} تومان</p>
+    </section>
+
+    {% if referred_users %}
+    <section class="mk-affiliate-panel">
+        <div class="mk-affiliate-panel-head">
+            <h2><i class="fas fa-users"></i> کاربران دعوت‌شده</h2>
+        </div>
+        <div class="mk-affiliate-table-wrap">
+            <table class="mk-affiliate-table">
+                <thead>
+                    <tr>
+                        <th>کاربر</th>
+                        <th>تاریخ ثبت‌نام</th>
+                        <th>وضعیت خرید</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in referred_users %}
+                    <tr>
+                        <td>{{ item.user.phone|default:item.user.username }}</td>
+                        <td>{{ item.user.date_joined|to_jalali_date }}</td>
+                        <td>
+                            {% if item.has_paid_order %}
+                            <span class="mk-affiliate-badge mk-affiliate-badge--success">خرید موفق</span>
+                            {% else %}
+                            <span class="mk-affiliate-badge mk-affiliate-badge--muted">بدون خرید</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if recent_sales %}
+    <section class="mk-affiliate-panel">
+        <div class="mk-affiliate-panel-head">
+            <h2><i class="fas fa-receipt"></i> آخرین فروش‌ها</h2>
+        </div>
+        <div class="mk-affiliate-table-wrap">
+            <table class="mk-affiliate-table">
+                <thead>
+                    <tr>
+                        <th>سفارش</th>
+                        <th>کمیسیون</th>
+                        <th>وضعیت</th>
+                        <th>تاریخ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in recent_sales %}
+                    <tr>
+                        <td dir="ltr">{{ sale.order_id|truncatechars:12 }}</td>
+                        <td>{{ sale.commission_amount|currency }} تومان</td>
+                        <td>{{ sale.get_status_display }}</td>
+                        <td>{{ sale.created_at|to_jalali_date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
 </div>
 
 <script>
 function copyReferralLink() {
     const input = document.getElementById('referralLink');
     input.select();
-    document.execCommand('copy');
-    alert('لینک کپی شد!');
+    navigator.clipboard.writeText(input.value).then(function () {
+        if (window.MkNotices) MkNotices.show('لینک معرف کپی شد', 'success', { duration: 2500 });
+    });
 }
 </script>
 {% endblock %}
-

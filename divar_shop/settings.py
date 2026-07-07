@@ -95,6 +95,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'shop.context_processors.shop_context',
                 'workspace.context_processors.workspace_context',
+                'affiliates.context_processors.affiliate_context',
             ],
         },
     },
@@ -255,6 +256,8 @@ AFFILIATE_MIN_PAYOUT = 100000  # حداقل مبلغ برای تسویه (توم
 AFFILIATE_MIN_WITHDRAWAL = 10000  # حداقل مبلغ برای برداشت (تومان)
 AFFILIATE_COOKIE_NAME = 'affiliate_ref'  # نام cookie برای ذخیره کد معرف
 AFFILIATE_COOKIE_DAYS = 30  # مدت اعتبار cookie (روز)
+AFFILIATE_DISCOUNT_ENABLED = True
+AFFILIATE_DISCOUNT_FIRST_ORDER_ONLY = True  # تخفیف معرف فقط روی اولین خرید موفق
 
 # Email Settings
 EMAIL_BACKEND = config(

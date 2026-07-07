@@ -1,0 +1,29 @@
+{% if referral_banner %}
+<div class="mk-notices mk-notices--banner mk-referral-strip" role="region" aria-label="دعوت معرف">
+    <div class="mk-notices__inner">
+        <div class="mk-notice mk-notice--discount mk-notice--banner mk-referral-bar">
+            <span class="mk-notice__badge" aria-hidden="true">
+                <i class="fas fa-user-plus"></i>
+                <span class="mk-notice__badge-label">دعوت ویژه</span>
+            </span>
+            <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-gift"></i></span>
+            <div class="mk-notice__body">
+                <strong class="mk-notice__title">از طریق {{ referral_banner.referrer_name }}</strong>
+                <span class="mk-notice__text">
+                    {% if referral_banner.discount_percent %}
+                    با ثبت‌نام و خرید، <strong>{{ referral_banner.discount_label }}</strong> دریافت می‌کنید.
+                    {% else %}
+                    به فایلینگ دیوار خوش آمدید — CRM رایگان و امکانات حرفه‌ای در انتظار شماست.
+                    {% endif %}
+                </span>
+            </div>
+            <div class="mk-notice__actions">
+                <a href="{{ referral_banner.cta_url }}" class="mk-notice__cta">
+                    <span>{{ referral_banner.cta_text }}</span>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

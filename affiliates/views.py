@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.db.models import Sum, Count
 from django.conf import settings
+from affiliates.services.referral import build_referral_url
 from .models import Affiliate, AffiliateSale, AffiliatePayout, Wallet, WalletTransaction, Withdrawal
 from .forms import WithdrawalForm
 
@@ -62,9 +63,7 @@ class AffiliateDashboardView(LoginRequiredMixin, TemplateView):
         # تسویه حساب‌ها
         payouts = AffiliatePayout.objects.filter(affiliate=affiliate).order_by('-created_at')[:10]
         
-        # لینک معرف
-        base_url = self.request.build_absolute_uri('/')
-        referral_url = f'{base_url}?ref={affiliate.code}'
+        referral_url = build_referral_url(self.request, affiliate)
         
         # آمار کیف پول
         recent_transactions = wallet.transactions.order_by('-created_at')[:10]

@@ -52,7 +52,8 @@ def _parse_float(val) -> Optional[float]:
             return None
         return val
     if isinstance(val, int):
-        return float(val)    s = str(val).strip().translate(_FA_DIGITS).replace(',', '').replace('،', '')
+        return float(val)
+    s = str(val).strip().translate(_FA_DIGITS).replace(',', '').replace('،', '')
     if not s or s.lower() in ('nan', 'none', '-', '—'):
         return None
     try:

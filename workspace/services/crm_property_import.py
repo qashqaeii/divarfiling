@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import io
+import math
 from typing import Any, Dict, List, Optional, Tuple
-
 from workspace.constants import (
     CRM_PROPERTIES,
     IMPORT_PROPERTY_COLUMNS,
@@ -38,16 +38,21 @@ def _map_row(row: dict) -> Dict[str, Any]:
 def _clean_str(val) -> str:
     if val is None:
         return ''
+    if isinstance(val, float) and math.isnan(val):
+        return ''
     s = str(val).strip()
     return '' if s.lower() in ('nan', 'none', 'null') else s
 
 
 def _parse_float(val) -> Optional[float]:
-    if val in (None, ''):
+    if val is None or val == '':
         return None
-    if isinstance(val, (int, float)):
-        return float(val)
-    s = str(val).strip().translate(_FA_DIGITS).replace(',', '').replace('،', '')
+    if isinstance(val, float):
+        if math.isnan(val) or math.isinf(val):
+            return None
+        return val
+    if isinstance(val, int):
+        return float(val)    s = str(val).strip().translate(_FA_DIGITS).replace(',', '').replace('،', '')
     if not s or s.lower() in ('nan', 'none', '-', '—'):
         return None
     try:
@@ -62,6 +67,13 @@ def _parse_int(val) -> Optional[int]:
         return None
     return int(f)
 
+
+def _parse_money(val) -> Optional[int]:
+    if val is None or val == '':
+        return None
+    if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+        return None
+    return parse_money_input(val)
 
 def _parse_bool(val) -> bool:
     parsed = parse_bool_feature(val)
@@ -185,9 +197,9 @@ def import_properties_from_file(user, uploaded_file) -> Tuple[int, int, List[str
             has_parking=_parse_bool(data.get('has_parking')),
             has_storage=_parse_bool(data.get('has_storage')),
             has_elevator=_parse_bool(data.get('has_elevator')),
-            sale_price=parse_money_input(data.get('sale_price')),
-            deposit=parse_money_input(data.get('deposit')),
-            monthly_rent=parse_money_input(data.get('monthly_rent')),
+            sale_price=_parse_money(data.get('sale_price')),
+            deposit=_parse_money(data.get('deposit')),
+            monthly_rent=_parse_money(data.get('monthly_rent')),
             amenities=_clean_str(data.get('amenities')),
             token=token,
             link=_clean_str(data.get('link')),

@@ -1,4 +1,6 @@
 """فرم‌های workspace."""
+import math
+
 from django import forms
 from django.utils import timezone
 
@@ -35,12 +37,14 @@ def format_money_input(value) -> str:
 
 
 def parse_money_input(value):
-    if value in (None, ''):
+    if value is None or value == '':
         return None
+    if isinstance(value, float):
+        if math.isnan(value) or math.isinf(value):
+            return None
+        return int(value)
     if isinstance(value, int):
         return value
-    if isinstance(value, float):
-        return int(value)
     s = str(value).strip().translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789'))
     s = s.replace(',', '').replace('،', '').replace(' ', '')
     if not s:

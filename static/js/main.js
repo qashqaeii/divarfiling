@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initPublicMobileMenu() {
         const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobilePanel = document.getElementById('mkMobilePanel');
         const navMenu = document.getElementById('siteNavMenu') || document.querySelector('.nav-menu');
         const navAccount = document.getElementById('siteNavAccount') || document.querySelector('.nav-actions');
         const siteNav = document.querySelector('.mk-navbar') || document.querySelector('.navbar');
@@ -49,11 +50,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const toggleIcon = mobileMenuToggle.querySelector('i');
 
+        function isMenuOpen() {
+            return mobilePanel ? mobilePanel.classList.contains('active') : navMenu.classList.contains('active');
+        }
+
         function setMenuOpen(open) {
+            mobilePanel?.classList.toggle('active', open);
             navMenu.classList.toggle('active', open);
             navAccount?.classList.toggle('active', open);
             siteNav?.classList.toggle('mk-nav-open', open);
             document.body.classList.toggle('mk-nav-open', open);
+            mobilePanel?.setAttribute('aria-hidden', open ? 'false' : 'true');
             mobileMenuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             mobileMenuToggle.setAttribute('aria-label', open ? 'بستن منو' : 'باز کردن منو');
             if (toggleIcon) {
@@ -66,17 +73,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         mobileMenuToggle.addEventListener('click', function () {
-            setMenuOpen(!navMenu.classList.contains('active'));
+            setMenuOpen(!isMenuOpen());
         });
 
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+            if (e.key === 'Escape' && isMenuOpen()) {
                 closeMenu();
             }
         });
 
         document.addEventListener('click', function (e) {
-            if (!navMenu.classList.contains('active')) return;
+            if (!isMenuOpen()) return;
+            if (mobilePanel && mobilePanel.contains(e.target)) return;
             if (siteNav && siteNav.contains(e.target)) return;
             closeMenu();
         });

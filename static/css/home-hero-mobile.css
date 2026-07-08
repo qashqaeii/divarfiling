@@ -151,41 +151,25 @@
         letter-spacing: -0.02em;
     }
 
-    .mk-home-page .mk-nav-toggle {
+    .mk-home-page .mk-nav-mobile-tools {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 0.35rem;
+        margin-inline-start: auto;
+    }
+
+    .mk-home-page .mk-nav-mobile-tools .mk-nav-toggle,
+    .mk-home-page .mk-nav-mobile-tools .mk-theme-toggle--bar {
         width: 2.35rem;
         height: 2.35rem;
+        min-width: 2.35rem;
+        min-height: 2.35rem;
         border-radius: 11px;
         border: 1px solid var(--hh-toggle-border);
         background: var(--hh-toggle-bg);
         color: var(--hh-toggle-color);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
-    }
-
-    /* Theme toggle visible; hide login/register on hero */
-    .mk-home-page .mk-nav-account {
-        display: flex !important;
-        align-items: center;
-        gap: 0.35rem;
-    }
-
-    .mk-home-page .mk-nav-account .mk-nav-btn,
-    .mk-home-page .mk-nav-account > a:not(.mk-theme-toggle) {
-        display: none !important;
-    }
-
-    .mk-home-page .mk-nav-account .mk-theme-toggle {
-        display: inline-flex !important;
-        width: 2.35rem;
-        height: 2.35rem;
-        border-radius: 11px;
-        border: 1px solid var(--hh-toggle-border);
-        background: var(--hh-toggle-bg);
-        color: var(--hh-toggle-color);
-    }
-
-    .mk-home-page .mk-nav-links {
-        top: calc(var(--mk-site-header-h) + env(safe-area-inset-top, 0px));
     }
 
     .mk-home-page .mk-theme-toggle--auth {
@@ -204,8 +188,8 @@
         color: var(--mk-text) !important;
     }
 
-    html.mk-public[data-theme="light"] .mk-home-page .mk-site-header.is-scrolled .mk-nav-toggle,
-    html.mk-public[data-theme="light"] .mk-home-page .mk-site-header.is-scrolled .mk-nav-account .mk-theme-toggle {
+    html.mk-public[data-theme="light"] .mk-home-page .mk-site-header.is-scrolled .mk-nav-mobile-tools .mk-nav-toggle,
+    html.mk-public[data-theme="light"] .mk-home-page .mk-site-header.is-scrolled .mk-nav-mobile-tools .mk-theme-toggle--bar {
         color: var(--mk-text-secondary);
         border-color: var(--mk-border);
         background: var(--mk-surface);

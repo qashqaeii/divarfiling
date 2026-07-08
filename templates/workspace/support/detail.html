@@ -1,0 +1,128 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags support_tags %}
+
+{% block title %}تیکت {{ ticket.ticket_number }}{% endblock %}
+{% block mobile_bar_title %}جزئیات تیکت{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="mk-page sup-page sup-detail-page">
+
+    <header class="sup-detail-head ws-glass-panel">
+        <div class="sup-detail-head-main">
+            <a href="{% url 'workspace:support_list' %}" class="sup-back-link">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i> بازگشت به لیست
+            </a>
+            <div class="sup-detail-title-row">
+                <code class="sup-ticket-num">{{ ticket.ticket_number }}</code>
+                {% sup_ticket_badges ticket %}
+            </div>
+            <h1 class="sup-detail-subject">{{ ticket.subject }}</h1>
+            <dl class="sup-detail-meta">
+                <div><dt>دسته‌بندی</dt><dd>{{ ticket.get_category_display }}</dd></div>
+                <div><dt>ایجاد</dt><dd>{{ ticket.created_at|ws_jalali }}</dd></div>
+                <div><dt>آخرین بروزرسانی</dt><dd>{{ ticket.updated_at|ws_jalali }}</dd></div>
+                {% if ticket.last_message_at %}
+                <div><dt>آخرین پاسخ</dt><dd>{{ ticket.last_message_at|ws_jalali }}</dd></div>
+                {% endif %}
+            </dl>
+        </div>
+        <div class="sup-detail-actions">
+            {% if ticket.is_closed %}
+            <form method="post" action="{% url 'workspace:support_reopen' ticket.id %}">
+                {% csrf_token %}
+                <button type="submit" class="ws-btn ws-btn-primary">باز کردن مجدد تیکت</button>
+            </form>
+            {% else %}
+            <form method="post" action="{% url 'workspace:support_close' ticket.id %}" onsubmit="return confirm('آیا از بستن این تیکت مطمئن هستید؟');">
+                {% csrf_token %}
+                <button type="submit" class="ws-btn ws-btn-ghost">بستن تیکت</button>
+            </form>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if ticket.is_closed %}
+    <div class="mk-notice mk-notice--muted mk-notice--inline sup-closed-notice">
+        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+        <div class="mk-notice__body">
+            <strong class="mk-notice__title">تیکت بسته شد</strong>
+            <span class="mk-notice__text">در صورت نیاز می‌توانید تیکت را مجدداً باز کنید.</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <section class="ws-glass-panel sup-chat" aria-label="گفتگو">
+        <div class="sup-chat-messages" id="supChatMessages">
+            {% for msg in messages_list %}
+            <article class="sup-msg {% if msg.is_staff_reply %}sup-msg--staff{% else %}sup-msg--user{% endif %}">
+                <header class="sup-msg-head">
+                    <span class="sup-msg-author">
+                        {% if msg.is_staff_reply %}
+                        <i class="fas fa-headset" aria-hidden="true"></i> پاسخ پشتیبانی
+                        {% else %}
+                        <i class="fas fa-user" aria-hidden="true"></i> شما
+                        {% endif %}
+                    </span>
+                    <time datetime="{{ msg.created_at|date:'c' }}">{{ msg.created_at|ws_jalali }}</time>
+                </header>
+                <div class="sup-msg-body">{{ msg.body|linebreaksbr }}</div>
+                {% with msg_attachments=msg.attachments.all %}
+                {% if msg_attachments %}
+                <ul class="sup-msg-files">
+                    {% for att in msg_attachments %}
+                    <li>
+                        <a href="{{ att.file.url }}" target="_blank" rel="noopener" class="sup-file-link">
+                            <i class="fas fa-paperclip" aria-hidden="true"></i>
+                            {{ att.original_filename }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endwith %}
+            </article>
+            {% empty %}
+            <p class="sup-chat-empty">هنوز پیامی ثبت نشده است.</p>
+            {% endfor %}
+        </div>
+
+        {% if not ticket.is_closed %}
+        <footer class="sup-chat-compose">
+            <form method="post" action="{% url 'workspace:support_reply' ticket.id %}" enctype="multipart/form-data" class="sup-reply-form">
+                {% csrf_token %}
+                <div class="ws-field">
+                    <label class="ws-label" for="{{ reply_form.body.id_for_label }}">پاسخ شما</label>
+                    {{ reply_form.body }}
+                </div>
+                <div class="sup-reply-row">
+                    <div class="ws-field sup-reply-file">
+                        <label class="ws-label" for="{{ reply_form.attachment.id_for_label }}">فایل پیوست</label>
+                        {{ reply_form.attachment }}
+                    </div>
+                    <button type="submit" class="ws-btn ws-btn-primary sup-reply-submit">
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i> ارسال
+                    </button>
+                </div>
+            </form>
+        </footer>
+        {% else %}
+        <footer class="sup-chat-compose sup-chat-compose--closed">
+            <p>این تیکت بسته شده است. برای ادامه گفتگو، تیکت را باز کنید.</p>
+        </footer>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var el = document.getElementById('supChatMessages');
+    if (el) el.scrollTop = el.scrollHeight;
+})();
+</script>
+{% endblock %}

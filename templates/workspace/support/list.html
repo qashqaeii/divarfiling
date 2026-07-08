@@ -1,0 +1,167 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags support_tags %}
+
+{% block title %}پشتیبانی{% endblock %}
+{% block mobile_bar_title %}پشتیبانی{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="mk-page sup-page">
+
+    <header class="mk-hub-head">
+        <div class="mk-hub-head-main">
+            <p class="mk-hub-head-eyebrow">درخواست پشتیبانی</p>
+            <h1 class="mk-hub-head-title">تیکت‌های پشتیبانی</h1>
+            <p class="mk-hub-head-meta">مدیریت درخواست‌ها و پیگیری پاسخ تیم پشتیبانی</p>
+        </div>
+        <div class="mk-hub-head-actions">
+            <a href="{% url 'workspace:support_create' %}" class="mk-hub-head-btn mk-hub-head-btn--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>تیکت جدید</span>
+            </a>
+        </div>
+    </header>
+
+    {% if stats.unread_replies %}
+    <div class="mk-notice mk-notice--info mk-notice--inline mk-notice--compact sup-unread-banner">
+        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-envelope"></i></span>
+        <div class="mk-notice__body">
+            <strong class="mk-notice__title">{{ stats.unread_replies }} پاسخ جدید از پشتیبانی دارید</strong>
+        </div>
+    </div>
+    {% endif %}
+
+    <section class="mk-hub-metrics sup-metrics" aria-label="خلاصه تیکت‌ها">
+        <a href="{% url 'workspace:support_list' %}" class="mk-hub-metric{% if not status_filter and not priority_filter %} is-active{% endif %}" data-tone="purple">
+            <span class="mk-hub-metric-icon"><i class="fas fa-ticket" aria-hidden="true"></i></span>
+            <span class="mk-hub-metric-body">
+                <span class="mk-hub-metric-val">{{ stats.total }}</span>
+                <span class="mk-hub-metric-lbl">همه تیکت‌ها</span>
+            </span>
+        </a>
+        <a href="?status=open" class="mk-hub-metric{% if status_filter == 'open' %} is-active{% endif %}" data-tone="blue">
+            <span class="mk-hub-metric-icon"><i class="fas fa-folder-open" aria-hidden="true"></i></span>
+            <span class="mk-hub-metric-body">
+                <span class="mk-hub-metric-val">{{ stats.open }}</span>
+                <span class="mk-hub-metric-lbl">باز</span>
+            </span>
+        </a>
+        <a href="?status=waiting_user" class="mk-hub-metric{% if status_filter == 'waiting_user' %} is-active{% endif %}" data-tone="amber">
+            <span class="mk-hub-metric-icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
+            <span class="mk-hub-metric-body">
+                <span class="mk-hub-metric-val">{{ stats.waiting_user }}</span>
+                <span class="mk-hub-metric-lbl">منتظر پاسخ</span>
+            </span>
+        </a>
+        <a href="?status=closed" class="mk-hub-metric{% if status_filter == 'closed' %} is-active{% endif %}" data-tone="gray">
+            <span class="mk-hub-metric-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
+            <span class="mk-hub-metric-body">
+                <span class="mk-hub-metric-val">{{ stats.closed }}</span>
+                <span class="mk-hub-metric-lbl">بسته شده</span>
+            </span>
+        </a>
+    </section>
+
+    <section class="ws-glass-panel sup-filters">
+        <form method="get" class="sup-filter-form" role="search">
+            <div class="sup-filter-field sup-filter-field--grow">
+                <label class="ws-label" for="sup-q">جستجو</label>
+                <input type="search" id="sup-q" name="q" value="{{ search_q }}" class="ws-input" placeholder="عنوان یا شماره تیکت…">
+            </div>
+            <div class="sup-filter-field">
+                <label class="ws-label" for="sup-status">وضعیت</label>
+                <select id="sup-status" name="status" class="ws-select">
+                    <option value="">همه</option>
+                    {% for val, label in status_choices %}
+                    <option value="{{ val }}"{% if status_filter == val %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="sup-filter-field">
+                <label class="ws-label" for="sup-priority">اولویت</label>
+                <select id="sup-priority" name="priority" class="ws-select">
+                    <option value="">همه</option>
+                    {% for val, label in priority_choices %}
+                    <option value="{{ val }}"{% if priority_filter == val %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="sup-filter-actions">
+                <button type="submit" class="ws-btn ws-btn-primary">اعمال فیلتر</button>
+                {% if search_q or status_filter or priority_filter %}
+                <a href="{% url 'workspace:support_list' %}" class="ws-btn ws-btn-ghost">پاک کردن</a>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+
+    <section class="ws-glass-panel sup-list-panel">
+        {% if tickets %}
+        <div class="sup-table-wrap">
+            <table class="ws-table sup-table">
+                <thead>
+                    <tr>
+                        <th>شماره تیکت</th>
+                        <th>عنوان</th>
+                        <th>دسته‌بندی</th>
+                        <th>وضعیت</th>
+                        <th>اولویت</th>
+                        <th>آخرین بروزرسانی</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in tickets %}
+                    <tr class="{% if t.user_has_unread %}sup-row--unread{% endif %}">
+                        <td><code class="sup-ticket-num">{{ t.ticket_number }}</code></td>
+                        <td>
+                            <strong>{{ t.subject }}</strong>
+                            {% if t.user_has_unread %}<span class="sup-dot" title="پاسخ جدید"></span>{% endif %}
+                        </td>
+                        <td><span class="sup-cat">{{ t.get_category_display }}</span></td>
+                        <td><span class="sup-badge {{ t.status|sup_status_badge_class }}">{{ t.get_status_display }}</span></td>
+                        <td><span class="sup-priority {{ t.priority|sup_priority_badge_class }}">{{ t.get_priority_display }}</span></td>
+                        <td><time datetime="{{ t.updated_at|date:'c' }}">{{ t.updated_at|ws_jalali }}</time></td>
+                        <td>
+                            <a href="{% url 'workspace:support_detail' t.id %}" class="ws-btn ws-btn-sm ws-btn-ghost">مشاهده</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sup-cards">
+            {% for t in tickets %}
+            <article class="sup-card{% if t.user_has_unread %} sup-card--unread{% endif %}">
+                <header class="sup-card-head">
+                    <code class="sup-ticket-num">{{ t.ticket_number }}</code>
+                    {% sup_ticket_badges t %}
+                </header>
+                <h2 class="sup-card-title">{{ t.subject }}</h2>
+                <p class="sup-card-meta">
+                    <span>{{ t.get_category_display }}</span>
+                    <span>{{ t.updated_at|ws_jalali }}</span>
+                </p>
+                <a href="{% url 'workspace:support_detail' t.id %}" class="ws-btn ws-btn-sm ws-btn-primary sup-card-btn">مشاهده</a>
+            </article>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        {% mk_pagination page_obj request.GET aria_label='صفحه‌بندی تیکت‌ها' %}
+        {% endif %}
+
+        {% else %}
+        <div class="ws-empty sup-empty">
+            <div class="ws-empty-icon"><i class="fas fa-headset" aria-hidden="true"></i></div>
+            <p class="ws-empty-title">هنوز تیکتی ثبت نکرده‌اید</p>
+            <p class="ws-empty-desc">اگر سوالی دارید یا مشکلی در استفاده از فایلینگ دیوار پیش آمده، اولین درخواست پشتیبانی خود را ثبت کنید.</p>
+            <a href="{% url 'workspace:support_create' %}" class="ws-btn ws-btn-primary">ثبت تیکت جدید</a>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

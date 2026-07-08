@@ -1,0 +1,95 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags %}
+
+{% block title %}ثبت تیکت جدید{% endblock %}
+{% block mobile_bar_title %}تیکت جدید{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="mk-page sup-page">
+
+    <header class="mk-page-hero sup-create-hero">
+        <div class="mk-page-hero-main">
+            <div class="mk-page-hero-kicker">
+                <span class="mk-page-hero-mark" aria-hidden="true"></span>
+                <span class="mk-page-hero-eyebrow">درخواست پشتیبانی</span>
+            </div>
+            <h1 class="mk-page-hero-title">ثبت تیکت جدید</h1>
+            <p class="mk-page-hero-desc">مشکل یا سوال خود را برای تیم پشتیبانی ارسال کنید</p>
+        </div>
+        <div class="mk-page-hero-toolbar">
+            <a href="{% url 'workspace:support_list' %}" class="mk-hero-btn mk-hero-btn-ghost">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i><span>بازگشت</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="sup-create-layout">
+        <section class="ws-glass-panel sup-create-form-panel">
+            <form method="post" enctype="multipart/form-data" class="sup-form" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="mk-notice mk-notice--error mk-notice--inline">
+                    {% for err in form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="ws-field">
+                    <label class="ws-label" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+                    {{ form.subject }}
+                    {% if form.subject.errors %}<span class="ws-field-error">{{ form.subject.errors.0 }}</span>{% endif %}
+                </div>
+
+                <div class="sup-form-row">
+                    <div class="ws-field">
+                        <label class="ws-label" for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}<span class="ws-field-error">{{ form.category.errors.0 }}</span>{% endif %}
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
+                        {{ form.priority }}
+                        {% if form.priority.errors %}<span class="ws-field-error">{{ form.priority.errors.0 }}</span>{% endif %}
+                    </div>
+                </div>
+
+                <div class="ws-field">
+                    <label class="ws-label" for="{{ form.body.id_for_label }}">{{ form.body.label }}</label>
+                    {{ form.body }}
+                    {% if form.body.errors %}<span class="ws-field-error">{{ form.body.errors.0 }}</span>{% endif %}
+                </div>
+
+                <div class="ws-field">
+                    <label class="ws-label" for="{{ form.attachment.id_for_label }}">{{ form.attachment.label }}</label>
+                    {{ form.attachment }}
+                    <p class="ws-field-hint">فرمت‌های مجاز: jpg, png, pdf, doc, xls, txt, zip — حداکثر ۱۰ مگابایت</p>
+                    {% if form.attachment.errors %}<span class="ws-field-error">{{ form.attachment.errors.0 }}</span>{% endif %}
+                </div>
+
+                <div class="sup-form-actions">
+                    <button type="submit" class="ws-btn ws-btn-primary">
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i> ارسال تیکت
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <aside class="ws-glass-panel sup-help-box" aria-label="راهنما">
+            <h2 class="sup-help-title"><i class="fas fa-lightbulb" aria-hidden="true"></i> راهنمای ثبت تیکت</h2>
+            <ul class="sup-help-list">
+                <li>برای پاسخ سریع‌تر، لطفاً مشکل را دقیق توضیح دهید.</li>
+                <li>اگر خطایی مشاهده می‌کنید، اسکرین‌شات آن را ضمیمه کنید.</li>
+                <li>شماره تیکت یا لایسنس خود را در صورت نیاز ذکر کنید.</li>
+                <li>پاسخ‌ها از طریق همین بخش به شما اطلاع داده می‌شود.</li>
+            </ul>
+            <div class="sup-help-contact">
+                <p>ساعات پاسخ‌گویی: شنبه تا پنج‌شنبه، ۹ تا ۱۸</p>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

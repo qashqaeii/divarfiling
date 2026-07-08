@@ -786,3 +786,98 @@ class CompareForm(forms.Form):
         qs = Dataset.objects.filter(user=user, is_active=True).order_by('-created_at')
         self.fields['dataset_a'].queryset = qs
         self.fields['dataset_b'].queryset = qs
+
+
+class TicketCreateForm(forms.Form):
+    subject = forms.CharField(
+        label='موضوع تیکت',
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class': 'ws-input',
+            'placeholder': 'مثال: خطا در آپلود فایل اکسل',
+            'autocomplete': 'off',
+        }),
+    )
+    category = forms.ChoiceField(
+        label='دسته‌بندی',
+        widget=forms.Select(attrs={'class': 'ws-select'}),
+    )
+    priority = forms.ChoiceField(
+        label='اولویت',
+        widget=forms.Select(attrs={'class': 'ws-select'}),
+    )
+    body = forms.CharField(
+        label='توضیحات',
+        widget=forms.Textarea(attrs={
+            'class': 'ws-input ws-textarea',
+            'rows': 6,
+            'placeholder': 'مشکل را با جزئیات توضیح دهید…',
+        }),
+    )
+    attachment = forms.FileField(
+        label='فایل پیوست',
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'ws-input ws-file-input',
+            'accept': '.jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip',
+        }),
+    )
+
+    def __init__(self, *args, **kwargs):
+        from workspace.support_constants import TICKET_CATEGORY_CHOICES, TICKET_PRIORITY_CHOICES
+        super().__init__(*args, **kwargs)
+        self.fields['category'].choices = TICKET_CATEGORY_CHOICES
+        self.fields['priority'].choices = TICKET_PRIORITY_CHOICES
+        self.fields['priority'].initial = 'normal'
+
+    def clean_attachment(self):
+        from workspace.services.support_tickets import validate_attachment_file
+        uploaded = self.cleaned_data.get('attachment')
+        if not uploaded:
+            return None
+        error = validate_attachment_file(uploaded)
+        if error:
+            raise forms.ValidationError(error)
+        return uploaded
+
+    def clean_body(self):
+        body = (self.cleaned_data.get('body') or '').strip()
+        if len(body) < 10:
+            raise forms.ValidationError('لطفاً توضیحات را حداقل در ۱۰ کاراکتر بنویسید.')
+        return body
+
+
+class TicketReplyForm(forms.Form):
+    body = forms.CharField(
+        label='پاسخ شما',
+        widget=forms.Textarea(attrs={
+            'class': 'ws-input ws-textarea sup-reply-input',
+            'rows': 3,
+            'placeholder': 'پیام خود را بنویسید…',
+        }),
+    )
+    attachment = forms.FileField(
+        label='فایل پیوست',
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'ws-input ws-file-input',
+            'accept': '.jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip',
+        }),
+    )
+
+    def clean_attachment(self):
+        from workspace.services.support_tickets import validate_attachment_file
+        uploaded = self.cleaned_data.get('attachment')
+        if not uploaded:
+            return None
+        error = validate_attachment_file(uploaded)
+        if error:
+            raise forms.ValidationError(error)
+        return uploaded
+
+    def clean_body(self):
+        body = (self.cleaned_data.get('body') or '').strip()
+        if not body:
+            raise forms.ValidationError('متن پیام نمی‌تواند خالی باشد.')
+        return body
+

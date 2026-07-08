@@ -12,6 +12,11 @@ from .constants import (
     PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES, PROPERTY_TX_STATUSES, REMINDER_RECURRENCE,
     VISIT_OUTCOMES, VISIT_REJECT_REASONS,
 )
+from .support_constants import (
+    TICKET_CATEGORY_CHOICES,
+    TICKET_PRIORITY_CHOICES,
+    TICKET_STATUS_CHOICES,
+)
 
 
 class Dataset(models.Model):
@@ -1052,6 +1057,126 @@ class PropertyMatchAlert(models.Model):
 
     def __str__(self):
         return f'{self.customer_id} · {self.match_key} ({self.score})'
+
+
+class Ticket(models.Model):
+    """تیکت پشتیبانی کاربر."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='support_tickets', verbose_name='کاربر',
+    )
+    ticket_number = models.CharField(max_length=20, unique=True, verbose_name='شماره تیکت')
+    subject = models.CharField(max_length=200, verbose_name='موضوع')
+    description = models.TextField(blank=True, verbose_name='توضیحات اولیه')
+    category = models.CharField(max_length=30, choices=TICKET_CATEGORY_CHOICES, verbose_name='دسته‌بندی')
+    priority = models.CharField(
+        max_length=10, choices=TICKET_PRIORITY_CHOICES,
+        default='normal', verbose_name='اولویت',
+    )
+    status = models.CharField(
+        max_length=20, choices=TICKET_STATUS_CHOICES,
+        default='open', verbose_name='وضعیت',
+    )
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='assigned_tickets',
+        verbose_name='اختصاص به',
+    )
+    user_has_unread = models.BooleanField(default=False, verbose_name='پیام خوانده‌نشده برای کاربر')
+    staff_has_unread = models.BooleanField(default=True, verbose_name='پیام خوانده‌نشده برای پشتیبانی')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='آخرین بروزرسانی')
+    closed_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ بسته شدن')
+    last_message_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین پیام')
+
+    class Meta:
+        verbose_name = 'تیکت پشتیبانی'
+        verbose_name_plural = 'تیکت‌های پشتیبانی'
+        ordering = ['-last_message_at', '-created_at']
+        indexes = [
+            models.Index(fields=['user', '-last_message_at']),
+            models.Index(fields=['status', '-updated_at']),
+            models.Index(fields=['ticket_number']),
+        ]
+
+    def __str__(self):
+        return f'{self.ticket_number} — {self.subject}'
+
+    @property
+    def is_closed(self):
+        return self.status == 'closed'
+
+    def get_status_display_fa(self):
+        return dict(self._meta.get_field('status').choices).get(self.status, self.status)
+
+    def get_priority_display_fa(self):
+        return dict(self._meta.get_field('priority').choices).get(self.priority, self.priority)
+
+    def get_category_display_fa(self):
+        return dict(self._meta.get_field('category').choices).get(self.category, self.category)
+
+
+class TicketMessage(models.Model):
+    """پیام تیکت — کاربر یا پشتیبانی."""
+    ticket = models.ForeignKey(
+        Ticket, on_delete=models.CASCADE,
+        related_name='messages', verbose_name='تیکت',
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='ticket_messages', verbose_name='نویسنده',
+    )
+    body = models.TextField(verbose_name='متن پیام')
+    is_staff_reply = models.BooleanField(default=False, verbose_name='پاسخ پشتیبانی')
+    is_internal = models.BooleanField(default=False, verbose_name='یادداشت داخلی')
+    is_read = models.BooleanField(default=False, verbose_name='خوانده شده')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='زمان ارسال')
+
+    class Meta:
+        verbose_name = 'پیام تیکت'
+        verbose_name_plural = 'پیام‌های تیکت'
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['ticket', 'created_at']),
+        ]
+
+    def __str__(self):
+        role = 'پشتیبانی' if self.is_staff_reply else 'کاربر'
+        return f'{self.ticket.ticket_number} · {role}'
+
+
+class TicketAttachment(models.Model):
+    """فایل پیوست تیکت."""
+    ticket = models.ForeignKey(
+        Ticket, on_delete=models.CASCADE,
+        related_name='attachments', verbose_name='تیکت',
+    )
+    message = models.ForeignKey(
+        TicketMessage, on_delete=models.CASCADE,
+        null=True, blank=True, related_name='attachments', verbose_name='پیام',
+    )
+    file = models.FileField(upload_to='workspace/support/attachments/', verbose_name='فایل')
+    original_filename = models.CharField(max_length=255, verbose_name='نام فایل')
+    file_size = models.PositiveIntegerField(default=0, verbose_name='حجم (بایت)')
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='ticket_attachments', verbose_name='آپلودکننده',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'پیوست تیکت'
+        verbose_name_plural = 'پیوست‌های تیکت'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return self.original_filename
+
+    @property
+    def extension(self):
+        import os
+        return os.path.splitext(self.original_filename)[1].lower().lstrip('.')
 
 
 class WorkspaceSettings(models.Model):

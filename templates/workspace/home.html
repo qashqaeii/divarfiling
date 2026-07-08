@@ -62,6 +62,18 @@
     </div>
     {% endif %}
 
+    {% if support_nav_counts.unread_replies %}
+    <div class="mk-notice mk-notice--info mk-notice--inline mk-notice--compact">
+        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-headset"></i></span>
+        <div class="mk-notice__body">
+            <strong class="mk-notice__title">{{ support_nav_counts.unread_replies }} پاسخ جدید از پشتیبانی دارید</strong>
+        </div>
+        <div class="mk-notice__actions">
+            <a href="{% url 'workspace:support_list' %}" class="mk-notice__cta">مشاهده تیکت‌ها</a>
+        </div>
+    </div>
+    {% endif %}
+
     <section class="mk-hub-metrics" aria-label="شاخص‌های کلیدی" data-tour="metrics">
         {% if has_bot_license %}
         <a href="{% url 'workspace:dataset_list' %}" class="mk-hub-metric" data-tone="purple">
@@ -150,6 +162,13 @@
                 <span class="mk-hub-metric-lbl">یادآور</span>
             </span>
         </a>
+        <a href="{% url 'workspace:support_list' %}" class="mk-hub-metric{% if support_nav_counts.unread_replies %} mk-hub-metric--warn{% endif %}" data-tone="teal">
+            <span class="mk-hub-metric-icon"><i class="fas fa-headset" aria-hidden="true"></i></span>
+            <span class="mk-hub-metric-body">
+                <span class="mk-hub-metric-val">{% if support_nav_counts.open %}{{ support_nav_counts.open }}{% else %}۰{% endif %}</span>
+                <span class="mk-hub-metric-lbl">تیکت باز</span>
+            </span>
+        </a>
     </section>
 
     <nav class="mk-hub-quick mk-hub-quick--bar" aria-label="دسترسی سریع" data-tour="quick-bar">
@@ -170,6 +189,7 @@
             <li><a href="{% url 'workspace:crm_dashboard' %}" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="violet">{% include 'includes/icon_slot.html' with decor='trending_up' size='inline' only %}</span><span class="mk-hub-quick-item-text">CRM</span></a></li>
             <li><a href="{% url 'workspace:crm_today' %}" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="indigo">{% include 'includes/icon_slot.html' with decor='list_todo' size='inline' only %}</span><span class="mk-hub-quick-item-text">امروز</span></a></li>
             <li><a href="{% url 'workspace:crm_calendar' %}" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="green">{% include 'includes/icon_slot.html' with decor='calendar' size='inline' only %}</span><span class="mk-hub-quick-item-text">تقویم</span></a></li>
+            <li><a href="{% url 'workspace:support_list' %}" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="teal"><i class="fas fa-headset" aria-hidden="true"></i></span><span class="mk-hub-quick-item-text">پشتیبانی</span></a></li>
         </ul>
     </nav>
 

@@ -1,7 +1,7 @@
 """URLهای workspace."""
 from django.urls import include, path
 
-from workspace import crm_views, views
+from workspace import crm_views, support_views, views
 
 app_name = 'workspace'
 
@@ -111,4 +111,12 @@ urlpatterns = [
     path('docs/api/', views.ApiDocsView.as_view(), name='docs_api'),
     path('docs/api/crm-key/', views.CrmApiKeyRevealView.as_view(), name='docs_api_crm_key'),
     path('upgrade/', views.BotUpgradeView.as_view(), name='upgrade'),
+
+    # Support tickets
+    path('support/', support_views.SupportTicketListView.as_view(), name='support_list'),
+    path('support/new/', support_views.SupportTicketCreateView.as_view(), name='support_create'),
+    path('support/<int:ticket_id>/', support_views.SupportTicketDetailView.as_view(), name='support_detail'),
+    path('support/<int:ticket_id>/reply/', support_views.SupportTicketReplyView.as_view(), name='support_reply'),
+    path('support/<int:ticket_id>/close/', support_views.SupportTicketCloseView.as_view(), name='support_close'),
+    path('support/<int:ticket_id>/reopen/', support_views.SupportTicketReopenView.as_view(), name='support_reopen'),
 ]

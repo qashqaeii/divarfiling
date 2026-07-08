@@ -500,6 +500,88 @@
         window.addEventListener('scroll', refreshMetrics, { passive: true });
     }
 
+    /* ─── Hero feature deck — mobile scroll dots ─── */
+    function initHeroDeck() {
+        var wrap = document.querySelector('[data-hero-deck-wrap]');
+        var deck = document.querySelector('[data-hero-deck]');
+        var dotsWrap = document.querySelector('[data-hero-deck-dots]');
+        if (!wrap || !deck || !dotsWrap) return;
+
+        var items = deck.querySelectorAll('.mk-hero-deck-item');
+        if (!items.length) return;
+
+        var mq = window.matchMedia('(max-width: 768px)');
+
+        function isMobileDeck() {
+            return mq.matches && deck.scrollWidth > deck.clientWidth + 8;
+        }
+
+        function activeIndex() {
+            var deckRect = deck.getBoundingClientRect();
+            var center = deckRect.left + deckRect.width * 0.5;
+            var best = 0;
+            var bestDist = Infinity;
+            items.forEach(function (item, i) {
+                var r = item.getBoundingClientRect();
+                var itemCenter = r.left + r.width * 0.5;
+                var dist = Math.abs(itemCenter - center);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = i;
+                }
+            });
+            return best;
+        }
+
+        function renderDots() {
+            dotsWrap.innerHTML = '';
+            if (!isMobileDeck()) {
+                wrap.classList.remove('is-scrollable');
+                return;
+            }
+            wrap.classList.add('is-scrollable');
+            items.forEach(function (item, i) {
+                var dot = document.createElement('button');
+                dot.type = 'button';
+                dot.className = 'mk-hero-deck-dot' + (i === activeIndex() ? ' is-active' : '');
+                dot.setAttribute('aria-label', 'امکان ' + (i + 1));
+                dot.addEventListener('click', function () {
+                    item.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', inline: 'start', block: 'nearest' });
+                });
+                dotsWrap.appendChild(dot);
+            });
+        }
+
+        function syncDots() {
+            if (!isMobileDeck()) {
+                wrap.classList.remove('is-scrollable');
+                dotsWrap.innerHTML = '';
+                return;
+            }
+            wrap.classList.add('is-scrollable');
+            var idx = activeIndex();
+            var dots = dotsWrap.querySelectorAll('.mk-hero-deck-dot');
+            dots.forEach(function (dot, i) {
+                dot.classList.toggle('is-active', i === idx);
+            });
+        }
+
+        deck.addEventListener('scroll', syncDots, { passive: true });
+        window.addEventListener('resize', function () {
+            renderDots();
+            syncDots();
+        }, { passive: true });
+
+        if (typeof mq.addEventListener === 'function') {
+            mq.addEventListener('change', renderDots);
+        } else if (typeof mq.addListener === 'function') {
+            mq.addListener(renderDots);
+        }
+
+        renderDots();
+        syncDots();
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initReveal();
         initShowcase();
@@ -509,5 +591,6 @@
         animateStatCounts();
         initGalleryLightbox();
         initHeroMagnifier();
+        initHeroDeck();
     });
 })();

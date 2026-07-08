@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
    Home Hero — mobile-first landing (≤768px)
-   Desktop: hidden via .home-hero__mobile { display:none }
+   Light + dark theme via CSS variables
    ═══════════════════════════════════════════════════════════ */
 
 .home-hero__mobile {
@@ -15,6 +15,97 @@
     .mk-home-page {
         --mk-site-header-h: 3.35rem;
         --home-hero-h: min(92svh, 92dvh);
+    }
+
+    /* ── Theme tokens (scoped to home page mobile) ── */
+    .mk-home-page {
+        --hh-bg: #07060f;
+        --hh-img-filter: saturate(0.88) contrast(1.05) brightness(0.7);
+        --hh-overlay:
+            linear-gradient(
+                180deg,
+                rgba(7, 6, 18, 0.52) 0%,
+                rgba(7, 6, 18, 0.32) 38%,
+                rgba(7, 6, 18, 0.84) 72%,
+                rgba(7, 6, 18, 0.97) 100%
+            ),
+            radial-gradient(ellipse 90% 60% at 78% 22%, rgba(124, 58, 237, 0.28) 0%, transparent 58%),
+            radial-gradient(ellipse 70% 50% at 12% 80%, rgba(37, 99, 235, 0.18) 0%, transparent 55%);
+        --hh-glow-violet: rgba(124, 58, 237, 0.45);
+        --hh-glow-sky: rgba(56, 189, 248, 0.22);
+        --hh-kicker-color: #ddd6fe;
+        --hh-kicker-icon: #c4b5fd;
+        --hh-kicker-bg: rgba(124, 58, 237, 0.22);
+        --hh-kicker-border: rgba(167, 139, 250, 0.32);
+        --hh-title: #f8fafc;
+        --hh-title-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+        --hh-brand: #fb7185;
+        --hh-subtitle: rgba(226, 232, 240, 0.9);
+        --hh-ghost-color: #e2e8f0;
+        --hh-ghost-em: rgba(203, 213, 225, 0.78);
+        --hh-ghost-bg: rgba(255, 255, 255, 0.07);
+        --hh-ghost-border: rgba(255, 255, 255, 0.14);
+        --hh-ghost-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.45);
+        --hh-chip-color: rgba(241, 245, 249, 0.92);
+        --hh-chip-bg: rgba(255, 255, 255, 0.06);
+        --hh-chip-border: rgba(255, 255, 255, 0.1);
+        --hh-header-grad-top: rgba(8, 6, 20, 0.72);
+        --hh-header-grad-mid: rgba(8, 6, 20, 0.28);
+        --hh-header-brand: #f8fafc;
+        --hh-toggle-bg: rgba(255, 255, 255, 0.08);
+        --hh-toggle-border: rgba(255, 255, 255, 0.14);
+        --hh-toggle-color: #f1f5f9;
+        --hh-header-scrolled-bg: rgba(8, 6, 20, 0.94);
+        --hh-header-scrolled-border: rgba(255, 255, 255, 0.08);
+        --hh-header-scrolled-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.45);
+        --hh-body-sheet: var(--mk-bg, #070b14);
+    }
+
+    html.mk-public[data-theme="light"] .mk-home-page {
+        --hh-bg: #f5f3ff;
+        --hh-img-filter: saturate(1.14) contrast(1.06) brightness(1.04);
+        --hh-overlay:
+            linear-gradient(
+                180deg,
+                rgba(245, 243, 255, 0.08) 0%,
+                rgba(241, 245, 249, 0.22) 34%,
+                rgba(241, 245, 249, 0.82) 68%,
+                rgba(248, 250, 252, 0.96) 100%
+            ),
+            radial-gradient(ellipse 85% 55% at 78% 18%, rgba(124, 58, 237, 0.16) 0%, transparent 58%),
+            radial-gradient(ellipse 65% 45% at 10% 78%, rgba(37, 99, 235, 0.1) 0%, transparent 55%);
+        --hh-glow-violet: rgba(124, 58, 237, 0.22);
+        --hh-glow-sky: rgba(56, 189, 248, 0.14);
+        --hh-kicker-color: #6d28d9;
+        --hh-kicker-icon: #7c3aed;
+        --hh-kicker-bg: rgba(237, 233, 254, 0.92);
+        --hh-kicker-border: rgba(167, 139, 250, 0.38);
+        --hh-title: #0f172a;
+        --hh-title-shadow: 0 2px 20px rgba(255, 255, 255, 0.35);
+        --hh-brand: #dc2626;
+        --hh-subtitle: #475569;
+        --hh-ghost-color: #334155;
+        --hh-ghost-em: #64748b;
+        --hh-ghost-bg: rgba(255, 255, 255, 0.82);
+        --hh-ghost-border: rgba(124, 58, 237, 0.22);
+        --hh-ghost-shadow: 0 8px 22px -16px rgba(91, 33, 182, 0.22);
+        --hh-chip-color: #334155;
+        --hh-chip-bg: rgba(255, 255, 255, 0.78);
+        --hh-chip-border: rgba(148, 163, 184, 0.2);
+        --hh-header-grad-top: rgba(255, 255, 255, 0.82);
+        --hh-header-grad-mid: rgba(255, 255, 255, 0.42);
+        --hh-header-brand: #0f172a;
+        --hh-toggle-bg: rgba(255, 255, 255, 0.72);
+        --hh-toggle-border: rgba(148, 163, 184, 0.28);
+        --hh-toggle-color: #475569;
+        --hh-header-scrolled-bg: rgba(255, 255, 255, 0.96);
+        --hh-header-scrolled-border: rgba(148, 163, 184, 0.22);
+        --hh-header-scrolled-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+        --hh-body-sheet: var(--mk-bg, #f1f5f9);
+    }
+
+    html.mk-public[data-theme="dark"] .mk-home-page {
+        --hh-body-sheet: var(--mk-bg, #070b14);
     }
 
     /* ── Header over hero ── */
@@ -32,14 +123,15 @@
     .mk-home-page .mk-site-header .navbar {
         background: linear-gradient(
             180deg,
-            rgba(8, 6, 20, 0.72) 0%,
-            rgba(8, 6, 20, 0.28) 70%,
+            var(--hh-header-grad-top) 0%,
+            var(--hh-header-grad-mid) 70%,
             transparent 100%
         ) !important;
         backdrop-filter: blur(12px) saturate(1.2) !important;
         -webkit-backdrop-filter: blur(12px) saturate(1.2) !important;
         border-bottom: none !important;
         box-shadow: none !important;
+        transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
     }
 
     .mk-home-page .mk-nav-inner,
@@ -50,7 +142,7 @@
 
     .mk-home-page .mk-brand,
     .mk-home-page .logo {
-        color: #f8fafc !important;
+        color: var(--hh-header-brand) !important;
     }
 
     .mk-home-page .mk-brand-name {
@@ -63,15 +155,33 @@
         width: 2.35rem;
         height: 2.35rem;
         border-radius: 11px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: rgba(255, 255, 255, 0.08);
-        color: #f1f5f9;
+        border: 1px solid var(--hh-toggle-border);
+        background: var(--hh-toggle-bg);
+        color: var(--hh-toggle-color);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
     }
 
+    /* Theme toggle visible; hide login/register on hero */
     .mk-home-page .mk-nav-account {
+        display: flex !important;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .mk-home-page .mk-nav-account .mk-nav-btn,
+    .mk-home-page .mk-nav-account > a:not(.mk-theme-toggle) {
         display: none !important;
+    }
+
+    .mk-home-page .mk-nav-account .mk-theme-toggle {
+        display: inline-flex !important;
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 11px;
+        border: 1px solid var(--hh-toggle-border);
+        background: var(--hh-toggle-bg);
+        color: var(--hh-toggle-color);
     }
 
     .mk-home-page .mk-nav-links {
@@ -80,6 +190,25 @@
 
     .mk-home-page .mk-theme-toggle--auth {
         display: none;
+    }
+
+    .mk-home-page .mk-site-header.is-scrolled .mk-navbar,
+    .mk-home-page .mk-site-header.is-scrolled .navbar {
+        background: var(--hh-header-scrolled-bg) !important;
+        border-bottom: 1px solid var(--hh-header-scrolled-border) !important;
+        box-shadow: var(--hh-header-scrolled-shadow) !important;
+    }
+
+    html.mk-public[data-theme="light"] .mk-home-page .mk-site-header.is-scrolled .mk-brand,
+    html.mk-public[data-theme="light"] .mk-home-page .mk-site-header.is-scrolled .logo {
+        color: var(--mk-text) !important;
+    }
+
+    html.mk-public[data-theme="light"] .mk-home-page .mk-site-header.is-scrolled .mk-nav-toggle,
+    html.mk-public[data-theme="light"] .mk-home-page .mk-site-header.is-scrolled .mk-nav-account .mk-theme-toggle {
+        color: var(--mk-text-secondary);
+        border-color: var(--mk-border);
+        background: var(--mk-surface);
     }
 
     /* ── Hero shell ── */
@@ -93,7 +222,7 @@
         padding: 0;
         overflow: hidden;
         border: none;
-        background: #07060f;
+        background: var(--hh-bg);
     }
 
     .mk-home-page .home-hero.mk-hero--pro,
@@ -134,30 +263,13 @@
         object-fit: cover;
         object-position: 72% 28%;
         transform: scale(1.06);
-        filter: saturate(0.85) contrast(1.05) brightness(0.72);
+        filter: var(--hh-img-filter);
     }
 
     .home-hero__overlay {
         position: absolute;
         inset: 0;
-        background:
-            linear-gradient(
-                180deg,
-                rgba(7, 6, 18, 0.55) 0%,
-                rgba(7, 6, 18, 0.35) 38%,
-                rgba(7, 6, 18, 0.82) 72%,
-                rgba(7, 6, 18, 0.96) 100%
-            ),
-            radial-gradient(
-                ellipse 90% 60% at 78% 22%,
-                rgba(124, 58, 237, 0.28) 0%,
-                transparent 58%
-            ),
-            radial-gradient(
-                ellipse 70% 50% at 12% 80%,
-                rgba(37, 99, 235, 0.18) 0%,
-                transparent 55%
-            );
+        background: var(--hh-overlay);
     }
 
     .home-hero__glow {
@@ -173,7 +285,7 @@
         height: 11rem;
         top: 18%;
         inset-inline-end: -2rem;
-        background: rgba(124, 58, 237, 0.45);
+        background: var(--hh-glow-violet);
     }
 
     .home-hero__glow--sky {
@@ -181,7 +293,7 @@
         height: 8rem;
         bottom: 28%;
         inset-inline-start: -1.5rem;
-        background: rgba(56, 189, 248, 0.22);
+        background: var(--hh-glow-sky);
     }
 
     /* ── Content ── */
@@ -219,9 +331,9 @@
         font-size: 0.68rem;
         font-weight: 700;
         letter-spacing: 0.02em;
-        color: #ddd6fe;
-        background: rgba(124, 58, 237, 0.22);
-        border: 1px solid rgba(167, 139, 250, 0.32);
+        color: var(--hh-kicker-color);
+        background: var(--hh-kicker-bg);
+        border: 1px solid var(--hh-kicker-border);
         border-radius: 999px;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
@@ -229,7 +341,7 @@
 
     .home-hero__kicker i {
         font-size: 0.62rem;
-        color: #c4b5fd;
+        color: var(--hh-kicker-icon);
     }
 
     .home-hero__title {
@@ -238,12 +350,12 @@
         font-weight: 800;
         line-height: 1.28;
         letter-spacing: -0.032em;
-        color: #f8fafc;
-        text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+        color: var(--hh-title);
+        text-shadow: var(--hh-title-shadow);
     }
 
     .home-hero__brand {
-        color: #fb7185;
+        color: var(--hh-brand);
     }
 
     .home-hero__subtitle {
@@ -251,11 +363,11 @@
         font-size: clamp(0.82rem, 3.6vw, 0.92rem);
         font-weight: 500;
         line-height: 1.65;
-        color: rgba(226, 232, 240, 0.88);
+        color: var(--hh-subtitle);
         max-width: 22rem;
     }
 
-    /* ── CTAs ── */
+    /* ── CTAs (primary works on both themes) ── */
     .home-hero__actions {
         display: flex;
         flex-direction: column;
@@ -323,16 +435,16 @@
     }
 
     .home-hero__btn--ghost {
-        color: #e2e8f0;
-        background: rgba(255, 255, 255, 0.07);
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: var(--hh-ghost-color);
+        background: var(--hh-ghost-bg);
+        border: 1px solid var(--hh-ghost-border);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
-        box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.45);
+        box-shadow: var(--hh-ghost-shadow);
     }
 
     .home-hero__btn--ghost .home-hero__btn-text em {
-        color: rgba(203, 213, 225, 0.78);
+        color: var(--hh-ghost-em);
     }
 
     /* ── Feature chips ── */
@@ -355,9 +467,9 @@
         font-weight: 700;
         line-height: 1.35;
         text-align: center;
-        color: rgba(241, 245, 249, 0.92);
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--hh-chip-color);
+        background: var(--hh-chip-bg);
+        border: 1px solid var(--hh-chip-border);
         border-radius: 12px;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
@@ -373,31 +485,42 @@
     }
 
     .home-hero__chip-icon[data-tone="violet"] {
+        color: #7c3aed;
+        background: rgba(124, 58, 237, 0.14);
+    }
+
+    .home-hero__chip-icon[data-tone="emerald"] {
+        color: #059669;
+        background: rgba(16, 185, 129, 0.14);
+    }
+
+    .home-hero__chip-icon[data-tone="sky"] {
+        color: #0284c7;
+        background: rgba(14, 165, 233, 0.14);
+    }
+
+    html.mk-public[data-theme="dark"] .home-hero__chip-icon[data-tone="violet"] {
         color: #c4b5fd;
         background: rgba(124, 58, 237, 0.22);
     }
 
-    .home-hero__chip-icon[data-tone="emerald"] {
+    html.mk-public[data-theme="dark"] .home-hero__chip-icon[data-tone="emerald"] {
         color: #6ee7b7;
         background: rgba(16, 185, 129, 0.18);
     }
 
-    .home-hero__chip-icon[data-tone="sky"] {
+    html.mk-public[data-theme="dark"] .home-hero__chip-icon[data-tone="sky"] {
         color: #7dd3fc;
         background: rgba(14, 165, 233, 0.18);
     }
 
-    /* ── Post-hero: no peek ── */
+    /* ── Post-hero sheet ── */
     .mk-home-page .mk-home-body {
         position: relative;
         z-index: 3;
-        background: var(--mk-bg, #f8fafc);
+        background: var(--hh-body-sheet);
         border-radius: 20px 20px 0 0;
         margin-top: -1px;
-    }
-
-    html.mk-public[data-theme="dark"] .mk-home-page .mk-home-body {
-        background: var(--mk-bg, #070b14);
     }
 
     .mk-home-page .mk-home-intro-band {
@@ -417,15 +540,26 @@
         border-radius: 16px;
     }
 
-    .mk-home-page .main-content {
-        padding-top: 0;
+    html.mk-public[data-theme="light"] .mk-home-page .mk-stat-item {
+        background: rgba(255, 255, 255, 0.72);
+        border-color: rgba(148, 163, 184, 0.14);
     }
 
-    .mk-home-page .mk-site-header.is-scrolled .mk-navbar,
-    .mk-home-page .mk-site-header.is-scrolled .navbar {
-        background: rgba(8, 6, 20, 0.94) !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-        box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.45) !important;
+    html.mk-public[data-theme="light"] .mk-home-page .mk-stat-lbl {
+        color: var(--mk-text-muted);
+    }
+
+    html.mk-public[data-theme="dark"] .mk-home-page .mk-stat-item {
+        background: rgba(148, 163, 184, 0.06);
+        border-color: rgba(148, 163, 184, 0.08);
+    }
+
+    html.mk-public[data-theme="dark"] .mk-home-page .mk-stat-lbl {
+        color: #94a3b8;
+    }
+
+    .mk-home-page .main-content {
+        padding-top: 0;
     }
 }
 
@@ -453,5 +587,10 @@
 @media (max-width: 768px) and (prefers-reduced-motion: reduce) {
     .home-hero__btn:active {
         transform: none;
+    }
+
+    .mk-home-page .mk-site-header .mk-navbar,
+    .mk-home-page .mk-site-header .navbar {
+        transition: none;
     }
 }

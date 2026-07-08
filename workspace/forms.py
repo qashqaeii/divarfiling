@@ -851,8 +851,8 @@ class TicketReplyForm(forms.Form):
     body = forms.CharField(
         label='پاسخ شما',
         widget=forms.Textarea(attrs={
-            'class': 'ws-input ws-textarea sup-reply-input',
-            'rows': 3,
+            'class': 'sup-compose-textarea',
+            'rows': 2,
             'placeholder': 'پیام خود را بنویسید…',
         }),
     )

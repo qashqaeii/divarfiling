@@ -5,124 +5,262 @@
 {% block mobile_bar_title %}جزئیات تیکت{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page sup-page sup-detail-page">
+<div class="sup-detail-pro" data-ticket-status="{{ ticket.status }}">
 
-    <header class="sup-detail-head ws-glass-panel">
-        <div class="sup-detail-head-main">
-            <a href="{% url 'workspace:support_list' %}" class="sup-back-link">
-                <i class="fas fa-arrow-right" aria-hidden="true"></i> بازگشت به لیست
-            </a>
-            <div class="sup-detail-title-row">
-                <code class="sup-ticket-num">{{ ticket.ticket_number }}</code>
-                {% sup_ticket_badges ticket %}
+    {# ── Hero ── #}
+    <section class="sup-detail-hero" aria-label="اطلاعات تیکت">
+        <div class="sup-detail-hero__accent" aria-hidden="true"></div>
+        <div class="sup-detail-hero__orbs" aria-hidden="true">
+            <span class="sup-detail-orb sup-detail-orb--1"></span>
+            <span class="sup-detail-orb sup-detail-orb--2"></span>
+        </div>
+
+        <div class="sup-detail-hero__top">
+            <div class="sup-detail-hero__identity">
+                <a href="{% url 'workspace:support_list' %}" class="sup-detail-hero__back" title="بازگشت به لیست">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <span class="sup-detail-hero__avatar" aria-hidden="true">
+                    <i class="fas {{ ticket.category|sup_category_icon }}" aria-hidden="true"></i>
+                </span>
+                <div class="sup-detail-hero__copy">
+                    <nav class="sup-detail-hero__crumb" aria-label="مسیر">
+                        <a href="{% url 'workspace:support_list' %}">پشتیبانی</a>
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        <span>{{ ticket.ticket_number }}</span>
+                    </nav>
+                    <div class="sup-detail-hero__badges">
+                        {% sup_ticket_badges ticket %}
+                        {% if ticket.user_has_unread %}
+                        <span class="sup-detail-hero__pulse">پاسخ جدید</span>
+                        {% endif %}
+                    </div>
+                    <h1 class="sup-detail-hero__title">{{ ticket.subject }}</h1>
+                    <div class="sup-detail-hero__chips">
+                        <span class="sup-detail-chip">
+                            <i class="fas fa-tag" aria-hidden="true"></i>
+                            {{ ticket.get_category_display }}
+                        </span>
+                        <span class="sup-detail-chip">
+                            <i class="fas fa-clock" aria-hidden="true"></i>
+                            {{ ticket.created_at|ws_jalali }}
+                        </span>
+                        {% if ticket.last_message_at %}
+                        <span class="sup-detail-chip">
+                            <i class="fas fa-message" aria-hidden="true"></i>
+                            آخرین پاسخ {{ ticket.last_message_at|ws_jalali }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-            <h1 class="sup-detail-subject">{{ ticket.subject }}</h1>
-            <dl class="sup-detail-meta">
-                <div><dt>دسته‌بندی</dt><dd>{{ ticket.get_category_display }}</dd></div>
-                <div><dt>ایجاد</dt><dd>{{ ticket.created_at|ws_jalali }}</dd></div>
-                <div><dt>آخرین بروزرسانی</dt><dd>{{ ticket.updated_at|ws_jalali }}</dd></div>
-                {% if ticket.last_message_at %}
-                <div><dt>آخرین پاسخ</dt><dd>{{ ticket.last_message_at|ws_jalali }}</dd></div>
+
+            <div class="sup-detail-hero__actions">
+                {% if ticket.is_closed %}
+                <form method="post" action="{% url 'workspace:support_reopen' ticket.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="sup-detail-act sup-detail-act--primary">
+                        <i class="fas fa-rotate-left" aria-hidden="true"></i>
+                        <span>باز کردن مجدد</span>
+                    </button>
+                </form>
+                {% else %}
+                <form method="post" action="{% url 'workspace:support_close' ticket.id %}" onsubmit="return confirm('آیا از بستن این تیکت مطمئن هستید؟');">
+                    {% csrf_token %}
+                    <button type="submit" class="sup-detail-act sup-detail-act--ghost">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
+                        <span>بستن تیکت</span>
+                    </button>
+                </form>
                 {% endif %}
-            </dl>
+            </div>
         </div>
-        <div class="sup-detail-actions">
-            {% if ticket.is_closed %}
-            <form method="post" action="{% url 'workspace:support_reopen' ticket.id %}">
-                {% csrf_token %}
-                <button type="submit" class="ws-btn ws-btn-primary">باز کردن مجدد تیکت</button>
-            </form>
-            {% else %}
-            <form method="post" action="{% url 'workspace:support_close' ticket.id %}" onsubmit="return confirm('آیا از بستن این تیکت مطمئن هستید؟');">
-                {% csrf_token %}
-                <button type="submit" class="ws-btn ws-btn-ghost">بستن تیکت</button>
-            </form>
-            {% endif %}
-        </div>
-    </header>
+
+        {# ── Status timeline ── #}
+        <ol class="sup-detail-timeline" aria-label="پیشرفت تیکت" data-step="{{ ticket.status|sup_status_step }}">
+            <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 1 %} is-done{% endif %}{% if ticket.status == 'open' %} is-current{% endif %}">
+                <span class="sup-detail-timeline__dot"><i class="fas fa-paper-plane" aria-hidden="true"></i></span>
+                <span class="sup-detail-timeline__label">ثبت شد</span>
+            </li>
+            <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 2 %} is-done{% endif %}{% if ticket.status == 'in_review' %} is-current{% endif %}">
+                <span class="sup-detail-timeline__dot"><i class="fas fa-magnifying-glass" aria-hidden="true"></i></span>
+                <span class="sup-detail-timeline__label">در بررسی</span>
+            </li>
+            <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 3 %} is-done{% endif %}{% if ticket.status == 'answered' %} is-current{% endif %}">
+                <span class="sup-detail-timeline__dot"><i class="fas fa-reply" aria-hidden="true"></i></span>
+                <span class="sup-detail-timeline__label">پاسخ داده شد</span>
+            </li>
+            <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 4 %} is-done{% endif %}{% if ticket.status == 'waiting_user' %} is-current{% endif %}">
+                <span class="sup-detail-timeline__dot"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
+                <span class="sup-detail-timeline__label">منتظر شما</span>
+            </li>
+            <li class="sup-detail-timeline__item{% if ticket.status == 'closed' %} is-done is-current{% endif %}">
+                <span class="sup-detail-timeline__dot"><i class="fas fa-lock" aria-hidden="true"></i></span>
+                <span class="sup-detail-timeline__label">بسته شده</span>
+            </li>
+        </ol>
+    </section>
 
     {% if ticket.is_closed %}
-    <div class="mk-notice mk-notice--muted mk-notice--inline sup-closed-notice">
-        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
-        <div class="mk-notice__body">
-            <strong class="mk-notice__title">تیکت بسته شد</strong>
-            <span class="mk-notice__text">در صورت نیاز می‌توانید تیکت را مجدداً باز کنید.</span>
+    <div class="sup-detail-closed-banner" role="status">
+        <span class="sup-detail-closed-banner__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+        <div>
+            <strong>تیکت بسته شد</strong>
+            <p>اگر مشکل حل نشده یا سوال جدید دارید، تیکت را مجدداً باز کنید.</p>
         </div>
     </div>
     {% endif %}
 
-    <section class="ws-glass-panel sup-chat" aria-label="گفتگو">
-        <div class="sup-chat-messages" id="supChatMessages">
-            {% for msg in messages_list %}
-            <article class="sup-msg {% if msg.is_staff_reply %}sup-msg--staff{% else %}sup-msg--user{% endif %}">
-                <header class="sup-msg-head">
-                    <span class="sup-msg-author">
-                        {% if msg.is_staff_reply %}
-                        <i class="fas fa-headset" aria-hidden="true"></i> پاسخ پشتیبانی
-                        {% else %}
-                        <i class="fas fa-user" aria-hidden="true"></i> شما
-                        {% endif %}
-                    </span>
-                    <time datetime="{{ msg.created_at|date:'c' }}">{{ msg.created_at|ws_jalali }}</time>
-                </header>
-                <div class="sup-msg-body">{{ msg.body|linebreaksbr }}</div>
-                {% with msg_attachments=msg.attachments.all %}
-                {% if msg_attachments %}
-                <ul class="sup-msg-files">
-                    {% for att in msg_attachments %}
-                    <li>
-                        <a href="{{ att.file.url }}" target="_blank" rel="noopener" class="sup-file-link">
-                            <i class="fas fa-paperclip" aria-hidden="true"></i>
-                            {{ att.original_filename }}
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-                {% endwith %}
-            </article>
-            {% empty %}
-            <p class="sup-chat-empty">هنوز پیامی ثبت نشده است.</p>
-            {% endfor %}
-        </div>
-
-        {% if not ticket.is_closed %}
-        <footer class="sup-chat-compose">
-            <form method="post" action="{% url 'workspace:support_reply' ticket.id %}" enctype="multipart/form-data" class="sup-reply-form">
-                {% csrf_token %}
-                <div class="ws-field">
-                    <label class="ws-label" for="{{ reply_form.body.id_for_label }}">پاسخ شما</label>
-                    {{ reply_form.body }}
-                </div>
-                <div class="sup-reply-row">
-                    <div class="ws-field sup-reply-file">
-                        <label class="ws-label" for="{{ reply_form.attachment.id_for_label }}">فایل پیوست</label>
-                        {{ reply_form.attachment }}
+    <div class="sup-detail-layout">
+        {# ── Sidebar ── #}
+        <aside class="sup-detail-sidebar" aria-label="جزئیات تیکت">
+            <article class="sup-detail-card">
+                <h2 class="sup-detail-card__title"><i class="fas fa-circle-info" aria-hidden="true"></i> اطلاعات تیکت</h2>
+                <dl class="sup-detail-card__list">
+                    <div>
+                        <dt>شماره تیکت</dt>
+                        <dd><code class="sup-ticket-num sup-ticket-num--lg">{{ ticket.ticket_number }}</code></dd>
                     </div>
-                    <button type="submit" class="ws-btn ws-btn-primary sup-reply-submit">
-                        <i class="fas fa-paper-plane" aria-hidden="true"></i> ارسال
-                    </button>
+                    <div>
+                        <dt>دسته‌بندی</dt>
+                        <dd>{{ ticket.get_category_display }}</dd>
+                    </div>
+                    <div>
+                        <dt>اولویت</dt>
+                        <dd><span class="sup-priority {{ ticket.priority|sup_priority_badge_class }}">{{ ticket.get_priority_display }}</span></dd>
+                    </div>
+                    <div>
+                        <dt>وضعیت</dt>
+                        <dd><span class="sup-badge {{ ticket.status|sup_status_badge_class }}">{{ ticket.get_status_display }}</span></dd>
+                    </div>
+                    <div>
+                        <dt>تاریخ ایجاد</dt>
+                        <dd>{{ ticket.created_at|ws_jalali }}</dd>
+                    </div>
+                    <div>
+                        <dt>آخرین بروزرسانی</dt>
+                        <dd>{{ ticket.updated_at|ws_jalali }}</dd>
+                    </div>
+                    {% if ticket.closed_at %}
+                    <div>
+                        <dt>تاریخ بسته شدن</dt>
+                        <dd>{{ ticket.closed_at|ws_jalali }}</dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </article>
+
+            <article class="sup-detail-card sup-detail-card--tip">
+                <h2 class="sup-detail-card__title"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> نکته</h2>
+                <p>برای پاسخ سریع‌تر، جزئیات بیشتری بنویسید یا اسکرین‌شات خطا را ضمیمه کنید.</p>
+            </article>
+
+            <article class="sup-detail-card sup-detail-card--stat">
+                <div class="sup-detail-stat">
+                    <span class="sup-detail-stat__val">{{ messages_list|length }}</span>
+                    <span class="sup-detail-stat__lbl">پیام در گفتگو</span>
                 </div>
-            </form>
-        </footer>
-        {% else %}
-        <footer class="sup-chat-compose sup-chat-compose--closed">
-            <p>این تیکت بسته شده است. برای ادامه گفتگو، تیکت را باز کنید.</p>
-        </footer>
-        {% endif %}
-    </section>
+            </article>
+        </aside>
+
+        {# ── Chat ── #}
+        <section class="sup-detail-chat" aria-label="گفتگو با پشتیبانی">
+            <header class="sup-detail-chat__head">
+                <div>
+                    <h2 class="sup-detail-chat__title">گفتگو با پشتیبانی</h2>
+                    <p class="sup-detail-chat__sub">تیم ما در اسرع وقت پاسخ می‌دهد</p>
+                </div>
+                <span class="sup-detail-chat__live{% if not ticket.is_closed %} is-active{% endif %}">
+                    <span class="sup-detail-chat__live-dot" aria-hidden="true"></span>
+                    {% if ticket.is_closed %}بسته{% else %}فعال{% endif %}
+                </span>
+            </header>
+
+            <div class="sup-detail-chat__body" id="supChatMessages">
+                {% for msg in messages_list %}
+                <article class="sup-bubble {% if msg.is_staff_reply %}sup-bubble--staff{% else %}sup-bubble--user{% endif %}">
+                    <div class="sup-bubble__avatar" aria-hidden="true">
+                        {% if msg.is_staff_reply %}
+                        <i class="fas fa-headset"></i>
+                        {% else %}
+                        <i class="fas fa-user"></i>
+                        {% endif %}
+                    </div>
+                    <div class="sup-bubble__content">
+                        <header class="sup-bubble__head">
+                            <span class="sup-bubble__name">
+                                {% if msg.is_staff_reply %}پاسخ پشتیبانی{% else %}شما{% endif %}
+                            </span>
+                            <time datetime="{{ msg.created_at|date:'c' }}">{{ msg.created_at|ws_jalali }}</time>
+                        </header>
+                        <div class="sup-bubble__text">{{ msg.body|linebreaksbr }}</div>
+                        {% with msg_attachments=msg.attachments.all %}
+                        {% if msg_attachments %}
+                        <ul class="sup-bubble__files">
+                            {% for att in msg_attachments %}
+                            <li>
+                                <a href="{{ att.file.url }}" target="_blank" rel="noopener" class="sup-file-card">
+                                    <span class="sup-file-card__icon" aria-hidden="true"><i class="fas fa-file-arrow-down"></i></span>
+                                    <span class="sup-file-card__meta">
+                                        <span class="sup-file-card__name">{{ att.original_filename }}</span>
+                                        <span class="sup-file-card__size">فایل پیوست</span>
+                                    </span>
+                                    <i class="fas fa-arrow-up-left-from-circle sup-file-card__dl" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                </article>
+                {% empty %}
+                <div class="sup-detail-chat__empty">
+                    <span class="sup-detail-chat__empty-icon" aria-hidden="true"><i class="fas fa-comments"></i></span>
+                    <p>گفتگو آغاز نشده — اولین پیام شما همین پایین ثبت شده است.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if not ticket.is_closed %}
+            <footer class="sup-detail-compose">
+                <form method="post" action="{% url 'workspace:support_reply' ticket.id %}" enctype="multipart/form-data" class="sup-compose-form" id="supComposeForm">
+                    {% csrf_token %}
+                    <div class="sup-compose-box">
+                        <label class="sup-compose-label" for="{{ reply_form.body.id_for_label }}">پاسخ شما</label>
+                        {{ reply_form.body }}
+                        <div class="sup-compose-toolbar">
+                            <label class="sup-compose-attach" for="{{ reply_form.attachment.id_for_label }}" title="فایل پیوست">
+                                <i class="fas fa-paperclip" aria-hidden="true"></i>
+                                <span class="sup-compose-attach-text">پیوست فایل</span>
+                                {{ reply_form.attachment }}
+                            </label>
+                            <span class="sup-compose-file-name" id="supFileName" aria-live="polite"></span>
+                            <button type="submit" class="sup-compose-send">
+                                <span>ارسال</span>
+                                <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </footer>
+            {% else %}
+            <footer class="sup-detail-compose sup-detail-compose--closed">
+                <div class="sup-detail-compose-closed">
+                    <i class="fas fa-lock" aria-hidden="true"></i>
+                    <p>این تیکت بسته شده است. برای ادامه، دکمه «باز کردن مجدد» را بزنید.</p>
+                </div>
+            </footer>
+            {% endif %}
+        </section>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-(function () {
-    var el = document.getElementById('supChatMessages');
-    if (el) el.scrollTop = el.scrollHeight;
-})();
-</script>
+<script src="{% static 'workspace/js/support-detail.js' %}?v=1"></script>
 {% endblock %}

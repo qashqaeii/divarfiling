@@ -7,85 +7,130 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=78">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=79">
+<link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
 
 {# ─── Hero ─── #}
-<section class="mk-hero mk-hero--split mk-hero--pro mk-hero--deck mk-hero--landing" data-hero-magnifier>
-    <div class="mk-hero-bg" aria-hidden="true">
-        <div class="mk-hero-ambient" aria-hidden="true">
-            <span class="mk-hero-orb mk-hero-orb--violet"></span>
-            <span class="mk-hero-orb mk-hero-orb--sky"></span>
-            <span class="mk-hero-orb mk-hero-orb--rose"></span>
-            <span class="mk-hero-mesh"></span>
-        </div>
-        <div class="mk-hero-mag" data-hero-mag>
-            <div class="mk-hero-mag-lens" data-hero-mag-lens>
-                <img
-                    class="mk-hero-mag-img"
-                    data-hero-mag-img
-                    src="{% static 'hero.webp' %}"
-                    alt=""
-                    decoding="async"
-                    draggable="false"
-                >
-            </div>
-            <span class="mk-hero-mag-shine" aria-hidden="true"></span>
-        </div>
-        <div class="mk-hero-float-chips" aria-hidden="true">
-            <span class="mk-hero-float-chip" data-tone="emerald"><i class="fas fa-gift"></i> CRM رایگان</span>
-            <span class="mk-hero-float-chip" data-tone="violet"><i class="fas fa-robot"></i> ربات دیوار</span>
-            <span class="mk-hero-float-chip" data-tone="sky"><i class="fas fa-chart-line"></i> تحلیل بازار</span>
-        </div>
-    </div>
-    <div class="container mk-hero-container">
-        <div class="mk-hero-split">
-            <div class="mk-hero-inner">
-                <span class="mk-hero-glow-ring" aria-hidden="true"></span>
-                <div class="mk-hero-stack">
-                    <p class="mk-hero-eyebrow mk-hero-eyebrow--pill">
-                        <i class="fas fa-sparkles" aria-hidden="true"></i>
-                        <span>پلتفرم تخصصی مشاوران املاک</span>
-                    </p>
-                    <h1 class="mk-hero-title">
-                        <span class="mk-hero-title-line">{{ home_page.hero.title_prefix }}<span class="mk-hero-title-brand">{{ home_page.hero.title_brand }}</span>{{ home_page.hero.title_suffix }}</span>
-                    </h1>
+<section class="home-hero mk-hero mk-hero--split mk-hero--pro mk-hero--deck" data-hero-magnifier aria-label="معرفی فایلینگ دیوار">
 
-                    <p class="mk-hero-subtitle mk-hero-subtitle--pro">{{ home_page.hero.subtitle }}</p>
+    <div class="home-hero__mobile">
+        <div class="home-hero__media" aria-hidden="true">
+            <img
+                class="home-hero__bg-img"
+                src="{% static 'hero.webp' %}"
+                alt=""
+                decoding="async"
+                fetchpriority="high"
+            >
+            <div class="home-hero__overlay"></div>
+            <div class="home-hero__glow home-hero__glow--violet"></div>
+            <div class="home-hero__glow home-hero__glow--sky"></div>
+        </div>
 
-                    <p class="mk-hero-lead">{{ home_page.hero.lead }}</p>
-                </div>
+        <div class="home-hero__shell">
+            <div class="home-hero__content">
+                <p class="home-hero__kicker">
+                    <i class="fas fa-sparkles" aria-hidden="true"></i>
+                    <span>هوشمند · سریع · دقیق</span>
+                </p>
 
-                <div class="mk-hero-cta">
+                <h1 class="home-hero__title">
+                    هر آگهی <span class="home-hero__brand">دیوار</span>، یک فرصت معامله است
+                </h1>
+
+                <p class="home-hero__subtitle">
+                    استخراج، فایلینگ، CRM و تحلیل بازار املاک در یک میزکار هوشمند
+                </p>
+
+                <div class="home-hero__actions">
                     {% if user.is_authenticated %}
-                    <a href="{% url 'workspace:home' %}" class="btn btn-primary mk-hero-cta-primary">
-                        <i class="fas fa-layer-group" aria-hidden="true"></i>
-                        {{ home_page.hero.cta_primary_label }}
+                    <a href="{% url 'workspace:home' %}" class="home-hero__btn home-hero__btn--primary">
+                        <span class="home-hero__btn-text">
+                            <strong>{{ home_page.hero.cta_primary_label }}</strong>
+                            <em>ورود به پنل مدیریت</em>
+                        </span>
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
                     </a>
                     {% else %}
-                    <a href="{% url 'register' %}" class="btn btn-primary mk-hero-cta-primary">
-                        <i class="fas fa-gift" aria-hidden="true"></i>
-                        {{ home_page.hero.cta_guest_label }}
+                    <a href="{% url 'register' %}" class="home-hero__btn home-hero__btn--primary">
+                        <span class="home-hero__btn-text">
+                            <strong>{{ home_page.hero.cta_guest_label }}</strong>
+                            <em>ثبت‌نام و تجربه رایگان</em>
+                        </span>
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
                     </a>
                     {% endif %}
-                    <a href="{% url 'product_list' %}" class="btn btn-secondary mk-hero-cta-bot">
+                    <a href="{% url 'product_list' %}" class="home-hero__btn home-hero__btn--ghost">
+                        <span class="home-hero__btn-text">
+                            <strong>{{ home_page.hero.cta_bot_label }}</strong>
+                            <em>جمع‌آوری آگهی‌ها در چند دقیقه</em>
+                        </span>
                         <i class="fas fa-robot" aria-hidden="true"></i>
-                        {{ home_page.hero.cta_bot_label }}
                     </a>
                 </div>
 
-                <ul class="mk-hero-trust-row" aria-label="مزایای کلیدی">
-                    <li><i class="fas fa-shield-halved" aria-hidden="true"></i> امن و ایرانی</li>
-                    <li><i class="fas fa-bolt" aria-hidden="true"></i> شروع فوری</li>
-                    <li><i class="fas fa-infinity" aria-hidden="true"></i> CRM رایگان</li>
+                <ul class="home-hero__chips" aria-label="مزایای کلیدی">
+                    <li>
+                        <span class="home-hero__chip-icon" data-tone="violet"><i class="fas fa-bullseye" aria-hidden="true"></i></span>
+                        <span>استخراج خودکار</span>
+                    </li>
+                    <li>
+                        <span class="home-hero__chip-icon" data-tone="emerald"><i class="fas fa-users" aria-hidden="true"></i></span>
+                        <span>CRM رایگان</span>
+                    </li>
+                    <li>
+                        <span class="home-hero__chip-icon" data-tone="sky"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
+                        <span>تحلیل بازار</span>
+                    </li>
                 </ul>
             </div>
         </div>
+    </div>
 
-        <div class="mk-hero-deck-wrap" data-hero-deck-wrap>
-            <div class="mk-hero-deck mk-reveal" data-hero-deck aria-label="امکانات کلیدی">
+    <div class="home-hero__desktop">
+        <div class="mk-hero-bg" aria-hidden="true">
+            <div class="mk-hero-mag" data-hero-mag>
+                <div class="mk-hero-mag-lens" data-hero-mag-lens>
+                    <img
+                        class="mk-hero-mag-img"
+                        data-hero-mag-img
+                        src="{% static 'hero.webp' %}"
+                        alt=""
+                        decoding="async"
+                        draggable="false"
+                    >
+                </div>
+                <span class="mk-hero-mag-shine" aria-hidden="true"></span>
+            </div>
+        </div>
+        <div class="container mk-hero-container">
+            <div class="mk-hero-split">
+                <div class="mk-hero-inner">
+                    <div class="mk-hero-stack">
+                        <p class="mk-hero-eyebrow mk-hero-eyebrow--pill">
+                            <i class="fas fa-sparkles" aria-hidden="true"></i>
+                            <span>پلتفرم تخصصی مشاوران املاک</span>
+                        </p>
+                        <h1 class="mk-hero-title">
+                            <span class="mk-hero-title-line">{{ home_page.hero.title_prefix }}<span class="mk-hero-title-brand">{{ home_page.hero.title_brand }}</span>{{ home_page.hero.title_suffix }}</span>
+                        </h1>
+                        <p class="mk-hero-subtitle mk-hero-subtitle--pro">{{ home_page.hero.subtitle }}</p>
+                        <p class="mk-hero-lead">{{ home_page.hero.lead }}</p>
+                    </div>
+                    <div class="mk-hero-cta">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'workspace:home' %}" class="btn btn-primary mk-hero-cta-primary">{{ home_page.hero.cta_primary_label }}</a>
+                        {% else %}
+                        <a href="{% url 'register' %}" class="btn btn-primary mk-hero-cta-primary">{{ home_page.hero.cta_guest_label }}</a>
+                        {% endif %}
+                        <a href="{% url 'product_list' %}" class="btn btn-secondary mk-hero-cta-bot">{{ home_page.hero.cta_bot_label }}</a>
+                    </div>
+                </div>
+            </div>
+            <div class="mk-hero-deck mk-reveal" aria-label="امکانات کلیدی">
                 {% for feat in home_page.hero.deck_features %}
                 <article class="mk-hero-deck-item" data-accent="{{ feat.accent }}">
                     <span class="mk-hero-deck-icon">{% include 'includes/icon_slot.html' with decor=feat.decor_icon fa=feat.icon only %}</span>
@@ -96,7 +141,6 @@
                 </article>
                 {% endfor %}
             </div>
-            <div class="mk-hero-deck-dots" data-hero-deck-dots aria-hidden="true"></div>
         </div>
     </div>
 </section>
@@ -915,5 +959,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-home.js' %}?v=9" defer></script>
+<script src="{% static 'js/mizkar-home.js' %}?v=10" defer></script>
 {% endblock %}

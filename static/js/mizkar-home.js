@@ -582,6 +582,18 @@
         syncDots();
     }
 
+    function initHomeMobileHeader() {
+        if (!document.body.classList.contains('mk-home-page')) return;
+        if (!window.matchMedia('(max-width: 768px)').matches) return;
+        var header = document.querySelector('.mk-site-header');
+        if (!header) return;
+        function sync() {
+            header.classList.toggle('is-scrolled', window.scrollY > 48);
+        }
+        window.addEventListener('scroll', sync, { passive: true });
+        sync();
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initReveal();
         initShowcase();
@@ -592,5 +604,6 @@
         initGalleryLightbox();
         initHeroMagnifier();
         initHeroDeck();
+        initHomeMobileHeader();
     });
 })();

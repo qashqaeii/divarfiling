@@ -1,2 +1,3 @@
+{% load support_tags %}
 <span class="sup-badge {{ ticket.status|sup_status_badge_class }}">{{ ticket.get_status_display }}</span>
 <span class="sup-priority {{ ticket.priority|sup_priority_badge_class }}">{{ ticket.get_priority_display }}</span>

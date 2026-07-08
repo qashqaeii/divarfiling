@@ -116,6 +116,163 @@
         startAutoplay();
     }
 
+    /* ─── Visual gallery mobile carousel ─── */
+    function initGalleryMobile() {
+        var root = document.querySelector('[data-gallery-mobile]');
+        if (!root) return;
+
+        var mq = window.matchMedia('(max-width: 768px)');
+        var viewport = root.querySelector('[data-gallery-mobile-viewport]');
+        var track = root.querySelector('[data-gallery-mobile-track]');
+        var slides = root.querySelectorAll('[data-gallery-mobile-slide]');
+        var dotsWrap = root.querySelector('[data-gallery-mobile-dots]');
+        var labelEl = root.querySelector('[data-gallery-mobile-label]');
+        var counterEl = root.querySelector('[data-gallery-mobile-counter]');
+        var progressEl = root.querySelector('[data-gallery-mobile-progress]');
+
+        if (!viewport || !track || !slides.length || !dotsWrap) return;
+
+        var index = 0;
+        var total = slides.length;
+        var touchStartX = 0;
+        var touchStartY = 0;
+        var autoplayTimer = null;
+        var isPaused = false;
+        var listenersBound = false;
+
+        slides.forEach(function (_, i) {
+            var dot = document.createElement('button');
+            dot.type = 'button';
+            dot.className = 'mk-gallery-mobile-dot-btn' + (i === 0 ? ' is-active' : '');
+            dot.setAttribute('aria-label', 'اسکرین‌شات ' + (i + 1));
+            dot.setAttribute('role', 'tab');
+            dot.addEventListener('click', function () { goTo(i); restartAutoplay(); });
+            dotsWrap.appendChild(dot);
+        });
+
+        var dots = dotsWrap.querySelectorAll('.mk-gallery-mobile-dot-btn');
+
+        function toFaNum(n) {
+            return String(n).replace(/\d/g, function (d) {
+                return '۰۱۲۳۴۵۶۷۸۹'[Number(d)];
+            });
+        }
+
+        function centerOffset(i) {
+            var slide = slides[i];
+            if (!slide) return 0;
+            return slide.offsetLeft - (viewport.clientWidth - slide.clientWidth) / 2;
+        }
+
+        function goTo(i) {
+            index = ((i % total) + total) % total;
+            track.style.transform = 'translateX(-' + centerOffset(index) + 'px)';
+
+            slides.forEach(function (s, j) {
+                s.classList.toggle('is-active', j === index);
+            });
+            dots.forEach(function (d, j) {
+                d.classList.toggle('is-active', j === index);
+                d.setAttribute('aria-selected', j === index ? 'true' : 'false');
+            });
+
+            if (labelEl) {
+                labelEl.textContent = slides[index].getAttribute('data-caption') || '';
+            }
+            if (counterEl) {
+                counterEl.textContent = toFaNum(index + 1) + ' / ' + toFaNum(total);
+            }
+            if (progressEl) {
+                progressEl.style.width = (((index + 1) / total) * 100) + '%';
+            }
+        }
+
+        function next() { goTo(index + 1); }
+        function prev() { goTo(index - 1); }
+
+        function stopAutoplay() {
+            if (autoplayTimer) clearInterval(autoplayTimer);
+            autoplayTimer = null;
+        }
+
+        function startAutoplay() {
+            if (prefersReduced || !mq.matches) return;
+            stopAutoplay();
+            autoplayTimer = setInterval(function () {
+                if (!isPaused) next();
+            }, 4800);
+        }
+
+        function restartAutoplay() {
+            stopAutoplay();
+            startAutoplay();
+        }
+
+        function bindListeners() {
+            if (listenersBound) return;
+            listenersBound = true;
+
+            viewport.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowLeft') { next(); restartAutoplay(); }
+                if (e.key === 'ArrowRight') { prev(); restartAutoplay(); }
+            });
+
+            viewport.addEventListener('touchstart', function (e) {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, { passive: true });
+
+            viewport.addEventListener('touchend', function (e) {
+                var dx = touchStartX - e.changedTouches[0].screenX;
+                var dy = touchStartY - e.changedTouches[0].screenY;
+                if (Math.abs(dx) < 42 || Math.abs(dx) < Math.abs(dy)) return;
+                if (dx > 0) next();
+                else prev();
+                restartAutoplay();
+            }, { passive: true });
+
+            root.addEventListener('mouseenter', function () { isPaused = true; });
+            root.addEventListener('mouseleave', function () { isPaused = false; });
+
+            window.addEventListener('resize', function () {
+                if (!mq.matches) {
+                    stopAutoplay();
+                    track.style.transform = '';
+                    return;
+                }
+                goTo(index);
+            });
+
+            root.querySelectorAll('.mk-gallery-mobile-img').forEach(function (img) {
+                if (img.complete) return;
+                img.addEventListener('load', function () {
+                    if (mq.matches) goTo(index);
+                });
+            });
+        }
+
+        function unbindVisual() {
+            stopAutoplay();
+            track.style.transform = '';
+            slides.forEach(function (s) { s.classList.remove('is-active'); });
+            dots.forEach(function (d) { d.classList.remove('is-active'); });
+        }
+
+        function syncMode() {
+            if (mq.matches) {
+                bindListeners();
+                requestAnimationFrame(function () { goTo(index); });
+                startAutoplay();
+            } else {
+                unbindVisual();
+            }
+        }
+
+        syncMode();
+        if (mq.addEventListener) mq.addEventListener('change', syncMode);
+        else mq.addListener(syncMode);
+    }
+
     /* ─── FAQ: single open ─── */
     function initFaq() {
         var faq = document.querySelector('[data-faq]');
@@ -597,6 +754,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         initReveal();
         initShowcase();
+        initGalleryMobile();
         initFaq();
         initCityMarquee();
         initCrmMock();

@@ -7,7 +7,7 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=79">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=80">
 <link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=5">
 {% endblock %}
 
@@ -299,6 +299,58 @@
                     {% endif %}
                     {% endfor %}
                 </div>
+            </div>
+        </div>
+
+        <div class="mk-gallery-mobile mk-reveal" data-gallery-mobile aria-roledescription="carousel" aria-label="گالری اسکرین‌شات میزکار">
+            <div class="mk-gallery-mobile-glow" aria-hidden="true"></div>
+            <div class="mk-gallery-mobile-viewport" data-gallery-mobile-viewport tabindex="0">
+                <div class="mk-gallery-mobile-track" data-gallery-mobile-track>
+                    {% for item in home_page.visual_gallery.items %}
+                    <article class="mk-gallery-mobile-slide mk-gallery-card--{{ item.accent }}" data-gallery-mobile-slide data-caption="{{ item.caption }}">
+                        <div class="mk-gallery-mobile-shell">
+                            <div class="mk-gallery-mobile-chrome" aria-hidden="true">
+                                <span class="mk-gallery-mobile-dot mk-gallery-mobile-dot--close"></span>
+                                <span class="mk-gallery-mobile-dot mk-gallery-mobile-dot--min"></span>
+                                <span class="mk-gallery-mobile-dot mk-gallery-mobile-dot--max"></span>
+                                <span class="mk-gallery-mobile-url">filingdivar.ir/workspace</span>
+                            </div>
+                            <button
+                                type="button"
+                                class="mk-gallery-mobile-open"
+                                data-mk-gallery
+                                data-src="{% static item.image %}"
+                                data-caption="{{ item.caption }}"
+                                aria-label="بزرگنمایی: {{ item.caption }}"
+                            >
+                                <img
+                                    src="{% static item.image %}"
+                                    alt="{{ item.caption }}"
+                                    class="mk-gallery-mobile-img"
+                                    loading="lazy"
+                                    decoding="async"
+                                    width="800"
+                                    height="500"
+                                    draggable="false"
+                                >
+                                <span class="mk-gallery-mobile-shine" aria-hidden="true"></span>
+                                <span class="mk-gallery-mobile-lens" aria-hidden="true"><i class="fas fa-expand"></i></span>
+                            </button>
+                        </div>
+                        <p class="mk-gallery-mobile-caption">{{ item.caption }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="mk-gallery-mobile-ui">
+                <div class="mk-gallery-mobile-progress" aria-hidden="true">
+                    <span class="mk-gallery-mobile-progress-fill" data-gallery-mobile-progress></span>
+                </div>
+                <div class="mk-gallery-mobile-meta">
+                    <p class="mk-gallery-mobile-label" data-gallery-mobile-label>{{ home_page.visual_gallery.items.0.caption }}</p>
+                    <span class="mk-gallery-mobile-counter" data-gallery-mobile-counter>۱ / {{ home_page.visual_gallery.items|length }}</span>
+                </div>
+                <div class="mk-gallery-mobile-dots" data-gallery-mobile-dots role="tablist" aria-label="انتخاب اسکرین‌شات"></div>
             </div>
         </div>
     </div>
@@ -954,5 +1006,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-home.js' %}?v=10" defer></script>
+<script src="{% static 'js/mizkar-home.js' %}?v=11" defer></script>
 {% endblock %}

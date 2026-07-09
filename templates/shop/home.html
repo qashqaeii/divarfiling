@@ -9,6 +9,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=80">
 <link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'css/home-day-story.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -189,6 +190,9 @@
         </div>
     </div>
 </section>
+
+{# ─── یک روز عادی مشاور املاک ─── #}
+{% include 'shop/includes/day_in_life.html' %}
 
 {# ─── پلن‌ها: رایگان vs ربات ─── #}
 <section class="mk-section mk-pricing-tiers" aria-label="پلن‌های پلتفرم">
@@ -558,7 +562,7 @@
 </section>
 
 {# ─── امکانات ─── #}
-<section class="mk-section mk-cap-pro">
+<section class="mk-section mk-cap-pro" id="mk-home-capabilities">
     <div class="container">
         <header class="mk-section-head mk-reveal">
             <span class="mk-section-kicker">{% decor_icon 'layers' size='xs' %} میزکار</span>

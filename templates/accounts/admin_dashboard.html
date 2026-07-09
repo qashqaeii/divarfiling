@@ -8,7 +8,7 @@
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -21,6 +21,16 @@
             </p>
             <h1 class="adm-hero-title">داشبورد مدیریت</h1>
             <p class="adm-hero-desc">گزارش، تحلیل و خروجی Excel/CSV از کاربران، فروش و لایسنس‌ها</p>
+            {% if stats.system_start_at %}
+            <p class="adm-hero-start">
+                <i class="fas fa-flag-checkered" aria-hidden="true"></i>
+                شروع به کار سیستم:
+                <strong>{{ stats.system_start_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</strong>
+                {% if stats.system_uptime_days is not None %}
+                <span class="adm-hero-start-days">({{ stats.system_uptime_days|to_persian_digits }} روز)</span>
+                {% endif %}
+            </p>
+            {% endif %}
         </div>
         <div class="adm-hero-actions">
             <div class="adm-range" role="group" aria-label="بازه زمانی نمودارها">
@@ -238,6 +248,16 @@
                     <h2 id="admExtraStats">آمار تکمیلی</h2>
                 </header>
                 <ul class="adm-stat-list">
+                    {% if stats.system_start_at %}
+                    <li>
+                        <span class="adm-stat-lbl">شروع به کار سیستم</span>
+                        <span class="adm-stat-val">{{ stats.system_start_at|to_jalali_fa:"%Y/%m/%d" }}</span>
+                    </li>
+                    <li>
+                        <span class="adm-stat-lbl">عمر سیستم</span>
+                        <span class="adm-stat-val">{{ stats.system_uptime_days|to_persian_digits }} روز</span>
+                    </li>
+                    {% endif %}
                     <li><span class="adm-stat-lbl">کاربران فعال</span><span class="adm-stat-val">{{ stats.users_active|currency }}</span></li>
                     <li><span class="adm-stat-lbl">درآمد ۷ روز اخیر</span><span class="adm-stat-val">{{ stats.revenue_week|currency }} ت</span></li>
                     <li><span class="adm-stat-lbl">مشاوران فروش</span><span class="adm-stat-val">{{ stats.affiliates_total|currency }}</span></li>

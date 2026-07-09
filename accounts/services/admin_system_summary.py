@@ -433,13 +433,22 @@ def build_system_summary(days: int = 30, detail_limit: int = 50) -> Dict[str, An
         'meta': {
             'generated_at': _iso(now),
             'generated_at_jalali': _jalali(now),
+            'system_start_at': _iso(stats.get('system_start_at')),
+            'system_start_at_jalali': _jalali(stats.get('system_start_at')),
+            'system_uptime_days': stats.get('system_uptime_days'),
             'timezone': str(timezone.get_current_timezone()),
             'range_days': days,
             'detail_limit': detail_limit,
             'version': '1.0',
             'source': 'filing-divar-admin-panel',
         },
-        'overview': stats,
+        'overview': {
+            **{
+                k: (_iso(v) if k == 'system_start_at' else v)
+                for k, v in stats.items()
+            },
+            'system_start_at_jalali': _jalali(stats.get('system_start_at')),
+        },
         'action_items': _action_items(stats),
         'breakdowns': {
             'order_status': get_order_status_breakdown(),

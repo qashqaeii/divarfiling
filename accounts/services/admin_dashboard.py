@@ -83,11 +83,42 @@ def _pct_change(current: int | float, previous: int | float) -> float | None:
     return round(((current - previous) / previous) * 100, 1)
 
 
+def get_system_start_at():
+    """تاریخ شروع به کار سیستم = اولین لایسنس فعال‌شده."""
+    first_active = (
+        LicenseActivation.objects.filter(is_active=True)
+        .order_by('activated_at')
+        .values_list('activated_at', flat=True)
+        .first()
+    )
+    if first_active:
+        return first_active
+    # اگر فعلاً هیچ اسلات فعالی نیست، اولین ثبت فعال‌سازی
+    first_any = (
+        LicenseActivation.objects.order_by('activated_at')
+        .values_list('activated_at', flat=True)
+        .first()
+    )
+    if first_any:
+        return first_any
+    # آخرین fallback: اولین لایسنس صادرشده
+    return (
+        License.objects.order_by('created_at')
+        .values_list('created_at', flat=True)
+        .first()
+    )
+
+
 def get_overview_stats() -> Dict[str, Any]:
     now = timezone.now()
     today = now.date()
     week_ago = today - timedelta(days=7)
     month_ago = today - timedelta(days=30)
+    system_start_at = get_system_start_at()
+    system_uptime_days = None
+    if system_start_at:
+        start_local = timezone.localtime(system_start_at) if timezone.is_aware(system_start_at) else system_start_at
+        system_uptime_days = max(0, (now.date() - start_local.date()).days)
 
     users_total = User.objects.count()
     users_active = User.objects.filter(is_active=True).count()
@@ -174,6 +205,8 @@ def get_overview_stats() -> Dict[str, Any]:
         'unread_tickets': unread_tickets,
         'datasets_total': datasets_total,
         'conversion_rate': round((orders_paid / users_total * 100), 1) if users_total else 0,
+        'system_start_at': system_start_at,
+        'system_uptime_days': system_uptime_days,
     }
 
 

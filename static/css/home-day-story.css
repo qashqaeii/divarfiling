@@ -1423,6 +1423,40 @@
     .mk-story__scroll-hint { display: none; }
 }
 
+/* ─── Light theme — climax copy (override mk-home-page contrast guard) ─── */
+html.mk-public[data-theme="light"] .mk-home-page .mk-story-climax__title {
+    color: #ffffff;
+    text-shadow: 0 2px 28px rgba(0, 0, 0, 0.55), 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+html.mk-public[data-theme="light"] .mk-home-page .mk-story-climax__sub {
+    color: #e9d5ff;
+}
+
+html.mk-public[data-theme="light"] .mk-home-page .mk-story-climax__line {
+    color: #cbd5e1;
+}
+
+html.mk-public[data-theme="light"] .mk-home-page .mk-story-climax__line strong {
+    color: #ffffff;
+}
+
+html.mk-public[data-theme="light"] .mk-home-page .mk-story-climax__time {
+    color: #ede9fe;
+    background: rgba(91, 33, 182, 0.28);
+    border-color: rgba(167, 139, 250, 0.42);
+}
+
+html.mk-public[data-theme="light"] .mk-home-page .mk-story-climax__product .mk-story-fix__result {
+    color: #e2e8f0;
+}
+
+html.mk-public[data-theme="light"] .mk-story-climax__veil {
+    background:
+        linear-gradient(180deg, rgba(2, 6, 23, 0.58) 0%, rgba(2, 6, 23, 0.84) 48%, rgba(2, 6, 23, 0.97) 100%),
+        radial-gradient(ellipse 55% 45% at 50% 25%, rgba(91, 33, 182, 0.32), transparent 70%);
+}
+
 /* ─── Dark theme ─── */
 html.mk-public[data-theme="dark"] .mk-story::before {
     background:

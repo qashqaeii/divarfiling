@@ -481,7 +481,7 @@ def bot_page_content():
                     'icon': 'fab fa-android',
                     'title': 'اپ اندروید',
                     'tagline': 'CRM موبایل · اعلان · استخراج سبک',
-                    'image': 'android/android-02-home.png',
+                    'image': 'images/android/android-02-home.png',
                     'image_alt': 'اپ فایلینگ دیوار — داشبورد روزانه و میانبر استخراج',
                     'lightbox_caption': 'اپ اندروید — داشبورد فایلینگ',
                     'highlights': [

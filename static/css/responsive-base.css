@@ -150,9 +150,11 @@ html.mk-public body.mk-nav-open::before {
     position: fixed;
     inset: 0;
     background: rgba(7, 11, 23, 0.55);
-    z-index: 900;
+    z-index: 1080;
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 html.mk-public[data-theme="light"] body.mk-nav-open::before {

@@ -79,6 +79,8 @@
         order: 5;
         margin-inline-start: auto;
         flex-shrink: 0;
+        position: relative;
+        z-index: 2;
     }
 
     html.mk-public .mk-nav-mobile-tools .mk-theme-toggle--bar,
@@ -104,6 +106,33 @@
         display: none;
     }
 
+    html.mk-public .mk-mobile-nav-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1080;
+        border: none;
+        padding: 0;
+        margin: 0;
+        background: rgba(7, 11, 23, 0.55);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        cursor: pointer;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.28s ease;
+    }
+
+    html.mk-public .mk-mobile-nav-backdrop.is-visible {
+        display: block;
+        pointer-events: auto;
+        opacity: 1;
+    }
+
+    html.mk-public[data-theme="light"] .mk-mobile-nav-backdrop {
+        background: rgba(15, 23, 42, 0.35);
+    }
+
     /* ── Drawer shell ── */
     html.mk-public .mk-mobile-panel {
         --mk-drawer-bg: rgba(10, 14, 28, 0.97);
@@ -124,7 +153,7 @@
         bottom: 0;
         width: min(21.5rem, 88vw);
         max-width: 100%;
-        z-index: 980;
+        z-index: 1090;
         padding: 0;
         margin: 0;
         order: unset;
@@ -139,6 +168,7 @@
         transform: translateX(105%);
         transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.34s;
         visibility: hidden;
+        pointer-events: none;
         overflow: hidden;
         overscroll-behavior: contain;
     }
@@ -147,6 +177,11 @@
         display: flex;
         transform: translateX(0);
         visibility: visible;
+        pointer-events: auto;
+    }
+
+    html.mk-public body > .mk-mobile-panel {
+        z-index: 1090;
     }
 
     html.mk-public .mk-mobile-panel::before {

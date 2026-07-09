@@ -7,7 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=34">
+<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=35">
 {% endblock %}
 
 {% block content %}
@@ -16,158 +16,120 @@
     {# ─── Hero ─── #}
     <section class="pb-hero">
         <div class="container pb-hero-wrap">
-            <div class="pb-hero-stage">
-                <div class="pb-hero-stage-ambient" aria-hidden="true">
-                    <span class="pb-hero-orb pb-hero-orb--violet"></span>
-                    <span class="pb-hero-orb pb-hero-orb--sky"></span>
-                    <span class="pb-hero-orb pb-hero-orb--emerald"></span>
-                </div>
-
-                <div class="pb-hero-copy-col">
-                    <div class="pb-hero-copy-panel">
-                        <span class="pb-kicker">
-                            <span class="pb-icon pb-icon--xs pb-icon--violet"><i class="fas fa-robot"></i></span>
-                            {{ bot_page.tagline }}
-                        </span>
-                        <h1 class="pb-title">
-                            <span class="pb-title-gradient">{{ product.title }}</span>
-                        </h1>
-                        <p class="pb-lead">{{ product.short_description|default:bot_page.hero_lead }}</p>
-
-                        <div class="pb-hero-chip-grid">
-                            <span class="pb-hero-chip pb-hero-chip--license">
-                                <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fas fa-key"></i></span>
-                                <span class="pb-hero-chip-text">
-                                    <strong>یک لایسنس</strong>
-                                    <small>{{ bot_page.license_badge }}</small>
-                                </span>
-                            </span>
-                            <span class="pb-hero-chip pb-hero-chip--sky">
-                                <span class="pb-icon pb-icon--sm pb-icon--sky"><i class="fab fa-windows"></i></span>
-                                <span class="pb-hero-chip-text">
-                                    <strong>ربات ویندوز</strong>
-                                    <small>استخراج حجیم</small>
-                                </span>
-                            </span>
-                            <span class="pb-hero-chip pb-hero-chip--emerald">
-                                <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fab fa-android"></i></span>
-                                <span class="pb-hero-chip-text">
-                                    <strong>اپ اندروید</strong>
-                                    <small>CRM میدانی</small>
-                                </span>
-                            </span>
-                            <span class="pb-hero-chip pb-hero-chip--amber">
-                                <span class="pb-icon pb-icon--sm pb-icon--amber"><i class="fas fa-layer-group"></i></span>
-                                <span class="pb-hero-chip-text">
-                                    <strong>میزکار</strong>
-                                    <small>تحلیل یکپارچه</small>
-                                </span>
-                            </span>
-                        </div>
-
-                        <div class="pb-hero-cta-row">
-                            {% if plans.first %}
-                            <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pb-hero-cta pb-hero-cta--primary">
-                                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-                                خرید لایسنس
-                            </a>
-                            {% endif %}
-                            <a href="#platforms" class="pb-hero-cta pb-hero-cta--ghost">
-                                <i class="fas fa-play-circle" aria-hidden="true"></i>
-                                مشاهده پلتفرم‌ها
-                            </a>
-                        </div>
-
-                        {% if average_rating > 0 %}
-                        <div class="pb-rating-card">
-                            <span class="pb-rating-card-val">{{ average_rating|floatformat:1 }}</span>
-                            <div class="pb-rating-card-body">
-                                <span class="pb-rating-stars" dir="rtl" aria-hidden="true">
-                                    {% for i in "12345" %}
-                                    <i class="fas fa-star{% if forloop.counter > average_rating %}-o{% endif %}"></i>
-                                    {% endfor %}
-                                </span>
-                                <span class="pb-rating-count">{{ rating_count }} امتیاز کاربران</span>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="pb-hero-showcase">
-                    <div class="pb-hero-showcase-frame" aria-hidden="true"></div>
-                    <div class="pb-hero-sync-pill" aria-hidden="true">
-                        <span class="pb-hero-sync-pulse"></span>
-                        <i class="fas fa-arrows-rotate"></i>
-                        <span>همگام با میزکار</span>
-                    </div>
-                    <div class="pb-hero-visual" aria-label="پیش‌نمایش ویندوز و اندروید">
-                    <button type="button" class="pb-hero-preview pb-app-shot pb-hero-preview--desktop" data-pb-lightbox-open aria-label="بزرگنمایی ربات ویندوز">
-                        <div class="pb-app-shot-chrome" aria-hidden="true">
-                            <span></span><span></span><span></span>
-                            <span class="pb-app-shot-title">ربات ویندوز — استخراج حرفه‌ای</span>
-                        </div>
-                        <div class="pb-hero-device-media">
-                            <img
-                                src="{% static 'images/help-bot-extract-tab.png' %}"
-                                alt="نمای برنامه استخراج دیوار — تب استخراج با فیلتر شهر و محله"
-                                class="pb-app-shot-img"
-                                loading="eager"
-                                decoding="async"
-                                width="1680"
-                                height="1000"
-                            >
-                        </div>
-                        <span class="pb-hero-device-badge pb-hero-device-badge--win"><i class="fab fa-windows"></i> ویندوز</span>
-                        <span class="pb-app-shot-zoom" aria-hidden="true">
-                            <i class="fas fa-search-plus"></i>
-                            <span>بزرگنمایی</span>
-                        </span>
-                    </button>
-
-                    <span class="pb-hero-visual-bridge" aria-hidden="true">
-                        <span class="pb-hero-visual-bridge-line"></span>
-                        <span class="pb-hero-visual-bridge-chip"><i class="fas fa-link"></i></span>
-                        <span class="pb-hero-visual-bridge-line"></span>
+            <div class="pb-hero-grid">
+                <div class="pb-hero-content">
+                    <span class="pb-kicker">
+                        <span class="pb-icon pb-icon--xs pb-icon--violet"><i class="fas fa-robot"></i></span>
+                        {{ bot_page.tagline }}
                     </span>
+                    <h1 class="pb-title">
+                        <span class="pb-title-gradient">{{ product.title }}</span>
+                    </h1>
+                    <p class="pb-lead">{{ product.short_description|default:bot_page.hero_lead }}</p>
 
-                    <button type="button" class="pb-hero-phone pb-app-shot" data-pb-lightbox-open data-pb-lightbox-src="{% static 'images/android/android-02-home.png' %}" data-pb-lightbox-caption="اپ اندروید — داشبورد فایلینگ" aria-label="بزرگنمایی اپ اندروید">
-                        <div class="pb-hero-phone-chrome" aria-hidden="true">
-                            <span class="pb-hero-phone-notch"></span>
-                        </div>
-                        <div class="pb-hero-device-media pb-hero-phone-frame">
-                            <img
-                                src="{% static 'images/android/android-02-home.png' %}"
-                                alt="اپ فایلینگ دیوار — داشبورد و استخراج موبایل"
-                                class="pb-hero-phone-img"
-                                loading="eager"
-                                decoding="async"
-                                width="390"
-                                height="844"
-                            >
-                        </div>
-                        <span class="pb-hero-device-badge pb-hero-device-badge--android"><i class="fab fa-android"></i> اندروید</span>
-                        <span class="pb-app-shot-zoom" aria-hidden="true">
-                            <i class="fas fa-search-plus"></i>
-                            <span>بزرگنمایی</span>
-                        </span>
-                    </button>
+                    <ul class="pb-hero-highlights" aria-label="مزایای کلیدی">
+                        <li>
+                            <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fas fa-key"></i></span>
+                            <span><strong>یک لایسنس</strong> {{ bot_page.license_badge }}</span>
+                        </li>
+                        <li>
+                            <span class="pb-icon pb-icon--sm pb-icon--sky"><i class="fab fa-windows"></i></span>
+                            <span><strong>ربات ویندوز</strong> استخراج حجیم</span>
+                        </li>
+                        <li>
+                            <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fab fa-android"></i></span>
+                            <span><strong>اپ اندروید</strong> CRM میدانی</span>
+                        </li>
+                        <li>
+                            <span class="pb-icon pb-icon--sm pb-icon--amber"><i class="fas fa-layer-group"></i></span>
+                            <span><strong>میزکار</strong> تحلیل یکپارچه</span>
+                        </li>
+                    </ul>
+
+                    <div class="pb-hero-actions">
+                        {% if plans.first %}
+                        <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pb-hero-cta pb-hero-cta--primary">
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                            خرید لایسنس
+                        </a>
+                        {% endif %}
+                        <a href="#platforms" class="pb-hero-cta pb-hero-cta--ghost">
+                            <i class="fas fa-play-circle" aria-hidden="true"></i>
+                            مشاهده پلتفرم‌ها
+                        </a>
                     </div>
-                    <div class="pb-hero-metric-strip" aria-hidden="true">
-                        <span class="pb-hero-metric">
-                            <strong>80+</strong>
-                            <small>فیلد استخراج</small>
-                        </span>
-                        <span class="pb-hero-metric-divider"></span>
-                        <span class="pb-hero-metric">
-                            <strong>Excel</strong>
-                            <small>خروجی حرفه‌ای</small>
-                        </span>
-                        <span class="pb-hero-metric-divider"></span>
-                        <span class="pb-hero-metric">
-                            <strong>۲</strong>
-                            <small>پلتفرم</small>
-                        </span>
+
+                    <div class="pb-hero-stats" aria-label="آمار کلیدی">
+                        <span class="pb-hero-stat"><strong>80+</strong> فیلد استخراج</span>
+                        <span class="pb-hero-stat-divider" aria-hidden="true"></span>
+                        <span class="pb-hero-stat"><strong>Excel</strong> خروجی حرفه‌ای</span>
+                        <span class="pb-hero-stat-divider" aria-hidden="true"></span>
+                        <span class="pb-hero-stat"><strong>۲ پلتفرم</strong> ویندوز و اندروید</span>
+                    </div>
+
+                    {% if average_rating > 0 %}
+                    <div class="pb-rating-card">
+                        <span class="pb-rating-card-val">{{ average_rating|floatformat:1 }}</span>
+                        <div class="pb-rating-card-body">
+                            <span class="pb-rating-stars" dir="rtl" aria-hidden="true">
+                                {% for i in "12345" %}
+                                <i class="fas fa-star{% if forloop.counter > average_rating %}-o{% endif %}"></i>
+                                {% endfor %}
+                            </span>
+                            <span class="pb-rating-count">{{ rating_count }} امتیاز کاربران</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="pb-hero-media">
+                    <div class="pb-hero-devices" aria-label="پیش‌نمایش ویندوز و اندروید">
+                        <button type="button" class="pb-hero-preview pb-app-shot" data-pb-lightbox-open aria-label="بزرگنمایی ربات ویندوز">
+                            <div class="pb-hero-window">
+                                <div class="pb-hero-window-bar" aria-hidden="true">
+                                    <span class="pb-hero-window-dots">
+                                        <i></i><i></i><i></i>
+                                    </span>
+                                    <span class="pb-hero-window-title">ربات ویندوز — استخراج حرفه‌ای</span>
+                                </div>
+                                <div class="pb-hero-window-body">
+                                    <img
+                                        src="{% static 'images/help-bot-extract-tab.png' %}"
+                                        alt="نمای برنامه استخراج دیوار — تب استخراج با فیلتر شهر و محله"
+                                        class="pb-hero-window-img"
+                                        loading="eager"
+                                        decoding="async"
+                                        width="1680"
+                                        height="1000"
+                                    >
+                                </div>
+                            </div>
+                            <span class="pb-hero-device-badge pb-hero-device-badge--win"><i class="fab fa-windows"></i> ویندوز</span>
+                            <span class="pb-app-shot-zoom" aria-hidden="true">
+                                <i class="fas fa-search-plus"></i>
+                                <span>بزرگنمایی</span>
+                            </span>
+                        </button>
+
+                        <button type="button" class="pb-hero-phone pb-app-shot" data-pb-lightbox-open data-pb-lightbox-src="{% static 'images/android/android-02-home.png' %}" data-pb-lightbox-caption="اپ اندروید — داشبورد فایلینگ" aria-label="بزرگنمایی اپ اندروید">
+                            <span class="pb-hero-phone-bezel">
+                                <span class="pb-hero-phone-island" aria-hidden="true"></span>
+                                <img
+                                    src="{% static 'images/android/android-02-home.png' %}"
+                                    alt="اپ فایلینگ دیوار — داشبورد و استخراج موبایل"
+                                    class="pb-hero-phone-screen"
+                                    loading="eager"
+                                    decoding="async"
+                                    width="390"
+                                    height="844"
+                                >
+                            </span>
+                            <span class="pb-hero-device-badge pb-hero-device-badge--android"><i class="fab fa-android"></i> اندروید</span>
+                            <span class="pb-app-shot-zoom" aria-hidden="true">
+                                <i class="fas fa-search-plus"></i>
+                                <span>بزرگنمایی</span>
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>

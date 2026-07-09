@@ -43,12 +43,12 @@
 
                     <div class="pb-xtree-branches" role="tablist" aria-orientation="vertical">
                         {% for cat in tree.categories %}
-                        <div class="pb-xtree-branch{% if forloop.first %} is-expanded{% endif %}" data-accent="{{ cat.accent }}">
+                        <div class="pb-xtree-branch" data-accent="{{ cat.accent }}">
                             <button type="button"
-                                    class="pb-xtree-branch-btn{% if forloop.first %} is-active{% endif %}"
+                                    class="pb-xtree-branch-btn"
                                     data-xtree-select="{{ cat.id }}"
                                     role="tab"
-                                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                                    aria-selected="false"
                                     aria-controls="xtree-pane-{{ cat.id }}"
                                     id="xtree-tab-{{ cat.id }}">
                                 <span class="pb-xtree-branch-dot" aria-hidden="true"></span>
@@ -57,7 +57,7 @@
                                 <span class="pb-xtree-branch-count">{{ cat.subcategories|length }}</span>
                                 <span class="pb-xtree-branch-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                             </button>
-                            <ul class="pb-xtree-leaves"{% if not forloop.first %} hidden{% endif %}>
+                            <ul class="pb-xtree-leaves" hidden>
                                 {% for sub in cat.subcategories %}
                                 <li>
                                     <button type="button" class="pb-xtree-leaf" data-xtree-select="{{ cat.id }}" data-xtree-file="{{ sub.file }}">
@@ -74,14 +74,19 @@
                 </aside>
 
                 <div class="pb-xtree-detail" role="tabpanel">
+                    <div class="pb-xtree-placeholder" data-xtree-placeholder>
+                        <span class="pb-icon pb-icon--md pb-icon--violet"><i class="fas fa-hand-pointer"></i></span>
+                        <h3>یک دسته را انتخاب کنید</h3>
+                        <p>روی شاخه‌های سمت راست کلیک کنید تا فیلدهای استخراج‌شده را ببینید.</p>
+                    </div>
                     {% for cat in tree.categories %}
                     <article
-                        class="pb-xtree-pane{% if forloop.first %} is-active{% endif %}"
+                        class="pb-xtree-pane"
                         id="xtree-pane-{{ cat.id }}"
                         data-xtree-pane="{{ cat.id }}"
                         role="tabpanel"
                         aria-labelledby="xtree-tab-{{ cat.id }}"
-                        {% if not forloop.first %} hidden{% endif %}
+                        hidden
                     >
                         <header class="pb-xtree-pane-head">
                             <span class="pb-xtree-pane-icon pb-icon pb-icon--lg pb-icon--{{ cat.accent }}"><i class="fas {{ cat.icon }}"></i></span>
@@ -93,7 +98,7 @@
 
                         <div class="pb-xtree-pane-body">
                             <div class="pb-xtree-accordions" data-pb-xtree-acc>
-                                <details class="pb-xtree-acc pb-xtree-acc--subs" data-accent="{{ cat.accent }}" open>
+                                <details class="pb-xtree-acc pb-xtree-acc--subs" data-accent="{{ cat.accent }}">
                                     <summary>
                                         <span class="pb-xtree-acc-icon pb-icon pb-icon--xs pb-icon--{{ cat.accent }}"><i class="fas fa-folder-tree"></i></span>
                                         <span class="pb-xtree-acc-title">زیردسته‌ها و فایل خروجی</span>

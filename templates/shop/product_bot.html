@@ -6,8 +6,8 @@
 {% block body_class %}mk-product-bot-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=30">
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=33">
 {% endblock %}
 
 {% block content %}
@@ -17,47 +17,91 @@
     <section class="pb-hero">
         <div class="container pb-hero-wrap">
             <div class="pb-hero-stage">
-                <div class="pb-hero-copy-col">
-                    <span class="pb-kicker">
-                        <span class="pb-icon pb-icon--xs pb-icon--violet"><i class="fas fa-robot"></i></span>
-                        {{ bot_page.tagline }}
-                    </span>
-                    <h1 class="pb-title">{{ product.title }}</h1>
-                    <p class="pb-lead">{{ product.short_description|default:bot_page.hero_lead }}</p>
-                    <div class="pb-hero-pills">
-                        <span class="pb-hero-pill pb-hero-pill--license">
-                            <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fas fa-key"></i></span>
-                            {{ bot_page.license_badge }}
-                        </span>
-                        <span class="pb-hero-pill">
-                            <span class="pb-icon pb-icon--sm pb-icon--sky"><i class="fab fa-windows"></i></span>
-                            ربات ویندوز
-                        </span>
-                        <span class="pb-hero-pill">
-                            <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fab fa-android"></i></span>
-                            اپ اندروید
-                        </span>
-                        <span class="pb-hero-pill">
-                            <span class="pb-icon pb-icon--sm pb-icon--amber"><i class="fas fa-layer-group"></i></span>
-                            میزکار یکپارچه
-                        </span>
-                    </div>
-                    {% if average_rating > 0 %}
-                    <div class="pb-rating-card">
-                        <span class="pb-rating-card-val">{{ average_rating|floatformat:1 }}</span>
-                        <div class="pb-rating-card-body">
-                            <span class="pb-rating-stars" dir="rtl" aria-hidden="true">
-                                {% for i in "12345" %}
-                                <i class="fas fa-star{% if forloop.counter > average_rating %}-o{% endif %}"></i>
-                                {% endfor %}
-                            </span>
-                            <span class="pb-rating-count">{{ rating_count }} امتیاز کاربران</span>
-                        </div>
-                    </div>
-                    {% endif %}
+                <div class="pb-hero-stage-ambient" aria-hidden="true">
+                    <span class="pb-hero-orb pb-hero-orb--violet"></span>
+                    <span class="pb-hero-orb pb-hero-orb--sky"></span>
+                    <span class="pb-hero-orb pb-hero-orb--emerald"></span>
                 </div>
 
-                <div class="pb-hero-visual" aria-label="پیش‌نمایش ویندوز و اندروید">
+                <div class="pb-hero-copy-col">
+                    <div class="pb-hero-copy-panel">
+                        <span class="pb-kicker">
+                            <span class="pb-icon pb-icon--xs pb-icon--violet"><i class="fas fa-robot"></i></span>
+                            {{ bot_page.tagline }}
+                        </span>
+                        <h1 class="pb-title">
+                            <span class="pb-title-gradient">{{ product.title }}</span>
+                        </h1>
+                        <p class="pb-lead">{{ product.short_description|default:bot_page.hero_lead }}</p>
+
+                        <div class="pb-hero-chip-grid">
+                            <span class="pb-hero-chip pb-hero-chip--license">
+                                <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fas fa-key"></i></span>
+                                <span class="pb-hero-chip-text">
+                                    <strong>یک لایسنس</strong>
+                                    <small>{{ bot_page.license_badge }}</small>
+                                </span>
+                            </span>
+                            <span class="pb-hero-chip pb-hero-chip--sky">
+                                <span class="pb-icon pb-icon--sm pb-icon--sky"><i class="fab fa-windows"></i></span>
+                                <span class="pb-hero-chip-text">
+                                    <strong>ربات ویندوز</strong>
+                                    <small>استخراج حجیم</small>
+                                </span>
+                            </span>
+                            <span class="pb-hero-chip pb-hero-chip--emerald">
+                                <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fab fa-android"></i></span>
+                                <span class="pb-hero-chip-text">
+                                    <strong>اپ اندروید</strong>
+                                    <small>CRM میدانی</small>
+                                </span>
+                            </span>
+                            <span class="pb-hero-chip pb-hero-chip--amber">
+                                <span class="pb-icon pb-icon--sm pb-icon--amber"><i class="fas fa-layer-group"></i></span>
+                                <span class="pb-hero-chip-text">
+                                    <strong>میزکار</strong>
+                                    <small>تحلیل یکپارچه</small>
+                                </span>
+                            </span>
+                        </div>
+
+                        <div class="pb-hero-cta-row">
+                            {% if plans.first %}
+                            <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pb-hero-cta pb-hero-cta--primary">
+                                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                                خرید لایسنس
+                            </a>
+                            {% endif %}
+                            <a href="#platforms" class="pb-hero-cta pb-hero-cta--ghost">
+                                <i class="fas fa-play-circle" aria-hidden="true"></i>
+                                مشاهده پلتفرم‌ها
+                            </a>
+                        </div>
+
+                        {% if average_rating > 0 %}
+                        <div class="pb-rating-card">
+                            <span class="pb-rating-card-val">{{ average_rating|floatformat:1 }}</span>
+                            <div class="pb-rating-card-body">
+                                <span class="pb-rating-stars" dir="rtl" aria-hidden="true">
+                                    {% for i in "12345" %}
+                                    <i class="fas fa-star{% if forloop.counter > average_rating %}-o{% endif %}"></i>
+                                    {% endfor %}
+                                </span>
+                                <span class="pb-rating-count">{{ rating_count }} امتیاز کاربران</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="pb-hero-showcase">
+                    <div class="pb-hero-showcase-frame" aria-hidden="true"></div>
+                    <div class="pb-hero-sync-pill" aria-hidden="true">
+                        <span class="pb-hero-sync-pulse"></span>
+                        <i class="fas fa-arrows-rotate"></i>
+                        <span>همگام با میزکار</span>
+                    </div>
+                    <div class="pb-hero-visual" aria-label="پیش‌نمایش ویندوز و اندروید">
                     <button type="button" class="pb-hero-preview pb-app-shot pb-hero-preview--desktop" data-pb-lightbox-open aria-label="بزرگنمایی ربات ویندوز">
                         <div class="pb-app-shot-chrome" aria-hidden="true">
                             <span></span><span></span><span></span>
@@ -108,38 +152,91 @@
                             <span>بزرگنمایی</span>
                         </span>
                     </button>
+                    </div>
+                    <div class="pb-hero-metric-strip" aria-hidden="true">
+                        <span class="pb-hero-metric">
+                            <strong>80+</strong>
+                            <small>فیلد استخراج</small>
+                        </span>
+                        <span class="pb-hero-metric-divider"></span>
+                        <span class="pb-hero-metric">
+                            <strong>Excel</strong>
+                            <small>خروجی حرفه‌ای</small>
+                        </span>
+                        <span class="pb-hero-metric-divider"></span>
+                        <span class="pb-hero-metric">
+                            <strong>۲</strong>
+                            <small>پلتفرم</small>
+                        </span>
+                    </div>
                 </div>
             </div>
 
             <section class="pb-pricing-deck" aria-label="پلن‌های لایسنس">
                 <div class="pb-pricing-deck-head">
-                    <h2>انتخاب پلن لایسنس</h2>
-                    <p>{{ bot_page.pricing_note }}</p>
+                    <div class="pb-pricing-deck-head-copy">
+                        <span class="pb-pricing-deck-kicker">لایسنس</span>
+                        <h2>انتخاب پلن لایسنس</h2>
+                        <p>{{ bot_page.pricing_note }}</p>
+                    </div>
+                    <ul class="pb-pricing-deck-trust" aria-label="مزایای خرید">
+                        <li><i class="fas fa-bolt" aria-hidden="true"></i> فعال‌سازی فوری</li>
+                        <li><i class="fas fa-shield-halved" aria-hidden="true"></i> پشتیبانی نصب</li>
+                        <li><i class="fas fa-link" aria-hidden="true"></i> ۱ ویندوز + ۱ اندروید</li>
+                    </ul>
                 </div>
                 <div class="pb-plan-deck">
                     {% for plan in plans %}
-                    <article class="pb-plan-card{% if forloop.counter == 2 %} pb-plan-card--featured{% endif %}">
-                        {% if forloop.counter == 2 %}<span class="pb-plan-card-ribbon">پیشنهادی</span>{% endif %}
-                        <div class="pb-plan-card-top">
-                            <span class="pb-plan-card-icon pb-icon pb-icon--md pb-icon--{% if forloop.counter == 1 %}sky{% elif forloop.counter == 2 %}violet{% else %}emerald{% endif %}">
-                                <i class="fas {% if forloop.counter == 1 %}fa-calendar-day{% elif forloop.counter == 2 %}fa-calendar-week{% else %}fa-calendar{% endif %}"></i>
+                    {% cycle 'sky' 'violet' 'emerald' as plan_accent silent %}
+                    {% cycle 'starter' 'pro' 'plus' as plan_tier silent %}
+                    {% cycle 'fa-calendar-day' 'fa-calendar-week' 'fa-calendar' as plan_icon silent %}
+                    <article class="pb-plan-card{% if forloop.counter == 2 %} pb-plan-card--featured{% endif %}" data-accent="{{ plan_accent }}" data-tier="{{ plan_tier }}">
+                        <span class="pb-plan-card-glow" aria-hidden="true"></span>
+                        <span class="pb-plan-card-watermark" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
+                        {% if forloop.counter == 2 %}
+                        <span class="pb-plan-card-ribbon">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            پیشنهادی
+                        </span>
+                        {% endif %}
+                        <header class="pb-plan-card-head">
+                            <span class="pb-plan-card-icon pb-icon pb-icon--lg pb-icon--{{ plan_accent }}">
+                                <i class="fas {{ plan_icon }}"></i>
                             </span>
-                            <div>
+                            <div class="pb-plan-card-head-text">
                                 <h3>{{ plan.get_plan_type_display }}</h3>
-                                <span class="pb-plan-card-sub">{{ plan.duration_days }} روز دسترسی</span>
+                                <span class="pb-plan-card-duration">
+                                    <i class="fas fa-clock" aria-hidden="true"></i>
+                                    {{ plan.duration_days }} روز دسترسی
+                                </span>
                             </div>
+                        </header>
+                        <div class="pb-plan-card-price-block">
+                            <div class="pb-plan-card-price">
+                                <span class="pb-plan-card-amount">{{ plan.price|currency }}</span>
+                                <span class="pb-plan-card-unit">تومان</span>
+                            </div>
+                            <span class="pb-plan-card-price-note">شامل ربات ویندوز و اپ اندروید</span>
                         </div>
-                        <div class="pb-plan-card-price">
-                            <span class="pb-plan-card-amount">{{ plan.price|currency }}</span>
-                            <span class="pb-plan-card-unit">تومان</span>
+                        <div class="pb-plan-card-platforms" aria-hidden="true">
+                            <span class="pb-plan-card-platform pb-plan-card-platform--win">
+                                <i class="fab fa-windows"></i>
+                                <small>ویندوز</small>
+                            </span>
+                            <span class="pb-plan-card-platform-bridge"><i class="fas fa-plus"></i></span>
+                            <span class="pb-plan-card-platform pb-plan-card-platform--android">
+                                <i class="fab fa-android"></i>
+                                <small>اندروید</small>
+                            </span>
                         </div>
                         <ul class="pb-plan-card-feats">
-                            <li><i class="fas fa-check" aria-hidden="true"></i> ۱ ویندوز + ۱ اندروید</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> ۱ اسلات ویندوز + ۱ اسلات اندروید</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> فعال‌سازی فوری پس از خرید</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> پشتیبانی نصب و راه‌اندازی</li>
                         </ul>
                         <a href="{% url 'buy' product.slug %}?plan={{ plan.id }}" class="pb-plan-card-cta{% if forloop.counter == 2 %} pb-plan-card-cta--primary{% endif %}">
-                            خرید {{ plan.get_plan_type_display }}
+                            <span>خرید {{ plan.get_plan_type_display }}</span>
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         </a>
                     </article>
                     {% empty %}
@@ -159,28 +256,27 @@
     </section>
 
     {% if install_video.available %}
-  {# ─── Install video ─── #}
     <section class="pb-band pb-install-video-band" id="install-video" aria-labelledby="pb-install-video-title">
         <div class="container">
-            <header class="pb-head">
-                <span class="pb-head-kicker">آموزش نصب</span>
-                <h2 id="pb-install-video-title">قبل از خرید، نصب را ببینید</h2>
-                <p>ویدیوی گام‌به‌گام نصب ویندوز — برای اندروید <a href="{% url 'android_tutorial' %}" class="pb-inline-link">آموزش اپ</a> را ببینید</p>
-            </header>
-            <div class="pb-install-video-shell pb-install-video-shell--split">
-                <div>
-                    {% include 'includes/bot_install_video.html' with variant='section' show_heading=False guide_link=True %}
+            <div class="pb-install-video-shell">
+                <div class="pb-install-video-main">
+                    <header class="pb-install-video-head">
+                        <span class="pb-head-kicker">آموزش نصب</span>
+                        <h2 id="pb-install-video-title">نصب و فعال‌سازی ربات</h2>
+                        <p>ویدیوی گام‌به‌گام ویندوز — اندروید: <a href="{% url 'android_tutorial' %}" class="pb-inline-link">آموزش اپ</a></p>
+                    </header>
+                    {% include 'includes/bot_install_video.html' with variant='section' show_heading=False guide_link=True show_meta=True %}
                 </div>
                 <aside class="pb-install-video-aside">
-                    <p class="pb-value-lead" style="margin:0;">در این ویدیو یاد می‌گیرید:</p>
+                    <h3 class="pb-install-video-aside-title">در این ویدیو</h3>
                     <ol class="pb-install-video-steps">
                         <li><strong>۱</strong><span>دانلود فایل نصب از داشبورد پس از خرید</span></li>
                         <li><strong>۲</strong><span>اجرای نصب‌کننده روی ویندوز ۱۰ یا ۱۱</span></li>
                         <li><strong>۳</strong><span>وارد کردن کلید لایسنس در اولین اجرای ربات</span></li>
                         <li><strong>۴</strong><span>شروع اولین استخراج و آپلود در میزکار</span></li>
                     </ol>
-                    <a href="{% url 'license_guide' %}" class="pb-pricing-deck-guide">
-                        راهنمای متنی کامل <i class="fas fa-arrow-left"></i>
+                    <a href="{% url 'license_guide' %}" class="pb-install-video-link">
+                        راهنمای متنی کامل <i class="fas fa-arrow-left" aria-hidden="true"></i>
                     </a>
                 </aside>
             </div>
@@ -211,23 +307,25 @@
                             <p class="pb-platform-tagline">{{ plat.tagline }}</p>
                         </div>
                     </div>
-                    <button
-                        type="button"
-                        class="pb-platform-shot pb-app-shot"
-                        data-pb-lightbox-open
-                        data-pb-lightbox-src="{% static plat.image %}"
-                        data-pb-lightbox-caption="{{ plat.lightbox_caption }}"
-                        aria-label="بزرگنمایی {{ plat.title }}"
-                    >
-                        <img
-                            src="{% static plat.image %}"
-                            alt="{{ plat.image_alt }}"
-                            class="pb-platform-shot-img{% if plat.id == 'android' %} pb-platform-shot-img--phone{% endif %}"
-                            loading="lazy"
-                            decoding="async"
+                    <div class="pb-platform-media{% if plat.id == 'android' %} pb-platform-media--phone{% else %} pb-platform-media--desktop{% endif %}">
+                        <button
+                            type="button"
+                            class="pb-platform-shot pb-app-shot"
+                            data-pb-lightbox-open
+                            data-pb-lightbox-src="{% static plat.image %}"
+                            data-pb-lightbox-caption="{{ plat.lightbox_caption }}"
+                            aria-label="بزرگنمایی {{ plat.title }}"
                         >
-                        <span class="pb-app-shot-zoom" aria-hidden="true"><i class="fas fa-search-plus"></i></span>
-                    </button>
+                            <img
+                                src="{% static plat.image %}"
+                                alt="{{ plat.image_alt }}"
+                                class="pb-platform-shot-img"
+                                loading="lazy"
+                                decoding="async"
+                            >
+                            <span class="pb-app-shot-zoom" aria-hidden="true"><i class="fas fa-search-plus"></i></span>
+                        </button>
+                    </div>
                     <ul class="pb-platform-feats">
                         {% for feat in plat.highlights %}
                         <li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>
@@ -268,36 +366,31 @@
     {# ─── Value props ─── #}
     <section class="pb-band pb-value-band">
         <div class="container">
-            <div class="pb-value-layout">
-                <header class="pb-value-intro">
+            <header class="pb-value-head">
+                <div>
                     <span class="pb-head-kicker">ارزش پیشنهادی</span>
                     <h2>ویندوز + اندروید چه می‌کنند؟</h2>
-                    <p class="pb-value-lead">جایگزین کار دستی — استخراج خودکار، CRM موبایل و فایلینگ حرفه‌ای</p>
-                    <div class="pb-value-rail" aria-hidden="true">
-                        {% for item in bot_page.value_props %}
-                        {% cycle 'violet' 'sky' 'emerald' 'amber' as value_accent silent %}
-                        <span class="pb-value-rail-node pb-icon pb-icon--sm pb-icon--{{ value_accent }}" data-accent="{{ value_accent }}">
-                            <i class="fas {{ item.icon }}"></i>
-                        </span>
-                        {% if not forloop.last %}<span class="pb-value-rail-line"></span>{% endif %}
-                        {% endfor %}
-                    </div>
-                    <p class="pb-value-tagline">از خرید لایسنس تا تحلیل در میزکار — یک مسیر یکپارچه</p>
-                </header>
-                {% resetcycle value_accent %}
-                <div class="pb-value-bento">
-                    {% for item in bot_page.value_props %}
-                    {% cycle 'violet' 'sky' 'emerald' 'amber' as value_accent silent %}
-                    <article class="pb-value-card{% if forloop.first %} pb-value-card--hero{% elif forloop.last %} pb-value-card--wide{% endif %}" data-accent="{{ value_accent }}">
-                        <span class="pb-value-card-num" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <span class="pb-value-card-icon pb-icon pb-icon--lg pb-icon--{{ value_accent }}"><i class="fas {{ item.icon }}"></i></span>
-                        <div class="pb-value-card-body">
-                            <h3>{{ item.title }}</h3>
-                            <p>{{ item.desc }}</p>
-                        </div>
-                    </article>
-                    {% endfor %}
+                    <p>جایگزین کار دستی — استخراج خودکار، CRM موبایل و فایلینگ حرفه‌ای</p>
                 </div>
+                <div class="pb-value-chips" aria-hidden="true">
+                    <span><i class="fab fa-windows"></i> ویندوز</span>
+                    <span><i class="fas fa-plus"></i></span>
+                    <span><i class="fab fa-android"></i> اندروید</span>
+                    <span><i class="fas fa-arrow-left"></i></span>
+                    <span><i class="fas fa-layer-group"></i> میزکار</span>
+                </div>
+            </header>
+            <div class="pb-value-grid">
+                {% for item in bot_page.value_props %}
+                {% cycle 'violet' 'sky' 'emerald' 'amber' as value_accent silent %}
+                <article class="pb-value-item" data-accent="{{ value_accent }}">
+                    <span class="pb-value-item-icon pb-icon pb-icon--md pb-icon--{{ value_accent }}"><i class="fas {{ item.icon }}"></i></span>
+                    <div>
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.desc }}</p>
+                    </div>
+                </article>
+                {% endfor %}
             </div>
         </div>
     </section>
@@ -305,89 +398,35 @@
     {# ─── Workflow ─── #}
     <section class="pb-band pb-band--alt pb-flow-band">
         <div class="container">
-            <div class="pb-flow-shell">
-                <header class="pb-flow-head">
-                    <div class="pb-flow-head-copy">
-                        <span class="pb-head-kicker">مسیر کار</span>
-                        <h2>از خرید تا تحلیل</h2>
-                        <p>ویندوز + اندروید → میزکار</p>
-                    </div>
-                    <div class="pb-flow-pipeline" aria-hidden="true">
-                        <span class="pb-flow-hub pb-flow-hub--bot">
-                            <span class="pb-icon pb-icon--sm pb-icon--sky"><i class="fab fa-windows"></i></span>
-                            <span>ویندوز</span>
-                        </span>
-                        <span class="pb-flow-hub-line"></span>
-                        <span class="pb-flow-hub pb-flow-hub--android">
-                            <span class="pb-icon pb-icon--sm pb-icon--emerald"><i class="fab fa-android"></i></span>
-                            <span>اندروید</span>
-                        </span>
-                        <span class="pb-flow-hub-line"></span>
-                        <span class="pb-flow-hub pb-flow-hub--desk">
-                            <span class="pb-icon pb-icon--sm pb-icon--violet"><i class="fas fa-layer-group"></i></span>
-                            <span>میزکار</span>
-                        </span>
-                    </div>
-                </header>
-
-                <div class="pb-flow-journey">
-                    <div class="pb-flow-phase">
-                        <div class="pb-flow-phase-head">
-                            <span class="pb-flow-phase-badge pb-flow-phase-badge--bot">فاز ۱</span>
-                            <h3 class="pb-flow-phase-title">خرید و فعال‌سازی</h3>
-                            <p class="pb-flow-phase-desc">لایسنس، اپ اندروید و ربات ویندوز — در همان روز</p>
-                        </div>
-                        <div class="pb-flow-grid pb-flow-grid--trio">
-                            {% for step in bot_page.workflow_steps %}
-                            {% if forloop.counter <= 3 %}
-                            {% cycle 'violet' 'sky' 'emerald' 'amber' as flow_accent silent %}
-                            <article class="pb-flow-step" data-accent="{{ flow_accent }}">
-                                <header class="pb-flow-step-head">
-                                    <span class="pb-flow-step-num">{{ forloop.counter|stringformat:"02d" }}</span>
-                                    <span class="pb-flow-step-icon pb-icon pb-icon--md pb-icon--{{ flow_accent }}"><i class="fas {{ step.icon }}"></i></span>
-                                </header>
-                                <h4>{{ step.title }}</h4>
-                                <p>{{ step.desc }}</p>
-                            </article>
-                            {% endif %}
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <div class="pb-flow-bridge" aria-hidden="true">
-                        <span class="pb-flow-bridge-rail"></span>
-                        <span class="pb-flow-bridge-chip">
-                            <i class="fas fa-arrow-down" aria-hidden="true"></i>
-                            <span>استخراج و همگام‌سازی</span>
-                        </span>
-                        <span class="pb-flow-bridge-rail"></span>
-                    </div>
-
-                    <div class="pb-flow-phase pb-flow-phase--desk">
-                        <div class="pb-flow-phase-head">
-                            <span class="pb-flow-phase-badge pb-flow-phase-badge--desk">فاز ۲</span>
-                            <h3 class="pb-flow-phase-title">استخراج و میزکار</h3>
-                            <p class="pb-flow-phase-desc">استخراج، آپلود output و تحلیل + CRM</p>
-                        </div>
-                        <div class="pb-flow-grid pb-flow-grid--trio">
-                            {% resetcycle flow_accent %}
-                            {% for step in bot_page.workflow_steps %}
-                            {% if forloop.counter > 3 %}
-                            {% cycle 'rose' 'violet' as flow_accent silent %}
-                            <article class="pb-flow-step pb-flow-step--wide" data-accent="{{ flow_accent }}">
-                                <header class="pb-flow-step-head">
-                                    <span class="pb-flow-step-num">{{ forloop.counter|stringformat:"02d" }}</span>
-                                    <span class="pb-flow-step-icon pb-icon pb-icon--md pb-icon--{{ flow_accent }}"><i class="fas {{ step.icon }}"></i></span>
-                                </header>
-                                <h4>{{ step.title }}</h4>
-                                <p>{{ step.desc }}</p>
-                            </article>
-                            {% endif %}
-                            {% endfor %}
-                        </div>
-                    </div>
+            <header class="pb-flow-head">
+                <div>
+                    <span class="pb-head-kicker">مسیر کار</span>
+                    <h2>از خرید تا تحلیل</h2>
+                    <p>ویندوز + اندروید → میزکار</p>
                 </div>
-            </div>
+                <div class="pb-flow-route" aria-hidden="true">
+                    <span><i class="fab fa-windows"></i></span>
+                    <i class="fas fa-arrow-left"></i>
+                    <span><i class="fab fa-android"></i></span>
+                    <i class="fas fa-arrow-left"></i>
+                    <span><i class="fas fa-layer-group"></i></span>
+                </div>
+            </header>
+            <ol class="pb-flow-timeline">
+                {% for step in bot_page.workflow_steps %}
+                {% cycle 'violet' 'sky' 'emerald' 'amber' 'rose' 'violet' as flow_accent silent %}
+                <li class="pb-flow-item" data-accent="{{ flow_accent }}">
+                    <span class="pb-flow-item-marker">
+                        <span class="pb-flow-item-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <span class="pb-flow-item-icon pb-icon pb-icon--sm pb-icon--{{ flow_accent }}"><i class="fas {{ step.icon }}"></i></span>
+                    </span>
+                    <div class="pb-flow-item-body">
+                        <h3>{{ step.title }}</h3>
+                        <p>{{ step.desc }}</p>
+                    </div>
+                </li>
+                {% endfor %}
+            </ol>
         </div>
     </section>
 
@@ -751,6 +790,8 @@
         var branches = xtree.querySelectorAll('.pb-xtree-branch');
         var detailPanel = xtree.querySelector('.pb-xtree-detail');
 
+        var placeholder = xtree.querySelector('[data-xtree-placeholder]');
+
         function activateBranch(id, btn) {
             branchBtns.forEach(function (b) {
                 var on = b === btn;
@@ -770,6 +811,7 @@
                 pane.hidden = !on;
                 pane.setAttribute('aria-hidden', on ? 'false' : 'true');
             });
+            if (placeholder) placeholder.hidden = true;
 
             if (detailPanel && window.matchMedia('(max-width: 1024px)').matches) {
                 detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -821,8 +863,6 @@
             });
         });
 
-        var first = branchBtns[0];
-        if (first) activateBranch(first.dataset.xtreeSelect, first);
     }
 
     var wsSlider = document.querySelector('[data-pb-ws-slider]');

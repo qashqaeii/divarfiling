@@ -40,18 +40,24 @@ class LogoutView(LogoutView):
 
 
 class RegisterView(CreateView):
+    """ثبت‌نام با شماره و رمز — مسیر جایگزین وقتی پیامک در دسترس نیست."""
+
     model = User
     form_class = RegisterForm
     template_name = 'accounts/register.html'
     success_url = reverse_lazy('workspace:home')
-    
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(self.get_success_url())
+        return super().dispatch(request, *args, **kwargs)
+
     def get_success_url(self):
-        # بررسی وجود پارامتر next در URL
         next_url = self.request.GET.get('next') or self.request.POST.get('next')
-        if next_url:
+        if next_url and str(next_url).startswith('/') and not str(next_url).startswith('//'):
             return next_url
         return reverse_lazy('workspace:home')
-    
+
     def form_valid(self, form):
         response = super().form_valid(form)
         phone = form.cleaned_data.get('phone')
@@ -61,9 +67,12 @@ class RegisterView(CreateView):
             from affiliates.services import assign_referred_user, capture_referral_from_request
             affiliate = capture_referral_from_request(self.request)
             assign_referred_user(user, affiliate)
-            login(self.request, user)
-            # ایجاد پروفایل
+            login(self.request, user, backend='accounts.backends.PhoneAuthBackend')
             UserProfile.objects.get_or_create(user=user)
+            messages.info(
+                self.request,
+                'حساب شما ساخته شد. برای امنیت بیشتر، بعداً شماره موبایل را با پیامک تأیید کنید.',
+            )
         return response
 
 

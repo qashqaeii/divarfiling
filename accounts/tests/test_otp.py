@@ -139,3 +139,23 @@ class OtpAuthFlowTests(TestCase):
     def test_password_login_still_works(self):
         logged_in = self.client.login(username='09122222222', password='ComplexPass123!')
         self.assertTrue(logged_in)
+
+    def test_password_register_fallback(self):
+        phone = '09125555555'
+        response = self.client.post(reverse('register_password'), {
+            'phone': phone,
+            'password1': 'ComplexPass123!',
+            'password2': 'ComplexPass123!',
+        })
+        self.assertEqual(response.status_code, 302)
+        user = User.objects.get(phone=phone)
+        self.assertFalse(user.phone_verified)
+        self.assertTrue(user.check_password('ComplexPass123!'))
+
+    def test_otp_send_failure_redirects_to_password_register(self):
+        from accounts.services.otp import OtpError
+
+        with patch('accounts.otp_views.request_otp', side_effect=OtpError('ارسال ناموفق', code='sms_send_failed')):
+            response = self.client.post(reverse('register'), {'phone': '09126666666'})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('register_password'))

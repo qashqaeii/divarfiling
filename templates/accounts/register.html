@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}ثبت‌نام | میزکار{% endblock %}
+{% block title %}ثبت‌نام با رمز عبور | میزکار{% endblock %}
 {% block body_class %}mk-auth-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/auth.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -30,9 +30,9 @@
                 <div class="mk-auth-stat"><strong>ابری</strong><span>هر دستگاه</span></div>
             </div>
             <div class="mk-auth-features-v2">
-                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>ثبت‌نام ساده با شماره موبایل</span></div>
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>ثبت‌نام ساده با شماره و رمز</span></div>
                 <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>داشبورد CRM از همان لحظه اول</span></div>
-                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>امنیت رمز و احراز هویت استاندارد</span></div>
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>امکان تأیید موبایل بعداً با پیامک</span></div>
             </div>
         </div>
     </aside>
@@ -45,9 +45,18 @@
             </div>
             <a href="{% url 'home' %}" class="mk-auth-back-v2"><i class="fas fa-arrow-right"></i> بازگشت به سایت</a>
 
+            {% if messages %}
+            {% for message in messages %}
+            <div class="mk-notice mk-notice--{% if message.tags == 'error' %}error{% else %}success{% endif %} mk-notice--inline mk-notice--compact" role="alert">
+                <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-{% if message.tags == 'error' %}triangle-exclamation{% else %}circle-check{% endif %}"></i></span>
+                <div class="mk-notice__body"><span class="mk-notice__text">{{ message }}</span></div>
+            </div>
+            {% endfor %}
+            {% endif %}
+
             <header class="auth-header-v2">
-                <h1 class="auth-title">ثبت‌نام</h1>
-                <p class="auth-subtitle">اطلاعات زیر را وارد کنید تا حساب شما ساخته شود</p>
+                <h1 class="auth-title">ثبت‌نام با رمز عبور</h1>
+                <p class="auth-subtitle">اگر پیامک در دسترس نیست، با شماره و رمز حساب بسازید</p>
             </header>
 
             <form method="post" class="auth-form" novalidate>
@@ -107,6 +116,12 @@
                 <button type="submit" class="auth-submit-btn auth-submit-btn-v2"><span>ایجاد حساب و ورود</span></button>
             </form>
 
+            <div class="auth-alt-divider"><span>یا</span></div>
+            <a href="{% url 'register' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="auth-alt-btn">
+                <i class="fas fa-comment-sms" aria-hidden="true"></i>
+                ثبت‌نام با کد پیامکی
+            </a>
+
             <footer class="auth-footer-v2">
                 <a href="{% url 'login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">قبلاً ثبت‌نام کرده‌اید؟ وارد شوید</a>
             </footer>
@@ -116,5 +131,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/auth.js' %}?v=1"></script>
+<script src="{% static 'js/auth.js' %}?v=2"></script>
 {% endblock %}

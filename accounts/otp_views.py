@@ -237,14 +237,18 @@ class OtpRegisterStartView(View):
                 'step': 'phone',
                 'next': request.POST.get('next', ''),
                 'retry_after': exc.retry_after,
+                'show_password_fallback': True,
             })
         except OtpError as exc:
-            messages.error(request, exc.message)
-            return render(request, self.template_name, {
-                'form': form,
-                'step': 'phone',
-                'next': request.POST.get('next', ''),
-            })
+            messages.error(
+                request,
+                f'{exc.message} می‌توانید فعلاً با رمز عبور ثبت‌نام کنید.',
+            )
+            url = reverse('register_password')
+            next_q = request.POST.get('next') or request.GET.get('next')
+            if next_q:
+                url = f'{url}?next={next_q}'
+            return redirect(url)
 
         _store_challenge(request, challenge.phone, 'register')
         request.session.pop(SESSION_REGISTER_VERIFIED, None)

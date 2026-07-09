@@ -91,6 +91,8 @@ class RegisterForm(UserCreationForm):
         user = super().save(commit=False)
         phone = self.cleaned_data['phone']
         user.phone = phone
+        user.phone_verified = False
+        user.phone_verified_at = None
         user.username = phone_username(phone)
         base_username = user.username
         n = 1

@@ -77,6 +77,12 @@
                 <button type="submit" class="auth-submit-btn auth-submit-btn-v2"><span>دریافت کد تأیید</span></button>
             </form>
 
+            <div class="auth-alt-divider"><span>یا</span></div>
+            <a href="{% url 'register_password' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="auth-alt-btn">
+                <i class="fas fa-key" aria-hidden="true"></i>
+                ثبت‌نام با رمز عبور (بدون پیامک)
+            </a>
+
             {% elif step == 'code' %}
             <header class="auth-header-v2">
                 <h1 class="auth-title">تأیید شماره</h1>
@@ -111,6 +117,9 @@
                 <button type="submit" class="auth-resend-btn" data-otp-resend data-seconds="60">ارسال مجدد کد</button>
             </form>
             <p class="auth-hint auth-hint-center"><a href="{% url 'register' %}">تغییر شماره موبایل</a></p>
+            <p class="auth-hint auth-hint-center">
+                <a href="{% url 'register_password' %}{% if next %}?next={{ next|urlencode }}{% endif %}">کد نمی‌رسد؟ ثبت‌نام با رمز عبور</a>
+            </p>
 
             {% else %}
             <header class="auth-header-v2">

@@ -403,19 +403,12 @@
         vals.forEach(function (el) { observer.observe(el); });
     }
 
-    /* ─── Gallery lightbox ─── */
-    function initGalleryLightbox() {
-        var triggers = Array.prototype.slice.call(document.querySelectorAll('[data-mk-gallery]'));
-        if (!triggers.length) return;
-
-        var items = triggers.map(function (btn) {
-            return {
-                src: btn.getAttribute('data-src') || '',
-                caption: btn.getAttribute('data-caption') || btn.getAttribute('aria-label') || '',
-            };
-        }).filter(function (item) { return item.src; });
-
-        if (!items.length) return;
+    /* ─── Image lightbox (gallery + story) ─── */
+    function initLightbox(options) {
+        var triggers = options.triggers;
+        var items = options.items;
+        var idPrefix = options.idPrefix;
+        if (!triggers.length || !items.length) return;
 
         var current = 0;
         var lightbox = document.createElement('div');
@@ -424,31 +417,31 @@
         lightbox.setAttribute('aria-modal', 'true');
         lightbox.setAttribute('aria-hidden', 'true');
         lightbox.innerHTML = [
-            '<button type="button" class="mk-gallery-lightbox-backdrop" data-mk-gallery-close aria-label="بستن"></button>',
+            '<button type="button" class="mk-gallery-lightbox-backdrop" data-mk-lightbox-close aria-label="بستن"></button>',
             '<div class="mk-gallery-lightbox-panel">',
             '  <div class="mk-gallery-lightbox-toolbar">',
-            '    <p class="mk-gallery-lightbox-title" id="mkGalleryLightboxTitle"></p>',
+            '    <p class="mk-gallery-lightbox-title" id="' + idPrefix + 'Title"></p>',
             '    <div class="mk-gallery-lightbox-actions">',
-            '      <span class="mk-gallery-lightbox-counter" id="mkGalleryLightboxCounter"></span>',
-            '      <button type="button" class="mk-gallery-lightbox-btn" id="mkGalleryLightboxPrev" aria-label="قبلی"><i class="fas fa-chevron-right"></i></button>',
-            '      <button type="button" class="mk-gallery-lightbox-btn" id="mkGalleryLightboxNext" aria-label="بعدی"><i class="fas fa-chevron-left"></i></button>',
-            '      <button type="button" class="mk-gallery-lightbox-btn" id="mkGalleryLightboxClose" aria-label="بستن"><i class="fas fa-xmark"></i></button>',
+            '      <span class="mk-gallery-lightbox-counter" id="' + idPrefix + 'Counter"></span>',
+            '      <button type="button" class="mk-gallery-lightbox-btn" id="' + idPrefix + 'Prev" aria-label="قبلی"><i class="fas fa-chevron-right"></i></button>',
+            '      <button type="button" class="mk-gallery-lightbox-btn" id="' + idPrefix + 'Next" aria-label="بعدی"><i class="fas fa-chevron-left"></i></button>',
+            '      <button type="button" class="mk-gallery-lightbox-btn" id="' + idPrefix + 'Close" aria-label="بستن"><i class="fas fa-xmark"></i></button>',
             '    </div>',
             '  </div>',
             '  <div class="mk-gallery-lightbox-stage">',
-            '    <img class="mk-gallery-lightbox-img" id="mkGalleryLightboxImg" src="" alt="">',
+            '    <img class="mk-gallery-lightbox-img" id="' + idPrefix + 'Img" src="" alt="">',
             '  </div>',
             '</div>',
         ].join('');
         document.body.appendChild(lightbox);
 
-        var imgEl = document.getElementById('mkGalleryLightboxImg');
-        var titleEl = document.getElementById('mkGalleryLightboxTitle');
-        var counterEl = document.getElementById('mkGalleryLightboxCounter');
-        var prevBtn = document.getElementById('mkGalleryLightboxPrev');
-        var nextBtn = document.getElementById('mkGalleryLightboxNext');
-        var closeBtn = document.getElementById('mkGalleryLightboxClose');
-        var backdrop = lightbox.querySelector('[data-mk-gallery-close]');
+        var imgEl = document.getElementById(idPrefix + 'Img');
+        var titleEl = document.getElementById(idPrefix + 'Title');
+        var counterEl = document.getElementById(idPrefix + 'Counter');
+        var prevBtn = document.getElementById(idPrefix + 'Prev');
+        var nextBtn = document.getElementById(idPrefix + 'Next');
+        var closeBtn = document.getElementById(idPrefix + 'Close');
+        var backdrop = lightbox.querySelector('[data-mk-lightbox-close]');
 
         function render(index) {
             current = (index + items.length) % items.length;
@@ -476,8 +469,14 @@
             imgEl.removeAttribute('src');
         }
 
-        triggers.forEach(function (btn, index) {
-            btn.addEventListener('click', function () { open(index); });
+        triggers.forEach(function (trigger, index) {
+            trigger.addEventListener('click', function () { open(index); });
+            trigger.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    open(index);
+                }
+            });
         });
 
         prevBtn.addEventListener('click', function () { render(current - 1); });
@@ -497,6 +496,62 @@
                 e.preventDefault();
                 render(current - 1);
             }
+        });
+    }
+
+    function initGalleryLightbox() {
+        var triggers = Array.prototype.slice.call(document.querySelectorAll('[data-mk-gallery]'));
+        if (!triggers.length) return;
+
+        var items = triggers.map(function (btn) {
+            return {
+                src: btn.getAttribute('data-src') || '',
+                caption: btn.getAttribute('data-caption') || btn.getAttribute('aria-label') || '',
+            };
+        }).filter(function (item) { return item.src; });
+
+        if (!items.length) return;
+
+        initLightbox({
+            triggers: triggers,
+            items: items,
+            idPrefix: 'mkGalleryLightbox',
+        });
+    }
+
+    function initStoryLightbox() {
+        var root = document.querySelector('[data-mk-story]');
+        if (!root) return;
+
+        var imgs = Array.prototype.slice.call(root.querySelectorAll('.mk-story-shot__img'));
+        var triggers = [];
+        var items = [];
+
+        imgs.forEach(function (img) {
+            if (img.classList.contains('is-missing')) return;
+
+            var src = img.currentSrc || img.getAttribute('src') || img.src;
+            if (!src) return;
+
+            var figure = img.closest('.mk-story-shot');
+            if (!figure) return;
+
+            var caption = img.getAttribute('alt') || '';
+            figure.classList.add('mk-story-shot--zoomable');
+            figure.setAttribute('role', 'button');
+            figure.setAttribute('tabindex', '0');
+            figure.setAttribute('aria-label', caption ? ('بزرگ‌نمایی: ' + caption) : 'بزرگ‌نمایی تصویر');
+
+            triggers.push(figure);
+            items.push({ src: src, caption: caption });
+        });
+
+        if (!items.length) return;
+
+        initLightbox({
+            triggers: triggers,
+            items: items,
+            idPrefix: 'mkStoryLightbox',
         });
     }
 
@@ -813,6 +868,7 @@
         initCrmMock();
         animateStatCounts();
         initGalleryLightbox();
+        initStoryLightbox();
         initHeroMagnifier();
         initHeroDeck();
         initHomeMobileHeader();

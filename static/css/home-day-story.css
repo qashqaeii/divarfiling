@@ -426,6 +426,49 @@
     overflow: hidden;
 }
 
+.mk-story-shot--zoomable {
+    cursor: zoom-in;
+}
+
+.mk-story-shot--zoomable:focus-visible {
+    outline: 2px solid rgba(124, 58, 237, 0.55);
+    outline-offset: 3px;
+}
+
+.mk-story-shot--zoomable::after {
+    content: '\f00e';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    inset-inline-end: 0.65rem;
+    bottom: 0.65rem;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    color: #fff;
+    background: rgba(15, 23, 42, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.mk-story-shot--zoomable:hover::after,
+.mk-story-shot--zoomable:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.mk-story-shot--product.mk-story-shot--zoomable::after {
+    bottom: 0.55rem;
+}
+
 .mk-story-shot--pain {
     background:
         linear-gradient(145deg, rgba(15, 23, 42, 0.03), rgba(148, 163, 184, 0.06));

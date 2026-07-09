@@ -2,7 +2,7 @@
 <div class="banners-section">
     <div class="container">
         {% for banner in banners %}
-        <div class="banner-card">
+        <div class="banner-card" data-notice-kind="banner" data-notice-id="{{ banner.pk }}">
             {% if banner.banner_type == 'image' and banner.image %}
             <a href="{% if banner.link %}{{ banner.link }}{% else %}#{% endif %}" class="banner-card-link">
                 <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="banner-card-image">

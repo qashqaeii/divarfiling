@@ -3,7 +3,7 @@
 <div class="mk-notices mk-notices--banner announcements-section" role="region" aria-label="اطلاعیه‌ها">
     <div class="mk-notices__inner">
         {% for announcement in announcements %}
-        <div class="mk-notice mk-notice--promo mk-notice--banner announcement-bar">
+        <div class="mk-notice mk-notice--promo mk-notice--banner announcement-bar" data-notice-kind="announcement" data-notice-id="{{ announcement.pk }}">
             <span class="mk-notice__badge" aria-hidden="true">
                 <i class="fas fa-bullhorn"></i>
                 <span class="mk-notice__badge-label">اطلاعیه</span>

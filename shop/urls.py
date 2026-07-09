@@ -2,7 +2,7 @@
 URLهای فروشگاه
 """
 from django.urls import path
-from . import views
+from . import notice_views, views
 from .seo_landings import landing_urlpatterns
 
 urlpatterns = [
@@ -23,5 +23,6 @@ urlpatterns = [
     path('amoozesh/android/', views.AndroidTutorialView.as_view(), name='android_tutorial'),
     path('author/hossein-qashqaeii/', views.AuthorPageView.as_view(), name='author_hossein_qashqaeii'),
     path('66998772.txt', views.verification_file, name='verification_file'),
+    path('api/notices/dismiss/', notice_views.DismissNoticeView.as_view(), name='dismiss_notice'),
 ] + landing_urlpatterns()
 

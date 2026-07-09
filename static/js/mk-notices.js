@@ -1,11 +1,13 @@
 /**
  * Mizkar Notice System — unified dismiss, auto-hide & toast API
+ * Session-persistent dismiss for referral / announcements / banners.
  */
 (function (global) {
     'use strict';
 
     var DURATION = 220;
     var AUTO_DISMISS_MS = 5000;
+    var DISMISS_URL = '/api/notices/dismiss/';
 
     var ICONS = {
         success: 'check-circle',
@@ -27,13 +29,49 @@
         return document.documentElement.getAttribute('dir') === 'rtl';
     }
 
+    function getCsrfToken() {
+        var input = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (input && input.value) return input.value;
+        var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function persistDismiss(notice) {
+        if (!notice) return;
+        var kind = notice.getAttribute('data-notice-kind');
+        if (!kind) {
+            var parent = notice.closest('[data-notice-kind]');
+            if (parent) kind = parent.getAttribute('data-notice-kind');
+        }
+        if (!kind) return;
+
+        var id = notice.getAttribute('data-notice-id') || '';
+        var payload = { kind: kind };
+        if (id) payload.id = id;
+
+        var headers = {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+        var csrf = getCsrfToken();
+        if (csrf) headers['X-CSRFToken'] = csrf;
+
+        fetch(DISMISS_URL, {
+            method: 'POST',
+            headers: headers,
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        }).catch(function () { /* silent — UI already closed */ });
+    }
+
     function dismiss(el, callback) {
         if (!el || el.classList.contains('is-leaving')) return;
+        persistDismiss(el);
         el.classList.add('is-leaving');
         setTimeout(function () {
             el.remove();
             if (typeof callback === 'function') callback();
-            var parent = el.closest('.mk-notices--banner, .announcements-section, .mk-notices');
+            var parent = el.closest('.mk-notices--banner, .announcements-section, .mk-notices, .banners-section');
             if (parent && parent.querySelectorAll('.mk-notice, .announcement-bar, .banner-card').length === 0) {
                 parent.classList.add('is-leaving');
                 setTimeout(function () { parent.remove(); }, DURATION);

@@ -1,7 +1,7 @@
 {% if referral_banner %}
-<div class="mk-notices mk-notices--banner mk-referral-strip" role="region" aria-label="دعوت معرف">
+<div class="mk-notices mk-notices--banner mk-referral-strip" role="region" aria-label="دعوت معرف" data-notice-kind="referral">
     <div class="mk-notices__inner">
-        <div class="mk-notice mk-notice--discount mk-notice--banner mk-referral-bar">
+        <div class="mk-notice mk-notice--discount mk-notice--banner mk-referral-bar" data-notice-kind="referral">
             <span class="mk-notice__badge" aria-hidden="true">
                 <i class="fas fa-user-plus"></i>
                 <span class="mk-notice__badge-label">دعوت ویژه</span>
@@ -23,6 +23,9 @@
                     <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 </a>
             </div>
+            <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن دعوت">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
         </div>
     </div>
 </div>

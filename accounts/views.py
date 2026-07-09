@@ -276,7 +276,9 @@ class UpdateUserInfoView(LoginRequiredMixin, View):
                 if User.objects.filter(phone=phone).exclude(pk=user.pk).exists():
                     return JsonResponse({'success': False, 'error': 'این شماره قبلاً ثبت شده است.'}, status=400)
                 user.phone = phone
-            
+                user.phone_verified = False
+                user.phone_verified_at = None
+
             user.save()
             return JsonResponse({
                 'success': True,

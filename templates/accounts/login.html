@@ -5,7 +5,7 @@
 {% block body_class %}mk-auth-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/auth.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -90,6 +90,12 @@
                 <button type="submit" class="auth-submit-btn auth-submit-btn-v2"><span>ورود به میزکار</span></button>
             </form>
 
+            <div class="auth-alt-divider"><span>یا</span></div>
+            <a href="{% url 'otp_login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="auth-alt-btn">
+                <i class="fas fa-comment-sms" aria-hidden="true"></i>
+                ورود با کد پیامکی
+            </a>
+
             <footer class="auth-footer-v2">
                 <a href="{% url 'password_reset' %}">رمز عبور را فراموش کرده‌اید؟</a>
                 <a href="{% url 'register' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">حساب ندارید؟ ثبت‌نام رایگان</a>
@@ -100,5 +106,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/auth.js' %}?v=1"></script>
+<script src="{% static 'js/auth.js' %}?v=2"></script>
 {% endblock %}

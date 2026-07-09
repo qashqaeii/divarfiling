@@ -138,4 +138,89 @@ class UserInfoForm(forms.ModelForm):
             'email': 'ایمیل (اختیاری)',
             'phone': 'شماره موبایل',
         }
+
+
+class OtpPhoneForm(forms.Form):
+    """فرم دریافت شماره برای ارسال OTP."""
+
+    phone = forms.CharField(
+        max_length=20,
+        label='شماره موبایل',
+        widget=forms.TextInput(attrs={
+            'class': 'auth-form-input',
+            'placeholder': '۰۹۱۲۳۴۵۶۷۸۹',
+            'autofocus': True,
+            'autocomplete': 'tel',
+            'dir': 'ltr',
+            'inputmode': 'tel',
+        }),
+    )
+
+    def clean_phone(self):
+        phone = normalize_phone(self.cleaned_data.get('phone', ''))
+        if not is_valid_iran_mobile(phone):
+            raise forms.ValidationError('شماره موبایل معتبر نیست (مثال: ۰۹۱۲۳۴۵۶۷۸۹).')
+        return phone
+
+
+class OtpCodeForm(forms.Form):
+    """فرم ورود کد یکبارمصرف."""
+
+    code = forms.CharField(
+        max_length=8,
+        label='کد تأیید',
+        widget=forms.TextInput(attrs={
+            'class': 'auth-form-input auth-otp-input',
+            'placeholder': '------',
+            'autofocus': True,
+            'autocomplete': 'one-time-code',
+            'dir': 'ltr',
+            'inputmode': 'numeric',
+            'pattern': '[0-9]*',
+            'maxlength': '8',
+        }),
+    )
+
+    def clean_code(self):
+        raw = (self.cleaned_data.get('code') or '').strip()
+        raw = raw.translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩', '01234567890123456789'))
+        if not raw.isdigit():
+            raise forms.ValidationError('کد تأیید باید عددی باشد.')
+        return raw
+
+
+class RegisterPasswordForm(forms.Form):
+    """تعیین رمز پس از تأیید OTP در ثبت‌نام."""
+
+    password1 = forms.CharField(
+        label='رمز عبور',
+        widget=forms.PasswordInput(attrs={
+            'class': 'auth-form-input',
+            'placeholder': 'حداقل ۸ کاراکتر',
+            'autocomplete': 'new-password',
+            'data-password-strength': '1',
+        }),
+    )
+    password2 = forms.CharField(
+        label='تکرار رمز عبور',
+        widget=forms.PasswordInput(attrs={
+            'class': 'auth-form-input',
+            'placeholder': 'تکرار رمز عبور',
+            'autocomplete': 'new-password',
+        }),
+    )
+
+    def clean_password1(self):
+        password = self.cleaned_data.get('password1') or ''
+        if len(password) < 8:
+            raise forms.ValidationError('رمز عبور باید حداقل ۸ کاراکتر باشد.')
+        return password
+
+    def clean(self):
+        cleaned = super().clean()
+        p1 = cleaned.get('password1')
+        p2 = cleaned.get('password2')
+        if p1 and p2 and p1 != p2:
+            self.add_error('password2', 'رمز عبور و تکرار آن یکسان نیستند.')
+        return cleaned
 

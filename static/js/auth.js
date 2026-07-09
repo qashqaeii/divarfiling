@@ -65,12 +65,47 @@
         });
     }
 
+    function toPersianDigits(n) {
+        return String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+    }
+
+    function initOtpResend() {
+        document.querySelectorAll('[data-otp-resend]').forEach(btn => {
+            const seconds = parseInt(btn.getAttribute('data-seconds') || '60', 10);
+            if (!seconds || seconds < 1) return;
+            let left = seconds;
+            const label = btn.textContent;
+            btn.disabled = true;
+            const tick = () => {
+                if (left <= 0) {
+                    btn.disabled = false;
+                    btn.textContent = label;
+                    return;
+                }
+                btn.textContent = `ارسال مجدد (${toPersianDigits(left)} ثانیه)`;
+                left -= 1;
+                window.setTimeout(tick, 1000);
+            };
+            tick();
+        });
+    }
+
+    function initOtpInput() {
+        const input = document.querySelector('.auth-otp-input');
+        if (!input) return;
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/[^\d۰-۹٠-٩]/g, '').slice(0, 8);
+        });
+    }
+
     function init() {
         document.querySelectorAll('[data-password-toggle]').forEach(btn => {
             btn.addEventListener('click', () => togglePassword(btn));
         });
         initPasswordStrength();
         initSubmitState();
+        initOtpResend();
+        initOtpInput();
     }
 
     if (document.readyState === 'loading') {

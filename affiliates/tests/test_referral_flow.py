@@ -139,13 +139,28 @@ class AffiliateReferralFlowTests(TestCase):
         self.assertFalse(data['items'][0]['has_paid_order'])
 
     def test_register_sets_referred_by(self):
+        from accounts.services.otp import request_otp, verify_otp
+
         client = Client()
         client.cookies[settings.AFFILIATE_COOKIE_NAME] = self.affiliate.code
-        response = client.post(reverse('register'), {
-            'phone': '09124444444',
-            'password1': 'ComplexPass123!',
-            'password2': 'ComplexPass123!',
-        })
+        phone = '09124444444'
+
+        with self.settings(SMS_PROVIDER='console', FARAZSMS_PATTERN_OTP='TESTOTP'):
+            challenge = request_otp(phone, 'register')
+            self.assertTrue(challenge.debug_code)
+            verify_otp(phone, 'register', challenge.debug_code)
+
+            session = client.session
+            session['otp_phone'] = phone
+            session['otp_purpose'] = 'register'
+            session['otp_register_verified'] = True
+            session.save()
+
+            response = client.post(reverse('otp_register_password'), {
+                'password1': 'ComplexPass123!',
+                'password2': 'ComplexPass123!',
+            })
         self.assertIn(response.status_code, (302, 200))
-        new_user = User.objects.get(phone='09124444444')
+        new_user = User.objects.get(phone=phone)
         self.assertEqual(new_user.referred_by_id, self.affiliate.pk)
+        self.assertTrue(new_user.phone_verified)

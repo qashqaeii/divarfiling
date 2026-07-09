@@ -4,13 +4,19 @@ URLهای مربوط به حساب کاربری
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from . import views
+from . import otp_views, views
 from .admin_views import AdminDashboardView, AdminExportView, AdminSystemSummaryView
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
+    path('login/otp/', otp_views.OtpLoginStartView.as_view(), name='otp_login'),
+    path('login/otp/verify/', otp_views.OtpLoginVerifyView.as_view(), name='otp_login_verify'),
+    path('login/otp/resend/', otp_views.OtpLoginResendView.as_view(), name='otp_login_resend'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
-    path('register/', views.RegisterView.as_view(), name='register'),
+    path('register/', otp_views.OtpRegisterStartView.as_view(), name='register'),
+    path('register/verify/', otp_views.OtpRegisterVerifyView.as_view(), name='otp_register_verify'),
+    path('register/resend/', otp_views.OtpRegisterResendView.as_view(), name='otp_register_resend'),
+    path('register/password/', otp_views.OtpRegisterPasswordView.as_view(), name='otp_register_password'),
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('dashboard/claim-license/', views.ClaimLicenseView.as_view(), name='claim_license'),
     path('dashboard/licenses/register-device/', views.RegisterDeviceSlotView.as_view(), name='license_register_device'),
@@ -53,4 +59,3 @@ urlpatterns = [
     path('api/update-user-info/', views.UpdateUserInfoView.as_view(), name='update_user_info'),
     path('api/update-profile/', views.UpdateProfileView.as_view(), name='update_profile'),
 ]
-

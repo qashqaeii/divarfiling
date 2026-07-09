@@ -474,3 +474,127 @@ html.mk-public[data-theme="dark"] .mk-auth-card-v2 {
         font-size: 1.25rem;
     }
 }
+
+/* OTP / multi-step auth */
+.auth-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin: 0 0 1.25rem;
+}
+.auth-step {
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--mk-muted, #94a3b8);
+    background: var(--mk-border, #e2e8f0);
+}
+.auth-step.is-active {
+    color: #fff;
+    background: var(--auth-accent);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
+}
+.auth-step.is-done {
+    color: #fff;
+    background: #16a34a;
+    font-size: 0.65rem;
+}
+.auth-step-line {
+    width: 1.5rem;
+    height: 2px;
+    background: var(--mk-border, #e2e8f0);
+    border-radius: 2px;
+}
+.auth-step-line.is-done {
+    background: #16a34a;
+}
+
+.auth-otp-input {
+    letter-spacing: 0.35em;
+    font-size: 1.25rem !important;
+    font-weight: 700;
+    text-align: center;
+    padding-inline: 1rem !important;
+}
+
+.auth-resend-form {
+    margin-top: 0.85rem;
+    text-align: center;
+}
+.auth-resend-btn {
+    background: none;
+    border: none;
+    color: var(--auth-accent);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.35rem 0.5rem;
+    font-family: inherit;
+}
+.auth-resend-btn:disabled {
+    color: var(--mk-muted, #94a3b8);
+    cursor: not-allowed;
+}
+.auth-hint-center {
+    text-align: center;
+    margin-top: 0.5rem;
+}
+.auth-hint-center a {
+    color: var(--auth-accent);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-alt-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.1rem 0 0.85rem;
+    color: var(--mk-muted, #94a3b8);
+    font-size: 0.72rem;
+}
+.auth-alt-divider::before,
+.auth-alt-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--mk-border, #e2e8f0);
+}
+.auth-alt-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--mk-border, #e2e8f0);
+    background: var(--mk-surface, #fff);
+    color: var(--mk-text, #0f172a) !important;
+    text-decoration: none !important;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: border-color 0.15s, background 0.15s;
+}
+.auth-alt-btn:hover {
+    border-color: var(--auth-accent);
+    background: rgba(124, 58, 237, 0.04);
+}
+.auth-alt-btn i {
+    color: var(--auth-accent);
+}
+
+html.mk-public[data-theme="dark"] .auth-alt-btn {
+    background: #0f172a;
+    border-color: rgba(255,255,255,0.1);
+    color: #e2e8f0 !important;
+}
+html.mk-public[data-theme="dark"] .auth-step:not(.is-active):not(.is-done) {
+    background: rgba(255,255,255,0.08);
+}

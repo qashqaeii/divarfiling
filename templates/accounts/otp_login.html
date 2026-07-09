@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ورود با پیامک | میزکار{% endblock %}
+{% block body_class %}mk-auth-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}?v=7">
+{% endblock %}
+
+{% block content %}
+<div class="mk-auth-v2">
+    <aside class="mk-auth-visual-v2" aria-hidden="true">
+        <div class="mk-auth-grid-bg"></div>
+        <div class="mk-auth-visual-inner">
+            <div class="mk-auth-brand-row">
+                <div class="mk-auth-brand-logo-wrap">
+                    <img src="{% static 'logo.png' %}" alt="" width="36" height="36">
+                </div>
+                <div>
+                    <div class="mk-auth-brand-tag">فایلینگ دیوار</div>
+                    <strong style="font-size:.85rem">میزکار هوشمند</strong>
+                </div>
+            </div>
+            <h2>ورود امن با کد یکبارمصرف</h2>
+            <p class="mk-auth-lead">کد تأیید به شماره موبایل شما پیامک می‌شود — سریع، بدون نیاز به به‌خاطر سپردن رمز.</p>
+            <div class="mk-auth-features-v2">
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>کد ۶ رقمی با انقضای کوتاه</span></div>
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>محدودیت ارسال مجدد و تلاش</span></div>
+                <div class="mk-auth-feature-v2"><i class="fas fa-check"></i><span>هماهنگ با حساب موبایل شما</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="mk-auth-form-side-v2">
+        <div class="mk-auth-card-v2">
+            <div class="mk-auth-mobile-brand">
+                <img src="{% static 'logo.png' %}" alt="">
+                <strong>میزکار هوشمند املاک</strong>
+            </div>
+            <a href="{% url 'home' %}" class="mk-auth-back-v2"><i class="fas fa-arrow-right"></i> بازگشت به سایت</a>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="mk-notice mk-notice--{% if message.tags == 'error' %}error{% else %}success{% endif %} mk-notice--inline mk-notice--compact" role="alert">
+                <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-{% if message.tags == 'error' %}triangle-exclamation{% else %}circle-check{% endif %}"></i></span>
+                <div class="mk-notice__body"><span class="mk-notice__text">{{ message }}</span></div>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% if step == 'phone' %}
+            <header class="auth-header-v2">
+                <h1 class="auth-title">ورود با پیامک</h1>
+                <p class="auth-subtitle">شماره موبایل حساب خود را وارد کنید</p>
+            </header>
+            <div class="auth-steps" aria-hidden="true">
+                <span class="auth-step is-active">۱</span>
+                <span class="auth-step-line"></span>
+                <span class="auth-step">۲</span>
+            </div>
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.phone.id_for_label }}">شماره موبایل</label>
+                    <div class="auth-input-wrap">
+                        {{ form.phone }}
+                        <i class="fas fa-phone auth-input-icon" aria-hidden="true"></i>
+                    </div>
+                    {% if form.phone.errors %}
+                    <div class="auth-form-error-v2"><i class="fas fa-circle-exclamation"></i> {{ form.phone.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <button type="submit" class="auth-submit-btn auth-submit-btn-v2"><span>دریافت کد تأیید</span></button>
+            </form>
+            {% else %}
+            <header class="auth-header-v2">
+                <h1 class="auth-title">کد تأیید</h1>
+                <p class="auth-subtitle">کد ارسال‌شده به <strong dir="ltr">{{ phone_display }}</strong> را وارد کنید</p>
+            </header>
+            <div class="auth-steps" aria-hidden="true">
+                <span class="auth-step is-done"><i class="fas fa-check"></i></span>
+                <span class="auth-step-line is-done"></span>
+                <span class="auth-step is-active">۲</span>
+            </div>
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.code.id_for_label }}">کد یکبارمصرف</label>
+                    <div class="auth-input-wrap">
+                        {{ form.code }}
+                        <i class="fas fa-shield-halved auth-input-icon" aria-hidden="true"></i>
+                    </div>
+                    <p class="auth-hint">کد تا ۲ دقیقه معتبر است</p>
+                    {% if form.code.errors %}
+                    <div class="auth-form-error-v2"><i class="fas fa-circle-exclamation"></i> {{ form.code.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <button type="submit" class="auth-submit-btn auth-submit-btn-v2"><span>تأیید و ورود</span></button>
+            </form>
+            <form method="post" action="{{ resend_url }}" class="auth-resend-form">
+                {% csrf_token %}
+                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                <button type="submit" class="auth-resend-btn" data-otp-resend data-seconds="60">ارسال مجدد کد</button>
+            </form>
+            <p class="auth-hint auth-hint-center"><a href="{% url 'otp_login' %}">تغییر شماره موبایل</a></p>
+            {% endif %}
+
+            <footer class="auth-footer-v2">
+                <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">ورود با رمز عبور</a>
+                <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">حساب ندارید؟ ثبت‌نام</a>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}?v=2"></script>
+{% endblock %}

@@ -259,6 +259,39 @@ AFFILIATE_COOKIE_DAYS = 30  # مدت اعتبار cookie (روز)
 AFFILIATE_DISCOUNT_ENABLED = True
 AFFILIATE_DISCOUNT_FIRST_ORDER_ONLY = True  # تخفیف معرف فقط روی اولین خرید موفق
 
+# ── SMS / FarazSMS (IranPayamak) — https://docs.iranpayamak.com/ ──
+# SMS_PROVIDER=console برای توسعه بدون ارسال واقعی؛ faraz برای تولید
+SMS_ENABLED = config('SMS_ENABLED', default=True, cast=bool)
+SMS_PROVIDER = config('SMS_PROVIDER', default='console')
+FARAZSMS_API_KEY = config('FARAZSMS_API_KEY', default='')
+FARAZSMS_LINE_NUMBER = config('FARAZSMS_LINE_NUMBER', default='90008361')
+FARAZSMS_BASE_URL = config('FARAZSMS_BASE_URL', default='https://api.iranpayamak.com')
+FARAZSMS_TIMEOUT = config('FARAZSMS_TIMEOUT', default=15, cast=int)
+# نام متغیر الگو در پنل فراز (مثلاً code یا verification-code)
+FARAZSMS_OTP_ATTR = config('FARAZSMS_OTP_ATTR', default='code')
+FARAZSMS_PATTERNS = {
+    'login': config('FARAZSMS_PATTERN_LOGIN', default=''),
+    'register': config('FARAZSMS_PATTERN_REGISTER', default=''),
+    'verify_phone': config('FARAZSMS_PATTERN_VERIFY_PHONE', default=''),
+    'license_renewal': config('FARAZSMS_PATTERN_LICENSE_RENEWAL', default=''),
+    'system': config('FARAZSMS_PATTERN_SYSTEM', default=''),
+}
+# اگر الگوی جداگانه ندارید، یک الگو برای همه OTPها:
+_FARAZSMS_PATTERN_OTP = config('FARAZSMS_PATTERN_OTP', default='')
+if _FARAZSMS_PATTERN_OTP:
+    for _otp_key in ('login', 'register', 'verify_phone'):
+        if not FARAZSMS_PATTERNS[_otp_key]:
+            FARAZSMS_PATTERNS[_otp_key] = _FARAZSMS_PATTERN_OTP
+
+OTP_LENGTH = config('OTP_LENGTH', default=6, cast=int)
+OTP_EXPIRY_SECONDS = config('OTP_EXPIRY_SECONDS', default=120, cast=int)
+OTP_RESEND_SECONDS = config('OTP_RESEND_SECONDS', default=60, cast=int)
+OTP_MAX_ATTEMPTS = config('OTP_MAX_ATTEMPTS', default=5, cast=int)
+OTP_MAX_SENDS_PER_HOUR = config('OTP_MAX_SENDS_PER_HOUR', default=5, cast=int)
+OTP_PEPPER = config('OTP_PEPPER', default='')
+# فقط برای تست خودکار — کد را در پاسخ/چالش برنگردانید در تولید
+OTP_DEBUG_RETURN_CODE = config('OTP_DEBUG_RETURN_CODE', default=DEBUG, cast=bool)
+
 # Email Settings
 EMAIL_BACKEND = config(
     'EMAIL_BACKEND',

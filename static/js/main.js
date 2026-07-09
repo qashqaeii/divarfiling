@@ -20,7 +20,7 @@ function initPublicThemeToggle() {
         });
     }
 
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem('ws-theme');
     if (saved === 'light' || saved === 'dark') {
         applyTheme(saved);
     } else {
@@ -42,59 +42,63 @@ document.addEventListener('DOMContentLoaded', function() {
     function initPublicMobileMenu() {
         const mobileMenuToggle = document.getElementById('mobileMenuToggle');
         const mobilePanel = document.getElementById('mkMobilePanel');
-        const navMenu = document.getElementById('siteNavMenu') || document.querySelector('.nav-menu');
-        const navAccount = document.getElementById('siteNavAccount') || document.querySelector('.nav-actions');
-        const siteNav = document.querySelector('.mk-navbar') || document.querySelector('.navbar');
-        const navInner = document.querySelector('.mk-nav-inner') || document.querySelector('.nav-wrapper');
         const mqMobile = window.matchMedia('(max-width: 960px)');
-        let navBackdrop = document.getElementById('mkMobileNavBackdrop');
 
-        if (!mobileMenuToggle || !navMenu) return;
+        if (!mobileMenuToggle || !mobilePanel) return;
+
+        const toggleIcon = mobileMenuToggle.querySelector('i');
+        const navMenu = mobilePanel.querySelector('#siteNavMenu');
+        const navAccount = mobilePanel.querySelector('#siteNavAccount');
+        const siteNav = document.querySelector('.mk-navbar') || document.querySelector('.navbar');
+
+        let navBackdrop = document.getElementById('mkMobileNavBackdrop');
+        let suppressOutsideClose = false;
 
         if (!navBackdrop) {
             navBackdrop = document.createElement('div');
             navBackdrop.id = 'mkMobileNavBackdrop';
             navBackdrop.className = 'mk-mobile-nav-backdrop';
             navBackdrop.setAttribute('aria-hidden', 'true');
+            navBackdrop.tabIndex = -1;
             document.body.appendChild(navBackdrop);
-            navBackdrop.addEventListener('click', function () {
-                closeMenu();
-            });
         }
 
-        const toggleIcon = mobileMenuToggle.querySelector('i');
+        function isMobileView() {
+            return mqMobile.matches;
+        }
 
         function isMenuOpen() {
-            return mobilePanel ? mobilePanel.classList.contains('active') : navMenu.classList.contains('active');
-        }
-
-        function ensurePanelPlacement() {
-            if (!mobilePanel || !navInner) return;
-            if (mqMobile.matches) {
-                if (mobilePanel.parentElement !== document.body) {
-                    document.body.appendChild(mobilePanel);
-                }
-            } else if (mobilePanel.parentElement !== navInner) {
-                navInner.appendChild(mobilePanel);
-            }
+            return mobilePanel.classList.contains('is-open');
         }
 
         function setMenuOpen(open) {
-            if (open && mqMobile.matches) {
-                ensurePanelPlacement();
+            if (!isMobileView()) {
+                open = false;
             }
-            mobilePanel?.classList.toggle('active', open);
-            navMenu.classList.toggle('active', open);
+
+            mobilePanel.classList.toggle('is-open', open);
+            mobilePanel.classList.toggle('active', open);
+            navMenu?.classList.toggle('active', open);
             navAccount?.classList.toggle('active', open);
             siteNav?.classList.toggle('mk-nav-open', open);
+            document.documentElement.classList.toggle('mk-nav-open', open);
             document.body.classList.toggle('mk-nav-open', open);
             navBackdrop.classList.toggle('is-visible', open);
+
+            mobilePanel.setAttribute('aria-hidden', open ? 'false' : 'true');
             navBackdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
-            mobilePanel?.setAttribute('aria-hidden', open ? 'false' : 'true');
             mobileMenuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             mobileMenuToggle.setAttribute('aria-label', open ? 'بستن منو' : 'باز کردن منو');
+
             if (toggleIcon) {
                 toggleIcon.className = open ? 'fas fa-times' : 'fas fa-bars';
+            }
+
+            if (open) {
+                suppressOutsideClose = true;
+                window.setTimeout(function () {
+                    suppressOutsideClose = false;
+                }, 320);
             }
         }
 
@@ -102,24 +106,26 @@ document.addEventListener('DOMContentLoaded', function() {
             setMenuOpen(false);
         }
 
-        ensurePanelPlacement();
+        function openMenu() {
+            if (!isMobileView()) return;
+            setMenuOpen(true);
+        }
+
         if (mqMobile.addEventListener) {
-            mqMobile.addEventListener('change', function () {
-                closeMenu();
-                ensurePanelPlacement();
-            });
+            mqMobile.addEventListener('change', closeMenu);
         } else if (mqMobile.addListener) {
-            mqMobile.addListener(function () {
-                closeMenu();
-                ensurePanelPlacement();
-            });
+            mqMobile.addListener(closeMenu);
         }
 
         mobileMenuToggle.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            setMenuOpen(!isMenuOpen());
+            if (!isMobileView()) return;
+            if (isMenuOpen()) closeMenu();
+            else openMenu();
         });
+
+        navBackdrop.addEventListener('click', closeMenu);
 
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && isMenuOpen()) {
@@ -128,27 +134,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         document.addEventListener('click', function (e) {
-            if (!isMenuOpen()) return;
-            if (e.target === mobileMenuToggle || mobileMenuToggle.contains(e.target)) return;
-            if (mobilePanel && mobilePanel.contains(e.target)) return;
+            if (!isMenuOpen() || suppressOutsideClose) return;
+            if (mobileMenuToggle.contains(e.target)) return;
+            if (mobilePanel.contains(e.target)) return;
             closeMenu();
         });
 
-        navMenu.querySelectorAll('a').forEach(function (link) {
-            link.addEventListener('click', closeMenu);
-        });
-        navAccount?.querySelectorAll('a').forEach(function (link) {
+        mobilePanel.querySelectorAll('a').forEach(function (link) {
             link.addEventListener('click', closeMenu);
         });
     }
 
     initPublicMobileMenu();
-    
+
     // Alerts handled by mk-notices.js
-    
+
     // Lazy Loading برای تصاویر
     const lazyImages = document.querySelectorAll('img.lazy-load[data-src]');
-    
+
     if ('IntersectionObserver' in window) {
         const imageObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
@@ -161,47 +164,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }, {
-            rootMargin: '50px' // شروع بارگذاری 50px قبل از رسیدن به viewport
+            rootMargin: '50px'
         });
-        
+
         lazyImages.forEach(img => {
             imageObserver.observe(img);
         });
     } else {
-        // Fallback برای مرورگرهای قدیمی
         lazyImages.forEach(img => {
             img.src = img.dataset.src;
             img.classList.add('loaded');
         });
     }
-    
-    // Counter Animation حذف شده - نمایش مستقیم اعداد
+
     const statNumbers = document.querySelectorAll('.stat-number, .hero-stat-number');
     const formatNumber = (num) => {
-        // فرمت اعداد با جداکننده هزارگان فارسی
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "،");
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '،');
     };
-    
-    // نمایش مستقیم اعداد بدون انیمیشن
+
     statNumbers.forEach(stat => {
         const target = parseInt(stat.getAttribute('data-count')) || 0;
         if (target > 0) {
             stat.textContent = formatNumber(target);
         }
     });
-    
-    // Lazy Loading برای نماد اعتماد الکترونیک (Enamad)
+
     const enamadImg = document.querySelector('#enamad-link img[data-src]');
     if (enamadImg) {
-        // لود تصویر بعد از لود کامل صفحه و با تاخیر
         const loadEnamad = () => {
             if (enamadImg.dataset.src) {
                 enamadImg.src = enamadImg.dataset.src;
                 enamadImg.removeAttribute('data-src');
             }
         };
-        
-        // استفاده از IntersectionObserver برای لود وقتی به viewport نزدیک شد
+
         if ('IntersectionObserver' in window) {
             const enamadObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -211,15 +207,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }, {
-                rootMargin: '200px' // شروع بارگذاری 200px قبل از رسیدن به viewport
+                rootMargin: '200px'
             });
-            
+
             enamadObserver.observe(enamadImg);
         } else {
-            // Fallback: لود بعد از 2 ثانیه
             setTimeout(loadEnamad, 2000);
         }
     }
-    
 });
-

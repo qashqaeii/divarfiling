@@ -1,0 +1,24 @@
+<div class="nav-actions mk-nav-account"{% if account_id %} id="{{ account_id }}"{% endif %}>
+    <button type="button" class="mk-theme-toggle mk-theme-toggle--desktop" data-theme-toggle aria-label="فعال‌سازی تم تاریک" title="تم تاریک">
+        <i class="fas fa-sun" aria-hidden="true"></i>
+    </button>
+    {% if user.is_authenticated %}
+    <a href="{% url 'workspace:home' %}" class="mk-nav-btn mk-nav-btn-primary">
+        <i class="fas fa-layer-group" aria-hidden="true"></i>
+        <span>میزکار</span>
+    </a>
+    <a href="{% url 'dashboard' %}" class="mk-nav-btn mk-nav-btn-ghost" title="پروفایل و لایسنس">
+        <i class="fas fa-user" aria-hidden="true"></i>
+        <span>پروفایل</span>
+    </a>
+    <a href="{% url 'logout' %}" class="mk-nav-btn mk-nav-btn-icon" aria-label="خروج" title="خروج">
+        <i class="fas fa-arrow-right-from-bracket" aria-hidden="true"></i>
+    </a>
+    {% else %}
+    <a href="{% url 'register' %}" class="mk-nav-btn mk-nav-btn-primary mk-nav-btn--cta">
+        <i class="fas fa-gift" aria-hidden="true"></i>
+        <span>شروع رایگان میزکار</span>
+    </a>
+    <a href="{% url 'login' %}" class="mk-nav-btn mk-nav-btn-ghost">ورود</a>
+    {% endif %}
+</div>

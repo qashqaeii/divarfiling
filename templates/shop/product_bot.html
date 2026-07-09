@@ -7,7 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=33">
+<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=34">
 {% endblock %}
 
 {% block content %}
@@ -307,7 +307,31 @@
                             <p class="pb-platform-tagline">{{ plat.tagline }}</p>
                         </div>
                     </div>
-                    <div class="pb-platform-media{% if plat.id == 'android' %} pb-platform-media--phone{% else %} pb-platform-media--desktop{% endif %}">
+                    {% if plat.id == 'android' %}
+                    <div class="pb-platform-media pb-platform-media--phone">
+                        <button
+                            type="button"
+                            class="pb-platform-phone-device"
+                            data-pb-lightbox-open
+                            data-pb-lightbox-src="{% static plat.image %}"
+                            data-pb-lightbox-caption="{{ plat.lightbox_caption }}"
+                            aria-label="بزرگنمایی {{ plat.title }}"
+                        >
+                            <span class="pb-platform-phone-bezel">
+                                <span class="pb-platform-phone-island" aria-hidden="true"></span>
+                                <img
+                                    src="{% static plat.image %}"
+                                    alt="{{ plat.image_alt }}"
+                                    class="pb-platform-phone-screen"
+                                    loading="lazy"
+                                    decoding="async"
+                                >
+                            </span>
+                            <span class="pb-app-shot-zoom" aria-hidden="true"><i class="fas fa-search-plus"></i></span>
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="pb-platform-media pb-platform-media--desktop">
                         <button
                             type="button"
                             class="pb-platform-shot pb-app-shot"
@@ -326,6 +350,7 @@
                             <span class="pb-app-shot-zoom" aria-hidden="true"><i class="fas fa-search-plus"></i></span>
                         </button>
                     </div>
+                    {% endif %}
                     <ul class="pb-platform-feats">
                         {% for feat in plat.highlights %}
                         <li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>
@@ -366,31 +391,38 @@
     {# ─── Value props ─── #}
     <section class="pb-band pb-value-band">
         <div class="container">
-            <header class="pb-value-head">
-                <div>
-                    <span class="pb-head-kicker">ارزش پیشنهادی</span>
-                    <h2>ویندوز + اندروید چه می‌کنند؟</h2>
-                    <p>جایگزین کار دستی — استخراج خودکار، CRM موبایل و فایلینگ حرفه‌ای</p>
-                </div>
-                <div class="pb-value-chips" aria-hidden="true">
-                    <span><i class="fab fa-windows"></i> ویندوز</span>
-                    <span><i class="fas fa-plus"></i></span>
-                    <span><i class="fab fa-android"></i> اندروید</span>
-                    <span><i class="fas fa-arrow-left"></i></span>
-                    <span><i class="fas fa-layer-group"></i> میزکار</span>
-                </div>
-            </header>
-            <div class="pb-value-grid">
-                {% for item in bot_page.value_props %}
-                {% cycle 'violet' 'sky' 'emerald' 'amber' as value_accent silent %}
-                <article class="pb-value-item" data-accent="{{ value_accent }}">
-                    <span class="pb-value-item-icon pb-icon pb-icon--md pb-icon--{{ value_accent }}"><i class="fas {{ item.icon }}"></i></span>
-                    <div>
+            <div class="pb-value-shell">
+                <header class="pb-value-head">
+                    <div class="pb-value-head-copy">
+                        <span class="pb-head-kicker">ارزش پیشنهادی</span>
+                        <h2>ویندوز + اندروید چه می‌کنند؟</h2>
+                        <p>جایگزین کار دستی — استخراج خودکار، CRM موبایل و فایلینگ حرفه‌ای در یک اکوسیستم</p>
+                    </div>
+                    <div class="pb-value-flow-badge" aria-hidden="true">
+                        <span><i class="fab fa-windows"></i></span>
+                        <i class="fas fa-plus"></i>
+                        <span><i class="fab fa-android"></i></span>
+                        <i class="fas fa-arrow-left"></i>
+                        <span><i class="fas fa-layer-group"></i></span>
+                    </div>
+                </header>
+                <div class="pb-value-track">
+                    {% for item in bot_page.value_props %}
+                    {% cycle 'violet' 'sky' 'emerald' 'amber' as value_accent silent %}
+                    <article class="pb-value-card" data-accent="{{ value_accent }}">
+                        <span class="pb-value-card-glow" aria-hidden="true"></span>
+                        <span class="pb-value-card-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <span class="pb-value-card-icon pb-icon pb-icon--lg pb-icon--{{ value_accent }}">
+                            <i class="fas {{ item.icon }}"></i>
+                        </span>
                         <h3>{{ item.title }}</h3>
                         <p>{{ item.desc }}</p>
-                    </div>
-                </article>
-                {% endfor %}
+                    </article>
+                    {% if not forloop.last %}
+                    <span class="pb-value-connector" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                    {% endif %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </section>
@@ -398,35 +430,43 @@
     {# ─── Workflow ─── #}
     <section class="pb-band pb-band--alt pb-flow-band">
         <div class="container">
-            <header class="pb-flow-head">
-                <div>
-                    <span class="pb-head-kicker">مسیر کار</span>
-                    <h2>از خرید تا تحلیل</h2>
-                    <p>ویندوز + اندروید → میزکار</p>
-                </div>
-                <div class="pb-flow-route" aria-hidden="true">
-                    <span><i class="fab fa-windows"></i></span>
-                    <i class="fas fa-arrow-left"></i>
-                    <span><i class="fab fa-android"></i></span>
-                    <i class="fas fa-arrow-left"></i>
-                    <span><i class="fas fa-layer-group"></i></span>
-                </div>
-            </header>
-            <ol class="pb-flow-timeline">
-                {% for step in bot_page.workflow_steps %}
-                {% cycle 'violet' 'sky' 'emerald' 'amber' 'rose' 'violet' as flow_accent silent %}
-                <li class="pb-flow-item" data-accent="{{ flow_accent }}">
-                    <span class="pb-flow-item-marker">
-                        <span class="pb-flow-item-num">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <span class="pb-flow-item-icon pb-icon pb-icon--sm pb-icon--{{ flow_accent }}"><i class="fas {{ step.icon }}"></i></span>
-                    </span>
-                    <div class="pb-flow-item-body">
-                        <h3>{{ step.title }}</h3>
-                        <p>{{ step.desc }}</p>
+            <div class="pb-flow-shell">
+                <header class="pb-flow-head">
+                    <div class="pb-flow-head-copy">
+                        <span class="pb-head-kicker">مسیر کار</span>
+                        <h2>از خرید تا تحلیل</h2>
+                        <p>۶ گام ساده — از خرید لایسنس تا تحلیل و CRM در میزکار</p>
                     </div>
-                </li>
-                {% endfor %}
-            </ol>
+                    <div class="pb-flow-phases" aria-hidden="true">
+                        <span class="pb-flow-phase-tag pb-flow-phase-tag--setup">راه‌اندازی</span>
+                        <i class="fas fa-arrow-left"></i>
+                        <span class="pb-flow-phase-tag pb-flow-phase-tag--work">استخراج</span>
+                        <i class="fas fa-arrow-left"></i>
+                        <span class="pb-flow-phase-tag pb-flow-phase-tag--desk">میزکار</span>
+                    </div>
+                </header>
+                <div class="pb-flow-rail-wrap">
+                    <div class="pb-flow-rail" aria-hidden="true"></div>
+                    <ol class="pb-flow-steps">
+                        {% for step in bot_page.workflow_steps %}
+                        {% cycle 'violet' 'sky' 'emerald' 'amber' 'rose' 'violet' as flow_accent silent %}
+                        <li class="pb-flow-step" data-accent="{{ flow_accent }}">
+                            <span class="pb-flow-step-node">
+                                <span class="pb-flow-step-dot"></span>
+                                <span class="pb-flow-step-icon pb-icon pb-icon--sm pb-icon--{{ flow_accent }}">
+                                    <i class="fas {{ step.icon }}"></i>
+                                </span>
+                            </span>
+                            <div class="pb-flow-step-card">
+                                <span class="pb-flow-step-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                                <h3>{{ step.title }}</h3>
+                                <p>{{ step.desc }}</p>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
         </div>
     </section>
 

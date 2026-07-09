@@ -5,12 +5,20 @@
     {# ─── Hook ─── #}
     <div class="container">
         <header class="mk-story__hook mk-reveal">
+            <div class="mk-story__hook-glow" aria-hidden="true"></div>
             <span class="mk-story__kicker">
                 <i class="fas fa-film" aria-hidden="true"></i>
                 یک روز واقعی
             </span>
-            <h2 class="mk-story__title" id="mk-story-title">امروز چند بار این اتفاق برات افتاده؟</h2>
+            <h2 class="mk-story__title" id="mk-story-title">
+                امروز چند بار این اتفاق
+                <span class="mk-story__title-em">برات افتاده؟</span>
+            </h2>
             <p class="mk-story__hook-sub">اسکرول کن — هر درد، همان لحظه با خودِ میزکار حل می‌شود.</p>
+            <div class="mk-story__scroll-hint" aria-hidden="true">
+                <span class="mk-story__scroll-mouse"></span>
+                <span>ادامه داستان</span>
+            </div>
         </header>
     </div>
 
@@ -50,9 +58,10 @@
                 </div>
 
                 <div class="mk-story-bridge" aria-hidden="true">
-                    <span class="mk-story-bridge__dot"></span>
+                    <span class="mk-story-bridge__line"></span>
+                    <span class="mk-story-bridge__orb"><i class="fas fa-arrow-down"></i></span>
                     <span class="mk-story-bridge__label">حل با فایلینگ</span>
-                    <span class="mk-story-bridge__dot"></span>
+                    <span class="mk-story-bridge__line"></span>
                 </div>
 
                 <div class="mk-story-fix">
@@ -62,15 +71,18 @@
                             <span></span><span></span><span></span>
                             <em>filingdivar.ir/workspace</em>
                         </div>
-                        <img
-                            class="mk-story-shot__img"
-                            src="{% static 'images/help-dataset-table.png' %}"
-                            alt="جدول آگهی‌ها با تفکیک مالک شخصی از مشاور"
-                            width="960"
-                            height="600"
-                            loading="lazy"
-                            decoding="async"
-                        >
+                        <div class="mk-story-shot__stage">
+                            <img
+                                class="mk-story-shot__img"
+                                src="{% static 'images/help-dataset-table.png' %}"
+                                alt="جدول آگهی‌ها با تفکیک مالک شخصی از مشاور"
+                                width="960"
+                                height="600"
+                                loading="lazy"
+                                decoding="async"
+                            >
+                            <span class="mk-story-shot__shine" aria-hidden="true"></span>
+                        </div>
                         <span class="mk-story-shot__hl mk-story-shot__hl--tr">مالک شخصی</span>
                     </figure>
                     <p class="mk-story-fix__result">فیلتر کن — فقط فایل‌های واقعاً شخصی.</p>
@@ -111,9 +123,10 @@
                 </div>
 
                 <div class="mk-story-bridge" aria-hidden="true">
-                    <span class="mk-story-bridge__dot"></span>
+                    <span class="mk-story-bridge__line"></span>
+                    <span class="mk-story-bridge__orb"><i class="fas fa-arrow-down"></i></span>
                     <span class="mk-story-bridge__label">حل با CRM</span>
-                    <span class="mk-story-bridge__dot"></span>
+                    <span class="mk-story-bridge__line"></span>
                 </div>
 
                 <div class="mk-story-fix">
@@ -123,15 +136,18 @@
                             <span></span><span></span><span></span>
                             <em>CRM · مخاطب</em>
                         </div>
-                        <img
-                            class="mk-story-shot__img"
-                            src="{% static 'images/help-crm-contact-detail.png' %}"
-                            alt="پروفایل مشتری با پیشنهاد فایل مناسب"
-                            width="960"
-                            height="600"
-                            loading="lazy"
-                            decoding="async"
-                        >
+                        <div class="mk-story-shot__stage">
+                            <img
+                                class="mk-story-shot__img"
+                                src="{% static 'images/help-crm-contact-detail.png' %}"
+                                alt="پروفایل مشتری با پیشنهاد فایل مناسب"
+                                width="960"
+                                height="600"
+                                loading="lazy"
+                                decoding="async"
+                            >
+                            <span class="mk-story-shot__shine" aria-hidden="true"></span>
+                        </div>
                         <span class="mk-story-shot__hl mk-story-shot__hl--br">تطبیق هوشمند</span>
                     </figure>
                     <p class="mk-story-fix__result">نیاز مشتری را بزن — فایل مناسب همان لحظه.</p>
@@ -171,9 +187,10 @@
                 </div>
 
                 <div class="mk-story-bridge" aria-hidden="true">
-                    <span class="mk-story-bridge__dot"></span>
+                    <span class="mk-story-bridge__line"></span>
+                    <span class="mk-story-bridge__orb"><i class="fas fa-arrow-down"></i></span>
                     <span class="mk-story-bridge__label">حل با یادآور</span>
-                    <span class="mk-story-bridge__dot"></span>
+                    <span class="mk-story-bridge__line"></span>
                 </div>
 
                 <div class="mk-story-fix">
@@ -183,7 +200,8 @@
                             <span></span><span></span><span></span>
                             <em>CRM · امروز</em>
                         </div>
-                        <img
+                        <div class="mk-story-shot__stage">
+<img
                             class="mk-story-shot__img"
                             src="{% static 'images/help-crm-today.png' %}"
                             alt="صف کار امروز با تماس‌ها و بازدیدها"
@@ -192,7 +210,9 @@
                             loading="lazy"
                             decoding="async"
                         >
-                        <span class="mk-story-shot__hl mk-story-shot__hl--tl">یادآور</span>
+<span class="mk-story-shot__shine" aria-hidden="true"></span>
+</div>
+<span class="mk-story-shot__hl mk-story-shot__hl--tl">یادآور</span>
                     </figure>
                     <p class="mk-story-fix__result">تماس، بازدید، معامله — هیچ‌کدام گم نمی‌شود.</p>
                 </div>
@@ -231,9 +251,10 @@
                 </div>
 
                 <div class="mk-story-bridge" aria-hidden="true">
-                    <span class="mk-story-bridge__dot"></span>
+                    <span class="mk-story-bridge__line"></span>
+                    <span class="mk-story-bridge__orb"><i class="fas fa-arrow-down"></i></span>
                     <span class="mk-story-bridge__label">حل با جستجو</span>
-                    <span class="mk-story-bridge__dot"></span>
+                    <span class="mk-story-bridge__line"></span>
                 </div>
 
                 <div class="mk-story-fix">
@@ -243,7 +264,8 @@
                             <span></span><span></span><span></span>
                             <em>فایلینگ · املاک</em>
                         </div>
-                        <img
+                        <div class="mk-story-shot__stage">
+<img
                             class="mk-story-shot__img"
                             src="{% static 'images/help-crm-properties.png' %}"
                             alt="جستجو و فیلتر سریع بین صدها فایل ملکی"
@@ -252,7 +274,9 @@
                             loading="lazy"
                             decoding="async"
                         >
-                        <span class="mk-story-shot__hl mk-story-shot__hl--tr">فیلتر پیشرفته</span>
+<span class="mk-story-shot__shine" aria-hidden="true"></span>
+</div>
+<span class="mk-story-shot__hl mk-story-shot__hl--tr">فیلتر پیشرفته</span>
                     </figure>
                     <p class="mk-story-fix__result">محله، متراژ، بودجه — فایل در چند ثانیه پیدا می‌شود.</p>
                 </div>
@@ -290,9 +314,10 @@
                 </div>
 
                 <div class="mk-story-bridge" aria-hidden="true">
-                    <span class="mk-story-bridge__dot"></span>
+                    <span class="mk-story-bridge__line"></span>
+                    <span class="mk-story-bridge__orb"><i class="fas fa-arrow-down"></i></span>
                     <span class="mk-story-bridge__label">حل با دسترسی</span>
-                    <span class="mk-story-bridge__dot"></span>
+                    <span class="mk-story-bridge__line"></span>
                 </div>
 
                 <div class="mk-story-fix">
@@ -302,7 +327,8 @@
                             <span></span><span></span><span></span>
                             <em>تیم · دسترسی</em>
                         </div>
-                        <img
+                        <div class="mk-story-shot__stage">
+<img
                             class="mk-story-shot__img"
                             src="{% static 'images/help-crm-team.png' %}"
                             alt="مدیریت نقش و دسترسی اعضای تیم"
@@ -311,7 +337,9 @@
                             loading="lazy"
                             decoding="async"
                         >
-                        <span class="mk-story-shot__hl mk-story-shot__hl--br">کنترل دسترسی</span>
+<span class="mk-story-shot__shine" aria-hidden="true"></span>
+</div>
+<span class="mk-story-shot__hl mk-story-shot__hl--br">کنترل دسترسی</span>
                     </figure>
                     <p class="mk-story-fix__result">هر نفر فقط همان چیزی را می‌بیند که باید ببیند.</p>
                 </div>
@@ -347,7 +375,8 @@
                         <span></span><span></span><span></span>
                         <em>داشبورد میزکار</em>
                     </div>
-                    <img
+                    <div class="mk-story-shot__stage">
+<img
                         class="mk-story-shot__img"
                         src="{% static 'images/help-workspace-home.png' %}"
                         alt="داشبورد میزکار فایلینگ دیوار"
@@ -356,7 +385,9 @@
                         loading="lazy"
                         decoding="async"
                     >
-                </figure>
+<span class="mk-story-shot__shine" aria-hidden="true"></span>
+</div>
+</figure>
                 <p class="mk-story-fix__result mk-story-fix__result--light">همه ابزارها یک‌جا — تا زمانت برای بستن معامله بماند.</p>
             </div>
         </div>

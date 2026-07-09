@@ -1,167 +1,289 @@
-{# یک روز عادی مشاور املاک — داستان مشکلات + راه‌حل فایلینگ دیوار #}
-<section class="mk-section mk-day-story" aria-labelledby="mk-day-story-title">
+{# Interactive Story — یک روز کاری مشاور املاک #}
+<section class="mk-story" id="mk-day-story" data-mk-story aria-labelledby="mk-story-title">
+
+    {# ─── Hook ─── #}
     <div class="container">
-        <header class="mk-section-head mk-day-story__head mk-reveal">
-            <span class="mk-section-kicker">
-                <i class="fas fa-clock" aria-hidden="true"></i>
-                داستان یک روز کاری
+        <header class="mk-story__hook mk-reveal">
+            <span class="mk-story__kicker">
+                <i class="fas fa-bolt" aria-hidden="true"></i>
+                داستان واقعی هر روز
             </span>
-            <h2 class="mk-section-title" id="mk-day-story-title">یه روز عادی از زندگی یک مشاور املاک...</h2>
-            <p class="mk-section-desc mk-day-story__lead">
-                اگر این اتفاق‌ها برای شما هم آشناست، فایلینگ دیوار دقیقاً برای همین روزهای شلوغ ساخته شده.
-            </p>
+            <h2 class="mk-story__title" id="mk-story-title">امروز چند بار این اتفاق برات افتاده؟</h2>
+            <p class="mk-story__hook-sub">اگر حتی یکی‌ش آشناست… ادامه بده.</p>
         </header>
+    </div>
 
-        <ol class="mk-day-story__timeline mk-reveal mk-reveal-stagger" aria-label="مراحل یک روز کاری مشاور املاک">
-            <li class="mk-day-story__item" data-accent="violet">
-                <span class="mk-day-story__rail" aria-hidden="true">
-                    <span class="mk-day-story__dot">
-                        <i class="fas fa-search"></i>
-                    </span>
-                </span>
-                <article class="mk-day-story__card">
-                    <span class="mk-day-story__time">۰۹:۰۰</span>
-                    <h3 class="mk-day-story__card-title">ساعت ۹ صبح؛ روزت با جستجو شروع میشه...</h3>
-                    <p class="mk-day-story__card-text">
-                        میگی امروز فقط می‌خوام فایل‌های مالک واقعی رو پیدا کنم. فیلتر «شخصی» رو توی دیوار فعال می‌کنی، اما بعد از باز کردن چندین آگهی می‌بینی آخر توضیحات نوشته «مشاور شما...» یا «املاک ...». دوباره وقتت تلف شده و باید ده‌ها آگهی رو یکی‌یکی باز کنی تا شاید چند فایل واقعاً شخصی پیدا بشه.
+    {# ─── Scenes ─── #}
+    <div class="mk-story__scenes" role="list">
+
+        {# Scene 1 — ۹ صبح: فایل مالک #}
+        <article class="mk-story-scene mk-story-scene--search" data-scene="search" data-accent="violet" role="listitem">
+            <div class="container mk-story-scene__inner">
+                <div class="mk-story-scene__copy">
+                    <span class="mk-story-scene__time"><i class="fas fa-sun" aria-hidden="true"></i> ساعت ۹ صبح</span>
+                    <h3 class="mk-story-scene__q">دنبال فایل مالک بودی؟</h3>
+                    <blockquote class="mk-story-scene__quote">«فقط می‌خوام فایل مالک پیدا کنم…»</blockquote>
+                    <p class="mk-story-scene__punch">
+                        <strong>۴۷ آگهی</strong> باز کردی.
+                        <span class="mk-story-scene__punch-bad">آخرش فقط ۳ تا واقعاً شخصی بود.</span>
                     </p>
-                </article>
-            </li>
+                </div>
+                <div class="mk-story-scene__visual" aria-hidden="true">
+                    <div class="mk-story-illu mk-story-illu--phone">
+                        <div class="mk-story-illu__phone-frame">
+                            <div class="mk-story-illu__phone-notch"></div>
+                            <div class="mk-story-illu__ads">
+                                <div class="mk-story-illu__ad is-fake">
+                                    <span class="mk-story-illu__ad-tag">شخصی</span>
+                                    <span class="mk-story-illu__ad-line"></span>
+                                    <span class="mk-story-illu__ad-line mk-story-illu__ad-line--sm"></span>
+                                    <span class="mk-story-illu__ad-reveal">املاک …</span>
+                                    <span class="mk-story-illu__ad-x"><i class="fas fa-xmark"></i></span>
+                                </div>
+                                <div class="mk-story-illu__ad is-fake">
+                                    <span class="mk-story-illu__ad-tag">شخصی</span>
+                                    <span class="mk-story-illu__ad-line"></span>
+                                    <span class="mk-story-illu__ad-line mk-story-illu__ad-line--sm"></span>
+                                    <span class="mk-story-illu__ad-reveal">مشاور شما…</span>
+                                    <span class="mk-story-illu__ad-x"><i class="fas fa-xmark"></i></span>
+                                </div>
+                                <div class="mk-story-illu__ad is-real">
+                                    <span class="mk-story-illu__ad-tag mk-story-illu__ad-tag--ok">مالک</span>
+                                    <span class="mk-story-illu__ad-line"></span>
+                                    <span class="mk-story-illu__ad-line mk-story-illu__ad-line--sm"></span>
+                                    <span class="mk-story-illu__ad-check"><i class="fas fa-check"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="mk-story-illu__float mk-story-illu__float--waste">۲۰ دقیقه تلف شد</span>
+                    </div>
+                </div>
+            </div>
+        </article>
 
-            <li class="mk-day-story__item" data-accent="sky">
-                <span class="mk-day-story__rail" aria-hidden="true">
-                    <span class="mk-day-story__dot">
-                        <i class="fas fa-handshake"></i>
-                    </span>
-                </span>
-                <article class="mk-day-story__card">
-                    <span class="mk-day-story__time">۱۱:۰۰</span>
-                    <h3 class="mk-day-story__card-title">ساعت ۱۱؛ مشتری وارد دفتر میشه...</h3>
-                    <p class="mk-day-story__card-text">
-                        مشتری میگه دنبال یه واحد ۱۲۰ متری، دوخوابه، آسانسور، پارکینگ، حوالی یک محله مشخص با بودجه محدود هستم. حالا باید دفتر رو ورق بزنی، اکسل رو باز کنی، واتساپ رو بگردی و بین فایل‌هات دنبال چند مورد مناسب بگردی؛ در حالی که مشتری روبه‌روت منتظر نشسته.
+        {# Scene 2 — ۱۱: مشتری منتظر #}
+        <article class="mk-story-scene mk-story-scene--client" data-scene="client" data-accent="sky" role="listitem">
+            <div class="container mk-story-scene__inner mk-story-scene__inner--flip">
+                <div class="mk-story-scene__copy">
+                    <span class="mk-story-scene__time"><i class="fas fa-user" aria-hidden="true"></i> ساعت ۱۱</span>
+                    <h3 class="mk-story-scene__q">مشتری منتظره…</h3>
+                    <blockquote class="mk-story-scene__quote">«۱۲۰ متر، دوخواب، آسانسور، پارکینگ، همین محله…»</blockquote>
+                    <p class="mk-story-scene__punch">
+                        هنوز داری بین <strong>دفتر، اکسل و واتساپ</strong> می‌گردی.
+                        <span class="mk-story-scene__punch-bad">مشتری روبه‌روت نشسته.</span>
                     </p>
-                </article>
-            </li>
+                </div>
+                <div class="mk-story-scene__visual" aria-hidden="true">
+                    <div class="mk-story-illu mk-story-illu--desk">
+                        <div class="mk-story-illu__desk-person">
+                            <span class="mk-story-illu__avatar"></span>
+                            <span class="mk-story-illu__wait">منتظر…</span>
+                        </div>
+                        <div class="mk-story-illu__desk-chaos">
+                            <span class="mk-story-illu__chip"><i class="fas fa-book"></i> دفتر</span>
+                            <span class="mk-story-illu__chip"><i class="fas fa-file-excel"></i> اکسل</span>
+                            <span class="mk-story-illu__chip"><i class="fab fa-whatsapp"></i> واتساپ</span>
+                            <span class="mk-story-illu__chip is-spin"><i class="fas fa-spinner"></i> جستجو…</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
 
-            <li class="mk-day-story__item" data-accent="amber">
-                <span class="mk-day-story__rail" aria-hidden="true">
-                    <span class="mk-day-story__dot">
-                        <i class="fas fa-phone"></i>
-                    </span>
-                </span>
-                <article class="mk-day-story__card">
-                    <span class="mk-day-story__time">۱۴:۰۰</span>
-                    <h3 class="mk-day-story__card-title">ساعت ۲ بعدازظهر؛ پیگیری‌ها شروع میشه...</h3>
-                    <p class="mk-day-story__card-text">
-                        یادت میاد قرار بود به یک مشتری زنگ بزنی، برای یکی بازدید هماهنگ کنی و نیاز یک سازنده رو هم پیگیری کنی. با زیاد شدن مشتری‌ها، به خاطر سپردن بودجه، محله، نوع ملک، زمان تماس و وضعیت هر نفر تقریباً غیرممکن میشه.
+        {# Scene 3 — ۲ بعدازظهر: پیگیری فراموش‌شده #}
+        <article class="mk-story-scene mk-story-scene--follow" data-scene="follow" data-accent="amber" role="listitem">
+            <div class="container mk-story-scene__inner">
+                <div class="mk-story-scene__copy">
+                    <span class="mk-story-scene__time"><i class="fas fa-phone" aria-hidden="true"></i> ساعت ۲ بعدازظهر</span>
+                    <h3 class="mk-story-scene__q">یادت رفت بهش زنگ بزنی…</h3>
+                    <blockquote class="mk-story-scene__quote">«قرار بود امروز تماس بگیری.»</blockquote>
+                    <p class="mk-story-scene__punch">
+                        بودجه، محله، بازدید، سازنده…
+                        <span class="mk-story-scene__punch-bad">یه معامله از دست رفت.</span>
                     </p>
-                </article>
-            </li>
+                </div>
+                <div class="mk-story-scene__visual" aria-hidden="true">
+                    <div class="mk-story-illu mk-story-illu--notify">
+                        <div class="mk-story-illu__cal">
+                            <span class="mk-story-illu__cal-h">امروز</span>
+                            <span class="mk-story-illu__cal-row is-missed"><i class="fas fa-phone-slash"></i> تماس مشتری</span>
+                            <span class="mk-story-illu__cal-row is-missed"><i class="fas fa-eye"></i> هماهنگی بازدید</span>
+                            <span class="mk-story-illu__cal-row"><i class="fas fa-building"></i> پیگیری سازنده</span>
+                        </div>
+                        <span class="mk-story-illu__badge-miss">از دست رفت</span>
+                    </div>
+                </div>
+            </div>
+        </article>
 
-            <li class="mk-day-story__item" data-accent="rose">
-                <span class="mk-day-story__rail" aria-hidden="true">
-                    <span class="mk-day-story__dot">
-                        <i class="fas fa-folder-open"></i>
-                    </span>
-                </span>
-                <article class="mk-day-story__card">
-                    <span class="mk-day-story__time">۱۶:۰۰</span>
-                    <h3 class="mk-day-story__card-title">ساعت ۴؛ فایل‌هات زیاد شدن...</h3>
-                    <p class="mk-day-story__card-text">
-                        چند صد فایل داری، اما هر بار برای پیدا کردن یک فایل مناسب باید دوباره از اول جستجو کنی. گاهی حتی یادت نمیاد همچین فایلی داشتی؛ یا می‌دونی داری، ولی پیدا کردنش بین این همه فایل زمان می‌بره.
+        {# Scene 4 — ۴ عصر: فایل‌های گم‌شده #}
+        <article class="mk-story-scene mk-story-scene--files" data-scene="files" data-accent="rose" role="listitem">
+            <div class="container mk-story-scene__inner mk-story-scene__inner--flip">
+                <div class="mk-story-scene__copy">
+                    <span class="mk-story-scene__time"><i class="fas fa-folder-open" aria-hidden="true"></i> ساعت ۴ عصر</span>
+                    <h3 class="mk-story-scene__q">فایل داری… ولی پیدا نمی‌کنی</h3>
+                    <blockquote class="mk-story-scene__quote">«می‌دونم همچین فایلی داشتم… کجاست؟»</blockquote>
+                    <p class="mk-story-scene__punch">
+                        <strong>چند صد فایل</strong> داری.
+                        <span class="mk-story-scene__punch-bad">هر بار از صفر جستجو می‌کنی.</span>
                     </p>
-                </article>
-            </li>
+                </div>
+                <div class="mk-story-scene__visual" aria-hidden="true">
+                    <div class="mk-story-illu mk-story-illu--folders">
+                        <span class="mk-story-illu__folder" style="--i:0"><i class="fas fa-folder"></i></span>
+                        <span class="mk-story-illu__folder" style="--i:1"><i class="fas fa-folder"></i></span>
+                        <span class="mk-story-illu__folder" style="--i:2"><i class="fas fa-folder"></i></span>
+                        <span class="mk-story-illu__folder" style="--i:3"><i class="fas fa-folder"></i></span>
+                        <span class="mk-story-illu__folder is-lost" style="--i:4"><i class="fas fa-question"></i></span>
+                        <span class="mk-story-illu__search-ring"><i class="fas fa-magnifying-glass"></i></span>
+                    </div>
+                </div>
+            </div>
+        </article>
 
-            <li class="mk-day-story__item" data-accent="emerald">
-                <span class="mk-day-story__rail" aria-hidden="true">
-                    <span class="mk-day-story__dot">
-                        <i class="fas fa-shield-halved"></i>
-                    </span>
-                </span>
-                <article class="mk-day-story__card">
-                    <span class="mk-day-story__time">همیشه</span>
-                    <h3 class="mk-day-story__card-title">دغدغه همیشگی؛ امنیت فایل‌ها و مشتری‌ها</h3>
-                    <p class="mk-day-story__card-text">
-                        بزرگ‌ترین سرمایه یک مشاور املاک، فایل‌ها و مشتری‌هاشه. سال‌ها زمان گذاشتی تا این اطلاعات رو جمع کنی؛ طبیعی‌ست که نخوای هر کسی به فایل‌های اختصاصی یا اطلاعات مشتری‌هات دسترسی داشته باشه. امنیت این اطلاعات باید کاملاً جدی گرفته بشه.
+        {# Scene 5 — امنیت #}
+        <article class="mk-story-scene mk-story-scene--secure" data-scene="secure" data-accent="emerald" role="listitem">
+            <div class="container mk-story-scene__inner">
+                <div class="mk-story-scene__copy">
+                    <span class="mk-story-scene__time"><i class="fas fa-shield-halved" aria-hidden="true"></i> دغدغه همیشگی</span>
+                    <h3 class="mk-story-scene__q">فایل‌هات سرمایهٔ توئه</h3>
+                    <blockquote class="mk-story-scene__quote">«نمی‌خوام هر کسی به مشتری‌هام دسترسی داشته باشه.»</blockquote>
+                    <p class="mk-story-scene__punch">
+                        سال‌ها جمع کردی.
+                        <span class="mk-story-scene__punch-bad">امنیتش باید جدی باشه.</span>
                     </p>
-                </article>
-            </li>
+                </div>
+                <div class="mk-story-scene__visual" aria-hidden="true">
+                    <div class="mk-story-illu mk-story-illu--vault">
+                        <div class="mk-story-illu__vault-box">
+                            <i class="fas fa-lock"></i>
+                            <span>فایل‌های اختصاصی</span>
+                        </div>
+                        <div class="mk-story-illu__vault-eyes">
+                            <span class="mk-story-illu__eye is-blocked"><i class="fas fa-eye-slash"></i></span>
+                            <span class="mk-story-illu__eye is-blocked"><i class="fas fa-user-slash"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
 
-            <li class="mk-day-story__item" data-accent="indigo">
-                <span class="mk-day-story__rail" aria-hidden="true">
-                    <span class="mk-day-story__dot">
-                        <i class="fas fa-moon"></i>
-                    </span>
-                </span>
-                <article class="mk-day-story__card">
-                    <span class="mk-day-story__time">۲۲:۰۰</span>
-                    <h3 class="mk-day-story__card-title">آخر شب؛ بیشتر وقتت رفت، اما نه برای فروش</h3>
-                    <p class="mk-day-story__card-text">
-                        آخر روز می‌بینی بیشتر وقتت صرف پیدا کردن فایل، باز کردن آگهی‌های اشتباه، یادداشت کردن اطلاعات، جستجو بین فایل‌ها، پیگیری مشتری‌ها و مقایسه قیمت‌ها شده؛ در حالی که کار اصلی تو مذاکره، ساختن اعتماد و بستن معامله است.
+        {# Scene 6 — آخر شب #}
+        <article class="mk-story-scene mk-story-scene--night" data-scene="night" data-accent="indigo" role="listitem">
+            <div class="container mk-story-scene__inner mk-story-scene__inner--flip">
+                <div class="mk-story-scene__copy">
+                    <span class="mk-story-scene__time"><i class="fas fa-moon" aria-hidden="true"></i> آخر شب</span>
+                    <h3 class="mk-story-scene__q">وقت رفت… نه برای فروش</h3>
+                    <blockquote class="mk-story-scene__quote">«امروز چی فروختم؟»</blockquote>
+                    <p class="mk-story-scene__punch">
+                        بیشتر وقتت رفت برای پیدا کردن و پیگیری.
+                        <span class="mk-story-scene__punch-bad">کار اصلیت مذاکره و بستن معامله بود.</span>
                     </p>
-                </article>
-            </li>
-        </ol>
+                </div>
+                <div class="mk-story-scene__visual" aria-hidden="true">
+                    <div class="mk-story-illu mk-story-illu--night">
+                        <div class="mk-story-illu__desk-night">
+                            <span class="mk-story-illu__screen"></span>
+                            <span class="mk-story-illu__coffee"></span>
+                            <span class="mk-story-illu__clock">۲۲:۴۰</span>
+                        </div>
+                        <span class="mk-story-illu__tired">خسته… بدون معامله</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
 
-        <div class="mk-day-story__bridge mk-reveal" aria-hidden="true">
-            <span class="mk-day-story__bridge-line"></span>
-            <span class="mk-day-story__bridge-icon"><i class="fas fa-arrow-down"></i></span>
-            <span class="mk-day-story__bridge-line"></span>
+    {# ─── Climax ─── #}
+    <div class="mk-story-climax" data-mk-story-climax>
+        <div class="container">
+            <div class="mk-story-climax__inner mk-reveal">
+                <p class="mk-story-climax__line">اگر هر روز این اتفاق‌ها برات تکرار میشه…</p>
+                <h3 class="mk-story-climax__big">وقتشه روش کارت رو عوض کنی.</h3>
+                <span class="mk-story-climax__arrow" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
+            </div>
         </div>
+    </div>
 
-        <div class="mk-day-story__solve mk-reveal">
-            <header class="mk-day-story__solve-head">
-                <span class="mk-section-kicker">
+    {# ─── Before / After ─── #}
+    <div class="container">
+        <div class="mk-story-ba mk-reveal" aria-label="قبل و بعد فایلینگ دیوار">
+            <div class="mk-story-ba__col mk-story-ba__col--before">
+                <span class="mk-story-ba__label"><i class="fas fa-clock" aria-hidden="true"></i> قبل</span>
+                <ul class="mk-story-ba__list">
+                    <li><strong>۳ ساعت</strong> جستجو بین آگهی‌ها</li>
+                    <li>دفتر + اکسل + واتساپ</li>
+                    <li>پیگیری‌های فراموش‌شده</li>
+                    <li>فایل هست… پیدا نمی‌شه</li>
+                </ul>
+            </div>
+            <div class="mk-story-ba__vs" aria-hidden="true">
+                <span>بعد</span>
+            </div>
+            <div class="mk-story-ba__col mk-story-ba__col--after">
+                <span class="mk-story-ba__label"><i class="fas fa-bolt" aria-hidden="true"></i> با فایلینگ دیوار</span>
+                <ul class="mk-story-ba__list">
+                    <li><strong>۳۰ ثانیه</strong> پیشنهاد فایل مناسب</li>
+                    <li>همه‌چیز در یک میزکار</li>
+                    <li>یادآور و صف کار امروز</li>
+                    <li>جستجوی هوشمند روی همه فایل‌ها</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {# ─── Solution ─── #}
+    <div class="container">
+        <div class="mk-story-solve mk-reveal">
+            <header class="mk-story-solve__head">
+                <span class="mk-story__kicker">
                     <i class="fas fa-sparkles" aria-hidden="true"></i>
                     راه‌حل
                 </span>
-                <h3 class="mk-day-story__solve-title">فایلینگ دیوار دقیقاً برای همین ساخته شده...</h3>
-                <p class="mk-day-story__solve-desc">
-                    تا به جای اینکه زمانت صرف پیدا کردن فایل و مدیریت اطلاعات بشه، روی کاری تمرکز کنی که واقعاً درآمد ایجاد می‌کنه: فروش، مذاکره و بستن معامله.
-                </p>
+                <h3 class="mk-story-solve__title">فایلینگ دیوار دقیقاً برای همین ساخته شده</h3>
+                <p class="mk-story-solve__desc">زمانت برای فروش، مذاکره و بستن معامله — نه کارهای تکراری.</p>
             </header>
 
-            <ul class="mk-day-story__solutions mk-reveal mk-reveal-stagger" aria-label="راه‌حل‌های فایلینگ دیوار">
-                <li class="mk-day-story__sol" data-accent="violet">
-                    <span class="mk-day-story__sol-icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
-                    <span class="mk-day-story__sol-text">پیدا کردن سریع فایل‌های مناسب</span>
+            <ul class="mk-story-solve__grid mk-reveal mk-reveal-stagger" aria-label="راه‌حل‌های فایلینگ دیوار">
+                <li class="mk-story-solve__item" data-accent="violet">
+                    <span class="mk-story-solve__icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+                    <span>پیدا کردن سریع فایل مناسب</span>
                 </li>
-                <li class="mk-day-story__sol" data-accent="emerald">
-                    <span class="mk-day-story__sol-icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
-                    <span class="mk-day-story__sol-text">مدیریت امن فایل‌های شخصی و مشتری‌ها</span>
+                <li class="mk-story-solve__item" data-accent="emerald">
+                    <span class="mk-story-solve__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+                    <span>مدیریت امن فایل و مشتری</span>
                 </li>
-                <li class="mk-day-story__sol" data-accent="sky">
-                    <span class="mk-day-story__sol-icon" aria-hidden="true"><i class="fas fa-user-check"></i></span>
-                    <span class="mk-day-story__sol-text">پیشنهاد فایل مناسب به هر مشتری</span>
+                <li class="mk-story-solve__item" data-accent="sky">
+                    <span class="mk-story-solve__icon" aria-hidden="true"><i class="fas fa-user-check"></i></span>
+                    <span>پیشنهاد فایل به هر مشتری</span>
                 </li>
-                <li class="mk-day-story__sol" data-accent="amber">
-                    <span class="mk-day-story__sol-icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
-                    <span class="mk-day-story__sol-text">پیگیری منظم تماس‌ها، بازدیدها و معاملات</span>
+                <li class="mk-story-solve__item" data-accent="amber">
+                    <span class="mk-story-solve__icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+                    <span>پیگیری تماس و بازدید</span>
                 </li>
-                <li class="mk-day-story__sol" data-accent="rose">
-                    <span class="mk-day-story__sol-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
-                    <span class="mk-day-story__sol-text">تحلیل و مقایسه بازار در چند ثانیه</span>
+                <li class="mk-story-solve__item" data-accent="rose">
+                    <span class="mk-story-solve__icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+                    <span>تحلیل بازار در چند ثانیه</span>
                 </li>
-                <li class="mk-day-story__sol" data-accent="indigo">
-                    <span class="mk-day-story__sol-icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
-                    <span class="mk-day-story__sol-text">زمان بیشتر برای فروش، نه کارهای تکراری</span>
+                <li class="mk-story-solve__item" data-accent="indigo">
+                    <span class="mk-story-solve__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                    <span>زمان بیشتر برای فروش</span>
                 </li>
             </ul>
 
-            <div class="mk-day-story__cta">
+            <div class="mk-story-solve__cta">
                 {% if user.is_authenticated %}
-                <a href="{% url 'workspace:home' %}" class="mk-cta-btn mk-cta-btn--primary mk-day-story__cta-primary">
+                <a href="{% url 'workspace:home' %}" class="mk-cta-btn mk-cta-btn--primary mk-story-solve__btn">
                     <i class="fas fa-layer-group" aria-hidden="true"></i>
                     شروع رایگان میزکار
                 </a>
                 {% else %}
-                <a href="{% url 'register' %}" class="mk-cta-btn mk-cta-btn--primary mk-day-story__cta-primary">
+                <a href="{% url 'register' %}" class="mk-cta-btn mk-cta-btn--primary mk-story-solve__btn">
                     <i class="fas fa-rocket" aria-hidden="true"></i>
                     شروع رایگان میزکار
                 </a>
                 {% endif %}
-                <a href="#mk-home-capabilities" class="mk-cta-btn mk-cta-btn--line mk-day-story__cta-secondary">
+                <a href="#mk-home-capabilities" class="mk-cta-btn mk-cta-btn--line mk-story-solve__btn-ghost">
                     <i class="fas fa-th-large" aria-hidden="true"></i>
                     مشاهده امکانات فایلینگ دیوار
                 </a>

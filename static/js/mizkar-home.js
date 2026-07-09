@@ -751,6 +751,30 @@
         sync();
     }
 
+    /* ─── Interactive story scenes ─── */
+    function initStoryScenes() {
+        var root = document.querySelector('[data-mk-story]');
+        if (!root) return;
+
+        var scenes = root.querySelectorAll('.mk-story-scene');
+        if (!scenes.length) return;
+
+        if (prefersReduced || !('IntersectionObserver' in window)) {
+            scenes.forEach(function (scene) { scene.classList.add('is-inview'); });
+            return;
+        }
+
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-inview');
+                }
+            });
+        }, { threshold: 0.28, rootMargin: '0px 0px -8% 0px' });
+
+        scenes.forEach(function (scene) { observer.observe(scene); });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initReveal();
         initShowcase();
@@ -763,5 +787,6 @@
         initHeroMagnifier();
         initHeroDeck();
         initHomeMobileHeader();
+        initStoryScenes();
     });
 })();

@@ -8,7 +8,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=80">
-<link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=9">
 {% endblock %}
 
 {% block content %}
@@ -17,21 +17,27 @@
 <section class="home-hero mk-hero mk-hero--split mk-hero--pro mk-hero--deck" data-hero-magnifier aria-label="معرفی فایلینگ دیوار">
 
     <div class="home-hero__mobile">
-        <div class="home-hero__media" aria-hidden="true">
+        <div class="home-hero__media">
             <img
                 class="home-hero__bg-img"
                 src="{% static 'hero.webp' %}"
-                alt=""
+                alt="میزکار هوشمند فایلینگ دیوار"
+                width="1200"
+                height="800"
                 decoding="async"
                 fetchpriority="high"
+                sizes="100vw"
             >
-            <div class="home-hero__overlay"></div>
-            <div class="home-hero__glow home-hero__glow--violet"></div>
-            <div class="home-hero__glow home-hero__glow--sky"></div>
+            <div class="home-hero__overlay" aria-hidden="true"></div>
         </div>
 
         <div class="home-hero__shell">
             <div class="home-hero__content">
+                <p class="home-hero__kicker">
+                    <i class="fas fa-sparkles" aria-hidden="true"></i>
+                    <span>پلتفرم تخصصی مشاوران املاک</span>
+                </p>
+
                 <h1 class="home-hero__title">
                     هر آگهی <span class="home-hero__brand">دیوار</span>، یک فرصت معامله است
                 </h1>
@@ -45,7 +51,6 @@
                     <a href="{% url 'workspace:home' %}" class="home-hero__btn home-hero__btn--primary">
                         <span class="home-hero__btn-text">
                             <strong>{{ home_page.hero.cta_primary_label }}</strong>
-                            <em>ورود به پنل مدیریت</em>
                         </span>
                         <i class="fas fa-chevron-left" aria-hidden="true"></i>
                     </a>
@@ -53,7 +58,6 @@
                     <a href="{% url 'register' %}" class="home-hero__btn home-hero__btn--primary">
                         <span class="home-hero__btn-text">
                             <strong>{{ home_page.hero.cta_guest_label }}</strong>
-                            <em>ثبت‌نام و تجربه رایگان</em>
                         </span>
                         <i class="fas fa-chevron-left" aria-hidden="true"></i>
                     </a>
@@ -61,7 +65,6 @@
                     <a href="{% url 'product_list' %}" class="home-hero__btn home-hero__btn--ghost">
                         <span class="home-hero__btn-text">
                             <strong>{{ home_page.hero.cta_bot_label }}</strong>
-                            <em>جمع‌آوری آگهی‌ها در چند دقیقه</em>
                         </span>
                         <i class="fas fa-robot" aria-hidden="true"></i>
                     </a>
@@ -79,6 +82,10 @@
                     <li>
                         <span class="home-hero__chip-icon" data-tone="sky"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
                         <span>تحلیل بازار</span>
+                    </li>
+                    <li>
+                        <span class="home-hero__chip-icon" data-tone="amber"><i class="fas fa-folder" aria-hidden="true"></i></span>
+                        <span>فایلینگ هوشمند</span>
                     </li>
                 </ul>
             </div>

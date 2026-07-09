@@ -162,7 +162,8 @@
         transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.34s;
         visibility: hidden;
         pointer-events: none;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
         overscroll-behavior: contain;
     }
 
@@ -198,6 +199,7 @@
     /* ── Panel header ── */
     html.mk-public .mk-mobile-panel__head {
         flex-shrink: 0;
+        order: 1;
         padding: max(1.1rem, env(safe-area-inset-top, 0px) + 0.75rem) 1.1rem 1rem;
         background: var(--mk-drawer-head-bg);
         border-bottom: 1px solid var(--mk-drawer-border);
@@ -237,26 +239,41 @@
         line-height: 1.35;
     }
 
-    /* ── Nav links (card style) ── */
+    /* ── Nav links (card style) — always visible inside open drawer ── */
     html.mk-public .mk-mobile-panel .mk-nav-links,
-    html.mk-public .mk-mobile-panel .nav-menu {
+    html.mk-public .mk-mobile-panel .nav-menu,
+    html.mk-public .mk-mobile-panel .mk-nav-links.active,
+    html.mk-public .mk-mobile-panel .nav-menu.active,
+    html.mk-public .mk-mobile-panel ul.mk-nav-links,
+    html.mk-public .mk-mobile-panel ul.nav-menu,
+    html.mk-public #mkMobilePanel .mk-nav-links,
+    html.mk-public #mkMobilePanel #siteNavMenu {
         display: flex !important;
-        flex: 1;
+        visibility: visible !important;
+        opacity: 1 !important;
+        flex: 0 0 auto;
         flex-direction: column;
         gap: 0.35rem !important;
         width: 100%;
+        min-height: min-content;
+        max-height: none;
+        height: auto;
         margin: 0;
         padding: 0.85rem 0.85rem 0.5rem;
         list-style: none;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+        overflow: visible;
         border: none;
         background: transparent;
         animation: none;
-        order: unset;
+        order: 2;
+        pointer-events: auto;
     }
 
-    html.mk-public .mk-mobile-panel .mk-nav-links li {
+    html.mk-public .mk-mobile-panel .mk-nav-links > li,
+    html.mk-public #mkMobilePanel #siteNavMenu > li {
+        display: list-item !important;
+        visibility: visible !important;
+        width: 100%;
         margin: 0;
         padding: 0;
     }
@@ -328,18 +345,24 @@
 
     /* ── Account / CTAs footer ── */
     html.mk-public .mk-mobile-panel .mk-nav-account,
-    html.mk-public .mk-mobile-panel .nav-actions {
+    html.mk-public .mk-mobile-panel .nav-actions,
+    html.mk-public .mk-mobile-panel .mk-nav-account.active,
+    html.mk-public .mk-mobile-panel .nav-actions.active,
+    html.mk-public #mkMobilePanel #siteNavAccount {
         display: grid !important;
+        visibility: visible !important;
+        opacity: 1 !important;
         grid-template-columns: 1fr;
         gap: 0.45rem;
         width: 100%;
         flex-shrink: 0;
         padding: 0.65rem 0.85rem max(1rem, env(safe-area-inset-bottom, 0px) + 0.65rem);
         margin: 0;
+        margin-top: auto;
         border-top: 1px solid var(--mk-drawer-border);
         background: rgba(0, 0, 0, 0.12);
         animation: none;
-        order: unset;
+        order: 3;
     }
 
     html.mk-public .mk-mobile-panel .mk-nav-btn {

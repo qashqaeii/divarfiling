@@ -532,129 +532,13 @@ html.mk-public .mk-nav-toggle:hover {
         box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.35);
     }
 
-    html.mk-public .mk-nav-links,
-    html.mk-public .nav-menu,
-    html.mk-public .mk-nav-account,
-    html.mk-public .nav-actions {
+    /* Legacy in-header dropdown rules — scoped to desktop nav only.
+       Mobile drawer (.mk-mobile-panel) is styled in mk-mobile-nav.css */
+    html.mk-public .mk-nav-desktop .mk-nav-links,
+    html.mk-public .mk-nav-desktop .nav-menu,
+    html.mk-public .mk-nav-desktop .mk-nav-account,
+    html.mk-public .mk-nav-desktop .nav-actions {
         display: none;
-        width: 100%;
-        flex: 1 1 100%;
-        order: 10;
-        background: var(--mk-nav-mobile-bg);
-        border-top: 1px solid var(--mk-border);
-        padding: 0.65rem 0.75rem;
-        animation: mk-nav-panel-in 0.22s ease;
-    }
-
-    @keyframes mk-nav-panel-in {
-        from {
-            opacity: 0;
-            transform: translateY(-6px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    html.mk-public .mk-nav-links,
-    html.mk-public .nav-menu {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.25rem !important;
-        padding-bottom: 0.4rem;
-    }
-
-    html.mk-public .mk-nav-links.active,
-    html.mk-public .nav-menu.active {
-        display: flex;
-    }
-
-    html.mk-public .mk-nav-account.active,
-    html.mk-public .nav-actions.active {
-        display: grid;
-    }
-
-    html.mk-public .mk-nav-link,
-    html.mk-public .nav-menu a {
-        width: 100%;
-        min-height: 2.75rem;
-        justify-content: flex-start;
-        padding: 0.62rem 0.85rem !important;
-        border-radius: 10px !important;
-        font-size: 0.84rem !important;
-    }
-
-    html.mk-public .mk-nav-link.is-active,
-    html.mk-public .nav-menu a.is-active {
-        background: rgba(124, 58, 237, 0.12) !important;
-    }
-
-    html.mk-public .mk-nav-account,
-    html.mk-public .nav-actions {
-        display: none;
-        padding-top: 0.15rem;
-        padding-bottom: 0.85rem;
-        flex-wrap: wrap;
-        gap: 0.45rem;
-        border-top: none;
-    }
-
-    html.mk-public .mk-nav-account.active,
-    html.mk-public .nav-actions.active {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.45rem;
-    }
-
-    html.mk-public .mk-nav-btn {
-        flex: none;
-        width: 100%;
-        min-width: 0;
-        min-height: 2.75rem;
-        padding-inline: 0.85rem;
-        font-size: 0.8rem;
-        border-radius: 10px;
-    }
-
-    html.mk-public .mk-nav-btn-primary {
-        min-height: 2.85rem;
-        font-size: 0.84rem;
-        font-weight: 700;
-    }
-
-    html.mk-public .mk-nav-btn-icon {
-        flex: none;
-        width: 100%;
-        min-width: 0;
-        min-height: 2.75rem;
-    }
-
-    html.mk-public .mk-nav-account .mk-theme-toggle,
-    html.mk-public .nav-actions .mk-theme-toggle {
-        width: 100%;
-        min-width: 0;
-        min-height: 2.5rem;
-        height: 2.5rem;
-        justify-self: stretch;
-        border-radius: 10px;
-    }
-
-    html.mk-public .mk-navbar.mk-nav-open .mk-nav-inner {
-        max-height: calc(100vh - env(safe-area-inset-top, 0px));
-        max-height: calc(100dvh - env(safe-area-inset-top, 0px));
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        html.mk-public .mk-nav-links,
-        html.mk-public .nav-menu,
-        html.mk-public .mk-nav-account,
-        html.mk-public .nav-actions {
-            animation: none;
-        }
     }
 }
 

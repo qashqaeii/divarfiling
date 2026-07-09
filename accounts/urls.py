@@ -5,6 +5,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from . import views
+from .admin_views import AdminDashboardView
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
@@ -17,6 +18,7 @@ urlpatterns = [
     path('dashboard/licenses/assign-seat/', views.AssignSeatView.as_view(), name='license_assign_seat'),
     path('dashboard/licenses/revoke-seat/', views.RevokeSeatView.as_view(), name='license_revoke_seat'),
     path('dashboard/licenses/remove-device/', views.RemoveDeviceSlotView.as_view(), name='license_remove_device'),
+    path('admin-panel/', AdminDashboardView.as_view(), name='admin_panel'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path(
         'password-reset/',

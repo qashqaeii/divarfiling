@@ -472,6 +472,24 @@ html.mk-public .mk-nav-btn-ghost:hover {
     background: rgba(148, 163, 184, 0.06) !important;
 }
 
+html.mk-public .mk-nav-btn-admin {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(234, 88, 12, 0.1)) !important;
+    color: #d97706 !important;
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+html.mk-public .mk-nav-btn-admin:hover {
+    color: #b45309 !important;
+    border-color: rgba(245, 158, 11, 0.55);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(234, 88, 12, 0.16)) !important;
+}
+
+html.mk-public:not([data-theme="light"]) .mk-nav-btn-admin {
+    color: #fbbf24 !important;
+    border-color: rgba(251, 191, 36, 0.35);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(234, 88, 12, 0.12)) !important;
+}
+
 html.mk-public .mk-nav-btn-icon {
     width: 2rem;
     padding: 0;

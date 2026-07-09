@@ -6729,6 +6729,27 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--split.mk-hero--pro.mk-
     padding-bottom: 0;
 }
 
+/* Desktop only: copy slightly left, feature deck centered */
+@media (min-width: 769px) {
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-container {
+        padding-left: 0;
+        padding-inline: clamp(0.85rem, 3.2vw, 2.1rem);
+        align-items: stretch;
+    }
+
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-inner {
+        margin-inline-end: clamp(-2.75rem, -8.5vw, -5.25rem);
+        transform: translateX(-1.15rem);
+    }
+
+    .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-deck {
+        align-self: center;
+        width: 100%;
+        max-width: min(72rem, 100%);
+        margin-inline: auto;
+    }
+}
+
 .mk-home-page .mk-hero--split.mk-hero--pro.mk-hero--deck .mk-hero-eyebrow--pill {
     display: inline-flex;
     align-items: center;

@@ -751,16 +751,19 @@
         sync();
     }
 
-    /* ─── Interactive story scenes ─── */
+    /* ─── Interactive story (problem → product film) ─── */
     function initStoryScenes() {
         var root = document.querySelector('[data-mk-story]');
         if (!root) return;
 
-        var scenes = root.querySelectorAll('.mk-story-scene');
-        if (!scenes.length) return;
+        var beats = root.querySelectorAll('.mk-story-beat, .mk-story-climax');
+        var spineFill = root.querySelector('[data-mk-story-spine]');
+
+        if (!beats.length) return;
 
         if (prefersReduced || !('IntersectionObserver' in window)) {
-            scenes.forEach(function (scene) { scene.classList.add('is-inview'); });
+            beats.forEach(function (beat) { beat.classList.add('is-inview'); });
+            if (spineFill) spineFill.style.height = '100%';
             return;
         }
 
@@ -770,9 +773,35 @@
                     entry.target.classList.add('is-inview');
                 }
             });
-        }, { threshold: 0.28, rootMargin: '0px 0px -8% 0px' });
+        }, { threshold: 0.22, rootMargin: '0px 0px -10% 0px' });
 
-        scenes.forEach(function (scene) { observer.observe(scene); });
+        beats.forEach(function (beat) { observer.observe(beat); });
+
+        if (!spineFill) return;
+
+        var film = root.querySelector('.mk-story__film');
+        if (!film) return;
+
+        var ticking = false;
+        function updateSpine() {
+            ticking = false;
+            var rect = film.getBoundingClientRect();
+            var viewH = window.innerHeight || 1;
+            var total = rect.height + viewH * 0.35;
+            var seen = Math.min(Math.max(viewH * 0.35 - rect.top, 0), total);
+            var pct = Math.round((seen / total) * 100);
+            spineFill.style.height = Math.max(0, Math.min(100, pct)) + '%';
+        }
+
+        function onScroll() {
+            if (ticking) return;
+            ticking = true;
+            window.requestAnimationFrame(updateSpine);
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+        updateSpine();
     }
 
     document.addEventListener('DOMContentLoaded', function () {

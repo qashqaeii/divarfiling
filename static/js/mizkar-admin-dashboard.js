@@ -23,15 +23,8 @@
         return toPersianDigits(n.toLocaleString('en-US'));
     }
 
-    function formatJalaliLabel(isoDate) {
-        if (!isoDate) return '';
-        try {
-            const parts = isoDate.split('-');
-            if (parts.length === 3) {
-                return toPersianDigits(parts[1] + '/' + parts[2]);
-            }
-        } catch (e) { /* ignore */ }
-        return isoDate;
+    function formatJalaliLabel(label) {
+        return label || '';
     }
 
     function getThemeColors() {
@@ -95,7 +88,7 @@
                         color: theme.text,
                         font: { size: 10 },
                         maxRotation: 0,
-                        callback: function (val, idx) {
+                        callback: function (val) {
                             const label = this.getLabelForValue(val);
                             return formatJalaliLabel(label);
                         },

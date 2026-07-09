@@ -287,7 +287,7 @@
                                 <td>{{ order.amount|toman }}</td>
                                 <td><span class="adm-badge adm-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
                                 <td>{{ order.get_payment_method_display }}</td>
-                                <td>{{ order.created_at|to_jalali_date:"%Y/%m/%d %H:%M" }}</td>
+                                <td>{{ order.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
                             </tr>
                             {% empty %}
                             <tr><td colspan="6" class="adm-empty">سفارش معلقی وجود ندارد</td></tr>
@@ -327,7 +327,7 @@
                                 <td dir="ltr">{{ u.phone|default:"—" }}</td>
                                 <td>{{ u.pending_count|currency }}</td>
                                 <td>{{ u.pending_total|toman }}</td>
-                                <td>{{ u.last_pending|to_jalali_date:"%Y/%m/%d %H:%M" }}</td>
+                                <td>{{ u.last_pending|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
                             </tr>
                             {% empty %}
                             <tr><td colspan="5" class="adm-empty">کاربری با سفارش معلق نیست</td></tr>
@@ -360,7 +360,7 @@
                                     <small>{{ lic.order.user.phone }}</small>
                                 </td>
                                 <td>{{ lic.plan.name }}</td>
-                                <td>{{ lic.expires_at|to_jalali_date:"%Y/%m/%d" }}</td>
+                                <td>{{ lic.expires_at|to_jalali_fa:"%Y/%m/%d" }}</td>
                             </tr>
                             {% empty %}
                             <tr><td colspan="3" class="adm-empty">لایسنس در شرف انقضا نیست</td></tr>
@@ -434,7 +434,7 @@
                                 <td>{{ order.product.title }}<small>{{ order.plan.name }}</small></td>
                                 <td>{{ order.amount|toman }}</td>
                                 <td><span class="adm-badge adm-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
-                                <td>{{ order.created_at|to_jalali_date:"%Y/%m/%d %H:%M" }}</td>
+                                <td>{{ order.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
                             </tr>
                             {% empty %}
                             <tr><td colspan="5" class="adm-empty">سفارشی ثبت نشده</td></tr>
@@ -487,5 +487,5 @@
 window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=2"></script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=3"></script>
 {% endblock %}

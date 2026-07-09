@@ -17,6 +17,8 @@ from licenses.models import License
 from shop.models import CardTransferSubmission, Order
 from workspace.models import Ticket
 
+from workspace.services.jalali_input import to_persian_digits
+
 User = get_user_model()
 
 PENDING_ORDER_STATUSES = ('pending', 'pending_verification')
@@ -30,10 +32,10 @@ def _jalali(dt) -> str:
             dt = timezone.localtime(dt)
         jdt = jdatetime.datetime.fromgregorian(datetime=dt)
         if jdt.hour or jdt.minute:
-            return jdt.strftime('%Y/%m/%d %H:%M')
-        return jdt.strftime('%Y/%m/%d')
+            return to_persian_digits(jdt.strftime('%Y/%m/%d %H:%M'))
+        return to_persian_digits(jdt.strftime('%Y/%m/%d'))
     except Exception:
-        return str(dt)
+        return to_persian_digits(str(dt))
 
 
 def _user_display(user) -> str:
@@ -305,7 +307,7 @@ def _expiring_licenses_rows(days: int = 14) -> Tuple[List[str], Iterable[ExportR
             'موبایل': lic.order.user.phone or '',
             'ایمیل': lic.order.user.email or '',
             'پلن': lic.plan.name,
-            'روز تا انقضا': days_left,
+            'روز تا انقضا': to_persian_digits(days_left),
             'تاریخ انقضا': _jalali(lic.expires_at),
         })
     return headers, rows

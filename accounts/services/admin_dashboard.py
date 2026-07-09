@@ -5,10 +5,13 @@ from datetime import timedelta
 from decimal import Decimal
 from typing import Any, Dict, List
 
+import jdatetime
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Exists, Max, Q, Sum
+from django.db.models import Count, Exists, Max, OuterRef, Q, Sum
 from django.db.models.functions import TruncDate
 from django.utils import timezone
+
+from workspace.services.jalali_input import to_persian_digits
 
 from accounts.services.admin_exports import get_export_catalog
 
@@ -47,13 +50,23 @@ def _date_range(days: int):
     return start, end
 
 
-def _fill_daily_series(start, end, rows, value_key='count', money=False):
+def _chart_day_label(day, total_days: int) -> str:
+    """برچسب شمسی برای محور نمودار."""
+    j = jdatetime.date.fromgregorian(date=day)
+    if total_days <= 7:
+        return to_persian_digits(f'{j.day:02d}/{j.month:02d}')
+    if total_days <= 31:
+        return to_persian_digits(f'{j.day:02d}/{j.month:02d}')
+    return to_persian_digits(f'{j.month:02d}/{j.year}')
+
+
+def _fill_daily_series(start, end, rows, value_key='count', money=False, days: int = 30):
     """سری روزانه با صفر برای روزهای بدون داده."""
     lookup = {row['day']: row[value_key] for row in rows}
     labels, values = [], []
     current = start
     while current <= end:
-        labels.append(current.isoformat())
+        labels.append(_chart_day_label(current, days))
         val = lookup.get(current, 0)
         if money:
             val = int(val or 0)
@@ -173,7 +186,7 @@ def get_revenue_series(days: int = 30) -> Dict[str, List]:
         .annotate(total=Sum('amount'))
         .order_by('day')
     )
-    labels, values = _fill_daily_series(start, end, rows, value_key='total', money=True)
+    labels, values = _fill_daily_series(start, end, rows, value_key='total', money=True, days=days)
     return {'labels': labels, 'values': values}
 
 
@@ -186,7 +199,7 @@ def get_user_registration_series(days: int = 30) -> Dict[str, List]:
         .annotate(count=Count('id'))
         .order_by('day')
     )
-    labels, values = _fill_daily_series(start, end, rows)
+    labels, values = _fill_daily_series(start, end, rows, days=days)
     return {'labels': labels, 'values': values}
 
 

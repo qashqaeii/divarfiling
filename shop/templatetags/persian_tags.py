@@ -12,6 +12,32 @@ import jdatetime
 register = template.Library()
 
 
+_EN_TO_FA = str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')
+
+
+@register.filter
+def to_persian_digits(value):
+    """تبدیل اعداد لاتین به فارسی."""
+    if value is None:
+        return ''
+    return str(value).translate(_EN_TO_FA)
+
+
+@register.filter
+def to_jalali_fa(value, format_string="%Y/%m/%d %H:%M"):
+    """تبدیل تاریخ میلادی به شمسی با ارقام فارسی."""
+    if not value:
+        return ''
+
+    try:
+        if timezone.is_aware(value):
+            value = timezone.localtime(value)
+        jdt = jdatetime.datetime.fromgregorian(datetime=value)
+        return jdt.strftime(format_string).translate(_EN_TO_FA)
+    except Exception:
+        return str(value).translate(_EN_TO_FA)
+
+
 @register.filter
 def to_jalali(value):
     """

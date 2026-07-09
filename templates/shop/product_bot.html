@@ -7,7 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=28">
+<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=30">
 {% endblock %}
 
 {% block content %}
@@ -57,28 +57,41 @@
                     {% endif %}
                 </div>
 
-                <div class="pb-hero-visual" aria-hidden="false">
+                <div class="pb-hero-visual" aria-label="پیش‌نمایش ویندوز و اندروید">
                     <button type="button" class="pb-hero-preview pb-app-shot pb-hero-preview--desktop" data-pb-lightbox-open aria-label="بزرگنمایی ربات ویندوز">
                         <div class="pb-app-shot-chrome" aria-hidden="true">
                             <span></span><span></span><span></span>
                             <span class="pb-app-shot-title">ربات ویندوز — استخراج حرفه‌ای</span>
                         </div>
-                        <img
-                            src="{% static 'images/help-bot-extract-tab.png' %}"
-                            alt="نمای برنامه استخراج دیوار — تب استخراج با فیلتر شهر و محله"
-                            class="pb-app-shot-img"
-                            loading="eager"
-                            decoding="async"
-                            width="1680"
-                            height="1000"
-                        >
+                        <div class="pb-hero-device-media">
+                            <img
+                                src="{% static 'images/help-bot-extract-tab.png' %}"
+                                alt="نمای برنامه استخراج دیوار — تب استخراج با فیلتر شهر و محله"
+                                class="pb-app-shot-img"
+                                loading="eager"
+                                decoding="async"
+                                width="1680"
+                                height="1000"
+                            >
+                        </div>
                         <span class="pb-hero-device-badge pb-hero-device-badge--win"><i class="fab fa-windows"></i> ویندوز</span>
                         <span class="pb-app-shot-zoom" aria-hidden="true">
                             <i class="fas fa-search-plus"></i>
+                            <span>بزرگنمایی</span>
                         </span>
                     </button>
+
+                    <span class="pb-hero-visual-bridge" aria-hidden="true">
+                        <span class="pb-hero-visual-bridge-line"></span>
+                        <span class="pb-hero-visual-bridge-chip"><i class="fas fa-link"></i></span>
+                        <span class="pb-hero-visual-bridge-line"></span>
+                    </span>
+
                     <button type="button" class="pb-hero-phone pb-app-shot" data-pb-lightbox-open data-pb-lightbox-src="{% static 'images/android/android-02-home.png' %}" data-pb-lightbox-caption="اپ اندروید — داشبورد فایلینگ" aria-label="بزرگنمایی اپ اندروید">
-                        <div class="pb-hero-phone-frame">
+                        <div class="pb-hero-phone-chrome" aria-hidden="true">
+                            <span class="pb-hero-phone-notch"></span>
+                        </div>
+                        <div class="pb-hero-device-media pb-hero-phone-frame">
                             <img
                                 src="{% static 'images/android/android-02-home.png' %}"
                                 alt="اپ فایلینگ دیوار — داشبورد و استخراج موبایل"
@@ -90,6 +103,10 @@
                             >
                         </div>
                         <span class="pb-hero-device-badge pb-hero-device-badge--android"><i class="fab fa-android"></i> اندروید</span>
+                        <span class="pb-app-shot-zoom" aria-hidden="true">
+                            <i class="fas fa-search-plus"></i>
+                            <span>بزرگنمایی</span>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -170,6 +187,9 @@
         </div>
     </section>
     {% endif %}
+
+    {# ─── Excel sample preview ─── #}
+    {% include 'shop/includes/excel_sample_preview.html' %}
 
     {# ─── Platforms: Windows + Android ─── #}
     <section class="pb-band pb-platform-band" id="platforms" aria-labelledby="pb-platform-title">
@@ -463,9 +483,6 @@
     {# ─── Extraction tree ─── #}
     {% include 'shop/includes/extraction_tree.html' %}
 
-    {# ─── Excel sample preview ─── #}
-    {% include 'shop/includes/excel_sample_preview.html' %}
-
     {# ─── Workspace ─── #}
     <section class="pb-band pb-band--alt pb-ws-band">
         <div class="container">
@@ -474,49 +491,89 @@
                 <h2>پس از آپلود</h2>
                 <p>CRM رایگان است؛ تحلیل و فایلینگ با لایسنس فعال باز می‌شود</p>
             </header>
-            <div class="pb-ws-grid">
-                {% for item in bot_page.workspace_integration %}
-                <article class="pb-ws-card" data-accent="{{ item.accent }}">
-                    <button
-                        type="button"
-                        class="pb-ws-shot pb-app-shot"
-                        data-pb-lightbox-open
-                        data-pb-lightbox-src="{% static item.image %}"
-                        data-pb-lightbox-caption="{{ item.title }}"
-                        aria-label="بزرگنمایی {{ item.title }}"
-                    >
-                        <div class="pb-app-shot-chrome" aria-hidden="true">
-                            <span></span><span></span><span></span>
-                            <span class="pb-app-shot-title">میزکار — {{ item.title }}</span>
-                        </div>
-                        <div class="pb-ws-shot-frame">
-                            <img
-                                src="{% static item.image %}"
-                                alt="{{ item.image_alt }}"
-                                class="pb-ws-shot-img"
-                                loading="lazy"
-                                decoding="async"
-                                width="1280"
-                                height="800"
+            <div class="pb-ws-showcase" data-pb-ws-slider tabindex="0" aria-roledescription="carousel" aria-label="امکانات میزکار پس از آپلود">
+                <div class="pb-ws-showcase-shell">
+                    <div class="pb-ws-showcase-viewport" data-pb-ws-viewport>
+                        <div class="pb-ws-showcase-track" data-pb-ws-track>
+                            {% for item in bot_page.workspace_integration %}
+                            <article
+                                class="pb-ws-slide{% if forloop.first %} is-active{% endif %}"
+                                data-pb-ws-slide
+                                data-accent="{{ item.accent }}"
+                                aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}"
                             >
-                            <span class="pb-ws-shot-shine" aria-hidden="true"></span>
-                        </div>
-                        <span class="pb-app-shot-zoom" aria-hidden="true">
-                            <i class="fas fa-search-plus"></i>
-                            <span>بزرگنمایی</span>
-                        </span>
-                    </button>
-                    <div class="pb-ws-card-body">
-                        <span class="pb-ws-icon pb-icon pb-icon--md pb-icon--{{ item.accent }}">
-                            <i class="fas {{ item.icon }}"></i>
-                        </span>
-                        <div>
-                            <h3>{{ item.title }}</h3>
-                            <p>{{ item.desc }}</p>
+                                <div class="pb-ws-slide-copy">
+                                    <span class="pb-ws-slide-idx" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
+                                    <span class="pb-ws-slide-icon pb-icon pb-icon--lg pb-icon--{{ item.accent }}">
+                                        <i class="fas {{ item.icon }}"></i>
+                                    </span>
+                                    <h3 class="pb-ws-slide-title">{{ item.title }}</h3>
+                                    <p class="pb-ws-slide-desc">{{ item.desc }}</p>
+                                    <span class="pb-ws-slide-badge">
+                                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                                        میزکار فایلینگ
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="pb-ws-slide-visual pb-app-shot"
+                                    data-pb-lightbox-open
+                                    data-pb-lightbox-src="{% static item.image %}"
+                                    data-pb-lightbox-caption="{{ item.title }}"
+                                    aria-label="بزرگنمایی {{ item.title }}"
+                                >
+                                    <div class="pb-app-shot-chrome" aria-hidden="true">
+                                        <span></span><span></span><span></span>
+                                        <span class="pb-app-shot-title">میزکار — {{ item.title }}</span>
+                                    </div>
+                                    <div class="pb-ws-slide-frame">
+                                        <img
+                                            src="{% static item.image %}"
+                                            alt="{{ item.image_alt }}"
+                                            class="pb-ws-slide-img"
+                                            loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+                                            decoding="async"
+                                            width="1280"
+                                            height="800"
+                                        >
+                                        <span class="pb-ws-slide-shine" aria-hidden="true"></span>
+                                    </div>
+                                    <span class="pb-app-shot-zoom" aria-hidden="true">
+                                        <i class="fas fa-search-plus"></i>
+                                        <span>بزرگنمایی</span>
+                                    </span>
+                                </button>
+                            </article>
+                            {% endfor %}
                         </div>
                     </div>
-                </article>
-                {% endfor %}
+                    <div class="pb-ws-showcase-controls">
+                        <button type="button" class="pb-ws-showcase-btn" data-pb-ws-prev aria-label="اسلاید قبلی">
+                            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                        </button>
+                        <div class="pb-ws-showcase-dots" data-pb-ws-dots role="tablist" aria-label="انتخاب اسلاید"></div>
+                        <button type="button" class="pb-ws-showcase-btn" data-pb-ws-next aria-label="اسلاید بعدی">
+                            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="pb-ws-showcase-thumbs" data-pb-ws-thumbs role="tablist" aria-label="پیش‌نمایش اسلایدها">
+                        {% for item in bot_page.workspace_integration %}
+                        <button
+                            type="button"
+                            class="pb-ws-thumb{% if forloop.first %} is-active{% endif %}"
+                            data-pb-ws-thumb="{{ forloop.counter0 }}"
+                            data-accent="{{ item.accent }}"
+                            aria-label="{{ item.title }}"
+                            aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                        >
+                            <span class="pb-ws-thumb-icon pb-icon pb-icon--xs pb-icon--{{ item.accent }}">
+                                <i class="fas {{ item.icon }}"></i>
+                            </span>
+                            <span class="pb-ws-thumb-label">{{ item.title }}</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
             <div class="pb-ws-actions">
                 {% if user.is_authenticated %}
@@ -692,12 +749,13 @@
         var branchBtns = xtree.querySelectorAll('.pb-xtree-branch-btn[data-xtree-select]');
         var panes = xtree.querySelectorAll('[data-xtree-pane]');
         var branches = xtree.querySelectorAll('.pb-xtree-branch');
+        var detailPanel = xtree.querySelector('.pb-xtree-detail');
 
         function activateBranch(id, btn) {
             branchBtns.forEach(function (b) {
                 var on = b === btn;
                 b.classList.toggle('is-active', on);
-                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
             });
             branches.forEach(function (branch) {
                 var leaves = branch.querySelector('.pb-xtree-leaves');
@@ -710,12 +768,26 @@
                 var on = pane.dataset.xtreePane === id;
                 pane.classList.toggle('is-active', on);
                 pane.hidden = !on;
+                pane.setAttribute('aria-hidden', on ? 'false' : 'true');
             });
+
+            if (detailPanel && window.matchMedia('(max-width: 1024px)').matches) {
+                detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
 
         branchBtns.forEach(function (btn) {
             btn.addEventListener('click', function () {
-                activateBranch(btn.dataset.xtreeSelect, btn);
+                var id = btn.dataset.xtreeSelect;
+                var branch = btn.closest('.pb-xtree-branch');
+                var wasActive = btn.classList.contains('is-active');
+                if (wasActive && branch && branch.classList.contains('is-expanded')) {
+                    branch.classList.remove('is-expanded');
+                    var leaves = branch.querySelector('.pb-xtree-leaves');
+                    if (leaves) leaves.hidden = true;
+                    return;
+                }
+                activateBranch(id, btn);
             });
         });
 
@@ -728,14 +800,124 @@
                 var pane = xtree.querySelector('[data-xtree-pane="' + id + '"]');
                 if (pane && file) {
                     var pathEl = pane.querySelector('.pb-xtree-sample-path');
-                    if (pathEl) pathEl.classList.add('is-pulse');
-                    setTimeout(function () { pathEl && pathEl.classList.remove('is-pulse'); }, 900);
+                    if (pathEl) {
+                        pathEl.classList.add('is-pulse');
+                        setTimeout(function () { pathEl.classList.remove('is-pulse'); }, 900);
+                    }
+                    var sampleAcc = pane.querySelector('.pb-xtree-acc--sample');
+                    if (sampleAcc) sampleAcc.open = true;
                 }
+            });
+        });
+
+        xtree.querySelectorAll('[data-pb-xtree-acc]').forEach(function (accRoot) {
+            accRoot.querySelectorAll('.pb-xtree-acc').forEach(function (acc) {
+                acc.addEventListener('toggle', function () {
+                    if (!acc.open) return;
+                    accRoot.querySelectorAll('.pb-xtree-acc').forEach(function (other) {
+                        if (other !== acc) other.open = false;
+                    });
+                });
             });
         });
 
         var first = branchBtns[0];
         if (first) activateBranch(first.dataset.xtreeSelect, first);
+    }
+
+    var wsSlider = document.querySelector('[data-pb-ws-slider]');
+    if (wsSlider) {
+        var wsTrack = wsSlider.querySelector('[data-pb-ws-track]');
+        var wsSlides = wsSlider.querySelectorAll('[data-pb-ws-slide]');
+        var wsDotsWrap = wsSlider.querySelector('[data-pb-ws-dots]');
+        var wsThumbs = wsSlider.querySelectorAll('[data-pb-ws-thumb]');
+        var wsPrev = wsSlider.querySelector('[data-pb-ws-prev]');
+        var wsNext = wsSlider.querySelector('[data-pb-ws-next]');
+        var wsIndex = 0;
+        var wsTotal = wsSlides.length;
+        var wsAutoplay = null;
+        var wsPaused = false;
+        var wsTouchX = 0;
+        var wsReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (wsTrack && wsSlides.length) {
+            wsTrack.style.direction = 'ltr';
+            wsSlides.forEach(function (s) { s.style.direction = 'rtl'; });
+
+            wsSlides.forEach(function (_, i) {
+                var dot = document.createElement('button');
+                dot.type = 'button';
+                dot.className = 'pb-ws-showcase-dot' + (i === 0 ? ' is-active' : '');
+                dot.setAttribute('aria-label', 'اسلاید ' + (i + 1));
+                dot.setAttribute('role', 'tab');
+                dot.addEventListener('click', function () { wsGoTo(i); });
+                wsDotsWrap.appendChild(dot);
+            });
+
+            var wsDots = wsDotsWrap.querySelectorAll('.pb-ws-showcase-dot');
+
+            function wsGoTo(i) {
+                wsIndex = ((i % wsTotal) + wsTotal) % wsTotal;
+                wsTrack.style.transform = 'translateX(-' + (wsIndex * 100) + '%)';
+                wsSlides.forEach(function (s, j) {
+                    var on = j === wsIndex;
+                    s.classList.toggle('is-active', on);
+                    s.setAttribute('aria-hidden', on ? 'false' : 'true');
+                });
+                wsDots.forEach(function (d, j) {
+                    d.classList.toggle('is-active', j === wsIndex);
+                });
+                wsThumbs.forEach(function (t, j) {
+                    var on = j === wsIndex;
+                    t.classList.toggle('is-active', on);
+                    t.setAttribute('aria-selected', on ? 'true' : 'false');
+                });
+            }
+
+            function wsNextSlide() { wsGoTo(wsIndex + 1); }
+            function wsPrevSlide() { wsGoTo(wsIndex - 1); }
+
+            function wsStartAutoplay() {
+                if (wsReduced) return;
+                if (wsAutoplay) clearInterval(wsAutoplay);
+                wsAutoplay = setInterval(function () {
+                    if (!wsPaused) wsNextSlide();
+                }, 6000);
+            }
+
+            if (wsPrev) wsPrev.addEventListener('click', function () { wsPrevSlide(); wsStartAutoplay(); });
+            if (wsNext) wsNext.addEventListener('click', function () { wsNextSlide(); wsStartAutoplay(); });
+
+            wsThumbs.forEach(function (thumb) {
+                thumb.addEventListener('click', function () {
+                    wsGoTo(parseInt(thumb.dataset.pbWsThumb, 10));
+                    wsStartAutoplay();
+                });
+            });
+
+            wsSlider.addEventListener('mouseenter', function () { wsPaused = true; });
+            wsSlider.addEventListener('mouseleave', function () { wsPaused = false; });
+
+            wsSlider.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowLeft') { wsNextSlide(); wsStartAutoplay(); }
+                if (e.key === 'ArrowRight') { wsPrevSlide(); wsStartAutoplay(); }
+            });
+
+            wsSlider.addEventListener('touchstart', function (e) {
+                wsTouchX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            wsSlider.addEventListener('touchend', function (e) {
+                var diff = wsTouchX - e.changedTouches[0].screenX;
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) wsNextSlide();
+                    else wsPrevSlide();
+                    wsStartAutoplay();
+                }
+            }, { passive: true });
+
+            wsStartAutoplay();
+        }
     }
 
     var xlsRoot = document.querySelector('[data-pb-xls]');

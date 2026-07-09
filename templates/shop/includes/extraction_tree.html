@@ -41,19 +41,23 @@
                         </div>
                     </div>
 
-                    <div class="pb-xtree-branches">
+                    <div class="pb-xtree-branches" role="tablist" aria-orientation="vertical">
                         {% for cat in tree.categories %}
-                        <div class="pb-xtree-branch" data-accent="{{ cat.accent }}">
+                        <div class="pb-xtree-branch{% if forloop.first %} is-expanded{% endif %}" data-accent="{{ cat.accent }}">
                             <button type="button"
                                     class="pb-xtree-branch-btn{% if forloop.first %} is-active{% endif %}"
                                     data-xtree-select="{{ cat.id }}"
-                                    aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">
+                                    role="tab"
+                                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                                    aria-controls="xtree-pane-{{ cat.id }}"
+                                    id="xtree-tab-{{ cat.id }}">
                                 <span class="pb-xtree-branch-dot" aria-hidden="true"></span>
                                 <span class="pb-xtree-branch-icon pb-icon pb-icon--xs pb-icon--{{ cat.accent }}"><i class="fas {{ cat.icon }}"></i></span>
                                 <span class="pb-xtree-branch-label">{{ cat.label }}</span>
                                 <span class="pb-xtree-branch-count">{{ cat.subcategories|length }}</span>
+                                <span class="pb-xtree-branch-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                             </button>
-                            <ul class="pb-xtree-leaves" hidden>
+                            <ul class="pb-xtree-leaves"{% if not forloop.first %} hidden{% endif %}>
                                 {% for sub in cat.subcategories %}
                                 <li>
                                     <button type="button" class="pb-xtree-leaf" data-xtree-select="{{ cat.id }}" data-xtree-file="{{ sub.file }}">
@@ -69,9 +73,16 @@
                     </div>
                 </aside>
 
-                <div class="pb-xtree-detail">
+                <div class="pb-xtree-detail" role="tabpanel">
                     {% for cat in tree.categories %}
-                    <article class="pb-xtree-pane{% if forloop.first %} is-active{% endif %}" data-xtree-pane="{{ cat.id }}"{% if not forloop.first %} hidden{% endif %}>
+                    <article
+                        class="pb-xtree-pane{% if forloop.first %} is-active{% endif %}"
+                        id="xtree-pane-{{ cat.id }}"
+                        data-xtree-pane="{{ cat.id }}"
+                        role="tabpanel"
+                        aria-labelledby="xtree-tab-{{ cat.id }}"
+                        {% if not forloop.first %} hidden{% endif %}
+                    >
                         <header class="pb-xtree-pane-head">
                             <span class="pb-xtree-pane-icon pb-icon pb-icon--lg pb-icon--{{ cat.accent }}"><i class="fas {{ cat.icon }}"></i></span>
                             <div>
@@ -80,95 +91,132 @@
                             </div>
                         </header>
 
-                        <div class="pb-xtree-subs">
-                            {% for sub in cat.subcategories %}
-                            <span class="pb-xtree-sub-chip" data-accent="{{ cat.accent }}">
-                                <i class="fas fa-file-excel" aria-hidden="true"></i>
-                                {{ sub.label }}
-                                <code dir="ltr">{{ sub.file }}</code>
-                            </span>
-                            {% endfor %}
-                        </div>
+                        <div class="pb-xtree-pane-body">
+                            <div class="pb-xtree-accordions" data-pb-xtree-acc>
+                                <details class="pb-xtree-acc pb-xtree-acc--subs" data-accent="{{ cat.accent }}" open>
+                                    <summary>
+                                        <span class="pb-xtree-acc-icon pb-icon pb-icon--xs pb-icon--{{ cat.accent }}"><i class="fas fa-folder-tree"></i></span>
+                                        <span class="pb-xtree-acc-title">زیردسته‌ها و فایل خروجی</span>
+                                        <span class="pb-xtree-acc-meta">{{ cat.subcategories|length }} نوع</span>
+                                        <span class="pb-xtree-acc-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                                    </summary>
+                                    <div class="pb-xtree-acc-body">
+                                        <div class="pb-xtree-subs">
+                                            {% for sub in cat.subcategories %}
+                                            <span class="pb-xtree-sub-chip" data-accent="{{ cat.accent }}">
+                                                <i class="fas fa-file-excel" aria-hidden="true"></i>
+                                                {{ sub.label }}
+                                                <code dir="ltr">{{ sub.file }}</code>
+                                            </span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </details>
 
-                        <div class="pb-xtree-layers">
-                            <section class="pb-xtree-layer pb-xtree-layer--price" data-accent="{{ cat.accent }}">
-                                <header>
-                                    <span class="pb-icon pb-icon--sm pb-icon--{{ cat.accent }}"><i class="fas {{ cat.price_layer.icon }}"></i></span>
-                                    <h4>{{ cat.price_layer.label }}</h4>
-                                </header>
-                                <ul>
-                                    {% for field in cat.price_layer.fields %}
-                                    <li>{{ field }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </section>
+                                <details class="pb-xtree-acc pb-xtree-acc--layers" data-accent="{{ cat.accent }}">
+                                    <summary>
+                                        <span class="pb-xtree-acc-icon pb-icon pb-icon--xs pb-icon--{{ cat.accent }}"><i class="fas fa-table-columns"></i></span>
+                                        <span class="pb-xtree-acc-title">لایه‌های داده استخراج‌شده</span>
+                                        <span class="pb-xtree-acc-meta">{{ cat.spec_layers|length|add:1 }} لایه</span>
+                                        <span class="pb-xtree-acc-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                                    </summary>
+                                    <div class="pb-xtree-acc-body">
+                                        <div class="pb-xtree-layers">
+                                            <section class="pb-xtree-layer pb-xtree-layer--price" data-accent="{{ cat.accent }}">
+                                                <header>
+                                                    <span class="pb-icon pb-icon--sm pb-icon--{{ cat.accent }}"><i class="fas {{ cat.price_layer.icon }}"></i></span>
+                                                    <h4>{{ cat.price_layer.label }}</h4>
+                                                </header>
+                                                <ul>
+                                                    {% for field in cat.price_layer.fields %}
+                                                    <li>{{ field }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </section>
 
-                            {% for layer in cat.spec_layers %}
-                            <section class="pb-xtree-layer" data-accent="{{ cat.accent }}">
-                                <header>
-                                    <span class="pb-icon pb-icon--sm pb-icon--{{ cat.accent }}"><i class="fas {{ layer.icon }}"></i></span>
-                                    <h4>{{ layer.label }}</h4>
-                                </header>
-                                <ul>
-                                    {% for field in layer.fields %}
-                                    <li>{{ field }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </section>
-                            {% endfor %}
-                        </div>
+                                            {% for layer in cat.spec_layers %}
+                                            <section class="pb-xtree-layer" data-accent="{{ cat.accent }}">
+                                                <header>
+                                                    <span class="pb-icon pb-icon--sm pb-icon--{{ cat.accent }}"><i class="fas {{ layer.icon }}"></i></span>
+                                                    <h4>{{ layer.label }}</h4>
+                                                </header>
+                                                <ul>
+                                                    {% for field in layer.fields %}
+                                                    <li>{{ field }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </section>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </details>
 
-                        <aside class="pb-xtree-sample" data-accent="{{ cat.accent }}">
-                            <div class="pb-xtree-sample-path" dir="ltr">
-                                <i class="fas fa-folder" aria-hidden="true"></i>
-                                output/{{ cat.sample.path }}{{ cat.sample.file }}
+                                <details class="pb-xtree-acc pb-xtree-acc--sample" data-accent="{{ cat.accent }}">
+                                    <summary>
+                                        <span class="pb-xtree-acc-icon pb-icon pb-icon--xs pb-icon--{{ cat.accent }}"><i class="fas fa-file-circle-check"></i></span>
+                                        <span class="pb-xtree-acc-title">نمونه آگهی واقعی</span>
+                                        <span class="pb-xtree-acc-meta">{{ cat.sample.title }}</span>
+                                        <span class="pb-xtree-acc-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                                    </summary>
+                                    <div class="pb-xtree-acc-body">
+                                        <aside class="pb-xtree-sample" data-accent="{{ cat.accent }}">
+                                            <div class="pb-xtree-sample-path" dir="ltr">
+                                                <i class="fas fa-folder" aria-hidden="true"></i>
+                                                output/{{ cat.sample.path }}{{ cat.sample.file }}
+                                            </div>
+                                            <h4>{{ cat.sample.title }}</h4>
+                                            <dl class="pb-xtree-sample-grid">
+                                                {% for h in cat.sample.highlights %}
+                                                <div>
+                                                    <dt>{{ h.label }}</dt>
+                                                    <dd>{{ h.value }}</dd>
+                                                </div>
+                                                {% endfor %}
+                                            </dl>
+                                            {% if cat.id == 'sale-residential' %}
+                                            <a href="#excel-sample" class="pb-xtree-sample-cta">
+                                                <i class="fas fa-table" aria-hidden="true"></i>
+                                                مشاهده پیش‌نمایش اکسل واقعی
+                                                <i class="fas fa-arrow-up" aria-hidden="true"></i>
+                                            </a>
+                                            {% endif %}
+                                        </aside>
+                                    </div>
+                                </details>
                             </div>
-                            <h4>{{ cat.sample.title }}</h4>
-                            <dl class="pb-xtree-sample-grid">
-                                {% for h in cat.sample.highlights %}
-                                <div>
-                                    <dt>{{ h.label }}</dt>
-                                    <dd>{{ h.value }}</dd>
-                                </div>
-                                {% endfor %}
-                            </dl>
-                            {% if cat.id == 'sale-residential' %}
-                            <a href="#excel-sample" class="pb-xtree-sample-cta">
-                                <i class="fas fa-table" aria-hidden="true"></i>
-                                مشاهده پیش‌نمایش اکسل واقعی
-                                <i class="fas fa-arrow-down" aria-hidden="true"></i>
-                            </a>
-                            {% endif %}
-                        </aside>
+                        </div>
                     </article>
                     {% endfor %}
                 </div>
             </div>
 
-            <footer class="pb-xtree-shared">
-                <div class="pb-xtree-shared-head">
+            <details class="pb-xtree-shared-collapse">
+                <summary class="pb-xtree-shared-summary">
                     <span class="pb-icon pb-icon--md pb-icon--violet"><i class="fas fa-layer-group"></i></span>
                     <div>
                         <h3>{{ tree.shared_label }}</h3>
-                        <p>در هر فایل Excel — مستقل از نوع معامله</p>
+                        <p>در هر فایل Excel — مستقل از نوع معامله · {{ tree.shared_layers|length }} لایه مشترک</p>
+                    </div>
+                    <span class="pb-xtree-shared-toggle" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                </summary>
+                <div class="pb-xtree-shared">
+                    <div class="pb-xtree-shared-grid">
+                        {% for layer in tree.shared_layers %}
+                        <article class="pb-xtree-shared-card" data-accent="{{ layer.accent }}">
+                            <header>
+                                <span class="pb-icon pb-icon--xs pb-icon--{{ layer.accent }}"><i class="fas {{ layer.icon }}"></i></span>
+                                <h4>{{ layer.label }}</h4>
+                            </header>
+                            <ul>
+                                {% for field in layer.fields %}
+                                <li>{{ field }}</li>
+                                {% endfor %}
+                            </ul>
+                        </article>
+                        {% endfor %}
                     </div>
                 </div>
-                <div class="pb-xtree-shared-grid">
-                    {% for layer in tree.shared_layers %}
-                    <article class="pb-xtree-shared-card" data-accent="{{ layer.accent }}">
-                        <header>
-                            <span class="pb-icon pb-icon--xs pb-icon--{{ layer.accent }}"><i class="fas {{ layer.icon }}"></i></span>
-                            <h4>{{ layer.label }}</h4>
-                        </header>
-                        <ul>
-                            {% for field in layer.fields %}
-                            <li>{{ field }}</li>
-                            {% endfor %}
-                        </ul>
-                    </article>
-                    {% endfor %}
-                </div>
-            </footer>
+            </details>
         </div>
     </div>
 </section>

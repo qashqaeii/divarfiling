@@ -6,9 +6,11 @@ from decimal import Decimal
 from typing import Any, Dict, List
 
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Sum
+from django.db.models import Count, Exists, Max, Q, Sum
 from django.db.models.functions import TruncDate
 from django.utils import timezone
+
+from accounts.services.admin_exports import get_export_catalog
 
 from affiliates.models import Affiliate, AffiliateSale, Withdrawal
 from licenses.models import License, LicenseActivation
@@ -27,6 +29,8 @@ CHART_COLORS = [
     'rgba(14, 165, 233, 0.8)',
     'rgba(99, 102, 241, 0.8)',
 ]
+
+PENDING_ORDER_STATUSES = ('pending', 'pending_verification')
 
 ORDER_STATUS_LABELS = dict(Order.STATUS_CHOICES)
 LICENSE_STATUS_LABELS = dict(License.STATUS_CHOICES)
@@ -115,7 +119,18 @@ def get_overview_stats() -> Dict[str, Any]:
     pending_withdrawals = Withdrawal.objects.filter(status='pending').count()
     open_tickets = Ticket.objects.exclude(status='closed').count()
     unread_tickets = Ticket.objects.filter(staff_has_unread=True).exclude(status='closed').count()
-    pending_orders = orders_qs.filter(status__in=('pending', 'pending_verification')).count()
+    pending_orders = orders_qs.filter(status__in=PENDING_ORDER_STATUSES).count()
+    users_pending_payment = User.objects.filter(
+        orders__status__in=PENDING_ORDER_STATUSES,
+    ).distinct().count()
+
+    active_license_q = License.objects.filter(
+        order__user=OuterRef('pk'),
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    users_without_license = User.objects.filter(is_active=True).annotate(
+        has_active_license=Exists(active_license_q),
+    ).filter(has_active_license=False).count()
 
     datasets_total = Dataset.objects.count()
 
@@ -127,6 +142,8 @@ def get_overview_stats() -> Dict[str, Any]:
         'orders_total': orders_total,
         'orders_paid': orders_paid,
         'orders_pending': pending_orders,
+        'users_pending_payment': users_pending_payment,
+        'users_without_license': users_without_license,
         'revenue_total': int(revenue_total),
         'revenue_month': int(revenue_month),
         'revenue_week': int(revenue_week),
@@ -247,6 +264,59 @@ def get_product_revenue() -> List[Dict[str, Any]]:
         }
         for row in rows
     ]
+
+
+def get_pending_orders(limit: int = 15):
+    return (
+        Order.objects.filter(status__in=PENDING_ORDER_STATUSES)
+        .select_related('user', 'product', 'plan')
+        .order_by('-created_at')[:limit]
+    )
+
+
+def get_users_with_pending_orders(limit: int = 12):
+    return (
+        User.objects.filter(orders__status__in=PENDING_ORDER_STATUSES)
+        .annotate(
+            pending_count=Count('orders', filter=Q(orders__status__in=PENDING_ORDER_STATUSES)),
+            pending_total=Sum('orders__amount', filter=Q(orders__status__in=PENDING_ORDER_STATUSES)),
+            last_pending=Max('orders__created_at', filter=Q(orders__status__in=PENDING_ORDER_STATUSES)),
+        )
+        .distinct()
+        .order_by('-last_pending')[:limit]
+    )
+
+
+def get_expiring_licenses(limit: int = 10):
+    now = timezone.now()
+    return (
+        License.objects.filter(
+            status='active',
+            expires_at__isnull=False,
+            expires_at__gt=now,
+            expires_at__lte=now + timedelta(days=14),
+        )
+        .select_related('order__user', 'plan')
+        .order_by('expires_at')[:limit]
+    )
+
+
+def get_users_without_license_preview(limit: int = 10):
+    now = timezone.now()
+    active_license_q = License.objects.filter(
+        order__user=OuterRef('pk'),
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    return (
+        User.objects.filter(is_active=True)
+        .annotate(
+            has_active_license=Exists(active_license_q),
+            paid_orders=Count('orders', filter=Q(orders__status='paid')),
+            pending_orders=Count('orders', filter=Q(orders__status__in=PENDING_ORDER_STATUSES)),
+        )
+        .filter(has_active_license=False)
+        .order_by('-date_joined')[:limit]
+    )
 
 
 def get_recent_orders(limit: int = 10):
@@ -394,9 +464,21 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
         'product_revenue': product_revenue,
         'recent_orders': get_recent_orders(),
         'recent_users': get_recent_users(),
+        'pending_orders': get_pending_orders(),
+        'users_with_pending_orders': get_users_with_pending_orders(),
+        'expiring_licenses': get_expiring_licenses(),
+        'users_without_license_list': get_users_without_license_preview(),
         'pending_card_transfers': get_pending_card_transfers(),
         'open_tickets': get_open_tickets(),
         'pending_withdrawals': get_pending_withdrawals(),
+        'export_catalog': get_export_catalog(days=days),
+        'export_categories': {
+            'orders': 'سفارش‌ها',
+            'users': 'کاربران',
+            'licenses': 'لایسنس‌ها',
+            'finance': 'مالی',
+            'support': 'پشتیبانی',
+        },
         'chart_days': days,
         'products_count': Product.objects.filter(is_active=True).count(),
     }

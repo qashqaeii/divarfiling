@@ -1,0 +1,673 @@
+"""خروجی گزارش‌های پنل مدیریت — CSV و Excel."""
+from __future__ import annotations
+
+import csv
+import io
+from datetime import timedelta
+from typing import Any, Callable, Dict, Iterable, List, Tuple
+
+import jdatetime
+from django.contrib.auth import get_user_model
+from django.db.models import Count, Exists, Max, OuterRef, Q, Sum
+from django.http import HttpResponse
+from django.utils import timezone
+
+from affiliates.models import AffiliateSale, Withdrawal
+from licenses.models import License
+from shop.models import CardTransferSubmission, Order
+from workspace.models import Ticket
+
+User = get_user_model()
+
+PENDING_ORDER_STATUSES = ('pending', 'pending_verification')
+
+
+def _jalali(dt) -> str:
+    if not dt:
+        return ''
+    try:
+        if timezone.is_aware(dt):
+            dt = timezone.localtime(dt)
+        jdt = jdatetime.datetime.fromgregorian(datetime=dt)
+        if jdt.hour or jdt.minute:
+            return jdt.strftime('%Y/%m/%d %H:%M')
+        return jdt.strftime('%Y/%m/%d')
+    except Exception:
+        return str(dt)
+
+
+def _user_display(user) -> str:
+    return user.get_full_name() or user.username or ''
+
+
+ExportRow = Dict[str, Any]
+ExportBuilder = Callable[[], Tuple[List[str], Iterable[ExportRow]]]
+
+
+def _pending_orders_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'شناسه سفارش', 'نام کاربر', 'موبایل', 'ایمیل', 'محصول', 'پلن',
+        'مبلغ (تومان)', 'وضعیت', 'روش پرداخت', 'تاریخ ایجاد',
+    ]
+    qs = (
+        Order.objects.filter(status__in=PENDING_ORDER_STATUSES)
+        .select_related('user', 'product', 'plan')
+        .order_by('-created_at')
+    )
+    rows = [
+        {
+            'شناسه سفارش': str(o.id),
+            'نام کاربر': _user_display(o.user),
+            'موبایل': o.user.phone or '',
+            'ایمیل': o.user.email or '',
+            'محصول': o.product.title,
+            'پلن': o.plan.name,
+            'مبلغ (تومان)': int(o.amount),
+            'وضعیت': o.get_status_display(),
+            'روش پرداخت': o.get_payment_method_display(),
+            'تاریخ ایجاد': _jalali(o.created_at),
+        }
+        for o in qs
+    ]
+    return headers, rows
+
+
+def _users_with_pending_orders_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'نام', 'موبایل', 'ایمیل', 'تعداد سفارش معلق', 'مجموع مبلغ معلق (تومان)',
+        'آخرین سفارش', 'محصولات', 'تاریخ عضویت',
+    ]
+    qs = (
+        User.objects.filter(orders__status__in=PENDING_ORDER_STATUSES)
+        .annotate(
+            pending_count=Count('orders', filter=Q(orders__status__in=PENDING_ORDER_STATUSES)),
+            pending_total=Sum('orders__amount', filter=Q(orders__status__in=PENDING_ORDER_STATUSES)),
+            last_pending=Max('orders__created_at', filter=Q(orders__status__in=PENDING_ORDER_STATUSES)),
+        )
+        .distinct()
+        .order_by('-last_pending')
+    )
+    rows = []
+    for u in qs:
+        products = (
+            Order.objects.filter(user=u, status__in=PENDING_ORDER_STATUSES)
+            .values_list('product__title', flat=True)
+            .distinct()
+        )
+        rows.append({
+            'نام': _user_display(u),
+            'موبایل': u.phone or '',
+            'ایمیل': u.email or '',
+            'تعداد سفارش معلق': u.pending_count,
+            'مجموع مبلغ معلق (تومان)': int(u.pending_total or 0),
+            'آخرین سفارش': _jalali(u.last_pending),
+            'محصولات': ' | '.join(products),
+            'تاریخ عضویت': _jalali(u.date_joined),
+        })
+    return headers, rows
+
+
+def _paid_orders_rows(days: int | None = None) -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'شناسه سفارش', 'نام کاربر', 'موبایل', 'محصول', 'پلن', 'مبلغ (تومان)',
+        'تخفیف (تومان)', 'روش پرداخت', 'تاریخ پرداخت', 'تاریخ ایجاد',
+    ]
+    qs = Order.objects.filter(status='paid').select_related('user', 'product', 'plan')
+    if days:
+        since = timezone.now() - timedelta(days=days)
+        qs = qs.filter(paid_at__gte=since)
+    qs = qs.order_by('-paid_at')
+    rows = [
+        {
+            'شناسه سفارش': str(o.id),
+            'نام کاربر': _user_display(o.user),
+            'موبایل': o.user.phone or '',
+            'محصول': o.product.title,
+            'پلن': o.plan.name,
+            'مبلغ (تومان)': int(o.amount),
+            'تخفیف (تومان)': int(o.discount_amount or 0),
+            'روش پرداخت': o.get_payment_method_display(),
+            'تاریخ پرداخت': _jalali(o.paid_at),
+            'تاریخ ایجاد': _jalali(o.created_at),
+        }
+        for o in qs
+    ]
+    return headers, rows
+
+
+def _failed_orders_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'شناسه سفارش', 'نام کاربر', 'موبایل', 'محصول', 'پلن', 'مبلغ (تومان)',
+        'وضعیت', 'روش پرداخت', 'تاریخ',
+    ]
+    qs = (
+        Order.objects.filter(status__in=('failed', 'cancelled'))
+        .select_related('user', 'product', 'plan')
+        .order_by('-created_at')
+    )
+    rows = [
+        {
+            'شناسه سفارش': str(o.id),
+            'نام کاربر': _user_display(o.user),
+            'موبایل': o.user.phone or '',
+            'محصول': o.product.title,
+            'پلن': o.plan.name,
+            'مبلغ (تومان)': int(o.amount),
+            'وضعیت': o.get_status_display(),
+            'روش پرداخت': o.get_payment_method_display(),
+            'تاریخ': _jalali(o.created_at),
+        }
+        for o in qs
+    ]
+    return headers, rows
+
+
+def _all_users_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'نام', 'نام کاربری', 'موبایل', 'ایمیل', 'فعال', 'staff',
+        'تعداد سفارش پرداخت‌شده', 'لایسنس فعال', 'تاریخ عضویت',
+    ]
+    active_license = License.objects.filter(
+        order__user=OuterRef('pk'),
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+    qs = (
+        User.objects.annotate(
+            paid_orders=Count('orders', filter=Q(orders__status='paid')),
+            has_active_license=Exists(active_license),
+        )
+        .order_by('-date_joined')
+    )
+    rows = [
+        {
+            'نام': _user_display(u),
+            'نام کاربری': u.username,
+            'موبایل': u.phone or '',
+            'ایمیل': u.email or '',
+            'فعال': 'بله' if u.is_active else 'خیر',
+            'staff': 'بله' if u.is_staff else 'خیر',
+            'تعداد سفارش پرداخت‌شده': u.paid_orders,
+            'لایسنس فعال': 'بله' if u.has_active_license else 'خیر',
+            'تاریخ عضویت': _jalali(u.date_joined),
+        }
+        for u in qs
+    ]
+    return headers, rows
+
+
+def _new_users_rows(days: int = 30) -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = ['نام', 'موبایل', 'ایمیل', 'سفارش پرداخت‌شده', 'تاریخ عضویت']
+    since = timezone.now() - timedelta(days=days)
+    qs = (
+        User.objects.filter(date_joined__gte=since)
+        .annotate(paid_orders=Count('orders', filter=Q(orders__status='paid')))
+        .order_by('-date_joined')
+    )
+    rows = [
+        {
+            'نام': _user_display(u),
+            'موبایل': u.phone or '',
+            'ایمیل': u.email or '',
+            'سفارش پرداخت‌شده': u.paid_orders,
+            'تاریخ عضویت': _jalali(u.date_joined),
+        }
+        for u in qs
+    ]
+    return headers, rows
+
+
+def _users_without_license_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'نام', 'موبایل', 'ایمیل', 'سفارش پرداخت‌شده', 'سفارش معلق',
+        'تاریخ عضویت',
+    ]
+    active_license = License.objects.filter(
+        order__user=OuterRef('pk'),
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+    qs = (
+        User.objects.filter(is_active=True)
+        .annotate(
+            has_active_license=Exists(active_license),
+            paid_orders=Count('orders', filter=Q(orders__status='paid')),
+            pending_orders=Count('orders', filter=Q(orders__status__in=PENDING_ORDER_STATUSES)),
+        )
+        .filter(has_active_license=False)
+        .order_by('-date_joined')
+    )
+    rows = [
+        {
+            'نام': _user_display(u),
+            'موبایل': u.phone or '',
+            'ایمیل': u.email or '',
+            'سفارش پرداخت‌شده': u.paid_orders,
+            'سفارش معلق': u.pending_orders,
+            'تاریخ عضویت': _jalali(u.date_joined),
+        }
+        for u in qs
+    ]
+    return headers, rows
+
+
+def _active_licenses_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'کلید لایسنس', 'نام کاربر', 'موبایل', 'پلن', 'وضعیت',
+        'حداکثر فعال‌سازی', 'دستگاه‌های فعال', 'تاریخ انقضا', 'تاریخ ایجاد',
+    ]
+    now = timezone.now()
+    qs = (
+        License.objects.filter(status='active')
+        .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+        .select_related('order__user', 'plan')
+        .prefetch_related('activations')
+        .order_by('-created_at')
+    )
+    rows = []
+    for lic in qs:
+        active_devices = lic.activations.filter(is_active=True).count()
+        rows.append({
+            'کلید لایسنس': lic.license_key,
+            'نام کاربر': _user_display(lic.order.user),
+            'موبایل': lic.order.user.phone or '',
+            'پلن': lic.plan.name,
+            'وضعیت': lic.get_status_display(),
+            'حداکثر فعال‌سازی': lic.max_activations,
+            'دستگاه‌های فعال': active_devices,
+            'تاریخ انقضا': _jalali(lic.expires_at) or 'نامحدود',
+            'تاریخ ایجاد': _jalali(lic.created_at),
+        })
+    return headers, rows
+
+
+def _expiring_licenses_rows(days: int = 14) -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'کلید لایسنس', 'نام کاربر', 'موبایل', 'ایمیل', 'پلن',
+        'روز تا انقضا', 'تاریخ انقضا',
+    ]
+    now = timezone.now()
+    deadline = now + timedelta(days=days)
+    qs = (
+        License.objects.filter(
+            status='active',
+            expires_at__isnull=False,
+            expires_at__gt=now,
+            expires_at__lte=deadline,
+        )
+        .select_related('order__user', 'plan')
+        .order_by('expires_at')
+    )
+    rows = []
+    for lic in qs:
+        days_left = (lic.expires_at - now).days
+        rows.append({
+            'کلید لایسنس': lic.license_key,
+            'نام کاربر': _user_display(lic.order.user),
+            'موبایل': lic.order.user.phone or '',
+            'ایمیل': lic.order.user.email or '',
+            'پلن': lic.plan.name,
+            'روز تا انقضا': days_left,
+            'تاریخ انقضا': _jalali(lic.expires_at),
+        })
+    return headers, rows
+
+
+def _expired_licenses_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'کلید لایسنس', 'نام کاربر', 'موبایل', 'پلن', 'تاریخ انقضا',
+    ]
+    qs = (
+        License.objects.filter(status='expired')
+        .select_related('order__user', 'plan')
+        .order_by('-expires_at')
+    )
+    rows = [
+        {
+            'کلید لایسنس': lic.license_key,
+            'نام کاربر': _user_display(lic.order.user),
+            'موبایل': lic.order.user.phone or '',
+            'پلن': lic.plan.name,
+            'تاریخ انقضا': _jalali(lic.expires_at),
+        }
+        for lic in qs
+    ]
+    return headers, rows
+
+
+def _card_transfers_pending_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'شناسه سفارش', 'نام کاربر', 'موبایل', 'مبلغ (تومان)', 'شماره پیگیری',
+        'نام پرداخت‌کننده', 'تاریخ ثبت',
+    ]
+    qs = (
+        CardTransferSubmission.objects.filter(status='pending')
+        .select_related('order__user', 'order')
+        .order_by('-created_at')
+    )
+    rows = [
+        {
+            'شناسه سفارش': str(ct.order_id),
+            'نام کاربر': _user_display(ct.order.user),
+            'موبایل': ct.order.user.phone or '',
+            'مبلغ (تومان)': int(ct.order.amount),
+            'شماره پیگیری': ct.reference_number,
+            'نام پرداخت‌کننده': ct.payer_name or '',
+            'تاریخ ثبت': _jalali(ct.created_at),
+        }
+        for ct in qs
+    ]
+    return headers, rows
+
+
+def _open_tickets_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'شماره تیکت', 'موضوع', 'کاربر', 'موبایل', 'دسته', 'اولویت', 'وضعیت',
+        'خوانده‌نشده', 'آخرین پیام', 'تاریخ ایجاد',
+    ]
+    qs = (
+        Ticket.objects.exclude(status='closed')
+        .select_related('user')
+        .order_by('-staff_has_unread', '-last_message_at')
+    )
+    rows = [
+        {
+            'شماره تیکت': t.ticket_number,
+            'موضوع': t.subject,
+            'کاربر': _user_display(t.user),
+            'موبایل': t.user.phone or '',
+            'دسته': t.get_category_display_fa(),
+            'اولویت': t.get_priority_display_fa(),
+            'وضعیت': t.get_status_display_fa(),
+            'خوانده‌نشده': 'بله' if t.staff_has_unread else 'خیر',
+            'آخرین پیام': _jalali(t.last_message_at or t.updated_at),
+            'تاریخ ایجاد': _jalali(t.created_at),
+        }
+        for t in qs
+    ]
+    return headers, rows
+
+
+def _affiliate_sales_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'کد مشاور', 'نام مشاور', 'مبلغ سفارش', 'کمیسیون', 'وضعیت', 'تاریخ',
+    ]
+    qs = (
+        AffiliateSale.objects.select_related('affiliate__user', 'order')
+        .order_by('-created_at')
+    )
+    rows = [
+        {
+            'کد مشاور': s.affiliate.code,
+            'نام مشاور': _user_display(s.affiliate.user),
+            'مبلغ سفارش': int(s.order.amount),
+            'کمیسیون': int(s.commission_amount),
+            'وضعیت': s.get_status_display(),
+            'تاریخ': _jalali(s.created_at),
+        }
+        for s in qs
+    ]
+    return headers, rows
+
+
+def _pending_withdrawals_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    headers = [
+        'کاربر', 'موبایل', 'مبلغ (تومان)', 'بانک', 'شماره حساب', 'تاریخ درخواست',
+    ]
+    qs = (
+        Withdrawal.objects.filter(status='pending')
+        .select_related('wallet__user')
+        .order_by('-created_at')
+    )
+    rows = [
+        {
+            'کاربر': _user_display(w.wallet.user),
+            'موبایل': w.wallet.user.phone or '',
+            'مبلغ (تومان)': int(w.amount),
+            'بانک': w.bank_name,
+            'شماره حساب': w.bank_account,
+            'تاریخ درخواست': _jalali(w.created_at),
+        }
+        for w in qs
+    ]
+    return headers, rows
+
+
+EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
+    'pending_orders': {
+        'title': 'سفارش‌های پرداخت‌نشده',
+        'description': 'تمام سفارش‌های در انتظار پرداخت یا تایید',
+        'category': 'orders',
+        'icon': 'fa-clock',
+        'accent': 'amber',
+        'builder': _pending_orders_rows,
+    },
+    'users_pending_payment': {
+        'title': 'کاربران با سفارش معلق',
+        'description': 'کاربرانی که سفارش پرداخت‌نشده یا در انتظار تایید دارند',
+        'category': 'users',
+        'icon': 'fa-user-clock',
+        'accent': 'rose',
+        'builder': _users_with_pending_orders_rows,
+    },
+    'paid_orders': {
+        'title': 'سفارش‌های پرداخت‌شده',
+        'description': 'فروش موفق — قابل فیلتر بر اساس بازه زمانی',
+        'category': 'orders',
+        'icon': 'fa-circle-check',
+        'accent': 'emerald',
+        'builder': lambda: _paid_orders_rows(),
+        'supports_days': True,
+    },
+    'failed_orders': {
+        'title': 'سفارش‌های ناموفق / لغوشده',
+        'description': 'سفارش‌های failed و cancelled',
+        'category': 'orders',
+        'icon': 'fa-circle-xmark',
+        'accent': 'red',
+        'builder': _failed_orders_rows,
+    },
+    'all_users': {
+        'title': 'همه کاربران',
+        'description': 'لیست کامل کاربران با وضعیت لایسنس',
+        'category': 'users',
+        'icon': 'fa-users',
+        'accent': 'violet',
+        'builder': _all_users_rows,
+    },
+    'new_users': {
+        'title': 'کاربران جدید',
+        'description': 'ثبت‌نام‌های اخیر',
+        'category': 'users',
+        'icon': 'fa-user-plus',
+        'accent': 'blue',
+        'builder': lambda: _new_users_rows(30),
+        'supports_days': True,
+    },
+    'users_without_license': {
+        'title': 'کاربران بدون لایسنس فعال',
+        'description': 'مناسب برای پیگیری فروش و بازاریابی',
+        'category': 'users',
+        'icon': 'fa-user-slash',
+        'accent': 'cyan',
+        'builder': _users_without_license_rows,
+    },
+    'active_licenses': {
+        'title': 'لایسنس‌های فعال',
+        'description': 'کلید، پلن، انقضا و دستگاه‌های فعال',
+        'category': 'licenses',
+        'icon': 'fa-key',
+        'accent': 'emerald',
+        'builder': _active_licenses_rows,
+    },
+    'expiring_licenses': {
+        'title': 'لایسنس‌های در شرف انقضا',
+        'description': '۱۴ روز آینده — برای تمدید و پیگیری',
+        'category': 'licenses',
+        'icon': 'fa-hourglass-half',
+        'accent': 'amber',
+        'builder': lambda: _expiring_licenses_rows(14),
+    },
+    'expired_licenses': {
+        'title': 'لایسنس‌های منقضی',
+        'description': 'فرصت تمدید و بازگشت مشتری',
+        'category': 'licenses',
+        'icon': 'fa-ban',
+        'accent': 'red',
+        'builder': _expired_licenses_rows,
+    },
+    'card_transfers_pending': {
+        'title': 'کارت‌به‌کارت در انتظار',
+        'description': 'رسیدهای نیازمند تایید دستی',
+        'category': 'finance',
+        'icon': 'fa-money-check',
+        'accent': 'amber',
+        'builder': _card_transfers_pending_rows,
+    },
+    'open_tickets': {
+        'title': 'تیکت‌های باز',
+        'description': 'پشتیبانی — تیکت‌های بسته‌نشده',
+        'category': 'support',
+        'icon': 'fa-headset',
+        'accent': 'blue',
+        'builder': _open_tickets_rows,
+    },
+    'affiliate_sales': {
+        'title': 'فروش‌های افیلیت',
+        'description': 'کمیسیون مشاوران فروش',
+        'category': 'finance',
+        'icon': 'fa-handshake',
+        'accent': 'violet',
+        'builder': _affiliate_sales_rows,
+    },
+    'pending_withdrawals': {
+        'title': 'درخواست‌های برداشت',
+        'description': 'برداشت‌های در انتظار تایید',
+        'category': 'finance',
+        'icon': 'fa-wallet',
+        'accent': 'rose',
+        'builder': _pending_withdrawals_rows,
+    },
+}
+
+
+def get_export_count(export_key: str, days: int | None = None) -> int:
+    """تعداد ردیف هر گزارش برای نمایش در داشبورد."""
+    meta = EXPORT_REGISTRY.get(export_key)
+    if not meta:
+        return 0
+    if export_key == 'paid_orders' and days:
+        since = timezone.now() - timedelta(days=days)
+        return Order.objects.filter(status='paid', paid_at__gte=since).count()
+    if export_key == 'new_users' and days:
+        since = timezone.now() - timedelta(days=days)
+        return User.objects.filter(date_joined__gte=since).count()
+    _, rows = meta['builder']()
+    if isinstance(rows, list):
+        return len(rows)
+    return len(list(rows))
+
+
+def get_export_catalog(days: int = 30) -> List[Dict[str, Any]]:
+    """کاتالوگ گزارش‌ها با تعداد ردیف."""
+    catalog = []
+    for key, meta in EXPORT_REGISTRY.items():
+        d = days if meta.get('supports_days') else None
+        catalog.append({
+            'key': key,
+            'title': meta['title'],
+            'description': meta['description'],
+            'category': meta['category'],
+            'icon': meta['icon'],
+            'accent': meta['accent'],
+            'count': get_export_count(key, days=d),
+            'supports_days': meta.get('supports_days', False),
+        })
+    return catalog
+
+
+def build_export(export_key: str, fmt: str = 'xlsx', days: int | None = None) -> HttpResponse:
+    meta = EXPORT_REGISTRY.get(export_key)
+    if not meta:
+        return HttpResponse('گزارش یافت نشد', status=404)
+
+    builder = meta['builder']
+    if meta.get('supports_days') and days:
+        if export_key == 'paid_orders':
+            headers, rows = _paid_orders_rows(days=days)
+        elif export_key == 'new_users':
+            headers, rows = _new_users_rows(days=days)
+        else:
+            headers, rows = builder()
+    else:
+        headers, rows = builder()
+
+    if not isinstance(rows, list):
+        rows = list(rows)
+
+    filename_base = f'filing-divar-{export_key}'
+    if days and meta.get('supports_days'):
+        filename_base += f'-{days}d'
+
+    if fmt == 'csv':
+        return _build_csv_response(headers, rows, filename_base)
+    return _build_xlsx_response(headers, rows, filename_base, meta['title'])
+
+
+def _build_csv_response(headers: List[str], rows: List[ExportRow], filename_base: str) -> HttpResponse:
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=headers, extrasaction='ignore')
+    writer.writeheader()
+    writer.writerows(rows)
+    response = HttpResponse('\ufeff' + buffer.getvalue(), content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename_base}.csv"'
+    return response
+
+
+def _build_xlsx_response(
+    headers: List[str],
+    rows: List[ExportRow],
+    filename_base: str,
+    sheet_title: str,
+) -> HttpResponse:
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = sheet_title[:31]
+    ws.sheet_view.rightToLeft = True
+
+    header_fill = PatternFill(start_color='7C3AED', end_color='7C3AED', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF', name='Tahoma', size=10)
+    body_font = Font(name='Tahoma', size=10)
+
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    for row_idx, row in enumerate(rows, 2):
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=row.get(header, ''))
+            cell.font = body_font
+            cell.alignment = Alignment(horizontal='right', vertical='center')
+
+    for col_idx, header in enumerate(headers, 1):
+        max_len = len(str(header))
+        for row in rows[:200]:
+            val = str(row.get(header, ''))
+            max_len = max(max_len, len(val))
+        ws.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 4, 48)
+
+    ws.freeze_panes = 'A2'
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename_base}.xlsx"'
+    return response

@@ -119,6 +119,221 @@ html.mk-public:not([data-theme="light"]) .adm-hero-link {
     border-color: rgba(124, 58, 237, 0.3);
 }
 
+/* ─── Tabs ─── */
+.adm-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 1.15rem;
+    padding: 0.25rem;
+    border-radius: 12px;
+    background: rgba(148, 163, 184, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.adm-tab {
+    flex: 1 1 auto;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    border-radius: 9px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--mk-text-secondary);
+    transition: background 0.12s, color 0.12s;
+}
+
+.adm-tab:hover {
+    color: var(--mk-text);
+    background: rgba(148, 163, 184, 0.1);
+}
+
+.adm-tab.is-active {
+    background: var(--mk-purple);
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(124, 58, 237, 0.5);
+}
+
+/* ─── Sections ─── */
+.adm-section {
+    margin-top: 2rem;
+    scroll-margin-top: 5rem;
+}
+
+#adm-overview {
+    scroll-margin-top: 5rem;
+}
+
+.adm-section-head {
+    margin-bottom: 1rem;
+}
+
+.adm-section-head h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--mk-text);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.adm-section-head h2 i {
+    color: var(--mk-purple);
+    font-size: 0.95rem;
+}
+
+.adm-section-head p {
+    margin: 0.3rem 0 0;
+    font-size: 0.82rem;
+    color: var(--mk-text-muted);
+}
+
+/* ─── Download buttons ─── */
+.adm-cell-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.adm-dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 7px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--mk-text-secondary);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(148, 163, 184, 0.06);
+    white-space: nowrap;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.adm-dl-btn:hover {
+    color: var(--mk-text);
+    border-color: rgba(148, 163, 184, 0.35);
+}
+
+.adm-dl-btn--primary {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #059669;
+}
+
+.adm-dl-btn--primary:hover {
+    background: rgba(16, 185, 129, 0.2);
+    color: #047857;
+}
+
+html.mk-public:not([data-theme="light"]) .adm-dl-btn--primary {
+    color: #34d399;
+}
+
+/* ─── Export cards ─── */
+.adm-export-group {
+    margin-bottom: 1.35rem;
+}
+
+.adm-export-group-title {
+    margin: 0 0 0.65rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--mk-text-secondary);
+}
+
+.adm-export-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: 0.75rem;
+}
+
+.adm-export-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    background: var(--mk-surface, #fff);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+html.mk-public:not([data-theme="light"]) .adm-export-card {
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.adm-export-card:hover {
+    border-color: rgba(124, 58, 237, 0.25);
+    box-shadow: 0 8px 24px -12px rgba(124, 58, 237, 0.25);
+}
+
+.adm-export-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.adm-export-card[data-accent="violet"] .adm-export-icon { background: rgba(124, 58, 237, 0.12); color: #7c3aed; }
+.adm-export-card[data-accent="emerald"] .adm-export-icon { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.adm-export-card[data-accent="blue"] .adm-export-icon { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+.adm-export-card[data-accent="amber"] .adm-export-icon { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.adm-export-card[data-accent="rose"] .adm-export-icon { background: rgba(236, 72, 153, 0.12); color: #db2777; }
+.adm-export-card[data-accent="cyan"] .adm-export-icon { background: rgba(6, 182, 212, 0.12); color: #0891b2; }
+.adm-export-card[data-accent="red"] .adm-export-icon { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+
+.adm-export-body {
+    flex: 1 1 140px;
+    min-width: 0;
+}
+
+.adm-export-title {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--mk-text);
+}
+
+.adm-export-desc {
+    margin: 0.2rem 0 0;
+    font-size: 0.72rem;
+    color: var(--mk-text-muted);
+    line-height: 1.45;
+}
+
+.adm-export-count {
+    display: inline-block;
+    margin-top: 0.35rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--mk-text-secondary);
+}
+
+.adm-export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    width: 100%;
+    margin-top: 0.15rem;
+}
+
+.adm-export-actions .adm-dl-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+}
+
 /* ─── Alerts ─── */
 .adm-alerts {
     display: flex;

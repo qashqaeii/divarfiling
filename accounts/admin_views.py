@@ -2,9 +2,12 @@
 import json
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.http import HttpResponseNotFound
+from django.views import View
 from django.views.generic import TemplateView
 
 from accounts.services.admin_dashboard import get_admin_dashboard_context
+from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 
 
 class StaffRequiredMixin(UserPassesTestMixin, LoginRequiredMixin):
@@ -30,3 +33,29 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
         ctx.update(dashboard)
         ctx['charts_json'] = json.dumps(dashboard['charts'], ensure_ascii=False)
         return ctx
+
+
+class AdminExportView(StaffRequiredMixin, View):
+    """دانلود گزارش Excel یا CSV."""
+
+    def get(self, request, export_key):
+        if export_key not in EXPORT_REGISTRY:
+            return HttpResponseNotFound('گزارش یافت نشد')
+
+        fmt = request.GET.get('format', 'xlsx').lower()
+        if fmt not in ('xlsx', 'csv'):
+            fmt = 'xlsx'
+
+        days = request.GET.get('days')
+        days_int = None
+        if days:
+            try:
+                days_int = max(1, min(int(days), 365))
+            except (TypeError, ValueError):
+                days_int = None
+
+        meta = EXPORT_REGISTRY[export_key]
+        if meta.get('supports_days') and days_int is None:
+            days_int = 30
+
+        return build_export(export_key, fmt=fmt, days=days_int)

@@ -193,4 +193,43 @@
     } else {
         initAdminDashboard();
     }
+
+    function initTabs() {
+        const tabs = document.querySelectorAll('.adm-tab');
+        const sections = ['adm-overview', 'adm-reports', 'adm-exports'];
+
+        function setActiveTab(hash) {
+            const id = (hash || '#adm-overview').replace('#', '');
+            tabs.forEach(function (tab) {
+                const href = tab.getAttribute('href') || '';
+                tab.classList.toggle('is-active', href === '#' + id);
+            });
+        }
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                setActiveTab(tab.getAttribute('href'));
+            });
+        });
+
+        function onScroll() {
+            let current = sections[0];
+            sections.forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el && el.getBoundingClientRect().top <= 120) {
+                    current = id;
+                }
+            });
+            setActiveTab('#' + current);
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        setActiveTab(window.location.hash || '#adm-overview');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTabs);
+    } else {
+        initTabs();
+    }
 })();

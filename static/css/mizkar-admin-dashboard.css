@@ -119,6 +119,22 @@ html.mk-public:not([data-theme="light"]) .adm-hero-link {
     border-color: rgba(124, 58, 237, 0.3);
 }
 
+.adm-hero-link--json {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #059669;
+}
+
+.adm-hero-link--json:hover {
+    color: #047857;
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.16);
+}
+
+html.mk-public:not([data-theme="light"]) .adm-hero-link--json {
+    color: #34d399;
+}
+
 /* ─── Tabs ─── */
 .adm-tabs {
     display: flex;
@@ -332,6 +348,94 @@ html.mk-public:not([data-theme="light"]) .adm-export-card {
 .adm-export-actions .adm-dl-btn {
     flex: 1 1 auto;
     justify-content: center;
+}
+
+/* ─── System JSON summary ─── */
+.adm-json-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding: 1.25rem 1.35rem;
+    border-radius: 16px;
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    background:
+        linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(124, 58, 237, 0.04) 50%, rgba(248, 250, 252, 0.96) 100%);
+}
+
+html.mk-public:not([data-theme="light"]) .adm-json-card {
+    background:
+        linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(124, 58, 237, 0.08) 45%, rgba(15, 23, 42, 0.9) 100%);
+    border-color: rgba(16, 185, 129, 0.28);
+}
+
+.adm-json-main {
+    display: flex;
+    gap: 0.9rem;
+    flex: 1 1 320px;
+    min-width: 0;
+}
+
+.adm-json-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 12px;
+    background: rgba(16, 185, 129, 0.14);
+    color: #059669;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+html.mk-public:not([data-theme="light"]) .adm-json-icon {
+    color: #34d399;
+}
+
+.adm-json-main h3 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--mk-text);
+}
+
+.adm-json-main p {
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--mk-text-secondary);
+}
+
+.adm-json-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+}
+
+.adm-json-meta li {
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--mk-text-secondary);
+}
+
+.adm-json-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: center;
+}
+
+.adm-json-actions .adm-dl-btn {
+    min-height: 2.1rem;
+    padding: 0.45rem 0.8rem;
 }
 
 /* ─── Alerts ─── */

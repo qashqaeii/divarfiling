@@ -8,6 +8,7 @@ from django.views.generic import TemplateView
 
 from accounts.services.admin_dashboard import get_admin_dashboard_context
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
+from accounts.services.admin_system_summary import system_summary_json_response
 
 
 class StaffRequiredMixin(UserPassesTestMixin, LoginRequiredMixin):
@@ -59,3 +60,23 @@ class AdminExportView(StaffRequiredMixin, View):
             days_int = 30
 
         return build_export(export_key, fmt=fmt, days=days_int)
+
+
+class AdminSystemSummaryView(StaffRequiredMixin, View):
+    """خروجی JSON خلاصه کامل سیستم."""
+
+    def get(self, request):
+        days = request.GET.get('days', '30')
+        try:
+            days = max(7, min(int(days), 90))
+        except (TypeError, ValueError):
+            days = 30
+
+        limit = request.GET.get('limit', '50')
+        try:
+            limit = max(10, min(int(limit), 200))
+        except (TypeError, ValueError):
+            limit = 50
+
+        download = request.GET.get('download', '1') not in ('0', 'false', 'no')
+        return system_summary_json_response(days=days, detail_limit=limit, download=download)

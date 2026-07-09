@@ -8,7 +8,7 @@
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -28,6 +28,10 @@
                 <a href="?days=30#adm-overview" class="adm-range-btn{% if chart_days == 30 %} is-active{% endif %}">۳۰ روز</a>
                 <a href="?days=90#adm-overview" class="adm-range-btn{% if chart_days == 90 %} is-active{% endif %}">۹۰ روز</a>
             </div>
+            <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="adm-hero-link adm-hero-link--json">
+                <i class="fas fa-file-code" aria-hidden="true"></i>
+                خلاصه JSON
+            </a>
             <a href="/admin/" class="adm-hero-link" target="_blank" rel="noopener">
                 <i class="fas fa-cog" aria-hidden="true"></i>
                 Django Admin
@@ -39,6 +43,7 @@
         <a href="#adm-overview" class="adm-tab is-active">نمای کلی</a>
         <a href="#adm-reports" class="adm-tab">گزارش‌ها</a>
         <a href="#adm-exports" class="adm-tab">خروجی Excel</a>
+        <a href="#adm-json" class="adm-tab">خلاصه JSON</a>
     </nav>
 
     {% if stats.pending_card_transfers or stats.pending_withdrawals or stats.unread_tickets or stats.orders_pending %}
@@ -478,6 +483,45 @@
         </div>
         {% endfor %}
     </div>
+
+    <div id="adm-json" class="adm-section">
+        <header class="adm-section-head">
+            <h2><i class="fas fa-file-code" aria-hidden="true"></i> خلاصه کامل سیستم (JSON)</h2>
+            <p>یک فایل JSON شامل آمار، روندها، لیست‌های عملیاتی و وضعیت کل سیستم</p>
+        </header>
+
+        <article class="adm-json-card">
+            <div class="adm-json-main">
+                <span class="adm-json-icon"><i class="fas fa-database" aria-hidden="true"></i></span>
+                <div>
+                    <h3>خروجی یکپارچه برای آرشیو، API یا تحلیل</h3>
+                    <p>
+                        شامل overview، action_items، breakdowns، trends، products، affiliates،
+                        workspace و لیست‌هایی مثل سفارش‌های معلق، کاربران بدون لایسنس، لایسنس‌های در شرف انقضا و تیکت‌ها.
+                    </p>
+                    <ul class="adm-json-meta">
+                        <li>بازه روندها: {{ chart_days }} روز</li>
+                        <li>تاریخ‌ها: میلادی (ISO) + شمسی</li>
+                        <li>فرمت: application/json</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="adm-json-actions">
+                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="adm-dl-btn adm-dl-btn--primary">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                    دانلود JSON
+                </a>
+                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=0" class="adm-dl-btn" target="_blank" rel="noopener">
+                    <i class="fas fa-eye" aria-hidden="true"></i>
+                    مشاهده در مرورگر
+                </a>
+                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&limit=100&download=1" class="adm-dl-btn">
+                    <i class="fas fa-layer-group" aria-hidden="true"></i>
+                    نسخه کامل‌تر (۱۰۰ ردیف)
+                </a>
+            </div>
+        </article>
+    </div>
 </div>
 {% endblock %}
 
@@ -487,5 +531,5 @@
 window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=3"></script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=4"></script>
 {% endblock %}

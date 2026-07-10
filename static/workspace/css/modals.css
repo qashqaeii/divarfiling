@@ -884,55 +884,104 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
 }
 
 .mk-edit-nav {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 0.4rem;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0;
     position: sticky;
     top: 0;
     z-index: 3;
-    padding: 0.65rem 0 0.75rem;
-    margin: 0 0 0.35rem;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    background: linear-gradient(180deg, var(--mk-modal-bg, #0F172A) 85%, transparent);
-    border-bottom: 1px solid var(--mk-modal-border);
+    margin: 0 0 1rem;
+    padding: 0.28rem;
+    overflow: visible;
+    border: 1px solid var(--mk-modal-border);
+    border-radius: 12px;
+    background: var(--ws-surface-2, #1A2332);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .mk-edit-nav-btn {
     appearance: none;
-    flex: 0 0 auto;
-    border: 1px solid transparent;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 9px;
     background: transparent;
-    color: var(--ws-text-muted, #64748B);
+    color: var(--ws-text-muted, #94A3B8);
     font-family: inherit;
-    font-size: 0.8125rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: -0.01em;
-    line-height: 1.2;
-    padding: 0.5rem 0.9rem;
-    border-radius: 10px;
+    letter-spacing: 0;
+    line-height: 1.15;
+    padding: 0.55rem 0.2rem;
     cursor: pointer;
     white-space: nowrap;
-    transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+    transition: background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.mk-edit-nav-btn i {
+    font-size: 0.78rem;
+    opacity: 0.75;
+    line-height: 1;
+}
+
+.mk-edit-nav-btn span {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .mk-edit-nav-btn:hover {
-    background: var(--ws-surface-2, #1A2332);
+    background: rgba(255, 255, 255, 0.04);
     color: var(--ws-text, #E2E8F0);
-    border-color: var(--mk-modal-border);
+}
+
+.mk-edit-nav-btn:hover i {
+    opacity: 0.95;
 }
 
 .mk-edit-nav-btn.is-active {
-    background: rgba(124, 58, 237, 0.18);
-    border-color: rgba(124, 58, 237, 0.45);
-    color: #EDE9FE;
-    box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.12), inset 0 -2px 0 rgba(124, 58, 237, 0.55);
+    background: var(--mk-modal-bg, #0F172A);
+    color: #F5F3FF;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(124, 58, 237, 0.35);
+}
+
+.mk-edit-nav-btn.is-active i {
+    color: #A78BFA;
+    opacity: 1;
 }
 
 .mk-edit-nav-btn:focus-visible {
     outline: 2px solid rgba(124, 58, 237, 0.55);
-    outline-offset: 2px;
+    outline-offset: 1px;
+}
+
+@media (max-width: 640px) {
+    .mk-edit-nav {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.2rem;
+        padding: 0.3rem;
+    }
+
+    .mk-edit-nav-btn:nth-child(5) {
+        grid-column: 1;
+    }
+
+    .mk-edit-nav-btn {
+        font-size: 0.68rem;
+        padding: 0.48rem 0.15rem;
+        gap: 0.22rem;
+    }
+
+    .mk-edit-nav-btn i {
+        font-size: 0.72rem;
+    }
 }
 
 .mk-edit-section {

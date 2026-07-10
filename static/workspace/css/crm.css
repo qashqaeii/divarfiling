@@ -17473,11 +17473,33 @@ select.crm-files-adv-control {
     text-decoration: none;
     border: 1px solid var(--ws-border-light);
     align-self: start;
-    transition: background 0.12s, color 0.12s;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.crm-match-links {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    align-self: start;
+    flex-shrink: 0;
 }
 .crm-match-link-v2:hover {
     background: var(--ws-primary-soft);
     color: var(--ws-primary);
+}
+.crm-match-link--app:hover {
+    background: rgba(13, 148, 136, 0.12);
+    color: #0f766e;
+    border-color: rgba(13, 148, 136, 0.28);
+}
+.crm-match-link--public:hover {
+    background: rgba(37, 99, 235, 0.12);
+    color: #2563eb;
+    border-color: rgba(37, 99, 235, 0.28);
+}
+.crm-match-link--divar:hover {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, 0.25);
 }
 .crm-match-empty-v2 {
     text-align: center;

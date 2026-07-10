@@ -277,15 +277,17 @@ def notify_matches_after_extract(user, *, dataset_id: str = '') -> int:
     return process_user_customer_matches(user, divar_enabled=has_active_bot_license(user))
 
 
-def contact_matches_payload(user, contact_id: int) -> Optional[Dict[str, Any]]:
+def contact_matches_payload(user, contact_id: int, request=None) -> Optional[Dict[str, Any]]:
     from workspace.services.access import has_active_bot_license
     from workspace.services.crm_scope import customer_for_user
+    from workspace.services.property_suggestion_share import enrich_match_data_links
 
     customer = customer_for_user(user, contact_id)
     if not customer:
         return None
     divar_enabled = has_active_bot_license(user)
     data = get_customer_matches(customer, user, divar_enabled=divar_enabled)
+    data = enrich_match_data_links(user, request, data)
     crm_matches = data.get('crm_matches', [])
     divar_matches = data.get('divar_matches', [])
     if 'total_count' in data:

@@ -56,10 +56,24 @@
                 </div>
                 {% endif %}
             </div>
-            {% if source == 'crm' %}
-            <a href="{% url 'workspace:crm_property_detail' m.property_id %}" class="crm-match-link crm-match-link-v2" title="مشاهده فایل"><i class="fas fa-arrow-up-right-from-square"></i></a>
-            {% elif m.link %}
-            <a href="{{ m.link }}" target="_blank" rel="noopener" class="crm-match-link crm-match-link-v2" title="دیوار"><i class="fas fa-arrow-up-right-from-square"></i></a>
+            {% if m.internal_url or m.public_share_url or m.link %}
+            <div class="crm-match-links">
+                {% if m.internal_url %}
+                <a href="{{ m.internal_url }}" class="crm-match-link crm-match-link-v2 crm-match-link--app" title="در سیستم">
+                    <i class="fas fa-folder-open" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if m.public_share_url %}
+                <a href="{{ m.public_share_url }}" target="_blank" rel="noopener" class="crm-match-link crm-match-link-v2 crm-match-link--public" title="لینک عمومی">
+                    <i class="fas fa-share-nodes" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if m.link %}
+                <a href="{{ m.link }}" target="_blank" rel="noopener" class="crm-match-link crm-match-link-v2 crm-match-link--divar" title="دیوار">
+                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
             {% endif %}
         </li>
         {% endfor %}

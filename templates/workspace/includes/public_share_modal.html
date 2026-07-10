@@ -100,16 +100,21 @@
                     <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-consultant">
                         <i class="fas fa-user-tie" aria-hidden="true"></i> اطلاعات مشاور
                     </h3>
+                    <p class="mk-share-msg-hint">
+                        از پروفایل شما خوانده شده؛ برای همه آگهی‌ها یکسان است مگر اینکه فقط برای این فایل تغییر دهید.
+                    </p>
                     <div class="mk-share-fields-grid">
                         <div class="mk-share-field">
                             <label class="ws-label" for="{{ id_prefix }}-consultant-name">نام نمایشی</label>
                             <input type="text" class="ws-input" id="{{ id_prefix }}-consultant-name" name="consultant_name"
-                                   value="{{ share.consultant_name }}" placeholder="خالی = نام آژانس یا کاربری">
+                                   value="{{ consultant_name|default:share.consultant_name }}"
+                                   placeholder="نام آژانس یا نام کاربری از پروفایل">
                         </div>
                         <div class="mk-share-field">
                             <label class="ws-label" for="{{ id_prefix }}-consultant-phone">شماره تماس</label>
                             <input type="text" class="ws-input" id="{{ id_prefix }}-consultant-phone" name="consultant_phone"
-                                   value="{{ share.consultant_phone }}" placeholder="خالی = شماره حساب" dir="ltr">
+                                   value="{{ consultant_phone|default:share.consultant_phone }}"
+                                   placeholder="شماره حساب از پروفایل" dir="ltr">
                         </div>
                     </div>
                     <div class="mk-share-field mk-share-field--full">

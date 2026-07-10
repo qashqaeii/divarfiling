@@ -23,21 +23,61 @@ def unique_share_token(model_cls) -> str:
     return token
 
 
+def profile_consultant_defaults(user) -> tuple[str, str]:
+    """نام و شماره پیش‌فرض مشاور از پروفایل / تنظیمات آژانس."""
+    settings = get_or_create_settings(user)
+    name = (settings.agency_name or '').strip()
+    if not name:
+        name = (user.get_full_name() or '').strip()
+    if not name:
+        name = (getattr(user, 'first_name', '') or '').strip()
+    phone = (getattr(user, 'phone', '') or '').strip()
+    return name, phone
+
+
 def consultant_name(user, settings: WorkspaceSettings, share) -> str:
-    if share.consultant_name.strip():
+    if (share.consultant_name or '').strip():
         return share.consultant_name.strip()
-    if settings.agency_name.strip():
+    name, _ = profile_consultant_defaults(user)
+    if name:
+        return name
+    if (settings.agency_name or '').strip():
         return settings.agency_name.strip()
-    full = (user.get_full_name() or '').strip()
-    if full:
-        return full
     return 'مشاور املاک'
 
 
 def consultant_phone(user, share) -> str:
-    if share.consultant_phone.strip():
+    if (share.consultant_phone or '').strip():
         return share.consultant_phone.strip()
-    return (user.phone or '').strip()
+    _, phone = profile_consultant_defaults(user)
+    return phone
+
+
+def share_consultant_form_values(user, share) -> Dict[str, Any]:
+    """مقادیر فرم مودال اشتراک — از share یا در صورت خالی از پروفایل."""
+    profile_name, profile_phone = profile_consultant_defaults(user)
+    stored_name = (share.consultant_name or '').strip()
+    stored_phone = (share.consultant_phone or '').strip()
+    return {
+        'consultant_name': stored_name or profile_name,
+        'consultant_phone': stored_phone or profile_phone,
+        'from_profile_name': not stored_name,
+        'from_profile_phone': not stored_phone,
+        'profile_name': profile_name,
+        'profile_phone': profile_phone,
+    }
+
+
+def normalize_consultant_fields_for_save(user, name: str, phone: str) -> tuple[str, str]:
+    """اگر مقدار همان پروفایل باشد خالی ذخیره می‌شود تا همیشه از پروفایل خوانده شود."""
+    profile_name, profile_phone = profile_consultant_defaults(user)
+    name = (name or '').strip()[:200]
+    phone = (phone or '').strip()[:20]
+    if name and name == profile_name:
+        name = ''
+    if phone and phone == profile_phone:
+        phone = ''
+    return name, phone
 
 
 def phone_whatsapp_digits(phone: str) -> str:
@@ -69,13 +109,16 @@ def absolute_public_share_url(url_name: str, *, share_token: str) -> str:
 def public_share_to_dict(share, request, *, url_name: str) -> Dict[str, Any]:
     path = reverse(url_name, kwargs={'share_token': share.share_token})
     share_url = request.build_absolute_uri(path) if request else absolute_public_share_url(url_name, share_token=share.share_token)
+    form_vals = share_consultant_form_values(share.created_by, share)
     return {
         'share_url': share_url,
         'share_token': share.share_token,
         'view_count': share.view_count,
         'is_active': share.is_active,
-        'consultant_name': share.consultant_name,
-        'consultant_phone': share.consultant_phone,
+        'consultant_name': form_vals['consultant_name'],
+        'consultant_phone': form_vals['consultant_phone'],
+        'consultant_name_stored': share.consultant_name,
+        'consultant_phone_stored': share.consultant_phone,
         'welcome_message': share.welcome_message,
         'show_divar_link': share.show_divar_link,
         'show_full_address': getattr(share, 'show_full_address', False),

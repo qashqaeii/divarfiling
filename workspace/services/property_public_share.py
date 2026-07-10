@@ -50,10 +50,18 @@ def property_public_share_to_dict(share: CRMPropertyPublicShare, request=None) -
 
 
 def update_property_public_share(share: CRMPropertyPublicShare, payload: dict) -> CRMPropertyPublicShare:
-    if 'consultant_name' in payload:
-        share.consultant_name = str(payload.get('consultant_name') or '').strip()[:200]
-    if 'consultant_phone' in payload:
-        share.consultant_phone = str(payload.get('consultant_phone') or '').strip()[:20]
+    from workspace.services.public_share_common import normalize_consultant_fields_for_save
+
+    if 'consultant_name' in payload or 'consultant_phone' in payload:
+        name, phone = normalize_consultant_fields_for_save(
+            share.created_by,
+            payload.get('consultant_name', share.consultant_name),
+            payload.get('consultant_phone', share.consultant_phone),
+        )
+        if 'consultant_name' in payload:
+            share.consultant_name = name
+        if 'consultant_phone' in payload:
+            share.consultant_phone = phone
     if 'welcome_message' in payload:
         share.welcome_message = str(payload.get('welcome_message') or '').strip()
     if 'show_divar_link' in payload:

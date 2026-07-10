@@ -74,20 +74,13 @@ def format_sections_public(
 
 
 def _consultant_name(user, settings: WorkspaceSettings, share: ListingPublicShare) -> str:
-    if share.consultant_name.strip():
-        return share.consultant_name.strip()
-    if settings.agency_name.strip():
-        return settings.agency_name.strip()
-    full = (user.get_full_name() or '').strip()
-    if full:
-        return full
-    return 'مشاور املاک'
+    from workspace.services.public_share_common import consultant_name as shared_consultant_name
+    return shared_consultant_name(user, settings, share)
 
 
 def _consultant_phone(user, share: ListingPublicShare) -> str:
-    if share.consultant_phone.strip():
-        return share.consultant_phone.strip()
-    return (user.phone or '').strip()
+    from workspace.services.public_share_common import consultant_phone as shared_consultant_phone
+    return shared_consultant_phone(user, share)
 
 
 def _phone_whatsapp_digits(phone: str) -> str:
@@ -135,23 +128,33 @@ def public_share_url(request, share: ListingPublicShare) -> str:
 
 def listing_public_share_to_dict(share: ListingPublicShare, request=None) -> Dict[str, Any]:
     """سریالایزر API موبایل / وب."""
+    from workspace.services.public_share_common import share_consultant_form_values
+    form_vals = share_consultant_form_values(share.created_by, share)
     return {
         'share_url': public_share_url(request, share) if request else '',
         'share_token': share.share_token,
         'view_count': share.view_count,
         'is_active': share.is_active,
-        'consultant_name': share.consultant_name,
-        'consultant_phone': share.consultant_phone,
+        'consultant_name': form_vals['consultant_name'],
+        'consultant_phone': form_vals['consultant_phone'],
         'welcome_message': share.welcome_message,
         'show_divar_link': share.show_divar_link,
     }
 
 
 def update_listing_public_share(share: ListingPublicShare, payload: dict) -> ListingPublicShare:
-    if 'consultant_name' in payload:
-        share.consultant_name = str(payload.get('consultant_name') or '').strip()[:200]
-    if 'consultant_phone' in payload:
-        share.consultant_phone = str(payload.get('consultant_phone') or '').strip()[:20]
+    from workspace.services.public_share_common import normalize_consultant_fields_for_save
+
+    if 'consultant_name' in payload or 'consultant_phone' in payload:
+        name, phone = normalize_consultant_fields_for_save(
+            share.created_by,
+            payload.get('consultant_name', share.consultant_name),
+            payload.get('consultant_phone', share.consultant_phone),
+        )
+        if 'consultant_name' in payload:
+            share.consultant_name = name
+        if 'consultant_phone' in payload:
+            share.consultant_phone = phone
     if 'welcome_message' in payload:
         share.welcome_message = str(payload.get('welcome_message') or '').strip()
     if 'show_divar_link' in payload:

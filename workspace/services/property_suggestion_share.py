@@ -45,21 +45,64 @@ def public_share_url_for_listing(user, request, listing: Listing) -> str:
     return absolute_uri(request, path)
 
 
+def _internal_url_for_property(request, prop: CRMProperty) -> str:
+    path = reverse('workspace:crm_property_detail', kwargs={'property_id': prop.pk})
+    return absolute_uri(request, path)
+
+
+def _internal_url_for_listing(request, listing: Listing) -> str:
+    path = reverse(
+        'workspace:listing_detail',
+        kwargs={'dataset_id': listing.dataset_id, 'listing_id': listing.pk},
+    )
+    return absolute_uri(request, path)
+
+
 def enrich_match_with_public_url(user, request, match: Dict[str, Any]) -> Dict[str, Any]:
+    """سازگاری با نام قبلی — لینک عمومی + داخلی + دیوار را پر می‌کند."""
+    return enrich_match_with_links(user, request, match)
+
+
+def enrich_match_with_links(user, request, match: Dict[str, Any]) -> Dict[str, Any]:
+    """افزودن لینک داخلی سیستم، لینک عمومی و حفظ لینک دیوار."""
     out = dict(match)
-    url = ''
+    public_url = (out.get('public_share_url') or '').strip()
+    internal_url = (out.get('internal_url') or '').strip()
+
     if match.get('source') == 'crm' and match.get('property_id'):
         prop = CRMProperty.objects.filter(pk=match['property_id'], user=user).first()
         if prop:
-            url = public_share_url_for_property(user, request, prop)
-    elif match.get('source') == 'divar' and match.get('token'):
-        listing = Listing.objects.filter(
-            token=match['token'],
-            dataset__user=user,
-        ).select_related('dataset').first()
+            if not public_url:
+                try:
+                    public_url = public_share_url_for_property(user, request, prop)
+                except Exception:
+                    public_url = ''
+            if not internal_url:
+                internal_url = _internal_url_for_property(request, prop)
+            if not (out.get('link') or '').strip() and prop.link:
+                out['link'] = prop.link
+    elif match.get('source') == 'divar':
+        listing = None
+        listing_id = match.get('listing_id')
+        token = match.get('token')
+        qs = Listing.objects.filter(dataset__user=user).select_related('dataset')
+        if listing_id:
+            listing = qs.filter(pk=listing_id).first()
+        if listing is None and token:
+            listing = qs.filter(token=token).first()
         if listing:
-            url = public_share_url_for_listing(user, request, listing)
-    out['public_share_url'] = url
+            if not public_url:
+                try:
+                    public_url = public_share_url_for_listing(user, request, listing)
+                except Exception:
+                    public_url = ''
+            if not internal_url:
+                internal_url = _internal_url_for_listing(request, listing)
+            if not (out.get('link') or '').strip() and listing.link:
+                out['link'] = listing.link
+
+    out['public_share_url'] = public_url
+    out['internal_url'] = internal_url
     return out
 
 
@@ -68,7 +111,22 @@ def enrich_matches_with_public_urls(
     request,
     matches: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    return [enrich_match_with_public_url(user, request, m) for m in matches]
+    return [enrich_match_with_links(user, request, m) for m in matches]
+
+
+def enrich_match_data_links(user, request, data: Dict[str, Any]) -> Dict[str, Any]:
+    """پر کردن لینک‌ها برای کل payload پیشنهاد هوشمند."""
+    out = dict(data)
+    out['crm_matches'] = enrich_matches_with_public_urls(user, request, data.get('crm_matches') or [])
+    out['divar_matches'] = enrich_matches_with_public_urls(user, request, data.get('divar_matches') or [])
+    groups = []
+    for group in data.get('match_groups') or []:
+        item = dict(group)
+        item['crm_matches'] = enrich_matches_with_public_urls(user, request, group.get('crm_matches') or [])
+        item['divar_matches'] = enrich_matches_with_public_urls(user, request, group.get('divar_matches') or [])
+        groups.append(item)
+    out['match_groups'] = groups
+    return out
 
 
 def sharing_link_for_match(match: Dict[str, Any]) -> str:

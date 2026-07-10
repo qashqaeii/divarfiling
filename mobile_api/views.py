@@ -799,7 +799,7 @@ class ContactMatchesView(APIView):
 
     def get(self, request, contact_id):
         from workspace.services.crm_match_notifications import contact_matches_payload
-        payload = contact_matches_payload(request.user, contact_id)
+        payload = contact_matches_payload(request.user, contact_id, request=request)
         if not payload:
             return api_error('مخاطب یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)

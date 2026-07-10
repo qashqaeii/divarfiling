@@ -780,6 +780,10 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         share = get_or_create_listing_share(self.request.user, listing)
         ctx['public_share'] = share
         ctx['public_share_url'] = public_share_url(self.request, share)
+        from workspace.services.public_share_common import share_consultant_form_values
+        form_vals = share_consultant_form_values(self.request.user, share)
+        ctx['consultant_name'] = form_vals['consultant_name']
+        ctx['consultant_phone'] = form_vals['consultant_phone']
         return ctx
 
     def _whatsapp_text(self, listing, tx):
@@ -864,13 +868,15 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         dataset = self.get_dataset()
         listing = get_object_or_404(dataset.listings, pk=listing_id)
         share = get_or_create_listing_share(request.user, listing)
+        from workspace.services.public_share_common import share_consultant_form_values
+        form_vals = share_consultant_form_values(request.user, share)
         return JsonResponse({
             'ok': True,
             'share_url': public_share_url(request, share),
             'share_token': share.share_token,
             'view_count': share.view_count,
-            'consultant_name': share.consultant_name,
-            'consultant_phone': share.consultant_phone,
+            'consultant_name': form_vals['consultant_name'],
+            'consultant_phone': form_vals['consultant_phone'],
             'welcome_message': share.welcome_message,
             'show_divar_link': share.show_divar_link,
             'is_active': share.is_active,
@@ -880,8 +886,14 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         dataset = self.get_dataset()
         listing = get_object_or_404(dataset.listings, pk=listing_id)
         share = get_or_create_listing_share(request.user, listing)
-        share.consultant_name = (request.POST.get('consultant_name') or '').strip()[:200]
-        share.consultant_phone = (request.POST.get('consultant_phone') or '').strip()[:20]
+        from workspace.services.public_share_common import normalize_consultant_fields_for_save
+        name, phone = normalize_consultant_fields_for_save(
+            request.user,
+            request.POST.get('consultant_name') or '',
+            request.POST.get('consultant_phone') or '',
+        )
+        share.consultant_name = name
+        share.consultant_phone = phone
         share.welcome_message = (request.POST.get('welcome_message') or '').strip()
         share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
         share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')

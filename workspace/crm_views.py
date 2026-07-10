@@ -588,7 +588,9 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['whatsapp_text'] = build_customer_whatsapp_text(c)
         ctx['crm_section'] = 'contacts'
         divar_enabled = has_active_bot_license(self.request.user)
-        ctx['match_data'] = get_customer_matches(c, self.request.user, divar_enabled=divar_enabled)
+        match_data = get_customer_matches(c, self.request.user, divar_enabled=divar_enabled)
+        from workspace.services.property_suggestion_share import enrich_match_data_links
+        ctx['match_data'] = enrich_match_data_links(self.request.user, self.request, match_data)
         ctx['match_data_json'] = json.dumps(ctx['match_data'], ensure_ascii=False)
         ctx['suggestion_text'] = self.request.session.pop('crm_last_suggestion_text', '')
         ctx['active_tab'] = self.request.GET.get('tab', '')
@@ -1210,6 +1212,10 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             pub_share = get_or_create_property_share(self.request.user, p)
             ctx['public_property_share'] = pub_share
             ctx['public_property_share_url'] = property_public_share_url(self.request, pub_share)
+            from workspace.services.public_share_common import share_consultant_form_values
+            form_vals = share_consultant_form_values(self.request.user, pub_share)
+            ctx['consultant_name'] = form_vals['consultant_name']
+            ctx['consultant_phone'] = form_vals['consultant_phone']
         return ctx
 
     def _detail_redirect(self, property_id, *, tab='contacts', drawer=''):
@@ -1413,13 +1419,15 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
             property_public_share_url,
         )
         share = get_or_create_property_share(request.user, prop)
+        from workspace.services.public_share_common import share_consultant_form_values
+        form_vals = share_consultant_form_values(request.user, share)
         return JsonResponse({
             'ok': True,
             'share_url': property_public_share_url(request, share),
             'share_token': share.share_token,
             'view_count': share.view_count,
-            'consultant_name': share.consultant_name,
-            'consultant_phone': share.consultant_phone,
+            'consultant_name': form_vals['consultant_name'],
+            'consultant_phone': form_vals['consultant_phone'],
             'welcome_message': share.welcome_message,
             'show_divar_link': share.show_divar_link,
             'show_full_address': share.show_full_address,
@@ -1436,9 +1444,15 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
             get_or_create_property_share,
             property_public_share_url,
         )
+        from workspace.services.public_share_common import normalize_consultant_fields_for_save
         share = get_or_create_property_share(request.user, prop)
-        share.consultant_name = (request.POST.get('consultant_name') or '').strip()[:200]
-        share.consultant_phone = (request.POST.get('consultant_phone') or '').strip()[:20]
+        name, phone = normalize_consultant_fields_for_save(
+            request.user,
+            request.POST.get('consultant_name') or '',
+            request.POST.get('consultant_phone') or '',
+        )
+        share.consultant_name = name
+        share.consultant_phone = phone
         share.welcome_message = (request.POST.get('welcome_message') or '').strip()
         share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
         share.show_full_address = request.POST.get('show_full_address') in ('1', 'true', 'on')

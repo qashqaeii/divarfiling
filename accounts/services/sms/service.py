@@ -121,36 +121,62 @@ def get_balance() -> Any:
     return _backend().get_balance()
 
 
-def _extract_credit(raw: Any) -> float | None:
-    """استخراج مبلغ موجودی (تومان) از پاسخ پنل — فیلد رسمی: balanceAmount."""
-    if raw is None:
+def _as_number(value: Any) -> float | None:
+    if value is None or isinstance(value, bool):
         return None
-    if isinstance(raw, bool):
-        return None
-    if isinstance(raw, (int, float)):
-        return float(raw)
-    if isinstance(raw, str):
-        s = raw.strip().replace(',', '').replace('٬', '')
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        s = value.strip().replace(',', '').replace('٬', '').replace(' ', '')
         if not s:
             return None
         try:
             return float(s)
         except ValueError:
             return None
-    if isinstance(raw, dict):
-        # مستندات ایران‌پیامک: data.balanceAmount
-        # https://docs.iranpayamak.com/account-balance-13717911e0
-        for key in (
-            'balanceAmount', 'credit', 'balance', 'remain', 'remaining',
-            'credit_amount', 'account_credit', 'wallet', 'amount',
-        ):
-            if key in raw and raw[key] is not None:
-                credit = _extract_credit(raw[key])
-                if credit is not None:
-                    return credit
-        nested = raw.get('data')
-        if nested is not None and nested is not raw:
-            return _extract_credit(nested)
+    return None
+
+
+def _extract_credit(raw: Any) -> float | None:
+    """استخراج مبلغ موجودی (تومان) — فیلد رسمی: balanceAmount."""
+    if raw is None:
+        return None
+    direct = _as_number(raw)
+    if direct is not None and not isinstance(raw, dict):
+        return direct
+
+    if not isinstance(raw, dict):
+        return None
+
+    # مستندات: https://docs.iranpayamak.com/account-balance-13717911e0
+    for key in (
+        'balanceAmount', 'balance_amount', 'BalanceAmount',
+        'credit', 'balance', 'remain', 'remaining',
+        'credit_amount', 'account_credit', 'wallet',
+    ):
+        if key in raw and raw[key] is not None:
+            num = _as_number(raw[key])
+            if num is not None:
+                return num
+
+    # جمع amountهای details در صورت نبودن balanceAmount
+    details = raw.get('details')
+    if isinstance(details, list) and details:
+        total = 0.0
+        found = False
+        for item in details:
+            if not isinstance(item, dict):
+                continue
+            amount = _as_number(item.get('amount'))
+            if amount is not None:
+                total += amount
+                found = True
+        if found:
+            return total
+
+    nested = raw.get('data')
+    if isinstance(nested, dict):
+        return _extract_credit(nested)
     return None
 
 
@@ -158,16 +184,45 @@ def _extract_sms_count(raw: Any) -> int | None:
     """تعداد پیامک باقی‌مانده — فیلد رسمی: balanceCount."""
     if not isinstance(raw, dict):
         return None
-    for key in ('balanceCount', 'count', 'sms_count', 'remaining_count'):
+    for key in (
+        'balanceCount', 'balance_count', 'BalanceCount',
+        'sms_count', 'remaining_count',
+    ):
         if key in raw and raw[key] is not None:
-            try:
-                return int(raw[key])
-            except (TypeError, ValueError):
+            num = _as_number(raw[key])
+            if num is not None:
+                return int(num)
+
+    details = raw.get('details')
+    if isinstance(details, list) and details:
+        total = 0
+        found = False
+        for item in details:
+            if not isinstance(item, dict):
                 continue
+            count = _as_number(item.get('count'))
+            if count is not None:
+                total += int(count)
+                found = True
+        if found:
+            return total
+
     nested = raw.get('data')
     if isinstance(nested, dict):
         return _extract_sms_count(nested)
     return None
+
+
+def _raw_debug(raw: Any) -> str:
+    """خلاصه امن از پاسخ برای نمایش در پنل ادمین."""
+    if raw is None:
+        return 'null'
+    if isinstance(raw, dict):
+        keys = ', '.join(sorted(str(k) for k in raw.keys())[:12])
+        return f'dict[{keys}]'
+    if isinstance(raw, list):
+        return f'list(len={len(raw)})'
+    return type(raw).__name__
 
 
 def get_sms_balance_snapshot(*, use_cache: bool = True, cache_ttl: int = 60) -> dict[str, Any]:
@@ -184,7 +239,7 @@ def get_sms_balance_snapshot(*, use_cache: bool = True, cache_ttl: int = 60) -> 
     }
     line = (getattr(settings, 'FARAZSMS_LINE_NUMBER', '') or '').strip()
     enabled = bool(getattr(settings, 'SMS_ENABLED', True))
-    cache_key = f'admin:sms_balance:v2:{provider}'
+    cache_key = f'admin:sms_balance:v3:{provider}'
 
     if use_cache:
         cached = cache.get(cache_key)
@@ -224,11 +279,11 @@ def get_sms_balance_snapshot(*, use_cache: bool = True, cache_ttl: int = 60) -> 
     credit = _extract_credit(raw)
     sms_count = _extract_sms_count(raw) if isinstance(raw, dict) else None
     if credit is None and sms_count is None:
-        base['error'] = 'پاسخ موجودی از پنل قابل‌خواندن نبود.'
+        logger.warning('SMS balance unreadable raw=%s', _raw_debug(raw))
+        base['error'] = f'پاسخ موجودی از پنل قابل‌خواندن نبود ({_raw_debug(raw)}).'
         base['raw'] = raw if isinstance(raw, (dict, list, str, int, float)) else None
         return base
 
-    # اگر فقط تعداد آمده، مبلغ را ۰ نگذار — ok با count
     if credit is None:
         credit = 0.0
 

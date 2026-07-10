@@ -36,6 +36,7 @@ class ConsoleSmsServiceTests(SimpleTestCase):
         snap = get_sms_balance_snapshot(use_cache=False)
         self.assertTrue(snap['ok'])
         self.assertEqual(snap['credit'], 0)
+        self.assertEqual(snap['sms_count'], 0)
         self.assertEqual(snap['provider'], 'console')
 
 
@@ -139,6 +140,26 @@ class FarazSmsServiceTests(SimpleTestCase):
         self.assertEqual(snap['credit'], 12000)
         self.assertEqual(snap['sms_count'], 60)
         self.assertTrue(snap['is_low'])
+
+    @patch('accounts.services.sms.faraz.requests.request')
+    def test_balance_from_details_fallback(self, mock_request):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.content = b'{"status":"success"}'
+        mock_resp.json.return_value = {
+            'status': 'success',
+            'data': {
+                'details': [
+                    {'count': 10, 'rate': 200, 'amount': 2000},
+                    {'count': 5, 'rate': 200, 'amount': 1000},
+                ],
+            },
+        }
+        mock_request.return_value = mock_resp
+        snap = get_sms_balance_snapshot(use_cache=False)
+        self.assertTrue(snap['ok'])
+        self.assertEqual(snap['credit'], 3000)
+        self.assertEqual(snap['sms_count'], 15)
 
 
 @override_settings(SMS_ENABLED=False, SMS_PROVIDER='console')

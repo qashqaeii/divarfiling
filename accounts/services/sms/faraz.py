@@ -107,12 +107,19 @@ def _extract_message_id(data: Any) -> str:
 
 def _request(method: str, path: str, *, json_body: dict | None = None) -> dict[str, Any]:
     url = f'{_base_url()}{path}'
+    headers = _headers()
+    # برای GET فقط Accept + Api-Key کافی است؛ Content-Type اضافه نکن
+    if json_body is None and method.upper() == 'GET':
+        headers = {
+            'Api-Key': headers['Api-Key'],
+            'Accept': 'application/json',
+        }
     try:
         response = requests.request(
             method,
             url,
-            headers=_headers(),
-            json=json_body,
+            headers=headers,
+            json=json_body if json_body is not None else None,
             timeout=_timeout(),
         )
     except requests.Timeout as exc:
@@ -231,6 +238,52 @@ def send_simple(
 
 
 def get_balance() -> Any:
-    """بررسی موجودی — روش رایگان برای تست Api-Key."""
+    """
+    موجودی حساب — GET /ws/v1/account/balance
+    مستندات: https://docs.iranpayamak.com/account-balance-13717911e0
+    خروجی: دیکشنری data با balanceAmount / balanceCount / details
+    """
     payload = _request('GET', '/ws/v1/account/balance')
-    return _ensure_success(payload, 200)
+    status = str(payload.get('status') or '').lower()
+    if status == 'error':
+        message = payload.get('message') or payload.get('messages') or 'خواندن موجودی ناموفق بود.'
+        if isinstance(message, list):
+            message = ' '.join(str(m) for m in message)
+        raise SmsSendError(
+            str(message),
+            code='sms_provider_error',
+            provider_status=status,
+        )
+
+    data = payload.get('data')
+    # بعضی پاسخ‌ها فیلدها را در ریشه می‌گذارند
+    if data is None and (
+        'balanceAmount' in payload or 'balanceCount' in payload or 'details' in payload
+    ):
+        data = payload
+
+    if data is None:
+        logger.warning(
+            'FarazSMS balance empty payload keys=%s status=%s',
+            list(payload.keys()) if isinstance(payload, dict) else type(payload).__name__,
+            status or '-',
+        )
+        raise SmsSendError(
+            'پاسخ موجودی از پنل خالی بود.',
+            code='sms_balance_empty',
+        )
+
+    if not isinstance(data, dict):
+        logger.warning('FarazSMS balance unexpected data type=%s', type(data).__name__)
+        raise SmsSendError(
+            'ساختار پاسخ موجودی نامعتبر است.',
+            code='sms_balance_invalid',
+        )
+
+    logger.info(
+        'FarazSMS balance ok amount=%s count=%s',
+        data.get('balanceAmount'),
+        data.get('balanceCount'),
+    )
+    return data
+

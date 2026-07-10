@@ -65,6 +65,7 @@ class ListingEditTests(SimpleTestCase):
     def test_payload_preserves_description_newlines(self):
         class Listing:
             id = 1
+            dataset_id = 9
             token = 'abc123'
             title = 'آپارتمان'
             price = None
@@ -74,14 +75,104 @@ class ListingEditTests(SimpleTestCase):
             rooms = '3'
             neighborhood = 'بریانک'
             city = 'تهران'
+            latitude = 35.6
+            longitude = 51.4
             business_type = 'مشاور'
             link = 'https://divar.ir/v/x'
             description = 'خط اول\n\nخط دوم'
-            data = {}
+            images = ['https://example.com/a.jpg']
+            is_expired = False
+            data = {
+                'آدرس': 'خیابان آزادی',
+                'منطقه': '۹',
+                'جهت ساختمان': 'شمالی',
+                'بالکن': 'دارد',
+                'تعداد کل طبقات ساختمان': '5',
+            }
+
+        from workspace.services.listing_edit import apply_listing_edit_post, listing_edit_payload
 
         payload = listing_edit_payload(Listing())
         self.assertIn('\n\n', payload['description'])
         self.assertNotIn('\\u000A', payload['description'])
+        self.assertEqual(payload['address'], 'خیابان آزادی')
+        self.assertEqual(payload['district'], '۹')
+        self.assertEqual(payload['total_floors'], '5')
+        self.assertEqual(payload['latitude'], 35.6)
+        self.assertEqual(payload['images'], ['https://example.com/a.jpg'])
+        self.assertTrue(any(f['key'] == 'جهت ساختمان' for f in payload['feature_fields']))
+
+    def test_apply_full_edit_updates_model_and_features(self):
+        class Listing:
+            id = 1
+            dataset_id = 9
+            token = 'tok'
+            title = 'قدیمی'
+            price = 1
+            deposit = None
+            rent = None
+            area = 50.0
+            rooms = '1'
+            neighborhood = ''
+            city = ''
+            latitude = None
+            longitude = None
+            business_type = 'شخصی'
+            link = ''
+            description = ''
+            images = []
+            is_expired = False
+            data = {'جهت ساختمان': 'جنوبی'}
+
+        from workspace.services.listing_edit import apply_listing_edit_post
+        import json
+
+        listing = Listing()
+        apply_listing_edit_post(listing, {
+            'title': 'جدید',
+            'price': '1000000000',
+            'area': '85.5',
+            'rooms': '2',
+            'floor': '3',
+            'total_floors': '8',
+            'build_year': '1400',
+            'elevator': '1',
+            'parking': '0',
+            'storage': '',
+            'balcony': '1',
+            'neighborhood': 'ونک',
+            'city': 'تهران',
+            'district': '۳',
+            'address': 'خیابان ولیعصر',
+            'latitude': '35.75',
+            'longitude': '51.41',
+            'business_type': 'مشاور',
+            'is_expired': '0',
+            'owner_phone': '09121234567',
+            'owner_name': 'علی',
+            'link': 'https://divar.ir/v/new',
+            'description': 'توضیح کامل',
+            'images_json': json.dumps(['https://cdn.example.com/1.jpg', 'https://cdn.example.com/2.jpg']),
+            'features_json': json.dumps({'جهت ساختمان': 'شمالی', 'جنس کف': 'پارکت'}, ensure_ascii=False),
+        })
+        self.assertEqual(listing.title, 'جدید')
+        self.assertEqual(listing.price, 1_000_000_000)
+        self.assertEqual(listing.area, 85.5)
+        self.assertEqual(listing.neighborhood, 'ونک')
+        self.assertEqual(listing.latitude, 35.75)
+        self.assertEqual(listing.longitude, 51.41)
+        self.assertFalse(listing.is_expired)
+        self.assertEqual(listing.images, ['https://cdn.example.com/1.jpg', 'https://cdn.example.com/2.jpg'])
+        self.assertEqual(listing.data.get('آدرس'), 'خیابان ولیعصر')
+        self.assertEqual(listing.data.get('منطقه'), '۳')
+        self.assertEqual(listing.data.get('طبقه'), '3')
+        self.assertEqual(listing.data.get('تعداد کل طبقات ساختمان'), '8')
+        self.assertEqual(listing.data.get('آسانسور'), 'دارد')
+        self.assertEqual(listing.data.get('پارکینگ'), 'ندارد')
+        self.assertEqual(listing.data.get('بالکن'), 'دارد')
+        self.assertEqual(listing.data.get('جهت ساختمان'), 'شمالی')
+        self.assertEqual(listing.data.get('جنس کف'), 'پارکت')
+        self.assertEqual(listing.data.get('شماره تماس'), '09121234567')
 
 
 class PriceHistoryTests(SimpleTestCase):

@@ -1,5 +1,5 @@
 {% extends 'workspace/base.html' %}
-{% load humanize workspace_tags %}
+{% load static humanize workspace_tags %}
 
 {% block page_title %}آگهی‌های {{ dataset_count }} فایل{% endblock %}
 {% block mobile_bar_title %}آگهی‌های چند فایل{% endblock %}
@@ -130,6 +130,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'workspace/js/listing-edit.js' %}?v=1"></script>
 <script>
 (function () {
     const advToggle = document.getElementById('wsAdvToggle');
@@ -155,124 +156,9 @@
     });
     if (advPanel && !advPanel.hidden) setFilterPanel(true);
 
-    const editModal = document.getElementById('modal-edit-listing');
-    const editForm = document.getElementById('editListingForm');
-    const editSubtitle = document.getElementById('editListingSubtitle');
-    const editToken = document.getElementById('editListingToken');
-    const listingsEditEl = document.getElementById('listings-edit-data');
-    const listingsEditData = listingsEditEl ? JSON.parse(listingsEditEl.textContent) : {};
-
-    const fields = {
-        title: document.getElementById('editTitle'),
-        price: document.getElementById('editPrice'),
-        deposit: document.getElementById('editDeposit'),
-        rent: document.getElementById('editRent'),
-        area: document.getElementById('editArea'),
-        rooms: document.getElementById('editRooms'),
-        floor: document.getElementById('editFloor'),
-        buildYear: document.getElementById('editBuildYear'),
-        elevator: document.getElementById('editElevator'),
-        parking: document.getElementById('editParking'),
-        storage: document.getElementById('editStorage'),
-        neighborhood: document.getElementById('editNeighborhood'),
-        city: document.getElementById('editCity'),
-        business: document.getElementById('editBusiness'),
-        ownerPhone: document.getElementById('editOwnerPhone'),
-        ownerName: document.getElementById('editOwnerName'),
-        link: document.getElementById('editLink'),
-        description: document.getElementById('editDescription'),
-    };
-
-    function moneyHint(el, hintEl) {
-        if (!el || !hintEl) return;
-        const n = parseInt(String(el.value || '').replace(/,/g, ''), 10);
-        hintEl.textContent = Number.isFinite(n) && n > 0 ? n.toLocaleString('fa-IR') + ' تومان' : '';
-    }
-    ['price', 'deposit', 'rent'].forEach(function (k) {
-        const el = fields[k];
-        const hint = document.getElementById('edit' + k.charAt(0).toUpperCase() + k.slice(1) + 'Hint');
-        el?.addEventListener('input', function () { moneyHint(el, hint); });
-    });
-
-    function triVal(v) {
-        if (v === true || v === 1 || v === '1') return '1';
-        if (v === false || v === 0 || v === '0') return '0';
-        return '';
-    }
-
-    function fillEditForm(data) {
-        if (fields.title) fields.title.value = data.title || '';
-        if (fields.price) fields.price.value = data.price ?? '';
-        if (fields.deposit) fields.deposit.value = data.deposit ?? '';
-        if (fields.rent) fields.rent.value = data.rent ?? '';
-        if (fields.area) fields.area.value = data.area ?? '';
-        if (fields.rooms) fields.rooms.value = data.rooms || '';
-        if (fields.floor) fields.floor.value = data.floor || '';
-        if (fields.buildYear) fields.buildYear.value = data.build_year ?? '';
-        if (fields.elevator) fields.elevator.value = triVal(data.elevator);
-        if (fields.parking) fields.parking.value = triVal(data.parking);
-        if (fields.storage) fields.storage.value = triVal(data.storage);
-        if (fields.neighborhood) fields.neighborhood.value = data.neighborhood || '';
-        if (fields.city) fields.city.value = data.city || '';
-        if (fields.business) fields.business.value = data.business_type || 'شخصی';
-        if (fields.ownerPhone) fields.ownerPhone.value = data.owner_phone || '';
-        if (fields.ownerName) fields.ownerName.value = data.owner_name || '';
-        if (fields.link) fields.link.value = data.link || '';
-        if (fields.description) fields.description.value = data.description || '';
-        if (editSubtitle) editSubtitle.textContent = data.title || '—';
-        if (editToken) editToken.textContent = data.token || '';
-        moneyHint(fields.price, document.getElementById('editPriceHint'));
-        moneyHint(fields.deposit, document.getElementById('editDepositHint'));
-        moneyHint(fields.rent, document.getElementById('editRentHint'));
-    }
-
-    function listingActionUrl(datasetId, listingId, action) {
-        return '/workspace/datasets/' + datasetId + '/listings/' + listingId + '/' + (action ? action + '/' : '');
-    }
-
-    document.querySelectorAll('.js-edit-listing').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            this.closest('.mk-action-menu')?.removeAttribute('open');
-            const id = String(this.dataset.id || '');
-            const data = listingsEditData[id];
-            if (!data) return;
-            const dsId = this.dataset.datasetId || data.dataset_id;
-            editForm.action = listingActionUrl(dsId, id, 'edit');
-            fillEditForm(data);
-            editModal?.classList.add('is-open');
-            document.body.classList.add('ws-modal-open');
-            fields.title?.focus();
-        });
-    });
-
-    const deleteModal = document.getElementById('modal-delete-listing');
-    const deleteForm = document.getElementById('deleteListingForm');
-    const deleteText = document.getElementById('deleteListingText');
-    document.querySelectorAll('.mk-action-menu').forEach(function (menu) {
-        menu.addEventListener('toggle', function () {
-            if (!menu.open) return;
-            document.querySelectorAll('.mk-action-menu[open]').forEach(function (other) {
-                if (other !== menu) other.removeAttribute('open');
-            });
-        });
-    });
-    document.addEventListener('click', function (e) {
-        if (e.target.closest('.mk-action-menu')) return;
-        document.querySelectorAll('.mk-action-menu[open]').forEach(function (m) {
-            m.removeAttribute('open');
-        });
-    });
-
-    document.querySelectorAll('.js-delete-listing').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            this.closest('.mk-action-menu')?.removeAttribute('open');
-            const id = this.dataset.id;
-            const dsId = this.dataset.datasetId;
-            deleteForm.action = listingActionUrl(dsId, id, 'delete');
-            deleteText.textContent = 'آگهی «' + (this.dataset.title || '') + '» حذف می‌شود.';
-            deleteModal?.classList.add('is-open');
-            document.body.classList.add('ws-modal-open');
-        });
+    initListingEdit({
+        editUrlTemplate: '/workspace/datasets/__DATASET__/listings/__LISTING__/edit/',
+        deleteUrlTemplate: '/workspace/datasets/__DATASET__/listings/__LISTING__/delete/',
     });
 
     document.querySelectorAll('.mk-listing-row[data-href], .mk-lcard[data-href]').forEach(function (row) {

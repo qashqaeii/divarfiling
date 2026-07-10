@@ -988,6 +988,9 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         form_vals = share_consultant_form_values(self.request.user, share)
         ctx['consultant_name'] = form_vals['consultant_name']
         ctx['consultant_phone'] = form_vals['consultant_phone']
+        ctx['listings_edit_data'] = {
+            str(listing.pk): listing_edit_payload(listing, ctx['feat']),
+        }
         return ctx
 
     def _whatsapp_text(self, listing, tx):

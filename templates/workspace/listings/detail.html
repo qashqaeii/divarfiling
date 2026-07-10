@@ -34,6 +34,9 @@
             </p>
         </div>
         <div class="mk-page-hero-toolbar" role="toolbar" aria-label="عملیات">
+            <button type="button" class="mk-hero-btn mk-hero-btn-primary" data-open-listing-edit="{{ listing.id }}" data-id="{{ listing.id }}" data-dataset-id="{{ dataset.id }}" title="ویرایش کامل آگهی" aria-label="ویرایش">
+                <i class="fas fa-pen-to-square" aria-hidden="true"></i><span class="mk-hero-btn-label">ویرایش</span>
+            </button>
             <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="mk-inline-form">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -340,6 +343,7 @@
 {% endblock %}
 
 {% block modals %}
+{% include 'workspace/includes/listing_edit_delete_modals.html' %}
 {% url 'workspace:listing_share' dataset.id listing.id as listing_share_action %}
 {% include 'workspace/includes/public_share_modal.html' with modal_id='modal-share' form_id='form-listing-share' form_action=listing_share_action share_url=public_share_url share=public_share item_title=listing.title id_prefix='listing-share' subtitle='لینک عمومی — مشتری بدون ورود، جزئیات ملک و اطلاعات شما را می‌بیند' is_personal_file=False %}
 <div class="ws-modal" id="modal-meta" role="dialog" aria-modal="true">
@@ -362,11 +366,21 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'workspace/js/listing-edit.js' %}?v=1"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    initListingEdit({
+        defaultDatasetId: '{{ dataset.id }}',
+        editUrlTemplate: '/workspace/datasets/__DATASET__/listings/__LISTING__/edit/',
+        deleteUrlTemplate: '/workspace/datasets/__DATASET__/listings/__LISTING__/delete/',
+    });
     if (new URLSearchParams(window.location.search).get('share') === '1') {
         var shareBtn = document.querySelector('[data-modal-open="modal-share"]');
         if (shareBtn) shareBtn.click();
+    }
+    if (new URLSearchParams(window.location.search).get('edit') === '1') {
+        var editBtn = document.querySelector('[data-open-listing-edit]');
+        if (editBtn) editBtn.click();
     }
     document.querySelectorAll('[data-fv-prose-toggle]').forEach(function (btn) {
         btn.addEventListener('click', function () {

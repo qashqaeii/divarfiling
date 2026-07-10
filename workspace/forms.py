@@ -112,7 +112,8 @@ class ListingEditForm(forms.ModelForm):
         model = Listing
         fields = [
             'title', 'price', 'deposit', 'rent', 'area', 'rooms',
-            'neighborhood', 'business_type', 'description', 'link',
+            'neighborhood', 'city', 'latitude', 'longitude',
+            'business_type', 'description', 'link', 'is_expired',
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'ws-input'}),
@@ -122,6 +123,9 @@ class ListingEditForm(forms.ModelForm):
             'area': forms.NumberInput(attrs={'class': 'ws-input', 'step': '0.1'}),
             'rooms': forms.TextInput(attrs={'class': 'ws-input'}),
             'neighborhood': forms.TextInput(attrs={'class': 'ws-input'}),
+            'city': forms.TextInput(attrs={'class': 'ws-input'}),
+            'latitude': forms.NumberInput(attrs={'class': 'ws-input', 'step': 'any', 'dir': 'ltr'}),
+            'longitude': forms.NumberInput(attrs={'class': 'ws-input', 'step': 'any', 'dir': 'ltr'}),
             'business_type': forms.Select(
                 choices=[
                     ('', '—'),
@@ -133,6 +137,7 @@ class ListingEditForm(forms.ModelForm):
             ),
             'description': forms.Textarea(attrs={'class': 'ws-textarea', 'rows': 3}),
             'link': forms.URLInput(attrs={'class': 'ws-input', 'dir': 'ltr'}),
+            'is_expired': forms.CheckboxInput(attrs={'class': 'ws-check'}),
         }
 
 

@@ -39,28 +39,37 @@
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <button type="submit" class="mk-hero-btn mk-hero-btn-ghost" title="{% if meta.is_favorite %}حذف از علاقه‌مندی{% else %}افزودن به علاقه‌مندی{% endif %}" aria-label="علاقه‌مندی">
                     <i class="{% if meta.is_favorite %}fas fa-star{% else %}far fa-star{% endif %}" aria-hidden="true"></i>
+                    <span class="mk-hero-btn-label">علاقه</span>
                 </button>
             </form>
             {% if crm_property %}
             <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="mk-hero-btn mk-hero-btn-ghost" title="مشاهده در فایل‌های شخصی">
-                <i class="fas fa-folder-open" aria-hidden="true"></i><span>فایل شخصی</span>
+                <i class="fas fa-folder-open" aria-hidden="true"></i><span class="mk-hero-btn-label">فایل شخصی</span>
             </a>
             {% else %}
             <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="mk-inline-form">
                 {% csrf_token %}
                 <input type="hidden" name="redirect" value="property">
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="mk-hero-btn mk-hero-btn-accent" title="تبدیل آگهی دیوار به فایل شخصی">
-                    <i class="fas fa-folder-plus" aria-hidden="true"></i><span>تبدیل به فایل شخصی</span>
+                <button type="submit" class="mk-hero-btn mk-hero-btn-accent" title="تبدیل آگهی دیوار به فایل شخصی" aria-label="تبدیل به فایل شخصی">
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i><span class="mk-hero-btn-label">فایل شخصی</span>
                 </button>
             </form>
             {% endif %}
-            <button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-modal-open="modal-meta"><span>متادیتا</span></button>
-            <button type="button" class="mk-hero-btn mk-hero-btn-accent" data-modal-open="modal-share" title="اشتراک با مشتری">
-                <i class="fas fa-share-nodes" aria-hidden="true"></i><span>اشتراک</span>
+            <button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-modal-open="modal-meta" title="متادیتا" aria-label="متادیتا">
+                <i class="fas fa-sliders" aria-hidden="true"></i><span class="mk-hero-btn-label">متادیتا</span>
             </button>
-            <button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-copy="{{ whatsapp_text }}" title="واتساپ"><i class="fas fa-comment-dots" aria-hidden="true"></i></button>
-            {% if listing.link %}<a href="{{ listing.link }}" target="_blank" rel="noopener" class="mk-hero-btn mk-hero-btn-primary"><span>دیوار</span></a>{% endif %}
+            <button type="button" class="mk-hero-btn mk-hero-btn-accent" data-modal-open="modal-share" title="اشتراک با مشتری" aria-label="اشتراک">
+                <i class="fas fa-share-nodes" aria-hidden="true"></i><span class="mk-hero-btn-label">اشتراک</span>
+            </button>
+            <button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-copy="{{ whatsapp_text }}" title="کپی متن واتساپ" aria-label="واتساپ">
+                <i class="fas fa-comment-dots" aria-hidden="true"></i><span class="mk-hero-btn-label">واتساپ</span>
+            </button>
+            {% if listing.link %}
+            <a href="{{ listing.link }}" target="_blank" rel="noopener" class="mk-hero-btn mk-hero-btn-primary" title="مشاهده در دیوار" aria-label="دیوار">
+                <i class="fas fa-external-link-alt" aria-hidden="true"></i><span class="mk-hero-btn-label">دیوار</span>
+            </a>
+            {% endif %}
         </div>
     </header>
 

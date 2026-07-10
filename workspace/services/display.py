@@ -35,7 +35,38 @@ CORE_LOCATION_MARKERS = (
     'latitude', 'longitude', 'lat', 'lng', 'مختصات', 'شعاع', 'نوع مختصات',
 )
 
-CONTACT_MARKERS = ('تماس', 'phone', 'تلفن', 'موبایل', 'شماره تماس', 'نام مالک', 'owner_name', 'owner_phone')
+CONTACT_MARKERS = (
+    'شماره تماس', 'نام مالک', 'نام و نام خانوادگی مالک', 'نام صاحب',
+    'owner_phone', 'owner_name', 'phone_text',
+    'تلفن', 'موبایل', 'phone', 'تماس',
+)
+
+# برچسب فارسی برای کلیدهای انگلیسی/داخلی
+FIELD_LABELS = {
+    'owner_phone': 'شماره تماس',
+    'owner_name': 'نام مالک',
+    'phone': 'شماره تماس',
+    'phone_text': 'شماره تماس',
+    'title': 'عنوان',
+    'token': 'شناسه',
+    'link': 'لینک',
+    'description': 'توضیحات',
+    'city': 'شهر',
+    'neighborhood': 'محله',
+    'district': 'منطقه',
+    'area': 'متراژ',
+    'rooms': 'اتاق',
+    'floor': 'طبقه',
+    'price': 'قیمت',
+    'deposit': 'ودیعه',
+    'rent': 'اجاره',
+    'latitude': 'عرض جغرافیایی',
+    'longitude': 'طول جغرافیایی',
+    'lat': 'عرض جغرافیایی',
+    'lng': 'طول جغرافیایی',
+    'build_year': 'سال ساخت',
+    'business_type': 'نوع آگهی‌دهنده',
+}
 
 SECTION_ORDER = ('مالی', 'ملک', 'مکان', 'متن', 'تماس')
 
@@ -49,6 +80,11 @@ LOCATION_FIELD_ORDER = (
     'شهر', 'city', 'منطقه', 'district', 'محله', 'neighborhood',
     'آدرس', 'address', 'عرض جغرافیایی', 'طول جغرافیایی',
     'latitude', 'longitude', 'نوع مختصات', 'در شعاع (متر)',
+)
+
+CONTACT_FIELD_ORDER = (
+    'نام مالک', 'owner_name', 'نام و نام خانوادگی مالک', 'نام صاحب',
+    'شماره تماس', 'owner_phone', 'phone', 'موبایل', 'تلفن', 'تماس',
 )
 
 _EXACT_COORD_MARKERS = frozenset({'EXACT', 'دقیق', 'دقيق'})
@@ -416,6 +452,19 @@ def _is_contact_key(key: str) -> bool:
     return _marker_in_key(key, CONTACT_MARKERS)
 
 
+def display_field_label(key: str) -> str:
+    """برچسب قابل‌نمایش فیلد — انگلیسی → فارسی."""
+    k = str(key or '').strip()
+    if not k:
+        return k
+    if k in FIELD_LABELS:
+        return FIELD_LABELS[k]
+    mapped = FIELD_LABELS.get(k.lower())
+    if mapped:
+        return mapped
+    return k
+
+
 def _include_in_sections(key: str) -> bool:
     """آیا فیلد در تب‌های اصلی نمایش داده شود (نه فقط تب ویژگی‌ها)؟"""
     if _is_core_property_key(key) or _is_location_key(key):
@@ -449,6 +498,7 @@ def _field_sort_key(section: str, key: str) -> Tuple[int, str]:
         'مالی': MONEY_FIELD_ORDER,
         'ملک': PROPERTY_FIELD_ORDER,
         'مکان': LOCATION_FIELD_ORDER,
+        'تماس': CONTACT_FIELD_ORDER,
     }
     preferred = order_map.get(section, ())
     kl = key.lower()
@@ -503,6 +553,10 @@ def _dedupe_listing_data_keys(data: dict) -> dict:
         'price': ('قیمت',),
         'business_type': ('نوع آگهی دهنده', 'نوع آگهی‌دهنده'),
         'فروشنده_business_type': ('نوع آگهی دهنده', 'نوع آگهی‌دهنده'),
+        'owner_phone': ('شماره تماس', 'موبایل', 'تلفن'),
+        'phone': ('شماره تماس', 'موبایل', 'تلفن'),
+        'phone_text': ('شماره تماس', 'موبایل', 'تلفن'),
+        'owner_name': ('نام مالک', 'نام و نام خانوادگی مالک', 'نام صاحب'),
     }
     for key, preferred in drop_if_present.items():
         if key not in out:
@@ -510,6 +564,33 @@ def _dedupe_listing_data_keys(data: dict) -> dict:
         if any(p in out and out.get(p) not in (None, '', '-', '—') for p in preferred):
             out.pop(key, None)
     return out
+
+
+def _normalize_contact_fields(data: dict, listing) -> None:
+    """یکپارچه‌سازی فیلدهای تماس — فقط برچسب فارسی و مقدار صحیح."""
+    from workspace.services.listing_edit import (
+        OWNER_NAME_KEYS,
+        OWNER_PHONE_KEYS,
+        owner_name_from_listing,
+        owner_phone_from_listing,
+    )
+
+    phone = (owner_phone_from_listing(listing) or '').strip()
+    name = (owner_name_from_listing(listing) or '').strip()
+
+    for key in (*OWNER_PHONE_KEYS, *OWNER_NAME_KEYS, 'phone_text'):
+        data.pop(key, None)
+
+    # کلیدهای انگلیسی باقی‌ماندهٔ تماس را هم حذف کن
+    for key in list(data.keys()):
+        kl = str(key).strip().lower()
+        if kl in ('owner_phone', 'owner_name', 'phone', 'phone_text'):
+            data.pop(key, None)
+
+    if phone:
+        data['شماره تماس'] = phone
+    if name:
+        data['نام مالک'] = name
 
 
 def build_listing_display_data(listing, feat: Optional[Dict[str, Any]] = None) -> dict:
@@ -550,6 +631,7 @@ def build_listing_display_data(listing, feat: Optional[Dict[str, Any]] = None) -
         if feat.get('build_year'):
             _set_if_missing(data, 'سال ساخت', feat['build_year'])
 
+    _normalize_contact_fields(data, listing)
     return data
 
 
@@ -643,7 +725,8 @@ def classify_field_for_display(key: str, display: str, raw: Any = None) -> Dict[
         kind = 'long'
 
     return {
-        'key': key,
+        'key': display_field_label(key),
+        'raw_key': key,
         'display': disp,
         'raw': raw_s,
         'short': short,

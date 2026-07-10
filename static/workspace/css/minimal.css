@@ -184,17 +184,83 @@ body.ws-body::before { opacity: 0.45; }
     .ws-dash-hero,
     .crm-dash-v2-head {
         padding: 0.7rem 0.8rem;
-        align-items: flex-start;
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.65rem;
     }
     .mk-page-hero-toolbar,
     .mk-page-actions,
     .crm-page-actions {
         width: 100%;
-        justify-content: flex-end;
-        flex-wrap: wrap;
+        align-self: stretch;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(3.4rem, 1fr));
+        gap: 0.2rem;
+        padding: 0.2rem;
+        justify-content: stretch;
+        flex-wrap: unset;
+        overflow: visible;
+    }
+    .mk-page-hero-toolbar > .mk-inline-form,
+    .mk-page-actions > .mk-inline-form,
+    .crm-page-actions > .mk-inline-form {
+        display: flex;
+        min-width: 0;
+        margin: 0;
+    }
+    .mk-page-hero-toolbar .mk-hero-btn,
+    .mk-page-actions .mk-hero-btn,
+    .crm-page-actions .mk-hero-btn,
+    .mk-page-hero-toolbar .mk-inline-form .mk-hero-btn,
+    .mk-page-actions .mk-inline-form .mk-hero-btn,
+    .crm-page-actions .mk-inline-form .mk-hero-btn,
+    .mk-page-hero-toolbar .ws-btn,
+    .mk-page-hero-toolbar .crm-btn,
+    .mk-page-actions .ws-btn,
+    .mk-page-actions .crm-btn,
+    .crm-page-actions .crm-btn {
+        width: 100%;
+        min-height: 2.75rem;
+        flex-direction: column;
+        gap: 0.18rem;
+        padding: 0.45rem 0.2rem;
+        font-size: 0.62rem;
+        font-weight: 600;
+        white-space: nowrap;
+        border-radius: 7px;
+    }
+    .mk-page-hero-toolbar .mk-hero-btn i,
+    .mk-page-actions .mk-hero-btn i,
+    .crm-page-actions .mk-hero-btn i {
+        font-size: 0.92rem;
+        opacity: 1;
+        line-height: 1;
+    }
+    .mk-page-hero-toolbar .mk-hero-btn-label,
+    .mk-page-actions .mk-hero-btn-label,
+    .crm-page-actions .mk-hero-btn-label {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.15;
     }
     .mk-page-hero-title,
     .mk-page-head h1 { font-size: 1.05rem; }
+}
+
+@media (max-width: 380px) {
+    .mk-page-hero-toolbar .mk-hero-btn-label,
+    .mk-page-actions .mk-hero-btn-label,
+    .crm-page-actions .mk-hero-btn-label {
+        display: none;
+    }
+    .mk-page-hero-toolbar .mk-hero-btn,
+    .mk-page-actions .mk-hero-btn,
+    .crm-page-actions .mk-hero-btn {
+        min-height: 2.5rem;
+        padding: 0.55rem 0.3rem;
+    }
 }
 
 /* ─── Stat strip (no icon cards) ─── */

@@ -175,6 +175,48 @@ class TenantMatchingTests(TestCase):
         titles = [m['title'] for m in data['crm_matches']]
         self.assertNotIn(huge.title, titles)
 
+    def test_buyer_respects_property_type_preference(self):
+        buyer = Customer.objects.create(
+            user=self.user,
+            name='متقاضی کلنگی',
+            phone='09120004444',
+            customer_type='متقاضی خرید',
+            property_type='کلنگی',
+            budget_min=10_000_000_000,
+            budget_max=40_000_000_000,
+            min_area=80,
+            max_area=400,
+            areas='ونک',
+        )
+        apartment = CRMProperty.objects.create(
+            user=self.user,
+            title='آپارتمان نامرتبط',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=20_000_000_000,
+            neighborhood='ونک',
+            city='تهران',
+            area=120,
+            rooms='2',
+        )
+        kolangi = CRMProperty.objects.create(
+            user=self.user,
+            title='کلنگی مناسب',
+            property_type='کلنگی',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=22_000_000_000,
+            neighborhood='ونک',
+            city='تهران',
+            area=200,
+            rooms='3',
+        )
+        data = get_customer_matches(buyer, self.user, divar_enabled=False)
+        titles = [m['title'] for m in data['crm_matches']]
+        self.assertNotIn(apartment.title, titles)
+        self.assertIn(kolangi.title, titles)
+
     def test_total_count_zero_when_no_matches(self):
         CRMProperty.objects.filter(user=self.user).delete()
         data = get_customer_matches(self.tenant, self.user, divar_enabled=False)

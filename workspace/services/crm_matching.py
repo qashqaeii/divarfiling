@@ -111,16 +111,42 @@ def _profile_budget_eligible(
     return _within_range_tolerance(sale_price, profile.budget_min, profile.budget_max)
 
 
+def _profile_allowed_property_types(profile) -> Optional[Set[str]]:
+    """مجموعه نوع‌های مجاز؛ None یعنی محدودیتی از سمت کاربر نیست."""
+    allowed: Set[str] = set(getattr(profile, 'allowed_types', None) or [])
+    if allowed:
+        expanded: Set[str] = set()
+        for item in allowed:
+            expanded |= _PROPERTY_TYPE_MAP.get(item, {item})
+        return expanded
+    want = (getattr(profile, 'property_type', None) or '').strip()
+    if not want or want == 'سایر':
+        return None
+    return set(_PROPERTY_TYPE_MAP.get(want, {want}))
+
+
+def _profile_property_type_eligible(profile, prop_type: Optional[str]) -> bool:
+    allowed = _profile_allowed_property_types(profile)
+    if allowed is None:
+        return True
+    if not prop_type:
+        return True
+    return prop_type in allowed
+
+
 def _profile_criteria_eligible(
     profile,
     *,
     area: Optional[float],
+    prop_type: Optional[str] = None,
     sale_price: Optional[int] = None,
     deposit: Optional[int] = None,
     rent: Optional[int] = None,
     is_rent: bool = False,
 ) -> bool:
-    """فیلتر سخت: بودجه و متراژ باید در بازه یا نزدیک آن باشند."""
+    """فیلتر سخت: بودجه، متراژ و نوع ملک باید با ترجیحات کاربر سازگار باشند."""
+    if not _profile_property_type_eligible(profile, prop_type):
+        return False
     if not _profile_area_eligible(profile, area):
         return False
     return _profile_budget_eligible(
@@ -180,21 +206,17 @@ def _rooms_match_profile(profile, rooms: str) -> Tuple[float, str]:
 
 
 def _property_type_match_profile(profile, prop_type: str) -> Tuple[float, str]:
-    allowed: Set[str] = set(getattr(profile, 'allowed_types', None) or [])
-    if allowed:
-        expanded = set()
-        for item in allowed:
-            expanded |= _PROPERTY_TYPE_MAP.get(item, {item})
-        if prop_type in expanded:
+    allowed = _profile_allowed_property_types(profile)
+    if allowed is not None:
+        if prop_type in allowed:
             return 1.0, prop_type
         return 0.1, prop_type
     if not profile.property_type or not prop_type:
         return 0.5, ''
-    allowed_single = _PROPERTY_TYPE_MAP.get(profile.property_type, {profile.property_type})
-    if prop_type in allowed_single or profile.property_type == prop_type:
-        return 1.0, prop_type
     if profile.property_type == 'سایر':
         return 0.5, prop_type
+    if profile.property_type == prop_type:
+        return 1.0, prop_type
     return 0.2, prop_type
 
 
@@ -433,6 +455,7 @@ def _score_crm_property_with_profile(
     if not _profile_criteria_eligible(
         profile,
         area=prop.area,
+        prop_type=prop.property_type,
         sale_price=prop.sale_price,
         deposit=prop.deposit,
         rent=prop.monthly_rent,
@@ -509,6 +532,7 @@ def _score_listing_with_profile(
     if not _profile_criteria_eligible(
         profile,
         area=listing.area,
+        prop_type=inferred,
         sale_price=listing.price,
         deposit=listing.deposit,
         rent=listing.rent,

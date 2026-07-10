@@ -70,7 +70,7 @@ from workspace.services.listing_edit import (
 from workspace.services.filters import (
     active_filter_count, advanced_filter_count, apply_amenity_filters,
     apply_listing_filters, apply_value_filter, get_neighborhoods,
-    parse_filter_params, sort_queryset,
+    get_neighborhoods_qs, parse_filter_params, sort_queryset,
 )
 from workspace.services.formatting import format_toman
 from workspace.services.valuation import (
@@ -625,6 +625,210 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
         ctx['is_listing_filtered'] = filtered < total or ctx['filter_count'] > 0
         ctx['listing_edit_form'] = ListingEditForm()
         ctx['filing_video'] = get_filing_video_context()
+        ctx['filter_reset_url'] = reverse('workspace:dataset_detail', args=[dataset.id])
+        ctx['show_dataset_column'] = False
+        return ctx
+
+
+def _parse_dataset_ids_param(request):
+    """پشتیبانی از dataset_ids=id1,id2 و همچنین چند پارامتر تکراری."""
+    ids = []
+    seen = set()
+    for item in request.GET.getlist('dataset_ids'):
+        for part in str(item or '').split(','):
+            part = part.strip()
+            if part and part not in seen:
+                seen.add(part)
+                ids.append(part)
+    return ids
+
+
+def _merged_transaction_profile(datasets) -> dict:
+    modes = {transaction_profile(d.transaction_type)['mode'] for d in datasets}
+    if not modes:
+        return transaction_profile('فروش')
+    if 'ترکیبی' in modes or ({'فروش', 'اجاره'} <= modes):
+        return transaction_profile('ترکیبی')
+    if len(modes) == 1:
+        return transaction_profile(next(iter(modes)))
+    return transaction_profile('ترکیبی')
+
+
+def _value_map_for_datasets(datasets) -> dict:
+    value_map = {}
+    for ds in datasets:
+        tx = transaction_profile(ds.transaction_type)
+        mode = 'rent' if tx['is_rent'] and not tx['show_price'] else 'sale'
+        all_listings = list(ds.listings.all())
+        if not all_listings:
+            continue
+        enriched = compute_expected_values(enrich_dataframe(all_listings), mode=mode)
+        for _, r in enriched.iterrows():
+            score = r.get('value_score')
+            if score is None:
+                continue
+            try:
+                if score != score:
+                    continue
+            except TypeError:
+                pass
+            value_map[int(r['listing_id'])] = float(score)
+    return value_map
+
+
+class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
+    """مرور یکپارچه آگهی‌های چند مجموعه‌داده انتخاب‌شده."""
+
+    template_name = 'workspace/listings/multi.html'
+    paginate_by = 50
+    max_datasets = 30
+
+    def get(self, request, *args, **kwargs):
+        ids = _parse_dataset_ids_param(request)
+        if not ids:
+            messages.warning(request, 'هیچ فایلی برای مشاهده آگهی‌ها انتخاب نشده است.')
+            return redirect('workspace:dataset_list')
+        if len(ids) > self.max_datasets:
+            messages.warning(
+                request,
+                f'حداکثر {self.max_datasets} فایل را می‌توانید همزمان ببینید.',
+            )
+            ids = ids[: self.max_datasets]
+        datasets = list(
+            Dataset.objects.filter(user=request.user, is_active=True, pk__in=ids)
+            .order_by('-last_opened_at', '-created_at')
+        )
+        if not datasets:
+            messages.error(request, 'فایل‌های انتخاب‌شده یافت نشد.')
+            return redirect('workspace:dataset_list')
+        # حفظ ترتیب انتخاب کاربر تا حد ممکن
+        by_id = {str(d.id): d for d in datasets}
+        ordered = [by_id[i] for i in ids if i in by_id]
+        self.datasets = ordered or datasets
+        self.dataset_ids_param = ','.join(str(d.id) for d in self.datasets)
+        for ds in self.datasets[:5]:
+            ds.touch()
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        datasets = self.datasets
+        base_qs = Listing.objects.filter(dataset__in=datasets).select_related('dataset')
+
+        filters = parse_filter_params(self.request)
+        tx = _merged_transaction_profile(datasets)
+        default_sort = '-deposit' if tx['is_rent'] and not tx['is_mixed'] else '-price'
+        sort = filters.get('sort') or default_sort
+        filters['sort'] = sort
+
+        qs = apply_listing_filters(base_qs, filters, self.request.user)
+        if filters.get('duplicates') == '1':
+            dup_tokens = (
+                base_qs.values('token')
+                .annotate(c=Count('token'))
+                .filter(c__gt=1)
+                .values_list('token', flat=True)
+            )
+            qs = qs.filter(token__in=dup_tokens)
+
+        value_map = _value_map_for_datasets(datasets)
+
+        needs_post = any(filters.get(k) for k in (
+            'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
+        ))
+        if needs_post:
+            filtered = list(qs)
+            filtered = apply_amenity_filters(filtered, filters)
+            filtered = apply_value_filter(filtered, value_map, filters.get('value', ''))
+            qs_ids = [x.pk for x in filtered]
+            qs = base_qs.filter(pk__in=qs_ids)
+            qs = sort_queryset(qs, sort, default_sort)
+            paginator = Paginator(qs, self.paginate_by)
+        else:
+            qs = sort_queryset(qs, sort, default_sort)
+            paginator = Paginator(qs, self.paginate_by)
+
+        page = self.request.GET.get('page', 1)
+        ctx['page_obj'] = paginator.get_page(page)
+        ctx['listings'] = ctx['page_obj']
+        ctx['datasets'] = datasets
+        ctx['dataset_ids_param'] = self.dataset_ids_param
+        ctx['dataset_count'] = len(datasets)
+        ctx['filters'] = filters
+        ctx['filter_count'] = active_filter_count(filters)
+        ctx['advanced_filter_count'] = advanced_filter_count(filters)
+        ctx['filters_open'] = self.request.GET.get('filters_open') == '1'
+        ctx['neighborhoods'] = get_neighborhoods_qs(base_qs)
+        ctx['total_count'] = base_qs.count()
+        ctx['filtered_count'] = paginator.count
+        ctx['value_map'] = value_map
+        ctx['listing_features'] = {
+            lst.pk: extract_listing_features(lst) for lst in ctx['listings']
+        }
+        ctx['listings_edit_data'] = {
+            str(lst.pk): listing_edit_payload(lst, ctx['listing_features'].get(lst.pk))
+            for lst in ctx['listings']
+        }
+        filter_pairs = [('dataset_ids', self.dataset_ids_param)]
+        filter_pairs.extend(
+            (k, str(v)) for k, v in filters.items()
+            if v not in ('', None) and k != 'sort'
+        )
+        ctx['filter_qs'] = urlencode(filter_pairs)
+        ctx['page_query'] = {
+            'dataset_ids': self.dataset_ids_param,
+            **{
+                k: str(v) for k, v in filters.items()
+                if v not in ('', None)
+            },
+        }
+        page_tokens = [lst.token for lst in ctx['listings']]
+        metas = ListingMeta.objects.filter(
+            user=self.request.user, token__in=page_tokens,
+        )
+        ctx['listing_metas'] = {m.token: m for m in metas}
+        personal_props = CRMProperty.objects.filter(
+            user=self.request.user, token__in=page_tokens,
+        )
+        ctx['personal_files_map'] = {p.token: p for p in personal_props}
+        ctx['tx'] = tx
+        from workspace.services.advertiser_signal import count_listings_by_advertiser_display
+        adv_counts = count_listings_by_advertiser_display(
+            Listing.objects.filter(dataset__in=datasets)
+        )
+        ctx['genuine_personal_count'] = adv_counts['genuine_personal']
+        ctx['disguised_consultant_count'] = adv_counts['disguised_consultant']
+        ctx['consultant_count'] = adv_counts['consultant']
+        ctx['personal_other_count'] = adv_counts['personal_other']
+        ctx['personal_count'] = (
+            adv_counts['personal_other']
+            + adv_counts['genuine_personal']
+            + adv_counts['disguised_consultant']
+        )
+        total = ctx['total_count']
+        if not total:
+            ctx['genuine_personal_count'] = 0
+            ctx['disguised_consultant_count'] = 0
+            ctx['consultant_count'] = 0
+            ctx['personal_other_count'] = 0
+            ctx['personal_count'] = 0
+        filtered = ctx['filtered_count']
+        consultant = ctx['consultant_count']
+        ctx['consultant_pct'] = round(consultant * 100 / total) if total else 0
+        ctx['genuine_personal_pct'] = round(ctx['genuine_personal_count'] * 100 / total) if total else 0
+        ctx['disguised_consultant_pct'] = round(ctx['disguised_consultant_count'] * 100 / total) if total else 0
+        ctx['personal_other_pct'] = round(ctx['personal_other_count'] * 100 / total) if total else 0
+        ctx['personal_pct'] = round(ctx['personal_count'] * 100 / total) if total else 0
+        ctx['filter_pct'] = round(filtered * 100 / total) if total else 100
+        ctx['is_listing_filtered'] = filtered < total or ctx['filter_count'] > 0
+        ctx['listing_edit_form'] = ListingEditForm()
+        ctx['filter_reset_url'] = (
+            reverse('workspace:multi_listings') + '?dataset_ids=' + self.dataset_ids_param
+        )
+        ctx['filter_form_action'] = reverse('workspace:multi_listings')
+        ctx['show_dataset_column'] = True
+        # سازگاری با includeهایی که هنوز dataset می‌خواهند (مثلاً لینک خالی)
+        ctx['dataset'] = datasets[0]
         return ctx
 
 

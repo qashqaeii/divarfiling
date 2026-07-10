@@ -3305,6 +3305,11 @@ body.ws-body::before { opacity: 0.45; }
     transition: background 0.12s;
 }
 .mk-bulk-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.mk-bulk-btn-primary {
+    background: rgba(255, 255, 255, 0.22);
+    font-weight: 600;
+}
+.mk-bulk-btn-primary:hover { background: rgba(255, 255, 255, 0.32); }
 .mk-bulk-btn-danger {
     background: #ef4444;
     color: #fff;
@@ -7812,6 +7817,7 @@ button.mk-ds-card-act {
 .mk-data-table-listings--pro tbody tr:last-child td { border-bottom: none; }
 
 .mk-data-table-listings .mk-col-w-title { width: auto; min-width: 15rem; }
+.mk-data-table-listings .mk-col-w-dataset { width: 7.5rem; min-width: 6.5rem; }
 .mk-data-table-listings .mk-col-w-money { width: 6rem; min-width: 5.5rem; }
 .mk-data-table-listings .mk-col-w-area { width: 4rem; min-width: 3.75rem; }
 .mk-data-table-listings .mk-col-w-specs { width: 8.5rem; min-width: 7.5rem; }
@@ -8986,3 +8992,48 @@ button.mk-ds-card-act {
     .mk-data-table-listings thead th:nth-child(6) { min-width: 6.5rem; }
 }
 
+
+/* Multi-dataset listings */
+.mk-multi-ds-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.85rem;
+    padding: 0 0.15rem 0.35rem;
+}
+.mk-multi-ds-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 100%;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: inherit;
+    text-decoration: none;
+    font-size: 0.78rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.mk-multi-ds-chip:hover { background: rgba(255, 255, 255, 0.22); }
+.mk-multi-ds-chip small {
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+}
+.mk-dataset-pill {
+    display: inline-block;
+    max-width: 7rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 0.4rem;
+    background: var(--ws-surface-2, rgba(15, 23, 42, 0.06));
+    color: var(--ws-text, inherit);
+    text-decoration: none;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mk-dataset-pill:hover { text-decoration: underline; }
+.mk-lcard-tag--dataset {
+    background: rgba(37, 99, 235, 0.12);
+    color: #1d4ed8;
+}

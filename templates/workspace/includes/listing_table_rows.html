@@ -1,10 +1,10 @@
 {% load humanize workspace_tags %}
 {% for listing in listings %}
 {% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token %}
-<tr class="mk-listing-row" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' dataset.id listing.id %}">
+<tr class="mk-listing-row" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
     <td class="mk-col-title" data-label="">
         <div class="mk-listing-title-cell">
-            <a href="{% url 'workspace:listing_detail' dataset.id listing.id %}" class="mk-listing-title" title="{{ listing.title }}">{{ listing.title }}</a>
+            <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-listing-title" title="{{ listing.title }}">{{ listing.title }}</a>
             <div class="mk-listing-meta">
                 <code class="mk-token" title="{{ listing.token }}">{{ listing.token|truncatechars:8 }}</code>
                 {% if lm.tag %}<span class="mk-tag">{{ lm.tag }}</span>{% endif %}
@@ -13,6 +13,11 @@
             </div>
         </div>
     </td>
+    {% if show_dataset_column %}
+    <td class="mk-col-dataset" data-label="فایل">
+        <a href="{% url 'workspace:dataset_detail' listing.dataset_id %}" class="mk-dataset-pill" title="{{ listing.dataset.name }}">{{ listing.dataset.name|truncatechars:18 }}</a>
+    </td>
+    {% endif %}
     {% if tx.show_price %}
     <td class="mk-col-money mk-num" data-label="قیمت">
         {% if listing.price %}<span class="mk-money" title="{{ listing.price|ws_money }}">{{ listing.price|ws_money_compact }}</span>{% else %}<span class="mk-muted">—</span>{% endif %}
@@ -93,13 +98,13 @@
     </td>
     <td class="mk-col-actions" data-label="">
         <div class="mk-row-actions mk-row-actions-compact" role="group" aria-label="عملیات آگهی">
-            <a href="{% url 'workspace:listing_detail' dataset.id listing.id %}" class="mk-row-btn mk-row-btn--view" title="مشاهده"><i class="fas fa-eye" aria-hidden="true"></i></a>
+            <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-row-btn mk-row-btn--view" title="مشاهده"><i class="fas fa-eye" aria-hidden="true"></i></a>
             <details class="mk-action-menu">
                 <summary class="mk-row-btn mk-row-btn--more" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
                 <div class="mk-action-menu-panel" role="menu">
                     <button type="button" class="mk-action-menu-item js-edit-listing"
-                        data-id="{{ listing.id }}">{% include 'includes/icon_slot.html' with decor='file_edit' size='inline' only %} ویرایش</button>
-                    <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="mk-inline-form">
+                        data-id="{{ listing.id }}" data-dataset-id="{{ listing.dataset_id }}">{% include 'includes/icon_slot.html' with decor='file_edit' size='inline' only %} ویرایش</button>
+                    <form method="post" action="{% url 'workspace:listing_favorite_toggle' listing.dataset_id listing.id %}" class="mk-inline-form">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
                         <button type="submit" class="mk-action-menu-item"><i class="fas fa-star" aria-hidden="true"></i> {% if lm.is_favorite %}علاقه‌مند{% else %}افزودن به علاقه‌مند{% endif %}</button>
@@ -107,7 +112,7 @@
                     {% if pf %}
                     <a href="{% url 'workspace:crm_property_detail' pf.id %}" class="mk-action-menu-item"><i class="fas fa-folder-open" aria-hidden="true"></i> فایل شخصی</a>
                     {% else %}
-                    <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="mk-inline-form">
+                    <form method="post" action="{% url 'workspace:listing_add_personal' listing.dataset_id listing.id %}" class="mk-inline-form">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
                         <button type="submit" class="mk-action-menu-item"><i class="fas fa-folder-plus" aria-hidden="true"></i> افزودن به فایل شخصی</button>
@@ -119,6 +124,7 @@
                     {% endif %}
                     <button type="button" class="mk-action-menu-item mk-action-menu-danger js-delete-listing"
                         data-id="{{ listing.id }}"
+                        data-dataset-id="{{ listing.dataset_id }}"
                         data-title="{{ listing.title|truncatechars:40|escapejs }}"><i class="fas fa-trash" aria-hidden="true"></i> حذف</button>
                 </div>
             </details>
@@ -127,11 +133,11 @@
 </tr>
 {% endwith %}
 {% empty %}
-<tr><td colspan="12" class="mk-table-empty-cell">
+<tr><td colspan="{% if show_dataset_column %}13{% else %}12{% endif %}" class="mk-table-empty-cell">
     <div class="mk-table-empty">
         <span class="mk-empty-icon" aria-hidden="true"><i class="fas fa-inbox"></i></span>
         <p>آگهی‌ای با این فیلترها یافت نشد</p>
-        {% if filter_count %}<a href="{% url 'workspace:dataset_detail' dataset.id %}" class="ws-btn ws-btn-sm ws-btn-ghost">پاک کردن فیلترها</a>{% endif %}
+        {% if filter_count and filter_reset_url %}<a href="{{ filter_reset_url }}" class="ws-btn ws-btn-sm ws-btn-ghost">پاک کردن فیلترها</a>{% endif %}
     </div>
 </td></tr>
 {% endfor %}

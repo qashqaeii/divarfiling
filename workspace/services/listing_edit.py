@@ -68,6 +68,7 @@ def listing_edit_payload(listing, feat: Optional[dict] = None) -> Dict[str, Any]
         biz = 'مشاور'
     return {
         'id': listing.id,
+        'dataset_id': str(listing.dataset_id),
         'token': listing.token or '',
         'title': listing.title or '',
         'price': listing.price,

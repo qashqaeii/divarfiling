@@ -505,6 +505,7 @@ function initDatasetBulkSelect() {
     const bulkBar = document.getElementById('dsBulkBar');
     const bulkCount = document.getElementById('dsBulkCount');
     const bulkClear = document.getElementById('dsBulkClear');
+    const bulkView = document.getElementById('dsBulkView');
     const bulkDelete = document.getElementById('dsBulkDelete');
     const bulkForm = document.getElementById('dsBulkDeleteForm');
     const bulkIds = document.getElementById('dsBulkDeleteIds');
@@ -573,6 +574,17 @@ function initDatasetBulkSelect() {
             document.querySelectorAll('.mk-ds-check').forEach(c => { c.checked = false; });
             if (selectAll) selectAll.checked = false;
             updateBulk();
+        });
+    }
+
+    if (bulkView) {
+        bulkView.addEventListener('click', () => {
+            const ids = selected().map(c => c.value);
+            if (!ids.length) return;
+            const base = bulkView.dataset.url || '/workspace/listings/';
+            const params = new URLSearchParams();
+            params.set('dataset_ids', ids.join(','));
+            window.location.href = base + (base.includes('?') ? '&' : '?') + params.toString();
         });
     }
 

@@ -1,13 +1,14 @@
 {% load humanize workspace_tags %}
 {% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token %}
-<article class="mk-lcard" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' dataset.id listing.id %}">
+<article class="mk-lcard" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
     <div class="mk-lcard-head">
         <div class="mk-lcard-head-main">
             <h3 class="mk-lcard-title">
-                <a href="{% url 'workspace:listing_detail' dataset.id listing.id %}" title="{{ listing.title }}">{{ listing.title }}</a>
+                <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" title="{{ listing.title }}">{{ listing.title }}</a>
             </h3>
-            {% if lm.tag or lm.is_favorite or pf %}
+            {% if lm.tag or lm.is_favorite or pf or show_dataset_column %}
             <div class="mk-lcard-tags">
+                {% if show_dataset_column %}<span class="mk-lcard-tag mk-lcard-tag--dataset" title="{{ listing.dataset.name }}">{{ listing.dataset.name|truncatechars:18 }}</span>{% endif %}
                 {% if lm.tag %}<span class="mk-lcard-tag">{{ lm.tag }}</span>{% endif %}
                 {% if lm.is_favorite %}<span class="mk-lcard-tag mk-lcard-tag--star" title="علاقه‌مند"><i class="fas fa-star" aria-hidden="true"></i></span>{% endif %}
                 {% if pf %}<span class="mk-lcard-tag mk-lcard-tag--folder" title="در فایل‌های شخصی"><i class="fas fa-folder" aria-hidden="true"></i></span>{% endif %}
@@ -102,7 +103,7 @@
     </div>
 
     <footer class="mk-lcard-foot">
-        <a href="{% url 'workspace:listing_detail' dataset.id listing.id %}" class="mk-lcard-btn mk-lcard-btn--primary">
+        <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-btn mk-lcard-btn--primary">
             <i class="fas fa-eye" aria-hidden="true"></i>
             <span>مشاهده</span>
         </a>
@@ -110,8 +111,8 @@
             <summary class="mk-lcard-btn mk-lcard-btn--icon" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
             <div class="mk-action-menu-panel" role="menu">
                 <button type="button" class="mk-action-menu-item js-edit-listing"
-                    data-id="{{ listing.id }}">{% include 'includes/icon_slot.html' with decor='file_edit' size='inline' only %} ویرایش</button>
-                <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="mk-inline-form">
+                    data-id="{{ listing.id }}" data-dataset-id="{{ listing.dataset_id }}">{% include 'includes/icon_slot.html' with decor='file_edit' size='inline' only %} ویرایش</button>
+                <form method="post" action="{% url 'workspace:listing_favorite_toggle' listing.dataset_id listing.id %}" class="mk-inline-form">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                     <button type="submit" class="mk-action-menu-item"><i class="fas fa-star" aria-hidden="true"></i> {% if lm.is_favorite %}علاقه‌مند{% else %}افزودن به علاقه‌مند{% endif %}</button>
@@ -119,7 +120,7 @@
                 {% if pf %}
                 <a href="{% url 'workspace:crm_property_detail' pf.id %}" class="mk-action-menu-item"><i class="fas fa-folder-open" aria-hidden="true"></i> فایل شخصی</a>
                 {% else %}
-                <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="mk-inline-form">
+                <form method="post" action="{% url 'workspace:listing_add_personal' listing.dataset_id listing.id %}" class="mk-inline-form">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                     <button type="submit" class="mk-action-menu-item"><i class="fas fa-folder-plus" aria-hidden="true"></i> افزودن به فایل شخصی</button>
@@ -131,6 +132,7 @@
                 {% endif %}
                 <button type="button" class="mk-action-menu-item mk-action-menu-danger js-delete-listing"
                     data-id="{{ listing.id }}"
+                    data-dataset-id="{{ listing.dataset_id }}"
                     data-title="{{ listing.title|truncatechars:40|escapejs }}"><i class="fas fa-trash" aria-hidden="true"></i> حذف</button>
             </div>
         </details>

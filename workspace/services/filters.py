@@ -171,8 +171,12 @@ def apply_value_filter(listings: List, value_map: Dict[int, Optional[float]], va
 
 
 def get_neighborhoods(dataset) -> List[str]:
+    return get_neighborhoods_qs(dataset.listings.all())
+
+
+def get_neighborhoods_qs(listings_qs: QuerySet) -> List[str]:
     return list(
-        dataset.listings.exclude(neighborhood='')
+        listings_qs.exclude(neighborhood='')
         .values_list('neighborhood', flat=True)
         .distinct()
         .order_by('neighborhood')[:80]

@@ -221,6 +221,10 @@
     <div class="mk-bulk-bar" id="dsBulkBar" hidden>
         <span class="mk-bulk-count"><strong id="dsBulkCount">0</strong> فایل انتخاب شده</span>
         <div class="mk-bulk-actions">
+            <button type="button" class="mk-bulk-btn mk-bulk-btn-primary" id="dsBulkView"
+                data-url="{% url 'workspace:multi_listings' %}">
+                <i class="fas fa-table-list" aria-hidden="true"></i> مشاهده آگهی‌ها
+            </button>
             <button type="button" class="mk-bulk-btn" id="dsBulkClear">لغو انتخاب</button>
             <button type="button" class="mk-bulk-btn mk-bulk-btn-danger" id="dsBulkDelete">
                 <i class="fas fa-trash" aria-hidden="true"></i> حذف

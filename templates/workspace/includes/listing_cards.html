@@ -5,6 +5,6 @@
 <div class="mk-lcard-empty-state">
     <span class="mk-empty-icon" aria-hidden="true"><i class="fas fa-inbox"></i></span>
     <p>آگهی‌ای با این فیلترها یافت نشد</p>
-    {% if filter_count %}<a href="{% url 'workspace:dataset_detail' dataset.id %}" class="ws-btn ws-btn-sm ws-btn-ghost">پاک کردن فیلترها</a>{% endif %}
+    {% if filter_count and filter_reset_url %}<a href="{{ filter_reset_url }}" class="ws-btn ws-btn-sm ws-btn-ghost">پاک کردن فیلترها</a>{% endif %}
 </div>
 {% endfor %}

@@ -1,0 +1,181 @@
+<div class="ws-modal" id="modal-edit-listing" role="dialog" aria-modal="true" aria-labelledby="editListingTitle">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-lg mk-edit-modal-panel">
+        <div class="ws-modal-head mk-edit-modal-head">
+            <div class="mk-edit-modal-head-main">
+                <h2 class="ws-modal-title" id="editListingTitle"><i class="fas fa-pen-to-square" aria-hidden="true"></i> ویرایش آگهی</h2>
+                <p class="ws-modal-sub mk-edit-modal-sub" id="editListingSubtitle">—</p>
+                <code class="mk-edit-token" id="editListingToken" title="شناسه دیوار"></code>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" id="editListingForm" class="ws-modal-body mk-edit-form">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+            <section class="mk-edit-section">
+                <h3 class="mk-edit-section-title">{% include 'includes/icon_slot.html' with decor='tag' size='inline' only %} اطلاعات اصلی</h3>
+                <div class="ws-fields ws-fields-2">
+                    <div class="ws-field ws-field-full">
+                        <label class="ws-label" for="editTitle">عنوان آگهی</label>
+                        <input type="text" name="title" id="editTitle" class="ws-input" required autocomplete="off">
+                    </div>
+                </div>
+            </section>
+
+            {% if tx.show_price or tx.show_deposit or tx.show_rent %}
+            <section class="mk-edit-section">
+                <h3 class="mk-edit-section-title"><i class="fas fa-coins" aria-hidden="true"></i> اطلاعات مالی</h3>
+                <div class="ws-fields ws-fields-2">
+                    {% if tx.show_price %}
+                    <div class="ws-field">
+                        <label class="ws-label" for="editPrice">قیمت (تومان)</label>
+                        <input type="number" name="price" id="editPrice" class="ws-input" min="0" step="1" inputmode="numeric" placeholder="مثلاً ۵۰۰۰۰۰۰۰۰۰">
+                        <span class="mk-edit-hint" id="editPriceHint" aria-live="polite"></span>
+                    </div>
+                    {% endif %}
+                    {% if tx.show_deposit %}
+                    <div class="ws-field">
+                        <label class="ws-label" for="editDeposit">ودیعه (تومان)</label>
+                        <input type="number" name="deposit" id="editDeposit" class="ws-input" min="0" step="1" inputmode="numeric" placeholder="مثلاً ۲۰۰۰۰۰۰۰۰۰">
+                        <span class="mk-edit-hint" id="editDepositHint" aria-live="polite"></span>
+                    </div>
+                    {% endif %}
+                    {% if tx.show_rent %}
+                    <div class="ws-field">
+                        <label class="ws-label" for="editRent">اجاره (تومان)</label>
+                        <input type="number" name="rent" id="editRent" class="ws-input" min="0" step="1" inputmode="numeric" placeholder="مثلاً ۱۵۰۰۰۰۰۰">
+                        <span class="mk-edit-hint" id="editRentHint" aria-live="polite"></span>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+
+            <section class="mk-edit-section">
+                <h3 class="mk-edit-section-title">{% include 'includes/icon_slot.html' with decor='building' size='inline' only %} مشخصات ملک</h3>
+                <div class="ws-fields ws-fields-2">
+                    <div class="ws-field">
+                        <label class="ws-label" for="editArea">متراژ (متر)</label>
+                        <input type="number" name="area" id="editArea" class="ws-input" step="0.1" min="0" inputmode="decimal">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editRooms">تعداد اتاق</label>
+                        <input type="text" name="rooms" id="editRooms" class="ws-input" placeholder="مثلاً ۳">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editFloor">طبقه</label>
+                        <input type="text" name="floor" id="editFloor" class="ws-input" placeholder="مثلاً ۶">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editBuildYear">سال ساخت</label>
+                        <input type="number" name="build_year" id="editBuildYear" class="ws-input" min="1300" max="1500" step="1" placeholder="مثلاً ۱۴۰۳">
+                    </div>
+                </div>
+                <div class="mk-edit-amenities">
+                    <span class="mk-edit-amenities-label">امکانات</span>
+                    <div class="mk-edit-amenities-grid">
+                        <label class="mk-edit-amenity">
+                            <span>آسانسور</span>
+                            <select name="elevator" id="editElevator" class="ws-select ws-select-sm">
+                                <option value="">نامشخص</option>
+                                <option value="1">دارد</option>
+                                <option value="0">ندارد</option>
+                            </select>
+                        </label>
+                        <label class="mk-edit-amenity">
+                            <span>پارکینگ</span>
+                            <select name="parking" id="editParking" class="ws-select ws-select-sm">
+                                <option value="">نامشخص</option>
+                                <option value="1">دارد</option>
+                                <option value="0">ندارد</option>
+                            </select>
+                        </label>
+                        <label class="mk-edit-amenity">
+                            <span>انباری</span>
+                            <select name="storage" id="editStorage" class="ws-select ws-select-sm">
+                                <option value="">نامشخص</option>
+                                <option value="1">دارد</option>
+                                <option value="0">ندارد</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mk-edit-section mk-edit-features-section" id="editFeaturesSection" hidden>
+                <h3 class="mk-edit-section-title"><i class="fas fa-list-ul" aria-hidden="true"></i> ویژگی‌ها و امکانات <span class="mk-edit-features-note">(از دیوار)</span></h3>
+                <div class="mk-edit-features-grid" id="editFeaturesGrid"></div>
+                <p class="mk-edit-features-empty" id="editFeaturesEmpty" hidden>ویژگی تفصیلی ثبت نشده.</p>
+            </section>
+
+            <section class="mk-edit-section">
+                <h3 class="mk-edit-section-title"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> موقعیت و آگهی‌دهنده</h3>
+                <div class="ws-fields ws-fields-2">
+                    <div class="ws-field">
+                        <label class="ws-label" for="editNeighborhood">محله</label>
+                        <input type="text" name="neighborhood" id="editNeighborhood" class="ws-input">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editCity">شهر</label>
+                        <input type="text" name="city" id="editCity" class="ws-input">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editBusiness">آگهی‌دهنده</label>
+                        <select name="business_type" id="editBusiness" class="ws-select">
+                            <option value="شخصی">شخصی</option>
+                            <option value="مشاور">مشاور املاک</option>
+                            <option value="business">بنگاه / Business</option>
+                        </select>
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editOwnerPhone">شماره تماس مالک</label>
+                        <input type="tel" name="owner_phone" id="editOwnerPhone" class="ws-input" dir="ltr" inputmode="tel" placeholder="۰۹۱۲…">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editOwnerName">نام مالک</label>
+                        <input type="text" name="owner_name" id="editOwnerName" class="ws-input" placeholder="نام و نام خانوادگی">
+                    </div>
+                    <div class="ws-field ws-field-full">
+                        <label class="ws-label" for="editLink">لینک دیوار</label>
+                        <input type="url" name="link" id="editLink" class="ws-input mk-edit-link" dir="ltr" placeholder="https://divar.ir/v/...">
+                    </div>
+                </div>
+                <p class="mk-edit-hint-static">با ذخیره شماره، مالک به مخاطبین اضافه و به این آگهی پیوند می‌شود.</p>
+            </section>
+
+            <section class="mk-edit-section mk-edit-section-last">
+                <h3 class="mk-edit-section-title"><i class="fas fa-align-right" aria-hidden="true"></i> توضیحات</h3>
+                <div class="ws-field ws-field-full">
+                    <textarea name="description" id="editDescription" class="ws-textarea mk-edit-description" rows="8" placeholder="متن کامل آگهی…"></textarea>
+                </div>
+            </section>
+
+            <div class="ws-modal-foot mk-edit-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary"><i class="fas fa-check" aria-hidden="true"></i> ذخیره تغییرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{ listings_edit_data|json_script:"listings-edit-data" }}
+
+<div class="ws-modal" id="modal-delete-listing" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-sm">
+        <div class="ws-modal-head">
+            <h2 class="ws-modal-title">حذف آگهی</h2>
+            <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" id="deleteListingForm" class="ws-modal-body">
+            {% csrf_token %}
+            <p class="ws-modal-text" id="deleteListingText">این آگهی حذف می‌شود.</p>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-danger">🗑 حذف</button>
+            </div>
+        </form>
+    </div>
+</div>
+

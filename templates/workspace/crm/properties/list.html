@@ -91,45 +91,121 @@
 
         <form method="get" class="crm-files-filters crm-page-filters" id="crmPropertyFilters">
             <input type="hidden" name="view" value="{{ view_mode }}">
-            <label class="crm-files-search">
-                <i class="fas fa-search" aria-hidden="true"></i>
-                <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو عنوان، محله، شهر، شناسه..." autocomplete="off" aria-label="جستجو">
-            </label>
-            <select name="deal_mode" class="crm-files-select" aria-label="معامله" onchange="this.form.submit()">
-                <option value="">همه معاملات</option>
-                {% for d in deal_modes %}<option value="{{ d }}" {% if request.GET.deal_mode == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
-            </select>
-            <select name="transaction_status" class="crm-files-select" aria-label="وضعیت" onchange="this.form.submit()">
-                <option value="">همه وضعیت‌ها</option>
-                {% for s in tx_statuses %}<option value="{{ s }}" {% if request.GET.transaction_status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
-            </select>
-            <select name="property_type" class="crm-files-select" aria-label="نوع" onchange="this.form.submit()">
-                <option value="">همه انواع</option>
-                {% for p in property_types %}<option value="{{ p }}" {% if request.GET.property_type == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
-            </select>
-            <select name="publish_status" class="crm-files-select" aria-label="انتشار" onchange="this.form.submit()">
-                <option value="">همه انتشار</option>
-                {% for s in publish_statuses %}<option value="{{ s }}" {% if request.GET.publish_status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
-            </select>
-            <select name="sort" class="crm-files-select" aria-label="مرتب‌سازی" onchange="this.form.submit()">
-                <option value="-updated_at" {% if sort == '-updated_at' %}selected{% endif %}>جدیدترین</option>
-                <option value="updated_at" {% if sort == 'updated_at' %}selected{% endif %}>قدیمی‌ترین</option>
-                <option value="-sale_price" {% if sort == '-sale_price' %}selected{% endif %}>گران‌ترین</option>
-                <option value="sale_price" {% if sort == 'sale_price' %}selected{% endif %}>ارزان‌ترین</option>
-                <option value="-area" {% if sort == '-area' %}selected{% endif %}>بزرگ‌ترین متراژ</option>
-                <option value="title" {% if sort == 'title' %}selected{% endif %}>عنوان (الفبا)</option>
-            </select>
-            <div class="crm-files-filter-actions">
-                {% include 'workspace/crm/includes/saved_filters.html' %}
-                {% if has_filters %}
-                <a href="{% url 'workspace:crm_properties' %}?view={{ view_mode }}" class="crm-dash-act crm-dash-act--icon" title="پاک کردن فیلتر">
-                    <i class="fas fa-times" aria-hidden="true"></i>
-                </a>
-                {% endif %}
-                <div class="crm-files-view-toggle" role="tablist" aria-label="نمای نمایش">
-                    <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="crm-files-view-btn {% if view_mode == 'grid' %}is-active{% endif %}" title="کارت"><i class="fas fa-grip" aria-hidden="true"></i></a>
-                    <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-files-view-btn {% if view_mode == 'table' %}is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
-                    <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-files-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+            <div class="crm-files-filters-main">
+                <label class="crm-files-search">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو عنوان، محله، شهر، شناسه..." autocomplete="off" aria-label="جستجو">
+                </label>
+                <select name="deal_mode" class="crm-files-select" aria-label="معامله" onchange="this.form.submit()">
+                    <option value="">همه معاملات</option>
+                    {% for d in deal_modes %}<option value="{{ d }}" {% if request.GET.deal_mode == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+                </select>
+                <select name="transaction_status" class="crm-files-select" aria-label="وضعیت" onchange="this.form.submit()">
+                    <option value="">همه وضعیت‌ها</option>
+                    {% for s in tx_statuses %}<option value="{{ s }}" {% if request.GET.transaction_status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                </select>
+                <select name="property_type" class="crm-files-select" aria-label="نوع" onchange="this.form.submit()">
+                    <option value="">همه انواع</option>
+                    {% for p in property_types %}<option value="{{ p }}" {% if request.GET.property_type == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+                </select>
+                <select name="publish_status" class="crm-files-select" aria-label="انتشار" onchange="this.form.submit()">
+                    <option value="">همه انتشار</option>
+                    {% for s in publish_statuses %}<option value="{{ s }}" {% if request.GET.publish_status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                </select>
+                <select name="sort" class="crm-files-select" aria-label="مرتب‌سازی" onchange="this.form.submit()">
+                    <option value="-updated_at" {% if sort == '-updated_at' %}selected{% endif %}>جدیدترین</option>
+                    <option value="updated_at" {% if sort == 'updated_at' %}selected{% endif %}>قدیمی‌ترین</option>
+                    <option value="-sale_price" {% if sort == '-sale_price' %}selected{% endif %}>گران‌ترین</option>
+                    <option value="sale_price" {% if sort == 'sale_price' %}selected{% endif %}>ارزان‌ترین</option>
+                    <option value="-area" {% if sort == '-area' %}selected{% endif %}>بزرگ‌ترین متراژ</option>
+                    <option value="title" {% if sort == 'title' %}selected{% endif %}>عنوان (الفبا)</option>
+                </select>
+                <div class="crm-files-filter-actions">
+                    <button type="button"
+                            class="crm-files-adv-toggle{% if filters_open %} is-open{% endif %}"
+                            id="crmPropAdvToggle"
+                            aria-expanded="{% if filters_open %}true{% else %}false{% endif %}"
+                            aria-controls="crmPropAdvPanel">
+                        <i class="fas fa-sliders" aria-hidden="true"></i>
+                        <span>پیشرفته</span>
+                        {% if advanced_filter_count %}<em class="crm-files-adv-badge">{{ advanced_filter_count }}</em>{% endif %}
+                        <i class="fas fa-chevron-down crm-files-adv-chevron" aria-hidden="true"></i>
+                    </button>
+                    {% include 'workspace/crm/includes/saved_filters.html' %}
+                    {% if has_filters %}
+                    <a href="{% url 'workspace:crm_properties' %}?view={{ view_mode }}" class="crm-dash-act crm-dash-act--icon" title="پاک کردن فیلتر">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                    <div class="crm-files-view-toggle" role="tablist" aria-label="نمای نمایش">
+                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="crm-files-view-btn {% if view_mode == 'grid' %}is-active{% endif %}" title="کارت"><i class="fas fa-grip" aria-hidden="true"></i></a>
+                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-files-view-btn {% if view_mode == 'table' %}is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-files-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="crm-files-adv{% if filters_open %} is-open{% endif %}"
+                 id="crmPropAdvPanel"
+                 {% if not filters_open %}hidden{% endif %}>
+                <div class="crm-files-adv-grid">
+                    <div class="crm-files-adv-group">
+                        <span class="crm-files-adv-label">امکانات</span>
+                        <div class="crm-files-adv-row">
+                            <select name="parking" class="crm-files-select" aria-label="پارکینگ">
+                                <option value="">پارکینگ</option>
+                                <option value="1" {% if request.GET.parking == '1' %}selected{% endif %}>دارد</option>
+                                <option value="0" {% if request.GET.parking == '0' %}selected{% endif %}>ندارد</option>
+                            </select>
+                            <select name="storage" class="crm-files-select" aria-label="انباری">
+                                <option value="">انباری</option>
+                                <option value="1" {% if request.GET.storage == '1' %}selected{% endif %}>دارد</option>
+                                <option value="0" {% if request.GET.storage == '0' %}selected{% endif %}>ندارد</option>
+                            </select>
+                            <select name="elevator" class="crm-files-select" aria-label="آسانسور">
+                                <option value="">آسانسور</option>
+                                <option value="1" {% if request.GET.elevator == '1' %}selected{% endif %}>دارد</option>
+                                <option value="0" {% if request.GET.elevator == '0' %}selected{% endif %}>ندارد</option>
+                            </select>
+                            <select name="rooms" class="crm-files-select" aria-label="تعداد اتاق">
+                                <option value="">تعداد اتاق</option>
+                                {% for r in "12345" %}<option value="{{ r }}" {% if request.GET.rooms == r %}selected{% endif %}>{{ r }} خواب</option>{% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="crm-files-adv-group">
+                        <span class="crm-files-adv-label">محدوده‌ها</span>
+                        <div class="crm-files-adv-ranges">
+                            <div class="crm-files-range" title="متراژ (متر)">
+                                <span>متراژ</span>
+                                <input type="text" name="area_min" value="{{ request.GET.area_min }}" class="crm-files-num" placeholder="از" inputmode="numeric" autocomplete="off" aria-label="متراژ از">
+                                <i aria-hidden="true">—</i>
+                                <input type="text" name="area_max" value="{{ request.GET.area_max }}" class="crm-files-num" placeholder="تا" inputmode="numeric" autocomplete="off" aria-label="متراژ تا">
+                            </div>
+                            <div class="crm-files-range" title="مبلغ فروش یا رهن (تومان)">
+                                <span>مبلغ</span>
+                                <input type="text" name="price_min" value="{{ request.GET.price_min }}" class="crm-files-num" placeholder="از" inputmode="numeric" autocomplete="off" aria-label="مبلغ از">
+                                <i aria-hidden="true">—</i>
+                                <input type="text" name="price_max" value="{{ request.GET.price_max }}" class="crm-files-num" placeholder="تا" inputmode="numeric" autocomplete="off" aria-label="مبلغ تا">
+                            </div>
+                            <div class="crm-files-range" title="سال ساخت">
+                                <span>سال ساخت</span>
+                                <input type="text" name="year_min" value="{{ request.GET.year_min }}" class="crm-files-num" placeholder="از" inputmode="numeric" autocomplete="off" aria-label="سال ساخت از">
+                                <i aria-hidden="true">—</i>
+                                <input type="text" name="year_max" value="{{ request.GET.year_max }}" class="crm-files-num" placeholder="تا" inputmode="numeric" autocomplete="off" aria-label="سال ساخت تا">
+                            </div>
+                            <div class="crm-files-range crm-files-range--single" title="حداکثر سن بنا به سال">
+                                <span>سن بنا</span>
+                                <input type="text" name="age_max" value="{{ request.GET.age_max }}" class="crm-files-num" placeholder="حداکثر (سال)" inputmode="numeric" autocomplete="off" aria-label="حداکثر سن بنا">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="crm-files-adv-foot">
+                    <button type="submit" class="crm-dash-act crm-dash-act--primary crm-files-adv-apply">
+                        <i class="fas fa-check" aria-hidden="true"></i><span>اعمال فیلتر</span>
+                    </button>
                 </div>
             </div>
         </form>

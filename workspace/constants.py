@@ -36,7 +36,12 @@ CRM_FILTER_SCOPES = ['contacts', 'properties', 'deals']
 
 CRM_FILTER_PARAMS = {
     'contacts': {'q', 'customer_type', 'status', 'priority', 'due', 'sort', 'tag'},
-    'properties': {'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort'},
+    'properties': {
+        'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
+        'parking', 'storage', 'elevator', 'rooms',
+        'area_min', 'area_max', 'price_min', 'price_max',
+        'year_min', 'year_max', 'age_max',
+    },
     'deals': {'q', 'stage', 'bucket', 'sort'},
 }
 PROPERTY_PUBLISH_STATUSES = ['پیش‌نویس', 'منتشرشده', 'مخفی', 'بایگانی']

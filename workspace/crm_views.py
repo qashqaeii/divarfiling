@@ -90,7 +90,8 @@ from workspace.services.crm import (
     get_overdue_contacts, get_pipeline_data, get_property_pipeline, get_recent_contacts,
     get_recent_properties, get_upcoming_reminders, global_search,
     link_customer_property, log_activity, log_phone_call, log_status_change,
-    advance_recurring_reminder, primary_owner_contact, recent_activities,
+    advance_recurring_reminder, primary_owner_contact, property_advanced_filter_count,
+    recent_activities,
     schedule_follow_up, set_next_follow_up, sync_follow_up_from_reminder,
     update_customer_status, update_property_transaction_status, reorder_property_pipeline,
     upsert_property_owner,
@@ -999,7 +1000,12 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         })
         ctx['has_filters'] = any(self.request.GET.get(k) for k in (
             'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
+            'parking', 'storage', 'elevator', 'rooms',
+            'area_min', 'area_max', 'price_min', 'price_max',
+            'year_min', 'year_max', 'age_max',
         ))
+        ctx['advanced_filter_count'] = property_advanced_filter_count(self.request.GET)
+        ctx['filters_open'] = bool(ctx['advanced_filter_count']) or self.request.GET.get('adv') == '1'
         ctx['pipeline'] = get_property_pipeline(user, self.request.GET, per_column=60)
         ctx['pipeline_interactive'] = True
         ctx['tx_status_url_template'] = reverse(

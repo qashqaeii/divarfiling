@@ -7237,6 +7237,151 @@ body.crm-side-open { overflow: hidden; }
     gap: 0.35rem;
     margin-inline-start: auto;
 }
+.crm-files-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+}
+.crm-files-filters-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+}
+.crm-files-adv-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    height: 32px;
+    padding: 0 0.55rem;
+    border-radius: 8px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    color: var(--ws-text-secondary);
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.crm-files-adv-toggle:hover,
+.crm-files-adv-toggle.is-open {
+    border-color: color-mix(in srgb, var(--ws-primary) 30%, var(--ws-border));
+    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+}
+.crm-files-adv-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0 0.28rem;
+    border-radius: 999px;
+    background: var(--ws-primary);
+    color: #fff;
+    font-size: 0.58rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 1;
+}
+.crm-files-adv-chevron {
+    font-size: 0.55rem;
+    opacity: 0.7;
+    transition: transform 0.18s ease;
+}
+.crm-files-adv-toggle.is-open .crm-files-adv-chevron {
+    transform: rotate(180deg);
+}
+.crm-files-adv {
+    display: none;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-top: 0.45rem;
+    padding: 0.65rem 0.7rem 0.55rem;
+    border-radius: 10px;
+    border: 1px solid var(--ws-border-light);
+    background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface));
+}
+.crm-files-adv.is-open {
+    display: flex;
+}
+.crm-files-adv[hidden]:not(.is-open) {
+    display: none !important;
+}
+.crm-files-adv.is-open[hidden] {
+    display: flex !important;
+}
+.crm-files-adv-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+.crm-files-adv-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.crm-files-adv-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+    letter-spacing: 0.01em;
+}
+.crm-files-adv-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+.crm-files-adv-ranges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+.crm-files-range {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    min-height: 32px;
+    padding: 0 0.4rem 0 0.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+}
+.crm-files-range > span {
+    font-size: 0.62rem;
+    font-weight: 650;
+    color: var(--ws-text-secondary);
+    white-space: nowrap;
+}
+.crm-files-range > i {
+    font-style: normal;
+    color: var(--ws-text-muted);
+    font-size: 0.62rem;
+}
+.crm-files-num {
+    width: 4.6rem;
+    height: 26px;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 0.68rem;
+    color: var(--ws-text);
+    text-align: center;
+}
+.crm-files-range--single .crm-files-num {
+    width: 6.2rem;
+    text-align: right;
+}
+.crm-files-adv-foot {
+    display: flex;
+    justify-content: flex-end;
+}
+.crm-files-adv-apply {
+    min-height: 32px;
+}
 .crm-files-view-toggle {
     display: flex;
     gap: 1px;
@@ -7794,7 +7939,7 @@ body.crm-side-open { overflow: hidden; }
     white-space: nowrap;
 }
 .crm-ft-td-specs span + span::before {
-    content: '·';
+    content: '\00B7';
     margin: 0 0.3rem;
     opacity: 0.45;
 }
@@ -8111,6 +8256,9 @@ body.crm-side-open { overflow: hidden; }
     .crm-files-kpis { grid-template-columns: 1fr 1fr; }
     .crm-files-filters .crm-files-select { flex: 1; min-width: calc(50% - 0.2rem); }
     .crm-files-filter-actions { width: 100%; justify-content: flex-end; }
+    .crm-files-adv-ranges { flex-direction: column; }
+    .crm-files-range { width: 100%; }
+    .crm-files-num { flex: 1; width: auto; }
     .crm-files-grid-v2 { grid-template-columns: 1fr; padding-bottom: 0.75rem; }
     .crm-files-table-copy strong { max-width: 160px; }
 }

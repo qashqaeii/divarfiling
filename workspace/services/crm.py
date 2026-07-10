@@ -1056,6 +1056,10 @@ def filter_contacts(user, params: dict):
 
 
 def filter_properties(user, params: dict):
+    from datetime import date
+
+    from workspace.services.filters import _float_param, _int_param
+
     qs = properties_qs(user)
     q = params.get('q', '').strip()
     if q:
@@ -1070,6 +1074,53 @@ def filter_properties(user, params: dict):
     city = params.get('city', '').strip()
     if city:
         qs = qs.filter(city__icontains=city)
+
+    for field, key in (
+        ('has_parking', 'parking'),
+        ('has_storage', 'storage'),
+        ('has_elevator', 'elevator'),
+    ):
+        val = (params.get(key) or '').strip()
+        if val == '1':
+            qs = qs.filter(**{field: True})
+        elif val == '0':
+            qs = qs.filter(**{field: False})
+
+    rooms = (params.get('rooms') or '').strip()
+    if rooms:
+        qs = qs.filter(rooms__icontains=rooms)
+
+    area_min = _float_param(params.get('area_min', ''))
+    area_max = _float_param(params.get('area_max', ''))
+    if area_min is not None:
+        qs = qs.filter(area__gte=area_min)
+    if area_max is not None:
+        qs = qs.filter(area__lte=area_max)
+
+    price_min = _int_param(params.get('price_min', ''))
+    price_max = _int_param(params.get('price_max', ''))
+    if price_min is not None or price_max is not None:
+        sale_q = Q(sale_price__isnull=False)
+        deposit_q = Q(deposit__isnull=False)
+        if price_min is not None:
+            sale_q &= Q(sale_price__gte=price_min)
+            deposit_q &= Q(deposit__gte=price_min)
+        if price_max is not None:
+            sale_q &= Q(sale_price__lte=price_max)
+            deposit_q &= Q(deposit__lte=price_max)
+        qs = qs.filter(sale_q | deposit_q)
+
+    year_min = _int_param(params.get('year_min', ''))
+    year_max = _int_param(params.get('year_max', ''))
+    if year_min is not None:
+        qs = qs.filter(build_year__gte=year_min)
+    if year_max is not None:
+        qs = qs.filter(build_year__lte=year_max)
+
+    age_max = _int_param(params.get('age_max', ''))
+    if age_max is not None and age_max >= 0:
+        qs = qs.filter(build_year__gte=date.today().year - age_max)
+
     sort = params.get('sort', '-updated_at')
     allowed = {'title', '-title', 'updated_at', '-updated_at', 'sale_price', '-sale_price', 'area', '-area'}
     if sort in allowed:
@@ -1077,6 +1128,17 @@ def filter_properties(user, params: dict):
     else:
         qs = qs.order_by('-updated_at')
     return qs
+
+
+PROPERTY_ADV_FILTER_KEYS = (
+    'parking', 'storage', 'elevator', 'rooms',
+    'area_min', 'area_max', 'price_min', 'price_max',
+    'year_min', 'year_max', 'age_max',
+)
+
+
+def property_advanced_filter_count(params: dict) -> int:
+    return sum(1 for key in PROPERTY_ADV_FILTER_KEYS if str(params.get(key) or '').strip())
 
 
 def recent_activities(user, limit: int = 15):

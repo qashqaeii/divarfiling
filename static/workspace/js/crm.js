@@ -2474,6 +2474,25 @@ function initCRMDealsPage() {
     }
 }
 
+function initCRMPropertyAdvFilters() {
+    const toggle = document.getElementById('crmPropAdvToggle');
+    const panel = document.getElementById('crmPropAdvPanel');
+    if (!toggle || !panel || toggle.dataset.bound === '1') return;
+    toggle.dataset.bound = '1';
+
+    const setOpen = (open) => {
+        toggle.classList.toggle('is-open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        panel.classList.toggle('is-open', open);
+        if (open) panel.removeAttribute('hidden');
+        else panel.setAttribute('hidden', '');
+    };
+
+    toggle.addEventListener('click', () => {
+        setOpen(!panel.classList.contains('is-open'));
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-drawer-open]').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -2513,6 +2532,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMDealPipeline();
     initCRMPropertyPipeline();
     initCRMSavedFilters();
+    initCRMPropertyAdvFilters();
     initCRMDealStagesEditor();
     initCRMDealChecklist();
     initCRMCommissionSplit();

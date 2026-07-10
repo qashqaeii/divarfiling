@@ -3,7 +3,7 @@ URL configuration for divar_shop project.
 """
 from django.contrib import admin
 from django.contrib.sitemaps.views import index as sitemap_index, sitemap
-from django.http import HttpResponseRedirect
+from django.http import HttpResponsePermanentRedirect
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -13,7 +13,7 @@ from divar_shop.sitemaps import sitemaps
 
 
 def favicon_redirect(_request):
-    return HttpResponseRedirect(f'{settings.STATIC_URL}logo.ico', permanent=True)
+    return HttpResponsePermanentRedirect(f'{settings.STATIC_URL}logo.ico')
 
 
 urlpatterns = [

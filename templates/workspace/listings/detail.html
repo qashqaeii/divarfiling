@@ -198,9 +198,9 @@
                             <em class="ws-ld-crm-row-role">{{ link.role }}</em>
                             {% if link.customer.phone %}<span class="ws-ld-crm-row-phone" dir="ltr">{{ link.customer.phone }}</span>{% endif %}
                         </a>
-                        {% url 'workspace:crm_detail' link.customer_id as _ld_profile %}
-                        {% url 'workspace:listing_detail' dataset.id listing.id as _ld_unlink_action %}
-                        {% include 'workspace/includes/contact_quick_actions.html' with phone=link.customer.phone profile_url=_ld_profile copy_text=link.customer.name show_unlink=True unlink_action='crm_unlink' unlink_id=link.id unlink_id_field='link_id' unlink_form_action=_ld_unlink_action acts_class='ws-ld-crm-acts' acts_label='عملیات مخاطب' %}
+                        {% url 'workspace:crm_detail' link.customer_id as contact_profile_url %}
+                        {% url 'workspace:listing_detail' dataset.id listing.id as listing_unlink_action %}
+                        {% include 'workspace/includes/contact_quick_actions.html' with phone=link.customer.phone profile_url=contact_profile_url copy_text=link.customer.name show_unlink=True unlink_action='crm_unlink' unlink_id=link.id unlink_id_field='link_id' unlink_form_action=listing_unlink_action acts_class='ws-ld-crm-acts' acts_label='عملیات مخاطب' %}
                     </article>
                     {% endfor %}
                 </div>

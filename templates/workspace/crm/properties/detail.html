@@ -408,9 +408,9 @@
                                     </div>
                                 </div>
                             </a>
-                            {% url 'workspace:crm_detail' link.customer_id as _c_profile %}
-                            {% url 'workspace:crm_property_detail' property.id as _prop_unlink_action %}
-                            {% include 'workspace/includes/contact_quick_actions.html' with phone=link.customer.phone profile_url=_c_profile copy_text=link.customer.name show_unlink=can_edit_property unlink_action='unlink_contact' unlink_id=link.id unlink_form_action=_prop_unlink_action acts_class='crm-prop-contact-acts' acts_label='عملیات مخاطب' %}
+                            {% url 'workspace:crm_detail' link.customer_id as contact_profile_url %}
+                            {% url 'workspace:crm_property_detail' property.id as prop_unlink_action %}
+                            {% include 'workspace/includes/contact_quick_actions.html' with phone=link.customer.phone profile_url=contact_profile_url copy_text=link.customer.name show_unlink=can_edit_property unlink_action='unlink_contact' unlink_id=link.id unlink_form_action=prop_unlink_action acts_class='crm-prop-contact-acts' acts_label='عملیات مخاطب' %}
                         </article>
                         {% endfor %}
                     </div>

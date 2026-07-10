@@ -267,6 +267,8 @@ FARAZSMS_API_KEY = config('FARAZSMS_API_KEY', default='')
 FARAZSMS_LINE_NUMBER = config('FARAZSMS_LINE_NUMBER', default='90008361')
 FARAZSMS_BASE_URL = config('FARAZSMS_BASE_URL', default='https://api.iranpayamak.com')
 FARAZSMS_TIMEOUT = config('FARAZSMS_TIMEOUT', default=15, cast=int)
+# هشدار موجودی کم در پنل ادمین (تومان)
+FARAZSMS_LOW_BALANCE = config('FARAZSMS_LOW_BALANCE', default=50000, cast=int)
 # نام متغیر الگو در پنل فراز (مثلاً code یا verification-code)
 FARAZSMS_OTP_ATTR = config('FARAZSMS_OTP_ATTR', default='code')
 FARAZSMS_PATTERNS = {

@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 from django.test import SimpleTestCase, override_settings
 
-from accounts.services.sms import SmsConfigurationError, SmsSendError, send_pattern_sms, send_simple_sms
+from accounts.services.sms import SmsConfigurationError, SmsSendError, get_sms_balance_snapshot, send_pattern_sms, send_simple_sms
 
 
 @override_settings(
@@ -32,6 +32,12 @@ class ConsoleSmsServiceTests(SimpleTestCase):
         result = send_pattern_sms('+989123456789', purpose='register', attributes={'code': '111111'})
         self.assertEqual(result.phone, '09123456789')
 
+    def test_console_balance_snapshot(self):
+        snap = get_sms_balance_snapshot(use_cache=False)
+        self.assertTrue(snap['ok'])
+        self.assertEqual(snap['credit'], 0)
+        self.assertEqual(snap['provider'], 'console')
+
 
 @override_settings(
     SMS_ENABLED=True,
@@ -39,6 +45,7 @@ class ConsoleSmsServiceTests(SimpleTestCase):
     FARAZSMS_API_KEY='test-key',
     FARAZSMS_LINE_NUMBER='90008361',
     FARAZSMS_BASE_URL='https://api.iranpayamak.com',
+    FARAZSMS_LOW_BALANCE=50000,
     FARAZSMS_PATTERNS={'login': 'PATLOGIN', 'register': '', 'verify_phone': '', 'license_renewal': '', 'system': ''},
     FARAZSMS_OTP_ATTR='code',
 )
@@ -87,6 +94,35 @@ class FarazSmsServiceTests(SimpleTestCase):
         with override_settings(FARAZSMS_API_KEY=''):
             with self.assertRaises(SmsConfigurationError):
                 send_pattern_sms('09123456789', purpose='login', attributes={'code': '1'})
+
+    @patch('accounts.services.sms.faraz.requests.request')
+    def test_balance_snapshot(self, mock_request):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.content = b'{"status":"success","data":{"credit":125000.5}}'
+        mock_resp.json.return_value = {'status': 'success', 'data': {'credit': 125000.5}}
+        mock_request.return_value = mock_resp
+
+        snap = get_sms_balance_snapshot(use_cache=False)
+        self.assertTrue(snap['ok'])
+        self.assertEqual(snap['credit'], 125000.5)
+        self.assertFalse(snap['is_low'])
+        self.assertEqual(snap['provider'], 'faraz')
+        self.assertEqual(snap['line_number'], '90008361')
+        args, _kwargs = mock_request.call_args
+        self.assertEqual(args[0], 'GET')
+        self.assertIn('/ws/v1/account/balance', args[1])
+
+    @patch('accounts.services.sms.faraz.requests.request')
+    def test_balance_low(self, mock_request):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.content = b'{"status":"success","data":{"credit":12000}}'
+        mock_resp.json.return_value = {'status': 'success', 'data': {'credit': 12000}}
+        mock_request.return_value = mock_resp
+        snap = get_sms_balance_snapshot(use_cache=False)
+        self.assertTrue(snap['ok'])
+        self.assertTrue(snap['is_low'])
 
 
 @override_settings(SMS_ENABLED=False, SMS_PROVIDER='console')

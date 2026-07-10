@@ -119,3 +119,105 @@ def send_simple_sms(phone: str, text: str) -> SmsResult:
 
 def get_balance() -> Any:
     return _backend().get_balance()
+
+
+def _extract_credit(raw: Any) -> float | None:
+    """استخراج مبلغ موجودی از پاسخ پنل (عدد یا دیکشنری)."""
+    if raw is None:
+        return None
+    if isinstance(raw, bool):
+        return None
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    if isinstance(raw, str):
+        s = raw.strip().replace(',', '').replace('٬', '')
+        if not s:
+            return None
+        try:
+            return float(s)
+        except ValueError:
+            return None
+    if isinstance(raw, dict):
+        for key in (
+            'credit', 'balance', 'amount', 'remain', 'remaining',
+            'credit_amount', 'account_credit', 'wallet',
+        ):
+            if key in raw and raw[key] is not None:
+                credit = _extract_credit(raw[key])
+                if credit is not None:
+                    return credit
+        # بعضی پاسخ‌ها credit را داخل data تو در تو می‌گذارند
+        nested = raw.get('data')
+        if nested is not None and nested is not raw:
+            return _extract_credit(nested)
+    return None
+
+
+def get_sms_balance_snapshot(*, use_cache: bool = True, cache_ttl: int = 60) -> dict[str, Any]:
+    """
+    موجودی پنل پیامک برای داشبورد ادمین.
+    خطا را می‌بلعد تا صفحه مدیریت از کار نیفتد.
+    """
+    from django.core.cache import cache
+
+    provider = _provider_name()
+    provider_labels = {
+        'faraz': 'فراز اس‌ام‌اس',
+        'console': 'کنسول (تست)',
+    }
+    line = (getattr(settings, 'FARAZSMS_LINE_NUMBER', '') or '').strip()
+    enabled = bool(getattr(settings, 'SMS_ENABLED', True))
+    cache_key = f'admin:sms_balance:{provider}'
+
+    if use_cache:
+        cached = cache.get(cache_key)
+        if isinstance(cached, dict) and cached.get('provider') == provider:
+            return cached
+
+    base: dict[str, Any] = {
+        'ok': False,
+        'credit': None,
+        'provider': provider,
+        'provider_label': provider_labels.get(provider, provider),
+        'line_number': line,
+        'enabled': enabled,
+        'is_low': False,
+        'error': '',
+        'raw': None,
+    }
+
+    if not enabled:
+        base['error'] = 'ارسال پیامک در تنظیمات غیرفعال است.'
+        return base
+
+    try:
+        raw = get_balance()
+    except SmsConfigurationError as exc:
+        base['error'] = str(exc.message or exc)
+        return base
+    except SmsSendError as exc:
+        base['error'] = str(exc.message or exc)
+        return base
+    except Exception:  # noqa: BLE001
+        logger.exception('SMS balance fetch failed')
+        base['error'] = 'دریافت موجودی پنل پیامک ناموفق بود.'
+        return base
+
+    credit = _extract_credit(raw)
+    if credit is None:
+        base['error'] = 'پاسخ موجودی از پنل قابل‌خواندن نبود.'
+        base['raw'] = raw if isinstance(raw, (dict, list, str, int, float)) else None
+        return base
+
+    low_threshold = float(getattr(settings, 'FARAZSMS_LOW_BALANCE', 50_000) or 50_000)
+    is_low = provider == 'faraz' and credit < low_threshold
+    base.update({
+        'ok': True,
+        'credit': credit,
+        'is_low': is_low,
+        'raw': raw if isinstance(raw, dict) else {'credit': credit},
+        'error': '',
+    })
+    if use_cache and cache_ttl > 0:
+        cache.set(cache_key, base, cache_ttl)
+    return base

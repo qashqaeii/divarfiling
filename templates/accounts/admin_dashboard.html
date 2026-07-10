@@ -8,7 +8,7 @@
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -56,8 +56,21 @@
         <a href="#adm-json" class="adm-tab">خلاصه JSON</a>
     </nav>
 
-    {% if stats.pending_card_transfers or stats.pending_withdrawals or stats.unread_tickets or stats.orders_pending %}
+    {% if stats.pending_card_transfers or stats.pending_withdrawals or stats.unread_tickets or stats.orders_pending or sms_balance.is_low or sms_balance.error %}
     <section class="adm-alerts" aria-label="اقدامات فوری">
+        {% if sms_balance.is_low and sms_balance.ok %}
+        <div class="adm-alert adm-alert--warn">
+            <i class="fas fa-comment-sms" aria-hidden="true"></i>
+            <span>موجودی <strong>فراز اس‌ام‌اس</strong> کم است: <strong>{{ sms_balance.credit|floatformat:0|currency }}</strong> تومان</span>
+            <a href="https://farazsms.com/" target="_blank" rel="noopener">شارژ پنل</a>
+        </div>
+        {% elif sms_balance.error %}
+        <div class="adm-alert adm-alert--warn">
+            <i class="fas fa-comment-sms" aria-hidden="true"></i>
+            <span>موجودی پیامک خوانده نشد: {{ sms_balance.error }}</span>
+            <a href="https://docs.iranpayamak.com/" target="_blank" rel="noopener">مستندات API</a>
+        </div>
+        {% endif %}
         {% if stats.pending_card_transfers %}
         <div class="adm-alert adm-alert--warn">
             <i class="fas fa-money-check" aria-hidden="true"></i>
@@ -151,6 +164,24 @@
                     <span class="adm-kpi-val">{{ stats.users_without_license|currency }}</span>
                     <span class="adm-kpi-lbl">بدون لایسنس فعال</span>
                     <span class="adm-kpi-sub">فرصت پیگیری فروش</span>
+                </span>
+            </article>
+            <article class="adm-kpi{% if sms_balance.is_low %} is-warn{% endif %}{% if sms_balance.error %} is-error{% endif %}" data-accent="indigo">
+                <span class="adm-kpi-icon"><i class="fas fa-comment-sms" aria-hidden="true"></i></span>
+                <span class="adm-kpi-body">
+                    {% if sms_balance.ok %}
+                    <span class="adm-kpi-val">{{ sms_balance.credit|floatformat:0|currency }}</span>
+                    <span class="adm-kpi-lbl">موجودی فراز اس‌ام‌اس</span>
+                    <span class="adm-kpi-sub">
+                        {{ sms_balance.provider_label }}
+                        {% if sms_balance.line_number %} · خط {{ sms_balance.line_number }}{% endif %}
+                        {% if sms_balance.is_low %}<em class="adm-kpi-delta is-down">کم</em>{% endif %}
+                    </span>
+                    {% else %}
+                    <span class="adm-kpi-val">—</span>
+                    <span class="adm-kpi-lbl">موجودی فراز اس‌ام‌اس</span>
+                    <span class="adm-kpi-sub">{{ sms_balance.error|default:"در دسترس نیست" }}</span>
+                    {% endif %}
                 </span>
             </article>
         </section>
@@ -264,6 +295,12 @@
                     <li><span class="adm-stat-lbl">لایسنس منقضی</span><span class="adm-stat-val">{{ stats.licenses_expired|currency }}</span></li>
                     <li><span class="adm-stat-lbl">تیکت باز</span><span class="adm-stat-val">{{ stats.open_tickets|currency }}</span></li>
                     <li><span class="adm-stat-lbl">مجموعه‌داده</span><span class="adm-stat-val">{{ stats.datasets_total|currency }}</span></li>
+                    <li>
+                        <span class="adm-stat-lbl">موجودی پیامک</span>
+                        <span class="adm-stat-val">
+                            {% if sms_balance.ok %}{{ sms_balance.credit|floatformat:0|currency }} ت{% else %}—{% endif %}
+                        </span>
+                    </li>
                 </ul>
             </section>
         </div>

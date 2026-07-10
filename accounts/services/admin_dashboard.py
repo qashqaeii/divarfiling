@@ -14,6 +14,7 @@ from django.utils import timezone
 from workspace.services.jalali_input import to_persian_digits
 
 from accounts.services.admin_exports import get_export_catalog
+from accounts.services.sms import get_sms_balance_snapshot
 
 from affiliates.models import Affiliate, AffiliateSale, Withdrawal
 from licenses.models import License, LicenseActivation
@@ -500,6 +501,7 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
 
     return {
         'stats': stats,
+        'sms_balance': get_sms_balance_snapshot(),
         'charts': build_charts_payload(days),
         'order_status': order_status,
         'order_status_max': status_max,

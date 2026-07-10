@@ -55,11 +55,42 @@
                                 <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                                 <span>پیش‌نمایش</span>
                             </a>
-                            <button type="button" class="mk-share-qa-btn mk-share-qa-btn--wa" data-share-wa
-                                data-share-url="{{ share_url }}"
-                                data-listing-title="{{ item_title|escape }}">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mk-share-section mk-share-section--message" aria-labelledby="{{ id_prefix }}-sec-message">
+                    <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-message">
+                        <i class="fas fa-comment-dots" aria-hidden="true"></i> متن اشتراک
+                    </h3>
+                    <p class="mk-share-msg-hint">
+                        متن را ببینید و ویرایش کنید؛ سپس کپی کنید برای تلگرام و بقیه پیام‌رسان‌ها، یا مستقیم در واتساپ بفرستید.
+                    </p>
+                    <div class="mk-share-msg-card"
+                         data-share-msg-root
+                         data-share-url="{{ share_url }}"
+                         data-listing-title="{{ item_title|escape }}">
+                        <label class="ws-label" for="{{ id_prefix }}-share-message">پیام آماده ارسال</label>
+                        <textarea class="ws-textarea mk-share-msg-input"
+                                  id="{{ id_prefix }}-share-message"
+                                  data-share-message
+                                  rows="5"
+                                  dir="rtl"
+                                  aria-describedby="{{ id_prefix }}-sec-message">سلام،
+جزئیات «{{ item_title }}» را در این لینک ببینید:
+{{ share_url }}</textarea>
+                        <div class="mk-share-msg-actions">
+                            <button type="button" class="mk-share-msg-btn mk-share-msg-btn--copy" data-share-msg-copy>
+                                <i class="fas fa-copy" aria-hidden="true"></i>
+                                <span>کپی متن</span>
+                            </button>
+                            <button type="button" class="mk-share-msg-btn mk-share-msg-btn--wa" data-share-msg-wa>
                                 <i class="fab fa-whatsapp" aria-hidden="true"></i>
-                                <span>متن واتساپ</span>
+                                <span>ارسال واتساپ</span>
+                            </button>
+                            <button type="button" class="mk-share-msg-btn mk-share-msg-btn--reset" data-share-msg-reset title="بازگردانی متن پیش‌فرض">
+                                <i class="fas fa-rotate-right" aria-hidden="true"></i>
+                                <span>پیش‌فرض</span>
                             </button>
                         </div>
                     </div>

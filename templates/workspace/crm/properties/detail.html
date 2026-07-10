@@ -640,17 +640,6 @@ document.addEventListener('DOMContentLoaded', function () {
         var shareBtn = document.querySelector('[data-modal-open="modal-property-share"]');
         if (shareBtn) shareBtn.click();
     }
-    document.querySelectorAll('[data-share-wa]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var url = btn.getAttribute('data-share-url') || '';
-            var title = btn.getAttribute('data-listing-title') || 'ملک';
-            var text = 'سلام،\nجزئیات «' + title + '» را در این لینک ببینید:\n' + url;
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text);
-            }
-            window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
-        });
-    });
 });
 </script>
 {% endif %}

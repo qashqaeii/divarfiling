@@ -1740,8 +1740,8 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
 .mk-share-status-badge--off i { font-size: 0.45rem; }
 
 .mk-share-quick-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.45rem;
     margin-top: 0.65rem;
 }
@@ -1771,15 +1771,90 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     background: rgba(37, 99, 235, 0.06);
 }
 
-.mk-share-qa-btn--wa {
+.mk-share-msg-hint {
+    margin: 0 0 0.55rem;
+    font-size: 0.68rem;
+    line-height: 1.55;
+    color: var(--ws-text-secondary, #94A3B8);
+}
+
+.mk-share-msg-card {
+    padding: 0.85rem;
+    border-radius: 12px;
+    border: 1px solid var(--mk-input-border);
+    background: linear-gradient(145deg, var(--mk-input-bg) 0%, var(--mk-modal-bg) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="light"] .mk-share-msg-card {
+    background: linear-gradient(145deg, #f8fafc 0%, #ffffff 100%);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.mk-share-msg-card .ws-label {
+    margin-bottom: 0.35rem;
+}
+
+.mk-share-msg-input {
+    width: 100%;
+    min-height: 7.5rem;
+    resize: vertical;
+    font-size: 0.8rem !important;
+    line-height: 1.65 !important;
+    border-radius: 10px !important;
+}
+
+.mk-share-msg-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.65rem;
+}
+
+.mk-share-msg-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 36px;
+    padding: 0.45rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1.5px solid var(--mk-input-border);
+    background: var(--mk-modal-bg);
+    color: var(--ws-text-secondary, #94A3B8);
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.mk-share-msg-btn--copy {
+    border-color: rgba(124, 58, 237, 0.35);
+    color: var(--ws-primary, #7C3AED);
+    background: rgba(124, 58, 237, 0.08);
+}
+
+.mk-share-msg-btn--copy:hover {
+    border-color: rgba(124, 58, 237, 0.55);
+    background: rgba(124, 58, 237, 0.14);
+}
+
+.mk-share-msg-btn--wa {
     border-color: rgba(22, 163, 74, 0.35);
     color: #16a34a;
     background: rgba(22, 163, 74, 0.06);
 }
 
-.mk-share-qa-btn--wa:hover {
+.mk-share-msg-btn--wa:hover {
     border-color: rgba(22, 163, 74, 0.55);
     background: rgba(22, 163, 74, 0.12);
+}
+
+.mk-share-msg-btn--reset:hover {
+    border-color: rgba(100, 116, 139, 0.45);
+    color: var(--ws-text, #E2E8F0);
+    background: rgba(100, 116, 139, 0.08);
 }
 
 .mk-share-fields-grid {
@@ -1945,8 +2020,12 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     .mk-share-fields-grid {
         grid-template-columns: 1fr;
     }
-    .mk-share-quick-actions {
-        grid-template-columns: 1fr;
+    .mk-share-msg-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+    .mk-share-msg-btn--reset {
+        grid-column: 1 / -1;
     }
     .mk-share-link-bar {
         flex-wrap: wrap;

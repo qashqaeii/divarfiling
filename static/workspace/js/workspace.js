@@ -352,7 +352,109 @@ function getCsrfToken() {
     return match ? decodeURIComponent(match[1]) : '';
 }
 
+function buildDefaultShareMessage(title, url) {
+    const safeTitle = (title || 'ملک').trim() || 'ملک';
+    const safeUrl = (url || '').trim();
+    return `سلام،\nجزئیات «${safeTitle}» را در این لینک ببینید:\n${safeUrl}`;
+}
+
+function syncShareMessageUrl(form, nextUrl) {
+    if (!nextUrl) return;
+    const root = form.querySelector('[data-share-msg-root]');
+    const ta = form.querySelector('[data-share-message]');
+    if (!root || !ta) return;
+    const prevUrl = (root.dataset.shareUrl || '').trim();
+    root.dataset.shareUrl = nextUrl;
+    if (prevUrl && ta.value.includes(prevUrl)) {
+        ta.value = ta.value.split(prevUrl).join(nextUrl);
+    } else if (!ta.value.trim()) {
+        ta.value = buildDefaultShareMessage(root.dataset.listingTitle, nextUrl);
+    }
+}
+
+function initPublicShareMessageEditors() {
+    document.querySelectorAll('[data-share-msg-root]').forEach((root) => {
+        if (root.dataset.shareMsgBound === '1') return;
+        root.dataset.shareMsgBound = '1';
+        const ta = root.querySelector('[data-share-message]');
+        if (!ta) return;
+
+        const setBtnLabel = (btn, label, restoreMs = 1600) => {
+            if (!btn) return;
+            const span = btn.querySelector('span');
+            if (!span) return;
+            const prev = span.textContent;
+            span.textContent = label;
+            window.setTimeout(() => {
+                span.textContent = prev;
+            }, restoreMs);
+        };
+
+        const copyText = async (text) => {
+            if (!text) return false;
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+            } catch (_) { /* fallback below */ }
+            try {
+                ta.focus();
+                ta.select();
+                const ok = document.execCommand('copy');
+                ta.setSelectionRange(ta.value.length, ta.value.length);
+                return ok;
+            } catch (_) {
+                return false;
+            }
+        };
+
+        root.querySelector('[data-share-msg-copy]')?.addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            const text = (ta.value || '').trim();
+            if (!text) {
+                if (typeof window.showWsToast === 'function') {
+                    window.showWsToast('متن اشتراک خالی است.', 'warning');
+                }
+                return;
+            }
+            const ok = await copyText(text);
+            if (ok) {
+                setBtnLabel(btn, 'کپی شد');
+                if (typeof window.showWsToast === 'function') {
+                    window.showWsToast('متن اشتراک کپی شد — در هر پیام‌رسانی بچسبانید.', 'success');
+                }
+            } else if (typeof window.showWsToast === 'function') {
+                window.showWsToast('کپی انجام نشد؛ متن را دستی انتخاب کنید.', 'error');
+            }
+        });
+
+        root.querySelector('[data-share-msg-wa]')?.addEventListener('click', () => {
+            const text = (ta.value || '').trim();
+            if (!text) {
+                if (typeof window.showWsToast === 'function') {
+                    window.showWsToast('ابتدا متن اشتراک را بنویسید.', 'warning');
+                }
+                return;
+            }
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+        });
+
+        root.querySelector('[data-share-msg-reset]')?.addEventListener('click', () => {
+            ta.value = buildDefaultShareMessage(
+                root.dataset.listingTitle,
+                root.dataset.shareUrl,
+            );
+            ta.focus();
+            if (typeof window.showWsToast === 'function') {
+                window.showWsToast('متن پیش‌فرض بازگردانی شد.', 'info');
+            }
+        });
+    });
+}
+
 function initPublicShareForms() {
+    initPublicShareMessageEditors();
     document.querySelectorAll('.mk-share-form').forEach((form) => {
         if (form.dataset.shareAjaxBound === '1') return;
         form.dataset.shareAjaxBound = '1';
@@ -381,9 +483,7 @@ function initPublicShareForms() {
                 form.querySelectorAll('[data-copy]').forEach((btn) => {
                     if (data.share_url) btn.dataset.copy = data.share_url;
                 });
-                form.querySelectorAll('[data-share-wa]').forEach((btn) => {
-                    if (data.share_url) btn.dataset.shareUrl = data.share_url;
-                });
+                if (data.share_url) syncShareMessageUrl(form, data.share_url);
                 const modal = form.closest('.ws-modal');
                 if (typeof WSModal !== 'undefined' && modal) WSModal.close(modal);
                 if (typeof window.showWsToast === 'function') {

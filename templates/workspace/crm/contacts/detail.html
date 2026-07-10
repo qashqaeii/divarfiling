@@ -389,7 +389,7 @@
                 </div>
 
                 {% else %}
-                {% if customer.property_type or customer.budget_min or customer.budget_max or customer.deposit_min or customer.deposit_max or customer.rent_min or customer.rent_max or customer.min_area or customer.max_area or customer.rooms or customer.areas or customer.district %}
+                {% if customer.property_type or customer.budget_min or customer.budget_max or customer.deposit_min or customer.deposit_max or customer.rent_min or customer.rent_max or customer.min_area or customer.max_area or customer.rooms or customer.areas %}
                 <div class="crm-contact-prefs">
                     {% if customer.property_type %}
                     <div class="crm-contact-pref-type">
@@ -454,16 +454,6 @@
                         <div class="crm-contact-pref-body">
                             <span class="crm-contact-pref-lbl">محله‌ها</span>
                             <strong>{{ customer.areas }}</strong>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if customer.district %}
-                    <div class="crm-contact-pref-row">
-                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-map"></i></span>
-                        <div class="crm-contact-pref-body">
-                            <span class="crm-contact-pref-lbl">منطقه</span>
-                            <strong>{{ customer.district }}</strong>
                         </div>
                     </div>
                     {% endif %}

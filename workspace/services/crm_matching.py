@@ -134,18 +134,57 @@ def _profile_property_type_eligible(profile, prop_type: Optional[str]) -> bool:
     return prop_type in allowed
 
 
+def _location_hay(neighborhood: str = '', city: str = '', district: str = '') -> str:
+    return _norm(f'{neighborhood or ""} {city or ""} {district or ""}')
+
+
+def _profile_neighborhood_eligible(
+    profile,
+    neighborhood: str = '',
+    city: str = '',
+    district: str = '',
+) -> bool:
+    """اگر کاربر محله/منطقه مشخص کرده، ملک باید در همان محدوده باشد."""
+    areas = _parse_areas(getattr(profile, 'areas', '') or '')
+    want_district = (getattr(profile, 'district', None) or '').strip()
+    if not areas and not want_district:
+        return True
+
+    hay = _location_hay(neighborhood, city, district)
+    hood = _norm(neighborhood or '')
+    if not hay and not hood:
+        return False
+
+    for area in areas:
+        token = _norm(area)
+        if token and (token in hay or token in hood or hood in token):
+            return True
+    if want_district:
+        dist = _norm(want_district)
+        if dist and (dist in hay or dist in hood or hood in dist):
+            return True
+    return False
+
+
 def _profile_criteria_eligible(
     profile,
     *,
     area: Optional[float],
     prop_type: Optional[str] = None,
+    neighborhood: str = '',
+    city: str = '',
+    district: str = '',
     sale_price: Optional[int] = None,
     deposit: Optional[int] = None,
     rent: Optional[int] = None,
     is_rent: bool = False,
 ) -> bool:
-    """فیلتر سخت: بودجه، متراژ و نوع ملک باید با ترجیحات کاربر سازگار باشند."""
+    """فیلتر سخت: بودجه، متراژ، نوع ملک و محله/منطقه باید با ترجیحات سازگار باشند."""
     if not _profile_property_type_eligible(profile, prop_type):
+        return False
+    if not _profile_neighborhood_eligible(
+        profile, neighborhood=neighborhood, city=city, district=district,
+    ):
         return False
     if not _profile_area_eligible(profile, area):
         return False
@@ -174,16 +213,21 @@ def _area_match_profile(profile, area: Optional[float]) -> Tuple[float, str]:
     return 1.0, f'متراژ {int(area)} متر'
 
 
-def _neighborhood_match_profile(profile, neighborhood: str, city: str) -> Tuple[float, str]:
-    areas = _parse_areas(profile.areas)
-    if not areas and not profile.district:
+def _neighborhood_match_profile(profile, neighborhood: str, city: str, district: str = '') -> Tuple[float, str]:
+    areas = _parse_areas(getattr(profile, 'areas', '') or '')
+    want_district = (getattr(profile, 'district', None) or '').strip()
+    if not areas and not want_district:
         return 0.5, ''
-    hay = _norm(f'{neighborhood} {city} {profile.district}')
+    hay = _location_hay(neighborhood, city, district)
+    hood = _norm(neighborhood or '')
     for area in areas:
-        if _norm(area) in hay or _norm(area) in _norm(neighborhood):
+        token = _norm(area)
+        if token and (token in hay or token in hood or hood in token):
             return 1.0, f'محله {area}'
-    if profile.district and _norm(profile.district) in hay:
-        return 0.85, f'منطقه {profile.district}'
+    if want_district:
+        dist = _norm(want_district)
+        if dist and (dist in hay or dist in hood or hood in dist):
+            return 0.85, f'منطقه {want_district}'
     return 0.15, 'محله متفاوت'
 
 
@@ -456,6 +500,9 @@ def _score_crm_property_with_profile(
         profile,
         area=prop.area,
         prop_type=prop.property_type,
+        neighborhood=prop.neighborhood or '',
+        city=prop.city or '',
+        district=prop.district or '',
         sale_price=prop.sale_price,
         deposit=prop.deposit,
         rent=prop.monthly_rent,
@@ -474,7 +521,10 @@ def _score_crm_property_with_profile(
 
     area_s, area_note = _area_match_profile(profile, prop.area)
     hood_s, hood_note = _neighborhood_match_profile(
-        profile, prop.neighborhood or prop.district, prop.city,
+        profile,
+        prop.neighborhood or '',
+        prop.city or '',
+        prop.district or '',
     )
     type_s, type_note = _property_type_match_profile(profile, prop.property_type)
     room_s, room_note = _rooms_match_profile(profile, prop.rooms)
@@ -533,6 +583,8 @@ def _score_listing_with_profile(
         profile,
         area=listing.area,
         prop_type=inferred,
+        neighborhood=listing.neighborhood or '',
+        city=listing.city or '',
         sale_price=listing.price,
         deposit=listing.deposit,
         rent=listing.rent,
@@ -550,7 +602,9 @@ def _score_listing_with_profile(
         price_s, price_label = _price_match_sale_profile(profile, listing.price)
 
     area_s, area_note = _area_match_profile(profile, listing.area)
-    hood_s, hood_note = _neighborhood_match_profile(profile, listing.neighborhood, listing.city)
+    hood_s, hood_note = _neighborhood_match_profile(
+        profile, listing.neighborhood or '', listing.city or '',
+    )
     type_s, type_note = _property_type_match_profile(profile, inferred)
     room_s, room_note = _rooms_match_profile(profile, listing.rooms)
 

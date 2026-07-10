@@ -19,6 +19,10 @@ MATCH_TYPES = {
     'خریدار', 'مستاجر', 'متقاضی خرید', 'متقاضی اجاره', 'سرنخ', 'سرمایه‌گذار', 'سازنده',
 }
 
+# حداکثر فاصله مجاز از بازه بودجه/متراژ (۲۰٪ بیشتر یا کمتر).
+# خارج از این باند اصلاً پیشنهاد نمی‌شود؛ داخل باند با امتیاز و برچسب نرم می‌ماند.
+RANGE_TOLERANCE = 0.20
+
 BUILDER_MATCH_INTENTS = {
     'acquisition': {
         'id': 'acquisition',
@@ -63,6 +67,69 @@ def _parse_areas(text: str) -> List[str]:
 
 def _norm(s: str) -> str:
     return re.sub(r'\s+', ' ', (s or '').strip().lower())
+
+
+def _within_range_tolerance(
+    value: Optional[float],
+    lo: Optional[float],
+    hi: Optional[float],
+    *,
+    tolerance: float = RANGE_TOLERANCE,
+) -> bool:
+    """True اگر مقدار داخل بازه باشد یا حداکثر به اندازه tolerance خارج از آن."""
+    if value is None:
+        return True
+    if lo is None and hi is None:
+        return True
+    if lo is not None and value < lo:
+        return value >= lo * (1 - tolerance)
+    if hi is not None and value > hi:
+        return value <= hi * (1 + tolerance)
+    return True
+
+
+def _profile_area_eligible(profile, area: Optional[float]) -> bool:
+    if area is None or area <= 0:
+        return True
+    return _within_range_tolerance(area, profile.min_area, profile.max_area)
+
+
+def _profile_budget_eligible(
+    profile,
+    *,
+    sale_price: Optional[int] = None,
+    deposit: Optional[int] = None,
+    rent: Optional[int] = None,
+    is_rent: bool = False,
+) -> bool:
+    if is_rent:
+        if not _within_range_tolerance(deposit, profile.deposit_min, profile.deposit_max):
+            return False
+        if not _within_range_tolerance(rent, profile.rent_min, profile.rent_max):
+            return False
+        return True
+    return _within_range_tolerance(sale_price, profile.budget_min, profile.budget_max)
+
+
+def _profile_criteria_eligible(
+    profile,
+    *,
+    area: Optional[float],
+    sale_price: Optional[int] = None,
+    deposit: Optional[int] = None,
+    rent: Optional[int] = None,
+    is_rent: bool = False,
+) -> bool:
+    """فیلتر سخت: بودجه و متراژ باید در بازه یا نزدیک آن باشند."""
+    if not _profile_area_eligible(profile, area):
+        return False
+    return _profile_budget_eligible(
+        profile,
+        sale_price=sale_price,
+        deposit=deposit,
+        rent=rent,
+        is_rent=is_rent,
+    )
 
 
 def _area_match_profile(profile, area: Optional[float]) -> Tuple[float, str]:
@@ -357,16 +424,27 @@ def _score_crm_property_with_profile(
     *,
     match_intent: str = '',
     intent_label: str = '',
-) -> Dict[str, Any]:
+) -> Optional[Dict[str, Any]]:
     is_rent_listing = _crm_property_is_rent_listing(prop)
     is_sale_listing = _crm_property_is_sale_listing(prop)
     rent_customer = _is_rent_profile(profile)
+
+    use_rent_price = is_rent_listing and (rent_customer or not is_sale_listing)
+    if not _profile_criteria_eligible(
+        profile,
+        area=prop.area,
+        sale_price=prop.sale_price,
+        deposit=prop.deposit,
+        rent=prop.monthly_rent,
+        is_rent=use_rent_price,
+    ):
+        return None
 
     if rent_customer and not is_rent_listing:
         price_s, price_label = 0.0, ''
     elif not rent_customer and is_rent_listing and not is_sale_listing:
         price_s, price_label = 0.0, ''
-    elif is_rent_listing and (rent_customer or not is_sale_listing):
+    elif use_rent_price:
         price_s, price_label = _price_match_rent_profile(profile, prop.deposit, prop.monthly_rent)
     else:
         price_s, price_label = _price_match_sale_profile(profile, prop.sale_price)
@@ -410,7 +488,7 @@ def _score_crm_property_with_profile(
     return result
 
 
-def _score_crm_property(customer: Customer, prop: CRMProperty) -> Dict[str, Any]:
+def _score_crm_property(customer: Customer, prop: CRMProperty) -> Optional[Dict[str, Any]]:
     return _score_crm_property_with_profile(customer, prop)
 
 
@@ -421,17 +499,28 @@ def _score_listing_with_profile(
     prop_type: Optional[str] = None,
     match_intent: str = '',
     intent_label: str = '',
-) -> Dict[str, Any]:
+) -> Optional[Dict[str, Any]]:
     inferred = prop_type or _infer_listing_property_type(listing)
     is_rent_listing = _listing_is_rent_listing(listing)
     is_sale_listing = _listing_is_sale_listing(listing)
     rent_customer = _is_rent_profile(profile)
 
+    use_rent_price = is_rent_listing and (rent_customer or not is_sale_listing)
+    if not _profile_criteria_eligible(
+        profile,
+        area=listing.area,
+        sale_price=listing.price,
+        deposit=listing.deposit,
+        rent=listing.rent,
+        is_rent=use_rent_price,
+    ):
+        return None
+
     if rent_customer and not is_rent_listing:
         price_s, price_label = 0.0, ''
     elif not rent_customer and is_rent_listing and not is_sale_listing:
         price_s, price_label = 0.0, ''
-    elif is_rent_listing and (rent_customer or not is_sale_listing):
+    elif use_rent_price:
         price_s, price_label = _price_match_rent_profile(profile, listing.deposit, listing.rent)
     else:
         price_s, price_label = _price_match_sale_profile(profile, listing.price)
@@ -471,7 +560,7 @@ def _score_listing_with_profile(
     return result
 
 
-def _score_listing(customer: Customer, listing: Listing) -> Dict[str, Any]:
+def _score_listing(customer: Customer, listing: Listing) -> Optional[Dict[str, Any]]:
     return _score_listing_with_profile(customer, listing)
 
 
@@ -520,7 +609,7 @@ def match_crm_properties(customer: Customer, user, *, limit: int = 12) -> List[D
         if not _crm_match_compatible(customer, prop):
             continue
         item = _score_crm_property(customer, prop)
-        if item['score'] >= 25:
+        if item and item['score'] >= 25:
             scored.append(item)
     scored.sort(key=lambda x: x['score'], reverse=True)
     return scored[:limit]
@@ -533,7 +622,7 @@ def match_divar_listings(customer: Customer, user, *, limit: int = 12) -> List[D
         if not _listing_match_compatible(customer, lst):
             continue
         item = _score_listing(customer, lst)
-        if item['score'] >= 30:
+        if item and item['score'] >= 30:
             scored.append(item)
     scored.sort(key=lambda x: x['score'], reverse=True)
     return scored[:limit]
@@ -552,25 +641,28 @@ def _match_builder_group(
     meta = BUILDER_MATCH_INTENTS[intent]
     crm_props = list(_filter_builder_crm_props(_crm_properties_qs(user)[:250], allowed_types))
     crm_scored = [
-        _score_crm_property_with_profile(
-            profile, prop,
-            match_intent=intent,
-            intent_label=meta['intent_label'],
+        item for item in (
+            _score_crm_property_with_profile(
+                profile, prop,
+                match_intent=intent,
+                intent_label=meta['intent_label'],
+            )
+            for prop in crm_props
         )
-        for prop in crm_props
+        if item
     ]
     crm_scored.sort(key=lambda x: x['score'], reverse=True)
     crm_matches = [m for m in crm_scored if m['score'] >= min_score][:limit]
 
     divar_scored = []
     for listing, inferred in _filter_builder_listings(_divar_listings_qs(user), allowed_types):
-        divar_scored.append(
-            _score_listing_with_profile(
-                profile, listing, prop_type=inferred,
-                match_intent=intent,
-                intent_label=meta['intent_label'],
-            )
+        item = _score_listing_with_profile(
+            profile, listing, prop_type=inferred,
+            match_intent=intent,
+            intent_label=meta['intent_label'],
         )
+        if item:
+            divar_scored.append(item)
     divar_scored.sort(key=lambda x: x['score'], reverse=True)
     divar_matches = [m for m in divar_scored if m['score'] >= max(min_score, 30)][:limit]
 

@@ -270,24 +270,32 @@ def preview_segment(
         product_id=product_id,
     )
     meta = SEGMENT_REGISTRY[segment_key]
+    capped = recipients[:MARKETING_BATCH_LIMIT]
     sample = recipients[:sample_size]
+
+    def _row(r: SegmentRecipient) -> Dict[str, str]:
+        ctx = r.context or {}
+        return {
+            'phone': r.phone,
+            'name': ctx.get('name') or '',
+            'name_part': ctx.get('name_part') or '',
+            'product': ctx.get('product') or '',
+            'plan': ctx.get('plan') or '',
+            'amount': ctx.get('amount') or '',
+            'link': ctx.get('link') or '',
+            'order_id': ctx.get('order_id') or '',
+            'code': ctx.get('code') or '',
+        }
+
     return {
         'key': segment_key,
         'title': meta['title'],
         'description': meta['description'],
         'count': len(recipients),
-        'capped_count': min(len(recipients), MARKETING_BATCH_LIMIT),
+        'capped_count': len(capped),
         'batch_limit': MARKETING_BATCH_LIMIT,
-        'sample': [
-            {
-                'phone': r.phone,
-                'name': r.context.get('name') or '',
-                'product': r.context.get('product') or '',
-                'amount': r.context.get('amount') or '',
-                'link': r.context.get('link') or '',
-            }
-            for r in sample
-        ],
+        'sample': [_row(r) for r in sample],
+        'recipients': [_row(r) for r in capped],
         'default_template': SEGMENT_DEFAULT_TEMPLATES.get(segment_key, ''),
     }
 

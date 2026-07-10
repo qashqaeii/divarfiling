@@ -129,6 +129,35 @@ class MarketingSendTests(TestCase):
             SmsMessageLog.objects.filter(phone='09123333333', purpose='marketing').exists()
         )
 
+    def test_selected_phones_only(self):
+        other = User.objects.create_user(
+            username='mkt3', password='pass1234', phone='09126666666',
+        )
+        Order.objects.create(
+            user=other,
+            product=self.product,
+            plan=self.plan,
+            amount=self.plan.price,
+            status='pending',
+        )
+        campaign = create_campaign_draft(
+            name='تست انتخاب',
+            segment_key='pending_orders',
+            message_template='سلام',
+            discount_mode='none',
+            created_by=self.staff,
+            dedupe_days=0,
+        )
+        run_campaign_send(campaign, selected_phones=['09123333333'])
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.recipients_total, 1)
+        self.assertEqual(campaign.sent_count, 1)
+        self.assertFalse(
+            MarketingCampaignRecipient.objects.filter(
+                campaign=campaign, phone='09126666666',
+            ).exists()
+        )
+
     def test_dedupe_skips_recent_marketing(self):
         SmsMessageLog.objects.create(
             phone='09123333333',

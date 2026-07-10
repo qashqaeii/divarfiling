@@ -110,8 +110,12 @@ def create_campaign_draft(
     return campaign
 
 
-def run_campaign_send(campaign: MarketingCampaign) -> MarketingCampaign:
-    """ساخت گیرندگان و ارسال پیامک تا سقف batch."""
+def run_campaign_send(
+    campaign: MarketingCampaign,
+    *,
+    selected_phones: Optional[list[str]] = None,
+) -> MarketingCampaign:
+    """ساخت گیرندگان و ارسال پیامک تا سقف batch — فقط شماره‌های انتخاب‌شده."""
     if campaign.status not in (
         MarketingCampaign.Status.DRAFT,
         MarketingCampaign.Status.FAILED,
@@ -120,7 +124,6 @@ def run_campaign_send(campaign: MarketingCampaign) -> MarketingCampaign:
 
     balance = get_sms_balance_snapshot(use_cache=False)
     if balance.get('error') and balance.get('provider') == 'faraz':
-        # فقط هشدار — ارسال را متوقف نکن مگر auth fail واضح
         if 'احراز' in (balance.get('error') or '') or 'Api-Key' in (balance.get('error') or ''):
             raise MarketingSendError(balance['error'], code='sms_auth')
 
@@ -133,6 +136,17 @@ def run_campaign_send(campaign: MarketingCampaign) -> MarketingCampaign:
     )
     if not recipients:
         raise MarketingSendError('گیرنده‌ای برای این سگمنت یافت نشد.', code='empty_segment')
+
+    if selected_phones is not None:
+        wanted = {str(p).strip() for p in selected_phones if str(p).strip()}
+        if not wanted:
+            raise MarketingSendError('هیچ گیرنده‌ای انتخاب نشده است.', code='none_selected')
+        recipients = [r for r in recipients if r.phone in wanted]
+        if not recipients:
+            raise MarketingSendError(
+                'گیرنده‌های انتخاب‌شده در سگمنت فعلی یافت نشدند.',
+                code='selection_mismatch',
+            )
 
     phones = [r.phone for r in recipients]
     recently = recently_marketed_phones(phones, days=campaign.dedupe_days)
@@ -177,7 +191,6 @@ def run_campaign_send(campaign: MarketingCampaign) -> MarketingCampaign:
                 campaign.skipped_count += 1
                 continue
 
-            discount_obj = None
             if campaign.discount_mode == MarketingCampaign.DiscountMode.UNIQUE:
                 discount_obj = create_unique_discount(
                     discount_type=campaign.discount_type or 'percentage',
@@ -191,7 +204,6 @@ def run_campaign_send(campaign: MarketingCampaign) -> MarketingCampaign:
                 ctx['code'] = shared_code
                 recipient.discount_code = campaign.shared_discount
 
-            # اگر قالب به {code} نیاز دارد ولی کد نداریم
             if '{code}' in campaign.message_template and not ctx.get('code'):
                 ctx['code'] = '—'
 

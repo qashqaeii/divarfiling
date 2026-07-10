@@ -135,13 +135,22 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
             days_lookback=days_lookback,
             product_id=product_id,
         )
-        sample_ctx = {}
-        if preview['sample']:
-            s0 = preview['sample'][0]
+        sample_ctx = {
+            'name': '',
+            'name_part': '',
+            'product': 'محصول',
+            'plan': '',
+            'amount': '',
+            'link': 'https://divarfiling.ir/',
+            'code': 'SAMPLE15',
+        }
+        if preview['recipients']:
+            s0 = preview['recipients'][0]
             sample_ctx = {
                 'name': s0.get('name') or '',
-                'name_part': f" {s0['name']}" if s0.get('name') else '',
+                'name_part': s0.get('name_part') or (f" {s0['name']}" if s0.get('name') else ''),
                 'product': s0.get('product') or 'محصول',
+                'plan': s0.get('plan') or '',
                 'amount': s0.get('amount') or '',
                 'link': s0.get('link') or '',
                 'code': 'SAMPLE15',
@@ -158,6 +167,7 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
             'products': active_products_for_filter(),
             'default_template': template,
             'sample_message': render_message(template, sample_ctx) if sample_ctx else template,
+            'sample_context': sample_ctx,
             'sms_balance': get_sms_balance_snapshot(),
             'recent_campaigns': MarketingCampaign.objects.select_related(
                 'shared_discount', 'created_by',
@@ -169,6 +179,13 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         if request.POST.get('confirm_send') != '1':
             messages.error(request, 'برای ارسال، تأیید قطعی را فعال کنید.')
+            return redirect('admin_panel_marketing')
+
+        selected_phones = [
+            p.strip() for p in request.POST.getlist('selected_phones') if (p or '').strip()
+        ]
+        if not selected_phones:
+            messages.error(request, 'حداقل یک گیرنده را برای ارسال انتخاب کنید.')
             return redirect('admin_panel_marketing')
 
         segment = request.POST.get('segment_key') or 'pending_orders'
@@ -201,7 +218,7 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
                 ),
                 shared_code=request.POST.get('shared_code') or '',
             )
-            run_campaign_send(campaign)
+            run_campaign_send(campaign, selected_phones=selected_phones)
         except MarketingSendError as exc:
             messages.error(request, exc.message)
             return redirect('admin_panel_marketing')

@@ -1028,8 +1028,102 @@ html.mk-public:not([data-theme="light"]) .adm-cell {
     border-radius: 10px;
     background: rgba(148, 163, 184, 0.08);
 }
-.adm-mkt-balance {
-    pointer-events: none;
+.adm-mkt-select-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+}
+.adm-mkt-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.adm-mkt-link-btn {
+    border: none;
+    background: transparent;
+    color: #7c3aed;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+.adm-mkt-link-btn:hover { text-decoration: underline; }
+.adm-mkt-recipient-list {
+    max-height: 280px;
+    overflow: auto;
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.15rem;
+    margin-bottom: 0.25rem;
+    border-radius: 10px;
+}
+.adm-mkt-recipient {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 0.55rem;
+    row-gap: 0.1rem;
+    align-items: start;
+    padding: 0.5rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: var(--mk-surface, #fff);
+    cursor: pointer;
+}
+.adm-mkt-recipient:has(input:checked) {
+    border-color: rgba(124, 58, 237, 0.35);
+    background: rgba(124, 58, 237, 0.05);
+}
+.adm-mkt-recipient input {
+    grid-row: 1 / span 2;
+    margin-top: 0.2rem;
+}
+.adm-mkt-recipient-main {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.55rem;
+    align-items: baseline;
+    font-size: 0.82rem;
+}
+.adm-mkt-recipient-main em {
+    font-style: normal;
+    color: var(--mk-text-secondary);
+}
+.adm-mkt-recipient-meta {
+    font-size: 0.72rem;
+    color: var(--mk-text-muted);
+}
+.adm-mkt-sample-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+}
+.adm-mkt-preview-pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    color: var(--mk-text-muted);
+}
+.adm-mkt-input--sm {
+    width: auto;
+    min-width: 10rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+}
+#adm-mkt-live-text {
+    margin: 0;
+    white-space: pre-wrap;
+    line-height: 1.7;
 }
 .adm-badge--draft { background: rgba(148, 163, 184, 0.15); color: #64748b; }
 .adm-badge--sending { background: rgba(59, 130, 246, 0.15); color: #2563eb; }

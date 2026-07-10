@@ -307,64 +307,176 @@
         </div>
 
         <aside class="crm-detail-sidebar crm-contact-sidebar">
-            <div class="crm-contact-side-card">
+            <div class="crm-contact-side-card crm-contact-side-card--prefs">
                 <header class="crm-contact-side-head">
-                    <span class="crm-contact-side-icon crm-contact-side-icon--finance" aria-hidden="true"><i class="fas fa-wallet"></i></span>
-                    <h3>خلاصه مالی</h3>
+                    <span class="crm-contact-side-icon crm-contact-side-icon--prefs" aria-hidden="true"><i class="fas fa-sliders-h"></i></span>
+                    <h3>ترجیحات</h3>
+                    <button type="button" class="crm-contact-prefs-edit" data-drawer-open="drawer-edit" title="ویرایش ترجیحات">
+                        <i class="fas fa-pen" aria-hidden="true"></i>
+                    </button>
                 </header>
-                <div class="crm-contact-side-stats">
-                    {% if customer.customer_type == 'سازنده' %}
-                    <div class="crm-contact-side-stat crm-contact-side-stat--builder">
-                        <span class="crm-contact-side-stat-lbl">خط فروش (آپارتمان)</span>
-                        <strong>
-                            {% if customer.budget_min or customer.budget_max %}
-                            {{ customer.budget_min|ws_money|default:"—" }} — {{ customer.budget_max|ws_money|default:"—" }}
-                            {% else %}—{% endif %}
-                        </strong>
-                        {% if customer.areas %}<small>{{ customer.areas|truncatechars:48 }}</small>{% endif %}
+
+                {% if customer.customer_type == 'سازنده' %}
+                <div class="crm-contact-prefs">
+                    <div class="crm-contact-pref-group">
+                        <span class="crm-contact-pref-group-lbl">خط فروش</span>
+                        <div class="crm-contact-pref-type">
+                            <i class="fas fa-building" aria-hidden="true"></i>
+                            <span>{{ customer.property_type|default:"آپارتمان" }}</span>
+                        </div>
+                        {% if customer.budget_min or customer.budget_max %}
+                        <div class="crm-contact-pref-row">
+                            <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-coins"></i></span>
+                            <div class="crm-contact-pref-body">
+                                <span class="crm-contact-pref-lbl">بودجه فروش</span>
+                                <strong>{% if customer.budget_min %}{{ customer.budget_min|ws_money }}{% else %}—{% endif %} — {% if customer.budget_max %}{{ customer.budget_max|ws_money }}{% else %}—{% endif %}</strong>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if customer.min_area or customer.max_area %}
+                        <div class="crm-contact-pref-row">
+                            <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+                            <div class="crm-contact-pref-body">
+                                <span class="crm-contact-pref-lbl">متراژ</span>
+                                <strong>{% if customer.min_area %}{{ customer.min_area }}{% else %}—{% endif %} — {% if customer.max_area %}{{ customer.max_area }}{% else %}—{% endif %} متر</strong>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if customer.areas %}
+                        <div class="crm-contact-pref-row">
+                            <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
+                            <div class="crm-contact-pref-body">
+                                <span class="crm-contact-pref-lbl">محله‌ها</span>
+                                <strong>{{ customer.areas }}</strong>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
-                    <div class="crm-contact-side-stat crm-contact-side-stat--builder">
-                        <span class="crm-contact-side-stat-lbl">تأمین پروژه (خرید)</span>
-                        <strong>
-                            {% if customer.builder_buy_budget_min or customer.builder_buy_budget_max %}
-                            {{ customer.builder_buy_budget_min|ws_money|default:"—" }} — {{ customer.builder_buy_budget_max|ws_money|default:"—" }}
-                            {% else %}—{% endif %}
-                        </strong>
-                        <small>
-                            {% if customer.builder_buy_property_types %}{{ customer.builder_buy_property_types }}{% else %}ویلا، کلنگی، زمین{% endif %}
-                            {% if customer.builder_buy_areas %} · {{ customer.builder_buy_areas|truncatechars:32 }}{% endif %}
-                        </small>
+                    <div class="crm-contact-pref-group">
+                        <span class="crm-contact-pref-group-lbl">تأمین پروژه</span>
+                        <div class="crm-contact-pref-type">
+                            <i class="fas fa-warehouse" aria-hidden="true"></i>
+                            <span>{% if customer.builder_buy_property_types %}{{ customer.builder_buy_property_types }}{% else %}ویلا، کلنگی، زمین{% endif %}</span>
+                        </div>
+                        {% if customer.builder_buy_budget_min or customer.builder_buy_budget_max %}
+                        <div class="crm-contact-pref-row">
+                            <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-coins"></i></span>
+                            <div class="crm-contact-pref-body">
+                                <span class="crm-contact-pref-lbl">بودجه خرید</span>
+                                <strong>{% if customer.builder_buy_budget_min %}{{ customer.builder_buy_budget_min|ws_money }}{% else %}—{% endif %} — {% if customer.builder_buy_budget_max %}{{ customer.builder_buy_budget_max|ws_money }}{% else %}—{% endif %}</strong>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if customer.builder_buy_min_area or customer.builder_buy_max_area %}
+                        <div class="crm-contact-pref-row">
+                            <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+                            <div class="crm-contact-pref-body">
+                                <span class="crm-contact-pref-lbl">متراژ خرید</span>
+                                <strong>{% if customer.builder_buy_min_area %}{{ customer.builder_buy_min_area }}{% else %}—{% endif %} — {% if customer.builder_buy_max_area %}{{ customer.builder_buy_max_area }}{% else %}—{% endif %} متر</strong>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if customer.builder_buy_areas %}
+                        <div class="crm-contact-pref-row">
+                            <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
+                            <div class="crm-contact-pref-body">
+                                <span class="crm-contact-pref-lbl">مناطق خرید</span>
+                                <strong>{{ customer.builder_buy_areas }}</strong>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% else %}
+                </div>
+
+                {% else %}
+                {% if customer.property_type or customer.budget_min or customer.budget_max or customer.deposit_min or customer.deposit_max or customer.rent_min or customer.rent_max or customer.min_area or customer.max_area or customer.rooms or customer.areas or customer.district %}
+                <div class="crm-contact-prefs">
+                    {% if customer.property_type %}
+                    <div class="crm-contact-pref-type">
+                        <i class="fas {{ customer.property_type|crm_property_type_icon }}" aria-hidden="true"></i>
+                        <span>{{ customer.property_type }}</span>
+                    </div>
+                    {% endif %}
+
                     {% if customer.budget_min or customer.budget_max %}
-                    <div class="crm-contact-side-stat">
-                        <span class="crm-contact-side-stat-lbl">بودجه</span>
-                        <strong>{{ customer.budget_min|ws_money|default:"—" }} — {{ customer.budget_max|ws_money|default:"—" }}</strong>
+                    <div class="crm-contact-pref-row">
+                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-coins"></i></span>
+                        <div class="crm-contact-pref-body">
+                            <span class="crm-contact-pref-lbl">{% if customer.customer_type == 'سرمایه‌گذار' %}سرمایه{% elif customer.customer_type == 'فروشنده' or customer.customer_type == 'فروشنده ملک' or customer.customer_type == 'مالک' %}قیمت فروش{% else %}بودجه{% endif %}</span>
+                            <strong>{% if customer.budget_min %}{{ customer.budget_min|ws_money }}{% else %}—{% endif %} — {% if customer.budget_max %}{{ customer.budget_max|ws_money }}{% else %}—{% endif %}</strong>
+                        </div>
                     </div>
                     {% endif %}
+
                     {% if customer.deposit_min or customer.deposit_max %}
-                    <div class="crm-contact-side-stat">
-                        <span class="crm-contact-side-stat-lbl">ودیعه</span>
-                        <strong>{{ customer.deposit_min|ws_money|default:"—" }} — {{ customer.deposit_max|ws_money|default:"—" }}</strong>
+                    <div class="crm-contact-pref-row">
+                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-key"></i></span>
+                        <div class="crm-contact-pref-body">
+                            <span class="crm-contact-pref-lbl">ودیعه</span>
+                            <strong>{% if customer.deposit_min %}{{ customer.deposit_min|ws_money }}{% else %}—{% endif %} — {% if customer.deposit_max %}{{ customer.deposit_max|ws_money }}{% else %}—{% endif %}</strong>
+                        </div>
                     </div>
                     {% endif %}
+
                     {% if customer.rent_min or customer.rent_max %}
-                    <div class="crm-contact-side-stat">
-                        <span class="crm-contact-side-stat-lbl">اجاره</span>
-                        <strong>{{ customer.rent_min|ws_money|default:"—" }} — {{ customer.rent_max|ws_money|default:"—" }}</strong>
+                    <div class="crm-contact-pref-row">
+                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-calendar-day"></i></span>
+                        <div class="crm-contact-pref-body">
+                            <span class="crm-contact-pref-lbl">اجاره ماهانه</span>
+                            <strong>{% if customer.rent_min %}{{ customer.rent_min|ws_money }}{% else %}—{% endif %} — {% if customer.rent_max %}{{ customer.rent_max|ws_money }}{% else %}—{% endif %}</strong>
+                        </div>
                     </div>
                     {% endif %}
+
                     {% if customer.min_area or customer.max_area %}
-                    <div class="crm-contact-side-stat">
-                        <span class="crm-contact-side-stat-lbl">متراژ</span>
-                        <strong>{{ customer.min_area|default:"—" }} — {{ customer.max_area|default:"—" }} متر</strong>
+                    <div class="crm-contact-pref-row">
+                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+                        <div class="crm-contact-pref-body">
+                            <span class="crm-contact-pref-lbl">متراژ</span>
+                            <strong>{% if customer.min_area %}{{ customer.min_area }}{% else %}—{% endif %} — {% if customer.max_area %}{{ customer.max_area }}{% else %}—{% endif %} متر</strong>
+                        </div>
                     </div>
                     {% endif %}
-                    {% if not customer.budget_min and not customer.budget_max and not customer.deposit_min and not customer.deposit_max and not customer.rent_min and not customer.rent_max and not customer.min_area and not customer.max_area and customer.customer_type != 'سازنده' %}
-                    <p class="crm-contact-side-muted">اطلاعات مالی ثبت نشده</p>
+
+                    {% if customer.rooms %}
+                    <div class="crm-contact-pref-row">
+                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-bed"></i></span>
+                        <div class="crm-contact-pref-body">
+                            <span class="crm-contact-pref-lbl">خواب</span>
+                            <strong>{{ customer.rooms }}</strong>
+                        </div>
+                    </div>
                     {% endif %}
+
+                    {% if customer.areas %}
+                    <div class="crm-contact-pref-row">
+                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
+                        <div class="crm-contact-pref-body">
+                            <span class="crm-contact-pref-lbl">محله‌ها</span>
+                            <strong>{{ customer.areas }}</strong>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if customer.district %}
+                    <div class="crm-contact-pref-row">
+                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-map"></i></span>
+                        <div class="crm-contact-pref-body">
+                            <span class="crm-contact-pref-lbl">منطقه</span>
+                            <strong>{{ customer.district }}</strong>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
+                {% else %}
+                <div class="crm-contact-prefs-empty">
+                    <p class="crm-contact-side-muted">ترجیحی ثبت نشده</p>
+                    <button type="button" class="crm-btn crm-btn-sm crm-btn-ghost crm-btn-block" data-drawer-open="drawer-edit">
+                        <i class="fas fa-sliders-h" aria-hidden="true"></i> ثبت ترجیحات
+                    </button>
+                </div>
+                {% endif %}
+                {% endif %}
             </div>
 
             <div class="crm-contact-side-card crm-contact-side-card--followup crm-followup-v2">

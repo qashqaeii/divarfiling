@@ -394,6 +394,18 @@ def _is_date_key(key: str) -> bool:
     ))
 
 
+def _looks_like_phone_number(value: Any) -> bool:
+    """تشخیص شماره موبایل/تلفن تا به‌عنوان مبلغ فرمت نشود."""
+    digits = re.sub(r'\D', '', str(value or ''))
+    if not digits:
+        return False
+    if digits.startswith('98') and len(digits) >= 12:
+        digits = digits[2:]
+    if digits.startswith('0'):
+        return len(digits) in (10, 11) and digits.startswith(('09', '021', '026', '031', '041', '051', '061', '071', '081', '011'))
+    return len(digits) == 10 and digits.startswith('9')
+
+
 def format_display_value(key: str, value: Any, profile: Optional[Dict] = None) -> str:
     """فرمت مقدار برای نمایش در جدول/جزئیات."""
     if value is None or str(value).strip() in ('', 'nan', 'None', '-'):
@@ -406,6 +418,9 @@ def format_display_value(key: str, value: Any, profile: Optional[Dict] = None) -
         formatted = _format_date_display(value)
         if formatted:
             return formatted
+
+    if _is_contact_key(key) or _looks_like_phone_number(value):
+        return str(value).strip()
 
     if _is_money_key(key):
         try:
@@ -423,7 +438,8 @@ def format_display_value(key: str, value: Any, profile: Optional[Dict] = None) -
             pass
 
     s = str(value).strip()
-    if re.fullmatch(r'\d{9,}', s):
+    # اعداد ۹+ رقمی معمولاً مبلغ‌اند — مگر شماره تماس (۰۹…) یا فیلد تماس
+    if re.fullmatch(r'\d{9,}', s) and not s.startswith('0'):
         try:
             return format_toman(int(s), per_sqm=_is_per_sqm_key(key))
         except ValueError:

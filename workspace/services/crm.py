@@ -1084,31 +1084,89 @@ def update_customer_status(customer: Customer, new_status: str) -> None:
 
 
 def build_suggestions_whatsapp_text(customer, matches: List[Dict[str, Any]]) -> str:
-    """متن واتساپ برای لیست پیشنهاد ملک — فقط لینک عمومی."""
+    """متن واتساپ برای لیست پیشنهاد ملک به خریدار/مستاجر — فقط لینک عمومی."""
+    return _build_share_whatsapp_text(
+        customer,
+        matches,
+        intro_line='چند ملک مناسب برای شما:',
+        outro_lines=['در صورت تمایل برای بازدید هماهنگ می‌کنیم.', 'با احترام'],
+    )
+
+
+_OWNER_SIDE_ROLES = frozenset({
+    'مالک', 'فروشنده', 'موجر', 'سازنده',
+})
+
+
+def _format_share_match_block(index: int, match: Dict[str, Any]) -> List[str]:
     from workspace.services.property_suggestion_share import sharing_link_for_match
 
-    lines = [f'سلام {customer.name}،', '', 'چند ملک مناسب برای شما:', '']
+    lines = [f'{index}. {match.get("title") or "ملک"}']
+    if match.get('price_label'):
+        lines.append(f'   💰 {match["price_label"]}')
+    if match.get('area'):
+        area_val = match['area']
+        try:
+            area_txt = f'{int(float(area_val))} متر'
+        except (TypeError, ValueError):
+            area_txt = str(area_val)
+        lines.append(f'   📐 {area_txt}')
+    hood = match.get('neighborhood') or match.get('city')
+    if hood:
+        lines.append(f'   📍 {hood}')
+    share_link = sharing_link_for_match(match)
+    if share_link:
+        lines.append(f'   🔗 {share_link}')
+    lines.append('')
+    return lines
+
+
+def _build_share_whatsapp_text(
+    customer,
+    matches: List[Dict[str, Any]],
+    *,
+    intro_line: str,
+    outro_lines: List[str],
+) -> str:
+    lines = [f'سلام {customer.name}،', '', intro_line, '']
     for i, m in enumerate(matches, 1):
-        lines.append(f'{i}. {m.get("title") or "ملک"}')
-        if m.get('price_label'):
-            lines.append(f'   💰 {m["price_label"]}')
-        if m.get('area'):
-            area_val = m['area']
-            try:
-                area_txt = f'{int(float(area_val))} متر'
-            except (TypeError, ValueError):
-                area_txt = str(area_val)
-            lines.append(f'   📐 {area_txt}')
-        hood = m.get('neighborhood') or m.get('city')
-        if hood:
-            lines.append(f'   📍 {hood}')
-        share_link = sharing_link_for_match(m)
-        if share_link:
-            lines.append(f'   🔗 {share_link}')
-        lines.append('')
-    lines.append('در صورت تمایل برای بازدید هماهنگ می‌کنیم.')
-    lines.append('با احترام')
+        lines.extend(_format_share_match_block(i, m))
+    lines.extend(outro_lines)
     return '\n'.join(lines)
+
+
+def build_portfolio_whatsapp_text(customer, matches: List[Dict[str, Any]]) -> str:
+    """
+    متن واتساپ برای اشتراک از تب املاک مرتبط.
+    اگر نقش‌ها مالک/فروشنده/موجر باشند، پیام «فایل شما» است نه «پیشنهاد به مشتری».
+    """
+    roles = {(m.get('role') or '').strip() for m in matches}
+    roles.discard('')
+    owner_side = roles & _OWNER_SIDE_ROLES
+    other_side = roles - _OWNER_SIDE_ROLES
+
+    if owner_side and not other_side:
+        n = len(matches)
+        intro = 'لینک فایل‌های ملکی شما:' if n > 1 else 'لینک فایل ملک شما:'
+        return _build_share_whatsapp_text(
+            customer,
+            matches,
+            intro_line=intro,
+            outro_lines=[
+                'در صورت نیاز به هماهنگی بازدید یا به‌روزرسانی فایل، در خدمتم.',
+                'با احترام',
+            ],
+        )
+
+    if other_side and not owner_side:
+        return build_suggestions_whatsapp_text(customer, matches)
+
+    return _build_share_whatsapp_text(
+        customer,
+        matches,
+        intro_line='اطلاعات املاک مرتبط:',
+        outro_lines=['در صورت نیاز هماهنگ می‌کنیم.', 'با احترام'],
+    )
 
 
 def apply_property_suggestions(

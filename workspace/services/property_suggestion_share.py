@@ -96,14 +96,13 @@ def resolve_portfolio_share_items(
             pid = item.get('property_id')
             if not pid:
                 continue
-            if not customer.property_links.filter(
+            link = customer.property_links.filter(
                 property_id=pid,
                 property__user=user,
-            ).exists():
+            ).select_related('property').first()
+            if not link:
                 continue
-            prop = CRMProperty.objects.filter(pk=pid, user=user).first()
-            if not prop:
-                continue
+            prop = link.property
             matches.append({
                 'source': 'crm',
                 'property_id': prop.pk,
@@ -112,6 +111,7 @@ def resolve_portfolio_share_items(
                 'area': prop.area,
                 'neighborhood': prop.neighborhood or prop.district or '',
                 'city': prop.city or '',
+                'role': (item.get('role') or link.role or '').strip(),
             })
         elif source == 'divar':
             listing_id = item.get('listing_id')
@@ -138,6 +138,7 @@ def resolve_portfolio_share_items(
                 'area': cl.area or (listing.area if listing else ''),
                 'neighborhood': listing.neighborhood if listing else '',
                 'city': listing.city if listing else '',
+                'role': (item.get('role') or cl.role or '').strip(),
             })
     return enrich_matches_with_public_urls(user, request, matches)
 

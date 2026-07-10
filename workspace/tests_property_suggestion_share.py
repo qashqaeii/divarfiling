@@ -4,7 +4,11 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
 from workspace.models import CRMProperty, Customer, Dataset, Listing, ListingPublicShare
-from workspace.services.crm import apply_property_suggestions, build_suggestions_whatsapp_text
+from workspace.services.crm import (
+    apply_property_suggestions,
+    build_portfolio_whatsapp_text,
+    build_suggestions_whatsapp_text,
+)
 from workspace.services.property_suggestion_share import sharing_link_for_match
 
 User = get_user_model()
@@ -101,3 +105,27 @@ class PropertySuggestionShareTests(TestCase):
         expected_path = reverse('listing_public:view', kwargs={'share_token': share.share_token})
         self.assertIn(expected_path, text)
         self.assertNotIn('divar.ir', text)
+
+    def test_portfolio_owner_whatsapp_text_not_buyer_copy(self):
+        matches = [{
+            'title': '۲۳۵متر زعفرانیه',
+            'price_label': '199 میلیارد تومان',
+            'area': 235,
+            'neighborhood': 'ولنجک',
+            'role': 'مالک',
+            'share_url': 'https://divarfiling.ir/p/abc/',
+        }]
+        text = build_portfolio_whatsapp_text(self.customer, matches)
+        self.assertIn('لینک فایل ملک شما:', text)
+        self.assertNotIn('چند ملک مناسب برای شما', text)
+        self.assertIn('https://divarfiling.ir/p/abc/', text)
+
+    def test_portfolio_buyer_whatsapp_text_keeps_suggestion_copy(self):
+        matches = [{
+            'title': 'آپارتمان نیاوران',
+            'role': 'خریدار',
+            'share_url': 'https://divarfiling.ir/p/xyz/',
+        }]
+        text = build_portfolio_whatsapp_text(self.customer, matches)
+        self.assertIn('چند ملک مناسب برای شما:', text)
+        self.assertNotIn('لینک فایل ملک شما', text)

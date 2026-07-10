@@ -1978,7 +1978,7 @@ class CRMPropertySharePreviewView(LoginRequiredMixin, View):
     """پیش‌نمایش متن اشتراک املاک انتخاب‌شده — فقط لینک عمومی."""
 
     def post(self, request, customer_id):
-        from workspace.services.crm import build_suggestions_whatsapp_text, log_activity
+        from workspace.services.crm import build_portfolio_whatsapp_text, log_activity
         from workspace.services.property_suggestion_share import (
             resolve_portfolio_share_items,
             whatsapp_url_for_customer,
@@ -2006,17 +2006,25 @@ class CRMPropertySharePreviewView(LoginRequiredMixin, View):
         if not matches:
             return JsonResponse({'ok': False, 'error': 'ملک معتبری یافت نشد'}, status=400)
 
-        text = build_suggestions_whatsapp_text(customer, matches)
+        text = build_portfolio_whatsapp_text(customer, matches)
         wa_url = whatsapp_url_for_customer(customer, text)
 
         if body.get('log'):
             titles = [m.get('title') or 'ملک' for m in matches]
+            roles = {(m.get('role') or '').strip() for m in matches}
+            roles.discard('')
+            is_owner_share = bool(roles) and roles <= {'مالک', 'فروشنده', 'موجر', 'سازنده'}
             log_activity(
                 customer,
                 'املاک',
                 content=f'اشتراک {len(matches)} ملک: ' + '، '.join(titles[:5]),
-                title='ارسال پیشنهاد ملک',
-                metadata={'suggestion_count': len(matches), 'titles': titles, 'share_only': True},
+                title='ارسال فایل مالک' if is_owner_share else 'ارسال پیشنهاد ملک',
+                metadata={
+                    'suggestion_count': len(matches),
+                    'titles': titles,
+                    'share_only': True,
+                    'roles': sorted(roles),
+                },
             )
 
         return JsonResponse({

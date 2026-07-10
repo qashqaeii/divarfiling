@@ -65,7 +65,8 @@
                        data-title="{{ p.title|escape }}"
                        data-price-label="{% crm_property_price_label p %}"
                        data-area="{{ p.area|default:'' }}"
-                       data-neighborhood="{{ p.neighborhood|default:'' }}">
+                       data-neighborhood="{{ p.neighborhood|default:'' }}"
+                       data-role="{{ link.role }}">
             </label>
             <div class="crm-portfolio-card-visual" style="{% crm_role_style link.role %}">
                 <span class="crm-portfolio-card-source"><i class="fas fa-folder-open" aria-hidden="true"></i> فایل شخصی</span>
@@ -112,7 +113,8 @@
                        data-token="{{ l.token }}"
                        data-title="{{ l.title|escape }}"
                        data-price-label="{{ l.price|escape }}"
-                       data-area="{{ l.area|default:'' }}">
+                       data-area="{{ l.area|default:'' }}"
+                       data-role="{{ l.role }}">
             </label>
             <div class="crm-portfolio-card-visual crm-portfolio-card-visual--divar" style="{% crm_role_style l.role %}">
                 <span class="crm-portfolio-card-source"><i class="fas fa-folder" aria-hidden="true"></i> فایلینگ دیوار</span>

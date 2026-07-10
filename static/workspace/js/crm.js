@@ -1387,6 +1387,7 @@ function initCRMContactPortfolio() {
             neighborhood: d.neighborhood || '',
         };
         if (d.area) item.area = d.area;
+        if (d.role) item.role = d.role;
         if (d.source === 'crm' && d.propertyId) item.property_id = parseInt(d.propertyId, 10);
         if (d.source === 'divar') {
             if (d.listingId) item.listing_id = parseInt(d.listingId, 10);

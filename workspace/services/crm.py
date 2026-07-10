@@ -22,9 +22,15 @@ from workspace.services.crm_scope import customers_qs, get_agency, properties_qs
 
 
 def normalize_phone(phone: str) -> str:
-    s = re.sub(r'\D', '', (phone or '').strip())
+    """نرمال‌سازی شماره — ارقام فارسی/عربی و پیش‌شماره ایران."""
+    if not phone:
+        return ''
+    s = str(phone).strip().translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩', '01234567890123456789'))
+    s = re.sub(r'\D', '', s)
     if s.startswith('98') and len(s) >= 12:
         s = '0' + s[2:]
+    elif s.startswith('9') and len(s) == 10:
+        s = '0' + s
     return s
 
 
@@ -75,6 +81,73 @@ def primary_owner_contact(
     return None
 
 
+def _resolve_owner_customer(
+    user,
+    *,
+    phone_key: str,
+    name_raw: str,
+    listing: Optional[Listing],
+    crm_property: Optional[CRMProperty],
+    source: str,
+) -> Customer:
+    """
+    یافتن یا ساخت مخاطب مالک.
+    اگر این ملک از قبل مالک داشته باشد و شماره متعلق به کس دیگری نباشد،
+    همان مخاطب به‌روز می‌شود (نه مخاطب جدید).
+    """
+    by_phone = find_customer_by_phone(user, phone_key)
+    current_owner = primary_owner_contact(listing=listing, crm_property=crm_property)
+
+    if by_phone is not None:
+        customer = by_phone
+    elif current_owner is not None:
+        # ویرایش همان مالک ملک — شماره عوض شده یا قبلاً match نشده
+        customer = current_owner
+    else:
+        customer = Customer.objects.create(
+            user=user,
+            agency=get_agency(user),
+            name=name_raw or f'مالک {phone_key[-4:]}',
+            phone=phone_key,
+            customer_type='مالک',
+            status='جدید',
+            priority='متوسط',
+            source=source if source in (
+                'دیوار', 'معرف', 'ورود به املاک', 'تماس ورودی',
+                'اینستاگرام', 'سایت', 'تلگرام', 'موبایل', 'سایر',
+            ) else 'سایر',
+        )
+        log_activity(
+            customer,
+            'یادداشت',
+            content='ثبت خودکار به‌عنوان مالک ملک',
+            title='ثبت مالک',
+            token=(listing.token if listing else '') or (crm_property.token if crm_property else ''),
+            property_obj=crm_property,
+        )
+        return customer
+
+    update_fields = ['updated_at']
+    if name_raw and customer.name != name_raw:
+        customer.name = name_raw
+        update_fields.append('name')
+    current_phone = normalize_phone(customer.phone)
+    if current_phone != phone_key:
+        # اگر شماره جدید مالِ مخاطب دیگری نیست، روی همین مالک بنویس
+        if by_phone is None or by_phone.pk == customer.pk:
+            customer.phone = phone_key
+            update_fields.append('phone')
+    elif not current_phone:
+        customer.phone = phone_key
+        update_fields.append('phone')
+    if customer.customer_type not in ('مالک', 'فروشنده', 'موجر'):
+        customer.customer_type = 'مالک'
+        update_fields.append('customer_type')
+    if len(update_fields) > 1:
+        customer.save(update_fields=update_fields)
+    return customer
+
+
 def upsert_property_owner(
     user,
     *,
@@ -87,6 +160,7 @@ def upsert_property_owner(
     """
     ذخیره شماره/نام مالک روی آگهی و/یا فایل شخصی،
     ساخت یا یافتن مخاطب، و پیوند با نقش «مالک».
+    ویرایش مجدد همان ملک مخاطب تکراری نمی‌سازد.
     """
     from django.db import transaction as db_transaction
     from workspace.services.listing_edit import apply_owner_fields
@@ -102,7 +176,8 @@ def upsert_property_owner(
 
     with db_transaction.atomic():
         if listing is not None:
-            apply_owner_fields(listing, phone=phone_raw, name=name_raw)
+            # همیشه نسخه نرمال‌شده را در data نگه دار تا match پایدار بماند
+            apply_owner_fields(listing, phone=phone_key or phone_raw, name=name_raw)
             listing.save(update_fields=['data'])
 
         if crm_property is not None:
@@ -113,43 +188,14 @@ def upsert_property_owner(
         if not phone_key:
             return None
 
-        customer = find_customer_by_phone(user, phone_key)
-        if customer is None:
-            display_name = name_raw or f'مالک {phone_key[-4:]}'
-            customer = Customer.objects.create(
-                user=user,
-                agency=get_agency(user),
-                name=display_name,
-                phone=phone_key,
-                customer_type='مالک',
-                status='جدید',
-                priority='متوسط',
-                source=source if source in (
-                    'دیوار', 'معرف', 'ورود به املاک', 'تماس ورودی',
-                    'اینستاگرام', 'سایت', 'تلگرام', 'موبایل', 'سایر',
-                ) else 'سایر',
-            )
-            log_activity(
-                customer,
-                'یادداشت',
-                content='ثبت خودکار به‌عنوان مالک ملک',
-                title='ثبت مالک',
-                token=(listing.token if listing else '') or (crm_property.token if crm_property else ''),
-                property_obj=crm_property,
-            )
-        else:
-            update_fields = ['updated_at']
-            if name_raw and customer.name != name_raw:
-                customer.name = name_raw
-                update_fields.append('name')
-            if not normalize_phone(customer.phone):
-                customer.phone = phone_key
-                update_fields.append('phone')
-            if customer.customer_type not in ('مالک', 'فروشنده', 'موجر'):
-                customer.customer_type = 'مالک'
-                update_fields.append('customer_type')
-            if len(update_fields) > 1:
-                customer.save(update_fields=update_fields)
+        customer = _resolve_owner_customer(
+            user,
+            phone_key=phone_key,
+            name_raw=name_raw,
+            listing=listing,
+            crm_property=crm_property,
+            source=source,
+        )
 
         deal_type = 'سایر'
         if listing is not None:
@@ -158,9 +204,10 @@ def upsert_property_owner(
             deal_type = crm_property.deal_mode
 
         if crm_property is not None:
+            # فقط یک مالک primary روی ملک
             PropertyContact.objects.filter(
-                property=crm_property, role='مالک', is_primary=True,
-            ).exclude(customer=customer).update(is_primary=False)
+                property=crm_property, role='مالک',
+            ).exclude(customer=customer).delete()
             existing_pc = PropertyContact.objects.filter(
                 customer=customer, property=crm_property, role='مالک',
             ).first()
@@ -193,13 +240,14 @@ def upsert_property_owner(
                 price_parts.append(f'رهن {format_toman(listing.deposit)}')
             if listing.rent:
                 price_parts.append(f'اجاره {format_toman(listing.rent)}')
+            # مالک‌های قبلی همین آگهی با نقش مالک را به مخاطب فعلی منتقل/پاک کن
+            CustomerListing.objects.filter(
+                token=listing.token, role='مالک',
+            ).exclude(customer=customer).delete()
             existing_cl = CustomerListing.objects.filter(
                 customer=customer, token=listing.token, role='مالک',
             ).first()
-            need_listing_link = existing_cl is None
-            if existing_cl is not None and crm_property is not None:
-                need_listing_link = existing_cl.crm_property_id != crm_property.pk
-            if need_listing_link:
+            if existing_cl is None:
                 link_customer_listing(
                     customer,
                     token=listing.token,
@@ -211,6 +259,9 @@ def upsert_property_owner(
                     deal_type=deal_type,
                     crm_property=crm_property,
                 )
+            elif crm_property is not None and existing_cl.crm_property_id != crm_property.pk:
+                existing_cl.crm_property = crm_property
+                existing_cl.save(update_fields=['crm_property', 'updated_at'])
 
     return customer
 

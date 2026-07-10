@@ -122,3 +122,93 @@ class UpsertPropertyOwnerTests(TestCase):
         self.assertIsNone(result)
         self.assertEqual(owner_phone_from_listing(self.listing), '')
         self.assertEqual(Customer.objects.filter(user=self.user).count(), before)
+
+    def test_second_edit_does_not_duplicate_owner(self):
+        first = upsert_property_owner(
+            self.user,
+            phone='09121234567',
+            name='علی رضایی',
+            listing=self.listing,
+        )
+        second = upsert_property_owner(
+            self.user,
+            phone='09121234567',
+            name='علی رضایی ویرایش',
+            listing=self.listing,
+        )
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(Customer.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(
+            CustomerListing.objects.filter(token='tok-owner-1', role='مالک').count(),
+            1,
+        )
+        second.refresh_from_db()
+        self.assertEqual(second.name, 'علی رضایی ویرایش')
+
+    def test_second_edit_with_persian_digits_reuses_owner(self):
+        first = upsert_property_owner(
+            self.user,
+            phone='09129876543',
+            name='سارا',
+            listing=self.listing,
+        )
+        second = upsert_property_owner(
+            self.user,
+            phone='۰۹۱۲۹۸۷۶۵۴۳',
+            name='سارا محمدی',
+            listing=self.listing,
+        )
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(Customer.objects.filter(user=self.user).count(), 1)
+
+    def test_second_edit_on_property_does_not_duplicate_link(self):
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='فایل شخصی',
+            deal_mode='فروش',
+        )
+        first = upsert_property_owner(
+            self.user,
+            phone='09121112233',
+            name='مالک یک',
+            crm_property=prop,
+        )
+        second = upsert_property_owner(
+            self.user,
+            phone='09121112233',
+            name='مالک یک به‌روز',
+            crm_property=prop,
+        )
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(
+            PropertyContact.objects.filter(property=prop, role='مالک').count(),
+            1,
+        )
+        self.assertEqual(Customer.objects.filter(user=self.user).count(), 1)
+
+    def test_edit_owner_phone_updates_same_contact_in_place(self):
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='فایل شخصی ۲',
+            deal_mode='فروش',
+        )
+        first = upsert_property_owner(
+            self.user,
+            phone='09120001111',
+            name='مالک',
+            crm_property=prop,
+        )
+        second = upsert_property_owner(
+            self.user,
+            phone='09120002222',
+            name='مالک',
+            crm_property=prop,
+        )
+        self.assertEqual(first.pk, second.pk)
+        second.refresh_from_db()
+        self.assertEqual(second.phone, '09120002222')
+        self.assertEqual(Customer.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(
+            PropertyContact.objects.filter(property=prop, role='مالک').count(),
+            1,
+        )

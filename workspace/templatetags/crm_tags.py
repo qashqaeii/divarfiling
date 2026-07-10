@@ -339,3 +339,34 @@ def crm_placeholder_meta():
         ('{areas}', 'منطقه', 'fa-location-dot'),
         ('{agency}', 'آژانس', 'fa-building'),
     ]
+
+
+def _normalized_mobile(phone: str) -> str:
+    from workspace.services.crm import normalize_phone
+    return normalize_phone(phone or '')
+
+
+@register.filter
+def phone_tel_href(phone):
+    """href برای تماس تلفنی."""
+    key = _normalized_mobile(phone)
+    return f'tel:{key}' if key else ''
+
+
+@register.filter
+def phone_wa_href(phone):
+    """لینک واتساپ (wa.me) از شماره ایران."""
+    key = _normalized_mobile(phone)
+    if not key:
+        return ''
+    digits = key[1:] if key.startswith('0') else key
+    if digits.startswith('98'):
+        return f'https://wa.me/{digits}'
+    return f'https://wa.me/98{digits}'
+
+
+@register.filter
+def phone_sms_href(phone):
+    """href برای پیامک."""
+    key = _normalized_mobile(phone)
+    return f'sms:{key}' if key else ''

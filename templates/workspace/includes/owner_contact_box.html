@@ -1,4 +1,6 @@
+{% load crm_tags %}
 {# باکس ثبت/ویرایش مالک ملک — مشترک فایلینگ و فایل شخصی #}
+{% with act_phone=owner_phone|default:owner_contact.phone %}
 {% if can_edit_owner %}
 <form method="post" action="{{ owner_form_action }}" class="mk-owner-box mk-owner-box--edit">
     {% csrf_token %}
@@ -11,6 +13,16 @@
         </a>
         {% endif %}
     </div>
+    {% if act_phone %}
+    <div class="mk-owner-box__acts">
+        {% if owner_contact %}
+        {% url 'workspace:crm_detail' owner_contact.id as _owner_profile %}
+        {% include 'workspace/includes/contact_quick_actions.html' with phone=act_phone profile_url=_owner_profile copy_text=owner_contact.name acts_label='تماس با مالک' %}
+        {% else %}
+        {% include 'workspace/includes/contact_quick_actions.html' with phone=act_phone copy_text=owner_name acts_label='تماس با مالک' %}
+        {% endif %}
+    </div>
+    {% endif %}
     <p class="mk-owner-box__hint">با ذخیره، به مخاطبین اضافه و به‌عنوان مالک پیوند می‌شود.</p>
     <div class="mk-owner-box__fields">
         <div class="mk-owner-box__field">
@@ -56,8 +68,19 @@
         </div>
         {% endif %}
     </dl>
+    {% if act_phone %}
+    <div class="mk-owner-box__acts">
+        {% if owner_contact %}
+        {% url 'workspace:crm_detail' owner_contact.id as _owner_profile %}
+        {% include 'workspace/includes/contact_quick_actions.html' with phone=act_phone profile_url=_owner_profile copy_text=owner_contact.name acts_label='تماس با مالک' %}
+        {% else %}
+        {% include 'workspace/includes/contact_quick_actions.html' with phone=act_phone copy_text=owner_name acts_label='تماس با مالک' %}
+        {% endif %}
+    </div>
+    {% endif %}
     {% else %}
     <p class="mk-owner-box__empty">مالک ثبت نشده است.</p>
     {% endif %}
 </div>
 {% endif %}
+{% endwith %}

@@ -1264,6 +1264,23 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             else:
                 messages.error(request, 'پیوند انجام نشد. مخاطب و نقش را انتخاب کنید.')
                 return redirect(self._detail_redirect(property_id, tab='contacts', drawer='link-contact'))
+        elif action == 'unlink_contact':
+            link_id = request.POST.get('link_id')
+            link = prop.contact_links.filter(pk=link_id).select_related('customer').first()
+            if not link:
+                messages.error(request, 'پیوند یافت نشد.')
+            else:
+                from workspace.services.crm import log_activity
+                name = link.customer.name
+                log_activity(
+                    link.customer,
+                    'املاک',
+                    content=f'حذف پیوند از ملک: {prop.title}',
+                    property_obj=prop,
+                )
+                link.delete()
+                messages.success(request, f'پیوند «{name}» حذف شد.')
+            return redirect(self._detail_redirect(property_id, tab='contacts'))
         return redirect(redirect_url)
 
 

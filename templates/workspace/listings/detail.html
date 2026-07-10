@@ -1,5 +1,5 @@
 {% extends 'workspace/base.html' %}
-{% load static workspace_tags %}
+{% load static workspace_tags crm_tags %}
 
 {% block page_title %}{{ listing.title|truncatechars:40 }}{% endblock %}
 
@@ -190,12 +190,18 @@
                     <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="ws-ld-crm-new">+ مخاطب جدید</a>
                 </div>
                 {% if crm_links %}
-                <div class="ws-ld-crm-chips">
+                <div class="ws-ld-crm-list">
                     {% for link in crm_links %}
-                    <a href="{% url 'workspace:crm_detail' link.customer_id %}" class="ws-ld-crm-chip">
-                        <span>{{ link.customer.name }}</span>
-                        <em>{{ link.role }}</em>
-                    </a>
+                    <article class="ws-ld-crm-row">
+                        <a href="{% url 'workspace:crm_detail' link.customer_id %}" class="ws-ld-crm-row-main">
+                            <span class="ws-ld-crm-row-name">{{ link.customer.name }}</span>
+                            <em class="ws-ld-crm-row-role">{{ link.role }}</em>
+                            {% if link.customer.phone %}<span class="ws-ld-crm-row-phone" dir="ltr">{{ link.customer.phone }}</span>{% endif %}
+                        </a>
+                        {% url 'workspace:crm_detail' link.customer_id as _ld_profile %}
+                        {% url 'workspace:listing_detail' dataset.id listing.id as _ld_unlink_action %}
+                        {% include 'workspace/includes/contact_quick_actions.html' with phone=link.customer.phone profile_url=_ld_profile copy_text=link.customer.name show_unlink=True unlink_action='crm_unlink' unlink_id=link.id unlink_id_field='link_id' unlink_form_action=_ld_unlink_action acts_class='ws-ld-crm-acts' acts_label='عملیات مخاطب' %}
+                    </article>
                     {% endfor %}
                 </div>
                 {% else %}

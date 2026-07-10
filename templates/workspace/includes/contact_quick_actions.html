@@ -1,0 +1,37 @@
+{% load crm_tags %}
+{# آیکن‌های مینیمال تماس / واتساپ / پیامک / پروفایل / حذف پیوند #}
+{% if phone or profile_url or show_unlink %}
+<div class="mk-contact-acts{% if acts_class %} {{ acts_class }}{% endif %}" role="group" aria-label="{{ acts_label|default:'عملیات تماس' }}">
+    {% if phone %}
+    <a href="{{ phone|phone_tel_href }}" class="mk-contact-act mk-contact-act--call" title="تماس" aria-label="تماس">
+        <i class="fas fa-phone" aria-hidden="true"></i>
+    </a>
+    <a href="{{ phone|phone_wa_href }}" target="_blank" rel="noopener" class="mk-contact-act mk-contact-act--wa" title="واتساپ" aria-label="واتساپ">
+        <i class="fab fa-whatsapp" aria-hidden="true"></i>
+    </a>
+    <a href="{{ phone|phone_sms_href }}" class="mk-contact-act mk-contact-act--sms" title="پیامک" aria-label="پیامک">
+        <i class="fas fa-sms" aria-hidden="true"></i>
+    </a>
+    {% if copy_text %}
+    <button type="button" class="mk-contact-act mk-contact-act--copy" data-copy="{{ copy_text }}" title="کپی پیام" aria-label="کپی پیام">
+        <i class="fas fa-comment-dots" aria-hidden="true"></i>
+    </button>
+    {% endif %}
+    {% endif %}
+    {% if profile_url %}
+    <a href="{{ profile_url }}" class="mk-contact-act mk-contact-act--profile" title="پروفایل مخاطب" aria-label="پروفایل">
+        <i class="fas fa-user" aria-hidden="true"></i>
+    </a>
+    {% endif %}
+    {% if show_unlink and unlink_action and unlink_id %}
+    <form method="post" action="{{ unlink_form_action|default:'' }}" class="mk-contact-act-form" onsubmit="return confirm('پیوند این مخاطب حذف شود؟');">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="{{ unlink_action }}">
+        <input type="hidden" name="{{ unlink_id_field|default:'link_id' }}" value="{{ unlink_id }}">
+        <button type="submit" class="mk-contact-act mk-contact-act--danger" title="حذف پیوند" aria-label="حذف پیوند">
+            <i class="fas fa-link-slash" aria-hidden="true"></i>
+        </button>
+    </form>
+    {% endif %}
+</div>
+{% endif %}

@@ -838,6 +838,17 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
                 messages.success(request, 'شماره مالک پاک شد.')
             return redirect('workspace:listing_detail', dataset_id=dataset_id, listing_id=listing_id)
 
+        if action == 'crm_unlink':
+            link_id = request.POST.get('link_id')
+            link = customers_linked_to_token(request.user, listing.token).filter(pk=link_id).first()
+            if not link:
+                messages.error(request, 'پیوند یافت نشد.')
+            else:
+                name = link.customer.name
+                link.delete()
+                messages.success(request, f'پیوند «{name}» حذف شد.')
+            return redirect('workspace:listing_detail', dataset_id=dataset_id, listing_id=listing_id)
+
         meta, _ = ListingMeta.objects.get_or_create(user=request.user, token=listing.token)
         form = ListingMetaForm(request.POST, instance=meta)
         if form.is_valid():

@@ -395,18 +395,23 @@
                     {% elif contact_links %}
                     <div class="crm-prop-contact-grid">
                         {% for link in contact_links %}
-                        <a href="{% url 'workspace:crm_detail' link.customer_id %}" class="crm-prop-contact-tile">
-                            <span class="crm-prop-contact-avatar">{{ link.customer.name|slice:":1" }}</span>
-                            <div class="crm-prop-contact-body">
-                                <strong>{{ link.customer.name }}</strong>
-                                <span class="crm-prop-contact-role" {% crm_role_style_attr link.role %}>{{ link.role }}</span>
-                                <div class="crm-prop-contact-meta">
-                                    {% if link.deal_type %}<span>{{ link.deal_type }}</span>{% endif %}
-                                    {% if link.interest_level %}<span>{{ link.interest_level }}</span>{% endif %}
+                        <article class="crm-prop-contact-tile">
+                            <a href="{% url 'workspace:crm_detail' link.customer_id %}" class="crm-prop-contact-main">
+                                <span class="crm-prop-contact-avatar">{{ link.customer.name|crm_initials }}</span>
+                                <div class="crm-prop-contact-body">
+                                    <strong>{{ link.customer.name }}</strong>
+                                    <span class="crm-prop-contact-role" {% crm_role_style_attr link.role %}>{{ link.role }}</span>
+                                    <div class="crm-prop-contact-meta">
+                                        {% if link.customer.phone %}<span dir="ltr">{{ link.customer.phone }}</span>{% endif %}
+                                        {% if link.deal_type %}<span>{{ link.deal_type }}</span>{% endif %}
+                                        {% if link.interest_level %}<span>{{ link.interest_level }}</span>{% endif %}
+                                    </div>
                                 </div>
-                            </div>
-                            <i class="fas fa-arrow-left crm-prop-contact-go"></i>
-                        </a>
+                            </a>
+                            {% url 'workspace:crm_detail' link.customer_id as _c_profile %}
+                            {% url 'workspace:crm_property_detail' property.id as _prop_unlink_action %}
+                            {% include 'workspace/includes/contact_quick_actions.html' with phone=link.customer.phone profile_url=_c_profile copy_text=link.customer.name show_unlink=can_edit_property unlink_action='unlink_contact' unlink_id=link.id unlink_form_action=_prop_unlink_action acts_class='crm-prop-contact-acts' acts_label='عملیات مخاطب' %}
+                        </article>
                         {% endfor %}
                     </div>
                     {% else %}

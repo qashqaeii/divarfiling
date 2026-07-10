@@ -165,6 +165,7 @@
                                 <span class="crm-ft-prop-text">
                                     <strong>{{ p.title }}</strong>
                                     <em>{% if p.neighborhood %}{{ p.neighborhood }}{% endif %}{% if p.city %}{% if p.neighborhood %} · {% endif %}{{ p.city }}{% endif %}</em>
+                                    {% if p.owner_name %}<span class="crm-ft-owner"><i class="fas fa-user-tie" aria-hidden="true"></i> {{ p.owner_name }}</span>{% endif %}
                                 </span>
                                 <i class="fas fa-chevron-left crm-ft-prop-go" aria-hidden="true"></i>
                             </a>
@@ -240,6 +241,9 @@
                 <p class="crm-files-card-loc">
                     {% if p.neighborhood %}{{ p.neighborhood }}{% endif %}{% if p.city %}<span class="crm-files-card-loc-sep">·</span>{{ p.city }}{% endif %}
                 </p>
+                {% if p.owner_name %}
+                <p class="crm-files-card-owner"><i class="fas fa-user-tie" aria-hidden="true"></i>{{ p.owner_name }}</p>
+                {% endif %}
                 {% if p.area or p.rooms or p.floor %}
                 <div class="crm-files-card-metrics">
                     {% if p.area %}<span class="crm-files-metric-chip"><em>متراژ</em><strong>{{ p.area|ws_area }}</strong></span>{% endif %}

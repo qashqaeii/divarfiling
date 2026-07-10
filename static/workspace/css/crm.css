@@ -7347,6 +7347,13 @@ body.crm-side-open { overflow: hidden; }
 .crm-files-card > :not(.crm-files-card-bg):not(.crm-files-card-accent):not(.crm-files-card-hit) {
     position: relative;
     z-index: 1;
+    pointer-events: none;
+}
+.crm-files-card a:not(.crm-files-card-hit),
+.crm-files-card button {
+    pointer-events: auto;
+    position: relative;
+    z-index: 3;
 }
 .crm-files-card-accent {
     position: absolute;
@@ -7356,6 +7363,7 @@ body.crm-side-open { overflow: hidden; }
     height: 3px;
     background: var(--tx-accent, var(--ws-primary));
     opacity: 0.9;
+    pointer-events: none;
 }
 .crm-files-card:hover .crm-files-card-bg i {
     opacity: 0.095;
@@ -7542,8 +7550,31 @@ body.crm-side-open { overflow: hidden; }
 .crm-files-card-hit {
     position: absolute;
     inset: 0;
-    z-index: 1;
+    z-index: 2;
     border-radius: inherit;
+}
+.crm-files-card-owner {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    line-height: 1.35;
+}
+.crm-files-card-owner i {
+    color: var(--ws-primary);
+    opacity: 0.85;
+    font-size: 0.68rem;
+}
+.crm-ft-owner {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    font-style: normal;
 }
 .crm-ft-contact-cell {
     display: flex;

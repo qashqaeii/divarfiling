@@ -159,10 +159,21 @@
                             <button type="button" class="crm-prop-copy" data-copy="{{ property.token }}" title="کپی شناسه"><i class="fas fa-copy"></i></button>
                         </span>
                         {% endif %}
+                        {% if not mask_sensitive %}
+                            {% if owner_contact %}
+                            <span class="crm-prop-hero-chip crm-prop-hero-chip--owner">
+                                <i class="fas fa-user-tie" aria-hidden="true"></i>مالک: {{ owner_contact.name }}
+                            </span>
+                            {% elif owner_name %}
+                            <span class="crm-prop-hero-chip crm-prop-hero-chip--owner">
+                                <i class="fas fa-user-tie" aria-hidden="true"></i>مالک: {{ owner_name }}
+                            </span>
+                            {% endif %}
+                        {% endif %}
                         {% if is_property_owner %}
-                        <span class="crm-prop-hero-chip"><i class="fas fa-user-check" aria-hidden="true"></i>مالک: شما</span>
+                        <span class="crm-prop-hero-chip"><i class="fas fa-user-check" aria-hidden="true"></i>ثبت‌کننده: شما</span>
                         {% elif property_owner_user %}
-                        <span class="crm-prop-hero-chip"><i class="fas fa-user" aria-hidden="true"></i>مالک: {{ property_owner_user.get_full_name|default:property_owner_user.username }}</span>
+                        <span class="crm-prop-hero-chip"><i class="fas fa-user" aria-hidden="true"></i>ثبت‌کننده: {{ property_owner_user.get_full_name|default:property_owner_user.username }}</span>
                         {% endif %}
                     </div>
 

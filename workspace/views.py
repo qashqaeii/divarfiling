@@ -955,15 +955,22 @@ class ListingAddToPersonalFilesView(DatasetOwnerMixin, View):
         listing = get_object_or_404(dataset.listings, pk=listing_id)
         prop, created = add_listing_to_personal_files(request.user, listing)
         if created:
-            messages.success(request, 'آگهی به فایل‌های شخصی اضافه شد.')
+            messages.success(
+                request,
+                'آگهی به فایل‌های شخصی منتقل شد و از فایلینگ دیوار حذف شد.',
+            )
         else:
-            messages.info(request, 'این آگهی قبلاً در فایل‌های شخصی ثبت شده است.')
+            messages.info(
+                request,
+                'این آگهی قبلاً در فایل‌های شخصی بود؛ از فایلینگ دیوار حذف شد.',
+            )
         if request.POST.get('redirect') == 'property':
             return redirect('workspace:crm_property_detail', property_id=prop.pk)
-        return redirect(request.POST.get('next') or reverse(
-            'workspace:listing_detail',
-            kwargs={'dataset_id': dataset.pk, 'listing_id': listing.pk},
-        ))
+        nxt = (request.POST.get('next') or '').strip()
+        # آگهی از فایلینگ حذف شده؛ به جزئیات آگهی برنگرد
+        if nxt and f'/listings/{listing_id}/' not in nxt:
+            return redirect(nxt)
+        return redirect('workspace:crm_property_detail', property_id=prop.pk)
 
 
 class DeleteConsultantsView(DatasetOwnerMixin, View):

@@ -2,15 +2,27 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import uuid
-from typing import List
+from typing import List, Optional
 
+import requests
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_IMAGE_EXT = {'.jpg', '.jpeg', '.png', '.webp', '.gif'}
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 MAX_PROPERTY_IMAGES = 12
+_CONTENT_TYPE_EXT = {
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+    'image/gif': '.gif',
+}
 
 
 def validate_image_file(uploaded_file) -> None:
@@ -30,6 +42,74 @@ def store_property_image(user, prop, uploaded_file) -> str:
     rel_path = f'workspace/crm/properties/{user.pk}/{prop.pk}/{uuid.uuid4().hex}{ext}'
     saved = default_storage.save(rel_path, uploaded_file)
     return default_storage.url(saved)
+
+
+def _guess_image_ext(url: str, content_type: str) -> str:
+    ctype = (content_type or '').split(';')[0].strip().lower()
+    if ctype in _CONTENT_TYPE_EXT:
+        return _CONTENT_TYPE_EXT[ctype]
+    path_ext = os.path.splitext(str(url or '').split('?', 1)[0])[1].lower()
+    if path_ext in ALLOWED_IMAGE_EXT:
+        return path_ext
+    return '.jpg'
+
+
+def download_and_store_remote_image(user, prop, url: str, *, timeout: int = 25) -> str:
+    """دانلود تصویر از URL خارجی (مثل CDN دیوار) و ذخیره در media فایل شخصی."""
+    url = normalize_external_image_url(url)
+    if not url:
+        raise ValueError('آدرس تصویر نامعتبر است.')
+    if url.startswith('/media/'):
+        return url
+
+    headers = {
+        'User-Agent': (
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        ),
+        'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        'Referer': 'https://divar.ir/',
+    }
+    resp = requests.get(url, headers=headers, timeout=timeout)
+    resp.raise_for_status()
+    data = resp.content or b''
+    if not data:
+        raise ValueError('تصویر خالی است.')
+    if len(data) > MAX_IMAGE_BYTES:
+        raise ValueError('حجم تصویر بیش از حد مجاز است.')
+
+    ext = _guess_image_ext(url, resp.headers.get('Content-Type', ''))
+    uploaded = ContentFile(data, name=f'remote{ext}')
+    return store_property_image(user, prop, uploaded)
+
+
+def mirror_remote_images_to_property(
+    user,
+    prop,
+    urls: Optional[List[str]] = None,
+) -> List[str]:
+    """
+    کپی تصاویر خارجی به storage محلی فایل شخصی.
+    اگر دانلود شکست بخورد، همان URL اصلی به‌عنوان fallback نگه داشته می‌شود.
+    """
+    raw = list(urls if urls is not None else (prop.images or []))
+    sources = deduplicate_divar_image_urls(raw)[:MAX_PROPERTY_IMAGES]
+    out: List[str] = []
+    for url in sources:
+        if str(url).startswith('/media/'):
+            out.append(url)
+            continue
+        try:
+            out.append(download_and_store_remote_image(user, prop, url))
+        except Exception:
+            logger.warning(
+                'Failed to mirror property image for prop=%s url=%s',
+                getattr(prop, 'pk', None),
+                url,
+                exc_info=True,
+            )
+            out.append(url)
+    return out
 
 
 def parse_images_payload(raw) -> List[str]:

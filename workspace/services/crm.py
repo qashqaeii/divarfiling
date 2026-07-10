@@ -562,25 +562,109 @@ def get_crm_property_by_token(user, token: str) -> Optional[CRMProperty]:
     return properties_qs(user).filter(token=token).first()
 
 
+def migrate_customer_listings_to_crm_property(user, token: str, prop: CRMProperty) -> int:
+    """
+    پیوندهای «املاک مرتبط» مبتنی بر آگهی دیوار را به PropertyContact فایل شخصی منتقل می‌کند
+    تا پس از حذف آگهی از فایلینگ، ملک دوبار نمایش داده نشود.
+    """
+    token = str(token or '').strip()
+    if not token:
+        return 0
+    customer_ids = list(customers_qs(user).values_list('id', flat=True))
+    if not customer_ids:
+        return 0
+    qs = CustomerListing.objects.filter(token=token, customer_id__in=customer_ids)
+    migrated = 0
+    for cl in qs.iterator():
+        PropertyContact.objects.update_or_create(
+            customer_id=cl.customer_id,
+            property=prop,
+            role=cl.role,
+            defaults={
+                'deal_type': cl.deal_type or 'سایر',
+                'is_primary': cl.role == 'مالک',
+                'notes': cl.notes or '',
+            },
+        )
+        cl.delete()
+        migrated += 1
+    return migrated
+
+
+def remove_listing_from_filing(user, listing) -> int:
+    """حذف آگهی (و نسخه‌های هم‌توکن کاربر) از فایلینگ دیوار."""
+    token = str(getattr(listing, 'token', '') or '').strip()
+    if token:
+        qs = Listing.objects.filter(token=token, dataset__user=user).select_related('dataset')
+    else:
+        qs = Listing.objects.filter(pk=listing.pk).select_related('dataset')
+
+    dataset_ids = set()
+    deleted = 0
+    for row in list(qs):
+        dataset_ids.add(row.dataset_id)
+        row.delete()
+        deleted += 1
+
+    if dataset_ids:
+        from workspace.models import Dataset
+
+        for ds_id in dataset_ids:
+            Dataset.objects.filter(pk=ds_id).update(
+                row_count=Listing.objects.filter(dataset_id=ds_id).count(),
+            )
+    return deleted
+
+
+def finalize_listing_moved_to_personal(user, listing, prop: CRMProperty) -> None:
+    """پس از ساخت/یافتن فایل شخصی: ذخیره عکس‌ها، مهاجرت لینک‌ها، حذف از فایلینگ."""
+    from workspace.services.property_images import mirror_remote_images_to_property
+
+    source_images = list(prop.images or []) or list(listing.images or [])
+    mirrored = mirror_remote_images_to_property(user, prop, source_images)
+    if mirrored != list(prop.images or []):
+        prop.images = mirrored
+        prop.save(update_fields=['images', 'updated_at'])
+
+    migrate_customer_listings_to_crm_property(user, listing.token, prop)
+    remove_listing_from_filing(user, listing)
+
+
 def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
-    """افزودن آگهی به فایل‌های شخصی؛ در صورت تکراری بودن همان ملک برگردانده می‌شود."""
+    """
+    انتقال آگهی به فایل‌های شخصی:
+    ساخت/بازیابی CRMProperty، ذخیره محلی تصاویر، مهاجرت املاک مرتبط، حذف از فایلینگ دیوار.
+    """
     from workspace.services.listing_edit import owner_name_from_listing, owner_phone_from_listing
 
     existing = get_crm_property_by_token(user, listing.token)
     if existing:
+        phone = owner_phone_from_listing(listing) or existing.phone
+        name = owner_name_from_listing(listing) or existing.owner_name
+        if normalize_phone(phone):
+            upsert_property_owner(
+                user,
+                phone=phone,
+                name=name,
+                crm_property=existing,
+                source='دیوار',
+            )
+        finalize_listing_moved_to_personal(user, listing, existing)
         return existing, False
+
     prop = property_from_listing(user, listing)
     phone = owner_phone_from_listing(listing) or prop.phone
     name = owner_name_from_listing(listing) or prop.owner_name
     if normalize_phone(phone):
+        # فقط PropertyContact — CustomerListing بعداً مهاجرت/حذف می‌شود
         upsert_property_owner(
             user,
             phone=phone,
             name=name,
-            listing=listing,
             crm_property=prop,
             source='دیوار',
         )
+    finalize_listing_moved_to_personal(user, listing, prop)
     return prop, True
 
 

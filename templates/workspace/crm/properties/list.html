@@ -347,13 +347,17 @@
                     {% if p.floor %}<span class="crm-files-metric-chip"><em>طبقه</em><strong>{{ p.floor }}{% if p.total_floors %}/{{ p.total_floors }}{% endif %}</strong></span>{% endif %}
                 </div>
                 {% endif %}
-                {% if p.has_parking or p.has_storage or p.has_elevator %}
                 <div class="crm-files-card-amenities" aria-label="امکانات">
-                    {% if p.has_parking %}<span title="پارکینگ"><i class="fas fa-car" aria-hidden="true"></i></span>{% endif %}
-                    {% if p.has_storage %}<span title="انباری"><i class="fas fa-box" aria-hidden="true"></i></span>{% endif %}
-                    {% if p.has_elevator %}<span title="آسانسور">{% include 'includes/icon_slot.html' with decor='elevator' size='inline' only %}</span>{% endif %}
+                    <span class="crm-files-amenity{% if p.has_parking %} is-on{% else %} is-off{% endif %}" title="پارکینگ: {% if p.has_parking %}دارد{% else %}ندارد{% endif %}">
+                        <i class="fas fa-car" aria-hidden="true"></i>
+                    </span>
+                    <span class="crm-files-amenity{% if p.has_storage %} is-on{% else %} is-off{% endif %}" title="انباری: {% if p.has_storage %}دارد{% else %}ندارد{% endif %}">
+                        <i class="fas fa-box-archive" aria-hidden="true"></i>
+                    </span>
+                    <span class="crm-files-amenity{% if p.has_elevator %} is-on{% else %} is-off{% endif %}" title="آسانسور: {% if p.has_elevator %}دارد{% else %}ندارد{% endif %}">
+                        <i class="fas fa-elevator" aria-hidden="true"></i>
+                    </span>
                 </div>
-                {% endif %}
                 <footer class="crm-files-card-foot">
                     <div class="crm-files-card-price">
                         {% if p.sale_price %}

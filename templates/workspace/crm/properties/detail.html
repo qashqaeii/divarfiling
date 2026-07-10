@@ -261,17 +261,25 @@
                 </div>
             </div>
 
-            {% if property.has_parking or property.has_storage or property.has_elevator or listing_highlights %}
             <div class="crm-prop-hero-amenities">
                 <span class="crm-prop-hero-amenities-lbl"><i class="fas fa-sparkles"></i> امکانات</span>
+                <div class="crm-prop-hero-amenity-icons" aria-label="امکانات اصلی">
+                    <span class="crm-files-amenity{% if property.has_parking %} is-on{% else %} is-off{% endif %}" title="پارکینگ: {% if property.has_parking %}دارد{% else %}ندارد{% endif %}">
+                        <i class="fas fa-car" aria-hidden="true"></i>
+                    </span>
+                    <span class="crm-files-amenity{% if property.has_storage %} is-on{% else %} is-off{% endif %}" title="انباری: {% if property.has_storage %}دارد{% else %}ندارد{% endif %}">
+                        <i class="fas fa-box-archive" aria-hidden="true"></i>
+                    </span>
+                    <span class="crm-files-amenity{% if property.has_elevator %} is-on{% else %} is-off{% endif %}" title="آسانسور: {% if property.has_elevator %}دارد{% else %}ندارد{% endif %}">
+                        <i class="fas fa-elevator" aria-hidden="true"></i>
+                    </span>
+                </div>
+                {% if listing_highlights %}
                 <div class="crm-prop-hero-tags">
-                    {% if property.has_parking %}<span class="crm-prop-tag"><i class="fas fa-car"></i> پارکینگ</span>{% endif %}
-                    {% if property.has_storage %}<span class="crm-prop-tag"><i class="fas fa-box"></i> انباری</span>{% endif %}
-                    {% if property.has_elevator %}<span class="crm-prop-tag">{% include 'includes/icon_slot.html' with decor='elevator' size='inline' only %} آسانسور</span>{% endif %}
                     {% for hl in listing_highlights %}<span class="crm-prop-tag crm-prop-tag--hl">{{ hl }}</span>{% endfor %}
                 </div>
+                {% endif %}
             </div>
-            {% endif %}
 
             {% if property_is_shared and not can_edit_property and property_share %}
             <div class="crm-prop-hero-share-view">

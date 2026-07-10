@@ -8,7 +8,7 @@
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -38,6 +38,10 @@
                 <a href="?days=30#adm-overview" class="adm-range-btn{% if chart_days == 30 %} is-active{% endif %}">۳۰ روز</a>
                 <a href="?days=90#adm-overview" class="adm-range-btn{% if chart_days == 90 %} is-active{% endif %}">۹۰ روز</a>
             </div>
+            <a href="{% url 'admin_panel_marketing' %}" class="adm-hero-link">
+                <i class="fas fa-bullhorn" aria-hidden="true"></i>
+                بازاریابی SMS
+            </a>
             <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="adm-hero-link adm-hero-link--json">
                 <i class="fas fa-file-code" aria-hidden="true"></i>
                 خلاصه JSON
@@ -53,6 +57,7 @@
         <a href="#adm-overview" class="adm-tab is-active">نمای کلی</a>
         <a href="#adm-reports" class="adm-tab">گزارش‌ها</a>
         <a href="#adm-exports" class="adm-tab">خروجی Excel</a>
+        <a href="{% url 'admin_panel_marketing' %}" class="adm-tab">بازاریابی SMS</a>
         <a href="#adm-json" class="adm-tab">خلاصه JSON</a>
     </nav>
 

@@ -85,3 +85,47 @@ def notify_system(phone: str, *, text: str = '', attributes: dict | None = None)
     except SmsError as exc:
         log.mark_failed(str(exc))
         return False
+
+
+def notify_marketing(
+    phone: str,
+    *,
+    text: str = '',
+    attributes: dict | None = None,
+) -> tuple[bool, SmsMessageLog]:
+    """
+    پیام بازاریابی — ترجیح با الگوی FARAZSMS_PATTERNS['marketing']،
+    در غیر این صورت ارسال متن ساده.
+    خروجی: (موفقیت، لاگ SmsMessageLog)
+    """
+    phone = normalize_phone(phone)
+    pattern = (getattr(settings, 'FARAZSMS_PATTERNS', {}) or {}).get('marketing') or ''
+    log = SmsMessageLog.objects.create(
+        phone=phone,
+        purpose='marketing',
+        channel=SmsMessageLog.Channel.PATTERN if pattern else SmsMessageLog.Channel.SIMPLE,
+        provider=getattr(settings, 'SMS_PROVIDER', 'console'),
+        pattern_code=pattern,
+        status=SmsMessageLog.Status.PENDING,
+    )
+    try:
+        if pattern:
+            attrs = dict(attributes or {})
+            if text and 'message' not in attrs:
+                attrs['message'] = text[:500]
+            result = send_pattern_sms(phone, purpose='marketing', attributes=attrs)
+        else:
+            if not (text or '').strip():
+                log.mark_failed('متن پیام خالی است')
+                return False, log
+            result = send_simple_sms(phone, text.strip())
+        log.mark_sent(
+            provider=result.provider,
+            message_id=result.message_id,
+            status=SmsMessageLog.Status.FAKE if result.is_fake else SmsMessageLog.Status.SENT,
+        )
+        return True, log
+    except SmsError as exc:
+        log.mark_failed(str(exc))
+        logger.warning('marketing SMS failed phone=%s**** err=%s', phone[:4], exc.code)
+        return False, log

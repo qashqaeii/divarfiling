@@ -4,8 +4,14 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import OtpRequest, SmsMessageLog, User, UserProfile
-
+from .models import (
+    MarketingCampaign,
+    MarketingCampaignRecipient,
+    OtpRequest,
+    SmsMessageLog,
+    User,
+    UserProfile,
+)
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
@@ -118,3 +124,24 @@ class SmsMessageLogAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+@admin.register(MarketingCampaign)
+class MarketingCampaignAdmin(admin.ModelAdmin):
+    list_display = [
+        'name', 'segment_key', 'status', 'discount_mode',
+        'sent_count', 'failed_count', 'skipped_count', 'created_at',
+    ]
+    list_filter = ['status', 'segment_key', 'discount_mode']
+    search_fields = ['name', 'message_template']
+    readonly_fields = [
+        'recipients_total', 'sent_count', 'failed_count', 'skipped_count',
+        'created_at', 'completed_at',
+    ]
+
+
+@admin.register(MarketingCampaignRecipient)
+class MarketingCampaignRecipientAdmin(admin.ModelAdmin):
+    list_display = ['campaign', 'phone', 'status', 'discount_code', 'created_at']
+    list_filter = ['status']
+    search_fields = ['phone']
+    raw_id_fields = ['campaign', 'user', 'discount_code', 'sms_log']

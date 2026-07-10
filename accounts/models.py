@@ -178,3 +178,141 @@ class SmsMessageLog(models.Model):
         self.status = self.Status.FAILED
         self.error_message = (error or '')[:500]
         self.save(update_fields=['status', 'error_message', 'updated_at'])
+
+
+class MarketingCampaign(models.Model):
+    """کمپین بازاریابی پیامکی — پنل ادمین."""
+
+    class Status(models.TextChoices):
+        DRAFT = 'draft', 'پیش‌نویس'
+        SENDING = 'sending', 'در حال ارسال'
+        COMPLETED = 'completed', 'تکمیل‌شده'
+        FAILED = 'failed', 'ناموفق'
+
+    class DiscountMode(models.TextChoices):
+        NONE = 'none', 'بدون تخفیف'
+        SHARED = 'shared', 'کد مشترک'
+        UNIQUE = 'unique', 'کد یکتا برای هر کاربر'
+
+    name = models.CharField(max_length=200, verbose_name='نام کمپین')
+    segment_key = models.CharField(max_length=64, db_index=True, verbose_name='سگمنت')
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.DRAFT,
+        db_index=True,
+        verbose_name='وضعیت',
+    )
+    message_template = models.TextField(verbose_name='قالب پیام')
+    discount_mode = models.CharField(
+        max_length=16,
+        choices=DiscountMode.choices,
+        default=DiscountMode.NONE,
+        verbose_name='حالت تخفیف',
+    )
+    shared_discount = models.ForeignKey(
+        'shop.DiscountCode',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketing_campaigns',
+        verbose_name='کد تخفیف مشترک',
+    )
+    stale_hours = models.PositiveIntegerField(null=True, blank=True, verbose_name='حداقل سن سفارش (ساعت)')
+    days_lookback = models.PositiveIntegerField(null=True, blank=True, verbose_name='بازه روز')
+    product_id = models.PositiveIntegerField(null=True, blank=True, verbose_name='شناسه محصول')
+    dedupe_days = models.PositiveIntegerField(default=7, verbose_name='فاصله عدم تکرار (روز)')
+    discount_type = models.CharField(max_length=20, blank=True, verbose_name='نوع تخفیف')
+    discount_value = models.DecimalField(
+        max_digits=12, decimal_places=0, null=True, blank=True, verbose_name='مقدار تخفیف',
+    )
+    discount_valid_days = models.PositiveIntegerField(null=True, blank=True, verbose_name='اعتبار تخفیف (روز)')
+    recipients_total = models.PositiveIntegerField(default=0, verbose_name='تعداد گیرندگان')
+    sent_count = models.PositiveIntegerField(default=0, verbose_name='ارسال‌شده')
+    failed_count = models.PositiveIntegerField(default=0, verbose_name='ناموفق')
+    skipped_count = models.PositiveIntegerField(default=0, verbose_name='ردشده')
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketing_campaigns',
+        verbose_name='ایجادکننده',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='ایجاد')
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name='اتمام')
+
+    class Meta:
+        verbose_name = 'کمپین بازاریابی'
+        verbose_name_plural = 'کمپین‌های بازاریابی'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.name} [{self.get_status_display()}]'
+
+
+class MarketingCampaignRecipient(models.Model):
+    """گیرنده یک کمپین بازاریابی."""
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'در انتظار'
+        SENT = 'sent', 'ارسال‌شده'
+        FAILED = 'failed', 'ناموفق'
+        SKIPPED = 'skipped', 'ردشده'
+
+    campaign = models.ForeignKey(
+        MarketingCampaign,
+        on_delete=models.CASCADE,
+        related_name='recipients',
+        verbose_name='کمپین',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketing_recipients',
+        verbose_name='کاربر',
+    )
+    phone = models.CharField(max_length=20, db_index=True, verbose_name='موبایل')
+    discount_code = models.ForeignKey(
+        'shop.DiscountCode',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketing_recipients',
+        verbose_name='کد تخفیف',
+    )
+    context_json = models.JSONField(default=dict, blank=True, verbose_name='زمینه پیام')
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+        verbose_name='وضعیت',
+    )
+    skip_reason = models.CharField(max_length=200, blank=True, verbose_name='دلیل رد')
+    sms_log = models.ForeignKey(
+        SmsMessageLog,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketing_recipients',
+        verbose_name='لاگ پیامک',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='ایجاد')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='به‌روزرسانی')
+
+    class Meta:
+        verbose_name = 'گیرنده کمپین'
+        verbose_name_plural = 'گیرندگان کمپین'
+        ordering = ['id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['campaign', 'phone'],
+                name='uniq_marketing_campaign_phone',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.phone} @ {self.campaign_id}'

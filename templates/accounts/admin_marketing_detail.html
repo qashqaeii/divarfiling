@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% block title %}گزارش کمپین {{ campaign.name }} | پنل مدیریت{% endblock %}
+
+{% block body_class %}mk-admin-dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=7">
+{% endblock %}
+
+{% block content %}
+<div class="adm-page">
+    <header class="adm-hero">
+        <div class="adm-hero-main">
+            <p class="adm-hero-kicker">
+                <i class="fas fa-chart-line" aria-hidden="true"></i>
+                گزارش کمپین
+            </p>
+            <h1 class="adm-hero-title">{{ campaign.name }}</h1>
+            <p class="adm-hero-desc">
+                {{ report.segment_title }}
+                · {{ campaign.get_discount_mode_display }}
+                {% if report.shared_code %} · کد {{ report.shared_code }}{% endif %}
+            </p>
+        </div>
+        <div class="adm-hero-actions">
+            <a href="{% url 'admin_panel_marketing' %}" class="adm-hero-link">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                کمپین جدید
+            </a>
+            <a href="{% url 'admin_panel' %}" class="adm-hero-link">داشبورد</a>
+        </div>
+    </header>
+
+    {% if messages %}
+    <section class="adm-alerts">
+        {% for message in messages %}
+        <div class="adm-alert adm-alert--info"><span>{{ message }}</span></div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    <section class="adm-kpis" aria-label="نتیجه کمپین">
+        <article class="adm-kpi" data-accent="emerald">
+            <span class="adm-kpi-icon"><i class="fas fa-paper-plane"></i></span>
+            <span class="adm-kpi-body">
+                <span class="adm-kpi-val">{{ campaign.sent_count|currency }}</span>
+                <span class="adm-kpi-lbl">ارسال موفق</span>
+            </span>
+        </article>
+        <article class="adm-kpi" data-accent="rose">
+            <span class="adm-kpi-icon"><i class="fas fa-circle-xmark"></i></span>
+            <span class="adm-kpi-body">
+                <span class="adm-kpi-val">{{ campaign.failed_count|currency }}</span>
+                <span class="adm-kpi-lbl">ناموفق</span>
+            </span>
+        </article>
+        <article class="adm-kpi" data-accent="amber">
+            <span class="adm-kpi-icon"><i class="fas fa-forward"></i></span>
+            <span class="adm-kpi-body">
+                <span class="adm-kpi-val">{{ campaign.skipped_count|currency }}</span>
+                <span class="adm-kpi-lbl">ردشده (تکرار)</span>
+            </span>
+        </article>
+        <article class="adm-kpi" data-accent="violet">
+            <span class="adm-kpi-icon"><i class="fas fa-users"></i></span>
+            <span class="adm-kpi-body">
+                <span class="adm-kpi-val">{{ campaign.recipients_total|currency }}</span>
+                <span class="adm-kpi-lbl">کل گیرندگان</span>
+            </span>
+        </article>
+    </section>
+
+    <div class="adm-bento">
+        <section class="adm-cell adm-cell--wide">
+            <header class="adm-cell-head">
+                <div>
+                    <h2>متن کمپین</h2>
+                    <p>وضعیت: {{ campaign.get_status_display }}
+                        {% if campaign.completed_at %} · {{ campaign.completed_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}{% endif %}
+                    </p>
+                </div>
+            </header>
+            <pre class="adm-mkt-template">{{ campaign.message_template }}</pre>
+        </section>
+
+        <section class="adm-cell adm-cell--wide">
+            <header class="adm-cell-head">
+                <div>
+                    <h2>گیرندگان</h2>
+                    <p>حداکثر ۳۰۰ ردیف اول</p>
+                </div>
+            </header>
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
+                        <tr>
+                            <th>موبایل</th>
+                            <th>وضعیت</th>
+                            <th>کد تخفیف</th>
+                            <th>محصول</th>
+                            <th>توضیح</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in recipients %}
+                        <tr>
+                            <td dir="ltr">{{ r.phone }}</td>
+                            <td><span class="adm-badge adm-badge--{{ r.status }}">{{ r.get_status_display }}</span></td>
+                            <td>{% if r.discount_code %}<code>{{ r.discount_code.code }}</code>{% else %}—{% endif %}</td>
+                            <td>{{ r.context_json.product|default:"—" }}</td>
+                            <td>{{ r.skip_reason|default:"—" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5">گیرنده‌ای ثبت نشده.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

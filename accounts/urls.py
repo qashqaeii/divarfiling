@@ -5,7 +5,14 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from . import otp_views, views
-from .admin_views import AdminDashboardView, AdminExportView, AdminSystemSummaryView
+from .admin_views import (
+    AdminDashboardView,
+    AdminExportView,
+    AdminMarketingDetailView,
+    AdminMarketingPreviewView,
+    AdminMarketingView,
+    AdminSystemSummaryView,
+)
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
@@ -28,6 +35,9 @@ urlpatterns = [
     path('admin-panel/', AdminDashboardView.as_view(), name='admin_panel'),
     path('admin-panel/export/<str:export_key>/', AdminExportView.as_view(), name='admin_panel_export'),
     path('admin-panel/system-summary.json', AdminSystemSummaryView.as_view(), name='admin_panel_system_summary'),
+    path('admin-panel/marketing/', AdminMarketingView.as_view(), name='admin_panel_marketing'),
+    path('admin-panel/marketing/preview.json', AdminMarketingPreviewView.as_view(), name='admin_panel_marketing_preview'),
+    path('admin-panel/marketing/<int:pk>/', AdminMarketingDetailView.as_view(), name='admin_panel_marketing_detail'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path(
         'password-reset/',

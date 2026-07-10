@@ -277,6 +277,7 @@ FARAZSMS_PATTERNS = {
     'verify_phone': config('FARAZSMS_PATTERN_VERIFY_PHONE', default=''),
     'license_renewal': config('FARAZSMS_PATTERN_LICENSE_RENEWAL', default=''),
     'system': config('FARAZSMS_PATTERN_SYSTEM', default=''),
+    'marketing': config('FARAZSMS_PATTERN_MARKETING', default=''),
 }
 # اگر الگوی جداگانه ندارید، یک الگو برای همه OTPها:
 _FARAZSMS_PATTERN_OTP = config('FARAZSMS_PATTERN_OTP', default='')

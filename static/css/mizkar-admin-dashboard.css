@@ -862,3 +862,185 @@ html.mk-public:not([data-theme="light"]) .adm-cell {
         grid-template-columns: 1fr;
     }
 }
+
+/* ─── Marketing campaigns ─── */
+.adm-mkt-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.9fr);
+    gap: 0.85rem;
+    align-items: start;
+}
+.adm-mkt-compose,
+.adm-mkt-history {
+    grid-column: auto;
+}
+.adm-mkt-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+    align-items: end;
+}
+.adm-mkt-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    font-size: 0.78rem;
+    color: var(--mk-text-secondary);
+}
+.adm-mkt-input {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: var(--mk-surface, #fff);
+    color: var(--mk-text);
+    font-family: inherit;
+    font-size: 0.85rem;
+}
+.adm-mkt-textarea {
+    min-height: 7rem;
+    resize: vertical;
+    line-height: 1.6;
+}
+.adm-mkt-hint {
+    color: var(--mk-text-muted);
+    font-size: 0.72rem;
+}
+.adm-mkt-preview-box {
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(124, 58, 237, 0.04);
+    margin-bottom: 1rem;
+}
+.adm-mkt-preview-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.85rem;
+    align-items: baseline;
+    margin-bottom: 0.65rem;
+}
+.adm-mkt-preview-stats strong {
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+.adm-mkt-preview-stats em {
+    font-style: normal;
+    font-size: 0.72rem;
+    color: #d97706;
+}
+.adm-mkt-sample-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--mk-text-muted);
+    margin: 0 0 0.35rem;
+}
+.adm-mkt-sample ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.3rem;
+}
+.adm-mkt-sample li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--mk-text-secondary);
+}
+.adm-mkt-empty {
+    font-size: 0.82rem;
+    color: var(--mk-text-muted);
+    margin: 0.4rem 0 0;
+}
+.adm-mkt-fieldset {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 12px;
+    padding: 0.75rem 0.9rem;
+    margin: 0 0 0.9rem;
+}
+.adm-mkt-fieldset legend {
+    padding: 0 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+.adm-mkt-radios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.1rem;
+    margin-bottom: 0.65rem;
+    font-size: 0.82rem;
+}
+.adm-mkt-discount-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.55rem;
+}
+.adm-mkt-sample-msg {
+    padding: 0.75rem 0.9rem;
+    border-radius: 10px;
+    background: rgba(16, 185, 129, 0.06);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    margin-bottom: 0.9rem;
+    font-size: 0.84rem;
+    line-height: 1.65;
+}
+.adm-mkt-confirm {
+    display: flex;
+    gap: 0.55rem;
+    align-items: flex-start;
+    font-size: 0.84rem;
+    margin-bottom: 0.9rem;
+}
+.adm-mkt-campaign-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.45rem;
+}
+.adm-mkt-campaign-list a {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    text-decoration: none;
+    color: inherit;
+}
+.adm-mkt-campaign-list a:hover {
+    border-color: rgba(124, 58, 237, 0.35);
+}
+.adm-mkt-campaign-list em {
+    font-style: normal;
+    font-size: 0.72rem;
+    color: var(--mk-text-muted);
+}
+.adm-mkt-template {
+    white-space: pre-wrap;
+    font-family: inherit;
+    font-size: 0.86rem;
+    line-height: 1.7;
+    margin: 0;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: rgba(148, 163, 184, 0.08);
+}
+.adm-mkt-balance {
+    pointer-events: none;
+}
+.adm-badge--draft { background: rgba(148, 163, 184, 0.15); color: #64748b; }
+.adm-badge--sending { background: rgba(59, 130, 246, 0.15); color: #2563eb; }
+.adm-badge--completed { background: rgba(16, 185, 129, 0.15); color: #059669; }
+.adm-badge--failed { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
+.adm-badge--pending { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+.adm-badge--sent { background: rgba(16, 185, 129, 0.15); color: #059669; }
+.adm-badge--skipped { background: rgba(148, 163, 184, 0.15); color: #64748b; }
+
+@media (max-width: 900px) {
+    .adm-mkt-grid {
+        grid-template-columns: 1fr;
+    }
+}

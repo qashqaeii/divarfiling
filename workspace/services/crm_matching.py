@@ -166,6 +166,94 @@ def _profile_neighborhood_eligible(
     return False
 
 
+def _parse_int_feature(value) -> Optional[int]:
+    if value is None or value == '':
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    text = str(value).strip()
+    if not text or text == '-':
+        return None
+    if 'همکف' in text or 'هم کف' in text:
+        return 0
+    digits = re.sub(r'[^\d-]', '', text)
+    if not digits or digits == '-':
+        return None
+    try:
+        return int(digits)
+    except ValueError:
+        return None
+
+
+def _int_range_eligible(value: Optional[int], lo: Optional[int], hi: Optional[int]) -> bool:
+    if lo is None and hi is None:
+        return True
+    if value is None:
+        return True
+    if lo is not None and value < lo:
+        return False
+    if hi is not None and value > hi:
+        return False
+    return True
+
+
+def _amenity_required_eligible(want: bool, has: Optional[bool]) -> bool:
+    if not want:
+        return True
+    if has is False:
+        return False
+    return True
+
+
+def _profile_rooms_bounds(profile) -> Tuple[Optional[int], Optional[int]]:
+    lo = getattr(profile, 'rooms_min', None)
+    hi = getattr(profile, 'rooms_max', None)
+    if lo is not None or hi is not None:
+        return lo, hi
+    legacy = _parse_int_feature(getattr(profile, 'rooms', None))
+    if legacy is not None:
+        return legacy, legacy
+    return None, None
+
+
+def _profile_detail_eligible(
+    profile,
+    *,
+    rooms: Optional[str] = None,
+    build_year: Optional[int] = None,
+    floor: Optional[int] = None,
+    has_parking: Optional[bool] = None,
+    has_storage: Optional[bool] = None,
+    has_elevator: Optional[bool] = None,
+) -> bool:
+    rooms_lo, rooms_hi = _profile_rooms_bounds(profile)
+    if not _int_range_eligible(_parse_int_feature(rooms), rooms_lo, rooms_hi):
+        return False
+    if not _int_range_eligible(
+        _parse_int_feature(build_year),
+        getattr(profile, 'year_min', None),
+        getattr(profile, 'year_max', None),
+    ):
+        return False
+    if not _int_range_eligible(
+        _parse_int_feature(floor),
+        getattr(profile, 'floor_min', None),
+        getattr(profile, 'floor_max', None),
+    ):
+        return False
+    if not _amenity_required_eligible(bool(getattr(profile, 'want_parking', False)), has_parking):
+        return False
+    if not _amenity_required_eligible(bool(getattr(profile, 'want_storage', False)), has_storage):
+        return False
+    if not _amenity_required_eligible(bool(getattr(profile, 'want_elevator', False)), has_elevator):
+        return False
+    return True
+
+
 def _profile_criteria_eligible(
     profile,
     *,
@@ -174,12 +262,18 @@ def _profile_criteria_eligible(
     neighborhood: str = '',
     city: str = '',
     district: str = '',
+    rooms: Optional[str] = None,
+    build_year: Optional[int] = None,
+    floor: Optional[int] = None,
+    has_parking: Optional[bool] = None,
+    has_storage: Optional[bool] = None,
+    has_elevator: Optional[bool] = None,
     sale_price: Optional[int] = None,
     deposit: Optional[int] = None,
     rent: Optional[int] = None,
     is_rent: bool = False,
 ) -> bool:
-    """فیلتر سخت: بودجه، متراژ، نوع ملک و محله/منطقه باید با ترجیحات سازگار باشند."""
+    """فیلتر سخت: بودجه، متراژ، نوع، محله و جزئیات ترجیحات باید سازگار باشند."""
     if not _profile_property_type_eligible(profile, prop_type):
         return False
     if not _profile_neighborhood_eligible(
@@ -187,6 +281,16 @@ def _profile_criteria_eligible(
     ):
         return False
     if not _profile_area_eligible(profile, area):
+        return False
+    if not _profile_detail_eligible(
+        profile,
+        rooms=rooms,
+        build_year=build_year,
+        floor=floor,
+        has_parking=has_parking,
+        has_storage=has_storage,
+        has_elevator=has_elevator,
+    ):
         return False
     return _profile_budget_eligible(
         profile,
@@ -232,21 +336,22 @@ def _neighborhood_match_profile(profile, neighborhood: str, city: str, district:
 
 
 def _rooms_match_profile(profile, rooms: str) -> Tuple[float, str]:
-    if not profile.rooms or not rooms:
+    lo, hi = _profile_rooms_bounds(profile)
+    got = _parse_int_feature(rooms)
+    if lo is None and hi is None:
         return 0.5, ''
-    want = re.sub(r'\D', '', profile.rooms)
-    got = re.sub(r'\D', '', str(rooms))
-    if not want or not got:
-        return 0.5, ''
-    if want == got:
-        return 1.0, f'{rooms} خواب'
-    try:
-        diff = abs(int(want) - int(got))
-        if diff == 1:
-            return 0.6, f'{rooms} خواب'
-        return 0.2, f'{rooms} خواب'
-    except ValueError:
-        return 0.3, ''
+    if got is None:
+        return 0.4, ''
+    if (lo is None or got >= lo) and (hi is None or got <= hi):
+        label = f'{got} خواب'
+        return 1.0, label
+    if lo is not None and got < lo:
+        gap = lo - got
+    else:
+        gap = got - (hi or got)
+    if gap == 1:
+        return 0.55, f'{got} خواب'
+    return 0.15, f'{got} خواب'
 
 
 def _property_type_match_profile(profile, prop_type: str) -> Tuple[float, str]:
@@ -440,6 +545,15 @@ def _builder_supply_profile(customer: Customer):
         min_area=customer.min_area,
         max_area=customer.max_area,
         rooms=customer.rooms,
+        rooms_min=customer.rooms_min,
+        rooms_max=customer.rooms_max,
+        year_min=customer.year_min,
+        year_max=customer.year_max,
+        floor_min=customer.floor_min,
+        floor_max=customer.floor_max,
+        want_parking=customer.want_parking,
+        want_storage=customer.want_storage,
+        want_elevator=customer.want_elevator,
         areas=customer.areas,
         district=customer.district,
         property_type=customer.property_type or 'آپارتمان',
@@ -459,6 +573,15 @@ def _builder_acquisition_profile(customer: Customer):
         min_area=customer.builder_buy_min_area,
         max_area=customer.builder_buy_max_area,
         rooms=customer.rooms,
+        rooms_min=None,
+        rooms_max=None,
+        year_min=None,
+        year_max=None,
+        floor_min=None,
+        floor_max=None,
+        want_parking=False,
+        want_storage=False,
+        want_elevator=False,
         areas=customer.builder_buy_areas or customer.areas,
         district=customer.district,
         property_type='',
@@ -503,6 +626,12 @@ def _score_crm_property_with_profile(
         neighborhood=prop.neighborhood or '',
         city=prop.city or '',
         district=prop.district or '',
+        rooms=prop.rooms,
+        build_year=prop.build_year,
+        floor=prop.floor,
+        has_parking=prop.has_parking,
+        has_storage=prop.has_storage,
+        has_elevator=prop.has_elevator,
         sale_price=prop.sale_price,
         deposit=prop.deposit,
         rent=prop.monthly_rent,
@@ -578,6 +707,12 @@ def _score_listing_with_profile(
     is_sale_listing = _listing_is_sale_listing(listing)
     rent_customer = _is_rent_profile(profile)
 
+    from workspace.services.features import extract_listing_features
+    feats = extract_listing_features(listing)
+    listing_floor = _parse_int_feature(feats.get('floor'))
+    listing_year = _parse_int_feature(feats.get('build_year'))
+    listing_rooms = feats.get('rooms') or listing.rooms
+
     use_rent_price = is_rent_listing and (rent_customer or not is_sale_listing)
     if not _profile_criteria_eligible(
         profile,
@@ -585,6 +720,12 @@ def _score_listing_with_profile(
         prop_type=inferred,
         neighborhood=listing.neighborhood or '',
         city=listing.city or '',
+        rooms=listing_rooms,
+        build_year=listing_year,
+        floor=listing_floor,
+        has_parking=feats.get('parking'),
+        has_storage=feats.get('storage'),
+        has_elevator=feats.get('elevator'),
         sale_price=listing.price,
         deposit=listing.deposit,
         rent=listing.rent,
@@ -606,7 +747,7 @@ def _score_listing_with_profile(
         profile, listing.neighborhood or '', listing.city or '',
     )
     type_s, type_note = _property_type_match_profile(profile, inferred)
-    room_s, room_note = _rooms_match_profile(profile, listing.rooms)
+    room_s, room_note = _rooms_match_profile(profile, listing_rooms)
 
     score = _compute_score(
         price_s=price_s, area_s=area_s, hood_s=hood_s, type_s=type_s, room_s=room_s,

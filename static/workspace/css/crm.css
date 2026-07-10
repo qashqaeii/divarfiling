@@ -484,7 +484,48 @@ body.crm-drawer-open { overflow: hidden; }
 .crm-money-budget.hidden, .crm-money-deposit.hidden, .crm-money-rent.hidden { display: none !important; }
 .crm-money-builder-buy.hidden, .crm-builder-section.hidden, .crm-builder-buy-field.hidden,
 .crm-prefs-standard.hidden { display: none !important; }
+.crm-prefs-rooms.hidden,
+.crm-prefs-size.hidden,
+.crm-prefs-year.hidden,
+.crm-prefs-floor.hidden,
+.crm-prefs-location.hidden,
+.crm-prefs-amenities-block.hidden { display: none !important; }
 .crm-price-sale.hidden, .crm-price-deposit.hidden, .crm-price-rent.hidden { display: none !important; }
+.crm-form-hint--tight {
+    margin: 0.15rem 0 0.55rem;
+    font-size: 0.68rem;
+}
+.crm-prefs-amenities-block {
+    margin-top: 0.85rem;
+    padding: 0.7rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid var(--ws-border-light);
+    background: var(--ws-surface-2);
+}
+.crm-prefs-amenity-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.7rem;
+}
+.crm-prefs-amenity {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ws-text);
+    cursor: pointer;
+    user-select: none;
+}
+.crm-prefs-amenity input { margin: 0; }
+.crm-prefs-amenity i {
+    color: var(--ws-text-muted);
+    font-size: 0.72rem;
+}
 
 @media (max-width: 768px) {
     .crm-drawer-panel { max-width: 100%; }
@@ -9505,6 +9546,22 @@ select.crm-files-adv-control {
     line-height: 1.35;
     font-variant-numeric: tabular-nums;
     word-break: break-word;
+}
+.crm-contact-pref-amenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.28rem;
+}
+.crm-contact-pref-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.22rem 0.48rem;
+    border-radius: 999px;
+    background: rgba(13, 148, 136, 0.1);
+    color: #0f766e;
+    font-size: 0.62rem;
+    font-weight: 700;
 }
 .crm-contact-prefs-empty {
     display: flex;

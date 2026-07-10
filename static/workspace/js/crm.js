@@ -148,6 +148,7 @@ function crmSetFieldLabel(section, fieldName, text) {
 function initCRMTypeProfiles(root) {
     const profiles = window.crmTypeProfiles || {};
     const scope = root || document;
+    const LAND_LIKE = new Set(['زمین', 'کلنگی']);
 
     scope.querySelectorAll('.crm-form-sections').forEach(section => {
         const typeSelect = section.querySelector('[data-crm-type]') || section.querySelector('[name="customer_type"]');
@@ -162,20 +163,42 @@ function initCRMTypeProfiles(root) {
         const builderBuyFields = section.querySelectorAll('.crm-builder-buy-field');
         const builderBuyMoney = section.querySelectorAll('.crm-money-builder-buy');
         const prefsStandard = section.querySelectorAll('.crm-prefs-standard');
+        const prefsRooms = section.querySelectorAll('.crm-prefs-rooms');
+        const prefsSize = section.querySelectorAll('.crm-prefs-size');
+        const prefsYear = section.querySelectorAll('.crm-prefs-year');
+        const prefsFloor = section.querySelectorAll('.crm-prefs-floor');
+        const prefsLocation = section.querySelectorAll('.crm-prefs-location');
+        const prefsAmenities = section.querySelectorAll('.crm-prefs-amenities-block');
         const propertyTypeSelect = section.querySelector('[name="property_type"]');
+
+        function applyResidentialVisibility(propType, prefsMode) {
+            const isBuilder = prefsMode === 'builder';
+            const showDetail = prefsMode === 'seeker' || prefsMode === 'listing' || prefsMode === 'flexible' || isBuilder;
+            const landLike = LAND_LIKE.has(propType || '');
+            const showUnitDetails = showDetail && !landLike;
+            const show = (els, on) => els.forEach(el => el.classList.toggle('hidden', !on));
+            show(prefsRooms, showUnitDetails);
+            show(prefsSize, showDetail);
+            show(prefsYear, showUnitDetails);
+            show(prefsFloor, showUnitDetails);
+            show(prefsLocation, showDetail || isBuilder);
+            show(prefsAmenities, showUnitDetails);
+        }
 
         function applyProfile(type) {
             const p = profiles[type] || profiles['سرنخ'] || {};
             const mode = p.money_mode || 'flexible';
-            const isBuilder = mode === 'builder';
+            const prefsMode = p.prefs_mode || (mode === 'builder' ? 'builder' : 'flexible');
+            const isBuilder = mode === 'builder' || prefsMode === 'builder';
             const showBudget = mode === 'budget' || mode === 'both' || mode === 'flexible' || isBuilder;
             const showRent = mode === 'rent' || mode === 'both' || mode === 'flexible';
 
             if (hint) hint.textContent = p.section_hint || 'محدوده مالی بر اساس نوع مخاطب';
             if (prefsHint) {
-                prefsHint.textContent = isBuilder
-                    ? 'مشخصات واحدهای آپارتمان در حال فروش و محله‌های پروژه'
-                    : 'نوع ملک، متراژ و محله‌های مورد نظر';
+                prefsHint.textContent = p.prefs_hint
+                    || (isBuilder
+                        ? 'مشخصات واحدهای آپارتمان در حال فروش و محله‌های پروژه'
+                        : 'نوع ملک، متراژ، خواب و امکانات مورد نظر');
             }
 
             const show = (els, on) => els.forEach(el => el.classList.toggle('hidden', !on));
@@ -196,11 +219,11 @@ function initCRMTypeProfiles(root) {
             crmSetFieldLabel(section, 'deposit_max', dl[1]);
             crmSetFieldLabel(section, 'rent_min', rl[0]);
             crmSetFieldLabel(section, 'rent_max', rl[1]);
-            crmSetFieldLabel(
-                section,
-                'areas',
-                isBuilder ? 'محله‌های فروش / پروژه' : 'محله‌های مورد نظر',
-            );
+
+            const areasLabel = prefsMode === 'listing'
+                ? 'محله ملک'
+                : (isBuilder ? 'محله‌های فروش / پروژه' : 'محله‌های مورد نظر');
+            crmSetFieldLabel(section, 'areas', areasLabel);
 
             section.querySelectorAll('[data-label-budget-min]').forEach(el => { el.textContent = bl[0]; });
             section.querySelectorAll('[data-label-budget-max]').forEach(el => { el.textContent = bl[1]; });
@@ -224,7 +247,7 @@ function initCRMTypeProfiles(root) {
                     ? p.sell_section_title.replace('خط فروش — ', 'مشخصات ')
                     : 'مشخصات واحد فروش (آپارتمان)';
             }
-            if (prefsTitle) prefsTitle.textContent = 'ترجیحات ملک';
+            if (prefsTitle) prefsTitle.textContent = p.prefs_title || 'ترجیحات ملک';
 
             if (isBuilder && propertyTypeSelect && p.default_property_type) {
                 const hasOption = Array.from(propertyTypeSelect.options).some(o => o.value === p.default_property_type);
@@ -232,12 +255,24 @@ function initCRMTypeProfiles(root) {
                     propertyTypeSelect.value = p.default_property_type;
                 }
             }
+
+            applyResidentialVisibility(propertyTypeSelect ? propertyTypeSelect.value : '', prefsMode);
+            section.dataset.crmPrefsMode = prefsMode;
         }
 
         applyProfile(typeSelect.value);
         if (typeSelect.dataset.crmTypeBound !== '1') {
             typeSelect.dataset.crmTypeBound = '1';
             typeSelect.addEventListener('change', () => applyProfile(typeSelect.value));
+        }
+        if (propertyTypeSelect && propertyTypeSelect.dataset.crmPropTypeBound !== '1') {
+            propertyTypeSelect.dataset.crmPropTypeBound = '1';
+            propertyTypeSelect.addEventListener('change', () => {
+                applyResidentialVisibility(
+                    propertyTypeSelect.value,
+                    section.dataset.crmPrefsMode || 'flexible',
+                );
+            });
         }
     });
 }

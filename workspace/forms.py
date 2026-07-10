@@ -175,6 +175,10 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 self.initial['builder_buy_types'] = list(BUILDER_BUY_PROPERTY_TYPES)
             if self.instance.customer_type == 'سازنده' and not self.instance.property_type:
                 self.initial.setdefault('property_type', 'آپارتمان')
+            if self.instance.pk and not self.instance.rooms_min and self.instance.rooms:
+                digits = ''.join(ch for ch in self.instance.rooms if ch.isdigit())
+                if digits:
+                    self.initial.setdefault('rooms_min', int(digits))
 
     def clean_next_follow_up(self):
         raw = self.cleaned_data.get('next_follow_up')
@@ -193,6 +197,12 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
         instance.builder_buy_property_types = ', '.join(selected)
         if instance.customer_type == 'سازنده' and not instance.property_type:
             instance.property_type = 'آپارتمان'
+        if instance.rooms_min is not None and instance.rooms_max is not None:
+            instance.rooms = f'{instance.rooms_min}-{instance.rooms_max}'
+        elif instance.rooms_min is not None:
+            instance.rooms = str(instance.rooms_min)
+        elif instance.rooms_max is not None:
+            instance.rooms = str(instance.rooms_max)
         if commit:
             instance.save()
             self.save_m2m()
@@ -205,7 +215,9 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'is_legal_entity', 'company_name', 'national_id',
             'customer_type', 'status', 'priority', 'property_type', 'source',
             'budget_min', 'budget_max', 'deposit_min', 'deposit_max',
-            'rent_min', 'rent_max', 'min_area', 'max_area', 'rooms', 'areas',
+            'rent_min', 'rent_max', 'min_area', 'max_area',
+            'rooms_min', 'rooms_max', 'year_min', 'year_max', 'floor_min', 'floor_max',
+            'want_parking', 'want_storage', 'want_elevator', 'areas',
             'builder_buy_budget_min', 'builder_buy_budget_max',
             'builder_buy_areas', 'builder_buy_min_area', 'builder_buy_max_area',
             'tags', 'notes', 'next_follow_up',
@@ -228,7 +240,7 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'customer_type': forms.Select(attrs={'class': 'crm-select', 'data-crm-type': '1'}),
             'status': forms.Select(attrs={'class': 'crm-select'}),
             'priority': forms.Select(attrs={'class': 'crm-select'}),
-            'property_type': forms.Select(attrs={'class': 'crm-select'}),
+            'property_type': forms.Select(attrs={'class': 'crm-select', 'data-crm-property-type': '1'}),
             'source': forms.Select(attrs={'class': 'crm-select'}),
             'budget_min': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
             'budget_max': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
@@ -236,10 +248,23 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'deposit_max': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
             'rent_min': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
             'rent_max': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
-            'min_area': forms.NumberInput(attrs={'class': 'crm-input'}),
-            'max_area': forms.NumberInput(attrs={'class': 'crm-input'}),
-            'rooms': forms.TextInput(attrs={'class': 'crm-input'}),
-            'areas': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2, 'data-builder-sell-areas': '1'}),
+            'min_area': forms.NumberInput(attrs={'class': 'crm-input', 'min': '0', 'placeholder': 'مثلاً ۷۵'}),
+            'max_area': forms.NumberInput(attrs={'class': 'crm-input', 'min': '0', 'placeholder': 'مثلاً ۱۵۰'}),
+            'rooms_min': forms.NumberInput(attrs={'class': 'crm-input', 'min': '0', 'placeholder': 'از'}),
+            'rooms_max': forms.NumberInput(attrs={'class': 'crm-input', 'min': '0', 'placeholder': 'تا'}),
+            'year_min': forms.NumberInput(attrs={'class': 'crm-input', 'min': '1300', 'max': '1500', 'placeholder': 'مثلاً ۱۳۹۵'}),
+            'year_max': forms.NumberInput(attrs={'class': 'crm-input', 'min': '1300', 'max': '1500', 'placeholder': 'مثلاً ۱۴۰۳'}),
+            'floor_min': forms.NumberInput(attrs={'class': 'crm-input', 'placeholder': 'از'}),
+            'floor_max': forms.NumberInput(attrs={'class': 'crm-input', 'placeholder': 'تا'}),
+            'want_parking': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
+            'want_storage': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
+            'want_elevator': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
+            'areas': forms.Textarea(attrs={
+                'class': 'crm-textarea',
+                'rows': 2,
+                'data-builder-sell-areas': '1',
+                'placeholder': 'مثلاً ونک، جردن، سعادت‌آباد',
+            }),
             'builder_buy_budget_min': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
             'builder_buy_budget_max': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
             'builder_buy_areas': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),

@@ -389,7 +389,7 @@
                 </div>
 
                 {% else %}
-                {% if customer.property_type or customer.budget_min or customer.budget_max or customer.deposit_min or customer.deposit_max or customer.rent_min or customer.rent_max or customer.min_area or customer.max_area or customer.rooms or customer.areas %}
+                {% if customer.property_type or customer.budget_min or customer.budget_max or customer.deposit_min or customer.deposit_max or customer.rent_min or customer.rent_max or customer.min_area or customer.max_area or customer.rooms_min or customer.rooms_max or customer.rooms or customer.year_min or customer.year_max or customer.floor_min or customer.floor_max or customer.want_parking or customer.want_storage or customer.want_elevator or customer.areas %}
                 <div class="crm-contact-prefs">
                     {% if customer.property_type %}
                     <div class="crm-contact-pref-type">
@@ -438,13 +438,45 @@
                     </div>
                     {% endif %}
 
-                    {% if customer.rooms %}
+                    {% if customer.rooms_min or customer.rooms_max or customer.rooms %}
                     <div class="crm-contact-pref-row">
                         <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-bed"></i></span>
                         <div class="crm-contact-pref-body">
                             <span class="crm-contact-pref-lbl">خواب</span>
-                            <strong>{{ customer.rooms }}</strong>
+                            <strong>
+                                {% if customer.rooms_min or customer.rooms_max %}
+                                {% if customer.rooms_min %}{{ customer.rooms_min }}{% else %}—{% endif %} — {% if customer.rooms_max %}{{ customer.rooms_max }}{% else %}—{% endif %}
+                                {% else %}{{ customer.rooms }}{% endif %}
+                            </strong>
                         </div>
+                    </div>
+                    {% endif %}
+
+                    {% if customer.year_min or customer.year_max %}
+                    <div class="crm-contact-pref-row">
+                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-calendar"></i></span>
+                        <div class="crm-contact-pref-body">
+                            <span class="crm-contact-pref-lbl">سال ساخت</span>
+                            <strong>{% if customer.year_min %}{{ customer.year_min }}{% else %}—{% endif %} — {% if customer.year_max %}{{ customer.year_max }}{% else %}—{% endif %}</strong>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if customer.floor_min or customer.floor_max %}
+                    <div class="crm-contact-pref-row">
+                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                        <div class="crm-contact-pref-body">
+                            <span class="crm-contact-pref-lbl">طبقه</span>
+                            <strong>{% if customer.floor_min %}{{ customer.floor_min }}{% else %}—{% endif %} — {% if customer.floor_max %}{{ customer.floor_max }}{% else %}—{% endif %}</strong>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if customer.want_parking or customer.want_storage or customer.want_elevator %}
+                    <div class="crm-contact-pref-amenities">
+                        {% if customer.want_parking %}<span class="crm-contact-pref-chip"><i class="fas fa-square-parking" aria-hidden="true"></i> پارکینگ</span>{% endif %}
+                        {% if customer.want_storage %}<span class="crm-contact-pref-chip"><i class="fas fa-box" aria-hidden="true"></i> انباری</span>{% endif %}
+                        {% if customer.want_elevator %}<span class="crm-contact-pref-chip"><i class="fas fa-elevator" aria-hidden="true"></i> آسانسور</span>{% endif %}
                     </div>
                     {% endif %}
 

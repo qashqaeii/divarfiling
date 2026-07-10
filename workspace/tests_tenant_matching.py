@@ -259,6 +259,72 @@ class TenantMatchingTests(TestCase):
         self.assertNotIn(other_hood.title, titles)
         self.assertIn(same_hood.title, titles)
 
+    def test_buyer_respects_rooms_and_amenities(self):
+        buyer = Customer.objects.create(
+            user=self.user,
+            name='متقاضی امکانات',
+            phone='09120006666',
+            customer_type='متقاضی خرید',
+            property_type='آپارتمان',
+            budget_min=10_000_000_000,
+            budget_max=25_000_000_000,
+            min_area=70,
+            max_area=160,
+            rooms_min=2,
+            rooms_max=3,
+            want_parking=True,
+            want_elevator=True,
+            areas='ونک',
+        )
+        no_parking = CRMProperty.objects.create(
+            user=self.user,
+            title='بدون پارکینگ',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=14_000_000_000,
+            neighborhood='ونک',
+            city='تهران',
+            area=100,
+            rooms='2',
+            has_parking=False,
+            has_elevator=True,
+        )
+        too_many_rooms = CRMProperty.objects.create(
+            user=self.user,
+            title='۵ خوابه',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=15_000_000_000,
+            neighborhood='ونک',
+            city='تهران',
+            area=140,
+            rooms='5',
+            has_parking=True,
+            has_elevator=True,
+        )
+        good = CRMProperty.objects.create(
+            user=self.user,
+            title='۲ خواب با امکانات',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=13_500_000_000,
+            neighborhood='ونک',
+            city='تهران',
+            area=95,
+            rooms='2',
+            has_parking=True,
+            has_elevator=True,
+            has_storage=True,
+        )
+        data = get_customer_matches(buyer, self.user, divar_enabled=False)
+        titles = [m['title'] for m in data['crm_matches']]
+        self.assertNotIn(no_parking.title, titles)
+        self.assertNotIn(too_many_rooms.title, titles)
+        self.assertIn(good.title, titles)
+
     def test_total_count_zero_when_no_matches(self):
         CRMProperty.objects.filter(user=self.user).delete()
         data = get_customer_matches(self.tenant, self.user, divar_enabled=False)

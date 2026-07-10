@@ -203,51 +203,47 @@
 
     <div data-panel="prefs" class="crm-form-panel" hidden>
 
-
-
         <p class="crm-form-hint" id="crmPrefsHint">نوع ملک، متراژ و محله‌های مورد نظر</p>
-
-
 
         <div class="crm-builder-sell-prefs crm-builder-section hidden">
             <h4 class="crm-builder-section-title" id="crmPrefsBuilderTitle">مشخصات واحد فروش (آپارتمان)</h4>
         </div>
 
-
-
         <div class="crm-prefs-standard hidden">
             <h4 class="crm-prefs-section-title" id="crmPrefsTitle">ترجیحات ملک</h4>
         </div>
 
-
-
         <div class="crm-fields crm-fields-2">
-
-
-
-            {% crm_field form.property_type 'نوع ملک' 'crm-prefs-field' %}
-
-
-
-            {% crm_field form.rooms 'اتاق' 'crm-prefs-field' %}
-
-
-
-            {% crm_field form.min_area 'متراژ از' 'crm-prefs-field' %}
-
-
-
-            {% crm_field form.max_area 'متراژ تا' 'crm-prefs-field' %}
-
-
-
-            {% crm_field form.areas 'محله‌های مورد نظر' 'crm-field-full crm-prefs-field' %}
-
-
-
+            {% crm_field form.property_type 'نوع ملک' 'crm-prefs-core' %}
+            {% crm_field form.rooms_min 'اتاق از' 'crm-prefs-rooms' %}
+            {% crm_field form.rooms_max 'اتاق تا' 'crm-prefs-rooms' %}
+            {% crm_field form.min_area 'متراژ از' 'crm-prefs-size' %}
+            {% crm_field form.max_area 'متراژ تا' 'crm-prefs-size' %}
+            {% crm_field form.year_min 'سال ساخت از' 'crm-prefs-year' %}
+            {% crm_field form.year_max 'سال ساخت تا' 'crm-prefs-year' %}
+            {% crm_field form.floor_min 'طبقه از' 'crm-prefs-floor' %}
+            {% crm_field form.floor_max 'طبقه تا' 'crm-prefs-floor' %}
+            {% crm_field form.areas 'محله‌های مورد نظر' 'crm-field-full crm-prefs-location' %}
         </div>
 
-
+        <div class="crm-prefs-amenities crm-prefs-amenities-block">
+            <span class="crm-label">امکانات ضروری</span>
+            <p class="crm-form-hint crm-form-hint--tight">فقط مواردی که حتماً باید داشته باشد را تیک بزنید</p>
+            <div class="crm-prefs-amenity-list">
+                <label class="crm-prefs-amenity">
+                    {{ form.want_parking }}
+                    <span><i class="fas fa-square-parking" aria-hidden="true"></i> پارکینگ</span>
+                </label>
+                <label class="crm-prefs-amenity">
+                    {{ form.want_storage }}
+                    <span><i class="fas fa-box" aria-hidden="true"></i> انباری</span>
+                </label>
+                <label class="crm-prefs-amenity">
+                    {{ form.want_elevator }}
+                    <span><i class="fas fa-elevator" aria-hidden="true"></i> آسانسور</span>
+                </label>
+            </div>
+        </div>
 
     </div>
 

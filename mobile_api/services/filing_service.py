@@ -144,10 +144,19 @@ def update_listing(user, token: str, payload: dict, request=None) -> Optional[di
     if not lst:
         return None
     from workspace.services.listing_edit import apply_listing_edit_json
+    from workspace.services.crm import upsert_property_owner
 
     try:
         apply_listing_edit_json(lst, payload)
         lst.save()
+        if 'owner_phone' in payload or 'owner_name' in payload:
+            upsert_property_owner(
+                user,
+                phone=payload.get('owner_phone') or '',
+                name=payload.get('owner_name') or '',
+                listing=lst,
+                source='موبایل',
+            )
     except (ValueError, TypeError):
         return None
     return listing_detail_to_dict(lst, user=user, request=request)

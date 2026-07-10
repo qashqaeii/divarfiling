@@ -28,6 +28,193 @@ def normalize_phone(phone: str) -> str:
     return s
 
 
+def find_customer_by_phone(user, phone: str) -> Optional[Customer]:
+    """یافتن مخاطب با شماره نرمال‌شده در اسکوپ کاربر/آژانس."""
+    key = normalize_phone(phone)
+    if not key:
+        return None
+    for customer in customers_qs(user).filter(Q(phone__gt='') | Q(phone_alt__gt='')).only(
+        'id', 'phone', 'phone_alt', 'name', 'customer_type', 'user_id',
+    ):
+        if normalize_phone(customer.phone) == key or normalize_phone(customer.phone_alt) == key:
+            return customer
+    return None
+
+
+def primary_owner_contact(
+    *,
+    listing: Optional[Listing] = None,
+    crm_property: Optional[CRMProperty] = None,
+) -> Optional[Customer]:
+    """مخاطب پیوندخورده با نقش مالک (اولویت: فایل شخصی، سپس آگهی)."""
+    if crm_property is not None:
+        link = (
+            PropertyContact.objects
+            .filter(property=crm_property, role='مالک')
+            .select_related('customer')
+            .order_by('-is_primary', '-updated_at')
+            .first()
+        )
+        if link:
+            return link.customer
+    token = ''
+    if listing is not None:
+        token = str(listing.token or '').strip()
+    elif crm_property is not None:
+        token = str(crm_property.token or '').strip()
+    if token:
+        link = (
+            CustomerListing.objects
+            .filter(token=token, role='مالک')
+            .select_related('customer')
+            .order_by('-updated_at')
+            .first()
+        )
+        if link:
+            return link.customer
+    return None
+
+
+def upsert_property_owner(
+    user,
+    *,
+    phone: str = '',
+    name: str = '',
+    listing: Optional[Listing] = None,
+    crm_property: Optional[CRMProperty] = None,
+    source: str = 'سایر',
+) -> Optional[Customer]:
+    """
+    ذخیره شماره/نام مالک روی آگهی و/یا فایل شخصی،
+    ساخت یا یافتن مخاطب، و پیوند با نقش «مالک».
+    """
+    from django.db import transaction as db_transaction
+    from workspace.services.listing_edit import apply_owner_fields
+
+    phone_raw = (phone or '').strip()
+    name_raw = (name or '').strip()
+    phone_key = normalize_phone(phone_raw)
+
+    if listing is None and crm_property is not None and crm_property.token:
+        listing = resolve_listing_for_property(user, crm_property)
+    if crm_property is None and listing is not None:
+        crm_property = get_crm_property_by_token(user, listing.token)
+
+    with db_transaction.atomic():
+        if listing is not None:
+            apply_owner_fields(listing, phone=phone_raw, name=name_raw)
+            listing.save(update_fields=['data'])
+
+        if crm_property is not None:
+            crm_property.phone = phone_key or phone_raw
+            crm_property.owner_name = name_raw
+            crm_property.save(update_fields=['phone', 'owner_name', 'updated_at'])
+
+        if not phone_key:
+            return None
+
+        customer = find_customer_by_phone(user, phone_key)
+        if customer is None:
+            display_name = name_raw or f'مالک {phone_key[-4:]}'
+            customer = Customer.objects.create(
+                user=user,
+                agency=get_agency(user),
+                name=display_name,
+                phone=phone_key,
+                customer_type='مالک',
+                status='جدید',
+                priority='متوسط',
+                source=source if source in (
+                    'دیوار', 'معرف', 'ورود به املاک', 'تماس ورودی',
+                    'اینستاگرام', 'سایت', 'تلگرام', 'موبایل', 'سایر',
+                ) else 'سایر',
+            )
+            log_activity(
+                customer,
+                'یادداشت',
+                content='ثبت خودکار به‌عنوان مالک ملک',
+                title='ثبت مالک',
+                token=(listing.token if listing else '') or (crm_property.token if crm_property else ''),
+                property_obj=crm_property,
+            )
+        else:
+            update_fields = ['updated_at']
+            if name_raw and customer.name != name_raw:
+                customer.name = name_raw
+                update_fields.append('name')
+            if not normalize_phone(customer.phone):
+                customer.phone = phone_key
+                update_fields.append('phone')
+            if customer.customer_type not in ('مالک', 'فروشنده', 'موجر'):
+                customer.customer_type = 'مالک'
+                update_fields.append('customer_type')
+            if len(update_fields) > 1:
+                customer.save(update_fields=update_fields)
+
+        deal_type = 'سایر'
+        if listing is not None:
+            deal_type = guess_deal_type_from_listing(listing)
+        elif crm_property is not None and crm_property.deal_mode:
+            deal_type = crm_property.deal_mode
+
+        if crm_property is not None:
+            PropertyContact.objects.filter(
+                property=crm_property, role='مالک', is_primary=True,
+            ).exclude(customer=customer).update(is_primary=False)
+            existing_pc = PropertyContact.objects.filter(
+                customer=customer, property=crm_property, role='مالک',
+            ).first()
+            if existing_pc is None:
+                link_customer_property(
+                    customer,
+                    crm_property,
+                    role='مالک',
+                    deal_type=deal_type,
+                    is_primary=True,
+                )
+            else:
+                pc_updates = []
+                if not existing_pc.is_primary:
+                    existing_pc.is_primary = True
+                    pc_updates.append('is_primary')
+                if deal_type and existing_pc.deal_type != deal_type:
+                    existing_pc.deal_type = deal_type
+                    pc_updates.append('deal_type')
+                if pc_updates:
+                    existing_pc.save(update_fields=[*pc_updates, 'updated_at'])
+
+        if listing is not None and listing.token:
+            from workspace.services.formatting import format_toman
+
+            price_parts = []
+            if listing.price:
+                price_parts.append(format_toman(listing.price))
+            if listing.deposit:
+                price_parts.append(f'رهن {format_toman(listing.deposit)}')
+            if listing.rent:
+                price_parts.append(f'اجاره {format_toman(listing.rent)}')
+            existing_cl = CustomerListing.objects.filter(
+                customer=customer, token=listing.token, role='مالک',
+            ).first()
+            need_listing_link = existing_cl is None
+            if existing_cl is not None and crm_property is not None:
+                need_listing_link = existing_cl.crm_property_id != crm_property.pk
+            if need_listing_link:
+                link_customer_listing(
+                    customer,
+                    token=listing.token,
+                    title=listing.title or '',
+                    price=' · '.join(price_parts),
+                    area=f'{listing.area} متر' if listing.area else '',
+                    link=listing.link or '',
+                    role='مالک',
+                    deal_type=deal_type,
+                    crm_property=crm_property,
+                )
+
+    return customer
+
+
 def log_activity(
     customer: Customer,
     activity_type: str,
@@ -251,7 +438,7 @@ def link_customer_listing(
 def property_from_listing(user, listing) -> CRMProperty:
     """ساخت ملک CRM از آگهی اسکرپ‌شده."""
     from workspace.services.features import extract_listing_features
-    from workspace.services.listing_edit import owner_phone_from_listing
+    from workspace.services.listing_edit import owner_name_from_listing, owner_phone_from_listing
     from workspace.services.listing_features import build_listing_feature_profile
 
     deal_mode = 'فروش'
@@ -263,6 +450,7 @@ def property_from_listing(user, listing) -> CRMProperty:
     if feat.get('is_consultant') and not biz:
         biz = 'مشاور'
     owner_phone = normalize_phone(owner_phone_from_listing(listing))
+    owner_name = (owner_name_from_listing(listing) or '').strip()
     amenity_lines = []
     for group in profile.get('groups', []):
         for item in group.get('items', []):
@@ -310,6 +498,7 @@ def property_from_listing(user, listing) -> CRMProperty:
         link=listing.link or '',
         business_type=biz or 'شخصی',
         phone=owner_phone,
+        owner_name=owner_name,
         publish_status='منتشرشده',
     )
 
@@ -324,10 +513,24 @@ def get_crm_property_by_token(user, token: str) -> Optional[CRMProperty]:
 
 def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
     """افزودن آگهی به فایل‌های شخصی؛ در صورت تکراری بودن همان ملک برگردانده می‌شود."""
+    from workspace.services.listing_edit import owner_name_from_listing, owner_phone_from_listing
+
     existing = get_crm_property_by_token(user, listing.token)
     if existing:
         return existing, False
-    return property_from_listing(user, listing), True
+    prop = property_from_listing(user, listing)
+    phone = owner_phone_from_listing(listing) or prop.phone
+    name = owner_name_from_listing(listing) or prop.owner_name
+    if normalize_phone(phone):
+        upsert_property_owner(
+            user,
+            phone=phone,
+            name=name,
+            listing=listing,
+            crm_property=prop,
+            source='دیوار',
+        )
+    return prop, True
 
 
 def resolve_listing_for_property(user, prop) -> Optional[Listing]:
@@ -791,8 +994,9 @@ def link_listing_to_customer(customer, listing, tx, *, role='پیشنهادی', 
         price_parts.append(f'اجاره {format_toman(listing.rent)}')
     price_str = ' · '.join(price_parts)
     area_str = f'{listing.area} متر' if listing.area else ''
+    crm_prop = get_crm_property_by_token(customer.user, listing.token)
 
-    return link_customer_listing(
+    link = link_customer_listing(
         customer,
         token=listing.token,
         title=listing.title or '',
@@ -801,7 +1005,17 @@ def link_listing_to_customer(customer, listing, tx, *, role='پیشنهادی', 
         link=listing.link or '',
         role=role,
         deal_type=deal_type,
+        crm_property=crm_prop,
     )
+    if crm_prop is not None:
+        link_customer_property(
+            customer,
+            crm_prop,
+            role=role,
+            deal_type=deal_type,
+            is_primary=(role == 'مالک'),
+        )
+    return link
 
 
 def update_customer_status(customer: Customer, new_status: str) -> None:

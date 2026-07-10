@@ -222,6 +222,9 @@
         </div>
 
         <aside class="ws-ld-aside">
+            {% url 'workspace:listing_detail' dataset.id listing.id as listing_owner_action %}
+            {% include 'workspace/includes/owner_contact_box.html' with owner_form_action=listing_owner_action owner_phone=owner_phone owner_name=owner_name owner_contact=owner_contact can_edit_owner=True owner_id_prefix='ld-owner' %}
+
             {% if listing.latitude and listing.longitude %}
             <div class="ws-card ws-ld-map-card">
                 <p class="ws-card-title">موقعیت</p>

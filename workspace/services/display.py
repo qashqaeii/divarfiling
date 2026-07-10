@@ -35,7 +35,7 @@ CORE_LOCATION_MARKERS = (
     'latitude', 'longitude', 'lat', 'lng', 'مختصات', 'شعاع', 'نوع مختصات',
 )
 
-CONTACT_MARKERS = ('تماس', 'phone', 'تلفن', 'موبایل', 'شماره تماس')
+CONTACT_MARKERS = ('تماس', 'phone', 'تلفن', 'موبایل', 'شماره تماس', 'نام مالک', 'owner_name', 'owner_phone')
 
 SECTION_ORDER = ('مالی', 'ملک', 'مکان', 'متن', 'تماس')
 

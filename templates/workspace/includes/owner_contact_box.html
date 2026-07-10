@@ -1,0 +1,63 @@
+{# باکس ثبت/ویرایش مالک ملک — مشترک فایلینگ و فایل شخصی #}
+{% if can_edit_owner %}
+<form method="post" action="{{ owner_form_action }}" class="mk-owner-box mk-owner-box--edit">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="save_owner">
+    <div class="mk-owner-box__head">
+        <h3 class="mk-owner-box__title"><i class="fas fa-user-tie" aria-hidden="true"></i> مالک ملک</h3>
+        {% if owner_contact %}
+        <a href="{% url 'workspace:crm_detail' owner_contact.id %}" class="mk-owner-box__link" title="مشاهده مخاطب">
+            {{ owner_contact.name }}
+        </a>
+        {% endif %}
+    </div>
+    <p class="mk-owner-box__hint">با ذخیره، به مخاطبین اضافه و به‌عنوان مالک پیوند می‌شود.</p>
+    <div class="mk-owner-box__fields">
+        <div class="mk-owner-box__field">
+            <label class="mk-owner-box__label" for="{{ owner_id_prefix }}-phone">شماره تماس</label>
+            <input type="tel" name="owner_phone" id="{{ owner_id_prefix }}-phone"
+                   class="ws-input mk-owner-box__input" dir="ltr" inputmode="tel"
+                   autocomplete="tel" placeholder="۰۹۱۲…"
+                   value="{{ owner_phone|default:'' }}">
+        </div>
+        <div class="mk-owner-box__field">
+            <label class="mk-owner-box__label" for="{{ owner_id_prefix }}-name">نام و نام خانوادگی</label>
+            <input type="text" name="owner_name" id="{{ owner_id_prefix }}-name"
+                   class="ws-input mk-owner-box__input" autocomplete="name"
+                   placeholder="مثلاً علی رضایی"
+                   value="{{ owner_name|default:'' }}">
+        </div>
+    </div>
+    <button type="submit" class="ws-btn ws-btn-sm ws-btn-primary mk-owner-box__submit">
+        <i class="fas fa-check" aria-hidden="true"></i> ذخیره مالک
+    </button>
+</form>
+{% else %}
+<div class="mk-owner-box mk-owner-box--readonly">
+    <div class="mk-owner-box__head">
+        <h3 class="mk-owner-box__title"><i class="fas fa-user-tie" aria-hidden="true"></i> مالک ملک</h3>
+    </div>
+    {% if owner_name or owner_phone or owner_contact %}
+    <dl class="mk-owner-box__dl">
+        {% if owner_name or owner_contact %}
+        <div>
+            <dt>نام</dt>
+            <dd>
+                {% if owner_contact %}
+                <a href="{% url 'workspace:crm_detail' owner_contact.id %}">{{ owner_contact.name }}</a>
+                {% else %}{{ owner_name }}{% endif %}
+            </dd>
+        </div>
+        {% endif %}
+        {% if owner_phone %}
+        <div>
+            <dt>تماس</dt>
+            <dd dir="ltr">{{ owner_phone }}</dd>
+        </div>
+        {% endif %}
+    </dl>
+    {% else %}
+    <p class="mk-owner-box__empty">مالک ثبت نشده است.</p>
+    {% endif %}
+</div>
+{% endif %}

@@ -564,11 +564,20 @@
                             <option value="business">بنگاه / Business</option>
                         </select>
                     </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editOwnerPhone">شماره تماس مالک</label>
+                        <input type="tel" name="owner_phone" id="editOwnerPhone" class="ws-input" dir="ltr" inputmode="tel" placeholder="۰۹۱۲…">
+                    </div>
+                    <div class="ws-field">
+                        <label class="ws-label" for="editOwnerName">نام مالک</label>
+                        <input type="text" name="owner_name" id="editOwnerName" class="ws-input" placeholder="نام و نام خانوادگی">
+                    </div>
                     <div class="ws-field ws-field-full">
                         <label class="ws-label" for="editLink">لینک دیوار</label>
                         <input type="url" name="link" id="editLink" class="ws-input mk-edit-link" dir="ltr" placeholder="https://divar.ir/v/...">
                     </div>
                 </div>
+                <p class="mk-edit-hint-static">با ذخیره شماره، مالک به مخاطبین اضافه و به این آگهی پیوند می‌شود.</p>
             </section>
 
             <section class="mk-edit-section mk-edit-section-last">
@@ -680,6 +689,8 @@
         neighborhood: document.getElementById('editNeighborhood'),
         city: document.getElementById('editCity'),
         business: document.getElementById('editBusiness'),
+        ownerPhone: document.getElementById('editOwnerPhone'),
+        ownerName: document.getElementById('editOwnerName'),
         link: document.getElementById('editLink'),
         description: document.getElementById('editDescription'),
     };
@@ -774,6 +785,8 @@
             const biz = data.business_type || 'شخصی';
             fields.business.value = ['شخصی', 'مشاور', 'business'].includes(biz) ? biz : 'شخصی';
         }
+        setField(fields.ownerPhone, data.owner_phone);
+        setField(fields.ownerName, data.owner_name);
         setField(fields.link, data.link);
         if (fields.description) fields.description.value = data.description || '';
         updateMoneyHint(fields.price, moneyHints.price);

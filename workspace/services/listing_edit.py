@@ -6,6 +6,59 @@ from typing import Any, Dict, Optional
 from workspace.services.features import FEATURE_KEYS, extract_listing_features
 from workspace.services.listing_features import feature_details_for_edit
 
+OWNER_PHONE_KEYS = ('شماره تماس', 'owner_phone', 'phone', 'موبایل', 'تلفن', 'تماس')
+OWNER_NAME_KEYS = ('نام مالک', 'owner_name', 'نام و نام خانوادگی مالک', 'نام صاحب')
+
+
+def owner_phone_from_listing(listing) -> str:
+    data = listing.data or {}
+    for key in OWNER_PHONE_KEYS:
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ''
+
+
+def owner_name_from_listing(listing) -> str:
+    data = listing.data or {}
+    for key in OWNER_NAME_KEYS:
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ''
+
+
+def _apply_owner_phone(listing, phone: str) -> None:
+    data = dict(listing.data or {})
+    phone = (phone or '').strip()
+    if phone:
+        data['شماره تماس'] = phone
+        data['owner_phone'] = phone
+    else:
+        for key in OWNER_PHONE_KEYS:
+            data.pop(key, None)
+    listing.data = data
+
+
+def _apply_owner_name(listing, name: str) -> None:
+    data = dict(listing.data or {})
+    name = (name or '').strip()
+    if name:
+        data['نام مالک'] = name
+        data['owner_name'] = name
+    else:
+        for key in OWNER_NAME_KEYS:
+            data.pop(key, None)
+    listing.data = data
+
+
+def apply_owner_fields(listing, *, phone: Optional[str] = None, name: Optional[str] = None) -> None:
+    """به‌روزرسانی شماره/نام مالک در Listing.data (None = بدون تغییر)."""
+    if phone is not None:
+        _apply_owner_phone(listing, phone)
+    if name is not None:
+        _apply_owner_name(listing, name)
+
 
 def listing_edit_payload(listing, feat: Optional[dict] = None) -> Dict[str, Any]:
     """داده کامل برای مودال ویرایش — بدون escape دستی."""
@@ -30,6 +83,8 @@ def listing_edit_payload(listing, feat: Optional[dict] = None) -> Dict[str, Any]
         'neighborhood': listing.neighborhood or '',
         'city': listing.city or '',
         'business_type': biz or 'شخصی',
+        'owner_phone': owner_phone_from_listing(listing),
+        'owner_name': owner_name_from_listing(listing),
         'link': listing.link or '',
         'description': listing.description or '',
         'feature_details': feature_details_for_edit(listing),
@@ -99,29 +154,10 @@ def apply_listing_edit_post(listing, post) -> None:
 
     listing.data = data
 
-
-OWNER_PHONE_KEYS = ('شماره تماس', 'owner_phone', 'phone', 'موبایل', 'تلفن', 'تماس')
-
-
-def owner_phone_from_listing(listing) -> str:
-    data = listing.data or {}
-    for key in OWNER_PHONE_KEYS:
-        value = data.get(key)
-        if value is not None and str(value).strip():
-            return str(value).strip()
-    return ''
-
-
-def _apply_owner_phone(listing, phone: str) -> None:
-    data = dict(listing.data or {})
-    phone = (phone or '').strip()
-    if phone:
-        data['شماره تماس'] = phone
-        data['owner_phone'] = phone
-    else:
-        for key in OWNER_PHONE_KEYS:
-            data.pop(key, None)
-    listing.data = data
+    if 'owner_phone' in post:
+        _apply_owner_phone(listing, post.get('owner_phone', ''))
+    if 'owner_name' in post:
+        _apply_owner_name(listing, post.get('owner_name', ''))
 
 
 class _JsonPostAdapter:
@@ -147,5 +183,3 @@ class _JsonPostAdapter:
 def apply_listing_edit_json(listing, payload: Dict[str, Any]) -> None:
     """Apply listing edits from mobile JSON body."""
     apply_listing_edit_post(listing, _JsonPostAdapter(payload))
-    if 'owner_phone' in payload:
-        _apply_owner_phone(listing, payload.get('owner_phone') or '')

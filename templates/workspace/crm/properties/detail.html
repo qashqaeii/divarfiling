@@ -537,6 +537,10 @@
                 </dl>
             </div>
             {% endif %}
+            {% if can_edit_property or owner_phone or owner_name or owner_contact %}
+            {% url 'workspace:crm_property_detail' property.id as prop_owner_action %}
+            {% include 'workspace/includes/owner_contact_box.html' with owner_form_action=prop_owner_action owner_phone=owner_phone owner_name=owner_name owner_contact=owner_contact can_edit_owner=can_edit_property owner_id_prefix='prop-owner' %}
+            {% endif %}
             <div class="crm-prop-side-card crm-prop-side-card--pro">
                 <h3>خلاصه پرونده</h3>
                 <dl class="crm-prop-side-dl">
@@ -544,8 +548,8 @@
                     <div><dt>معامله</dt><dd>{{ property.deal_mode }}</dd></div>
                     <div><dt>وضعیت</dt><dd>{{ property.transaction_status }}</dd></div>
                     <div><dt>انتشار</dt><dd>{{ property.publish_status|default:"—" }}</dd></div>
-                    {% if is_property_owner %}<div><dt>مالک</dt><dd>شما</dd></div>
-                    {% elif property_owner_user %}<div><dt>مالک</dt><dd>{{ property_owner_user.get_full_name|default:property_owner_user.username }}</dd></div>{% endif %}
+                    {% if is_property_owner %}<div><dt>ثبت‌کننده</dt><dd>شما</dd></div>
+                    {% elif property_owner_user %}<div><dt>ثبت‌کننده</dt><dd>{{ property_owner_user.get_full_name|default:property_owner_user.username }}</dd></div>{% endif %}
                     <div><dt>ثبت</dt><dd>{{ property.created_at|ws_jalali }}</dd></div>
                 </dl>
             </div>

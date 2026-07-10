@@ -367,6 +367,7 @@ class CRMProperty(models.Model):
     link = models.URLField(max_length=500, blank=True, verbose_name='لینک')
     business_type = models.CharField(max_length=50, blank=True, verbose_name='نوع آگهی‌دهنده')
     phone = models.CharField(max_length=20, blank=True, verbose_name='شماره تماس')
+    owner_name = models.CharField(max_length=200, blank=True, verbose_name='نام مالک')
     notes = models.TextField(blank=True, verbose_name='یادداشت')
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان حذف')
     pipeline_order = models.PositiveIntegerField(default=0, verbose_name='ترتیب کانبان')

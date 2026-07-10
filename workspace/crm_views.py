@@ -90,9 +90,10 @@ from workspace.services.crm import (
     get_overdue_contacts, get_pipeline_data, get_property_pipeline, get_recent_contacts,
     get_recent_properties, get_upcoming_reminders, global_search,
     link_customer_property, log_activity, log_phone_call, log_status_change,
-    advance_recurring_reminder, recent_activities,
+    advance_recurring_reminder, primary_owner_contact, recent_activities,
     schedule_follow_up, set_next_follow_up, sync_follow_up_from_reminder,
     update_customer_status, update_property_transaction_status, reorder_property_pipeline,
+    upsert_property_owner,
 )
 from workspace.services.crm_analytics import (
     get_conversion_funnel, get_stagnant_contacts, stagnant_count,
@@ -1059,6 +1060,14 @@ class CRMPropertyCreateView(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         form.instance.agency = get_agency(self.request.user)
         self.object = form.save()
+        if self.object.phone or self.object.owner_name:
+            upsert_property_owner(
+                self.request.user,
+                phone=self.object.phone,
+                name=self.object.owner_name,
+                crm_property=self.object,
+                source='سایر',
+            )
         messages.success(self.request, 'ملک ثبت شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
 
@@ -1143,10 +1152,15 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['property_location_display'] = location_display(p, mask=share_ctx.mask_sensitive)
         ctx['property_shares'] = list_outgoing_property_shares(p) if share_ctx.is_owner else []
         ctx['property_is_shared'] = share_ctx.is_recipient
+        ctx['owner_phone'] = p.phone or ''
+        ctx['owner_name'] = p.owner_name or ''
+        ctx['owner_contact'] = None if share_ctx.mask_sensitive else primary_owner_contact(crm_property=p)
         if share_ctx.mask_sensitive:
             ctx['contact_links'] = []
             ctx['activities'] = []
             ctx['documents'] = []
+            ctx['owner_phone'] = ''
+            ctx['owner_name'] = ''
         if ctx.get('can_edit_property'):
             ctx['property_link_form'] = PropertyLinkForm()
             ctx['quick_lead_form'] = QuickLeadForm()
@@ -1184,6 +1198,23 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             return redirect('workspace:crm_property_detail', property_id=property_id)
         action = request.POST.get('action', '')
         redirect_url = self._detail_redirect(property_id)
+        if action == 'save_owner':
+            phone = (request.POST.get('owner_phone') or '').strip()
+            name = (request.POST.get('owner_name') or '').strip()
+            customer = upsert_property_owner(
+                request.user,
+                phone=phone,
+                name=name,
+                crm_property=prop,
+                source='سایر',
+            )
+            if phone and customer:
+                messages.success(request, f'مالک «{customer.name}» ذخیره و به مخاطبین پیوند شد.')
+            elif phone:
+                messages.success(request, 'اطلاعات مالک ذخیره شد.')
+            else:
+                messages.success(request, 'شماره مالک پاک شد.')
+            return redirect('workspace:crm_property_detail', property_id=property_id)
         if action == 'add_document':
             form = CustomerDocumentForm(request.POST, request.FILES)
             if form.is_valid():
@@ -1266,6 +1297,14 @@ class CRMPropertyUpdateView(LoginRequiredMixin, UpdateView):
             if images != (self.object.images or []):
                 self.object.images = images
                 self.object.save(update_fields=['images', 'updated_at'])
+        if 'phone' in form.changed_data or 'owner_name' in form.changed_data:
+            upsert_property_owner(
+                self.request.user,
+                phone=self.object.phone,
+                name=self.object.owner_name,
+                crm_property=self.object,
+                source='سایر',
+            )
         messages.success(self.request, 'ملک به‌روز شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
 

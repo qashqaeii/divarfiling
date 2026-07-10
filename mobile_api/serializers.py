@@ -21,7 +21,7 @@ from workspace.services.advertiser_signal import (
     listing_advertiser_display,
     listing_advertiser_signal,
 )
-from workspace.services.listing_edit import owner_phone_from_listing
+from workspace.services.listing_edit import owner_name_from_listing, owner_phone_from_listing
 from workspace.services.columns import _parse_images
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 
@@ -308,6 +308,7 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str
         'total_floors': specs['total_floors'],
         'business_type': lst.business_type or '',
         'owner_phone': owner_phone_from_listing(lst),
+        'owner_name': owner_name_from_listing(lst),
         'published_at': lst.published_at.isoformat() if lst.published_at else None,
         'expires_at': lst.expires_at.isoformat() if lst.expires_at else None,
         'is_expired': lst.is_expired,
@@ -436,6 +437,9 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False) -> Dict[str, Any
         'rooms': p.rooms or '',
         'token': p.token or '',
         'link': p.link or '',
+        'phone': p.phone or '',
+        'owner_name': p.owner_name or '',
+        'business_type': p.business_type or '',
         'created_at': p.created_at.isoformat() if p.created_at else None,
         'updated_at': p.updated_at.isoformat() if p.updated_at else None,
     }

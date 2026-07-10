@@ -9,7 +9,7 @@ from django.utils import timezone
 from mobile_api.serializers import property_detail_to_dict, property_to_dict
 from workspace.constants import CRM_PROPERTIES, PROPERTY_DEAL_MODES, PROPERTY_TX_STATUSES
 from workspace.models import CRMProperty, Customer, CustomerActivity, CustomerDocument, PropertyContact
-from workspace.services.crm import filter_properties, link_customer_property, resolve_listing_for_property, update_property_transaction_status
+from workspace.services.crm import filter_properties, link_customer_property, resolve_listing_for_property, update_property_transaction_status, upsert_property_owner
 from workspace.services.crm_property_share import build_property_share_context
 from workspace.services.crm_scope import can_edit_property, customers_qs, get_agency, properties_qs, property_for_user
 from workspace.services.features import extract_listing_features
@@ -222,11 +222,23 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:
         link=(data.get('link') or '')[:500],
         notes=(data.get('notes') or ''),
         images=list(data.get('images') or []),
+        phone=(data.get('phone') or data.get('owner_phone') or '')[:20],
+        owner_name=(data.get('owner_name') or '')[:200],
+        business_type=(data.get('business_type') or '')[:50],
     )
     for bool_field in ('has_parking', 'has_storage', 'has_elevator'):
         if bool_field in data:
             setattr(prop, bool_field, bool(data.get(bool_field)))
     prop.save()
+
+    if prop.phone or prop.owner_name:
+        upsert_property_owner(
+            user,
+            phone=prop.phone,
+            name=prop.owner_name,
+            crm_property=prop,
+            source='موبایل',
+        )
 
     contact_id = data.get('contact_id') or data.get('customer_id')
     if contact_id:
@@ -261,10 +273,15 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
         'link': 'link',
         'notes': 'notes',
         'amenities': 'amenities',
+        'phone': 'phone',
+        'owner_name': 'owner_name',
+        'business_type': 'business_type',
     }
     for api_key, model_field in simple_fields.items():
         if api_key in data:
             setattr(prop, model_field, data.get(api_key) or '')
+    if 'owner_phone' in data and 'phone' not in data:
+        prop.phone = (data.get('owner_phone') or '')[:20]
 
     if 'area' in data:
         prop.area = _parse_float(data.get('area'))
@@ -285,6 +302,14 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
         prop.publish_status = (data.get('publish_status') or prop.publish_status)[:30]
 
     prop.save()
+    if 'phone' in data or 'owner_phone' in data or 'owner_name' in data:
+        upsert_property_owner(
+            user,
+            phone=prop.phone,
+            name=prop.owner_name,
+            crm_property=prop,
+            source='موبایل',
+        )
     return prop
 
 

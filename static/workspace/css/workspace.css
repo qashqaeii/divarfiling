@@ -1962,6 +1962,93 @@ body.ws-lightbox-open { overflow: hidden; }
 .ws-ld-map-accuracy { font-size: .7rem; margin-top: .35rem; color: var(--ws-text-muted); line-height: 1.5; }
 .ws-ld-map-jump { width: 100%; margin-top: .55rem; justify-content: center; }
 
+/* مالک ملک — باکس مشترک فایلینگ / فایل شخصی */
+.mk-owner-box {
+    padding: .9rem 1rem;
+    border-radius: 12px;
+    background: var(--ws-surface);
+    border: 1px solid var(--ws-border-light);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .03);
+}
+.mk-owner-box__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .35rem;
+}
+.mk-owner-box__title {
+    margin: 0;
+    font-size: .72rem;
+    font-weight: 800;
+    color: var(--ws-text-muted);
+    letter-spacing: .02em;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+.mk-owner-box__title i { color: var(--ws-primary); opacity: .85; }
+.mk-owner-box__link {
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--ws-primary);
+    text-decoration: none;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.mk-owner-box__link:hover { text-decoration: underline; }
+.mk-owner-box__hint {
+    margin: 0 0 .65rem;
+    font-size: .68rem;
+    color: var(--ws-text-muted);
+    line-height: 1.45;
+}
+.mk-owner-box__fields {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: .55rem;
+}
+.mk-owner-box__field { display: flex; flex-direction: column; gap: .25rem; }
+.mk-owner-box__label {
+    font-size: .68rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+}
+.mk-owner-box__input { font-size: .82rem; }
+.mk-owner-box__submit {
+    width: 100%;
+    margin-top: .7rem;
+    justify-content: center;
+}
+.mk-owner-box__dl {
+    margin: .35rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+.mk-owner-box__dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+    font-size: .78rem;
+}
+.mk-owner-box__dl dt { color: var(--ws-text-muted); font-weight: 500; }
+.mk-owner-box__dl dd { margin: 0; font-weight: 600; text-align: left; }
+.mk-owner-box__dl dd a { color: var(--ws-primary); text-decoration: none; }
+.mk-owner-box__empty {
+    margin: .35rem 0 0;
+    font-size: .75rem;
+    color: var(--ws-text-muted);
+}
+.mk-edit-hint-static {
+    margin: .55rem 0 0;
+    font-size: .7rem;
+    color: var(--ws-text-muted);
+    line-height: 1.45;
+}
+
 .ws-ld-location-map-wrap {
     margin-top: 1.1rem;
     border: 1px solid var(--ws-border);

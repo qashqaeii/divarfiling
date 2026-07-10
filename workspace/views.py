@@ -40,7 +40,7 @@ from workspace.services.crm import (
     customers_linked_to_token, get_communication_stats, get_crm_property_by_token,
     get_dashboard_stats, get_overdue_contacts, get_pipeline_data, get_recent_contacts,
     get_recent_properties, get_upcoming_reminders, guess_deal_type_from_listing,
-    link_listing_to_customer,
+    link_listing_to_customer, primary_owner_contact, upsert_property_owner,
 )
 from workspace.services.analyzer import (
     benchmark_listing, build_analysis_dashboard, compute_outliers_report, compute_statistics,
@@ -63,7 +63,10 @@ from workspace.services.display import (
 from workspace.services.features import extract_listing_features
 from workspace.services.listing_features import build_listing_feature_profile
 from workspace.services.listing_map import build_listing_map_marker
-from workspace.services.listing_edit import apply_listing_edit_post, listing_edit_payload
+from workspace.services.listing_edit import (
+    apply_listing_edit_post, listing_edit_payload,
+    owner_name_from_listing, owner_phone_from_listing,
+)
 from workspace.services.filters import (
     active_filter_count, advanced_filter_count, apply_amenity_filters,
     apply_listing_filters, apply_value_filter, get_neighborhoods,
@@ -749,6 +752,14 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['crm_deal_types'] = DEAL_TYPES
         ctx['crm_default_deal'] = guess_deal_type_from_listing(listing)
         ctx['crm_property'] = get_crm_property_by_token(self.request.user, listing.token)
+        ctx['owner_phone'] = owner_phone_from_listing(listing)
+        ctx['owner_name'] = owner_name_from_listing(listing)
+        if ctx['crm_property']:
+            ctx['owner_phone'] = ctx['crm_property'].phone or ctx['owner_phone']
+            ctx['owner_name'] = ctx['crm_property'].owner_name or ctx['owner_name']
+        ctx['owner_contact'] = primary_owner_contact(
+            listing=listing, crm_property=ctx['crm_property'],
+        )
         ctx['gallery_images'] = deduplicate_divar_image_urls(
             [normalize_external_image_url(img) for img in (listing.images or []) if img],
         )
@@ -809,6 +820,24 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
             messages.success(request, f'آگهی به «{customer.name}» پیوند شد.')
             return redirect('workspace:listing_detail', dataset_id=dataset_id, listing_id=listing_id)
 
+        if action == 'save_owner':
+            phone = (request.POST.get('owner_phone') or '').strip()
+            name = (request.POST.get('owner_name') or '').strip()
+            customer = upsert_property_owner(
+                request.user,
+                phone=phone,
+                name=name,
+                listing=listing,
+                source='دیوار',
+            )
+            if phone and customer:
+                messages.success(request, f'مالک «{customer.name}» ذخیره و به مخاطبین پیوند شد.')
+            elif phone:
+                messages.success(request, 'اطلاعات مالک ذخیره شد.')
+            else:
+                messages.success(request, 'شماره مالک پاک شد.')
+            return redirect('workspace:listing_detail', dataset_id=dataset_id, listing_id=listing_id)
+
         meta, _ = ListingMeta.objects.get_or_create(user=request.user, token=listing.token)
         form = ListingMetaForm(request.POST, instance=meta)
         if form.is_valid():
@@ -866,6 +895,14 @@ class ListingUpdateView(DatasetOwnerMixin, View):
         try:
             apply_listing_edit_post(listing, request.POST)
             listing.save()
+            if 'owner_phone' in request.POST or 'owner_name' in request.POST:
+                upsert_property_owner(
+                    request.user,
+                    phone=request.POST.get('owner_phone', ''),
+                    name=request.POST.get('owner_name', ''),
+                    listing=listing,
+                    source='دیوار',
+                )
             messages.success(request, 'آگهی به‌روزرسانی شد.')
         except (ValueError, TypeError):
             messages.error(request, 'مقادیر عددی نامعتبر است.')

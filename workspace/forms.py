@@ -295,7 +295,7 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         model = CRMProperty
         fields = [
             'title', 'property_type', 'deal_mode', 'transaction_status', 'publish_status',
-            'business_type', 'phone',
+            'business_type', 'phone', 'owner_name',
             'address', 'city', 'district', 'neighborhood',
             'latitude', 'longitude', 'area', 'rooms', 'floor', 'total_floors',
             'has_parking', 'has_storage', 'has_elevator', 'build_year',
@@ -311,7 +311,8 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 choices=[('', '—'), ('شخصی', 'شخصی'), ('مشاور', 'مشاور املاک'), ('business', 'بنگاه / Business')],
                 attrs={'class': 'crm-select'},
             ),
-            'phone': forms.TextInput(attrs={'class': 'crm-input', 'dir': 'ltr', 'inputmode': 'tel'}),
+            'phone': forms.TextInput(attrs={'class': 'crm-input', 'dir': 'ltr', 'inputmode': 'tel', 'placeholder': '۰۹۱۲…'}),
+            'owner_name': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'نام و نام خانوادگی مالک'}),
             'address': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
             'city': forms.TextInput(attrs={'class': 'crm-input'}),
             'district': forms.TextInput(attrs={'class': 'crm-input'}),

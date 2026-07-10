@@ -69,8 +69,10 @@
                        data-role="{{ link.role }}">
             </label>
             <div class="crm-portfolio-card-visual" style="{% crm_role_style link.role %}">
-                <span class="crm-portfolio-card-source"><i class="fas fa-folder-open" aria-hidden="true"></i> فایل شخصی</span>
-                <span class="crm-portfolio-card-role">{{ link.role }}</span>
+                <div class="crm-portfolio-card-badges">
+                    <span class="crm-portfolio-card-source"><i class="fas fa-folder-open" aria-hidden="true"></i> فایل شخصی</span>
+                    <span class="crm-portfolio-card-role">{{ link.role }}</span>
+                </div>
                 <span class="crm-portfolio-card-type"><i class="fas fa-building" aria-hidden="true"></i> {{ p.property_type|default:'ملک' }}</span>
             </div>
             <div class="crm-portfolio-card-body">
@@ -92,13 +94,23 @@
                 </div>
             </div>
             <footer class="crm-portfolio-card-foot">
-                <a href="{% url 'workspace:crm_property_detail' p.pk %}" class="crm-portfolio-act" title="مشاهده فایل"><i class="fas fa-arrow-up-right-from-square"></i></a>
-                <form method="post" class="crm-inline-form crm-portfolio-unlink">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="unlink_property">
-                    <input type="hidden" name="link_id" value="{{ link.id }}">
-                    <button type="submit" class="crm-portfolio-act crm-portfolio-act--danger" title="حذف پیوند"><i class="fas fa-link-slash"></i></button>
-                </form>
+                <div class="crm-portfolio-card-foot-share">
+                    {% if link.public_share_url %}
+                    <a href="{{ link.public_share_url }}" target="_blank" rel="noopener" class="crm-portfolio-public-link" title="{{ link.public_share_url }}">
+                        <i class="fas fa-link" aria-hidden="true"></i><span>لینک عمومی</span>
+                    </a>
+                    <button type="button" class="crm-portfolio-act" data-copy="{{ link.public_share_url }}" title="کپی لینک عمومی"><i class="fas fa-copy"></i></button>
+                    {% endif %}
+                </div>
+                <div class="crm-portfolio-card-foot-actions">
+                    <a href="{% url 'workspace:crm_property_detail' p.pk %}" class="crm-portfolio-act" title="مشاهده فایل"><i class="fas fa-arrow-up-right-from-square"></i></a>
+                    <form method="post" class="crm-inline-form crm-portfolio-unlink">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="unlink_property">
+                        <input type="hidden" name="link_id" value="{{ link.id }}">
+                        <button type="submit" class="crm-portfolio-act crm-portfolio-act--danger" title="حذف پیوند"><i class="fas fa-link-slash"></i></button>
+                    </form>
+                </div>
             </footer>
         </article>
         {% endwith %}
@@ -117,8 +129,10 @@
                        data-role="{{ l.role }}">
             </label>
             <div class="crm-portfolio-card-visual crm-portfolio-card-visual--divar" style="{% crm_role_style l.role %}">
-                <span class="crm-portfolio-card-source"><i class="fas fa-folder" aria-hidden="true"></i> فایلینگ دیوار</span>
-                <span class="crm-portfolio-card-role">{{ l.role }}</span>
+                <div class="crm-portfolio-card-badges">
+                    <span class="crm-portfolio-card-source"><i class="fas fa-folder" aria-hidden="true"></i> فایلینگ دیوار</span>
+                    <span class="crm-portfolio-card-role">{{ l.role }}</span>
+                </div>
                 {% if l.area %}<span class="crm-portfolio-card-type">{{ l.area }} متر</span>{% endif %}
             </div>
             <div class="crm-portfolio-card-body">
@@ -139,15 +153,25 @@
                 {% endwith %}
             </div>
             <footer class="crm-portfolio-card-foot">
-                {% if l.link %}
-                <a href="{{ l.link }}" target="_blank" rel="noopener" class="crm-portfolio-act" title="دیوار (داخلی)"><i class="fas fa-arrow-up-right-from-square"></i></a>
-                {% endif %}
-                <form method="post" class="crm-inline-form crm-portfolio-unlink">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="unlink_listing">
-                    <input type="hidden" name="listing_id" value="{{ l.id }}">
-                    <button type="submit" class="crm-portfolio-act crm-portfolio-act--danger" title="حذف پیوند"><i class="fas fa-link-slash"></i></button>
-                </form>
+                <div class="crm-portfolio-card-foot-share">
+                    {% if l.public_share_url %}
+                    <a href="{{ l.public_share_url }}" target="_blank" rel="noopener" class="crm-portfolio-public-link" title="{{ l.public_share_url }}">
+                        <i class="fas fa-link" aria-hidden="true"></i><span>لینک عمومی</span>
+                    </a>
+                    <button type="button" class="crm-portfolio-act" data-copy="{{ l.public_share_url }}" title="کپی لینک عمومی"><i class="fas fa-copy"></i></button>
+                    {% endif %}
+                </div>
+                <div class="crm-portfolio-card-foot-actions">
+                    {% if l.link %}
+                    <a href="{{ l.link }}" target="_blank" rel="noopener" class="crm-portfolio-act" title="دیوار"><i class="fas fa-arrow-up-right-from-square"></i></a>
+                    {% endif %}
+                    <form method="post" class="crm-inline-form crm-portfolio-unlink">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="unlink_listing">
+                        <input type="hidden" name="listing_id" value="{{ l.id }}">
+                        <button type="submit" class="crm-portfolio-act crm-portfolio-act--danger" title="حذف پیوند"><i class="fas fa-link-slash"></i></button>
+                    </form>
+                </div>
             </footer>
         </article>
         {% endfor %}

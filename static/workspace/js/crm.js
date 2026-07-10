@@ -1369,9 +1369,11 @@ function initCRMContactPortfolio() {
     const selects = () => [...root.querySelectorAll('.crm-portfolio-select:checked')];
 
     function applyFilter(role) {
+        const wanted = (role || 'all').trim();
         let visible = 0;
         cards().forEach(card => {
-            const show = role === 'all' || card.dataset.role === role;
+            const cardRole = (card.dataset.role || '').trim();
+            const show = wanted === 'all' || cardRole === wanted;
             card.hidden = !show;
             if (show) visible += 1;
         });

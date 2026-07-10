@@ -519,19 +519,48 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         c = self.object
         ctx['activities'] = c.activities.select_related('property').all()[:50]
         ctx['property_links'] = c.property_links.select_related('property').all()
-        ctx['linked_listings'] = c.linked_listings.all()
+        ctx['linked_listings'] = c.linked_listings.select_related('crm_property').all()
         link_tokens = [lk.token for lk in ctx['linked_listings'] if lk.token]
         listings_by_token = {
             lst.token: lst
             for lst in Listing.objects.filter(
                 dataset__user=self.request.user,
                 token__in=link_tokens,
-            ).only('token', 'data')
+            ).select_related('dataset')
         }
         ctx['linked_listing_highlights'] = {
             token: feature_highlights_for_listing(lst, limit=3)
             for token, lst in listings_by_token.items()
         }
+        from workspace.services.property_suggestion_share import (
+            public_share_url_for_listing,
+            public_share_url_for_property,
+        )
+        for link in ctx['property_links']:
+            share_url = ''
+            if link.property_id:
+                try:
+                    share_url = public_share_url_for_property(
+                        self.request.user, self.request, link.property,
+                    )
+                except Exception:
+                    share_url = ''
+            link.public_share_url = share_url
+        for cl in ctx['linked_listings']:
+            share_url = ''
+            listing = listings_by_token.get(cl.token)
+            try:
+                if listing is not None:
+                    share_url = public_share_url_for_listing(
+                        self.request.user, self.request, listing,
+                    )
+                elif cl.crm_property_id:
+                    share_url = public_share_url_for_property(
+                        self.request.user, self.request, cl.crm_property,
+                    )
+            except Exception:
+                share_url = ''
+            cl.public_share_url = share_url
         ctx['reminders'] = c.reminders.filter(is_done=False).order_by('due_at')
         ctx['documents'] = c.documents.all()
         ctx['customer_form'] = CustomerForm(instance=c)

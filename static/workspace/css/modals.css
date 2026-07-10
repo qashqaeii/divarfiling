@@ -885,35 +885,54 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
 
 .mk-edit-nav {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
     position: sticky;
     top: 0;
-    z-index: 2;
-    padding: 0.55rem 0 0.65rem;
-    margin: 0 0 0.15rem;
-    background: linear-gradient(180deg, var(--mk-modal-bg, #0F172A) 70%, transparent);
+    z-index: 3;
+    padding: 0.65rem 0 0.75rem;
+    margin: 0 0 0.35rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    background: linear-gradient(180deg, var(--mk-modal-bg, #0F172A) 85%, transparent);
     border-bottom: 1px solid var(--mk-modal-border);
 }
 
 .mk-edit-nav-btn {
     appearance: none;
-    border: 1px solid var(--mk-modal-border);
-    background: var(--ws-surface-2, #1A2332);
-    color: var(--ws-text-secondary, #94A3B8);
-    font-size: 0.68rem;
+    flex: 0 0 auto;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ws-text-muted, #64748B);
+    font-family: inherit;
+    font-size: 0.8125rem;
     font-weight: 600;
-    padding: 0.35rem 0.65rem;
-    border-radius: 999px;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    padding: 0.5rem 0.9rem;
+    border-radius: 10px;
     cursor: pointer;
-    transition: background .15s, color .15s, border-color .15s;
+    white-space: nowrap;
+    transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
 
-.mk-edit-nav-btn:hover,
-.mk-edit-nav-btn.is-active {
-    background: rgba(124, 58, 237, 0.14);
-    border-color: rgba(124, 58, 237, 0.35);
+.mk-edit-nav-btn:hover {
+    background: var(--ws-surface-2, #1A2332);
     color: var(--ws-text, #E2E8F0);
+    border-color: var(--mk-modal-border);
+}
+
+.mk-edit-nav-btn.is-active {
+    background: rgba(124, 58, 237, 0.18);
+    border-color: rgba(124, 58, 237, 0.45);
+    color: #EDE9FE;
+    box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.12), inset 0 -2px 0 rgba(124, 58, 237, 0.55);
+}
+
+.mk-edit-nav-btn:focus-visible {
+    outline: 2px solid rgba(124, 58, 237, 0.55);
+    outline-offset: 2px;
 }
 
 .mk-edit-section {

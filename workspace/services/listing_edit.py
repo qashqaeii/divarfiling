@@ -387,6 +387,63 @@ def apply_listing_edit_post(listing, post) -> None:
 
     data = dict(listing.data or {})
 
+    # همگام‌سازی فیلدهای مدل با data — نمایش صفحه جزئیات از data می‌خواند
+    if 'title' in post:
+        if listing.title:
+            data['عنوان'] = listing.title
+        else:
+            data.pop('عنوان', None)
+            data.pop('title', None)
+    if 'description' in post:
+        for key in list(data.keys()):
+            kl = str(key).lower()
+            if 'توضیح' in str(key) or kl in ('description', 'desc'):
+                data.pop(key, None)
+        if listing.description:
+            data['توضیحات'] = listing.description
+    if 'city' in post:
+        if listing.city:
+            data['شهر'] = listing.city
+            data['مکان_شهر'] = listing.city
+        else:
+            data.pop('شهر', None)
+            data.pop('city', None)
+            data.pop('مکان_شهر', None)
+    if 'neighborhood' in post:
+        if listing.neighborhood:
+            data['محله'] = listing.neighborhood
+        else:
+            data.pop('محله', None)
+            data.pop('neighborhood', None)
+    if 'link' in post:
+        if listing.link:
+            data['لینک'] = listing.link
+        else:
+            data.pop('لینک', None)
+            data.pop('link', None)
+    if 'rooms' in post:
+        if listing.rooms:
+            data['اتاق'] = listing.rooms
+            data['تعداد اتاق'] = listing.rooms
+        else:
+            data.pop('اتاق', None)
+            data.pop('rooms', None)
+            data.pop('تعداد اتاق', None)
+    for model_key, data_keys in (
+        ('price', ('قیمت', 'price')),
+        ('deposit', ('ودیعه', 'deposit', 'رهن')),
+        ('rent', ('اجاره', 'اجاره ماهانه', 'rent')),
+        ('area', ('متراژ', 'area')),
+    ):
+        if model_key not in post:
+            continue
+        value = getattr(listing, model_key, None)
+        if value is None or value == '':
+            for dk in data_keys:
+                data.pop(dk, None)
+        else:
+            data[data_keys[0]] = value
+
     if 'floor' in post:
         floor = post.get('floor', '').strip()
         if floor:

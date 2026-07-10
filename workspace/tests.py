@@ -173,6 +173,9 @@ class ListingEditTests(SimpleTestCase):
         self.assertEqual(listing.data.get('جهت ساختمان'), 'شمالی')
         self.assertEqual(listing.data.get('جنس کف'), 'پارکت')
         self.assertEqual(listing.data.get('شماره تماس'), '09121234567')
+        self.assertEqual(listing.data.get('توضیحات'), 'توضیح کامل')
+        self.assertEqual(listing.data.get('عنوان'), 'جدید')
+        self.assertEqual(listing.data.get('محله'), 'ونک')
 
 
 class PriceHistoryTests(SimpleTestCase):

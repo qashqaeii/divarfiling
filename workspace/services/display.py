@@ -611,20 +611,44 @@ def _normalize_contact_fields(data: dict, listing) -> None:
         data['نام مالک'] = name
 
 
+def _set_model_field(data: dict, key: str, value: Any, *, clear_keys: tuple = ()) -> None:
+    """اولویت با فیلد مدل — برای نمایش پس از ویرایش."""
+    if value is None:
+        return
+    if isinstance(value, str):
+        s = value.strip()
+        if not s or s.lower() in ('nan', 'none', '-', '—'):
+            return
+        value = s
+    for ck in clear_keys:
+        data.pop(ck, None)
+    data[key] = value
+
+
 def build_listing_display_data(listing, feat: Optional[Dict[str, Any]] = None) -> dict:
     """ادغام فیلدهای مدل و استخراج‌شده در دیکشنری نمایش."""
     data = _dedupe_listing_data_keys(dict(listing.data or {}))
 
-    _set_if_missing(data, 'شناسه', listing.token)
-    _set_if_missing(data, 'عنوان', listing.title)
-    _set_if_missing(data, 'لینک', listing.link)
-    _set_if_missing(data, 'متراژ', listing.area)
-    _set_if_missing(data, 'اتاق', listing.rooms)
-    _set_if_missing(data, 'شهر', listing.city)
-    _set_if_missing(data, 'محله', listing.neighborhood)
-    _set_if_missing(data, 'قیمت', listing.price)
-    _set_if_missing(data, 'ودیعه', listing.deposit)
-    _set_if_missing(data, 'اجاره', listing.rent)
+    # فیلدهای مدل بعد از ویرایش اولویت دارند (نه فقط وقتی data خالی است)
+    _set_model_field(data, 'شناسه', listing.token)
+    _set_model_field(data, 'عنوان', listing.title, clear_keys=('title',))
+    _set_model_field(data, 'لینک', listing.link, clear_keys=('link', 'url'))
+    _set_model_field(data, 'متراژ', listing.area, clear_keys=('area',))
+    _set_model_field(data, 'اتاق', listing.rooms, clear_keys=('rooms', 'تعداد اتاق'))
+    _set_model_field(data, 'شهر', listing.city, clear_keys=('city', 'مکان_شهر', 'city_persian'))
+    _set_model_field(data, 'محله', listing.neighborhood, clear_keys=('neighborhood',))
+    _set_model_field(data, 'قیمت', listing.price, clear_keys=('price',))
+    _set_model_field(data, 'ودیعه', listing.deposit, clear_keys=('deposit', 'رهن'))
+    _set_model_field(data, 'اجاره', listing.rent, clear_keys=('rent', 'اجاره ماهانه'))
+
+    desc = (listing.description or '').strip()
+    if desc:
+        for key in list(data.keys()):
+            kl = str(key).lower()
+            if key != 'توضیحات' and ('توضیح' in str(key) or kl in ('description', 'desc')):
+                data.pop(key, None)
+        data['توضیحات'] = desc
+
     advertiser_label = ''
     if feat and feat.get('advertiser_label'):
         advertiser_label = str(feat['advertiser_label']).strip()
@@ -633,19 +657,20 @@ def build_listing_display_data(listing, feat: Optional[Dict[str, Any]] = None) -
         advertiser_label = listing_advertiser_display(listing)['label']
     data['نوع آگهی‌دهنده'] = advertiser_label
     data['نوع آگهی دهنده'] = advertiser_label
-    _set_if_missing(data, 'عرض جغرافیایی', listing.latitude)
-    _set_if_missing(data, 'طول جغرافیایی', listing.longitude)
+    _set_model_field(data, 'عرض جغرافیایی', listing.latitude, clear_keys=('latitude', 'lat', 'مکان_مختصات_lat'))
+    _set_model_field(data, 'طول جغرافیایی', listing.longitude, clear_keys=('longitude', 'lng', 'مکان_مختصات_lng'))
 
     if listing.published_at:
         _set_if_missing(data, 'تاریخ انتشار', listing.published_at)
     if listing.expires_at:
         _set_if_missing(data, 'تاریخ انقضا', listing.expires_at)
     if listing.images:
-        _set_if_missing(data, 'تعداد تصاویر', len(listing.images))
+        data['تعداد تصاویر'] = len(listing.images)
 
     if feat:
         _set_if_missing(data, 'طبقه', feat.get('floor'))
-        _set_if_missing(data, 'اتاق', feat.get('rooms'))
+        if feat.get('rooms'):
+            _set_model_field(data, 'اتاق', feat.get('rooms'))
         if feat.get('build_year'):
             _set_if_missing(data, 'سال ساخت', feat['build_year'])
 

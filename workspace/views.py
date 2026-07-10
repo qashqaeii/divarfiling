@@ -926,9 +926,6 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         tx = transaction_profile(dataset.transaction_type)
         ctx['feat'] = extract_listing_features(listing)
         data = build_listing_display_data(listing, ctx['feat'])
-        desc = (listing.description or '').strip()
-        if desc and not any('توضیح' in k or 'description' in k.lower() for k in data):
-            data['توضیحات'] = desc
         ctx['tx'] = tx
         sections = format_sections(data, tx)
         sections.pop('سایر', None)
@@ -1134,8 +1131,8 @@ class ListingUpdateView(DatasetOwnerMixin, View):
                     source='دیوار',
                 )
             messages.success(request, 'آگهی به‌روزرسانی شد.')
-        except (ValueError, TypeError):
-            messages.error(request, 'مقادیر عددی نامعتبر است.')
+        except (ValueError, TypeError) as exc:
+            messages.error(request, f'ذخیره نشد: {exc}' if str(exc) else 'مقادیر عددی نامعتبر است.')
         nxt = request.POST.get('next') or reverse(
             'workspace:dataset_detail', kwargs={'dataset_id': dataset.pk},
         )

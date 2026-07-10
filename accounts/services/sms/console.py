@@ -77,4 +77,9 @@ def send_simple(
 
 
 def get_balance() -> Any:
-    return {'balance': 0, 'provider': 'console'}
+    return {
+        'balanceAmount': 0,
+        'balanceCount': 0,
+        'details': [],
+        'provider': 'console',
+    }

@@ -97,15 +97,26 @@ class FarazSmsServiceTests(SimpleTestCase):
 
     @patch('accounts.services.sms.faraz.requests.request')
     def test_balance_snapshot(self, mock_request):
+        # شکل رسمی API: https://docs.iranpayamak.com/account-balance-13717911e0
+        payload = {
+            'status': 'success',
+            'message': None,
+            'data': {
+                'balanceAmount': 125000,
+                'balanceCount': 625,
+                'details': [{'count': 625, 'rate': 200, 'amount': 125000}],
+            },
+        }
         mock_resp = MagicMock()
         mock_resp.status_code = 200
-        mock_resp.content = b'{"status":"success","data":{"credit":125000.5}}'
-        mock_resp.json.return_value = {'status': 'success', 'data': {'credit': 125000.5}}
+        mock_resp.content = b'{"status":"success"}'
+        mock_resp.json.return_value = payload
         mock_request.return_value = mock_resp
 
         snap = get_sms_balance_snapshot(use_cache=False)
         self.assertTrue(snap['ok'])
-        self.assertEqual(snap['credit'], 125000.5)
+        self.assertEqual(snap['credit'], 125000)
+        self.assertEqual(snap['sms_count'], 625)
         self.assertFalse(snap['is_low'])
         self.assertEqual(snap['provider'], 'faraz')
         self.assertEqual(snap['line_number'], '90008361')
@@ -117,11 +128,16 @@ class FarazSmsServiceTests(SimpleTestCase):
     def test_balance_low(self, mock_request):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
-        mock_resp.content = b'{"status":"success","data":{"credit":12000}}'
-        mock_resp.json.return_value = {'status': 'success', 'data': {'credit': 12000}}
+        mock_resp.content = b'{"status":"success"}'
+        mock_resp.json.return_value = {
+            'status': 'success',
+            'data': {'balanceAmount': 12000, 'balanceCount': 60, 'details': []},
+        }
         mock_request.return_value = mock_resp
         snap = get_sms_balance_snapshot(use_cache=False)
         self.assertTrue(snap['ok'])
+        self.assertEqual(snap['credit'], 12000)
+        self.assertEqual(snap['sms_count'], 60)
         self.assertTrue(snap['is_low'])
 
 

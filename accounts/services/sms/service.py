@@ -122,7 +122,7 @@ def get_balance() -> Any:
 
 
 def _extract_credit(raw: Any) -> float | None:
-    """استخراج مبلغ موجودی از پاسخ پنل (عدد یا دیکشنری)."""
+    """استخراج مبلغ موجودی (تومان) از پاسخ پنل — فیلد رسمی: balanceAmount."""
     if raw is None:
         return None
     if isinstance(raw, bool):
@@ -138,25 +138,42 @@ def _extract_credit(raw: Any) -> float | None:
         except ValueError:
             return None
     if isinstance(raw, dict):
+        # مستندات ایران‌پیامک: data.balanceAmount
+        # https://docs.iranpayamak.com/account-balance-13717911e0
         for key in (
-            'credit', 'balance', 'amount', 'remain', 'remaining',
-            'credit_amount', 'account_credit', 'wallet',
+            'balanceAmount', 'credit', 'balance', 'remain', 'remaining',
+            'credit_amount', 'account_credit', 'wallet', 'amount',
         ):
             if key in raw and raw[key] is not None:
                 credit = _extract_credit(raw[key])
                 if credit is not None:
                     return credit
-        # بعضی پاسخ‌ها credit را داخل data تو در تو می‌گذارند
         nested = raw.get('data')
         if nested is not None and nested is not raw:
             return _extract_credit(nested)
     return None
 
 
+def _extract_sms_count(raw: Any) -> int | None:
+    """تعداد پیامک باقی‌مانده — فیلد رسمی: balanceCount."""
+    if not isinstance(raw, dict):
+        return None
+    for key in ('balanceCount', 'count', 'sms_count', 'remaining_count'):
+        if key in raw and raw[key] is not None:
+            try:
+                return int(raw[key])
+            except (TypeError, ValueError):
+                continue
+    nested = raw.get('data')
+    if isinstance(nested, dict):
+        return _extract_sms_count(nested)
+    return None
+
+
 def get_sms_balance_snapshot(*, use_cache: bool = True, cache_ttl: int = 60) -> dict[str, Any]:
     """
     موجودی پنل پیامک برای داشبورد ادمین.
-    خطا را می‌بلعد تا صفحه مدیریت از کار نیفتد.
+    پاسخ رسمی: balanceAmount (تومان) + balanceCount (تعداد پیامک).
     """
     from django.core.cache import cache
 
@@ -167,7 +184,7 @@ def get_sms_balance_snapshot(*, use_cache: bool = True, cache_ttl: int = 60) -> 
     }
     line = (getattr(settings, 'FARAZSMS_LINE_NUMBER', '') or '').strip()
     enabled = bool(getattr(settings, 'SMS_ENABLED', True))
-    cache_key = f'admin:sms_balance:{provider}'
+    cache_key = f'admin:sms_balance:v2:{provider}'
 
     if use_cache:
         cached = cache.get(cache_key)
@@ -177,6 +194,7 @@ def get_sms_balance_snapshot(*, use_cache: bool = True, cache_ttl: int = 60) -> 
     base: dict[str, Any] = {
         'ok': False,
         'credit': None,
+        'sms_count': None,
         'provider': provider,
         'provider_label': provider_labels.get(provider, provider),
         'line_number': line,
@@ -204,18 +222,24 @@ def get_sms_balance_snapshot(*, use_cache: bool = True, cache_ttl: int = 60) -> 
         return base
 
     credit = _extract_credit(raw)
-    if credit is None:
+    sms_count = _extract_sms_count(raw) if isinstance(raw, dict) else None
+    if credit is None and sms_count is None:
         base['error'] = 'پاسخ موجودی از پنل قابل‌خواندن نبود.'
         base['raw'] = raw if isinstance(raw, (dict, list, str, int, float)) else None
         return base
+
+    # اگر فقط تعداد آمده، مبلغ را ۰ نگذار — ok با count
+    if credit is None:
+        credit = 0.0
 
     low_threshold = float(getattr(settings, 'FARAZSMS_LOW_BALANCE', 50_000) or 50_000)
     is_low = provider == 'faraz' and credit < low_threshold
     base.update({
         'ok': True,
         'credit': credit,
+        'sms_count': sms_count,
         'is_low': is_low,
-        'raw': raw if isinstance(raw, dict) else {'credit': credit},
+        'raw': raw if isinstance(raw, dict) else {'balanceAmount': credit},
         'error': '',
     })
     if use_cache and cache_ttl > 0:

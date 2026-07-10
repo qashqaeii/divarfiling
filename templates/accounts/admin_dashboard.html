@@ -8,7 +8,7 @@
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -171,8 +171,9 @@
                 <span class="adm-kpi-body">
                     {% if sms_balance.ok %}
                     <span class="adm-kpi-val">{{ sms_balance.credit|floatformat:0|currency }}</span>
-                    <span class="adm-kpi-lbl">موجودی فراز اس‌ام‌اس</span>
+                    <span class="adm-kpi-lbl">موجودی فراز اس‌ام‌اس (تومان)</span>
                     <span class="adm-kpi-sub">
+                        {% if sms_balance.sms_count is not None %}≈ {{ sms_balance.sms_count|currency }} پیامک · {% endif %}
                         {{ sms_balance.provider_label }}
                         {% if sms_balance.line_number %} · خط {{ sms_balance.line_number }}{% endif %}
                         {% if sms_balance.is_low %}<em class="adm-kpi-delta is-down">کم</em>{% endif %}
@@ -298,7 +299,12 @@
                     <li>
                         <span class="adm-stat-lbl">موجودی پیامک</span>
                         <span class="adm-stat-val">
-                            {% if sms_balance.ok %}{{ sms_balance.credit|floatformat:0|currency }} ت{% else %}—{% endif %}
+                            {% if sms_balance.ok %}
+                                {{ sms_balance.credit|floatformat:0|currency }} ت
+                                {% if sms_balance.sms_count is not None %}
+                                <small>({{ sms_balance.sms_count|currency }} پیامک)</small>
+                                {% endif %}
+                            {% else %}—{% endif %}
                         </span>
                     </li>
                 </ul>

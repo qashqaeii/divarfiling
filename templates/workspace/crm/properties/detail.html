@@ -116,9 +116,13 @@
             <div class="crm-prop-hero-main">
                 <div class="crm-prop-hero-visual">
                     {% if property.images %}
-                    <a href="{{ property.images.0 }}" target="_blank" rel="noopener" class="crm-prop-hero-cover" aria-label="تصویر اصلی ملک" data-crm-prop-hero-cover>
-                        <img src="{{ property.images.0 }}" alt="" loading="eager">
-                    </a>
+                    <button type="button"
+                            class="crm-prop-hero-cover"
+                            aria-label="نمایش تصاویر ملک"
+                            data-crm-prop-hero-cover
+                            data-crm-prop-open-gallery>
+                        <img src="{{ property.images.0 }}" alt="تصویر ۱" loading="eager">
+                    </button>
                     {% if property.images|length > 1 %}
                     <span class="crm-prop-hero-img-badge"><i class="fas fa-images"></i> {{ property.images|length }}</span>
                     {% endif %}
@@ -341,13 +345,22 @@
         </div>
         {% endif %}
 
-        {% if property.images|length > 1 %}
-        <div class="crm-prop-hero-gallery" aria-label="گالری تصاویر">
-            {% for img in property.images|slice:":8" %}
-            <a href="{{ img }}" target="_blank" rel="noopener" class="crm-prop-gallery-item{% if forloop.first %} is-active{% endif %}">
-                <img src="{{ img }}" alt="" loading="lazy">
-            </a>
-            {% endfor %}
+        {% if property.images %}
+        <div class="crm-prop-hero-gallery-wrap" data-ws-gallery>
+            {% if property.images|length == 1 %}
+            <button type="button" hidden data-ws-lightbox="{{ property.images.0 }}" aria-hidden="true" tabindex="-1"></button>
+            {% else %}
+            <div class="crm-prop-hero-gallery" aria-label="گالری تصاویر">
+                {% for img in property.images %}
+                <button type="button"
+                        class="crm-prop-gallery-item{% if forloop.first %} is-active{% endif %}"
+                        data-ws-lightbox="{{ img }}"
+                        aria-label="نمایش تصویر {{ forloop.counter }} از {{ property.images|length }}">
+                    <img src="{{ img }}" alt="تصویر {{ forloop.counter }}" loading="lazy">
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         {% endif %}
         </div>

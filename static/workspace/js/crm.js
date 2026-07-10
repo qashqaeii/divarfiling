@@ -2235,7 +2235,6 @@ function initCRMPropertyImages(scope) {
         const emptyCover = document.querySelector('.crm-prop-hero-cover--empty');
         if (images.length && coverImg) {
             coverImg.src = images[0];
-            coverLink.href = images[0];
             coverLink.style.display = '';
             emptyCover?.closest('.crm-prop-hero-visual')?.querySelector('.crm-prop-hero-cover--empty')?.remove();
         } else if (!images.length && coverImg) {
@@ -2528,6 +2527,30 @@ function initCRMPropertyAdvFilters() {
     });
 }
 
+function initCRMPropGalleryLightbox() {
+    document.querySelectorAll('[data-crm-prop-open-gallery]').forEach(btn => {
+        if (btn.dataset.crmGalleryBound === '1') return;
+        btn.dataset.crmGalleryBound = '1';
+        btn.addEventListener('click', () => {
+            const root = document.querySelector('.crm-prop-hero-gallery-wrap[data-ws-gallery]');
+            const first = root?.querySelector('[data-ws-lightbox]');
+            if (first) first.click();
+        });
+    });
+
+    const gallery = document.querySelector('.crm-prop-hero-gallery');
+    if (!gallery) return;
+    gallery.querySelectorAll('[data-ws-lightbox]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            gallery.querySelectorAll('.crm-prop-gallery-item').forEach(el => el.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            const coverImg = document.querySelector('[data-crm-prop-hero-cover] img');
+            const src = btn.getAttribute('data-ws-lightbox');
+            if (coverImg && src) coverImg.src = src;
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-drawer-open]').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -2572,6 +2595,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMDealChecklist();
     initCRMCommissionSplit();
     initCRMContactTeam();
+    initCRMPropGalleryLightbox();
         initCRMPropertyTeam();
         initCRMPropertyImages();
         initCRMTeamPage();

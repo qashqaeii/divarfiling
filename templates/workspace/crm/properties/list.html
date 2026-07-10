@@ -148,63 +148,83 @@
             <div class="crm-files-adv{% if filters_open %} is-open{% endif %}"
                  id="crmPropAdvPanel"
                  {% if not filters_open %}hidden{% endif %}>
-                <div class="crm-files-adv-grid">
-                    <div class="crm-files-adv-group">
-                        <span class="crm-files-adv-label">امکانات</span>
-                        <div class="crm-files-adv-row">
-                            <select name="parking" class="crm-files-select" aria-label="پارکینگ">
-                                <option value="">پارکینگ</option>
-                                <option value="1" {% if request.GET.parking == '1' %}selected{% endif %}>دارد</option>
-                                <option value="0" {% if request.GET.parking == '0' %}selected{% endif %}>ندارد</option>
-                            </select>
-                            <select name="storage" class="crm-files-select" aria-label="انباری">
-                                <option value="">انباری</option>
-                                <option value="1" {% if request.GET.storage == '1' %}selected{% endif %}>دارد</option>
-                                <option value="0" {% if request.GET.storage == '0' %}selected{% endif %}>ندارد</option>
-                            </select>
-                            <select name="elevator" class="crm-files-select" aria-label="آسانسور">
-                                <option value="">آسانسور</option>
-                                <option value="1" {% if request.GET.elevator == '1' %}selected{% endif %}>دارد</option>
-                                <option value="0" {% if request.GET.elevator == '0' %}selected{% endif %}>ندارد</option>
-                            </select>
-                            <select name="rooms" class="crm-files-select" aria-label="تعداد اتاق">
-                                <option value="">تعداد اتاق</option>
-                                {% for r in "12345" %}<option value="{{ r }}" {% if request.GET.rooms == r %}selected{% endif %}>{{ r }} خواب</option>{% endfor %}
-                            </select>
+                <div class="crm-files-adv-body">
+                    <section class="crm-files-adv-col" aria-label="امکانات">
+                        <h4 class="crm-files-adv-heading">امکانات</h4>
+                        <div class="crm-files-adv-fields">
+                            <label class="crm-files-adv-field">
+                                <span class="crm-files-adv-caption">پارکینگ</span>
+                                <select name="parking" class="crm-files-adv-control" aria-label="پارکینگ">
+                                    <option value="">همه</option>
+                                    <option value="1" {% if request.GET.parking == '1' %}selected{% endif %}>دارد</option>
+                                    <option value="0" {% if request.GET.parking == '0' %}selected{% endif %}>ندارد</option>
+                                </select>
+                            </label>
+                            <label class="crm-files-adv-field">
+                                <span class="crm-files-adv-caption">انباری</span>
+                                <select name="storage" class="crm-files-adv-control" aria-label="انباری">
+                                    <option value="">همه</option>
+                                    <option value="1" {% if request.GET.storage == '1' %}selected{% endif %}>دارد</option>
+                                    <option value="0" {% if request.GET.storage == '0' %}selected{% endif %}>ندارد</option>
+                                </select>
+                            </label>
+                            <label class="crm-files-adv-field">
+                                <span class="crm-files-adv-caption">آسانسور</span>
+                                <select name="elevator" class="crm-files-adv-control" aria-label="آسانسور">
+                                    <option value="">همه</option>
+                                    <option value="1" {% if request.GET.elevator == '1' %}selected{% endif %}>دارد</option>
+                                    <option value="0" {% if request.GET.elevator == '0' %}selected{% endif %}>ندارد</option>
+                                </select>
+                            </label>
+                            <label class="crm-files-adv-field">
+                                <span class="crm-files-adv-caption">اتاق</span>
+                                <select name="rooms" class="crm-files-adv-control" aria-label="تعداد اتاق">
+                                    <option value="">همه</option>
+                                    {% for r in "12345" %}<option value="{{ r }}" {% if request.GET.rooms == r %}selected{% endif %}>{{ r }} خواب</option>{% endfor %}
+                                </select>
+                            </label>
                         </div>
-                    </div>
+                    </section>
 
-                    <div class="crm-files-adv-group">
-                        <span class="crm-files-adv-label">محدوده‌ها</span>
-                        <div class="crm-files-adv-ranges">
-                            <div class="crm-files-range" title="متراژ (متر)">
-                                <span>متراژ</span>
-                                <input type="text" name="area_min" value="{{ request.GET.area_min }}" class="crm-files-num" placeholder="از" inputmode="numeric" autocomplete="off" aria-label="متراژ از">
-                                <i aria-hidden="true">—</i>
-                                <input type="text" name="area_max" value="{{ request.GET.area_max }}" class="crm-files-num" placeholder="تا" inputmode="numeric" autocomplete="off" aria-label="متراژ تا">
+                    <section class="crm-files-adv-col" aria-label="محدوده‌ها">
+                        <h4 class="crm-files-adv-heading">محدوده</h4>
+                        <div class="crm-files-adv-fields crm-files-adv-fields--ranges">
+                            <div class="crm-files-adv-field crm-files-adv-field--range">
+                                <span class="crm-files-adv-caption">متراژ <em>متر</em></span>
+                                <div class="crm-files-adv-dual">
+                                    <input type="text" name="area_min" value="{{ request.GET.area_min }}" class="crm-files-adv-control" placeholder="از" inputmode="numeric" autocomplete="off" aria-label="متراژ از">
+                                    <span class="crm-files-adv-sep" aria-hidden="true"></span>
+                                    <input type="text" name="area_max" value="{{ request.GET.area_max }}" class="crm-files-adv-control" placeholder="تا" inputmode="numeric" autocomplete="off" aria-label="متراژ تا">
+                                </div>
                             </div>
-                            <div class="crm-files-range" title="مبلغ فروش یا رهن (تومان)">
-                                <span>مبلغ</span>
-                                <input type="text" name="price_min" value="{{ request.GET.price_min }}" class="crm-files-num" placeholder="از" inputmode="numeric" autocomplete="off" aria-label="مبلغ از">
-                                <i aria-hidden="true">—</i>
-                                <input type="text" name="price_max" value="{{ request.GET.price_max }}" class="crm-files-num" placeholder="تا" inputmode="numeric" autocomplete="off" aria-label="مبلغ تا">
+                            <div class="crm-files-adv-field crm-files-adv-field--range">
+                                <span class="crm-files-adv-caption">مبلغ <em>تومان</em></span>
+                                <div class="crm-files-adv-dual">
+                                    <input type="text" name="price_min" value="{{ request.GET.price_min }}" class="crm-files-adv-control" placeholder="از" inputmode="numeric" autocomplete="off" aria-label="مبلغ از">
+                                    <span class="crm-files-adv-sep" aria-hidden="true"></span>
+                                    <input type="text" name="price_max" value="{{ request.GET.price_max }}" class="crm-files-adv-control" placeholder="تا" inputmode="numeric" autocomplete="off" aria-label="مبلغ تا">
+                                </div>
                             </div>
-                            <div class="crm-files-range" title="سال ساخت">
-                                <span>سال ساخت</span>
-                                <input type="text" name="year_min" value="{{ request.GET.year_min }}" class="crm-files-num" placeholder="از" inputmode="numeric" autocomplete="off" aria-label="سال ساخت از">
-                                <i aria-hidden="true">—</i>
-                                <input type="text" name="year_max" value="{{ request.GET.year_max }}" class="crm-files-num" placeholder="تا" inputmode="numeric" autocomplete="off" aria-label="سال ساخت تا">
+                            <div class="crm-files-adv-field crm-files-adv-field--range">
+                                <span class="crm-files-adv-caption">سال ساخت</span>
+                                <div class="crm-files-adv-dual">
+                                    <input type="text" name="year_min" value="{{ request.GET.year_min }}" class="crm-files-adv-control" placeholder="از" inputmode="numeric" autocomplete="off" aria-label="سال ساخت از">
+                                    <span class="crm-files-adv-sep" aria-hidden="true"></span>
+                                    <input type="text" name="year_max" value="{{ request.GET.year_max }}" class="crm-files-adv-control" placeholder="تا" inputmode="numeric" autocomplete="off" aria-label="سال ساخت تا">
+                                </div>
                             </div>
-                            <div class="crm-files-range crm-files-range--single" title="حداکثر سن بنا به سال">
-                                <span>سن بنا</span>
-                                <input type="text" name="age_max" value="{{ request.GET.age_max }}" class="crm-files-num" placeholder="حداکثر (سال)" inputmode="numeric" autocomplete="off" aria-label="حداکثر سن بنا">
-                            </div>
+                            <label class="crm-files-adv-field">
+                                <span class="crm-files-adv-caption">سن بنا <em>حداکثر سال</em></span>
+                                <input type="text" name="age_max" value="{{ request.GET.age_max }}" class="crm-files-adv-control" placeholder="مثلاً ۵" inputmode="numeric" autocomplete="off" aria-label="حداکثر سن بنا">
+                            </label>
                         </div>
-                    </div>
+                    </section>
                 </div>
                 <div class="crm-files-adv-foot">
-                    <button type="submit" class="crm-dash-act crm-dash-act--primary crm-files-adv-apply">
-                        <i class="fas fa-check" aria-hidden="true"></i><span>اعمال فیلتر</span>
+                    <p class="crm-files-adv-hint">مبلغ روی قیمت فروش یا رهن اعمال می‌شود</p>
+                    <button type="submit" class="crm-files-adv-apply">
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                        <span>اعمال</span>
                     </button>
                 </div>
             </div>
@@ -301,7 +321,7 @@
         <div class="crm-files-grid crm-files-grid-v2">
             {% for p in properties %}
             <article class="crm-files-card {% if p.deal_mode == 'فروش' %}crm-files-card--sale{% else %}crm-files-card--rent{% endif %}" style="--tx-accent: {{ p.transaction_status|crm_tx_status_dot }};">
-                <span class="crm-files-card-bg" aria-hidden="true"><i class="fas {{ p.transaction_status|crm_tx_status_icon }}"></i></span>
+                <span class="crm-files-card-bg" aria-hidden="true"><i class="fas {{ p.property_type|crm_property_type_icon }}"></i></span>
                 <div class="crm-files-card-accent" aria-hidden="true"></div>
                 <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-hit" aria-label="{{ p.title }}"></a>
                 <header class="crm-files-card-head">

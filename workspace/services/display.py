@@ -239,13 +239,15 @@ def listing_map_price_label(listing, tx: Optional[Dict[str, Any]] = None) -> str
 def listing_map_deposit_label(listing) -> str:
     if getattr(listing, 'deposit', None):
         return format_toman(listing.deposit)
-    return _listing_text_deposit(getattr(listing, 'data', None) or {})
+    data = getattr(listing, 'data', None)
+    return _listing_text_deposit(data if isinstance(data, dict) else {})
 
 
 def listing_map_rent_label(listing) -> str:
     if getattr(listing, 'rent', None):
         return format_toman(listing.rent)
-    return _listing_text_rent(getattr(listing, 'data', None) or '')
+    data = getattr(listing, 'data', None)
+    return _listing_text_rent(data if isinstance(data, dict) else {})
 
 
 MONEY_FIELD_ORDER = (

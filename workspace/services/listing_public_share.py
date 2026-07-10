@@ -8,7 +8,6 @@ from urllib.parse import quote
 from django.urls import reverse
 from django.utils import timezone
 
-from workspace.mixins import get_or_create_settings
 from workspace.models import Listing, ListingPublicShare, WorkspaceSettings
 from workspace.services.display import (
     build_listing_display_data,
@@ -25,15 +24,18 @@ from workspace.services.listing_features import (
     build_listing_feature_profile,
     feature_highlights_for_listing,
 )
-from workspace.services.public_share_common import filter_public_feature_highlights, build_map_navigation
+from workspace.services.public_share_common import (
+    build_consultant_block,
+    build_finance_summary,
+    build_map_navigation,
+    filter_public_feature_highlights,
+    is_public_technical_key,
+    remap_public_section_labels,
+    strip_duplicate_section_fields,
+)
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 
 _PUBLIC_HIDDEN_SECTIONS = frozenset({'تماس'})
-_PUBLIC_HIDDEN_KEY_MARKERS = (
-    'شناسه', 'token', 'لینک', 'link', 'share_link', 'url',
-    'تماس', 'phone', 'تلفن', 'موبایل', 'شماره تماس', 'contact_uuid',
-    'contact', 'chat', 'چت',
-)
 
 
 def _generate_share_token() -> str:
@@ -41,8 +43,7 @@ def _generate_share_token() -> str:
 
 
 def _is_public_hidden_key(key: str) -> bool:
-    kl = str(key or '').lower()
-    return any(m in key or m in kl for m in _PUBLIC_HIDDEN_KEY_MARKERS)
+    return is_public_technical_key(key)
 
 
 def _filter_section_fields(fields: Dict[str, str], *, show_divar_link: bool) -> Dict[str, str]:
@@ -70,7 +71,8 @@ def format_sections_public(
         filtered = _filter_section_fields(fields, show_divar_link=show_divar_link)
         if filtered:
             result[name] = filtered
-    return result
+    result = strip_duplicate_section_fields(result)
+    return remap_public_section_labels(result)
 
 
 def _consultant_name(user, settings: WorkspaceSettings, share: ListingPublicShare) -> str:
@@ -175,7 +177,6 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
     listing = share.listing
     dataset = listing.dataset
     user = share.created_by
-    settings = get_or_create_settings(user)
 
     feat = extract_listing_features(listing)
     tx = transaction_profile(dataset.transaction_type)
@@ -189,23 +190,31 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
     section_rows = {
         name: format_field_rows(fields, data) for name, fields in sections.items()
     }
+    _supp_skip = (
+        'ودیعه', 'اجاره', 'قیمت', 'متراژ', 'اتاق', 'طبقه', 'سال ساخت', 'ساخت',
+        'توضیح', 'عرض', 'طول', 'مختصات', 'تصویر', 'ویدیو', 'تاریخ', 'نوع آگهی',
+    )
+    _supp_hidden_groups = frozenset({'زمان‌بندی', 'رسانه', 'شناسایی'})
     supplementary_fields = [
         row for row in format_supplementary_fields(data, tx, sections)
         if not _is_public_hidden_key(row.get('key', ''))
+        and not any(m in row.get('key', '') for m in _supp_skip)
     ]
     supplementary_groups = [
         {
             'name': g['name'],
-            'fields': [f for f in g['fields'] if not _is_public_hidden_key(f.get('key', ''))],
+            'fields': [
+                f for f in g['fields']
+                if not _is_public_hidden_key(f.get('key', ''))
+                and not any(m in f.get('key', '') for m in _supp_skip)
+            ],
         }
         for g in format_supplementary_groups(data, tx, sections)
+        if g['name'] not in _supp_hidden_groups
     ]
     supplementary_groups = [g for g in supplementary_groups if g['fields']]
 
-    consultant_name = _consultant_name(user, settings, share)
-    consultant_phone = _consultant_phone(user, share)
-    wa_message = f'سلام {consultant_name}، درباره آگهی «{listing.title or "ملک"}» اطلاعات بیشتری می‌خواهم.'
-    contact = consultant_contact_urls(consultant_phone, wa_message)
+    consultant = build_consultant_block(user, share, title=listing.title or 'ملک')
 
     category_parts = [p for p in (
         dataset.transaction_type,
@@ -222,16 +231,8 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
                 description_text = val
                 break
 
-    primary_price = ''
-    if tx.get('show_price') and listing.price:
-        from workspace.services.formatting import format_toman
-        primary_price = format_toman(listing.price)
-    elif tx.get('show_rent') and listing.rent:
-        from workspace.services.formatting import format_toman
-        primary_price = f'اجاره {format_toman(listing.rent)}'
-    elif tx.get('show_deposit') and listing.deposit:
-        from workspace.services.formatting import format_toman
-        primary_price = f'ودیعه {format_toman(listing.deposit)}'
+    finance = build_finance_summary(listing, tx, data)
+    primary_price = finance.get('primary') or ''
 
     feature_profile = build_listing_feature_profile(listing, feat)
     gallery_images = gallery_images_for_listing(listing)
@@ -253,6 +254,7 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
         ),
         'gallery_images': gallery_images,
         'description_text': description_text,
+        'finance': finance,
         'primary_price_label': primary_price,
         'location_accuracy': location_accuracy,
         'listing_map_marker': build_listing_map_marker(
@@ -265,16 +267,7 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
             show_divar_link=share.show_divar_link,
             public=True,
         ),
-        'consultant': {
-            'name': consultant_name,
-            'phone': consultant_phone,
-            'phone_display': consultant_phone,
-            'has_phone': bool(consultant_phone),
-            'agency_name': settings.agency_name.strip(),
-            'agency_logo': settings.agency_logo,
-            'welcome_message': share.welcome_message.strip(),
-            **contact,
-        },
+        'consultant': consultant,
         'category_breadcrumb': category_parts,
         'show_divar_link': share.show_divar_link,
         'meta_description': _meta_description(listing, tx, category_parts),

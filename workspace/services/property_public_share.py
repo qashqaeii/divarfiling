@@ -12,17 +12,16 @@ from workspace.models import CRMProperty, CRMPropertyPublicShare
 from workspace.services.crm import resolve_listing_for_property
 from workspace.services.display import (
     format_field_rows,
-    format_sections,
     transaction_profile,
 )
 from workspace.services.features import extract_listing_features, parse_bool_feature
-from workspace.services.formatting import format_toman
 from workspace.services.listing_features import build_listing_feature_profile
 from workspace.services.listing_map import build_listing_map_marker
 from workspace.services.listing_public_share import format_sections_public
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 from workspace.services.public_share_common import (
     build_consultant_block,
+    build_finance_summary,
     build_map_navigation,
     filter_public_feature_highlights,
     public_share_to_dict,
@@ -301,13 +300,9 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         description_parts.append(prop.notes.strip())
     description_text = '\n\n'.join(description_parts)
 
-    primary_price = ''
-    if tx.get('show_price') and prop.sale_price:
-        primary_price = format_toman(prop.sale_price)
-    elif tx.get('show_rent') and prop.monthly_rent:
-        primary_price = f'اجاره {format_toman(prop.monthly_rent)}'
-    elif tx.get('show_deposit') and prop.deposit:
-        primary_price = f'ودیعه {format_toman(prop.deposit)}'
+    listing = _listing_like(prop, feat)
+    finance = build_finance_summary(listing, tx, data)
+    primary_price = finance.get('primary') or ''
 
     category_parts = [p for p in (prop.deal_mode, prop.property_type, prop.city, prop.neighborhood or prop.district) if p]
 
@@ -315,7 +310,6 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         [normalize_external_image_url(img) for img in (prop.images or []) if img],
     )
 
-    listing = _listing_like(prop, feat)
     feature_profile = _property_feature_profile(user, prop, feat)
 
     meta_parts = [prop.title or 'فایل شخصی']
@@ -373,6 +367,7 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         ),
         'gallery_images': images,
         'description_text': description_text,
+        'finance': finance,
         'primary_price_label': primary_price,
         'consultant': build_consultant_block(user, share, title=prop.title or 'ملک'),
         'category_breadcrumb': category_parts,

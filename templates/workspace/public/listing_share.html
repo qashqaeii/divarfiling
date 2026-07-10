@@ -29,10 +29,9 @@
     <meta itemprop="name" content="{{ listing.title }}">
     {% if meta_description %}<meta itemprop="description" content="{{ meta_description }}">{% endif %}
 
-    {# ── Top bar ── #}
     <header class="ps-topbar">
         <div class="ps-topbar-inner">
-            <a href="{% url 'home' %}" class="ps-brand">
+            <div class="ps-brand">
                 {% if consultant.agency_logo %}
                 <img src="{{ consultant.agency_logo.url }}" alt="" class="ps-brand-logo">
                 {% else %}
@@ -40,21 +39,20 @@
                 {% endif %}
                 <span class="ps-brand-text">
                     <em>{{ consultant.agency_name|default:"فایلینگ دیوار" }}</em>
-                    <small>پرونده اختصاصی ملک</small>
+                    <small>{% if is_personal_file or dossier_badge %}پرونده اختصاصی{% else %}آگهی اختصاصی{% endif %}</small>
                 </span>
-            </a>
+            </div>
             {% if consultant.has_phone %}
             <div class="ps-topbar-actions">
                 <a href="{{ consultant.tel_url }}" class="ps-btn ps-btn--ghost ps-btn--sm"><i class="fas fa-phone"></i><span class="ps-hide-mobile">{{ consultant.phone_display }}</span></a>
                 {% if consultant.whatsapp_url %}
-                <a href="{{ consultant.whatsapp_url }}" class="ps-btn ps-btn--wa ps-btn--sm" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i><span>واتساپ</span></a>
+                <a href="{{ consultant.whatsapp_url }}" class="ps-btn ps-btn--wa ps-btn--sm" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i><span class="ps-hide-mobile">واتساپ</span></a>
                 {% endif %}
             </div>
             {% endif %}
         </div>
     </header>
 
-    {# ── Gallery Hero ── #}
     <section class="ps-hero" aria-label="تصاویر ملک">
         {% if gallery_images %}
         <div class="ps-gallery-wrap">
@@ -62,23 +60,24 @@
                 <div class="swiper-wrapper">
                     {% for img in gallery_images %}
                     <div class="swiper-slide">
-                        <button type="button" class="ps-gallery-slide" data-lightbox="{{ img }}" aria-label="بزرگنمایی تصویر {{ forloop.counter }}">
-                            <img src="{{ img }}" alt="{{ listing.title }} — {{ forloop.counter }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" itemprop="image">
+                        <button type="button" class="ps-gallery-slide" data-lightbox-index="{{ forloop.counter0 }}" aria-label="بزرگنمایی تصویر {{ forloop.counter }}">
+                            <img src="{{ img }}" alt="{{ listing.title }} — {{ forloop.counter }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" itemprop="image" data-full="{{ img }}">
                         </button>
                     </div>
                     {% endfor %}
                 </div>
-                <div class="ps-gallery-gradient"></div>
                 {% if gallery_images|length > 1 %}
-                <button type="button" class="ps-gallery-nav ps-gallery-nav--prev" aria-label="قبلی"><i class="fas fa-chevron-right"></i></button>
-                <button type="button" class="ps-gallery-nav ps-gallery-nav--next" aria-label="بعدی"><i class="fas fa-chevron-left"></i></button>
+                <div class="ps-gallery-controls">
+                    <button type="button" class="ps-gallery-nav ps-gallery-nav--prev" aria-label="قبلی"><i class="fas fa-chevron-right"></i></button>
+                    <span class="ps-gallery-count" id="psGalleryCount" aria-live="polite">۱ / {{ gallery_images|length }}</span>
+                    <button type="button" class="ps-gallery-nav ps-gallery-nav--next" aria-label="بعدی"><i class="fas fa-chevron-left"></i></button>
+                </div>
                 {% endif %}
-                <div class="ps-gallery-badge"><i class="fas fa-images"></i> {{ gallery_images|length }}</div>
             </div>
             {% if gallery_images|length > 1 %}
             <div class="swiper ps-gallery-thumbs" id="psGalleryThumbs">
                 <div class="swiper-wrapper">
-                    {% for img in gallery_images|slice:":12" %}
+                    {% for img in gallery_images %}
                     <div class="swiper-slide"><img src="{{ img }}" alt="" loading="lazy"></div>
                     {% endfor %}
                 </div>
@@ -93,102 +92,115 @@
         {% endif %}
     </section>
 
-    <div class="ps-container ps-container--hero">
-        <div class="ps-hero-sheet">
+    <div class="ps-container ps-container--identity">
+        <div class="ps-identity" data-reveal>
+            {% if category_breadcrumb %}
             <nav class="ps-crumb" aria-label="دسته‌بندی">
                 {% for part in category_breadcrumb %}
                 <span>{{ part }}</span>{% if not forloop.last %}<i class="fas fa-angle-left"></i>{% endif %}
                 {% endfor %}
             </nav>
-            <div class="ps-hero-badges">
+            {% endif %}
+
+            <div class="ps-identity-badges">
                 {% if dossier_badge %}<span class="ps-tag ps-tag--file">{{ dossier_badge }}</span>{% endif %}
-                <span class="ps-tag ps-tag--deal">{{ tx.badge }}</span>
+                {% if tx.badge %}<span class="ps-tag ps-tag--deal">{{ tx.badge }}</span>{% endif %}
                 {% if feat.advertiser %}
-                <span class="ps-tag ps-tag--adv {{ feat.advertiser.pill_class|cut:'mk-pub-pill--' }}">
+                <span class="ps-tag ps-tag--adv">
                     <i class="fas {{ feat.advertiser.icon }}"></i> {{ feat.advertiser.short_label }}
                 </span>
                 {% endif %}
                 {% if listing.is_expired %}<span class="ps-tag ps-tag--warn">منقضی</span>{% endif %}
             </div>
-            <h1 class="ps-hero-title" itemprop="name">{{ listing.title }}</h1>
-            <div class="ps-hero-meta">
-                {% if listing.neighborhood or listing.city %}
-                <p class="ps-hero-loc"><i class="fas fa-location-dot"></i>
-                    {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}
-                    {% if listing.city %}{% if listing.neighborhood %}، {% endif %}{{ listing.city }}{% endif %}
-                </p>
-                {% endif %}
+
+            <h1 class="ps-identity-title" itemprop="name">{{ listing.title }}</h1>
+
+            {% if listing.neighborhood or listing.city %}
+            <p class="ps-identity-loc"><i class="fas fa-location-dot"></i>
+                {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}
+                {% if listing.city %}{% if listing.neighborhood %}، {% endif %}{{ listing.city }}{% endif %}
+            </p>
+            {% endif %}
+
+            <div class="ps-identity-cta">
                 {% if primary_price_label %}
-                <p class="ps-hero-price" itemprop="price">{{ primary_price_label }}</p>
+                <p class="ps-identity-price" itemprop="price">{{ primary_price_label }}</p>
+                {% endif %}
+                {% if consultant.has_phone %}
+                <div class="ps-identity-actions">
+                    <a href="{{ consultant.tel_url }}" class="ps-btn ps-btn--primary"><i class="fas fa-phone"></i> تماس</a>
+                    {% if consultant.whatsapp_url %}
+                    <a href="{{ consultant.whatsapp_url }}" class="ps-btn ps-btn--wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> واتساپ</a>
+                    {% endif %}
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
     <div class="ps-container">
-        {# ── Metrics (قیمت در هیرو نمایش داده می‌شود) ── #}
-        <section class="ps-metrics" aria-label="مشخصات کلیدی">
+        {% if listing.deposit or listing.rent or listing.price_per_sqm or listing.area or feat.rooms or listing.rooms or feat.floor or feat.build_year %}
+        <section class="ps-specs" aria-label="مشخصات کلیدی" data-reveal>
             {% if tx.show_deposit and listing.deposit %}
-            <article class="ps-metric">
-                <span class="ps-metric-icon"><i class="fas fa-key"></i></span>
-                <div><span class="ps-metric-label">ودیعه</span><strong>{{ listing.deposit|ws_money }}</strong></div>
-            </article>
+            <div class="ps-spec">
+                <span class="ps-spec-label">ودیعه</span>
+                <strong>{{ listing.deposit|ws_money }}</strong>
+            </div>
             {% endif %}
             {% if tx.show_rent and listing.rent %}
-            <article class="ps-metric">
-                <span class="ps-metric-icon"><i class="fas fa-calendar-day"></i></span>
-                <div><span class="ps-metric-label">اجاره ماهانه</span><strong>{{ listing.rent|ws_money }}</strong></div>
-            </article>
+            <div class="ps-spec">
+                <span class="ps-spec-label">اجاره ماهانه</span>
+                <strong>{{ listing.rent|ws_money }}</strong>
+            </div>
             {% endif %}
             {% if tx.show_price_per_sqm and listing.price_per_sqm %}
-            <article class="ps-metric">
-                <span class="ps-metric-icon"><i class="fas fa-ruler-combined"></i></span>
-                <div><span class="ps-metric-label">قیمت هر متر</span><strong>{{ listing.price_per_sqm|ws_money:'per_sqm' }}</strong></div>
-            </article>
+            <div class="ps-spec">
+                <span class="ps-spec-label">قیمت هر متر</span>
+                <strong>{{ listing.price_per_sqm|ws_money:'per_sqm' }}</strong>
+            </div>
             {% endif %}
             {% if listing.area %}
-            <article class="ps-metric">
-                <span class="ps-metric-icon"><i class="fas fa-expand"></i></span>
-                <div><span class="ps-metric-label">متراژ</span><strong>{{ listing.area|ws_area }}</strong></div>
-            </article>
+            <div class="ps-spec">
+                <span class="ps-spec-label">متراژ</span>
+                <strong>{{ listing.area|ws_area }}</strong>
+            </div>
             {% endif %}
             {% if feat.rooms or listing.rooms %}
-            <article class="ps-metric">
-                <span class="ps-metric-icon"><i class="fas fa-door-open"></i></span>
-                <div><span class="ps-metric-label">اتاق</span><strong>{{ feat.rooms|default:listing.rooms }}</strong></div>
-            </article>
+            <div class="ps-spec">
+                <span class="ps-spec-label">اتاق</span>
+                <strong>{{ feat.rooms|default:listing.rooms }}</strong>
+            </div>
             {% endif %}
             {% if feat.floor %}
-            <article class="ps-metric">
-                <span class="ps-metric-icon"><i class="fas fa-layer-group"></i></span>
-                <div><span class="ps-metric-label">طبقه</span><strong>{{ feat.floor }}</strong></div>
-            </article>
+            <div class="ps-spec">
+                <span class="ps-spec-label">طبقه</span>
+                <strong>{{ feat.floor }}</strong>
+            </div>
             {% endif %}
             {% if feat.build_year %}
-            <article class="ps-metric">
-                <span class="ps-metric-icon"><i class="fas fa-hammer"></i></span>
-                <div><span class="ps-metric-label">سال ساخت</span><strong>{{ feat.build_year }}</strong></div>
-            </article>
+            <div class="ps-spec">
+                <span class="ps-spec-label">سال ساخت</span>
+                <strong>{{ feat.build_year }}</strong>
+            </div>
             {% endif %}
         </section>
+        {% endif %}
 
-        {# ── Highlights ── #}
         {% if feature_highlights or feature_profile.core %}
-        <section class="ps-highlights" aria-label="ویژگی‌های برجسته">
+        <section class="ps-highlights" aria-label="ویژگی‌های برجسته" data-reveal>
             {% for item in feature_profile.core %}
             {% if item.known and item.state == 'yes' %}
-            <span class="ps-chip ps-chip--yes"><i class="fas {{ item.icon }}"></i> {{ item.label }}</span>
+            <span class="ps-hl"><i class="fas {{ item.icon }}"></i> {{ item.label }}</span>
             {% endif %}
             {% endfor %}
             {% for h in feature_highlights %}
-            <span class="ps-chip"><i class="fas fa-check"></i> {{ h }}</span>
+            <span class="ps-hl"><i class="fas fa-check"></i> {{ h }}</span>
             {% endfor %}
         </section>
         {% endif %}
 
         {% if consultant.welcome_message %}
-        <blockquote class="ps-quote">
-            <i class="fas fa-quote-right" aria-hidden="true"></i>
+        <blockquote class="ps-quote" data-reveal>
             <p>{{ consultant.welcome_message }}</p>
             <footer>— {{ consultant.name }}</footer>
         </blockquote>
@@ -197,20 +209,14 @@
         <div class="ps-layout">
             <main class="ps-main">
                 {% if description_text %}
-                <section class="ps-card ps-desc-card">
-                    <header class="ps-card-head">
-                        <span class="ps-card-icon"><i class="fas fa-align-right"></i></span>
-                        <h2>توضیحات ملک</h2>
-                    </header>
+                <section class="ps-block ps-desc" data-reveal>
+                    <h2 class="ps-block-title">توضیحات ملک</h2>
                     <div class="ps-desc-body">{{ description_text|linebreaksbr }}</div>
                 </section>
                 {% endif %}
 
-                <section class="ps-card ps-details-card">
-                    <header class="ps-card-head">
-                        <span class="ps-card-icon"><i class="fas fa-list-ul"></i></span>
-                        <h2>جزئیات کامل</h2>
-                    </header>
+                <section class="ps-block ps-details" data-reveal>
+                    <h2 class="ps-block-title">جزئیات کامل</h2>
 
                     <nav class="ps-tabs" role="tablist" aria-label="بخش‌های جزئیات">
                         {% for section, fields in sections.items %}
@@ -273,14 +279,14 @@
                 </section>
 
                 {% if show_divar_link and listing.link %}
-                <a href="{{ listing.link }}" class="ps-divar-link" target="_blank" rel="noopener noreferrer">
+                <a href="{{ listing.link }}" class="ps-divar-link" target="_blank" rel="noopener noreferrer" data-reveal>
                     <i class="fas fa-external-link-alt"></i> مشاهده آگهی اصلی در دیوار
                 </a>
                 {% endif %}
             </main>
 
             <aside class="ps-sidebar">
-                <div class="ps-agent-card">
+                <div class="ps-agent" data-reveal>
                     <div class="ps-agent-top">
                         {% if consultant.agency_logo %}
                         <img src="{{ consultant.agency_logo.url }}" alt="" class="ps-agent-avatar">
@@ -309,7 +315,7 @@
                 </div>
 
                 {% if listing.latitude and listing.longitude %}
-                <div class="ps-card ps-map-card">
+                <div class="ps-map-wrap" data-reveal>
                     {% include 'workspace/includes/listing_location_map.html' with map_prefix='pubLd' map_id='pubLocationMap' map_stage_id='pubLocationMapStage' map_wrap_id='pubLocationMapPanel' map_navigation=map_navigation %}
                 </div>
                 {% endif %}
@@ -332,9 +338,13 @@
     </footer>
 </div>
 
-{# Lightbox #}
 <div class="ps-lightbox" id="psLightbox" hidden>
     <button type="button" class="ps-lightbox-close" aria-label="بستن"><i class="fas fa-times"></i></button>
+    {% if gallery_images|length > 1 %}
+    <button type="button" class="ps-lightbox-nav ps-lightbox-nav--prev" aria-label="قبلی"><i class="fas fa-chevron-right"></i></button>
+    <button type="button" class="ps-lightbox-nav ps-lightbox-nav--next" aria-label="بعدی"><i class="fas fa-chevron-left"></i></button>
+    <span class="ps-lightbox-count" id="psLightboxCount" aria-live="polite"></span>
+    {% endif %}
     <img src="" alt="" id="psLightboxImg">
 </div>
 {% endblock %}
@@ -342,96 +352,11 @@
 {% block extra_js %}
 {% if gallery_images %}
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var thumbsEl = document.getElementById('psGalleryThumbs');
-    var thumbs = null;
-    if (thumbsEl) {
-        thumbs = new Swiper('#psGalleryThumbs', {
-            spaceBetween: 8,
-            slidesPerView: 'auto',
-            freeMode: true,
-            watchSlidesProgress: true,
-            rtl: true,
-        });
-    }
-    new Swiper('#psGalleryMain', {
-        loop: {{ gallery_images|length }} > 1,
-        spaceBetween: 0,
-        navigation: {
-            nextEl: '.ps-gallery-nav--next',
-            prevEl: '.ps-gallery-nav--prev',
-        },
-        thumbs: thumbs ? { swiper: thumbs } : undefined,
-        rtl: true,
-    });
-});
-</script>
 {% endif %}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.ps-tab').forEach(function (tab) {
-        tab.addEventListener('click', function () {
-            var name = tab.getAttribute('data-tab');
-            document.querySelectorAll('.ps-tab').forEach(function (t) {
-                t.classList.toggle('is-active', t === tab);
-                t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
-            });
-            document.querySelectorAll('.ps-panel').forEach(function (p) {
-                p.hidden = p.getAttribute('data-panel') !== name;
-            });
-        });
-    });
-    var lb = document.getElementById('psLightbox');
-    var lbImg = document.getElementById('psLightboxImg');
-    if (lb && lbImg) {
-        document.querySelectorAll('[data-lightbox]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                lbImg.src = btn.getAttribute('data-lightbox');
-                lb.hidden = false;
-                document.body.style.overflow = 'hidden';
-            });
-        });
-        lb.querySelector('.ps-lightbox-close').addEventListener('click', function () {
-            lb.hidden = true;
-            document.body.style.overflow = '';
-        });
-        lb.addEventListener('click', function (e) {
-            if (e.target === lb) { lb.hidden = true; document.body.style.overflow = ''; }
-        });
-    }
-    document.querySelectorAll('[data-fv-prose-toggle]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var wrap = btn.closest('[data-fv-prose]');
-            if (!wrap) return;
-            var open = btn.getAttribute('aria-expanded') !== 'true';
-            var preview = wrap.querySelector('.ws-fv-prose-preview');
-            var full = wrap.querySelector('.ws-fv-prose-full');
-            if (preview) preview.hidden = open;
-            if (full) full.hidden = !open;
-            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            btn.textContent = open ? 'بستن' : '... ادامه';
-        });
-    });
-});
-</script>
-{% if listing.latitude and listing.longitude %}
+{% if listing.latitude and listing.longitude and listing_map_marker %}
 {{ listing_map_marker|json_script:"listing-map-marker" }}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{% static 'workspace/js/listing-map.js' %}?v=4"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var markerEl = document.getElementById('listing-map-marker');
-    if (!markerEl || typeof initListingDetailMap !== 'function') return;
-    var marker = JSON.parse(markerEl.textContent);
-    initListingDetailMap({
-        marker: marker,
-        uiPrefix: 'pubLd',
-        mapId: 'pubLocationMap',
-        stageId: 'pubLocationMapStage',
-        zoom: 17,
-    });
-});
-</script>
 {% endif %}
+<script src="{% static 'js/listing-public-share.js' %}?v=6"></script>
 {% endblock %}

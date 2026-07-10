@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from django.utils import timezone
@@ -17,6 +18,7 @@ from workspace.services.display import (
 from workspace.services.features import extract_listing_features, parse_bool_feature
 from workspace.services.formatting import format_toman
 from workspace.services.listing_features import build_listing_feature_profile
+from workspace.services.listing_map import build_listing_map_marker
 from workspace.services.listing_public_share import format_sections_public
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 from workspace.services.public_share_common import (
@@ -322,6 +324,37 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
     if category_parts:
         meta_parts.append(' · '.join(category_parts[:2]))
 
+    location_accuracy = {'label': 'موقعیت دقیق', 'kind': 'exact', 'radius_m': 0}
+    marker_listing = SimpleNamespace(
+        latitude=prop.latitude,
+        longitude=prop.longitude,
+        title=prop.title or '',
+        area=prop.area,
+        rooms=prop.rooms,
+        price_per_sqm=listing.get('price_per_sqm'),
+        price=prop.sale_price,
+        deposit=prop.deposit,
+        rent=prop.monthly_rent,
+        neighborhood=prop.neighborhood or prop.district or '',
+        city=prop.city or '',
+        business_type='',
+        token='',
+        link=prop.link if share.show_divar_link else '',
+        published_at=None,
+        data={},
+        transaction_type=prop.deal_mode or '',
+    )
+    listing_map_marker = build_listing_map_marker(
+        marker_listing,
+        tx,
+        feat,
+        data={},
+        location_accuracy=location_accuracy,
+        thumb=images[0] if images else '',
+        show_divar_link=share.show_divar_link,
+        public=True,
+    )
+
     return {
         'share': share,
         'listing': listing,
@@ -346,6 +379,8 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         'show_divar_link': share.show_divar_link and bool(prop.link),
         'meta_description': ' — '.join(meta_parts)[:300],
         'dossier_badge': 'فایل شخصی',
+        'location_accuracy': location_accuracy,
+        'listing_map_marker': listing_map_marker,
         'map_navigation': build_map_navigation(prop.latitude, prop.longitude),
     }
 

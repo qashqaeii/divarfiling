@@ -6673,18 +6673,20 @@ body.crm-side-open { overflow: hidden; }
 /* Contact grid */
 .crm-prop-contact-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: .55rem;
 }
 .crm-prop-contact-tile {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: .55rem;
     padding: .75rem .85rem;
     border-radius: 12px;
     border: 1px solid var(--ws-border-light);
     background: var(--ws-surface-2);
     color: inherit;
+    min-width: 0;
     transition: border-color .15s, box-shadow .15s, transform .15s;
 }
 .crm-prop-contact-tile:hover {
@@ -6697,12 +6699,19 @@ body.crm-side-open { overflow: hidden; }
     align-items: center;
     gap: .65rem;
     min-width: 0;
-    flex: 1;
+    width: 100%;
     text-decoration: none;
     color: inherit;
 }
+.crm-prop-contact-acts.mk-contact-acts,
 .crm-prop-contact-acts {
     flex-shrink: 0;
+    width: 100%;
+    padding-top: .45rem;
+    border-top: 1px solid var(--ws-border-light);
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: .3rem;
 }
 .crm-prop-contact-avatar {
     flex-shrink: 0;

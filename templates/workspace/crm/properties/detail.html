@@ -164,11 +164,6 @@
                         {% elif property_owner_user %}
                         <span class="crm-prop-hero-chip"><i class="fas fa-user" aria-hidden="true"></i>مالک: {{ property_owner_user.get_full_name|default:property_owner_user.username }}</span>
                         {% endif %}
-                        {% if property.address and not mask_sensitive %}
-                        <span class="crm-prop-hero-chip crm-prop-hero-chip--addr">
-                            <i class="fas fa-map-pin" aria-hidden="true"></i>{{ property.address }}
-                        </span>
-                        {% endif %}
                     </div>
 
                     <div class="crm-prop-hero-board" aria-label="قیمت و مشخصات کلیدی">

@@ -29,7 +29,10 @@ class CrmMessageFallbackTests(TestCase):
                     'price_label': 'رهن ۲۵۰M / اجاره ۱۶M',
                     'neighborhood': 'یوسف‌آباد',
                     'city': 'تهران',
+                    'area': 75,
+                    'rooms': '2',
                     'score': 88,
+                    'reasons': ['محله یوسف‌آباد', 'متراژ ۷۵ متر', 'محله متفاوت'],
                     'public_url': 'https://divarfiling.ir/p/abc123/',
                 },
                 {
@@ -47,6 +50,10 @@ class CrmMessageFallbackTests(TestCase):
         self.assertIn('https://divarfiling.ir/p/def456/', text)
         self.assertIn('امتیاز تطابق سیستم: 88٪', text)
         self.assertIn('یوسف‌آباد', text)
+        self.assertIn('دلیل پیشنهاد: محله یوسف‌آباد · متراژ ۷۵ متر', text)
+        self.assertNotIn('محله متفاوت', text)
+        self.assertIn('۷۵ متر', text)
+        self.assertIn('2 خواب', text)
 
     def test_text_only_matches_uses_correct_count(self):
         text = build_crm_message({
@@ -91,10 +98,13 @@ class CrmMessageFallbackTests(TestCase):
             'top_matches': [{
                 'title': 'آپارتمان ۹۰ متری',
                 'neighborhood': 'پونک',
+                'reasons': ['محله پونک'],
                 'public_url': 'https://divarfiling.ir/p/x/',
             }],
         })
         self.assertIn('عزیز', text)
+        self.assertIn('چرا مناسبه', text)
+        self.assertIn('جزئیات کامل:', text)
         self.assertNotRegex(text, r'[\U0001F300-\U0001FAFF]')
 
     def test_short_tone_is_compact(self):
@@ -107,9 +117,13 @@ class CrmMessageFallbackTests(TestCase):
             'top_matches': [{
                 'title': 'واحد ۶۰ متری',
                 'neighborhood': 'سعادت‌آباد',
+                'score': 90,
+                'reasons': ['محله سعادت‌آباد'],
             }],
         })
         self.assertIn('پیشنهاد:', text)
+        self.assertNotIn('امتیاز', text)
+        self.assertNotIn('چرا مناسبه', text)
         self.assertLess(len(text.splitlines()), 12)
 
     def test_normalize_crm_tone_fallback(self):

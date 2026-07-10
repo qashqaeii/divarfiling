@@ -57,26 +57,50 @@
     <div class="crm-portfolio-grid" data-portfolio-grid>
         {% for link in property_links %}
         {% with p=link.property %}
-        <article class="crm-portfolio-card{% if link.role == 'پیشنهادی' %} crm-portfolio-card--suggested{% endif %}" data-role="{{ link.role }}" data-source="crm" data-portfolio-card>
-            <label class="crm-portfolio-check" title="انتخاب برای اشتراک">
+        {% crm_property_price_label p as price_label %}
+        <article class="crm-portfolio-card crm-portfolio-card--crm{% if link.role == 'پیشنهادی' %} crm-portfolio-card--suggested{% endif %}" data-role="{{ link.role }}" data-source="crm" data-portfolio-card>
+            <span class="crm-pf-rail crm-pf-rail--crm" aria-hidden="true"></span>
+            <label class="crm-portfolio-check crm-pf-check" title="انتخاب برای اشتراک">
                 <input type="checkbox" class="crm-portfolio-select"
                        data-source="crm"
                        data-property-id="{{ p.pk }}"
                        data-title="{{ p.title|escape }}"
-                       data-price-label="{% crm_property_price_label p %}"
+                       data-price-label="{{ price_label|escape }}"
                        data-area="{{ p.area|default:'' }}"
                        data-neighborhood="{{ p.neighborhood|default:'' }}"
                        data-role="{{ link.role }}">
             </label>
-            <div class="crm-portfolio-card-visual" style="{% crm_role_style link.role %}">
-                <div class="crm-portfolio-card-badges">
-                    <span class="crm-portfolio-card-source"><i class="fas fa-folder-open" aria-hidden="true"></i> فایل شخصی</span>
-                    <span class="crm-portfolio-card-role">{{ link.role }}</span>
+            <header class="crm-pf-head crm-pf-head--crm">
+                <div class="crm-pf-head-bg" aria-hidden="true"></div>
+                <div class="crm-pf-head-top">
+                    <span class="crm-pf-brand">
+                        <span class="crm-pf-mark" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+                        <span class="crm-pf-brand-text">
+                            <em>فایل</em>
+                            <strong>شخصی</strong>
+                        </span>
+                    </span>
+                    <span class="crm-pf-role" style="{% crm_role_style link.role %}">{{ link.role }}</span>
                 </div>
-                <span class="crm-portfolio-card-type"><i class="fas fa-building" aria-hidden="true"></i> {{ p.property_type|default:'ملک' }}</span>
-            </div>
-            <div class="crm-portfolio-card-body">
-                <h3 class="crm-portfolio-card-title">
+                <div class="crm-pf-metrics">
+                    {% with area_n=p.area|crm_area_metric %}
+                    {% if area_n %}
+                    <div class="crm-pf-metric">
+                        <span class="crm-pf-metric-val">{{ area_n }}</span>
+                        <span class="crm-pf-metric-lbl">متر</span>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    {% if p.property_type %}
+                    <div class="crm-pf-metric crm-pf-metric--soft">
+                        <i class="fas fa-building" aria-hidden="true"></i>
+                        <span class="crm-pf-metric-lbl">{{ p.property_type }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </header>
+            <div class="crm-portfolio-card-body crm-pf-body">
+                <h3 class="crm-portfolio-card-title crm-pf-title">
                     <a href="{% url 'workspace:crm_property_detail' p.pk %}">{{ p.title }}</a>
                 </h3>
                 {% if p.neighborhood or p.city %}
@@ -85,30 +109,53 @@
                     {% if p.neighborhood %}{{ p.neighborhood }}{% endif %}{% if p.city %}{% if p.neighborhood %} · {% endif %}{{ p.city }}{% endif %}
                 </p>
                 {% endif %}
-                <div class="crm-portfolio-card-price">{% crm_property_price_label p %}</div>
-                <div class="crm-portfolio-card-specs">
-                    <span class="crm-portfolio-chip">{{ p.deal_mode }}</span>
-                    {% if p.area %}<span class="crm-portfolio-chip">{{ p.area|floatformat:0 }} متر</span>{% endif %}
-                    {% if p.rooms %}<span class="crm-portfolio-chip">{{ p.rooms }} خواب</span>{% endif %}
-                    <span class="crm-portfolio-chip crm-portfolio-chip--muted">{{ p.transaction_status }}</span>
-                </div>
-            </div>
-            <footer class="crm-portfolio-card-foot">
-                <div class="crm-portfolio-card-foot-share">
-                    {% if link.public_share_url %}
-                    <a href="{{ link.public_share_url }}" target="_blank" rel="noopener" class="crm-portfolio-public-link" title="{{ link.public_share_url }}">
-                        <i class="fas fa-link" aria-hidden="true"></i><span>لینک عمومی</span>
-                    </a>
-                    <button type="button" class="crm-portfolio-act" data-copy="{{ link.public_share_url }}" title="کپی لینک عمومی"><i class="fas fa-copy"></i></button>
+                <div class="crm-pf-price">
+                    {% if price_label %}
+                    <span class="crm-pf-price-val">{{ price_label }}</span>
+                    {% else %}
+                    <span class="crm-portfolio-muted">قیمت ثبت نشده</span>
                     {% endif %}
                 </div>
-                <div class="crm-portfolio-card-foot-actions">
-                    <a href="{% url 'workspace:crm_property_detail' p.pk %}" class="crm-portfolio-act" title="مشاهده فایل"><i class="fas fa-arrow-up-right-from-square"></i></a>
-                    <form method="post" class="crm-inline-form crm-portfolio-unlink">
+                <div class="crm-pf-meta">
+                    {% if p.deal_mode %}<span class="crm-pf-chip crm-pf-chip--deal">{{ p.deal_mode }}</span>{% endif %}
+                    {% if p.rooms %}<span class="crm-pf-chip">{{ p.rooms }} خواب</span>{% endif %}
+                    {% if p.transaction_status %}<span class="crm-pf-chip crm-pf-chip--muted">{{ p.transaction_status }}</span>{% endif %}
+                </div>
+                {% with feats=p.amenities|crm_amenity_chips:3 %}
+                {% if feats %}
+                <div class="crm-pf-feats">
+                    {% for f in feats %}<span class="crm-pf-feat">{{ f|truncatechars:22 }}</span>{% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+            <footer class="crm-portfolio-card-foot crm-pf-foot">
+                <div class="crm-pf-toolbar">
+                    {% if link.public_share_url %}
+                    <a href="{{ link.public_share_url }}" target="_blank" rel="noopener" class="crm-pf-tool crm-pf-tool--link" title="{{ link.public_share_url }}">
+                        <i class="fas fa-link" aria-hidden="true"></i>
+                        <span>لینک عمومی</span>
+                    </a>
+                    <button type="button" class="crm-pf-tool crm-pf-tool--icon" data-copy="{{ link.public_share_url }}" title="کپی لینک عمومی" aria-label="کپی لینک عمومی">
+                        <i class="fas fa-copy" aria-hidden="true"></i>
+                    </button>
+                    {% else %}
+                    <span class="crm-pf-tool crm-pf-tool--ghost" title="لینک عمومی آماده نیست">
+                        <i class="fas fa-link-slash" aria-hidden="true"></i>
+                        <span>بدون لینک</span>
+                    </span>
+                    {% endif %}
+                    <span class="crm-pf-toolbar-sep" aria-hidden="true"></span>
+                    <a href="{% url 'workspace:crm_property_detail' p.pk %}" class="crm-pf-tool crm-pf-tool--icon" title="مشاهده فایل" aria-label="مشاهده فایل">
+                        <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
+                    <form method="post" class="crm-inline-form crm-pf-unlink">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="unlink_property">
                         <input type="hidden" name="link_id" value="{{ link.id }}">
-                        <button type="submit" class="crm-portfolio-act crm-portfolio-act--danger" title="حذف پیوند"><i class="fas fa-link-slash"></i></button>
+                        <button type="submit" class="crm-pf-tool crm-pf-tool--icon crm-pf-tool--danger" title="حذف پیوند" aria-label="حذف پیوند">
+                            <i class="fas fa-link-slash" aria-hidden="true"></i>
+                        </button>
                     </form>
                 </div>
             </footer>
@@ -118,8 +165,8 @@
 
         {% for l in linked_listings %}
         <article class="crm-portfolio-card crm-portfolio-card--divar{% if l.role == 'پیشنهادی' %} crm-portfolio-card--suggested{% endif %}" data-role="{{ l.role }}" data-source="divar" data-portfolio-card>
-            <span class="crm-pf-divar-rail" aria-hidden="true"></span>
-            <label class="crm-portfolio-check crm-pf-divar-check" title="انتخاب برای اشتراک">
+            <span class="crm-pf-rail crm-pf-rail--divar" aria-hidden="true"></span>
+            <label class="crm-portfolio-check crm-pf-check" title="انتخاب برای اشتراک">
                 <input type="checkbox" class="crm-portfolio-select"
                        data-source="divar"
                        data-listing-id="{{ l.id }}"
@@ -129,75 +176,79 @@
                        data-area="{{ l.area|default:'' }}"
                        data-role="{{ l.role }}">
             </label>
-            <header class="crm-pf-divar-head">
-                <div class="crm-pf-divar-head-bg" aria-hidden="true"></div>
-                <div class="crm-pf-divar-head-top">
-                    <span class="crm-pf-divar-brand">
-                        <span class="crm-pf-divar-mark" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
-                        <span class="crm-pf-divar-brand-text">
+            <header class="crm-pf-head crm-pf-head--divar">
+                <div class="crm-pf-head-bg" aria-hidden="true"></div>
+                <div class="crm-pf-head-top">
+                    <span class="crm-pf-brand">
+                        <span class="crm-pf-mark" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                        <span class="crm-pf-brand-text">
                             <em>فایلینگ</em>
                             <strong>دیوار</strong>
                         </span>
                     </span>
-                    <span class="crm-pf-divar-role" style="{% crm_role_style l.role %}">{{ l.role }}</span>
+                    <span class="crm-pf-role" style="{% crm_role_style l.role %}">{{ l.role }}</span>
                 </div>
-                {% if l.area %}
-                <div class="crm-pf-divar-metric">
-                    <span class="crm-pf-divar-metric-val">{{ l.area }}</span>
-                    <span class="crm-pf-divar-metric-lbl">متر مربع</span>
+                {% with area_n=l.area|crm_area_metric %}
+                {% if area_n %}
+                <div class="crm-pf-metrics">
+                    <div class="crm-pf-metric">
+                        <span class="crm-pf-metric-val">{{ area_n }}</span>
+                        <span class="crm-pf-metric-lbl">متر</span>
+                    </div>
                 </div>
                 {% endif %}
+                {% endwith %}
             </header>
-            <div class="crm-portfolio-card-body crm-pf-divar-body">
-                <h3 class="crm-portfolio-card-title crm-pf-divar-title">
+            <div class="crm-portfolio-card-body crm-pf-body">
+                <h3 class="crm-portfolio-card-title crm-pf-title">
                     {% if l.link %}<a href="{{ l.link }}" target="_blank" rel="noopener">{{ l.title|truncatechars:56 }}</a>{% else %}<span>{{ l.title|truncatechars:56 }}</span>{% endif %}
                 </h3>
-                <div class="crm-pf-divar-price">
+                <div class="crm-pf-price">
                     {% if l.price %}
-                    <span class="crm-pf-divar-price-val">{{ l.price }}</span>
+                    <span class="crm-pf-price-val">{{ l.price }}</span>
                     {% else %}
                     <span class="crm-portfolio-muted">قیمت نامشخص</span>
                     {% endif %}
                 </div>
-                <div class="crm-pf-divar-meta">
-                    {% if l.deal_type %}<span class="crm-pf-divar-chip crm-pf-divar-chip--deal">{{ l.deal_type }}</span>{% endif %}
-                    {% if l.token %}<span class="crm-pf-divar-chip crm-pf-divar-chip--token" title="{{ l.token }}"><i class="fas fa-hashtag" aria-hidden="true"></i>{{ l.token|truncatechars:14 }}</span>{% endif %}
+                <div class="crm-pf-meta">
+                    {% if l.deal_type %}<span class="crm-pf-chip crm-pf-chip--deal">{{ l.deal_type }}</span>{% endif %}
+                    {% if l.token %}<span class="crm-pf-chip crm-pf-chip--token" title="{{ l.token }}"><i class="fas fa-hashtag" aria-hidden="true"></i>{{ l.token|truncatechars:14 }}</span>{% endif %}
                 </div>
                 {% with hl=linked_listing_highlights|dict_get:l.token %}
                 {% if hl %}
-                <div class="crm-pf-divar-feats">
-                    {% for h in hl %}<span class="crm-pf-divar-feat">{{ h|truncatechars:22 }}</span>{% endfor %}
+                <div class="crm-pf-feats">
+                    {% for h in hl %}<span class="crm-pf-feat">{{ h|truncatechars:22 }}</span>{% endfor %}
                 </div>
                 {% endif %}
                 {% endwith %}
             </div>
-            <footer class="crm-portfolio-card-foot crm-pf-divar-foot">
-                <div class="crm-pf-divar-toolbar">
+            <footer class="crm-portfolio-card-foot crm-pf-foot">
+                <div class="crm-pf-toolbar">
                     {% if l.public_share_url %}
-                    <a href="{{ l.public_share_url }}" target="_blank" rel="noopener" class="crm-pf-divar-tool crm-pf-divar-tool--link" title="{{ l.public_share_url }}">
+                    <a href="{{ l.public_share_url }}" target="_blank" rel="noopener" class="crm-pf-tool crm-pf-tool--link" title="{{ l.public_share_url }}">
                         <i class="fas fa-link" aria-hidden="true"></i>
                         <span>لینک عمومی</span>
                     </a>
-                    <button type="button" class="crm-pf-divar-tool crm-pf-divar-tool--icon" data-copy="{{ l.public_share_url }}" title="کپی لینک عمومی" aria-label="کپی لینک عمومی">
+                    <button type="button" class="crm-pf-tool crm-pf-tool--icon" data-copy="{{ l.public_share_url }}" title="کپی لینک عمومی" aria-label="کپی لینک عمومی">
                         <i class="fas fa-copy" aria-hidden="true"></i>
                     </button>
                     {% else %}
-                    <span class="crm-pf-divar-tool crm-pf-divar-tool--ghost" title="لینک عمومی آماده نیست">
+                    <span class="crm-pf-tool crm-pf-tool--ghost" title="لینک عمومی آماده نیست">
                         <i class="fas fa-link-slash" aria-hidden="true"></i>
                         <span>بدون لینک</span>
                     </span>
                     {% endif %}
-                    <span class="crm-pf-divar-toolbar-sep" aria-hidden="true"></span>
+                    <span class="crm-pf-toolbar-sep" aria-hidden="true"></span>
                     {% if l.link %}
-                    <a href="{{ l.link }}" target="_blank" rel="noopener" class="crm-pf-divar-tool crm-pf-divar-tool--icon" title="مشاهده در دیوار" aria-label="مشاهده در دیوار">
+                    <a href="{{ l.link }}" target="_blank" rel="noopener" class="crm-pf-tool crm-pf-tool--icon" title="مشاهده در دیوار" aria-label="مشاهده در دیوار">
                         <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
                     </a>
                     {% endif %}
-                    <form method="post" class="crm-inline-form crm-pf-divar-unlink">
+                    <form method="post" class="crm-inline-form crm-pf-unlink">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="unlink_listing">
                         <input type="hidden" name="listing_id" value="{{ l.id }}">
-                        <button type="submit" class="crm-pf-divar-tool crm-pf-divar-tool--icon crm-pf-divar-tool--danger" title="حذف پیوند" aria-label="حذف پیوند">
+                        <button type="submit" class="crm-pf-tool crm-pf-tool--icon crm-pf-tool--danger" title="حذف پیوند" aria-label="حذف پیوند">
                             <i class="fas fa-link-slash" aria-hidden="true"></i>
                         </button>
                     </form>

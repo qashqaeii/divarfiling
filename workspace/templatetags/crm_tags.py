@@ -167,14 +167,43 @@ def crm_property_price_label(prop):
     from workspace.services.formatting import format_toman
     if not prop:
         return ''
-    if prop.deal_mode == 'فروش' and prop.sale_price:
-        return format_toman(prop.sale_price)
     parts = []
     if prop.deposit:
         parts.append(f'رهن {format_toman(prop.deposit)}')
     if prop.monthly_rent:
         parts.append(f'اجاره {format_toman(prop.monthly_rent)}')
-    return ' · '.join(parts) if parts else ''
+    if parts:
+        return ' · '.join(parts)
+    if prop.sale_price:
+        return format_toman(prop.sale_price)
+    return ''
+
+
+@register.filter
+def crm_area_metric(value):
+    """عدد متراژ تمیز برای هدر کارت — بدون تکرار «متر»."""
+    if value in (None, ''):
+        return ''
+    text = str(value).strip()
+    for junk in ('متر مربع', 'مترمربع', 'متر', 'm2', 'm²', 'M2'):
+        text = text.replace(junk, '')
+    text = text.strip(' .،,')
+    if not text:
+        return ''
+    try:
+        return str(int(round(float(text.replace(',', '')))) )
+    except (TypeError, ValueError):
+        return text
+
+
+@register.filter
+def crm_amenity_chips(amenities, limit=3):
+    """چند امکان اول ملک برای کارت پورتفولیو."""
+    if not amenities:
+        return []
+    raw = str(amenities).replace('،', ',').replace('\n', ',')
+    items = [x.strip() for x in raw.split(',') if x.strip()]
+    return items[: int(limit)]
 
 
 @register.simple_tag

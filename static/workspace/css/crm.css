@@ -16245,101 +16245,112 @@ body.crm-side-open { overflow: hidden; }
     flex-wrap: wrap;
     gap: 0.35rem;
 }
-.crm-portfolio-card-visual {
-    position: relative;
-    min-height: 72px;
-    padding-block: 0.65rem;
-    padding-inline-start: 0.75rem;
-    padding-inline-end: 2.75rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 0.35rem;
-    color: inherit;
-}
-.crm-portfolio-card-visual--divar {
-    background: linear-gradient(135deg, rgba(14, 116, 144, 0.15), rgba(6, 182, 212, 0.08)) !important;
-}
-
-/* ── Divar portfolio card (فایلینگ دیوار) ── */
+/* ── Portfolio cards — shared shell (فایل شخصی + فایلینگ) ── */
+.crm-portfolio-card--crm,
 .crm-portfolio-card--divar {
-    --pf-divar: #0e7490;
-    --pf-divar-deep: #155e75;
-    --pf-divar-soft: rgba(14, 116, 144, 0.12);
-    --pf-divar-glow: rgba(6, 182, 212, 0.22);
-    border-color: color-mix(in srgb, var(--pf-divar) 22%, var(--ws-border));
+    --pf-accent: #6366f1;
+    --pf-accent-deep: #4f46e5;
+    --pf-accent-soft: rgba(99, 102, 241, 0.12);
+    --pf-accent-glow: rgba(129, 140, 248, 0.28);
+    --pf-head-a: rgba(49, 46, 129, 0.94);
+    --pf-head-b: rgba(79, 70, 229, 0.9);
+    --pf-head-c: rgba(129, 140, 248, 0.78);
+    --pf-wash: #eef2ff;
+    --pf-feat: #5b21b6;
+    --pf-feat-bg: color-mix(in srgb, #8b5cf6 12%, var(--ws-surface));
+    --pf-feat-border: color-mix(in srgb, #8b5cf6 18%, transparent);
+    border-color: color-mix(in srgb, var(--pf-accent) 22%, var(--ws-border));
     background:
-        linear-gradient(180deg, color-mix(in srgb, #ecfeff 55%, var(--ws-surface)), var(--ws-surface));
+        linear-gradient(180deg, color-mix(in srgb, var(--pf-wash) 55%, var(--ws-surface)), var(--ws-surface));
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.7) inset,
         0 8px 22px rgba(15, 23, 42, 0.04);
     isolation: isolate;
 }
+.crm-portfolio-card--divar {
+    --pf-accent: #0e7490;
+    --pf-accent-deep: #155e75;
+    --pf-accent-soft: rgba(14, 116, 144, 0.12);
+    --pf-accent-glow: rgba(6, 182, 212, 0.22);
+    --pf-head-a: rgba(8, 51, 68, 0.92);
+    --pf-head-b: rgba(14, 116, 144, 0.88);
+    --pf-head-c: rgba(6, 182, 212, 0.75);
+    --pf-wash: #ecfeff;
+    --pf-feat: #0f766e;
+    --pf-feat-bg: color-mix(in srgb, #14b8a6 12%, var(--ws-surface));
+    --pf-feat-border: color-mix(in srgb, #14b8a6 18%, transparent);
+}
+.crm-portfolio-card--crm::before,
 .crm-portfolio-card--divar::before {
     content: '';
     position: absolute;
     inset: 0 0 auto 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--pf-divar), #22d3ee, transparent);
+    background: linear-gradient(90deg, transparent, var(--pf-accent), var(--pf-head-c), transparent);
     opacity: 0.85;
     z-index: 3;
     pointer-events: none;
 }
+.crm-portfolio-card--crm:hover,
 .crm-portfolio-card--divar:hover {
     transform: translateY(-4px);
-    border-color: color-mix(in srgb, var(--pf-divar) 42%, var(--ws-border));
+    border-color: color-mix(in srgb, var(--pf-accent) 42%, var(--ws-border));
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.8) inset,
-        0 16px 36px rgba(14, 116, 144, 0.14);
+        0 16px 36px color-mix(in srgb, var(--pf-accent) 18%, transparent);
 }
+.crm-portfolio-card--crm.is-selected,
 .crm-portfolio-card--divar.is-selected {
-    border-color: color-mix(in srgb, var(--pf-divar) 55%, var(--ws-border));
+    border-color: color-mix(in srgb, var(--pf-accent) 55%, var(--ws-border));
     box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--pf-divar) 18%, transparent),
-        0 14px 30px rgba(14, 116, 144, 0.12);
+        0 0 0 2px color-mix(in srgb, var(--pf-accent) 18%, transparent),
+        0 14px 30px color-mix(in srgb, var(--pf-accent) 14%, transparent);
 }
+.crm-portfolio-card--crm.crm-portfolio-card--suggested,
 .crm-portfolio-card--divar.crm-portfolio-card--suggested {
-    border-color: color-mix(in srgb, #8b5cf6 28%, color-mix(in srgb, var(--pf-divar) 20%, var(--ws-border)));
+    border-color: color-mix(in srgb, #8b5cf6 28%, color-mix(in srgb, var(--pf-accent) 20%, var(--ws-border)));
 }
-.crm-pf-divar-rail {
+
+.crm-pf-rail {
     position: absolute;
     inset-block: 0;
     inset-inline-start: 0;
     width: 3px;
-    background: linear-gradient(180deg, #22d3ee, var(--pf-divar), var(--pf-divar-deep));
+    background: linear-gradient(180deg, var(--pf-head-c), var(--pf-accent), var(--pf-accent-deep));
     z-index: 2;
     pointer-events: none;
 }
-.crm-pf-divar-check {
+.crm-pf-check {
     background: rgba(255, 255, 255, 0.94);
-    border-color: color-mix(in srgb, var(--pf-divar) 25%, var(--ws-border));
+    border-color: color-mix(in srgb, var(--pf-accent) 25%, var(--ws-border));
     backdrop-filter: blur(6px);
 }
-.crm-pf-divar-check input {
-    accent-color: var(--pf-divar);
+.crm-pf-check input {
+    accent-color: var(--pf-accent);
 }
-.crm-pf-divar-head {
+
+.crm-pf-head {
     position: relative;
     min-height: 92px;
     padding-block: 0.75rem 0.7rem;
     padding-inline-start: 0.85rem;
-    padding-inline-end: 3.35rem; /* فضای چک‌باکس — logical برای RTL */
+    padding-inline-end: 3.35rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     gap: 0.55rem;
     overflow: hidden;
 }
-.crm-pf-divar-head-bg {
+.crm-pf-head-bg {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse 80% 70% at 100% 0%, var(--pf-divar-glow), transparent 55%),
-        radial-gradient(ellipse 60% 50% at 0% 100%, rgba(14, 116, 144, 0.14), transparent 50%),
-        linear-gradient(145deg, rgba(8, 51, 68, 0.92), rgba(14, 116, 144, 0.88) 48%, rgba(6, 182, 212, 0.75));
+        radial-gradient(ellipse 80% 70% at 100% 0%, var(--pf-accent-glow), transparent 55%),
+        radial-gradient(ellipse 60% 50% at 0% 100%, var(--pf-accent-soft), transparent 50%),
+        linear-gradient(145deg, var(--pf-head-a), var(--pf-head-b) 48%, var(--pf-head-c));
     pointer-events: none;
 }
-.crm-pf-divar-head-bg::after {
+.crm-pf-head-bg::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -16351,12 +16362,12 @@ body.crm-side-open { overflow: hidden; }
     mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 92%);
     pointer-events: none;
 }
-.crm-pf-divar-head-top,
-.crm-pf-divar-metric {
+.crm-pf-head-top,
+.crm-pf-metrics {
     position: relative;
     z-index: 1;
 }
-.crm-pf-divar-head-top {
+.crm-pf-head-top {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -16364,13 +16375,13 @@ body.crm-side-open { overflow: hidden; }
     gap: 0.4rem;
     max-width: 100%;
 }
-.crm-pf-divar-brand {
+.crm-pf-brand {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
     min-width: 0;
 }
-.crm-pf-divar-mark {
+.crm-pf-mark {
     width: 30px;
     height: 30px;
     border-radius: 9px;
@@ -16378,32 +16389,32 @@ body.crm-side-open { overflow: hidden; }
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: #ecfeff;
+    color: #f8fafc;
     background: rgba(255, 255, 255, 0.14);
     border: 1px solid rgba(255, 255, 255, 0.22);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     font-size: 0.78rem;
 }
-.crm-pf-divar-brand-text {
+.crm-pf-brand-text {
     display: flex;
     flex-direction: column;
     gap: 0.05rem;
     line-height: 1.15;
-    color: #f0fdfa;
+    color: #f8fafc;
 }
-.crm-pf-divar-brand-text em {
+.crm-pf-brand-text em {
     font-style: normal;
     font-size: 0.58rem;
     font-weight: 600;
     letter-spacing: 0.04em;
     opacity: 0.78;
 }
-.crm-pf-divar-brand-text strong {
+.crm-pf-brand-text strong {
     font-size: 0.78rem;
     font-weight: 800;
     letter-spacing: -0.01em;
 }
-.crm-pf-divar-role {
+.crm-pf-role {
     flex-shrink: 0;
     font-size: 0.62rem;
     font-weight: 800;
@@ -16417,11 +16428,17 @@ body.crm-side-open { overflow: hidden; }
     white-space: nowrap;
     max-width: 100%;
 }
-.crm-pf-divar-metric {
+.crm-pf-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+.crm-pf-metric {
     display: inline-flex;
     align-items: baseline;
     gap: 0.3rem;
-    color: #ecfeff;
+    color: #f8fafc;
     width: fit-content;
     padding: 0.2rem 0.55rem 0.22rem;
     border-radius: 8px;
@@ -16429,52 +16446,66 @@ body.crm-side-open { overflow: hidden; }
     border: 1px solid rgba(255, 255, 255, 0.14);
     backdrop-filter: blur(4px);
 }
-.crm-pf-divar-metric-val {
+.crm-pf-metric--soft {
+    align-items: center;
+    font-size: 0.62rem;
+    font-weight: 700;
+    gap: 0.28rem;
+}
+.crm-pf-metric--soft i {
+    font-size: 0.58rem;
+    opacity: 0.85;
+}
+.crm-pf-metric-val {
     font-size: 1.05rem;
     font-weight: 800;
     letter-spacing: -0.03em;
     font-variant-numeric: tabular-nums;
     line-height: 1;
 }
-.crm-pf-divar-metric-lbl {
+.crm-pf-metric-lbl {
     font-size: 0.58rem;
     font-weight: 600;
-    opacity: 0.8;
+    opacity: 0.85;
 }
-.crm-pf-divar-body {
+
+.crm-pf-body {
     gap: 0.42rem;
     padding-top: 0.8rem;
 }
-.crm-pf-divar-title {
+.crm-pf-title {
     font-size: 0.86rem;
     font-weight: 800;
     letter-spacing: -0.015em;
     line-height: 1.4;
 }
-.crm-pf-divar-title a:hover {
-    color: var(--pf-divar-deep);
+.crm-portfolio-card--crm .crm-pf-title a:hover {
+    color: var(--pf-accent-deep);
 }
-.crm-pf-divar-price {
+.crm-portfolio-card--divar .crm-pf-title a:hover {
+    color: var(--pf-accent-deep);
+}
+.crm-pf-price {
     display: flex;
     align-items: center;
     gap: 0.35rem;
 }
-.crm-pf-divar-price-val {
+.crm-pf-price-val {
     font-size: 0.92rem;
     font-weight: 800;
     letter-spacing: -0.02em;
-    color: var(--pf-divar-deep);
-    background: linear-gradient(90deg, var(--pf-divar-deep), #0e7490 70%, #0891b2);
+    color: var(--pf-accent-deep);
+    background: linear-gradient(90deg, var(--pf-accent-deep), var(--pf-accent) 70%, var(--pf-head-c));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-.crm-pf-divar-meta {
+.crm-pf-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0.3rem;
 }
-.crm-pf-divar-chip {
+.crm-pf-chip {
     display: inline-flex;
     align-items: center;
     gap: 0.22rem;
@@ -16482,14 +16513,20 @@ body.crm-side-open { overflow: hidden; }
     font-weight: 700;
     padding: 0.2rem 0.48rem;
     border-radius: 7px;
-    border: 1px solid color-mix(in srgb, var(--pf-divar) 16%, var(--ws-border));
-    background: color-mix(in srgb, var(--pf-divar) 7%, var(--ws-surface));
-    color: var(--pf-divar-deep);
+    border: 1px solid color-mix(in srgb, var(--pf-accent) 16%, var(--ws-border));
+    background: color-mix(in srgb, var(--pf-accent) 7%, var(--ws-surface));
+    color: var(--pf-accent-deep);
 }
-.crm-pf-divar-chip--deal {
-    background: linear-gradient(135deg, color-mix(in srgb, var(--pf-divar) 14%, var(--ws-surface)), var(--ws-surface));
+.crm-pf-chip--deal {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--pf-accent) 14%, var(--ws-surface)), var(--ws-surface));
 }
-.crm-pf-divar-chip--token {
+.crm-pf-chip--muted {
+    opacity: 0.8;
+    color: var(--ws-text-secondary);
+    background: var(--ws-surface-2);
+    border-color: var(--ws-border);
+}
+.crm-pf-chip--token {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.55rem;
     font-weight: 600;
@@ -16497,26 +16534,27 @@ body.crm-side-open { overflow: hidden; }
     background: var(--ws-surface-2);
     border-color: var(--ws-border);
 }
-.crm-pf-divar-chip--token i {
+.crm-pf-chip--token i {
     font-size: 0.5rem;
     opacity: 0.7;
 }
-.crm-pf-divar-feats {
+.crm-pf-feats {
     display: flex;
     flex-wrap: wrap;
     gap: 0.28rem;
     margin-top: 0.1rem;
 }
-.crm-pf-divar-feat {
+.crm-pf-feat {
     font-size: 0.58rem;
     font-weight: 600;
     padding: 0.14rem 0.42rem;
     border-radius: 999px;
-    color: #0f766e;
-    background: color-mix(in srgb, #14b8a6 12%, var(--ws-surface));
-    border: 1px solid color-mix(in srgb, #14b8a6 18%, transparent);
+    color: var(--pf-feat);
+    background: var(--pf-feat-bg);
+    border: 1px solid var(--pf-feat-border);
 }
-.crm-pf-divar-foot {
+
+.crm-pf-foot {
     display: flex;
     align-items: center;
     justify-content: stretch;
@@ -16524,30 +16562,30 @@ body.crm-side-open { overflow: hidden; }
     min-height: 48px;
     padding: 0.5rem 0.65rem;
     background:
-        linear-gradient(180deg, color-mix(in srgb, #ecfeff 35%, var(--ws-surface)), color-mix(in srgb, var(--pf-divar) 4%, var(--ws-surface)));
-    border-top-color: color-mix(in srgb, var(--pf-divar) 14%, var(--ws-border-light));
+        linear-gradient(180deg, color-mix(in srgb, var(--pf-wash) 35%, var(--ws-surface)), color-mix(in srgb, var(--pf-accent) 4%, var(--ws-surface)));
+    border-top-color: color-mix(in srgb, var(--pf-accent) 14%, var(--ws-border-light));
 }
-.crm-pf-divar-toolbar {
+.crm-pf-toolbar {
     display: flex;
     align-items: center;
     gap: 0.35rem;
     width: 100%;
     min-height: 32px;
 }
-.crm-pf-divar-unlink {
+.crm-pf-unlink {
     margin: 0 !important;
     display: inline-flex;
     align-items: center;
     line-height: 0;
 }
-.crm-pf-divar-toolbar-sep {
+.crm-pf-toolbar-sep {
     width: 1px;
     height: 18px;
     margin-inline: 0.1rem;
-    background: color-mix(in srgb, var(--pf-divar) 18%, var(--ws-border));
+    background: color-mix(in srgb, var(--pf-accent) 18%, var(--ws-border));
     flex-shrink: 0;
 }
-.crm-pf-divar-tool {
+.crm-pf-tool {
     box-sizing: border-box;
     height: 32px;
     min-height: 32px;
@@ -16555,9 +16593,9 @@ body.crm-side-open { overflow: hidden; }
     margin: 0;
     padding: 0 0.65rem;
     border-radius: 8px;
-    border: 1px solid color-mix(in srgb, var(--pf-divar) 20%, var(--ws-border));
+    border: 1px solid color-mix(in srgb, var(--pf-accent) 20%, var(--ws-border));
     background: var(--ws-surface);
-    color: var(--pf-divar-deep);
+    color: var(--pf-accent-deep);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -16570,28 +16608,28 @@ body.crm-side-open { overflow: hidden; }
     flex-shrink: 0;
     transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
-.crm-pf-divar-tool i {
+.crm-pf-tool i {
     font-size: 0.72rem;
     line-height: 1;
 }
-.crm-pf-divar-tool--link {
+.crm-pf-tool--link {
     min-width: 0;
     flex: 1 1 auto;
     justify-content: flex-start;
     padding-inline: 0.55rem 0.7rem;
-    background: color-mix(in srgb, var(--pf-divar) 8%, var(--ws-surface));
+    background: color-mix(in srgb, var(--pf-accent) 8%, var(--ws-surface));
 }
-.crm-pf-divar-tool--link span {
+.crm-pf-tool--link span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.crm-pf-divar-tool--icon {
+.crm-pf-tool--icon {
     width: 32px;
     min-width: 32px;
     padding: 0;
 }
-.crm-pf-divar-tool--ghost {
+.crm-pf-tool--ghost {
     min-width: 0;
     flex: 1 1 auto;
     justify-content: flex-start;
@@ -16601,69 +16639,36 @@ body.crm-side-open { overflow: hidden; }
     background: var(--ws-surface-2);
     border-color: var(--ws-border);
 }
-.crm-pf-divar-tool:hover {
-    background: color-mix(in srgb, var(--pf-divar) 12%, var(--ws-surface));
-    border-color: color-mix(in srgb, var(--pf-divar) 35%, var(--ws-border));
-    color: var(--pf-divar-deep);
+.crm-pf-tool:hover {
+    background: color-mix(in srgb, var(--pf-accent) 12%, var(--ws-surface));
+    border-color: color-mix(in srgb, var(--pf-accent) 35%, var(--ws-border));
+    color: var(--pf-accent-deep);
 }
-.crm-pf-divar-tool--ghost:hover {
+.crm-pf-tool--ghost:hover {
     background: var(--ws-surface-2);
     border-color: var(--ws-border);
     color: var(--ws-text-muted);
 }
-.crm-pf-divar-tool--danger {
+.crm-pf-tool--danger {
     color: var(--ws-text-muted);
     border-color: var(--ws-border);
 }
-.crm-pf-divar-tool--danger:hover {
+.crm-pf-tool--danger:hover {
     background: #fef2f2;
     color: #dc2626;
     border-color: #fecaca;
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .crm-portfolio-card--crm,
     .crm-portfolio-card--divar,
+    .crm-portfolio-card--crm:hover,
     .crm-portfolio-card--divar:hover {
         transition: none;
         transform: none;
     }
 }
-.crm-portfolio-card-badges {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.35rem 0.5rem;
-    flex-wrap: wrap;
-    width: 100%;
-}
-.crm-portfolio-card-source {
-    position: static;
-    font-size: 0.58rem;
-    font-weight: 700;
-    opacity: 0.85;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    max-width: 100%;
-    line-height: 1.35;
-}
-.crm-portfolio-card-role {
-    flex: 0 0 auto;
-    margin-inline-start: auto;
-    font-size: 0.62rem;
-    font-weight: 800;
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.72);
-    backdrop-filter: blur(4px);
-    line-height: 1.3;
-    white-space: nowrap;
-}
-.crm-portfolio-card-type {
-    font-size: 0.68rem;
-    font-weight: 600;
-    opacity: 0.9;
-}
+
 .crm-portfolio-card-body {
     padding: 0.7rem 0.75rem 0.55rem;
     flex: 1;
@@ -16690,45 +16695,7 @@ body.crm-side-open { overflow: hidden; }
     align-items: center;
     gap: 0.3rem;
 }
-.crm-portfolio-card-price {
-    font-size: 0.88rem;
-    font-weight: 800;
-    color: var(--ws-primary);
-    letter-spacing: -0.01em;
-}
 .crm-portfolio-muted { color: var(--ws-text-muted); font-weight: 500; font-size: 0.78rem; }
-.crm-portfolio-card-specs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.28rem;
-    margin-top: 0.15rem;
-}
-.crm-portfolio-chip {
-    font-size: 0.6rem;
-    font-weight: 600;
-    padding: 0.18rem 0.45rem;
-    border-radius: 6px;
-    background: var(--ws-surface-2);
-    color: var(--ws-text-secondary);
-}
-.crm-portfolio-chip--muted { opacity: 0.75; }
-.crm-portfolio-chip--code {
-    font-family: ui-monospace, monospace;
-    font-size: 0.55rem;
-}
-.crm-portfolio-feats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin-top: 0.2rem;
-}
-.crm-portfolio-feat {
-    font-size: 0.58rem;
-    padding: 0.12rem 0.4rem;
-    border-radius: 5px;
-    background: color-mix(in srgb, #8b5cf6 10%, var(--ws-surface-2));
-    color: #6d28d9;
-}
 .crm-portfolio-card-foot {
     display: flex;
     align-items: center;
@@ -16738,75 +16705,6 @@ body.crm-side-open { overflow: hidden; }
     border-top: 1px solid var(--ws-border-light);
     background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
 }
-.crm-portfolio-card-foot-share {
-    min-width: 0;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-.crm-portfolio-public-link {
-    min-width: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    max-width: 100%;
-    padding: 0.2rem 0.45rem;
-    border-radius: 7px;
-    border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
-    background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
-    color: var(--ws-primary);
-    text-decoration: none;
-    font-size: 0.62rem;
-    font-weight: 700;
-    line-height: 1.3;
-}
-.crm-portfolio-public-link:hover {
-    background: var(--ws-primary-soft);
-    border-color: color-mix(in srgb, var(--ws-primary) 30%, var(--ws-border));
-}
-.crm-portfolio-public-link span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.crm-portfolio-card-foot-actions {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    flex-shrink: 0;
-}
-.crm-portfolio-act {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1px solid var(--ws-border);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--ws-text-muted);
-    text-decoration: none;
-    background: var(--ws-surface);
-    cursor: pointer;
-    transition: background 0.12s, color 0.12s, border-color 0.12s;
-    font-size: 0.72rem;
-}
-.crm-portfolio-act:hover {
-    background: var(--ws-primary-soft);
-    color: var(--ws-primary);
-    border-color: color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
-}
-.crm-portfolio-act--wa:hover {
-    background: #dcfce7;
-    color: #15803d;
-    border-color: #86efac;
-}
-.crm-portfolio-act--danger:hover {
-    background: #fef2f2;
-    color: #dc2626;
-    border-color: #fecaca;
-}
-.crm-portfolio-unlink { margin-inline-start: auto; }
 .crm-portfolio-empty,
 .crm-portfolio-empty-filter {
     text-align: center;

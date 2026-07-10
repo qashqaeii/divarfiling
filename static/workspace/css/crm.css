@@ -16321,7 +16321,9 @@ body.crm-side-open { overflow: hidden; }
 .crm-pf-divar-head {
     position: relative;
     min-height: 92px;
-    padding: 0.75rem 2.75rem 0.7rem 0.85rem;
+    padding-block: 0.75rem 0.7rem;
+    padding-inline-start: 0.85rem;
+    padding-inline-end: 3.35rem; /* فضای چک‌باکس — logical برای RTL */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -16356,9 +16358,11 @@ body.crm-side-open { overflow: hidden; }
 }
 .crm-pf-divar-head-top {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.45rem;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    max-width: 100%;
 }
 .crm-pf-divar-brand {
     display: inline-flex;
@@ -16411,6 +16415,7 @@ body.crm-side-open { overflow: hidden; }
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     line-height: 1.25;
     white-space: nowrap;
+    max-width: 100%;
 }
 .crm-pf-divar-metric {
     display: inline-flex;
@@ -16512,29 +16517,105 @@ body.crm-side-open { overflow: hidden; }
     border: 1px solid color-mix(in srgb, #14b8a6 18%, transparent);
 }
 .crm-pf-divar-foot {
+    display: flex;
+    align-items: center;
+    justify-content: stretch;
+    gap: 0;
+    min-height: 48px;
+    padding: 0.5rem 0.65rem;
     background:
         linear-gradient(180deg, color-mix(in srgb, #ecfeff 35%, var(--ws-surface)), color-mix(in srgb, var(--pf-divar) 4%, var(--ws-surface)));
     border-top-color: color-mix(in srgb, var(--pf-divar) 14%, var(--ws-border-light));
 }
-.crm-pf-divar-public {
-    border-color: color-mix(in srgb, var(--pf-divar) 28%, var(--ws-border));
+.crm-pf-divar-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    min-height: 32px;
+}
+.crm-pf-divar-unlink {
+    margin: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+}
+.crm-pf-divar-toolbar-sep {
+    width: 1px;
+    height: 18px;
+    margin-inline: 0.1rem;
+    background: color-mix(in srgb, var(--pf-divar) 18%, var(--ws-border));
+    flex-shrink: 0;
+}
+.crm-pf-divar-tool {
+    box-sizing: border-box;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    margin: 0;
+    padding: 0 0.65rem;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--pf-divar) 20%, var(--ws-border));
+    background: var(--ws-surface);
+    color: var(--pf-divar-deep);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.crm-pf-divar-tool i {
+    font-size: 0.72rem;
+    line-height: 1;
+}
+.crm-pf-divar-tool--link {
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    padding-inline: 0.55rem 0.7rem;
     background: color-mix(in srgb, var(--pf-divar) 8%, var(--ws-surface));
+}
+.crm-pf-divar-tool--link span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.crm-pf-divar-tool--icon {
+    width: 32px;
+    min-width: 32px;
+    padding: 0;
+}
+.crm-pf-divar-tool--ghost {
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    cursor: default;
+    opacity: 0.72;
+    color: var(--ws-text-muted);
+    background: var(--ws-surface-2);
+    border-color: var(--ws-border);
+}
+.crm-pf-divar-tool:hover {
+    background: color-mix(in srgb, var(--pf-divar) 12%, var(--ws-surface));
+    border-color: color-mix(in srgb, var(--pf-divar) 35%, var(--ws-border));
     color: var(--pf-divar-deep);
 }
-.crm-pf-divar-public:hover {
-    background: color-mix(in srgb, var(--pf-divar) 14%, var(--ws-surface));
-    border-color: color-mix(in srgb, var(--pf-divar) 40%, var(--ws-border));
-}
-.crm-pf-divar-public-empty {
-    font-size: 0.58rem;
+.crm-pf-divar-tool--ghost:hover {
+    background: var(--ws-surface-2);
+    border-color: var(--ws-border);
     color: var(--ws-text-muted);
 }
-.crm-pf-divar-act:hover {
-    background: color-mix(in srgb, var(--pf-divar) 10%, var(--ws-surface));
-    color: var(--pf-divar-deep);
-    border-color: color-mix(in srgb, var(--pf-divar) 28%, var(--ws-border));
+.crm-pf-divar-tool--danger {
+    color: var(--ws-text-muted);
+    border-color: var(--ws-border);
 }
-.crm-portfolio-card--divar .crm-portfolio-act--danger:hover {
+.crm-pf-divar-tool--danger:hover {
     background: #fef2f2;
     color: #dc2626;
     border-color: #fecaca;

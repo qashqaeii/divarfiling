@@ -172,25 +172,34 @@
                 {% endwith %}
             </div>
             <footer class="crm-portfolio-card-foot crm-pf-divar-foot">
-                <div class="crm-portfolio-card-foot-share">
+                <div class="crm-pf-divar-toolbar">
                     {% if l.public_share_url %}
-                    <a href="{{ l.public_share_url }}" target="_blank" rel="noopener" class="crm-portfolio-public-link crm-pf-divar-public" title="{{ l.public_share_url }}">
-                        <i class="fas fa-link" aria-hidden="true"></i><span>لینک عمومی</span>
+                    <a href="{{ l.public_share_url }}" target="_blank" rel="noopener" class="crm-pf-divar-tool crm-pf-divar-tool--link" title="{{ l.public_share_url }}">
+                        <i class="fas fa-link" aria-hidden="true"></i>
+                        <span>لینک عمومی</span>
                     </a>
-                    <button type="button" class="crm-portfolio-act crm-pf-divar-act" data-copy="{{ l.public_share_url }}" title="کپی لینک عمومی"><i class="fas fa-copy"></i></button>
+                    <button type="button" class="crm-pf-divar-tool crm-pf-divar-tool--icon" data-copy="{{ l.public_share_url }}" title="کپی لینک عمومی" aria-label="کپی لینک عمومی">
+                        <i class="fas fa-copy" aria-hidden="true"></i>
+                    </button>
                     {% else %}
-                    <span class="crm-pf-divar-public-empty">لینک عمومی آماده نیست</span>
+                    <span class="crm-pf-divar-tool crm-pf-divar-tool--ghost" title="لینک عمومی آماده نیست">
+                        <i class="fas fa-link-slash" aria-hidden="true"></i>
+                        <span>بدون لینک</span>
+                    </span>
                     {% endif %}
-                </div>
-                <div class="crm-portfolio-card-foot-actions">
+                    <span class="crm-pf-divar-toolbar-sep" aria-hidden="true"></span>
                     {% if l.link %}
-                    <a href="{{ l.link }}" target="_blank" rel="noopener" class="crm-portfolio-act crm-pf-divar-act" title="مشاهده در دیوار"><i class="fas fa-arrow-up-right-from-square"></i></a>
+                    <a href="{{ l.link }}" target="_blank" rel="noopener" class="crm-pf-divar-tool crm-pf-divar-tool--icon" title="مشاهده در دیوار" aria-label="مشاهده در دیوار">
+                        <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
                     {% endif %}
-                    <form method="post" class="crm-inline-form crm-portfolio-unlink">
+                    <form method="post" class="crm-inline-form crm-pf-divar-unlink">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="unlink_listing">
                         <input type="hidden" name="listing_id" value="{{ l.id }}">
-                        <button type="submit" class="crm-portfolio-act crm-portfolio-act--danger crm-pf-divar-act" title="حذف پیوند"><i class="fas fa-link-slash"></i></button>
+                        <button type="submit" class="crm-pf-divar-tool crm-pf-divar-tool--icon crm-pf-divar-tool--danger" title="حذف پیوند" aria-label="حذف پیوند">
+                            <i class="fas fa-link-slash" aria-hidden="true"></i>
+                        </button>
                     </form>
                 </div>
             </footer>

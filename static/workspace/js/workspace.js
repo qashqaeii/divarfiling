@@ -376,7 +376,7 @@ function messageToShareTemplate(text, title, url) {
     return out || 'سلام،\nجزئیات «{title}» را در این لینک ببینید:\n{url}\nبا تشکر مشاور شما';
 }
 
-def syncShareMessageUrl(form, nextUrl) {
+function syncShareMessageUrl(form, nextUrl) {
     if (!nextUrl) return;
     const root = form.querySelector('[data-share-msg-root]');
     const ta = form.querySelector('[data-share-message]');

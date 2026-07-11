@@ -8,9 +8,9 @@
 {% block body_class %}mk-account-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=11">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=20">
 {% endblock %}
 
 {% block content %}
@@ -60,10 +60,28 @@
                             <i class="fas fa-receipt" aria-hidden="true"></i>
                             {{ paid_orders }} سفارش پرداخت‌شده
                         </span>
+                        {% if consultant_agency_name %}
+                        <span class="dash-hero-tag" data-tone="teal">
+                            <i class="fas fa-building" aria-hidden="true"></i>
+                            {{ consultant_agency_name }}
+                        </span>
+                        {% endif %}
                     </div>
+                    {% if consultant_socials_active %}
+                    <div class="dash-hero-socials" aria-label="شبکه‌های اجتماعی">
+                        {% for net in consultant_socials_active %}
+                        <a href="{{ net.url }}" class="dash-hero-social" target="_blank" rel="noopener noreferrer" title="{{ net.label }}" style="--dash-social: {{ net.color }}">
+                            {% if net.icon_file %}
+                            <img src="{% static net.icon_file %}?v=2" alt="{{ net.label }}" width="18" height="18">
+                            {% else %}
+                            <i class="{{ net.icon }}" aria-hidden="true"></i>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
-            </div>
-            <div class="dash-profile-actions">
+            </div>            <div class="dash-profile-actions">
                 <a href="{% url 'workspace:home' %}" class="dash-action-btn dash-action-btn--primary">
                     <i class="fas fa-layer-group" aria-hidden="true"></i>
                     <span>ورود به میزکار</span>
@@ -927,13 +945,23 @@
         
         <!-- Tab: Profile -->
         <div id="tab-profile" class="tab-content" style="display: none;">
-            <h2 class="tab-content-title">پروفایل من</h2>
-            
+            <div class="dash-profile-tab-head">
+                <div>
+                    <h2 class="tab-content-title">پروفایل من</h2>
+                    <p class="dash-profile-tab-lead">اطلاعات حساب و پروفایل عمومی مشاور برای لینک اشتراک مشتری</p>
+                </div>
+            </div>
+
             <div class="dash-profile-sections">
-                <!-- اطلاعات کاربری -->
                 <article class="dash-profile-panel">
                     <header class="dash-profile-panel-head">
-                        <h3 class="section-title">اطلاعات کاربری</h3>
+                        <div class="dash-profile-panel-title-row">
+                            <span class="dash-profile-panel-icon" aria-hidden="true"><i class="fas fa-id-card"></i></span>
+                            <div>
+                                <h3 class="section-title">اطلاعات کاربری</h3>
+                                <p class="dash-profile-panel-sub">ورود و هویت حساب</p>
+                            </div>
+                        </div>
                     </header>
                     <dl class="dash-field-list">
                         <div class="dash-field-row">
@@ -959,11 +987,16 @@
                         </button>
                     </div>
                 </article>
-                
-                <!-- اطلاعات تکمیلی -->
+
                 <article class="dash-profile-panel">
                     <header class="dash-profile-panel-head">
-                        <h3 class="section-title">اطلاعات تکمیلی</h3>
+                        <div class="dash-profile-panel-title-row">
+                            <span class="dash-profile-panel-icon" aria-hidden="true"><i class="fas fa-user-circle"></i></span>
+                            <div>
+                                <h3 class="section-title">اطلاعات تکمیلی</h3>
+                                <p class="dash-profile-panel-sub">آواتار، درباره من و آدرس</p>
+                            </div>
+                        </div>
                     </header>
                     {% if user.profile %}
                         {% if user.profile.avatar %}
@@ -999,6 +1032,93 @@
                     </div>
                 </article>
             </div>
+
+            {# پروفایل عمومی مشاور — شبکه‌های اجتماعی و برندینگ #}
+            <article class="dash-profile-panel dash-profile-panel--consultant" id="consultantPublicProfile">
+                <header class="dash-profile-panel-head">
+                    <div class="dash-profile-panel-title-row">
+                        <span class="dash-profile-panel-icon dash-profile-panel-icon--teal" aria-hidden="true"><i class="fas fa-share-nodes"></i></span>
+                        <div>
+                            <h3 class="section-title">پروفایل عمومی مشاور</h3>
+                            <p class="dash-profile-panel-sub">این اطلاعات در مودال «اشتراک با مشتری» و صفحه لینک عمومی نمایش داده می‌شود</p>
+                        </div>
+                    </div>
+                    {% if consultant_socials_active %}
+                    <span class="dash-profile-live-chip"><i class="fas fa-circle" aria-hidden="true"></i> {{ consultant_socials_active|length }} شبکه فعال</span>
+                    {% endif %}
+                </header>
+
+                <form id="consultantProfileForm" class="dash-consultant-form" onsubmit="submitConsultantProfileForm(event)">
+                    {% csrf_token %}
+                    <div class="dash-consultant-grid">
+                        <div class="form-group dash-consultant-field">
+                            <label class="form-label" for="consultantAgencyName">
+                                <i class="fas fa-building" aria-hidden="true"></i>
+                                نام آژانس / برند نمایشی
+                            </label>
+                            <input type="text" name="agency_name" id="consultantAgencyName" class="form-control modal-input"
+                                   value="{{ consultant_agency_name }}" placeholder="مثلاً آژانس املاک آسمان">
+                        </div>
+                        <div class="form-group dash-consultant-field dash-consultant-field--full">
+                            <label class="form-label" for="consultantWelcome">
+                                <i class="fas fa-comment-dots" aria-hidden="true"></i>
+                                پیام خوش‌آمد پیش‌فرض صفحه مشتری
+                            </label>
+                            <textarea name="default_welcome_message" id="consultantWelcome" class="form-control modal-input" rows="3"
+                                      placeholder="مثلاً: برای هماهنگی بازدید با من در تماس باشید…">{{ consultant_welcome_plain }}</textarea>
+                            <small class="dash-field-hint">در همه لینک‌های عمومی نمایش داده می‌شود مگر برای یک فایل جداگانه سفارشی کنید.</small>
+                        </div>
+                    </div>
+
+                    <div class="dash-social-block">
+                        <div class="dash-social-block-head">
+                            <h4><i class="fas fa-hashtag" aria-hidden="true"></i> شبکه‌های اجتماعی</h4>
+                            <p>آیدی، شماره موبایل یا لینک کامل — یک‌بار ذخیره کنید تا در صفحه عمومی همه فایل‌ها دیده شود.</p>
+                        </div>
+                        <div class="dash-social-grid">
+                            {% for net in consultant_social_networks %}
+                            <div class="dash-social-field" style="--dash-social: {{ net.color }}">
+                                <label class="dash-social-label" for="dash-social-{{ net.key }}">
+                                    <span class="dash-social-badge" aria-hidden="true">
+                                        {% if net.icon_file %}
+                                        <img src="{% static net.icon_file %}?v=2" alt="" width="26" height="26">
+                                        {% else %}
+                                        <i class="fas fa-link"></i>
+                                        {% endif %}
+                                    </span>
+                                    <span class="dash-social-meta">
+                                        <strong>{{ net.label }}</strong>
+                                        <small>{{ net.placeholder }}</small>
+                                    </span>
+                                </label>
+                                <input type="text"
+                                       class="form-control modal-input dash-social-input"
+                                       id="dash-social-{{ net.key }}"
+                                       name="social_{{ net.key }}"
+                                       value="{{ net.url }}"
+                                       placeholder="{{ net.placeholder }}"
+                                       dir="ltr"
+                                       autocomplete="off">
+                            </div>
+                            {% empty %}
+                            <p class="empty-text">شبکه‌های اجتماعی در دسترس نیست.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div id="consultantProfileError" class="alert alert-danger modal-error" style="display: none;"></div>
+                    <div class="dash-consultant-form-actions">
+                        <button type="submit" id="consultantProfileSubmitBtn" class="dash-action-btn dash-action-btn--primary">
+                            <i class="fas fa-save" aria-hidden="true"></i>
+                            <span>ذخیره پروفایل عمومی</span>
+                        </button>
+                        <p class="dash-consultant-form-note">
+                            <i class="fas fa-circle-info" aria-hidden="true"></i>
+                            پس از ذخیره، دکمه‌های ارسال در مودال اشتراک و آیکون‌های صفحه عمومی به‌روز می‌شوند.
+                        </p>
+                    </div>
+                </form>
+            </article>
         </div>
     </div>
 </div>
@@ -1386,6 +1506,62 @@ function submitProfileForm(event) {
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات';
+        }
+    });
+}
+
+// ذخیره پروفایل عمومی مشاور (شبکه‌های اجتماعی + برندینگ)
+function submitConsultantProfileForm(event) {
+    event.preventDefault();
+    const form = document.getElementById('consultantProfileForm');
+    const errorDiv = document.getElementById('consultantProfileError');
+    const submitBtn = document.getElementById('consultantProfileSubmitBtn');
+    if (!form) return;
+
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> <span>در حال ذخیره...</span>';
+    }
+
+    const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+    const body = new FormData(form);
+
+    fetch('{% url "update_consultant_profile" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+        body,
+    })
+    .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            if (typeof showNotification === 'function') {
+                showNotification(data.message || 'ذخیره شد.', 'success');
+            } else {
+                alert(data.message || 'ذخیره شد.');
+            }
+            setTimeout(() => window.location.reload(), 800);
+            return;
+        }
+        const msg = (data && data.error) || 'خطایی رخ داد. لطفاً دوباره تلاش کنید.';
+        if (errorDiv) {
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> <span>ذخیره پروفایل عمومی</span>';
+        }
+    })
+    .catch((error) => {
+        console.error(error);
+        if (errorDiv) {
+            errorDiv.textContent = 'خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.';
+            errorDiv.style.display = 'block';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> <span>ذخیره پروفایل عمومی</span>';
         }
     });
 }

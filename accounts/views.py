@@ -230,6 +230,46 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'affiliate_wallet': affiliate_wallet,
             'affiliate_stats': affiliate_stats,
         })
+
+        # پروفایل عمومی مشاور (شبکه‌های اجتماعی + برندینگ صفحه اشتراک)
+        try:
+            from workspace.mixins import get_or_create_settings
+            from workspace.services.public_share_common import (
+                SOCIAL_NETWORK_DEFS,
+                social_networks_for_display,
+                welcome_html_to_plain,
+            )
+            ws = get_or_create_settings(user)
+            socials = ws.social_links if isinstance(ws.social_links, dict) else {}
+            social_networks = [
+                {
+                    'key': defn['key'],
+                    'label': defn['label'],
+                    'icon_file': defn.get('icon_file', ''),
+                    'color': defn['color'],
+                    'placeholder': defn['placeholder'],
+                    'url': (socials.get(defn['key']) or '').strip(),
+                }
+                for defn in SOCIAL_NETWORK_DEFS
+            ]
+            welcome_raw = (ws.default_welcome_message or '').strip()
+            context.update({
+                'ws_settings': ws,
+                'consultant_agency_name': (ws.agency_name or '').strip(),
+                'consultant_welcome_default': welcome_raw,
+                'consultant_welcome_plain': welcome_html_to_plain(welcome_raw),
+                'consultant_social_networks': social_networks,
+                'consultant_socials_active': social_networks_for_display(socials),
+            })
+        except Exception:
+            context.update({
+                'ws_settings': None,
+                'consultant_agency_name': '',
+                'consultant_welcome_default': '',
+                'consultant_welcome_plain': '',
+                'consultant_social_networks': [],
+                'consultant_socials_active': [],
+            })
         return context
 
 
@@ -333,6 +373,55 @@ class UpdateProfileView(LoginRequiredMixin, View):
                     'postal_code': profile.postal_code or '-',
                     'avatar_url': profile.avatar.url if profile.avatar else ''
                 }
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+class UpdateConsultantProfileView(LoginRequiredMixin, View):
+    """ذخیره برندینگ مشاور و شبکه‌های اجتماعی برای صفحه عمومی / مودال اشتراک."""
+
+    def post(self, request):
+        try:
+            from workspace.mixins import get_or_create_settings
+            from workspace.services.public_share_common import (
+                save_share_profile_defaults,
+                sanitize_welcome_html,
+                social_links_from_post,
+                social_networks_for_display,
+                welcome_html_to_plain,
+            )
+
+            agency_name = (request.POST.get('agency_name') or '').strip()[:200]
+            welcome_raw = request.POST.get('default_welcome_message') or ''
+            welcome_clean = sanitize_welcome_html(welcome_raw)[:8000]
+            socials = social_links_from_post(request.POST)
+
+            ws = get_or_create_settings(request.user)
+            ws.agency_name = agency_name
+            ws.save(update_fields=['agency_name', 'updated_at'])
+
+            save_share_profile_defaults(
+                request.user,
+                default_welcome_message=welcome_clean,
+                social_links=socials,
+                save_welcome=True,
+                save_socials=True,
+            )
+            ws.refresh_from_db()
+            active = social_networks_for_display(ws.social_links or {})
+            return JsonResponse({
+                'success': True,
+                'message': 'پروفایل عمومی مشاور ذخیره شد. در مودال اشتراک و لینک عمومی نمایش داده می‌شود.',
+                'data': {
+                    'agency_name': ws.agency_name or '',
+                    'welcome_plain': welcome_html_to_plain(ws.default_welcome_message or ''),
+                    'social_count': len(active),
+                    'socials': [
+                        {'key': s['key'], 'label': s['label'], 'url': s['url']}
+                        for s in active
+                    ],
+                },
             })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)

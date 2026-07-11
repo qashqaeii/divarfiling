@@ -69,4 +69,5 @@ urlpatterns = [
     ),
     path('api/update-user-info/', views.UpdateUserInfoView.as_view(), name='update_user_info'),
     path('api/update-profile/', views.UpdateProfileView.as_view(), name='update_profile'),
+    path('api/update-consultant-profile/', views.UpdateConsultantProfileView.as_view(), name='update_consultant_profile'),
 ]

@@ -1593,7 +1593,252 @@
     border: 1px solid color-mix(in srgb, var(--ps-social, #64748b) 20%, transparent) !important;
 }
 
-/* ── Map ── */
+/* ── Full-bleed map finale ── */
+.ps-map-finale {
+    margin-top: 2.5rem;
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(15, 118, 110, 0.14), transparent 55%),
+        linear-gradient(180deg, var(--ps-bg) 0%, #0b1f1d 100%);
+    color: #f4faf9;
+    overflow: hidden;
+}
+
+.ps-map-finale-intro {
+    max-width: var(--ps-max);
+    margin: 0 auto;
+    padding: 2.25rem 1.35rem 1.35rem;
+    text-align: center;
+}
+
+.ps-map-finale-intro-inner {
+    max-width: 36rem;
+    margin: 0 auto;
+}
+
+.ps-map-finale-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #99f6e4;
+    background: rgba(15, 118, 110, 0.35);
+    border: 1px solid rgba(45, 212, 191, 0.28);
+    margin-bottom: 0.85rem;
+}
+
+.ps-map-finale-title {
+    margin: 0 0 0.65rem;
+    font-size: clamp(1.55rem, 3.5vw, 2.15rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.25;
+    color: #f8fafc;
+}
+
+.ps-map-finale-place {
+    margin: 0 0 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: rgba(226, 232, 240, 0.88);
+}
+
+.ps-map-finale-place i {
+    color: #2dd4bf;
+    font-size: 0.85rem;
+}
+
+.ps-map-finale-accuracy {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 1.1rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(226, 232, 240, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ps-map-finale-accuracy--exact {
+    background: rgba(16, 185, 129, 0.18);
+    color: #a7f3d0;
+    border-color: rgba(52, 211, 153, 0.28);
+}
+
+.ps-map-finale-accuracy--approx,
+.ps-map-finale-accuracy--radius {
+    background: rgba(251, 191, 36, 0.14);
+    color: #fde68a;
+    border-color: rgba(251, 191, 36, 0.28);
+}
+
+.ps-map-finale-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.55rem;
+}
+
+.ps-map-finale-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: #ecfdf5;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(8px);
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.ps-map-finale-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(45, 212, 191, 0.4);
+    color: #fff;
+}
+
+.ps-map-finale-btn--primary {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    border-color: transparent;
+    box-shadow: 0 8px 24px rgba(13, 148, 136, 0.35);
+}
+
+.ps-map-finale-btn--primary:hover {
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    border-color: transparent;
+}
+
+.ps-map-finale-canvas {
+    position: relative;
+    width: 100%;
+}
+
+.ps-map-finale .ws-ld-location-map-wrap,
+.ps-map-finale .ws-ld-location-map-stage {
+    position: relative;
+}
+
+.ps-map-finale-canvas::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 72px;
+    z-index: 4;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(11, 31, 29, 0.55), transparent);
+}
+
+.ps-map-finale .ws-ld-location-map-wrap {
+    --lm-primary: #14b8a6;
+    --lm-border: transparent;
+    --lm-surface: transparent;
+    --lm-surface-2: rgba(15, 23, 42, 0.55);
+    --lm-text: #f8fafc;
+    --lm-text-secondary: #cbd5e1;
+    --lm-text-muted: #94a3b8;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    background: transparent;
+}
+
+.ps-map-finale .ws-ld-location-map-head {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    width: min(calc(100% - 1.5rem), 420px);
+    padding: 0.45rem 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.ps-map-finale .ws-ld-location-map-head-main {
+    display: none;
+}
+
+.ps-map-finale .ws-ld-basemap-wrap {
+    width: 100%;
+}
+
+.ps-map-finale .ws-ld-basemap-toggle {
+    width: 100%;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    box-shadow: none;
+}
+
+.ps-map-finale .ws-ld-basemap-label {
+    color: #e2e8f0;
+    font-weight: 700;
+}
+
+.ps-map-finale .ws-ld-basemap-menu {
+    top: calc(100% + 0.45rem);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    min-width: 220px;
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+}
+
+.ps-map-finale .ws-ld-location-map-stage {
+    border-radius: 0;
+    border: none;
+    overflow: hidden;
+}
+
+.ps-map-finale .ws-ld-location-map {
+    height: min(68vh, 620px);
+    min-height: 360px;
+    width: 100%;
+}
+
+.ps-map-finale .ws-ld-location-map-chrome {
+    top: auto;
+    bottom: 1.1rem;
+    inset-inline-end: 1.1rem;
+}
+
+.ps-map-finale .ws-ld-location-map-badge,
+.ps-map-finale .ws-ld-location-map-tool {
+    background: rgba(15, 23, 42, 0.72);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #e2e8f0;
+    backdrop-filter: blur(8px);
+}
+
+.ps-map-finale .ps-map-nav-actions { display: none; }
+
 .ps-map-wrap {
     background: var(--ps-surface);
     border: 1px solid var(--ps-border-light);
@@ -1695,24 +1940,41 @@
 
 /* ── Footer ── */
 .ps-footer {
-    max-width: var(--ps-max);
-    margin: 2.5rem auto 0;
-    padding: 1.25rem 1.35rem 2rem;
+    max-width: none;
+    margin: 0;
+    padding: 1.35rem 1.35rem 2rem;
     text-align: center;
     font-size: 0.72rem;
     font-weight: 500;
-    color: var(--ps-muted);
+    color: rgba(148, 163, 184, 0.9);
+    background: #0b1f1d;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.ps-footer p { margin: 0 0 0.35rem; }
+.ps-footer p { margin: 0 0 0.35rem; color: inherit; }
+
+.ps-footer strong { color: #e2e8f0; }
 
 .ps-footer a {
-    color: var(--ps-brand);
+    color: #2dd4bf;
     text-decoration: none;
     font-weight: 600;
 }
 
 .ps-footer a:hover { text-decoration: underline; }
+
+/* وقتی نقشه نیست، فوتر روشن بماند */
+.ps-page:not(:has(.ps-map-finale)) .ps-footer {
+    max-width: var(--ps-max);
+    margin: 2.5rem auto 0;
+    padding: 1.25rem 1.35rem 2rem;
+    background: transparent;
+    border-top: none;
+    color: var(--ps-muted);
+}
+
+.ps-page:not(:has(.ps-map-finale)) .ps-footer strong { color: var(--ps-ink); }
+.ps-page:not(:has(.ps-map-finale)) .ps-footer a { color: var(--ps-brand); }
 
 /* ── Lightbox ── */
 .ps-lightbox {
@@ -1874,6 +2136,12 @@
 
     .ps-container { padding: 1rem 0.9rem 0; }
 
+    .ps-map-finale-intro { padding: 1.75rem 0.9rem 1.1rem; }
+    .ps-map-finale .ws-ld-location-map {
+        height: min(58vh, 480px);
+        min-height: 300px;
+    }
+
     .ps-identity { padding: 1.1rem 1.05rem 1.15rem; }
     .ps-finance { padding: 1rem 1.05rem; }
     .ps-amenities { padding: 1rem 1.05rem; }
@@ -1929,6 +2197,12 @@
 }
 
 @media (max-width: 420px) {
+    .ps-map-finale-intro { padding: 1.6rem 0.85rem 1rem; }
+    .ps-map-finale .ws-ld-location-map {
+        height: min(56vh, 440px);
+        min-height: 280px;
+    }
+    .ps-map-finale-btn { padding: 0.55rem 0.8rem; font-size: 0.72rem; }
     .ps-map-nav-actions { grid-template-columns: 1fr; }
     .ps-amenity-grid { grid-template-columns: 1fr; }
     .ps-finance-grid { grid-template-columns: 1fr; }

@@ -20,7 +20,7 @@
 {% endif %}
 {% if listing.latitude and listing.longitude %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=6">
 {% endif %}
 {% endblock %}
 
@@ -373,7 +373,7 @@
             </main>
 
             <aside class="ps-sidebar">
-                {# 7. کارت مشاور / آژانس #}
+                {# کارت مشاور / آژانس #}
                 <div class="ps-agent" data-reveal>
                     <div class="ps-agent-top">
                         {% if consultant.agency_logo %}
@@ -426,18 +426,57 @@
                     </div>
                     {% endif %}
                 </div>
-
-                {# 8. نقشه #}
-                {% if listing.latitude and listing.longitude %}
-                <section class="ps-map-wrap" data-reveal aria-label="موقعیت مکانی">
-                    {% include 'workspace/includes/listing_location_map.html' with map_prefix='pubLd' map_id='pubLocationMap' map_stage_id='pubLocationMapStage' map_wrap_id='pubLocationMapPanel' map_navigation=map_navigation location_accuracy=location_accuracy %}
-                </section>
-                {% endif %}
             </aside>
         </div>
-
-        {# نقشه در موبایل — ترتیب بصری با CSS order #}
     </div>
+
+    {# نقشه تمام‌عرض — انتهای صفحه #}
+    {% if listing.latitude and listing.longitude %}
+    <section class="ps-map-finale" data-reveal aria-label="نقشه موقعیت ملک">
+        <div class="ps-map-finale-intro">
+            <div class="ps-map-finale-intro-inner">
+                <span class="ps-map-finale-kicker">
+                    <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                    موقعیت روی نقشه
+                </span>
+                <h2 class="ps-map-finale-title">کجا قرار دارد؟</h2>
+                {% if listing.neighborhood or listing.city %}
+                <p class="ps-map-finale-place">
+                    <i class="fas fa-location-dot" aria-hidden="true"></i>
+                    {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}
+                    {% if listing.city %}{% if listing.neighborhood %}، {% endif %}{{ listing.city }}{% endif %}
+                </p>
+                {% endif %}
+                {% if location_accuracy.label %}
+                <span class="ps-map-finale-accuracy ps-map-finale-accuracy--{{ location_accuracy.kind|default:'exact' }}">
+                    {{ location_accuracy.label }}
+                </span>
+                {% endif %}
+                {% if map_navigation %}
+                <div class="ps-map-finale-actions">
+                    <a href="{{ map_navigation.google_url }}" class="ps-map-finale-btn ps-map-finale-btn--primary" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-diamond-turn-right" aria-hidden="true"></i>
+                        مسیریابی گوگل
+                    </a>
+                    <a href="{{ map_navigation.neshan_url }}" class="ps-map-finale-btn" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-map" aria-hidden="true"></i>
+                        نشان
+                    </a>
+                    {% if map_navigation.waze_url %}
+                    <a href="{{ map_navigation.waze_url }}" class="ps-map-finale-btn" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-car" aria-hidden="true"></i>
+                        ویز
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="ps-map-finale-canvas">
+            {% include 'workspace/includes/listing_location_map.html' with map_prefix='pubLd' map_id='pubLocationMap' map_stage_id='pubLocationMapStage' map_wrap_id='pubLocationMapPanel' map_navigation=None location_accuracy=None %}
+        </div>
+    </section>
+    {% endif %}
 
     {% if consultant.has_phone or consultant.has_socials %}
     <div class="ps-dock" aria-label="تماس سریع">

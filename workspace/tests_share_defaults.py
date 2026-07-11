@@ -12,11 +12,13 @@ from workspace.services.listing_public_share import (
     get_or_create_listing_share,
 )
 from workspace.services.public_share_common import (
+    build_share_send_channels,
     normalize_social_links,
     render_share_message,
     resolve_welcome_message,
     sanitize_welcome_html,
     save_share_profile_defaults,
+    share_profile_context,
 )
 
 User = get_user_model()
@@ -125,6 +127,38 @@ class ShareDefaultsAndSocialTests(TestCase):
         )
         self.assertEqual(text, 'ملک آپارتمان\nhttps://example.com/p/x/')
 
+    def test_share_send_channels_include_saved_socials(self):
+        channels = build_share_send_channels({})
+        self.assertEqual([c['key'] for c in channels], ['whatsapp'])
+
+        channels = build_share_send_channels({
+            'telegram': 'agent_tg',
+            'bale': '09121112233',
+            'instagram': '',
+        })
+        keys = [c['key'] for c in channels]
+        self.assertEqual(keys[0], 'whatsapp')
+        self.assertIn('telegram', keys)
+        self.assertIn('bale', keys)
+        self.assertNotIn('instagram', keys)
+        tg = next(c for c in channels if c['key'] == 'telegram')
+        self.assertEqual(tg['mode'], 'telegram')
+        bale = next(c for c in channels if c['key'] == 'bale')
+        self.assertEqual(bale['mode'], 'copy_open')
+        self.assertIn('ble.ir', bale['href'])
+
+        share = get_or_create_listing_share(self.user, self.listing)
+        save_share_profile_defaults(
+            self.user,
+            social_links={'telegram': '@desk', 'rubika': 'myrubika'},
+            save_socials=True,
+        )
+        profile = share_profile_context(self.user, share, title='x', share_url='https://ex.com/p/1/')
+        send_keys = [c['key'] for c in profile['share_send_channels']]
+        self.assertEqual(send_keys[0], 'whatsapp')
+        self.assertIn('telegram', send_keys)
+        self.assertIn('rubika', send_keys)
+
     @patch('workspace.mixins.has_active_bot_license', return_value=True)
     def test_share_manage_saves_defaults_and_socials(self, _mock):
         self.client.login(username='09129876543', password='testpass123')
@@ -155,6 +189,11 @@ class ShareDefaultsAndSocialTests(TestCase):
 
     @patch('workspace.mixins.has_active_bot_license', return_value=True)
     def test_listing_detail_has_pro_share_modal(self, _mock):
+        save_share_profile_defaults(
+            self.user,
+            social_links={'telegram': '@agency', 'bale': '09120001122'},
+            save_socials=True,
+        )
         self.client.login(username='09129876543', password='testpass123')
         url = reverse(
             'workspace:listing_detail',
@@ -166,3 +205,7 @@ class ShareDefaultsAndSocialTests(TestCase):
         self.assertContains(resp, 'data-welcome-rte')
         self.assertContains(resp, 'social_telegram')
         self.assertContains(resp, 'save_as_default_share_message')
+        self.assertContains(resp, 'data-share-msg-send')
+        self.assertContains(resp, 'data-send-mode="telegram"')
+        self.assertContains(resp, 'data-send-mode="copy_open"')
+        self.assertContains(resp, 'data-send-key="bale"')

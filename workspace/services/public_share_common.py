@@ -461,6 +461,39 @@ def social_networks_for_display(links: Optional[dict]) -> List[Dict[str, str]]:
     return items
 
 
+def build_share_send_channels(social_links: Optional[dict] = None) -> List[Dict[str, str]]:
+    """
+    دکمه‌های «ارسال متن» زیر پیش‌نمایش مودال اشتراک.
+    واتساپ همیشه هست؛ بقیه فقط برای شبکه‌هایی که در پروفایل ذخیره شده‌اند.
+    """
+    channels: List[Dict[str, str]] = [
+        {
+            'key': 'whatsapp',
+            'label': 'واتساپ',
+            'icon_file': WHATSAPP_ICON_FILE,
+            'color': '#25D366',
+            'mode': 'whatsapp',
+            'href': '',
+        },
+    ]
+    for item in social_networks_for_display(social_links):
+        key = item['key']
+        if key == 'telegram':
+            mode = 'telegram'
+        else:
+            # بله / روبیکا / ایتا / سروش / اینستاگرام: کپی متن + باز کردن پروفایل
+            mode = 'copy_open'
+        channels.append({
+            'key': key,
+            'label': item['label'],
+            'icon_file': item.get('icon_file', ''),
+            'color': item.get('color', '#64748b'),
+            'mode': mode,
+            'href': item.get('url', ''),
+        })
+    return channels
+
+
 def get_share_message_template(user) -> str:
     ws = get_or_create_settings(user)
     tpl = (ws.default_share_message or '').strip()
@@ -597,6 +630,7 @@ def share_profile_context(user, share, *, title: str = '', share_url: str = '') 
         'social_links': socials,
         'social_networks': networks,
         'social_networks_active': social_networks_for_display(socials),
+        'share_send_channels': build_share_send_channels(socials),
         'whatsapp_icon_file': WHATSAPP_ICON_FILE,
         'telegram_icon_file': _SOCIAL_BY_KEY['telegram']['icon_file'],
     }

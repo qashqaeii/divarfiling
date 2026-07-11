@@ -549,28 +549,65 @@ function initPublicShareMessageEditors() {
             }
         });
 
-        root.querySelector('[data-share-msg-wa]')?.addEventListener('click', () => {
+        const openShareChannel = async (btn) => {
+            const mode = (btn.getAttribute('data-send-mode') || '').trim();
+            const href = (btn.getAttribute('data-send-href') || '').trim();
+            const label = (btn.getAttribute('data-send-label') || 'پیام‌رسان').trim();
             const text = getRenderedMessage().trim();
-            if (!text) {
+            const url = (root.dataset.shareUrl || '').trim();
+            if (!text && mode !== 'telegram') {
                 if (typeof window.showWsToast === 'function') {
                     window.showWsToast('ابتدا متن اشتراک را بنویسید.', 'warning');
                 }
                 return;
             }
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+            if (mode === 'whatsapp') {
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+                return;
+            }
+            if (mode === 'telegram') {
+                if (!text && !url) {
+                    if (typeof window.showWsToast === 'function') {
+                        window.showWsToast('ابتدا متن اشتراک را بنویسید.', 'warning');
+                    }
+                    return;
+                }
+                const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text || url)}`;
+                window.open(tgUrl, '_blank', 'noopener');
+                return;
+            }
+            // copy_open: کپی متن و باز کردن پروفایل/چت ذخیره‌شده
+            if (text) {
+                const ok = await copyText(text);
+                if (ok && typeof window.showWsToast === 'function') {
+                    window.showWsToast(`متن کپی شد — در ${label} جای‌گذاری کنید.`, 'success');
+                }
+            }
+            if (href) {
+                window.open(href, '_blank', 'noopener');
+            } else if (typeof window.showWsToast === 'function') {
+                window.showWsToast(`لینک ${label} ذخیره نشده است.`, 'warning');
+            }
+        };
+
+        root.querySelectorAll('[data-share-msg-send]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                openShareChannel(btn);
+            });
         });
 
+        // سازگاری با دکمه‌های قدیمی
+        root.querySelector('[data-share-msg-wa]')?.addEventListener('click', () => {
+            window.open(`https://wa.me/?text=${encodeURIComponent(getRenderedMessage().trim())}`, '_blank', 'noopener');
+        });
         root.querySelector('[data-share-msg-tg]')?.addEventListener('click', () => {
             const text = getRenderedMessage().trim();
             const url = (root.dataset.shareUrl || '').trim();
-            if (!text && !url) {
-                if (typeof window.showWsToast === 'function') {
-                    window.showWsToast('ابتدا متن اشتراک را بنویسید.', 'warning');
-                }
-                return;
-            }
-            const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text || url)}`;
-            window.open(tgUrl, '_blank', 'noopener');
+            window.open(
+                `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text || url)}`,
+                '_blank',
+                'noopener',
+            );
         });
 
         root.querySelector('[data-share-msg-reset]')?.addEventListener('click', () => {

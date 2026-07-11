@@ -122,7 +122,7 @@ class PropertyPublicShareTests(TestCase):
         from workspace.services.property_public_share import build_property_amenity_dossier_items
         dossier = build_property_amenity_dossier_items(self.prop)
         by_d = {i['label']: i for i in dossier}
-        self.assertEqual(by_d['آسانسور']['emoji'], '🛗')
+        self.assertEqual(by_d['آسانسور']['emoji'], '⬆️')
         self.assertEqual(by_d['پارکینگ']['state'], 'yes')
         self.assertEqual(by_d['پارکینگ']['tip'], 'پارکینگ: دارد')
         self.assertEqual(by_d['تعداد واحد در طبقه']['value'], '۲')

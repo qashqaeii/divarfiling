@@ -363,6 +363,10 @@ function buildDefaultShareMessage(title, url, template) {
         .split('{URL}').join(safeUrl);
 }
 
+function getDefaultShareTemplate(template) {
+    return (template || '').trim() || 'سلام،\nجزئیات «{title}» را در این لینک ببینید:\n{url}\nبا تشکر مشاور شما';
+}
+
 function messageToShareTemplate(text, title, url) {
     let out = (text || '').trim();
     const safeUrl = (url || '').trim();
@@ -373,7 +377,7 @@ function messageToShareTemplate(text, title, url) {
     if (safeTitle && out.includes(safeTitle)) {
         out = out.split(safeTitle).join('{title}');
     }
-    return out || 'سلام،\nجزئیات «{title}» را در این لینک ببینید:\n{url}\nبا تشکر مشاور شما';
+    return out || getDefaultShareTemplate();
 }
 
 function syncShareMessageUrl(form, nextUrl) {
@@ -381,14 +385,9 @@ function syncShareMessageUrl(form, nextUrl) {
     const root = form.querySelector('[data-share-msg-root]');
     const ta = form.querySelector('[data-share-message]');
     if (!root || !ta) return;
-    const prevUrl = (root.dataset.shareUrl || '').trim();
     root.dataset.shareUrl = nextUrl;
-    if (prevUrl && ta.value.includes(prevUrl)) {
-        ta.value = ta.value.split(prevUrl).join(nextUrl);
-    } else if (!ta.value.trim()) {
-        ta.value = buildDefaultShareMessage(
-            root.dataset.listingTitle,
-            nextUrl,
+    if (!ta.value.trim()) {
+        ta.value = getDefaultShareTemplate(
             root.dataset.shareTemplate || form.querySelector('[data-share-msg-template]')?.value,
         );
     }
@@ -475,14 +474,20 @@ function initPublicShareMessageEditors() {
                 .replace(/\n/g, '<br>');
         };
 
+        const getRenderedMessage = () => buildDefaultShareMessage(
+            root.dataset.listingTitle,
+            root.dataset.shareUrl,
+            ta.value || getDefaultShareTemplate(root.dataset.shareTemplate),
+        );
+
         const syncPreview = () => {
             if (!preview) return;
-            const text = (ta.value || '').trim();
-            if (!text) {
+            const tpl = (ta.value || '').trim();
+            if (!tpl) {
                 preview.innerHTML = '<span class="mk-share-live-preview-empty">متن پیام را بنویسید…</span>';
                 return;
             }
-            preview.innerHTML = linkifyPreview(ta.value || '');
+            preview.innerHTML = linkifyPreview(getRenderedMessage());
         };
 
         syncPreview();
@@ -509,10 +514,15 @@ function initPublicShareMessageEditors() {
                 }
             } catch (_) { /* fallback below */ }
             try {
-                ta.focus();
-                ta.select();
+                const tmp = document.createElement('textarea');
+                tmp.value = text;
+                tmp.setAttribute('readonly', '');
+                tmp.style.position = 'fixed';
+                tmp.style.opacity = '0';
+                document.body.appendChild(tmp);
+                tmp.select();
                 const ok = document.execCommand('copy');
-                ta.setSelectionRange(ta.value.length, ta.value.length);
+                document.body.removeChild(tmp);
                 return ok;
             } catch (_) {
                 return false;
@@ -521,7 +531,7 @@ function initPublicShareMessageEditors() {
 
         root.querySelector('[data-share-msg-copy]')?.addEventListener('click', async (e) => {
             const btn = e.currentTarget;
-            const text = (ta.value || '').trim();
+            const text = getRenderedMessage().trim();
             if (!text) {
                 if (typeof window.showWsToast === 'function') {
                     window.showWsToast('متن اشتراک خالی است.', 'warning');
@@ -532,7 +542,7 @@ function initPublicShareMessageEditors() {
             if (ok) {
                 setBtnLabel(btn, 'کپی شد');
                 if (typeof window.showWsToast === 'function') {
-                    window.showWsToast('متن اشتراک کپی شد — در هر پیام‌رسانی بچسبانید.', 'success');
+                    window.showWsToast('متن نهایی (با عنوان و لینک) کپی شد.', 'success');
                 }
             } else if (typeof window.showWsToast === 'function') {
                 window.showWsToast('کپی انجام نشد؛ متن را دستی انتخاب کنید.', 'error');
@@ -540,7 +550,7 @@ function initPublicShareMessageEditors() {
         });
 
         root.querySelector('[data-share-msg-wa]')?.addEventListener('click', () => {
-            const text = (ta.value || '').trim();
+            const text = getRenderedMessage().trim();
             if (!text) {
                 if (typeof window.showWsToast === 'function') {
                     window.showWsToast('ابتدا متن اشتراک را بنویسید.', 'warning');
@@ -551,7 +561,7 @@ function initPublicShareMessageEditors() {
         });
 
         root.querySelector('[data-share-msg-tg]')?.addEventListener('click', () => {
-            const text = (ta.value || '').trim();
+            const text = getRenderedMessage().trim();
             const url = (root.dataset.shareUrl || '').trim();
             if (!text && !url) {
                 if (typeof window.showWsToast === 'function') {
@@ -564,18 +574,16 @@ function initPublicShareMessageEditors() {
         });
 
         root.querySelector('[data-share-msg-reset]')?.addEventListener('click', () => {
-            const tpl = root.dataset.shareTemplate
+            const tpl = getDefaultShareTemplate(
+                root.dataset.shareTemplate
                 || form?.querySelector('[data-share-msg-template]')?.value
-                || '';
-            ta.value = buildDefaultShareMessage(
-                root.dataset.listingTitle,
-                root.dataset.shareUrl,
-                tpl,
+                || '',
             );
+            ta.value = tpl;
             syncPreview();
             ta.focus();
             if (typeof window.showWsToast === 'function') {
-                window.showWsToast('متن از قالب پیش‌فرض بازگردانی شد.', 'info');
+                window.showWsToast('قالب پیش‌فرض بازگردانی شد.', 'info');
             }
         });
     });
@@ -587,11 +595,14 @@ function prepareShareFormSubmit(form) {
     const tplInput = form.querySelector('[data-share-msg-template]');
     const saveDefaultMsg = form.querySelector('[data-save-default-msg], [name="save_as_default_share_message"]');
     if (root && ta && tplInput && saveDefaultMsg && saveDefaultMsg.checked) {
+        // textarea خودش قالب است ({title}/{url})؛ اگر کاربر مقادیر واقعی نوشته بود برمی‌گردانیم
         tplInput.value = messageToShareTemplate(
             ta.value,
             root.dataset.listingTitle,
             root.dataset.shareUrl,
         );
+    } else if (ta && tplInput) {
+        tplInput.value = (ta.value || '').trim() || getDefaultShareTemplate(tplInput.value);
     }
     const editor = form.querySelector('[data-welcome-editor]');
     const hidden = form.querySelector('[data-welcome-input]');

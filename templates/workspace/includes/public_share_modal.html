@@ -85,29 +85,29 @@
                             <span class="mk-share-chip" title="از پیش‌فرض پروفایل شما ساخته شده"><i class="fas fa-star" aria-hidden="true"></i> قالب شخصی</span>
                         </div>
                         <p class="mk-share-msg-hint">
-                            این متن را برای واتساپ، تلگرام و بقیه پیام‌رسان‌ها کپی کنید.
-                            با <code>{title}</code> و <code>{url}</code> می‌توانید قالب پیش‌فرض همه آگهی‌ها را بسازید.
+                            قالب پیام را با <code>{title}</code> و <code>{url}</code> ویرایش کنید.
+                            در پیش‌نمایش، عنوان و لینک واقعی همین فایل جایگزین می‌شود.
                         </p>
                         <div class="mk-share-msg-card"
                              data-share-msg-root
                              data-share-url="{{ share_url }}"
                              data-listing-title="{{ item_title|escape }}"
                              data-share-template="{{ sp.default_share_message|default:''|escape }}">
-                            <label class="ws-label" for="{{ id_prefix }}-share-message">پیام</label>
+                            <label class="ws-label" for="{{ id_prefix }}-share-message">قالب پیام</label>
                             <textarea class="ws-textarea mk-share-msg-input"
                                       id="{{ id_prefix }}-share-message"
                                       data-share-message
                                       rows="6"
                                       dir="rtl"
-                                      aria-describedby="{{ id_prefix }}-sec-message {{ id_prefix }}-msg-preview-label">{% if sp.share_message_rendered %}{{ sp.share_message_rendered }}{% else %}سلام،
-جزئیات «{{ item_title }}» را در این لینک ببینید:
-{{ share_url }}
+                                      aria-describedby="{{ id_prefix }}-sec-message {{ id_prefix }}-msg-preview-label">{% if sp.default_share_message %}{{ sp.default_share_message }}{% else %}سلام،
+جزئیات «{title}» را در این لینک ببینید:
+{url}
 با تشکر مشاور شما{% endif %}</textarea>
                             <div class="mk-share-live-preview" aria-live="polite">
                                 <div class="mk-share-live-preview-head" id="{{ id_prefix }}-msg-preview-label">
                                     <i class="fas fa-eye" aria-hidden="true"></i>
                                     <span>پیش‌نمایش زنده</span>
-                                    <small>همان‌طور که مشتری در پیام‌رسان می‌بیند</small>
+                                    <small>با عنوان و لینک واقعی این فایل</small>
                                 </div>
                                 <div class="mk-share-live-preview-bubble" data-share-msg-preview dir="rtl"></div>
                             </div>

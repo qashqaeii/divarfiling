@@ -1976,8 +1976,17 @@ function normalizeMoneyInput(val) {
 
 function applyMapMarkerFilters(markers, filterState, sellerFilter) {
     let list = markers;
-    if (sellerFilter === 'consultant') list = list.filter(m => m.is_consultant);
-    else if (sellerFilter === 'personal') list = list.filter(m => !m.is_consultant);
+    if (sellerFilter === 'consultant') {
+        list = list.filter(m => mapSellerKind(m) === 'consultant');
+    } else if (sellerFilter === 'disguised') {
+        list = list.filter(m => mapSellerKind(m) === 'disguised');
+    } else if (sellerFilter === 'genuine' || sellerFilter === 'personal') {
+        // مالک واقعی + شخصی طبقه‌بندی‌نشده
+        list = list.filter(m => {
+            const kind = mapSellerKind(m);
+            return kind === 'genuine' || kind === 'personal';
+        });
+    }
 
     const pMin = filterState.priceMin != null && filterState.priceMin !== '' ? normalizeMoneyInput(filterState.priceMin) : null;
     const pMax = filterState.priceMax != null && filterState.priceMax !== '' ? normalizeMoneyInput(filterState.priceMax) : null;
@@ -2000,7 +2009,13 @@ function applyMapMarkerFilters(markers, filterState, sellerFilter) {
 
 function addAccuracyRings(group, marker, showRings) {
     if (!showRings || !marker.location_radius_m) return;
-    const stroke = marker.is_consultant ? '#2563eb' : '#e11d48';
+    const kind = mapSellerKind(marker);
+    const stroke = {
+        consultant: '#2563eb',
+        disguised: '#be123c',
+        genuine: '#059669',
+        personal: '#e11d48',
+    }[kind] || '#e11d48';
     const circle = L.circle([marker.lat, marker.lng], {
         radius: marker.location_radius_m,
         color: stroke,
@@ -3169,14 +3184,17 @@ function initMap(allMarkers, settings) {
         if (sellerFilter === 'consultant') {
             return `<div class="mk-map-legend-items">${ringHint}<span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--consultant" aria-hidden="true"></i>مشاور</span><span class="mk-map-legend-hint">کلیک برای جزئیات</span></div>`;
         }
-        if (sellerFilter === 'personal') {
-            return `<div class="mk-map-legend-items">${ringHint}<span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--personal" aria-hidden="true"></i>شخصی</span><span class="mk-map-legend-hint">کلیک برای جزئیات</span></div>`;
+        if (sellerFilter === 'disguised') {
+            return `<div class="mk-map-legend-items">${ringHint}<span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--disguised" aria-hidden="true"></i>مشاور پنهان</span><span class="mk-map-legend-hint">کلیک برای جزئیات</span></div>`;
+        }
+        if (sellerFilter === 'genuine' || sellerFilter === 'personal') {
+            return `<div class="mk-map-legend-items">${ringHint}<span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--genuine" aria-hidden="true"></i>مالک واقعی</span><span class="mk-map-legend-hint">کلیک برای جزئیات</span></div>`;
         }
         return `<div class="mk-map-legend-items">
             ${ringHint}
             <span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--consultant" aria-hidden="true"></i>مشاور</span>
             <span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--disguised" aria-hidden="true"></i>مشاور پنهان</span>
-            <span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--personal" aria-hidden="true"></i>شخصی / مالک</span>
+            <span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--genuine" aria-hidden="true"></i>مالک واقعی</span>
             <span class="mk-map-legend-hint">کلیک برای جزئیات</span>
         </div>`;
     }

@@ -10,7 +10,7 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=16">
 
 <div class="mk-page mk-map-pro">
 
@@ -64,11 +64,19 @@
 
                 </div>
 
-                <div class="mk-map-head-stat mk-map-head-stat--personal">
+                <div class="mk-map-head-stat mk-map-head-stat--disguised">
 
-                    <span class="mk-map-head-stat-val">{{ personal_count|intcomma }}</span>
+                    <span class="mk-map-head-stat-val">{{ disguised_consultant_count|intcomma }}</span>
 
-                    <span class="mk-map-head-stat-lbl">شخصی</span>
+                    <span class="mk-map-head-stat-lbl">مشاور پنهان</span>
+
+                </div>
+
+                <div class="mk-map-head-stat mk-map-head-stat--genuine">
+
+                    <span class="mk-map-head-stat-val">{{ genuine_personal_count|intcomma }}</span>
+
+                    <span class="mk-map-head-stat-lbl">مالک واقعی</span>
 
                 </div>
 
@@ -94,7 +102,9 @@
 
                         <button type="button" class="mk-map-filter mk-map-filter--consultant" data-filter="consultant" aria-pressed="false">مشاور</button>
 
-                        <button type="button" class="mk-map-filter mk-map-filter--personal" data-filter="personal" aria-pressed="false">شخصی</button>
+                        <button type="button" class="mk-map-filter mk-map-filter--disguised" data-filter="disguised" aria-pressed="false">مشاور پنهان</button>
+
+                        <button type="button" class="mk-map-filter mk-map-filter--genuine" data-filter="genuine" aria-pressed="false">مالک واقعی</button>
 
                     </div>
 

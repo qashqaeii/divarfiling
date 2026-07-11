@@ -221,8 +221,10 @@
 
 /* Seller filter chips */
 .mk-map-pro .mk-map-filters {
+    display: flex;
+    flex-wrap: wrap;
     padding: 0.2rem;
-    border-radius: 999px;
+    border-radius: 14px;
     background: var(--ws-surface);
     border: 1px solid var(--map-glass-border);
     gap: 0.15rem;
@@ -244,6 +246,16 @@
 
 .mk-map-pro .mk-map-filter--consultant.is-active {
     background: #2563eb;
+    color: #fff;
+}
+
+.mk-map-pro .mk-map-filter--disguised.is-active {
+    background: #be123c;
+    color: #fff;
+}
+
+.mk-map-pro .mk-map-filter--genuine.is-active {
+    background: #059669;
     color: #fff;
 }
 
@@ -955,6 +967,8 @@
 
 /* ── Stat accents ── */
 .mk-map-pro .mk-map-head-stat--consultant .mk-map-head-stat-val { color: #2563eb; }
+.mk-map-pro .mk-map-head-stat--disguised .mk-map-head-stat-val { color: #be123c; }
+.mk-map-pro .mk-map-head-stat--genuine .mk-map-head-stat-val { color: #059669; }
 .mk-map-pro .mk-map-head-stat--personal .mk-map-head-stat-val { color: #e11d48; }
 .mk-map-pro .mk-map-head-stat-val {
     background: linear-gradient(135deg, var(--ws-text) 0%, var(--ws-text-secondary) 100%);
@@ -964,6 +978,16 @@
 }
 .mk-map-pro .mk-map-head-stat--consultant .mk-map-head-stat-val {
     background: linear-gradient(135deg, #2563eb, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+.mk-map-pro .mk-map-head-stat--disguised .mk-map-head-stat-val {
+    background: linear-gradient(135deg, #be123c, #e11d48);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+.mk-map-pro .mk-map-head-stat--genuine .mk-map-head-stat-val {
+    background: linear-gradient(135deg, #059669, #10b981);
     -webkit-background-clip: text;
     background-clip: text;
 }
@@ -1076,6 +1100,8 @@
 }
 
 .mk-map-pro .mk-map-pin--selected.mk-map-pin--consultant i { color: #2563eb; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--disguised i { color: #be123c; }
+.mk-map-pro .mk-map-pin--selected.mk-map-pin--genuine i { color: #059669; }
 .mk-map-pro .mk-map-pin--selected.mk-map-pin--personal i { color: #e11d48; }
 .mk-map-pro .mk-map-pin--selected.mk-map-pin--market.mk-map-pin--under i { color: #059669; }
 .mk-map-pro .mk-map-pin--selected.mk-map-pin--market.mk-map-pin--fair i { color: #6366f1; }

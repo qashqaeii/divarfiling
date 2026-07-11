@@ -1317,7 +1317,13 @@ class DatasetMapView(DatasetOwnerMixin, TemplateView):
         ctx['markers_shown'] = len(markers)
         ctx['markers_truncated'] = geo_count > marker_limit
         ctx['consultant_count'] = sum(1 for m in markers if m.get('is_consultant'))
-        ctx['personal_count'] = len(markers) - ctx['consultant_count']
+        ctx['disguised_consultant_count'] = sum(1 for m in markers if m.get('is_disguised'))
+        ctx['genuine_personal_count'] = max(
+            0,
+            len(markers) - ctx['consultant_count'] - ctx['disguised_consultant_count'],
+        )
+        # سازگاری عقب‌رو با قالب‌های قدیمی
+        ctx['personal_count'] = ctx['genuine_personal_count'] + ctx['disguised_consultant_count']
         ctx['ws_settings'] = settings
         return ctx
 

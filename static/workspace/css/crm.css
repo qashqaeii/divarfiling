@@ -18078,7 +18078,7 @@ button.crm-prop-hero-cover {
 .crm-prop-map-finale {
     margin: 1.25rem 0 0;
     border-radius: 16px;
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid var(--ws-border-light);
     background:
         radial-gradient(ellipse 80% 60% at 100% 0%, color-mix(in srgb, var(--ws-primary) 8%, transparent), transparent 55%),
@@ -18180,12 +18180,79 @@ button.crm-prop-hero-cover {
 .crm-prop-map-finale-edit-tip i { color: var(--ws-primary); }
 .crm-prop-map-finale-canvas {
     position: relative;
+    overflow: visible;
 }
 .crm-prop-map-finale .ws-ld-location-map-wrap {
     margin: 0;
     border: none;
     border-radius: 0;
     border-top: 1px solid var(--ws-border-light);
+    overflow: visible;
+    background: transparent;
+    position: relative;
+}
+.crm-prop-map-finale .ws-ld-location-map-head {
+    position: absolute;
+    top: 0.85rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 520;
+    width: min(calc(100% - 1.25rem), 250px);
+    margin: 0;
+    padding: 0.28rem 0.4rem;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    background: color-mix(in srgb, #0f172a 78%, transparent);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-bottom-color: rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.28);
+}
+.crm-prop-map-finale .ws-ld-location-map-head-main {
+    display: none;
+}
+.crm-prop-map-finale .ws-ld-basemap-wrap {
+    width: 100%;
+}
+.crm-prop-map-finale .ws-ld-basemap-wrap.is-open {
+    z-index: 650;
+}
+.crm-prop-map-finale .ws-ld-basemap-toggle {
+    width: 100%;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    min-height: 2rem;
+    box-shadow: none;
+}
+.crm-prop-map-finale .ws-ld-basemap-label {
+    color: #e2e8f0;
+    font-weight: 700;
+}
+.crm-prop-map-finale .ws-ld-basemap-menu {
+    top: calc(100% + 0.45rem);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    min-width: 220px;
+    max-height: min(48vh, 300px);
+    overflow: auto;
+    z-index: 660;
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.4);
+}
+.crm-prop-map-finale .ws-ld-location-map-stage {
+    border-radius: 0;
+    overflow: hidden;
 }
 .crm-prop-map-finale .ws-ld-location-map {
     height: min(62vh, 520px);
@@ -18194,7 +18261,7 @@ button.crm-prop-hero-cover {
 .crm-prop-map-empty-hint {
     position: absolute;
     z-index: 450;
-    top: 4.2rem;
+    top: 4.35rem;
     left: 50%;
     transform: translateX(-50%);
     display: flex;

@@ -770,16 +770,40 @@ def build_map_navigation(latitude, longitude) -> Dict[str, Any] | None:
     }
 
 
+def _normalize_public_key(key: str) -> str:
+    """نرمال‌سازی کلید برای تطبیق پایدار (ZWNJ، فاصله، ی/ک عربی)."""
+    text = str(key or '').strip().lower()
+    for ch in ('\u200c', '\u200f', '\u200e', '\u00a0'):
+        text = text.replace(ch, '')
+    text = text.replace('ي', 'ی').replace('ك', 'ک')
+    text = ''.join(text.split())
+    return text
+
+
 def is_public_technical_key(key: str) -> bool:
     """آیا این کلید اطلاعات فنی/داخلی است و نباید در صفحه عمومی بیاید؟"""
-    kl = str(key or '').lower()
-    return any(m in key or m in kl for m in PUBLIC_TECHNICAL_KEY_MARKERS)
+    raw = str(key or '')
+    kl = raw.lower()
+    kn = _normalize_public_key(raw)
+    for m in PUBLIC_TECHNICAL_KEY_MARKERS:
+        if m in raw or m in kl:
+            return True
+        if _normalize_public_key(m) and _normalize_public_key(m) in kn:
+            return True
+    return False
 
 
 def is_public_hero_dedup_key(key: str) -> bool:
     """کلیدهایی که در بخش‌های بالای صفحه نمایش داده شده‌اند."""
-    kl = str(key or '').lower()
-    return any(m in key or m in kl for m in PUBLIC_HERO_DEDUP_KEY_MARKERS)
+    raw = str(key or '')
+    kl = raw.lower()
+    kn = _normalize_public_key(raw)
+    for m in PUBLIC_HERO_DEDUP_KEY_MARKERS:
+        if m in raw or m in kl:
+            return True
+        if _normalize_public_key(m) and _normalize_public_key(m) in kn:
+            return True
+    return False
 
 
 def filter_public_feature_highlights(feature_profile: dict, highlights: list) -> list:
@@ -799,6 +823,8 @@ def filter_public_feature_highlights(feature_profile: dict, highlights: list) ->
             continue
         base = label.split(':')[0].replace(' ندارد', '').strip()
         if label in skip or base in skip:
+            continue
+        if is_public_technical_key(label) or is_public_technical_key(base):
             continue
         # هایلایت‌های شبیه توضیحات بلند / کلیدهای متنی
         low = label.lower()

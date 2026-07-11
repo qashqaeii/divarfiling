@@ -1991,7 +1991,7 @@
 .ps-map-finale-frame {
     position: relative;
     border-radius: 22px;
-    overflow: hidden;
+    overflow: visible; /* اجازه باز شدن منوی نوع نقشه */
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow:
         0 0 0 1px rgba(0, 0, 0, 0.35),
@@ -2005,7 +2005,7 @@
     inset: 0;
     z-index: 3;
     pointer-events: none;
-    border-radius: inherit;
+    border-radius: 22px;
     box-shadow:
         inset 0 40px 50px -30px rgba(7, 22, 20, 0.55),
         inset 0 -24px 40px -28px rgba(7, 22, 20, 0.45);
@@ -2031,32 +2031,45 @@
     background: transparent;
 }
 
+/* نوار نوع نقشه — شناور روی نقشه (نه هدر جدا) */
+.ps-page .ps-map-finale .ws-ld-location-map-head,
 .ps-map-finale .ws-ld-location-map-head {
     position: absolute;
     top: 0.95rem;
     left: 50%;
+    right: auto;
     transform: translateX(-50%);
-    z-index: 40;
-    width: min(calc(100% - 1.4rem), 280px);
-    padding: 0.35rem 0.4rem;
+    z-index: 520;
+    width: min(calc(100% - 1.4rem), 260px);
+    margin: 0;
+    padding: 0.3rem 0.4rem;
     display: flex;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
-    gap: 0.45rem;
-    background: rgba(8, 20, 18, 0.72);
+    gap: 0;
+    background: rgba(8, 20, 18, 0.78);
     border: 1px solid rgba(255, 255, 255, 0.14);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 999px;
     backdrop-filter: blur(14px) saturate(1.25);
     -webkit-backdrop-filter: blur(14px) saturate(1.25);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
 }
 
+.ps-page .ps-map-finale .ws-ld-location-map-head-main,
 .ps-map-finale .ws-ld-location-map-head-main {
     display: none;
 }
 
 .ps-map-finale .ws-ld-basemap-wrap {
     width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.ps-map-finale .ws-ld-basemap-wrap.is-open {
+    z-index: 650;
 }
 
 .ps-map-finale .ws-ld-basemap-toggle {
@@ -2066,7 +2079,8 @@
     border: none;
     color: #e2e8f0;
     box-shadow: none;
-    min-height: 2.1rem;
+    min-height: 2.05rem;
+    padding-inline: 0.55rem;
 }
 
 .ps-map-finale .ws-ld-basemap-label {
@@ -2075,21 +2089,28 @@
     font-size: 0.78rem;
 }
 
+.ps-map-finale .ws-ld-basemap-chevron {
+    color: #94a3b8;
+}
+
 .ps-map-finale .ws-ld-basemap-menu {
     top: calc(100% + 0.5rem);
     left: 50%;
     right: auto;
     transform: translateX(-50%);
     min-width: 230px;
-    background: rgba(8, 20, 18, 0.94);
+    max-height: min(52vh, 320px);
+    overflow: auto;
+    background: rgba(8, 20, 18, 0.96);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #e2e8f0;
     border-radius: 14px;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    z-index: 660;
 }
 
 .ps-map-finale .ws-ld-location-map-stage {
-    border-radius: 0;
+    border-radius: 22px;
     border: none;
     overflow: hidden;
 }
@@ -2165,6 +2186,35 @@
     border-radius: var(--ps-radius) var(--ps-radius) 0 0;
 }
 
+/* finale: بازنویسی هدر شناور بعد از استایل کارت معمولی */
+.ps-page .ps-map-finale .ws-ld-location-map-head {
+    position: absolute;
+    top: 0.95rem;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    z-index: 520;
+    width: min(calc(100% - 1.4rem), 260px);
+    margin: 0;
+    padding: 0.3rem 0.4rem;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    background: rgba(8, 20, 18, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    backdrop-filter: blur(14px) saturate(1.25);
+    -webkit-backdrop-filter: blur(14px) saturate(1.25);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.ps-page .ps-map-finale .ws-ld-location-map-head-main {
+    display: none;
+}
+
 .ps-page .ws-ld-location-map-title {
     color: var(--ps-ink);
     font-weight: 700;
@@ -2182,6 +2232,11 @@
 .ps-page .ws-ld-location-map-stage {
     border-radius: 0;
     z-index: 1;
+}
+
+.ps-page .ps-map-finale .ws-ld-location-map-stage {
+    border-radius: 22px;
+    overflow: hidden;
 }
 
 .ps-map-nav-actions {
@@ -2461,12 +2516,22 @@
     .ps-map-finale-frame {
         border-radius: 16px;
     }
+    .ps-map-finale .ws-ld-location-map-stage {
+        border-radius: 16px;
+    }
+    .ps-page .ps-map-finale .ws-ld-location-map-stage {
+        border-radius: 16px;
+    }
+    .ps-map-finale-frame-edge {
+        border-radius: 16px;
+    }
     .ps-map-finale .ws-ld-location-map {
         height: min(56vh, 460px);
         min-height: 300px;
     }
+    .ps-page .ps-map-finale .ws-ld-location-map-head,
     .ps-map-finale .ws-ld-location-map-head {
-        width: min(calc(100% - 1rem), 240px);
+        width: min(calc(100% - 1rem), 230px);
         top: 0.75rem;
     }
     .ps-map-finale .ws-ld-location-map-chrome {

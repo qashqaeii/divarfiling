@@ -186,3 +186,43 @@ class ListingPublicShareTests(TestCase):
         self.assertNotIn('شرایط مالی', ctx['sections'])
         self.assertNotIn('مشخصات اصلی', ctx['sections'])
         self.assertEqual(ctx['description_text'], 'توضیحات تست')
+
+    def test_public_hides_consultant_active_ads_and_agency_name(self):
+        self.listing.data = {
+            **(self.listing.data or {}),
+            'آگهی‌های فعال مشاور': '۲۴۷ آگهی فعال',
+            'مشاور_آگهی_فعال': '۲۴۷ آگهی فعال',
+            'نام مشاور / آژانس': 'املاک آتی زعفرانیه',
+            'بالکن': 'دارد',
+        }
+        self.listing.save(update_fields=['data'])
+        share = get_or_create_listing_share(self.user, self.listing)
+        ctx = build_public_listing_context(share)
+
+        blob_parts = []
+        for fields in (ctx['sections'] or {}).values():
+            blob_parts.extend(fields.keys())
+            blob_parts.extend(str(v) for v in fields.values())
+        for group in ctx.get('supplementary_groups') or []:
+            for f in group.get('fields') or []:
+                blob_parts.append(str(f.get('key') or ''))
+                blob_parts.append(str(f.get('display') or f.get('raw') or ''))
+        for h in ctx.get('feature_highlights') or []:
+            blob_parts.append(str(h))
+        for group in (ctx.get('feature_profile') or {}).get('groups') or []:
+            for item in group.get('items') or []:
+                blob_parts.append(str(item.get('key') or item.get('label') or ''))
+                blob_parts.append(str(item.get('value') or ''))
+        blob = '\n'.join(blob_parts)
+
+        self.assertNotIn('آگهی‌های فعال مشاور', blob)
+        self.assertNotIn('۲۴۷ آگهی فعال', blob)
+        self.assertNotIn('نام مشاور / آژانس', blob)
+        self.assertNotIn('املاک آتی زعفرانیه', blob)
+
+        url = reverse('listing_public:view', kwargs={'share_token': share.share_token})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'آگهی‌های فعال مشاور')
+        self.assertNotContains(resp, '۲۴۷ آگهی فعال')
+        self.assertNotContains(resp, 'نام مشاور / آژانس')

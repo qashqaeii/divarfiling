@@ -226,9 +226,15 @@
         listingMapInstances.get(mapId)?.cleanup?.();
 
         const marker = options.marker || {};
-        const lat = Number(options.lat ?? marker.lat);
-        const lng = Number(options.lng ?? marker.lng);
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        function parseCoord(value) {
+            if (value == null || value === '') return NaN;
+            const n = Number(value);
+            return Number.isFinite(n) ? n : NaN;
+        }
+        const lat = parseCoord(options.lat ?? marker.lat);
+        const lng = parseCoord(options.lng ?? marker.lng);
+        const editable = !!options.editable;
+        if ((!Number.isFinite(lat) || !Number.isFinite(lng)) && !editable) return null;
 
         const locOpts = {
             accuracyKind: marker.location_kind || options.accuracyKind,
@@ -440,36 +446,231 @@
 
         updateBasemapUI(currentBasemapId);
 
-        let locationLayer;
-        if (isApprox && radiusM > 0) {
-            locationLayer = L.circle([lat, lng], {
-                radius: radiusM,
-                color: '#7c3aed',
-                fillColor: '#7c3aed',
-                fillOpacity: 0.16,
-                weight: 2.5,
-                opacity: 0.85,
-            }).addTo(map);
-            L.circleMarker([lat, lng], {
-                radius: 6,
-                color: '#ffffff',
-                weight: 2,
-                fillColor: '#7c3aed',
-                fillOpacity: 1,
-            }).addTo(map);
-        } else {
-            locationLayer = L.circleMarker([lat, lng], {
-                radius: 10,
-                color: '#ffffff',
-                weight: 2.5,
-                fillColor: '#dc2626',
-                fillOpacity: 1,
-            }).addTo(map);
+        const onDraftChange = typeof options.onDraftChange === 'function' ? options.onDraftChange : null;
+        const defaultCenter = options.defaultCenter || { lat: 35.6892, lng: 51.3890, zoom: 11 };
+        let committedLat = Number.isFinite(lat) ? lat : null;
+        let committedLng = Number.isFinite(lng) ? lng : null;
+        let draftLat = committedLat;
+        let draftLng = committedLng;
+        const emptyPlaceMode = editable && (committedLat == null || committedLng == null);
+
+        const pinIcon = L.divIcon({
+            className: 'ws-ld-map-pin',
+            html: '<span class="ws-ld-map-pin-dot" aria-hidden="true"></span><span class="ws-ld-map-pin-pulse" aria-hidden="true"></span>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+        });
+        const ghostIcon = L.divIcon({
+            className: 'ws-ld-map-pin ws-ld-map-pin--ghost',
+            html: '<span class="ws-ld-map-pin-dot" aria-hidden="true"></span>',
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+        });
+
+        let locationLayer = null;
+        let ghostLayer = null;
+        let locationCircle = null;
+
+        function clearLocationLayers() {
+            if (locationLayer) {
+                try { map.removeLayer(locationLayer); } catch (e) { /* ignore */ }
+                locationLayer = null;
+            }
+            if (locationCircle) {
+                try { map.removeLayer(locationCircle); } catch (e) { /* ignore */ }
+                locationCircle = null;
+            }
+            if (ghostLayer) {
+                try { map.removeLayer(ghostLayer); } catch (e) { /* ignore */ }
+                ghostLayer = null;
+            }
         }
 
-        const popupMarker = { ...marker, lat, lng };
-        const popupOpts = { className: 'mk-map-popup-shell', maxWidth: 300, minWidth: 260 };
-        locationLayer.bindPopup(buildMapMarkerPopup(popupMarker), popupOpts);
+        function coordsEqual(aLat, aLng, bLat, bLng) {
+            if (aLat == null || aLng == null || bLat == null || bLng == null) return false;
+            return Math.abs(aLat - bLat) < 1e-8 && Math.abs(aLng - bLng) < 1e-8;
+        }
+
+        function updateGhost() {
+            if (!editable) return;
+            const showGhost = committedLat != null && committedLng != null
+                && draftLat != null && draftLng != null
+                && !coordsEqual(committedLat, committedLng, draftLat, draftLng);
+            if (!showGhost) {
+                if (ghostLayer) {
+                    try { map.removeLayer(ghostLayer); } catch (e) { /* ignore */ }
+                    ghostLayer = null;
+                }
+                return;
+            }
+            if (!ghostLayer) {
+                ghostLayer = L.marker([committedLat, committedLng], {
+                    icon: ghostIcon,
+                    interactive: false,
+                    keyboard: false,
+                }).addTo(map);
+            } else {
+                ghostLayer.setLatLng([committedLat, committedLng]);
+            }
+        }
+
+        function bindPopupAt(layer, atLat, atLng) {
+            if (!layer || atLat == null || atLng == null) return;
+            const popupMarker = { ...marker, lat: atLat, lng: atLng };
+            const popupOpts = { className: 'mk-map-popup-shell', maxWidth: 300, minWidth: 260 };
+            layer.bindPopup(buildMapMarkerPopup(popupMarker), popupOpts);
+        }
+
+        function placeEditableMarker(atLat, atLng, { openPopup = false } = {}) {
+            clearLocationLayers();
+            locationLayer = L.marker([atLat, atLng], {
+                icon: pinIcon,
+                draggable: true,
+                autoPan: true,
+                riseOnHover: true,
+            }).addTo(map);
+            bindPopupAt(locationLayer, atLat, atLng);
+            locationLayer.on('dragstart', () => {
+                locationLayer.closePopup();
+                el.classList.add('is-dragging-pin');
+            });
+            locationLayer.on('dragend', () => {
+                el.classList.remove('is-dragging-pin');
+                const pos = locationLayer.getLatLng();
+                setDraft(pos.lat, pos.lng, { fromDrag: true });
+            });
+            if (openPopup) locationLayer.openPopup();
+            updateGhost();
+        }
+
+        function placeReadonlyMarker(atLat, atLng) {
+            clearLocationLayers();
+            if (isApprox && radiusM > 0) {
+                locationCircle = L.circle([atLat, atLng], {
+                    radius: radiusM,
+                    color: '#7c3aed',
+                    fillColor: '#7c3aed',
+                    fillOpacity: 0.16,
+                    weight: 2.5,
+                    opacity: 0.85,
+                }).addTo(map);
+                locationLayer = L.circleMarker([atLat, atLng], {
+                    radius: 6,
+                    color: '#ffffff',
+                    weight: 2,
+                    fillColor: '#7c3aed',
+                    fillOpacity: 1,
+                }).addTo(map);
+            } else {
+                locationLayer = L.circleMarker([atLat, atLng], {
+                    radius: 10,
+                    color: '#ffffff',
+                    weight: 2.5,
+                    fillColor: '#dc2626',
+                    fillOpacity: 1,
+                }).addTo(map);
+            }
+            bindPopupAt(locationLayer, atLat, atLng);
+        }
+
+        function notifyDraft() {
+            const dirty = !coordsEqual(committedLat, committedLng, draftLat, draftLng)
+                || (committedLat == null && draftLat != null);
+            el.classList.toggle('has-draft-location', dirty);
+            el.classList.toggle('has-location', draftLat != null && draftLng != null);
+            onDraftChange?.({
+                lat: draftLat,
+                lng: draftLng,
+                committedLat,
+                committedLng,
+                dirty,
+                isNew: committedLat == null || committedLng == null,
+            });
+        }
+
+        function setDraft(nextLat, nextLng, meta = {}) {
+            const nLat = Number(nextLat);
+            const nLng = Number(nextLng);
+            if (!Number.isFinite(nLat) || !Number.isFinite(nLng)) return;
+            draftLat = nLat;
+            draftLng = nLng;
+            if (editable) {
+                if (!locationLayer || !(locationLayer instanceof L.Marker)) {
+                    placeEditableMarker(draftLat, draftLng);
+                } else {
+                    locationLayer.setLatLng([draftLat, draftLng]);
+                    bindPopupAt(locationLayer, draftLat, draftLng);
+                    updateGhost();
+                }
+            } else {
+                placeReadonlyMarker(draftLat, draftLng);
+            }
+            if (!meta.skipNotify) notifyDraft();
+        }
+
+        function commitDraft() {
+            if (draftLat == null || draftLng == null) return null;
+            committedLat = draftLat;
+            committedLng = draftLng;
+            marker.lat = committedLat;
+            marker.lng = committedLng;
+            updateGhost();
+            notifyDraft();
+            return { lat: committedLat, lng: committedLng };
+        }
+
+        function revertDraft() {
+            draftLat = committedLat;
+            draftLng = committedLng;
+            if (draftLat == null || draftLng == null) {
+                clearLocationLayers();
+                el.classList.remove('has-location', 'has-draft-location');
+                map.setView(
+                    [defaultCenter.lat, defaultCenter.lng],
+                    defaultCenter.zoom || 11,
+                    { animate: true },
+                );
+                notifyDraft();
+                return;
+            }
+            setDraft(draftLat, draftLng);
+            fitMapView(true);
+        }
+
+        function getDraft() {
+            return draftLat != null && draftLng != null
+                ? { lat: draftLat, lng: draftLng }
+                : null;
+        }
+
+        if (editable && emptyPlaceMode) {
+            map.setView(
+                [defaultCenter.lat, defaultCenter.lng],
+                defaultCenter.zoom || 11,
+                { animate: false },
+            );
+            el.classList.add('is-empty-place');
+            const onMapClickEmpty = (e) => {
+                el.classList.remove('is-empty-place');
+                setDraft(e.latlng.lat, e.latlng.lng);
+                map.setView(e.latlng, Math.max(map.getZoom(), 16), { animate: true });
+            };
+            map.on('click', onMapClickEmpty);
+            abortController.signal.addEventListener('abort', () => {
+                try { map.off('click', onMapClickEmpty); } catch (e) { /* ignore */ }
+            });
+        } else if (editable) {
+            placeEditableMarker(committedLat, committedLng);
+            const onMapClickEdit = (e) => {
+                setDraft(e.latlng.lat, e.latlng.lng);
+            };
+            map.on('click', onMapClickEdit);
+            abortController.signal.addEventListener('abort', () => {
+                try { map.off('click', onMapClickEdit); } catch (e) { /* ignore */ }
+            });
+        } else {
+            placeReadonlyMarker(committedLat, committedLng);
+        }
 
         function mapHasLayout() {
             return el.clientWidth > 0 && el.clientHeight > 0;
@@ -477,18 +678,28 @@
 
         function fitMapView(animate) {
             const anim = !!animate;
-            if (isApprox && radiusM > 0) {
-                const bounds = boundsForRadiusMeters(lat, lng, radiusM);
+            const viewLat = draftLat != null ? draftLat : committedLat;
+            const viewLng = draftLng != null ? draftLng : committedLng;
+            if (viewLat == null || viewLng == null) {
+                map.setView(
+                    [defaultCenter.lat, defaultCenter.lng],
+                    defaultCenter.zoom || 11,
+                    { animate: anim },
+                );
+                return;
+            }
+            if (!editable && isApprox && radiusM > 0) {
+                const bounds = boundsForRadiusMeters(viewLat, viewLng, radiusM);
                 if (mapHasLayout() && bounds.isValid()) {
                     map.fitBounds(bounds, { padding: [44, 44], maxZoom: 17, animate: anim });
                 } else {
-                    map.setView([lat, lng], estimateZoomForRadiusMeters(lat, radiusM, el.clientWidth), { animate: anim });
+                    map.setView([viewLat, viewLng], estimateZoomForRadiusMeters(viewLat, radiusM, el.clientWidth), { animate: anim });
                 }
             } else {
-                map.setView([lat, lng], options.zoom || 17, { animate: anim });
+                map.setView([viewLat, viewLng], options.zoom || 17, { animate: anim });
             }
             if (!Number.isFinite(map.getZoom())) {
-                map.setView([lat, lng], options.zoom || 15, { animate: false });
+                map.setView([viewLat, viewLng], options.zoom || 15, { animate: false });
             }
         }
 
@@ -500,7 +711,7 @@
                 : 'زوم —';
         }
 
-        fitMapView(false);
+        if (!emptyPlaceMode) fitMapView(false);
         updateZoomBadge();
         map.on('zoomend', updateZoomBadge);
 
@@ -509,7 +720,9 @@
         function refreshMapSize() {
             setTimeout(() => {
                 map.invalidateSize();
-                fitMapView(false);
+                if (!emptyPlaceMode || (draftLat != null && draftLng != null)) {
+                    fitMapView(false);
+                }
                 updateZoomBadge();
             }, 120);
         }
@@ -554,9 +767,23 @@
             ?.addEventListener('click', () => setTimeout(refreshMapSize, 180), { signal });
 
         refreshMapSize();
-        listingMapInstances.set(mapId, { cleanup, map });
+        if (editable) notifyDraft();
+
+        const api = {
+            map,
+            destroy: cleanup,
+            setDraft,
+            commitDraft,
+            revertDraft,
+            getDraft,
+            refresh: refreshMapSize,
+            hasLocation: () => draftLat != null && draftLng != null,
+            isDirty: () => !coordsEqual(committedLat, committedLng, draftLat, draftLng)
+                || (committedLat == null && draftLat != null),
+        };
+        listingMapInstances.set(mapId, { cleanup, map, api });
         global.wsLdDetailMap = map;
-        return { map, destroy: cleanup };
+        return api;
     }
 
     function destroyListingDetailMap(mapId = 'wsLdLocationMap') {

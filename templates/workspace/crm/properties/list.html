@@ -348,13 +348,22 @@
                 </div>
                 {% endif %}
                 <div class="crm-files-card-amenities" aria-label="امکانات">
-                    <span class="crm-files-amenity{% if p.has_parking %} is-on{% else %} is-off{% endif %}" title="پارکینگ: {% if p.has_parking %}دارد{% else %}ندارد{% endif %}">
+                    <span class="crm-files-amenity{% if p.has_parking %} is-on{% else %} is-off{% endif %}"
+                          data-tip="پارکینگ: {% if p.has_parking %}دارد{% else %}ندارد{% endif %}"
+                          aria-label="پارکینگ: {% if p.has_parking %}دارد{% else %}ندارد{% endif %}"
+                          tabindex="0">
                         <i class="fas fa-car" aria-hidden="true"></i>
                     </span>
-                    <span class="crm-files-amenity{% if p.has_storage %} is-on{% else %} is-off{% endif %}" title="انباری: {% if p.has_storage %}دارد{% else %}ندارد{% endif %}">
+                    <span class="crm-files-amenity{% if p.has_storage %} is-on{% else %} is-off{% endif %}"
+                          data-tip="انباری: {% if p.has_storage %}دارد{% else %}ندارد{% endif %}"
+                          aria-label="انباری: {% if p.has_storage %}دارد{% else %}ندارد{% endif %}"
+                          tabindex="0">
                         <i class="fas fa-box-archive" aria-hidden="true"></i>
                     </span>
-                    <span class="crm-files-amenity{% if p.has_elevator %} is-on{% else %} is-off{% endif %}" title="آسانسور: {% if p.has_elevator %}دارد{% else %}ندارد{% endif %}">
+                    <span class="crm-files-amenity{% if p.has_elevator %} is-on{% else %} is-off{% endif %}"
+                          data-tip="آسانسور: {% if p.has_elevator %}دارد{% else %}ندارد{% endif %}"
+                          aria-label="آسانسور: {% if p.has_elevator %}دارد{% else %}ندارد{% endif %}"
+                          tabindex="0">
                         <i class="fas fa-elevator" aria-hidden="true"></i>
                     </span>
                 </div>

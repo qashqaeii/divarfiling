@@ -1,11 +1,18 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load workspace_tags crm_tags %}
+{% load static workspace_tags crm_tags %}
 
 {% block page_title %}{{ property.title }}{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_search %}{% endblock %}
 {% block crm_actions %}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+{% if show_property_map or property_map_locked %}
+<link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=5">
+{% endif %}
+{% endblock %}
 
 {% block crm_content %}
 {% if property_is_deleted %}
@@ -268,13 +275,22 @@
             <div class="crm-prop-hero-amenities">
                 <span class="crm-prop-hero-amenities-lbl"><i class="fas fa-sparkles"></i> امکانات</span>
                 <div class="crm-prop-hero-amenity-icons" aria-label="امکانات اصلی">
-                    <span class="crm-files-amenity{% if property.has_parking %} is-on{% else %} is-off{% endif %}" title="پارکینگ: {% if property.has_parking %}دارد{% else %}ندارد{% endif %}">
+                    <span class="crm-files-amenity{% if property.has_parking %} is-on{% else %} is-off{% endif %}"
+                          data-tip="پارکینگ: {% if property.has_parking %}دارد{% else %}ندارد{% endif %}"
+                          aria-label="پارکینگ: {% if property.has_parking %}دارد{% else %}ندارد{% endif %}"
+                          tabindex="0">
                         <i class="fas fa-car" aria-hidden="true"></i>
                     </span>
-                    <span class="crm-files-amenity{% if property.has_storage %} is-on{% else %} is-off{% endif %}" title="انباری: {% if property.has_storage %}دارد{% else %}ندارد{% endif %}">
+                    <span class="crm-files-amenity{% if property.has_storage %} is-on{% else %} is-off{% endif %}"
+                          data-tip="انباری: {% if property.has_storage %}دارد{% else %}ندارد{% endif %}"
+                          aria-label="انباری: {% if property.has_storage %}دارد{% else %}ندارد{% endif %}"
+                          tabindex="0">
                         <i class="fas fa-box-archive" aria-hidden="true"></i>
                     </span>
-                    <span class="crm-files-amenity{% if property.has_elevator %} is-on{% else %} is-off{% endif %}" title="آسانسور: {% if property.has_elevator %}دارد{% else %}ندارد{% endif %}">
+                    <span class="crm-files-amenity{% if property.has_elevator %} is-on{% else %} is-off{% endif %}"
+                          data-tip="آسانسور: {% if property.has_elevator %}دارد{% else %}ندارد{% endif %}"
+                          aria-label="آسانسور: {% if property.has_elevator %}دارد{% else %}ندارد{% endif %}"
+                          tabindex="0">
                         <i class="fas fa-elevator" aria-hidden="true"></i>
                     </span>
                 </div>
@@ -593,6 +609,109 @@
             {% endif %}
         </aside>
     </div>
+
+    {% if property_map_locked %}
+    <section class="crm-prop-map-finale crm-prop-map-finale--locked" aria-label="نقشه موقعیت ملک">
+        <div class="crm-prop-map-locked">
+            <div class="crm-prop-map-locked-icon"><i class="fas fa-map-location-dot" aria-hidden="true"></i></div>
+            <h2>موقعیت دقیق محرمانه است</h2>
+            <p>در ارسال محرمانه، مختصات و نقشه دقیق ملک نمایش داده نمی‌شود.</p>
+            {% if property_location_display %}
+            <span class="crm-prop-map-locked-place"><i class="fas fa-location-dot" aria-hidden="true"></i>{{ property_location_display }}</span>
+            {% endif %}
+        </div>
+    </section>
+    {% elif show_property_map %}
+    <section class="crm-prop-map-finale{% if not property_map_has_coords %} is-empty-map{% endif %}" id="crmPropMapFinale" aria-label="نقشه موقعیت ملک">
+        <div class="crm-prop-map-finale-intro">
+            <div class="crm-prop-map-finale-intro-inner">
+                <span class="crm-prop-map-finale-kicker">
+                    <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                    موقعیت روی نقشه
+                </span>
+                <h2 class="crm-prop-map-finale-title">کجا قرار دارد؟</h2>
+                {% if property_location_display %}
+                <p class="crm-prop-map-finale-place">
+                    <i class="fas fa-location-dot" aria-hidden="true"></i>
+                    {{ property_location_display }}
+                </p>
+                {% endif %}
+                {% if location_accuracy.label %}
+                <span class="crm-prop-map-finale-accuracy crm-prop-map-finale-accuracy--{{ location_accuracy.kind|default:'exact' }}">
+                    {{ location_accuracy.label }}
+                </span>
+                {% endif %}
+                <span class="crm-prop-map-finale-coords" data-map-coords {% if not property_map_has_coords %}hidden{% endif %}>
+                    {% if property_map_has_coords %}{{ property.latitude|floatformat:6 }} ، {{ property.longitude|floatformat:6 }}{% endif %}
+                </span>
+                <div class="crm-prop-map-finale-actions" data-map-nav-actions {% if not map_navigation %}hidden{% endif %}>
+                    <a href="{% if map_navigation %}{{ map_navigation.google_url }}{% else %}#{% endif %}"
+                       class="crm-prop-map-finale-btn crm-prop-map-finale-btn--primary"
+                       data-map-nav="google" target="_blank" rel="noopener noreferrer"
+                       {% if not map_navigation %}hidden{% endif %}>
+                        <i class="fas fa-diamond-turn-right" aria-hidden="true"></i>
+                        مسیریابی گوگل
+                    </a>
+                    <a href="{% if map_navigation %}{{ map_navigation.neshan_url }}{% else %}#{% endif %}"
+                       class="crm-prop-map-finale-btn"
+                       data-map-nav="neshan" target="_blank" rel="noopener noreferrer"
+                       {% if not map_navigation %}hidden{% endif %}>
+                        <i class="fas fa-map" aria-hidden="true"></i>
+                        نشان
+                    </a>
+                    <a href="{% if map_navigation %}{{ map_navigation.waze_url }}{% else %}#{% endif %}"
+                       class="crm-prop-map-finale-btn"
+                       data-map-nav="waze" target="_blank" rel="noopener noreferrer"
+                       {% if not map_navigation %}hidden{% endif %}>
+                        <i class="fas fa-car" aria-hidden="true"></i>
+                        ویز
+                    </a>
+                </div>
+                {% if can_edit_map_location %}
+                <p class="crm-prop-map-finale-edit-tip">
+                    <i class="fas fa-hand-pointer" aria-hidden="true"></i>
+                    برای تغییر موقعیت، پین را بکشید یا روی نقشه کلیک کنید
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="crm-prop-map-finale-canvas">
+            {% if can_edit_map_location and not property_map_has_coords %}
+            <div class="crm-prop-map-empty-hint" data-map-empty-hint>
+                <i class="fas fa-crosshairs" aria-hidden="true"></i>
+                <strong>موقعیت ثبت نشده</strong>
+                <span>روی نقشه کلیک کنید تا پین ملک را بگذارید</span>
+            </div>
+            {% endif %}
+            {% include 'workspace/includes/listing_location_map.html' with map_prefix='crmProp' map_id='crmPropLocationMap' map_stage_id='crmPropLocationMapStage' map_wrap_id='crmPropLocationMapPanel' map_navigation=None location_accuracy=None %}
+            {% if can_edit_map_location %}
+            <div class="crm-prop-map-edit-dock" data-map-edit-dock hidden>
+                <div class="crm-prop-map-edit-dock-main">
+                    <span class="crm-prop-map-edit-dock-ico" aria-hidden="true"><i class="fas fa-location-crosshairs"></i></span>
+                    <div class="crm-prop-map-edit-dock-text">
+                        <strong data-map-edit-hint>موقعیت جابه‌جا شد</strong>
+                        <span data-map-edit-coords dir="ltr">—</span>
+                    </div>
+                </div>
+                <div class="crm-prop-map-edit-dock-acts">
+                    <button type="button" class="crm-prop-map-edit-btn crm-prop-map-edit-btn--ghost" data-map-edit-cancel>انصراف</button>
+                    <button type="button" class="crm-prop-map-edit-btn crm-prop-map-edit-btn--primary" data-map-edit-confirm>
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                        تأیید و ذخیره
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+    {% elif not property_map_has_coords and not can_edit_map_location %}
+    <section class="crm-prop-map-finale crm-prop-map-finale--empty" aria-label="نقشه موقعیت ملک">
+        <div class="crm-prop-map-empty-card">
+            <i class="fas fa-map" aria-hidden="true"></i>
+            <p>موقعیت جغرافیایی برای این فایل ثبت نشده است.</p>
+        </div>
+    </section>
+    {% endif %}
 </div>
 {% endif %}
 {% endblock %}
@@ -661,6 +780,33 @@ document.addEventListener('DOMContentLoaded', function () {
         var shareBtn = document.querySelector('[data-modal-open="modal-property-share"]');
         if (shareBtn) shareBtn.click();
     }
+});
+</script>
+{% endif %}
+{% if show_property_map and listing_map_marker %}
+{{ listing_map_marker|json_script:"crm-prop-map-marker" }}
+{% if default_map_center %}{{ default_map_center|json_script:"crm-prop-map-center" }}{% endif %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'workspace/js/listing-map.js' %}?v=5"></script>
+<script src="{% static 'workspace/js/crm-property-map.js' %}?v=1"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var markerEl = document.getElementById('crm-prop-map-marker');
+    var centerEl = document.getElementById('crm-prop-map-center');
+    var marker = markerEl ? JSON.parse(markerEl.textContent) : {};
+    var defaultCenter = centerEl ? JSON.parse(centerEl.textContent) : { lat: 35.6892, lng: 51.3890, zoom: 11 };
+    initCrmPropertyMap({
+        rootId: 'crmPropMapFinale',
+        uiPrefix: 'crmProp',
+        mapId: 'crmPropLocationMap',
+        stageId: 'crmPropLocationMapStage',
+        marker: marker,
+        editable: {{ can_edit_map_location|yesno:"true,false" }},
+        saveUrl: {% if property_location_url %}"{{ property_location_url }}"{% else %}null{% endif %},
+        defaultCenter: defaultCenter,
+        zoom: 16,
+    });
 });
 </script>
 {% endif %}

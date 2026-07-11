@@ -1160,6 +1160,14 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['document_form'] = CustomerDocumentForm()
             ctx['open_drawer'] = ''
             ctx['crm_section'] = 'properties'
+            ctx['show_property_map'] = False
+            ctx['property_map_locked'] = False
+            ctx['can_edit_map_location'] = False
+            ctx['listing_map_marker'] = None
+            ctx['map_navigation'] = None
+            ctx['location_accuracy'] = None
+            ctx['property_map_has_coords'] = False
+            ctx['default_map_center'] = None
             return ctx
         ctx['contact_links'] = p.contact_links.select_related('customer').all()
         ctx['activities'] = CustomerActivity.objects.filter(property=p).select_related('customer')[:30]
@@ -1221,6 +1229,36 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['consultant_name'] = profile['consultant_name']
             ctx['consultant_phone'] = profile['consultant_phone']
             ctx['share_profile'] = profile
+
+        # نقشه موقعیت — انتهای صفحه جزئیات
+        mask = bool(ctx.get('mask_sensitive'))
+        can_edit_map = bool(ctx.get('can_edit_property')) and not mask
+        ctx['can_edit_map_location'] = can_edit_map
+        if mask:
+            ctx['show_property_map'] = False
+            ctx['property_map_locked'] = True
+            ctx['listing_map_marker'] = None
+            ctx['map_navigation'] = None
+            ctx['location_accuracy'] = None
+            ctx['property_map_has_coords'] = False
+            ctx['default_map_center'] = None
+        else:
+            from workspace.services.listing_map import build_crm_property_map_context
+            platform_url = reverse(
+                'workspace:crm_property_detail', kwargs={'property_id': p.pk},
+            )
+            map_ctx = build_crm_property_map_context(p, platform_url=platform_url)
+            ctx['property_map_locked'] = False
+            ctx['property_map_has_coords'] = map_ctx['has_coords']
+            ctx['show_property_map'] = map_ctx['has_coords'] or can_edit_map
+            ctx['listing_map_marker'] = map_ctx['listing_map_marker']
+            ctx['map_navigation'] = map_ctx['map_navigation']
+            ctx['location_accuracy'] = map_ctx['location_accuracy']
+            ctx['default_map_center'] = map_ctx['default_map_center']
+            if can_edit_map:
+                ctx['property_location_url'] = reverse(
+                    'workspace:crm_property_location', kwargs={'property_id': p.pk},
+                )
         return ctx
 
     def _detail_redirect(self, property_id, *, tab='contacts', drawer=''):
@@ -1396,6 +1434,43 @@ class CRMPropertyImagesView(LoginRequiredMixin, View):
         prop.images = images
         prop.save(update_fields=['images', 'updated_at'])
         return JsonResponse({'ok': True, 'url': url, 'images': prop.images})
+
+
+class CRMPropertyLocationUpdateView(LoginRequiredMixin, View):
+    """ذخیره مختصات نقشه فایل شخصی از روی نقشه تعاملی."""
+
+    def post(self, request, property_id):
+        from workspace.services.listing_map import parse_map_coordinates
+        from workspace.services.public_share_common import build_map_navigation
+
+        prop = property_for_user(request.user, property_id)
+        if not prop or not can_edit_property(request.user, prop):
+            return JsonResponse({'ok': False, 'error': 'دسترسی ندارید.'}, status=403)
+
+        if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+            try:
+                payload = json.loads(request.body.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+            raw_lat = payload.get('latitude')
+            raw_lng = payload.get('longitude')
+        else:
+            raw_lat = request.POST.get('latitude')
+            raw_lng = request.POST.get('longitude')
+
+        lat, lng, error = parse_map_coordinates(raw_lat, raw_lng)
+        if error:
+            return JsonResponse({'ok': False, 'error': error}, status=400)
+
+        prop.latitude = lat
+        prop.longitude = lng
+        prop.save(update_fields=['latitude', 'longitude', 'updated_at'])
+        return JsonResponse({
+            'ok': True,
+            'latitude': lat,
+            'longitude': lng,
+            'map_navigation': build_map_navigation(lat, lng),
+        })
 
 
 class CRMPropertyDeleteView(LoginRequiredMixin, View):

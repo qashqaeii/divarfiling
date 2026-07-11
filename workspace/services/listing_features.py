@@ -9,6 +9,7 @@ from workspace.constants import (
     LISTING_FEATURE_COLUMNS,
     LISTING_FEATURE_COMBINED_KEYS,
     LISTING_FEATURE_GROUPS,
+    PROPERTY_BOOL_AMENITY_LABELS,
 )
 from workspace.services.features import (
     _NEGATIVE_EXACT,
@@ -21,8 +22,10 @@ from workspace.services.features import (
 )
 
 _CHIP_SPLIT = re.compile(r'\s*[،,|]\s*')
-_COMBINED_SPLIT = re.compile(r'\s*\|\s*')
+_COMBINED_SPLIT = re.compile(r'\s*[|؛;]\s*')
 _YEAR_ONLY_RE = re.compile(r'^(13|14|19|20)\d{2}$')
+# جداکنندهٔ چندامکانیتی داخل یک مقدار — «لابی، استخر، روف گاردن»
+_MULTI_AMENITY_SPLIT = re.compile(r'\s*[،,/]\s*')
 
 # کلیدهای متادیتا/مالی/مکان — نباید در پنل «ویژگی‌های ملک» نمایش داده شوند
 LISTING_METADATA_DATA_KEYS = frozenset({
@@ -197,7 +200,12 @@ def _parse_combined_features(text: str) -> Dict[str, str]:
     out: Dict[str, str] = {}
     if not text:
         return out
-    for part in _COMBINED_SPLIT.split(str(text).strip()):
+    # ابتدا با | / ؛ جدا کن؛ اگر جداکننده‌ای نبود، کل متن را یک قطعه بگیر
+    chunks = _COMBINED_SPLIT.split(str(text).strip())
+    if len(chunks) == 1 and ('،' in text or ',' in text):
+        # فرمت چیپ: «لابی، استخر، روف گاردن» یا «لابی دارد، استخر ندارد»
+        chunks = _MULTI_AMENITY_SPLIT.split(str(text).strip())
+    for part in chunks:
         piece = part.strip()
         if not piece:
             continue
@@ -206,6 +214,8 @@ def _parse_combined_features(text: str) -> Dict[str, str]:
             key, val = key.strip(), val.strip()
             if key and val:
                 out[key] = val
+                # انفجار مقدار چندچیپی: «امکانات: لابی، استخر»
+                _explode_chip_value_into(out, key, val)
             continue
         if piece.endswith(' ندارد'):
             out[piece[:-len(' ندارد')].strip()] = 'ندارد'
@@ -214,6 +224,41 @@ def _parse_combined_features(text: str) -> Dict[str, str]:
         else:
             out[piece] = 'دارد'
     return out
+
+
+def _explode_chip_value_into(raw: Dict[str, str], parent_key: str, value: str) -> None:
+    """اگر مقدار شامل چند برچسب بولین شناخته‌شده باشد، هر کدام را جدا ثبت کن."""
+    tokens = [t.strip() for t in _MULTI_AMENITY_SPLIT.split(value) if t and t.strip()]
+    if len(tokens) < 2:
+        return
+    known = PROPERTY_BOOL_AMENITY_LABELS
+    matched = []
+    for token in tokens:
+        label, state = token, 'دارد'
+        if token.endswith(' ندارد'):
+            label, state = token[:-len(' ندارد')].strip(), 'ندارد'
+        elif token.endswith(' دارد'):
+            label, state = token[:-len(' دارد')].strip(), 'دارد'
+        if label in known:
+            matched.append((label, state))
+    if len(matched) < 2:
+        return
+    for label, state in matched:
+        if label not in raw:
+            raw[label] = state
+    # کلید والدِ تجمیعی را حذف کن تا دوبار نمایش داده نشود
+    if parent_key not in known and parent_key in ('امکانات', 'ویژگی‌ها', 'سایر'):
+        raw.pop(parent_key, None)
+
+
+def _explode_multi_amenity_entries(raw: Dict[str, str]) -> None:
+    """انفجار مقادیر چندچیپی روی کلیدهای خام جمع‌آوری‌شده."""
+    for key, val in list(raw.items()):
+        if key in PROPERTY_BOOL_AMENITY_LABELS:
+            continue
+        if not val or ('،' not in val and ',' not in val and '/' not in val):
+            continue
+        _explode_chip_value_into(raw, key, val)
 
 
 def _collect_raw_features(data: dict) -> Dict[str, str]:
@@ -235,6 +280,7 @@ def _collect_raw_features(data: dict) -> Dict[str, str]:
         if text.startswith('{') or text.startswith('['):
             continue
         _store_feature(raw, str(key), val)
+    _explode_multi_amenity_entries(raw)
     return raw
 
 
@@ -282,6 +328,7 @@ def _icon_for_key(key: str) -> str:
         'درب ضدسرقت': 'fa-shield-halved',
         'نگهبانی': 'fa-user-shield',
         'سرایداری': 'fa-bell-concierge',
+        'آنتن مرکزی': 'fa-satellite-dish',
         # سکونت
         'مناسب برای': 'fa-user-group',
         'حداقل مدت قرارداد': 'fa-file-signature',
@@ -352,6 +399,12 @@ def _icon_for_key(key: str) -> str:
         ('کابینت', 'fa-cubes'),
         ('لابی', 'fa-hotel'),
         ('نگهبان', 'fa-user-shield'),
+        ('آنتن', 'fa-satellite-dish'),
+        ('آیفون', 'fa-video'),
+        ('ضدسرقت', 'fa-shield-halved'),
+        ('روف', 'fa-seedling'),
+        ('ورزش', 'fa-dumbbell'),
+        ('سرایدار', 'fa-bell-concierge'),
         ('حیوان', 'fa-paw'),
         ('متراژ', 'fa-ruler-combined'),
         ('قیمت', 'fa-tags'),
@@ -404,6 +457,7 @@ _FEATURE_EMOJIS = {
     'درب ضدسرقت': '🔒',
     'نگهبانی': '🛡️',
     'سرایداری': '🛎️',
+    'آنتن مرکزی': '📡',
     'مناسب برای': '👨‍👩‍👧',
     'حداقل مدت قرارداد': '📝',
     'وضعیت سکونت': '🔑',
@@ -436,6 +490,7 @@ def emoji_for_key(key: str) -> str:
         ('کابینت', '🗄️'),
         ('لابی', '🛋️'),
         ('نگهبان', '🛡️'),
+        ('آنتن', '📡'),
         ('حیوان', '🐾'),
         ('حمام', '🚿'),
         ('سرویس', '🚻'),

@@ -376,3 +376,125 @@ class PropertyDistrictAndPriceFormTests(TestCase):
         self.assertEqual(created.deal_mode, 'رهن و اجاره')
         self.assertEqual(created.deposit, 500_000_000)
         self.assertEqual(created.monthly_rent, 25_000_000)
+
+
+class AmenityCategoryCoverageTests(TestCase):
+    """پوشش امکانات در همه دسته‌ها، چیپ ترکیبی، و ادغام آگهی→پرونده."""
+
+    def setUp(self):
+        from workspace.models import Dataset, Listing
+
+        self.user = User.objects.create_user(
+            username='09125556677',
+            phone='09125556677',
+            password='testpass123',
+        )
+        self.dataset = Dataset.objects.create(
+            user=self.user,
+            name='پوشش امکانات',
+            original_filename='فروش_آپارتمان.xlsx',
+            file_format='xlsx',
+            city='تهران',
+            district='منطقه ۱',
+        )
+        self.listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='tokcover1',
+            title='پوشش کامل امکانات',
+            city='تهران',
+            neighborhood='فرمانیه',
+            price=20_000_000_000,
+            area=150,
+            data={
+                'آسانسور': 'ندارد',
+                'پارکینگ': 'ندارد',
+                'انباری': 'ندارد',
+                'ویژگی‌ها و امکانات': 'لابی دارد | استخر دارد | روف گاردن دارد | آیفون تصویری',
+                'جنس کف': 'سرامیک',
+                'سرمایش': 'اسپیلت',
+                'گرمایش': 'پکیج',
+                'بالکن': 'دارد',
+                'جکوزی': 'دارد',
+                'سونا': 'ندارد',
+                'حیوان خانگی مجاز': 'خیر',
+                'تعداد پارکینگ': '۲',
+                'تعداد واحد در طبقه': '۴',
+                'جهت ساختمان': 'شمالی',
+                'امکانات': 'نگهبانی، سرایداری، آنتن مرکزی',
+            },
+        )
+        self.prop = CRMProperty.objects.create(
+            user=self.user,
+            title='پوشش کامل امکانات',
+            deal_mode='فروش',
+            property_type='آپارتمان',
+            token='tokcover1',
+            amenities='',
+            has_parking=False,
+            has_storage=False,
+            has_elevator=False,
+        )
+
+    def test_combined_and_chip_amenities_in_extract_features(self):
+        from workspace.services.features import extract_listing_features
+
+        feat = extract_listing_features(self.listing)
+        self.assertTrue(feat['lobby'])
+        self.assertTrue(feat['pool'])
+        self.assertTrue(feat['roof_garden'])
+        self.assertTrue(feat['balcony'])
+        self.assertTrue(feat['jacuzzi'])
+        self.assertIn('لابی', feat['amenities'])
+        self.assertIn('استخر', feat['amenities'])
+
+    def test_listing_profile_covers_all_feature_groups(self):
+        from workspace.services.features import extract_listing_features
+        from workspace.services.listing_features import build_listing_feature_profile
+
+        profile = build_listing_feature_profile(
+            self.listing, extract_listing_features(self.listing),
+        )
+        group_ids = {g['id'] for g in profile['groups']}
+        self.assertIn('comfort', group_ids)
+        self.assertIn('luxury', group_ids)
+        self.assertIn('lifestyle', group_ids)
+        self.assertIn('counts', group_ids)
+        self.assertIn('building', group_ids)
+        by_label = {
+            item['label']: item
+            for group in profile['groups']
+            for item in group['items']
+        }
+        self.assertEqual(by_label['جنس کف']['value'], 'سرامیک')
+        self.assertEqual(by_label['سرمایش']['value'], 'اسپیلت')
+        self.assertEqual(by_label['تعداد پارکینگ']['value'], '۲')
+        self.assertEqual(by_label['لابی']['state'], 'yes')
+        self.assertEqual(by_label['استخر']['state'], 'yes')
+        self.assertEqual(by_label['نگهبانی']['state'], 'yes')
+        self.assertEqual(by_label['آنتن مرکزی']['icon'], 'fa-satellite-dish')
+        self.assertEqual(by_label['جکوزی']['icon'], 'fa-hot-tub-person')
+
+    def test_dossier_merges_listing_when_amenities_empty(self):
+        from workspace.services.property_public_share import build_property_amenity_dossier_items
+
+        dossier = build_property_amenity_dossier_items(self.prop)
+        by_d = {i['label']: i for i in dossier}
+        self.assertIn('پارکینگ', by_d)
+        self.assertEqual(by_d['پارکینگ']['state'], 'no')
+        self.assertEqual(by_d['لابی']['state'], 'yes')
+        self.assertEqual(by_d['استخر']['tip'], 'استخر: دارد')
+        self.assertEqual(by_d['جنس کف']['value'], 'سرامیک')
+        self.assertEqual(by_d['سرمایش']['value'], 'اسپیلت')
+        self.assertEqual(by_d['تعداد پارکینگ']['value'], '۲')
+        self.assertEqual(by_d['نگهبانی']['icon'], 'fa-user-shield')
+        self.assertEqual(by_d['روف گاردن']['icon'], 'fa-seedling')
+
+    def test_comma_chip_list_explodes(self):
+        from workspace.services.listing_features import _collect_raw_features
+
+        raw = _collect_raw_features({
+            'امکانات': 'لابی، استخر، روف گاردن',
+        })
+        self.assertEqual(raw.get('لابی'), 'دارد')
+        self.assertEqual(raw.get('استخر'), 'دارد')
+        self.assertEqual(raw.get('روف گاردن'), 'دارد')

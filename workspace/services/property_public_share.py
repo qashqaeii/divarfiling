@@ -227,7 +227,8 @@ def property_amenity_checkbox_choices() -> List[tuple[str, str]]:
 
 
 def property_amenity_checkbox_labels() -> frozenset[str]:
-    return frozenset(label for label, _ in property_amenity_checkbox_choices())
+    from workspace.constants import PROPERTY_BOOL_AMENITY_LABELS
+    return PROPERTY_BOOL_AMENITY_LABELS
 
 
 def property_amenity_checkbox_order() -> List[str]:
@@ -307,10 +308,15 @@ def serialize_amenity_checkboxes(
     return '، '.join(parts)
 
 
-def build_property_amenity_dossier_items(prop: CRMProperty) -> List[Dict[str, Any]]:
+def build_property_amenity_dossier_items(
+    prop: CRMProperty,
+    *,
+    user=None,
+    listing=None,
+) -> List[Dict[str, Any]]:
     """
-    آیتم‌های امکانات برای باکس پرونده و نوار hero —
-    سه امکان اصلی همیشه + سایر امکانات پارس‌شده از متن.
+    آیتم‌های امکانات برای باکس پرونده، نوار hero و کارت لیست —
+    امکانات اصلی + متن CRM + تمام گروه‌های ویژگی آگهی لینک‌شده (در صورت وجود).
     """
     items: List[Dict[str, Any]] = []
     seen: set[str] = set()
@@ -355,6 +361,30 @@ def build_property_amenity_dossier_items(prop: CRMProperty) -> List[Dict[str, An
             str(extra.get('value') or ''),
             str(extra.get('state') or 'neutral'),
         )
+
+    # ادغام ویژگی‌های تفصیلی آگهی دیوار — همه دسته‌ها و زیردسته‌ها
+    source = listing
+    if source is None:
+        owner = user or getattr(prop, 'user', None)
+        if owner is not None:
+            source = resolve_listing_for_property(owner, prop)
+    if source is not None:
+        try:
+            feat = extract_listing_features(source)
+            profile = build_listing_feature_profile(source, feat)
+        except Exception:
+            profile = None
+        if profile:
+            for group in profile.get('groups') or []:
+                for item in group.get('items') or []:
+                    key = str(item.get('label') or item.get('key') or '').strip()
+                    if not key or key in _CORE_AMENITY_KEYS:
+                        continue
+                    _add(
+                        key,
+                        str(item.get('value') or ''),
+                        str(item.get('state') or 'neutral'),
+                    )
 
     return items
 

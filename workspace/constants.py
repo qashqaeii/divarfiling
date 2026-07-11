@@ -200,6 +200,13 @@ PROPERTY_AMENITY_CHECKBOX_GROUPS = (
     },
 )
 
+# برچسب‌های بولین شناخته‌شده (چک‌باکس CRM + چیپ‌های دیوار)
+PROPERTY_BOOL_AMENITY_LABELS = frozenset(
+    label
+    for group in PROPERTY_AMENITY_CHECKBOX_GROUPS
+    for label, _icon in group['items']
+)
+
 BUILDER_BUY_PROPERTY_TYPES = ['ویلا', 'کلنگی', 'زمین']
 BUILDER_SELL_PROPERTY_TYPES = ['آپارتمان']
 

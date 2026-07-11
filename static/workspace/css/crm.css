@@ -7875,11 +7875,20 @@ select.crm-files-adv-control {
     position: relative;
     z-index: 3;
     max-width: 100%;
+    overflow: visible;
+}
+/* بالاتر از لایه کلیک کارت تا hover و tooltip کار کند */
+.crm-files-card > .crm-files-card-amenities {
+    z-index: 3;
+    pointer-events: none;
+    overflow: visible;
 }
 .crm-files-card .crm-files-amenity {
     pointer-events: auto;
     cursor: help;
     flex-shrink: 0;
+    position: relative;
+    z-index: 4;
 }
 .crm-files-card .crm-files-amenity.is-extra.is-on {
     color: #b45309;
@@ -7888,12 +7897,26 @@ select.crm-files-adv-control {
     white-space: normal;
     max-width: min(70vw, 210px);
     text-align: center;
-    z-index: 40;
+    z-index: 50;
+    /* زیر آیکن تا کمتر توسط لبه کارت بریده شود */
+    bottom: auto;
+    top: calc(100% + 6px);
+    transform: translateX(50%) translateY(-3px);
+}
+.crm-files-card .crm-files-amenity[data-tip]:hover::after,
+.crm-files-card .crm-files-amenity[data-tip]:focus-visible::after {
+    transform: translateX(50%) translateY(0);
 }
 .crm-files-card:has(.crm-files-amenity:hover),
 .crm-files-card:has(.crm-files-amenity:focus-visible) {
     overflow: visible;
-    z-index: 6;
+    z-index: 12;
+}
+.crm-files-grid-v2:has(.crm-files-amenity:hover),
+.crm-files-grid-v2:has(.crm-files-amenity:focus-visible) {
+    overflow: visible;
+    position: relative;
+    z-index: 5;
 }
 .crm-files-amenity {
     position: relative;

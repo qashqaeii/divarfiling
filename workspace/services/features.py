@@ -201,17 +201,35 @@ def extract_listing_features(listing) -> Dict[str, Any]:
     jacuzzi = parse_bool_feature(_get_from_data(data, FEATURE_KEYS['jacuzzi']))
     gym = parse_bool_feature(_get_from_data(data, FEATURE_KEYS['gym']))
 
-    if any(x is None for x in (elevator, parking, storage)):
-        from workspace.services.listing_features import _collect_raw_features
-        raw = _collect_raw_features(data)
-        if elevator is None:
-            elevator = parse_bool_feature(raw.get('آسانسور'))
+    # همیشه از فیلد ترکیبی / ستون‌های خام دیوار بک‌فیل کن
+    from workspace.services.listing_features import _collect_raw_features
+    raw = _collect_raw_features(data)
+    if elevator is None:
+        elevator = parse_bool_feature(raw.get('آسانسور'))
+    if parking is None:
+        parking = parse_bool_feature(raw.get('پارکینگ'))
         if parking is None:
-            parking = parse_bool_feature(raw.get('پارکینگ'))
-        if storage is None:
-            storage = parse_bool_feature(raw.get('انباری'))
-        if balcony is None:
-            balcony = parse_bool_feature(raw.get('بالکن'))
+            park_count = raw.get('تعداد پارکینگ')
+            if park_count and str(park_count).strip() not in ('0', '۰', '-', '—'):
+                try:
+                    if float(str(park_count).translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789'))) > 0:
+                        parking = True
+                except (TypeError, ValueError):
+                    parking = True
+    if storage is None:
+        storage = parse_bool_feature(raw.get('انباری'))
+    if balcony is None:
+        balcony = parse_bool_feature(raw.get('بالکن')) or parse_bool_feature(raw.get('تراس'))
+    if lobby is None:
+        lobby = parse_bool_feature(raw.get('لابی'))
+    if pool is None:
+        pool = parse_bool_feature(raw.get('استخر'))
+    if roof_garden is None:
+        roof_garden = parse_bool_feature(raw.get('روف گاردن'))
+    if jacuzzi is None:
+        jacuzzi = parse_bool_feature(raw.get('جکوزی'))
+    if gym is None:
+        gym = parse_bool_feature(raw.get('سالن ورزش'))
 
     from workspace.services.listing_features import feature_highlights_for_listing
     from workspace.services.advertiser_signal import listing_advertiser_display

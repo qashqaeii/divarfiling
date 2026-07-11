@@ -949,10 +949,11 @@ html.mk-public:not([data-theme="light"]) .mk-dashboard-page .dash-hero-btn--ghos
     border-radius: 10px;
     border: 1px solid var(--mk-border);
     background: var(--mk-card);
-    color: var(--mk-text);
+    color: var(--mk-text) !important;
     font-family: inherit;
     font-size: 0.76rem;
     transition: border-color 0.15s, box-shadow 0.15s;
+    text-shadow: none !important;
 }
 
 .mk-dashboard-page .form-control:focus,
@@ -960,6 +961,65 @@ html.mk-public:not([data-theme="light"]) .mk-dashboard-page .dash-hero-btn--ghos
     outline: none;
     border-color: rgba(124, 58, 237, 0.45);
     box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    color: var(--mk-text) !important;
+}
+
+.mk-dashboard-page .form-control::placeholder,
+.mk-dashboard-page .modal-input::placeholder {
+    color: var(--mk-text-muted) !important;
+    text-shadow: none !important;
+    opacity: 1;
+}
+
+.mk-dashboard-page .form-group label,
+.mk-dashboard-page .form-label {
+    color: var(--mk-text-secondary) !important;
+}
+
+.mk-dashboard-page .dash-field-row dt {
+    color: var(--mk-text-muted) !important;
+}
+
+.mk-dashboard-page .dash-field-row dd,
+.mk-dashboard-page .dash-social-meta strong,
+.mk-dashboard-page .section-title,
+.mk-dashboard-page .tab-content-title {
+    color: var(--mk-text) !important;
+}
+
+.mk-dashboard-page .dash-social-meta small,
+.mk-dashboard-page .dash-profile-panel-sub,
+.mk-dashboard-page .dash-field-hint,
+.mk-dashboard-page .dash-profile-tab-lead,
+.mk-dashboard-page .empty-text {
+    color: var(--mk-text-muted) !important;
+}
+
+/* مودال‌های پروفایل داشبورد — تضمین خوانایی در تم روشن */
+html.mk-public[data-theme="light"] .modal-professional .modal-title-professional,
+html.mk-public[data-theme="light"] .modal-professional .modal-body-professional,
+html.mk-public[data-theme="light"] .modal-professional .form-label,
+html.mk-public[data-theme="light"] .modal-professional label {
+    color: #0F172A !important;
+}
+
+html.mk-public[data-theme="light"] .modal-professional .form-label,
+html.mk-public[data-theme="light"] .modal-professional label {
+    color: #475569 !important;
+}
+
+html.mk-public[data-theme="light"] .modal-professional .modal-input,
+html.mk-public[data-theme="light"] .modal-professional .form-control,
+html.mk-public[data-theme="light"] .modal-professional input,
+html.mk-public[data-theme="light"] .modal-professional textarea {
+    color: #0F172A !important;
+    background: #F8FAFC !important;
+    border-color: #CBD5E1 !important;
+    text-shadow: none !important;
+}
+
+html.mk-public[data-theme="light"] .modal-professional .modal-close-btn {
+    color: #64748B !important;
 }
 
 .mk-dashboard-page .form-control:disabled {

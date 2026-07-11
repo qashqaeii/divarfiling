@@ -1675,10 +1675,28 @@ function wsEscapeHtml(value) {
         .replace(/"/g, '&quot;');
 }
 
+function mapSellerKind(m) {
+    const sig = String(m.advertiser_signal || '');
+    const label = String(m.seller_type || '');
+    if (sig === 'disguised_consultant' || m.is_disguised || label === 'مشاور پنهان') return 'disguised';
+    if (sig === 'consultant' || m.is_consultant || label === 'مشاور') return 'consultant';
+    if (sig === 'genuine_personal' || label === 'مالک واقعی' || label === 'مالک') return 'genuine';
+    return 'personal';
+}
+
+function mapSellerLabel(m) {
+    if (m.seller_type) return m.seller_type;
+    const kind = mapSellerKind(m);
+    if (kind === 'disguised') return 'مشاور پنهان';
+    if (kind === 'consultant') return 'مشاور';
+    if (kind === 'genuine') return 'مالک واقعی';
+    return 'شخصی';
+}
+
 function buildMapMarkerPopup(m) {
     const priceLine = m.price_label || (m.price ? Number(m.price).toLocaleString('fa-IR') : '—');
-    const sellerClass = m.is_consultant ? 'consultant' : 'personal';
-    const sellerLabel = m.seller_type || (m.is_consultant ? 'مشاور' : 'شخصی');
+    const sellerClass = mapSellerKind(m);
+    const sellerLabel = mapSellerLabel(m);
     const locParts = [m.city, m.neighborhood].filter(Boolean);
     const locLine = locParts.length ? locParts.join(' · ') : '';
 
@@ -2487,7 +2505,7 @@ function initMap(allMarkers, settings) {
         if (mode === 'market') {
             const tier = m.market_tier || 'unknown';
             pinClass = `mk-map-pin mk-map-pin--market mk-map-pin--${tier}`;
-            if (m.is_consultant) pinClass += ' mk-map-pin--consultant-ring';
+            if (m.is_consultant || m.is_disguised) pinClass += ' mk-map-pin--consultant-ring';
         } else if (mode === 'value') {
             const tier = m._valueTier ?? 0;
             const bg = valueTierColor(tier);
@@ -2508,7 +2526,7 @@ function initMap(allMarkers, settings) {
                 iconAnchor: [9, 9],
             });
         } else {
-            pinClass += ` mk-map-pin--${m.is_consultant ? 'consultant' : 'personal'}`;
+            pinClass += ` mk-map-pin--${mapSellerKind(m)}`;
         }
         if (selected) pinClass += ' mk-map-pin--selected';
 
@@ -3128,7 +3146,8 @@ function initMap(allMarkers, settings) {
         return `<div class="mk-map-legend-items">
             ${ringHint}
             <span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--consultant" aria-hidden="true"></i>مشاور</span>
-            <span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--personal" aria-hidden="true"></i>شخصی</span>
+            <span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--disguised" aria-hidden="true"></i>مشاور پنهان</span>
+            <span class="mk-map-legend-item"><i class="mk-map-legend-dot mk-map-legend-dot--personal" aria-hidden="true"></i>شخصی / مالک</span>
             <span class="mk-map-legend-hint">کلیک برای جزئیات</span>
         </div>`;
     }

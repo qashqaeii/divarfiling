@@ -148,10 +148,28 @@
         );
     }
 
+    function mapSellerKind(m) {
+        const sig = String(m.advertiser_signal || '');
+        const label = String(m.seller_type || '');
+        if (sig === 'disguised_consultant' || m.is_disguised || label === 'مشاور پنهان') return 'disguised';
+        if (sig === 'consultant' || m.is_consultant || label === 'مشاور') return 'consultant';
+        if (sig === 'genuine_personal' || label === 'مالک واقعی' || label === 'مالک') return 'genuine';
+        return 'personal';
+    }
+
+    function mapSellerLabel(m) {
+        if (m.seller_type) return m.seller_type;
+        const kind = mapSellerKind(m);
+        if (kind === 'disguised') return 'مشاور پنهان';
+        if (kind === 'consultant') return 'مشاور';
+        if (kind === 'genuine') return 'مالک واقعی';
+        return 'شخصی';
+    }
+
     function buildMapMarkerPopup(m) {
         const priceLine = m.price_label || (m.price ? Number(m.price).toLocaleString('fa-IR') : '—');
-        const sellerClass = m.is_consultant ? 'consultant' : 'personal';
-        const sellerLabel = m.seller_type || (m.is_consultant ? 'مشاور' : 'شخصی');
+        const sellerClass = mapSellerKind(m);
+        const sellerLabel = mapSellerLabel(m);
         const locParts = [m.city, m.neighborhood].filter(Boolean);
         const locLine = locParts.length ? locParts.join(' · ') : '';
 

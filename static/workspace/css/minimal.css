@@ -1599,6 +1599,8 @@ body.ws-body::before { opacity: 0.45; }
 }
 .mk-map-pin--consultant { background: linear-gradient(145deg, #60a5fa, #2563eb); }
 .mk-map-pin--personal { background: linear-gradient(145deg, #fb7185, #e11d48); }
+.mk-map-pin--genuine { background: linear-gradient(145deg, #34d399, #059669); }
+.mk-map-pin--disguised { background: linear-gradient(145deg, #fb7185, #be123c); box-shadow: 0 0 0 2px rgba(190, 18, 60, 0.35); }
 .mk-map-pin--market.mk-map-pin--under { background: linear-gradient(145deg, #34d399, #059669); }
 .mk-map-pin--market.mk-map-pin--fair { background: linear-gradient(145deg, #818cf8, #6366f1); }
 .mk-map-pin--market.mk-map-pin--over { background: linear-gradient(145deg, #f87171, #dc2626); }
@@ -1676,6 +1678,8 @@ body.ws-body::before { opacity: 0.45; }
     overflow: hidden;
 }
 .mk-map-popup--consultant { --mk-popup-accent: #2563eb; }
+.mk-map-popup--disguised { --mk-popup-accent: #be123c; }
+.mk-map-popup--genuine { --mk-popup-accent: #059669; }
 .mk-map-popup--personal { --mk-popup-accent: #e11d48; }
 
 .mk-map-popup-media {
@@ -1734,6 +1738,16 @@ body.ws-body::before { opacity: 0.45; }
     background: rgba(37, 99, 235, 0.1);
     color: #2563eb;
     border: 1px solid rgba(37, 99, 235, 0.18);
+}
+.mk-map-popup-badge--disguised {
+    background: rgba(190, 18, 60, 0.12);
+    color: #be123c;
+    border: 1px solid rgba(190, 18, 60, 0.22);
+}
+.mk-map-popup-badge--genuine {
+    background: rgba(5, 150, 105, 0.1);
+    color: #059669;
+    border: 1px solid rgba(5, 150, 105, 0.2);
 }
 .mk-map-popup-badge--personal {
     background: rgba(225, 29, 72, 0.1);

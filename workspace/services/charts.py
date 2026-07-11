@@ -559,6 +559,16 @@ def map_markers(
         rent_label = listing_map_rent_label(lst)
 
         is_consultant = 'مشاور' in (lst.business_type or '')
+        from workspace.services.advertiser_signal import (
+            ADVERTISER_SIGNAL_CONSULTANT,
+            ADVERTISER_SIGNAL_DISGUISED,
+            listing_advertiser_display,
+        )
+        adv = listing_advertiser_display(lst)
+        signal = adv.get('signal') or ''
+        seller_type = adv.get('label') or ('مشاور' if is_consultant else 'شخصی')
+        is_consultant = signal == ADVERTISER_SIGNAL_CONSULTANT
+        is_disguised = signal == ADVERTISER_SIGNAL_DISGUISED
         platform_url = ''
         if dataset_id and lst.pk:
             platform_url = reverse(
@@ -602,7 +612,8 @@ def map_markers(
             'neighborhood': lst.neighborhood or '',
             'city': lst.city or '',
             'business_type': lst.business_type or '',
-            'seller_type': 'مشاور' if is_consultant else 'شخصی',
+            'seller_type': seller_type,
+            'advertiser_signal': signal,
             'published': to_jalali_display(lst.published_at) if lst.published_at else '',
             'published_ts': published_ts,
             'token': lst.token,
@@ -611,6 +622,7 @@ def map_markers(
             'thumb': (lst.images[0] if lst.images else '') or '',
             'phone': lst.data.get('شماره تماس', lst.data.get('phone', '')),
             'is_consultant': is_consultant,
+            'is_disguised': is_disguised,
             'location_label': loc_acc.get('label', ''),
             'location_kind': loc_acc.get('kind', ''),
             'location_radius_m': int(loc_acc.get('radius_m') or 0),

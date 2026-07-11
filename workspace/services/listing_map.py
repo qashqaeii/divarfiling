@@ -50,13 +50,31 @@ def build_listing_map_marker(
     public: bool = False,
 ) -> Dict[str, Any]:
     """ساخت payload مارکر برای popup و نقشه جزئیات ملک."""
+    from workspace.services.advertiser_signal import (
+        ADVERTISER_SIGNAL_CONSULTANT,
+        ADVERTISER_SIGNAL_DISGUISED,
+        listing_advertiser_display,
+    )
+
     feat = feat or {}
     raw_data = data if data is not None else (getattr(listing, 'data', None) or {})
     loc_acc = location_accuracy if location_accuracy is not None else location_accuracy_for_map(raw_data)
 
-    is_consultant = 'مشاور' in (listing.business_type or '')
-    if not is_consultant and feat.get('advertiser_label'):
-        is_consultant = 'مشاور' in str(feat['advertiser_label'])
+    adv = feat.get('advertiser') if isinstance(feat.get('advertiser'), dict) else None
+    if not adv or not adv.get('label'):
+        adv = listing_advertiser_display(listing)
+    signal = str((adv or {}).get('signal') or '')
+    seller_type = str((adv or {}).get('label') or '').strip()
+    if not seller_type:
+        # fallback برای SimpleNamespace بدون متن آگهی
+        bt = getattr(listing, 'business_type', '') or ''
+        if 'مشاور' in bt or bt.lower() in ('business', 'premium-panel', 'agency'):
+            seller_type, signal = 'مشاور', ADVERTISER_SIGNAL_CONSULTANT
+        else:
+            seller_type, signal = 'شخصی', ''
+
+    is_consultant = signal == ADVERTISER_SIGNAL_CONSULTANT
+    is_disguised = signal == ADVERTISER_SIGNAL_DISGUISED
 
     score = None
     verdict = ''
@@ -83,7 +101,9 @@ def build_listing_map_marker(
         'neighborhood': listing.neighborhood or '',
         'city': listing.city or '',
         'is_consultant': is_consultant,
-        'seller_type': 'مشاور' if is_consultant else 'شخصی',
+        'is_disguised': is_disguised,
+        'advertiser_signal': signal,
+        'seller_type': seller_type,
         'token': listing.token or '',
         'link': listing.link if show_divar_link else '',
         'platform_url': platform_url,

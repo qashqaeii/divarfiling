@@ -2176,7 +2176,8 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
 }
 
 .mk-share-field--full {
-    margin-top: 0.5rem;
+    grid-column: 1 / -1;
+    margin-top: 0;
 }
 
 .mk-share-field .ws-label {
@@ -2713,7 +2714,7 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     .mk-share-fields-grid {
         grid-template-columns: 1fr;
     }
-    .mk-share-social-grid {
+    .mk-share-social-grid:not(.mk-share-social-grid--tiles) {
         grid-template-columns: 1fr;
     }
     .mk-share-quick-actions {
@@ -2737,82 +2738,266 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     .mk-share-tab { min-height: 40px; }
 }
 
-/* پروفایل کامل آژانس در مودال اشتراک */
+/* پروفایل کامل آژانس در مودال اشتراک — مینیمال و حرفه‌ای */
+.mk-share-pane--profile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
 .mk-share-profile-hint {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
-    margin: 0 0 0.85rem;
-    padding: 0.55rem 0.75rem;
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--ws-accent, #0d9488) 10%, transparent);
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0.45rem 0.65rem;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--ws-accent, #0d9488) 18%, var(--mk-input-border));
+    background: color-mix(in srgb, var(--ws-accent, #0d9488) 6%, transparent);
     color: var(--ws-text-muted, #64748b);
-    font-size: 0.82rem;
-    line-height: 1.45;
+    font-size: 0.68rem;
+    line-height: 1.4;
 }
-.mk-share-profile-hint i { color: var(--ws-accent, #0d9488); }
-.mk-share-sublabel {
-    grid-column: 1 / -1;
-    margin: 0.75rem 0 0.15rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--ws-text-muted, #64748b);
+.mk-share-profile-hint i {
+    color: var(--ws-accent, #0d9488);
+    font-size: 0.72rem;
+    flex-shrink: 0;
+}
+
+.mk-share-panel {
+    margin: 0;
+    padding: 0.75rem 0.8rem 0.85rem;
+    border-radius: 12px;
+    border: 1px solid var(--mk-input-border);
+    background: color-mix(in srgb, var(--mk-input-bg) 88%, var(--mk-modal-bg));
+}
+
+.mk-share-panel + .mk-share-panel {
+    margin-top: 0;
+}
+
+.mk-share-panel-head {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.55rem;
+    margin: 0 0 0.7rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mk-input-border) 85%, transparent);
 }
+
+.mk-share-panel-ico {
+    display: grid;
+    place-items: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background: color-mix(in srgb, #2563eb 12%, transparent);
+    color: #2563eb;
+    font-size: 0.72rem;
+}
+
+.mk-share-panel-ico--office {
+    background: color-mix(in srgb, #0d9488 12%, transparent);
+    color: #0d9488;
+}
+
+.mk-share-panel-title {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 750;
+    color: var(--ws-text, #E2E8F0);
+    line-height: 1.25;
+}
+
+.mk-share-panel-sub {
+    margin: 0.12rem 0 0;
+    font-size: 0.58rem;
+    color: var(--ws-text-muted, #64748B);
+    line-height: 1.35;
+}
+
 .mk-share-field-hint {
     display: block;
-    margin: 0.35rem 0 0.75rem;
-    font-size: 0.75rem;
+    margin: 0.35rem 0 0.55rem;
+    font-size: 0.58rem;
     color: var(--ws-text-muted, #94a3b8);
+    line-height: 1.4;
 }
+
 .mk-share-upload-row {
     display: flex;
     align-items: center;
-    gap: 0.85rem;
-    margin: 0.85rem 0 1rem;
-    padding: 0.75rem;
-    border: 1px solid var(--ws-border, #e2e8f0);
-    border-radius: 12px;
-    background: var(--ws-surface-2, #f8fafc);
+    gap: 0.65rem;
+    margin: 0.65rem 0 0.75rem;
+    padding: 0.5rem 0.55rem;
+    border: 1px dashed color-mix(in srgb, var(--mk-input-border) 90%, transparent);
+    border-radius: 10px;
+    background: transparent;
 }
+
 .mk-share-upload-preview {
-    width: 72px;
-    height: 72px;
-    border-radius: 14px;
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
     overflow: hidden;
     flex-shrink: 0;
-    background: #e2e8f0;
+    background: color-mix(in srgb, var(--mk-input-border) 55%, transparent);
     display: grid;
     place-items: center;
+    border: 1px solid var(--mk-input-border);
 }
+
 .mk-share-upload-preview--card {
-    width: 120px;
-    height: 72px;
-    border-radius: 10px;
+    width: 96px;
+    height: 58px;
+    border-radius: 8px;
 }
+
 .mk-share-upload-preview img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
 }
+
 .mk-share-upload-placeholder {
-    color: #94a3b8;
-    font-size: 1.35rem;
+    color: var(--ws-text-muted, #94a3b8);
+    font-size: 1.05rem;
 }
+
 .mk-share-upload-meta { flex: 1; min-width: 0; }
+.mk-share-upload-meta .ws-label {
+    margin-bottom: 0.2rem !important;
+    font-size: 0.64rem !important;
+}
+
 .mk-share-file-input {
-    font-size: 0.8rem;
-    padding: 0.35rem 0;
+    font-size: 0.68rem !important;
+    padding: 0.2rem 0 !important;
+    min-height: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
+
 .mk-share-check-row--compact {
-    margin-top: 0.35rem;
-    font-size: 0.78rem;
+    margin-top: 0.25rem;
+    font-size: 0.62rem;
+    gap: 0.3rem;
 }
-.mk-share-social-grid--compact {
-    margin-top: 0.35rem;
+
+/* شبکه اجتماعی — تایل‌های فشرده کنار هم */
+.mk-share-social-block {
+    margin-top: 0.55rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid color-mix(in srgb, var(--mk-input-border) 80%, transparent);
+}
+
+.mk-share-social-block-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin: 0 0 0.45rem;
+}
+
+.mk-share-social-block-head span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--ws-text, #E2E8F0);
+}
+
+.mk-share-social-block-head em {
+    font-style: normal;
+    font-size: 0.55rem;
+    color: var(--ws-text-muted, #64748B);
+}
+
+.mk-share-social-grid--tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+}
+
+.mk-share-social-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    min-width: 0;
+    padding: 0.4rem 0.42rem 0.45rem;
+    border-radius: 9px;
+    border: 1px solid color-mix(in srgb, var(--mk-social-color, var(--mk-input-border)) 22%, var(--mk-input-border));
+    background: color-mix(in srgb, var(--mk-social-color, transparent) 4%, var(--mk-input-bg));
+    transition: border-color 0.14s, box-shadow 0.14s;
+}
+
+.mk-share-social-tile:focus-within {
+    border-color: color-mix(in srgb, var(--mk-social-color) 50%, var(--mk-input-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mk-social-color) 14%, transparent);
+}
+
+.mk-share-social-tile-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.mk-share-social-tile-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+}
+
+.mk-share-social-tile-icon img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    display: block;
+}
+
+.mk-share-social-tile-icon i {
+    font-size: 0.85rem;
+    color: var(--mk-social-color, var(--ws-text-muted));
+}
+
+.mk-share-social-tile-name {
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--ws-text, #E2E8F0);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mk-share-social-grid--tiles .mk-share-social-input {
+    min-height: 30px !important;
+    font-size: 0.68rem !important;
+    padding: 0.28rem 0.4rem !important;
+    border-radius: 6px !important;
+    border-color: color-mix(in srgb, var(--mk-social-color) 14%, var(--mk-input-border)) !important;
+    background: color-mix(in srgb, var(--mk-modal-bg) 40%, transparent) !important;
+}
+
+@media (max-width: 640px) {
+    .mk-share-social-grid--tiles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 420px) {
+    .mk-share-social-grid--tiles {
+        grid-template-columns: 1fr;
+    }
+    .mk-share-panel {
+        padding: 0.65rem 0.6rem 0.7rem;
+    }
 }
 
 

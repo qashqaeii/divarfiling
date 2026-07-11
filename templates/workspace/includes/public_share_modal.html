@@ -3,6 +3,7 @@
   modal_id, form_id, form_action, share_url, share, item_title, subtitle, id_prefix
   is_personal_file (اختیاری)، share_profile (اختیاری — از view)
 {% endcomment %}
+{% load static %}
 {% with sp=share_profile %}
 <div class="ws-modal" id="{{ modal_id }}" role="dialog" aria-modal="true" aria-labelledby="{{ id_prefix }}-modal-title">
     <div class="ws-modal-overlay" data-modal-close></div>
@@ -117,11 +118,11 @@
                                     <span>کپی متن</span>
                                 </button>
                                 <button type="button" class="mk-share-msg-btn mk-share-msg-btn--wa" data-share-msg-wa>
-                                    <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                                    <img src="{% static 'icons/whatsup.png' %}" alt="" class="mk-share-brand-icon" width="18" height="18">
                                     <span>واتساپ</span>
                                 </button>
                                 <button type="button" class="mk-share-msg-btn mk-share-msg-btn--tg" data-share-msg-tg title="اشتراک در تلگرام">
-                                    <i class="fab fa-telegram" aria-hidden="true"></i>
+                                    <img src="{% static 'icons/telegram.png' %}" alt="" class="mk-share-brand-icon" width="18" height="18">
                                     <span>تلگرام</span>
                                 </button>
                                 <button type="button" class="mk-share-msg-btn mk-share-msg-btn--reset" data-share-msg-reset title="بازگردانی از قالب پیش‌فرض">
@@ -284,12 +285,22 @@
                         </p>
                         <div class="mk-share-social-grid">
                             {% for net in sp.social_networks %}
-                            <div class="mk-share-social-field" style="--mk-social-color: {{ net.color }}">
-                                <label class="ws-label" for="{{ id_prefix }}-social-{{ net.key }}">
-                                    <i class="{{ net.icon }}" aria-hidden="true"></i> {{ net.label }}
+                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color: {{ net.color }}">
+                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-{{ net.key }}">
+                                    <span class="mk-share-social-badge" aria-hidden="true">
+                                        {% if net.icon_file %}
+                                        <img src="{% static net.icon_file %}" alt="" width="28" height="28" class="mk-share-social-badge-img">
+                                        {% else %}
+                                        <i class="{{ net.icon }}"></i>
+                                        {% endif %}
+                                    </span>
+                                    <span class="mk-share-social-meta">
+                                        <strong>{{ net.label }}</strong>
+                                        <small>{{ net.placeholder }}</small>
+                                    </span>
                                 </label>
                                 <input type="text"
-                                       class="ws-input"
+                                       class="ws-input mk-share-social-input"
                                        id="{{ id_prefix }}-social-{{ net.key }}"
                                        name="social_{{ net.key }}"
                                        value="{{ net.url }}"
@@ -300,30 +311,47 @@
                                        autocomplete="off">
                             </div>
                             {% empty %}
-                            {# fallback if share_profile missing #}
-                            <div class="mk-share-social-field" style="--mk-social-color:#229ED9">
-                                <label class="ws-label" for="{{ id_prefix }}-social-telegram"><i class="fab fa-telegram" aria-hidden="true"></i> تلگرام</label>
-                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-telegram" name="social_telegram" placeholder="@username یا ۰۹۱۲…" dir="ltr">
+                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#2AABEE">
+                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-telegram">
+                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/telegram.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
+                                    <span class="mk-share-social-meta"><strong>تلگرام</strong><small>@username یا ۰۹۱۲…</small></span>
+                                </label>
+                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-telegram" name="social_telegram" placeholder="@username یا ۰۹۱۲…" dir="ltr">
                             </div>
-                            <div class="mk-share-social-field" style="--mk-social-color:#00ADEF">
-                                <label class="ws-label" for="{{ id_prefix }}-social-bale"><i class="fas fa-comment-dots" aria-hidden="true"></i> بله</label>
-                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-bale" name="social_bale" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
+                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#00C2A8">
+                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-bale">
+                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/bale.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
+                                    <span class="mk-share-social-meta"><strong>بله</strong><small>آیدی یا ۰۹۱۲…</small></span>
+                                </label>
+                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-bale" name="social_bale" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
                             </div>
-                            <div class="mk-share-social-field" style="--mk-social-color:#7B2D8E">
-                                <label class="ws-label" for="{{ id_prefix }}-social-rubika"><i class="fas fa-comments" aria-hidden="true"></i> روبیکا</label>
-                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-rubika" name="social_rubika" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
+                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#6C2BD9">
+                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-rubika">
+                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/rubika.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
+                                    <span class="mk-share-social-meta"><strong>روبیکا</strong><small>آیدی یا ۰۹۱۲…</small></span>
+                                </label>
+                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-rubika" name="social_rubika" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
                             </div>
-                            <div class="mk-share-social-field" style="--mk-social-color:#F7941D">
-                                <label class="ws-label" for="{{ id_prefix }}-social-eitaa"><i class="fas fa-paper-plane" aria-hidden="true"></i> ایتا</label>
-                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-eitaa" name="social_eitaa" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
+                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#F7941D">
+                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-eitaa">
+                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/eita.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
+                                    <span class="mk-share-social-meta"><strong>ایتا</strong><small>آیدی یا ۰۹۱۲…</small></span>
+                                </label>
+                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-eitaa" name="social_eitaa" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
                             </div>
-                            <div class="mk-share-social-field" style="--mk-social-color:#E4405F">
-                                <label class="ws-label" for="{{ id_prefix }}-social-instagram"><i class="fab fa-instagram" aria-hidden="true"></i> اینستاگرام</label>
-                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-instagram" name="social_instagram" placeholder="@username" dir="ltr">
+                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#E1306C">
+                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-instagram">
+                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/Instagram.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
+                                    <span class="mk-share-social-meta"><strong>اینستاگرام</strong><small>@username</small></span>
+                                </label>
+                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-instagram" name="social_instagram" placeholder="@username" dir="ltr">
                             </div>
-                            <div class="mk-share-social-field" style="--mk-social-color:#00A651">
-                                <label class="ws-label" for="{{ id_prefix }}-social-soroush"><i class="fas fa-mobile-alt" aria-hidden="true"></i> سروش</label>
-                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-soroush" name="social_soroush" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
+                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#1E6BFF">
+                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-soroush">
+                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/sorosh.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
+                                    <span class="mk-share-social-meta"><strong>سروش</strong><small>آیدی یا ۰۹۱۲…</small></span>
+                                </label>
+                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-soroush" name="social_soroush" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
                             </div>
                             {% endfor %}
                         </div>

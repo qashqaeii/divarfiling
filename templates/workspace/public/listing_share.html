@@ -400,7 +400,10 @@
                     <div class="ps-agent-btns">
                         <a href="{{ consultant.tel_url }}" class="ps-btn ps-btn--primary ps-btn--block"><i class="fas fa-phone" aria-hidden="true"></i> تماس</a>
                         {% if consultant.whatsapp_url %}
-                        <a href="{{ consultant.whatsapp_url }}" class="ps-btn ps-btn--wa ps-btn--block" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> واتساپ</a>
+                        <a href="{{ consultant.whatsapp_url }}" class="ps-btn ps-btn--wa ps-btn--block" target="_blank" rel="noopener">
+                            <img src="{% static 'icons/whatsup.png' %}" alt="" class="ps-brand-icon" width="18" height="18">
+                            واتساپ
+                        </a>
                         {% endif %}
                     </div>
                     {% else %}
@@ -410,7 +413,13 @@
                     <div class="ps-agent-socials" aria-label="شبکه‌های اجتماعی">
                         {% for net in consultant.social_networks %}
                         <a href="{{ net.url }}" class="ps-agent-social ps-agent-social--{{ net.key }}" target="_blank" rel="noopener noreferrer" title="{{ net.label }}" style="--ps-social: {{ net.color }}">
+                            {% if net.icon_file %}
+                            <span class="ps-agent-social-icon" aria-hidden="true">
+                                <img src="{% static net.icon_file %}" alt="" width="22" height="22">
+                            </span>
+                            {% else %}
                             <i class="{{ net.icon }}" aria-hidden="true"></i>
+                            {% endif %}
                             <span>{{ net.label }}</span>
                         </a>
                         {% endfor %}
@@ -435,14 +444,22 @@
         {% if consultant.has_phone %}
         <a href="{{ consultant.tel_url }}" class="ps-btn ps-btn--primary"><i class="fas fa-phone" aria-hidden="true"></i> تماس</a>
         {% if consultant.whatsapp_url %}
-        <a href="{{ consultant.whatsapp_url }}" class="ps-btn ps-btn--wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> واتساپ</a>
+        <a href="{{ consultant.whatsapp_url }}" class="ps-btn ps-btn--wa" target="_blank" rel="noopener">
+            <img src="{% static 'icons/whatsup.png' %}" alt="" class="ps-brand-icon" width="18" height="18">
+            واتساپ
+        </a>
         {% endif %}
         {% endif %}
         {% if consultant.has_socials %}
         {% for net in consultant.social_networks %}
         {% if forloop.counter <= 2 %}
         <a href="{{ net.url }}" class="ps-btn ps-btn--social" target="_blank" rel="noopener" style="--ps-social: {{ net.color }}" title="{{ net.label }}">
-            <i class="{{ net.icon }}" aria-hidden="true"></i> {{ net.label }}
+            {% if net.icon_file %}
+            <img src="{% static net.icon_file %}" alt="" class="ps-brand-icon" width="18" height="18">
+            {% else %}
+            <i class="{{ net.icon }}" aria-hidden="true"></i>
+            {% endif %}
+            {{ net.label }}
         </a>
         {% endif %}
         {% endfor %}

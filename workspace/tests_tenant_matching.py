@@ -332,3 +332,32 @@ class TenantMatchingTests(TestCase):
         self.assertEqual(data['total_count'], len(data['crm_matches']) + len(data['divar_matches']))
         payload = contact_matches_payload(self.user, self.tenant.pk)
         self.assertEqual(payload['total_count'], 0)
+
+    def test_investor_broad_budget_returns_many_matches_not_capped_at_three(self):
+        investor = Customer.objects.create(
+            user=self.user,
+            name='سرمایه‌گذار تست',
+            phone='09120007777',
+            customer_type='سرمایه‌گذار',
+            status='در حال پیگیری',
+            budget_min=1_000_000_000,
+            budget_max=500_000_000_000,
+            property_type='آپارتمان',
+        )
+        for idx in range(18):
+            CRMProperty.objects.create(
+                user=self.user,
+                title=f'آپارتمان سرمایه {idx + 1}',
+                property_type='آپارتمان',
+                deal_mode='فروش',
+                transaction_status='فعال',
+                sale_price=2_000_000_000 + (idx * 500_000_000),
+                neighborhood='ونک',
+                city='تهران',
+                area=90 + idx,
+                rooms='2',
+            )
+        data = get_customer_matches(investor, self.user, divar_enabled=False)
+        self.assertTrue(data['eligible'])
+        self.assertGreaterEqual(len(data['crm_matches']), 12)
+        self.assertGreaterEqual(data['total_count'], 12)

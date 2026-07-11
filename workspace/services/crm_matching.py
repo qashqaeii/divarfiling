@@ -23,6 +23,18 @@ MATCH_TYPES = {
 # خارج از این باند اصلاً پیشنهاد نمی‌شود؛ داخل باند با امتیاز و برچسب نرم می‌ماند.
 RANGE_TOLERANCE = 0.20
 
+MATCH_CRM_SCAN_LIMIT = 800
+MATCH_CRM_SCAN_LIMIT_BROAD = 1200
+MATCH_DIVAR_SCAN_LIMIT = 800
+MATCH_DIVAR_SCAN_LIMIT_BROAD = 1200
+MATCH_RESULT_LIMIT = 24
+MATCH_RESULT_LIMIT_BROAD = 36
+MATCH_CRM_MIN_SCORE = 25
+MATCH_DIVAR_MIN_SCORE = 30
+MATCH_CRM_MIN_SCORE_BROAD = 18
+MATCH_DIVAR_MIN_SCORE_BROAD = 22
+BROAD_BUDGET_SPAN_RATIO = 8.0
+
 BUILDER_MATCH_INTENTS = {
     'acquisition': {
         'id': 'acquisition',
@@ -478,6 +490,83 @@ def _profile_has_sale_criteria(profile) -> bool:
     return getattr(profile, 'budget_min', None) is not None or getattr(profile, 'budget_max', None) is not None
 
 
+def _budget_sql_bounds(profile, *, tolerance: float = RANGE_TOLERANCE) -> Tuple[Optional[int], Optional[int]]:
+    lo = getattr(profile, 'budget_min', None)
+    hi = getattr(profile, 'budget_max', None)
+    sql_lo = int(lo * (1 - tolerance)) if lo else None
+    sql_hi = int(hi * (1 + tolerance)) if hi else None
+    return sql_lo, sql_hi
+
+
+def _deposit_rent_sql_bounds(profile, *, tolerance: float = RANGE_TOLERANCE) -> Dict[str, Optional[int]]:
+    out: Dict[str, Optional[int]] = {}
+    for field, sql_key in (
+        ('deposit_min', 'deposit_lo'),
+        ('deposit_max', 'deposit_hi'),
+        ('rent_min', 'rent_lo'),
+        ('rent_max', 'rent_hi'),
+    ):
+        val = getattr(profile, field, None)
+        if val is None:
+            out[sql_key] = None
+        elif sql_key.endswith('_lo'):
+            out[sql_key] = int(val * (1 - tolerance))
+        else:
+            out[sql_key] = int(val * (1 + tolerance))
+    return out
+
+
+def _customer_has_narrow_detail_prefs(customer: Customer) -> bool:
+    return any([
+        customer.areas,
+        customer.district,
+        customer.want_parking,
+        customer.want_storage,
+        customer.want_elevator,
+        customer.rooms_min is not None,
+        customer.rooms_max is not None,
+        customer.year_min is not None,
+        customer.year_max is not None,
+        customer.floor_min is not None,
+        customer.floor_max is not None,
+    ])
+
+
+def _customer_budget_span_ratio(customer: Customer) -> Optional[float]:
+    lo = customer.budget_min
+    hi = customer.budget_max
+    if lo and hi and lo > 0:
+        return hi / lo
+    return None
+
+
+def _is_broad_seeker_profile(customer: Customer) -> bool:
+    """ترجیحات باز — بودجه گسترده و بدون فیلتر سخت محله/امکانات."""
+    if is_builder_customer(customer):
+        return False
+    if _customer_has_narrow_detail_prefs(customer):
+        return False
+    span = _customer_budget_span_ratio(customer)
+    if span is not None and span >= BROAD_BUDGET_SPAN_RATIO:
+        return True
+    if customer.min_area is None and customer.max_area is None:
+        if not customer.property_type or customer.property_type == 'سایر':
+            if not customer.budget_min and not customer.budget_max:
+                return True
+    return False
+
+
+def _match_tuning(customer: Customer) -> Dict[str, int]:
+    broad = _is_broad_seeker_profile(customer)
+    return {
+        'crm_scan_limit': MATCH_CRM_SCAN_LIMIT_BROAD if broad else MATCH_CRM_SCAN_LIMIT,
+        'divar_scan_limit': MATCH_DIVAR_SCAN_LIMIT_BROAD if broad else MATCH_DIVAR_SCAN_LIMIT,
+        'result_limit': MATCH_RESULT_LIMIT_BROAD if broad else MATCH_RESULT_LIMIT,
+        'crm_min_score': MATCH_CRM_MIN_SCORE_BROAD if broad else MATCH_CRM_MIN_SCORE,
+        'divar_min_score': MATCH_DIVAR_MIN_SCORE_BROAD if broad else MATCH_DIVAR_MIN_SCORE,
+    }
+
+
 def _crm_property_is_rent_listing(prop: CRMProperty) -> bool:
     return (
         prop.deal_mode in {'رهن و اجاره', 'اجاره'}
@@ -790,12 +879,103 @@ def _crm_properties_qs(user):
     ).exclude(publish_status='بایگانی')
 
 
-def _divar_listings_qs(user):
+def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
+    """پیش‌فیلتر SQL تا فایل‌های داخل بازه بودجه/متراژ از دست نروند."""
+    qs = _crm_properties_qs(user)
+    if is_builder_customer(customer):
+        return qs.order_by('-updated_at')[:scan_limit]
+
+    if _is_rent_customer(customer):
+        qs = qs.filter(deal_mode__in=['رهن و اجاره', 'اجاره']).filter(
+            Q(deposit__gt=0) | Q(monthly_rent__gt=0),
+        )
+        bounds = _deposit_rent_sql_bounds(customer)
+        if bounds['deposit_lo'] is not None:
+            qs = qs.filter(deposit__gte=bounds['deposit_lo'])
+        if bounds['deposit_hi'] is not None:
+            qs = qs.filter(deposit__lte=bounds['deposit_hi'])
+        if bounds['rent_lo'] is not None:
+            qs = qs.filter(monthly_rent__gte=bounds['rent_lo'])
+        if bounds['rent_hi'] is not None:
+            qs = qs.filter(monthly_rent__lte=bounds['rent_hi'])
+    elif _is_sale_customer(customer):
+        qs = qs.filter(deal_mode__in=['فروش', 'پیش‌فروش']).filter(sale_price__gt=0)
+        sql_lo, sql_hi = _budget_sql_bounds(customer)
+        if sql_lo is not None:
+            qs = qs.filter(sale_price__gte=sql_lo)
+        if sql_hi is not None:
+            qs = qs.filter(sale_price__lte=sql_hi)
+    elif customer.customer_type in LEAD_TYPES or customer.customer_type == 'سرنخ':
+        qs = qs.filter(
+            Q(deal_mode__in=['فروش', 'پیش‌فروش'], sale_price__gt=0)
+            | Q(deal_mode__in=['رهن و اجاره', 'اجاره'], deposit__gt=0)
+            | Q(deal_mode__in=['رهن و اجاره', 'اجاره'], monthly_rent__gt=0)
+        )
+
+    allowed = _profile_allowed_property_types(customer)
+    if allowed:
+        qs = qs.filter(property_type__in=sorted(allowed))
+
+    if customer.min_area:
+        qs = qs.filter(area__gte=customer.min_area * (1 - RANGE_TOLERANCE))
+    if customer.max_area:
+        qs = qs.filter(area__lte=customer.max_area * (1 + RANGE_TOLERANCE))
+
+    return qs.order_by('-updated_at')[:scan_limit]
+
+
+def _divar_listings_base_qs(user):
     return (
         Listing.objects.filter(dataset__user=user, dataset__is_active=True, is_expired=False)
         .select_related('dataset')
-        .order_by('-published_at')[:500]
+        .order_by('-published_at')
     )
+
+
+def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
+    qs = _divar_listings_base_qs(user)
+    if is_builder_customer(customer):
+        return qs[:scan_limit]
+
+    if _is_rent_customer(customer):
+        qs = qs.filter(Q(deposit__gt=0) | Q(rent__gt=0))
+        bounds = _deposit_rent_sql_bounds(customer)
+        if bounds['deposit_lo'] is not None:
+            qs = qs.filter(deposit__gte=bounds['deposit_lo'])
+        if bounds['deposit_hi'] is not None:
+            qs = qs.filter(deposit__lte=bounds['deposit_hi'])
+        if bounds['rent_lo'] is not None:
+            qs = qs.filter(rent__gte=bounds['rent_lo'])
+        if bounds['rent_hi'] is not None:
+            qs = qs.filter(rent__lte=bounds['rent_hi'])
+    elif _is_sale_customer(customer):
+        qs = qs.filter(price__gt=0).filter(
+            Q(deposit__isnull=True) | Q(deposit=0),
+        ).filter(
+            Q(rent__isnull=True) | Q(rent=0),
+        )
+        sql_lo, sql_hi = _budget_sql_bounds(customer)
+        if sql_lo is not None:
+            qs = qs.filter(price__gte=sql_lo)
+        if sql_hi is not None:
+            qs = qs.filter(price__lte=sql_hi)
+    elif customer.customer_type in LEAD_TYPES or customer.customer_type == 'سرنخ':
+        qs = qs.filter(
+            Q(price__gt=0)
+            | Q(deposit__gt=0)
+            | Q(rent__gt=0)
+        )
+
+    if customer.min_area:
+        qs = qs.filter(area__gte=customer.min_area * (1 - RANGE_TOLERANCE))
+    if customer.max_area:
+        qs = qs.filter(area__lte=customer.max_area * (1 + RANGE_TOLERANCE))
+
+    return qs[:scan_limit]
+
+
+def _divar_listings_qs(user):
+    return _divar_listings_base_qs(user)[:MATCH_DIVAR_SCAN_LIMIT]
 
 
 def _filter_builder_crm_props(props, allowed_types: Set[str], *, sale_only: bool = True):
@@ -821,30 +1001,34 @@ def _filter_builder_listings(listings, allowed_types: Set[str], *, sale_only: bo
             yield listing, inferred
 
 
-def match_crm_properties(customer: Customer, user, *, limit: int = 12) -> List[Dict[str, Any]]:
-    qs = _crm_properties_qs(user)
+def match_crm_properties(customer: Customer, user, *, limit: int | None = None) -> List[Dict[str, Any]]:
+    tuning = _match_tuning(customer)
+    result_limit = limit if limit is not None else tuning['result_limit']
+    min_score = tuning['crm_min_score']
     scored = []
-    for prop in qs[:200]:
+    for prop in _crm_match_candidates_qs(customer, user, scan_limit=tuning['crm_scan_limit']):
         if not _crm_match_compatible(customer, prop):
             continue
         item = _score_crm_property(customer, prop)
-        if item and item['score'] >= 25:
+        if item and item['score'] >= min_score:
             scored.append(item)
     scored.sort(key=lambda x: x['score'], reverse=True)
-    return scored[:limit]
+    return scored[:result_limit]
 
 
-def match_divar_listings(customer: Customer, user, *, limit: int = 12) -> List[Dict[str, Any]]:
-    qs = _divar_listings_qs(user)
+def match_divar_listings(customer: Customer, user, *, limit: int | None = None) -> List[Dict[str, Any]]:
+    tuning = _match_tuning(customer)
+    result_limit = limit if limit is not None else tuning['result_limit']
+    min_score = tuning['divar_min_score']
     scored = []
-    for lst in qs:
+    for lst in _divar_match_candidates_qs(customer, user, scan_limit=tuning['divar_scan_limit']):
         if not _listing_match_compatible(customer, lst):
             continue
         item = _score_listing(customer, lst)
-        if item and item['score'] >= 30:
+        if item and item['score'] >= min_score:
             scored.append(item)
     scored.sort(key=lambda x: x['score'], reverse=True)
-    return scored[:limit]
+    return scored[:result_limit]
 
 
 def _match_builder_group(

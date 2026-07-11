@@ -280,26 +280,26 @@
                           data-tip="{{ item.tip }}"
                           aria-label="{{ item.tip }}"
                           tabindex="0">
-                        <span class="crm-prop-hero-amenity-emoji" aria-hidden="true">{{ item.emoji }}</span>
+                        <i class="fas {{ item.icon }}" aria-hidden="true"></i>
                     </span>
                     {% empty %}
                     <span class="crm-files-amenity{% if property.has_parking %} is-on{% else %} is-off{% endif %}"
                           data-tip="پارکینگ: {% if property.has_parking %}دارد{% else %}ندارد{% endif %}"
                           aria-label="پارکینگ: {% if property.has_parking %}دارد{% else %}ندارد{% endif %}"
                           tabindex="0">
-                        <span class="crm-prop-hero-amenity-emoji" aria-hidden="true">🅿️</span>
+                        <i class="fas fa-square-parking" aria-hidden="true"></i>
                     </span>
                     <span class="crm-files-amenity{% if property.has_storage %} is-on{% else %} is-off{% endif %}"
                           data-tip="انباری: {% if property.has_storage %}دارد{% else %}ندارد{% endif %}"
                           aria-label="انباری: {% if property.has_storage %}دارد{% else %}ندارد{% endif %}"
                           tabindex="0">
-                        <span class="crm-prop-hero-amenity-emoji" aria-hidden="true">📦</span>
+                        <i class="fas fa-box-archive" aria-hidden="true"></i>
                     </span>
                     <span class="crm-files-amenity{% if property.has_elevator %} is-on{% else %} is-off{% endif %}"
                           data-tip="آسانسور: {% if property.has_elevator %}دارد{% else %}ندارد{% endif %}"
                           aria-label="آسانسور: {% if property.has_elevator %}دارد{% else %}ندارد{% endif %}"
                           tabindex="0">
-                        <span class="crm-prop-hero-amenity-emoji" aria-hidden="true">⬆️</span>
+                        <i class="fas fa-elevator" aria-hidden="true"></i>
                     </span>
                     {% endfor %}
                 </div>

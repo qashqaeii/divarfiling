@@ -123,13 +123,17 @@ class PropertyPublicShareTests(TestCase):
         dossier = build_property_amenity_dossier_items(self.prop)
         by_d = {i['label']: i for i in dossier}
         self.assertEqual(by_d['آسانسور']['emoji'], '⬆️')
+        self.assertEqual(by_d['آسانسور']['icon'], 'fa-elevator')
         self.assertEqual(by_d['پارکینگ']['state'], 'yes')
         self.assertEqual(by_d['پارکینگ']['tip'], 'پارکینگ: دارد')
+        self.assertEqual(by_d['پارکینگ']['icon'], 'fa-square-parking')
         self.assertEqual(by_d['تعداد واحد در طبقه']['value'], '۲')
         self.assertEqual(by_d['تعداد واحد در طبقه']['emoji'], '🚪')
+        self.assertEqual(by_d['تعداد واحد در طبقه']['icon'], 'fa-door-closed')
         self.assertEqual(by_d['تعداد واحد در طبقه']['tip'], 'تعداد واحد در طبقه: ۲')
         self.assertEqual(by_d['جنس کف']['value'], 'سرامیک')
         self.assertEqual(by_d['بالکن']['state'], 'no')
+        self.assertEqual(by_d['بالکن']['icon'], 'fa-fan')
         self.assertTrue(by_d['آسانسور']['is_core'])
         self.assertFalse(by_d['لابی']['is_core'])
 
@@ -213,3 +217,162 @@ class PropertyPublicShareTests(TestCase):
         self.assertEqual(resp.status_code, 302)
         share = CRMPropertyPublicShare.objects.get(property=self.prop, created_by=self.user)
         self.assertFalse(share.is_active)
+
+
+class PropertyAmenityCheckboxFormTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='09121112233',
+            phone='09121112233',
+            password='testpass123',
+        )
+        self.prop = CRMProperty.objects.create(
+            user=self.user,
+            title='آپارتمان تست امکانات',
+            deal_mode='فروش',
+            property_type='آپارتمان',
+            has_parking=True,
+            has_elevator=False,
+            has_storage=True,
+            amenities='بالکن، لابی، جنس کف: سرامیک، استخر ندارد',
+        )
+
+    def test_split_and_serialize_roundtrip(self):
+        from workspace.services.property_public_share import (
+            serialize_amenity_checkboxes,
+            split_amenities_for_checkbox_form,
+        )
+
+        selected, leftover = split_amenities_for_checkbox_form(
+            self.prop.amenities,
+            has_parking=self.prop.has_parking,
+            has_storage=self.prop.has_storage,
+            has_elevator=self.prop.has_elevator,
+        )
+        self.assertIn('پارکینگ', selected)
+        self.assertIn('انباری', selected)
+        self.assertIn('بالکن', selected)
+        self.assertIn('لابی', selected)
+        self.assertNotIn('آسانسور', selected)
+        self.assertNotIn('استخر', selected)
+        self.assertIn('جنس کف: سرامیک', leftover)
+
+        text = serialize_amenity_checkboxes(
+            ['پارکینگ', 'انباری', 'بالکن', 'لابی', 'جکوزی'],
+            leftover,
+        )
+        self.assertIn('بالکن', text)
+        self.assertIn('لابی', text)
+        self.assertIn('جکوزی', text)
+        self.assertIn('جنس کف: سرامیک', text)
+        self.assertNotIn('پارکینگ', text)
+
+    def test_form_save_syncs_flags_and_amenities(self):
+        from workspace.forms import CRMPropertyForm
+
+        form = CRMPropertyForm(instance=self.prop)
+        groups = form.amenity_checkbox_groups()
+        flat = {item['label']: item['checked'] for g in groups for item in g['items']}
+        self.assertTrue(flat['پارکینگ'])
+        self.assertTrue(flat['بالکن'])
+        self.assertFalse(flat['آسانسور'])
+        self.assertFalse(flat['استخر'])
+        self.assertEqual(form.fields['amenities_extra'].initial, 'جنس کف: سرامیک')
+
+        data = {
+            'title': self.prop.title,
+            'property_type': self.prop.property_type,
+            'deal_mode': self.prop.deal_mode,
+            'transaction_status': self.prop.transaction_status or 'فعال',
+            'publish_status': self.prop.publish_status or 'خصوصی',
+            'amenity_flags': ['پارکینگ', 'آسانسور', 'استخر', 'روف گاردن'],
+            'amenities_extra': 'جنس کف: پارکت',
+        }
+        form = CRMPropertyForm(data, instance=self.prop)
+        self.assertTrue(form.is_valid(), form.errors)
+        saved = form.save()
+        self.assertTrue(saved.has_parking)
+        self.assertTrue(saved.has_elevator)
+        self.assertFalse(saved.has_storage)
+        self.assertIn('استخر', saved.amenities)
+        self.assertIn('روف گاردن', saved.amenities)
+        self.assertIn('جنس کف: پارکت', saved.amenities)
+        self.assertNotIn('پارکینگ', saved.amenities)
+
+
+class PropertyDistrictAndPriceFormTests(TestCase):
+    def setUp(self):
+        from workspace.models import Dataset, Listing
+
+        self.user = User.objects.create_user(
+            username='09123334455',
+            phone='09123334455',
+            password='testpass123',
+        )
+        self.dataset = Dataset.objects.create(
+            user=self.user,
+            name='تست منطقه',
+            original_filename='فروش_آپارتمان.xlsx',
+            file_format='xlsx',
+            city='تهران',
+            district='منطقه ۳',
+        )
+        self.listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='tokdistrict1',
+            title='آپارتمان نیاوران',
+            city='تهران',
+            neighborhood='نیاوران',
+            price=10_000_000_000,
+            area=120,
+            data={'منطقه': 'منطقه ۳'},
+        )
+        self.prop = CRMProperty.objects.create(
+            user=self.user,
+            title='آپارتمان نیاوران',
+            deal_mode='فروش',
+            property_type='آپارتمان',
+            city='تهران',
+            neighborhood='نیاوران',
+            district='',
+            token='tokdistrict1',
+            sale_price=10_000_000_000,
+            area=120,
+        )
+
+    def test_district_from_listing_uses_data_and_dataset(self):
+        from workspace.services.listing_edit import district_from_listing
+
+        self.assertEqual(district_from_listing(self.listing), 'منطقه ۳')
+        self.listing.data = {}
+        self.listing.save(update_fields=['data'])
+        self.assertEqual(district_from_listing(self.listing), 'منطقه ۳')
+
+    def test_form_hydrates_district_from_source_listing(self):
+        from workspace.forms import CRMPropertyForm
+
+        form = CRMPropertyForm(instance=self.prop)
+        self.assertEqual(form.initial.get('district'), 'منطقه ۳')
+        self.assertIn('منطقه ۳', form['district'].value() or '')
+
+    def test_property_from_listing_sets_district(self):
+        from workspace.services.crm import property_from_listing
+
+        created = property_from_listing(self.user, self.listing)
+        self.assertEqual(created.district, 'منطقه ۳')
+        self.assertEqual(created.neighborhood, 'نیاوران')
+        self.assertEqual(created.deal_mode, 'فروش')
+        self.assertEqual(created.sale_price, 10_000_000_000)
+
+    def test_rent_listing_maps_deal_mode_and_prices(self):
+        from workspace.services.crm import property_from_listing
+
+        self.listing.price = None
+        self.listing.deposit = 500_000_000
+        self.listing.rent = 25_000_000
+        self.listing.token = 'tokrent1'
+        self.listing.save()
+        created = property_from_listing(self.user, self.listing)
+        self.assertEqual(created.deal_mode, 'رهن و اجاره')
+        self.assertEqual(created.deposit, 500_000_000)
+        self.assertEqual(created.monthly_rent, 25_000_000)

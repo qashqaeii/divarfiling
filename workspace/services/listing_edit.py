@@ -81,6 +81,11 @@ def district_from_listing(listing) -> str:
         value = data.get(key)
         if value is not None and str(value).strip():
             return str(value).strip()
+    dataset = getattr(listing, 'dataset', None)
+    if dataset is not None:
+        ds_district = getattr(dataset, 'district', None)
+        if ds_district is not None and str(ds_district).strip():
+            return str(ds_district).strip()
     return ''
 
 

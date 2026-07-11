@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from django.utils import timezone
 
-from workspace.constants import LISTING_CORE_AMENITIES
+from workspace.constants import LISTING_CORE_AMENITIES, PROPERTY_AMENITY_CHECKBOX_GROUPS
 from workspace.models import CRMProperty, CRMPropertyPublicShare
 from workspace.services.crm import resolve_listing_for_property
 from workspace.services.display import (
@@ -215,6 +215,96 @@ def _parse_property_amenities_text(text: str) -> tuple[Dict[str, bool], List[Dic
             'is_chip': False,
         })
     return core_states, extras
+
+
+def property_amenity_checkbox_choices() -> List[tuple[str, str]]:
+    """لیست (value, label) برای MultipleChoiceField امکانات ملک."""
+    return [
+        (label, label)
+        for group in PROPERTY_AMENITY_CHECKBOX_GROUPS
+        for label, _icon in group['items']
+    ]
+
+
+def property_amenity_checkbox_labels() -> frozenset[str]:
+    return frozenset(label for label, _ in property_amenity_checkbox_choices())
+
+
+def property_amenity_checkbox_order() -> List[str]:
+    """ترتیب پایدار برچسب‌ها مطابق گروه‌بندی فرم."""
+    return [label for label, _ in property_amenity_checkbox_choices()]
+
+
+def split_amenities_for_checkbox_form(
+    amenities_text: str,
+    *,
+    has_parking: bool = False,
+    has_storage: bool = False,
+    has_elevator: bool = False,
+) -> tuple[List[str], str]:
+    """
+    متن امکانات + فلگ‌های اصلی → لیست تیک‌خورده + متن آزاد باقی‌مانده.
+    """
+    known = property_amenity_checkbox_labels()
+    selected: set[str] = set()
+    leftovers: List[str] = []
+
+    if has_parking:
+        selected.add('پارکینگ')
+    if has_storage:
+        selected.add('انباری')
+    if has_elevator:
+        selected.add('آسانسور')
+
+    for token in re.split(r'[\n،,|]+', str(amenities_text or '').strip()):
+        raw = token.strip()
+        if not raw:
+            continue
+        label, has_val, _display = _parse_amenity_token(raw)
+        if not label:
+            leftovers.append(raw)
+            continue
+        if label in known:
+            if has_val is False:
+                selected.discard(label)
+            else:
+                selected.add(label)
+            continue
+        leftovers.append(raw)
+
+    ordered = [label for label in property_amenity_checkbox_order() if label in selected]
+    return ordered, '، '.join(leftovers)
+
+
+def serialize_amenity_checkboxes(
+    selected_labels: List[str] | None,
+    leftover_text: str = '',
+) -> str:
+    """
+    تیک‌ها + متن آزاد → رشته amenities سازگار با پارس پرونده.
+    امکانات اصلی فقط از فلگ‌های مدل می‌آیند و در متن تکرار نمی‌شوند.
+    """
+    known = property_amenity_checkbox_labels()
+    cores = _CORE_AMENITY_KEYS
+    selected = {str(x).strip() for x in (selected_labels or []) if str(x).strip()}
+    parts: List[str] = []
+    for label in property_amenity_checkbox_order():
+        if label in selected and label in known and label not in cores:
+            parts.append(label)
+    leftover = str(leftover_text or '').strip()
+    if leftover:
+        # جلوگیری از تکرار برچسب‌های شناخته‌شده در متن آزاد
+        leftover_parts: List[str] = []
+        for token in re.split(r'[\n،,|]+', leftover):
+            raw = token.strip()
+            if not raw:
+                continue
+            label, _has_val, _display = _parse_amenity_token(raw)
+            if label and label in known:
+                continue
+            leftover_parts.append(raw)
+        parts.extend(leftover_parts)
+    return '، '.join(parts)
 
 
 def build_property_amenity_dossier_items(prop: CRMProperty) -> List[Dict[str, Any]]:

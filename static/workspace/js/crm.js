@@ -286,15 +286,132 @@ function initPropertyDealMode(root) {
         const sale = form.querySelectorAll('.crm-price-sale');
         const deposit = form.querySelectorAll('.crm-price-deposit');
         const rent = form.querySelectorAll('.crm-price-rent');
+        const priceSection = form.querySelector('[data-crm-prop-price]');
+        const titleEl = form.querySelector('[data-crm-price-title]');
+        const hintEl = form.querySelector('[data-crm-price-hint]');
+        const saleLabel = form.querySelector('[data-crm-label-sale]');
+        const depositLabel = form.querySelector('[data-crm-label-deposit]');
+        const rentLabel = form.querySelector('[data-crm-label-rent]');
+        const saleHeading = form.querySelector('[data-crm-price-sale-heading]');
+        const depositHeading = form.querySelector('[data-crm-price-deposit-heading]');
+        const rentHeading = form.querySelector('[data-crm-price-rent-heading]');
+        const saleHint = form.querySelector('[data-crm-price-sale-hint]');
+        const depositHint = form.querySelector('[data-crm-price-deposit-hint]');
+        const rentHint = form.querySelector('[data-crm-price-rent-hint]');
+        const perSqmEl = form.querySelector('[data-crm-price-per-sqm]');
+        const saleInput = form.querySelector('[name="sale_price"]');
+        const areaInput = form.querySelector('[name="area"]');
+
+        const PROFILES = {
+            'فروش': {
+                title: 'قیمت فروش',
+                hint: 'قیمت توافقی یا نهایی فروش',
+                showSale: true,
+                showDeposit: false,
+                showRent: false,
+                saleLabel: 'قیمت فروش (تومان)',
+                saleHeading: 'فروش',
+                saleHint: 'قیمت نهایی یا توافقی ملک',
+            },
+            'پیش‌فروش': {
+                title: 'قیمت پیش‌فروش',
+                hint: 'مبلغ پیش‌فروش واحد یا پروژه',
+                showSale: true,
+                showDeposit: false,
+                showRent: false,
+                saleLabel: 'قیمت پیش‌فروش (تومان)',
+                saleHeading: 'پیش‌فروش',
+                saleHint: 'مبلغ توافقی پیش‌فروش',
+            },
+            'رهن و اجاره': {
+                title: 'رهن و اجاره',
+                hint: 'مبالغ رهن و اجاره ماهانه',
+                showSale: false,
+                showDeposit: true,
+                showRent: true,
+                depositLabel: 'مبلغ رهن (تومان)',
+                rentLabel: 'اجاره ماهانه (تومان)',
+                depositHeading: 'رهن',
+                depositHint: 'مبلغ رهن / تبدیل‌پذیر',
+                rentHeading: 'اجاره',
+                rentHint: 'اجاره ماهانه پس از رهن',
+            },
+            'اجاره': {
+                title: 'اجاره',
+                hint: 'ودیعه و اجاره ماهانه',
+                showSale: false,
+                showDeposit: true,
+                showRent: true,
+                depositLabel: 'ودیعه (تومان)',
+                rentLabel: 'اجاره ماهانه (تومان)',
+                depositHeading: 'ودیعه',
+                depositHint: 'مبلغ ودیعه نزد مالک',
+                rentHeading: 'اجاره',
+                rentHint: 'اجاره ماهانه',
+            },
+        };
+
+        function parseMoney(raw) {
+            if (raw == null || raw === '') return null;
+            const s = String(raw).replace(/[^\d]/g, '');
+            if (!s) return null;
+            const n = Number(s);
+            return Number.isFinite(n) ? n : null;
+        }
+
+        function formatToman(n) {
+            try {
+                return new Intl.NumberFormat('fa-IR').format(Math.round(n));
+            } catch (e) {
+                return String(Math.round(n));
+            }
+        }
+
+        function updatePerSqm() {
+            if (!perSqmEl) return;
+            const profile = PROFILES[dealSelect.value] || PROFILES['فروش'];
+            if (!profile.showSale) {
+                perSqmEl.hidden = true;
+                return;
+            }
+            const price = parseMoney(saleInput && saleInput.value);
+            const area = parseFloat(areaInput && areaInput.value);
+            if (!price || !area || area <= 0) {
+                perSqmEl.hidden = true;
+                perSqmEl.textContent = '';
+                return;
+            }
+            perSqmEl.hidden = false;
+            perSqmEl.innerHTML = `<i class="fas fa-calculator" aria-hidden="true"></i> حدود <strong>${formatToman(price / area)}</strong> تومان در هر متر`;
+        }
 
         function apply(mode) {
+            const profile = PROFILES[mode] || PROFILES['فروش'];
             const show = (els, on) => els.forEach(el => el.classList.toggle('hidden', !on));
-            show(sale, mode === 'فروش' || mode === 'پیش‌فروش');
-            show(deposit, mode === 'رهن و اجاره' || mode === 'اجاره');
-            show(rent, mode === 'رهن و اجاره' || mode === 'اجاره');
+            show(sale, profile.showSale);
+            show(deposit, profile.showDeposit);
+            show(rent, profile.showRent);
+            if (priceSection) {
+                priceSection.dataset.dealMode = mode || '';
+            }
+            if (titleEl) titleEl.textContent = profile.title || 'قیمت و یادداشت';
+            if (hintEl) hintEl.textContent = profile.hint || '';
+            if (saleLabel && profile.saleLabel) saleLabel.textContent = profile.saleLabel;
+            if (depositLabel && profile.depositLabel) depositLabel.textContent = profile.depositLabel;
+            if (rentLabel && profile.rentLabel) rentLabel.textContent = profile.rentLabel;
+            if (saleHeading && profile.saleHeading) saleHeading.textContent = profile.saleHeading;
+            if (depositHeading && profile.depositHeading) depositHeading.textContent = profile.depositHeading;
+            if (rentHeading && profile.rentHeading) rentHeading.textContent = profile.rentHeading;
+            if (saleHint && profile.saleHint) saleHint.textContent = profile.saleHint;
+            if (depositHint && profile.depositHint) depositHint.textContent = profile.depositHint;
+            if (rentHint && profile.rentHint) rentHint.textContent = profile.rentHint;
+            updatePerSqm();
         }
+
         apply(dealSelect.value);
         dealSelect.addEventListener('change', () => apply(dealSelect.value));
+        if (saleInput) saleInput.addEventListener('input', updatePerSqm);
+        if (areaInput) areaInput.addEventListener('input', updatePerSqm);
     });
 }
 

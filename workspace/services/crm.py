@@ -489,7 +489,11 @@ def link_customer_listing(
 def property_from_listing(user, listing) -> CRMProperty:
     """ساخت ملک CRM از آگهی اسکرپ‌شده."""
     from workspace.services.features import extract_listing_features
-    from workspace.services.listing_edit import owner_name_from_listing, owner_phone_from_listing
+    from workspace.services.listing_edit import (
+        district_from_listing,
+        owner_name_from_listing,
+        owner_phone_from_listing,
+    )
     from workspace.services.listing_features import build_listing_feature_profile
 
     deal_mode = 'فروش'
@@ -529,6 +533,7 @@ def property_from_listing(user, listing) -> CRMProperty:
         deal_mode=deal_mode,
         address=listing.neighborhood,
         city=listing.city,
+        district=district_from_listing(listing),
         neighborhood=listing.neighborhood,
         latitude=listing.latitude,
         longitude=listing.longitude,
@@ -679,6 +684,21 @@ def resolve_listing_for_property(user, prop) -> Optional[Listing]:
         .order_by('-published_at', '-id')
         .first()
     )
+
+
+def resolve_district_for_property(prop) -> str:
+    """منطقه ذخیره‌شده روی ملک، یا از آگهی/دیتاست منبع."""
+    existing = (getattr(prop, 'district', None) or '').strip()
+    if existing:
+        return existing
+    user = getattr(prop, 'user', None)
+    if user is None:
+        return ''
+    listing = resolve_listing_for_property(user, prop)
+    if not listing:
+        return ''
+    from workspace.services.listing_edit import district_from_listing
+    return district_from_listing(listing)
 
 
 def get_dashboard_stats(user) -> Dict[str, Any]:

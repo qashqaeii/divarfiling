@@ -34,8 +34,15 @@
         <div class="crm-fields crm-fields-2">
             <div class="crm-field crm-field-full"><label class="crm-label">آدرس</label>{{ form.address }}</div>
             <div class="crm-field"><label class="crm-label">شهر</label>{{ form.city }}</div>
-            <div class="crm-field"><label class="crm-label">منطقه</label>{{ form.district }}</div>
-            <div class="crm-field"><label class="crm-label">محله</label>{{ form.neighborhood }}</div>
+            <div class="crm-field">
+                <label class="crm-label" for="{{ form.district.id_for_label }}">منطقه</label>
+                {{ form.district }}
+                <p class="crm-form-hint crm-form-hint--tight">منطقه شهرداری / مسیر دیوار</p>
+            </div>
+            <div class="crm-field">
+                <label class="crm-label" for="{{ form.neighborhood.id_for_label }}">محله</label>
+                {{ form.neighborhood }}
+            </div>
             <div class="crm-field"><label class="crm-label">عرض جغرافیایی</label>{{ form.latitude }}</div>
             <div class="crm-field"><label class="crm-label">طول جغرافیایی</label>{{ form.longitude }}</div>
         </div>
@@ -52,22 +59,100 @@
             <div class="crm-field"><label class="crm-label">طبقه</label>{{ form.floor }}</div>
             <div class="crm-field"><label class="crm-label">تعداد طبقات</label>{{ form.total_floors }}</div>
             <div class="crm-field"><label class="crm-label">سال ساخت</label>{{ form.build_year }}</div>
-            <div class="crm-field crm-field-check">{{ form.has_parking }}<label class="crm-label crm-label-check">پارکینگ</label></div>
-            <div class="crm-field crm-field-check">{{ form.has_storage }}<label class="crm-label crm-label-check">انباری</label></div>
-            <div class="crm-field crm-field-check">{{ form.has_elevator }}<label class="crm-label crm-label-check">آسانسور</label></div>
-            <div class="crm-field crm-field-full"><label class="crm-label">امکانات</label>{{ form.amenities }}</div>
+            <div class="crm-field crm-field-full crm-prop-amenities-field">
+                <span class="crm-label">امکانات</span>
+                <p class="crm-form-hint crm-form-hint--tight">مواردی که ملک دارد را تیک بزنید</p>
+                <div class="crm-prop-amenity-groups" role="group" aria-label="امکانات ملک">
+                    {% for group in form.amenity_checkbox_groups %}
+                    <div class="crm-prop-amenity-group" data-amenity-group="{{ group.id }}">
+                        <span class="crm-prop-amenity-group-title">
+                            <i class="fas {{ group.icon }}" aria-hidden="true"></i>
+                            {{ group.title }}
+                        </span>
+                        <div class="crm-prefs-amenity-list crm-prop-amenity-list">
+                            {% for item in group.items %}
+                            <label class="crm-prefs-amenity crm-prop-amenity{% if item.checked %} is-checked{% endif %}">
+                                <input
+                                    type="checkbox"
+                                    name="amenity_flags"
+                                    value="{{ item.label }}"
+                                    class="crm-checkbox"
+                                    {% if item.checked %}checked{% endif %}
+                                >
+                                <span><i class="fas {{ item.icon }}" aria-hidden="true"></i> {{ item.label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <label class="crm-label crm-prop-amenities-extra-label" for="{{ form.amenities_extra.id_for_label }}">سایر امکانات / جزئیات</label>
+                {{ form.amenities_extra }}
+                {{ form.amenities }}
+                {{ form.has_parking }}{{ form.has_storage }}{{ form.has_elevator }}
+            </div>
         </div>
     </section>
 
-    <section class="crm-prop-form-block" data-form-section="pprice">
+    <section class="crm-prop-form-block" data-form-section="pprice" data-crm-prop-price>
         <header class="crm-prop-form-block-head">
             <i class="fas fa-tag" aria-hidden="true"></i>
-            <h3>قیمت و یادداشت</h3>
+            <h3 data-crm-price-title>قیمت و یادداشت</h3>
+            <span class="crm-prop-form-block-hint" data-crm-price-hint>بر اساس نوع معامله</span>
         </header>
-        <div class="crm-fields crm-fields-2">
-            <div class="crm-field crm-price-sale"><label class="crm-label">قیمت فروش (تومان)</label>{{ form.sale_price }}</div>
-            <div class="crm-field crm-price-deposit"><label class="crm-label">مبلغ رهن (تومان)</label>{{ form.deposit }}</div>
-            <div class="crm-field crm-price-rent"><label class="crm-label">اجاره ماهانه (تومان)</label>{{ form.monthly_rent }}</div>
+
+        <div class="crm-prop-price-panels">
+            <div class="crm-prop-price-panel crm-price-sale" data-price-panel="sale">
+                <div class="crm-prop-price-panel-head">
+                    <span class="crm-prop-price-panel-ico" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                    <div>
+                        <strong data-crm-price-sale-heading>فروش</strong>
+                        <em data-crm-price-sale-hint>قیمت نهایی یا توافقی ملک</em>
+                    </div>
+                </div>
+                <div class="crm-fields crm-fields-2">
+                    <div class="crm-field crm-field-full" data-field="sale_price">
+                        <label class="crm-label" data-crm-label-sale>قیمت فروش (تومان)</label>
+                        {{ form.sale_price }}
+                        <p class="crm-prop-price-meta" data-crm-price-per-sqm hidden></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="crm-prop-price-panel crm-price-deposit" data-price-panel="deposit">
+                <div class="crm-prop-price-panel-head">
+                    <span class="crm-prop-price-panel-ico crm-prop-price-panel-ico--dep" aria-hidden="true"><i class="fas fa-vault"></i></span>
+                    <div>
+                        <strong data-crm-price-deposit-heading>رهن / ودیعه</strong>
+                        <em data-crm-price-deposit-hint>مبلغ بلوکه‌شده نزد مالک یا بنگاه</em>
+                    </div>
+                </div>
+                <div class="crm-fields crm-fields-2">
+                    <div class="crm-field crm-field-full" data-field="deposit">
+                        <label class="crm-label" data-crm-label-deposit>مبلغ رهن (تومان)</label>
+                        {{ form.deposit }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="crm-prop-price-panel crm-price-rent" data-price-panel="rent">
+                <div class="crm-prop-price-panel-head">
+                    <span class="crm-prop-price-panel-ico crm-prop-price-panel-ico--rent" aria-hidden="true"><i class="fas fa-calendar-day"></i></span>
+                    <div>
+                        <strong data-crm-price-rent-heading>اجاره</strong>
+                        <em data-crm-price-rent-hint>مبلغ اجاره ماهانه</em>
+                    </div>
+                </div>
+                <div class="crm-fields crm-fields-2">
+                    <div class="crm-field crm-field-full" data-field="monthly_rent">
+                        <label class="crm-label" data-crm-label-rent>اجاره ماهانه (تومان)</label>
+                        {{ form.monthly_rent }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="crm-fields crm-fields-2 crm-prop-price-notes">
             <div class="crm-field crm-field-full"><label class="crm-label">یادداشت</label>{{ form.notes }}</div>
         </div>
     </section>

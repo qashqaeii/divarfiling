@@ -807,15 +807,18 @@
 }
 
 .ps-amenity-icon {
-    width: 2rem;
-    height: 2rem;
+    width: auto;
+    height: auto;
+    min-width: 1.15rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    font-size: 0.75rem;
+    border-radius: 0;
+    font-size: 0.95rem;
     flex-shrink: 0;
-    background: var(--ps-brand-soft);
+    background: transparent;
+    border: none;
+    box-shadow: none;
     color: var(--ps-brand);
 }
 
@@ -825,7 +828,7 @@
 }
 
 .ps-amenity.is-yes .ps-amenity-icon {
-    background: #ecfdf5;
+    background: transparent;
     color: #16a34a;
 }
 
@@ -834,7 +837,7 @@
 }
 
 .ps-amenity.is-no .ps-amenity-icon {
-    background: #f4f4f5;
+    background: transparent;
     color: #a1a1aa;
 }
 

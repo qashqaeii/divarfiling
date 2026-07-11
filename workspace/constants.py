@@ -147,6 +147,59 @@ LISTING_CORE_AMENITIES = (
     {'key': 'انباری', 'field': 'storage', 'icon': 'fa-box-archive'},
 )
 
+# چک‌باکس‌های امکانات در فرم ویرایش ملک CRM (گروه‌بندی‌شده)
+PROPERTY_AMENITY_CHECKBOX_GROUPS = (
+    {
+        'id': 'core',
+        'title': 'امکانات اصلی',
+        'icon': 'fa-star',
+        'items': (
+            ('پارکینگ', 'fa-square-parking'),
+            ('انباری', 'fa-box-archive'),
+            ('آسانسور', 'fa-elevator'),
+        ),
+    },
+    {
+        'id': 'building',
+        'title': 'امکانات ساختمان',
+        'icon': 'fa-building',
+        'items': (
+            ('بالکن', 'fa-fan'),
+            ('تراس', 'fa-tree'),
+            ('لابی', 'fa-hotel'),
+            ('آیفون تصویری', 'fa-video'),
+            ('درب ضدسرقت', 'fa-shield-halved'),
+            ('نگهبانی', 'fa-user-shield'),
+            ('سرایداری', 'fa-bell-concierge'),
+            ('آنتن مرکزی', 'fa-satellite-dish'),
+        ),
+    },
+    {
+        'id': 'luxury',
+        'title': 'رفاهی و لوکس',
+        'icon': 'fa-spa',
+        'items': (
+            ('استخر', 'fa-water-ladder'),
+            ('روف گاردن', 'fa-seedling'),
+            ('جکوزی', 'fa-hot-tub-person'),
+            ('سونا', 'fa-temperature-high'),
+            ('سالن ورزش', 'fa-dumbbell'),
+        ),
+    },
+    {
+        'id': 'conditions',
+        'title': 'شرایط و وضعیت',
+        'icon': 'fa-clipboard-check',
+        'items': (
+            ('حیوان خانگی مجاز', 'fa-paw'),
+            ('قابل معاوضه', 'fa-right-left'),
+            ('بازسازی شده', 'fa-hammer'),
+            ('سند', 'fa-file-signature'),
+            ('مجوز ساخت', 'fa-hard-hat'),
+        ),
+    },
+)
+
 BUILDER_BUY_PROPERTY_TYPES = ['ویلا', 'کلنگی', 'زمین']
 BUILDER_SELL_PROPERTY_TYPES = ['آپارتمان']
 

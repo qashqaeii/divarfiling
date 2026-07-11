@@ -321,6 +321,21 @@ class QuickLeadForm(forms.ModelForm):
 class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
     money_fields = ('sale_price', 'deposit', 'monthly_rent')
 
+    amenity_flags = forms.MultipleChoiceField(
+        required=False,
+        choices=[],
+        widget=forms.CheckboxSelectMultiple,
+    )
+    amenities_extra = forms.CharField(
+        required=False,
+        label='سایر امکانات',
+        widget=forms.Textarea(attrs={
+            'class': 'crm-textarea',
+            'rows': 2,
+            'placeholder': 'مثلاً جنس کف: سرامیک، تعداد پارکینگ: ۲، …',
+        }),
+    )
+
     class Meta:
         model = CRMProperty
         fields = [
@@ -345,8 +360,16 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'owner_name': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'نام و نام خانوادگی مالک'}),
             'address': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
             'city': forms.TextInput(attrs={'class': 'crm-input'}),
-            'district': forms.TextInput(attrs={'class': 'crm-input'}),
-            'neighborhood': forms.TextInput(attrs={'class': 'crm-input'}),
+            'district': forms.TextInput(attrs={
+                'class': 'crm-input',
+                'placeholder': 'مثلاً منطقه ۳',
+                'autocomplete': 'off',
+            }),
+            'neighborhood': forms.TextInput(attrs={
+                'class': 'crm-input',
+                'placeholder': 'مثلاً نیاوران',
+                'autocomplete': 'off',
+            }),
             'latitude': forms.NumberInput(attrs={'class': 'crm-input', 'step': 'any'}),
             'longitude': forms.NumberInput(attrs={'class': 'crm-input', 'step': 'any'}),
             'area': forms.NumberInput(attrs={'class': 'crm-input', 'step': '0.1'}),
@@ -357,13 +380,79 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'sale_price': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
             'deposit': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
             'monthly_rent': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
-            'amenities': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
+            'amenities': forms.HiddenInput(),
             'notes': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
             'link': forms.URLInput(attrs={'class': 'crm-input'}),
-            'has_parking': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
-            'has_storage': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
-            'has_elevator': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
+            'has_parking': forms.HiddenInput(),
+            'has_storage': forms.HiddenInput(),
+            'has_elevator': forms.HiddenInput(),
         }
+
+    def __init__(self, *args, **kwargs):
+        from workspace.constants import PROPERTY_AMENITY_CHECKBOX_GROUPS
+        from workspace.services.property_public_share import (
+            property_amenity_checkbox_choices,
+            split_amenities_for_checkbox_form,
+        )
+
+        super().__init__(*args, **kwargs)
+        self.fields['amenity_flags'].choices = property_amenity_checkbox_choices()
+        self._amenity_groups_meta = PROPERTY_AMENITY_CHECKBOX_GROUPS
+
+        instance = getattr(self, 'instance', None)
+        if instance is not None and not self.is_bound and not (instance.district or '').strip():
+            from workspace.services.crm import resolve_district_for_property
+            resolved_district = resolve_district_for_property(instance)
+            if resolved_district:
+                self.initial['district'] = resolved_district
+
+        if instance is not None and (instance.pk or instance.amenities or instance.has_parking
+                                     or instance.has_storage or instance.has_elevator):
+            selected, leftover = split_amenities_for_checkbox_form(
+                instance.amenities or '',
+                has_parking=bool(instance.has_parking),
+                has_storage=bool(instance.has_storage),
+                has_elevator=bool(instance.has_elevator),
+            )
+            self.fields['amenity_flags'].initial = selected
+            self.fields['amenities_extra'].initial = leftover
+
+    def amenity_checkbox_groups(self):
+        """گروه‌های امکانات با وضعیت تیک برای رندر در قالب."""
+        if self.is_bound:
+            selected = set(self.data.getlist('amenity_flags'))
+        else:
+            initial = self.fields['amenity_flags'].initial or []
+            selected = set(initial)
+        groups = []
+        for group in self._amenity_groups_meta:
+            items = [
+                {
+                    'label': label,
+                    'icon': icon,
+                    'checked': label in selected,
+                }
+                for label, icon in group['items']
+            ]
+            groups.append({
+                'id': group['id'],
+                'title': group['title'],
+                'icon': group['icon'],
+                'items': items,
+            })
+        return groups
+
+    def clean(self):
+        from workspace.services.property_public_share import serialize_amenity_checkboxes
+
+        cleaned = super().clean()
+        selected = list(cleaned.get('amenity_flags') or [])
+        leftover = (cleaned.get('amenities_extra') or '').strip()
+        cleaned['has_parking'] = 'پارکینگ' in selected
+        cleaned['has_storage'] = 'انباری' in selected
+        cleaned['has_elevator'] = 'آسانسور' in selected
+        cleaned['amenities'] = serialize_amenity_checkboxes(selected, leftover)
+        return cleaned
 
 
 class ActivityForm(forms.Form):

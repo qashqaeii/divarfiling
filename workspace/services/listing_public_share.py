@@ -28,11 +28,13 @@ from workspace.services.public_share_common import (
     build_consultant_block,
     build_finance_summary,
     build_map_navigation,
+    build_office_map_marker,
     filter_public_feature_highlights,
     is_public_technical_key,
     prune_public_detail_sections,
     public_feature_details_flag,
     remap_public_section_labels,
+    resolve_public_location_accuracy,
     scrub_public_feature_profile,
     strip_duplicate_section_fields,
     texts_are_equivalent,
@@ -163,6 +165,8 @@ def update_listing_public_share(share: ListingPublicShare, payload: dict) -> Lis
         share.welcome_message = sanitize_welcome_html(str(payload.get('welcome_message') or ''))
     if 'show_divar_link' in payload:
         share.show_divar_link = bool(payload.get('show_divar_link'))
+    if 'approximate_location' in payload:
+        share.approximate_location = bool(payload.get('approximate_location'))
     if 'is_active' in payload:
         share.is_active = bool(payload.get('is_active'))
     if payload.get('save_as_default_welcome'):
@@ -277,7 +281,10 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
 
     feature_profile = scrub_public_feature_profile(build_listing_feature_profile(listing, feat))
     gallery_images = gallery_images_for_listing(listing)
-    location_accuracy = location_accuracy_for_map(data)
+    location_accuracy = resolve_public_location_accuracy(
+        share,
+        location_accuracy_for_map(data),
+    )
     show_feature_details = public_feature_details_flag(feature_profile)
 
     # اگر پیام مشاور همان متن توضیحات آگهی است، پیام را مخفی کن تا تکرار نشود
@@ -286,6 +293,9 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
         consultant['has_welcome'] = False
         consultant['welcome_message'] = ''
         consultant['welcome_message_html'] = ''
+
+    from workspace.mixins import get_or_create_settings
+    office_map_marker = build_office_map_marker(get_or_create_settings(user))
 
     return {
         'share': share,
@@ -318,6 +328,8 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
             show_divar_link=share.show_divar_link,
             public=True,
         ),
+        'office_map_marker': office_map_marker,
+        'office_map_navigation': (consultant.get('agency') or {}).get('map_navigation'),
         'consultant': consultant,
         'category_breadcrumb': category_parts,
         'show_divar_link': share.show_divar_link,

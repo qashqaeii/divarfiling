@@ -322,8 +322,8 @@
         document.body.removeChild(ta);
     }
 
-    function initMap() {
-        var markerEl = document.getElementById('listing-map-marker');
+    function initLazyListingMap(markerElId, mapId, uiPrefix, stageId) {
+        var markerEl = document.getElementById(markerElId);
         if (!markerEl || typeof initListingDetailMap !== 'function') return;
         try {
             var marker = JSON.parse(markerEl.textContent);
@@ -332,15 +332,15 @@
             var start = function () {
                 initListingDetailMap({
                     marker: marker,
-                    uiPrefix: 'pubLd',
-                    mapId: 'pubLocationMap',
-                    stageId: 'pubLocationMapStage',
-                    zoom: 17,
+                    uiPrefix: uiPrefix,
+                    mapId: mapId,
+                    stageId: stageId,
+                    zoom: marker.map_kind === 'office' ? 16 : 17,
                 });
             };
 
             if ('IntersectionObserver' in window) {
-                var mapEl = document.getElementById('pubLocationMap');
+                var mapEl = document.getElementById(mapId);
                 if (mapEl) {
                     var io = new IntersectionObserver(function (entries) {
                         if (entries.some(function (e) { return e.isIntersecting; })) {
@@ -354,6 +354,11 @@
             }
             start();
         } catch (e) { /* ignore bad marker */ }
+    }
+
+    function initMap() {
+        initLazyListingMap('listing-map-marker', 'pubLocationMap', 'pubLd', 'pubLocationMapStage');
+        initLazyListingMap('office-map-marker', 'pubOfficeMap', 'pubOffice', 'pubOfficeMapStage');
     }
 
     function initDockPadding() {

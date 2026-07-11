@@ -4,6 +4,7 @@
 {% block page_title %}{{ listing.title|truncatechars:40 }}{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=134">
 <link rel="stylesheet" href="{% static 'css/listing-public-share.css' %}?v=2">
 {% if listing.latitude and listing.longitude %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=4">
@@ -11,283 +12,569 @@
 {% endblock %}
 
 {% block content %}
-<div class="mk-page ws-ld">
-    <header class="mk-page-hero">
-        <div class="mk-page-hero-main">
-            <div class="mk-page-hero-kicker">
-                <span class="mk-page-hero-mark" aria-hidden="true"></span>
-                <span class="mk-page-hero-eyebrow">آگهی</span>
-            </div>
-            <h1 class="mk-page-hero-title">{{ listing.title }}</h1>
-            <p class="mk-page-hero-desc">
-                <code class="ws-token">{{ listing.token }}</code>
-                <button type="button" class="ws-fv-btn" data-copy="{{ listing.token }}" title="کپی">{% include 'includes/icon_slot.html' with decor='copy' size='inline' only %}</button>
-                <span class="ws-badge ws-badge-blue">{{ tx.badge }}</span>
-                {% if feat.advertiser %}
-                <span class="mk-pub-pill {{ feat.advertiser.pill_class }}" title="{{ feat.advertiser.title }}">
-                    <i class="fas {{ feat.advertiser.icon }}" aria-hidden="true"></i><span>{{ feat.advertiser.label }}</span>
-                </span>
-                {% endif %}
-                {% if meta.is_favorite %}<span class="ws-badge ws-badge-amber">علاقه‌مند</span>{% endif %}
-                {% if crm_property %}<span class="ws-badge ws-badge-green">فایل شخصی</span>{% endif %}
-                {% if listing.is_expired %}<span class="ws-badge ws-badge-red">منقضی</span>{% endif %}
-            </p>
+<div class="crm-prop-detail-v2 crm-page-chrome ws-ld-detail{% if tx.is_sale %} ws-ld-detail--sale{% elif tx.is_rent %} ws-ld-detail--rent{% elif tx.show_deposit %} ws-ld-detail--deposit{% endif %}">
+
+    <header class="crm-prop-hero crm-prop-hero--{% if tx.is_sale %}sale{% elif tx.show_deposit and not tx.is_sale %}deposit{% elif tx.is_rent %}rent{% else %}default{% endif %}" aria-label="خلاصه آگهی">
+        <div class="crm-prop-hero-ambient" aria-hidden="true">
+            <span class="crm-prop-hero-orb crm-prop-hero-orb--1"></span>
+            <span class="crm-prop-hero-orb crm-prop-hero-orb--2"></span>
         </div>
-        <div class="mk-page-hero-toolbar" role="toolbar" aria-label="عملیات">
-            <button type="button" class="mk-hero-btn mk-hero-btn-primary" data-open-listing-edit="{{ listing.id }}" data-id="{{ listing.id }}" data-dataset-id="{{ dataset.id }}" title="ویرایش کامل آگهی" aria-label="ویرایش">
-                <i class="fas fa-pen-to-square" aria-hidden="true"></i><span class="mk-hero-btn-label">ویرایش</span>
-            </button>
-            <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="mk-inline-form">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="mk-hero-btn mk-hero-btn-ghost" title="{% if meta.is_favorite %}حذف از علاقه‌مندی{% else %}افزودن به علاقه‌مندی{% endif %}" aria-label="علاقه‌مندی">
-                    <i class="{% if meta.is_favorite %}fas fa-star{% else %}far fa-star{% endif %}" aria-hidden="true"></i>
-                    <span class="mk-hero-btn-label">علاقه</span>
-                </button>
-            </form>
-            {% if crm_property %}
-            <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="mk-hero-btn mk-hero-btn-ghost" title="مشاهده در فایل‌های شخصی">
-                <i class="fas fa-folder-open" aria-hidden="true"></i><span class="mk-hero-btn-label">فایل شخصی</span>
-            </a>
-            {% else %}
-            <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="mk-inline-form">
-                {% csrf_token %}
-                <input type="hidden" name="redirect" value="property">
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="mk-hero-btn mk-hero-btn-accent" title="تبدیل آگهی دیوار به فایل شخصی" aria-label="تبدیل به فایل شخصی">
-                    <i class="fas fa-folder-plus" aria-hidden="true"></i><span class="mk-hero-btn-label">فایل شخصی</span>
-                </button>
-            </form>
+
+        <div class="crm-prop-hero-inner">
+            <div class="crm-prop-hero-nav">
+                <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="crm-prop-hero-back" title="بازگشت به جدول">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <nav class="crm-prop-hero-crumb" aria-label="مسیر">
+                    <a href="{% url 'workspace:dataset_detail' dataset.id %}">{{ dataset.name|truncatechars:28 }}</a>
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    <span>آگهی</span>
+                </nav>
+                <div class="crm-prop-hero-actions" role="toolbar" aria-label="عملیات آگهی">
+                    <button type="button" class="crm-prop-hero-act crm-prop-hero-act--primary" data-open-listing-edit="{{ listing.id }}" data-id="{{ listing.id }}" data-dataset-id="{{ dataset.id }}" title="ویرایش کامل آگهی">
+                        <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
+                    </button>
+                    <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="ws-ld-hero-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="crm-prop-hero-act" title="{% if meta.is_favorite %}حذف از علاقه‌مندی{% else %}افزودن به علاقه‌مندی{% endif %}">
+                            <i class="{% if meta.is_favorite %}fas fa-star{% else %}far fa-star{% endif %}" aria-hidden="true"></i>
+                            <span>علاقه</span>
+                        </button>
+                    </form>
+                    {% if crm_property %}
+                    <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="crm-prop-hero-act" title="مشاهده در فایل‌های شخصی">
+                        <i class="fas fa-folder-open" aria-hidden="true"></i><span>فایل شخصی</span>
+                    </a>
+                    {% else %}
+                    <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-hero-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="redirect" value="property">
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="crm-prop-hero-act crm-prop-hero-act--accent" title="تبدیل آگهی دیوار به فایل شخصی">
+                            <i class="fas fa-folder-plus" aria-hidden="true"></i><span>فایل شخصی</span>
+                        </button>
+                    </form>
+                    {% endif %}
+                    <button type="button" class="crm-prop-hero-act" data-modal-open="modal-meta" title="متادیتا">
+                        <i class="fas fa-sliders" aria-hidden="true"></i><span>متادیتا</span>
+                    </button>
+                    <button type="button" class="crm-prop-hero-act crm-prop-hero-act--accent" data-modal-open="modal-share" title="اشتراک با مشتری">
+                        <i class="fas fa-share-alt" aria-hidden="true"></i><span>اشتراک</span>
+                    </button>
+                    <button type="button" class="crm-prop-hero-act" data-copy="{{ whatsapp_text }}" title="کپی متن واتساپ">
+                        <i class="fas fa-comment-dots" aria-hidden="true"></i><span>واتساپ</span>
+                    </button>
+                    {% if listing.link %}
+                    <a href="{{ listing.link }}" target="_blank" rel="noopener" class="crm-prop-hero-act" title="مشاهده در دیوار">
+                        {% include 'includes/icon_slot.html' with decor='external_link' size='inline' only %}<span>دیوار</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="crm-prop-hero-main">
+                <div class="crm-prop-hero-visual">
+                    {% if gallery_images %}
+                    <button type="button"
+                            class="crm-prop-hero-cover"
+                            aria-label="نمایش تصاویر آگهی"
+                            data-ws-lightbox="{{ gallery_images.0 }}">
+                        <img src="{{ gallery_images.0 }}" alt="تصویر ۱" loading="eager">
+                    </button>
+                    {% if gallery_images|length > 1 %}
+                    <span class="crm-prop-hero-img-badge"><i class="fas fa-images"></i> {{ gallery_images|length }}</span>
+                    {% endif %}
+                    {% else %}
+                    <div class="crm-prop-hero-cover crm-prop-hero-cover--empty" aria-hidden="true">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    {% endif %}
+                    <span class="crm-prop-hero-deal-pill">{{ tx.badge }}</span>
+                </div>
+
+                <div class="crm-prop-hero-content">
+                    <div class="crm-prop-hero-status-row">
+                        <span class="crm-prop-badge crm-prop-badge--type">آگهی دیوار</span>
+                        {% if feat.advertiser %}
+                        <span class="crm-prop-badge crm-prop-badge--status" title="{{ feat.advertiser.title }}">
+                            <i class="fas {{ feat.advertiser.icon }}" aria-hidden="true"></i> {{ feat.advertiser.label }}
+                        </span>
+                        {% endif %}
+                        {% if meta.is_favorite %}<span class="crm-prop-badge crm-prop-badge--deal">علاقه‌مند</span>{% endif %}
+                        {% if crm_property %}<span class="crm-prop-badge crm-prop-badge--status">فایل شخصی</span>{% endif %}
+                        {% if listing.is_expired %}<span class="crm-prop-badge ws-ld-badge-expired">منقضی</span>{% endif %}
+                    </div>
+
+                    <h1 class="crm-prop-hero-title">{{ listing.title }}</h1>
+
+                    <div class="crm-prop-hero-chips">
+                        {% if listing.neighborhood or listing.city %}
+                        <span class="crm-prop-hero-chip crm-prop-hero-chip--loc">
+                            <i class="fas fa-location-dot" aria-hidden="true"></i>
+                            {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}{% if listing.neighborhood and listing.city %} · {% endif %}{% if listing.city %}{{ listing.city }}{% endif %}
+                        </span>
+                        {% endif %}
+                        <span class="crm-prop-hero-chip crm-prop-hero-chip--token">
+                            <i class="fas fa-fingerprint" aria-hidden="true"></i>
+                            <code>{{ listing.token }}</code>
+                            <button type="button" class="crm-prop-copy" data-copy="{{ listing.token }}" title="کپی شناسه"><i class="fas fa-copy"></i></button>
+                        </span>
+                        {% if owner_contact %}
+                        <span class="crm-prop-hero-chip crm-prop-hero-chip--owner">
+                            <i class="fas fa-user-tie" aria-hidden="true"></i>مالک: {{ owner_contact.name }}
+                        </span>
+                        {% elif owner_name %}
+                        <span class="crm-prop-hero-chip crm-prop-hero-chip--owner">
+                            <i class="fas fa-user-tie" aria-hidden="true"></i>مالک: {{ owner_name }}
+                        </span>
+                        {% endif %}
+                        <span class="crm-prop-hero-chip"><i class="fas fa-database" aria-hidden="true"></i>{{ dataset.name|truncatechars:24 }}</span>
+                    </div>
+
+                    <div class="crm-prop-hero-board" aria-label="قیمت و مشخصات کلیدی">
+                        <div class="crm-prop-hero-pricezone">
+                            {% if tx.show_price and listing.price %}
+                            <div class="crm-prop-hero-pricecard crm-prop-hero-pricecard--sale">
+                                <span class="crm-prop-hero-pricecard-lbl">قیمت</span>
+                                <strong>{{ listing.price|ws_money }}</strong>
+                            </div>
+                            {% endif %}
+                            {% if tx.show_price_per_sqm and listing.price_per_sqm %}
+                            <div class="crm-prop-hero-pricecard crm-prop-hero-pricecard--sale">
+                                <span class="crm-prop-hero-pricecard-lbl">قیمت/متر</span>
+                                <strong>{{ listing.price_per_sqm|ws_money:'per_sqm' }}</strong>
+                            </div>
+                            {% endif %}
+                            {% if tx.show_deposit and listing.deposit %}
+                            <div class="crm-prop-hero-pricecard crm-prop-hero-pricecard--dep">
+                                <span class="crm-prop-hero-pricecard-lbl">ودیعه</span>
+                                <strong>{{ listing.deposit|ws_money }}</strong>
+                            </div>
+                            {% endif %}
+                            {% if tx.show_rent and listing.rent %}
+                            <div class="crm-prop-hero-pricecard crm-prop-hero-pricecard--rent">
+                                <span class="crm-prop-hero-pricecard-lbl">اجاره</span>
+                                <strong>{{ listing.rent|ws_money }}</strong>
+                            </div>
+                            {% endif %}
+                            {% if not listing.price and not listing.deposit and not listing.rent %}
+                            <div class="crm-prop-hero-pricecard crm-prop-hero-pricecard--empty">
+                                <i class="fas fa-tag" aria-hidden="true"></i>
+                                <span>قیمت ثبت نشده</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="crm-prop-hero-kpis">
+                            {% if listing.area %}
+                            <div class="crm-prop-hero-kpi">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-ruler-combined"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>متراژ</em>
+                                    <strong>{{ listing.area|ws_area }}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% if feat.rooms or listing.rooms %}
+                            <div class="crm-prop-hero-kpi">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-door-open"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>اتاق</em>
+                                    <strong>{{ feat.rooms|default:listing.rooms }}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% if feat.floor %}
+                            <div class="crm-prop-hero-kpi">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-layer-group"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>طبقه</em>
+                                    <strong>{{ feat.floor }}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% if feat.build_year %}
+                            <div class="crm-prop-hero-kpi">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-calendar"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>ساخت</em>
+                                    <strong>{{ feat.build_year }}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
+                            <div class="crm-prop-hero-kpi crm-prop-hero-kpi--accent">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-users"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>مخاطب</em>
+                                    <strong>{{ crm_links|length }}</strong>
+                                </span>
+                            </div>
+                            {% if listing.neighborhood %}
+                            <div class="crm-prop-hero-kpi">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-map-pin"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>محله</em>
+                                    <strong>{{ listing.neighborhood|truncatechars:14 }}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if feature_profile.core or benchmark.verdict %}
+            <div class="crm-prop-hero-amenities">
+                {% if feature_profile.core %}
+                <span class="crm-prop-hero-amenities-lbl"><i class="fas fa-sparkles"></i> امکانات</span>
+                <div class="crm-prop-hero-amenity-icons" aria-label="امکانات ملک">
+                    {% for item in feature_profile.core %}
+                    <span class="crm-files-amenity crm-prop-hero-amenity{% if item.state == 'yes' or item.state == 'neutral' %} is-on{% else %} is-off{% endif %}"
+                          data-tip="{{ item.label }}: {% if item.state == 'yes' %}دارد{% elif item.state == 'no' %}ندارد{% else %}{{ item.value|default:'—' }}{% endif %}"
+                          aria-label="{{ item.label }}"
+                          tabindex="0">
+                        <i class="fas {{ item.icon }}" aria-hidden="true"></i>
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if benchmark.verdict %}
+                <div class="crm-prop-hero-tags ws-ld-hero-bench" title="مقایسه با بازار">
+                    <span class="crm-prop-tag crm-prop-tag--hl">
+                        <i class="fas fa-scale-balanced" aria-hidden="true"></i>
+                        {{ benchmark.verdict }}
+                    </span>
+                    {% if benchmark.price_per_sqm_fmt %}
+                    <span class="crm-prop-tag">این آگهی: {{ benchmark.price_per_sqm_fmt }}</span>
+                    {% endif %}
+                    {% if benchmark.market_median_fmt %}
+                    <span class="crm-prop-tag">میانه: {{ benchmark.market_median_fmt }}</span>
+                    {% endif %}
+                    {% if benchmark.diff_pct is not None %}
+                    <span class="crm-prop-tag">اختلاف: {{ benchmark.diff_pct|ws_pct }}</span>
+                    {% endif %}
+                    {% if benchmark.note %}
+                    <span class="crm-prop-tag ws-ld-bench-note">{{ benchmark.note }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
             {% endif %}
-            <button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-modal-open="modal-meta" title="متادیتا" aria-label="متادیتا">
-                <i class="fas fa-sliders" aria-hidden="true"></i><span class="mk-hero-btn-label">متادیتا</span>
-            </button>
-            <button type="button" class="mk-hero-btn mk-hero-btn-accent" data-modal-open="modal-share" title="اشتراک با مشتری" aria-label="اشتراک">
-                <i class="fas fa-share-nodes" aria-hidden="true"></i><span class="mk-hero-btn-label">اشتراک</span>
-            </button>
-            <button type="button" class="mk-hero-btn mk-hero-btn-ghost" data-copy="{{ whatsapp_text }}" title="کپی متن واتساپ" aria-label="واتساپ">
-                <i class="fas fa-comment-dots" aria-hidden="true"></i><span class="mk-hero-btn-label">واتساپ</span>
-            </button>
-            {% if listing.link %}
-            <a href="{{ listing.link }}" target="_blank" rel="noopener" class="mk-hero-btn mk-hero-btn-primary" title="مشاهده در دیوار" aria-label="دیوار">
-                <i class="fas fa-external-link-alt" aria-hidden="true"></i><span class="mk-hero-btn-label">دیوار</span>
-            </a>
+
+            {% if gallery_images %}
+            <div class="crm-prop-hero-gallery-wrap" data-ws-gallery>
+                {% if gallery_images|length == 1 %}
+                <button type="button" hidden data-ws-lightbox="{{ gallery_images.0 }}" aria-hidden="true" tabindex="-1"></button>
+                {% else %}
+                <div class="crm-prop-hero-gallery" aria-label="گالری تصاویر">
+                    {% for img in gallery_images|slice:":24" %}
+                    <button type="button"
+                            class="crm-prop-gallery-item{% if forloop.first %} is-active{% endif %}"
+                            data-ws-lightbox="{{ img }}"
+                            aria-label="نمایش تصویر {{ forloop.counter }} از {{ gallery_images|length }}">
+                        <img src="{{ img }}" alt="تصویر {{ forloop.counter }}" loading="lazy" decoding="async">
+                    </button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
     </header>
 
-    <section class="mk-stat-strip ws-ld-stats">
-            {% if tx.show_price and listing.price %}<div class="ws-ld-stat"><span>قیمت</span><strong>{{ listing.price|ws_money }}</strong></div>{% endif %}
-            {% if tx.show_price_per_sqm and listing.price_per_sqm %}<div class="ws-ld-stat"><span>قیمت/متر</span><strong>{{ listing.price_per_sqm|ws_money:'per_sqm' }}</strong></div>{% endif %}
-            {% if tx.show_deposit and listing.deposit %}<div class="ws-ld-stat"><span>ودیعه</span><strong>{{ listing.deposit|ws_money }}</strong></div>{% endif %}
-            {% if tx.show_rent and listing.rent %}<div class="ws-ld-stat"><span>اجاره</span><strong>{{ listing.rent|ws_money }}</strong></div>{% endif %}
-            {% if listing.area %}<div class="ws-ld-stat"><span>متراژ</span><strong>{{ listing.area|ws_area }}</strong></div>{% endif %}
-            {% if feat.rooms or listing.rooms %}<div class="ws-ld-stat"><span>اتاق</span><strong>{{ feat.rooms|default:listing.rooms }}</strong></div>{% endif %}
-            {% if feat.floor %}<div class="ws-ld-stat"><span>طبقه</span><strong>{{ feat.floor }}</strong></div>{% endif %}
-            {% if feat.build_year %}<div class="ws-ld-stat"><span>ساخت</span><strong>{{ feat.build_year }}</strong></div>{% endif %}
-            {% if listing.neighborhood %}<div class="ws-ld-stat"><span>محله</span><strong>{{ listing.neighborhood }}</strong></div>{% endif %}
-    </section>
+    <div class="crm-prop-detail-grid">
+        <main class="crm-prop-main crm-detail-main">
+            <nav class="crm-tabs crm-tabs-pro crm-prop-tabs" role="tablist" aria-label="جزئیات آگهی">
+                <button type="button" class="crm-tab crm-tab-pro active" data-tab="overview" role="tab" aria-selected="true">
+                    <i class="fas fa-table-columns"></i><span>پرونده</span>
+                </button>
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="contacts" role="tab" aria-selected="false">
+                    <i class="fas fa-users"></i><span>مخاطبین</span>{% if crm_links %}<em>{{ crm_links|length }}</em>{% endif %}
+                </button>
+                {% if feature_profile.has_details %}
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="specs" role="tab" aria-selected="false">
+                    <i class="fas fa-list-check"></i><span>مشخصات</span>{% if feature_profile.detail_count %}<em>{{ feature_profile.detail_count }}</em>{% endif %}
+                </button>
+                {% endif %}
+                {% if supplementary_fields or supplementary_groups %}
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="extra" role="tab" aria-selected="false">
+                    <i class="fas fa-layer-group"></i><span>تکمیلی</span>
+                </button>
+                {% endif %}
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="notes" role="tab" aria-selected="false">
+                    <i class="fas fa-note-sticky"></i><span>یادداشت</span>
+                </button>
+                {% if price_history %}
+                <button type="button" class="crm-tab crm-tab-pro" data-tab="history" role="tab" aria-selected="false">
+                    <i class="fas fa-clock-rotate-left"></i><span>قیمت</span><em>{{ price_history|length }}</em>
+                </button>
+                {% endif %}
+            </nav>
 
-    {% if benchmark.verdict %}
-    <div class="ws-card ws-benchmark ws-ld-bench">
-        <h3 class="ws-card-title"><i class="fas fa-scale-balanced" aria-hidden="true"></i> مقایسه با بازار</h3>
-        <div class="ws-benchmark-grid">
-            <div class="ws-benchmark-item">
-                <span class="ws-stat-lbl">{{ benchmark.label|default:"قیمت/متر" }} این آگهی</span>
-                <strong>{{ benchmark.price_per_sqm_fmt }}</strong>
-            </div>
-            <div class="ws-benchmark-item">
-                <span class="ws-stat-lbl">میانه بازار</span>
-                <strong>{{ benchmark.market_median_fmt }}</strong>
-            </div>
-            <div class="ws-benchmark-item">
-                <span class="ws-stat-lbl">اختلاف</span>
-                <strong>{{ benchmark.diff_pct|ws_pct }}</strong>
-            </div>
-            <div class="ws-benchmark-verdict">
-                {{ benchmark.verdict }}
-                {% if benchmark.note %}<span class="ws-ld-bench-note">{{ benchmark.note }}</span>{% endif %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <div class="ws-ld-grid">
-        <div class="ws-ld-main">
-            <div class="ws-card ws-ld-fields">
-                <div class="ws-ld-tabs-bar">
-                    <nav class="ws-tabs ws-ld-tabs" role="tablist" aria-label="جزئیات آگهی">
-                        {% for section, fields in sections.items %}
-                        {% if fields or section == 'مکان' and listing.latitude and listing.longitude %}
-                        <button type="button" role="tab" class="ws-tab ws-ld-tab {% if forloop.first %}active{% endif %}" data-tab="{{ section }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+            <div data-panel="overview" class="crm-prop-panel crm-prop-panel-pro" role="tabpanel">
+                <header class="crm-prop-panel-head">
+                    <h2>پرونده کامل آگهی</h2>
+                    <p>تمام فیلدهای استخراج‌شده از دیوار</p>
+                </header>
+                <div class="crm-prop-panel-body">
+                    {% for section, fields in sections.items %}
+                    {% if fields %}
+                    <section class="ws-ld-dossier-section">
+                        <h3 class="ws-ld-dossier-section-title">
                             {% if section == 'مالی' %}<i class="fas fa-coins" aria-hidden="true"></i>
                             {% elif section == 'ملک' %}{% include 'includes/icon_slot.html' with decor='building' size='inline' only %}
                             {% elif section == 'مکان' %}{% include 'includes/icon_slot.html' with decor='map_pin' size='inline' only %}
                             {% elif section == 'متن' %}<i class="fas fa-align-right" aria-hidden="true"></i>
                             {% elif section == 'تماس' %}{% include 'includes/icon_slot.html' with decor='phone' size='inline' only %}
                             {% else %}<i class="fas fa-circle-info" aria-hidden="true"></i>{% endif %}
-                            <span>{{ section }}</span>
-                        </button>
-                        {% endif %}
-                        {% if section == 'ملک' and feature_profile.has_details %}
-                        <button type="button" role="tab" class="ws-tab ws-ld-tab" data-tab="features" aria-selected="false">
-                            <i class="fas fa-list-check" aria-hidden="true"></i>
-                            <span>ویژگی‌ها و امکانات</span>
-                            <em class="ws-ld-tab-badge">{{ feature_profile.detail_count }}</em>
-                        </button>
-                        {% endif %}
-                        {% endfor %}
-                        {% if feature_profile.has_details and 'ملک' not in sections %}
-                        <button type="button" role="tab" class="ws-tab ws-ld-tab {% if not sections %}active{% endif %}" data-tab="features" aria-selected="{% if not sections %}true{% else %}false{% endif %}">
-                            <i class="fas fa-list-check" aria-hidden="true"></i>
-                            <span>ویژگی‌ها و امکانات</span>
-                            <em class="ws-ld-tab-badge">{{ feature_profile.detail_count }}</em>
-                        </button>
-                        {% endif %}
-                        {% if supplementary_fields %}
-                        <button type="button" role="tab" class="ws-tab ws-ld-tab {% if not sections and not feature_profile.has_details %}active{% endif %}" data-tab="extra" aria-selected="{% if not sections and not feature_profile.has_details %}true{% else %}false{% endif %}">
-                            <i class="fas fa-layer-group" aria-hidden="true"></i>
-                            <span>اطلاعات تکمیلی</span>
-                        </button>
-                        {% endif %}
-                    </nav>
-                </div>
-
-                <div class="ws-ld-tab-panels">
-                    {% for section, fields in sections.items %}
-                    {% if fields or section == 'مکان' and listing.latitude and listing.longitude %}
-                    <div role="tabpanel" data-panel="{{ section }}" {% if not forloop.first %}hidden{% endif %}>
-                        {% if fields %}
+                            {{ section }}
+                        </h3>
                         {% with section_rows|dict_get:section as rows %}
                         {% include 'workspace/includes/field_list.html' with fields=rows %}
                         {% endwith %}
-                        {% endif %}
-                        {% if section == 'مکان' and listing.latitude and listing.longitude %}
-                        {% include 'workspace/includes/listing_location_map.html' %}
-                        {% endif %}
-                    </div>
+                    </section>
                     {% endif %}
+                    {% empty %}
+                    <div class="crm-prop-empty crm-prop-empty--pro">
+                        <div class="crm-prop-empty-icon"><i class="fas fa-inbox"></i></div>
+                        <p>فیلدی برای نمایش ثبت نشده</p>
+                    </div>
                     {% endfor %}
-
-                    {% if feature_profile.has_details %}
-                    <div role="tabpanel" data-panel="features" {% if sections %}hidden{% endif %}>
-                        {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile embedded=True %}
-                    </div>
-                    {% endif %}
-
-                    {% if supplementary_groups %}
-                    <div role="tabpanel" data-panel="extra" {% if sections or feature_profile.has_details %}hidden{% endif %}>
-                        {% include 'workspace/includes/supplementary_fields.html' with groups=supplementary_groups %}
-                    </div>
-                    {% endif %}
                 </div>
-
-                {% if gallery_images %}
-                <div class="ws-ld-gallery" data-ws-gallery>
-                    <p class="ws-ld-gallery-title">تصاویر <span>{{ gallery_images|length }}</span></p>
-                    <div class="ws-ld-gallery-grid">
-                        {% for img in gallery_images|slice:":24" %}
-                        <button type="button" class="ws-ld-gallery-thumb" data-ws-lightbox="{{ img }}" aria-label="نمایش تصویر {{ forloop.counter }} از {{ gallery_images|length }}">
-                            <img src="{{ img }}" alt="تصویر {{ forloop.counter }}" loading="lazy" decoding="async">
-                        </button>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
             </div>
 
-            <section class="ws-card ws-ld-crm">
-                <div class="ws-ld-crm-head">
-                    <h3><i class="fas fa-address-book" aria-hidden="true"></i> مخاطبین CRM</h3>
-                    <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="ws-ld-crm-new">+ مخاطب جدید</a>
-                </div>
-                {% if crm_links %}
-                <div class="ws-ld-crm-list">
-                    {% for link in crm_links %}
-                    <article class="ws-ld-crm-row">
-                        <a href="{% url 'workspace:crm_detail' link.customer_id %}" class="ws-ld-crm-row-main">
-                            <span class="ws-ld-crm-row-name">{{ link.customer.name }}</span>
-                            <em class="ws-ld-crm-row-role">{{ link.role }}</em>
-                            {% if link.customer.phone %}<span class="ws-ld-crm-row-phone" dir="ltr">{{ link.customer.phone }}</span>{% endif %}
+            <div data-panel="contacts" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head crm-prop-panel-head--row">
+                    <div>
+                        <h2>مخاطبین مرتبط</h2>
+                        <p>افراد پیوندشده به این آگهی</p>
+                    </div>
+                    <div class="crm-prop-panel-head-actions">
+                        <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="crm-dash-act crm-dash-act--primary">
+                            <i class="fas fa-user-plus"></i><span>مخاطب جدید</span>
                         </a>
-                        {% url 'workspace:crm_detail' link.customer_id as contact_profile_url %}
-                        {% url 'workspace:listing_detail' dataset.id listing.id as listing_unlink_action %}
-                        {% include 'workspace/includes/contact_quick_actions.html' with phone=link.customer.phone profile_url=contact_profile_url copy_text=link.customer.name show_unlink=True unlink_action='crm_unlink' unlink_id=link.id unlink_id_field='link_id' unlink_form_action=listing_unlink_action acts_class='ws-ld-crm-acts' acts_label='عملیات مخاطب' %}
-                    </article>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="ws-ld-crm-empty">هنوز مخاطبی به این آگهی پیوند نشده.</p>
-                {% endif %}
-                {% if crm_customers %}
-                <form method="post" class="ws-ld-crm-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="crm_link">
-                    <select name="customer_id" class="ws-select ws-ld-crm-sel" required aria-label="مخاطب">
-                        <option value="">مخاطب...</option>
-                        {% for c in crm_customers %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
-                    </select>
-                    <select name="role" class="ws-select ws-ld-crm-sel" aria-label="نقش">
-                        {% for r in crm_listing_roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
-                    </select>
-                    <select name="deal_type" class="ws-select ws-ld-crm-sel" aria-label="معامله">
-                        {% for d in crm_deal_types %}<option value="{{ d }}" {% if d == crm_default_deal %}selected{% endif %}>{{ d }}</option>{% endfor %}
-                    </select>
-                    <button type="submit" class="ws-btn ws-btn-sm ws-btn-primary"><i class="fas fa-link" aria-hidden="true"></i> پیوند</button>
-                </form>
-                {% endif %}
-            </section>
-        </div>
+                    </div>
+                </header>
+                <div class="crm-prop-panel-body">
+                    {% if crm_links %}
+                    <div class="crm-prop-contact-grid">
+                        {% for link in crm_links %}
+                        <article class="crm-prop-contact-tile">
+                            <a href="{% url 'workspace:crm_detail' link.customer_id %}" class="crm-prop-contact-main">
+                                <span class="crm-prop-contact-avatar">{{ link.customer.name|crm_initials }}</span>
+                                <div class="crm-prop-contact-body">
+                                    <strong>{{ link.customer.name }}</strong>
+                                    <span class="crm-prop-contact-role" {% crm_role_style_attr link.role %}>{{ link.role }}</span>
+                                    <div class="crm-prop-contact-meta">
+                                        {% if link.customer.phone %}<span dir="ltr">{{ link.customer.phone }}</span>{% endif %}
+                                        {% if link.deal_type %}<span>{{ link.deal_type }}</span>{% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                            {% url 'workspace:crm_detail' link.customer_id as contact_profile_url %}
+                            {% url 'workspace:listing_detail' dataset.id listing.id as listing_unlink_action %}
+                            {% include 'workspace/includes/contact_quick_actions.html' with phone=link.customer.phone profile_url=contact_profile_url copy_text=link.customer.name show_unlink=True unlink_action='crm_unlink' unlink_id=link.id unlink_id_field='link_id' unlink_form_action=listing_unlink_action acts_class='crm-prop-contact-acts' acts_label='عملیات مخاطب' %}
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="crm-prop-empty crm-prop-empty--pro">
+                        <div class="crm-prop-empty-icon"><i class="fas fa-user-plus"></i></div>
+                        <p>هنوز مخاطبی به این آگهی پیوند نشده</p>
+                    </div>
+                    {% endif %}
 
-        <aside class="ws-ld-aside">
+                    {% if crm_customers %}
+                    <form method="post" class="ws-ld-crm-form ws-ld-crm-form--pro">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="crm_link">
+                        <p class="ws-ld-crm-form-lbl">پیوند مخاطب موجود</p>
+                        <div class="ws-ld-crm-form-row">
+                            <select name="customer_id" class="ws-select" required aria-label="مخاطب">
+                                <option value="">مخاطب...</option>
+                                {% for c in crm_customers %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                            </select>
+                            <select name="role" class="ws-select" aria-label="نقش">
+                                {% for r in crm_listing_roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+                            </select>
+                            <select name="deal_type" class="ws-select" aria-label="معامله">
+                                {% for d in crm_deal_types %}<option value="{{ d }}" {% if d == crm_default_deal %}selected{% endif %}>{{ d }}</option>{% endfor %}
+                            </select>
+                            <button type="submit" class="crm-dash-act crm-dash-act--primary"><i class="fas fa-link" aria-hidden="true"></i><span>پیوند</span></button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if feature_profile.has_details %}
+            <div data-panel="specs" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head">
+                    <h2>ویژگی‌ها و امکانات</h2>
+                    {% if listing.link %}
+                    <p>منبع: <a href="{{ listing.link }}" target="_blank" rel="noopener">مشاهده در دیوار</a></p>
+                    {% endif %}
+                </header>
+                <div class="crm-prop-panel-body">
+                    {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if supplementary_fields or supplementary_groups %}
+            <div data-panel="extra" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head">
+                    <h2>اطلاعات تکمیلی</h2>
+                    <p>فیلدهای اضافی استخراج‌شده</p>
+                </header>
+                <div class="crm-prop-panel-body">
+                    {% if supplementary_groups %}
+                    {% include 'workspace/includes/supplementary_fields.html' with groups=supplementary_groups %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div data-panel="notes" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head crm-prop-panel-head--row">
+                    <div><h2>یادداشت</h2><p>یادداشت شخصی روی این آگهی</p></div>
+                    <button type="button" class="crm-dash-act" data-modal-open="modal-meta">
+                        <i class="fas fa-pen"></i><span>ویرایش</span>
+                    </button>
+                </header>
+                <div class="crm-prop-panel-body">
+                    {% if meta.note %}
+                    <div class="crm-notes-block crm-prop-notes">{{ meta.note|linebreaks }}</div>
+                    {% else %}
+                    <div class="crm-prop-empty crm-prop-empty--pro">
+                        <div class="crm-prop-empty-icon"><i class="fas fa-note-sticky"></i></div>
+                        <p>یادداشتی ثبت نشده</p>
+                        <button type="button" class="crm-dash-act crm-dash-act--primary" data-modal-open="modal-meta">افزودن یادداشت</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if price_history %}
+            <div data-panel="history" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head">
+                    <h2>تاریخچه قیمت</h2>
+                    <p>تغییرات ثبت‌شده برای این توکن</p>
+                </header>
+                <div class="crm-prop-panel-body">
+                    <div class="ws-ld-history-wrap">
+                        <table class="ws-table ws-ld-history-table">
+                            <thead>
+                                <tr>
+                                    <th>تاریخ</th>
+                                    {% if tx.show_price %}<th>قیمت</th>{% endif %}
+                                    {% if tx.show_deposit %}<th>ودیعه</th>{% endif %}
+                                    {% if tx.show_rent %}<th>اجاره</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ph in price_history %}
+                                <tr>
+                                    <td>{{ ph.recorded_at|ws_jalali }}</td>
+                                    {% if tx.show_price %}<td>{% if ph.price %}{{ ph.price|ws_money }}{% else %}—{% endif %}</td>{% endif %}
+                                    {% if tx.show_deposit %}<td>{% if ph.deposit %}{{ ph.deposit|ws_money }}{% else %}—{% endif %}</td>{% endif %}
+                                    {% if tx.show_rent %}<td>{% if ph.rent %}{{ ph.rent|ws_money }}{% else %}—{% endif %}</td>{% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+
+        <aside class="crm-prop-aside" aria-label="اطلاعات پرونده">
             {% url 'workspace:listing_detail' dataset.id listing.id as listing_owner_action %}
             {% include 'workspace/includes/owner_contact_box.html' with owner_form_action=listing_owner_action owner_phone=owner_phone owner_name=owner_name owner_contact=owner_contact can_edit_owner=True owner_id_prefix='ld-owner' %}
 
+            <div class="crm-prop-side-card crm-prop-side-card--pro">
+                <h3>خلاصه آگهی</h3>
+                <dl class="crm-prop-side-dl">
+                    <div><dt>نوع معامله</dt><dd>{{ tx.badge }}</dd></div>
+                    {% if feat.advertiser %}<div><dt>آگهی‌دهنده</dt><dd>{{ feat.advertiser.label }}</dd></div>{% endif %}
+                    {% if listing.neighborhood %}<div><dt>محله</dt><dd>{{ listing.neighborhood }}</dd></div>{% endif %}
+                    {% if listing.city %}<div><dt>شهر</dt><dd>{{ listing.city }}</dd></div>{% endif %}
+                    <div><dt>فایلینگ</dt><dd>{{ dataset.name }}</dd></div>
+                    {% if listing.published_at %}<div><dt>انتشار</dt><dd>{{ listing.published_at|ws_jalali }}</dd></div>{% endif %}
+                    {% if listing.is_expired %}<div><dt>وضعیت</dt><dd>منقضی</dd></div>{% endif %}
+                    {% if crm_property %}<div><dt>فایل شخصی</dt><dd><a href="{% url 'workspace:crm_property_detail' crm_property.id %}">مشاهده</a></dd></div>{% endif %}
+                </dl>
+            </div>
+
             {% if listing.latitude and listing.longitude %}
-            <div class="ws-card ws-ld-map-card">
-                <p class="ws-card-title">موقعیت</p>
-                {% if listing.neighborhood %}<p class="ws-ld-map-loc">{{ listing.neighborhood }}{% if listing.city %} · {{ listing.city }}{% endif %}</p>{% endif %}
-                {% if location_accuracy.label %}<p class="ws-ld-map-accuracy">{{ location_accuracy.label }}</p>{% endif %}
-                <button type="button" class="ws-btn ws-btn-sm ws-btn-secondary ws-ld-map-jump" data-ld-map-jump="مکان">
-                    <i class="fas fa-map" aria-hidden="true"></i> مشاهده نقشه
-                </button>
+            <div class="crm-prop-side-card crm-prop-side-card--pro">
+                <h3>موقعیت</h3>
+                {% if listing.neighborhood %}<p class="ws-ld-side-loc">{{ listing.neighborhood }}{% if listing.city %} · {{ listing.city }}{% endif %}</p>{% endif %}
+                {% if location_accuracy.label %}<p class="ws-ld-side-accuracy">{{ location_accuracy.label }}</p>{% endif %}
+                <a href="#wsLdMapFinale" class="crm-dash-act" data-ld-map-jump>
+                    <i class="fas fa-map" aria-hidden="true"></i><span>مشاهده نقشه</span>
+                </a>
             </div>
             {% endif %}
 
             {% if meta.note %}
-            <div class="ws-card ws-ld-note">
-                <p class="ws-card-title">یادداشت</p>
-                <p class="ws-ld-note-body">{{ meta.note }}</p>
-            </div>
-            {% endif %}
-
-            {% if price_history %}
-            <div class="ws-card ws-ld-history">
-                <p class="ws-card-title">تاریخچه قیمت</p>
-                <table class="ws-table ws-ld-history-table">
-                    <thead>
-                        <tr>
-                            <th>تاریخ</th>
-                            {% if tx.show_price %}<th>قیمت</th>{% endif %}
-                            {% if tx.show_deposit %}<th>ودیعه</th>{% endif %}
-                            {% if tx.show_rent %}<th>اجاره</th>{% endif %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for ph in price_history %}
-                        <tr>
-                            <td>{{ ph.recorded_at|ws_jalali }}</td>
-                            {% if tx.show_price %}<td>{% if ph.price %}{{ ph.price|ws_money }}{% else %}—{% endif %}</td>{% endif %}
-                            {% if tx.show_deposit %}<td>{% if ph.deposit %}{{ ph.deposit|ws_money }}{% else %}—{% endif %}</td>{% endif %}
-                            {% if tx.show_rent %}<td>{% if ph.rent %}{{ ph.rent|ws_money }}{% else %}—{% endif %}</td>{% endif %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="crm-prop-side-card crm-prop-side-card--pro">
+                <h3>یادداشت</h3>
+                <p class="ws-ld-note-body">{{ meta.note|truncatechars:160 }}</p>
+                <button type="button" class="crm-dash-act" data-tab-jump="notes" style="margin-top:0.5rem">مشاهده کامل</button>
             </div>
             {% endif %}
         </aside>
     </div>
+
+    {% if listing.latitude and listing.longitude %}
+    <section class="crm-prop-map-finale" id="wsLdMapFinale" aria-label="نقشه موقعیت آگهی">
+        <div class="crm-prop-map-finale-intro">
+            <div class="crm-prop-map-finale-intro-inner">
+                <span class="crm-prop-map-finale-kicker">
+                    <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                    موقعیت روی نقشه
+                </span>
+                <h2 class="crm-prop-map-finale-title">کجا قرار دارد؟</h2>
+                {% if listing.neighborhood or listing.city %}
+                <p class="crm-prop-map-finale-place">
+                    <i class="fas fa-location-dot" aria-hidden="true"></i>
+                    {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}{% if listing.neighborhood and listing.city %} · {% endif %}{% if listing.city %}{{ listing.city }}{% endif %}
+                </p>
+                {% endif %}
+                {% if location_accuracy.label %}
+                <span class="crm-prop-map-finale-accuracy crm-prop-map-finale-accuracy--{{ location_accuracy.kind|default:'exact' }}">
+                    {{ location_accuracy.label }}
+                </span>
+                {% endif %}
+                <span class="crm-prop-map-finale-coords" dir="ltr">
+                    {{ listing.latitude|floatformat:6 }} ، {{ listing.longitude|floatformat:6 }}
+                </span>
+                {% if map_navigation %}
+                <div class="crm-prop-map-finale-actions">
+                    <a href="{{ map_navigation.google_url }}" class="crm-prop-map-finale-btn crm-prop-map-finale-btn--primary" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-diamond-turn-right" aria-hidden="true"></i>
+                        مسیریابی گوگل
+                    </a>
+                    <a href="{{ map_navigation.neshan_url }}" class="crm-prop-map-finale-btn" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-map" aria-hidden="true"></i>
+                        نشان
+                    </a>
+                    <a href="{{ map_navigation.waze_url }}" class="crm-prop-map-finale-btn" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-car" aria-hidden="true"></i>
+                        ویز
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="crm-prop-map-finale-canvas">
+            {% include 'workspace/includes/listing_location_map.html' with map_prefix='wsLd' map_navigation=None location_accuracy=None %}
+        </div>
+    </section>
+    {% endif %}
 
     {% if ai_enabled and has_bot_license %}
     <section class="ws-ai-card ws-ai-card--listing" id="wsAiListingSummary" data-ai-card aria-label="خلاصه هوشمند فایل">
@@ -337,8 +624,6 @@
         </div>
     </section>
     {% endif %}
-
-    <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="ws-btn ws-btn-ghost ws-ld-back"><i class="fas fa-arrow-right" aria-hidden="true"></i> بازگشت به جدول</a>
 </div>
 {% endblock %}
 
@@ -395,11 +680,17 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.textContent = open ? 'بستن' : '... ادامه';
         });
     });
+
     document.querySelectorAll('[data-ld-map-jump]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var tab = btn.getAttribute('data-ld-map-jump');
-            var tabBtn = document.querySelector('.ws-ld-tabs [data-tab="' + tab + '"]');
-            if (tabBtn) tabBtn.click();
+        btn.addEventListener('click', function (e) {
+            var target = document.getElementById('wsLdMapFinale');
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (typeof window.wsLdDetailMap !== 'undefined' && window.wsLdDetailMap.invalidateSize) {
+                    setTimeout(function () { window.wsLdDetailMap.invalidateSize(); }, 320);
+                }
+            }
         });
     });
 });
@@ -408,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function () {
 {{ listing_map_marker|json_script:"listing-map-marker" }}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{% static 'workspace/js/listing-map.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/listing-map.js' %}?v=7"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var markerEl = document.getElementById('listing-map-marker');

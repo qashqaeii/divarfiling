@@ -222,6 +222,52 @@ class ShareDefaultsAndSocialTests(TestCase):
         self.assertIsNone(build_map_navigation(None, 51.4))
         self.assertIsNone(build_map_navigation(0, 0))
 
+    def test_approximate_location_forced_on_public_page(self):
+        from workspace.services.public_share_common import resolve_public_location_accuracy
+        share = get_or_create_listing_share(self.user, self.listing)
+        share.approximate_location = True
+        share.save(update_fields=['approximate_location'])
+        exact = {'label': 'موقعیت دقیق روی نقشه', 'kind': 'exact', 'radius_m': 0}
+        resolved = resolve_public_location_accuracy(share, exact)
+        self.assertEqual(resolved['kind'], 'approx')
+        self.assertGreater(resolved['radius_m'], 0)
+        self.assertTrue(resolved.get('forced'))
+        self.listing.latitude = 35.7
+        self.listing.longitude = 51.4
+        self.listing.data = {'نوع مختصات': 'دقیق'}
+        self.listing.save()
+        ctx = build_public_listing_context(share)
+        self.assertEqual(ctx['location_accuracy']['kind'], 'approx')
+        self.assertEqual(ctx['listing_map_marker']['location_kind'], 'approx')
+        url = reverse('listing_public:view', kwargs={'share_token': share.share_token})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'موقعیت تقریبی')
+
+    def test_office_map_on_public_page_when_coords_set(self):
+        ws = get_or_create_settings(self.user)
+        ws.agency_name = 'آژانس تست'
+        ws.agency_address = 'جردن'
+        ws.agency_latitude = 35.75
+        ws.agency_longitude = 51.42
+        ws.save()
+        self.listing.latitude = 35.7
+        self.listing.longitude = 51.4
+        self.listing.save()
+        share = ListingPublicShare.objects.create(
+            share_token='officetok12',
+            listing=self.listing,
+            created_by=self.user,
+        )
+        ctx = build_public_listing_context(share)
+        self.assertIsNotNone(ctx['office_map_marker'])
+        self.assertIsNotNone(ctx['office_map_navigation'])
+        resp = self.client.get(reverse('listing_public:view', kwargs={'share_token': share.share_token}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'مسیریابی به دفتر')
+        self.assertContains(resp, 'office-map-marker')
+        self.assertContains(resp, 'آدرس دفتر کجاست')
+
     def test_consultant_block_agency_profile_conditional(self):
         from workspace.services.public_share_common import build_consultant_block
         ws = get_or_create_settings(self.user)

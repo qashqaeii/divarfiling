@@ -905,6 +905,76 @@ def public_share_to_dict(share, request, *, url_name: str) -> Dict[str, Any]:
         'show_divar_link': share.show_divar_link,
         'show_full_address': getattr(share, 'show_full_address', False),
         'show_internal_notes': getattr(share, 'show_internal_notes', False),
+        'approximate_location': bool(getattr(share, 'approximate_location', False)),
+    }
+
+
+DEFAULT_PUBLIC_APPROX_RADIUS_M = 500
+
+
+def approximate_location_accuracy(*, radius_m: int = DEFAULT_PUBLIC_APPROX_RADIUS_M) -> Dict[str, Any]:
+    """دقت موقعیت اجباری برای صفحه عمومی وقتی مشاور «تقریبی» را انتخاب کرده."""
+    from workspace.services.jalali_input import to_persian_digits
+    r = int(radius_m) if radius_m and int(radius_m) > 0 else DEFAULT_PUBLIC_APPROX_RADIUS_M
+    return {
+        'label': f'موقعیت تقریبی — در شعاع حدود {to_persian_digits(r)} متر',
+        'kind': 'approx',
+        'radius_m': r,
+        'forced': True,
+    }
+
+
+def resolve_public_location_accuracy(share, base: Optional[dict] = None) -> Dict[str, Any]:
+    """
+    دقت موقعیت برای صفحه عمومی.
+    اگر share.approximate_location روشن باشد، حتی مختصات دقیق هم تقریبی نمایش داده می‌شود.
+    """
+    base = dict(base or {})
+    if getattr(share, 'approximate_location', False):
+        existing_r = int(base.get('radius_m') or 0)
+        return approximate_location_accuracy(
+            radius_m=existing_r if existing_r > 0 else DEFAULT_PUBLIC_APPROX_RADIUS_M,
+        )
+    if not base.get('kind') and not base.get('label'):
+        return {'label': '', 'kind': '', 'radius_m': 0}
+    return {
+        'label': base.get('label') or '',
+        'kind': base.get('kind') or '',
+        'radius_m': int(base.get('radius_m') or 0),
+        'forced': False,
+    }
+
+
+def build_office_map_marker(ws: WorkspaceSettings) -> Optional[Dict[str, Any]]:
+    """مارکر نقشه دفتر برای صفحه عمومی — فقط اگر مختصات معتبر باشد."""
+    nav = build_map_navigation(ws.agency_latitude, ws.agency_longitude)
+    if not nav:
+        return None
+    address = (ws.agency_address or '').strip()
+    city = (ws.agency_city or '').strip()
+    title = (ws.agency_name or '').strip() or 'دفتر املاک'
+    place = address
+    if city and city not in address:
+        place = f'{address}، {city}'.strip('، ') if address else city
+    return {
+        'lat': nav['latitude'],
+        'lng': nav['longitude'],
+        'title': title,
+        'price_label': '',
+        'neighborhood': place or city,
+        'city': city,
+        'seller_type': 'دفتر املاک',
+        'advertiser_signal': '',
+        'is_consultant': False,
+        'is_disguised': False,
+        'location_label': 'موقعیت دفتر',
+        'location_kind': 'exact',
+        'location_radius_m': 0,
+        'thumb': '',
+        'token': '',
+        'link': '',
+        'platform_url': '',
+        'map_kind': 'office',
     }
 
 

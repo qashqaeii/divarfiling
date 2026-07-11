@@ -18,7 +18,7 @@
 {% if gallery_images %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 {% endif %}
-{% if listing.latitude and listing.longitude %}
+{% if listing.latitude and listing.longitude or office_map_marker %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=7">
 {% endif %}
@@ -568,12 +568,12 @@
                 </div>
 
                 {% if map_navigation %}
-                <nav class="ps-map-finale-routes" aria-label="مسیریابی">
+                <nav class="ps-map-finale-routes" aria-label="مسیریابی به ملک">
                     <a href="{{ map_navigation.google_url }}" class="ps-map-route ps-map-route--google" target="_blank" rel="noopener noreferrer">
                         <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-diamond-turn-right"></i></span>
                         <span class="ps-map-route-text">
                             <strong>گوگل مپس</strong>
-                            <em>مسیریابی سریع</em>
+                            <em>{% if location_accuracy.kind == 'approx' %}محدوده تقریبی{% else %}مسیریابی سریع{% endif %}</em>
                         </span>
                         <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
                     </a>
@@ -581,7 +581,7 @@
                         <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-map"></i></span>
                         <span class="ps-map-route-text">
                             <strong>نشان</strong>
-                            <em>نقشه فارسی</em>
+                            <em>{% if location_accuracy.kind == 'approx' %}محدوده تقریبی{% else %}نقشه فارسی{% endif %}</em>
                         </span>
                         <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
                     </a>
@@ -590,7 +590,7 @@
                         <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-car"></i></span>
                         <span class="ps-map-route-text">
                             <strong>ویز</strong>
-                            <em>ترافیک زنده</em>
+                            <em>{% if location_accuracy.kind == 'approx' %}محدوده تقریبی{% else %}ترافیک زنده{% endif %}</em>
                         </span>
                         <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
                     </a>
@@ -600,7 +600,7 @@
                         <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-location-arrow"></i></span>
                         <span class="ps-map-route-text">
                             <strong>بلد</strong>
-                            <em>مسیریابی شهری</em>
+                            <em>{% if location_accuracy.kind == 'approx' %}محدوده تقریبی{% else %}مسیریابی شهری{% endif %}</em>
                         </span>
                         <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
                     </a>
@@ -613,6 +613,95 @@
                 <div class="ps-map-finale-frame">
                     <div class="ps-map-finale-frame-edge" aria-hidden="true"></div>
                     {% include 'workspace/includes/listing_location_map.html' with map_prefix='pubLd' map_id='pubLocationMap' map_stage_id='pubLocationMapStage' map_wrap_id='pubLocationMapPanel' map_navigation=None location_accuracy=None %}
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if office_map_marker and office_map_navigation %}
+    <section class="ps-map-finale ps-map-finale--office" data-reveal aria-label="نقشه موقعیت دفتر">
+        <div class="ps-map-finale-atmosphere" aria-hidden="true">
+            <span class="ps-map-finale-orb ps-map-finale-orb--a"></span>
+            <span class="ps-map-finale-orb ps-map-finale-orb--b"></span>
+            <span class="ps-map-finale-grid"></span>
+        </div>
+
+        <div class="ps-map-finale-shell">
+            <header class="ps-map-finale-intro">
+                <div class="ps-map-finale-intro-copy">
+                    <div class="ps-map-finale-meta">
+                        <span class="ps-map-finale-kicker">
+                            <i class="fas fa-building" aria-hidden="true"></i>
+                            دفتر املاک
+                        </span>
+                        <span class="ps-map-finale-accuracy ps-map-finale-accuracy--exact">
+                            <i class="fas fa-crosshairs" aria-hidden="true"></i>
+                            موقعیت دفتر
+                        </span>
+                    </div>
+
+                    <h2 class="ps-map-finale-title">آدرس دفتر کجاست؟</h2>
+                    <p class="ps-map-finale-lead">موقعیت دفتر را روی نقشه ببینید و مسیر خود را باز کنید.</p>
+
+                    {% if consultant.agency.address_line %}
+                    <div class="ps-map-finale-place-card">
+                        <span class="ps-map-finale-place-pin" aria-hidden="true">
+                            <i class="fas fa-building"></i>
+                            <span class="ps-map-finale-place-pulse"></span>
+                        </span>
+                        <div class="ps-map-finale-place-body">
+                            <em>دفتر</em>
+                            <strong>{{ consultant.agency.address_line }}</strong>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <nav class="ps-map-finale-routes" aria-label="مسیریابی به دفتر">
+                    <a href="{{ office_map_navigation.google_url }}" class="ps-map-route ps-map-route--google" target="_blank" rel="noopener noreferrer">
+                        <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-diamond-turn-right"></i></span>
+                        <span class="ps-map-route-text">
+                            <strong>گوگل مپس</strong>
+                            <em>مسیریابی به دفتر</em>
+                        </span>
+                        <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
+                    </a>
+                    <a href="{{ office_map_navigation.neshan_url }}" class="ps-map-route ps-map-route--neshan" target="_blank" rel="noopener noreferrer">
+                        <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-map"></i></span>
+                        <span class="ps-map-route-text">
+                            <strong>نشان</strong>
+                            <em>مسیریابی به دفتر</em>
+                        </span>
+                        <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
+                    </a>
+                    {% if office_map_navigation.waze_url %}
+                    <a href="{{ office_map_navigation.waze_url }}" class="ps-map-route ps-map-route--waze" target="_blank" rel="noopener noreferrer">
+                        <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-car"></i></span>
+                        <span class="ps-map-route-text">
+                            <strong>ویز</strong>
+                            <em>مسیریابی به دفتر</em>
+                        </span>
+                        <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                    {% if office_map_navigation.balad_url %}
+                    <a href="{{ office_map_navigation.balad_url }}" class="ps-map-route ps-map-route--balad" target="_blank" rel="noopener noreferrer">
+                        <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-location-arrow"></i></span>
+                        <span class="ps-map-route-text">
+                            <strong>بلد</strong>
+                            <em>مسیریابی به دفتر</em>
+                        </span>
+                        <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                </nav>
+            </header>
+
+            <div class="ps-map-finale-canvas">
+                <div class="ps-map-finale-frame">
+                    <div class="ps-map-finale-frame-edge" aria-hidden="true"></div>
+                    {% include 'workspace/includes/listing_location_map.html' with map_prefix='pubOffice' map_id='pubOfficeMap' map_stage_id='pubOfficeMapStage' map_wrap_id='pubOfficeMapPanel' map_navigation=None location_accuracy=None %}
                 </div>
             </div>
         </div>
@@ -683,10 +772,11 @@
 {% if gallery_images %}
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 {% endif %}
-{% if listing.latitude and listing.longitude and listing_map_marker %}
-{{ listing_map_marker|json_script:"listing-map-marker" }}
+{% if listing.latitude and listing.longitude and listing_map_marker or office_map_marker %}
+{% if listing_map_marker %}{{ listing_map_marker|json_script:"listing-map-marker" }}{% endif %}
+{% if office_map_marker %}{{ office_map_marker|json_script:"office-map-marker" }}{% endif %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{% static 'workspace/js/listing-map.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/listing-map.js' %}?v=7"></script>
 {% endif %}
-<script src="{% static 'js/listing-public-share.js' %}?v=8"></script>
+<script src="{% static 'js/listing-public-share.js' %}?v=9"></script>
 {% endblock %}

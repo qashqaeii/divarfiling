@@ -781,8 +781,13 @@
 
         document.querySelector('.ws-ld-tabs [data-tab="مکان"]')
             ?.addEventListener('click', () => refreshMapSize(), { signal });
-        document.querySelector('[data-ld-map-jump]')
-            ?.addEventListener('click', () => setTimeout(refreshMapSize, 180), { signal });
+        document.querySelectorAll('[data-ld-map-jump]').forEach((btn) => {
+            btn.addEventListener('click', () => setTimeout(refreshMapSize, 180), { signal });
+        });
+        /* Map finale is visible on load — refresh after layout settles */
+        if (el.closest('.crm-prop-map-finale')) {
+            requestAnimationFrame(() => setTimeout(refreshMapSize, 80));
+        }
 
         refreshMapSize();
         if (editable) notifyDraft();

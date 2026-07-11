@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-tab]').forEach(btn => {
         btn.addEventListener('click', () => {
             const tab = btn.dataset.tab;
-            const parent = btn.closest('.ws-card, .ws-modal-body, .ws-content');
+            const parent = btn.closest('.crm-prop-main, .crm-detail-main, .ws-card, .ws-modal-body, .ws-content');
             if (!parent) return;
             parent.querySelectorAll('[data-tab]').forEach(b => {
                 b.classList.remove('active');
@@ -313,6 +313,15 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.setAttribute('aria-selected', 'true');
             const panel = parent.querySelector(`[data-panel="${tab}"]`);
             if (panel) panel.hidden = false;
+        });
+    });
+
+    document.querySelectorAll('[data-tab-jump]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tabJump;
+            const shell = btn.closest('.crm-prop-detail-v2') || document.querySelector('.crm-prop-main');
+            const tabBtn = shell?.querySelector(`[data-tab="${tab}"]`);
+            tabBtn?.click();
         });
     });
 

@@ -230,6 +230,16 @@
                                     <span class="mk-share-switch-track" aria-hidden="true"></span>
                                 </span>
                             </label>
+                            <label class="mk-share-toggle-row">
+                                <span class="mk-share-toggle-info">
+                                    <span class="mk-share-toggle-title">موقعیت تقریبی روی نقشه</span>
+                                    <span class="mk-share-toggle-desc">حتی اگر مختصات دقیق باشد، برای مشتری تقریبی (شعاع حدود ۵۰۰ متر) نمایش داده می‌شود</span>
+                                </span>
+                                <span class="mk-share-switch">
+                                    <input type="checkbox" name="approximate_location" value="1"{% if share.approximate_location %} checked{% endif %}>
+                                    <span class="mk-share-switch-track" aria-hidden="true"></span>
+                                </span>
+                            </label>
                             {% if is_personal_file %}
                             <label class="mk-share-toggle-row">
                                 <span class="mk-share-toggle-info">

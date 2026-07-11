@@ -28,10 +28,12 @@ from workspace.services.public_share_common import (
     build_consultant_block,
     build_finance_summary,
     build_map_navigation,
+    build_office_map_marker,
     filter_public_feature_highlights,
     prune_public_detail_sections,
     public_feature_details_flag,
     public_share_to_dict,
+    resolve_public_location_accuracy,
     scrub_public_feature_profile,
     texts_are_equivalent,
     unique_share_token,
@@ -85,6 +87,8 @@ def update_property_public_share(share: CRMPropertyPublicShare, payload: dict) -
         share.show_full_address = bool(payload.get('show_full_address'))
     if 'show_internal_notes' in payload:
         share.show_internal_notes = bool(payload.get('show_internal_notes'))
+    if 'approximate_location' in payload:
+        share.approximate_location = bool(payload.get('approximate_location'))
     if 'is_active' in payload:
         share.is_active = bool(payload.get('is_active'))
     if payload.get('save_as_default_welcome'):
@@ -576,7 +580,10 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
     if category_parts:
         meta_parts.append(' · '.join(category_parts[:2]))
 
-    location_accuracy = {'label': 'موقعیت دقیق', 'kind': 'exact', 'radius_m': 0}
+    location_accuracy = resolve_public_location_accuracy(
+        share,
+        {'label': 'موقعیت دقیق', 'kind': 'exact', 'radius_m': 0},
+    )
     marker_listing = SimpleNamespace(
         latitude=prop.latitude,
         longitude=prop.longitude,
@@ -614,6 +621,9 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         consultant['welcome_message'] = ''
         consultant['welcome_message_html'] = ''
 
+    from workspace.mixins import get_or_create_settings
+    office_map_marker = build_office_map_marker(get_or_create_settings(user))
+
     return {
         'share': share,
         'listing': listing,
@@ -642,6 +652,8 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         'dossier_badge': 'فایل شخصی',
         'location_accuracy': location_accuracy,
         'listing_map_marker': listing_map_marker,
+        'office_map_marker': office_map_marker,
+        'office_map_navigation': (consultant.get('agency') or {}).get('map_navigation'),
         'map_navigation': build_map_navigation(prop.latitude, prop.longitude),
     }
 

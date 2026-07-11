@@ -1526,6 +1526,7 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
             'show_divar_link': share.show_divar_link,
             'show_full_address': share.show_full_address,
             'show_internal_notes': share.show_internal_notes,
+            'approximate_location': share.approximate_location,
             'is_active': share.is_active,
         })
 
@@ -1554,6 +1555,7 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
         share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
         share.show_full_address = request.POST.get('show_full_address') in ('1', 'true', 'on')
         share.show_internal_notes = request.POST.get('show_internal_notes') in ('1', 'true', 'on')
+        share.approximate_location = request.POST.get('approximate_location') in ('1', 'true', 'on')
         share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')
         share.save()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':

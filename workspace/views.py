@@ -981,7 +981,7 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         share = get_or_create_listing_share(self.request.user, listing)
         ctx['public_share'] = share
         ctx['public_share_url'] = public_share_url(self.request, share)
-        from workspace.services.public_share_common import share_profile_context
+        from workspace.services.public_share_common import build_map_navigation, share_profile_context
         profile = share_profile_context(
             self.request.user, share,
             title=listing.title or '',
@@ -990,6 +990,7 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['consultant_name'] = profile['consultant_name']
         ctx['consultant_phone'] = profile['consultant_phone']
         ctx['share_profile'] = profile
+        ctx['map_navigation'] = build_map_navigation(listing.latitude, listing.longitude)
         ctx['listings_edit_data'] = {
             str(listing.pk): listing_edit_payload(listing, ctx['feat']),
         }
@@ -1095,6 +1096,7 @@ class ListingShareManageView(DatasetOwnerMixin, View):
             'share_message_rendered': profile['share_message_rendered'],
             'social_links': profile['social_links'],
             'show_divar_link': share.show_divar_link,
+            'approximate_location': share.approximate_location,
             'is_active': share.is_active,
         })
 
@@ -1115,6 +1117,7 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         share.consultant_phone = phone
         apply_share_form_extras(request.user, request.POST, share, files=request.FILES)
         share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
+        share.approximate_location = request.POST.get('approximate_location') in ('1', 'true', 'on')
         share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')
         share.save()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':

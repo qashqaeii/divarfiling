@@ -169,6 +169,11 @@ class ListingPublicShare(models.Model):
     consultant_phone = models.CharField(max_length=20, blank=True, verbose_name='شماره مشاور')
     welcome_message = models.TextField(blank=True, verbose_name='پیام خوش‌آمد')
     show_divar_link = models.BooleanField(default=False, verbose_name='نمایش لینک دیوار')
+    approximate_location = models.BooleanField(
+        default=False,
+        verbose_name='نمایش موقعیت تقریبی',
+        help_text='حتی اگر مختصات دقیق باشد، در صفحه عمومی به‌صورت تقریبی نمایش داده شود.',
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
     last_viewed_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین بازدید')
 
@@ -205,6 +210,11 @@ class CRMPropertyPublicShare(models.Model):
     show_divar_link = models.BooleanField(default=False, verbose_name='نمایش لینک دیوار')
     show_full_address = models.BooleanField(default=False, verbose_name='نمایش آدرس کامل')
     show_internal_notes = models.BooleanField(default=False, verbose_name='نمایش یادداشت داخلی')
+    approximate_location = models.BooleanField(
+        default=False,
+        verbose_name='نمایش موقعیت تقریبی',
+        help_text='حتی اگر مختصات دقیق باشد، در صفحه عمومی به‌صورت تقریبی نمایش داده شود.',
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
     last_viewed_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین بازدید')
 

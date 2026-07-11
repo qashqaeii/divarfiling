@@ -413,9 +413,6 @@
                             {% endif %}
                         </div>
                     </div>
-                    {% if consultant.active_files_count %}
-                    <p class="ps-agent-meta">{{ consultant.active_files_count }} فایل فعال</p>
-                    {% endif %}
                     {% if consultant.has_phone %}
                     <a href="{{ consultant.tel_url }}" class="ps-agent-phone" dir="ltr">{{ consultant.phone_display }}</a>
                     <div class="ps-agent-btns">

@@ -222,9 +222,15 @@
         </section>
         {% endif %}
 
-        {% if consultant.welcome_message %}
+        {% if consultant.has_welcome or consultant.welcome_message_html or consultant.welcome_message %}
         <blockquote class="ps-quote" data-reveal>
-            <p>{{ consultant.welcome_message }}</p>
+            <div class="ps-quote-body">
+                {% if consultant.welcome_message_html %}
+                {{ consultant.welcome_message_html }}
+                {% else %}
+                <p>{{ consultant.welcome_message }}</p>
+                {% endif %}
+            </div>
             <footer>— {{ consultant.person_name|default:consultant.brand_name|default:consultant.name }}</footer>
         </blockquote>
         {% endif %}
@@ -400,6 +406,16 @@
                     {% else %}
                     <p class="ps-agent-muted">شماره تماس ثبت نشده</p>
                     {% endif %}
+                    {% if consultant.has_socials %}
+                    <div class="ps-agent-socials" aria-label="شبکه‌های اجتماعی">
+                        {% for net in consultant.social_networks %}
+                        <a href="{{ net.url }}" class="ps-agent-social ps-agent-social--{{ net.key }}" target="_blank" rel="noopener noreferrer" title="{{ net.label }}" style="--ps-social: {{ net.color }}">
+                            <i class="{{ net.icon }}" aria-hidden="true"></i>
+                            <span>{{ net.label }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
                 {# 8. نقشه #}
@@ -414,11 +430,22 @@
         {# نقشه در موبایل — ترتیب بصری با CSS order #}
     </div>
 
-    {% if consultant.has_phone %}
+    {% if consultant.has_phone or consultant.has_socials %}
     <div class="ps-dock" aria-label="تماس سریع">
+        {% if consultant.has_phone %}
         <a href="{{ consultant.tel_url }}" class="ps-btn ps-btn--primary"><i class="fas fa-phone" aria-hidden="true"></i> تماس</a>
         {% if consultant.whatsapp_url %}
         <a href="{{ consultant.whatsapp_url }}" class="ps-btn ps-btn--wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> واتساپ</a>
+        {% endif %}
+        {% endif %}
+        {% if consultant.has_socials %}
+        {% for net in consultant.social_networks %}
+        {% if forloop.counter <= 2 %}
+        <a href="{{ net.url }}" class="ps-btn ps-btn--social" target="_blank" rel="noopener" style="--ps-social: {{ net.color }}" title="{{ net.label }}">
+            <i class="{{ net.icon }}" aria-hidden="true"></i> {{ net.label }}
+        </a>
+        {% endif %}
+        {% endfor %}
         {% endif %}
     </div>
     {% endif %}

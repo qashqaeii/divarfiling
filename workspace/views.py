@@ -981,10 +981,15 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         share = get_or_create_listing_share(self.request.user, listing)
         ctx['public_share'] = share
         ctx['public_share_url'] = public_share_url(self.request, share)
-        from workspace.services.public_share_common import share_consultant_form_values
-        form_vals = share_consultant_form_values(self.request.user, share)
-        ctx['consultant_name'] = form_vals['consultant_name']
-        ctx['consultant_phone'] = form_vals['consultant_phone']
+        from workspace.services.public_share_common import share_profile_context
+        profile = share_profile_context(
+            self.request.user, share,
+            title=listing.title or '',
+            share_url=ctx['public_share_url'],
+        )
+        ctx['consultant_name'] = profile['consultant_name']
+        ctx['consultant_phone'] = profile['consultant_phone']
+        ctx['share_profile'] = profile
         ctx['listings_edit_data'] = {
             str(listing.pk): listing_edit_payload(listing, ctx['feat']),
         }
@@ -1072,16 +1077,23 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         dataset = self.get_dataset()
         listing = get_object_or_404(dataset.listings, pk=listing_id)
         share = get_or_create_listing_share(request.user, listing)
-        from workspace.services.public_share_common import share_consultant_form_values
-        form_vals = share_consultant_form_values(request.user, share)
+        from workspace.services.public_share_common import share_profile_context
+        url = public_share_url(request, share)
+        profile = share_profile_context(
+            request.user, share, title=listing.title or '', share_url=url,
+        )
         return JsonResponse({
             'ok': True,
-            'share_url': public_share_url(request, share),
+            'share_url': url,
             'share_token': share.share_token,
             'view_count': share.view_count,
-            'consultant_name': form_vals['consultant_name'],
-            'consultant_phone': form_vals['consultant_phone'],
-            'welcome_message': share.welcome_message,
+            'consultant_name': profile['consultant_name'],
+            'consultant_phone': profile['consultant_phone'],
+            'welcome_message': profile['welcome_message'],
+            'welcome_is_custom': profile['welcome_is_custom'],
+            'default_share_message': profile['default_share_message'],
+            'share_message_rendered': profile['share_message_rendered'],
+            'social_links': profile['social_links'],
             'show_divar_link': share.show_divar_link,
             'is_active': share.is_active,
         })
@@ -1090,7 +1102,10 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         dataset = self.get_dataset()
         listing = get_object_or_404(dataset.listings, pk=listing_id)
         share = get_or_create_listing_share(request.user, listing)
-        from workspace.services.public_share_common import normalize_consultant_fields_for_save
+        from workspace.services.public_share_common import (
+            apply_share_form_extras,
+            normalize_consultant_fields_for_save,
+        )
         name, phone = normalize_consultant_fields_for_save(
             request.user,
             request.POST.get('consultant_name') or '',
@@ -1098,7 +1113,7 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         )
         share.consultant_name = name
         share.consultant_phone = phone
-        share.welcome_message = (request.POST.get('welcome_message') or '').strip()
+        apply_share_form_extras(request.user, request.POST, share)
         share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
         share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')
         share.save()

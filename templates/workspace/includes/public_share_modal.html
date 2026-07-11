@@ -1,11 +1,12 @@
 {% comment %}
-  مودال اشتراک عمومی — پارامترها:
+  مودال اشتراک عمومی حرفه‌ای — پارامترها:
   modal_id, form_id, form_action, share_url, share, item_title, subtitle, id_prefix
-  is_personal_file (اختیاری، پیش‌فرض false)
+  is_personal_file (اختیاری)، share_profile (اختیاری — از view)
 {% endcomment %}
+{% with sp=share_profile %}
 <div class="ws-modal" id="{{ modal_id }}" role="dialog" aria-modal="true" aria-labelledby="{{ id_prefix }}-modal-title">
     <div class="ws-modal-overlay" data-modal-close></div>
-    <div class="ws-modal-panel mk-share-modal-panel">
+    <div class="ws-modal-panel mk-share-modal-panel mk-share-modal-panel--pro">
         <div class="ws-modal-head mk-share-modal-head">
             <div class="mk-share-modal-head-main">
                 <span class="mk-share-modal-icon" aria-hidden="true"><i class="fas fa-share-nodes"></i></span>
@@ -16,169 +17,308 @@
             </div>
             <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
-        <form method="post" action="{{ form_action }}" class="mk-share-form"{% if form_id %} id="{{ form_id }}"{% endif %}>
+        <form method="post" action="{{ form_action }}" class="mk-share-form" data-share-pro="1"{% if form_id %} id="{{ form_id }}"{% endif %}>
             {% csrf_token %}
+            <input type="hidden" name="share_message_template" data-share-msg-template value="{{ sp.default_share_message|default:'' }}">
+            <input type="hidden" name="welcome_message" id="{{ id_prefix }}-welcome" data-welcome-input value="{{ sp.welcome_message|default:share.welcome_message }}">
+
+            <nav class="mk-share-tabs" role="tablist" aria-label="بخش‌های اشتراک" data-share-tabs>
+                <button type="button" class="mk-share-tab is-active" role="tab" aria-selected="true" data-share-tab="send">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i><span>ارسال</span>
+                </button>
+                <button type="button" class="mk-share-tab" role="tab" aria-selected="false" data-share-tab="page">
+                    <i class="fas fa-file-lines" aria-hidden="true"></i><span>صفحه مشتری</span>
+                </button>
+                <button type="button" class="mk-share-tab" role="tab" aria-selected="false" data-share-tab="profile">
+                    <i class="fas fa-id-card" aria-hidden="true"></i><span>پروفایل من</span>
+                </button>
+            </nav>
+
             <div class="ws-modal-body mk-share-modal-body">
-                <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-link">
-                    <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-link">
-                        <i class="fas fa-link" aria-hidden="true"></i> لینک عمومی
-                    </h3>
-                    <div class="mk-share-link-card">
-                        <div class="mk-share-link-bar">
-                            <span class="mk-share-link-glyph" aria-hidden="true"><i class="fas fa-globe"></i></span>
-                            <input type="text"
-                                   class="mk-share-link-input"
-                                   id="{{ id_prefix }}-url-input"
-                                   value="{{ share_url }}"
-                                   readonly
-                                   dir="ltr"
-                                   aria-label="لینک اشتراک">
-                            <button type="button" class="mk-share-copy-btn" data-copy="{{ share_url }}">
-                                <i class="fas fa-copy" aria-hidden="true"></i>
-                                <span>کپی</span>
-                            </button>
+                {# ── تب ارسال ── #}
+                <div class="mk-share-pane is-active" data-share-pane="send" role="tabpanel">
+                    <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-link">
+                        <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-link">
+                            <i class="fas fa-link" aria-hidden="true"></i> لینک عمومی
+                        </h3>
+                        <div class="mk-share-link-card">
+                            <div class="mk-share-link-bar">
+                                <span class="mk-share-link-glyph" aria-hidden="true"><i class="fas fa-globe"></i></span>
+                                <input type="text"
+                                       class="mk-share-link-input"
+                                       id="{{ id_prefix }}-url-input"
+                                       value="{{ share_url }}"
+                                       readonly
+                                       dir="ltr"
+                                       aria-label="لینک اشتراک">
+                                <button type="button" class="mk-share-copy-btn" data-copy="{{ share_url }}">
+                                    <i class="fas fa-copy" aria-hidden="true"></i>
+                                    <span>کپی</span>
+                                </button>
+                            </div>
+                            <div class="mk-share-meta-row">
+                                {% if share.view_count %}
+                                <span class="mk-share-view-badge"><i class="fas fa-eye" aria-hidden="true"></i> {{ share.view_count }} بازدید</span>
+                                {% else %}
+                                <span class="mk-share-view-badge"><i class="fas fa-eye" aria-hidden="true"></i> هنوز باز نشده</span>
+                                {% endif %}
+                                {% if share.is_active %}
+                                <span class="mk-share-status-badge mk-share-status-badge--on"><i class="fas fa-circle" aria-hidden="true"></i> فعال</span>
+                                {% else %}
+                                <span class="mk-share-status-badge mk-share-status-badge--off"><i class="fas fa-circle" aria-hidden="true"></i> غیرفعال</span>
+                                {% endif %}
+                            </div>
+                            <div class="mk-share-quick-actions">
+                                <a href="{{ share_url }}" target="_blank" rel="noopener" class="mk-share-qa-btn mk-share-qa-btn--preview">
+                                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                                    <span>پیش‌نمایش صفحه</span>
+                                </a>
+                            </div>
                         </div>
-                        {% if share.view_count or share.is_active is not None %}
-                        <div class="mk-share-meta-row">
-                            {% if share.view_count %}
-                            <span class="mk-share-view-badge"><i class="fas fa-eye" aria-hidden="true"></i> {{ share.view_count }} بازدید</span>
-                            {% endif %}
-                            {% if share.is_active %}
-                            <span class="mk-share-status-badge mk-share-status-badge--on"><i class="fas fa-circle" aria-hidden="true"></i> فعال</span>
-                            {% else %}
-                            <span class="mk-share-status-badge mk-share-status-badge--off"><i class="fas fa-circle" aria-hidden="true"></i> غیرفعال</span>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                        <div class="mk-share-quick-actions">
-                            <a href="{{ share_url }}" target="_blank" rel="noopener" class="mk-share-qa-btn mk-share-qa-btn--preview">
-                                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                                <span>پیش‌نمایش</span>
-                            </a>
-                        </div>
-                    </div>
-                </section>
+                    </section>
 
-                <section class="mk-share-section mk-share-section--message" aria-labelledby="{{ id_prefix }}-sec-message">
-                    <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-message">
-                        <i class="fas fa-comment-dots" aria-hidden="true"></i> متن اشتراک
-                    </h3>
-                    <p class="mk-share-msg-hint">
-                        ویرایش کنید، کپی کنید برای پیام‌رسان‌ها، یا مستقیم در واتساپ بفرستید.
-                    </p>
-                    <div class="mk-share-msg-card"
-                         data-share-msg-root
-                         data-share-url="{{ share_url }}"
-                         data-listing-title="{{ item_title|escape }}">
-                        <label class="ws-label" for="{{ id_prefix }}-share-message">پیام آماده ارسال</label>
-                        <textarea class="ws-textarea mk-share-msg-input"
-                                  id="{{ id_prefix }}-share-message"
-                                  data-share-message
-                                  rows="4"
-                                  dir="rtl"
-                                  aria-describedby="{{ id_prefix }}-sec-message">سلام،
+                    <section class="mk-share-section mk-share-section--message" aria-labelledby="{{ id_prefix }}-sec-message">
+                        <div class="mk-share-section-head">
+                            <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-message">
+                                <i class="fas fa-comment-dots" aria-hidden="true"></i> متن آماده ارسال
+                            </h3>
+                            <span class="mk-share-chip" title="از پیش‌فرض پروفایل شما ساخته شده"><i class="fas fa-star" aria-hidden="true"></i> قالب شخصی</span>
+                        </div>
+                        <p class="mk-share-msg-hint">
+                            این متن را برای واتساپ، تلگرام و بقیه پیام‌رسان‌ها کپی کنید.
+                            با <code>{title}</code> و <code>{url}</code> می‌توانید قالب پیش‌فرض همه آگهی‌ها را بسازید.
+                        </p>
+                        <div class="mk-share-msg-card"
+                             data-share-msg-root
+                             data-share-url="{{ share_url }}"
+                             data-listing-title="{{ item_title|escape }}"
+                             data-share-template="{{ sp.default_share_message|default:''|escape }}">
+                            <label class="ws-label" for="{{ id_prefix }}-share-message">پیام</label>
+                            <textarea class="ws-textarea mk-share-msg-input"
+                                      id="{{ id_prefix }}-share-message"
+                                      data-share-message
+                                      rows="5"
+                                      dir="rtl"
+                                      aria-describedby="{{ id_prefix }}-sec-message">{% if sp.share_message_rendered %}{{ sp.share_message_rendered }}{% else %}سلام،
 جزئیات «{{ item_title }}» را در این لینک ببینید:
-{{ share_url }}</textarea>
-                        <div class="mk-share-msg-actions">
-                            <button type="button" class="mk-share-msg-btn mk-share-msg-btn--copy" data-share-msg-copy>
-                                <i class="fas fa-copy" aria-hidden="true"></i>
-                                <span>کپی متن</span>
-                            </button>
-                            <button type="button" class="mk-share-msg-btn mk-share-msg-btn--wa" data-share-msg-wa>
-                                <i class="fab fa-whatsapp" aria-hidden="true"></i>
-                                <span>ارسال واتساپ</span>
-                            </button>
-                            <button type="button" class="mk-share-msg-btn mk-share-msg-btn--reset" data-share-msg-reset title="بازگردانی متن پیش‌فرض">
-                                <i class="fas fa-rotate-right" aria-hidden="true"></i>
-                                <span>پیش‌فرض</span>
-                            </button>
+{{ share_url }}{% endif %}</textarea>
+                            <div class="mk-share-msg-actions">
+                                <button type="button" class="mk-share-msg-btn mk-share-msg-btn--copy" data-share-msg-copy>
+                                    <i class="fas fa-copy" aria-hidden="true"></i>
+                                    <span>کپی متن</span>
+                                </button>
+                                <button type="button" class="mk-share-msg-btn mk-share-msg-btn--wa" data-share-msg-wa>
+                                    <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                                    <span>واتساپ</span>
+                                </button>
+                                <button type="button" class="mk-share-msg-btn mk-share-msg-btn--tg" data-share-msg-tg title="اشتراک در تلگرام">
+                                    <i class="fab fa-telegram" aria-hidden="true"></i>
+                                    <span>تلگرام</span>
+                                </button>
+                                <button type="button" class="mk-share-msg-btn mk-share-msg-btn--reset" data-share-msg-reset title="بازگردانی از قالب پیش‌فرض">
+                                    <i class="fas fa-rotate-right" aria-hidden="true"></i>
+                                    <span>از پیش‌فرض</span>
+                                </button>
+                            </div>
+                            <label class="mk-share-check-row">
+                                <input type="checkbox" name="save_as_default_share_message" value="1" data-save-default-msg>
+                                <span>
+                                    <strong>ذخیره به‌عنوان پیش‌فرض همه آگهی‌ها</strong>
+                                    <small>دیگر لازم نیست برای هر فایل دوباره قالب را بنویسید — از <code>{title}</code> و <code>{url}</code> استفاده می‌شود</small>
+                                </span>
+                            </label>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
 
-                <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-consultant">
-                    <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-consultant">
-                        <i class="fas fa-user-tie" aria-hidden="true"></i> اطلاعات مشاور
-                    </h3>
-                    <p class="mk-share-msg-hint">
-                        از پروفایل شما خوانده شده؛ برای همه آگهی‌ها یکسان است مگر اینکه فقط برای این فایل تغییر دهید.
-                    </p>
-                    <div class="mk-share-fields-grid">
-                        <div class="mk-share-field">
-                            <label class="ws-label" for="{{ id_prefix }}-consultant-name">نام نمایشی</label>
-                            <input type="text" class="ws-input" id="{{ id_prefix }}-consultant-name" name="consultant_name"
-                                   value="{{ consultant_name|default:share.consultant_name }}"
-                                   placeholder="نام آژانس یا نام کاربری از پروفایل">
+                {# ── تب صفحه مشتری ── #}
+                <div class="mk-share-pane" data-share-pane="page" role="tabpanel" hidden>
+                    <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-welcome">
+                        <div class="mk-share-section-head">
+                            <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-welcome">
+                                <i class="fas fa-quote-right" aria-hidden="true"></i> پیام خوش‌آمد صفحه
+                            </h3>
+                            {% if sp.welcome_from_default %}
+                            <span class="mk-share-chip mk-share-chip--soft">از پیش‌فرض</span>
+                            {% elif sp.welcome_is_custom %}
+                            <span class="mk-share-chip mk-share-chip--accent">سفارشی این فایل</span>
+                            {% endif %}
                         </div>
-                        <div class="mk-share-field">
-                            <label class="ws-label" for="{{ id_prefix }}-consultant-phone">شماره تماس</label>
-                            <input type="text" class="ws-input" id="{{ id_prefix }}-consultant-phone" name="consultant_phone"
-                                   value="{{ consultant_phone|default:share.consultant_phone }}"
-                                   placeholder="شماره حساب از پروفایل" dir="ltr">
+                        <p class="mk-share-msg-hint">این متن در صفحه عمومی مشتری نمایش داده می‌شود. می‌توانید پررنگ، کج و لیست بنویسید.</p>
+                        <div class="mk-share-rte" data-welcome-rte>
+                            <div class="mk-share-rte-toolbar" role="toolbar" aria-label="قالب‌بندی متن">
+                                <button type="button" class="mk-share-rte-btn" data-rte-cmd="bold" title="پررنگ"><i class="fas fa-bold" aria-hidden="true"></i></button>
+                                <button type="button" class="mk-share-rte-btn" data-rte-cmd="italic" title="کج"><i class="fas fa-italic" aria-hidden="true"></i></button>
+                                <button type="button" class="mk-share-rte-btn" data-rte-cmd="underline" title="زیرخط"><i class="fas fa-underline" aria-hidden="true"></i></button>
+                                <span class="mk-share-rte-sep" aria-hidden="true"></span>
+                                <button type="button" class="mk-share-rte-btn" data-rte-cmd="insertUnorderedList" title="لیست"><i class="fas fa-list-ul" aria-hidden="true"></i></button>
+                                <button type="button" class="mk-share-rte-btn" data-rte-cmd="insertOrderedList" title="لیست شماره‌دار"><i class="fas fa-list-ol" aria-hidden="true"></i></button>
+                                <span class="mk-share-rte-sep" aria-hidden="true"></span>
+                                <button type="button" class="mk-share-rte-btn" data-rte-cmd="createLink" title="لینک"><i class="fas fa-link" aria-hidden="true"></i></button>
+                                <button type="button" class="mk-share-rte-btn" data-rte-cmd="removeFormat" title="حذف قالب"><i class="fas fa-eraser" aria-hidden="true"></i></button>
+                            </div>
+                            <div class="mk-share-rte-editor"
+                                 contenteditable="true"
+                                 role="textbox"
+                                 aria-multiline="true"
+                                 aria-label="پیام خوش‌آمد"
+                                 data-welcome-editor
+                                 dir="rtl"
+                                 data-placeholder="مثلاً: برای هماهنگی بازدید با من در تماس باشید…">{% if sp.welcome_message %}{{ sp.welcome_message|safe }}{% elif share.welcome_message %}{{ share.welcome_message|linebreaksbr }}{% endif %}</div>
                         </div>
-                    </div>
-                    <div class="mk-share-field mk-share-field--full">
-                        <label class="ws-label" for="{{ id_prefix }}-welcome">پیام خوش‌آمد</label>
-                        <textarea class="ws-textarea" id="{{ id_prefix }}-welcome" name="welcome_message" rows="2"
-                                  placeholder="مثلاً: برای بازدید هماهنگ کنید">{{ share.welcome_message }}</textarea>
-                    </div>
-                </section>
+                        <div class="mk-share-welcome-actions">
+                            <label class="mk-share-check-row">
+                                <input type="checkbox" name="save_as_default_welcome" value="1">
+                                <span>
+                                    <strong>ذخیره به‌عنوان پیش‌فرض همه فایل‌ها</strong>
+                                    <small>برای آگهی‌های بعدی همین پیام نمایش داده می‌شود مگر اینکه سفارشی کنید</small>
+                                </span>
+                            </label>
+                            <label class="mk-share-check-row">
+                                <input type="checkbox" name="use_default_welcome" value="1">
+                                <span>
+                                    <strong>بازگشت به پیش‌فرض پروفایل</strong>
+                                    <small>سفارشی‌سازی این فایل حذف می‌شود</small>
+                                </span>
+                            </label>
+                        </div>
+                    </section>
 
-                <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-display">
-                    <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-display">
-                        <i class="fas fa-sliders-h" aria-hidden="true"></i> نمایش در صفحه عمومی
-                    </h3>
-                    <div class="mk-share-toggles">
-                        <label class="mk-share-toggle-row">
-                            <span class="mk-share-toggle-info">
-                                <span class="mk-share-toggle-title">لینک دیوار</span>
-                                <span class="mk-share-toggle-desc">افزودن لینک آگهی به صفحه مشتری</span>
+                    <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-display">
+                        <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-display">
+                            <i class="fas fa-sliders-h" aria-hidden="true"></i> نمایش در صفحه عمومی
+                        </h3>
+                        <div class="mk-share-toggles">
+                            <label class="mk-share-toggle-row">
+                                <span class="mk-share-toggle-info">
+                                    <span class="mk-share-toggle-title">لینک دیوار</span>
+                                    <span class="mk-share-toggle-desc">افزودن لینک آگهی اصلی به صفحه مشتری</span>
+                                </span>
+                                <span class="mk-share-switch">
+                                    <input type="checkbox" name="show_divar_link" value="1"{% if share.show_divar_link %} checked{% endif %}>
+                                    <span class="mk-share-switch-track" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                            {% if is_personal_file %}
+                            <label class="mk-share-toggle-row">
+                                <span class="mk-share-toggle-info">
+                                    <span class="mk-share-toggle-title">آدرس کامل</span>
+                                    <span class="mk-share-toggle-desc">نمایش آدرس دقیق ملک در صفحه عمومی</span>
+                                </span>
+                                <span class="mk-share-switch">
+                                    <input type="checkbox" name="show_full_address" value="1"{% if share.show_full_address %} checked{% endif %}>
+                                    <span class="mk-share-switch-track" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                            <label class="mk-share-toggle-row">
+                                <span class="mk-share-toggle-info">
+                                    <span class="mk-share-toggle-title">یادداشت داخلی</span>
+                                    <span class="mk-share-toggle-desc">یادداشت‌های محرمانه پرونده</span>
+                                </span>
+                                <span class="mk-share-switch">
+                                    <input type="checkbox" name="show_internal_notes" value="1"{% if share.show_internal_notes %} checked{% endif %}>
+                                    <span class="mk-share-switch-track" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                    <section class="mk-share-section mk-share-section--status" aria-labelledby="{{ id_prefix }}-sec-status">
+                        <label class="mk-share-status-card">
+                            <span class="mk-share-status-card-body">
+                                <span class="mk-share-status-card-icon" aria-hidden="true"><i class="fas fa-power-off"></i></span>
+                                <span class="mk-share-toggle-info">
+                                    <span class="mk-share-toggle-title" id="{{ id_prefix }}-sec-status">لینک فعال است</span>
+                                    <span class="mk-share-toggle-desc">با غیرفعال کردن، مشتری دیگر صفحه را نمی‌بیند</span>
+                                </span>
                             </span>
-                            <span class="mk-share-switch">
-                                <input type="checkbox" name="show_divar_link" value="1"{% if share.show_divar_link %} checked{% endif %}>
+                            <span class="mk-share-switch mk-share-switch--lg">
+                                <input type="checkbox" name="is_active" value="1"{% if share.is_active %} checked{% endif %}>
                                 <span class="mk-share-switch-track" aria-hidden="true"></span>
                             </span>
                         </label>
-                        {% if is_personal_file %}
-                        <label class="mk-share-toggle-row">
-                            <span class="mk-share-toggle-info">
-                                <span class="mk-share-toggle-title">آدرس کامل</span>
-                                <span class="mk-share-toggle-desc">نمایش آدرس دقیق ملک در صفحه عمومی</span>
-                            </span>
-                            <span class="mk-share-switch">
-                                <input type="checkbox" name="show_full_address" value="1"{% if share.show_full_address %} checked{% endif %}>
-                                <span class="mk-share-switch-track" aria-hidden="true"></span>
-                            </span>
-                        </label>
-                        <label class="mk-share-toggle-row">
-                            <span class="mk-share-toggle-info">
-                                <span class="mk-share-toggle-title">یادداشت داخلی</span>
-                                <span class="mk-share-toggle-desc">یادداشت‌های محرمانه پرونده</span>
-                            </span>
-                            <span class="mk-share-switch">
-                                <input type="checkbox" name="show_internal_notes" value="1"{% if share.show_internal_notes %} checked{% endif %}>
-                                <span class="mk-share-switch-track" aria-hidden="true"></span>
-                            </span>
-                        </label>
-                        {% endif %}
-                    </div>
-                </section>
+                    </section>
+                </div>
 
-                <section class="mk-share-section mk-share-section--status" aria-labelledby="{{ id_prefix }}-sec-status">
-                    <label class="mk-share-status-card">
-                        <span class="mk-share-status-card-body">
-                            <span class="mk-share-status-card-icon" aria-hidden="true"><i class="fas fa-power-off"></i></span>
-                            <span class="mk-share-toggle-info">
-                                <span class="mk-share-toggle-title" id="{{ id_prefix }}-sec-status">لینک فعال است</span>
-                                <span class="mk-share-toggle-desc">با غیرفعال کردن، مشتری دیگر صفحه را نمی‌بیند</span>
-                            </span>
-                        </span>
-                        <span class="mk-share-switch mk-share-switch--lg">
-                            <input type="checkbox" name="is_active" value="1"{% if share.is_active %} checked{% endif %}>
-                            <span class="mk-share-switch-track" aria-hidden="true"></span>
-                        </span>
-                    </label>
-                </section>
+                {# ── تب پروفایل ── #}
+                <div class="mk-share-pane" data-share-pane="profile" role="tabpanel" hidden>
+                    <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-consultant">
+                        <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-consultant">
+                            <i class="fas fa-user-tie" aria-hidden="true"></i> اطلاعات تماس
+                        </h3>
+                        <p class="mk-share-msg-hint">
+                            از پروفایل شما خوانده می‌شود؛ خالی بگذارید تا همیشه از تنظیمات آژانس به‌روز شود.
+                        </p>
+                        <div class="mk-share-fields-grid">
+                            <div class="mk-share-field">
+                                <label class="ws-label" for="{{ id_prefix }}-consultant-name">نام نمایشی</label>
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-consultant-name" name="consultant_name"
+                                       value="{{ sp.consultant_name|default:consultant_name|default:share.consultant_name }}"
+                                       placeholder="نام آژانس یا مشاور">
+                            </div>
+                            <div class="mk-share-field">
+                                <label class="ws-label" for="{{ id_prefix }}-consultant-phone">شماره تماس</label>
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-consultant-phone" name="consultant_phone"
+                                       value="{{ sp.consultant_phone|default:consultant_phone|default:share.consultant_phone }}"
+                                       placeholder="۰۹۱۲…" dir="ltr">
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-social">
+                        <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-social">
+                            <i class="fas fa-share-alt" aria-hidden="true"></i> شبکه‌های اجتماعی
+                        </h3>
+                        <p class="mk-share-msg-hint">
+                            لینک‌ها یک‌بار ذخیره می‌شوند و در صفحه عمومی همه فایل‌های شما نمایش داده می‌شوند.
+                        </p>
+                        <div class="mk-share-social-grid">
+                            {% for net in sp.social_networks %}
+                            <div class="mk-share-social-field" style="--mk-social-color: {{ net.color }}">
+                                <label class="ws-label" for="{{ id_prefix }}-social-{{ net.key }}">
+                                    <i class="{{ net.icon }}" aria-hidden="true"></i> {{ net.label }}
+                                </label>
+                                <input type="url"
+                                       class="ws-input"
+                                       id="{{ id_prefix }}-social-{{ net.key }}"
+                                       name="social_{{ net.key }}"
+                                       value="{{ net.url }}"
+                                       data-social-key="{{ net.key }}"
+                                       placeholder="{{ net.placeholder }}"
+                                       dir="ltr"
+                                       autocomplete="off">
+                            </div>
+                            {% empty %}
+                            {# fallback if share_profile missing #}
+                            <div class="mk-share-social-field" style="--mk-social-color:#229ED9">
+                                <label class="ws-label" for="{{ id_prefix }}-social-telegram"><i class="fab fa-telegram" aria-hidden="true"></i> تلگرام</label>
+                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-telegram" name="social_telegram" placeholder="https://t.me/username" dir="ltr">
+                            </div>
+                            <div class="mk-share-social-field" style="--mk-social-color:#00ADEF">
+                                <label class="ws-label" for="{{ id_prefix }}-social-bale"><i class="fas fa-comment-dots" aria-hidden="true"></i> بله</label>
+                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-bale" name="social_bale" placeholder="https://ble.ir/username" dir="ltr">
+                            </div>
+                            <div class="mk-share-social-field" style="--mk-social-color:#7B2D8E">
+                                <label class="ws-label" for="{{ id_prefix }}-social-rubika"><i class="fas fa-comments" aria-hidden="true"></i> روبیکا</label>
+                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-rubika" name="social_rubika" placeholder="https://rubika.ir/username" dir="ltr">
+                            </div>
+                            <div class="mk-share-social-field" style="--mk-social-color:#F7941D">
+                                <label class="ws-label" for="{{ id_prefix }}-social-eitaa"><i class="fas fa-paper-plane" aria-hidden="true"></i> ایتا</label>
+                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-eitaa" name="social_eitaa" placeholder="https://eitaa.com/username" dir="ltr">
+                            </div>
+                            <div class="mk-share-social-field" style="--mk-social-color:#E4405F">
+                                <label class="ws-label" for="{{ id_prefix }}-social-instagram"><i class="fab fa-instagram" aria-hidden="true"></i> اینستاگرام</label>
+                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-instagram" name="social_instagram" placeholder="https://instagram.com/username" dir="ltr">
+                            </div>
+                            <div class="mk-share-social-field" style="--mk-social-color:#00A651">
+                                <label class="ws-label" for="{{ id_prefix }}-social-soroush"><i class="fas fa-mobile-screen" aria-hidden="true"></i> سروش</label>
+                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-soroush" name="social_soroush" placeholder="https://splus.ir/username" dir="ltr">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
             </div>
             <div class="ws-modal-foot mk-share-modal-foot">
                 <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>بستن</button>
@@ -189,3 +329,4 @@
         </form>
     </div>
 </div>
+{% endwith %}

@@ -1212,10 +1212,15 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             pub_share = get_or_create_property_share(self.request.user, p)
             ctx['public_property_share'] = pub_share
             ctx['public_property_share_url'] = property_public_share_url(self.request, pub_share)
-            from workspace.services.public_share_common import share_consultant_form_values
-            form_vals = share_consultant_form_values(self.request.user, pub_share)
-            ctx['consultant_name'] = form_vals['consultant_name']
-            ctx['consultant_phone'] = form_vals['consultant_phone']
+            from workspace.services.public_share_common import share_profile_context
+            profile = share_profile_context(
+                self.request.user, pub_share,
+                title=p.title or '',
+                share_url=ctx['public_property_share_url'],
+            )
+            ctx['consultant_name'] = profile['consultant_name']
+            ctx['consultant_phone'] = profile['consultant_phone']
+            ctx['share_profile'] = profile
         return ctx
 
     def _detail_redirect(self, property_id, *, tab='contacts', drawer=''):
@@ -1418,17 +1423,24 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
             get_or_create_property_share,
             property_public_share_url,
         )
+        from workspace.services.public_share_common import share_profile_context
         share = get_or_create_property_share(request.user, prop)
-        from workspace.services.public_share_common import share_consultant_form_values
-        form_vals = share_consultant_form_values(request.user, share)
+        url = property_public_share_url(request, share)
+        profile = share_profile_context(
+            request.user, share, title=prop.title or '', share_url=url,
+        )
         return JsonResponse({
             'ok': True,
-            'share_url': property_public_share_url(request, share),
+            'share_url': url,
             'share_token': share.share_token,
             'view_count': share.view_count,
-            'consultant_name': form_vals['consultant_name'],
-            'consultant_phone': form_vals['consultant_phone'],
-            'welcome_message': share.welcome_message,
+            'consultant_name': profile['consultant_name'],
+            'consultant_phone': profile['consultant_phone'],
+            'welcome_message': profile['welcome_message'],
+            'welcome_is_custom': profile['welcome_is_custom'],
+            'default_share_message': profile['default_share_message'],
+            'share_message_rendered': profile['share_message_rendered'],
+            'social_links': profile['social_links'],
             'show_divar_link': share.show_divar_link,
             'show_full_address': share.show_full_address,
             'show_internal_notes': share.show_internal_notes,
@@ -1444,7 +1456,10 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
             get_or_create_property_share,
             property_public_share_url,
         )
-        from workspace.services.public_share_common import normalize_consultant_fields_for_save
+        from workspace.services.public_share_common import (
+            apply_share_form_extras,
+            normalize_consultant_fields_for_save,
+        )
         share = get_or_create_property_share(request.user, prop)
         name, phone = normalize_consultant_fields_for_save(
             request.user,
@@ -1453,7 +1468,7 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
         )
         share.consultant_name = name
         share.consultant_phone = phone
-        share.welcome_message = (request.POST.get('welcome_message') or '').strip()
+        apply_share_form_extras(request.user, request.POST, share)
         share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
         share.show_full_address = request.POST.get('show_full_address') in ('1', 'true', 'on')
         share.show_internal_notes = request.POST.get('show_internal_notes') in ('1', 'true', 'on')

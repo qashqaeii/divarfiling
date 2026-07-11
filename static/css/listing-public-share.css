@@ -797,6 +797,20 @@
     font-weight: 500;
 }
 
+.ps-quote-body {
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: var(--ps-text-soft);
+    font-weight: 500;
+}
+
+.ps-quote-body p { margin: 0 0 0.45rem; }
+.ps-quote-body ul,
+.ps-quote-body ol { margin: 0.35rem 0 0.55rem; padding-inline-start: 1.2rem; }
+.ps-quote-body a { color: var(--ps-brand); text-decoration: underline; }
+.ps-quote-body strong,
+.ps-quote-body b { font-weight: 700; color: var(--ps-ink); }
+
 .ps-quote footer {
     font-size: 0.75rem;
     font-weight: 700;
@@ -1426,6 +1440,45 @@
     color: var(--ps-muted);
     text-align: center;
     margin: 0;
+}
+
+.ps-agent-socials {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--ps-border-light);
+}
+
+.ps-agent-social {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 34px;
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--ps-social, var(--ps-brand)) 28%, var(--ps-border-light));
+    background: color-mix(in srgb, var(--ps-social, var(--ps-brand)) 8%, var(--ps-surface));
+    color: var(--ps-social, var(--ps-brand));
+    font-size: 0.72rem;
+    font-weight: 650;
+    text-decoration: none;
+    transition: transform 0.15s, background 0.15s;
+}
+
+.ps-agent-social:hover {
+    transform: translateY(-1px);
+    background: color-mix(in srgb, var(--ps-social, var(--ps-brand)) 14%, var(--ps-surface));
+}
+
+.ps-agent-social i { font-size: 0.85rem; }
+
+.ps-btn--social {
+    background: color-mix(in srgb, var(--ps-social, #64748b) 12%, var(--ps-surface)) !important;
+    color: var(--ps-social, #334155) !important;
+    border: 1px solid color-mix(in srgb, var(--ps-social, #64748b) 30%, transparent) !important;
 }
 
 /* ── Map ── */

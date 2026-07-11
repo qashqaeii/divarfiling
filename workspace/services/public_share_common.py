@@ -1,15 +1,75 @@
 """ابزارهای مشترک اشتراک عمومی آگهی و فایل شخصی."""
 from __future__ import annotations
 
+import re
 import secrets
-from typing import Any, Dict, List, Optional, Set
-from urllib.parse import quote
+from html.parser import HTMLParser
+from typing import Any, Dict, List, Optional, Set, Tuple
+from urllib.parse import quote, urlparse
 
 from django.conf import settings
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from workspace.mixins import get_or_create_settings
 from workspace.models import WorkspaceSettings
+
+DEFAULT_SHARE_MESSAGE_TEMPLATE = (
+    'سلام،\n'
+    'جزئیات «{title}» را در این لینک ببینید:\n'
+    '{url}'
+)
+
+# شبکه‌های اجتماعی پشتیبانی‌شده در کارت مشاور / مودال اشتراک
+SOCIAL_NETWORK_DEFS: Tuple[Dict[str, str], ...] = (
+    {
+        'key': 'telegram',
+        'label': 'تلگرام',
+        'icon': 'fab fa-telegram',
+        'placeholder': 'https://t.me/username',
+        'color': '#229ED9',
+    },
+    {
+        'key': 'bale',
+        'label': 'بله',
+        'icon': 'fas fa-comment-dots',
+        'placeholder': 'https://ble.ir/username',
+        'color': '#00ADEF',
+    },
+    {
+        'key': 'rubika',
+        'label': 'روبیکا',
+        'icon': 'fas fa-comments',
+        'placeholder': 'https://rubika.ir/username',
+        'color': '#7B2D8E',
+    },
+    {
+        'key': 'eitaa',
+        'label': 'ایتا',
+        'icon': 'fas fa-paper-plane',
+        'placeholder': 'https://eitaa.com/username',
+        'color': '#F7941D',
+    },
+    {
+        'key': 'instagram',
+        'label': 'اینستاگرام',
+        'icon': 'fab fa-instagram',
+        'placeholder': 'https://instagram.com/username',
+        'color': '#E4405F',
+    },
+    {
+        'key': 'soroush',
+        'label': 'سروش',
+        'icon': 'fas fa-mobile-alt',
+        'placeholder': 'https://splus.ir/username',
+        'color': '#00A651',
+    },
+)
+
+_ALLOWED_WELCOME_TAGS = frozenset({
+    'b', 'strong', 'i', 'em', 'u', 'br', 'p', 'ul', 'ol', 'li', 'a', 'span', 'div',
+})
+_ALLOWED_A_ATTRS = frozenset({'href', 'title', 'rel', 'target'})
 
 # فیلدهای فنی / داخلی — فقط برای منطق داخلی؛ در صفحه عمومی نمایش داده نشوند
 PUBLIC_TECHNICAL_KEY_MARKERS = (
@@ -43,6 +103,319 @@ def unique_share_token(model_cls) -> str:
     while model_cls.objects.filter(share_token=token).exists():
         token = generate_share_token()
     return token
+
+
+class _WelcomeHTMLSanitizer(HTMLParser):
+    """سانیتایزر سبک برای پیام خوش‌آمد — فقط تگ‌های امن قالب‌بندی."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self._out: List[str] = []
+        self._stack: List[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        tag = tag.lower()
+        if tag == 'br':
+            self._out.append('<br>')
+            return
+        if tag not in _ALLOWED_WELCOME_TAGS:
+            return
+        safe_attrs = []
+        if tag == 'a':
+            href = ''
+            for k, v in attrs:
+                k = (k or '').lower()
+                if k not in _ALLOWED_A_ATTRS or not v:
+                    continue
+                if k == 'href':
+                    href = self._safe_href(v)
+                    if not href:
+                        return
+                    safe_attrs.append(f'href="{href}"')
+                elif k == 'title':
+                    safe_attrs.append(f'title="{_escape_attr(v)}"')
+            safe_attrs.append('rel="noopener noreferrer"')
+            safe_attrs.append('target="_blank"')
+        attr_str = (' ' + ' '.join(safe_attrs)) if safe_attrs else ''
+        self._out.append(f'<{tag}{attr_str}>')
+        self._stack.append(tag)
+
+    def handle_endtag(self, tag):
+        tag = tag.lower()
+        if tag in ('br',) or tag not in _ALLOWED_WELCOME_TAGS:
+            return
+        if self._stack and self._stack[-1] == tag:
+            self._stack.pop()
+            self._out.append(f'</{tag}>')
+
+    def handle_data(self, data):
+        self._out.append(_escape_text(data))
+
+    def handle_entityref(self, name):
+        self._out.append(f'&{name};')
+
+    def handle_charref(self, name):
+        self._out.append(f'&#{name};')
+
+    @staticmethod
+    def _safe_href(url: str) -> str:
+        u = (url or '').strip()
+        if not u:
+            return ''
+        parsed = urlparse(u)
+        if parsed.scheme.lower() in ('http', 'https', 'tel', 'mailto'):
+            return _escape_attr(u)
+        if u.startswith('/') and not u.startswith('//'):
+            return _escape_attr(u)
+        return ''
+
+    def result(self) -> str:
+        while self._stack:
+            self._out.append(f'</{self._stack.pop()}>')
+        return ''.join(self._out)
+
+
+def _escape_text(s: str) -> str:
+    return (
+        (s or '')
+        .replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+    )
+
+
+def _escape_attr(s: str) -> str:
+    return (
+        (s or '')
+        .replace('&', '&amp;')
+        .replace('"', '&quot;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+    )
+
+
+def sanitize_welcome_html(raw: str) -> str:
+    """پاک‌سازی HTML پیام خوش‌آمد برای ذخیره و نمایش امن."""
+    text = (raw or '').strip()
+    if not text:
+        return ''
+    # اگر فقط متن ساده است، خط‌ها را به <br> تبدیل کن
+    if '<' not in text:
+        return '<br>'.join(_escape_text(line) for line in text.splitlines())
+    parser = _WelcomeHTMLSanitizer()
+    try:
+        parser.feed(text)
+        parser.close()
+    except Exception:
+        return _escape_text(re.sub(r'<[^>]+>', '', text))
+    return parser.result().strip()
+
+
+def welcome_html_to_plain(html: str) -> str:
+    """نسخه متنی ساده از پیام خوش‌آمد (برای API / پیش‌نمایش)."""
+    if not html:
+        return ''
+    text = re.sub(r'<br\s*/?>', '\n', html, flags=re.I)
+    text = re.sub(r'</p\s*>', '\n', text, flags=re.I)
+    text = re.sub(r'<[^>]+>', '', text)
+    text = (
+        text.replace('&nbsp;', ' ')
+        .replace('&amp;', '&')
+        .replace('&lt;', '<')
+        .replace('&gt;', '>')
+        .replace('&quot;', '"')
+    )
+    return re.sub(r'\n{3,}', '\n\n', text).strip()
+
+
+def normalize_social_url(url: str) -> str:
+    u = (url or '').strip()
+    if not u:
+        return ''
+    if not re.match(r'^https?://', u, re.I):
+        u = 'https://' + u.lstrip('/')
+    parsed = urlparse(u)
+    if parsed.scheme.lower() not in ('http', 'https'):
+        return ''
+    if not parsed.netloc:
+        return ''
+    return u[:500]
+
+
+def normalize_social_links(raw) -> Dict[str, str]:
+    """استخراج و نرمال‌سازی لینک‌های اجتماعی از dict یا POST."""
+    src = raw if isinstance(raw, dict) else {}
+    out: Dict[str, str] = {}
+    for defn in SOCIAL_NETWORK_DEFS:
+        key = defn['key']
+        val = normalize_social_url(str(src.get(key) or ''))
+        if val:
+            out[key] = val
+    return out
+
+
+def social_links_from_post(post) -> Dict[str, str]:
+    raw = {}
+    for defn in SOCIAL_NETWORK_DEFS:
+        key = defn['key']
+        raw[key] = post.get(f'social_{key}') or post.get(key) or ''
+    return normalize_social_links(raw)
+
+
+def social_networks_for_display(links: Optional[dict]) -> List[Dict[str, str]]:
+    """لیست شبکه‌های دارای لینک برای رندر در UI."""
+    links = links or {}
+    items: List[Dict[str, str]] = []
+    for defn in SOCIAL_NETWORK_DEFS:
+        url = (links.get(defn['key']) or '').strip()
+        if not url:
+            continue
+        items.append({
+            'key': defn['key'],
+            'label': defn['label'],
+            'icon': defn['icon'],
+            'color': defn['color'],
+            'url': url,
+        })
+    return items
+
+
+def get_share_message_template(user) -> str:
+    ws = get_or_create_settings(user)
+    tpl = (ws.default_share_message or '').strip()
+    return tpl or DEFAULT_SHARE_MESSAGE_TEMPLATE
+
+
+def render_share_message(template: str, *, title: str, url: str) -> str:
+    tpl = (template or '').strip() or DEFAULT_SHARE_MESSAGE_TEMPLATE
+    safe_title = (title or 'ملک').strip() or 'ملک'
+    safe_url = (url or '').strip()
+    return (
+        tpl.replace('{title}', safe_title)
+        .replace('{url}', safe_url)
+        .replace('{TITLE}', safe_title)
+        .replace('{URL}', safe_url)
+    )
+
+
+def resolve_welcome_message(user, share) -> Dict[str, Any]:
+    """پیام خوش‌آمد مؤثر: سفارشی فایل یا پیش‌فرض پروفایل."""
+    ws = get_or_create_settings(user)
+    stored = (share.welcome_message or '').strip()
+    default = (ws.default_welcome_message or '').strip()
+    effective_raw = stored or default
+    effective = sanitize_welcome_html(effective_raw) if effective_raw else ''
+    return {
+        'welcome_message': effective,
+        'welcome_message_html': mark_safe(effective) if effective else '',
+        'welcome_plain': welcome_html_to_plain(effective),
+        'is_custom': bool(stored),
+        'default_welcome_message': default,
+        'from_default': not bool(stored) and bool(default),
+    }
+
+
+def save_share_profile_defaults(
+    user,
+    *,
+    default_share_message: Optional[str] = None,
+    default_welcome_message: Optional[str] = None,
+    social_links: Optional[dict] = None,
+    save_share_message: bool = False,
+    save_welcome: bool = False,
+    save_socials: bool = False,
+) -> WorkspaceSettings:
+    """ذخیره پیش‌فرض‌های اشتراک در تنظیمات کاربر."""
+    ws = get_or_create_settings(user)
+    changed = False
+    if save_share_message and default_share_message is not None:
+        tpl = (default_share_message or '').strip()
+        # اگر کاربر متن رندر‌شده فرستاده، سعی نکن خرابش کنیم — همان قالب را نگه دار
+        ws.default_share_message = tpl[:4000]
+        changed = True
+    if save_welcome and default_welcome_message is not None:
+        ws.default_welcome_message = sanitize_welcome_html(default_welcome_message)[:8000]
+        changed = True
+    if save_socials and social_links is not None:
+        ws.social_links = normalize_social_links(social_links)
+        changed = True
+    if changed:
+        ws.save()
+    return ws
+
+
+def apply_share_form_extras(user, post, share) -> Dict[str, Any]:
+    """
+    پردازش فیلدهای اضافی مودال اشتراک:
+    - پیام خوش‌آمد (فایل / پیش‌فرض)
+    - متن اشتراک پیش‌فرض
+    - لینک شبکه‌های اجتماعی
+    """
+    welcome_raw = post.get('welcome_message') or ''
+    save_as_default_welcome = post.get('save_as_default_welcome') in ('1', 'true', 'on')
+    save_as_default_message = post.get('save_as_default_share_message') in ('1', 'true', 'on')
+    clear_custom_welcome = post.get('use_default_welcome') in ('1', 'true', 'on')
+
+    socials = social_links_from_post(post)
+    save_share_profile_defaults(
+        user,
+        social_links=socials,
+        save_socials=True,
+        default_welcome_message=welcome_raw if save_as_default_welcome else None,
+        save_welcome=save_as_default_welcome,
+        default_share_message=post.get('share_message_template') if save_as_default_message else None,
+        save_share_message=save_as_default_message,
+    )
+
+    if clear_custom_welcome or save_as_default_welcome:
+        # با ذخیره پیش‌فرض، این فایل هم از همان پیش‌فرض پیروی کند
+        share.welcome_message = ''
+    else:
+        cleaned = sanitize_welcome_html(welcome_raw)
+        default = (get_or_create_settings(user).default_welcome_message or '').strip()
+        # اگر دقیقاً همان پیش‌فرض است، خالی بگذار تا همیشه از پروفایل خوانده شود
+        if cleaned and default and cleaned == default:
+            share.welcome_message = ''
+        else:
+            share.welcome_message = cleaned
+
+    return {
+        'social_links': socials,
+        'welcome_resolved': resolve_welcome_message(user, share),
+    }
+
+
+def share_profile_context(user, share, *, title: str = '', share_url: str = '') -> Dict[str, Any]:
+    """کانتکست مشترک مودال اشتراک و پاسخ JSON."""
+    ws = get_or_create_settings(user)
+    form_vals = share_consultant_form_values(user, share)
+    welcome = resolve_welcome_message(user, share)
+    msg_tpl = get_share_message_template(user)
+    rendered_msg = render_share_message(msg_tpl, title=title, url=share_url)
+    socials = normalize_social_links(ws.social_links or {})
+    networks = [
+        {
+            'key': defn['key'],
+            'label': defn['label'],
+            'icon': defn['icon'],
+            'color': defn['color'],
+            'placeholder': defn['placeholder'],
+            'url': socials.get(defn['key'], ''),
+        }
+        for defn in SOCIAL_NETWORK_DEFS
+    ]
+    return {
+        **form_vals,
+        'welcome_message': welcome['welcome_message'],
+        'welcome_is_custom': welcome['is_custom'],
+        'welcome_from_default': welcome['from_default'],
+        'default_welcome_message': welcome['default_welcome_message'],
+        'default_share_message': msg_tpl,
+        'share_message_rendered': rendered_msg,
+        'social_links': socials,
+        'social_networks': networks,
+        'social_networks_active': social_networks_for_display(socials),
+    }
 
 
 def profile_consultant_defaults(user) -> tuple[str, str]:
@@ -131,17 +504,21 @@ def absolute_public_share_url(url_name: str, *, share_token: str) -> str:
 def public_share_to_dict(share, request, *, url_name: str) -> Dict[str, Any]:
     path = reverse(url_name, kwargs={'share_token': share.share_token})
     share_url = request.build_absolute_uri(path) if request else absolute_public_share_url(url_name, share_token=share.share_token)
-    form_vals = share_consultant_form_values(share.created_by, share)
+    profile = share_profile_context(share.created_by, share, share_url=share_url)
     return {
         'share_url': share_url,
         'share_token': share.share_token,
         'view_count': share.view_count,
         'is_active': share.is_active,
-        'consultant_name': form_vals['consultant_name'],
-        'consultant_phone': form_vals['consultant_phone'],
+        'consultant_name': profile['consultant_name'],
+        'consultant_phone': profile['consultant_phone'],
         'consultant_name_stored': share.consultant_name,
         'consultant_phone_stored': share.consultant_phone,
-        'welcome_message': share.welcome_message,
+        'welcome_message': profile['welcome_message'],
+        'welcome_is_custom': profile['welcome_is_custom'],
+        'default_share_message': profile['default_share_message'],
+        'share_message_rendered': profile['share_message_rendered'],
+        'social_links': profile['social_links'],
         'show_divar_link': share.show_divar_link,
         'show_full_address': getattr(share, 'show_full_address', False),
         'show_internal_notes': getattr(share, 'show_internal_notes', False),
@@ -376,6 +753,9 @@ def build_consultant_block(user, share, *, title: str = 'ملک') -> Dict[str, A
     greet_name = display['person_name'] or display['brand_name']
     wa_message = f'سلام {greet_name}، درباره «{title}» اطلاعات بیشتری می‌خواهم.'
     active_count = count_active_files(user)
+    welcome = resolve_welcome_message(user, share)
+    socials = normalize_social_links(ws.social_links or {})
+    social_items = social_networks_for_display(socials)
     return {
         'name': display['display_name'],
         'brand_name': display['brand_name'],
@@ -386,7 +766,12 @@ def build_consultant_block(user, share, *, title: str = 'ملک') -> Dict[str, A
         'has_phone': bool(phone),
         'agency_name': display['agency_name'] or display['brand_name'],
         'agency_logo': ws.agency_logo,
-        'welcome_message': share.welcome_message.strip(),
+        'welcome_message': welcome['welcome_plain'] or welcome_html_to_plain(welcome['welcome_message']),
+        'welcome_message_html': welcome['welcome_message_html'],
+        'has_welcome': bool(welcome['welcome_message']),
+        'social_links': socials,
+        'social_networks': social_items,
+        'has_socials': bool(social_items),
         'active_files_count': active_count,
         'is_verified': bool(ws.agency_name and ws.agency_logo),
         **consultant_contact_urls(phone, wa_message),

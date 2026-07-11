@@ -345,7 +345,7 @@
 {% block modals %}
 {% include 'workspace/includes/listing_edit_delete_modals.html' %}
 {% url 'workspace:listing_share' dataset.id listing.id as listing_share_action %}
-{% include 'workspace/includes/public_share_modal.html' with modal_id='modal-share' form_id='form-listing-share' form_action=listing_share_action share_url=public_share_url share=public_share item_title=listing.title id_prefix='listing-share' subtitle='لینک عمومی — مشتری بدون ورود، جزئیات ملک و اطلاعات شما را می‌بیند' is_personal_file=False %}
+{% include 'workspace/includes/public_share_modal.html' with modal_id='modal-share' form_id='form-listing-share' form_action=listing_share_action share_url=public_share_url share=public_share item_title=listing.title id_prefix='listing-share' subtitle='لینک عمومی — مشتری بدون ورود، جزئیات ملک و اطلاعات شما را می‌بیند' is_personal_file=False share_profile=share_profile %}
 <div class="ws-modal" id="modal-meta" role="dialog" aria-modal="true">
     <div class="ws-modal-overlay" data-modal-close></div>
     <div class="ws-modal-panel">

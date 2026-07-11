@@ -51,7 +51,12 @@ def property_public_share_to_dict(share: CRMPropertyPublicShare, request=None) -
 
 
 def update_property_public_share(share: CRMPropertyPublicShare, payload: dict) -> CRMPropertyPublicShare:
-    from workspace.services.public_share_common import normalize_consultant_fields_for_save
+    from workspace.services.public_share_common import (
+        normalize_consultant_fields_for_save,
+        normalize_social_links,
+        sanitize_welcome_html,
+        save_share_profile_defaults,
+    )
 
     if 'consultant_name' in payload or 'consultant_phone' in payload:
         name, phone = normalize_consultant_fields_for_save(
@@ -64,7 +69,7 @@ def update_property_public_share(share: CRMPropertyPublicShare, payload: dict) -
         if 'consultant_phone' in payload:
             share.consultant_phone = phone
     if 'welcome_message' in payload:
-        share.welcome_message = str(payload.get('welcome_message') or '').strip()
+        share.welcome_message = sanitize_welcome_html(str(payload.get('welcome_message') or ''))
     if 'show_divar_link' in payload:
         share.show_divar_link = bool(payload.get('show_divar_link'))
     if 'show_full_address' in payload:
@@ -73,6 +78,25 @@ def update_property_public_share(share: CRMPropertyPublicShare, payload: dict) -
         share.show_internal_notes = bool(payload.get('show_internal_notes'))
     if 'is_active' in payload:
         share.is_active = bool(payload.get('is_active'))
+    if payload.get('save_as_default_welcome'):
+        save_share_profile_defaults(
+            share.created_by,
+            default_welcome_message=payload.get('welcome_message') or share.welcome_message,
+            save_welcome=True,
+        )
+        share.welcome_message = ''
+    if 'social_links' in payload:
+        save_share_profile_defaults(
+            share.created_by,
+            social_links=normalize_social_links(payload.get('social_links') or {}),
+            save_socials=True,
+        )
+    if payload.get('save_as_default_share_message') and 'default_share_message' in payload:
+        save_share_profile_defaults(
+            share.created_by,
+            default_share_message=str(payload.get('default_share_message') or ''),
+            save_share_message=True,
+        )
     share.save()
     return share
 

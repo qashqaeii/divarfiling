@@ -352,10 +352,28 @@ function getCsrfToken() {
     return match ? decodeURIComponent(match[1]) : '';
 }
 
-function buildDefaultShareMessage(title, url) {
+function buildDefaultShareMessage(title, url, template) {
     const safeTitle = (title || 'ملک').trim() || 'ملک';
     const safeUrl = (url || '').trim();
-    return `سلام،\nجزئیات «${safeTitle}» را در این لینک ببینید:\n${safeUrl}`;
+    const tpl = (template || '').trim() || 'سلام،\nجزئیات «{title}» را در این لینک ببینید:\n{url}';
+    return tpl
+        .split('{title}').join(safeTitle)
+        .split('{TITLE}').join(safeTitle)
+        .split('{url}').join(safeUrl)
+        .split('{URL}').join(safeUrl);
+}
+
+function messageToShareTemplate(text, title, url) {
+    let out = (text || '').trim();
+    const safeUrl = (url || '').trim();
+    const safeTitle = (title || '').trim();
+    if (safeUrl && out.includes(safeUrl)) {
+        out = out.split(safeUrl).join('{url}');
+    }
+    if (safeTitle && out.includes(safeTitle)) {
+        out = out.split(safeTitle).join('{title}');
+    }
+    return out || 'سلام،\nجزئیات «{title}» را در این لینک ببینید:\n{url}';
 }
 
 function syncShareMessageUrl(form, nextUrl) {
@@ -368,8 +386,70 @@ function syncShareMessageUrl(form, nextUrl) {
     if (prevUrl && ta.value.includes(prevUrl)) {
         ta.value = ta.value.split(prevUrl).join(nextUrl);
     } else if (!ta.value.trim()) {
-        ta.value = buildDefaultShareMessage(root.dataset.listingTitle, nextUrl);
+        ta.value = buildDefaultShareMessage(
+            root.dataset.listingTitle,
+            nextUrl,
+            root.dataset.shareTemplate || form.querySelector('[data-share-msg-template]')?.value,
+        );
     }
+}
+
+function initShareModalTabs(form) {
+    const tabs = form.querySelector('[data-share-tabs]');
+    if (!tabs || tabs.dataset.bound === '1') return;
+    tabs.dataset.bound = '1';
+    tabs.querySelectorAll('[data-share-tab]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const key = btn.dataset.shareTab;
+            tabs.querySelectorAll('[data-share-tab]').forEach((b) => {
+                const on = b === btn;
+                b.classList.toggle('is-active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            form.querySelectorAll('[data-share-pane]').forEach((pane) => {
+                const on = pane.dataset.sharePane === key;
+                pane.classList.toggle('is-active', on);
+                pane.hidden = !on;
+            });
+        });
+    });
+}
+
+function initWelcomeRichEditors(form) {
+    const rte = form.querySelector('[data-welcome-rte]');
+    if (!rte || rte.dataset.bound === '1') return;
+    rte.dataset.bound = '1';
+    const editor = rte.querySelector('[data-welcome-editor]');
+    const hidden = form.querySelector('[data-welcome-input]');
+    if (!editor || !hidden) return;
+
+    const syncHidden = () => {
+        const html = (editor.innerHTML || '').trim();
+        const plain = (editor.innerText || '').trim();
+        hidden.value = plain ? html : '';
+        editor.classList.toggle('is-empty', !plain);
+    };
+
+    editor.classList.toggle('is-empty', !(editor.innerText || '').trim());
+
+    rte.querySelectorAll('[data-rte-cmd]').forEach((btn) => {
+        btn.addEventListener('mousedown', (e) => e.preventDefault());
+        btn.addEventListener('click', () => {
+            const cmd = btn.dataset.rteCmd;
+            editor.focus();
+            if (cmd === 'createLink') {
+                const url = window.prompt('آدرس لینک را وارد کنید:', 'https://');
+                if (url) document.execCommand('createLink', false, url);
+            } else {
+                document.execCommand(cmd, false, null);
+            }
+            syncHidden();
+        });
+    });
+
+    editor.addEventListener('input', syncHidden);
+    editor.addEventListener('blur', syncHidden);
+    form.addEventListener('submit', syncHidden);
 }
 
 function initPublicShareMessageEditors() {
@@ -378,6 +458,7 @@ function initPublicShareMessageEditors() {
         root.dataset.shareMsgBound = '1';
         const ta = root.querySelector('[data-share-message]');
         if (!ta) return;
+        const form = root.closest('form');
 
         const setBtnLabel = (btn, label, restoreMs = 1600) => {
             if (!btn) return;
@@ -440,17 +521,54 @@ function initPublicShareMessageEditors() {
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
         });
 
+        root.querySelector('[data-share-msg-tg]')?.addEventListener('click', () => {
+            const text = (ta.value || '').trim();
+            const url = (root.dataset.shareUrl || '').trim();
+            if (!text && !url) {
+                if (typeof window.showWsToast === 'function') {
+                    window.showWsToast('ابتدا متن اشتراک را بنویسید.', 'warning');
+                }
+                return;
+            }
+            const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text || url)}`;
+            window.open(tgUrl, '_blank', 'noopener');
+        });
+
         root.querySelector('[data-share-msg-reset]')?.addEventListener('click', () => {
+            const tpl = root.dataset.shareTemplate
+                || form?.querySelector('[data-share-msg-template]')?.value
+                || '';
             ta.value = buildDefaultShareMessage(
                 root.dataset.listingTitle,
                 root.dataset.shareUrl,
+                tpl,
             );
             ta.focus();
             if (typeof window.showWsToast === 'function') {
-                window.showWsToast('متن پیش‌فرض بازگردانی شد.', 'info');
+                window.showWsToast('متن از قالب پیش‌فرض بازگردانی شد.', 'info');
             }
         });
     });
+}
+
+function prepareShareFormSubmit(form) {
+    const root = form.querySelector('[data-share-msg-root]');
+    const ta = form.querySelector('[data-share-message]');
+    const tplInput = form.querySelector('[data-share-msg-template]');
+    const saveDefaultMsg = form.querySelector('[data-save-default-msg], [name="save_as_default_share_message"]');
+    if (root && ta && tplInput && saveDefaultMsg && saveDefaultMsg.checked) {
+        tplInput.value = messageToShareTemplate(
+            ta.value,
+            root.dataset.listingTitle,
+            root.dataset.shareUrl,
+        );
+    }
+    const editor = form.querySelector('[data-welcome-editor]');
+    const hidden = form.querySelector('[data-welcome-input]');
+    if (editor && hidden) {
+        const plain = (editor.innerText || '').trim();
+        hidden.value = plain ? (editor.innerHTML || '').trim() : '';
+    }
 }
 
 function initPublicShareForms() {
@@ -458,8 +576,11 @@ function initPublicShareForms() {
     document.querySelectorAll('.mk-share-form').forEach((form) => {
         if (form.dataset.shareAjaxBound === '1') return;
         form.dataset.shareAjaxBound = '1';
+        initShareModalTabs(form);
+        initWelcomeRichEditors(form);
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            prepareShareFormSubmit(form);
             const submitBtn = form.querySelector('[type="submit"]');
             if (submitBtn) submitBtn.disabled = true;
             try {

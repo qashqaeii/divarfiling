@@ -1206,6 +1206,20 @@ class WorkspaceSettings(models.Model):
     agency_logo = models.ImageField(
         upload_to='workspace/logos/', blank=True, null=True, verbose_name='لوگو',
     )
+    default_share_message = models.TextField(
+        blank=True,
+        verbose_name='متن پیش‌فرض اشتراک',
+        help_text='قالب پیام ارسال به مشتری. از {title} و {url} استفاده کنید.',
+    )
+    default_welcome_message = models.TextField(
+        blank=True,
+        verbose_name='پیام خوش‌آمد پیش‌فرض',
+        help_text='پیام نمایش‌داده‌شده در صفحه عمومی همه فایل‌ها مگر اینکه برای فایل خاصی سفارشی شود.',
+    )
+    social_links = models.JSONField(
+        default=dict, blank=True,
+        verbose_name='لینک شبکه‌های اجتماعی',
+    )
     crm_deal_stages = models.JSONField(
         default=list, blank=True,
         verbose_name='مراحل سفارشی pipeline معامله',

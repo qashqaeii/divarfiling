@@ -130,22 +130,20 @@ def public_share_url(request, share: ListingPublicShare) -> str:
 
 def listing_public_share_to_dict(share: ListingPublicShare, request=None) -> Dict[str, Any]:
     """سریالایزر API موبایل / وب."""
-    from workspace.services.public_share_common import share_consultant_form_values
-    form_vals = share_consultant_form_values(share.created_by, share)
-    return {
-        'share_url': public_share_url(request, share) if request else '',
-        'share_token': share.share_token,
-        'view_count': share.view_count,
-        'is_active': share.is_active,
-        'consultant_name': form_vals['consultant_name'],
-        'consultant_phone': form_vals['consultant_phone'],
-        'welcome_message': share.welcome_message,
-        'show_divar_link': share.show_divar_link,
-    }
+    from workspace.services.public_share_common import public_share_to_dict
+    data = public_share_to_dict(share, request, url_name='listing_public:view')
+    if request:
+        data['share_url'] = public_share_url(request, share)
+    return data
 
 
 def update_listing_public_share(share: ListingPublicShare, payload: dict) -> ListingPublicShare:
-    from workspace.services.public_share_common import normalize_consultant_fields_for_save
+    from workspace.services.public_share_common import (
+        normalize_consultant_fields_for_save,
+        sanitize_welcome_html,
+        save_share_profile_defaults,
+        normalize_social_links,
+    )
 
     if 'consultant_name' in payload or 'consultant_phone' in payload:
         name, phone = normalize_consultant_fields_for_save(
@@ -158,11 +156,30 @@ def update_listing_public_share(share: ListingPublicShare, payload: dict) -> Lis
         if 'consultant_phone' in payload:
             share.consultant_phone = phone
     if 'welcome_message' in payload:
-        share.welcome_message = str(payload.get('welcome_message') or '').strip()
+        share.welcome_message = sanitize_welcome_html(str(payload.get('welcome_message') or ''))
     if 'show_divar_link' in payload:
         share.show_divar_link = bool(payload.get('show_divar_link'))
     if 'is_active' in payload:
         share.is_active = bool(payload.get('is_active'))
+    if payload.get('save_as_default_welcome'):
+        save_share_profile_defaults(
+            share.created_by,
+            default_welcome_message=payload.get('welcome_message') or share.welcome_message,
+            save_welcome=True,
+        )
+        share.welcome_message = ''
+    if 'social_links' in payload:
+        save_share_profile_defaults(
+            share.created_by,
+            social_links=normalize_social_links(payload.get('social_links') or {}),
+            save_socials=True,
+        )
+    if payload.get('save_as_default_share_message') and 'default_share_message' in payload:
+        save_share_profile_defaults(
+            share.created_by,
+            default_share_message=str(payload.get('default_share_message') or ''),
+            save_share_message=True,
+        )
     share.save()
     return share
 

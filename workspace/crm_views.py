@@ -1030,6 +1030,9 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
             'advertiser_types': list(PROPERTY_ADVERTISER_TYPES),
         }
         ctx['open_modal'] = ctx.get('open_modal', self.request.GET.get('open', ''))
+        from workspace.services.property_public_share import build_property_amenity_dossier_items
+        for prop in ctx.get('properties') or []:
+            prop.card_amenities = build_property_amenity_dossier_items(prop)
         return ctx
 
 

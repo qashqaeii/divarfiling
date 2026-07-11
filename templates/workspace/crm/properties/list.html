@@ -348,6 +348,14 @@
                 </div>
                 {% endif %}
                 <div class="crm-files-card-amenities" aria-label="امکانات">
+                    {% for item in p.card_amenities %}
+                    <span class="crm-files-amenity{% if item.state == 'yes' or item.state == 'neutral' %} is-on{% else %} is-off{% endif %}{% if not item.is_core %} is-extra{% endif %}"
+                          data-tip="{{ item.tip }}"
+                          aria-label="{{ item.tip }}"
+                          tabindex="0">
+                        <i class="fas {{ item.icon }}" aria-hidden="true"></i>
+                    </span>
+                    {% empty %}
                     <span class="crm-files-amenity{% if p.has_parking %} is-on{% else %} is-off{% endif %}"
                           data-tip="پارکینگ: {% if p.has_parking %}دارد{% else %}ندارد{% endif %}"
                           aria-label="پارکینگ: {% if p.has_parking %}دارد{% else %}ندارد{% endif %}"
@@ -366,6 +374,7 @@
                           tabindex="0">
                         <i class="fas fa-elevator" aria-hidden="true"></i>
                     </span>
+                    {% endfor %}
                 </div>
                 <footer class="crm-files-card-foot">
                     <div class="crm-files-card-price">

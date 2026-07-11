@@ -15433,6 +15433,13 @@ select.crm-files-adv-control {
     gap: 0.3rem;
     flex-shrink: 0;
     align-items: center;
+    min-width: 0;
+    max-width: 100%;
+}
+.crm-prop-hero-actions .ws-ld-hero-form {
+    display: inline-flex;
+    margin: 0;
+    min-width: 0;
 }
 .crm-prop-hero-act {
     display: inline-flex;
@@ -16027,15 +16034,37 @@ button.crm-prop-hero-cover {
 @media (max-width: 700px) {
     .crm-prop-hero-nav {
         flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem 0.55rem;
+        padding: 0.55rem 0.65rem;
     }
     .crm-prop-hero-crumb {
-        order: 3;
-        flex: 1 1 100%;
-        padding-inline-start: 2.4rem;
+        order: 0;
+        flex: 1 1 calc(100% - 2.5rem);
+        min-width: 0;
+        padding-inline-start: 0;
     }
     .crm-prop-hero-actions {
-        width: auto;
-        margin-inline-start: auto;
+        order: 1;
+        flex: 1 1 100%;
+        width: 100%;
+        max-width: 100%;
+        margin-inline-start: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 5.6rem), 1fr));
+        gap: 0.35rem;
+        align-items: stretch;
+    }
+    .crm-prop-hero-actions .ws-ld-hero-form {
+        display: contents;
+    }
+    .crm-prop-hero-act {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        height: 34px;
+        padding: 0 0.4rem;
+        font-size: 0.68rem;
     }
     .crm-prop-hero-main {
         grid-template-columns: 1fr;
@@ -16061,6 +16090,25 @@ button.crm-prop-hero-cover {
     }
     .crm-prop-tabs .crm-tab-pro span { display: none; }
     .crm-prop-tabs .crm-tab-pro { padding: 0.42rem 0.55rem; }
+}
+
+@media (max-width: 480px) {
+    .crm-prop-hero-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.3rem;
+    }
+    .crm-prop-hero-act {
+        height: 36px;
+        font-size: 0.66rem;
+        padding: 0 0.35rem;
+        gap: 0.25rem;
+    }
+    .crm-prop-hero-act i,
+    .crm-prop-hero-act .fas,
+    .crm-prop-hero-act .far,
+    .crm-prop-hero-act .icon-slot {
+        font-size: 0.68rem;
+    }
 }
 
 /* ══ Property share modes & dossier full ══ */

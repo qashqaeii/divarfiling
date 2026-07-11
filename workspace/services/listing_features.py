@@ -11,10 +11,10 @@ from workspace.constants import (
     LISTING_FEATURE_GROUPS,
 )
 from workspace.services.features import (
-    NEGATIVE,
-    POSITIVE,
     _NEGATIVE_EXACT,
+    _NEGATIVE_SUB,
     _POSITIVE_EXACT,
+    _POSITIVE_SUB,
     _get_from_data,
     get_exact_from_data,
     parse_bool_feature,
@@ -110,10 +110,46 @@ _COUNT_FEATURE_KEYS = frozenset({
     'تعداد پارکینگ', 'تعداد حمام', 'تعداد سرویس بهداشتی',
     'تعداد واحد در طبقه', 'تعداد کل طبقات ساختمان',
 })
+_SCALAR_FEATURE_KEYS = frozenset({
+    *_COUNT_FEATURE_KEYS,
+    'عرض ملک', 'جهت ساختمان', 'جنس کف', 'جنس کابینت', 'نوع آشپزخانه',
+    'نمای ساختمان', 'وضعیت واحد', 'وضعیت سند', 'وضعیت سکونت',
+    'مناسب برای', 'حداقل مدت قرارداد', 'سرویس بهداشتی',
+    'سرمایش', 'گرمایش', 'تأمین‌کننده آب گرم', 'سند',
+})
 _BUILD_YEAR_KEYS = frozenset({
     'ساخت', 'سال ساخت', 'build_year', 'سن بنا', 'سال ساخت بنا', 'بازسازی شده',
 })
 _BOOLISH = frozenset({'دارد', 'ندارد', 'بله', 'خیر', 'yes', 'no'})
+_EXPLICIT_BOOL_VALUES = frozenset({
+    'دارد', 'ندارد', 'بله', 'خیر', 'yes', 'no', 'true', 'false',
+    'هست', 'نیست', 'داره', 'نداره', 'می‌باشد', 'ميباشد', 'میباشد',
+})
+_NUMERIC_VALUE_RE = re.compile(r'^[۰-۹0-9]+([./٫][۰-۹0-9]+)?$')
+
+
+def is_scalar_feature_key(key: str) -> bool:
+    """کلیدهایی که مقدار متنی/عددی دارند و نباید به دارد/ندارد تبدیل شوند."""
+    k = str(key or '').strip()
+    if not k:
+        return False
+    if k in _SCALAR_FEATURE_KEYS or k in _COUNT_FEATURE_KEYS:
+        return True
+    if k.startswith('تعداد'):
+        return True
+    return False
+
+
+def _looks_numeric_value(value: str) -> bool:
+    v = _clean_value(value)
+    if not v:
+        return False
+    return bool(_NUMERIC_VALUE_RE.match(v))
+
+
+def _is_explicit_bool_value(value: str) -> bool:
+    v = _clean_value(value).lower()
+    return v in _EXPLICIT_BOOL_VALUES or v in _BOOLISH
 
 
 def _value_plausible_for_key(key: str, value: str) -> bool:
@@ -136,15 +172,19 @@ def _store_feature(raw: Dict[str, str], key: str, value: Any) -> None:
 
 
 def _feature_state(value: str) -> str:
-    """yes | no | neutral"""
+    """yes | no | neutral | unknown"""
     if not value:
         return 'unknown'
     low = value.strip().lower()
     if low in ('-', '—'):
         return 'unknown'
-    if low in _NEGATIVE_EXACT or any(n in low for n in NEGATIVE if n not in ('-', '—')):
+    if low in _NEGATIVE_EXACT:
         return 'no'
-    if low in _POSITIVE_EXACT or any(p in low for p in POSITIVE):
+    if low in _POSITIVE_EXACT:
+        return 'yes'
+    if any(n in low for n in _NEGATIVE_SUB):
+        return 'no'
+    if any(p in low for p in _POSITIVE_SUB):
         return 'yes'
     if low in ('بله', 'yes', 'true'):
         return 'yes'
@@ -329,14 +369,32 @@ def _icon_for_key(key: str) -> str:
 
 
 def _format_item_display(key: str, value: str) -> Dict[str, Any]:
-    state = _feature_state(value)
+    cleaned = _clean_value(value)
     chips: List[str] = []
-    if key == 'مناسب برای' and value:
-        chips = [c for c in _CHIP_SPLIT.split(value) if c]
+    if key == 'مناسب برای' and cleaned:
+        chips = [c for c in _CHIP_SPLIT.split(cleaned) if c]
+
+    # کلیدهای عددی/متنی (تعداد، جنس، جهت، …) — مقدار خام بماند
+    if is_scalar_feature_key(key):
+        if _is_explicit_bool_value(cleaned):
+            state = _feature_state(cleaned)
+            display = 'دارد' if state == 'yes' else ('ندارد' if state == 'no' else cleaned)
+        else:
+            state = 'neutral'
+            display = cleaned
+    else:
+        state = _feature_state(cleaned)
+        if state == 'yes' and (_is_explicit_bool_value(cleaned) or cleaned in ('1', '۱')):
+            display = 'دارد'
+        elif state == 'no' and (_is_explicit_bool_value(cleaned) or cleaned in ('0', '۰')):
+            display = 'ندارد'
+        else:
+            display = cleaned
+
     return {
         'key': key,
         'label': key,
-        'value': value,
+        'value': display,
         'state': state,
         'icon': _icon_for_key(key),
         'chips': chips,
@@ -370,6 +428,8 @@ def feature_highlights_for_listing(listing, limit: int = 4) -> List[str]:
         if key == 'مناسب برای':
             chips = [c for c in _CHIP_SPLIT.split(val) if c]
             _add(f"مناسب: {chips[0]}" + (f" +{len(chips)-1}" if len(chips) > 1 else ''))
+        elif is_scalar_feature_key(key):
+            _add(f"{key}: {val}")
         elif _feature_state(val) == 'yes':
             _add(key)
         elif _feature_state(val) == 'no':

@@ -1,0 +1,83 @@
+"""تست نمایش صحیح مقادیر امکانات در پروفایل آگهی."""
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+
+from workspace.models import Dataset, Listing
+from workspace.services.features import extract_listing_features, parse_bool_feature
+from workspace.services.listing_features import (
+    _format_item_display,
+    _feature_state,
+    build_listing_feature_profile,
+)
+
+User = get_user_model()
+
+
+class ListingFeatureDisplayTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='09120001122',
+            phone='09120001122',
+            password='testpass123',
+        )
+        self.dataset = Dataset.objects.create(
+            user=self.user,
+            name='تست',
+            original_filename='t.xlsx',
+            file_format='xlsx',
+            transaction_type='فروش',
+            subcategory='آپارتمان',
+            city='تهران',
+        )
+
+    def test_count_fields_keep_numeric_value(self):
+        item = _format_item_display('تعداد واحد در طبقه', '۲')
+        self.assertEqual(item['value'], '۲')
+        self.assertEqual(item['state'], 'neutral')
+
+        item1 = _format_item_display('تعداد واحد در طبقه', '1')
+        self.assertEqual(item1['value'], '1')
+        self.assertEqual(item1['state'], 'neutral')
+
+        item0 = _format_item_display('تعداد پارکینگ', '0')
+        self.assertEqual(item0['value'], '0')
+        self.assertEqual(item0['state'], 'neutral')
+
+    def test_bool_fields_normalize_to_darad(self):
+        item = _format_item_display('بالکن', 'دارد')
+        self.assertEqual(item['value'], 'دارد')
+        self.assertEqual(item['state'], 'yes')
+        item_no = _format_item_display('بالکن', 'ندارد')
+        self.assertEqual(item_no['value'], 'ندارد')
+        self.assertEqual(item_no['state'], 'no')
+
+    def test_feature_state_does_not_treat_12_as_bool(self):
+        self.assertEqual(_feature_state('12'), 'neutral')
+        self.assertEqual(_feature_state('10'), 'neutral')
+        self.assertIsNone(parse_bool_feature('12'))
+        self.assertTrue(parse_bool_feature('1'))
+        self.assertFalse(parse_bool_feature('0'))
+
+    def test_profile_preserves_count_and_text(self):
+        listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='feat001',
+            title='آپارتمان',
+            data={
+                'تعداد واحد در طبقه': '۴',
+                'جنس کف': 'پارکت',
+                'بالکن': 'دارد',
+                'آسانسور': 'ندارد',
+            },
+        )
+        profile = build_listing_feature_profile(listing, extract_listing_features(listing))
+        by_key = {
+            item['key']: item
+            for group in profile['groups']
+            for item in group['items']
+        }
+        self.assertEqual(by_key['تعداد واحد در طبقه']['value'], '۴')
+        self.assertEqual(by_key['جنس کف']['value'], 'پارکت')
+        self.assertEqual(by_key['بالکن']['value'], 'دارد')
+        core = {c['key']: c for c in profile['core']}
+        self.assertEqual(core['آسانسور']['value'], 'ندارد')

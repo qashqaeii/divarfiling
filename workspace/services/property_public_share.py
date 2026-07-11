@@ -15,7 +15,11 @@ from workspace.services.display import (
     transaction_profile,
 )
 from workspace.services.features import extract_listing_features, parse_bool_feature
-from workspace.services.listing_features import build_listing_feature_profile, _icon_for_key
+from workspace.services.listing_features import (
+    build_listing_feature_profile,
+    is_scalar_feature_key,
+    _icon_for_key,
+)
 from workspace.services.listing_map import build_listing_map_marker
 from workspace.services.listing_public_share import format_sections_public
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
@@ -123,51 +127,88 @@ def _property_feat(prop: CRMProperty) -> Dict[str, Any]:
 
 _CORE_AMENITY_KEYS = frozenset(spec['key'] for spec in LISTING_CORE_AMENITIES)
 
+_EXPLICIT_BOOL_VALUES = frozenset({
+    'دارد', 'ندارد', 'بله', 'خیر', 'yes', 'no', 'true', 'false',
+    'هست', 'نیست', 'داره', 'نداره', 'می‌باشد', 'ميباشد', 'میباشد',
+})
 
-def _parse_amenity_token(token: str) -> tuple[str, Optional[bool]]:
-    """برچسب امکان و مقدار بولین (در صورت مشخص بودن)."""
+
+def _parse_amenity_token(token: str) -> tuple[str, Optional[bool], str]:
+    """برچسب امکان، بولین (در صورت صریح بودن)، و مقدار نمایشی واقعی."""
     text = str(token or '').strip()
     if not text:
-        return '', None
+        return '', None, ''
     if ':' in text:
         label, value = text.split(':', 1)
         label, value = label.strip(), value.strip()
         if not label:
-            return '', None
+            return '', None, ''
+        if not value:
+            return label, True, 'دارد'
+        value_l = value.lower()
+        if value_l in _EXPLICIT_BOOL_VALUES or value in _EXPLICIT_BOOL_VALUES:
+            parsed = parse_bool_feature(value)
+            if parsed is True:
+                return label, True, 'دارد'
+            if parsed is False:
+                return label, False, 'ندارد'
+            return label, None, value
+        # تعداد / مقادیر متنی یا عددی — خود مقدار نمایش داده شود
+        if is_scalar_feature_key(label):
+            return label, None, value
         parsed = parse_bool_feature(value)
-        if parsed is not None:
-            return label, parsed
-        return label, True
+        if parsed is not None and value_l in ('1', '0', '۱', '۰'):
+            # فقط برای امکانات بولین مثل آسانسور: ۱/۰
+            if label in _CORE_AMENITY_KEYS:
+                return label, parsed, 'دارد' if parsed else 'ندارد'
+            return label, None, value
+        if parsed is not None and value_l in _EXPLICIT_BOOL_VALUES:
+            return label, parsed, 'دارد' if parsed else 'ندارد'
+        return label, None, value
     if text.endswith(' ندارد'):
-        return text[:-len(' ندارد')].strip(), False
+        return text[:-len(' ندارد')].strip(), False, 'ندارد'
     if text.endswith(' دارد'):
-        return text[:-len(' دارد')].strip(), True
-    return text, True
+        return text[:-len(' دارد')].strip(), True, 'دارد'
+    return text, True, 'دارد'
 
 
 def _parse_property_amenities_text(text: str) -> tuple[Dict[str, bool], List[Dict[str, Any]]]:
-    """امکانات اصلی از متن + آیتم‌های تکمیلی غیرتکراری."""
+    """امکانات اصلی از متن + آیتم‌های تکمیلی غیرتکراری با مقدار واقعی."""
     core_states: Dict[str, bool] = {}
     extras: List[Dict[str, Any]] = []
     if not text or not str(text).strip():
         return core_states, extras
     for token in re.split(r'[\n،,|]+', str(text).strip()):
-        label, has_val = _parse_amenity_token(token)
+        label, has_val, display = _parse_amenity_token(token)
         if not label:
             continue
         if label in _CORE_AMENITY_KEYS:
             if has_val is not None:
                 core_states[label] = has_val
             elif label not in core_states:
+                # مقدار غیرصریح روی امکانات اصلی — غیرصفر را دارد بگیر
                 core_states[label] = True
             continue
         if has_val is False:
+            extras.append({
+                'key': label,
+                'label': label,
+                'value': 'ندارد',
+                'state': 'no',
+                'icon': _icon_for_key(label),
+                'chips': [],
+                'is_chip': False,
+            })
+            continue
+        state = 'yes' if has_val is True else 'neutral'
+        value = display or ('دارد' if has_val is True else '')
+        if not value:
             continue
         extras.append({
             'key': label,
             'label': label,
-            'value': 'دارد',
-            'state': 'yes',
+            'value': value,
+            'state': state,
             'icon': _icon_for_key(label),
             'chips': [],
             'is_chip': False,
@@ -230,7 +271,7 @@ def _property_feature_profile(user, prop: CRMProperty, feat: Dict[str, Any]) -> 
 
 def _property_highlights(prop: CRMProperty) -> List[str]:
     items: List[str] = []
-    parsed_core, _ = _parse_property_amenities_text(prop.amenities or '')
+    parsed_core, extras = _parse_property_amenities_text(prop.amenities or '')
     for key, has_val in parsed_core.items():
         if has_val and key not in items:
             items.append(key)
@@ -242,10 +283,15 @@ def _property_highlights(prop: CRMProperty) -> List[str]:
         items.append('آسانسور')
     if prop.property_type:
         items.append(prop.property_type)
-    if prop.amenities:
-        for part in re.split(r'[،,|]\s*', prop.amenities.strip())[:4]:
-            if part.strip() and part.strip() not in items:
-                items.append(part.strip())
+    for item in extras:
+        if item.get('state') == 'no':
+            continue
+        if item.get('state') == 'neutral':
+            chip = f"{item['label']}: {item['value']}"
+        else:
+            chip = item['label']
+        if chip and chip not in items:
+            items.append(chip)
     return items[:8]
 
 

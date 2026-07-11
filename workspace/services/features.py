@@ -31,6 +31,13 @@ POSITIVE = ('دارد', 'yes', 'true', '1', 'هست', 'داره', 'می‌باش
 NEGATIVE = ('ندارد', 'no', 'false', '0', 'نیست', 'نداره', '-', '—', 'خیر')
 _POSITIVE_EXACT = frozenset(p.lower() for p in POSITIVE)
 _NEGATIVE_EXACT = frozenset(n.lower() for n in NEGATIVE)
+# ارقام تکی فقط با تطبیق دقیق — نه به‌صورت زیررشته داخل «12» یا «10»
+_BOOL_DIGIT_TOKENS = frozenset({'0', '1'})
+_POSITIVE_SUB = tuple(p for p in POSITIVE if p.lower() not in _BOOL_DIGIT_TOKENS)
+_NEGATIVE_SUB = tuple(
+    n for n in NEGATIVE
+    if n not in ('-', '—') and n.lower() not in _BOOL_DIGIT_TOKENS
+)
 
 _YEAR_ONLY_RE = re.compile(r'^(13|14|19|20)\d{2}$')
 
@@ -104,10 +111,10 @@ def parse_bool_feature(value: Any) -> Optional[bool]:
     if sl in _POSITIVE_EXACT:
         return True
     # منفی‌ها قبل از مثبت — «ندارد» شامل «دارد» است؛ «-» نامشخص است
-    _neg_sub = tuple(n for n in NEGATIVE if n not in ('-', '—'))
-    if any(n in sl for n in _neg_sub):
+    # ارقام 0/1 فقط exact (بالا) — نه زیررشته داخل اعداد چندرقمی
+    if any(n in sl for n in _NEGATIVE_SUB):
         return False
-    if any(p in sl for p in POSITIVE):
+    if any(p in sl for p in _POSITIVE_SUB):
         return True
     return None
 

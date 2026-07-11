@@ -16091,7 +16091,7 @@ button.crm-prop-hero-cover {
 .crm-prop-dossier-dl > div {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: 0.5rem;
     font-size: 0.68rem;
 }
@@ -16100,14 +16100,47 @@ button.crm-prop-hero-cover {
     font-weight: 600;
     color: var(--ws-text-muted);
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.crm-prop-dossier-dl dt i {
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+    color: var(--ws-primary);
+    font-size: 0.62rem;
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, var(--ws-border-light));
 }
 .crm-prop-dossier-dl dd { margin: 0; font-weight: 700; color: var(--ws-text); text-align: end; }
 .crm-prop-dossier-dl--full { flex-direction: column; align-items: stretch !important; }
+.crm-prop-dossier-dl--full dt { margin-bottom: 0.2rem; }
 .crm-prop-dossier-dl--full dd { text-align: start; font-weight: 500; line-height: 1.55; }
 .crm-prop-dl-price--sale { color: #2563eb !important; }
 .crm-prop-dl-price--dep { color: #7c3aed !important; }
 .crm-prop-dl-price--rent { color: #059669 !important; }
 .crm-prop-dl-yes { color: #059669; font-size: 0.62rem; }
+.crm-prop-dl-amenity {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 700;
+}
+.crm-prop-dl-amenity.is-yes { color: #059669; }
+.crm-prop-dl-amenity.is-no { color: var(--ws-text-muted); font-weight: 600; }
+.crm-prop-dl-amenity i { font-size: 0.58rem; }
+.crm-prop-dl-coords {
+    font-variant-numeric: tabular-nums;
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    word-break: break-all;
+}
 .crm-prop-dossier-text {
     margin: 0;
     font-size: 0.7rem;

@@ -142,9 +142,9 @@ LISTING_FEATURE_GROUPS = (
 )
 
 LISTING_CORE_AMENITIES = (
-    {'key': 'آسانسور', 'field': 'elevator', 'icon': 'fa-arrows-alt-v'},
-    {'key': 'پارکینگ', 'field': 'parking', 'icon': 'fa-car'},
-    {'key': 'انباری', 'field': 'storage', 'icon': 'fa-archive'},
+    {'key': 'آسانسور', 'field': 'elevator', 'icon': 'fa-elevator'},
+    {'key': 'پارکینگ', 'field': 'parking', 'icon': 'fa-square-parking'},
+    {'key': 'انباری', 'field': 'storage', 'icon': 'fa-box-archive'},
 )
 
 BUILDER_BUY_PROPERTY_TYPES = ['ویلا', 'کلنگی', 'زمین']

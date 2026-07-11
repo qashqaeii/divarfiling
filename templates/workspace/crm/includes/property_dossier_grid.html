@@ -1,68 +1,168 @@
 {% load workspace_tags %}
 <section class="crm-prop-dossier-full" aria-label="اطلاعات کامل ملک">
     <div class="crm-prop-dossier-group">
-        <h3><i class="fas fa-tag"></i> معامله و قیمت</h3>
+        <h3><i class="fas fa-handshake" aria-hidden="true"></i> معامله و قیمت</h3>
         <dl class="crm-prop-dossier-dl">
-            <div><dt>نوع معامله</dt><dd>{{ property.deal_mode }}</dd></div>
-            <div><dt>وضعیت</dt><dd>{{ property.transaction_status }}</dd></div>
-            <div><dt>انتشار</dt><dd>{{ property.publish_status|default:"—" }}</dd></div>
-            {% if property.sale_price %}<div><dt>فروش</dt><dd class="crm-prop-dl-price crm-prop-dl-price--sale">{{ property.sale_price|ws_money }}</dd></div>{% endif %}
-            {% if property.deposit %}<div><dt>رهن</dt><dd class="crm-prop-dl-price crm-prop-dl-price--dep">{{ property.deposit|ws_money }}</dd></div>{% endif %}
-            {% if property.monthly_rent %}<div><dt>اجاره</dt><dd class="crm-prop-dl-price crm-prop-dl-price--rent">{{ property.monthly_rent|ws_money }}</dd></div>{% endif %}
+            <div>
+                <dt><i class="fas {{ 'نوع معامله'|feature_icon }}" aria-hidden="true"></i> نوع معامله</dt>
+                <dd>{{ property.deal_mode }}</dd>
+            </div>
+            <div>
+                <dt><i class="fas fa-bolt" aria-hidden="true"></i> وضعیت</dt>
+                <dd>{{ property.transaction_status }}</dd>
+            </div>
+            <div>
+                <dt><i class="fas fa-bullhorn" aria-hidden="true"></i> انتشار</dt>
+                <dd>{{ property.publish_status|default:"—" }}</dd>
+            </div>
+            {% if property.sale_price %}
+            <div>
+                <dt><i class="fas {{ 'قیمت'|feature_icon }}" aria-hidden="true"></i> فروش</dt>
+                <dd class="crm-prop-dl-price crm-prop-dl-price--sale">{{ property.sale_price|ws_money }}</dd>
+            </div>
+            {% endif %}
+            {% if property.deposit %}
+            <div>
+                <dt><i class="fas {{ 'ودیعه'|feature_icon }}" aria-hidden="true"></i> رهن</dt>
+                <dd class="crm-prop-dl-price crm-prop-dl-price--dep">{{ property.deposit|ws_money }}</dd>
+            </div>
+            {% endif %}
+            {% if property.monthly_rent %}
+            <div>
+                <dt><i class="fas {{ 'اجاره'|feature_icon }}" aria-hidden="true"></i> اجاره</dt>
+                <dd class="crm-prop-dl-price crm-prop-dl-price--rent">{{ property.monthly_rent|ws_money }}</dd>
+            </div>
+            {% endif %}
         </dl>
     </div>
     <div class="crm-prop-dossier-group">
-        <h3><i class="fas fa-ruler-combined"></i> مشخصات فنی</h3>
+        <h3><i class="fas fa-ruler-combined" aria-hidden="true"></i> مشخصات فنی</h3>
         <dl class="crm-prop-dossier-dl">
-            <div><dt>نوع ملک</dt><dd>{{ property.property_type }}</dd></div>
-            {% if property.area %}<div><dt>متراژ</dt><dd>{{ property.area|ws_area }}</dd></div>{% endif %}
-            {% if property.rooms %}<div><dt>اتاق</dt><dd>{{ property.rooms }}</dd></div>{% endif %}
-            {% if property.floor %}<div><dt>طبقه</dt><dd>{{ property.floor }}{% if property.total_floors %} از {{ property.total_floors }}{% endif %}</dd></div>{% endif %}
-            {% if property.build_year %}<div><dt>سال ساخت</dt><dd>{{ property.build_year }}</dd></div>{% endif %}
-            <div><dt>پارکینگ</dt><dd>{% if property.has_parking %}<i class="fas fa-check crm-prop-dl-yes"></i> دارد{% else %}—{% endif %}</div>
-            <div><dt>انباری</dt><dd>{% if property.has_storage %}<i class="fas fa-check crm-prop-dl-yes"></i> دارد{% else %}—{% endif %}</div>
-            <div><dt>آسانسور</dt><dd>{% if property.has_elevator %}<i class="fas fa-check crm-prop-dl-yes"></i> دارد{% else %}—{% endif %}</div>
+            <div>
+                <dt><i class="fas {{ 'نوع ملک'|feature_icon }}" aria-hidden="true"></i> نوع ملک</dt>
+                <dd>{{ property.property_type }}</dd>
+            </div>
+            {% if property.area %}
+            <div>
+                <dt><i class="fas {{ 'متراژ'|feature_icon }}" aria-hidden="true"></i> متراژ</dt>
+                <dd>{{ property.area|ws_area }}</dd>
+            </div>
+            {% endif %}
+            {% if property.rooms %}
+            <div>
+                <dt><i class="fas {{ 'اتاق'|feature_icon }}" aria-hidden="true"></i> اتاق</dt>
+                <dd>{{ property.rooms }}</dd>
+            </div>
+            {% endif %}
+            {% if property.floor %}
+            <div>
+                <dt><i class="fas {{ 'طبقه'|feature_icon }}" aria-hidden="true"></i> طبقه</dt>
+                <dd>{{ property.floor }}{% if property.total_floors %} از {{ property.total_floors }}{% endif %}</dd>
+            </div>
+            {% endif %}
+            {% if property.build_year %}
+            <div>
+                <dt><i class="fas {{ 'سال ساخت'|feature_icon }}" aria-hidden="true"></i> سال ساخت</dt>
+                <dd>{{ property.build_year }}</dd>
+            </div>
+            {% endif %}
+            <div>
+                <dt><i class="fas {{ 'پارکینگ'|feature_icon }}" aria-hidden="true"></i> پارکینگ</dt>
+                <dd>{% if property.has_parking %}<span class="crm-prop-dl-amenity is-yes"><i class="fas fa-check" aria-hidden="true"></i> دارد</span>{% else %}<span class="crm-prop-dl-amenity is-no">ندارد</span>{% endif %}</dd>
+            </div>
+            <div>
+                <dt><i class="fas {{ 'انباری'|feature_icon }}" aria-hidden="true"></i> انباری</dt>
+                <dd>{% if property.has_storage %}<span class="crm-prop-dl-amenity is-yes"><i class="fas fa-check" aria-hidden="true"></i> دارد</span>{% else %}<span class="crm-prop-dl-amenity is-no">ندارد</span>{% endif %}</dd>
+            </div>
+            <div>
+                <dt><i class="fas {{ 'آسانسور'|feature_icon }}" aria-hidden="true"></i> آسانسور</dt>
+                <dd>{% if property.has_elevator %}<span class="crm-prop-dl-amenity is-yes"><i class="fas fa-check" aria-hidden="true"></i> دارد</span>{% else %}<span class="crm-prop-dl-amenity is-no">ندارد</span>{% endif %}</dd>
+            </div>
         </dl>
     </div>
     <div class="crm-prop-dossier-group{% if mask_sensitive %} crm-prop-dossier-group--masked{% endif %}">
-        <h3><i class="fas fa-location-dot"></i> موقعیت {% if mask_sensitive %}<span class="crm-prop-mask-badge"><i class="fas fa-eye-slash"></i> محرمانه</span>{% endif %}</h3>
+        <h3><i class="fas fa-location-dot" aria-hidden="true"></i> موقعیت {% if mask_sensitive %}<span class="crm-prop-mask-badge"><i class="fas fa-eye-slash" aria-hidden="true"></i> محرمانه</span>{% endif %}</h3>
         <dl class="crm-prop-dossier-dl">
-            <div><dt>نمایش</dt><dd>{{ property_location_display }}</dd></div>
+            <div>
+                <dt><i class="fas fa-eye" aria-hidden="true"></i> نمایش</dt>
+                <dd>{{ property_location_display }}</dd>
+            </div>
             {% if not mask_sensitive %}
-            {% if property.neighborhood %}<div><dt>محله</dt><dd>{{ property.neighborhood }}</dd></div>{% endif %}
-            {% if property.city %}<div><dt>شهر</dt><dd>{{ property.city }}</dd></div>{% endif %}
-            {% if property.district %}<div><dt>منطقه</dt><dd>{{ property.district }}</dd></div>{% endif %}
-            {% if property.address %}<div class="crm-prop-dossier-dl--full"><dt>آدرس</dt><dd>{{ property.address }}</dd></div>{% endif %}
-            {% if property.latitude and property.longitude %}<div><dt>مختصات</dt><dd>{{ property.latitude }}, {{ property.longitude }}</dd></div>{% endif %}
+            {% if property.neighborhood %}
+            <div>
+                <dt><i class="fas {{ 'محله'|feature_icon }}" aria-hidden="true"></i> محله</dt>
+                <dd>{{ property.neighborhood }}</dd>
+            </div>
+            {% endif %}
+            {% if property.city %}
+            <div>
+                <dt><i class="fas {{ 'شهر'|feature_icon }}" aria-hidden="true"></i> شهر</dt>
+                <dd>{{ property.city }}</dd>
+            </div>
+            {% endif %}
+            {% if property.district %}
+            <div>
+                <dt><i class="fas {{ 'منطقه'|feature_icon }}" aria-hidden="true"></i> منطقه</dt>
+                <dd>{{ property.district }}</dd>
+            </div>
+            {% endif %}
+            {% if property.address %}
+            <div class="crm-prop-dossier-dl--full">
+                <dt><i class="fas {{ 'آدرس'|feature_icon }}" aria-hidden="true"></i> آدرس</dt>
+                <dd>{{ property.address }}</dd>
+            </div>
+            {% endif %}
+            {% if property.latitude and property.longitude %}
+            <div>
+                <dt><i class="fas fa-crosshairs" aria-hidden="true"></i> مختصات</dt>
+                <dd class="crm-prop-dl-coords" dir="ltr">{{ property.latitude }}, {{ property.longitude }}</dd>
+            </div>
+            {% endif %}
             {% else %}
-            <div class="crm-prop-mask-notice"><i class="fas fa-shield-halved"></i> موقعیت دقیق و آدرس در ارسال محرمانه نمایش داده نمی‌شود.</div>
+            <div class="crm-prop-mask-notice"><i class="fas fa-shield-halved" aria-hidden="true"></i> موقعیت دقیق و آدرس در ارسال محرمانه نمایش داده نمی‌شود.</div>
             {% endif %}
         </dl>
     </div>
     {% if property.amenities %}
     <div class="crm-prop-dossier-group">
-        <h3><i class="fas fa-star"></i> امکانات</h3>
+        <h3><i class="fas fa-sparkles" aria-hidden="true"></i> امکانات</h3>
         <p class="crm-prop-dossier-text">{{ property.amenities }}</p>
     </div>
     {% endif %}
     {% if property.notes and not mask_sensitive %}
     <div class="crm-prop-dossier-group">
-        <h3><i class="fas fa-note-sticky"></i> یادداشت مالک</h3>
+        <h3><i class="fas fa-note-sticky" aria-hidden="true"></i> یادداشت مالک</h3>
         <p class="crm-prop-dossier-text">{{ property.notes|linebreaks }}</p>
     </div>
     {% elif mask_sensitive %}
     <div class="crm-prop-dossier-group crm-prop-dossier-group--masked">
-        <h3><i class="fas fa-note-sticky"></i> یادداشت مالک <span class="crm-prop-mask-badge"><i class="fas fa-eye-slash"></i> مخفی</span></h3>
+        <h3><i class="fas fa-note-sticky" aria-hidden="true"></i> یادداشت مالک <span class="crm-prop-mask-badge"><i class="fas fa-eye-slash" aria-hidden="true"></i> مخفی</span></h3>
         <div class="crm-prop-mask-blur" aria-hidden="true">یادداشت‌های خصوصی مالک فایل در این حالت قابل مشاهده نیست.</div>
     </div>
     {% endif %}
     <div class="crm-prop-dossier-group">
-        <h3><i class="fas fa-clock"></i> زمان‌بندی</h3>
+        <h3><i class="fas fa-clock" aria-hidden="true"></i> زمان‌بندی</h3>
         <dl class="crm-prop-dossier-dl">
-            <div><dt>ثبت</dt><dd>{{ property.created_at|ws_jalali }}</dd></div>
-            <div><dt>بروزرسانی</dt><dd>{{ property.updated_at|ws_jalali }}</dd></div>
-            {% if property.images %}<div><dt>تصاویر</dt><dd>{{ property.images|length }} عدد</dd></div>{% endif %}
-            {% if property.videos %}<div><dt>ویدئو</dt><dd>{{ property.videos|length }} عدد</dd></div>{% endif %}
+            <div>
+                <dt><i class="fas fa-calendar-plus" aria-hidden="true"></i> ثبت</dt>
+                <dd>{{ property.created_at|ws_jalali }}</dd>
+            </div>
+            <div>
+                <dt><i class="fas fa-arrows-rotate" aria-hidden="true"></i> بروزرسانی</dt>
+                <dd>{{ property.updated_at|ws_jalali }}</dd>
+            </div>
+            {% if property.images %}
+            <div>
+                <dt><i class="fas fa-images" aria-hidden="true"></i> تصاویر</dt>
+                <dd>{{ property.images|length }} عدد</dd>
+            </div>
+            {% endif %}
+            {% if property.videos %}
+            <div>
+                <dt><i class="fas fa-video" aria-hidden="true"></i> ویدئو</dt>
+                <dd>{{ property.videos|length }} عدد</dd>
+            </div>
+            {% endif %}
         </dl>
     </div>
 </section>

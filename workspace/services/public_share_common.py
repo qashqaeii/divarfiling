@@ -917,23 +917,23 @@ def build_finance_summary(listing_like, tx: Dict[str, Any], data: Optional[dict]
     price = _get(listing_like, 'price')
     if tx.get('show_price') and price:
         primary = format_toman(price)
-        items.append({'label': 'قیمت', 'value': primary, 'kind': 'price'})
+        items.append({'label': 'قیمت', 'value': primary, 'kind': 'price', 'icon': 'fa-tags'})
         pps = _get(listing_like, 'price_per_sqm')
         if tx.get('show_price_per_sqm') and pps:
-            items.append({'label': 'قیمت هر متر', 'value': format_toman(pps, per_sqm=True), 'kind': 'pps'})
+            items.append({'label': 'قیمت هر متر', 'value': format_toman(pps, per_sqm=True), 'kind': 'pps', 'icon': 'fa-chart-line'})
 
     if tx.get('show_deposit'):
         deposit = _get(listing_like, 'deposit')
         if deposit:
             dep_label = format_toman(deposit)
-            items.append({'label': 'ودیعه', 'value': dep_label, 'kind': 'deposit'})
+            items.append({'label': 'ودیعه', 'value': dep_label, 'kind': 'deposit', 'icon': 'fa-hand-holding-dollar'})
             if not primary:
                 primary = f'ودیعه {dep_label}'
         elif data:
             from workspace.services.display import _listing_text_deposit
             txt = _listing_text_deposit(data)
             if txt:
-                items.append({'label': 'ودیعه', 'value': txt, 'kind': 'deposit'})
+                items.append({'label': 'ودیعه', 'value': txt, 'kind': 'deposit', 'icon': 'fa-hand-holding-dollar'})
                 if not primary:
                     primary = txt if txt in ('متعارف', 'توافقی') else f'ودیعه {txt}'
 
@@ -945,31 +945,31 @@ def build_finance_summary(listing_like, tx: Dict[str, Any], data: Optional[dict]
             except (TypeError, ValueError):
                 rent_num = None
             if rent_num is not None and rent_num == 0:
-                items.append({'label': 'اجاره ماهانه', 'value': 'بدون اجاره', 'kind': 'rent'})
+                items.append({'label': 'اجاره ماهانه', 'value': 'بدون اجاره', 'kind': 'rent', 'icon': 'fa-calendar-day'})
                 if not note and tx.get('show_deposit'):
                     note = 'رهن کامل'
             elif rent_num is not None and rent_num > 0:
                 rent_label = format_toman(rent_num)
-                items.append({'label': 'اجاره ماهانه', 'value': rent_label, 'kind': 'rent'})
+                items.append({'label': 'اجاره ماهانه', 'value': rent_label, 'kind': 'rent', 'icon': 'fa-calendar-day'})
                 if not primary:
                     primary = f'اجاره {rent_label}'
             elif rent_num is None:
                 from workspace.services.display import _listing_text_rent
                 txt = _listing_text_rent(data)
                 if txt:
-                    items.append({'label': 'اجاره ماهانه', 'value': txt, 'kind': 'rent'})
+                    items.append({'label': 'اجاره ماهانه', 'value': txt, 'kind': 'rent', 'icon': 'fa-calendar-day'})
         elif data:
             from workspace.services.display import _listing_text_rent
             txt = _listing_text_rent(data)
             if txt:
-                items.append({'label': 'اجاره ماهانه', 'value': txt, 'kind': 'rent'})
+                items.append({'label': 'اجاره ماهانه', 'value': txt, 'kind': 'rent', 'icon': 'fa-calendar-day'})
 
     # اگر فقط ودیعه داریم و اجاره در داده نیست ولی معامله اجاره‌ای است
     if tx.get('show_rent') and not any(i['kind'] == 'rent' for i in items):
         deposit = _get(listing_like, 'deposit')
         rent = _get(listing_like, 'rent')
         if deposit and (rent in (None, 0, 0.0, '')):
-            items.append({'label': 'اجاره ماهانه', 'value': 'بدون اجاره', 'kind': 'rent'})
+            items.append({'label': 'اجاره ماهانه', 'value': 'بدون اجاره', 'kind': 'rent', 'icon': 'fa-calendar-day'})
             if not note:
                 note = 'رهن کامل'
 

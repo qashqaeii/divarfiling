@@ -213,3 +213,10 @@ def ws_value_badge(score):
     if score >= 12:
         return 'above'
     return 'fair'
+
+
+@register.filter
+def feature_icon(label):
+    """آیکون Font Awesome مناسب برای برچسب ویژگی / امکان / مشخصه."""
+    from workspace.services.listing_features import _icon_for_key
+    return _icon_for_key(label)

@@ -15,7 +15,7 @@ from workspace.services.display import (
     transaction_profile,
 )
 from workspace.services.features import extract_listing_features, parse_bool_feature
-from workspace.services.listing_features import build_listing_feature_profile
+from workspace.services.listing_features import build_listing_feature_profile, _icon_for_key
 from workspace.services.listing_map import build_listing_map_marker
 from workspace.services.listing_public_share import format_sections_public
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
@@ -168,7 +168,7 @@ def _parse_property_amenities_text(text: str) -> tuple[Dict[str, bool], List[Dic
             'label': label,
             'value': 'دارد',
             'state': 'yes',
-            'icon': 'fa-check',
+            'icon': _icon_for_key(label),
             'chips': [],
             'is_chip': False,
         })

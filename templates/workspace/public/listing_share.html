@@ -145,8 +145,11 @@
                     {% elif finance.primary and item.kind == 'rent' and 'اجاره' in finance.primary and item.value != 'بدون اجاره' %}
                     {% else %}
                     <div class="ps-finance-item ps-finance-item--{{ item.kind }}">
-                        <span class="ps-finance-label">{{ item.label }}</span>
-                        <strong class="ps-finance-value">{{ item.value }}</strong>
+                        <span class="ps-finance-ico" aria-hidden="true"><i class="fas {% if item.icon %}{{ item.icon }}{% else %}{{ item.label|feature_icon }}{% endif %}"></i></span>
+                        <div class="ps-finance-item-body">
+                            <span class="ps-finance-label">{{ item.label }}</span>
+                            <strong class="ps-finance-value">{{ item.value }}</strong>
+                        </div>
                     </div>
                     {% endif %}
                     {% endfor %}
@@ -162,26 +165,38 @@
             <div class="ps-specs" aria-label="مشخصات اصلی">
                 {% if listing.area %}
                 <div class="ps-spec">
-                    <span class="ps-spec-label">متراژ</span>
-                    <strong>{{ listing.area|ws_area }}</strong>
+                    <span class="ps-spec-ico" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+                    <div class="ps-spec-body">
+                        <span class="ps-spec-label">متراژ</span>
+                        <strong>{{ listing.area|ws_area }}</strong>
+                    </div>
                 </div>
                 {% endif %}
                 {% if feat.rooms or listing.rooms %}
                 <div class="ps-spec">
-                    <span class="ps-spec-label">اتاق</span>
-                    <strong>{{ feat.rooms|default:listing.rooms }}</strong>
+                    <span class="ps-spec-ico" aria-hidden="true"><i class="fas fa-door-open"></i></span>
+                    <div class="ps-spec-body">
+                        <span class="ps-spec-label">اتاق</span>
+                        <strong>{{ feat.rooms|default:listing.rooms }}</strong>
+                    </div>
                 </div>
                 {% endif %}
                 {% if feat.floor %}
                 <div class="ps-spec">
-                    <span class="ps-spec-label">طبقه</span>
-                    <strong>{{ feat.floor }}</strong>
+                    <span class="ps-spec-ico" aria-hidden="true"><i class="fas fa-stairs"></i></span>
+                    <div class="ps-spec-body">
+                        <span class="ps-spec-label">طبقه</span>
+                        <strong>{{ feat.floor }}</strong>
+                    </div>
                 </div>
                 {% endif %}
                 {% if feat.build_year %}
                 <div class="ps-spec">
-                    <span class="ps-spec-label">سال ساخت</span>
-                    <strong>{{ feat.build_year }}</strong>
+                    <span class="ps-spec-ico" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+                    <div class="ps-spec-body">
+                        <span class="ps-spec-label">سال ساخت</span>
+                        <strong>{{ feat.build_year }}</strong>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -206,7 +221,7 @@
             {% if feature_highlights %}
             <div class="ps-amenity-extras" aria-label="سایر ویژگی‌ها">
                 {% for h in feature_highlights %}
-                <span class="ps-amenity-chip"><i class="fas fa-check" aria-hidden="true"></i> {{ h }}</span>
+                <span class="ps-amenity-chip"><i class="fas {{ h|feature_icon }}" aria-hidden="true"></i> {{ h }}</span>
                 {% endfor %}
             </div>
             {% endif %}
@@ -216,7 +231,7 @@
             <h2 class="ps-section-title"><i class="fas fa-sparkles" aria-hidden="true"></i> امکانات</h2>
             <div class="ps-amenity-extras">
                 {% for h in feature_highlights %}
-                <span class="ps-amenity-chip"><i class="fas fa-check" aria-hidden="true"></i> {{ h }}</span>
+                <span class="ps-amenity-chip"><i class="fas {{ h|feature_icon }}" aria-hidden="true"></i> {{ h }}</span>
                 {% endfor %}
             </div>
         </section>
@@ -303,7 +318,10 @@
                                         {% with section_rows|dict_get:section as rows %}
                                         {% for field in rows %}
                                         <div class="ps-spec-row">
-                                            <span class="ps-spec-key">{{ field.key }}</span>
+                                            <span class="ps-spec-key">
+                                                <i class="fas {{ field.key|feature_icon }}" aria-hidden="true"></i>
+                                                {{ field.key }}
+                                            </span>
                                             <div class="ps-spec-val">{% include 'workspace/includes/field_value_public.html' with field=field %}</div>
                                         </div>
                                         {% endfor %}
@@ -339,7 +357,10 @@
                                     {% with section_rows|dict_get:section as rows %}
                                     {% for field in rows %}
                                     <div class="ps-spec-row">
-                                        <span class="ps-spec-key">{{ field.key }}</span>
+                                        <span class="ps-spec-key">
+                                            <i class="fas {{ field.key|feature_icon }}" aria-hidden="true"></i>
+                                            {{ field.key }}
+                                        </span>
                                         <div class="ps-spec-val">{% include 'workspace/includes/field_value_public.html' with field=field %}</div>
                                     </div>
                                     {% endfor %}

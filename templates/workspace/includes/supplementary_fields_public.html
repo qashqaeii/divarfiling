@@ -6,7 +6,10 @@
         <dl class="ws-extra-grid">
             {% for field in group.fields %}
             <div class="ws-extra-item">
-                <dt>{{ field.key }}</dt>
+                <dt>
+                    <i class="fas {{ field.key|feature_icon }}" aria-hidden="true"></i>
+                    {{ field.key }}
+                </dt>
                 <dd>{% include 'workspace/includes/field_value_public.html' with field=field %}</dd>
             </div>
             {% endfor %}

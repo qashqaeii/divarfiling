@@ -433,47 +433,86 @@
     {# نقشه تمام‌عرض — انتهای صفحه #}
     {% if listing.latitude and listing.longitude %}
     <section class="ps-map-finale" data-reveal aria-label="نقشه موقعیت ملک">
-        <div class="ps-map-finale-intro">
-            <div class="ps-map-finale-intro-inner">
-                <span class="ps-map-finale-kicker">
-                    <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-                    موقعیت روی نقشه
-                </span>
-                <h2 class="ps-map-finale-title">کجا قرار دارد؟</h2>
-                {% if listing.neighborhood or listing.city %}
-                <p class="ps-map-finale-place">
-                    <i class="fas fa-location-dot" aria-hidden="true"></i>
-                    {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}
-                    {% if listing.city %}{% if listing.neighborhood %}، {% endif %}{{ listing.city }}{% endif %}
-                </p>
-                {% endif %}
-                {% if location_accuracy.label %}
-                <span class="ps-map-finale-accuracy ps-map-finale-accuracy--{{ location_accuracy.kind|default:'exact' }}">
-                    {{ location_accuracy.label }}
-                </span>
-                {% endif %}
-                {% if map_navigation %}
-                <div class="ps-map-finale-actions">
-                    <a href="{{ map_navigation.google_url }}" class="ps-map-finale-btn ps-map-finale-btn--primary" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-diamond-turn-right" aria-hidden="true"></i>
-                        مسیریابی گوگل
-                    </a>
-                    <a href="{{ map_navigation.neshan_url }}" class="ps-map-finale-btn" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-map" aria-hidden="true"></i>
-                        نشان
-                    </a>
-                    {% if map_navigation.waze_url %}
-                    <a href="{{ map_navigation.waze_url }}" class="ps-map-finale-btn" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-car" aria-hidden="true"></i>
-                        ویز
-                    </a>
+        <div class="ps-map-finale-atmosphere" aria-hidden="true">
+            <span class="ps-map-finale-orb ps-map-finale-orb--a"></span>
+            <span class="ps-map-finale-orb ps-map-finale-orb--b"></span>
+            <span class="ps-map-finale-grid"></span>
+        </div>
+
+        <div class="ps-map-finale-shell">
+            <header class="ps-map-finale-intro">
+                <div class="ps-map-finale-intro-copy">
+                    <div class="ps-map-finale-meta">
+                        <span class="ps-map-finale-kicker">
+                            <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                            موقعیت روی نقشه
+                        </span>
+                        {% if location_accuracy.label %}
+                        <span class="ps-map-finale-accuracy ps-map-finale-accuracy--{{ location_accuracy.kind|default:'exact' }}">
+                            <i class="fas {% if location_accuracy.kind == 'exact' %}fa-crosshairs{% else %}fa-circle-notch{% endif %}" aria-hidden="true"></i>
+                            {{ location_accuracy.label }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <h2 class="ps-map-finale-title">کجا قرار دارد؟</h2>
+                    <p class="ps-map-finale-lead">موقعیت ملک را روی نقشه ببینید و با یک لمس مسیر خود را باز کنید.</p>
+
+                    {% if listing.neighborhood or listing.city %}
+                    <div class="ps-map-finale-place-card">
+                        <span class="ps-map-finale-place-pin" aria-hidden="true">
+                            <i class="fas fa-location-dot"></i>
+                            <span class="ps-map-finale-place-pulse"></span>
+                        </span>
+                        <div class="ps-map-finale-place-body">
+                            <em>محل ملک</em>
+                            <strong>
+                                {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}
+                                {% if listing.city %}{% if listing.neighborhood %}، {% endif %}{{ listing.city }}{% endif %}
+                            </strong>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
+
+                {% if map_navigation %}
+                <nav class="ps-map-finale-routes" aria-label="مسیریابی">
+                    <a href="{{ map_navigation.google_url }}" class="ps-map-route ps-map-route--google" target="_blank" rel="noopener noreferrer">
+                        <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-diamond-turn-right"></i></span>
+                        <span class="ps-map-route-text">
+                            <strong>گوگل مپس</strong>
+                            <em>مسیریابی سریع</em>
+                        </span>
+                        <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
+                    </a>
+                    <a href="{{ map_navigation.neshan_url }}" class="ps-map-route ps-map-route--neshan" target="_blank" rel="noopener noreferrer">
+                        <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-map"></i></span>
+                        <span class="ps-map-route-text">
+                            <strong>نشان</strong>
+                            <em>نقشه فارسی</em>
+                        </span>
+                        <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
+                    </a>
+                    {% if map_navigation.waze_url %}
+                    <a href="{{ map_navigation.waze_url }}" class="ps-map-route ps-map-route--waze" target="_blank" rel="noopener noreferrer">
+                        <span class="ps-map-route-ico" aria-hidden="true"><i class="fas fa-car"></i></span>
+                        <span class="ps-map-route-text">
+                            <strong>ویز</strong>
+                            <em>ترافیک زنده</em>
+                        </span>
+                        <i class="fas fa-arrow-up-left ps-map-route-go" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                </nav>
                 {% endif %}
+            </header>
+
+            <div class="ps-map-finale-canvas">
+                <div class="ps-map-finale-frame">
+                    <div class="ps-map-finale-frame-edge" aria-hidden="true"></div>
+                    {% include 'workspace/includes/listing_location_map.html' with map_prefix='pubLd' map_id='pubLocationMap' map_stage_id='pubLocationMapStage' map_wrap_id='pubLocationMapPanel' map_navigation=None location_accuracy=None %}
+                </div>
             </div>
-        </div>
-        <div class="ps-map-finale-canvas">
-            {% include 'workspace/includes/listing_location_map.html' with map_prefix='pubLd' map_id='pubLocationMap' map_stage_id='pubLocationMapStage' map_wrap_id='pubLocationMapPanel' map_navigation=None location_accuracy=None %}
         </div>
     </section>
     {% endif %}

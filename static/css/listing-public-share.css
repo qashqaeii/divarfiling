@@ -1595,83 +1595,203 @@
 
 /* ── Full-bleed map finale ── */
 .ps-map-finale {
-    margin-top: 2.5rem;
+    --ps-map-ink: #f4faf9;
+    --ps-map-muted: rgba(226, 232, 240, 0.72);
+    --ps-map-deep: #071614;
+    --ps-map-panel: rgba(8, 28, 26, 0.72);
+    position: relative;
+    margin-top: 2.75rem;
+    padding: 0 0 2.25rem;
     background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(15, 118, 110, 0.14), transparent 55%),
-        linear-gradient(180deg, var(--ps-bg) 0%, #0b1f1d 100%);
-    color: #f4faf9;
+        radial-gradient(ellipse 70% 50% at 15% 10%, rgba(45, 212, 191, 0.16), transparent 55%),
+        radial-gradient(ellipse 55% 45% at 90% 20%, rgba(180, 140, 90, 0.12), transparent 50%),
+        linear-gradient(180deg, #0d2421 0%, var(--ps-map-deep) 48%, #050f0e 100%);
+    color: var(--ps-map-ink);
     overflow: hidden;
 }
 
-.ps-map-finale-intro {
-    max-width: var(--ps-max);
-    margin: 0 auto;
-    padding: 2.25rem 1.35rem 1.35rem;
-    text-align: center;
+.ps-map-finale-atmosphere {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
 }
 
-.ps-map-finale-intro-inner {
-    max-width: 36rem;
+.ps-map-finale-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.55;
+}
+
+.ps-map-finale-orb--a {
+    width: min(48vw, 420px);
+    height: min(48vw, 420px);
+    top: -12%;
+    right: -8%;
+    background: rgba(15, 118, 110, 0.45);
+}
+
+.ps-map-finale-orb--b {
+    width: min(36vw, 300px);
+    height: min(36vw, 300px);
+    bottom: 18%;
+    left: -6%;
+    background: rgba(180, 140, 90, 0.22);
+}
+
+.ps-map-finale-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.07;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.55) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.55) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 20%, transparent 75%);
+}
+
+.ps-map-finale-shell {
+    position: relative;
+    z-index: 1;
+    max-width: min(1120px, calc(100% - 2rem));
     margin: 0 auto;
+    padding: 2.4rem 0 0;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.ps-map-finale-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+    gap: 1.25rem 1.75rem;
+    align-items: end;
+}
+
+.ps-map-finale-intro-copy {
+    min-width: 0;
+}
+
+.ps-map-finale-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.85rem;
 }
 
 .ps-map-finale-kicker {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.28rem 0.7rem;
+    padding: 0.32rem 0.75rem;
     border-radius: 999px;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 800;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     color: #99f6e4;
-    background: rgba(15, 118, 110, 0.35);
-    border: 1px solid rgba(45, 212, 191, 0.28);
-    margin-bottom: 0.85rem;
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.55), rgba(13, 148, 136, 0.28));
+    border: 1px solid rgba(45, 212, 191, 0.32);
+    box-shadow: 0 0 0 1px rgba(15, 118, 110, 0.15), 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
 .ps-map-finale-title {
-    margin: 0 0 0.65rem;
-    font-size: clamp(1.55rem, 3.5vw, 2.15rem);
+    margin: 0 0 0.45rem;
+    font-size: clamp(1.7rem, 3.8vw, 2.45rem);
     font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 1.25;
+    letter-spacing: -0.045em;
+    line-height: 1.15;
     color: #f8fafc;
+    text-wrap: balance;
 }
 
-.ps-map-finale-place {
-    margin: 0 0 0.75rem;
+.ps-map-finale-lead {
+    margin: 0 0 1.15rem;
+    max-width: 34rem;
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--ps-map-muted);
+}
+
+.ps-map-finale-place-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+    max-width: 100%;
+    padding: 0.85rem 1.05rem 0.85rem 0.85rem;
+    border-radius: 16px;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 12px 32px rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+
+.ps-map-finale-place-pin {
+    position: relative;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 14px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: rgba(226, 232, 240, 0.88);
+    flex-shrink: 0;
+    color: #fff;
+    background: linear-gradient(160deg, #ef4444, #b91c1c);
+    box-shadow: 0 8px 20px rgba(185, 28, 28, 0.35);
+    font-size: 1rem;
 }
 
-.ps-map-finale-place i {
-    color: #2dd4bf;
-    font-size: 0.85rem;
+.ps-map-finale-place-pulse {
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    border: 2px solid rgba(248, 113, 113, 0.55);
+    animation: ps-map-pin-pulse 2s ease-out infinite;
+}
+
+.ps-map-finale-place-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.ps-map-finale-place-body em {
+    font-style: normal;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: rgba(153, 246, 228, 0.85);
+    letter-spacing: 0.02em;
+}
+
+.ps-map-finale-place-body strong {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: #f8fafc;
+    line-height: 1.35;
 }
 
 .ps-map-finale-accuracy {
     display: inline-flex;
     align-items: center;
-    margin-bottom: 1.1rem;
-    padding: 0.22rem 0.65rem;
-    border-radius: 6px;
-    font-size: 0.7rem;
+    gap: 0.35rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
     font-weight: 700;
     background: rgba(255, 255, 255, 0.08);
-    color: rgba(226, 232, 240, 0.9);
+    color: rgba(226, 232, 240, 0.92);
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .ps-map-finale-accuracy--exact {
-    background: rgba(16, 185, 129, 0.18);
+    background: rgba(16, 185, 129, 0.16);
     color: #a7f3d0;
-    border-color: rgba(52, 211, 153, 0.28);
+    border-color: rgba(52, 211, 153, 0.3);
 }
 
 .ps-map-finale-accuracy--approx,
@@ -1681,45 +1801,104 @@
     border-color: rgba(251, 191, 36, 0.28);
 }
 
-.ps-map-finale-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+.ps-map-finale-routes {
+    display: grid;
     gap: 0.55rem;
+    align-content: end;
 }
 
-.ps-map-finale-btn {
+.ps-map-route {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.72rem 0.85rem;
+    border-radius: 14px;
+    text-decoration: none;
+    color: #f8fafc;
+    background: var(--ps-map-panel);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ps-map-route:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+}
+
+.ps-map-route-ico {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 11px;
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.65rem 1rem;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-decoration: none;
-    color: #ecfdf5;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    backdrop-filter: blur(8px);
-    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    justify-content: center;
+    font-size: 0.92rem;
+    flex-shrink: 0;
 }
 
-.ps-map-finale-btn:hover {
-    transform: translateY(-1px);
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(45, 212, 191, 0.4);
+.ps-map-route-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.08rem;
+}
+
+.ps-map-route-text strong {
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.ps-map-route-text em {
+    font-style: normal;
+    font-size: 0.66rem;
+    color: rgba(226, 232, 240, 0.68);
+}
+
+.ps-map-route-go {
+    font-size: 0.72rem;
+    opacity: 0.55;
+    transition: opacity 0.15s, transform 0.15s;
+}
+
+.ps-map-route:hover .ps-map-route-go {
+    opacity: 1;
+    transform: translate(-2px, -2px);
+}
+
+.ps-map-route--google .ps-map-route-ico {
+    background: linear-gradient(145deg, #4285f4, #34a853);
     color: #fff;
+    box-shadow: 0 6px 16px rgba(66, 133, 244, 0.35);
+}
+.ps-map-route--google:hover {
+    background: color-mix(in srgb, #4285f4 18%, var(--ps-map-panel));
+    border-color: rgba(66, 133, 244, 0.4);
 }
 
-.ps-map-finale-btn--primary {
-    background: linear-gradient(135deg, #0d9488, #0f766e);
-    border-color: transparent;
-    box-shadow: 0 8px 24px rgba(13, 148, 136, 0.35);
+.ps-map-route--neshan .ps-map-route-ico {
+    background: linear-gradient(145deg, #0d9488, #0f766e);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.35);
+}
+.ps-map-route--neshan:hover {
+    background: color-mix(in srgb, #0d9488 18%, var(--ps-map-panel));
+    border-color: rgba(45, 212, 191, 0.35);
 }
 
-.ps-map-finale-btn--primary:hover {
-    background: linear-gradient(135deg, #14b8a6, #0d9488);
-    border-color: transparent;
+.ps-map-route--waze .ps-map-route-ico {
+    background: linear-gradient(145deg, #33ccff, #05c);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(51, 204, 255, 0.3);
+}
+.ps-map-route--waze:hover {
+    background: color-mix(in srgb, #33ccff 16%, var(--ps-map-panel));
+    border-color: rgba(51, 204, 255, 0.35);
 }
 
 .ps-map-finale-canvas {
@@ -1727,28 +1906,39 @@
     width: 100%;
 }
 
+.ps-map-finale-frame {
+    position: relative;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.35),
+        0 24px 60px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    background: #0b1a18;
+}
+
+.ps-map-finale-frame-edge {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow:
+        inset 0 40px 50px -30px rgba(7, 22, 20, 0.55),
+        inset 0 -24px 40px -28px rgba(7, 22, 20, 0.45);
+}
+
 .ps-map-finale .ws-ld-location-map-wrap,
 .ps-map-finale .ws-ld-location-map-stage {
     position: relative;
-}
-
-.ps-map-finale-canvas::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 72px;
-    z-index: 4;
-    pointer-events: none;
-    background: linear-gradient(180deg, rgba(11, 31, 29, 0.55), transparent);
 }
 
 .ps-map-finale .ws-ld-location-map-wrap {
     --lm-primary: #14b8a6;
     --lm-border: transparent;
     --lm-surface: transparent;
-    --lm-surface-2: rgba(15, 23, 42, 0.55);
+    --lm-surface-2: rgba(15, 23, 42, 0.62);
     --lm-text: #f8fafc;
     --lm-text-secondary: #cbd5e1;
     --lm-text-muted: #94a3b8;
@@ -1761,21 +1951,22 @@
 
 .ps-map-finale .ws-ld-location-map-head {
     position: absolute;
-    top: 1rem;
+    top: 0.95rem;
     left: 50%;
     transform: translateX(-50%);
     z-index: 40;
-    width: min(calc(100% - 1.5rem), 420px);
-    padding: 0.45rem 0.55rem;
+    width: min(calc(100% - 1.4rem), 280px);
+    padding: 0.35rem 0.4rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    background: rgba(15, 23, 42, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    gap: 0.45rem;
+    background: rgba(8, 20, 18, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 999px;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(14px) saturate(1.25);
+    -webkit-backdrop-filter: blur(14px) saturate(1.25);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
 }
 
 .ps-map-finale .ws-ld-location-map-head-main {
@@ -1793,22 +1984,26 @@
     border: none;
     color: #e2e8f0;
     box-shadow: none;
+    min-height: 2.1rem;
 }
 
 .ps-map-finale .ws-ld-basemap-label {
     color: #e2e8f0;
     font-weight: 700;
+    font-size: 0.78rem;
 }
 
 .ps-map-finale .ws-ld-basemap-menu {
-    top: calc(100% + 0.45rem);
+    top: calc(100% + 0.5rem);
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    min-width: 220px;
-    background: rgba(15, 23, 42, 0.92);
+    min-width: 230px;
+    background: rgba(8, 20, 18, 0.94);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
 }
 
 .ps-map-finale .ws-ld-location-map-stage {
@@ -1818,26 +2013,44 @@
 }
 
 .ps-map-finale .ws-ld-location-map {
-    height: min(68vh, 620px);
-    min-height: 360px;
+    height: min(64vh, 560px);
+    min-height: 340px;
     width: 100%;
 }
 
 .ps-map-finale .ws-ld-location-map-chrome {
     top: auto;
-    bottom: 1.1rem;
-    inset-inline-end: 1.1rem;
+    bottom: 1rem;
+    inset-inline-end: 1rem;
+    gap: 0.35rem;
 }
 
 .ps-map-finale .ws-ld-location-map-badge,
 .ps-map-finale .ws-ld-location-map-tool {
-    background: rgba(15, 23, 42, 0.72);
+    background: rgba(8, 20, 18, 0.78);
     border-color: rgba(255, 255, 255, 0.14);
     color: #e2e8f0;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
 .ps-map-finale .ps-map-nav-actions { display: none; }
+
+/* legacy aliases kept harmless if referenced */
+.ps-map-finale-actions,
+.ps-map-finale-btn { display: none; }
+
+@keyframes ps-map-pin-pulse {
+    0% { transform: scale(0.85); opacity: 0.8; }
+    70% { transform: scale(1.35); opacity: 0; }
+    100% { transform: scale(1.35); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ps-map-finale-place-pulse { animation: none; }
+    .ps-map-route:hover { transform: none; }
+}
 
 .ps-map-wrap {
     background: var(--ps-surface);
@@ -1947,7 +2160,7 @@
     font-size: 0.72rem;
     font-weight: 500;
     color: rgba(148, 163, 184, 0.9);
-    background: #0b1f1d;
+    background: #050f0e;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -2136,10 +2349,47 @@
 
     .ps-container { padding: 1rem 0.9rem 0; }
 
-    .ps-map-finale-intro { padding: 1.75rem 0.9rem 1.1rem; }
+    .ps-map-finale {
+        margin-top: 2rem;
+        padding-bottom: 1.5rem;
+    }
+    .ps-map-finale-shell {
+        max-width: calc(100% - 1.2rem);
+        padding-top: 1.75rem;
+        gap: 1.15rem;
+    }
+    .ps-map-finale-intro {
+        grid-template-columns: 1fr;
+        gap: 1.1rem;
+    }
+    .ps-map-finale-title {
+        font-size: clamp(1.45rem, 7vw, 1.85rem);
+    }
+    .ps-map-finale-lead {
+        font-size: 0.84rem;
+        margin-bottom: 0.95rem;
+    }
+    .ps-map-finale-place-card {
+        display: flex;
+        width: 100%;
+    }
+    .ps-map-finale-routes {
+        grid-template-columns: 1fr;
+    }
+    .ps-map-finale-frame {
+        border-radius: 16px;
+    }
     .ps-map-finale .ws-ld-location-map {
-        height: min(58vh, 480px);
+        height: min(56vh, 460px);
         min-height: 300px;
+    }
+    .ps-map-finale .ws-ld-location-map-head {
+        width: min(calc(100% - 1rem), 240px);
+        top: 0.75rem;
+    }
+    .ps-map-finale .ws-ld-location-map-chrome {
+        bottom: 0.75rem;
+        inset-inline-end: 0.75rem;
     }
 
     .ps-identity { padding: 1.1rem 1.05rem 1.15rem; }
@@ -2197,15 +2447,24 @@
 }
 
 @media (max-width: 420px) {
-    .ps-map-finale-intro { padding: 1.6rem 0.85rem 1rem; }
+    .ps-map-finale-shell { max-width: calc(100% - 0.9rem); padding-top: 1.45rem; }
     .ps-map-finale .ws-ld-location-map {
-        height: min(56vh, 440px);
-        min-height: 280px;
+        height: min(52vh, 400px);
+        min-height: 260px;
     }
-    .ps-map-finale-btn { padding: 0.55rem 0.8rem; font-size: 0.72rem; }
-    .ps-map-nav-actions { grid-template-columns: 1fr; }
+    .ps-map-route { padding: 0.65rem 0.75rem; gap: 0.55rem; }
+    .ps-map-route-ico { width: 2.1rem; height: 2.1rem; border-radius: 10px; }
     .ps-amenity-grid { grid-template-columns: 1fr; }
     .ps-finance-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) and (min-width: 641px) {
+    .ps-map-finale-intro {
+        grid-template-columns: 1fr;
+    }
+    .ps-map-finale-routes {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 @media (min-width: 769px) {

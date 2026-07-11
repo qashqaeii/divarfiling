@@ -219,27 +219,27 @@ def _parse_property_amenities_text(text: str) -> tuple[Dict[str, bool], List[Dic
 
 def build_property_amenity_dossier_items(prop: CRMProperty) -> List[Dict[str, Any]]:
     """
-    آیتم‌های امکانات برای باکس پرونده ملک — ساخت‌یافته مثل سایر گروه‌ها.
+    آیتم‌های امکانات برای باکس پرونده و نوار hero —
+    سه امکان اصلی همیشه + سایر امکانات پارس‌شده از متن.
     """
     items: List[Dict[str, Any]] = []
     seen: set[str] = set()
-    has_text = bool((prop.amenities or '').strip())
-    has_flags = bool(prop.has_parking or prop.has_storage or prop.has_elevator)
-    if not has_text and not has_flags:
-        return []
 
     def _add(label: str, value: str, state: str) -> None:
         key = (label or '').strip()
         if not key or key in seen or len(key) > 48:
             return
         seen.add(key)
+        display = (value or '').strip() or ('دارد' if state == 'yes' else ('ندارد' if state == 'no' else '—'))
         items.append({
             'key': key,
             'label': key,
-            'value': value,
+            'value': display,
             'state': state,
             'icon': _icon_for_key(key),
             'emoji': emoji_for_key(key),
+            'tip': f'{key}: {display}',
+            'is_core': key in _CORE_AMENITY_KEYS,
         })
 
     core_states, extras = _parse_property_amenities_text(prop.amenities or '')

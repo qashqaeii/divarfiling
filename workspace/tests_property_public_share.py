@@ -124,10 +124,14 @@ class PropertyPublicShareTests(TestCase):
         by_d = {i['label']: i for i in dossier}
         self.assertEqual(by_d['آسانسور']['emoji'], '🛗')
         self.assertEqual(by_d['پارکینگ']['state'], 'yes')
+        self.assertEqual(by_d['پارکینگ']['tip'], 'پارکینگ: دارد')
         self.assertEqual(by_d['تعداد واحد در طبقه']['value'], '۲')
         self.assertEqual(by_d['تعداد واحد در طبقه']['emoji'], '🚪')
+        self.assertEqual(by_d['تعداد واحد در طبقه']['tip'], 'تعداد واحد در طبقه: ۲')
         self.assertEqual(by_d['جنس کف']['value'], 'سرامیک')
         self.assertEqual(by_d['بالکن']['state'], 'no')
+        self.assertTrue(by_d['آسانسور']['is_core'])
+        self.assertFalse(by_d['لابی']['is_core'])
 
         url = reverse('listing_public:property_view', kwargs={'share_token': share.share_token})
         resp = self.client.get(url)

@@ -274,25 +274,34 @@
 
             <div class="crm-prop-hero-amenities">
                 <span class="crm-prop-hero-amenities-lbl"><i class="fas fa-sparkles"></i> امکانات</span>
-                <div class="crm-prop-hero-amenity-icons" aria-label="امکانات اصلی">
+                <div class="crm-prop-hero-amenity-icons" aria-label="امکانات ملک">
+                    {% for item in dossier_amenities %}
+                    <span class="crm-files-amenity crm-prop-hero-amenity{% if item.state == 'yes' or item.state == 'neutral' %} is-on{% else %} is-off{% endif %}{% if not item.is_core %} is-extra{% endif %}"
+                          data-tip="{{ item.tip }}"
+                          aria-label="{{ item.tip }}"
+                          tabindex="0">
+                        <span class="crm-prop-hero-amenity-emoji" aria-hidden="true">{{ item.emoji }}</span>
+                    </span>
+                    {% empty %}
                     <span class="crm-files-amenity{% if property.has_parking %} is-on{% else %} is-off{% endif %}"
                           data-tip="پارکینگ: {% if property.has_parking %}دارد{% else %}ندارد{% endif %}"
                           aria-label="پارکینگ: {% if property.has_parking %}دارد{% else %}ندارد{% endif %}"
                           tabindex="0">
-                        <i class="fas fa-car" aria-hidden="true"></i>
+                        <span class="crm-prop-hero-amenity-emoji" aria-hidden="true">🅿️</span>
                     </span>
                     <span class="crm-files-amenity{% if property.has_storage %} is-on{% else %} is-off{% endif %}"
                           data-tip="انباری: {% if property.has_storage %}دارد{% else %}ندارد{% endif %}"
                           aria-label="انباری: {% if property.has_storage %}دارد{% else %}ندارد{% endif %}"
                           tabindex="0">
-                        <i class="fas fa-box-archive" aria-hidden="true"></i>
+                        <span class="crm-prop-hero-amenity-emoji" aria-hidden="true">📦</span>
                     </span>
                     <span class="crm-files-amenity{% if property.has_elevator %} is-on{% else %} is-off{% endif %}"
                           data-tip="آسانسور: {% if property.has_elevator %}دارد{% else %}ندارد{% endif %}"
                           aria-label="آسانسور: {% if property.has_elevator %}دارد{% else %}ندارد{% endif %}"
                           tabindex="0">
-                        <i class="fas fa-elevator" aria-hidden="true"></i>
+                        <span class="crm-prop-hero-amenity-emoji" aria-hidden="true">🛗</span>
                     </span>
+                    {% endfor %}
                 </div>
                 {% if listing_highlights %}
                 <div class="crm-prop-hero-tags">

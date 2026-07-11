@@ -355,7 +355,7 @@ function getCsrfToken() {
 function buildDefaultShareMessage(title, url, template) {
     const safeTitle = (title || 'ملک').trim() || 'ملک';
     const safeUrl = (url || '').trim();
-    const tpl = (template || '').trim() || 'سلام،\nجزئیات «{title}» را در این لینک ببینید:\n{url}';
+    const tpl = (template || '').trim() || 'سلام،\nجزئیات «{title}» را در این لینک ببینید:\n{url}\nبا تشکر مشاور شما';
     return tpl
         .split('{title}').join(safeTitle)
         .split('{TITLE}').join(safeTitle)
@@ -373,10 +373,10 @@ function messageToShareTemplate(text, title, url) {
     if (safeTitle && out.includes(safeTitle)) {
         out = out.split(safeTitle).join('{title}');
     }
-    return out || 'سلام،\nجزئیات «{title}» را در این لینک ببینید:\n{url}';
+    return out || 'سلام،\nجزئیات «{title}» را در این لینک ببینید:\n{url}\nبا تشکر مشاور شما';
 }
 
-function syncShareMessageUrl(form, nextUrl) {
+def syncShareMessageUrl(form, nextUrl) {
     if (!nextUrl) return;
     const root = form.querySelector('[data-share-msg-root]');
     const ta = form.querySelector('[data-share-message]');
@@ -392,6 +392,7 @@ function syncShareMessageUrl(form, nextUrl) {
             root.dataset.shareTemplate || form.querySelector('[data-share-msg-template]')?.value,
         );
     }
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 function initShareModalTabs(form) {
@@ -459,6 +460,34 @@ function initPublicShareMessageEditors() {
         const ta = root.querySelector('[data-share-message]');
         if (!ta) return;
         const form = root.closest('form');
+        const preview = root.querySelector('[data-share-msg-preview]');
+
+        const escapeHtml = (s) => String(s || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+
+        const linkifyPreview = (text) => {
+            const escaped = escapeHtml(text);
+            return escaped
+                .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" dir="ltr">$1</a>')
+                .replace(/\n/g, '<br>');
+        };
+
+        const syncPreview = () => {
+            if (!preview) return;
+            const text = (ta.value || '').trim();
+            if (!text) {
+                preview.innerHTML = '<span class="mk-share-live-preview-empty">متن پیام را بنویسید…</span>';
+                return;
+            }
+            preview.innerHTML = linkifyPreview(ta.value || '');
+        };
+
+        syncPreview();
+        ta.addEventListener('input', syncPreview);
+        ta.addEventListener('change', syncPreview);
 
         const setBtnLabel = (btn, label, restoreMs = 1600) => {
             if (!btn) return;
@@ -543,6 +572,7 @@ function initPublicShareMessageEditors() {
                 root.dataset.shareUrl,
                 tpl,
             );
+            syncPreview();
             ta.focus();
             if (typeof window.showWsToast === 'function') {
                 window.showWsToast('متن از قالب پیش‌فرض بازگردانی شد.', 'info');

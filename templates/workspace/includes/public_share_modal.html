@@ -97,11 +97,20 @@
                             <textarea class="ws-textarea mk-share-msg-input"
                                       id="{{ id_prefix }}-share-message"
                                       data-share-message
-                                      rows="5"
+                                      rows="6"
                                       dir="rtl"
-                                      aria-describedby="{{ id_prefix }}-sec-message">{% if sp.share_message_rendered %}{{ sp.share_message_rendered }}{% else %}سلام،
+                                      aria-describedby="{{ id_prefix }}-sec-message {{ id_prefix }}-msg-preview-label">{% if sp.share_message_rendered %}{{ sp.share_message_rendered }}{% else %}سلام،
 جزئیات «{{ item_title }}» را در این لینک ببینید:
-{{ share_url }}{% endif %}</textarea>
+{{ share_url }}
+با تشکر مشاور شما{% endif %}</textarea>
+                            <div class="mk-share-live-preview" aria-live="polite">
+                                <div class="mk-share-live-preview-head" id="{{ id_prefix }}-msg-preview-label">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                    <span>پیش‌نمایش زنده</span>
+                                    <small>همان‌طور که مشتری در پیام‌رسان می‌بیند</small>
+                                </div>
+                                <div class="mk-share-live-preview-bubble" data-share-msg-preview dir="rtl"></div>
+                            </div>
                             <div class="mk-share-msg-actions">
                                 <button type="button" class="mk-share-msg-btn mk-share-msg-btn--copy" data-share-msg-copy>
                                     <i class="fas fa-copy" aria-hidden="true"></i>
@@ -271,7 +280,7 @@
                             <i class="fas fa-share-alt" aria-hidden="true"></i> شبکه‌های اجتماعی
                         </h3>
                         <p class="mk-share-msg-hint">
-                            لینک‌ها یک‌بار ذخیره می‌شوند و در صفحه عمومی همه فایل‌های شما نمایش داده می‌شوند.
+                            کافی است آیدی، شماره موبایل یا لینک کامل را وارد کنید — یک‌بار ذخیره می‌شود و در صفحه عمومی همه فایل‌ها نمایش داده می‌شود.
                         </p>
                         <div class="mk-share-social-grid">
                             {% for net in sp.social_networks %}
@@ -279,7 +288,7 @@
                                 <label class="ws-label" for="{{ id_prefix }}-social-{{ net.key }}">
                                     <i class="{{ net.icon }}" aria-hidden="true"></i> {{ net.label }}
                                 </label>
-                                <input type="url"
+                                <input type="text"
                                        class="ws-input"
                                        id="{{ id_prefix }}-social-{{ net.key }}"
                                        name="social_{{ net.key }}"
@@ -287,33 +296,34 @@
                                        data-social-key="{{ net.key }}"
                                        placeholder="{{ net.placeholder }}"
                                        dir="ltr"
+                                       inputmode="text"
                                        autocomplete="off">
                             </div>
                             {% empty %}
                             {# fallback if share_profile missing #}
                             <div class="mk-share-social-field" style="--mk-social-color:#229ED9">
                                 <label class="ws-label" for="{{ id_prefix }}-social-telegram"><i class="fab fa-telegram" aria-hidden="true"></i> تلگرام</label>
-                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-telegram" name="social_telegram" placeholder="https://t.me/username" dir="ltr">
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-telegram" name="social_telegram" placeholder="@username یا ۰۹۱۲…" dir="ltr">
                             </div>
                             <div class="mk-share-social-field" style="--mk-social-color:#00ADEF">
                                 <label class="ws-label" for="{{ id_prefix }}-social-bale"><i class="fas fa-comment-dots" aria-hidden="true"></i> بله</label>
-                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-bale" name="social_bale" placeholder="https://ble.ir/username" dir="ltr">
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-bale" name="social_bale" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
                             </div>
                             <div class="mk-share-social-field" style="--mk-social-color:#7B2D8E">
                                 <label class="ws-label" for="{{ id_prefix }}-social-rubika"><i class="fas fa-comments" aria-hidden="true"></i> روبیکا</label>
-                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-rubika" name="social_rubika" placeholder="https://rubika.ir/username" dir="ltr">
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-rubika" name="social_rubika" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
                             </div>
                             <div class="mk-share-social-field" style="--mk-social-color:#F7941D">
                                 <label class="ws-label" for="{{ id_prefix }}-social-eitaa"><i class="fas fa-paper-plane" aria-hidden="true"></i> ایتا</label>
-                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-eitaa" name="social_eitaa" placeholder="https://eitaa.com/username" dir="ltr">
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-eitaa" name="social_eitaa" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
                             </div>
                             <div class="mk-share-social-field" style="--mk-social-color:#E4405F">
                                 <label class="ws-label" for="{{ id_prefix }}-social-instagram"><i class="fab fa-instagram" aria-hidden="true"></i> اینستاگرام</label>
-                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-instagram" name="social_instagram" placeholder="https://instagram.com/username" dir="ltr">
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-instagram" name="social_instagram" placeholder="@username" dir="ltr">
                             </div>
                             <div class="mk-share-social-field" style="--mk-social-color:#00A651">
-                                <label class="ws-label" for="{{ id_prefix }}-social-soroush"><i class="fas fa-mobile-screen" aria-hidden="true"></i> سروش</label>
-                                <input type="url" class="ws-input" id="{{ id_prefix }}-social-soroush" name="social_soroush" placeholder="https://splus.ir/username" dir="ltr">
+                                <label class="ws-label" for="{{ id_prefix }}-social-soroush"><i class="fas fa-mobile-alt" aria-hidden="true"></i> سروش</label>
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-social-soroush" name="social_soroush" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
                             </div>
                             {% endfor %}
                         </div>

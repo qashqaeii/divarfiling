@@ -74,7 +74,7 @@ class ShareDefaultsAndSocialTests(TestCase):
     def test_social_links_on_public_page(self):
         save_share_profile_defaults(
             self.user,
-            social_links={'telegram': 'https://t.me/testagent', 'bale': 'ble.ir/agent'},
+            social_links={'telegram': '@testagent', 'bale': '09120001122'},
             save_socials=True,
         )
         share = ListingPublicShare.objects.create(
@@ -95,8 +95,27 @@ class ShareDefaultsAndSocialTests(TestCase):
 
     def test_normalize_social_adds_https(self):
         out = normalize_social_links({'telegram': 't.me/foo', 'instagram': ''})
-        self.assertEqual(out['telegram'], 'https://t.me/foo')
+        self.assertEqual(out['telegram'], 'foo')
         self.assertNotIn('instagram', out)
+
+    def test_normalize_social_accepts_username_and_phone(self):
+        from workspace.services.public_share_common import resolve_social_href
+        out = normalize_social_links({
+            'telegram': '@MyAgent',
+            'bale': '09121234567',
+            'rubika': '۰۹۳۵۱۱۱۲۲۳۳',
+            'eitaa': 'agent_id',
+        })
+        self.assertEqual(out['telegram'], 'MyAgent')
+        self.assertEqual(out['bale'], '09121234567')
+        self.assertEqual(out['rubika'], '09351112233')
+        self.assertEqual(out['eitaa'], 'agent_id')
+        self.assertEqual(resolve_social_href('telegram', out['telegram']), 'https://t.me/MyAgent')
+        self.assertEqual(resolve_social_href('bale', out['bale']), 'https://ble.ir/9121234567')
+        self.assertEqual(
+            resolve_social_href('telegram', '09121234567'),
+            'tg://resolve?phone=989121234567',
+        )
 
     def test_render_share_message_placeholders(self):
         text = render_share_message(
@@ -120,8 +139,8 @@ class ShareDefaultsAndSocialTests(TestCase):
             'save_as_default_welcome': '1',
             'share_message_template': 'سلام {title}\n{url}',
             'save_as_default_share_message': '1',
-            'social_telegram': 'https://t.me/agency',
-            'social_rubika': 'https://rubika.ir/agency',
+            'social_telegram': '@agency',
+            'social_rubika': '09123334455',
             'is_active': '1',
         }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(resp.status_code, 200)
@@ -129,8 +148,8 @@ class ShareDefaultsAndSocialTests(TestCase):
         ws = get_or_create_settings(self.user)
         self.assertIn('پیام پیش‌فرض', ws.default_welcome_message)
         self.assertIn('{title}', ws.default_share_message)
-        self.assertEqual(ws.social_links.get('telegram'), 'https://t.me/agency')
-        self.assertEqual(ws.social_links.get('rubika'), 'https://rubika.ir/agency')
+        self.assertEqual(ws.social_links.get('telegram'), 'agency')
+        self.assertEqual(ws.social_links.get('rubika'), '09123334455')
         share = ListingPublicShare.objects.get(listing=self.listing, created_by=self.user, is_active=True)
         self.assertEqual(share.welcome_message, '')
 

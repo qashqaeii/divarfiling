@@ -17,7 +17,8 @@ from workspace.models import WorkspaceSettings
 DEFAULT_SHARE_MESSAGE_TEMPLATE = (
     'سلام،\n'
     'جزئیات «{title}» را در این لینک ببینید:\n'
-    '{url}'
+    '{url}\n'
+    'با تشکر مشاور شما'
 )
 
 # شبکه‌های اجتماعی پشتیبانی‌شده در کارت مشاور / مودال اشتراک
@@ -26,45 +27,59 @@ SOCIAL_NETWORK_DEFS: Tuple[Dict[str, str], ...] = (
         'key': 'telegram',
         'label': 'تلگرام',
         'icon': 'fab fa-telegram',
-        'placeholder': 'https://t.me/username',
+        'placeholder': '@username یا ۰۹۱۲…',
         'color': '#229ED9',
+        'base': 'https://t.me/',
+        'hosts': ('t.me', 'telegram.me', 'telegram.org'),
     },
     {
         'key': 'bale',
         'label': 'بله',
         'icon': 'fas fa-comment-dots',
-        'placeholder': 'https://ble.ir/username',
+        'placeholder': 'آیدی یا ۰۹۱۲…',
         'color': '#00ADEF',
+        'base': 'https://ble.ir/',
+        'hosts': ('ble.ir', 'bale.ai'),
     },
     {
         'key': 'rubika',
         'label': 'روبیکا',
         'icon': 'fas fa-comments',
-        'placeholder': 'https://rubika.ir/username',
+        'placeholder': 'آیدی یا ۰۹۱۲…',
         'color': '#7B2D8E',
+        'base': 'https://rubika.ir/',
+        'hosts': ('rubika.ir',),
     },
     {
         'key': 'eitaa',
         'label': 'ایتا',
         'icon': 'fas fa-paper-plane',
-        'placeholder': 'https://eitaa.com/username',
+        'placeholder': 'آیدی یا ۰۹۱۲…',
         'color': '#F7941D',
+        'base': 'https://eitaa.com/',
+        'hosts': ('eitaa.com',),
     },
     {
         'key': 'instagram',
         'label': 'اینستاگرام',
         'icon': 'fab fa-instagram',
-        'placeholder': 'https://instagram.com/username',
+        'placeholder': '@username',
         'color': '#E4405F',
+        'base': 'https://instagram.com/',
+        'hosts': ('instagram.com', 'www.instagram.com', 'instagr.am'),
     },
     {
         'key': 'soroush',
         'label': 'سروش',
         'icon': 'fas fa-mobile-alt',
-        'placeholder': 'https://splus.ir/username',
+        'placeholder': 'آیدی یا ۰۹۱۲…',
         'color': '#00A651',
+        'base': 'https://splus.ir/',
+        'hosts': ('splus.ir', 'sapp.ir'),
     },
 )
+
+_SOCIAL_BY_KEY = {d['key']: d for d in SOCIAL_NETWORK_DEFS}
 
 _ALLOWED_WELCOME_TAGS = frozenset({
     'b', 'strong', 'i', 'em', 'u', 'br', 'p', 'ul', 'ol', 'li', 'a', 'span', 'div',
@@ -228,12 +243,165 @@ def welcome_html_to_plain(html: str) -> str:
     return re.sub(r'\n{3,}', '\n\n', text).strip()
 
 
-def normalize_social_url(url: str) -> str:
+def _to_english_digits(value: str) -> str:
+    table = str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩', '01234567890123456789')
+    return (value or '').translate(table)
+
+
+def _social_phone_digits(value: str) -> str:
+    """استخراج شماره موبایل ایران به‌صورت ۹xxxxxxxxx؛ در غیر این صورت خالی."""
+    raw = _to_english_digits(value or '')
+    digits = re.sub(r'\D', '', raw)
+    if not digits:
+        return ''
+    if digits.startswith('0098'):
+        digits = digits[4:]
+    elif digits.startswith('98') and len(digits) >= 12:
+        digits = digits[2:]
+    if digits.startswith('0'):
+        digits = digits[1:]
+    if len(digits) == 10 and digits.startswith('9'):
+        return digits
+    return ''
+
+
+def _looks_like_phone(value: str) -> bool:
+    raw = _to_english_digits((value or '').strip())
+    if not raw:
+        return False
+    # اگر حرف داشته باشد شماره نیست (مگر + و فاصله و خط تیره)
+    if re.search(r'[A-Za-zآ-ی]', raw):
+        return False
+    return bool(_social_phone_digits(raw))
+
+
+def _clean_social_username(value: str) -> str:
+    u = (value or '').strip().lstrip('@').strip().strip('/')
+    u = u.split('?')[0].split('#')[0].strip()
+    if not u or len(u) > 64:
+        return ''
+    # فقط کاراکترهای رایج آیدی
+    if not re.fullmatch(r'[A-Za-z0-9_.]+', u):
+        return ''
+    return u
+
+
+def _extract_id_from_social_url(network_key: str, url: str) -> str:
+    """از لینک کامل، آیدی یا شماره را برای نمایش در فرم برمی‌گرداند."""
+    defn = _SOCIAL_BY_KEY.get(network_key) or {}
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return url
+    host = (parsed.netloc or '').lower().removeprefix('www.')
+    path = (parsed.path or '').strip('/')
+    # tg://resolve?phone=98912...
+    if parsed.scheme == 'tg' and 'phone=' in (parsed.query or ''):
+        m = re.search(r'phone=(\d+)', parsed.query)
+        if m:
+            digits = m.group(1)
+            if digits.startswith('98') and len(digits) >= 12:
+                digits = digits[2:]
+            if len(digits) == 10:
+                return '0' + digits
+            return digits
+    hosts = defn.get('hosts') or ()
+    if host in hosts or any(host.endswith('.' + h) for h in hosts):
+        part = path.split('/')[0] if path else ''
+        if part.startswith('+') and _looks_like_phone(part):
+            digits = _social_phone_digits(part)
+            return f'0{digits}' if digits else part
+        return part.lstrip('@') if part else url
+    return url
+
+
+def resolve_social_href(network_key: str, raw: str) -> str:
+    """تبدیل آیدی / شماره / لینک به آدرس قابل‌کلیک."""
+    value = (raw or '').strip()
+    if not value:
+        return ''
+    defn = _SOCIAL_BY_KEY.get(network_key)
+    if not defn:
+        return ''
+
+    # لینک کامل یا دامنه بدون scheme
+    candidate = value
+    if re.match(r'^https?://', candidate, re.I):
+        parsed = urlparse(candidate)
+        if parsed.scheme.lower() in ('http', 'https') and parsed.netloc:
+            return candidate[:500]
+    if candidate.startswith('tg://'):
+        return candidate[:500]
+    if re.match(r'^[a-z0-9.-]+\.[a-z]{2,}(/|$)', candidate, re.I):
+        full = 'https://' + candidate.lstrip('/')
+        parsed = urlparse(full)
+        if parsed.netloc:
+            return full[:500]
+
+    # شماره موبایل
+    if _looks_like_phone(value):
+        digits = _social_phone_digits(value)
+        if not digits:
+            return ''
+        if network_key == 'telegram':
+            return f'tg://resolve?phone=98{digits}'
+        if network_key == 'instagram':
+            # اینستاگرام با شماره پروفایل عمومی ندارد
+            return ''
+        return f"{defn['base']}{digits}"
+
+    # آیدی / یوزرنیم خالی
+    username = _clean_social_username(value)
+    if not username:
+        return ''
+    return f"{defn['base']}{username}"
+
+
+def normalize_social_value(network_key: str, raw: str) -> str:
+    """
+    مقدار ذخیره‌شده در تنظیمات:
+    - لینک کامل → همان لینک نرمال
+    - آیدی → آیدی بدون @
+    - شماره → 09xxxxxxxxx
+    """
+    value = (raw or '').strip()
+    if not value:
+        return ''
+
+    # اگر لینک کامل است، برای فرم آیدی/شماره را استخراج کن تا دوباره لینک کامل نماند
+    if re.match(r'^https?://', value, re.I) or value.startswith('tg://') or re.match(
+        r'^[a-z0-9.-]+\.[a-z]{2,}(/|$)', value, re.I,
+    ):
+        href = resolve_social_href(network_key, value)
+        if not href:
+            return ''
+        extracted = _extract_id_from_social_url(network_key, href)
+        # اگر استخراج نشد، خود لینک را نگه دار
+        return (extracted or href)[:200]
+
+    if _looks_like_phone(value):
+        if network_key == 'instagram':
+            return ''
+        digits = _social_phone_digits(value)
+        return f'0{digits}' if digits else ''
+
+    username = _clean_social_username(value)
+    return username[:64]
+
+
+def normalize_social_url(url: str, network_key: str = '') -> str:
+    """سازگاری با نام قبلی — خروجی لینک قابل‌کلیک است."""
+    if network_key:
+        return resolve_social_href(network_key, url)
+    # بدون کلید شبکه: فقط لینک کامل را بپذیر
     u = (url or '').strip()
     if not u:
         return ''
     if not re.match(r'^https?://', u, re.I):
-        u = 'https://' + u.lstrip('/')
+        if re.match(r'^[a-z0-9.-]+\.[a-z]{2,}(/|$)', u, re.I):
+            u = 'https://' + u.lstrip('/')
+        else:
+            return ''
     parsed = urlparse(u)
     if parsed.scheme.lower() not in ('http', 'https'):
         return ''
@@ -243,12 +411,12 @@ def normalize_social_url(url: str) -> str:
 
 
 def normalize_social_links(raw) -> Dict[str, str]:
-    """استخراج و نرمال‌سازی لینک‌های اجتماعی از dict یا POST."""
+    """استخراج و نرمال‌سازی مقادیر اجتماعی (آیدی / شماره / لینک)."""
     src = raw if isinstance(raw, dict) else {}
     out: Dict[str, str] = {}
     for defn in SOCIAL_NETWORK_DEFS:
         key = defn['key']
-        val = normalize_social_url(str(src.get(key) or ''))
+        val = normalize_social_value(key, str(src.get(key) or ''))
         if val:
             out[key] = val
     return out
@@ -263,19 +431,23 @@ def social_links_from_post(post) -> Dict[str, str]:
 
 
 def social_networks_for_display(links: Optional[dict]) -> List[Dict[str, str]]:
-    """لیست شبکه‌های دارای لینک برای رندر در UI."""
+    """لیست شبکه‌های دارای لینک برای رندر در UI عمومی."""
     links = links or {}
     items: List[Dict[str, str]] = []
     for defn in SOCIAL_NETWORK_DEFS:
-        url = (links.get(defn['key']) or '').strip()
-        if not url:
+        raw = (links.get(defn['key']) or '').strip()
+        if not raw:
+            continue
+        href = resolve_social_href(defn['key'], raw)
+        if not href:
             continue
         items.append({
             'key': defn['key'],
             'label': defn['label'],
             'icon': defn['icon'],
             'color': defn['color'],
-            'url': url,
+            'url': href,
+            'value': raw,
         })
     return items
 

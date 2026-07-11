@@ -695,3 +695,79 @@ def build_listing_feature_profile(listing, base_feat: Optional[Dict[str, Any]] =
         'raw': raw,
         'source_label': 'ثبت‌شده از دیوار',
     }
+
+
+_CORE_AMENITY_KEYS = frozenset(spec['key'] for spec in LISTING_CORE_AMENITIES)
+
+
+def build_listing_amenity_dossier_items(
+    listing,
+    base_feat: Optional[Dict[str, Any]] = None,
+    profile: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    """
+    آیتم‌های امکانات برای نوار hero جزئیات آگهی —
+    امکانات اصلی + تمام ویژگی‌های استخراج‌شده با آیکن و tooltip.
+    """
+    if profile is None:
+        profile = build_listing_feature_profile(listing, base_feat)
+    base_feat = base_feat or {}
+
+    items: List[Dict[str, Any]] = []
+    seen: set[str] = set()
+
+    def _add(label: str, value: str, state: str, *, is_core: bool = False) -> None:
+        key = (label or '').strip()
+        if not key or key in seen or len(key) > 48:
+            return
+        seen.add(key)
+        display = (value or '').strip() or (
+            'دارد' if state == 'yes' else ('ندارد' if state == 'no' else '—')
+        )
+        items.append({
+            'key': key,
+            'label': key,
+            'value': display,
+            'state': state,
+            'icon': _icon_for_key(key),
+            'emoji': emoji_for_key(key),
+            'tip': f'{key}: {display}',
+            'is_core': is_core or key in _CORE_AMENITY_KEYS,
+        })
+
+    for item in profile.get('core') or []:
+        _add(
+            str(item.get('label') or item.get('key') or ''),
+            str(item.get('value') or ''),
+            str(item.get('state') or 'unknown'),
+            is_core=True,
+        )
+
+    for group in profile.get('groups') or []:
+        for item in group.get('items') or []:
+            key = str(item.get('label') or item.get('key') or '').strip()
+            if not key or key in _CORE_AMENITY_KEYS:
+                continue
+            value = str(item.get('value') or '')
+            state = str(item.get('state') or 'neutral')
+            chips = item.get('chips') or []
+            if chips:
+                _add(key, value or '، '.join(str(c) for c in chips), state)
+                continue
+            # مقادیر چندامکانیتی مثل «لابی، استخر»
+            if value and any(sep in value for sep in ('،', ',', '/')) and not is_scalar_feature_key(key):
+                parts = [p.strip() for p in _MULTI_AMENITY_SPLIT.split(value) if p.strip()]
+                if len(parts) > 1:
+                    for part in parts:
+                        part_state = _feature_state(part)
+                        if part_state == 'no':
+                            _add(part.replace(' ندارد', '').strip() or part, 'ندارد', 'no')
+                        elif part_state == 'yes' or part in PROPERTY_BOOL_AMENITY_LABELS:
+                            label = part.replace(' دارد', '').strip() or part
+                            _add(label, 'دارد', 'yes')
+                        else:
+                            _add(part, 'دارد', 'yes')
+                    continue
+            _add(key, value, state)
+
+    return items

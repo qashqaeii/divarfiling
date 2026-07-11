@@ -7,6 +7,7 @@ from workspace.services.features import extract_listing_features, parse_bool_fea
 from workspace.services.listing_features import (
     _format_item_display,
     _feature_state,
+    build_listing_amenity_dossier_items,
     build_listing_feature_profile,
 )
 
@@ -81,3 +82,38 @@ class ListingFeatureDisplayTests(TestCase):
         self.assertEqual(by_key['بالکن']['value'], 'دارد')
         core = {c['key']: c for c in profile['core']}
         self.assertEqual(core['آسانسور']['value'], 'ندارد')
+
+    def test_amenity_dossier_includes_all_features_with_tips(self):
+        listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='feat002',
+            title='آپارتمان',
+            data={
+                'آسانسور': 'دارد',
+                'پارکینگ': 'ندارد',
+                'انباری': 'دارد',
+                'بالکن': 'دارد',
+                'گرمایش': 'شوفاژ',
+                'سرمایش': 'اسپلیت',
+                'سند': 'تک‌برگ',
+                'لابی': 'دارد',
+                'استخر': 'ندارد',
+            },
+        )
+        feat = extract_listing_features(listing)
+        items = build_listing_amenity_dossier_items(listing, feat)
+        by_key = {it['key']: it for it in items}
+        self.assertIn('آسانسور', by_key)
+        self.assertEqual(by_key['آسانسور']['tip'], 'آسانسور: دارد')
+        self.assertEqual(by_key['آسانسور']['state'], 'yes')
+        self.assertTrue(by_key['آسانسور']['is_core'])
+        self.assertEqual(by_key['پارکینگ']['tip'], 'پارکینگ: ندارد')
+        self.assertEqual(by_key['پارکینگ']['state'], 'no')
+        self.assertEqual(by_key['بالکن']['tip'], 'بالکن: دارد')
+        self.assertEqual(by_key['گرمایش']['tip'], 'گرمایش: شوفاژ')
+        self.assertEqual(by_key['گرمایش']['icon'], 'fa-fire')
+        self.assertEqual(by_key['سند']['tip'], 'سند: تک‌برگ')
+        self.assertGreaterEqual(len(items), 7)
+        for it in items:
+            self.assertTrue(it['tip'])
+            self.assertTrue(it['icon'].startswith('fa-'))

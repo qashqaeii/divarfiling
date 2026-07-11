@@ -15321,7 +15321,7 @@ select.crm-files-adv-control {
     border-radius: 14px;
     background: var(--ws-surface);
     box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
-    overflow: hidden;
+    overflow: visible;
     flex-shrink: 0;
 }
 .crm-prop-hero--sale {
@@ -15796,10 +15796,14 @@ button.crm-prop-hero-cover {
     overflow: visible;
 }
 .crm-prop-hero-amenities .crm-files-amenity[data-tip]::after {
-    z-index: 40;
+    z-index: 80;
     max-width: min(70vw, 220px);
     white-space: normal;
     text-align: center;
+}
+.crm-prop-hero-amenities .crm-files-amenity[data-tip]:hover,
+.crm-prop-hero-amenities .crm-files-amenity[data-tip]:focus-visible {
+    z-index: 81;
 }
 .crm-prop-hero-amenities .crm-prop-hero-tags {
     display: flex;

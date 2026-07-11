@@ -4,7 +4,7 @@
 {% block page_title %}{{ listing.title|truncatechars:40 }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=134">
+<link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=135">
 <link rel="stylesheet" href="{% static 'css/listing-public-share.css' %}?v=2">
 {% if listing.latitude and listing.longitude %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=4">
@@ -224,15 +224,15 @@
                 </div>
             </div>
 
-            {% if feature_profile.core or benchmark.verdict %}
+            {% if dossier_amenities or benchmark.verdict %}
             <div class="crm-prop-hero-amenities">
-                {% if feature_profile.core %}
+                {% if dossier_amenities %}
                 <span class="crm-prop-hero-amenities-lbl"><i class="fas fa-sparkles"></i> امکانات</span>
                 <div class="crm-prop-hero-amenity-icons" aria-label="امکانات ملک">
-                    {% for item in feature_profile.core %}
-                    <span class="crm-files-amenity crm-prop-hero-amenity{% if item.state == 'yes' or item.state == 'neutral' %} is-on{% else %} is-off{% endif %}"
-                          data-tip="{{ item.label }}: {% if item.state == 'yes' %}دارد{% elif item.state == 'no' %}ندارد{% else %}{{ item.value|default:'—' }}{% endif %}"
-                          aria-label="{{ item.label }}"
+                    {% for item in dossier_amenities %}
+                    <span class="crm-files-amenity crm-prop-hero-amenity{% if item.state == 'yes' or item.state == 'neutral' %} is-on{% else %} is-off{% endif %}{% if not item.is_core %} is-extra{% endif %}"
+                          data-tip="{{ item.tip }}"
+                          aria-label="{{ item.tip }}"
                           tabindex="0">
                         <i class="fas {{ item.icon }}" aria-hidden="true"></i>
                     </span>

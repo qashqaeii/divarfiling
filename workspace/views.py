@@ -61,7 +61,10 @@ from workspace.services.display import (
     transaction_profile,
 )
 from workspace.services.features import extract_listing_features
-from workspace.services.listing_features import build_listing_feature_profile
+from workspace.services.listing_features import (
+    build_listing_amenity_dossier_items,
+    build_listing_feature_profile,
+)
 from workspace.services.listing_map import build_listing_map_marker
 from workspace.services.listing_edit import (
     apply_listing_edit_post, listing_edit_payload,
@@ -939,6 +942,9 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['supplementary_fields'] = format_supplementary_fields(data, tx, sections)
         ctx['supplementary_groups'] = format_supplementary_groups(data, tx, sections)
         ctx['feature_profile'] = build_listing_feature_profile(listing, ctx['feat'])
+        ctx['dossier_amenities'] = build_listing_amenity_dossier_items(
+            listing, ctx['feat'], ctx['feature_profile'],
+        )
         ctx['open_modal'] = self.request.GET.get('open', '')
         df = listings_to_dataframe(dataset.listings.all())
         ctx['benchmark'] = benchmark_listing(listing, df, dataset.transaction_type) if len(df) else {}

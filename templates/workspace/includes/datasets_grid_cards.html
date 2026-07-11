@@ -38,7 +38,7 @@
                 </div>
             </a>
             <footer class="mk-ds-card-foot">
-                <time class="mk-ds-card-date" datetime="{{ ds.created_at|date:'c' }}">{{ ds.created_at|ws_jalali }}</time>
+                <time class="mk-ds-card-date" datetime="{{ ds.updated_at|date:'c' }}" title="آخرین بروزرسانی">{{ ds.updated_at|ws_jalali_datetime }}</time>
                 <nav class="mk-ds-card-acts" role="toolbar" aria-label="عملیات فایل">
                     <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-ds-card-act mk-ds-card-act--open" title="باز کردن">
                         <i class="fas fa-arrow-left" aria-hidden="true"></i><span>باز کردن</span>

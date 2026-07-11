@@ -119,6 +119,16 @@ class PropertyPublicShareTests(TestCase):
         self.assertEqual(by_label['لابی']['value'], 'دارد')
         self.assertNotEqual(by_label['تعداد واحد در طبقه']['value'], 'دارد')
 
+        from workspace.services.property_public_share import build_property_amenity_dossier_items
+        dossier = build_property_amenity_dossier_items(self.prop)
+        by_d = {i['label']: i for i in dossier}
+        self.assertEqual(by_d['آسانسور']['emoji'], '🛗')
+        self.assertEqual(by_d['پارکینگ']['state'], 'yes')
+        self.assertEqual(by_d['تعداد واحد در طبقه']['value'], '۲')
+        self.assertEqual(by_d['تعداد واحد در طبقه']['emoji'], '🚪')
+        self.assertEqual(by_d['جنس کف']['value'], 'سرامیک')
+        self.assertEqual(by_d['بالکن']['state'], 'no')
+
         url = reverse('listing_public:property_view', kwargs={'share_token': share.share_token})
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)

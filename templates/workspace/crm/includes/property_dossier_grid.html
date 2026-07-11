@@ -123,8 +123,31 @@
             {% endif %}
         </dl>
     </div>
-    {% if property.amenities %}
-    <div class="crm-prop-dossier-group">
+    {% if dossier_amenities %}
+    <div class="crm-prop-dossier-group crm-prop-dossier-group--amenities">
+        <h3><i class="fas fa-sparkles" aria-hidden="true"></i> امکانات</h3>
+        <dl class="crm-prop-dossier-dl crm-prop-dossier-amenities">
+            {% for item in dossier_amenities %}
+            <div class="crm-prop-amenity-row state-{{ item.state }}">
+                <dt>
+                    <span class="crm-prop-amenity-emoji" aria-hidden="true">{{ item.emoji }}</span>
+                    <span class="crm-prop-amenity-label">{{ item.label }}</span>
+                </dt>
+                <dd>
+                    {% if item.state == 'yes' %}
+                    <span class="crm-prop-dl-amenity is-yes"><i class="fas fa-check" aria-hidden="true"></i> دارد</span>
+                    {% elif item.state == 'no' %}
+                    <span class="crm-prop-dl-amenity is-no">ندارد</span>
+                    {% else %}
+                    <span class="crm-prop-amenity-value">{{ item.value }}</span>
+                    {% endif %}
+                </dd>
+            </div>
+            {% endfor %}
+        </dl>
+    </div>
+    {% elif property.amenities %}
+    <div class="crm-prop-dossier-group crm-prop-dossier-group--amenities">
         <h3><i class="fas fa-sparkles" aria-hidden="true"></i> امکانات</h3>
         <p class="crm-prop-dossier-text">{{ property.amenities }}</p>
     </div>

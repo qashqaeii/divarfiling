@@ -1137,6 +1137,7 @@ class ListingUpdateView(DatasetOwnerMixin, View):
         try:
             apply_listing_edit_post(listing, request.POST)
             listing.save()
+            dataset.mark_updated()
             if 'owner_phone' in request.POST or 'owner_name' in request.POST:
                 upsert_property_owner(
                     request.user,
@@ -1160,8 +1161,7 @@ class ListingDeleteView(DatasetOwnerMixin, View):
         listing = get_object_or_404(dataset.listings, pk=listing_id)
         title = listing.title[:40] if listing.title else listing.token
         listing.delete()
-        dataset.row_count = dataset.listings.count()
-        dataset.save(update_fields=['row_count'])
+        dataset.sync_row_count()
         messages.success(request, f'آگهی «{title}» حذف شد.')
         return redirect('workspace:dataset_detail', dataset_id=dataset.pk)
 
@@ -1211,8 +1211,7 @@ class DeleteConsultantsView(DatasetOwnerMixin, View):
         count = qs.count()
         if count:
             qs.delete()
-            dataset.row_count = dataset.listings.count()
-            dataset.save(update_fields=['row_count'])
+            dataset.sync_row_count()
             messages.success(request, f'{count:,} آگهی مشاور حذف شد.')
         else:
             messages.info(request, 'آگهی مشاوری برای حذف یافت نشد.')

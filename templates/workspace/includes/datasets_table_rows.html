@@ -44,8 +44,8 @@
     <td class="mk-col-num mk-num" data-label="آگهی" data-sort-value="{{ ds.listing_count|default:ds.row_count }}">
         {{ ds.listing_count|default:ds.row_count|intcomma }}
     </td>
-    <td class="mk-col-date mk-date" data-label="ایجاد" data-sort-value="{{ ds.created_at|date:'U' }}">
-        {{ ds.created_at|ws_jalali_date }}
+    <td class="mk-col-date mk-date" data-label="بروزرسانی" data-sort-value="{{ ds.updated_at|date:'U' }}">
+        {{ ds.updated_at|ws_jalali_datetime }}
     </td>
     <td class="mk-col-actions" data-label="">
         <div class="mk-row-actions">

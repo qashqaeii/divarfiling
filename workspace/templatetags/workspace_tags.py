@@ -73,6 +73,25 @@ def ws_jalali_date(value):
 
 
 @register.filter
+def ws_jalali_datetime(value):
+    """تاریخ و ساعت شمسی با ارقام فارسی."""
+    from django.utils import timezone
+    from workspace.services.jalali_input import to_persian_digits
+
+    if not value:
+        return '—'
+    dt = value
+    if hasattr(value, 'tzinfo'):
+        dt = timezone.localtime(value)
+    try:
+        import jdatetime
+        j = jdatetime.datetime.fromgregorian(datetime=dt)
+        return to_persian_digits(j.strftime('%Y/%m/%d %H:%M'))
+    except Exception:
+        return to_jalali_display(value) or '—'
+
+
+@register.filter
 def ws_time(value):
     """ساعت محلی با ارقام فارسی."""
     from django.utils import timezone

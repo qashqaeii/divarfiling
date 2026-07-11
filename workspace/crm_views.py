@@ -1155,6 +1155,7 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['property_location_display'] = ''
             ctx['feature_profile'] = {'has_details': False, 'groups': [], 'core': [], 'detail_count': 0}
             ctx['listing_highlights'] = []
+            ctx['dossier_amenities'] = []
             ctx['source_listing'] = None
             ctx['property_form'] = CRMPropertyForm(instance=p)
             ctx['document_form'] = CustomerDocumentForm()
@@ -1178,12 +1179,15 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['crm_section'] = 'properties'
         ctx['feature_profile'] = {'has_details': False, 'groups': [], 'core': [], 'detail_count': 0}
         ctx['listing_highlights'] = []
+        ctx['dossier_amenities'] = []
         source_listing = resolve_listing_for_property(self.request.user, p)
         ctx['source_listing'] = source_listing
         if source_listing:
             feat = extract_listing_features(source_listing)
             ctx['feature_profile'] = build_listing_feature_profile(source_listing, feat)
             ctx['listing_highlights'] = feat.get('highlights') or []
+        from workspace.services.property_public_share import build_property_amenity_dossier_items
+        ctx['dossier_amenities'] = build_property_amenity_dossier_items(p)
         ctx['is_property_owner'] = is_property_owner(self.request.user, p)
         share_ctx = build_property_share_context(self.request.user, p)
         ctx['property_share_ctx'] = share_ctx

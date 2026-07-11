@@ -17,6 +17,7 @@ from workspace.services.display import (
 from workspace.services.features import extract_listing_features, parse_bool_feature
 from workspace.services.listing_features import (
     build_listing_feature_profile,
+    emoji_for_key,
     is_scalar_feature_key,
     _icon_for_key,
 )
@@ -214,6 +215,58 @@ def _parse_property_amenities_text(text: str) -> tuple[Dict[str, bool], List[Dic
             'is_chip': False,
         })
     return core_states, extras
+
+
+def build_property_amenity_dossier_items(prop: CRMProperty) -> List[Dict[str, Any]]:
+    """
+    آیتم‌های امکانات برای باکس پرونده ملک — ساخت‌یافته مثل سایر گروه‌ها.
+    """
+    items: List[Dict[str, Any]] = []
+    seen: set[str] = set()
+    has_text = bool((prop.amenities or '').strip())
+    has_flags = bool(prop.has_parking or prop.has_storage or prop.has_elevator)
+    if not has_text and not has_flags:
+        return []
+
+    def _add(label: str, value: str, state: str) -> None:
+        key = (label or '').strip()
+        if not key or key in seen or len(key) > 48:
+            return
+        seen.add(key)
+        items.append({
+            'key': key,
+            'label': key,
+            'value': value,
+            'state': state,
+            'icon': _icon_for_key(key),
+            'emoji': emoji_for_key(key),
+        })
+
+    core_states, extras = _parse_property_amenities_text(prop.amenities or '')
+
+    for spec in LISTING_CORE_AMENITIES:
+        key = spec['key']
+        if key in core_states:
+            has_val = core_states[key]
+        else:
+            has_val = {
+                'پارکینگ': prop.has_parking,
+                'انباری': prop.has_storage,
+                'آسانسور': prop.has_elevator,
+            }.get(key, False)
+        _add(key, 'دارد' if has_val else 'ندارد', 'yes' if has_val else 'no')
+
+    for extra in extras:
+        label = str(extra.get('label') or '')
+        if label in _CORE_AMENITY_KEYS:
+            continue
+        _add(
+            label,
+            str(extra.get('value') or ''),
+            str(extra.get('state') or 'neutral'),
+        )
+
+    return items
 
 
 def _resolve_core_amenity_state(prop: CRMProperty, key: str, parsed_core: Dict[str, bool]) -> bool:

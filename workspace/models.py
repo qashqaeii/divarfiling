@@ -60,6 +60,21 @@ class Dataset(models.Model):
         self.last_opened_at = timezone.now()
         self.save(update_fields=['last_opened_at'])
 
+    def sync_row_count(self, *, bump_updated: bool = True) -> int:
+        """همگام‌سازی تعداد آگهی و (اختیاری) زمان بروزرسانی دیتاست."""
+        self.row_count = self.listings.count()
+        fields = ['row_count']
+        if bump_updated:
+            self.updated_at = timezone.now()
+            fields.append('updated_at')
+        self.save(update_fields=fields)
+        return self.row_count
+
+    def mark_updated(self) -> None:
+        """ثبت زمان آخرین تغییر محتوای دیتاست."""
+        self.updated_at = timezone.now()
+        self.save(update_fields=['updated_at'])
+
 
 class Listing(models.Model):
     """یک آگهی در مجموعه‌داده."""

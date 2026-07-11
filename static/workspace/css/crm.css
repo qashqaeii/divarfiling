@@ -16147,6 +16147,77 @@ button.crm-prop-hero-cover {
     line-height: 1.65;
     color: var(--ws-text-secondary);
 }
+.crm-prop-dossier-group--amenities {
+    grid-column: 1 / -1;
+    background:
+        radial-gradient(ellipse 80% 60% at 100% 0%, color-mix(in srgb, #f59e0b 8%, transparent), transparent 55%),
+        var(--ws-surface-2);
+}
+.crm-prop-dossier-amenities {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+}
+.crm-prop-amenity-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--ws-surface) 88%, transparent);
+    border: 1px solid var(--ws-border-light);
+    font-size: 0.68rem;
+}
+.crm-prop-amenity-row dt {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 650;
+    color: var(--ws-text-secondary);
+    min-width: 0;
+}
+.crm-prop-amenity-emoji {
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.95rem;
+    line-height: 1;
+    background: color-mix(in srgb, #f59e0b 12%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, #f59e0b 18%, var(--ws-border-light));
+}
+.crm-prop-amenity-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.crm-prop-amenity-row dd {
+    margin: 0;
+    font-weight: 800;
+    color: var(--ws-text);
+    text-align: end;
+    flex-shrink: 0;
+}
+.crm-prop-amenity-value {
+    font-weight: 800;
+    color: var(--ws-text);
+    font-variant-numeric: tabular-nums;
+}
+.crm-prop-amenity-row.state-yes {
+    border-color: color-mix(in srgb, #059669 22%, var(--ws-border-light));
+    background: color-mix(in srgb, #059669 6%, var(--ws-surface));
+}
+.crm-prop-amenity-row.state-no {
+    opacity: 0.78;
+}
+@media (max-width: 720px) {
+    .crm-prop-dossier-amenities { grid-template-columns: 1fr; }
+}
 .crm-prop-dossier-group--masked {
     border-style: dashed;
     border-color: color-mix(in srgb, #d97706 30%, var(--ws-border));

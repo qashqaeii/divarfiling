@@ -1221,6 +1221,21 @@ class WorkspaceSettings(models.Model):
     agency_logo = models.ImageField(
         upload_to='workspace/logos/', blank=True, null=True, verbose_name='لوگو',
     )
+    agency_address = models.TextField(blank=True, verbose_name='آدرس دفتر')
+    agency_city = models.CharField(max_length=100, blank=True, verbose_name='شهر دفتر')
+    agency_latitude = models.FloatField(null=True, blank=True, verbose_name='عرض جغرافیایی دفتر')
+    agency_longitude = models.FloatField(null=True, blank=True, verbose_name='طول جغرافیایی دفتر')
+    agency_landline = models.CharField(max_length=32, blank=True, verbose_name='تلفن ثابت')
+    agency_landline_alt = models.CharField(max_length=32, blank=True, verbose_name='تلفن ثابت دوم')
+    agency_website = models.URLField(blank=True, verbose_name='وبسایت آژانس')
+    consultant_photo = models.ImageField(
+        upload_to='workspace/consultant_photos/', blank=True, null=True,
+        verbose_name='عکس مشاور',
+    )
+    business_card_image = models.ImageField(
+        upload_to='workspace/business_cards/', blank=True, null=True,
+        verbose_name='کارت ویزیت',
+    )
     default_share_message = models.TextField(
         blank=True,
         verbose_name='متن پیش‌فرض اشتراک',
@@ -1233,7 +1248,11 @@ class WorkspaceSettings(models.Model):
     )
     social_links = models.JSONField(
         default=dict, blank=True,
-        verbose_name='لینک شبکه‌های اجتماعی',
+        verbose_name='لینک شبکه‌های اجتماعی مشاور',
+    )
+    agency_social_links = models.JSONField(
+        default=dict, blank=True,
+        verbose_name='لینک شبکه‌های اجتماعی دفتر',
     )
     crm_deal_stages = models.JSONField(
         default=list, blank=True,

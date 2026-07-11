@@ -1550,7 +1550,7 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
         )
         share.consultant_name = name
         share.consultant_phone = phone
-        apply_share_form_extras(request.user, request.POST, share)
+        apply_share_form_extras(request.user, request.POST, share, files=request.FILES)
         share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
         share.show_full_address = request.POST.get('show_full_address') in ('1', 'true', 'on')
         share.show_internal_notes = request.POST.get('show_internal_notes') in ('1', 'true', 'on')

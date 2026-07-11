@@ -362,10 +362,33 @@
         if (dock && page) page.classList.add('has-dock');
     }
 
+    function initBusinessCardLightbox() {
+        var lb = document.getElementById('psLightbox');
+        var lbImg = document.getElementById('psLightboxImg');
+        if (!lb || !lbImg) return;
+        document.querySelectorAll('[data-business-card]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var url = btn.getAttribute('data-business-card');
+                if (!url) return;
+                lbImg.src = url;
+                lbImg.alt = 'کارت ویزیت';
+                var countEl = document.getElementById('psLightboxCount');
+                if (countEl) countEl.textContent = '';
+                var prevBtn = lb.querySelector('.ps-lightbox-nav--prev');
+                var nextBtn = lb.querySelector('.ps-lightbox-nav--next');
+                if (prevBtn) prevBtn.hidden = true;
+                if (nextBtn) nextBtn.hidden = true;
+                lb.hidden = false;
+                document.body.style.overflow = 'hidden';
+            });
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initReveal();
         var galleryApi = initGallery();
         initLightbox(galleryApi);
+        initBusinessCardLightbox();
         initTabs();
         initAccordion();
         initProse();

@@ -18,7 +18,7 @@
             </div>
             <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
-        <form method="post" action="{{ form_action }}" class="mk-share-form" data-share-pro="1"{% if form_id %} id="{{ form_id }}"{% endif %}>
+        <form method="post" action="{{ form_action }}" class="mk-share-form" data-share-pro="1" enctype="multipart/form-data"{% if form_id %} id="{{ form_id }}"{% endif %}>
             {% csrf_token %}
             <input type="hidden" name="share_message_template" data-share-msg-template value="{{ sp.default_share_message|default:'' }}">
             <input type="hidden" name="welcome_message" id="{{ id_prefix }}-welcome" data-welcome-input value="{{ sp.welcome_message|default:share.welcome_message }}">
@@ -274,12 +274,17 @@
 
                 {# ── تب پروفایل ── #}
                 <div class="mk-share-pane" data-share-pane="profile" role="tabpanel" hidden>
+                    <p class="mk-share-profile-hint">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                        فقط موارد پرشده در صفحه مشتری دیده می‌شود.
+                    </p>
+
                     <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-consultant">
                         <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-consultant">
-                            <i class="fas fa-user-tie" aria-hidden="true"></i> اطلاعات تماس
+                            <i class="fas fa-user-tie" aria-hidden="true"></i> مشاور
                         </h3>
                         <p class="mk-share-msg-hint">
-                            از پروفایل شما خوانده می‌شود؛ خالی بگذارید تا همیشه از تنظیمات آژانس به‌روز شود.
+                            نام و موبایل از پروفایل خوانده می‌شود؛ خالی بگذارید تا همیشه از تنظیمات به‌روز شود.
                         </p>
                         <div class="mk-share-fields-grid">
                             <div class="mk-share-field">
@@ -289,23 +294,35 @@
                                        placeholder="نام آژانس یا مشاور">
                             </div>
                             <div class="mk-share-field">
-                                <label class="ws-label" for="{{ id_prefix }}-consultant-phone">شماره تماس</label>
+                                <label class="ws-label" for="{{ id_prefix }}-consultant-phone">موبایل مشاور</label>
                                 <input type="text" class="ws-input" id="{{ id_prefix }}-consultant-phone" name="consultant_phone"
                                        value="{{ sp.consultant_phone|default:consultant_phone|default:share.consultant_phone }}"
                                        placeholder="۰۹۱۲…" dir="ltr">
                             </div>
                         </div>
-                    </section>
-
-                    <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-social">
-                        <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-social">
-                            <i class="fas fa-share-alt" aria-hidden="true"></i> شبکه‌های اجتماعی
-                        </h3>
-                        <p class="mk-share-msg-hint">
-                            کافی است آیدی، شماره موبایل یا لینک کامل را وارد کنید — یک‌بار ذخیره می‌شود و در صفحه عمومی همه فایل‌ها نمایش داده می‌شود.
-                            می‌توانید همین‌ها را از <a href="{% url 'dashboard' %}?tab=profile" target="_blank" rel="noopener">پروفایل داشبورد</a> هم مدیریت کنید.
-                        </p>
-                        <div class="mk-share-social-grid">
+                        <div class="mk-share-upload-row">
+                            <div class="mk-share-upload-preview" data-photo-preview>
+                                {% if sp.consultant_photo_url %}
+                                <img src="{{ sp.consultant_photo_url }}" alt="" width="72" height="72">
+                                {% else %}
+                                <span class="mk-share-upload-placeholder" aria-hidden="true"><i class="fas fa-user"></i></span>
+                                {% endif %}
+                            </div>
+                            <div class="mk-share-upload-meta">
+                                <label class="ws-label" for="{{ id_prefix }}-consultant-photo">عکس مشاور</label>
+                                <input type="file" class="ws-input mk-share-file-input" id="{{ id_prefix }}-consultant-photo"
+                                       name="consultant_photo" accept="image/*" data-image-preview>
+                                <small class="mk-share-field-hint">ترجیحاً مربع و با کیفیت بالا</small>
+                                {% if sp.consultant_photo_url %}
+                                <label class="mk-share-check-row mk-share-check-row--compact">
+                                    <input type="checkbox" name="clear_consultant_photo" value="1">
+                                    <span>حذف عکس فعلی</span>
+                                </label>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mk-share-social-grid mk-share-social-grid--compact">
+                            <p class="mk-share-sublabel"><i class="fas fa-share-alt" aria-hidden="true"></i> شبکه‌های مشاور</p>
                             {% for net in sp.social_networks %}
                             <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color: {{ net.color }}">
                                 <label class="mk-share-social-label" for="{{ id_prefix }}-social-{{ net.key }}">
@@ -333,48 +350,102 @@
                                        autocomplete="off">
                             </div>
                             {% empty %}
-                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#2AABEE">
-                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-telegram">
-                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/telegram.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
-                                    <span class="mk-share-social-meta"><strong>تلگرام</strong><small>@username یا ۰۹۱۲…</small></span>
-                                </label>
-                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-telegram" name="social_telegram" placeholder="@username یا ۰۹۱۲…" dir="ltr">
+                            <p class="mk-share-msg-hint">شبکه‌های اجتماعی در دسترس نیست.</p>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="mk-share-section" aria-labelledby="{{ id_prefix }}-sec-agency">
+                        <h3 class="mk-share-section-title" id="{{ id_prefix }}-sec-agency">
+                            <i class="fas fa-building" aria-hidden="true"></i> دفتر املاک
+                        </h3>
+                        <div class="mk-share-fields-grid">
+                            <div class="mk-share-field mk-share-field--full">
+                                <label class="ws-label" for="{{ id_prefix }}-agency-address">آدرس دفتر</label>
+                                <textarea class="ws-textarea" id="{{ id_prefix }}-agency-address" name="agency_address" rows="2"
+                                          placeholder="خیابان، پلاک، واحد…">{{ sp.agency_address|default:'' }}</textarea>
                             </div>
-                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#00C2A8">
-                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-bale">
-                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/bale.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
-                                    <span class="mk-share-social-meta"><strong>بله</strong><small>آیدی یا ۰۹۱۲…</small></span>
-                                </label>
-                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-bale" name="social_bale" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
+                            <div class="mk-share-field">
+                                <label class="ws-label" for="{{ id_prefix }}-agency-city">شهر</label>
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-agency-city" name="agency_city"
+                                       value="{{ sp.agency_city|default:'' }}" placeholder="تهران">
                             </div>
-                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#6C2BD9">
-                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-rubika">
-                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/rubika.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
-                                    <span class="mk-share-social-meta"><strong>روبیکا</strong><small>آیدی یا ۰۹۱۲…</small></span>
-                                </label>
-                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-rubika" name="social_rubika" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
+                            <div class="mk-share-field">
+                                <label class="ws-label" for="{{ id_prefix }}-agency-website">وبسایت</label>
+                                <input type="url" class="ws-input" id="{{ id_prefix }}-agency-website" name="agency_website"
+                                       value="{{ sp.agency_website|default:'' }}" placeholder="https://…" dir="ltr">
                             </div>
-                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#F7941D">
-                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-eitaa">
-                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/eita.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
-                                    <span class="mk-share-social-meta"><strong>ایتا</strong><small>آیدی یا ۰۹۱۲…</small></span>
-                                </label>
-                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-eitaa" name="social_eitaa" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
+                            <div class="mk-share-field">
+                                <label class="ws-label" for="{{ id_prefix }}-agency-landline">تلفن ثابت</label>
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-agency-landline" name="agency_landline"
+                                       value="{{ sp.agency_landline|default:'' }}" placeholder="۰۲۱…" dir="ltr">
                             </div>
-                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#E1306C">
-                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-instagram">
-                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/Instagram.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
-                                    <span class="mk-share-social-meta"><strong>اینستاگرام</strong><small>@username</small></span>
-                                </label>
-                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-instagram" name="social_instagram" placeholder="@username" dir="ltr">
+                            <div class="mk-share-field">
+                                <label class="ws-label" for="{{ id_prefix }}-agency-landline-alt">تلفن ثابت دوم</label>
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-agency-landline-alt" name="agency_landline_alt"
+                                       value="{{ sp.agency_landline_alt|default:'' }}" placeholder="اختیاری" dir="ltr">
                             </div>
-                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color:#1E6BFF">
-                                <label class="mk-share-social-label" for="{{ id_prefix }}-social-soroush">
-                                    <span class="mk-share-social-badge" aria-hidden="true"><img src="{% static 'icons/sorosh.png' %}" alt="" width="28" height="28" class="mk-share-social-badge-img"></span>
-                                    <span class="mk-share-social-meta"><strong>سروش</strong><small>آیدی یا ۰۹۱۲…</small></span>
-                                </label>
-                                <input type="text" class="ws-input mk-share-social-input" id="{{ id_prefix }}-social-soroush" name="social_soroush" placeholder="آیدی یا ۰۹۱۲…" dir="ltr">
+                            <div class="mk-share-field">
+                                <label class="ws-label" for="{{ id_prefix }}-agency-lat">عرض جغرافیایی دفتر</label>
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-agency-lat" name="agency_latitude"
+                                       value="{{ sp.agency_latitude|default:'' }}" placeholder="35.6892" dir="ltr" inputmode="decimal">
                             </div>
+                            <div class="mk-share-field">
+                                <label class="ws-label" for="{{ id_prefix }}-agency-lng">طول جغرافیایی دفتر</label>
+                                <input type="text" class="ws-input" id="{{ id_prefix }}-agency-lng" name="agency_longitude"
+                                       value="{{ sp.agency_longitude|default:'' }}" placeholder="51.3890" dir="ltr" inputmode="decimal">
+                            </div>
+                        </div>
+                        <p class="mk-share-field-hint">با پر کردن مختصات، لینک‌های نشان، گوگل، ویز و بلد در صفحه مشتری نمایش داده می‌شود.</p>
+                        <div class="mk-share-upload-row">
+                            <div class="mk-share-upload-preview mk-share-upload-preview--card" data-card-preview>
+                                {% if sp.business_card_url %}
+                                <img src="{{ sp.business_card_url }}" alt="" width="120" height="72">
+                                {% else %}
+                                <span class="mk-share-upload-placeholder" aria-hidden="true"><i class="fas fa-id-card"></i></span>
+                                {% endif %}
+                            </div>
+                            <div class="mk-share-upload-meta">
+                                <label class="ws-label" for="{{ id_prefix }}-business-card">کارت ویزیت</label>
+                                <input type="file" class="ws-input mk-share-file-input" id="{{ id_prefix }}-business-card"
+                                       name="business_card_image" accept="image/*" data-image-preview>
+                                {% if sp.business_card_url %}
+                                <label class="mk-share-check-row mk-share-check-row--compact">
+                                    <input type="checkbox" name="clear_business_card_image" value="1">
+                                    <span>حذف کارت فعلی</span>
+                                </label>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mk-share-social-grid mk-share-social-grid--compact">
+                            <p class="mk-share-sublabel"><i class="fas fa-building" aria-hidden="true"></i> شبکه‌های دفتر</p>
+                            {% for net in sp.agency_social_networks %}
+                            <div class="mk-share-social-field mk-share-social-field--brand" style="--mk-social-color: {{ net.color }}">
+                                <label class="mk-share-social-label" for="{{ id_prefix }}-agency-social-{{ net.key }}">
+                                    <span class="mk-share-social-badge" aria-hidden="true">
+                                        {% if net.icon_file %}
+                                        <img src="{% static net.icon_file %}?v=2" alt="" width="28" height="28" class="mk-share-social-badge-img">
+                                        {% else %}
+                                        <i class="{{ net.icon }}"></i>
+                                        {% endif %}
+                                    </span>
+                                    <span class="mk-share-social-meta">
+                                        <strong>{{ net.label }}</strong>
+                                        <small>{{ net.placeholder }}</small>
+                                    </span>
+                                </label>
+                                <input type="text"
+                                       class="ws-input mk-share-social-input"
+                                       id="{{ id_prefix }}-agency-social-{{ net.key }}"
+                                       name="agency_social_{{ net.key }}"
+                                       value="{{ net.url }}"
+                                       placeholder="{{ net.placeholder }}"
+                                       dir="ltr"
+                                       inputmode="text"
+                                       autocomplete="off">
+                            </div>
+                            {% empty %}
+                            <p class="mk-share-msg-hint">شبکه‌های دفتر در دسترس نیست.</p>
                             {% endfor %}
                         </div>
                     </section>

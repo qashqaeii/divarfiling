@@ -209,3 +209,112 @@ class ShareDefaultsAndSocialTests(TestCase):
         self.assertContains(resp, 'data-send-mode="telegram"')
         self.assertContains(resp, 'data-send-mode="copy_open"')
         self.assertContains(resp, 'data-send-key="bale"')
+
+    def test_build_map_navigation_includes_balad(self):
+        from workspace.services.public_share_common import build_map_navigation
+        nav = build_map_navigation(35.7, 51.4)
+        self.assertIsNotNone(nav)
+        self.assertIn('balad.ir/directions', nav['balad_url'])
+        self.assertIn('35.7,51.4', nav['balad_url'])
+        self.assertIn('google.com/maps', nav['google_url'])
+        self.assertIn('neshan.org', nav['neshan_url'])
+        self.assertIn('waze.com', nav['waze_url'])
+        self.assertIsNone(build_map_navigation(None, 51.4))
+        self.assertIsNone(build_map_navigation(0, 0))
+
+    def test_consultant_block_agency_profile_conditional(self):
+        from workspace.services.public_share_common import build_consultant_block
+        ws = get_or_create_settings(self.user)
+        ws.agency_name = 'آژانس نگین'
+        ws.agency_address = 'ولیعصر، پلاک ۱'
+        ws.agency_city = 'تهران'
+        ws.agency_landline = '02188776655'
+        ws.agency_website = 'https://negin.example'
+        ws.agency_latitude = 35.7
+        ws.agency_longitude = 51.4
+        ws.social_links = {'telegram': 'person_tg'}
+        ws.agency_social_links = {'instagram': 'office_ig'}
+        ws.save()
+        share = get_or_create_listing_share(self.user, self.listing)
+        block = build_consultant_block(self.user, share, title=self.listing.title)
+        self.assertTrue(block['has_agency_address'])
+        self.assertTrue(block['has_agency_landlines'])
+        self.assertTrue(block['has_agency_website'])
+        self.assertTrue(block['has_office_navigation'])
+        self.assertIn('balad.ir', block['agency']['map_navigation']['balad_url'])
+        self.assertTrue(block['has_consultant_socials'])
+        self.assertTrue(block['has_agency_socials'])
+        self.assertEqual(block['consultant_social_networks'][0]['key'], 'telegram')
+        self.assertEqual(block['agency_social_networks'][0]['key'], 'instagram')
+        # بدون مختصات، مسیریابی دفتر نباشد
+        ws.agency_latitude = None
+        ws.agency_longitude = None
+        ws.agency_address = ''
+        ws.agency_city = ''
+        ws.agency_landline = ''
+        ws.agency_website = ''
+        ws.agency_social_links = {}
+        ws.save()
+        block2 = build_consultant_block(self.user, share, title=self.listing.title)
+        self.assertFalse(block2['has_agency_address'])
+        self.assertFalse(block2['has_agency_landlines'])
+        self.assertFalse(block2['has_agency_website'])
+        self.assertFalse(block2['has_office_navigation'])
+        self.assertFalse(block2['has_agency_socials'])
+        self.assertTrue(block2['has_consultant_socials'])
+
+    def test_share_profile_context_has_agency_fields(self):
+        ws = get_or_create_settings(self.user)
+        ws.agency_address = 'سعادت‌آباد'
+        ws.agency_landline = '02111112222'
+        ws.agency_social_links = {'telegram': 'office_tg'}
+        ws.save()
+        share = get_or_create_listing_share(self.user, self.listing)
+        profile = share_profile_context(self.user, share, title='x', share_url='https://ex.com/p/1/')
+        self.assertEqual(profile['agency_address'], 'سعادت‌آباد')
+        self.assertEqual(profile['agency_landline'], '02111112222')
+        self.assertTrue(any(n['key'] == 'telegram' for n in profile['agency_social_networks']))
+        self.assertIn('agency_social_networks', profile)
+
+    @patch('workspace.mixins.has_active_bot_license', return_value=True)
+    def test_share_manage_saves_agency_profile(self, _mock):
+        self.client.login(username='09129876543', password='testpass123')
+        url = reverse(
+            'workspace:listing_share',
+            kwargs={'dataset_id': self.dataset.pk, 'listing_id': self.listing.pk},
+        )
+        resp = self.client.post(url, {
+            'consultant_name': '',
+            'consultant_phone': '',
+            'agency_address': 'جردن، پلاک ۱۰',
+            'agency_city': 'تهران',
+            'agency_landline': '02199887766',
+            'agency_website': 'negin.ir',
+            'agency_latitude': '35.75',
+            'agency_longitude': '51.42',
+            'social_telegram': '@person',
+            'agency_social_instagram': '@officebrand',
+            'is_active': '1',
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()['ok'])
+        ws = get_or_create_settings(self.user)
+        self.assertEqual(ws.agency_address, 'جردن، پلاک ۱۰')
+        self.assertEqual(ws.agency_city, 'تهران')
+        self.assertEqual(ws.agency_landline, '02199887766')
+        self.assertEqual(ws.agency_website, 'https://negin.ir')
+        self.assertAlmostEqual(ws.agency_latitude, 35.75)
+        self.assertAlmostEqual(ws.agency_longitude, 51.42)
+        self.assertEqual(ws.social_links.get('telegram'), 'person')
+        self.assertEqual(ws.agency_social_links.get('instagram'), 'officebrand')
+        share = ListingPublicShare.objects.get(listing=self.listing, created_by=self.user, is_active=True)
+        ctx = build_public_listing_context(share)
+        self.assertContains(
+            self.client.get(reverse('listing_public:view', kwargs={'share_token': share.share_token})),
+            'مسیریابی به دفتر',
+        )
+        self.assertTrue(ctx['consultant']['has_office_navigation'])
+        self.assertContains(
+            self.client.get(reverse('listing_public:view', kwargs={'share_token': share.share_token})),
+            'balad.ir/directions',
+        )

@@ -434,12 +434,76 @@ def normalize_social_links(raw) -> Dict[str, str]:
     return out
 
 
-def social_links_from_post(post) -> Dict[str, str]:
+def social_links_from_post(post, *, prefix: str = 'social_') -> Dict[str, str]:
+    """خواندن سوشال از POST؛ prefix پیش‌فرض social_ و برای دفتر agency_social_."""
     raw = {}
     for defn in SOCIAL_NETWORK_DEFS:
         key = defn['key']
-        raw[key] = post.get(f'social_{key}') or post.get(key) or ''
+        raw[key] = post.get(f'{prefix}{key}') or (post.get(key) if prefix == 'social_' else '') or ''
     return normalize_social_links(raw)
+
+
+def agency_social_links_from_post(post) -> Dict[str, str]:
+    return social_links_from_post(post, prefix='agency_social_')
+
+
+def _social_networks_form_list(links: Optional[dict]) -> List[Dict[str, str]]:
+    socials = normalize_social_links(links or {})
+    return [
+        {
+            'key': defn['key'],
+            'label': defn['label'],
+            'icon': defn['icon'],
+            'icon_file': defn.get('icon_file', ''),
+            'color': defn['color'],
+            'placeholder': defn['placeholder'],
+            'url': socials.get(defn['key'], ''),
+        }
+        for defn in SOCIAL_NETWORK_DEFS
+    ]
+
+
+def normalize_agency_website(raw: str) -> str:
+    url = (raw or '').strip()
+    if not url:
+        return ''
+    if not re.match(r'^https?://', url, re.I):
+        if re.match(r'^[a-z0-9.-]+\.[a-z]{2,}(/|$)', url, re.I):
+            url = 'https://' + url.lstrip('/')
+        else:
+            return ''
+    parsed = urlparse(url)
+    if parsed.scheme.lower() not in ('http', 'https') or not parsed.netloc:
+        return ''
+    return url[:500]
+
+
+def parse_optional_float(raw) -> Optional[float]:
+    text = str(raw or '').strip().replace(',', '.')
+    if not text:
+        return None
+    try:
+        val = float(text)
+    except (TypeError, ValueError):
+        return None
+    return val
+
+
+def landline_tel_url(phone: str) -> str:
+    tel = (phone or '').strip()
+    if not tel:
+        return ''
+    digits = ''.join(c for c in tel if c.isdigit() or c == '+')
+    return f'tel:{digits or tel}'
+
+
+def _media_url_or_none(field) -> Optional[str]:
+    if not field:
+        return None
+    try:
+        return field.url
+    except (ValueError, AttributeError):
+        return None
 
 
 def social_networks_for_display(links: Optional[dict]) -> List[Dict[str, str]]:
@@ -539,9 +603,11 @@ def save_share_profile_defaults(
     default_share_message: Optional[str] = None,
     default_welcome_message: Optional[str] = None,
     social_links: Optional[dict] = None,
+    agency_social_links: Optional[dict] = None,
     save_share_message: bool = False,
     save_welcome: bool = False,
     save_socials: bool = False,
+    save_agency_socials: bool = False,
 ) -> WorkspaceSettings:
     """ذخیره پیش‌فرض‌های اشتراک در تنظیمات کاربر."""
     ws = get_or_create_settings(user)
@@ -557,17 +623,77 @@ def save_share_profile_defaults(
     if save_socials and social_links is not None:
         ws.social_links = normalize_social_links(social_links)
         changed = True
+    if save_agency_socials and agency_social_links is not None:
+        ws.agency_social_links = normalize_social_links(agency_social_links)
+        changed = True
     if changed:
         ws.save()
     return ws
 
 
-def apply_share_form_extras(user, post, share) -> Dict[str, Any]:
+def apply_agency_profile_fields(ws: WorkspaceSettings, post, files=None) -> list[str]:
+    """اعمال فیلدهای پروفایل دفتر/مشاور روی WorkspaceSettings؛ لیست فیلدهای تغییر‌یافته."""
+    changed: list[str] = []
+
+    def _set_char(attr: str, value: str, *, maxlen: int):
+        cleaned = (value or '').strip()[:maxlen]
+        if getattr(ws, attr) != cleaned:
+            setattr(ws, attr, cleaned)
+            changed.append(attr)
+
+    _set_char('agency_address', post.get('agency_address') or '', maxlen=2000)
+    _set_char('agency_city', post.get('agency_city') or '', maxlen=100)
+    _set_char('agency_landline', post.get('agency_landline') or '', maxlen=32)
+    _set_char('agency_landline_alt', post.get('agency_landline_alt') or '', maxlen=32)
+
+    website = normalize_agency_website(post.get('agency_website') or '')
+    if ws.agency_website != website:
+        ws.agency_website = website
+        changed.append('agency_website')
+
+    lat = parse_optional_float(post.get('agency_latitude'))
+    lng = parse_optional_float(post.get('agency_longitude'))
+    if lat is not None and not (-90 <= lat <= 90):
+        lat = None
+    if lng is not None and not (-180 <= lng <= 180):
+        lng = None
+    if ws.agency_latitude != lat:
+        ws.agency_latitude = lat
+        changed.append('agency_latitude')
+    if ws.agency_longitude != lng:
+        ws.agency_longitude = lng
+        changed.append('agency_longitude')
+
+    files = files or {}
+    photo = files.get('consultant_photo') if hasattr(files, 'get') else None
+    card = files.get('business_card_image') if hasattr(files, 'get') else None
+    if photo:
+        ws.consultant_photo = photo
+        changed.append('consultant_photo')
+    if card:
+        ws.business_card_image = card
+        changed.append('business_card_image')
+    if post.get('clear_consultant_photo') in ('1', 'true', 'on'):
+        if ws.consultant_photo:
+            ws.consultant_photo.delete(save=False)
+            ws.consultant_photo = None
+            changed.append('consultant_photo')
+    if post.get('clear_business_card_image') in ('1', 'true', 'on'):
+        if ws.business_card_image:
+            ws.business_card_image.delete(save=False)
+            ws.business_card_image = None
+            changed.append('business_card_image')
+
+    return changed
+
+
+def apply_share_form_extras(user, post, share, files=None) -> Dict[str, Any]:
     """
     پردازش فیلدهای اضافی مودال اشتراک:
     - پیام خوش‌آمد (فایل / پیش‌فرض)
     - متن اشتراک پیش‌فرض
-    - لینک شبکه‌های اجتماعی
+    - لینک شبکه‌های اجتماعی مشاور و دفتر
+    - پروفایل دفتر (آدرس، تلفن، مختصات، تصاویر)
     """
     welcome_raw = post.get('welcome_message') or ''
     save_as_default_welcome = post.get('save_as_default_welcome') in ('1', 'true', 'on')
@@ -575,15 +701,38 @@ def apply_share_form_extras(user, post, share) -> Dict[str, Any]:
     clear_custom_welcome = post.get('use_default_welcome') in ('1', 'true', 'on')
 
     socials = social_links_from_post(post)
+    has_agency_social_fields = any(
+        f'agency_social_{defn["key"]}' in post for defn in SOCIAL_NETWORK_DEFS
+    )
+    agency_socials = agency_social_links_from_post(post) if has_agency_social_fields else None
     save_share_profile_defaults(
         user,
         social_links=socials,
+        agency_social_links=agency_socials,
         save_socials=True,
+        save_agency_socials=has_agency_social_fields,
         default_welcome_message=welcome_raw if save_as_default_welcome else None,
         save_welcome=save_as_default_welcome,
         default_share_message=post.get('share_message_template') if save_as_default_message else None,
         save_share_message=save_as_default_message,
     )
+
+    profile_field_keys = (
+        'agency_address', 'agency_city', 'agency_landline', 'agency_landline_alt',
+        'agency_website', 'agency_latitude', 'agency_longitude',
+        'clear_consultant_photo', 'clear_business_card_image',
+    )
+    has_profile_fields = any(k in post for k in profile_field_keys)
+    has_profile_files = bool(
+        files and hasattr(files, 'get') and (
+            files.get('consultant_photo') or files.get('business_card_image')
+        )
+    )
+    if has_profile_fields or has_profile_files:
+        ws = get_or_create_settings(user)
+        profile_changed = apply_agency_profile_fields(ws, post, files)
+        if profile_changed:
+            ws.save(update_fields=[*profile_changed, 'updated_at'])
 
     if clear_custom_welcome or save_as_default_welcome:
         # با ذخیره پیش‌فرض، این فایل هم از همان پیش‌فرض پیروی کند
@@ -599,6 +748,7 @@ def apply_share_form_extras(user, post, share) -> Dict[str, Any]:
 
     return {
         'social_links': socials,
+        'agency_social_links': agency_socials or {},
         'welcome_resolved': resolve_welcome_message(user, share),
     }
 
@@ -611,18 +761,11 @@ def share_profile_context(user, share, *, title: str = '', share_url: str = '') 
     msg_tpl = get_share_message_template(user)
     rendered_msg = render_share_message(msg_tpl, title=title, url=share_url)
     socials = normalize_social_links(ws.social_links or {})
-    networks = [
-        {
-            'key': defn['key'],
-            'label': defn['label'],
-            'icon': defn['icon'],
-            'icon_file': defn.get('icon_file', ''),
-            'color': defn['color'],
-            'placeholder': defn['placeholder'],
-            'url': socials.get(defn['key'], ''),
-        }
-        for defn in SOCIAL_NETWORK_DEFS
-    ]
+    agency_socials = normalize_social_links(ws.agency_social_links or {})
+    networks = _social_networks_form_list(socials)
+    agency_networks = _social_networks_form_list(agency_socials)
+    photo_url = _media_url_or_none(ws.consultant_photo)
+    card_url = _media_url_or_none(ws.business_card_image)
     return {
         **form_vals,
         'welcome_message': welcome['welcome_message'],
@@ -634,9 +777,22 @@ def share_profile_context(user, share, *, title: str = '', share_url: str = '') 
         'social_links': socials,
         'social_networks': networks,
         'social_networks_active': social_networks_for_display(socials),
+        'agency_social_links': agency_socials,
+        'agency_social_networks': agency_networks,
+        'agency_social_networks_active': social_networks_for_display(agency_socials),
         'share_send_channels': build_share_send_channels(socials),
         'whatsapp_icon_file': WHATSAPP_ICON_FILE,
         'telegram_icon_file': _SOCIAL_BY_KEY['telegram']['icon_file'],
+        'agency_address': (ws.agency_address or '').strip(),
+        'agency_city': (ws.agency_city or '').strip(),
+        'agency_landline': (ws.agency_landline or '').strip(),
+        'agency_landline_alt': (ws.agency_landline_alt or '').strip(),
+        'agency_website': (ws.agency_website or '').strip(),
+        'agency_latitude': ws.agency_latitude if ws.agency_latitude is not None else '',
+        'agency_longitude': ws.agency_longitude if ws.agency_longitude is not None else '',
+        'consultant_photo_url': photo_url,
+        'business_card_url': card_url,
+        'agency_name_profile': (ws.agency_name or '').strip(),
     }
 
 
@@ -767,6 +923,54 @@ def build_map_navigation(latitude, longitude) -> Dict[str, Any] | None:
         'google_url': f'https://www.google.com/maps/dir/?api=1&destination={dest}',
         'neshan_url': f'https://neshan.org/maps/routing/car/destination/{lat},{lng}',
         'waze_url': f'https://waze.com/ul?ll={lat},{lng}&navigate=yes',
+        'balad_url': f'https://balad.ir/directions?destination={dest}',
+    }
+
+
+def build_agency_office_block(ws: WorkspaceSettings) -> Dict[str, Any]:
+    """بلوک اطلاعات دفتر املاک برای کارت مشاور صفحه عمومی."""
+    address = (ws.agency_address or '').strip()
+    city = (ws.agency_city or '').strip()
+    landline = (ws.agency_landline or '').strip()
+    landline_alt = (ws.agency_landline_alt or '').strip()
+    website = (ws.agency_website or '').strip()
+    agency_socials = normalize_social_links(ws.agency_social_links or {})
+    agency_social_items = social_networks_for_display(agency_socials)
+    map_nav = build_map_navigation(ws.agency_latitude, ws.agency_longitude)
+    landlines = []
+    if landline:
+        landlines.append({
+            'label': landline,
+            'display': landline,
+            'tel_url': landline_tel_url(landline),
+        })
+    if landline_alt:
+        landlines.append({
+            'label': landline_alt,
+            'display': landline_alt,
+            'tel_url': landline_tel_url(landline_alt),
+        })
+    address_line = address
+    if city and city not in address:
+        address_line = f'{address}، {city}'.strip('، ') if address else city
+    return {
+        'address': address,
+        'city': city,
+        'address_line': address_line,
+        'has_address': bool(address_line),
+        'landline': landline,
+        'landline_alt': landline_alt,
+        'landlines': landlines,
+        'has_landlines': bool(landlines),
+        'website': website,
+        'has_website': bool(website),
+        'latitude': ws.agency_latitude,
+        'longitude': ws.agency_longitude,
+        'map_navigation': map_nav,
+        'has_map_navigation': bool(map_nav),
+        'social_links': agency_socials,
+        'social_networks': agency_social_items,
+        'has_socials': bool(agency_social_items),
     }
 
 
@@ -1043,6 +1247,12 @@ def build_consultant_block(user, share, *, title: str = 'ملک') -> Dict[str, A
     welcome = resolve_welcome_message(user, share)
     socials = normalize_social_links(ws.social_links or {})
     social_items = social_networks_for_display(socials)
+    office = build_agency_office_block(ws)
+    photo = ws.consultant_photo if ws.consultant_photo else None
+    photo_url = _media_url_or_none(photo) or _media_url_or_none(ws.agency_logo)
+    card_url = _media_url_or_none(ws.business_card_image)
+    has_consultant_socials = bool(social_items)
+    has_agency_socials = office['has_socials']
     return {
         'name': display['display_name'],
         'brand_name': display['brand_name'],
@@ -1053,16 +1263,30 @@ def build_consultant_block(user, share, *, title: str = 'ملک') -> Dict[str, A
         'has_phone': bool(phone),
         'agency_name': display['agency_name'] or display['brand_name'],
         'agency_logo': ws.agency_logo,
+        'photo': photo or ws.agency_logo,
+        'photo_url': photo_url,
+        'has_photo': bool(photo_url),
+        'business_card_url': card_url,
+        'has_business_card': bool(card_url),
         'welcome_message': welcome['welcome_plain'] or welcome_html_to_plain(welcome['welcome_message']),
         'welcome_message_html': welcome['welcome_message_html'],
         'has_welcome': bool(welcome['welcome_message']),
         'social_links': socials,
         'social_networks': social_items,
-        'has_socials': bool(social_items),
+        'has_socials': has_consultant_socials or has_agency_socials,
+        'consultant_social_networks': social_items,
+        'has_consultant_socials': has_consultant_socials,
+        'agency_social_networks': office['social_networks'],
+        'has_agency_socials': has_agency_socials,
+        'agency': office,
+        'has_agency_address': office['has_address'],
+        'has_agency_landlines': office['has_landlines'],
+        'has_agency_website': office['has_website'],
+        'has_office_navigation': office['has_map_navigation'],
         'whatsapp_icon_file': WHATSAPP_ICON_FILE,
         'telegram_icon_file': _SOCIAL_BY_KEY['telegram']['icon_file'],
         'active_files_count': active_count,
-        'is_verified': bool(ws.agency_name and ws.agency_logo),
+        'is_verified': bool(ws.agency_name and (ws.agency_logo or ws.consultant_photo)),
         **consultant_contact_urls(phone, wa_message),
     }
 

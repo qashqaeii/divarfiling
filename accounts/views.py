@@ -241,25 +241,52 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )
             ws = get_or_create_settings(user)
             socials = ws.social_links if isinstance(ws.social_links, dict) else {}
-            social_networks = [
-                {
-                    'key': defn['key'],
-                    'label': defn['label'],
-                    'icon_file': defn.get('icon_file', ''),
-                    'color': defn['color'],
-                    'placeholder': defn['placeholder'],
-                    'url': (socials.get(defn['key']) or '').strip(),
-                }
-                for defn in SOCIAL_NETWORK_DEFS
-            ]
+            agency_socials = ws.agency_social_links if isinstance(ws.agency_social_links, dict) else {}
+
+            def _networks_form(src):
+                return [
+                    {
+                        'key': defn['key'],
+                        'label': defn['label'],
+                        'icon_file': defn.get('icon_file', ''),
+                        'color': defn['color'],
+                        'placeholder': defn['placeholder'],
+                        'url': (src.get(defn['key']) or '').strip(),
+                    }
+                    for defn in SOCIAL_NETWORK_DEFS
+                ]
+
             welcome_raw = (ws.default_welcome_message or '').strip()
+            photo_url = ''
+            card_url = ''
+            try:
+                if ws.consultant_photo:
+                    photo_url = ws.consultant_photo.url
+            except (ValueError, AttributeError):
+                pass
+            try:
+                if ws.business_card_image:
+                    card_url = ws.business_card_image.url
+            except (ValueError, AttributeError):
+                pass
             context.update({
                 'ws_settings': ws,
                 'consultant_agency_name': (ws.agency_name or '').strip(),
                 'consultant_welcome_default': welcome_raw,
                 'consultant_welcome_plain': welcome_html_to_plain(welcome_raw),
-                'consultant_social_networks': social_networks,
+                'consultant_social_networks': _networks_form(socials),
                 'consultant_socials_active': social_networks_for_display(socials),
+                'agency_social_networks': _networks_form(agency_socials),
+                'agency_socials_active': social_networks_for_display(agency_socials),
+                'consultant_agency_address': (ws.agency_address or '').strip(),
+                'consultant_agency_city': (ws.agency_city or '').strip(),
+                'consultant_agency_landline': (ws.agency_landline or '').strip(),
+                'consultant_agency_landline_alt': (ws.agency_landline_alt or '').strip(),
+                'consultant_agency_website': (ws.agency_website or '').strip(),
+                'consultant_agency_latitude': ws.agency_latitude if ws.agency_latitude is not None else '',
+                'consultant_agency_longitude': ws.agency_longitude if ws.agency_longitude is not None else '',
+                'consultant_photo_url': photo_url,
+                'consultant_business_card_url': card_url,
             })
         except Exception:
             context.update({
@@ -269,6 +296,17 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 'consultant_welcome_plain': '',
                 'consultant_social_networks': [],
                 'consultant_socials_active': [],
+                'agency_social_networks': [],
+                'agency_socials_active': [],
+                'consultant_agency_address': '',
+                'consultant_agency_city': '',
+                'consultant_agency_landline': '',
+                'consultant_agency_landline_alt': '',
+                'consultant_agency_website': '',
+                'consultant_agency_latitude': '',
+                'consultant_agency_longitude': '',
+                'consultant_photo_url': '',
+                'consultant_business_card_url': '',
             })
         return context
 
@@ -385,6 +423,8 @@ class UpdateConsultantProfileView(LoginRequiredMixin, View):
         try:
             from workspace.mixins import get_or_create_settings
             from workspace.services.public_share_common import (
+                agency_social_links_from_post,
+                apply_agency_profile_fields,
                 save_share_profile_defaults,
                 sanitize_welcome_html,
                 social_links_from_post,
@@ -396,20 +436,33 @@ class UpdateConsultantProfileView(LoginRequiredMixin, View):
             welcome_raw = request.POST.get('default_welcome_message') or ''
             welcome_clean = sanitize_welcome_html(welcome_raw)[:8000]
             socials = social_links_from_post(request.POST)
+            agency_socials = agency_social_links_from_post(request.POST)
 
             ws = get_or_create_settings(request.user)
             ws.agency_name = agency_name
-            ws.save(update_fields=['agency_name', 'updated_at'])
+            profile_changed = apply_agency_profile_fields(ws, request.POST, request.FILES)
+            update_fields = ['agency_name', 'updated_at', *profile_changed]
+            # حذف تکراری‌ها با حفظ ترتیب
+            seen = set()
+            unique_fields = []
+            for f in update_fields:
+                if f not in seen:
+                    seen.add(f)
+                    unique_fields.append(f)
+            ws.save(update_fields=unique_fields)
 
             save_share_profile_defaults(
                 request.user,
                 default_welcome_message=welcome_clean,
                 social_links=socials,
+                agency_social_links=agency_socials,
                 save_welcome=True,
                 save_socials=True,
+                save_agency_socials=True,
             )
             ws.refresh_from_db()
             active = social_networks_for_display(ws.social_links or {})
+            agency_active = social_networks_for_display(ws.agency_social_links or {})
             return JsonResponse({
                 'success': True,
                 'message': 'پروفایل عمومی مشاور ذخیره شد. در مودال اشتراک و لینک عمومی نمایش داده می‌شود.',
@@ -417,6 +470,7 @@ class UpdateConsultantProfileView(LoginRequiredMixin, View):
                     'agency_name': ws.agency_name or '',
                     'welcome_plain': welcome_html_to_plain(ws.default_welcome_message or ''),
                     'social_count': len(active),
+                    'agency_social_count': len(agency_active),
                     'socials': [
                         {'key': s['key'], 'label': s['label'], 'url': s['url']}
                         for s in active

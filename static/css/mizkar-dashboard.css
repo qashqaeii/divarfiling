@@ -3002,6 +3002,54 @@ html.mk-public:not([data-theme="light"]) .mk-dashboard-page .dash-profile-card {
     color: #0f766e;
 }
 
+.mk-dashboard-page .dash-consultant-block {
+    margin: 1.1rem 0;
+    padding: 1rem;
+    border: 1px solid var(--mk-border, #e2e8f0);
+    border-radius: 14px;
+    background: var(--mk-surface-2, #f8fafc);
+}
+.mk-dashboard-page .dash-consultant-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+}
+.mk-dashboard-page .dash-consultant-photo-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #e2e8f0;
+    display: grid;
+    place-items: center;
+}
+.mk-dashboard-page .dash-consultant-photo-preview--card {
+    width: 120px;
+    height: 72px;
+    border-radius: 10px;
+}
+.mk-dashboard-page .dash-consultant-photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.mk-dashboard-page .dash-upload-placeholder {
+    color: #94a3b8;
+    font-size: 1.4rem;
+}
+.mk-dashboard-page .dash-clear-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--mk-text-muted);
+    cursor: pointer;
+}
+
 /* Affiliate refinements */
 .mk-dashboard-page .affiliate-modern-link-input-group {
     min-width: 0;

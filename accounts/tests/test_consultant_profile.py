@@ -71,3 +71,36 @@ class ConsultantProfileDashboardTests(TestCase):
         active_keys = [n['key'] for n in profile['social_networks_active']]
         self.assertIn('telegram', active_keys)
         self.assertIn('bale', active_keys)
+
+    def test_update_consultant_profile_saves_agency_fields(self):
+        url = reverse('update_consultant_profile')
+        resp = self.client.post(url, {
+            'agency_name': 'دفتر آسمان',
+            'default_welcome_message': 'سلام',
+            'agency_address': 'ونک',
+            'agency_city': 'تهران',
+            'agency_landline': '02122223333',
+            'agency_website': 'https://aseman.example',
+            'agency_latitude': '35.76',
+            'agency_longitude': '51.41',
+            'social_telegram': '@me',
+            'agency_social_bale': '09120001122',
+        })
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()['success'])
+        ws = get_or_create_settings(self.user)
+        self.assertEqual(ws.agency_address, 'ونک')
+        self.assertEqual(ws.agency_landline, '02122223333')
+        self.assertEqual(ws.agency_website, 'https://aseman.example')
+        self.assertAlmostEqual(ws.agency_latitude, 35.76)
+        self.assertEqual(ws.social_links.get('telegram'), 'me')
+        self.assertEqual(ws.agency_social_links.get('bale'), '09120001122')
+
+    def test_dashboard_shows_agency_profile_fields(self):
+        resp = self.client.get(reverse('dashboard'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'agency_address')
+        self.assertContains(resp, 'agency_social_telegram')
+        self.assertContains(resp, 'consultant_photo')
+        self.assertContains(resp, 'business_card_image')
+        self.assertContains(resp, 'دفتر املاک')

@@ -1113,7 +1113,7 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         )
         share.consultant_name = name
         share.consultant_phone = phone
-        apply_share_form_extras(request.user, request.POST, share)
+        apply_share_form_extras(request.user, request.POST, share, files=request.FILES)
         share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
         share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')
         share.save()

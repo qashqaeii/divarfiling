@@ -656,6 +656,7 @@ function initPublicShareForms() {
         form.dataset.shareAjaxBound = '1';
         initShareModalTabs(form);
         initWelcomeRichEditors(form);
+        initShareProfileImagePreviews(form);
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             prepareShareFormSubmit(form);
@@ -695,6 +696,34 @@ function initPublicShareForms() {
             } finally {
                 if (submitBtn) submitBtn.disabled = false;
             }
+        });
+    });
+}
+
+function initShareProfileImagePreviews(form) {
+    form.querySelectorAll('input[type="file"][data-image-preview]').forEach((input) => {
+        if (input.dataset.previewBound === '1') return;
+        input.dataset.previewBound = '1';
+        input.addEventListener('change', () => {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            const row = input.closest('.mk-share-upload-row');
+            const preview = row && row.querySelector('[data-photo-preview], [data-card-preview], .mk-share-upload-preview');
+            if (!preview) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                let img = preview.querySelector('img');
+                if (!img) {
+                    preview.innerHTML = '';
+                    img = document.createElement('img');
+                    img.width = 72;
+                    img.height = 72;
+                    img.alt = '';
+                    preview.appendChild(img);
+                }
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
         });
     });
 }

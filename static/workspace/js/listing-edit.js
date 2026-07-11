@@ -65,6 +65,12 @@
 
         this.images = [];
         this.featureFields = [];
+        this.editScroll = null;
+        this.navBtns = [];
+        this.navSections = [];
+        this._navJumping = false;
+        this._navJumpTimer = null;
+        this._navScrollTimer = null;
 
         this.fields = {
             title: qs('#editTitle'),
@@ -127,17 +133,96 @@
     };
 
     ListingEditController.prototype._bindNav = function () {
-        qsa('[data-edit-jump]').forEach(function (btn) {
+        var self = this;
+        this.editScroll = qs('[data-edit-scroll]', this.editForm);
+        this.navBtns = qsa('[data-edit-jump]', this.editModal || document);
+        this._refreshNavSections();
+
+        this.navBtns.forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var id = btn.getAttribute('data-edit-jump');
-                var target = id ? document.getElementById(id) : null;
-                if (!target) return;
-                qsa('.mk-edit-nav-btn').forEach(function (b) {
-                    b.classList.toggle('is-active', b === btn);
-                });
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                self._setActiveNav(btn);
+                self._scrollToSection(id);
             });
         });
+
+        if (this.editScroll) {
+            this.editScroll.addEventListener('scroll', function () {
+                self._onEditScroll();
+            }, { passive: true });
+        }
+    };
+
+    ListingEditController.prototype._refreshNavSections = function () {
+        this.navSections = this.editScroll
+            ? qsa('.mk-edit-section', this.editScroll)
+            : [];
+    };
+
+    ListingEditController.prototype._setActiveNav = function (activeBtn) {
+        this.navBtns.forEach(function (b) {
+            b.classList.toggle('is-active', b === activeBtn);
+        });
+    };
+
+    ListingEditController.prototype._setActiveNavById = function (sectionId) {
+        if (!sectionId) return;
+        this.navBtns.forEach(function (b) {
+            b.classList.toggle('is-active', b.getAttribute('data-edit-jump') === sectionId);
+        });
+    };
+
+    ListingEditController.prototype._sectionScrollTop = function (target) {
+        var root = this.editScroll;
+        if (!root || !target) return 0;
+        return target.getBoundingClientRect().top - root.getBoundingClientRect().top + root.scrollTop;
+    };
+
+    ListingEditController.prototype._scrollToSection = function (sectionId) {
+        var target = sectionId ? document.getElementById(sectionId) : null;
+        var root = this.editScroll;
+        if (!target || !root) return;
+
+        this._navJumping = true;
+        clearTimeout(this._navJumpTimer);
+        root.scrollTo({
+            top: Math.max(0, this._sectionScrollTop(target) - 4),
+            behavior: 'smooth',
+        });
+        this._navJumpTimer = window.setTimeout(function () {
+            this._navJumping = false;
+            this._syncActiveNavFromScroll();
+        }.bind(this), 450);
+    };
+
+    ListingEditController.prototype._syncActiveNavFromScroll = function () {
+        var root = this.editScroll;
+        if (!root || !this.navSections.length) return;
+
+        var marker = root.scrollTop + 12;
+        var activeId = this.navSections[0].id;
+
+        this.navSections.forEach(function (section) {
+            if (this._sectionScrollTop(section) <= marker) {
+                activeId = section.id;
+            }
+        }.bind(this));
+
+        this._setActiveNavById(activeId);
+    };
+
+    ListingEditController.prototype._onEditScroll = function () {
+        if (this._navJumping) return;
+        clearTimeout(this._navScrollTimer);
+        this._navScrollTimer = window.setTimeout(function () {
+            this._syncActiveNavFromScroll();
+        }.bind(this), 60);
+    };
+
+    ListingEditController.prototype._resetNavState = function () {
+        this._refreshNavSections();
+        if (this.editScroll) this.editScroll.scrollTop = 0;
+        this._setActiveNavById('sec-main');
     };
 
     ListingEditController.prototype._bindImages = function () {
@@ -296,6 +381,7 @@
 
         this.featureGroupsEl.innerHTML = html;
         this.syncFeaturesJson();
+        this._refreshNavSections();
 
         var self = this;
         qsa('[data-feat-key]', this.featureGroupsEl).forEach(function (el) {
@@ -383,6 +469,8 @@
             this.editModal.classList.add('is-open');
             document.body.classList.add('ws-modal-open');
         }
+        this._refreshNavSections();
+        this._resetNavState();
         if (this.fields.title) this.fields.title.focus();
         return true;
     };

@@ -867,6 +867,26 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     max-height: min(92vh, 960px);
 }
 
+.mk-edit-modal-panel .mk-edit-form.ws-modal-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 !important;
+    gap: 0;
+}
+
+.mk-edit-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 1.25rem;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
 .mk-edit-modal-head-main {
     min-width: 0;
     flex: 1;
@@ -905,16 +925,17 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 0;
-    position: sticky;
-    top: 0;
-    z-index: 3;
-    margin: 0 0 1rem;
-    padding: 0.28rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 4;
+    margin: 0;
+    padding: 0.35rem 1.25rem;
     overflow: visible;
-    border: 1px solid var(--mk-modal-border);
-    border-radius: 12px;
-    background: var(--ws-surface-2, #1A2332);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    border: none;
+    border-bottom: 1px solid var(--mk-modal-border);
+    border-radius: 0;
+    background: var(--mk-modal-head, var(--ws-surface-2, #1A2332));
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .mk-edit-nav-btn {
@@ -1004,7 +1025,7 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     .mk-edit-nav {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 0.2rem;
-        padding: 0.3rem;
+        padding: 0.3rem 0.65rem;
     }
 
     .mk-edit-nav-btn:nth-child(5) {
@@ -1025,7 +1046,7 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
 .mk-edit-section {
     padding: 0.95rem 0 1rem;
     border-bottom: 1px solid var(--mk-modal-border);
-    scroll-margin-top: 3.25rem;
+    scroll-margin-top: 0.35rem;
 }
 
 .mk-edit-section-last {
@@ -1115,9 +1136,9 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
 }
 
 .mk-edit-modal-foot {
-    position: sticky;
-    bottom: 0;
-    margin-top: 0.25rem;
+    flex-shrink: 0;
+    position: relative;
+    margin-top: 0;
     background: var(--mk-modal-foot) !important;
     border-top: 1px solid var(--mk-modal-border);
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);

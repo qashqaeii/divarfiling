@@ -30,8 +30,12 @@ from workspace.services.public_share_common import (
     build_map_navigation,
     filter_public_feature_highlights,
     is_public_technical_key,
+    prune_public_detail_sections,
+    public_feature_details_flag,
     remap_public_section_labels,
+    scrub_public_feature_profile,
     strip_duplicate_section_fields,
+    texts_are_equivalent,
 )
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 
@@ -207,15 +211,30 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
     section_rows = {
         name: format_field_rows(fields, data) for name, fields in sections.items()
     }
+
+    description_text = desc
+    if not description_text:
+        for key in ('توضیحات', 'description', 'متن آگهی'):
+            val = (data.get(key) or '').strip()
+            if val and val.lower() not in ('-', 'nan', 'none'):
+                description_text = val
+                break
+
     _supp_skip = (
         'ودیعه', 'اجاره', 'قیمت', 'متراژ', 'اتاق', 'طبقه', 'سال ساخت', 'ساخت',
-        'توضیح', 'عرض', 'طول', 'مختصات', 'تصویر', 'ویدیو', 'تاریخ', 'نوع آگهی',
+        'توضیح', 'متن آگهی', 'متن کامل', 'شرح', 'description', 'amenities',
+        'عرض', 'طول', 'مختصات', 'تصویر', 'ویدیو', 'تاریخ', 'نوع آگهی',
     )
     _supp_hidden_groups = frozenset({'زمان‌بندی', 'رسانه', 'شناسایی'})
     supplementary_fields = [
         row for row in format_supplementary_fields(data, tx, sections)
         if not _is_public_hidden_key(row.get('key', ''))
         and not any(m in row.get('key', '') for m in _supp_skip)
+        and not (
+            description_text
+            and texts_are_equivalent(description_text, str(row.get('display') or row.get('raw') or ''))
+        )
+        and len(str(row.get('display') or row.get('raw') or '')) <= 180
     ]
     supplementary_groups = [
         {
@@ -224,6 +243,11 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
                 f for f in g['fields']
                 if not _is_public_hidden_key(f.get('key', ''))
                 and not any(m in f.get('key', '') for m in _supp_skip)
+                and not (
+                    description_text
+                    and texts_are_equivalent(description_text, str(f.get('display') or f.get('raw') or ''))
+                )
+                and len(str(f.get('display') or f.get('raw') or '')) <= 180
             ],
         }
         for g in format_supplementary_groups(data, tx, sections)
@@ -240,20 +264,29 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
         listing.neighborhood or dataset.district,
     ) if p]
 
-    description_text = desc
-    if not description_text:
-        for key in ('توضیحات', 'description', 'متن آگهی'):
-            val = (data.get(key) or '').strip()
-            if val and val.lower() not in ('-', 'nan', 'none'):
-                description_text = val
-                break
+    sections, section_rows = prune_public_detail_sections(
+        sections,
+        section_rows,
+        has_description=bool(description_text),
+        description_text=description_text,
+        hide_hero_sections=True,
+    )
 
     finance = build_finance_summary(listing, tx, data)
     primary_price = finance.get('primary') or ''
 
-    feature_profile = build_listing_feature_profile(listing, feat)
+    feature_profile = scrub_public_feature_profile(build_listing_feature_profile(listing, feat))
     gallery_images = gallery_images_for_listing(listing)
     location_accuracy = location_accuracy_for_map(data)
+    show_feature_details = public_feature_details_flag(feature_profile)
+
+    # اگر پیام مشاور همان متن توضیحات آگهی است، پیام را مخفی کن تا تکرار نشود
+    welcome_plain = consultant.get('welcome_message') or ''
+    if description_text and texts_are_equivalent(description_text, welcome_plain):
+        consultant['has_welcome'] = False
+        consultant['welcome_message'] = ''
+        consultant['welcome_message_html'] = ''
+
     return {
         'share': share,
         'listing': listing,
@@ -269,6 +302,7 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
             feature_profile,
             feature_highlights_for_listing(listing, limit=8),
         ),
+        'show_feature_details': show_feature_details,
         'gallery_images': gallery_images,
         'description_text': description_text,
         'finance': finance,

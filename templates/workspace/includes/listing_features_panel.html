@@ -1,3 +1,4 @@
+{% if feature_profile.groups or feature_profile.core and not hide_core %}
 {% if feature_profile.has_details %}
 <section class="ws-ld-features{% if embedded %} ws-ld-features--embedded{% endif %}" aria-label="ویژگی‌ها و امکانات">
     {% if not embedded %}
@@ -10,10 +11,11 @@
             </div>
         </div>
     </header>
-    {% else %}
+    {% elif not hide_core %}
     <p class="ws-ld-features-embedded-meta">{{ feature_profile.detail_count }} مورد {{ feature_profile.source_label|default:"ثبت‌شده از دیوار" }}</p>
     {% endif %}
 
+    {% if not hide_core and feature_profile.core %}
     <div class="ws-ld-features-core">
         {% for item in feature_profile.core %}
         <article class="ws-ld-feat-core-card state-{{ item.state }}" data-known="{% if item.known %}1{% else %}0{% endif %}">
@@ -28,6 +30,7 @@
         </article>
         {% endfor %}
     </div>
+    {% endif %}
 
     {% if feature_profile.groups %}
     <div class="ws-ld-features-bento">
@@ -61,4 +64,5 @@
     </div>
     {% endif %}
 </section>
+{% endif %}
 {% endif %}

@@ -100,98 +100,98 @@
     </section>
 
     <div class="ps-container">
-        {# 2. عنوان، دسته‌بندی و موقعیت #}
-        <div class="ps-identity" data-reveal>
-            {% if category_breadcrumb %}
-            <nav class="ps-crumb" aria-label="دسته‌بندی">
-                {% for part in category_breadcrumb %}
-                <span>{{ part }}</span>{% if not forloop.last %}<i class="fas fa-angle-left" aria-hidden="true"></i>{% endif %}
-                {% endfor %}
-            </nav>
-            {% endif %}
+        {# 2–4. نمای کلی: هویت + مالی + مشخصات #}
+        <section class="ps-overview" data-reveal aria-label="نمای کلی ملک">
+            <div class="ps-identity">
+                {% if category_breadcrumb %}
+                <nav class="ps-crumb" aria-label="دسته‌بندی">
+                    {% for part in category_breadcrumb %}
+                    <span>{{ part }}</span>{% if not forloop.last %}<i class="fas fa-angle-left" aria-hidden="true"></i>{% endif %}
+                    {% endfor %}
+                </nav>
+                {% endif %}
 
-            <div class="ps-identity-badges">
-                {% if dossier_badge %}<span class="ps-tag ps-tag--file">{{ dossier_badge }}</span>{% endif %}
-                {% if tx.badge %}<span class="ps-tag ps-tag--deal">{{ tx.badge }}</span>{% endif %}
-                {% if listing.is_expired %}<span class="ps-tag ps-tag--warn">منقضی</span>{% endif %}
+                <div class="ps-identity-badges">
+                    {% if dossier_badge %}<span class="ps-tag ps-tag--file">{{ dossier_badge }}</span>{% endif %}
+                    {% if tx.badge %}<span class="ps-tag ps-tag--deal">{{ tx.badge }}</span>{% endif %}
+                    {% if listing.is_expired %}<span class="ps-tag ps-tag--warn">منقضی</span>{% endif %}
+                </div>
+
+                <h1 class="ps-identity-title" itemprop="name">{{ listing.title }}</h1>
+
+                {% if listing.neighborhood or listing.city %}
+                <p class="ps-identity-loc">
+                    <i class="fas fa-location-dot" aria-hidden="true"></i>
+                    <span>
+                        {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}
+                        {% if listing.city %}{% if listing.neighborhood %}، {% endif %}{{ listing.city }}{% endif %}
+                    </span>
+                </p>
+                {% endif %}
             </div>
 
-            <h1 class="ps-identity-title" itemprop="name">{{ listing.title }}</h1>
+            {% if finance.has_finance %}
+            <div class="ps-finance" aria-label="شرایط مالی">
+                {% if finance.primary %}
+                <p class="ps-finance-primary" itemprop="price">{{ finance.primary }}</p>
+                {% endif %}
+                {% if finance.note %}
+                <span class="ps-finance-note">{{ finance.note }}</span>
+                {% endif %}
+                <div class="ps-finance-grid">
+                    {% for item in finance.items %}
+                    {% if finance.primary and item.kind == 'price' %}
+                    {% elif finance.primary and item.kind == 'deposit' and 'ودیعه' in finance.primary %}
+                    {% elif finance.primary and item.kind == 'rent' and 'اجاره' in finance.primary and item.value != 'بدون اجاره' %}
+                    {% else %}
+                    <div class="ps-finance-item ps-finance-item--{{ item.kind }}">
+                        <span class="ps-finance-label">{{ item.label }}</span>
+                        <strong class="ps-finance-value">{{ item.value }}</strong>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% elif primary_price_label %}
+            <div class="ps-finance" aria-label="شرایط مالی">
+                <p class="ps-finance-primary" itemprop="price">{{ primary_price_label }}</p>
+            </div>
+            {% endif %}
 
-            {% if listing.neighborhood or listing.city %}
-            <p class="ps-identity-loc">
-                <i class="fas fa-location-dot" aria-hidden="true"></i>
-                <span>
-                    {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}
-                    {% if listing.city %}{% if listing.neighborhood %}، {% endif %}{{ listing.city }}{% endif %}
-                </span>
-            </p>
-            {% endif %}
-        </div>
-
-        {# 3. قیمت و شرایط مالی #}
-        {% if finance.has_finance %}
-        <section class="ps-finance" aria-label="شرایط مالی" data-reveal>
-            {% if finance.primary %}
-            <p class="ps-finance-primary" itemprop="price">{{ finance.primary }}</p>
-            {% endif %}
-            {% if finance.note %}
-            <span class="ps-finance-note">{{ finance.note }}</span>
-            {% endif %}
-            <div class="ps-finance-grid">
-                {% for item in finance.items %}
-                {% if finance.primary and item.kind == 'price' %}
-                {% elif finance.primary and item.kind == 'deposit' and 'ودیعه' in finance.primary %}
-                {% elif finance.primary and item.kind == 'rent' and 'اجاره' in finance.primary and item.value != 'بدون اجاره' %}
-                {% else %}
-                <div class="ps-finance-item ps-finance-item--{{ item.kind }}">
-                    <span class="ps-finance-label">{{ item.label }}</span>
-                    <strong class="ps-finance-value">{{ item.value }}</strong>
+            {% if listing.area or feat.rooms or listing.rooms or feat.floor or feat.build_year %}
+            <div class="ps-specs" aria-label="مشخصات اصلی">
+                {% if listing.area %}
+                <div class="ps-spec">
+                    <span class="ps-spec-label">متراژ</span>
+                    <strong>{{ listing.area|ws_area }}</strong>
                 </div>
                 {% endif %}
-                {% endfor %}
+                {% if feat.rooms or listing.rooms %}
+                <div class="ps-spec">
+                    <span class="ps-spec-label">اتاق</span>
+                    <strong>{{ feat.rooms|default:listing.rooms }}</strong>
+                </div>
+                {% endif %}
+                {% if feat.floor %}
+                <div class="ps-spec">
+                    <span class="ps-spec-label">طبقه</span>
+                    <strong>{{ feat.floor }}</strong>
+                </div>
+                {% endif %}
+                {% if feat.build_year %}
+                <div class="ps-spec">
+                    <span class="ps-spec-label">سال ساخت</span>
+                    <strong>{{ feat.build_year }}</strong>
+                </div>
+                {% endif %}
             </div>
+            {% endif %}
         </section>
-        {% elif primary_price_label %}
-        <section class="ps-finance" aria-label="شرایط مالی" data-reveal>
-            <p class="ps-finance-primary" itemprop="price">{{ primary_price_label }}</p>
-        </section>
-        {% endif %}
 
-        {# 4. مشخصات اصلی #}
-        {% if listing.area or feat.rooms or listing.rooms or feat.floor or feat.build_year %}
-        <section class="ps-specs" aria-label="مشخصات اصلی" data-reveal>
-            {% if listing.area %}
-            <div class="ps-spec">
-                <span class="ps-spec-label">متراژ</span>
-                <strong>{{ listing.area|ws_area }}</strong>
-            </div>
-            {% endif %}
-            {% if feat.rooms or listing.rooms %}
-            <div class="ps-spec">
-                <span class="ps-spec-label">اتاق</span>
-                <strong>{{ feat.rooms|default:listing.rooms }}</strong>
-            </div>
-            {% endif %}
-            {% if feat.floor %}
-            <div class="ps-spec">
-                <span class="ps-spec-label">طبقه</span>
-                <strong>{{ feat.floor }}</strong>
-            </div>
-            {% endif %}
-            {% if feat.build_year %}
-            <div class="ps-spec">
-                <span class="ps-spec-label">سال ساخت</span>
-                <strong>{{ feat.build_year }}</strong>
-            </div>
-            {% endif %}
-        </section>
-        {% endif %}
-
-        {# 5. امکانات #}
+        {# 5. امکانات — فقط یک‌بار در بالا #}
         {% if feature_profile.core %}
         <section class="ps-amenities" aria-label="امکانات ملک" data-reveal>
-            <h2 class="ps-section-title">امکانات</h2>
+            <h2 class="ps-section-title"><i class="fas fa-sparkles" aria-hidden="true"></i> امکانات</h2>
             <div class="ps-amenity-grid">
                 {% for item in feature_profile.core %}
                 <div class="ps-amenity {% if item.known and item.state == 'yes' %}is-yes{% elif item.known and item.state == 'no' %}is-no{% else %}is-unknown{% endif %}" {% if not item.known %}aria-disabled="true"{% endif %}>
@@ -213,7 +213,7 @@
         </section>
         {% elif feature_highlights %}
         <section class="ps-amenities" aria-label="امکانات ملک" data-reveal>
-            <h2 class="ps-section-title">امکانات</h2>
+            <h2 class="ps-section-title"><i class="fas fa-sparkles" aria-hidden="true"></i> امکانات</h2>
             <div class="ps-amenity-extras">
                 {% for h in feature_highlights %}
                 <span class="ps-amenity-chip"><i class="fas fa-check" aria-hidden="true"></i> {{ h }}</span>
@@ -222,8 +222,10 @@
         </section>
         {% endif %}
 
+        {# پیام مشاور — جدا از توضیحات آگهی #}
         {% if consultant.has_welcome or consultant.welcome_message_html or consultant.welcome_message %}
         <blockquote class="ps-quote" data-reveal>
+            <div class="ps-quote-kicker"><i class="fas fa-comment-dots" aria-hidden="true"></i> پیام مشاور</div>
             <div class="ps-quote-body">
                 {% if consultant.welcome_message_html %}
                 {{ consultant.welcome_message_html }}
@@ -237,18 +239,18 @@
 
         <div class="ps-layout">
             <main class="ps-main">
-                {# 6. توضیحات ملک #}
+                {# 6. توضیحات آگهی — فقط یک‌بار #}
                 {% if description_text %}
                 <section class="ps-block ps-desc" data-reveal>
-                    <h2 class="ps-block-title">توضیحات ملک</h2>
+                    <h2 class="ps-block-title"><i class="fas fa-align-right" aria-hidden="true"></i> توضیحات آگهی</h2>
                     <div class="ps-desc-body" id="psDescBody">{{ description_text|linebreaksbr }}</div>
                 </section>
                 {% endif %}
 
-                {# 8. نقشه (در موبایل بعد از مشاور؛ در دسکتاپ سایدبار) — اینجا فقط جزئیات #}
-                {% if sections or feature_profile.has_details or supplementary_groups %}
+                {# جزئیات تکمیلی — بدون تکرار مالی/مشخصات/توضیحات/امکانات اصلی #}
+                {% if sections or show_feature_details or supplementary_groups %}
                 <section class="ps-block ps-details" data-reveal id="psDetails">
-                    <h2 class="ps-block-title">جزئیات تکمیلی</h2>
+                    <h2 class="ps-block-title"><i class="fas fa-list-ul" aria-hidden="true"></i> جزئیات تکمیلی</h2>
 
                     <div class="ps-details-nav" data-ps-details>
                         <nav class="ps-tabs" role="tablist" aria-label="بخش‌های جزئیات">
@@ -263,19 +265,18 @@
                                 {% if section == 'شرایط مالی' %}<i class="fas fa-coins" aria-hidden="true"></i>
                                 {% elif section == 'مشخصات اصلی' %}<i class="fas fa-building" aria-hidden="true"></i>
                                 {% elif section == 'موقعیت مکانی' %}<i class="fas fa-map-pin" aria-hidden="true"></i>
-                                {% elif section == 'توضیحات' %}<i class="fas fa-file-lines" aria-hidden="true"></i>
                                 {% else %}<i class="fas fa-circle-info" aria-hidden="true"></i>{% endif %}
                                 <span>{{ section }}</span>
                             </button>
                             {% endif %}
                             {% endfor %}
-                            {% if feature_profile.has_details %}
+                            {% if show_feature_details %}
                             <button type="button" role="tab" class="ps-tab{% if not sections %} is-active{% endif %}"
                                 data-tab="features"
                                 aria-selected="{% if not sections %}true{% else %}false{% endif %}"
                                 tabindex="{% if not sections %}0{% else %}-1{% endif %}">
                                 <i class="fas fa-star" aria-hidden="true"></i>
-                                <span>امکانات</span>
+                                <span>جزئیات امکانات</span>
                             </button>
                             {% endif %}
                             {% if supplementary_groups %}
@@ -294,7 +295,6 @@
                                     {% if section == 'شرایط مالی' %}<i class="fas fa-coins" aria-hidden="true"></i>
                                     {% elif section == 'مشخصات اصلی' %}<i class="fas fa-building" aria-hidden="true"></i>
                                     {% elif section == 'موقعیت مکانی' %}<i class="fas fa-map-pin" aria-hidden="true"></i>
-                                    {% elif section == 'توضیحات' %}<i class="fas fa-file-lines" aria-hidden="true"></i>
                                     {% else %}<i class="fas fa-circle-info" aria-hidden="true"></i>{% endif %}
                                     <span>{{ section }}</span>
                                 </summary>
@@ -313,11 +313,11 @@
                             </details>
                             {% endif %}
                             {% endfor %}
-                            {% if feature_profile.has_details %}
+                            {% if show_feature_details %}
                             <details class="ps-acc-item" data-panel="features" {% if not sections %}open{% endif %}>
-                                <summary class="ps-acc-summary"><i class="fas fa-star" aria-hidden="true"></i><span>امکانات</span></summary>
+                                <summary class="ps-acc-summary"><i class="fas fa-star" aria-hidden="true"></i><span>جزئیات امکانات</span></summary>
                                 <div class="ps-acc-body">
-                                    {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile embedded=True %}
+                                    {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile embedded=True hide_core=True %}
                                 </div>
                             </details>
                             {% endif %}
@@ -349,9 +349,9 @@
                             {% endif %}
                             {% endfor %}
 
-                            {% if feature_profile.has_details %}
+                            {% if show_feature_details %}
                             <div class="ps-panel" role="tabpanel" data-panel="features" {% if sections %}hidden{% endif %}>
-                                {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile embedded=True %}
+                                {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile embedded=True hide_core=True %}
                             </div>
                             {% endif %}
 
@@ -401,7 +401,7 @@
                         <a href="{{ consultant.tel_url }}" class="ps-btn ps-btn--primary ps-btn--block"><i class="fas fa-phone" aria-hidden="true"></i> تماس</a>
                         {% if consultant.whatsapp_url %}
                         <a href="{{ consultant.whatsapp_url }}" class="ps-btn ps-btn--wa ps-btn--block" target="_blank" rel="noopener">
-                            <img src="{% static 'icons/whatsup.png' %}" alt="" class="ps-brand-icon" width="18" height="18">
+                            <img src="{% static 'icons/whatsup.png' %}?v=2" alt="" class="ps-brand-icon" width="18" height="18">
                             واتساپ
                         </a>
                         {% endif %}
@@ -415,7 +415,7 @@
                         <a href="{{ net.url }}" class="ps-agent-social ps-agent-social--{{ net.key }}" target="_blank" rel="noopener noreferrer" title="{{ net.label }}" style="--ps-social: {{ net.color }}">
                             {% if net.icon_file %}
                             <span class="ps-agent-social-icon" aria-hidden="true">
-                                <img src="{% static net.icon_file %}" alt="" width="22" height="22">
+                                <img src="{% static net.icon_file %}?v=2" alt="" width="20" height="20">
                             </span>
                             {% else %}
                             <i class="{{ net.icon }}" aria-hidden="true"></i>
@@ -445,7 +445,7 @@
         <a href="{{ consultant.tel_url }}" class="ps-btn ps-btn--primary"><i class="fas fa-phone" aria-hidden="true"></i> تماس</a>
         {% if consultant.whatsapp_url %}
         <a href="{{ consultant.whatsapp_url }}" class="ps-btn ps-btn--wa" target="_blank" rel="noopener">
-            <img src="{% static 'icons/whatsup.png' %}" alt="" class="ps-brand-icon" width="18" height="18">
+            <img src="{% static 'icons/whatsup.png' %}?v=2" alt="" class="ps-brand-icon" width="18" height="18">
             واتساپ
         </a>
         {% endif %}
@@ -455,7 +455,7 @@
         {% if forloop.counter <= 2 %}
         <a href="{{ net.url }}" class="ps-btn ps-btn--social" target="_blank" rel="noopener" style="--ps-social: {{ net.color }}" title="{{ net.label }}">
             {% if net.icon_file %}
-            <img src="{% static net.icon_file %}" alt="" class="ps-brand-icon" width="18" height="18">
+            <img src="{% static net.icon_file %}?v=2" alt="" class="ps-brand-icon" width="18" height="18">
             {% else %}
             <i class="{{ net.icon }}" aria-hidden="true"></i>
             {% endif %}

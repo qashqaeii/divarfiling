@@ -24,7 +24,11 @@ from workspace.services.public_share_common import (
     build_finance_summary,
     build_map_navigation,
     filter_public_feature_highlights,
+    prune_public_detail_sections,
+    public_feature_details_flag,
     public_share_to_dict,
+    scrub_public_feature_profile,
+    texts_are_equivalent,
     unique_share_token,
 )
 
@@ -317,12 +321,25 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         name: format_field_rows(fields, data) for name, fields in sections.items()
     }
 
+    feature_profile = scrub_public_feature_profile(_property_feature_profile(user, prop, feat))
+
+    # امکانات فقط در بلوک امکانات؛ توضیح آزاد فقط یادداشت (در صورت اجازه)
     description_parts = []
-    if prop.amenities:
-        description_parts.append(prop.amenities.strip())
     if share.show_internal_notes and prop.notes:
         description_parts.append(prop.notes.strip())
-    description_text = '\n\n'.join(description_parts)
+    if prop.amenities and not feature_profile.get('groups') and not any(
+        c.get('known') for c in (feature_profile.get('core') or [])
+    ):
+        description_parts.append(prop.amenities.strip())
+    description_text = '\n\n'.join(p for p in description_parts if p)
+
+    sections, section_rows = prune_public_detail_sections(
+        sections,
+        section_rows,
+        has_description=bool(description_text) or bool(prop.amenities),
+        description_text=description_text,
+        hide_hero_sections=True,
+    )
 
     listing = _listing_like(prop, feat)
     finance = build_finance_summary(listing, tx, data)
@@ -333,8 +350,6 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
     images = deduplicate_divar_image_urls(
         [normalize_external_image_url(img) for img in (prop.images or []) if img],
     )
-
-    feature_profile = _property_feature_profile(user, prop, feat)
 
     meta_parts = [prop.title or 'فایل شخصی']
     if prop.area:
@@ -373,6 +388,13 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         public=True,
     )
 
+    consultant = build_consultant_block(user, share, title=prop.title or 'ملک')
+    welcome_plain = consultant.get('welcome_message') or ''
+    if description_text and texts_are_equivalent(description_text, welcome_plain):
+        consultant['has_welcome'] = False
+        consultant['welcome_message'] = ''
+        consultant['welcome_message_html'] = ''
+
     return {
         'share': share,
         'listing': listing,
@@ -389,11 +411,12 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
             feature_profile,
             _property_highlights(prop),
         ),
+        'show_feature_details': public_feature_details_flag(feature_profile),
         'gallery_images': images,
         'description_text': description_text,
         'finance': finance,
         'primary_price_label': primary_price,
-        'consultant': build_consultant_block(user, share, title=prop.title or 'ملک'),
+        'consultant': consultant,
         'category_breadcrumb': category_parts,
         'show_divar_link': share.show_divar_link and bool(prop.link),
         'meta_description': ' — '.join(meta_parts)[:300],

@@ -35,7 +35,7 @@ LISTING_METADATA_DATA_KEYS = frozenset({
     'نوع آگهی دهنده', 'نوع آگهی‌دهنده', 'business_type', 'فروشنده_business_type',
     'فروشنده_نوع', 'فروشنده_تخفیف', 'status', 'دسته‌بندی', 'category', 'category_slug',
     'دسته‌بندی_سطح۱', 'دسته‌بندی_سطح۲', 'دسته‌بندی_سطح۳', 'دسته‌بندی_عنوان',
-    'توضیحات', 'description', 'زیرعنوان',
+    'توضیحات', 'description', 'زیرعنوان', 'متن آگهی', 'متن کامل', 'شرح', 'شرح آگهی',
     'ایجاد آگهی', 'انقضا آگهی', 'published_at', 'expires_at', 'created_at',
     'انتشار_تاریخ_شمسی', 'انتشار_تاریخ_میلادی', 'انتشار_unavailable_after',
     'عرض جغرافیایی', 'طول جغرافیایی', 'latitude', 'longitude', 'lat', 'lng',
@@ -63,7 +63,7 @@ LISTING_METADATA_DATA_KEYS = frozenset({
 _METADATA_KEY_MARKERS = (
     'قیمت', 'price', 'ودیعه', 'اجاره', 'rent', 'deposit',
     'متراژ', 'area', 'latitude', 'longitude', 'عرض جغرافیایی', 'طول جغرافیایی',
-    'توضیح', 'description', 'لینک', 'link', 'http', 'تاریخ', 'ایجاد', 'انقضا',
+    'توضیح', 'description', 'متن آگهی', 'متن کامل', 'شرح', 'لینک', 'link', 'http', 'تاریخ', 'ایجاد', 'انقضا',
     'تصویر', 'ویدیو', 'video', 'image', 'تماس', 'phone', 'شناسه', 'token',
     'دسته', 'category', 'شهر', 'city', 'محله', 'neighborhood',
     'مالک', 'owner_name', 'owner_phone',

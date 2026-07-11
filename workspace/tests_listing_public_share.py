@@ -146,3 +146,43 @@ class ListingPublicShareTests(TestCase):
         self.assertEqual(resp.status_code, 302)
         share = ListingPublicShare.objects.get(listing=self.listing, created_by=self.user)
         self.assertFalse(share.is_active)
+
+    def test_public_page_shows_description_once(self):
+        long_desc = 'این واحد نورگیر است و دسترسی عالی به مترو دارد. مناسب خانواده.'
+        self.listing.description = long_desc
+        self.listing.data = {
+            **(self.listing.data or {}),
+            'توضیحات': long_desc,
+            'متن آگهی': long_desc,
+        }
+        self.listing.save(update_fields=['description', 'data'])
+        share = ListingPublicShare.objects.create(
+            share_token='desctoken001',
+            listing=self.listing,
+            created_by=self.user,
+            welcome_message=long_desc,
+        )
+        ctx = build_public_listing_context(share)
+        self.assertEqual(ctx['description_text'], long_desc)
+        self.assertFalse(ctx['consultant']['has_welcome'])
+        for fields in (ctx['sections'] or {}).values():
+            for key, val in fields.items():
+                self.assertNotIn('توضیح', key)
+                self.assertNotEqual(val.strip(), long_desc)
+
+        url = reverse('listing_public:view', kwargs={'share_token': share.share_token})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+        self.assertEqual(body.count(long_desc), 1)
+        self.assertContains(resp, 'توضیحات آگهی')
+        self.assertNotContains(resp, 'پیام مشاور')
+        self.assertNotContains(resp, 'متن آگهی')
+
+    def test_public_context_prunes_hero_and_description_sections(self):
+        share = get_or_create_listing_share(self.user, self.listing)
+        ctx = build_public_listing_context(share)
+        self.assertNotIn('توضیحات', ctx['sections'])
+        self.assertNotIn('شرایط مالی', ctx['sections'])
+        self.assertNotIn('مشخصات اصلی', ctx['sections'])
+        self.assertEqual(ctx['description_text'], 'توضیحات تست')

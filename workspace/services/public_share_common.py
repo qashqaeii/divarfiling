@@ -745,7 +745,7 @@ def is_public_hero_dedup_key(key: str) -> bool:
 
 
 def filter_public_feature_highlights(feature_profile: dict, highlights: list) -> list:
-    """برچسب‌های تکراری با feature_profile.core را از نوار highlights حذف می‌کند."""
+    """برچسب‌های تکراری با feature_profile.core و متن‌های شبیه توضیحات را حذف می‌کند."""
     skip: set[str] = set()
     for item in feature_profile.get('core', []):
         if not (item.get('known') and item.get('state') == 'yes'):
@@ -762,8 +762,47 @@ def filter_public_feature_highlights(feature_profile: dict, highlights: list) ->
         base = label.split(':')[0].replace(' ندارد', '').strip()
         if label in skip or base in skip:
             continue
+        # هایلایت‌های شبیه توضیحات بلند / کلیدهای متنی
+        low = label.lower()
+        if any(m in label or m in low for m in ('توضیح', 'متن آگهی', 'description', 'شرح')):
+            continue
+        if len(label) > 80:
+            continue
         filtered.append(label)
     return filtered
+
+
+def scrub_public_feature_profile(feature_profile: Optional[dict]) -> dict:
+    """حذف آیتم‌های متنی/توضیحات از گروه‌های امکانات صفحه عمومی."""
+    if not feature_profile:
+        return {}
+    profile = dict(feature_profile)
+    groups = []
+    for group in profile.get('groups') or []:
+        items = []
+        for item in group.get('items') or []:
+            key = str(item.get('key') or item.get('label') or '')
+            val = str(item.get('value') or '')
+            if is_public_technical_key(key):
+                continue
+            if any(
+                (m in key.lower()) if m.isascii() else (m in key)
+                for m in _DESC_KEY_MARKERS
+            ):
+                continue
+            if len(val) > 180:
+                continue
+            items.append(item)
+        if items:
+            groups.append({**group, 'items': items})
+    profile['groups'] = groups
+    profile['detail_count'] = sum(len(g['items']) for g in groups) + sum(
+        1 for c in (profile.get('core') or []) if c.get('known')
+    )
+    profile['has_details'] = bool(groups) or any(
+        c.get('known') for c in (profile.get('core') or [])
+    )
+    return profile
 
 
 def _looks_like_agency_name(name: str) -> bool:
@@ -985,7 +1024,10 @@ def strip_duplicate_section_fields(
                 continue
             if key.strip() in ('ساخت', 'سال ساخت'):
                 continue
-            if also_hide_description and any(m in key for m in ('توضیح', 'description', 'متن آگهی')):
+            if also_hide_description and any(
+                m in key.lower() if m.isascii() else m in key
+                for m in ('توضیح', 'description', 'متن آگهی', 'شرح', 'amenities')
+            ):
                 continue
             nk = _norm(key)
             # ادغام «سال ساخت» و «ساخت»
@@ -1017,3 +1059,95 @@ def remap_public_section_labels(sections: Dict[str, Dict[str, str]]) -> Dict[str
     for name, fields in sections.items():
         result[label_map.get(name, name)] = fields
     return result
+
+
+_DESC_SECTION_NAMES = frozenset({'توضیحات', 'متن', 'شرح'})
+_DESC_KEY_MARKERS = (
+    'توضیح', 'description', 'متن آگهی', 'شرح', 'توضیحات', 'amenities', 'امکانات و توضیحات',
+)
+_HERO_SECTION_NAMES = frozenset({'شرایط مالی', 'مالی', 'مشخصات اصلی', 'ملک'})
+
+
+def _normalize_public_text(value: str) -> str:
+    text = str(value or '').strip().lower()
+    for ch in ('\u200c', '\u200f', '\u200e', ' ', '\n', '\r', '\t'):
+        text = text.replace(ch, '')
+    return text
+
+
+def texts_are_equivalent(a: str, b: str) -> bool:
+    """مقایسه تقریبی دو متن برای تشخیص تکرار در صفحه عمومی."""
+    na, nb = _normalize_public_text(a), _normalize_public_text(b)
+    if not na or not nb:
+        return False
+    if na == nb:
+        return True
+    # یکی زیرمجموعهٔ دیگری با طول کافی
+    shorter, longer = (na, nb) if len(na) <= len(nb) else (nb, na)
+    return len(shorter) >= 40 and shorter in longer
+
+
+def prune_public_detail_sections(
+    sections: Dict[str, Dict[str, str]],
+    section_rows: Dict[str, list],
+    *,
+    has_description: bool = False,
+    description_text: str = '',
+    hide_hero_sections: bool = True,
+) -> tuple[Dict[str, Dict[str, str]], Dict[str, list]]:
+    """
+    حذف سکشن‌ها/فیلدهای تکراری با بلوک‌های بالای صفحه عمومی
+    (توضیحات، مالی، مشخصات اصلی).
+    """
+    cleaned_sections: Dict[str, Dict[str, str]] = {}
+    cleaned_rows: Dict[str, list] = {}
+    desc = (description_text or '').strip()
+    hide_desc = has_description or bool(desc)
+
+    for name, fields in (sections or {}).items():
+        if hide_desc and name in _DESC_SECTION_NAMES:
+            continue
+        if hide_hero_sections and name in _HERO_SECTION_NAMES:
+            continue
+
+        kept_fields: Dict[str, str] = {}
+        for key, val in (fields or {}).items():
+            key_s = str(key or '')
+            key_l = key_s.lower()
+            if hide_desc and any(
+                (m in key_l) if m.isascii() else (m in key_s)
+                for m in _DESC_KEY_MARKERS
+            ):
+                continue
+            val_s = str(val or '')
+            # مقادیر خیلی بلند یا همان متن توضیحات — در تب تکرار نشوند
+            if hide_desc and len(val_s) > 180:
+                continue
+            if desc and texts_are_equivalent(desc, val_s):
+                continue
+            kept_fields[key] = val
+        if not kept_fields:
+            continue
+
+        rows = section_rows.get(name) or []
+        kept_keys = set(kept_fields.keys())
+        kept_rows = [
+            row for row in rows
+            if str(row.get('raw_key') or '') in kept_keys
+            or (
+                not row.get('raw_key')
+                and str(row.get('key') or '') in kept_keys
+            )
+        ]
+        cleaned_sections[name] = kept_fields
+        cleaned_rows[name] = kept_rows
+
+    return cleaned_sections, cleaned_rows
+
+
+def public_feature_details_flag(feature_profile: Optional[dict]) -> bool:
+    """آیا تب/آکاردئون امکانات جزئیات اضافه دارد؟ (نه تکرار core بالای صفحه)."""
+    if not feature_profile:
+        return False
+    groups = feature_profile.get('groups') or []
+    return any((g.get('items') or []) for g in groups)

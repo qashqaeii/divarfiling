@@ -1513,12 +1513,100 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     gap: 0.85rem;
 }
 
-.ws-settings-hint {
-    margin: 0.35rem 0 0;
-    font-size: 0.62rem;
-    color: var(--ws-text-muted, #64748B);
-    line-height: 1.5;
+.ws-settings-hint--top {
+    margin: 0 0 0.15rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ws-accent, #0d9488) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ws-accent, #0d9488) 16%, var(--mk-input-border));
 }
+
+.ws-settings-profile-panel {
+    margin-top: 0.15rem;
+    padding: 0.7rem 0.75rem 0.8rem;
+    border-radius: 12px;
+    border: 1px solid var(--mk-input-border);
+    background: color-mix(in srgb, var(--mk-input-bg) 70%, var(--mk-modal-bg));
+}
+
+.ws-settings-profile-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.65rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mk-input-border) 85%, transparent);
+}
+
+.ws-settings-profile-panel-head strong {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 750;
+    color: var(--ws-text, #E2E8F0);
+    line-height: 1.25;
+}
+
+.ws-settings-profile-panel-head em {
+    display: block;
+    margin-top: 0.1rem;
+    font-style: normal;
+    font-size: 0.58rem;
+    color: var(--ws-text-muted, #64748B);
+}
+
+.ws-settings-profile-ico {
+    display: grid;
+    place-items: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background: color-mix(in srgb, #2563eb 12%, transparent);
+    color: #2563eb;
+    font-size: 0.72rem;
+}
+
+.ws-settings-profile-ico--office {
+    background: color-mix(in srgb, #0d9488 12%, transparent);
+    color: #0d9488;
+}
+
+.ws-settings-fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem 0.65rem;
+}
+
+.ws-settings-field--full {
+    grid-column: 1 / -1;
+}
+
+.ws-settings-fields-grid .ws-field {
+    margin: 0;
+}
+
+.ws-settings-fields-grid .ws-label {
+    margin-bottom: 0.22rem;
+    font-size: 0.64rem;
+}
+
+.ws-settings-fields-grid .ws-input,
+.ws-settings-fields-grid .ws-textarea {
+    min-height: 34px;
+    font-size: 0.74rem;
+    padding: 0.4rem 0.55rem;
+}
+
+.ws-settings-fields-grid .ws-textarea {
+    min-height: 52px;
+}
+
+@media (max-width: 520px) {
+    .ws-settings-fields-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 
 .ws-settings-theme-grid {
     display: grid;

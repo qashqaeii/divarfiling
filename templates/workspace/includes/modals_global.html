@@ -1,4 +1,4 @@
-{% load workspace_tags %}
+{% load workspace_tags static %}
 
 {% if has_bot_license %}
 {# ─── آپلود فایل / پوشه ─── #}
@@ -78,7 +78,7 @@
                 <div class="ws-settings-head-icon" aria-hidden="true"><i class="fas fa-sliders-h"></i></div>
                 <div>
                     <h2 id="modal-settings-title" class="ws-modal-title">تنظیمات میز کار</h2>
-                    <p class="ws-modal-sub">ظاهر، نقشه و برندینگ</p>
+                    <p class="ws-modal-sub">ظاهر، نقشه، برندینگ و پروفایل عمومی</p>
                 </div>
             </div>
             <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
@@ -195,13 +195,16 @@
 
                 <section class="ws-settings-section ws-settings-section--last" aria-labelledby="ws-settings-brand">
                     <h3 id="ws-settings-brand" class="ws-settings-section-title">
-                        <i class="fas fa-building" aria-hidden="true"></i> برندینگ آژانس
+                        <i class="fas fa-building" aria-hidden="true"></i> برندینگ و پروفایل عمومی
                     </h3>
                     <div class="ws-settings-section-body">
+                        <p class="ws-settings-hint ws-settings-hint--top">
+                            این اطلاعات در صفحه اشتراک با مشتری و کارت مشاور نمایش داده می‌شود — فقط موارد پرشده دیده می‌شود.
+                        </p>
+
                         <div class="ws-field">
-                            <label class="ws-label" for="id_agency_name">نام آژانس</label>
+                            <label class="ws-label" for="id_agency_name">نام آژانس / برند</label>
                             <input type="text" name="agency_name" id="id_agency_name" class="ws-input" value="{{ ws_settings_form.agency_name.value|default:'' }}" placeholder="مثلاً آژانس املاک نمونه" maxlength="200">
-                            <p class="ws-settings-hint">در خروجی‌ها و برندینگ CRM نمایش داده می‌شود</p>
                         </div>
 
                         <div class="ws-field">
@@ -222,6 +225,157 @@
                                 </div>
                             </div>
                             <div id="wsLogoFileName" class="ws-upload-filename"></div>
+                        </div>
+
+                        <div class="ws-settings-profile-panel">
+                            <div class="ws-settings-profile-panel-head">
+                                <span class="ws-settings-profile-ico" aria-hidden="true"><i class="fas fa-user-tie"></i></span>
+                                <div>
+                                    <strong>مشاور</strong>
+                                    <em>عکس و شبکه‌های شخصی</em>
+                                </div>
+                            </div>
+                            <div class="mk-share-upload-row">
+                                <div class="mk-share-upload-preview" data-photo-preview>
+                                    {% if ws_settings.consultant_photo %}
+                                    <img src="{{ ws_settings.consultant_photo.url }}" alt="" width="56" height="56">
+                                    {% else %}
+                                    <span class="mk-share-upload-placeholder" aria-hidden="true"><i class="fas fa-user"></i></span>
+                                    {% endif %}
+                                </div>
+                                <div class="mk-share-upload-meta">
+                                    <label class="ws-label" for="id_consultant_photo">عکس مشاور</label>
+                                    <input type="file" name="consultant_photo" id="id_consultant_photo" class="ws-input mk-share-file-input" accept="image/*" data-image-preview>
+                                    {% if ws_settings.consultant_photo %}
+                                    <label class="mk-share-check-row mk-share-check-row--compact">
+                                        <input type="checkbox" name="clear_consultant_photo" value="1">
+                                        <span>حذف عکس</span>
+                                    </label>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mk-share-social-block">
+                                <div class="mk-share-social-block-head">
+                                    <span>شبکه‌های مشاور</span>
+                                    <em>آیدی، شماره یا لینک</em>
+                                </div>
+                                <div class="mk-share-social-grid mk-share-social-grid--tiles">
+                                    {% for net in ws_consultant_social_networks %}
+                                    <div class="mk-share-social-tile" style="--mk-social-color: {{ net.color }}">
+                                        <label class="mk-share-social-tile-label" for="ws-settings-social-{{ net.key }}">
+                                            <span class="mk-share-social-tile-icon" aria-hidden="true">
+                                                {% if net.icon_file %}
+                                                <img src="{% static net.icon_file %}?v=2" alt="" width="22" height="22">
+                                                {% else %}
+                                                <i class="{{ net.icon }}"></i>
+                                                {% endif %}
+                                            </span>
+                                            <span class="mk-share-social-tile-name">{{ net.label }}</span>
+                                        </label>
+                                        <input type="text" class="ws-input mk-share-social-input"
+                                               id="ws-settings-social-{{ net.key }}"
+                                               name="social_{{ net.key }}"
+                                               value="{{ net.url }}"
+                                               placeholder="{{ net.placeholder }}"
+                                               dir="ltr" autocomplete="off">
+                                    </div>
+                                    {% empty %}
+                                    <p class="ws-settings-hint">شبکه‌ای در دسترس نیست.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ws-settings-profile-panel">
+                            <div class="ws-settings-profile-panel-head">
+                                <span class="ws-settings-profile-ico ws-settings-profile-ico--office" aria-hidden="true"><i class="fas fa-building"></i></span>
+                                <div>
+                                    <strong>دفتر املاک</strong>
+                                    <em>آدرس، تماس و شبکه‌های دفتر</em>
+                                </div>
+                            </div>
+                            <div class="ws-settings-fields-grid">
+                                <div class="ws-field ws-settings-field--full">
+                                    <label class="ws-label" for="id_agency_address">آدرس دفتر</label>
+                                    <textarea name="agency_address" id="id_agency_address" class="ws-textarea" rows="2" placeholder="خیابان، پلاک، واحد…">{{ ws_settings_form.agency_address.value|default:'' }}</textarea>
+                                </div>
+                                <div class="ws-field">
+                                    <label class="ws-label" for="id_agency_city">شهر</label>
+                                    <input type="text" name="agency_city" id="id_agency_city" class="ws-input" value="{{ ws_settings_form.agency_city.value|default:'' }}" placeholder="تهران">
+                                </div>
+                                <div class="ws-field">
+                                    <label class="ws-label" for="id_agency_website">وبسایت</label>
+                                    <input type="url" name="agency_website" id="id_agency_website" class="ws-input" value="{{ ws_settings_form.agency_website.value|default:'' }}" placeholder="https://…" dir="ltr">
+                                </div>
+                                <div class="ws-field">
+                                    <label class="ws-label" for="id_agency_landline">تلفن ثابت</label>
+                                    <input type="text" name="agency_landline" id="id_agency_landline" class="ws-input" value="{{ ws_settings_form.agency_landline.value|default:'' }}" placeholder="۰۲۱…" dir="ltr">
+                                </div>
+                                <div class="ws-field">
+                                    <label class="ws-label" for="id_agency_landline_alt">تلفن دوم</label>
+                                    <input type="text" name="agency_landline_alt" id="id_agency_landline_alt" class="ws-input" value="{{ ws_settings_form.agency_landline_alt.value|default:'' }}" placeholder="اختیاری" dir="ltr">
+                                </div>
+                                <div class="ws-field">
+                                    <label class="ws-label" for="id_agency_latitude">عرض جغرافیایی</label>
+                                    <input type="text" name="agency_latitude" id="id_agency_latitude" class="ws-input" value="{% if ws_settings_form.agency_latitude.value != None %}{{ ws_settings_form.agency_latitude.value }}{% endif %}" placeholder="35.6892" dir="ltr" inputmode="decimal">
+                                </div>
+                                <div class="ws-field">
+                                    <label class="ws-label" for="id_agency_longitude">طول جغرافیایی</label>
+                                    <input type="text" name="agency_longitude" id="id_agency_longitude" class="ws-input" value="{% if ws_settings_form.agency_longitude.value != None %}{{ ws_settings_form.agency_longitude.value }}{% endif %}" placeholder="51.3890" dir="ltr" inputmode="decimal">
+                                </div>
+                            </div>
+                            <p class="ws-settings-hint">با مختصات، مسیریابی نشان / گوگل / ویز / بلد در صفحه مشتری فعال می‌شود.</p>
+
+                            <div class="mk-share-upload-row">
+                                <div class="mk-share-upload-preview mk-share-upload-preview--card" data-card-preview>
+                                    {% if ws_settings.business_card_image %}
+                                    <img src="{{ ws_settings.business_card_image.url }}" alt="" width="96" height="58">
+                                    {% else %}
+                                    <span class="mk-share-upload-placeholder" aria-hidden="true"><i class="fas fa-id-card"></i></span>
+                                    {% endif %}
+                                </div>
+                                <div class="mk-share-upload-meta">
+                                    <label class="ws-label" for="id_business_card_image">کارت ویزیت</label>
+                                    <input type="file" name="business_card_image" id="id_business_card_image" class="ws-input mk-share-file-input" accept="image/*" data-image-preview>
+                                    {% if ws_settings.business_card_image %}
+                                    <label class="mk-share-check-row mk-share-check-row--compact">
+                                        <input type="checkbox" name="clear_business_card_image" value="1">
+                                        <span>حذف کارت</span>
+                                    </label>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mk-share-social-block">
+                                <div class="mk-share-social-block-head">
+                                    <span>شبکه‌های دفتر</span>
+                                    <em>آیدی، شماره یا لینک</em>
+                                </div>
+                                <div class="mk-share-social-grid mk-share-social-grid--tiles">
+                                    {% for net in ws_agency_social_networks %}
+                                    <div class="mk-share-social-tile" style="--mk-social-color: {{ net.color }}">
+                                        <label class="mk-share-social-tile-label" for="ws-settings-agency-social-{{ net.key }}">
+                                            <span class="mk-share-social-tile-icon" aria-hidden="true">
+                                                {% if net.icon_file %}
+                                                <img src="{% static net.icon_file %}?v=2" alt="" width="22" height="22">
+                                                {% else %}
+                                                <i class="{{ net.icon }}"></i>
+                                                {% endif %}
+                                            </span>
+                                            <span class="mk-share-social-tile-name">{{ net.label }}</span>
+                                        </label>
+                                        <input type="text" class="ws-input mk-share-social-input"
+                                               id="ws-settings-agency-social-{{ net.key }}"
+                                               name="agency_social_{{ net.key }}"
+                                               value="{{ net.url }}"
+                                               placeholder="{{ net.placeholder }}"
+                                               dir="ltr" autocomplete="off">
+                                    </div>
+                                    {% empty %}
+                                    <p class="ws-settings-hint">شبکه‌ای در دسترس نیست.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>

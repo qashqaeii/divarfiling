@@ -1137,6 +1137,8 @@ function initSettingsModal() {
         }
     }
 
+    initShareProfileImagePreviews(form);
+
     form.addEventListener('submit', () => {
         const theme = form.querySelector('input[name="theme"]:checked')?.value;
         if (theme) {

@@ -31,6 +31,7 @@ def workspace_context(request):
             and request.resolver_match.url_name == 'home'
             and (force_tour or not settings_obj.onboarding_completed)
         )
+        from workspace.services.public_share_common import social_networks_form_list
         ctx.update({
             'is_workspace': True,
             'ws_settings_form': WorkspaceSettingsForm(instance=settings_obj),
@@ -38,6 +39,8 @@ def workspace_context(request):
             'open_modal': request.GET.get('open', ''),
             'show_onboarding': show_onboarding,
             'onboarding_force': force_tour,
+            'ws_consultant_social_networks': social_networks_form_list(settings_obj.social_links),
+            'ws_agency_social_networks': social_networks_form_list(settings_obj.agency_social_links),
         })
         if access['has_bot_license']:
             ctx['ws_upload_form'] = DatasetUploadForm()

@@ -852,6 +852,9 @@ class WorkspaceSettingsForm(forms.ModelForm):
         fields = [
             'theme', 'font_scale', 'map_cluster', 'map_heatmap',
             'map_kmeans', 'agency_name', 'agency_logo',
+            'agency_address', 'agency_city', 'agency_latitude', 'agency_longitude',
+            'agency_landline', 'agency_landline_alt', 'agency_website',
+            'consultant_photo', 'business_card_image',
         ]
         labels = {
             'theme': 'تم ظاهری',
@@ -861,14 +864,26 @@ class WorkspaceSettingsForm(forms.ModelForm):
             'map_kmeans': 'خوشه‌بندی K-Means',
             'agency_name': 'نام آژانس',
             'agency_logo': 'لوگو آژانس',
+            'agency_address': 'آدرس دفتر',
+            'agency_city': 'شهر دفتر',
+            'agency_latitude': 'عرض جغرافیایی',
+            'agency_longitude': 'طول جغرافیایی',
+            'agency_landline': 'تلفن ثابت',
+            'agency_landline_alt': 'تلفن ثابت دوم',
+            'agency_website': 'وبسایت آژانس',
+            'consultant_photo': 'عکس مشاور',
+            'business_card_image': 'کارت ویزیت',
         }
         help_texts = {
             'font_scale': 'بین ۰٫۸ تا ۱٫۵ — پیش‌فرض ۱٫۰',
             'map_cluster': 'نقاط نزدیک روی نقشه در یک خوشه نمایش داده می‌شوند',
             'map_heatmap': 'نمایش تراکم داده روی نقشه با گرادیان رنگی',
             'map_kmeans': '۰ یعنی غیرفعال · حداکثر ۱۰ خوشه',
-            'agency_name': 'در خروجی‌ها و برندینگ CRM نمایش داده می‌شود',
+            'agency_name': 'در صفحه اشتراک عمومی و CRM نمایش داده می‌شود',
             'agency_logo': 'PNG یا JPG — حداکثر ۲ مگابایت',
+            'agency_website': 'در کارت مشاور صفحه عمومی نمایش داده می‌شود',
+            'consultant_photo': 'عکس پروفایل مشاور در صفحه اشتراک',
+            'business_card_image': 'پیش‌نمایش کارت ویزیت در صفحه مشتری',
         }
         widgets = {
             'theme': forms.RadioSelect(attrs={'class': 'ws-settings-theme-input'}),
@@ -886,7 +901,54 @@ class WorkspaceSettingsForm(forms.ModelForm):
             'agency_logo': forms.FileInput(attrs={
                 'class': 'ws-settings-logo-input', 'accept': 'image/png,image/jpeg,image/webp,image/svg+xml',
             }),
+            'agency_address': forms.Textarea(attrs={
+                'class': 'ws-textarea', 'rows': 2, 'placeholder': 'خیابان، پلاک، واحد…',
+            }),
+            'agency_city': forms.TextInput(attrs={
+                'class': 'ws-input', 'placeholder': 'تهران',
+            }),
+            'agency_latitude': forms.NumberInput(attrs={
+                'class': 'ws-input', 'step': 'any', 'placeholder': '35.6892',
+            }),
+            'agency_longitude': forms.NumberInput(attrs={
+                'class': 'ws-input', 'step': 'any', 'placeholder': '51.3890',
+            }),
+            'agency_landline': forms.TextInput(attrs={
+                'class': 'ws-input', 'placeholder': '۰۲۱…', 'dir': 'ltr',
+            }),
+            'agency_landline_alt': forms.TextInput(attrs={
+                'class': 'ws-input', 'placeholder': 'اختیاری', 'dir': 'ltr',
+            }),
+            'agency_website': forms.URLInput(attrs={
+                'class': 'ws-input', 'placeholder': 'https://…', 'dir': 'ltr',
+            }),
+            'consultant_photo': forms.FileInput(attrs={
+                'class': 'ws-input mk-share-file-input', 'accept': 'image/*',
+            }),
+            'business_card_image': forms.FileInput(attrs={
+                'class': 'ws-input mk-share-file-input', 'accept': 'image/*',
+            }),
         }
+
+    def clean_agency_website(self):
+        from workspace.services.public_share_common import normalize_agency_website
+        return normalize_agency_website(self.cleaned_data.get('agency_website') or '')
+
+    def clean_agency_latitude(self):
+        val = self.cleaned_data.get('agency_latitude')
+        if val is None:
+            return None
+        if not (-90 <= float(val) <= 90):
+            raise forms.ValidationError('عرض جغرافیایی نامعتبر است.')
+        return val
+
+    def clean_agency_longitude(self):
+        val = self.cleaned_data.get('agency_longitude')
+        if val is None:
+            return None
+        if not (-180 <= float(val) <= 180):
+            raise forms.ValidationError('طول جغرافیایی نامعتبر است.')
+        return val
 
 
 class CompareForm(forms.Form):

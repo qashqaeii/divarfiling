@@ -447,6 +447,11 @@ def agency_social_links_from_post(post) -> Dict[str, str]:
     return social_links_from_post(post, prefix='agency_social_')
 
 
+def social_networks_form_list(links: Optional[dict]) -> List[Dict[str, str]]:
+    """لیست شبکه‌ها برای فرم‌های تنظیمات / مودال / داشبورد."""
+    return _social_networks_form_list(links)
+
+
 def _social_networks_form_list(links: Optional[dict]) -> List[Dict[str, str]]:
     socials = normalize_social_links(links or {})
     return [

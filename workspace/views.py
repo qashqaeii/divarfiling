@@ -1501,8 +1501,28 @@ class WorkspaceSettingsView(WorkspaceLoginMixin, UpdateView):
         return redirect(f"{reverse('workspace:home')}?open=modal-settings")
 
     def form_valid(self, form):
+        from workspace.services.public_share_common import (
+            agency_social_links_from_post,
+            social_links_from_post,
+        )
+
+        obj = form.save(commit=False)
+        post = self.request.POST
+
+        if post.get('clear_consultant_photo') in ('1', 'true', 'on') and not form.cleaned_data.get('consultant_photo'):
+            if obj.consultant_photo:
+                obj.consultant_photo.delete(save=False)
+            obj.consultant_photo = None
+        if post.get('clear_business_card_image') in ('1', 'true', 'on') and not form.cleaned_data.get('business_card_image'):
+            if obj.business_card_image:
+                obj.business_card_image.delete(save=False)
+            obj.business_card_image = None
+
+        obj.social_links = social_links_from_post(post)
+        obj.agency_social_links = agency_social_links_from_post(post)
+        obj.save()
         messages.success(self.request, 'تنظیمات ذخیره شد.')
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
     def form_invalid(self, form):
         view = WorkspaceHomeView()

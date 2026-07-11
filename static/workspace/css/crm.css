@@ -15437,18 +15437,39 @@ select.crm-files-adv-control {
 .crm-prop-hero-act {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.3rem;
-    height: 30px;
-    padding: 0 0.65rem;
+    height: 32px;
+    padding: 0 0.7rem;
     border-radius: 8px;
     border: 1px solid var(--ws-border);
     background: var(--ws-surface);
     color: var(--ws-text-secondary);
-    font-size: 0.64rem;
-    font-weight: 700;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0;
+    white-space: nowrap;
     cursor: pointer;
     text-decoration: none;
+    appearance: none;
+    -webkit-appearance: none;
     transition: border-color 0.12s, background 0.12s, color 0.12s, box-shadow 0.12s;
+}
+.crm-prop-hero-act i,
+.crm-prop-hero-act .fas,
+.crm-prop-hero-act .far,
+.crm-prop-hero-act .icon-slot {
+    font-size: 0.72rem;
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+.crm-prop-hero-act span {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
 }
 .crm-prop-hero-act:hover {
     border-color: color-mix(in srgb, var(--crm-hero-accent) 35%, var(--ws-border));

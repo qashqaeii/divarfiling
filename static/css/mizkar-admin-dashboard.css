@@ -864,6 +864,64 @@ html.mk-public:not([data-theme="light"]) .adm-cell {
 }
 
 /* ─── Marketing campaigns ─── */
+.adm-mkt-phonebook {
+    margin-bottom: 0.85rem;
+}
+.adm-mkt-phonebook .adm-cell-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.adm-mkt-phonebook-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+.adm-mkt-phonebook-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.55rem;
+    margin-bottom: 0.65rem;
+}
+.adm-mkt-phonebook-stat {
+    padding: 0.65rem 0.8rem;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: rgba(255, 255, 255, 0.55);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.adm-mkt-phonebook-stat--warn strong {
+    color: #d97706;
+}
+.adm-mkt-phonebook-stat-lbl {
+    font-size: 0.72rem;
+    color: var(--mk-text-muted);
+}
+.adm-mkt-phonebook-stat strong {
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+.adm-mkt-phonebook-hint {
+    margin: 0;
+}
+.adm-mkt-phonebook-msg {
+    margin: 0.55rem 0 0;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+}
+.adm-mkt-phonebook-msg--ok {
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+}
+.adm-mkt-phonebook-msg--error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #b91c1c;
+}
 .adm-mkt-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.9fr);

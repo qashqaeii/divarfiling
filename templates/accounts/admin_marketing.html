@@ -8,7 +8,7 @@
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=9">
 {% endblock %}
 
 {% block content %}
@@ -57,6 +57,48 @@
         </div>
     </section>
     {% endif %}
+
+    <section class="adm-cell adm-mkt-phonebook" aria-labelledby="admMktPhonebook" id="adm-mkt-phonebook">
+        <header class="adm-cell-head">
+            <div>
+                <h2 id="admMktPhonebook">دفترچه تلفن فراز — کاربران</h2>
+                <p>همگام‌سازی کاربران سایت با دفترچه <strong dir="ltr">{{ phonebook_id }}</strong> برای ارسال کمپین حرفه‌ای</p>
+            </div>
+            <div class="adm-mkt-phonebook-actions">
+                <button type="button" class="adm-dl-btn" id="adm-phonebook-refresh" title="بارگذاری مجدد وضعیت">
+                    <i class="fas fa-rotate" aria-hidden="true"></i>
+                    بروزرسانی وضعیت
+                </button>
+                <button type="button" class="adm-dl-btn adm-dl-btn--primary" id="adm-phonebook-sync">
+                    <i class="fas fa-address-book" aria-hidden="true"></i>
+                    همگام‌سازی کاربران
+                </button>
+            </div>
+        </header>
+
+        <div class="adm-mkt-phonebook-stats" id="adm-phonebook-stats" aria-live="polite">
+            <div class="adm-mkt-phonebook-stat">
+                <span class="adm-mkt-phonebook-stat-lbl">کاربران سایت (معتبر)</span>
+                <strong id="adm-pb-site-valid">—</strong>
+            </div>
+            <div class="adm-mkt-phonebook-stat">
+                <span class="adm-mkt-phonebook-stat-lbl">مخاطبین دفترچه</span>
+                <strong id="adm-pb-book-total">—</strong>
+            </div>
+            <div class="adm-mkt-phonebook-stat adm-mkt-phonebook-stat--warn">
+                <span class="adm-mkt-phonebook-stat-lbl">نیاز به همگام‌سازی</span>
+                <strong id="adm-pb-missing">—</strong>
+            </div>
+            <div class="adm-mkt-phonebook-stat">
+                <span class="adm-mkt-phonebook-stat-lbl">فقط در دفترچه</span>
+                <strong id="adm-pb-extra">—</strong>
+            </div>
+        </div>
+        <p class="adm-mkt-hint adm-mkt-phonebook-hint" id="adm-phonebook-hint">
+            با هر همگام‌سازی، کاربران با موبایل معتبر به‌صورت دسته‌ای (حداکثر ۵۰۰ نفر در هر درخواست) در دفترچه ثبت یا به‌روز می‌شوند.
+        </p>
+        <p class="adm-mkt-phonebook-msg" id="adm-phonebook-msg" hidden></p>
+    </section>
 
     <div class="adm-mkt-grid">
         <section class="adm-cell adm-mkt-compose" aria-labelledby="admMktCompose">
@@ -406,6 +448,119 @@
   syncDiscount();
   updateSelectedCount();
   updateLivePreview();
+})();
+
+(function () {
+  var statusUrl = '{% url "admin_panel_phonebook_status" %}';
+  var syncUrl = '{% url "admin_panel_phonebook_sync" %}';
+  var refreshBtn = document.getElementById('adm-phonebook-refresh');
+  var syncBtn = document.getElementById('adm-phonebook-sync');
+  var msgEl = document.getElementById('adm-phonebook-msg');
+  var hintEl = document.getElementById('adm-phonebook-hint');
+  var elSite = document.getElementById('adm-pb-site-valid');
+  var elBook = document.getElementById('adm-pb-book-total');
+  var elMissing = document.getElementById('adm-pb-missing');
+  var elExtra = document.getElementById('adm-pb-extra');
+  var csrf = document.querySelector('#adm-mkt-send-form input[name="csrfmiddlewaretoken"]');
+
+  if (!refreshBtn || !syncBtn) return;
+
+  function toFaDigits(n) {
+    return String(n).replace(/\d/g, function (d) {
+      return '۰۱۲۳۴۵۶۷۸۹'[d];
+    });
+  }
+
+  function formatNum(n) {
+    return toFaDigits(Number(n || 0).toLocaleString('en-US'));
+  }
+
+  function setMsg(text, isError) {
+    if (!msgEl) return;
+    if (!text) {
+      msgEl.hidden = true;
+      msgEl.textContent = '';
+      msgEl.classList.remove('adm-mkt-phonebook-msg--error', 'adm-mkt-phonebook-msg--ok');
+      return;
+    }
+    msgEl.hidden = false;
+    msgEl.textContent = text;
+    msgEl.classList.toggle('adm-mkt-phonebook-msg--error', !!isError);
+    msgEl.classList.toggle('adm-mkt-phonebook-msg--ok', !isError);
+  }
+
+  function renderStatus(data) {
+    if (elSite) elSite.textContent = formatNum(data.site_users_valid);
+    if (elBook) elBook.textContent = formatNum(data.phonebook_total);
+    if (elMissing) elMissing.textContent = formatNum(data.missing_in_phonebook);
+    if (elExtra) elExtra.textContent = formatNum(data.extra_in_phonebook);
+    if (!data.ok && data.error) {
+      setMsg(data.error, true);
+    } else {
+      setMsg('');
+    }
+  }
+
+  function setLoading(loading) {
+    refreshBtn.disabled = loading;
+    syncBtn.disabled = loading;
+    if (hintEl) hintEl.style.opacity = loading ? '0.55' : '';
+  }
+
+  function loadStatus() {
+    setLoading(true);
+    return fetch(statusUrl, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        renderStatus(data);
+        return data;
+      })
+      .catch(function () {
+        setMsg('بارگذاری وضعیت دفترچه ناموفق بود.', true);
+      })
+      .finally(function () {
+        setLoading(false);
+      });
+  }
+
+  function syncPhonebook() {
+    if (!window.confirm('کاربران سایت در دفترچه تلفن فراز ثبت/به‌روز شوند؟')) return;
+    setLoading(true);
+    setMsg('در حال همگام‌سازی…', false);
+    fetch(syncUrl, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+        'X-CSRFToken': csrf ? csrf.value : '',
+      },
+    })
+      .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.body.ok) {
+          setMsg((res.body && res.body.error) || 'همگام‌سازی ناموفق بود.', true);
+          return;
+        }
+        var b = res.body;
+        setMsg(
+          'همگام‌سازی انجام شد: ' + formatNum(b.synced) + ' کاربر در ' +
+          formatNum(b.batches) + ' دسته. مخاطبین دفترچه: ' +
+          formatNum(b.phonebook_total_before) + ' ← ' + formatNum(b.phonebook_total_after),
+          false
+        );
+        return loadStatus();
+      })
+      .catch(function () {
+        setMsg('خطا در ارتباط با سرور.', true);
+      })
+      .finally(function () {
+        setLoading(false);
+      });
+  }
+
+  refreshBtn.addEventListener('click', loadStatus);
+  syncBtn.addEventListener('click', syncPhonebook);
+  loadStatus();
 })();
 </script>
 {% endblock %}

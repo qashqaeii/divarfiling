@@ -269,6 +269,8 @@ FARAZSMS_BASE_URL = config('FARAZSMS_BASE_URL', default='https://api.iranpayamak
 FARAZSMS_TIMEOUT = config('FARAZSMS_TIMEOUT', default=15, cast=int)
 # هشدار موجودی کم در پنل ادمین (تومان)
 FARAZSMS_LOW_BALANCE = config('FARAZSMS_LOW_BALANCE', default=50000, cast=int)
+# دفترچه تلفن «کاربران» در پنل فراز — برای کمپین‌های بازاریابی
+FARAZSMS_PHONEBOOK_USERS_ID = config('FARAZSMS_PHONEBOOK_USERS_ID', default=119558, cast=int)
 # نام متغیر الگو در پنل فراز (مثلاً code یا verification-code)
 FARAZSMS_OTP_ATTR = config('FARAZSMS_OTP_ATTR', default='code')
 FARAZSMS_PATTERNS = {

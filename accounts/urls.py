@@ -11,6 +11,8 @@ from .admin_views import (
     AdminMarketingDetailView,
     AdminMarketingPreviewView,
     AdminMarketingView,
+    AdminPhonebookStatusView,
+    AdminPhonebookSyncView,
     AdminSystemSummaryView,
 )
 
@@ -37,6 +39,8 @@ urlpatterns = [
     path('admin-panel/system-summary.json', AdminSystemSummaryView.as_view(), name='admin_panel_system_summary'),
     path('admin-panel/marketing/', AdminMarketingView.as_view(), name='admin_panel_marketing'),
     path('admin-panel/marketing/preview.json', AdminMarketingPreviewView.as_view(), name='admin_panel_marketing_preview'),
+    path('admin-panel/marketing/phonebook/status.json', AdminPhonebookStatusView.as_view(), name='admin_panel_phonebook_status'),
+    path('admin-panel/marketing/phonebook/sync/', AdminPhonebookSyncView.as_view(), name='admin_panel_phonebook_sync'),
     path('admin-panel/marketing/<int:pk>/', AdminMarketingDetailView.as_view(), name='admin_panel_marketing_detail'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path(

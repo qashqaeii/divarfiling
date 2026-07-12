@@ -105,8 +105,20 @@ def _extract_message_id(data: Any) -> str:
     return ''
 
 
-def _request(method: str, path: str, *, json_body: dict | None = None) -> dict[str, Any]:
+def _request(
+    method: str,
+    path: str,
+    *,
+    json_body: dict | None = None,
+    params: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    from urllib.parse import urlencode
+
     url = f'{_base_url()}{path}'
+    if params:
+        query = urlencode({k: v for k, v in params.items() if v is not None and v != ''})
+        if query:
+            url = f'{url}?{query}'
     headers = _headers()
     # برای GET فقط Accept + Api-Key کافی است؛ Content-Type اضافه نکن
     if json_body is None and method.upper() == 'GET':
@@ -286,4 +298,130 @@ def get_balance() -> Any:
         data.get('balanceCount'),
     )
     return data
+
+
+BULK_PHONEBOOK_LIMIT = 500
+PHONEBOOK_PAGE_LIMIT = 200
+
+
+def _phonebook_id(phone_book_id: int | None = None) -> int:
+    book_id = phone_book_id
+    if not book_id:
+        book_id = int(getattr(settings, 'FARAZSMS_PHONEBOOK_USERS_ID', 0) or 0)
+    if not book_id:
+        raise SmsConfigurationError(
+            'FARAZSMS_PHONEBOOK_USERS_ID در تنظیمات تعریف نشده است.'
+        )
+    return book_id
+
+
+def get_phonebook_contacts_page(
+    *,
+    phone_book_id: int | None = None,
+    page: int = 1,
+    limit: int = PHONEBOOK_PAGE_LIMIT,
+    search: str = '',
+) -> dict[str, Any]:
+    """
+    صفحه‌ای از مخاطبین دفترچه — GET /ws/v1/phone_book_data
+    مستندات: https://docs.iranpayamak.com/get-phonebook-contacts-13925175e0
+    """
+    book_id = _phonebook_id(phone_book_id)
+    payload = _request(
+        'GET',
+        '/ws/v1/phone_book_data',
+        params={
+            'phone_book_id': book_id,
+            'page': max(1, int(page)),
+            'limit': max(1, min(int(limit), 500)),
+            'search': (search or '').strip(),
+        },
+    )
+    data = _ensure_success(payload, 200)
+    if not isinstance(data, dict):
+        raise SmsSendError(
+            'ساختار پاسخ دفترچه تلفن نامعتبر است.',
+            code='phonebook_invalid_response',
+        )
+    return data
+
+
+def iter_phonebook_contacts(
+    *,
+    phone_book_id: int | None = None,
+    search: str = '',
+) -> list[dict[str, Any]]:
+    """همه مخاطبین دفترچه را با صفحه‌بندی می‌خواند."""
+    book_id = _phonebook_id(phone_book_id)
+    page = 1
+    items: list[dict[str, Any]] = []
+    while True:
+        data = get_phonebook_contacts_page(
+            phone_book_id=book_id,
+            page=page,
+            limit=PHONEBOOK_PAGE_LIMIT,
+            search=search,
+        )
+        batch = data.get('items') or []
+        if not isinstance(batch, list):
+            break
+        items.extend(batch)
+        total_pages = int(data.get('totalPages') or 1)
+        if page >= total_pages:
+            break
+        page += 1
+    return items
+
+
+def bulk_upsert_phonebook_contacts(
+    *,
+    phone_book_id: int | None = None,
+    items: list[dict[str, Any]],
+) -> Any:
+    """
+    افزودن/به‌روزرسانی دسته‌ای مخاطبین — POST /ws/v1/phone_book_data/bulk-upsert
+    مستندات: https://docs.iranpayamak.com/add-bulk-contact-34585784e0
+    حداکثر ۵۰۰ مخاطب در هر درخواست.
+    """
+    if not items:
+        return None
+    if len(items) > BULK_PHONEBOOK_LIMIT:
+        raise SmsSendError(
+            f'حداکثر {BULK_PHONEBOOK_LIMIT} مخاطب در هر درخواست bulk مجاز است.',
+            code='phonebook_batch_too_large',
+        )
+    book_id = _phonebook_id(phone_book_id)
+    body = {
+        'phone_book_id': book_id,
+        'items': items,
+    }
+    payload = _request('POST', '/ws/v1/phone_book_data/bulk-upsert', json_body=body)
+    return _ensure_success(payload, 200)
+
+
+def upsert_phonebook_contact(
+    *,
+    phone_book_id: int | None = None,
+    mobile: str,
+    name: str = '',
+    prefix: str = 'man',
+    phone_book_data_id: int | None = None,
+    attributes: list[dict[str, Any]] | None = None,
+) -> Any:
+    """
+    افزودن یا ویرایش تک‌مخاطب — POST /ws/v1/phone_book_data
+    مستندات: https://docs.iranpayamak.com/add-new-contact-23655867e0
+    """
+    book_id = _phonebook_id(phone_book_id)
+    body: dict[str, Any] = {
+        'phone_book_id': book_id,
+        'prefix': prefix or 'man',
+        'mobile': mobile,
+        'name': (name or '').strip(),
+        'attributes': attributes or [],
+    }
+    if phone_book_data_id:
+        body['phone_book_data_id'] = phone_book_data_id
+    payload = _request('POST', '/ws/v1/phone_book_data', json_body=body)
+    return _ensure_success(payload, 200)
 

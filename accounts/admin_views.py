@@ -25,6 +25,12 @@ from accounts.services.admin_marketing_send import (
     create_campaign_draft,
     run_campaign_send,
 )
+from accounts.services.admin_phonebook_sync import (
+    PhonebookSyncError,
+    get_phonebook_sync_status,
+    phonebook_users_id,
+    sync_users_to_phonebook,
+)
 from accounts.services.admin_system_summary import system_summary_json_response
 from accounts.services.sms import get_sms_balance_snapshot
 
@@ -169,6 +175,7 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
             'sample_message': render_message(template, sample_ctx) if sample_ctx else template,
             'sample_context': sample_ctx,
             'sms_balance': get_sms_balance_snapshot(),
+            'phonebook_id': phonebook_users_id(),
             'recent_campaigns': MarketingCampaign.objects.select_related(
                 'shared_discount', 'created_by',
             )[:12],
@@ -268,3 +275,27 @@ class AdminMarketingDetailView(StaffRequiredMixin, DetailView):
         )
         ctx['sms_balance'] = get_sms_balance_snapshot()
         return ctx
+
+
+class AdminPhonebookStatusView(StaffRequiredMixin, View):
+    """وضعیت همگام‌سازی دفترچه تلفن فراز."""
+
+    def get(self, request):
+        status = get_phonebook_sync_status()
+        return JsonResponse({'ok': status.ok, **status.to_dict()})
+
+
+class AdminPhonebookSyncView(StaffRequiredMixin, View):
+    """همگام‌سازی یک‌کلیکی کاربران با دفترچه تلفن فراز."""
+
+    def post(self, request):
+        try:
+            result = sync_users_to_phonebook()
+        except PhonebookSyncError as exc:
+            return JsonResponse({'ok': False, 'error': exc.message, 'code': exc.code}, status=400)
+        except Exception:
+            return JsonResponse(
+                {'ok': False, 'error': 'خطای غیرمنتظره در همگام‌سازی دفترچه تلفن.'},
+                status=500,
+            )
+        return JsonResponse({'ok': True, **result.to_dict()})

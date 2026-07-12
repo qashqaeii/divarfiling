@@ -162,6 +162,16 @@ def _segment_pending_orders(
         .select_related('user', 'product', 'plan')
         .order_by('-created_at')
     )
+    # کاربرانی که بعداً سفارش پرداخت‌شده یا لایسنس فعال گرفته‌اند نباید هدف پیگیری باشند
+    paid_order_q = Order.objects.filter(user=OuterRef('user'), status='paid')
+    active_license_q = License.objects.filter(
+        order__user=OuterRef('user'),
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+    qs = qs.annotate(
+        _has_paid_order=Exists(paid_order_q),
+        _has_active_license=Exists(active_license_q),
+    ).filter(_has_paid_order=False, _has_active_license=False)
     if stale_hours and stale_hours > 0:
         cutoff = timezone.now() - timedelta(hours=stale_hours)
         qs = qs.filter(created_at__lte=cutoff)

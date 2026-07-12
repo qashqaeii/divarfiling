@@ -60,6 +60,40 @@ class MarketingSegmentTests(TestCase):
         phones = [r['phone'] for r in preview['sample']]
         self.assertIn('09121111111', phones)
 
+    def test_pending_segment_excludes_paid_order_user(self):
+        """کاربری که بعداً سفارش پرداخت‌شده گرفته نباید در سگمنت باشد."""
+        Order.objects.create(
+            user=self.user,
+            product=self.product,
+            plan=self.plan,
+            amount=self.plan.price,
+            status='paid',
+        )
+        preview = preview_segment('pending_orders')
+        phones = [r['phone'] for r in preview['recipients']]
+        self.assertNotIn('09121111111', phones)
+
+    def test_pending_segment_excludes_active_license_user(self):
+        """کاربری با لایسنس فعال نباید در سگمنت سفارش معلق باشد."""
+        from licenses.models import License
+
+        paid = Order.objects.create(
+            user=self.user,
+            product=self.product,
+            plan=self.plan,
+            amount=self.plan.price,
+            status='paid',
+        )
+        License.objects.create(
+            order=paid,
+            license_key='LIC-MKT-TEST-1',
+            plan=self.plan,
+            status='active',
+        )
+        preview = preview_segment('pending_orders')
+        phones = [r['phone'] for r in preview['recipients']]
+        self.assertNotIn('09121111111', phones)
+
     def test_marketing_dashboard_stats(self):
         stats = get_marketing_dashboard_stats()
         self.assertIn('campaigns_total', stats)

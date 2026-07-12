@@ -4273,38 +4273,34 @@ button.mk-ds-card-act {
 .mk-hub-metric--warn .mk-hub-metric-val { color: #d97706; }
 
 .mk-hub-metric[data-tone="purple"]::after { background: #7C3AED; }
-.mk-hub-metric[data-tone="purple"] .mk-hub-metric-icon { background: var(--ds-purple-soft, rgba(124,58,237,.12)); color: #7C3AED; }
+.mk-hub-metric[data-tone="purple"] .mk-hub-metric-icon { color: #7C3AED; }
 .mk-hub-metric[data-tone="blue"]::after { background: #2563EB; }
-.mk-hub-metric[data-tone="blue"] .mk-hub-metric-icon { background: var(--ds-blue-soft, rgba(37,99,235,.12)); color: #2563EB; }
+.mk-hub-metric[data-tone="blue"] .mk-hub-metric-icon { color: #2563EB; }
 .mk-hub-metric[data-tone="green"]::after { background: #10B981; }
-.mk-hub-metric[data-tone="green"] .mk-hub-metric-icon { background: var(--ds-green-soft, rgba(16,185,129,.12)); color: #10B981; }
+.mk-hub-metric[data-tone="green"] .mk-hub-metric-icon { color: #10B981; }
 .mk-hub-metric[data-tone="cyan"]::after { background: #06B6D4; }
-.mk-hub-metric[data-tone="cyan"] .mk-hub-metric-icon { background: var(--ds-cyan-soft, rgba(6,182,212,.12)); color: #06B6D4; }
+.mk-hub-metric[data-tone="cyan"] .mk-hub-metric-icon { color: #06B6D4; }
 .mk-hub-metric[data-tone="indigo"]::after { background: #4F46E5; }
-.mk-hub-metric[data-tone="indigo"] .mk-hub-metric-icon { background: rgba(79, 70, 229, 0.12); color: #4F46E5; }
+.mk-hub-metric[data-tone="indigo"] .mk-hub-metric-icon { color: #4F46E5; }
 .mk-hub-metric[data-tone="violet"]::after { background: #8B5CF6; }
-.mk-hub-metric[data-tone="violet"] .mk-hub-metric-icon { background: rgba(139, 92, 246, 0.12); color: #8B5CF6; }
+.mk-hub-metric[data-tone="violet"] .mk-hub-metric-icon { color: #8B5CF6; }
 .mk-hub-metric[data-tone="amber"]::after { background: #F59E0B; }
-.mk-hub-metric[data-tone="amber"] .mk-hub-metric-icon { background: var(--ds-amber-soft, rgba(245,158,11,.12)); color: #F59E0B; }
+.mk-hub-metric[data-tone="amber"] .mk-hub-metric-icon { color: #F59E0B; }
 .mk-hub-metric[data-tone="rose"]::after { background: #F43F5E; }
-.mk-hub-metric[data-tone="rose"] .mk-hub-metric-icon { background: var(--ds-rose-soft, rgba(244,63,94,.12)); color: #F43F5E; }
+.mk-hub-metric[data-tone="rose"] .mk-hub-metric-icon { color: #F43F5E; }
+.mk-hub-metric[data-tone="teal"] .mk-hub-metric-icon { color: #14B8A6; }
+.mk-hub-metric[data-tone="gray"] .mk-hub-metric-icon { color: #64748B; }
 
 .mk-hub-metric-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.9rem;
-    flex-shrink: 0;
-}
-.ws-home .mk-hub-metrics .mk-hub-metric-icon,
-.ws-home .mk-hub-metrics .mk-hub-metric[data-tone] .mk-hub-metric-icon {
-    background: transparent;
-    border: none;
-    border-radius: 0;
     width: auto;
     height: auto;
+    border-radius: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
 }
-.ws-home .mk-hub-metrics .mk-hub-metric[data-tone="teal"] .mk-hub-metric-icon { color: #14B8A6; }
 .mk-hub-metric-body {
     display: flex;
     flex-direction: column;
@@ -5171,14 +5167,16 @@ button.mk-ds-card-act {
     background: var(--ws-surface-2);
 }
 .mk-hub-quick-item-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
+    width: auto;
+    height: auto;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.72rem;
+    font-size: 0.85rem;
     flex-shrink: 0;
+    background: transparent;
+    border: none;
 }
 .mk-hub-quick-item-text {
     font-size: 0.64rem;
@@ -5191,24 +5189,15 @@ button.mk-ds-card-act {
     max-width: 100%;
     line-height: 1.2;
 }
-.mk-hub-quick-item-icon[data-tone="purple"] { background: rgba(124, 58, 237, 0.1); color: #7C3AED; }
-.mk-hub-quick-item-icon[data-tone="blue"] { background: rgba(37, 99, 235, 0.1); color: #2563EB; }
-.mk-hub-quick-item-icon[data-tone="cyan"] { background: rgba(6, 182, 212, 0.1); color: #06B6D4; }
-.mk-hub-quick-item-icon[data-tone="indigo"] { background: rgba(79, 70, 229, 0.1); color: #4F46E5; }
-.mk-hub-quick-item-icon[data-tone="green"] { background: rgba(16, 185, 129, 0.1); color: #10B981; }
-.mk-hub-quick-item-icon[data-tone="amber"] { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
-.mk-hub-quick-item-icon[data-tone="violet"] { background: rgba(139, 92, 246, 0.1); color: #8B5CF6; }
-.mk-hub-quick-item-icon[data-tone="rose"] { background: rgba(244, 63, 94, 0.1); color: #F43F5E; }
-
-.mk-hub-quick--bar .mk-hub-quick-item-icon,
-.mk-hub-quick--bar .mk-hub-quick-item-icon[data-tone] {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    width: auto;
-    height: auto;
-}
-.mk-hub-quick--bar .mk-hub-quick-item-icon[data-tone="teal"] { color: #14B8A6; }
+.mk-hub-quick-item-icon[data-tone="purple"] { color: #7C3AED; }
+.mk-hub-quick-item-icon[data-tone="blue"] { color: #2563EB; }
+.mk-hub-quick-item-icon[data-tone="cyan"] { color: #06B6D4; }
+.mk-hub-quick-item-icon[data-tone="indigo"] { color: #4F46E5; }
+.mk-hub-quick-item-icon[data-tone="green"] { color: #10B981; }
+.mk-hub-quick-item-icon[data-tone="amber"] { color: #F59E0B; }
+.mk-hub-quick-item-icon[data-tone="violet"] { color: #8B5CF6; }
+.mk-hub-quick-item-icon[data-tone="rose"] { color: #F43F5E; }
+.mk-hub-quick-item-icon[data-tone="teal"] { color: #14B8A6; }
 
 .mk-hub-aside {
     display: flex;
@@ -5904,11 +5893,14 @@ button.mk-ds-card-act {
     border-color: rgba(124, 58, 237, 0.2);
 }
 .mk-launch-icon {
-    width: 36px; height: 36px;
-    border-radius: 10px;
+    width: auto;
+    height: auto;
+    border-radius: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     transition: transform 0.15s;
+    background: transparent;
+    border: none;
 }
 .mk-launch-tile:hover .mk-launch-icon { transform: scale(1.06); }
 .mk-launch-label {
@@ -5918,14 +5910,14 @@ button.mk-ds-card-act {
     text-align: center;
     line-height: 1.2;
 }
-.mk-launch-tile[data-tone="purple"] .mk-launch-icon { background: rgba(124, 58, 237, 0.12); color: #7C3AED; }
-.mk-launch-tile[data-tone="blue"] .mk-launch-icon { background: rgba(37, 99, 235, 0.12); color: #2563EB; }
-.mk-launch-tile[data-tone="cyan"] .mk-launch-icon { background: rgba(6, 182, 212, 0.12); color: #06B6D4; }
-.mk-launch-tile[data-tone="indigo"] .mk-launch-icon { background: rgba(79, 70, 229, 0.12); color: #4F46E5; }
-.mk-launch-tile[data-tone="green"] .mk-launch-icon { background: rgba(16, 185, 129, 0.12); color: #10B981; }
-.mk-launch-tile[data-tone="amber"] .mk-launch-icon { background: rgba(245, 158, 11, 0.12); color: #F59E0B; }
-.mk-launch-tile[data-tone="violet"] .mk-launch-icon { background: rgba(139, 92, 246, 0.12); color: #8B5CF6; }
-.mk-launch-tile[data-tone="rose"] .mk-launch-icon { background: rgba(244, 63, 94, 0.12); color: #F43F5E; }
+.mk-launch-tile[data-tone="purple"] .mk-launch-icon { color: #7C3AED; }
+.mk-launch-tile[data-tone="blue"] .mk-launch-icon { color: #2563EB; }
+.mk-launch-tile[data-tone="cyan"] .mk-launch-icon { color: #06B6D4; }
+.mk-launch-tile[data-tone="indigo"] .mk-launch-icon { color: #4F46E5; }
+.mk-launch-tile[data-tone="green"] .mk-launch-icon { color: #10B981; }
+.mk-launch-tile[data-tone="amber"] .mk-launch-icon { color: #F59E0B; }
+.mk-launch-tile[data-tone="violet"] .mk-launch-icon { color: #8B5CF6; }
+.mk-launch-tile[data-tone="rose"] .mk-launch-icon { color: #F43F5E; }
 
 @media (max-width: 640px) {
     .mk-hub-head { padding: 0.65rem 0.8rem; flex-direction: column; align-items: stretch; gap: 0.65rem; }
@@ -7380,19 +7372,21 @@ button.mk-ds-card-act {
     min-width: 0;
 }
 .mk-ds-kpi-icon {
-    width: 1.85rem;
-    height: 1.85rem;
-    border-radius: 8px;
+    width: auto;
+    height: auto;
+    border-radius: 0;
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    font-size: 0.72rem;
+    font-size: 0.95rem;
+    background: transparent;
+    border: none;
 }
-.mk-ds-kpi-icon-view { background: rgba(124, 58, 237, 0.1); color: #7c3aed; }
-.mk-ds-kpi-icon-total { background: rgba(100, 116, 139, 0.1); color: #64748b; }
-.mk-ds-kpi-icon-consultant { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
-.mk-ds-kpi-icon-personal { background: rgba(245, 158, 11, 0.12); color: #d97706; }
-.mk-ds-kpi-icon-filter { background: var(--ws-primary-soft); color: var(--ws-primary); }
+.mk-ds-kpi-icon-view { color: #7c3aed; }
+.mk-ds-kpi-icon-total { color: #64748b; }
+.mk-ds-kpi-icon-consultant { color: #2563eb; }
+.mk-ds-kpi-icon-personal { color: #d97706; }
+.mk-ds-kpi-icon-filter { color: var(--ws-primary); }
 .mk-ds-kpi-val {
     display: block;
     font-size: 1rem;

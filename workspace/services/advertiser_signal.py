@@ -258,6 +258,54 @@ def listing_advertiser_signal(listing) -> str:
     )
 
 
+def property_advertiser_display(business_type: str = '') -> Dict[str, str]:
+    """برچسب نوع آگهی‌دهنده برای فایل‌های شخصی CRM (فقط business_type)."""
+    raw = (business_type or '').strip()
+    lowered = raw.lower().replace('\u200c', '')
+    if lowered == 'مالک':
+        return {
+            'signal': ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+            'label': 'مالک',
+            'short_label': 'مالک',
+            'pill_class': 'mk-pub-pill--genuine',
+            'tag_class': 'mk-adv-tag--genuine',
+            'icon': 'fa-user-check',
+            'title': 'آگهی مالک',
+        }
+    if (
+        'مشاور' in lowered
+        or lowered in ('consultant', 'premium-panel', 'premium', 'business', 'بنگاه', 'agency')
+    ):
+        return {
+            'signal': ADVERTISER_SIGNAL_CONSULTANT,
+            'label': 'مشاور',
+            'short_label': 'مشاور',
+            'pill_class': 'mk-pub-pill--consultant',
+            'tag_class': 'mk-adv-tag--consultant',
+            'icon': 'fa-building',
+            'title': 'مشاور / آژانس املاک',
+        }
+    if raw:
+        return {
+            'signal': '',
+            'label': raw,
+            'short_label': raw,
+            'pill_class': 'mk-pub-pill--personal',
+            'tag_class': 'mk-adv-tag--personal',
+            'icon': 'fa-user',
+            'title': raw,
+        }
+    return {
+        'signal': '',
+        'label': 'شخصی',
+        'short_label': 'شخصی',
+        'pill_class': 'mk-pub-pill--personal',
+        'tag_class': 'mk-adv-tag--personal',
+        'icon': 'fa-user',
+        'title': 'آگهی شخصی',
+    }
+
+
 def listing_advertiser_display(listing) -> Dict[str, str]:
     """برچسب و استایل نمایش نوع آگهی‌دهنده برای جدول، هدر و اطلاعات تکمیلی."""
     signal = listing_advertiser_signal(listing)

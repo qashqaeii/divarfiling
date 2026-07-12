@@ -45,6 +45,12 @@
                     {% if m.intent_label %}<span class="crm-match-intent">{{ m.intent_label }}</span>{% endif %}
                 </div>
                 <div class="crm-match-meta crm-match-meta-v2">
+                    {% if m.advertiser %}
+                    <span class="mk-adv-tag {{ m.advertiser.tag_class }}" title="{{ m.advertiser.title }}">
+                        <span class="mk-adv-dot" aria-hidden="true"></span>
+                        <span class="mk-adv-label">{{ m.advertiser.short_label }}</span>
+                    </span>
+                    {% endif %}
                     {% if m.property_type %}<span><i class="fas fa-building" aria-hidden="true"></i> {{ m.property_type }}</span>{% endif %}
                     {% if m.price_label %}<span class="crm-match-price"><i class="fas fa-coins" aria-hidden="true"></i> {{ m.price_label }}</span>{% endif %}
                     {% if m.area %}<span><i class="fas fa-ruler-combined" aria-hidden="true"></i> {{ m.area|floatformat:0 }} متر</span>{% endif %}

@@ -14,6 +14,7 @@ from workspace.constants import (
 )
 from workspace.models import CRMProperty, Customer, Listing
 from workspace.services.formatting import format_toman
+from workspace.services.advertiser_signal import listing_advertiser_display, property_advertiser_display
 
 MATCH_TYPES = {
     'خریدار', 'مستاجر', 'متقاضی خرید', 'متقاضی اجاره', 'سرنخ', 'سرمایه‌گذار', 'سازنده',
@@ -822,6 +823,7 @@ def _score_crm_property_with_profile(
         ),
         'link': prop.link or '',
         'image': (prop.images or [None])[0] if prop.images else '',
+        'advertiser': property_advertiser_display(prop.business_type),
     }
     if match_intent:
         result['match_intent'] = match_intent
@@ -911,6 +913,7 @@ def _score_listing_with_profile(
         'price_label': price_label,
         'link': listing.link or '',
         'image': (listing.images or [None])[0] if listing.images else '',
+        'advertiser': listing_advertiser_display(listing),
     }
     if match_intent:
         result['match_intent'] = match_intent

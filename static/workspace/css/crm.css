@@ -19168,22 +19168,76 @@ button.crm-prop-hero-cover {
 }
 
 .crm-areas-search-wrap {
-    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0.55rem 0.85rem;
+    background: var(--crm-surface-muted);
+    border: 1px solid var(--crm-border);
+    border-radius: var(--crm-radius-sm);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.crm-areas-search-wrap:focus-within {
+    border-color: var(--crm-accent);
+    box-shadow: 0 0 0 3px var(--crm-accent-ring);
 }
 
 .crm-areas-search-wrap i {
-    position: absolute;
-    inset-inline-start: 0.65rem;
-    top: 50%;
-    transform: translateY(-50%);
+    flex-shrink: 0;
     font-size: 0.65rem;
     color: var(--ws-text-muted);
     pointer-events: none;
 }
 
 .crm-areas-search {
-    padding-inline-start: 1.85rem !important;
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    min-height: 0 !important;
     font-size: 0.72rem !important;
+    font-family: inherit;
+    color: var(--ws-text);
+    outline: none;
+}
+
+.crm-areas-search::placeholder {
+    color: var(--ws-text-muted);
+}
+
+.crm-drawer .crm-areas-search-wrap,
+.ws-modal .crm-areas-search-wrap {
+    background: var(--mk-input-bg) !important;
+    border: 1.5px solid var(--mk-input-border) !important;
+    border-radius: 8px !important;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+}
+
+.crm-drawer .crm-areas-search-wrap:focus-within,
+.ws-modal .crm-areas-search-wrap:focus-within {
+    border-color: var(--ws-primary, #7C3AED) !important;
+    box-shadow:
+        inset 0 1px 2px rgba(15, 23, 42, 0.04),
+        0 0 0 3px var(--mk-input-focus) !important;
+}
+
+.crm-drawer .crm-areas-search-wrap .crm-areas-search,
+.ws-modal .crm-areas-search-wrap .crm-areas-search {
+    display: block;
+    width: auto !important;
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 .crm-areas-custom {

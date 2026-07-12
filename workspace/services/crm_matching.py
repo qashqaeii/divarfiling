@@ -150,6 +150,58 @@ def _location_hay(neighborhood: str = '', city: str = '', district: str = '') ->
     return _norm(f'{neighborhood or ""} {city or ""} {district or ""}')
 
 
+def _location_field_values(
+    neighborhood: str = '',
+    city: str = '',
+    district: str = '',
+) -> List[Tuple[str, str]]:
+    """جفت (مقدار خام، نرمال‌شده) برای فیلدهای غیرخالی موقعیت."""
+    out: List[Tuple[str, str]] = []
+    seen: Set[str] = set()
+    for raw in (neighborhood, district, city):
+        text = (raw or '').strip()
+        norm = _norm(text)
+        if norm and norm not in seen:
+            seen.add(norm)
+            out.append((text, norm))
+    return out
+
+
+def _location_tokens_equivalent(preferred: str, location: str) -> bool:
+    """آیا ترجیح مشتری با یکی از فیلدهای موقعیت ملک هم‌پوشانی دارد."""
+    token = _norm(preferred)
+    loc = _norm(location)
+    if not token or not loc:
+        return False
+    if token == loc:
+        return True
+    if len(token) < 2 or len(loc) < 2:
+        return False
+    return token in loc or loc in token
+
+
+def _match_preferred_locations(
+    preferred: List[str],
+    neighborhood: str = '',
+    city: str = '',
+    district: str = '',
+) -> Tuple[bool, str]:
+    """تطبیق لیست محله/منطقه ترجیحی با فیلدهای واقعی ملک."""
+    fields = _location_field_values(neighborhood, city, district)
+    if not fields or not preferred:
+        return False, ''
+    for pref in preferred:
+        for raw, _ in fields:
+            if not _location_tokens_equivalent(pref, raw):
+                continue
+            if _location_tokens_equivalent(pref, neighborhood):
+                return True, (neighborhood or raw).strip()
+            if _location_tokens_equivalent(pref, district):
+                return True, (district or raw).strip()
+            return True, raw.strip()
+    return False, ''
+
+
 def _profile_neighborhood_eligible(
     profile,
     neighborhood: str = '',
@@ -162,18 +214,16 @@ def _profile_neighborhood_eligible(
     if not areas and not want_district:
         return True
 
-    hay = _location_hay(neighborhood, city, district)
-    hood = _norm(neighborhood or '')
-    if not hay and not hood:
+    if not _location_field_values(neighborhood, city, district):
         return False
 
-    for area in areas:
-        token = _norm(area)
-        if token and (token in hay or token in hood or hood in token):
+    if areas:
+        matched, _ = _match_preferred_locations(areas, neighborhood, city, district)
+        if matched:
             return True
     if want_district:
-        dist = _norm(want_district)
-        if dist and (dist in hay or dist in hood or hood in dist):
+        matched, _ = _match_preferred_locations([want_district], neighborhood, city, district)
+        if matched:
             return True
     return False
 
@@ -334,16 +384,16 @@ def _neighborhood_match_profile(profile, neighborhood: str, city: str, district:
     want_district = (getattr(profile, 'district', None) or '').strip()
     if not areas and not want_district:
         return 0.5, ''
-    hay = _location_hay(neighborhood, city, district)
-    hood = _norm(neighborhood or '')
-    for area in areas:
-        token = _norm(area)
-        if token and (token in hay or token in hood or hood in token):
-            return 1.0, f'محله {area}'
+    if areas:
+        matched, label = _match_preferred_locations(areas, neighborhood, city, district)
+        if matched:
+            return 1.0, f'محله {label or areas[0]}'
     if want_district:
-        dist = _norm(want_district)
-        if dist and (dist in hay or dist in hood or hood in dist):
-            return 0.85, f'منطقه {want_district}'
+        matched, label = _match_preferred_locations([want_district], neighborhood, city, district)
+        if matched:
+            return 0.85, f'منطقه {label or want_district}'
+    if not _location_field_values(neighborhood, city, district):
+        return 0.15, 'محله نامشخص'
     return 0.15, 'محله متفاوت'
 
 

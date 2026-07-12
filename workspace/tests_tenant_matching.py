@@ -259,6 +259,69 @@ class TenantMatchingTests(TestCase):
         self.assertNotIn(other_hood.title, titles)
         self.assertIn(same_hood.title, titles)
 
+    def test_buyer_rejects_mismatched_neighborhood_when_only_district_set(self):
+        """باگ: neighborhood خالی + district پر — نباید هر محله‌ای را بپذیرد."""
+        buyer = Customer.objects.create(
+            user=self.user,
+            name='متقاضی شادمهر',
+            phone='09120004444',
+            customer_type='متقاضی خرید',
+            property_type='آپارتمان',
+            budget_min=2_000_000_000,
+            budget_max=30_000_000_000,
+            min_area=40,
+            max_area=120,
+            areas='شادمهر',
+        )
+        beryanak = CRMProperty.objects.create(
+            user=self.user,
+            title='۴۹متربریانک شرقی',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=6_400_000_000,
+            neighborhood='',
+            district='بریانک',
+            city='تهران',
+            area=49,
+            rooms='2',
+        )
+        data = get_customer_matches(buyer, self.user, divar_enabled=False)
+        titles = [m['title'] for m in data['crm_matches']]
+        self.assertNotIn(beryanak.title, titles)
+
+    def test_buyer_neighborhood_reason_uses_property_location(self):
+        buyer = Customer.objects.create(
+            user=self.user,
+            name='متقاضی بریانک',
+            phone='09120003333',
+            customer_type='متقاضی خرید',
+            property_type='آپارتمان',
+            budget_min=2_000_000_000,
+            budget_max=30_000_000_000,
+            min_area=40,
+            max_area=120,
+            areas='بریانک',
+        )
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='آپارتمان بریانک',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=6_400_000_000,
+            neighborhood='',
+            district='بریانک',
+            city='تهران',
+            area=49,
+            rooms='2',
+        )
+        data = get_customer_matches(buyer, self.user, divar_enabled=False)
+        match = next(m for m in data['crm_matches'] if m['title'] == prop.title)
+        reasons_text = ' · '.join(match['reasons'])
+        self.assertIn('بریانک', reasons_text)
+        self.assertNotIn('شادمهر', reasons_text)
+
     def test_buyer_respects_rooms_and_amenities(self):
         buyer = Customer.objects.create(
             user=self.user,

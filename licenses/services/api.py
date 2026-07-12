@@ -8,6 +8,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from licenses.models import AuditLog, License, LicenseActivation
+from licenses.services.account_context import build_license_account_payload
 from licenses.services.security import (
     RateLimitExceeded,
     check_rate_limit,
@@ -92,7 +93,7 @@ def activate_license(request) -> dict:
     try:
         with transaction.atomic():
             try:
-                license_obj = License.objects.select_for_update().get(license_key=license_key)
+                license_obj = License.objects.select_for_update().select_related('order__user', 'plan').get(license_key=license_key)
             except License.DoesNotExist:
                 _audit(None, 'suspicious', request, {
                     'license_key': license_key,
@@ -117,6 +118,7 @@ def activate_license(request) -> dict:
                     'message': 'لایسنس قبلاً برای این سیستم فعال شده است.',
                     'license_key': license_obj.license_key,
                     'activated_at': existing_active.activated_at.isoformat(),
+                    'account': build_license_account_payload(license_obj),
                     **_offline_grace_payload(),
                     **license_obj.plan_payload(),
                 }
@@ -172,6 +174,7 @@ def activate_license(request) -> dict:
                 'message': 'لایسنس با موفقیت فعال شد.',
                 'license_key': license_obj.license_key,
                 'activated_at': activation.activated_at.isoformat(),
+                'account': build_license_account_payload(license_obj),
                 **_offline_grace_payload(),
                 **license_obj.plan_payload(),
             }
@@ -197,7 +200,7 @@ def validate_license(request) -> dict:
         raise LicenseAPIError(str(exc), http_status=429) from exc
 
     try:
-        license_obj = License.objects.get(license_key=license_key)
+        license_obj = License.objects.select_related('order__user', 'plan').get(license_key=license_key)
     except License.DoesNotExist:
         raise LicenseAPIError('لایسنس یافت نشد.', http_status=404, payload={'valid': False})
 
@@ -239,6 +242,7 @@ def validate_license(request) -> dict:
         payload['error'] = error
 
     if is_ok:
+        payload['account'] = build_license_account_payload(license_obj)
         _audit(license_obj, 'validation', request, {'hardware_fingerprint': hardware_fingerprint[:32]})
 
     return payload

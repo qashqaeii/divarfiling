@@ -76,6 +76,9 @@ class LicenseAPITests(TestCase):
         data = resp.json()
         self.assertTrue(data['success'])
         self.assertIn('offline_grace_until', data)
+        self.assertIn('account', data)
+        self.assertIsInstance(data['account'], dict)
+        self.assertEqual(data['account'].get('phone'), '09121111111')
         self.license.refresh_from_db()
         self.assertEqual(self.license.status, 'active')
 
@@ -97,7 +100,10 @@ class LicenseAPITests(TestCase):
             'license_key': TEST_KEY,
             'hardware_fingerprint': TEST_HW,
         }, format='json')
-        self.assertTrue(resp.json()['valid'], resp.json())
+        data = resp.json()
+        self.assertTrue(data['valid'], data)
+        self.assertIn('account', data)
+        self.assertIsInstance(data['account'], dict)
 
     def test_invalid_key_format_rejected(self):
         resp = self.client.post('/api/licenses/activate/', {

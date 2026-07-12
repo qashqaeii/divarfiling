@@ -214,6 +214,20 @@ def _apply_geo_coord_format(cell: Any, header_text: str, numeric_alignment: Any)
 IMAGE_LINK_SEPARATOR = " | "
 DIVAR_IMAGE_HOST_HINTS = ("divarcdn", "webimage.divar", "divar.ir")
 IMAGE_LINK_EXCEL_COLUMNS = ("لینک تصویر اول", "لینک تصاویر")
+EXCEL_MAX_HYPERLINK_LENGTH = 2078
+
+_AMENITY_FILTERS_BY_CATEGORY = {
+    "apartment-rent": frozenset({"parking", "warehouse", "elevator"}),
+    "apartment-sell": frozenset({"parking", "warehouse", "elevator"}),
+    "house-villa-rent": frozenset({"parking", "warehouse"}),
+    "house-villa-sell": frozenset({"parking", "warehouse"}),
+}
+
+
+def _truthy_filter_flag(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in ("1", "true", "yes", "on")
 
 
 def _is_likely_image_url(value: Any) -> bool:
@@ -365,6 +379,26 @@ def _first_url_from_joined(value: Any) -> str:
     return parts[0] if parts else "-"
 
 
+def _excel_hyperlink_target(raw: Any, *, multi_link_column: bool = False) -> str:
+    """اولین URL معتبر برای هایپرلینک اکسل — رعایت سقف ۲۰۷۸ کاراکتر."""
+    text = str(raw or "").strip()
+    if not text or text == "-":
+        return ""
+    url = _first_url_from_joined(text) if multi_link_column and "|" in text else text
+    url = url.strip()
+    if not url.startswith("http") or len(url) > EXCEL_MAX_HYPERLINK_LENGTH:
+        return ""
+    return url
+
+
+def _write_result_excel(result_df: Any, output_path: str) -> None:
+    """ذخیره اکسل — openpyxl تا از هایپرلینک خودکار xlsxwriter روی URLهای بلند جلوگیری شود."""
+    try:
+        result_df.to_excel(output_path, index=False, engine="openpyxl")
+    except Exception:
+        result_df.to_excel(output_path, index=False)
+
+
 def _append_image_link_excel_columns(result_df: Any, df: Any, combine_excel_and_source) -> None:
     """افزودن ستون‌های لینک تصویر به خروجی اکسل."""
     import pandas as pd
@@ -415,8 +449,11 @@ def _apply_image_link_excel_format(ws: Any) -> None:
             raw = str(cell.value or "").strip()
             if not raw or raw == "-":
                 continue
-            url = _first_url_from_joined(raw) if header == "لینک تصاویر" and "|" in raw else raw
-            if not url.startswith("http"):
+            url = _excel_hyperlink_target(
+                raw,
+                multi_link_column=(header == "لینک تصاویر"),
+            )
+            if not url:
                 continue
             try:
                 cell.hyperlink = url
@@ -753,6 +790,26 @@ def _append_feature_detail_columns(result_df: Any, df: Any, combine_excel_and_so
     return added
 
 
+def _has_active_search_filters(sf: Optional[Dict[str, Any]] = None) -> bool:
+    """آیا فیلتر پیشرفته‌ای برای source_view=FILTER فعال است؟"""
+    data = sf if sf is not None else (CONFIG.get("search_filters") or {})
+    if not data:
+        return False
+    for key in (
+        "price_min", "price_max", "deposit_min", "deposit_max",
+        "rent_min", "rent_max", "area_min", "area_max",
+        "year_min", "year_max",
+    ):
+        if data.get(key) is not None and str(data.get(key)).strip() != "":
+            return True
+    for key in ("parking", "elevator", "warehouse"):
+        if _truthy_filter_flag(data.get(key)):
+            return True
+    if str(data.get("advertiser_filter") or "all").strip().lower() == "personal":
+        return True
+    return False
+
+
 def _apply_search_filters(form_data: Dict[str, Any]) -> None:
     """اعمال فیلترهای پیشرفته از CONFIG['search_filters'] روی form_data دیوار."""
     sf = CONFIG.get("search_filters") or {}
@@ -781,14 +838,16 @@ def _apply_search_filters(form_data: Dict[str, Any]) -> None:
         _num_range("price", "price_min", "price_max")
 
     _num_range("size", "area_min", "area_max")
-    _num_range("building-year", "year_min", "year_max")
+    _num_range("building-age", "year_min", "year_max")
 
-    rooms = sf.get("rooms")
-    if rooms:
-        if isinstance(rooms, str):
-            rooms = [r.strip() for r in rooms.split(",") if r.strip()]
-        if rooms:
-            form_data["rooms"] = {"repeated_string": {"value": [str(r) for r in rooms]}}
+    supported = _AMENITY_FILTERS_BY_CATEGORY.get(cat, frozenset())
+    for key in ("parking", "elevator", "warehouse"):
+        if key in supported and _truthy_filter_flag(sf.get(key)):
+            form_data[key] = {"boolean": {"value": True}}
+
+    advertiser_filter = str(sf.get("advertiser_filter") or "all").strip().lower()
+    if advertiser_filter == "personal":
+        form_data["business-type"] = {"repeated_string": {"value": ["personal"]}}
 
 
 def build_search_payload(page: int, last_post_date: Optional[str], search_uid: Optional[str], cumulative_widgets_count: int, viewed_tokens: Optional[str] = None) -> Dict[str, Any]:
@@ -839,6 +898,9 @@ def build_search_payload(page: int, last_post_date: Optional[str], search_uid: O
 
     if search_query:
         payload["source_view"] = "SEARCH_BAR_QUERY_SUGGESTION"
+    elif _has_active_search_filters():
+        payload["source_view"] = "FILTER"
+        payload["map_state"] = {"camera_info": {"bbox": {}}, "page_state": "HALF_STATE"}
     else:
         # سازگاری با برخی دسته‌ها که نیاز به source_view/page_state دارند
         commercial_categories = ("office-sell", "shop-sell", "industry-agriculture-business-sell")
@@ -2465,7 +2527,7 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
     result_df = _apply_export_column_filter(result_df, export_columns)
     
     # ذخیره فایل
-    result_df.to_excel(output_path, index=False)
+    _write_result_excel(result_df, output_path)
     
     # فرمت‌بندی حرفه‌ای فایل
     try:
@@ -3404,7 +3466,7 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
     result_df = _apply_export_column_filter(result_df, export_columns)
     
     # ذخیره فایل
-    result_df.to_excel(output_path, index=False)
+    _write_result_excel(result_df, output_path)
     
     # فرمت‌بندی حرفه‌ای فایل (مشابه فروش)
     try:

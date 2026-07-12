@@ -163,7 +163,6 @@
                             <td class="crm-contacts-col-check"><input type="checkbox" class="crm-checkbox crm-row-check" value="{{ c.id }}"></td>
                             <td>
                                 <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-person crm-contacts-person-link">
-                                    <span class="crm-contacts-avatar crm-contacts-avatar--hue-{{ c.name|crm_avatar_hue }}" aria-hidden="true">{{ c.name|crm_initials }}</span>
                                     <div class="crm-contacts-person-text">
                                         <span class="crm-contacts-name">{{ c.name }}</span>
                                         {% if c.company_name %}<span class="crm-contacts-sub">{{ c.company_name }}</span>{% endif %}

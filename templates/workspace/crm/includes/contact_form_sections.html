@@ -190,7 +190,7 @@
                 {% crm_field form.builder_buy_budget_max 'بودجه خرید تا' 'crm-money-builder-buy' %}
                 {% crm_field form.builder_buy_min_area 'متراژ خرید از' 'crm-builder-buy-field' %}
                 {% crm_field form.builder_buy_max_area 'متراژ خرید تا' 'crm-builder-buy-field' %}
-                {% include 'workspace/crm/includes/contact_areas_picker.html' with field_name='builder_buy_areas' label='محله‌های هدف خرید' wrapper_class='crm-field-full crm-builder-buy-field' form=form dataset_neighborhoods=dataset_neighborhoods dataset_neighborhoods_json=dataset_neighborhoods_json %}
+                {% crm_contact_areas_picker form 'builder_buy_areas' 'محله‌های هدف خرید' 'crm-field-full crm-builder-buy-field' dataset_neighborhoods %}
             </div>
             <div class="crm-field crm-field-full crm-builder-buy-field">
                 <span class="crm-label">انواع ملک هدف خرید</span>
@@ -232,7 +232,7 @@
             {% crm_field form.year_max 'سال ساخت تا' 'crm-prefs-year' %}
             {% crm_field form.floor_min 'طبقه از' 'crm-prefs-floor' %}
             {% crm_field form.floor_max 'طبقه تا' 'crm-prefs-floor' %}
-            {% include 'workspace/crm/includes/contact_areas_picker.html' with field_name='areas' label='محله‌های مورد نظر' wrapper_class='crm-field-full crm-prefs-location' form=form dataset_neighborhoods=dataset_neighborhoods dataset_neighborhoods_json=dataset_neighborhoods_json %}
+            {% crm_contact_areas_picker form 'areas' 'محله‌های مورد نظر' 'crm-field-full crm-prefs-location' dataset_neighborhoods %}
         </div>
 
         <div class="crm-prefs-amenities crm-prefs-amenities-block">

@@ -411,3 +411,14 @@ def phone_sms_href(phone):
 def crm_contact_channels_form(form):
     from workspace.services.contact_channels import contact_channels_form_list_for_form
     return {'channels': contact_channels_form_list_for_form(form)}
+
+
+@register.inclusion_tag('workspace/crm/includes/contact_areas_picker.html')
+def crm_contact_areas_picker(form, field_name, label, wrapper_class='', dataset_neighborhoods=None):
+    return {
+        'field': form[field_name],
+        'field_name': field_name,
+        'label': label,
+        'wrapper_class': wrapper_class,
+        'dataset_neighborhoods': dataset_neighborhoods or [],
+    }

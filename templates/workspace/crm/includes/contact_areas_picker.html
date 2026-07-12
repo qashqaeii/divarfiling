@@ -1,6 +1,5 @@
-{% load crm_tags %}
 {# انتخاب محله از فایلینگ + تگ دلخواه #}
-<div class="crm-field crm-areas-field{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if form.errors and form[field_name].errors %} crm-field-has-error{% endif %}"
+<div class="crm-field crm-areas-field{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if field.errors %} crm-field-has-error{% endif %}"
      data-field="{{ field_name }}"
      data-crm-areas-picker
      data-field-name="{{ field_name }}">
@@ -10,7 +9,7 @@
     </div>
     <p class="crm-form-hint crm-form-hint--tight">از محله‌های فایلینگ تیک بزنید یا محله دلخواه را به‌صورت تگ اضافه کنید.</p>
 
-    {{ form[field_name] }}
+    {{ field }}
 
     <div class="crm-areas-selected" data-crm-areas-selected aria-labelledby="crm-areas-label-{{ field_name }}"></div>
 
@@ -52,7 +51,7 @@
         {% endif %}
     </div>
 
-    {% for error in form[field_name].errors %}
+    {% for error in field.errors %}
     <p class="crm-field-error" role="alert">{{ error }}</p>
     {% endfor %}
 </div>

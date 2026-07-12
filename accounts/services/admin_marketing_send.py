@@ -249,20 +249,29 @@ def run_campaign_send(
 
 
 def campaign_report(campaign: MarketingCampaign) -> Dict[str, Any]:
+    attempted = campaign.sent_count + campaign.failed_count
+    success_rate = round(100 * campaign.sent_count / attempted) if attempted else None
+    seg_meta = SEGMENT_REGISTRY.get(campaign.segment_key, {})
     return {
         'id': campaign.pk,
         'name': campaign.name,
         'segment_key': campaign.segment_key,
-        'segment_title': SEGMENT_REGISTRY.get(campaign.segment_key, {}).get('title', campaign.segment_key),
+        'segment_title': seg_meta.get('title', campaign.segment_key),
+        'segment_icon': seg_meta.get('icon', 'fa-bullhorn'),
+        'segment_accent': seg_meta.get('accent', 'violet'),
         'status': campaign.status,
         'status_label': campaign.get_status_display(),
         'discount_mode': campaign.discount_mode,
+        'discount_mode_label': campaign.get_discount_mode_display(),
         'shared_code': campaign.shared_discount.code if campaign.shared_discount_id else '',
         'recipients_total': campaign.recipients_total,
         'sent_count': campaign.sent_count,
         'failed_count': campaign.failed_count,
         'skipped_count': campaign.skipped_count,
+        'success_rate': success_rate,
         'message_template': campaign.message_template,
+        'dedupe_days': campaign.dedupe_days,
         'created_at': campaign.created_at,
         'completed_at': campaign.completed_at,
+        'created_by': campaign.created_by,
     }

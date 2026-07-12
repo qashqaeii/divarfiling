@@ -14,7 +14,9 @@ from accounts.services.admin_dashboard import get_admin_dashboard_context
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 from accounts.services.admin_marketing import (
     SEGMENT_DEFAULT_TEMPLATES,
+    SEGMENT_REGISTRY,
     active_products_for_filter,
+    get_marketing_dashboard_stats,
     get_segment_catalog,
     preview_segment,
     render_message,
@@ -162,6 +164,19 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
                 'code': 'SAMPLE15',
             }
         template = SEGMENT_DEFAULT_TEMPLATES.get(segment, '')
+        recent_campaigns = list(
+            MarketingCampaign.objects.select_related('shared_discount', 'created_by')[:12]
+        )
+        for campaign in recent_campaigns:
+            attempted = campaign.sent_count + campaign.failed_count
+            campaign.success_pct = (
+                round(100 * campaign.sent_count / attempted) if attempted else None
+            )
+            seg_meta = SEGMENT_REGISTRY.get(campaign.segment_key, {})
+            campaign.segment_icon = seg_meta.get('icon', 'fa-bullhorn')
+            campaign.segment_accent = seg_meta.get('accent', 'violet')
+            campaign.segment_title = seg_meta.get('title', campaign.segment_key)
+
         ctx.update({
             'segments': catalog,
             'selected_segment': segment,
@@ -176,9 +191,8 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
             'sample_context': sample_ctx,
             'sms_balance': get_sms_balance_snapshot(),
             'phonebook_id': phonebook_users_id(),
-            'recent_campaigns': MarketingCampaign.objects.select_related(
-                'shared_discount', 'created_by',
-            )[:12],
+            'marketing_stats': get_marketing_dashboard_stats(),
+            'recent_campaigns': recent_campaigns,
             'segment_meta': next((c for c in catalog if c['key'] == segment), catalog[0]),
         })
         return ctx

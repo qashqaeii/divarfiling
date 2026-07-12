@@ -8,28 +8,32 @@
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
-<div class="adm-page">
-    <header class="adm-hero">
+<div class="adm-page adm-mkt-page adm-mkt-detail">
+    <header class="adm-hero adm-mkt-hero">
         <div class="adm-hero-main">
             <p class="adm-hero-kicker">
-                <i class="fas fa-chart-line" aria-hidden="true"></i>
+                <i class="fas {{ report.segment_icon }}" aria-hidden="true"></i>
                 گزارش کمپین
             </p>
             <h1 class="adm-hero-title">{{ campaign.name }}</h1>
             <p class="adm-hero-desc">
                 {{ report.segment_title }}
-                · {{ campaign.get_discount_mode_display }}
-                {% if report.shared_code %} · کد {{ report.shared_code }}{% endif %}
+                · {{ report.discount_mode_label }}
+                {% if report.shared_code %} · کد <code dir="ltr">{{ report.shared_code }}</code>{% endif %}
             </p>
         </div>
         <div class="adm-hero-actions">
-            <a href="{% url 'admin_panel_marketing' %}" class="adm-hero-link">
-                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            <a href="{% url 'admin_panel_marketing' %}#mkt-compose" class="adm-hero-link">
+                <i class="fas fa-plus" aria-hidden="true"></i>
                 کمپین جدید
+            </a>
+            <a href="{% url 'admin_panel_marketing' %}#mkt-history" class="adm-hero-link">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                تاریخچه
             </a>
             <a href="{% url 'admin_panel' %}" class="adm-hero-link">داشبورد</a>
         </div>
@@ -43,7 +47,7 @@
     </section>
     {% endif %}
 
-    <section class="adm-kpis" aria-label="نتیجه کمپین">
+    <section class="adm-kpis adm-mkt-kpis" aria-label="نتیجه کمپین">
         <article class="adm-kpi" data-accent="emerald">
             <span class="adm-kpi-icon"><i class="fas fa-paper-plane"></i></span>
             <span class="adm-kpi-body">
@@ -74,28 +78,75 @@
         </article>
     </section>
 
-    <div class="adm-bento">
+    {% if report.success_rate is not None %}
+    <section class="adm-cell adm-mkt-result-banner" data-accent="{{ report.segment_accent }}">
+        <div class="adm-mkt-result-main">
+            <span class="adm-mkt-result-rate">{{ report.success_rate|to_persian_digits }}٪</span>
+            <div>
+                <strong>نرخ موفقیت ارسال</strong>
+                <p>{{ campaign.sent_count|currency }} از {{ campaign.sent_count|add:campaign.failed_count|currency }} تلاش موفق بود</p>
+            </div>
+        </div>
+        <div class="adm-mkt-progress adm-mkt-progress--lg" role="progressbar" aria-valuenow="{{ report.success_rate }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="adm-mkt-progress-bar" style="width: {{ report.success_rate }}%"></div>
+        </div>
+    </section>
+    {% endif %}
+
+    <div class="adm-bento adm-mkt-detail-grid">
+        <section class="adm-cell">
+            <header class="adm-cell-head">
+                <div>
+                    <h2>جزئیات کمپین</h2>
+                    <p>اطلاعات پیکربندی و زمان‌بندی</p>
+                </div>
+                <span class="adm-badge adm-badge--{{ campaign.status }}">{{ campaign.get_status_display }}</span>
+            </header>
+            <dl class="adm-mkt-meta">
+                <div><dt>سگمنت</dt><dd>{{ report.segment_title }}</dd></div>
+                <div><dt>حالت تخفیف</dt><dd>{{ report.discount_mode_label }}</dd></div>
+                <div><dt>عدم تکرار</dt><dd>{{ campaign.dedupe_days|to_persian_digits }} روز</dd></div>
+                <div><dt>ایجاد</dt><dd>{{ campaign.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</dd></div>
+                {% if campaign.completed_at %}
+                <div><dt>اتمام</dt><dd>{{ campaign.completed_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</dd></div>
+                {% endif %}
+                {% if report.created_by %}
+                <div><dt>ایجادکننده</dt><dd>{{ report.created_by.get_full_name|default:report.created_by.username }}</dd></div>
+                {% endif %}
+            </dl>
+        </section>
+
         <section class="adm-cell adm-cell--wide">
             <header class="adm-cell-head">
                 <div>
-                    <h2>متن کمپین</h2>
-                    <p>وضعیت: {{ campaign.get_status_display }}
-                        {% if campaign.completed_at %} · {{ campaign.completed_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}{% endif %}
-                    </p>
+                    <h2>متن پیام</h2>
+                    <p>قالب ارسال‌شده به گیرندگان</p>
                 </div>
             </header>
-            <pre class="adm-mkt-template">{{ campaign.message_template }}</pre>
+            <div class="adm-mkt-phone adm-mkt-phone--inline" aria-hidden="true">
+                <div class="adm-mkt-phone-screen">
+                    <div class="adm-mkt-phone-bubble">
+                        <pre class="adm-mkt-template">{{ campaign.message_template }}</pre>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section class="adm-cell adm-cell--wide">
             <header class="adm-cell-head">
                 <div>
                     <h2>گیرندگان</h2>
-                    <p>حداکثر ۳۰۰ ردیف اول</p>
+                    <p>حداکثر ۳۰۰ ردیف اول — فیلتر بر اساس وضعیت</p>
+                </div>
+                <div class="adm-mkt-recipient-filters" role="group" aria-label="فیلتر وضعیت">
+                    <button type="button" class="adm-dl-btn is-active" data-filter="all">همه</button>
+                    <button type="button" class="adm-dl-btn" data-filter="sent">ارسال‌شده</button>
+                    <button type="button" class="adm-dl-btn" data-filter="failed">ناموفق</button>
+                    <button type="button" class="adm-dl-btn" data-filter="skipped">ردشده</button>
                 </div>
             </header>
             <div class="adm-table-wrap">
-                <table class="adm-table">
+                <table class="adm-table adm-mkt-recipient-table">
                     <thead>
                         <tr>
                             <th>موبایل</th>
@@ -105,12 +156,12 @@
                             <th>توضیح</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="adm-mkt-detail-recipients">
                         {% for r in recipients %}
-                        <tr>
+                        <tr data-status="{{ r.status }}">
                             <td dir="ltr">{{ r.phone }}</td>
                             <td><span class="adm-badge adm-badge--{{ r.status }}">{{ r.get_status_display }}</span></td>
-                            <td>{% if r.discount_code %}<code>{{ r.discount_code.code }}</code>{% else %}—{% endif %}</td>
+                            <td>{% if r.discount_code %}<code dir="ltr">{{ r.discount_code.code }}</code>{% else %}—{% endif %}</td>
                             <td>{{ r.context_json.product|default:"—" }}</td>
                             <td>{{ r.skip_reason|default:"—" }}</td>
                         </tr>
@@ -123,4 +174,25 @@
         </section>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var buttons = document.querySelectorAll('.adm-mkt-recipient-filters [data-filter]');
+  var rows = document.querySelectorAll('#adm-mkt-detail-recipients tr[data-status]');
+  if (!buttons.length) return;
+
+  buttons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var filter = btn.getAttribute('data-filter');
+      buttons.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+      rows.forEach(function (row) {
+        var status = row.getAttribute('data-status');
+        row.style.display = filter === 'all' || status === filter ? '' : 'none';
+      });
+    });
+  });
+})();
+</script>
 {% endblock %}

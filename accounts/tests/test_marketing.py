@@ -10,6 +10,7 @@ from accounts.models import MarketingCampaign, MarketingCampaignRecipient, SmsMe
 from accounts.services.admin_marketing import (
     create_shared_discount,
     create_unique_discount,
+    get_marketing_dashboard_stats,
     preview_segment,
     recently_marketed_phones,
     render_message,
@@ -58,6 +59,12 @@ class MarketingSegmentTests(TestCase):
         self.assertGreaterEqual(preview['count'], 1)
         phones = [r['phone'] for r in preview['sample']]
         self.assertIn('09121111111', phones)
+
+    def test_marketing_dashboard_stats(self):
+        stats = get_marketing_dashboard_stats()
+        self.assertIn('campaigns_total', stats)
+        self.assertIn('segment_sizes', stats)
+        self.assertIn('pending_orders', stats['segment_sizes'])
 
     def test_render_message_placeholders(self):
         text = render_message(
@@ -201,7 +208,8 @@ class MarketingViewTests(TestCase):
         self.client.login(username='staffview', password='pass1234')
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'کمپین پیامکی')
+        self.assertContains(resp, 'کمپین پیامکی هوشمند')
+        self.assertContains(resp, 'سگمنت‌های آماده')
 
     def test_preview_json(self):
         self.client.login(username='staffview', password='pass1234')

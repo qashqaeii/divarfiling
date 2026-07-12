@@ -395,3 +395,46 @@ def active_products_for_filter() -> List[Dict[str, Any]]:
         .order_by('title')
         .values('id', 'title')
     )
+
+
+def get_marketing_dashboard_stats() -> Dict[str, Any]:
+    """آمار خلاصه پنل بازاریابی برای KPIها و کارت سگمنت‌ها."""
+    from django.db.models import Count, Sum
+
+    from accounts.models import MarketingCampaign, SmsMessageLog
+
+    completed = MarketingCampaign.objects.filter(status=MarketingCampaign.Status.COMPLETED)
+    agg = completed.aggregate(
+        campaigns=Count('id'),
+        sent=Sum('sent_count'),
+        failed=Sum('failed_count'),
+        skipped=Sum('skipped_count'),
+    )
+    sent_total = int(agg['sent'] or 0)
+    failed_total = int(agg['failed'] or 0)
+    attempted = sent_total + failed_total
+    success_rate = round(100 * sent_total / attempted) if attempted else None
+
+    since_30 = timezone.now() - timedelta(days=30)
+    sms_30d = SmsMessageLog.objects.filter(
+        purpose='marketing',
+        status__in=('sent', 'fake'),
+        created_at__gte=since_30,
+    ).count()
+
+    segment_sizes: Dict[str, int] = {}
+    for key in SEGMENT_REGISTRY:
+        try:
+            segment_sizes[key] = len(build_segment_recipients(key))
+        except Exception:
+            segment_sizes[key] = 0
+
+    return {
+        'campaigns_total': int(agg['campaigns'] or 0),
+        'sent_total': sent_total,
+        'failed_total': failed_total,
+        'skipped_total': int(agg['skipped'] or 0),
+        'success_rate': success_rate,
+        'sms_marketing_30d': sms_30d,
+        'segment_sizes': segment_sizes,
+    }

@@ -8,354 +8,434 @@
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=11">
 {% endblock %}
 
 {% block content %}
-<div class="adm-page">
-    <header class="adm-hero">
-        <div class="adm-hero-main">
-            <p class="adm-hero-kicker">
-                <i class="fas fa-shield-halved" aria-hidden="true"></i>
-                مدیریت سیستم
-            </p>
+<div class="adm-page adm-dash-page">
+    <header class="adm-dash-command">
+        <div class="adm-dash-command-main">
+            <div class="adm-dash-command-top">
+                <p class="adm-hero-kicker">
+                    <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                    مرکز فرمان
+                </p>
+                <div class="adm-dash-health" aria-label="وضعیت سیستم">
+                    {% for h in health_indicators %}
+                    <span class="adm-dash-health-dot adm-dash-health-dot--{{ h.status }}" title="{{ h.label }}: {{ h.detail }}"></span>
+                    {% endfor %}
+                </div>
+            </div>
             <h1 class="adm-hero-title">داشبورد مدیریت</h1>
-            <p class="adm-hero-desc">گزارش، تحلیل و خروجی Excel/CSV از کاربران، فروش و لایسنس‌ها</p>
+            <p class="adm-hero-desc">تحلیل لحظه‌ای فروش، کاربران، لایسنس و عملیات — با خروجی Excel و JSON</p>
             {% if stats.system_start_at %}
             <p class="adm-hero-start">
                 <i class="fas fa-flag-checkered" aria-hidden="true"></i>
-                شروع به کار سیستم:
-                <strong>{{ stats.system_start_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</strong>
-                {% if stats.system_uptime_days is not None %}
-                <span class="adm-hero-start-days">({{ stats.system_uptime_days|to_persian_digits }} روز)</span>
-                {% endif %}
+                عمر سیستم:
+                <strong>{{ stats.system_uptime_days|to_persian_digits }} روز</strong>
+                <span class="adm-hero-start-days">از {{ stats.system_start_at|to_jalali_fa:"%Y/%m/%d" }}</span>
             </p>
             {% endif %}
         </div>
-        <div class="adm-hero-actions">
-            <div class="adm-range" role="group" aria-label="بازه زمانی نمودارها">
+        <div class="adm-dash-command-side">
+            <div class="adm-range" role="group" aria-label="بازه زمانی">
                 <a href="?days=7#adm-overview" class="adm-range-btn{% if chart_days == 7 %} is-active{% endif %}">۷ روز</a>
                 <a href="?days=30#adm-overview" class="adm-range-btn{% if chart_days == 30 %} is-active{% endif %}">۳۰ روز</a>
                 <a href="?days=90#adm-overview" class="adm-range-btn{% if chart_days == 90 %} is-active{% endif %}">۹۰ روز</a>
             </div>
-            <a href="{% url 'admin_panel_marketing' %}" class="adm-hero-link">
-                <i class="fas fa-bullhorn" aria-hidden="true"></i>
-                بازاریابی SMS
-            </a>
-            <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="adm-hero-link adm-hero-link--json">
-                <i class="fas fa-file-code" aria-hidden="true"></i>
-                خلاصه JSON
-            </a>
-            <a href="/admin/" class="adm-hero-link" target="_blank" rel="noopener">
-                <i class="fas fa-cog" aria-hidden="true"></i>
-                Django Admin
-            </a>
+            <div class="adm-dash-command-actions">
+                <a href="{% url 'admin_panel_marketing' %}" class="adm-hero-link adm-hero-link--accent">
+                    <i class="fas fa-bullhorn" aria-hidden="true"></i>
+                    بازاریابی
+                </a>
+                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="adm-hero-link adm-hero-link--json">
+                    <i class="fas fa-file-code" aria-hidden="true"></i>
+                    JSON
+                </a>
+                <a href="/admin/" class="adm-hero-link" target="_blank" rel="noopener">
+                    <i class="fas fa-cog" aria-hidden="true"></i>
+                    Admin
+                </a>
+            </div>
         </div>
     </header>
 
-    <nav class="adm-tabs" aria-label="بخش‌های داشبورد">
+    <nav class="adm-tabs adm-dash-tabs" aria-label="بخش‌های داشبورد">
         <a href="#adm-overview" class="adm-tab is-active">نمای کلی</a>
+        <a href="#adm-ops" class="adm-tab">عملیات{% if action_queue %} <span class="adm-tab-badge">{{ action_queue|length|to_persian_digits }}</span>{% endif %}</a>
         <a href="#adm-reports" class="adm-tab">گزارش‌ها</a>
-        <a href="#adm-exports" class="adm-tab">خروجی Excel</a>
-        <a href="{% url 'admin_panel_marketing' %}" class="adm-tab">بازاریابی SMS</a>
-        <a href="#adm-json" class="adm-tab">خلاصه JSON</a>
+        <a href="#adm-exports" class="adm-tab">خروجی</a>
+        <a href="#adm-json" class="adm-tab">JSON</a>
     </nav>
 
-    {% if stats.pending_card_transfers or stats.pending_withdrawals or stats.unread_tickets or stats.orders_pending or sms_balance.is_low or sms_balance.error %}
-    <section class="adm-alerts" aria-label="اقدامات فوری">
-        {% if sms_balance.is_low and sms_balance.ok %}
-        <div class="adm-alert adm-alert--warn">
-            <i class="fas fa-comment-sms" aria-hidden="true"></i>
-            <span>موجودی <strong>فراز اس‌ام‌اس</strong> کم است: <strong>{{ sms_balance.credit|floatformat:0|currency }}</strong> تومان</span>
-            <a href="https://farazsms.com/" target="_blank" rel="noopener">شارژ پنل</a>
+    {% if action_queue %}
+    <section class="adm-dash-queue" aria-label="اقدامات فوری">
+        <div class="adm-dash-queue-head">
+            <h2><i class="fas fa-bolt"></i> نیاز به اقدام</h2>
+            <span>{{ action_queue|length|to_persian_digits }} مورد</span>
         </div>
-        {% elif sms_balance.error %}
-        <div class="adm-alert adm-alert--warn">
-            <i class="fas fa-comment-sms" aria-hidden="true"></i>
-            <span>موجودی پیامک خوانده نشد: {{ sms_balance.error }}</span>
-            <a href="https://docs.iranpayamak.com/" target="_blank" rel="noopener">مستندات API</a>
+        <div class="adm-dash-queue-scroll">
+            {% for item in action_queue %}
+            <a href="{{ item.anchor }}" class="adm-dash-queue-card" data-accent="{{ item.accent }}">
+                <span class="adm-dash-queue-icon"><i class="fas {{ item.icon }}"></i></span>
+                <span class="adm-dash-queue-body">
+                    <strong>{{ item.count|currency }}</strong>
+                    <em>{{ item.title }}</em>
+                </span>
+                <span class="adm-dash-queue-action">{{ item.action }} →</span>
+            </a>
+            {% endfor %}
         </div>
-        {% endif %}
-        {% if stats.pending_card_transfers %}
-        <div class="adm-alert adm-alert--warn">
-            <i class="fas fa-money-check" aria-hidden="true"></i>
-            <span><strong>{{ stats.pending_card_transfers }}</strong> پرداخت کارت‌به‌کارت در انتظار</span>
-            <a href="#adm-exports">خروجی</a>
-        </div>
-        {% endif %}
-        {% if stats.orders_pending %}
-        <div class="adm-alert adm-alert--warn">
-            <i class="fas fa-clock" aria-hidden="true"></i>
-            <span><strong>{{ stats.orders_pending }}</strong> سفارش پرداخت‌نشده</span>
-            <a href="#adm-reports">مشاهده</a>
-        </div>
-        {% endif %}
-        {% if stats.users_pending_payment %}
-        <div class="adm-alert adm-alert--info">
-            <i class="fas fa-user-clock" aria-hidden="true"></i>
-            <span><strong>{{ stats.users_pending_payment }}</strong> کاربر با سفارش معلق</span>
-            <a href="{% url 'admin_panel_export' 'users_pending_payment' %}?format=xlsx">دانلود</a>
-        </div>
-        {% endif %}
-        {% if stats.unread_tickets %}
-        <div class="adm-alert adm-alert--info">
-            <i class="fas fa-headset" aria-hidden="true"></i>
-            <span><strong>{{ stats.unread_tickets }}</strong> تیکت خوانده‌نشده</span>
-            <a href="/admin/workspace/ticket/" target="_blank" rel="noopener">بررسی</a>
-        </div>
-        {% endif %}
-        {% if stats.licenses_expiring_soon %}
-        <div class="adm-alert adm-alert--muted">
-            <i class="fas fa-hourglass-half" aria-hidden="true"></i>
-            <span><strong>{{ stats.licenses_expiring_soon }}</strong> لایسنس در شرف انقضا</span>
-            <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx">دانلود</a>
-        </div>
-        {% endif %}
     </section>
     {% endif %}
 
-    <div id="adm-overview">
-        <section class="adm-kpis" aria-label="شاخص‌های کلیدی">
-            <article class="adm-kpi" data-accent="violet">
-                <span class="adm-kpi-icon"><i class="fas fa-users" aria-hidden="true"></i></span>
-                <span class="adm-kpi-body">
-                    <span class="adm-kpi-val">{{ stats.users_total|currency }}</span>
-                    <span class="adm-kpi-lbl">کل کاربران</span>
-                    <span class="adm-kpi-sub">+{{ stats.users_new_month }} این ماه</span>
-                </span>
-            </article>
-            <article class="adm-kpi" data-accent="emerald">
-                <span class="adm-kpi-icon"><i class="fas fa-sack-dollar" aria-hidden="true"></i></span>
-                <span class="adm-kpi-body">
-                    <span class="adm-kpi-val">{{ stats.revenue_total|currency }}</span>
-                    <span class="adm-kpi-lbl">کل درآمد (تومان)</span>
-                    <span class="adm-kpi-sub">
-                        {{ stats.revenue_month|currency }} این ماه
-                        {% if stats.revenue_month_change is not None %}
-                        <em class="adm-kpi-delta{% if stats.revenue_month_change >= 0 %} is-up{% else %} is-down{% endif %}">
-                            {% if stats.revenue_month_change >= 0 %}+{% endif %}{{ stats.revenue_month_change }}٪
-                        </em>
-                        {% endif %}
+    {% if sms_balance.is_low and sms_balance.ok %}
+    <section class="adm-alerts">
+        <div class="adm-alert adm-alert--warn">
+            <i class="fas fa-comment-sms" aria-hidden="true"></i>
+            <span>موجودی فراز اس‌ام‌اس کم است: <strong>{{ sms_balance.credit|floatformat:0|currency }}</strong> تومان</span>
+            <a href="https://farazsms.com/" target="_blank" rel="noopener">شارژ</a>
+        </div>
+    </section>
+    {% endif %}
+
+    <div id="adm-overview" class="adm-section">
+        <section class="adm-dash-spotlight" aria-label="شاخص‌های کلیدی">
+            <article class="adm-dash-spot" data-accent="emerald">
+                <div class="adm-dash-spot-head">
+                    <span class="adm-dash-spot-icon"><i class="fas fa-sack-dollar"></i></span>
+                    {% if stats.revenue_month_change is not None %}
+                    <span class="adm-dash-spot-delta{% if stats.revenue_month_change >= 0 %} is-up{% else %} is-down{% endif %}">
+                        {% if stats.revenue_month_change >= 0 %}+{% endif %}{{ stats.revenue_month_change|to_persian_digits }}٪
                     </span>
-                </span>
-            </article>
-            <article class="adm-kpi" data-accent="blue">
-                <span class="adm-kpi-icon"><i class="fas fa-shopping-cart" aria-hidden="true"></i></span>
-                <span class="adm-kpi-body">
-                    <span class="adm-kpi-val">{{ stats.orders_paid|currency }}</span>
-                    <span class="adm-kpi-lbl">سفارش پرداخت‌شده</span>
-                    <span class="adm-kpi-sub">{{ stats.conversion_rate }}٪ نرخ تبدیل</span>
-                </span>
-            </article>
-            <article class="adm-kpi" data-accent="amber">
-                <span class="adm-kpi-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
-                <span class="adm-kpi-body">
-                    <span class="adm-kpi-val">{{ stats.licenses_active|currency }}</span>
-                    <span class="adm-kpi-lbl">لایسنس فعال</span>
-                    <span class="adm-kpi-sub">{{ stats.activations_total }} دستگاه فعال</span>
-                </span>
-            </article>
-            <article class="adm-kpi" data-accent="rose">
-                <span class="adm-kpi-icon"><i class="fas fa-user-clock" aria-hidden="true"></i></span>
-                <span class="adm-kpi-body">
-                    <span class="adm-kpi-val">{{ stats.users_pending_payment|currency }}</span>
-                    <span class="adm-kpi-lbl">کاربر با سفارش معلق</span>
-                    <span class="adm-kpi-sub">{{ stats.orders_pending }} سفارش باز</span>
-                </span>
-            </article>
-            <article class="adm-kpi" data-accent="cyan">
-                <span class="adm-kpi-icon"><i class="fas fa-user-slash" aria-hidden="true"></i></span>
-                <span class="adm-kpi-body">
-                    <span class="adm-kpi-val">{{ stats.users_without_license|currency }}</span>
-                    <span class="adm-kpi-lbl">بدون لایسنس فعال</span>
-                    <span class="adm-kpi-sub">فرصت پیگیری فروش</span>
-                </span>
-            </article>
-            <article class="adm-kpi{% if sms_balance.is_low %} is-warn{% endif %}{% if sms_balance.error %} is-error{% endif %}" data-accent="indigo">
-                <span class="adm-kpi-icon"><i class="fas fa-comment-sms" aria-hidden="true"></i></span>
-                <span class="adm-kpi-body">
-                    {% if sms_balance.ok %}
-                    <span class="adm-kpi-val">{{ sms_balance.credit|floatformat:0|currency }}</span>
-                    <span class="adm-kpi-lbl">موجودی فراز اس‌ام‌اس (تومان)</span>
-                    <span class="adm-kpi-sub">
-                        {% if sms_balance.sms_count is not None %}≈ {{ sms_balance.sms_count|currency }} پیامک · {% endif %}
-                        {{ sms_balance.provider_label }}
-                        {% if sms_balance.line_number %} · خط {{ sms_balance.line_number }}{% endif %}
-                        {% if sms_balance.is_low %}<em class="adm-kpi-delta is-down">کم</em>{% endif %}
-                    </span>
-                    {% else %}
-                    <span class="adm-kpi-val">—</span>
-                    <span class="adm-kpi-lbl">موجودی فراز اس‌ام‌اس</span>
-                    <span class="adm-kpi-sub">{{ sms_balance.error|default:"در دسترس نیست" }}</span>
                     {% endif %}
-                </span>
+                </div>
+                <strong class="adm-dash-spot-val">{{ stats.revenue_total|currency }}</strong>
+                <span class="adm-dash-spot-lbl">کل درآمد (تومان)</span>
+                <span class="adm-dash-spot-sub">امروز {{ today_stats.revenue_today|currency }} · ماه {{ stats.revenue_month|currency }}</span>
+            </article>
+            <article class="adm-dash-spot" data-accent="violet">
+                <div class="adm-dash-spot-head">
+                    <span class="adm-dash-spot-icon"><i class="fas fa-users"></i></span>
+                </div>
+                <strong class="adm-dash-spot-val">{{ stats.users_total|currency }}</strong>
+                <span class="adm-dash-spot-lbl">کاربران</span>
+                <span class="adm-dash-spot-sub">+{{ today_stats.signups_today|currency }} امروز · +{{ stats.users_new_month|currency }} ماه</span>
+            </article>
+            <article class="adm-dash-spot" data-accent="blue">
+                <div class="adm-dash-spot-head">
+                    <span class="adm-dash-spot-icon"><i class="fas fa-shopping-cart"></i></span>
+                </div>
+                <strong class="adm-dash-spot-val">{{ stats.orders_paid|currency }}</strong>
+                <span class="adm-dash-spot-lbl">سفارش پرداخت‌شده</span>
+                <span class="adm-dash-spot-sub">{{ today_stats.orders_paid_today|currency }} امروز · {{ stats.conversion_rate|to_persian_digits }}٪ تبدیل</span>
+            </article>
+            <article class="adm-dash-spot" data-accent="amber">
+                <div class="adm-dash-spot-head">
+                    <span class="adm-dash-spot-icon"><i class="fas fa-key"></i></span>
+                </div>
+                <strong class="adm-dash-spot-val">{{ stats.licenses_active|currency }}</strong>
+                <span class="adm-dash-spot-lbl">لایسنس فعال</span>
+                <span class="adm-dash-spot-sub">{{ stats.activations_total|currency }} دستگاه · {{ stats.licenses_expiring_soon|currency }} در شرف انقضا</span>
             </article>
         </section>
 
-        <div class="adm-bento">
-            <section class="adm-cell adm-cell--wide adm-cell--chart" aria-labelledby="admChartRevenue">
-                <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admChartRevenue">روند درآمد</h2>
-                        <p>مجموع فروش پرداخت‌شده در {{ chart_days }} روز اخیر</p>
-                    </div>
-                </header>
-                <div class="adm-chart-wrap">
-                    <canvas id="chart-revenue" height="220"></canvas>
-                </div>
-            </section>
+        <section class="adm-dash-hub" aria-label="دسترسی سریع">
+            <a href="{% url 'admin_panel_marketing' %}" class="adm-dash-hub-link" data-accent="violet">
+                <i class="fas fa-bullhorn"></i><span>بازاریابی SMS</span>
+            </a>
+            <a href="#adm-exports" class="adm-dash-hub-link" data-accent="emerald">
+                <i class="fas fa-file-excel"></i><span>خروجی Excel</span>
+            </a>
+            <a href="#adm-reports" class="adm-dash-hub-link" data-accent="blue">
+                <i class="fas fa-table-list"></i><span>گزارش عملیاتی</span>
+            </a>
+            <a href="{% url 'admin_panel_export' 'pending_orders' %}?format=xlsx" class="adm-dash-hub-link" data-accent="rose">
+                <i class="fas fa-clock"></i><span>سفارش معلق</span>
+            </a>
+            <a href="/admin/workspace/ticket/" target="_blank" rel="noopener" class="adm-dash-hub-link" data-accent="cyan">
+                <i class="fas fa-headset"></i><span>تیکت‌ها</span>
+            </a>
+            <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=0" target="_blank" rel="noopener" class="adm-dash-hub-link" data-accent="indigo">
+                <i class="fas fa-database"></i><span>API JSON</span>
+            </a>
+        </section>
 
-            <section class="adm-cell adm-cell--chart" aria-labelledby="admChartSignups">
-                <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admChartSignups">ثبت‌نام کاربران</h2>
-                        <p>کاربران جدید روزانه</p>
+        <div class="adm-dash-main">
+            <div class="adm-dash-charts">
+                <section class="adm-cell adm-cell--chart adm-dash-chart-hero" aria-labelledby="admChartRevenue">
+                    <header class="adm-cell-head">
+                        <div>
+                            <h2 id="admChartRevenue">روند درآمد</h2>
+                            <p>{{ chart_days }} روز اخیر · میانگین سفارش {{ today_stats.avg_order_value|currency }} ت</p>
+                        </div>
+                    </header>
+                    <div class="adm-chart-wrap adm-chart-wrap--tall">
+                        <canvas id="chart-revenue" height="240"></canvas>
                     </div>
-                </header>
-                <div class="adm-chart-wrap">
-                    <canvas id="chart-signups" height="200"></canvas>
-                </div>
-            </section>
+                </section>
 
-            <section class="adm-cell adm-cell--chart" aria-labelledby="admChartOrderStatus">
-                <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admChartOrderStatus">وضعیت سفارش‌ها</h2>
-                        <p>توزیع وضعیت تمام سفارش‌ها</p>
-                    </div>
-                </header>
-                <div class="adm-chart-wrap adm-chart-wrap--donut">
-                    <canvas id="chart-order-status" height="200"></canvas>
+                <div class="adm-dash-charts-row">
+                    <section class="adm-cell adm-cell--chart" aria-labelledby="admChartSignups">
+                        <header class="adm-cell-head adm-cell-head--compact">
+                            <h2 id="admChartSignups">ثبت‌نام</h2>
+                        </header>
+                        <div class="adm-chart-wrap">
+                            <canvas id="chart-signups" height="160"></canvas>
+                        </div>
+                    </section>
+                    <section class="adm-cell adm-cell--chart" aria-labelledby="admChartOrderStatus">
+                        <header class="adm-cell-head adm-cell-head--compact">
+                            <h2 id="admChartOrderStatus">وضعیت سفارش</h2>
+                        </header>
+                        <div class="adm-chart-wrap adm-chart-wrap--donut">
+                            <canvas id="chart-order-status" height="160"></canvas>
+                        </div>
+                    </section>
                 </div>
-            </section>
 
+                <div class="adm-dash-charts-row">
+                    <section class="adm-cell adm-cell--chart" aria-labelledby="admChartPlans">
+                        <header class="adm-cell-head adm-cell-head--compact">
+                            <h2 id="admChartPlans">فروش پلن</h2>
+                        </header>
+                        <div class="adm-chart-wrap">
+                            <canvas id="chart-plans" height="180"></canvas>
+                        </div>
+                    </section>
+                    <section class="adm-cell adm-cell--chart" aria-labelledby="admChartProduct">
+                        <header class="adm-cell-head adm-cell-head--compact">
+                            <h2 id="admChartProduct">درآمد محصول</h2>
+                        </header>
+                        <div class="adm-chart-wrap">
+                            <canvas id="chart-product" height="180"></canvas>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <aside class="adm-dash-aside">
+                <section class="adm-cell adm-dash-feed" aria-labelledby="admActivity">
+                    <header class="adm-cell-head adm-cell-head--compact">
+                        <h2 id="admActivity"><i class="fas fa-stream"></i> فعالیت اخیر</h2>
+                    </header>
+                    <ul class="adm-dash-feed-list">
+                        {% for ev in activity_feed %}
+                        <li class="adm-dash-feed-item" data-type="{{ ev.type }}">
+                            <span class="adm-dash-feed-icon" data-accent="{{ ev.accent }}">
+                                <i class="fas {{ ev.icon }}"></i>
+                            </span>
+                            <div class="adm-dash-feed-body">
+                                <strong>{{ ev.title }}{% if ev.unread %} <em class="adm-dash-feed-new">جدید</em>{% endif %}</strong>
+                                <span>{{ ev.meta }}{% if ev.amount %} · {{ ev.amount|currency }} ت{% endif %}</span>
+                            </div>
+                            <time>{{ ev.at|to_jalali_fa:"%m/%d %H:%M" }}</time>
+                        </li>
+                        {% empty %}
+                        <li class="adm-dash-feed-empty">فعالیتی ثبت نشده.</li>
+                        {% endfor %}
+                    </ul>
+                </section>
+
+                <section class="adm-cell adm-dash-mini-kpis" aria-label="آمار تکمیلی">
+                    <ul class="adm-stat-list adm-stat-list--compact">
+                        <li><span class="adm-stat-lbl">درآمد هفته</span><span class="adm-stat-val">{{ stats.revenue_week|currency }} ت</span></li>
+                        <li><span class="adm-stat-lbl">مشاوران فروش</span><span class="adm-stat-val">{{ stats.affiliates_total|currency }}</span></li>
+                        <li><span class="adm-stat-lbl">کمیسیون پرداخت‌شده</span><span class="adm-stat-val">{{ stats.affiliate_commissions_total|currency }} ت</span></li>
+                        <li><span class="adm-stat-lbl">مجموعه‌داده CRM</span><span class="adm-stat-val">{{ stats.datasets_total|currency }}</span></li>
+                        <li><span class="adm-stat-lbl">محصول فعال</span><span class="adm-stat-val">{{ products_count|currency }}</span></li>
+                        <li>
+                            <span class="adm-stat-lbl">موجودی SMS</span>
+                            <span class="adm-stat-val">
+                                {% if sms_balance.ok %}{{ sms_balance.credit|floatformat:0|currency }} ت{% else %}—{% endif %}
+                            </span>
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="adm-cell adm-cell--pipe" aria-labelledby="admOrderPipe">
+                    <header class="adm-cell-head adm-cell-head--compact">
+                        <h2 id="admOrderPipe">قیف سفارش</h2>
+                    </header>
+                    <ul class="adm-pipe adm-pipe--compact">
+                        {% for item in order_status %}
+                        <li>
+                            <span class="adm-pipe-name">{{ item.label }}</span>
+                            <span class="adm-pipe-bar"><i style="width:{% widthratio item.count order_status_max 100 %}%"></i></span>
+                            <span class="adm-pipe-count">{{ item.count|currency }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </section>
+            </aside>
+        </div>
+
+        <div class="adm-bento adm-dash-bento-secondary">
             <section class="adm-cell adm-cell--chart" aria-labelledby="admChartLicenseStatus">
-                <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admChartLicenseStatus">وضعیت لایسنس‌ها</h2>
-                        <p>{{ stats.licenses_expiring_soon }} لایسنس تا ۱۴ روز دیگر منقضی می‌شود</p>
-                    </div>
+                <header class="adm-cell-head adm-cell-head--compact">
+                    <h2 id="admChartLicenseStatus">وضعیت لایسنس</h2>
                 </header>
                 <div class="adm-chart-wrap adm-chart-wrap--donut">
-                    <canvas id="chart-license-status" height="200"></canvas>
+                    <canvas id="chart-license-status" height="180"></canvas>
                 </div>
             </section>
-
-            <section class="adm-cell adm-cell--chart" aria-labelledby="admChartPlans">
-                <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admChartPlans">فروش بر اساس پلن</h2>
-                        <p>پرفروش‌ترین پلن‌های لایسنس</p>
-                    </div>
-                </header>
-                <div class="adm-chart-wrap">
-                    <canvas id="chart-plans" height="220"></canvas>
-                </div>
-            </section>
-
             <section class="adm-cell adm-cell--chart" aria-labelledby="admChartPayment">
-                <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admChartPayment">روش پرداخت</h2>
-                        <p>سفارش‌های پرداخت‌شده</p>
-                    </div>
+                <header class="adm-cell-head adm-cell-head--compact">
+                    <h2 id="admChartPayment">روش پرداخت</h2>
                 </header>
                 <div class="adm-chart-wrap">
                     <canvas id="chart-payment" height="180"></canvas>
                 </div>
             </section>
+            <section class="adm-cell adm-dash-kpi-strip" aria-label="شاخص‌های فرعی">
+                <div class="adm-kpi adm-kpi--mini" data-accent="rose">
+                    <span class="adm-kpi-icon"><i class="fas fa-user-clock"></i></span>
+                    <span class="adm-kpi-body">
+                        <span class="adm-kpi-val">{{ stats.users_pending_payment|currency }}</span>
+                        <span class="adm-kpi-lbl">سفارش معلق</span>
+                    </span>
+                </div>
+                <div class="adm-kpi adm-kpi--mini" data-accent="cyan">
+                    <span class="adm-kpi-icon"><i class="fas fa-user-slash"></i></span>
+                    <span class="adm-kpi-body">
+                        <span class="adm-kpi-val">{{ stats.users_without_license|currency }}</span>
+                        <span class="adm-kpi-lbl">بدون لایسنس</span>
+                    </span>
+                </div>
+                <div class="adm-kpi adm-kpi--mini" data-accent="indigo">
+                    <span class="adm-kpi-icon"><i class="fas fa-comment-sms"></i></span>
+                    <span class="adm-kpi-body">
+                        <span class="adm-kpi-val">{% if sms_balance.ok %}{{ sms_balance.credit|floatformat:0|currency }}{% else %}—{% endif %}</span>
+                        <span class="adm-kpi-lbl">موجودی SMS</span>
+                    </span>
+                </div>
+                <div class="adm-kpi adm-kpi--mini" data-accent="amber">
+                    <span class="adm-kpi-icon"><i class="fas fa-headset"></i></span>
+                    <span class="adm-kpi-body">
+                        <span class="adm-kpi-val">{{ stats.unread_tickets|currency }}</span>
+                        <span class="adm-kpi-lbl">تیکت خوانده‌نشده</span>
+                    </span>
+                </div>
+            </section>
+        </div>
+    </div>
 
-            <section class="adm-cell adm-cell--pipe" aria-labelledby="admOrderPipe">
+    <div id="adm-ops" class="adm-section">
+        <header class="adm-section-head">
+            <h2><i class="fas fa-bolt"></i> صف عملیات</h2>
+            <p>موارد نیازمند بررسی فوری — پرداخت، پشتیبانی و مالی</p>
+        </header>
+        <div class="adm-bento">
+            <section class="adm-cell adm-cell--table adm-cell--wide" aria-labelledby="admCardTransfers">
                 <header class="adm-cell-head">
-                    <h2 id="admOrderPipe">خلاصه وضعیت سفارش</h2>
+                    <div>
+                        <h2 id="admCardTransfers">کارت‌به‌کارت در انتظار</h2>
+                        <p>{{ stats.pending_card_transfers|currency }} مورد</p>
+                    </div>
+                    <a href="/admin/shop/cardtransfersubmission/" target="_blank" rel="noopener" class="adm-dl-btn">پنل Admin</a>
                 </header>
-                <ul class="adm-pipe">
-                    {% for item in order_status %}
-                    <li>
-                        <span class="adm-pipe-name">{{ item.label }}</span>
-                        <span class="adm-pipe-bar"><i style="width:{% widthratio item.count order_status_max 100 %}%"></i></span>
-                        <span class="adm-pipe-count">{{ item.count|currency }}</span>
-                    </li>
-                    {% endfor %}
-                </ul>
+                <div class="adm-table-wrap">
+                    <table class="adm-table">
+                        <thead>
+                            <tr><th>کاربر</th><th>محصول</th><th>مبلغ</th><th>پیگیری</th><th>تاریخ</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for ct in pending_card_transfers %}
+                            <tr>
+                                <td><strong>{{ ct.order.user.get_full_name|default:ct.order.user.username }}</strong><small>{{ ct.order.user.phone }}</small></td>
+                                <td>{{ ct.order.product.title }}</td>
+                                <td>{{ ct.order.amount|toman }}</td>
+                                <td dir="ltr">{{ ct.reference_number|default:"—" }}</td>
+                                <td>{{ ct.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="adm-empty">موردی در انتظار نیست</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
-            <section class="adm-cell adm-cell--stats" aria-labelledby="admExtraStats">
+            <section class="adm-cell adm-cell--table" aria-labelledby="admOpenTickets">
                 <header class="adm-cell-head">
-                    <h2 id="admExtraStats">آمار تکمیلی</h2>
+                    <div>
+                        <h2 id="admOpenTickets">تیکت‌های باز</h2>
+                        <p>{{ stats.open_tickets|currency }} باز · {{ stats.unread_tickets|currency }} خوانده‌نشده</p>
+                    </div>
+                    <a href="/admin/workspace/ticket/" target="_blank" rel="noopener" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-headset"></i></a>
                 </header>
-                <ul class="adm-stat-list">
-                    {% if stats.system_start_at %}
-                    <li>
-                        <span class="adm-stat-lbl">شروع به کار سیستم</span>
-                        <span class="adm-stat-val">{{ stats.system_start_at|to_jalali_fa:"%Y/%m/%d" }}</span>
-                    </li>
-                    <li>
-                        <span class="adm-stat-lbl">عمر سیستم</span>
-                        <span class="adm-stat-val">{{ stats.system_uptime_days|to_persian_digits }} روز</span>
-                    </li>
-                    {% endif %}
-                    <li><span class="adm-stat-lbl">کاربران فعال</span><span class="adm-stat-val">{{ stats.users_active|currency }}</span></li>
-                    <li><span class="adm-stat-lbl">درآمد ۷ روز اخیر</span><span class="adm-stat-val">{{ stats.revenue_week|currency }} ت</span></li>
-                    <li><span class="adm-stat-lbl">مشاوران فروش</span><span class="adm-stat-val">{{ stats.affiliates_total|currency }}</span></li>
-                    <li><span class="adm-stat-lbl">لایسنس منقضی</span><span class="adm-stat-val">{{ stats.licenses_expired|currency }}</span></li>
-                    <li><span class="adm-stat-lbl">تیکت باز</span><span class="adm-stat-val">{{ stats.open_tickets|currency }}</span></li>
-                    <li><span class="adm-stat-lbl">مجموعه‌داده</span><span class="adm-stat-val">{{ stats.datasets_total|currency }}</span></li>
-                    <li>
-                        <span class="adm-stat-lbl">موجودی پیامک</span>
-                        <span class="adm-stat-val">
-                            {% if sms_balance.ok %}
-                                {{ sms_balance.credit|floatformat:0|currency }} ت
-                                {% if sms_balance.sms_count is not None %}
-                                <small>({{ sms_balance.sms_count|currency }} پیامک)</small>
-                                {% endif %}
-                            {% else %}—{% endif %}
-                        </span>
-                    </li>
-                </ul>
+                <div class="adm-table-wrap">
+                    <table class="adm-table adm-table--compact">
+                        <thead><tr><th>موضوع</th><th>کاربر</th><th>وضعیت</th></tr></thead>
+                        <tbody>
+                            {% for t in open_tickets %}
+                            <tr{% if t.staff_has_unread %} class="adm-row--highlight"{% endif %}>
+                                <td><strong>{{ t.subject|truncatechars:40 }}</strong>{% if t.staff_has_unread %} <span class="adm-badge adm-badge--pending">جدید</span>{% endif %}</td>
+                                <td>{{ t.user.get_full_name|default:t.user.username }}</td>
+                                <td><span class="adm-badge adm-badge--{{ t.status }}">{{ t.get_status_display }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="adm-empty">تیکت بازی نیست</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="adm-cell adm-cell--table" aria-labelledby="admWithdrawals">
+                <header class="adm-cell-head">
+                    <div>
+                        <h2 id="admWithdrawals">برداشت همکار فروش</h2>
+                        <p>{{ stats.pending_withdrawals|currency }} در انتظار</p>
+                    </div>
+                    <a href="/admin/affiliates/withdrawal/" target="_blank" rel="noopener" class="adm-dl-btn">Admin</a>
+                </header>
+                <div class="adm-table-wrap">
+                    <table class="adm-table adm-table--compact">
+                        <thead><tr><th>کاربر</th><th>مبلغ</th><th>تاریخ</th></tr></thead>
+                        <tbody>
+                            {% for w in pending_withdrawals %}
+                            <tr>
+                                <td>{{ w.wallet.user.get_full_name|default:w.wallet.user.username }}</td>
+                                <td>{{ w.amount|toman }}</td>
+                                <td>{{ w.created_at|to_jalali_fa:"%Y/%m/%d" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="adm-empty">برداشتی در انتظار نیست</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </section>
         </div>
     </div>
 
     <div id="adm-reports" class="adm-section">
         <header class="adm-section-head">
-            <h2><i class="fas fa-table-list" aria-hidden="true"></i> گزارش‌های عملیاتی</h2>
-            <p>لیست‌های قابل پیگیری — هر بخش دکمه خروجی Excel دارد</p>
+            <h2><i class="fas fa-table-list"></i> گزارش‌های عملیاتی</h2>
+            <p>لیست‌های قابل پیگیری با خروجی Excel</p>
         </header>
-
         <div class="adm-bento">
             <section class="adm-cell adm-cell--table adm-cell--wide" aria-labelledby="admPendingOrders">
                 <header class="adm-cell-head">
                     <div>
                         <h2 id="admPendingOrders">سفارش‌های پرداخت‌نشده</h2>
-                        <p>{{ stats.orders_pending }} سفارش در انتظار پرداخت یا تایید</p>
+                        <p>{{ stats.orders_pending|currency }} سفارش</p>
                     </div>
                     <div class="adm-cell-actions">
-                        <a href="{% url 'admin_panel_export' 'pending_orders' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary">
-                            <i class="fas fa-file-excel" aria-hidden="true"></i> Excel
-                        </a>
-                        <a href="{% url 'admin_panel_export' 'pending_orders' %}?format=csv" class="adm-dl-btn">CSV</a>
+                        <a href="{% url 'admin_panel_export' 'pending_orders' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i> Excel</a>
+                        <a href="{% url 'admin_panel_marketing' %}?segment=pending_orders#mkt-compose" class="adm-dl-btn"><i class="fas fa-bullhorn"></i> SMS</a>
                     </div>
                 </header>
                 <div class="adm-table-wrap">
                     <table class="adm-table">
                         <thead>
-                            <tr>
-                                <th>کاربر</th>
-                                <th>محصول / پلن</th>
-                                <th>مبلغ</th>
-                                <th>وضعیت</th>
-                                <th>روش پرداخت</th>
-                                <th>تاریخ</th>
-                            </tr>
+                            <tr><th>کاربر</th><th>محصول / پلن</th><th>مبلغ</th><th>وضعیت</th><th>روش</th><th>تاریخ</th></tr>
                         </thead>
                         <tbody>
                             {% for order in pending_orders %}
                             <tr>
-                                <td>
-                                    <strong>{{ order.user.get_full_name|default:order.user.username }}</strong>
-                                    <small>{{ order.user.phone|default:order.user.email }}</small>
-                                </td>
+                                <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong><small>{{ order.user.phone|default:order.user.email }}</small></td>
                                 <td>{{ order.product.title }}<small>{{ order.plan.name }}</small></td>
                                 <td>{{ order.amount|toman }}</td>
                                 <td><span class="adm-badge adm-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
@@ -363,7 +443,33 @@
                                 <td>{{ order.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="6" class="adm-empty">سفارش معلقی وجود ندارد</td></tr>
+                            <tr><td colspan="6" class="adm-empty">سفارش معلقی نیست</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="adm-cell adm-cell--table" aria-labelledby="admRecentUsers">
+                <header class="adm-cell-head">
+                    <div>
+                        <h2 id="admRecentUsers">ثبت‌نام‌های اخیر</h2>
+                        <p>کاربران جدید</p>
+                    </div>
+                    <a href="{% url 'admin_panel_export' 'new_users' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i></a>
+                </header>
+                <div class="adm-table-wrap">
+                    <table class="adm-table adm-table--compact">
+                        <thead><tr><th>کاربر</th><th>موبایل</th><th>تاریخ</th></tr></thead>
+                        <tbody>
+                            {% for u in recent_users %}
+                            <tr>
+                                <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
+                                <td dir="ltr">{{ u.phone|default:"—" }}</td>
+                                <td>{{ u.date_joined|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="adm-empty">—</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -374,25 +480,13 @@
                 <header class="adm-cell-head">
                     <div>
                         <h2 id="admUsersPending">کاربران با سفارش معلق</h2>
-                        <p>مناسب برای پیگیری تلفنی و یادآوری پرداخت</p>
+                        <p>مناسب پیگیری تلفنی</p>
                     </div>
-                    <div class="adm-cell-actions">
-                        <a href="{% url 'admin_panel_export' 'users_pending_payment' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary">
-                            <i class="fas fa-file-excel" aria-hidden="true"></i> Excel
-                        </a>
-                    </div>
+                    <a href="{% url 'admin_panel_export' 'users_pending_payment' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i> Excel</a>
                 </header>
                 <div class="adm-table-wrap">
                     <table class="adm-table">
-                        <thead>
-                            <tr>
-                                <th>کاربر</th>
-                                <th>موبایل</th>
-                                <th>تعداد معلق</th>
-                                <th>مجموع مبلغ</th>
-                                <th>آخرین سفارش</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>کاربر</th><th>موبایل</th><th>تعداد</th><th>مجموع</th><th>آخرین</th></tr></thead>
                         <tbody>
                             {% for u in users_with_pending_orders %}
                             <tr>
@@ -403,7 +497,7 @@
                                 <td>{{ u.last_pending|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="5" class="adm-empty">کاربری با سفارش معلق نیست</td></tr>
+                            <tr><td colspan="5" class="adm-empty">—</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -412,31 +506,21 @@
 
             <section class="adm-cell adm-cell--table" aria-labelledby="admExpiringLic">
                 <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admExpiringLic">لایسنس در شرف انقضا</h2>
-                        <p>۱۴ روز آینده</p>
-                    </div>
-                    <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary">
-                        <i class="fas fa-file-excel" aria-hidden="true"></i>
-                    </a>
+                    <div><h2 id="admExpiringLic">لایسنس در شرف انقضا</h2><p>۱۴ روز آینده</p></div>
+                    <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i></a>
                 </header>
                 <div class="adm-table-wrap">
                     <table class="adm-table adm-table--compact">
-                        <thead>
-                            <tr><th>کاربر</th><th>پلن</th><th>انقضا</th></tr>
-                        </thead>
+                        <thead><tr><th>کاربر</th><th>پلن</th><th>انقضا</th></tr></thead>
                         <tbody>
                             {% for lic in expiring_licenses %}
                             <tr>
-                                <td>
-                                    <strong>{{ lic.order.user.get_full_name|default:lic.order.user.username }}</strong>
-                                    <small>{{ lic.order.user.phone }}</small>
-                                </td>
+                                <td><strong>{{ lic.order.user.get_full_name|default:lic.order.user.username }}</strong><small>{{ lic.order.user.phone }}</small></td>
                                 <td>{{ lic.plan.name }}</td>
                                 <td>{{ lic.expires_at|to_jalali_fa:"%Y/%m/%d" }}</td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="3" class="adm-empty">لایسنس در شرف انقضا نیست</td></tr>
+                            <tr><td colspan="3" class="adm-empty">—</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -445,34 +529,23 @@
 
             <section class="adm-cell adm-cell--table" aria-labelledby="admNoLicense">
                 <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admNoLicense">بدون لایسنس فعال</h2>
-                        <p>{{ stats.users_without_license }} کاربر</p>
-                    </div>
-                    <a href="{% url 'admin_panel_export' 'users_without_license' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary">
-                        <i class="fas fa-file-excel" aria-hidden="true"></i>
-                    </a>
+                    <div><h2 id="admNoLicense">بدون لایسنس فعال</h2><p>{{ stats.users_without_license|currency }} کاربر</p></div>
+                    <a href="{% url 'admin_panel_export' 'users_without_license' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i></a>
                 </header>
                 <div class="adm-table-wrap">
                     <table class="adm-table adm-table--compact">
-                        <thead>
-                            <tr><th>کاربر</th><th>سفارش</th></tr>
-                        </thead>
+                        <thead><tr><th>کاربر</th><th>سفارش</th></tr></thead>
                         <tbody>
                             {% for u in users_without_license_list %}
                             <tr>
-                                <td>
-                                    <strong>{{ u.get_full_name|default:u.username }}</strong>
-                                    <small>{{ u.phone|default:u.email }}</small>
-                                </td>
+                                <td><strong>{{ u.get_full_name|default:u.username }}</strong><small>{{ u.phone|default:u.email }}</small></td>
                                 <td>
                                     {% if u.pending_orders %}<span class="adm-badge adm-badge--pending">{{ u.pending_orders }} معلق</span>{% endif %}
                                     {% if u.paid_orders %}<span class="adm-badge adm-badge--paid">{{ u.paid_orders }} پرداخت</span>{% endif %}
-                                    {% if not u.pending_orders and not u.paid_orders %}—{% endif %}
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="2" class="adm-empty">همه کاربران لایسنس فعال دارند</td></tr>
+                            <tr><td colspan="2" class="adm-empty">—</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -482,35 +555,22 @@
             <section class="adm-cell adm-cell--table adm-cell--wide" aria-labelledby="admRecentOrders">
                 <header class="adm-cell-head">
                     <h2 id="admRecentOrders">آخرین سفارش‌ها</h2>
-                    <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="adm-dl-btn adm-dl-btn--primary">
-                        <i class="fas fa-file-excel" aria-hidden="true"></i> خروجی {{ chart_days }} روز
-                    </a>
+                    <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i> {{ chart_days }} روز</a>
                 </header>
                 <div class="adm-table-wrap">
                     <table class="adm-table">
-                        <thead>
-                            <tr>
-                                <th>کاربر</th>
-                                <th>محصول / پلن</th>
-                                <th>مبلغ</th>
-                                <th>وضعیت</th>
-                                <th>تاریخ</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>کاربر</th><th>محصول</th><th>مبلغ</th><th>وضعیت</th><th>تاریخ</th></tr></thead>
                         <tbody>
                             {% for order in recent_orders %}
                             <tr>
-                                <td>
-                                    <strong>{{ order.user.get_full_name|default:order.user.username }}</strong>
-                                    <small>{{ order.user.phone|default:order.user.email }}</small>
-                                </td>
+                                <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong><small>{{ order.user.phone|default:order.user.email }}</small></td>
                                 <td>{{ order.product.title }}<small>{{ order.plan.name }}</small></td>
                                 <td>{{ order.amount|toman }}</td>
                                 <td><span class="adm-badge adm-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
                                 <td>{{ order.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="5" class="adm-empty">سفارشی ثبت نشده</td></tr>
+                            <tr><td colspan="5" class="adm-empty">—</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -521,10 +581,9 @@
 
     <div id="adm-exports" class="adm-section">
         <header class="adm-section-head">
-            <h2><i class="fas fa-file-export" aria-hidden="true"></i> مرکز خروجی گزارش‌ها</h2>
-            <p>دانلود Excel یا CSV — مناسب Excel، Google Sheets و CRM</p>
+            <h2><i class="fas fa-file-export"></i> مرکز خروجی</h2>
+            <p>Excel و CSV — مناسب CRM و Google Sheets</p>
         </header>
-
         {% for cat_key, cat_label in export_categories.items %}
         <div class="adm-export-group">
             <h3 class="adm-export-group-title">{{ cat_label }}</h3>
@@ -532,17 +591,15 @@
                 {% for item in export_catalog %}
                 {% if item.category == cat_key %}
                 <article class="adm-export-card" data-accent="{{ item.accent }}">
-                    <span class="adm-export-icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
+                    <span class="adm-export-icon"><i class="fas {{ item.icon }}"></i></span>
                     <div class="adm-export-body">
                         <h4 class="adm-export-title">{{ item.title }}</h4>
                         <p class="adm-export-desc">{{ item.description }}</p>
                         <span class="adm-export-count">{{ item.count|currency }} ردیف</span>
                     </div>
                     <div class="adm-export-actions">
-                        <a href="{% url 'admin_panel_export' item.key %}?format=xlsx{% if item.supports_days %}&days={{ chart_days }}{% endif %}" class="adm-dl-btn adm-dl-btn--primary" title="دانلود Excel">
-                            <i class="fas fa-file-excel" aria-hidden="true"></i> Excel
-                        </a>
-                        <a href="{% url 'admin_panel_export' item.key %}?format=csv{% if item.supports_days %}&days={{ chart_days }}{% endif %}" class="adm-dl-btn" title="دانلود CSV">CSV</a>
+                        <a href="{% url 'admin_panel_export' item.key %}?format=xlsx{% if item.supports_days %}&days={{ chart_days }}{% endif %}" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i> Excel</a>
+                        <a href="{% url 'admin_panel_export' item.key %}?format=csv{% if item.supports_days %}&days={{ chart_days }}{% endif %}" class="adm-dl-btn">CSV</a>
                     </div>
                 </article>
                 {% endif %}
@@ -554,39 +611,25 @@
 
     <div id="adm-json" class="adm-section">
         <header class="adm-section-head">
-            <h2><i class="fas fa-file-code" aria-hidden="true"></i> خلاصه کامل سیستم (JSON)</h2>
-            <p>یک فایل JSON شامل آمار، روندها، لیست‌های عملیاتی و وضعیت کل سیستم</p>
+            <h2><i class="fas fa-file-code"></i> خلاصه JSON</h2>
+            <p>آرشیو، API و تحلیل یکپارچه</p>
         </header>
-
         <article class="adm-json-card">
             <div class="adm-json-main">
-                <span class="adm-json-icon"><i class="fas fa-database" aria-hidden="true"></i></span>
+                <span class="adm-json-icon"><i class="fas fa-database"></i></span>
                 <div>
-                    <h3>خروجی یکپارچه برای آرشیو، API یا تحلیل</h3>
-                    <p>
-                        شامل overview، action_items، breakdowns، trends، products، affiliates،
-                        workspace و لیست‌هایی مثل سفارش‌های معلق، کاربران بدون لایسنس، لایسنس‌های در شرف انقضا و تیکت‌ها.
-                    </p>
+                    <h3>خروجی یکپارچه سیستم</h3>
+                    <p>overview، action_items، trends، products، workspace و لیست‌های عملیاتی</p>
                     <ul class="adm-json-meta">
-                        <li>بازه روندها: {{ chart_days }} روز</li>
-                        <li>تاریخ‌ها: میلادی (ISO) + شمسی</li>
-                        <li>فرمت: application/json</li>
+                        <li>بازه: {{ chart_days }} روز</li>
+                        <li>ISO + شمسی</li>
+                        <li>application/json</li>
                     </ul>
                 </div>
             </div>
             <div class="adm-json-actions">
-                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="adm-dl-btn adm-dl-btn--primary">
-                    <i class="fas fa-download" aria-hidden="true"></i>
-                    دانلود JSON
-                </a>
-                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=0" class="adm-dl-btn" target="_blank" rel="noopener">
-                    <i class="fas fa-eye" aria-hidden="true"></i>
-                    مشاهده در مرورگر
-                </a>
-                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&limit=100&download=1" class="adm-dl-btn">
-                    <i class="fas fa-layer-group" aria-hidden="true"></i>
-                    نسخه کامل‌تر (۱۰۰ ردیف)
-                </a>
+                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-download"></i> دانلود</a>
+                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=0" class="adm-dl-btn" target="_blank" rel="noopener"><i class="fas fa-eye"></i> مشاهده</a>
             </div>
         </article>
     </div>
@@ -599,5 +642,5 @@
 window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=4"></script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=5"></script>
 {% endblock %}

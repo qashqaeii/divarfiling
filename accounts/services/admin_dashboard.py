@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 
 import jdatetime
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Exists, Max, OuterRef, Q, Sum
+from django.db.models import Avg, Count, Exists, Max, OuterRef, Q, Sum
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 
@@ -490,18 +490,172 @@ def build_charts_payload(days: int = 30) -> Dict[str, Any]:
     }
 
 
+def get_today_stats() -> Dict[str, Any]:
+    """آمار امروز برای کارت‌های Spotlight."""
+    today = _today()
+    orders_paid_today = Order.objects.filter(status='paid', paid_at__date=today)
+    return {
+        'revenue_today': int(orders_paid_today.aggregate(total=Sum('amount'))['total'] or 0),
+        'orders_paid_today': orders_paid_today.count(),
+        'signups_today': User.objects.filter(date_joined__date=today).count(),
+        'avg_order_value': int(
+            Order.objects.filter(status='paid').aggregate(avg=Avg('amount'))['avg'] or 0
+        ),
+    }
+
+
+def build_action_queue(stats: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """صف اقدامات فوری — اولویت‌بندی شده."""
+    items: List[Dict[str, Any]] = []
+    queue = [
+        ('pending_card_transfers', 'پرداخت کارت‌به‌کارت', 'fa-money-check', 'amber', '#adm-ops', 'بررسی'),
+        ('unread_tickets', 'تیکت خوانده‌نشده', 'fa-headset', 'rose', '#adm-ops', 'پاسخ'),
+        ('orders_pending', 'سفارش پرداخت‌نشده', 'fa-clock', 'violet', '#adm-reports', 'پیگیری'),
+        ('users_pending_payment', 'کاربر با سفارش معلق', 'fa-user-clock', 'blue', '#adm-reports', 'تماس'),
+        ('licenses_expiring_soon', 'لایسنس در شرف انقضا', 'fa-hourglass-half', 'cyan', '#adm-reports', 'تمدید'),
+        ('pending_withdrawals', 'برداشت همکار فروش', 'fa-wallet', 'emerald', '#adm-ops', 'تأیید'),
+        ('users_without_license', 'بدون لایسنس فعال', 'fa-user-slash', 'indigo', '#adm-reports', 'فروش'),
+    ]
+    for key, title, icon, accent, anchor, action in queue:
+        count = int(stats.get(key) or 0)
+        if count > 0:
+            items.append({
+                'key': key,
+                'title': title,
+                'count': count,
+                'icon': icon,
+                'accent': accent,
+                'anchor': anchor,
+                'action': action,
+            })
+    return items
+
+
+def get_activity_feed(limit: int = 14) -> List[Dict[str, Any]]:
+    """فید فعالیت اخیر — سفارش، ثبت‌نام، تیکت، کارت‌به‌کارت."""
+    events: List[Dict[str, Any]] = []
+
+    for order in (
+        Order.objects.filter(status='paid')
+        .select_related('user', 'product')
+        .order_by('-paid_at')[:8]
+    ):
+        if not order.paid_at:
+            continue
+        events.append({
+            'type': 'order_paid',
+            'icon': 'fa-circle-check',
+            'accent': 'emerald',
+            'title': f'پرداخت {order.product.title if order.product_id else "سفارش"}',
+            'meta': order.user.get_full_name() or order.user.username,
+            'amount': int(order.amount or 0),
+            'at': order.paid_at,
+        })
+
+    for user in User.objects.order_by('-date_joined')[:6]:
+        events.append({
+            'type': 'signup',
+            'icon': 'fa-user-plus',
+            'accent': 'blue',
+            'title': 'ثبت‌نام جدید',
+            'meta': user.get_full_name() or user.username or user.phone,
+            'amount': None,
+            'at': user.date_joined,
+        })
+
+    for ticket in (
+        Ticket.objects.exclude(status='closed')
+        .select_related('user')
+        .order_by('-created_at')[:5]
+    ):
+        events.append({
+            'type': 'ticket',
+            'icon': 'fa-headset',
+            'accent': 'rose',
+            'title': ticket.subject[:60],
+            'meta': ticket.user.get_full_name() or ticket.user.username,
+            'amount': None,
+            'at': ticket.created_at,
+            'unread': ticket.staff_has_unread,
+        })
+
+    for ct in (
+        CardTransferSubmission.objects.filter(status='pending')
+        .select_related('order__user', 'order__product')
+        .order_by('-created_at')[:4]
+    ):
+        events.append({
+            'type': 'card_transfer',
+            'icon': 'fa-money-check',
+            'accent': 'amber',
+            'title': 'کارت‌به‌کارت در انتظار',
+            'meta': ct.order.user.get_full_name() or ct.order.user.username,
+            'amount': int(ct.order.amount or 0),
+            'at': ct.created_at,
+        })
+
+    events.sort(key=lambda e: e['at'], reverse=True)
+    return events[:limit]
+
+
+def build_health_indicators(stats: Dict[str, Any], sms_balance: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """وضعیت سلامت زیرسیستم‌ها."""
+    indicators = [
+        {
+            'key': 'users',
+            'label': 'کاربران',
+            'status': 'ok' if stats.get('users_active', 0) > 0 else 'warn',
+            'detail': f"{stats.get('users_active', 0)} فعال",
+        },
+        {
+            'key': 'licenses',
+            'label': 'لایسنس',
+            'status': 'warn' if stats.get('licenses_expiring_soon', 0) > 5 else 'ok',
+            'detail': f"{stats.get('licenses_active', 0)} فعال",
+        },
+        {
+            'key': 'orders',
+            'label': 'سفارش',
+            'status': 'warn' if stats.get('orders_pending', 0) > 10 else 'ok',
+            'detail': f"{stats.get('conversion_rate', 0)}٪ تبدیل",
+        },
+        {
+            'key': 'sms',
+            'label': 'پیامک',
+            'status': 'error' if sms_balance.get('error') else ('warn' if sms_balance.get('is_low') else 'ok'),
+            'detail': (
+                f"{int(sms_balance.get('credit') or 0):,} ت"
+                if sms_balance.get('ok') else 'خطا'
+            ),
+        },
+        {
+            'key': 'support',
+            'label': 'پشتیبانی',
+            'status': 'warn' if stats.get('unread_tickets', 0) > 0 else 'ok',
+            'detail': f"{stats.get('open_tickets', 0)} تیکت باز",
+        },
+    ]
+    return indicators
+
+
 def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
     stats = get_overview_stats()
+    sms_balance = get_sms_balance_snapshot()
     order_status = get_order_status_breakdown()
     license_status = get_license_status_breakdown()
     payment_methods = get_payment_method_breakdown()
     plan_sales = get_plan_sales_breakdown()
     product_revenue = get_product_revenue()
     status_max = max((item['count'] for item in order_status), default=1) or 1
+    today_stats = get_today_stats()
 
     return {
         'stats': stats,
-        'sms_balance': get_sms_balance_snapshot(),
+        'today_stats': today_stats,
+        'sms_balance': sms_balance,
+        'action_queue': build_action_queue(stats),
+        'activity_feed': get_activity_feed(),
+        'health_indicators': build_health_indicators(stats, sms_balance),
         'charts': build_charts_payload(days),
         'order_status': order_status,
         'order_status_max': status_max,

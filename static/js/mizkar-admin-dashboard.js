@@ -146,6 +146,7 @@
             ['chart-license-status', charts.license_status],
             ['chart-plans', charts.plan_sales],
             ['chart-payment', charts.payment_methods],
+            ['chart-product', charts.product_revenue],
         ];
 
         mapping.forEach(function (item) {
@@ -189,7 +190,7 @@
 
     function initTabs() {
         const tabs = document.querySelectorAll('.adm-tab');
-        const sections = ['adm-overview', 'adm-reports', 'adm-exports', 'adm-json'];
+        const sections = ['adm-overview', 'adm-ops', 'adm-reports', 'adm-exports', 'adm-json'];
 
         function setActiveTab(hash) {
             const id = (hash || '#adm-overview').replace('#', '');

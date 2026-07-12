@@ -25,7 +25,7 @@ class AndroidAppDownloadTests(TestCase):
 
     def test_license_guide_install_link_uses_in_page_fragment(self):
         response = self.client.get(reverse('license_guide'))
-        self.assertContains(response, 'href="#mk-dl-android-install"')
+        self.assertContains(response, 'href="#mk-dl-android-notes"')
 
     def test_license_guide_shows_download_hub(self):
         response = self.client.get(reverse('license_guide'))
@@ -46,9 +46,11 @@ class AndroidAppDownloadTests(TestCase):
         self.assertContains(response, 'id="download-apps"')
         self.assertContains(response, "tabName = 'downloads'")
         if android_apk_available():
-            self.assertContains(response, 'id="mk-dl-android-install"')
+            self.assertContains(response, 'id="mk-dl-android-notes"')
             self.assertContains(response, 'Play Protect')
-            self.assertContains(response, 'href="#mk-dl-android-install"')
+            self.assertContains(response, 'href="#mk-dl-android-notes"')
+        self.assertContains(response, 'id="mk-dl-windows-notes"')
+        self.assertContains(response, 'output')
 
     def test_dashboard_shows_android_link_for_authenticated_user(self):
         if not android_apk_available():

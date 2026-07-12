@@ -48,11 +48,31 @@
                         <i class="fab fa-android" aria-hidden="true"></i>
                         دانلود APK
                     </a>
-                    <a href="{% if compact %}{% url 'android_tutorial' %}{% else %}#mk-dl-android-install{% endif %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
+                    <a href="{% if compact %}{% url 'android_tutorial' %}{% else %}#mk-dl-android-notes{% endif %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
                     {% else %}
                     <span class="mk-dl-unavailable"><i class="fas fa-clock"></i> به‌زودی در سرور قرار می‌گیرد</span>
                     {% endif %}
                 </div>
+                {% if app_downloads.android.available %}
+                <div class="mk-dl-card-notes mk-dl-card-notes--android" id="mk-dl-android-notes">
+                    <h4 class="mk-dl-notes-title">
+                        <i class="fas fa-mobile-screen" aria-hidden="true"></i>
+                        {{ app_download_hub.android.install_title|default:'نصب در ۴ قدم' }}
+                    </h4>
+                    <ol class="mk-dl-notes-steps">
+                        {% for step in app_download_hub.android.install_steps %}
+                        <li><span class="mk-dl-notes-num">{{ step.num }}</span><span>{{ step.text }}</span></li>
+                        {% endfor %}
+                    </ol>
+                    <p class="mk-dl-notes-shield">
+                        <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                        <span>
+                            <strong>{{ app_download_hub.play_protect.title|default:'Play Protect' }}:</strong>
+                            {{ app_download_hub.play_protect.summary|default:app_download_hub.play_protect.why }}
+                        </span>
+                    </p>
+                </div>
+                {% endif %}
             </article>
 
             <article class="mk-dl-card mk-dl-card--windows">
@@ -108,42 +128,21 @@
                     <a href="{% url 'login' %}" class="mk-dl-btn mk-dl-btn--ghost">ورود</a>
                     {% endif %}
                 </div>
-            </article>
-        </div>
-
-        {% if app_downloads.android.available %}
-        {% if not compact %}
-        <div class="mk-dl-install" id="mk-dl-android-install">
-            <div class="mk-dl-install-grid">
-                <div class="mk-dl-install-steps">
-                    <h3><i class="fas fa-mobile-screen"></i> {{ app_download_hub.android.install_title|default:'نصب در ۴ قدم' }}</h3>
-                    <ol>
-                        {% for step in app_download_hub.android.install_steps %}
-                        <li><strong>{{ step.num }}</strong><span>{{ step.text }}</span></li>
-                        {% endfor %}
-                    </ol>
-                </div>
-                <aside class="mk-dl-shield" aria-labelledby="mk-dl-shield-title">
-                    <div class="mk-dl-shield-head">
-                        <span class="mk-dl-shield-icon" aria-hidden="true"><i class="fas fa-shield-halved"></i></span>
-                        <div>
-                            <h4 id="mk-dl-shield-title">{{ app_download_hub.play_protect.title }}</h4>
-                            <p>{{ app_download_hub.play_protect.why }}</p>
-                        </div>
-                    </div>
-                    <div class="mk-dl-shield-action">
-                        <span class="mk-dl-shield-cta">{{ app_download_hub.play_protect.cta }}</span>
-                        <span class="mk-dl-shield-sub">{{ app_download_hub.play_protect.cta_hint }}</span>
-                    </div>
-                    <ul class="mk-dl-shield-reasons">
-                        {% for reason in app_download_hub.play_protect.reasons %}
-                        <li><i class="fas fa-circle-check" aria-hidden="true"></i> {{ reason }}</li>
+                <div class="mk-dl-card-notes mk-dl-card-notes--windows" id="mk-dl-windows-notes">
+                    <h4 class="mk-dl-notes-title">
+                        <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+                        {{ app_download_hub.windows.update_title|default:'قبل از به‌روزرسانی یا حذف' }}
+                    </h4>
+                    <ul class="mk-dl-notes-list">
+                        {% for note in app_download_hub.windows.update_notes %}
+                        <li><i class="fas fa-circle" aria-hidden="true"></i> {{ note }}</li>
+                        {% empty %}
+                        <li><i class="fas fa-circle" aria-hidden="true"></i> از پوشه <code dir="ltr">output</code> کنار ربات (اکسل‌ها و تصاویر) قبل از حذف یا نصب مجدد کپی بگیرید.</li>
+                        <li><i class="fas fa-circle" aria-hidden="true"></i> ربات را کامل ببندید و بعد نصب‌کننده جدید را اجرا کنید.</li>
                         {% endfor %}
                     </ul>
-                </aside>
-            </div>
+                </div>
+            </article>
         </div>
-        {% endif %}
-        {% endif %}
     </div>
 </section>

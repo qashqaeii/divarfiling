@@ -433,6 +433,122 @@ html.mk-public[data-theme="light"] .mk-dl-shield-action {
     font-size: 0.72rem;
 }
 
+/* ─── یادداشت خلاصه زیر هر کارت ─── */
+.mk-dl-card-notes {
+    margin-top: 0.15rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.mk-dl-notes-title {
+    margin: 0 0 0.55rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--mk-text);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.mk-dl-notes-title i {
+    font-size: 0.72rem;
+    opacity: 0.85;
+}
+
+.mk-dl-card-notes--android .mk-dl-notes-title i {
+    color: #c4b5fd;
+}
+
+.mk-dl-card-notes--windows .mk-dl-notes-title i {
+    color: #fbbf24;
+}
+
+.mk-dl-notes-steps {
+    list-style: none;
+    margin: 0 0 0.65rem;
+    padding: 0;
+    display: grid;
+    gap: 0.35rem;
+}
+
+.mk-dl-notes-steps li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.45rem;
+    align-items: start;
+    font-size: 0.74rem;
+    line-height: 1.55;
+    color: var(--mk-text-secondary);
+}
+
+.mk-dl-notes-num {
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #c4b5fd;
+    background: rgba(124, 58, 237, 0.14);
+    border: 1px solid rgba(167, 139, 250, 0.18);
+}
+
+.mk-dl-notes-shield {
+    margin: 0;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: var(--mk-text-secondary);
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.16);
+    display: flex;
+    gap: 0.45rem;
+    align-items: flex-start;
+}
+
+.mk-dl-notes-shield i {
+    color: #fbbf24;
+    margin-top: 0.12rem;
+    flex-shrink: 0;
+}
+
+.mk-dl-notes-shield strong {
+    color: var(--mk-text);
+}
+
+.mk-dl-notes-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.mk-dl-notes-list li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.45rem;
+    align-items: start;
+    font-size: 0.74rem;
+    line-height: 1.55;
+    color: var(--mk-text-secondary);
+}
+
+.mk-dl-notes-list i {
+    font-size: 0.28rem;
+    margin-top: 0.45rem;
+    color: #86efac;
+}
+
+.mk-dl-notes-list code {
+    font-size: 0.68rem;
+    padding: 0.05rem 0.3rem;
+    border-radius: 4px;
+    background: rgba(148, 163, 184, 0.12);
+}
+
 /* ─── Compact (داشبورد) ─── */
 .mk-dl-hub--compact {
     padding: 0;

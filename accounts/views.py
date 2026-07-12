@@ -154,7 +154,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             licenses = licenses.filter(status=license_status_filter)
         
         # تراکنش‌ها
-        transactions = Transaction.objects.filter(order__user=user).select_related('order').order_by('-created_at')
+        transactions = Transaction.objects.filter(order__user=user).select_related(
+            'order', 'order__product', 'order__plan',
+        ).order_by('-created_at')
         
         # محصولات فعال برای خرید لایسنس جدید
         from shop.models import Product

@@ -8,9 +8,9 @@
 {% block body_class %}mk-account-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=14">
-<link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=24">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
 {% endblock %}
 
 {% block content %}
@@ -724,49 +724,77 @@
         
         <!-- Tab: Transactions -->
         <div id="tab-transactions" class="tab-content" style="display: none;">
-            <h2 class="tab-content-title">تراکنش‌های من</h2>
-            
+            <div class="tab-header dash-txn-head">
+                <div>
+                    <h2 class="tab-content-title">تراکنش‌های من</h2>
+                    <p class="dash-txn-subtitle">تاریخچه پرداخت‌های آنلاین و کد پیگیری درگاه زیبال</p>
+                </div>
+                {% if transactions %}
+                <span class="dash-txn-count">{{ transactions|length }} تراکنش</span>
+                {% endif %}
+            </div>
+
             {% if transactions %}
                 <div class="dash-txn-cards" aria-label="لیست تراکنش‌ها">
                     {% for transaction in transactions %}
                         <article class="dash-txn-card">
                             <div class="dash-txn-card-top">
                                 <code class="dash-txn-track">{{ transaction.zibal_track_id }}</code>
-                                <span class="badge {% if transaction.status == 'SUCCESS' or transaction.status == 'success' %}badge-success badge-paid{% elif transaction.status == 'FAILED' or transaction.status == 'failed' %}badge-danger{% elif transaction.status == 'PENDING' or transaction.status == 'pending' %}badge-pending{% else %}badge-cancelled{% endif %}">
+                                <span class="dash-txn-status dash-txn-status--{{ transaction.status|transaction_status_tone }}">
+                                    <span class="dash-txn-status-dot" aria-hidden="true"></span>
                                     {{ transaction.status|transaction_status_fa }}
                                 </span>
                             </div>
                             <p class="dash-txn-product">{{ transaction.order.product.title }}</p>
+                            {% if transaction.order.plan %}
+                            <p class="dash-txn-plan">{{ transaction.order.plan.name }}</p>
+                            {% endif %}
                             <div class="dash-txn-card-foot">
-                                <span class="dash-txn-amount">{{ transaction.amount|floatformat:0 }} تومان</span>
-                                <span class="dash-txn-date">{{ transaction.created_at|to_jalali }}</span>
+                                <span class="dash-txn-amount">{{ transaction.amount|currency }} <small>تومان</small></span>
+                                <span class="dash-txn-date">{{ transaction.created_at|to_jalali_date:"%Y/%m/%d" }} · {{ transaction.created_at|to_jalali_date:"%H:%M" }}</span>
                             </div>
                         </article>
                     {% endfor %}
                 </div>
-                <div class="dash-txn-table-wrap transactions-table-container">
-                    <table class="data-table dash-txn-table">
+                <div class="dash-txn-wrap transactions-table-container">
+                    <table class="dash-txn-table">
                         <thead>
                             <tr>
-                                <th>کد پیگیری</th>
-                                <th>سفارش</th>
-                                <th>مبلغ</th>
-                                <th>وضعیت</th>
-                                <th>تاریخ</th>
+                                <th scope="col">کد پیگیری</th>
+                                <th scope="col">سفارش</th>
+                                <th scope="col">مبلغ</th>
+                                <th scope="col">وضعیت</th>
+                                <th scope="col">تاریخ</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for transaction in transactions %}
                                 <tr>
-                                    <td><code>{{ transaction.zibal_track_id }}</code></td>
-                                    <td>{{ transaction.order.product.title }}</td>
-                                    <td>{{ transaction.amount|floatformat:0 }} تومان</td>
-                                    <td>
-                                        <span class="badge {% if transaction.status == 'SUCCESS' or transaction.status == 'success' %}badge-success badge-paid{% elif transaction.status == 'FAILED' or transaction.status == 'failed' %}badge-danger{% elif transaction.status == 'PENDING' or transaction.status == 'pending' %}badge-pending{% else %}badge-cancelled{% endif %}">
+                                    <td data-label="کد پیگیری">
+                                        <span class="dash-txn-track-cell">
+                                            <i class="fas fa-hashtag" aria-hidden="true"></i>
+                                            <code class="dash-txn-code">{{ transaction.zibal_track_id }}</code>
+                                        </span>
+                                    </td>
+                                    <td data-label="سفارش">
+                                        <span class="dash-txn-product-cell">{{ transaction.order.product.title }}</span>
+                                        {% if transaction.order.plan %}
+                                        <span class="dash-txn-plan-cell">{{ transaction.order.plan.name }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="مبلغ">
+                                        <span class="dash-txn-amount-cell">{{ transaction.amount|currency }} <small>تومان</small></span>
+                                    </td>
+                                    <td data-label="وضعیت">
+                                        <span class="dash-txn-status dash-txn-status--{{ transaction.status|transaction_status_tone }}">
+                                            <span class="dash-txn-status-dot" aria-hidden="true"></span>
                                             {{ transaction.status|transaction_status_fa }}
                                         </span>
                                     </td>
-                                    <td>{{ transaction.created_at|to_jalali }}</td>
+                                    <td data-label="تاریخ">
+                                        <span class="dash-txn-date-cell">{{ transaction.created_at|to_jalali_date:"%Y/%m/%d" }}</span>
+                                        <span class="dash-txn-time-cell">{{ transaction.created_at|to_jalali_date:"%H:%M" }}</span>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>

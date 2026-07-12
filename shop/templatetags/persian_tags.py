@@ -86,25 +86,56 @@ def to_jalali_date(value, format_string="%Y/%m/%d"):
         return value
 
 
+TXN_STATUS_LABELS = {
+    'paid': 'پرداخت شده',
+    'success': 'پرداخت شده',
+    'pending': 'در انتظار پرداخت',
+    'failed': 'ناموفق',
+    'cancelled': 'لغو شده',
+}
+
+TXN_STATUS_TONES = {
+    'paid': 'success',
+    'success': 'success',
+    'pending': 'pending',
+    'failed': 'failed',
+    'cancelled': 'cancelled',
+}
+
+
+def _normalize_txn_status(value):
+    raw = str(value or '').strip()
+    if not raw:
+        return ''
+    return raw.lower()
+
+
 @register.filter
 def transaction_status_fa(value):
     """
     تبدیل وضعیت تراکنش به فارسی
-    
+
     Usage:
         {{ transaction.status|transaction_status_fa }}
     """
-    status_map = {
-        'SUCCESS': 'موفق',
+    key = _normalize_txn_status(value)
+    if key in TXN_STATUS_LABELS:
+        return TXN_STATUS_LABELS[key]
+    upper_key = key.upper()
+    legacy = {
+        'SUCCESS': 'پرداخت شده',
         'FAILED': 'ناموفق',
-        'PENDING': 'در انتظار',
+        'PENDING': 'در انتظار پرداخت',
         'CANCELLED': 'لغو شده',
-        'success': 'موفق',
-        'failed': 'ناموفق',
-        'pending': 'در انتظار',
-        'cancelled': 'لغو شده',
     }
-    return status_map.get(str(value).upper(), str(value))
+    return legacy.get(upper_key, raw if (raw := str(value or '')) else '—')
+
+
+@register.filter
+def transaction_status_tone(value):
+    """کلاس رنگ وضعیت تراکنش — success / pending / failed / cancelled / unknown"""
+    key = _normalize_txn_status(value)
+    return TXN_STATUS_TONES.get(key, 'unknown')
 
 
 @register.filter

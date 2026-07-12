@@ -15,24 +15,26 @@
         <div class="mk-dl-grid">
             <article class="mk-dl-card mk-dl-card--android">
                 <div class="mk-dl-card-glow" aria-hidden="true"></div>
-                <div class="mk-dl-card-top">
+                <header class="mk-dl-card-top">
                     <div class="mk-dl-card-icon mk-dl-card-icon--android" aria-hidden="true">
                         <img src="{% static 'logo.png' %}" alt="" width="56" height="56" loading="lazy">
                     </div>
                     <div class="mk-dl-card-meta">
                         <span class="mk-dl-platform">اندروید</span>
                         <h3>{{ app_download_hub.android.title|default:'اپ فایلینگ دیوار' }}</h3>
-                        {% if app_downloads.android.available %}
                         <div class="mk-dl-badges">
+                            {% if app_downloads.android.available %}
                             <span class="mk-dl-badge">{{ app_downloads.android.version_label }}</span>
                             {% if app_downloads.android.size_label %}
                             <span class="mk-dl-badge mk-dl-badge--muted">{{ app_downloads.android.size_label }}</span>
                             {% endif %}
                             <span class="mk-dl-badge mk-dl-badge--muted">Android {{ app_downloads.android.min_android }}+</span>
+                            {% else %}
+                            <span class="mk-dl-badge mk-dl-badge--muted">به‌زودی</span>
+                            {% endif %}
                         </div>
-                        {% endif %}
                     </div>
-                </div>
+                </header>
                 <ul class="mk-dl-features">
                     {% for feat in app_download_hub.android.features %}
                     <li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>
@@ -43,18 +45,21 @@
                     {% endfor %}
                 </ul>
                 <div class="mk-dl-card-actions">
-                    {% if app_downloads.android.available %}
-                    <a href="{% url 'android_app_download' %}" class="mk-dl-btn mk-dl-btn--android">
-                        <i class="fab fa-android" aria-hidden="true"></i>
-                        دانلود APK
-                    </a>
-                    <a href="{% if compact %}{% url 'android_tutorial' %}{% else %}#mk-dl-android-notes{% endif %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
-                    {% else %}
-                    <span class="mk-dl-unavailable"><i class="fas fa-clock"></i> به‌زودی در سرور قرار می‌گیرد</span>
-                    {% endif %}
+                    <div class="mk-dl-card-actions-row">
+                        {% if app_downloads.android.available %}
+                        <a href="{% url 'android_app_download' %}" class="mk-dl-btn mk-dl-btn--android">
+                            <i class="fab fa-android" aria-hidden="true"></i>
+                            دانلود APK
+                        </a>
+                        <a href="{% if compact %}{% url 'android_tutorial' %}{% else %}#mk-dl-android-notes{% endif %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
+                        {% else %}
+                        <span class="mk-dl-unavailable"><i class="fas fa-clock"></i> به‌زودی در سرور قرار می‌گیرد</span>
+                        {% endif %}
+                    </div>
+                    <span class="mk-dl-file-hint mk-dl-file-hint--spacer" aria-hidden="true"></span>
                 </div>
-                {% if app_downloads.android.available %}
-                <div class="mk-dl-card-notes mk-dl-card-notes--android" id="mk-dl-android-notes">
+                <div class="mk-dl-card-notes mk-dl-card-notes--android{% if not app_downloads.android.available %} mk-dl-card-notes--empty{% endif %}" id="mk-dl-android-notes">
+                    {% if app_downloads.android.available %}
                     <h4 class="mk-dl-notes-title">
                         <i class="fas fa-mobile-screen" aria-hidden="true"></i>
                         {{ app_download_hub.android.install_title|default:'نصب در ۴ قدم' }}
@@ -71,13 +76,13 @@
                             {{ app_download_hub.play_protect.summary|default:app_download_hub.play_protect.why }}
                         </span>
                     </p>
+                    {% endif %}
                 </div>
-                {% endif %}
             </article>
 
             <article class="mk-dl-card mk-dl-card--windows">
                 <div class="mk-dl-card-glow" aria-hidden="true"></div>
-                <div class="mk-dl-card-top">
+                <header class="mk-dl-card-top">
                     <div class="mk-dl-card-icon mk-dl-card-icon--windows" aria-hidden="true">
                         {% decor_icon 'rocket' size='lg' boxed=True accent='emerald' %}
                     </div>
@@ -89,7 +94,7 @@
                             <span class="mk-dl-badge mk-dl-badge--license">نیاز به لایسنس</span>
                         </div>
                     </div>
-                </div>
+                </header>
                 <ul class="mk-dl-features">
                     {% for feat in app_download_hub.windows.features %}
                     <li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>
@@ -100,32 +105,37 @@
                     {% endfor %}
                 </ul>
                 <div class="mk-dl-card-actions">
-                    {% if windows_order_id %}
-                    <a href="{% url 'payment:download' windows_order_id %}" class="mk-dl-btn mk-dl-btn--windows">
-                        <i class="fab fa-windows" aria-hidden="true"></i>
-                        دانلود نصب‌کننده
-                    </a>
-                    {% if download_filename %}
+                    <div class="mk-dl-card-actions-row">
+                        {% if windows_order_id %}
+                        <a href="{% url 'payment:download' windows_order_id %}" class="mk-dl-btn mk-dl-btn--windows">
+                            <i class="fab fa-windows" aria-hidden="true"></i>
+                            دانلود نصب‌کننده
+                        </a>
+                        {% elif app_downloads.windows_download %}
+                        <a href="{% url 'payment:download' app_downloads.windows_download.order_id %}" class="mk-dl-btn mk-dl-btn--windows">
+                            <i class="fab fa-windows" aria-hidden="true"></i>
+                            دانلود نصب‌کننده
+                        </a>
+                        {% elif user.is_authenticated %}
+                        <a href="{% url 'product_list' %}" class="mk-dl-btn mk-dl-btn--windows">
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                            خرید لایسنس برای دانلود
+                        </a>
+                        <a href="{% url 'license_guide' %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای فعال‌سازی</a>
+                        {% else %}
+                        <a href="{% url 'register' %}" class="mk-dl-btn mk-dl-btn--windows">
+                            <i class="fas fa-user-plus" aria-hidden="true"></i>
+                            ثبت‌نام و خرید لایسنس
+                        </a>
+                        <a href="{% url 'login' %}" class="mk-dl-btn mk-dl-btn--ghost">ورود</a>
+                        {% endif %}
+                    </div>
+                    {% if windows_order_id and download_filename %}
                     <span class="mk-dl-file-hint" dir="ltr">{{ download_filename }}</span>
-                    {% endif %}
                     {% elif app_downloads.windows_download %}
-                    <a href="{% url 'payment:download' app_downloads.windows_download.order_id %}" class="mk-dl-btn mk-dl-btn--windows">
-                        <i class="fab fa-windows" aria-hidden="true"></i>
-                        دانلود نصب‌کننده
-                    </a>
                     <span class="mk-dl-file-hint" dir="ltr">{{ app_downloads.windows_download.filename }}</span>
-                    {% elif user.is_authenticated %}
-                    <a href="{% url 'product_list' %}" class="mk-dl-btn mk-dl-btn--windows">
-                        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-                        خرید لایسنس برای دانلود
-                    </a>
-                    <a href="{% url 'license_guide' %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای فعال‌سازی</a>
                     {% else %}
-                    <a href="{% url 'register' %}" class="mk-dl-btn mk-dl-btn--windows">
-                        <i class="fas fa-user-plus" aria-hidden="true"></i>
-                        ثبت‌نام و خرید لایسنس
-                    </a>
-                    <a href="{% url 'login' %}" class="mk-dl-btn mk-dl-btn--ghost">ورود</a>
+                    <span class="mk-dl-file-hint mk-dl-file-hint--spacer" aria-hidden="true"></span>
                     {% endif %}
                 </div>
                 <div class="mk-dl-card-notes mk-dl-card-notes--windows" id="mk-dl-windows-notes">

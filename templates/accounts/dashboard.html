@@ -8,7 +8,7 @@
 {% block body_class %}mk-account-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=14">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=24">
 {% endblock %}
@@ -170,6 +170,10 @@
                 <button class="tab-btn-modern" onclick="showTab('licenses', event)" data-tab="licenses">
                     <span class="tab-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
                     <span class="tab-text">لایسنس‌ها</span>
+                </button>
+                <button class="tab-btn-modern" onclick="showTab('downloads', event)" data-tab="downloads">
+                    <span class="tab-icon"><i class="fas fa-download" aria-hidden="true"></i></span>
+                    <span class="tab-text">دانلود اپ‌ها</span>
                 </button>
                 <button class="tab-btn-modern" onclick="showTab('transactions', event)" data-tab="transactions">
                     <span class="tab-icon"><i class="fas fa-exchange-alt" aria-hidden="true"></i></span>
@@ -477,8 +481,6 @@
                 {% endif %}
             </div>
 
-            {% include 'includes/app_download_hub.html' with compact=1 %}
-
             {% if license_dashboard.assigned_seats %}
             <section class="lic-seat-shared" aria-label="لایسنس‌های تخصیص‌یافته به من">
                 <header class="lic-seat-shared-head">
@@ -534,11 +536,6 @@
                             نمایش کلید لایسنس
                         </button>
                     </form>
-                    {% if order.product.download_file %}
-                    <a href="{% url 'payment:download' order.id %}" class="btn btn-secondary btn-sm lic-claim-dl">
-                        <i class="fas fa-download" aria-hidden="true"></i> دانلود ربات
-                    </a>
-                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
@@ -671,18 +668,11 @@
                     {% endif %}
 
                     <footer class="lic-card-foot">
-                        {% if lic.order.status == 'paid' and lic.order.product.download_file %}
-                        <a href="{% url 'payment:download' lic.order.id %}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-download" aria-hidden="true"></i> دانلود ربات ویندوز
-                        </a>
-                        {% endif %}
-                        {% if app_downloads.android.available %}
-                        <a href="{% url 'android_app_download' %}" class="btn btn-secondary btn-sm">
-                            <i class="fab fa-android" aria-hidden="true"></i> دانلود اپ اندروید
-                        </a>
-                        {% endif %}
                         <a href="{% url 'license_guide' %}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-book" aria-hidden="true"></i> راهنمای فعال‌سازی
+                        </a>
+                        <a href="#" onclick="showTab('downloads', event); return false;" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-download" aria-hidden="true"></i> دانلود اپ‌ها
                         </a>
                     </footer>
                 </article>
@@ -723,6 +713,13 @@
                     {% endif %}
                 </div>
             {% endif %}
+        </div>
+
+        <!-- Tab: Downloads -->
+        <div id="tab-downloads" class="tab-content" style="display: none;">
+            <div class="dash-downloads-hub">
+                {% include 'includes/app_download_hub.html' %}
+            </div>
         </div>
         
         <!-- Tab: Transactions -->
@@ -1767,7 +1764,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadAnchors = new Set(['download-apps', 'mk-dl-android-install']);
     let tabName = tabParam;
     if (!tabName && downloadAnchors.has(hash)) {
-        tabName = 'licenses';
+        tabName = 'downloads';
     } else if (!tabName && hash) {
         tabName = hash;
     }

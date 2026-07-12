@@ -1,0 +1,58 @@
+{% load crm_tags %}
+{# انتخاب محله از فایلینگ + تگ دلخواه #}
+<div class="crm-field crm-areas-field{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if form.errors and form[field_name].errors %} crm-field-has-error{% endif %}"
+     data-field="{{ field_name }}"
+     data-crm-areas-picker
+     data-field-name="{{ field_name }}">
+    <div class="crm-areas-head">
+        <label class="crm-label" id="crm-areas-label-{{ field_name }}">{{ label }}</label>
+        <span class="crm-areas-count" data-crm-areas-count aria-live="polite">۰ محله</span>
+    </div>
+    <p class="crm-form-hint crm-form-hint--tight">از محله‌های فایلینگ تیک بزنید یا محله دلخواه را به‌صورت تگ اضافه کنید.</p>
+
+    {{ form[field_name] }}
+
+    <div class="crm-areas-selected" data-crm-areas-selected aria-labelledby="crm-areas-label-{{ field_name }}"></div>
+
+    <div class="crm-areas-toolbar">
+        <div class="crm-areas-search-wrap">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input type="search"
+                   class="crm-input crm-areas-search"
+                   data-crm-areas-search
+                   placeholder="جستجو در محله‌های فایلینگ..."
+                   autocomplete="off"
+                   aria-label="جستجوی محله">
+        </div>
+        <div class="crm-areas-custom">
+            <input type="text"
+                   class="crm-input crm-areas-custom-input"
+                   data-crm-areas-custom-input
+                   placeholder="محله دلخواه..."
+                   aria-label="افزودن محله دلخواه">
+            <button type="button" class="crm-areas-custom-add" data-crm-areas-custom-add>
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                افزودن
+            </button>
+        </div>
+    </div>
+
+    <div class="crm-areas-catalog-wrap">
+        {% if dataset_neighborhoods %}
+        <div class="crm-areas-catalog" data-crm-areas-catalog role="group" aria-label="محله‌های فایلینگ">
+            {% for nb in dataset_neighborhoods %}
+            <label class="crm-areas-option" data-crm-areas-option-wrap>
+                <input type="checkbox" class="crm-areas-option-input" value="{{ nb }}" data-crm-areas-option>
+                <span class="crm-areas-option-text">{{ nb }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="crm-areas-empty">هنوز محله‌ای در فایلینگ شما ثبت نشده — محله دلخواه را با دکمه «افزودن» وارد کنید.</p>
+        {% endif %}
+    </div>
+
+    {% for error in form[field_name].errors %}
+    <p class="crm-field-error" role="alert">{{ error }}</p>
+    {% endfor %}
+</div>

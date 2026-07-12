@@ -57,6 +57,12 @@ def split_tags(value, sep=','):
     return [t.strip() for t in str(value).split(sep) if t.strip()]
 
 
+@register.filter
+def split_areas(value):
+    from workspace.services.crm_matching import _parse_areas
+    return _parse_areas(value or '')
+
+
 STATUS_STYLES = {
     'جدید': ('#eff6ff', '#1d4ed8', '#3b82f6'),
     'در حال پیگیری': ('#fffbeb', '#b45309', '#f59e0b'),
@@ -399,3 +405,9 @@ def phone_sms_href(phone):
     """href برای پیامک."""
     key = _normalized_mobile(phone)
     return f'sms:{key}' if key else ''
+
+
+@register.inclusion_tag('workspace/crm/includes/contact_social_channels.html')
+def crm_contact_channels_form(form):
+    from workspace.services.contact_channels import contact_channels_form_list_for_form
+    return {'channels': contact_channels_form_list_for_form(form)}

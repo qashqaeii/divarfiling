@@ -115,6 +115,16 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
     for field in ('min_area', 'max_area'):
         if field in data:
             setattr(c, field, _optional_int(data[field]))
+    if 'social_links' in data and isinstance(data['social_links'], dict):
+        from workspace.services.public_share_common import normalize_social_links
+        c.social_links = normalize_social_links(data['social_links'])
+    if 'active_channels' in data and isinstance(data['active_channels'], list):
+        from workspace.services.contact_channels import normalize_active_channels
+        c.active_channels = normalize_active_channels(
+            data['active_channels'],
+            social_links=c.social_links,
+            phone=c.phone or '',
+        )
     c.save()
     return c
 

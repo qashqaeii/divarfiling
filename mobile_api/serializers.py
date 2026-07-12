@@ -245,6 +245,8 @@ def contact_to_dict(c: Customer) -> Dict[str, Any]:
         'builder_buy_min_area': c.builder_buy_min_area,
         'builder_buy_max_area': c.builder_buy_max_area,
         'is_builder': c.customer_type == 'سازنده',
+        'social_links': getattr(c, 'social_links', None) or {},
+        'active_channels': getattr(c, 'active_channels', None) or [],
     }
 
 

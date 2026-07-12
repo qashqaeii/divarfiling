@@ -150,6 +150,16 @@ def _crm_nav_counts(user):
     }
 
 
+def _contact_areas_context(user):
+    from workspace.services.filters import get_user_dataset_neighborhoods
+
+    neighborhoods = get_user_dataset_neighborhoods(user)
+    return {
+        'dataset_neighborhoods': neighborhoods,
+        'dataset_neighborhoods_json': json.dumps(neighborhoods, ensure_ascii=False),
+    }
+
+
 class CRMContextMixin:
     def get_context_data(self, **kwargs):
         from workspace.services.crm_video import get_crm_video_context
@@ -322,6 +332,7 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['saved_filter_can_save'] = bool(ctx['saved_filter_params'])
         ctx['match_eligible_types'] = MATCH_TYPES | LEAD_TYPES
         ctx['today'] = today
+        ctx.update(_contact_areas_context(user))
         return ctx
 
 
@@ -586,6 +597,10 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['open_drawer'] = self.request.GET.get('drawer', '')
         ctx['type_profiles_json'] = json.dumps(TYPE_PROFILES, ensure_ascii=False)
         ctx['whatsapp_text'] = build_customer_whatsapp_text(c)
+        from workspace.services.contact_channels import contact_channels_for_display
+        ctx['contact_messaging_channels'] = contact_channels_for_display(
+            c, message=ctx['whatsapp_text'],
+        )
         ctx['crm_section'] = 'contacts'
         divar_enabled = has_active_bot_license(self.request.user)
         match_data = get_customer_matches(c, self.request.user, divar_enabled=divar_enabled)
@@ -608,6 +623,7 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['customer_share'] = (
             share_for_customer_recipient(self.request.user, c) if ctx['customer_is_shared'] else None
         )
+        ctx.update(_contact_areas_context(self.request.user))
         return ctx
 
     def post(self, request, customer_id):

@@ -1,0 +1,77 @@
+{% load static crm_tags %}
+{# کانال‌های پیام‌رسانی — نوار چسبان (همه تب‌ها) + ویرایشگر در تب پایه #}
+
+<div class="crm-contact-channels" data-crm-contact-channels>
+    <div class="crm-contact-channels-bar" aria-label="کانال‌های پیام‌رسانی فعال">
+        <div class="crm-contact-channels-bar-head">
+            <span class="crm-contact-channels-bar-title">
+                <i class="fas fa-comments" aria-hidden="true"></i>
+                کانال‌های پیام
+            </span>
+            <span class="crm-contact-channels-bar-hint">شبکه‌هایی که مخاطب در آن‌ها فعال است</span>
+        </div>
+        <div class="crm-contact-channels-strip" role="group" aria-label="انتخاب کانال فعال">
+            {% for ch in channels %}
+            <label class="crm-channel-chip{% if ch.active %} is-active{% endif %}{% if ch.active and not ch.ready %} is-incomplete{% endif %}"
+                   style="--crm-ch-color: {{ ch.color }}"
+                   data-channel-key="{{ ch.key }}"
+                   data-uses-phone="{{ ch.readonly_handle|yesno:'1,0' }}"
+                   title="{{ ch.label }}{% if ch.readonly_handle %} — از موبایل{% endif %}">
+                <input type="checkbox"
+                       class="crm-channel-chip-input"
+                       name="contact_active_{{ ch.key }}"
+                       value="1"
+                       {% if ch.active %}checked{% endif %}
+                       aria-label="فعال در {{ ch.label }}">
+                <span class="crm-channel-chip-icon" aria-hidden="true">
+                    {% if ch.icon_file %}
+                    <img src="{% static ch.icon_file %}?v=2" alt="" width="18" height="18" loading="lazy" decoding="async">
+                    {% else %}
+                    <i class="{{ ch.icon }}"></i>
+                    {% endif %}
+                </span>
+                <span class="crm-channel-chip-label">{{ ch.label }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        <p class="crm-contact-channels-summary" data-crm-channels-summary aria-live="polite"></p>
+    </div>
+
+    <div class="crm-contact-channels-editor" id="crmContactChannelsEditor" data-crm-channels-editor hidden>
+        <div class="crm-contact-channels-editor-head">
+            <h4 class="crm-contact-channels-editor-title">شناسه در شبکه‌های اجتماعی</h4>
+            <p class="crm-form-hint crm-form-hint--tight">برای واتساپ، پیامک و تماس از فیلد موبایل استفاده می‌شود.</p>
+        </div>
+        <div class="crm-contact-channels-grid">
+            {% for ch in channels %}
+            {% if not ch.readonly_handle %}
+            <div class="crm-contact-channel-field{% if ch.active %} is-active{% else %} is-dormant{% endif %}"
+                 data-channel-field="{{ ch.key }}"
+                 style="--crm-ch-color: {{ ch.color }}">
+                <label class="crm-contact-channel-field-label" for="crm-ch-handle-{{ ch.key }}">
+                    <span class="crm-contact-channel-field-icon" aria-hidden="true">
+                        {% if ch.icon_file %}
+                        <img src="{% static ch.icon_file %}?v=2" alt="" width="20" height="20" loading="lazy" decoding="async">
+                        {% else %}
+                        <i class="{{ ch.icon }}"></i>
+                        {% endif %}
+                    </span>
+                    <span>{{ ch.label }}</span>
+                </label>
+                <input type="text"
+                       class="crm-input crm-contact-channel-input"
+                       id="crm-ch-handle-{{ ch.key }}"
+                       name="contact_social_{{ ch.key }}"
+                       value="{{ ch.handle }}"
+                       placeholder="{{ ch.placeholder }}"
+                       dir="ltr"
+                       inputmode="text"
+                       autocomplete="off"
+                       aria-label="شناسه {{ ch.label }}"
+                       {% if not ch.active %}disabled{% endif %}>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>

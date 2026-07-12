@@ -347,7 +347,9 @@
                             <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
                             <div class="crm-contact-pref-body">
                                 <span class="crm-contact-pref-lbl">محله‌ها</span>
-                                <strong>{{ customer.areas }}</strong>
+                                <div class="crm-areas-display-tags">
+                                    {% for nb in customer.areas|split_areas %}<span class="crm-area-tag">{{ nb }}</span>{% endfor %}
+                                </div>
                             </div>
                         </div>
                         {% endif %}
@@ -381,7 +383,9 @@
                             <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
                             <div class="crm-contact-pref-body">
                                 <span class="crm-contact-pref-lbl">مناطق خرید</span>
-                                <strong>{{ customer.builder_buy_areas }}</strong>
+                                <div class="crm-areas-display-tags">
+                                    {% for nb in customer.builder_buy_areas|split_areas %}<span class="crm-area-tag">{{ nb }}</span>{% endfor %}
+                                </div>
                             </div>
                         </div>
                         {% endif %}

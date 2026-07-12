@@ -123,6 +123,8 @@ const CRMDrawer = {
         initCRMMoneyInputs(drawer);
         initPropertyDealMode(drawer);
         initCRMTypeProfiles(drawer);
+        initCRMContactChannels(drawer);
+        initCRMAreasPicker(drawer);
         initCRMFormErrors();
         if (id === 'drawer-import' || id === 'drawer-property-import') initCRMImportDrawer(drawer);
         else initCRMVisitOutcome(drawer);
@@ -1695,6 +1697,238 @@ function crmActivateFormTab(section, tabName) {
     if (panel) panel.hidden = false;
 }
 
+function parseAreasText(raw) {
+    return (raw || '')
+        .split(/[,،;\n|/]+/)
+        .map(part => part.trim())
+        .filter(Boolean);
+}
+
+function initCRMAreasPicker(root) {
+    const scope = root || document;
+    scope.querySelectorAll('[data-crm-areas-picker]').forEach(picker => {
+        if (picker.dataset.areasInit === '1') return;
+        picker.dataset.areasInit = '1';
+
+        const hidden = picker.querySelector('.crm-areas-hidden, input[type="hidden"][name]');
+        const selectedWrap = picker.querySelector('[data-crm-areas-selected]');
+        const countEl = picker.querySelector('[data-crm-areas-count]');
+        const searchInput = picker.querySelector('[data-crm-areas-search]');
+        const customInput = picker.querySelector('[data-crm-areas-custom-input]');
+        const customAdd = picker.querySelector('[data-crm-areas-custom-add]');
+        const catalog = picker.querySelector('[data-crm-areas-catalog]');
+        if (!hidden || !selectedWrap) return;
+
+        const catalogValues = new Set(
+            Array.from(picker.querySelectorAll('[data-crm-areas-option]')).map(el => el.value.trim())
+        );
+        const selected = [];
+
+        function hasArea(name) {
+            const norm = name.trim();
+            return selected.some(item => item === norm);
+        }
+
+        function syncHidden() {
+            hidden.value = selected.join('، ');
+            if (countEl) {
+                countEl.textContent = selected.length
+                    ? `${selected.length.toLocaleString('fa-IR')} محله`
+                    : '۰ محله';
+            }
+        }
+
+        function syncCheckboxes() {
+            picker.querySelectorAll('[data-crm-areas-option]').forEach(cb => {
+                cb.checked = hasArea(cb.value);
+            });
+        }
+
+        function renderTags() {
+            selectedWrap.innerHTML = '';
+            selected.forEach(name => {
+                const tag = document.createElement('span');
+                tag.className = 'crm-areas-tag' + (catalogValues.has(name) ? '' : ' crm-areas-tag--custom');
+                tag.dataset.areaName = name;
+
+                const label = document.createElement('span');
+                label.textContent = name;
+                tag.appendChild(label);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'crm-areas-tag-remove';
+                btn.setAttribute('aria-label', `حذف ${name}`);
+                btn.innerHTML = '&times;';
+                btn.addEventListener('click', () => {
+                    const idx = selected.indexOf(name);
+                    if (idx >= 0) selected.splice(idx, 1);
+                    syncCheckboxes();
+                    syncHidden();
+                    renderTags();
+                });
+                tag.appendChild(btn);
+                selectedWrap.appendChild(tag);
+            });
+            syncHidden();
+        }
+
+        function addArea(name) {
+            const value = (name || '').trim();
+            if (!value || hasArea(value)) return false;
+            selected.push(value);
+            syncCheckboxes();
+            renderTags();
+            return true;
+        }
+
+        function removeArea(name) {
+            const idx = selected.indexOf(name);
+            if (idx < 0) return;
+            selected.splice(idx, 1);
+            syncCheckboxes();
+            renderTags();
+        }
+
+        parseAreasText(hidden.value).forEach(addArea);
+        renderTags();
+
+        picker.querySelectorAll('[data-crm-areas-option]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (cb.checked) addArea(cb.value);
+                else removeArea(cb.value);
+            });
+        });
+
+        customAdd?.addEventListener('click', () => {
+            if (addArea(customInput?.value || '')) {
+                if (customInput) customInput.value = '';
+            }
+        });
+
+        customInput?.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                customAdd?.click();
+            }
+        });
+
+        searchInput?.addEventListener('input', () => {
+            const q = (searchInput.value || '').trim().toLowerCase();
+            picker.querySelectorAll('[data-crm-areas-option-wrap]').forEach(row => {
+                const text = row.textContent.trim().toLowerCase();
+                row.classList.toggle('is-hidden', q && !text.includes(q));
+            });
+        });
+    });
+}
+
+function initCRMContactChannels(root) {
+    const scope = root || document;
+    scope.querySelectorAll('[data-crm-contact-channels]').forEach(block => {
+        if (block.dataset.channelsInit === '1') return;
+        block.dataset.channelsInit = '1';
+
+        const form = block.closest('form');
+        const editor = block.querySelector('[data-crm-channels-editor]');
+        const summary = block.querySelector('[data-crm-channels-summary]');
+        const panelNotes = block.closest('.crm-form-sections')?.querySelectorAll('[data-crm-panel-channels-note]') || [];
+        const phoneInput = form?.querySelector('[name="phone"]');
+        const openBtn = block.closest('.crm-form-sections')?.querySelector('[data-crm-channels-open]');
+
+        function channelRows() {
+            return block.querySelectorAll('.crm-channel-chip');
+        }
+
+        function fieldBlocks() {
+            return block.querySelectorAll('[data-channel-field]');
+        }
+
+        function syncFieldVisibility() {
+            fieldBlocks().forEach(row => {
+                const key = row.dataset.channelField;
+                const chip = block.querySelector(`.crm-channel-chip[data-channel-key="${key}"] input`);
+                const active = chip?.checked;
+                row.classList.toggle('is-active', !!active);
+                row.classList.toggle('is-dormant', !active);
+                const input = row.querySelector('.crm-contact-channel-input');
+                if (input) input.disabled = !active;
+            });
+        }
+
+        function phoneReady() {
+            return !!(phoneInput?.value || '').replace(/\D/g, '').match(/^09\d{9}$/);
+        }
+
+        function updateReadiness() {
+            channelRows().forEach(chip => {
+                const input = chip.querySelector('.crm-channel-chip-input');
+                const usesPhone = chip.dataset.usesPhone === '1';
+                const handleInput = block.querySelector(`[name="contact_social_${chip.dataset.channelKey}"]`);
+                const hasHandle = usesPhone ? phoneReady() : !!(handleInput?.value || '').trim();
+                chip.classList.toggle('is-active', !!input?.checked);
+                chip.classList.toggle('is-incomplete', !!input?.checked && !hasHandle);
+            });
+        }
+
+        function buildSummary() {
+            const active = [];
+            const incomplete = [];
+            channelRows().forEach(chip => {
+                const cb = chip.querySelector('.crm-channel-chip-input');
+                if (!cb?.checked) return;
+                const label = chip.querySelector('.crm-channel-chip-label')?.textContent?.trim() || '';
+                if (chip.classList.contains('is-incomplete')) incomplete.push(label);
+                else active.push(label);
+            });
+            let text = '';
+            if (active.length) text += 'فعال: ' + active.join('، ');
+            if (incomplete.length) {
+                text += (text ? ' — ' : '') + 'نیاز به تکمیل: ' + incomplete.join('، ');
+            }
+            if (!text) text = 'هیچ کانالی انتخاب نشده — شبکه‌های فعال مخاطب را مشخص کنید.';
+            if (summary) summary.textContent = text;
+            panelNotes.forEach(note => { note.textContent = text; });
+        }
+
+        function refresh() {
+            syncFieldVisibility();
+            updateReadiness();
+            buildSummary();
+        }
+
+        channelRows().forEach(chip => {
+            const cb = chip.querySelector('.crm-channel-chip-input');
+            cb?.addEventListener('change', () => {
+                refresh();
+                if (cb.checked && editor?.hidden) {
+                    editor.hidden = false;
+                    const key = chip.dataset.channelKey;
+                    const field = block.querySelector(`#crm-ch-handle-${key}`);
+                    if (field && !field.disabled) field.focus();
+                }
+            });
+        });
+
+        block.querySelectorAll('.crm-contact-channel-input').forEach(inp => {
+            inp.addEventListener('input', refresh);
+        });
+        phoneInput?.addEventListener('input', refresh);
+
+        openBtn?.addEventListener('click', () => {
+            if (!editor) return;
+            editor.hidden = !editor.hidden;
+            if (!editor.hidden) {
+                crmActivateFormTab(block.closest('.crm-form-sections'), 'basic');
+                const first = editor.querySelector('.crm-contact-channel-input:not(:disabled)');
+                first?.focus();
+            }
+        });
+
+        refresh();
+    });
+}
+
 function initCRMContactFormGuard() {
     document.querySelectorAll('#drawer-contact form').forEach(form => {
         if (form.dataset.contactGuard === '1') return;
@@ -2703,6 +2937,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMMoneyInputs(document);
     initCRMFormErrors();
     initCRMContactFormGuard();
+    initCRMContactChannels(document);
+    initCRMAreasPicker(document);
     initCRMPipeline();
     initCRMDealPipeline();
     initCRMPropertyPipeline();

@@ -16,7 +16,40 @@
         </button>
     </div>
     <div class="crm-contact-hero__actions-quick" aria-label="دسترسی سریع">
+        {% if contact_messaging_channels %}
+        <div class="crm-contact-hero__channels" aria-label="کانال‌های پیام">
+            {% for ch in contact_messaging_channels %}
+            {% if ch.href %}
+            <a href="{{ ch.href }}"
+               class="crm-contact-hero__channel"
+               style="--crm-ch-color: {{ ch.color }}"
+               {% if ch.mode != 'tel' and ch.mode != 'sms' %}target="_blank" rel="noopener"{% endif %}
+               title="پیام در {{ ch.label }}"
+               aria-label="{{ ch.label }}">
+                {% if ch.icon_file %}
+                <img src="{% static ch.icon_file %}?v=2" alt="" width="16" height="16" loading="lazy" decoding="async">
+                {% else %}
+                <i class="{{ ch.icon }}" aria-hidden="true"></i>
+                {% endif %}
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
         {% if customer.phone %}
+        <button type="button" class="crm-contact-hero__quick" data-copy="{{ whatsapp_text }}" title="قالب پیام">
+            <i class="fas fa-comment-dots" aria-hidden="true"></i>
+            <span class="sr-only">قالب پیام</span>
+        </button>
+        <form method="post" class="crm-contact-hero__quick-form" title="ثبت تماس">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="log_call">
+            <button type="submit" class="crm-contact-hero__quick" title="تماس گرفتم">
+                <i class="fas fa-phone-volume" aria-hidden="true"></i>
+                <span class="sr-only">تماس گرفتم</span>
+            </button>
+        </form>
+        {% endif %}
+        {% elif customer.phone %}
         <a href="https://wa.me/98{{ customer.phone|slice:'1:' }}" target="_blank" rel="noopener" class="crm-contact-hero__quick crm-contact-hero__quick--wa" title="واتساپ">
             <i class="fab fa-whatsapp" aria-hidden="true"></i>
             <span class="sr-only">واتساپ</span>

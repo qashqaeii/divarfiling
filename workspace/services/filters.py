@@ -183,6 +183,24 @@ def get_neighborhoods_qs(listings_qs: QuerySet) -> List[str]:
     )
 
 
+def get_user_dataset_neighborhoods(user, *, limit: int = 300) -> List[str]:
+    """محله‌های م distinct از همه فایلینگ‌های فعال کاربر."""
+    from workspace.models import Listing
+
+    if not user or not getattr(user, 'pk', None):
+        return []
+    return list(
+        Listing.objects.filter(
+            dataset__user=user,
+            dataset__is_active=True,
+        )
+        .exclude(neighborhood='')
+        .values_list('neighborhood', flat=True)
+        .distinct()
+        .order_by('neighborhood')[:limit]
+    )
+
+
 _CONSULTANT_FILTER_Q = (
     Q(business_type__icontains='مشاور')
     | Q(business_type__icontains='business')

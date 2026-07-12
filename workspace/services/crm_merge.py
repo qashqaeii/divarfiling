@@ -109,6 +109,9 @@ def merge_customers(primary: Customer, secondary: Customer) -> Customer:
         tags.update(t.strip() for t in secondary.tags.split(',') if t.strip())
         primary.tags = ', '.join(sorted(tags))
 
+    from workspace.services.contact_channels import merge_contact_channels
+    merge_contact_channels(primary, secondary)
+
     primary.save()
     secondary.delete()
 

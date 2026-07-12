@@ -18834,3 +18834,458 @@ button.crm-prop-hero-cover {
     width: auto !important;
     height: auto !important;
 }
+
+/* ─── Contact messaging channels (create/edit modal) ─── */
+.crm-contact-channels {
+    margin-block: 0.55rem 0.65rem;
+}
+
+.crm-contact-channels-bar {
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--ws-border);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--ws-surface) 92%, var(--ws-primary) 8%);
+}
+
+.crm-contact-channels-bar-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.65rem;
+    margin-bottom: 0.45rem;
+}
+
+.crm-contact-channels-bar-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--ws-text);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.crm-contact-channels-bar-title i {
+    color: var(--ws-primary);
+    font-size: 0.68rem;
+}
+
+.crm-contact-channels-bar-hint {
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+    font-weight: 500;
+}
+
+.crm-contact-channels-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.crm-channel-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.28rem 0.48rem 0.28rem 0.38rem;
+    border-radius: 999px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.12s;
+    user-select: none;
+}
+
+.crm-channel-chip:hover {
+    border-color: color-mix(in srgb, var(--crm-ch-color, var(--ws-primary)) 35%, var(--ws-border));
+}
+
+.crm-channel-chip.is-active {
+    border-color: color-mix(in srgb, var(--crm-ch-color, var(--ws-primary)) 45%, var(--ws-border));
+    background: color-mix(in srgb, var(--crm-ch-color, var(--ws-primary)) 10%, var(--ws-surface));
+}
+
+.crm-channel-chip.is-incomplete.is-active {
+    border-color: rgba(245, 158, 11, 0.45);
+    background: rgba(245, 158, 11, 0.08);
+}
+
+.crm-channel-chip-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+
+.crm-channel-chip-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    display: grid;
+    place-items: center;
+    color: var(--crm-ch-color, var(--ws-text-secondary));
+    line-height: 0;
+}
+
+.crm-channel-chip-icon img {
+    width: 1rem;
+    height: 1rem;
+    object-fit: contain;
+}
+
+.crm-channel-chip-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--ws-text-secondary);
+}
+
+.crm-channel-chip.is-active .crm-channel-chip-label {
+    color: var(--ws-text);
+}
+
+.crm-contact-channels-summary,
+.crm-panel-channels-note {
+    margin: 0.4rem 0 0;
+    font-size: 0.6rem;
+    color: var(--ws-text-muted);
+    line-height: 1.45;
+}
+
+.crm-panel-channels-note:not(:empty) {
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+    background: var(--ws-surface-2);
+    border: 1px dashed var(--ws-border);
+}
+
+.crm-contact-channels-editor {
+    margin-top: 0.55rem;
+    padding: 0.65rem 0.7rem;
+    border: 1px solid var(--ws-border);
+    border-radius: 12px;
+    background: var(--ws-surface);
+}
+
+.crm-contact-channels-editor-head {
+    margin-bottom: 0.55rem;
+}
+
+.crm-contact-channels-editor-title {
+    margin: 0 0 0.15rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--ws-text);
+}
+
+.crm-contact-channels-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.crm-contact-channel-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    opacity: 0.45;
+    transition: opacity 0.15s;
+}
+
+.crm-contact-channel-field.is-active {
+    opacity: 1;
+}
+
+.crm-contact-channel-field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--ws-text-secondary);
+}
+
+.crm-contact-channel-field-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    display: grid;
+    place-items: center;
+    color: var(--crm-ch-color, var(--ws-primary));
+    line-height: 0;
+}
+
+.crm-contact-channel-field-icon img {
+    width: 1rem;
+    height: 1rem;
+    object-fit: contain;
+}
+
+.crm-contact-channel-input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.crm-contact-channels-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.55rem;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.64rem;
+    font-weight: 700;
+    font-family: inherit;
+    color: var(--ws-primary);
+    background: rgba(124, 58, 237, 0.06);
+    border: 1px dashed rgba(124, 58, 237, 0.25);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.crm-contact-channels-open:hover {
+    background: rgba(124, 58, 237, 0.1);
+    border-color: rgba(124, 58, 237, 0.4);
+}
+
+.crm-contact-hero__channels {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.crm-contact-hero__channel {
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    color: var(--crm-ch-color, var(--ws-text-secondary));
+    text-decoration: none;
+    transition: transform 0.12s, border-color 0.12s, background 0.12s;
+}
+
+.crm-contact-hero__channel:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--crm-ch-color, var(--ws-primary)) 40%, var(--ws-border));
+    background: color-mix(in srgb, var(--crm-ch-color, var(--ws-primary)) 8%, var(--ws-surface));
+}
+
+.crm-contact-hero__channel img {
+    width: 1rem;
+    height: 1rem;
+    object-fit: contain;
+}
+
+@media (max-width: 640px) {
+    .crm-contact-channels-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ─── Contact areas picker (dataset neighborhoods + custom tags) ─── */
+.crm-areas-field {
+    gap: 0.45rem;
+}
+
+.crm-areas-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.crm-areas-count {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--ws-primary);
+    background: rgba(124, 58, 237, 0.08);
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+}
+
+.crm-areas-hidden {
+    display: none !important;
+}
+
+.crm-areas-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    min-height: 0;
+}
+
+.crm-areas-selected:empty::before {
+    content: 'هنوز محله‌ای انتخاب نشده';
+    font-size: 0.62rem;
+    color: var(--ws-text-muted);
+}
+
+.crm-area-tag,
+.crm-areas-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.18rem 0.45rem 0.18rem 0.35rem;
+    border-radius: 999px;
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: var(--ws-text);
+    background: var(--ws-surface-2);
+    border: 1px solid var(--ws-border);
+}
+
+.crm-area-tag--custom,
+.crm-areas-tag--custom {
+    border-color: rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.08);
+}
+
+.crm-areas-tag-remove {
+    display: inline-grid;
+    place-items: center;
+    width: 1rem;
+    height: 1rem;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ws-text-muted);
+    cursor: pointer;
+    font-size: 0.72rem;
+    line-height: 1;
+}
+
+.crm-areas-tag-remove:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.crm-areas-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 0.45rem;
+}
+
+.crm-areas-search-wrap {
+    position: relative;
+}
+
+.crm-areas-search-wrap i {
+    position: absolute;
+    inset-inline-start: 0.65rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.65rem;
+    color: var(--ws-text-muted);
+    pointer-events: none;
+}
+
+.crm-areas-search {
+    padding-inline-start: 1.85rem !important;
+    font-size: 0.72rem !important;
+}
+
+.crm-areas-custom {
+    display: flex;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.crm-areas-custom-input {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.72rem !important;
+}
+
+.crm-areas-custom-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.55rem;
+    font-size: 0.64rem;
+    font-weight: 700;
+    font-family: inherit;
+    color: var(--ws-primary);
+    background: rgba(124, 58, 237, 0.08);
+    border: 1px solid rgba(124, 58, 237, 0.22);
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.crm-areas-custom-add:hover {
+    background: rgba(124, 58, 237, 0.14);
+}
+
+.crm-areas-catalog-wrap {
+    border: 1px solid var(--ws-border);
+    border-radius: 10px;
+    background: var(--ws-surface);
+    max-height: 9.5rem;
+    overflow: auto;
+}
+
+.crm-areas-catalog {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem;
+    padding: 0.45rem;
+}
+
+.crm-areas-option {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.4rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.12s;
+    min-width: 0;
+}
+
+.crm-areas-option:hover {
+    background: var(--ws-surface-2);
+}
+
+.crm-areas-option.is-hidden {
+    display: none;
+}
+
+.crm-areas-option-input {
+    flex-shrink: 0;
+    accent-color: var(--ws-primary);
+}
+
+.crm-areas-option-text {
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.crm-areas-empty {
+    margin: 0;
+    padding: 0.75rem;
+    font-size: 0.64rem;
+    color: var(--ws-text-muted);
+    text-align: center;
+}
+
+.crm-areas-display-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.15rem;
+}
+
+@media (max-width: 720px) {
+    .crm-areas-toolbar {
+        grid-template-columns: 1fr;
+    }
+    .crm-areas-catalog {
+        grid-template-columns: 1fr;
+    }
+}

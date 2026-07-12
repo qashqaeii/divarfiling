@@ -333,6 +333,16 @@ class Customer(models.Model):
         null=True, blank=True, verbose_name='متراژ خرید تا (سازنده)',
     )
     notes = models.TextField(blank=True, verbose_name='یادداشت')
+    social_links = models.JSONField(
+        default=dict, blank=True,
+        verbose_name='شناسه شبکه‌های اجتماعی',
+        help_text='آیدی یا شماره در تلگرام، اینستاگرام و سایر شبکه‌ها',
+    )
+    active_channels = models.JSONField(
+        default=list, blank=True,
+        verbose_name='کانال‌های پیام‌رسانی فعال',
+        help_text='لیست شبکه‌هایی که مخاطب در آن‌ها فعال است',
+    )
     next_follow_up = models.DateField(null=True, blank=True, verbose_name='پیگیری بعدی')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -16,6 +16,7 @@ from workspace.services.jalali_input import (
     parse_jalali_date_string,
     parse_jalali_datetime_string,
 )
+from workspace.services.contact_channels import contact_channels_from_post
 from workspace.models import (
     CRMAutomationRule, CRMDeal, CRMMessageTemplate, CRMProperty, Customer, CustomerDocument,
     Dataset, Listing, ListingMeta, PropertyContact, PropertyVisit, Reminder, WorkspaceSettings,
@@ -208,6 +209,10 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             instance.rooms = str(instance.rooms_min)
         elif instance.rooms_max is not None:
             instance.rooms = str(instance.rooms_max)
+        if self.is_bound:
+            active, links = contact_channels_from_post(self.data)
+            instance.active_channels = active
+            instance.social_links = links
         if commit:
             instance.save()
             self.save_m2m()
@@ -264,15 +269,13 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'want_parking': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
             'want_storage': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
             'want_elevator': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
-            'areas': forms.Textarea(attrs={
-                'class': 'crm-textarea',
-                'rows': 2,
-                'data-builder-sell-areas': '1',
-                'placeholder': 'مثلاً ونک، جردن، سعادت‌آباد',
-            }),
+            'areas': forms.HiddenInput(attrs={'class': 'crm-areas-hidden', 'data-crm-areas-hidden': 'areas'}),
             'builder_buy_budget_min': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
             'builder_buy_budget_max': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
-            'builder_buy_areas': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
+            'builder_buy_areas': forms.HiddenInput(attrs={
+                'class': 'crm-areas-hidden',
+                'data-crm-areas-hidden': 'builder_buy_areas',
+            }),
             'builder_buy_min_area': forms.NumberInput(attrs={'class': 'crm-input'}),
             'builder_buy_max_area': forms.NumberInput(attrs={'class': 'crm-input'}),
             'tags': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'با کاما جدا کنید'}),

@@ -7,6 +7,8 @@ from accounts.services.admin_dashboard import (
     build_action_queue,
     get_activity_feed,
     get_admin_dashboard_context,
+    get_affiliate_partners,
+    get_recent_affiliate_sales,
     get_today_stats,
 )
 
@@ -36,6 +38,12 @@ class AdminDashboardServiceTests(TestCase):
         feed = get_activity_feed(limit=5)
         self.assertIsInstance(feed, list)
 
+    def test_affiliate_queries(self):
+        partners = get_affiliate_partners(limit=5)
+        sales = get_recent_affiliate_sales(limit=5)
+        self.assertEqual(partners.model.__name__, 'Affiliate')
+        self.assertEqual(sales.model.__name__, 'AffiliateSale')
+
 
 class AdminDashboardViewTests(TestCase):
     def setUp(self):
@@ -57,7 +65,8 @@ class AdminDashboardViewTests(TestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'مرکز فرمان')
-        self.assertContains(resp, 'فعالیت اخیر')
+        self.assertContains(resp, 'همکاری در فروش')
+        self.assertContains(resp, 'adm-tbl-box')
 
     def test_dashboard_with_days_param(self):
         self.client.login(username='admstaff', password='pass1234')

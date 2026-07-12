@@ -14,6 +14,7 @@ from django.utils import timezone
 from workspace.services.jalali_input import to_persian_digits
 
 from accounts.services.admin_exports import get_export_catalog
+from accounts.services.pending_orders import PENDING_ORDER_STATUSES, get_pending_orders_for_display
 from accounts.services.sms import get_sms_balance_snapshot
 
 from affiliates.models import Affiliate, AffiliateSale, Withdrawal
@@ -22,6 +23,9 @@ from shop.models import CardTransferSubmission, Order, Product
 from workspace.models import Dataset, Ticket
 
 User = get_user_model()
+
+TABLE_PREVIEW_ROWS = 5
+TABLE_FETCH_LIMIT = 20
 
 CHART_COLORS = [
     'rgba(124, 58, 237, 0.85)',
@@ -33,8 +37,6 @@ CHART_COLORS = [
     'rgba(14, 165, 233, 0.8)',
     'rgba(99, 102, 241, 0.8)',
 ]
-
-PENDING_ORDER_STATUSES = ('pending', 'pending_verification')
 
 ORDER_STATUS_LABELS = dict(Order.STATUS_CHOICES)
 LICENSE_STATUS_LABELS = dict(License.STATUS_CHOICES)
@@ -313,15 +315,11 @@ def get_product_revenue() -> List[Dict[str, Any]]:
     ]
 
 
-def get_pending_orders(limit: int = 15):
-    return (
-        Order.objects.filter(status__in=PENDING_ORDER_STATUSES)
-        .select_related('user', 'product', 'plan')
-        .order_by('-created_at')[:limit]
-    )
+def get_pending_orders(limit: int = TABLE_FETCH_LIMIT):
+    return get_pending_orders_for_display(limit=limit)
 
 
-def get_users_with_pending_orders(limit: int = 12):
+def get_users_with_pending_orders(limit: int = TABLE_FETCH_LIMIT):
     return (
         User.objects.filter(orders__status__in=PENDING_ORDER_STATUSES)
         .annotate(
@@ -334,7 +332,7 @@ def get_users_with_pending_orders(limit: int = 12):
     )
 
 
-def get_expiring_licenses(limit: int = 10):
+def get_expiring_licenses(limit: int = TABLE_FETCH_LIMIT):
     now = timezone.now()
     return (
         License.objects.filter(
@@ -348,7 +346,7 @@ def get_expiring_licenses(limit: int = 10):
     )
 
 
-def get_users_without_license_preview(limit: int = 10):
+def get_users_without_license_preview(limit: int = TABLE_FETCH_LIMIT):
     now = timezone.now()
     active_license_q = License.objects.filter(
         order__user=OuterRef('pk'),
@@ -366,18 +364,18 @@ def get_users_without_license_preview(limit: int = 10):
     )
 
 
-def get_recent_orders(limit: int = 10):
+def get_recent_orders(limit: int = TABLE_FETCH_LIMIT):
     return (
         Order.objects.select_related('user', 'product', 'plan')
         .order_by('-created_at')[:limit]
     )
 
 
-def get_recent_users(limit: int = 10):
+def get_recent_users(limit: int = TABLE_FETCH_LIMIT):
     return User.objects.order_by('-date_joined')[:limit]
 
 
-def get_pending_card_transfers(limit: int = 8):
+def get_pending_card_transfers(limit: int = TABLE_FETCH_LIMIT):
     return (
         CardTransferSubmission.objects.filter(status='pending')
         .select_related('order', 'order__user', 'order__product')
@@ -385,7 +383,7 @@ def get_pending_card_transfers(limit: int = 8):
     )
 
 
-def get_open_tickets(limit: int = 8):
+def get_open_tickets(limit: int = TABLE_FETCH_LIMIT):
     return (
         Ticket.objects.exclude(status='closed')
         .select_related('user')
@@ -393,7 +391,7 @@ def get_open_tickets(limit: int = 8):
     )
 
 
-def get_pending_withdrawals(limit: int = 6):
+def get_pending_withdrawals(limit: int = TABLE_FETCH_LIMIT):
     return (
         Withdrawal.objects.filter(status='pending')
         .select_related('wallet', 'wallet__user')
@@ -638,6 +636,40 @@ def build_health_indicators(stats: Dict[str, Any], sms_balance: Dict[str, Any]) 
     return indicators
 
 
+def get_affiliate_partners(limit: int = TABLE_FETCH_LIMIT):
+    """لیست مشاوران فروش با آمار کمیسیون."""
+    return (
+        Affiliate.objects.select_related('user', 'user__wallet')
+        .annotate(
+            sales_count=Count('sales'),
+            sales_paid=Count('sales', filter=Q(sales__status='paid')),
+            commission_total=Sum(
+                'sales__commission_amount',
+                filter=Q(sales__status='paid'),
+            ),
+            commission_pending=Sum(
+                'sales__commission_amount',
+                filter=Q(sales__status='pending'),
+            ),
+        )
+        .order_by('-sales_paid', '-created_at')[:limit]
+    )
+
+
+def get_recent_affiliate_sales(limit: int = TABLE_FETCH_LIMIT):
+    """فروش‌های اخیر همکاری در فروش."""
+    return (
+        AffiliateSale.objects.select_related(
+            'affiliate',
+            'affiliate__user',
+            'order',
+            'order__user',
+            'order__product',
+        )
+        .order_by('-created_at')[:limit]
+    )
+
+
 def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
     stats = get_overview_stats()
     sms_balance = get_sms_balance_snapshot()
@@ -673,6 +705,9 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
         'pending_card_transfers': get_pending_card_transfers(),
         'open_tickets': get_open_tickets(),
         'pending_withdrawals': get_pending_withdrawals(),
+        'affiliate_partners': get_affiliate_partners(),
+        'recent_affiliate_sales': get_recent_affiliate_sales(),
+        'table_preview_rows': TABLE_PREVIEW_ROWS,
         'export_catalog': get_export_catalog(days=days),
         'export_categories': {
             'orders': 'سفارش‌ها',

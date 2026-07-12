@@ -19,7 +19,7 @@ from shop.models import DiscountCode, Order, Product
 
 User = get_user_model()
 
-PENDING_ORDER_STATUSES = ('pending', 'pending_verification')
+from accounts.services.pending_orders import PENDING_ORDER_STATUSES, pending_orders_queryset
 MARKETING_BATCH_LIMIT = 200
 DEFAULT_DEDUPE_DAYS = 7
 
@@ -158,7 +158,7 @@ def _segment_pending_orders(
     product_id: Optional[int] = None,
 ) -> List[SegmentRecipient]:
     qs = (
-        Order.objects.filter(status__in=PENDING_ORDER_STATUSES)
+        pending_orders_queryset(dedupe_by_user=True)
         .select_related('user', 'product', 'plan')
         .order_by('-created_at')
     )

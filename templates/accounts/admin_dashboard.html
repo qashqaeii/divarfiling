@@ -8,7 +8,7 @@
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=12">
 {% endblock %}
 
 {% block content %}
@@ -64,6 +64,7 @@
         <a href="#adm-overview" class="adm-tab is-active">نمای کلی</a>
         <a href="#adm-ops" class="adm-tab">عملیات{% if action_queue %} <span class="adm-tab-badge">{{ action_queue|length|to_persian_digits }}</span>{% endif %}</a>
         <a href="#adm-reports" class="adm-tab">گزارش‌ها</a>
+        <a href="#adm-affiliates" class="adm-tab">همکاری فروش</a>
         <a href="#adm-exports" class="adm-tab">خروجی</a>
         <a href="#adm-json" class="adm-tab">JSON</a>
     </nav>
@@ -152,6 +153,9 @@
             </a>
             <a href="{% url 'admin_panel_export' 'pending_orders' %}?format=xlsx" class="adm-dash-hub-link" data-accent="rose">
                 <i class="fas fa-clock"></i><span>سفارش معلق</span>
+            </a>
+            <a href="#adm-affiliates" class="adm-dash-hub-link" data-accent="violet">
+                <i class="fas fa-handshake"></i><span>همکاری فروش</span>
             </a>
             <a href="/admin/workspace/ticket/" target="_blank" rel="noopener" class="adm-dash-hub-link" data-accent="cyan">
                 <i class="fas fa-headset"></i><span>تیکت‌ها</span>
@@ -323,88 +327,97 @@
     <div id="adm-ops" class="adm-section">
         <header class="adm-section-head">
             <h2><i class="fas fa-bolt"></i> صف عملیات</h2>
-            <p>موارد نیازمند بررسی فوری — پرداخت، پشتیبانی و مالی</p>
+            <p>۵ مورد آخر — برای مشاهده کامل باز کنید</p>
         </header>
-        <div class="adm-bento">
-            <section class="adm-cell adm-cell--table adm-cell--wide" aria-labelledby="admCardTransfers">
+        <div class="adm-bento adm-bento--tables">
+            <section class="adm-cell adm-cell--table adm-cell--wide adm-cell--pro" aria-labelledby="admCardTransfers">
                 <header class="adm-cell-head">
                     <div>
                         <h2 id="admCardTransfers">کارت‌به‌کارت در انتظار</h2>
                         <p>{{ stats.pending_card_transfers|currency }} مورد</p>
                     </div>
-                    <a href="/admin/shop/cardtransfersubmission/" target="_blank" rel="noopener" class="adm-dl-btn">پنل Admin</a>
+                    <a href="/admin/shop/cardtransfersubmission/" target="_blank" rel="noopener" class="adm-dl-btn adm-dl-btn--ghost">Admin</a>
                 </header>
-                <div class="adm-table-wrap">
-                    <table class="adm-table">
-                        <thead>
-                            <tr><th>کاربر</th><th>محصول</th><th>مبلغ</th><th>پیگیری</th><th>تاریخ</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for ct in pending_card_transfers %}
-                            <tr>
-                                <td><strong>{{ ct.order.user.get_full_name|default:ct.order.user.username }}</strong><small>{{ ct.order.user.phone }}</small></td>
-                                <td>{{ ct.order.product.title }}</td>
-                                <td>{{ ct.order.amount|toman }}</td>
-                                <td dir="ltr">{{ ct.reference_number|default:"—" }}</td>
-                                <td>{{ ct.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="5" class="adm-empty">موردی در انتظار نیست</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro">
+                            <thead>
+                                <tr><th>کاربر</th><th>محصول</th><th>مبلغ</th><th>پیگیری</th><th>تاریخ</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for ct in pending_card_transfers %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ ct.order.user.get_full_name|default:ct.order.user.username }}</strong><small>{{ ct.order.user.phone }}</small></td>
+                                    <td>{{ ct.order.product.title }}</td>
+                                    <td>{{ ct.order.amount|toman }}</td>
+                                    <td dir="ltr">{{ ct.reference_number|default:"—" }}</td>
+                                    <td>{{ ct.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="adm-empty">موردی در انتظار نیست</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=pending_card_transfers|length preview=table_preview_rows %}
                 </div>
             </section>
 
-            <section class="adm-cell adm-cell--table" aria-labelledby="admOpenTickets">
+            <section class="adm-cell adm-cell--table adm-cell--pro" aria-labelledby="admOpenTickets">
                 <header class="adm-cell-head">
                     <div>
                         <h2 id="admOpenTickets">تیکت‌های باز</h2>
-                        <p>{{ stats.open_tickets|currency }} باز · {{ stats.unread_tickets|currency }} خوانده‌نشده</p>
+                        <p>{{ stats.open_tickets|currency }} باز · {{ stats.unread_tickets|currency }} جدید</p>
                     </div>
-                    <a href="/admin/workspace/ticket/" target="_blank" rel="noopener" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-headset"></i></a>
+                    <a href="/admin/workspace/ticket/" target="_blank" rel="noopener" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-headset"></i></a>
                 </header>
-                <div class="adm-table-wrap">
-                    <table class="adm-table adm-table--compact">
-                        <thead><tr><th>موضوع</th><th>کاربر</th><th>وضعیت</th></tr></thead>
-                        <tbody>
-                            {% for t in open_tickets %}
-                            <tr{% if t.staff_has_unread %} class="adm-row--highlight"{% endif %}>
-                                <td><strong>{{ t.subject|truncatechars:40 }}</strong>{% if t.staff_has_unread %} <span class="adm-badge adm-badge--pending">جدید</span>{% endif %}</td>
-                                <td>{{ t.user.get_full_name|default:t.user.username }}</td>
-                                <td><span class="adm-badge adm-badge--{{ t.status }}">{{ t.get_status_display }}</span></td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="3" class="adm-empty">تیکت بازی نیست</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro adm-table--compact">
+                            <thead><tr><th>موضوع</th><th>کاربر</th><th>وضعیت</th></tr></thead>
+                            <tbody>
+                                {% for t in open_tickets %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more{% if t.staff_has_unread %} adm-row--highlight{% endif %}" hidden{% elif t.staff_has_unread %} class="adm-row--highlight"{% endif %}>
+                                    <td><strong>{{ t.subject|truncatechars:36 }}</strong>{% if t.staff_has_unread %} <span class="adm-badge adm-badge--pending">جدید</span>{% endif %}</td>
+                                    <td>{{ t.user.get_full_name|default:t.user.username }}</td>
+                                    <td><span class="adm-badge adm-badge--{{ t.status }}">{{ t.get_status_display }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="adm-empty">تیکت بازی نیست</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=open_tickets|length preview=table_preview_rows %}
                 </div>
             </section>
 
-            <section class="adm-cell adm-cell--table" aria-labelledby="admWithdrawals">
+            <section class="adm-cell adm-cell--table adm-cell--pro" aria-labelledby="admWithdrawals">
                 <header class="adm-cell-head">
                     <div>
                         <h2 id="admWithdrawals">برداشت همکار فروش</h2>
                         <p>{{ stats.pending_withdrawals|currency }} در انتظار</p>
                     </div>
-                    <a href="/admin/affiliates/withdrawal/" target="_blank" rel="noopener" class="adm-dl-btn">Admin</a>
+                    <a href="/admin/affiliates/withdrawal/" target="_blank" rel="noopener" class="adm-dl-btn adm-dl-btn--ghost">Admin</a>
                 </header>
-                <div class="adm-table-wrap">
-                    <table class="adm-table adm-table--compact">
-                        <thead><tr><th>کاربر</th><th>مبلغ</th><th>تاریخ</th></tr></thead>
-                        <tbody>
-                            {% for w in pending_withdrawals %}
-                            <tr>
-                                <td>{{ w.wallet.user.get_full_name|default:w.wallet.user.username }}</td>
-                                <td>{{ w.amount|toman }}</td>
-                                <td>{{ w.created_at|to_jalali_fa:"%Y/%m/%d" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="3" class="adm-empty">برداشتی در انتظار نیست</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro adm-table--compact">
+                            <thead><tr><th>کاربر</th><th>مبلغ</th><th>تاریخ</th></tr></thead>
+                            <tbody>
+                                {% for w in pending_withdrawals %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td>{{ w.wallet.user.get_full_name|default:w.wallet.user.username }}</td>
+                                    <td>{{ w.amount|toman }}</td>
+                                    <td>{{ w.created_at|to_jalali_fa:"%Y/%m/%d" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="adm-empty">برداشتی در انتظار نیست</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=pending_withdrawals|length preview=table_preview_rows %}
                 </div>
             </section>
         </div>
@@ -413,167 +426,283 @@
     <div id="adm-reports" class="adm-section">
         <header class="adm-section-head">
             <h2><i class="fas fa-table-list"></i> گزارش‌های عملیاتی</h2>
-            <p>لیست‌های قابل پیگیری با خروجی Excel</p>
+            <p>پیش‌نمایش ۵ مورد — قابل گسترش و خروجی Excel</p>
         </header>
-        <div class="adm-bento">
-            <section class="adm-cell adm-cell--table adm-cell--wide" aria-labelledby="admPendingOrders">
+        <div class="adm-bento adm-bento--tables">
+            <section class="adm-cell adm-cell--table adm-cell--wide adm-cell--pro" aria-labelledby="admPendingOrders">
                 <header class="adm-cell-head">
                     <div>
                         <h2 id="admPendingOrders">سفارش‌های پرداخت‌نشده</h2>
-                        <p>{{ stats.orders_pending|currency }} سفارش</p>
+                        <p>{{ stats.orders_pending|currency }} سفارش · آخرین سفارش هر کاربر</p>
                     </div>
                     <div class="adm-cell-actions">
-                        <a href="{% url 'admin_panel_export' 'pending_orders' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i> Excel</a>
-                        <a href="{% url 'admin_panel_marketing' %}?segment=pending_orders#mkt-compose" class="adm-dl-btn"><i class="fas fa-bullhorn"></i> SMS</a>
+                        <a href="{% url 'admin_panel_export' 'pending_orders' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-file-excel"></i></a>
+                        <a href="{% url 'admin_panel_marketing' %}?segment=pending_orders#mkt-compose" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-bullhorn"></i></a>
                     </div>
                 </header>
-                <div class="adm-table-wrap">
-                    <table class="adm-table">
-                        <thead>
-                            <tr><th>کاربر</th><th>محصول / پلن</th><th>مبلغ</th><th>وضعیت</th><th>روش</th><th>تاریخ</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for order in pending_orders %}
-                            <tr>
-                                <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong><small>{{ order.user.phone|default:order.user.email }}</small></td>
-                                <td>{{ order.product.title }}<small>{{ order.plan.name }}</small></td>
-                                <td>{{ order.amount|toman }}</td>
-                                <td><span class="adm-badge adm-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
-                                <td>{{ order.get_payment_method_display }}</td>
-                                <td>{{ order.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="6" class="adm-empty">سفارش معلقی نیست</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="adm-cell adm-cell--table" aria-labelledby="admRecentUsers">
-                <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admRecentUsers">ثبت‌نام‌های اخیر</h2>
-                        <p>کاربران جدید</p>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro">
+                            <thead>
+                                <tr><th>کاربر</th><th>محصول / پلن</th><th>مبلغ</th><th>وضعیت</th><th>روش</th><th>تاریخ</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for order in pending_orders %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong><small>{{ order.user.phone|default:order.user.email }}</small></td>
+                                    <td>{{ order.product.title }}<small>{{ order.plan.name }}</small></td>
+                                    <td>{{ order.amount|toman }}</td>
+                                    <td><span class="adm-badge adm-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
+                                    <td>{{ order.get_payment_method_display }}</td>
+                                    <td>{{ order.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="6" class="adm-empty">سفارش معلقی نیست</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    <a href="{% url 'admin_panel_export' 'new_users' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i></a>
-                </header>
-                <div class="adm-table-wrap">
-                    <table class="adm-table adm-table--compact">
-                        <thead><tr><th>کاربر</th><th>موبایل</th><th>تاریخ</th></tr></thead>
-                        <tbody>
-                            {% for u in recent_users %}
-                            <tr>
-                                <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
-                                <td dir="ltr">{{ u.phone|default:"—" }}</td>
-                                <td>{{ u.date_joined|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="3" class="adm-empty">—</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=pending_orders|length preview=table_preview_rows %}
                 </div>
             </section>
 
-            <section class="adm-cell adm-cell--table adm-cell--wide" aria-labelledby="admUsersPending">
+            <section class="adm-cell adm-cell--table adm-cell--pro" aria-labelledby="admRecentUsers">
                 <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admUsersPending">کاربران با سفارش معلق</h2>
-                        <p>مناسب پیگیری تلفنی</p>
+                    <div><h2 id="admRecentUsers">ثبت‌نام‌های اخیر</h2></div>
+                    <a href="{% url 'admin_panel_export' 'new_users' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-file-excel"></i></a>
+                </header>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro adm-table--compact">
+                            <thead><tr><th>کاربر</th><th>موبایل</th><th>تاریخ</th></tr></thead>
+                            <tbody>
+                                {% for u in recent_users %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
+                                    <td dir="ltr">{{ u.phone|default:"—" }}</td>
+                                    <td>{{ u.date_joined|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="adm-empty">—</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    <a href="{% url 'admin_panel_export' 'users_pending_payment' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i> Excel</a>
-                </header>
-                <div class="adm-table-wrap">
-                    <table class="adm-table">
-                        <thead><tr><th>کاربر</th><th>موبایل</th><th>تعداد</th><th>مجموع</th><th>آخرین</th></tr></thead>
-                        <tbody>
-                            {% for u in users_with_pending_orders %}
-                            <tr>
-                                <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
-                                <td dir="ltr">{{ u.phone|default:"—" }}</td>
-                                <td>{{ u.pending_count|currency }}</td>
-                                <td>{{ u.pending_total|toman }}</td>
-                                <td>{{ u.last_pending|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="5" class="adm-empty">—</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=recent_users|length preview=table_preview_rows %}
                 </div>
             </section>
 
-            <section class="adm-cell adm-cell--table" aria-labelledby="admExpiringLic">
+            <section class="adm-cell adm-cell--table adm-cell--wide adm-cell--pro" aria-labelledby="admUsersPending">
                 <header class="adm-cell-head">
-                    <div><h2 id="admExpiringLic">لایسنس در شرف انقضا</h2><p>۱۴ روز آینده</p></div>
-                    <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i></a>
+                    <div><h2 id="admUsersPending">کاربران با سفارش معلق</h2></div>
+                    <a href="{% url 'admin_panel_export' 'users_pending_payment' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-file-excel"></i></a>
                 </header>
-                <div class="adm-table-wrap">
-                    <table class="adm-table adm-table--compact">
-                        <thead><tr><th>کاربر</th><th>پلن</th><th>انقضا</th></tr></thead>
-                        <tbody>
-                            {% for lic in expiring_licenses %}
-                            <tr>
-                                <td><strong>{{ lic.order.user.get_full_name|default:lic.order.user.username }}</strong><small>{{ lic.order.user.phone }}</small></td>
-                                <td>{{ lic.plan.name }}</td>
-                                <td>{{ lic.expires_at|to_jalali_fa:"%Y/%m/%d" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="3" class="adm-empty">—</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro">
+                            <thead><tr><th>کاربر</th><th>موبایل</th><th>تعداد</th><th>مجموع</th><th>آخرین</th></tr></thead>
+                            <tbody>
+                                {% for u in users_with_pending_orders %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
+                                    <td dir="ltr">{{ u.phone|default:"—" }}</td>
+                                    <td>{{ u.pending_count|currency }}</td>
+                                    <td>{{ u.pending_total|toman }}</td>
+                                    <td>{{ u.last_pending|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="adm-empty">—</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=users_with_pending_orders|length preview=table_preview_rows %}
                 </div>
             </section>
 
-            <section class="adm-cell adm-cell--table" aria-labelledby="admNoLicense">
+            <section class="adm-cell adm-cell--table adm-cell--pro" aria-labelledby="admExpiringLic">
+                <header class="adm-cell-head">
+                    <div><h2 id="admExpiringLic">لایسنس در شرف انقضا</h2><p>۱۴ روز</p></div>
+                    <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-file-excel"></i></a>
+                </header>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro adm-table--compact">
+                            <thead><tr><th>کاربر</th><th>پلن</th><th>انقضا</th></tr></thead>
+                            <tbody>
+                                {% for lic in expiring_licenses %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ lic.order.user.get_full_name|default:lic.order.user.username }}</strong><small>{{ lic.order.user.phone }}</small></td>
+                                    <td>{{ lic.plan.name }}</td>
+                                    <td>{{ lic.expires_at|to_jalali_fa:"%Y/%m/%d" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="adm-empty">—</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=expiring_licenses|length preview=table_preview_rows %}
+                </div>
+            </section>
+
+            <section class="adm-cell adm-cell--table adm-cell--pro" aria-labelledby="admNoLicense">
                 <header class="adm-cell-head">
                     <div><h2 id="admNoLicense">بدون لایسنس فعال</h2><p>{{ stats.users_without_license|currency }} کاربر</p></div>
-                    <a href="{% url 'admin_panel_export' 'users_without_license' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i></a>
+                    <a href="{% url 'admin_panel_export' 'users_without_license' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-file-excel"></i></a>
                 </header>
-                <div class="adm-table-wrap">
-                    <table class="adm-table adm-table--compact">
-                        <thead><tr><th>کاربر</th><th>سفارش</th></tr></thead>
-                        <tbody>
-                            {% for u in users_without_license_list %}
-                            <tr>
-                                <td><strong>{{ u.get_full_name|default:u.username }}</strong><small>{{ u.phone|default:u.email }}</small></td>
-                                <td>
-                                    {% if u.pending_orders %}<span class="adm-badge adm-badge--pending">{{ u.pending_orders }} معلق</span>{% endif %}
-                                    {% if u.paid_orders %}<span class="adm-badge adm-badge--paid">{{ u.paid_orders }} پرداخت</span>{% endif %}
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="2" class="adm-empty">—</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro adm-table--compact">
+                            <thead><tr><th>کاربر</th><th>سفارش</th></tr></thead>
+                            <tbody>
+                                {% for u in users_without_license_list %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ u.get_full_name|default:u.username }}</strong><small>{{ u.phone|default:u.email }}</small></td>
+                                    <td>
+                                        {% if u.pending_orders %}<span class="adm-badge adm-badge--pending">{{ u.pending_orders }} معلق</span>{% endif %}
+                                        {% if u.paid_orders %}<span class="adm-badge adm-badge--paid">{{ u.paid_orders }} پرداخت</span>{% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="2" class="adm-empty">—</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=users_without_license_list|length preview=table_preview_rows %}
                 </div>
             </section>
 
-            <section class="adm-cell adm-cell--table adm-cell--wide" aria-labelledby="admRecentOrders">
+            <section class="adm-cell adm-cell--table adm-cell--wide adm-cell--pro" aria-labelledby="admRecentOrders">
                 <header class="adm-cell-head">
                     <h2 id="admRecentOrders">آخرین سفارش‌ها</h2>
-                    <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i> {{ chart_days }} روز</a>
+                    <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-file-excel"></i> {{ chart_days }}d</a>
                 </header>
-                <div class="adm-table-wrap">
-                    <table class="adm-table">
-                        <thead><tr><th>کاربر</th><th>محصول</th><th>مبلغ</th><th>وضعیت</th><th>تاریخ</th></tr></thead>
-                        <tbody>
-                            {% for order in recent_orders %}
-                            <tr>
-                                <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong><small>{{ order.user.phone|default:order.user.email }}</small></td>
-                                <td>{{ order.product.title }}<small>{{ order.plan.name }}</small></td>
-                                <td>{{ order.amount|toman }}</td>
-                                <td><span class="adm-badge adm-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
-                                <td>{{ order.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="5" class="adm-empty">—</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro">
+                            <thead><tr><th>کاربر</th><th>محصول</th><th>مبلغ</th><th>وضعیت</th><th>تاریخ</th></tr></thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong><small>{{ order.user.phone|default:order.user.email }}</small></td>
+                                    <td>{{ order.product.title }}<small>{{ order.plan.name }}</small></td>
+                                    <td>{{ order.amount|toman }}</td>
+                                    <td><span class="adm-badge adm-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
+                                    <td>{{ order.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="adm-empty">—</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=recent_orders|length preview=table_preview_rows %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="adm-affiliates" class="adm-section">
+        <header class="adm-section-head">
+            <h2><i class="fas fa-handshake"></i> همکاری در فروش</h2>
+            <p>{{ stats.affiliates_total|currency }} مشاور فعال · {{ stats.affiliate_commissions_total|currency }} ت کمیسیون پرداخت‌شده</p>
+        </header>
+        <div class="adm-bento adm-bento--tables">
+            <section class="adm-cell adm-cell--table adm-cell--wide adm-cell--pro" aria-labelledby="admAffPartners">
+                <header class="adm-cell-head">
+                    <div>
+                        <h2 id="admAffPartners">مشاوران فروش</h2>
+                        <p>وضعیت کمیسیون و فروش هر مشاور</p>
+                    </div>
+                    <div class="adm-cell-actions">
+                        <a href="{% url 'admin_panel_export' 'affiliate_sales' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-file-excel"></i></a>
+                        <a href="/admin/affiliates/affiliate/" target="_blank" rel="noopener" class="adm-dl-btn adm-dl-btn--ghost">Admin</a>
+                    </div>
+                </header>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro">
+                            <thead>
+                                <tr>
+                                    <th>مشاور</th>
+                                    <th>کد</th>
+                                    <th>فروش</th>
+                                    <th>کمیسیون</th>
+                                    <th>در انتظار</th>
+                                    <th>کیف پول</th>
+                                    <th>وضعیت</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for aff in affiliate_partners %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td>
+                                        <strong>{{ aff.user.get_full_name|default:aff.user.username }}</strong>
+                                        <small dir="ltr">{{ aff.user.phone|default:"—" }}</small>
+                                    </td>
+                                    <td><code dir="ltr">{{ aff.code }}</code></td>
+                                    <td>{{ aff.sales_paid|default:0|currency }}<small>/ {{ aff.sales_count|default:0|currency }}</small></td>
+                                    <td>{{ aff.commission_total|default:0|currency }} ت</td>
+                                    <td>{% if aff.commission_pending %}{{ aff.commission_pending|currency }} ت{% else %}—{% endif %}</td>
+                                    <td>{% if aff.user.wallet %}{{ aff.user.wallet.balance|currency }} ت{% else %}—{% endif %}</td>
+                                    <td>
+                                        {% if aff.is_active %}
+                                        <span class="adm-badge adm-badge--paid">فعال</span>
+                                        {% else %}
+                                        <span class="adm-badge adm-badge--skipped">غیرفعال</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="7" class="adm-empty">مشاوری ثبت نشده</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=affiliate_partners|length preview=table_preview_rows %}
+                </div>
+            </section>
+
+            <section class="adm-cell adm-cell--table adm-cell--wide adm-cell--pro" aria-labelledby="admAffSales">
+                <header class="adm-cell-head">
+                    <div>
+                        <h2 id="admAffSales">فروش‌های اخیر افیلیت</h2>
+                        <p>آخرین تراکنش‌های کمیسیون</p>
+                    </div>
+                    <a href="{% url 'admin_panel_export' 'pending_withdrawals' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--ghost" title="برداشت‌ها"><i class="fas fa-wallet"></i></a>
+                </header>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro">
+                            <thead>
+                                <tr>
+                                    <th>مشاور</th>
+                                    <th>خریدار</th>
+                                    <th>محصول</th>
+                                    <th>کمیسیون</th>
+                                    <th>وضعیت</th>
+                                    <th>تاریخ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in recent_affiliate_sales %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ sale.affiliate.user.get_full_name|default:sale.affiliate.code }}</strong><small dir="ltr">{{ sale.affiliate.code }}</small></td>
+                                    <td>{{ sale.order.user.get_full_name|default:sale.order.user.username }}</td>
+                                    <td>{{ sale.order.product.title|default:"—" }}</td>
+                                    <td>{{ sale.commission_amount|currency }} ت</td>
+                                    <td><span class="adm-badge adm-badge--{{ sale.status }}">{{ sale.get_status_display }}</span></td>
+                                    <td>{{ sale.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="6" class="adm-empty">فروشی ثبت نشده</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=recent_affiliate_sales|length preview=table_preview_rows %}
                 </div>
             </section>
         </div>
@@ -582,31 +711,36 @@
     <div id="adm-exports" class="adm-section">
         <header class="adm-section-head">
             <h2><i class="fas fa-file-export"></i> مرکز خروجی</h2>
-            <p>Excel و CSV — مناسب CRM و Google Sheets</p>
+            <p>دانلود سریع Excel / CSV</p>
         </header>
-        {% for cat_key, cat_label in export_categories.items %}
-        <div class="adm-export-group">
-            <h3 class="adm-export-group-title">{{ cat_label }}</h3>
-            <div class="adm-export-grid">
-                {% for item in export_catalog %}
-                {% if item.category == cat_key %}
-                <article class="adm-export-card" data-accent="{{ item.accent }}">
-                    <span class="adm-export-icon"><i class="fas {{ item.icon }}"></i></span>
-                    <div class="adm-export-body">
-                        <h4 class="adm-export-title">{{ item.title }}</h4>
-                        <p class="adm-export-desc">{{ item.description }}</p>
-                        <span class="adm-export-count">{{ item.count|currency }} ردیف</span>
-                    </div>
-                    <div class="adm-export-actions">
-                        <a href="{% url 'admin_panel_export' item.key %}?format=xlsx{% if item.supports_days %}&days={{ chart_days }}{% endif %}" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-file-excel"></i> Excel</a>
-                        <a href="{% url 'admin_panel_export' item.key %}?format=csv{% if item.supports_days %}&days={{ chart_days }}{% endif %}" class="adm-dl-btn">CSV</a>
-                    </div>
-                </article>
-                {% endif %}
-                {% endfor %}
-            </div>
+        <div class="adm-export-minimal">
+            {% for cat_key, cat_label in export_categories.items %}
+            <section class="adm-export-minimal-group">
+                <h3 class="adm-export-minimal-title">{{ cat_label }}</h3>
+                <ul class="adm-export-minimal-list">
+                    {% for item in export_catalog %}
+                    {% if item.category == cat_key %}
+                    <li class="adm-export-minimal-row">
+                        <span class="adm-export-minimal-icon" data-accent="{{ item.accent }}"><i class="fas {{ item.icon }}"></i></span>
+                        <span class="adm-export-minimal-label">
+                            <strong>{{ item.title }}</strong>
+                            <em>{{ item.count|currency }} ردیف</em>
+                        </span>
+                        <span class="adm-export-minimal-actions">
+                            <a href="{% url 'admin_panel_export' item.key %}?format=xlsx{% if item.supports_days %}&days={{ chart_days }}{% endif %}" class="adm-export-minimal-btn" title="Excel">
+                                <i class="fas fa-file-excel"></i>
+                            </a>
+                            <a href="{% url 'admin_panel_export' item.key %}?format=csv{% if item.supports_days %}&days={{ chart_days }}{% endif %}" class="adm-export-minimal-btn" title="CSV">
+                                <i class="fas fa-file-csv"></i>
+                            </a>
+                        </span>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
 
     <div id="adm-json" class="adm-section">
@@ -642,5 +776,5 @@
 window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=5"></script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=6"></script>
 {% endblock %}

@@ -190,7 +190,7 @@
 
     function initTabs() {
         const tabs = document.querySelectorAll('.adm-tab');
-        const sections = ['adm-overview', 'adm-ops', 'adm-reports', 'adm-exports', 'adm-json'];
+        const sections = ['adm-overview', 'adm-ops', 'adm-reports', 'adm-affiliates', 'adm-exports', 'adm-json'];
 
         function setActiveTab(hash) {
             const id = (hash || '#adm-overview').replace('#', '');
@@ -225,5 +225,33 @@
         document.addEventListener('DOMContentLoaded', initTabs);
     } else {
         initTabs();
+    }
+
+    function initCollapsibleTables() {
+        document.querySelectorAll('.adm-tbl-box').forEach(function (box) {
+            var toggle = box.querySelector('.adm-tbl-toggle');
+            if (!toggle) return;
+
+            var moreRows = box.querySelectorAll('.adm-tbl-row--more');
+            var moreLabel = toggle.querySelector('.adm-tbl-toggle-more');
+            var lessLabel = toggle.querySelector('.adm-tbl-toggle-less');
+
+            toggle.addEventListener('click', function () {
+                var expanded = toggle.getAttribute('aria-expanded') === 'true';
+                moreRows.forEach(function (row) {
+                    row.hidden = expanded;
+                });
+                toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                box.classList.toggle('is-expanded', !expanded);
+                if (moreLabel) moreLabel.hidden = !expanded;
+                if (lessLabel) lessLabel.hidden = expanded;
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCollapsibleTables);
+    } else {
+        initCollapsibleTables();
     }
 })();

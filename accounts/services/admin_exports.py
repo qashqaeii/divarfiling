@@ -21,7 +21,7 @@ from workspace.services.jalali_input import to_persian_digits
 
 User = get_user_model()
 
-PENDING_ORDER_STATUSES = ('pending', 'pending_verification')
+from accounts.services.pending_orders import PENDING_ORDER_STATUSES
 
 
 def _jalali(dt) -> str:

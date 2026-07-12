@@ -19,7 +19,6 @@ from workspace.models import Dataset, Ticket
 from workspace.services.jalali_input import to_persian_digits
 
 from accounts.services.admin_dashboard import (
-    PENDING_ORDER_STATUSES,
     get_license_status_breakdown,
     get_order_status_breakdown,
     get_overview_stats,
@@ -29,6 +28,7 @@ from accounts.services.admin_dashboard import (
     get_revenue_series,
     get_user_registration_series,
 )
+from accounts.services.pending_orders import PENDING_ORDER_STATUSES, get_pending_orders_for_display
 
 User = get_user_model()
 
@@ -134,11 +134,7 @@ def _ticket_brief(ticket: Ticket) -> Dict[str, Any]:
 
 
 def _pending_orders(limit: int = 50) -> List[Dict[str, Any]]:
-    qs = (
-        Order.objects.filter(status__in=PENDING_ORDER_STATUSES)
-        .select_related('user', 'product', 'plan')
-        .order_by('-created_at')[:limit]
-    )
+    qs = get_pending_orders_for_display(limit=limit)
     return [_order_brief(o) for o in qs]
 
 

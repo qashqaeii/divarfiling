@@ -1,0 +1,14 @@
+{% load persian_tags %}
+{% if total > preview %}
+<button type="button" class="adm-tbl-toggle" aria-expanded="false">
+    <span class="adm-tbl-toggle-more">
+        <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        نمایش موارد بیشتر
+        <em>({{ total|to_persian_digits }} مورد)</em>
+    </span>
+    <span class="adm-tbl-toggle-less" hidden>
+        <i class="fas fa-chevron-up" aria-hidden="true"></i>
+        بستن لیست
+    </span>
+</button>
+{% endif %}

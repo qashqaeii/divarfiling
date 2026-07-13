@@ -93,3 +93,20 @@ class CRMTeamProTests(TestCase):
         share_property(self.owner, prop, member.pk, share_mode='collaborative')
         prop.refresh_from_db()
         self.assertEqual(prop.agency_id, self.agency.pk)
+
+    def test_set_team_goal_jalali_dates(self):
+        client = Client()
+        client.force_login(self.owner)
+        resp = client.post(reverse('workspace:crm_team'), {
+            'action': 'set_team_goal',
+            'tab': 'settings',
+            'metric': 'calls',
+            'target_value': '10',
+            'period_start': '1404/01/01',
+            'period_end': '1404/06/30',
+        })
+        self.assertEqual(resp.status_code, 302)
+        goal = self.agency.team_goals.first()
+        self.assertIsNotNone(goal)
+        self.assertEqual(str(goal.period_start), '2025-03-21')
+        self.assertEqual(str(goal.period_end), '2025-09-21')

@@ -72,15 +72,18 @@
         {% if team_goals %}
         <section class="crm-team-goals" aria-label="اهداف تیم">
             <h3 class="crm-team-section-title">اهداف دوره جاری</h3>
-            {% for g in team_goals %}
-            <article class="crm-team-goal-row">
-                <div class="crm-team-goal-head">
-                    <strong>{{ g.member_name }}</strong>
-                    <span>{{ g.goal.get_metric_display }}: {{ g.actual }}/{{ g.target }}</span>
-                </div>
-                <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
-            </article>
-            {% endfor %}
+        {% for g in team_goals %}
+        <article class="crm-team-goal-row">
+            <div class="crm-team-goal-head">
+                <strong>{{ g.member_name }}</strong>
+                <span>{{ g.goal.get_metric_display }}: {{ g.actual }}/{{ g.target }}</span>
+            </div>
+            <div class="crm-team-goal-meta">
+                <time><i class="fas fa-calendar-alt" aria-hidden="true"></i> {{ g.period_label }}</time>
+            </div>
+            <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
+        </article>
+        {% endfor %}
         </section>
         {% endif %}
 

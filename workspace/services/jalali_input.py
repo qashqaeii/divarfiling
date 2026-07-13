@@ -105,3 +105,58 @@ def parse_jalali_datetime_string(value: str) -> Optional[datetime]:
             continue
     d = parse_jalali_date_string(date_part)
     return datetime.combine(d, datetime.min.time()) if d else None
+
+
+def jalali_month_bounds(reference: Union[date, datetime, None] = None) -> tuple[date, date]:
+    """اول و آخر ماه شمسی (برگشت تاریخ میلادی)."""
+    if reference:
+        ref = reference.date() if isinstance(reference, datetime) else reference
+        jtoday = jdatetime.date.fromgregorian(date=ref)
+    else:
+        jtoday = jdatetime.date.today()
+    jstart = jdatetime.date(jtoday.year, jtoday.month, 1)
+    month_days = jdatetime.j_days_in_month[jtoday.month - 1]
+    if jtoday.month == 12 and jdatetime.date.isleap(jtoday.year):
+        month_days = 30
+    jend = jdatetime.date(jtoday.year, jtoday.month, month_days)
+    g_start = jstart.togregorian()
+    g_end = jend.togregorian()
+    return date(g_start.year, g_start.month, g_start.day), date(g_end.year, g_end.month, g_end.day)
+
+
+def jalali_month_bounds_display(reference: Union[date, datetime, None] = None) -> tuple[str, str]:
+    """برچسب شمسی اول و آخر ماه جاری برای فرم‌ها."""
+    start, end = jalali_month_bounds(reference)
+    return format_jalali_date(start), format_jalali_date(end)
+
+
+def jalali_quarter_ahead_display(reference: Union[date, datetime, None] = None) -> tuple[str, str]:
+    """از امروز تا پایان ماه سوم شمسی جلوتر."""
+    if reference:
+        ref = reference.date() if isinstance(reference, datetime) else reference
+        jtoday = jdatetime.date.fromgregorian(date=ref)
+    else:
+        jtoday = jdatetime.date.today()
+    jend_month = jtoday.month + 2
+    jend_year = jtoday.year
+    while jend_month > 12:
+        jend_month -= 12
+        jend_year += 1
+    month_days = jdatetime.j_days_in_month[jend_month - 1]
+    if jend_month == 12 and jdatetime.date.isleap(jend_year):
+        month_days = 30
+    jend = jdatetime.date(jend_year, jend_month, month_days)
+    g_start = jtoday.togregorian()
+    g_end = jend.togregorian()
+    return format_jalali_date(g_start), format_jalali_date(g_end)
+
+
+def parse_goal_period_strings(start_raw: str, end_raw: str) -> tuple[date, date]:
+    """تبدیل بازه هدف تیم از ورودی شمسی به میلادی."""
+    start = parse_jalali_date_string((start_raw or '').strip())
+    end = parse_jalali_date_string((end_raw or '').strip())
+    if not start or not end:
+        raise ValueError('تاریخ شمسی نامعتبر است. مثال: ۱۴۰۴/۰۶/۱۵')
+    if end < start:
+        raise ValueError('پایان دوره باید بعد از شروع دوره باشد')
+    return start, end

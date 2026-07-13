@@ -87,12 +87,19 @@
                         <strong>{{ g.member_name }}</strong>
                         <span>{{ g.goal.get_metric_display }} · {{ g.actual }}/{{ g.target }}</span>
                     </div>
+                    <div class="crm-team-goal-meta">
+                        <time><i class="fas fa-calendar-alt" aria-hidden="true"></i> {{ g.period_label }}</time>
+                    </div>
                     <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
                 </article>
                 {% endfor %}
             </div>
             {% endif %}
-            <form method="post" action="{{ crm_team_url }}" class="crm-team-goals-form">
+            <form method="post" action="{{ crm_team_url }}" class="crm-team-goals-form"
+                  data-goal-month-start="{{ goal_period_start_default }}"
+                  data-goal-month-end="{{ goal_period_end_default }}"
+                  data-goal-quarter-start="{{ goal_period_quarter_start }}"
+                  data-goal-quarter-end="{{ goal_period_quarter_end }}">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="set_team_goal">
                 <input type="hidden" name="tab" value="settings">
@@ -119,14 +126,42 @@
                         <span>هدف عددی</span>
                         <input type="number" name="target_value" class="crm-input" placeholder="مثلاً ۲۰" min="1" required>
                     </label>
-                    <label class="crm-field">
-                        <span>شروع دوره</span>
-                        <input type="date" name="period_start" class="crm-input" required>
-                    </label>
-                    <label class="crm-field">
-                        <span>پایان دوره</span>
-                        <input type="date" name="period_end" class="crm-input" required>
-                    </label>
+                    <div class="crm-field crm-field-full">
+                        <span>بازه زمانی دوره</span>
+                        <div class="crm-team-goals-period">
+                            <label class="crm-team-date-field">
+                                <span class="crm-team-date-lbl"><i class="fas fa-calendar-day"></i> شروع</span>
+                                <input type="text"
+                                       name="period_start"
+                                       class="crm-input crm-jalali-date"
+                                       data-jdp=""
+                                       data-jdp-only-date=""
+                                       value="{{ goal_period_start_default }}"
+                                       placeholder="۱۴۰۴/۰۱/۰۱"
+                                       autocomplete="off"
+                                       dir="ltr"
+                                       required>
+                            </label>
+                            <label class="crm-team-date-field">
+                                <span class="crm-team-date-lbl"><i class="fas fa-calendar-check"></i> پایان</span>
+                                <input type="text"
+                                       name="period_end"
+                                       class="crm-input crm-jalali-date"
+                                       data-jdp=""
+                                       data-jdp-only-date=""
+                                       value="{{ goal_period_end_default }}"
+                                       placeholder="۱۴۰۴/۰۶/۳۰"
+                                       autocomplete="off"
+                                       dir="ltr"
+                                       required>
+                            </label>
+                        </div>
+                        <div class="crm-team-goals-period-presets">
+                            <button type="button" class="crm-dash-act crm-dash-act--ghost crm-team-goal-preset" data-goal-preset="month">ماه جاری</button>
+                            <button type="button" class="crm-dash-act crm-dash-act--ghost crm-team-goal-preset" data-goal-preset="quarter">۳ ماه آینده</button>
+                        </div>
+                        <small class="crm-field-hint">تقویم شمسی — با کلیک روی فیلد، تاریخ را از تقویم انتخاب کنید.</small>
+                    </div>
                     <div class="crm-field crm-team-goals-submit">
                         <button type="submit" class="crm-dash-act crm-dash-act--primary">
                             <i class="fas fa-plus"></i><span>ثبت هدف</span>

@@ -15,6 +15,7 @@ from workspace.services.crm_agency import (
 from workspace.services.crm_agency_analytics import (
     export_team_performance_csv, get_team_performance,
 )
+from workspace.services.jalali_input import parse_goal_period_strings
 from workspace.services.crm_scope import agency_members, can_manage_team, can_operate_team_leads, get_membership
 from workspace.services.crm_sync import export_crm_payload, import_crm_payload, record_sync_log
 from workspace.services.crm_webhooks import test_webhook
@@ -212,13 +213,17 @@ class TeamGoalsAPIView(_TeamAPIBase):
             member = None
             if member_id:
                 member = CRMAgencyMember.objects.get(pk=member_id, agency=agency, is_active=True)
+            period_start, period_end = parse_goal_period_strings(
+                str(payload.get('period_start', '')),
+                str(payload.get('period_end', '')),
+            )
             goal = CRMAgencyTeamGoal.objects.create(
                 agency=agency,
                 member=member,
                 metric=payload.get('metric', 'calls'),
                 target_value=int(payload.get('target_value', 0)),
-                period_start=payload.get('period_start'),
-                period_end=payload.get('period_end'),
+                period_start=period_start,
+                period_end=period_end,
             )
         except (json.JSONDecodeError, ValueError, CRMAgencyMember.DoesNotExist) as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)

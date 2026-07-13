@@ -71,7 +71,10 @@ from workspace.services.crm_sync import export_crm_payload, import_crm_payload, 
 from workspace.services.crm_webhooks import create_lead_from_api, dispatch_webhook, test_webhook, verify_api_key
 from workspace.services.crm_audit import log_agency_audit
 from workspace.services.display import to_jalali_display
-from workspace.services.jalali_input import format_jalali_date, to_persian_digits
+from workspace.services.jalali_input import (
+    format_jalali_date, jalali_month_bounds_display, jalali_quarter_ahead_display,
+    parse_goal_period_strings, to_persian_digits,
+)
 from workspace.services.listing_features import feature_highlights_for_listing, build_listing_feature_profile
 
 logger = logging.getLogger(__name__)
@@ -2306,6 +2309,12 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['lead_routing_choices'] = LEAD_ROUTING_CHOICES
         ctx['can_view_team_inbox'] = can_view_team_inbox(user)
         ctx['can_operate_team_leads'] = can_operate_team_leads(user)
+        goal_start_jalali, goal_end_jalali = jalali_month_bounds_display()
+        quarter_start_jalali, quarter_end_jalali = jalali_quarter_ahead_display()
+        ctx['goal_period_start_default'] = to_persian_digits(goal_start_jalali)
+        ctx['goal_period_end_default'] = to_persian_digits(goal_end_jalali)
+        ctx['goal_period_quarter_start'] = to_persian_digits(quarter_start_jalali)
+        ctx['goal_period_quarter_end'] = to_persian_digits(quarter_end_jalali)
         if agency:
             sync_agency_member_records(agency)
             full_performance = get_team_performance(agency, days=perf_days)
@@ -2531,13 +2540,17 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
                 member_id = request.POST.get('member_id', '').strip()
                 if member_id:
                     member = CRMAgencyMember.objects.get(pk=int(member_id), agency=m.agency, is_active=True)
+                period_start, period_end = parse_goal_period_strings(
+                    request.POST.get('period_start', ''),
+                    request.POST.get('period_end', ''),
+                )
                 CRMAgencyTeamGoal.objects.create(
                     agency=m.agency,
                     member=member,
                     metric=request.POST.get('metric', 'calls'),
                     target_value=int(request.POST.get('target_value', 0) or 0),
-                    period_start=request.POST.get('period_start'),
-                    period_end=request.POST.get('period_end'),
+                    period_start=period_start,
+                    period_end=period_end,
                 )
                 messages.success(request, 'هدف تیم ثبت شد.')
             elif action == 'regenerate_api_key':

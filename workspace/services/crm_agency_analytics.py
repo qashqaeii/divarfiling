@@ -12,6 +12,7 @@ from django.utils import timezone
 from workspace.constants import DEAL_STAGE_WON
 from workspace.models import CRMAgency, CRMAgencyTeamGoal, CRMDeal, CRMProperty, Customer, CustomerActivity, PropertyVisit
 from workspace.services.crm_agency import get_team_inbox, member_display, role_label
+from workspace.services.jalali_input import format_jalali_date, to_persian_digits
 from workspace.services.crm_scope import agency_members
 
 def get_team_performance(agency: CRMAgency, days: int = 30) -> Dict[str, Any]:
@@ -208,6 +209,10 @@ def get_team_goals_progress(agency: CRMAgency, days: int = 30) -> List[Dict[str,
             'target': goal.target_value,
             'pct': min(pct, 100),
             'member_name': member_display(goal.member) if goal.member else 'کل تیم',
+            'period_label': (
+                f"{to_persian_digits(format_jalali_date(goal.period_start))}"
+                f" — {to_persian_digits(format_jalali_date(goal.period_end))}"
+            ),
         })
     return rows
 

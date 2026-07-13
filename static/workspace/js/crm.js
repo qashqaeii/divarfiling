@@ -2385,6 +2385,27 @@ function initCRMTeamPage() {
         syncRoutingCards();
     });
 
+    initCRMJalaliPickers(root);
+
+    const goalForm = root.querySelector('.crm-team-goals-form');
+    if (goalForm) {
+        const startInput = goalForm.querySelector('input[name="period_start"]');
+        const endInput = goalForm.querySelector('input[name="period_end"]');
+        goalForm.querySelectorAll('[data-goal-preset]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const preset = btn.dataset.goalPreset;
+                const startVal = preset === 'quarter'
+                    ? goalForm.dataset.goalQuarterStart
+                    : goalForm.dataset.goalMonthStart;
+                const endVal = preset === 'quarter'
+                    ? goalForm.dataset.goalQuarterEnd
+                    : goalForm.dataset.goalMonthEnd;
+                if (startInput && startVal) startInput.value = startVal;
+                if (endInput && endVal) endInput.value = endVal;
+            });
+        });
+    }
+
     document.getElementById('crm-api-key-copy')?.addEventListener('click', e => {
         copyText(window.__crmTeamApiKey || document.getElementById('crm-api-key')?.textContent?.trim(), e.currentTarget);
     });

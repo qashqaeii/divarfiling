@@ -15428,8 +15428,42 @@ select.crm-files-adv-control {
 .crm-team-goals-current h3,
 .crm-team-goals-form h3 { margin: 0 0 0.55rem; font-size: 0.72rem; color: var(--ws-text-muted); }
 .crm-team-goals-submit { display: flex; align-items: flex-end; }
+.crm-field-full { grid-column: 1 / -1; }
+.crm-team-goals-period {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-top: 0.25rem;
+}
+.crm-team-date-field { display: block; }
+.crm-team-date-lbl {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+    margin-bottom: 0.2rem;
+}
+.crm-jalali-date {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+.crm-team-goals-period-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+}
+.crm-team-goal-meta {
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+    margin-bottom: 0.25rem;
+}
+.crm-team-goal-meta time { display: inline-flex; align-items: center; gap: 0.25rem; }
 @media (max-width: 900px) {
     .crm-team-settings-grid { grid-template-columns: 1fr; }
+    .crm-team-goals-period { grid-template-columns: 1fr; }
 }
 .crm-team-alert { padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.68rem; margin: 0.35rem 0; }
 .crm-team-alert--warn { background: #fffbeb; color: #b45309; }

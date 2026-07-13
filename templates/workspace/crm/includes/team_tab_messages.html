@@ -1,5 +1,6 @@
 {% if tab == 'messages' and agency_feature_messages %}
-<section class="crm-msg-hub" data-crm-messages
+{% load crm_tags %}
+<section class="crm-msg-hub crm-msg-hub--pro" data-crm-messages
     data-api-threads="{{ api_crm_team_messages_url }}"
     data-api-unread="{{ api_crm_team_messages_unread_url }}"
     data-api-members="{{ api_crm_team_messages_members_url }}"
@@ -8,80 +9,125 @@
     data-initial-thread="{{ request.GET.thread|default:'' }}"
     aria-label="صندوق پیام داخلی">
 
-    <header class="crm-agency-tab-intro crm-msg-hub-intro">
-        <div>
-            <h2>صندوق پیام داخلی</h2>
-            <p>ارتباط خصوصی و گروهی بین اعضای آژانس — بدون نیاز به آنلاین بودن</p>
+    <header class="crm-msg-studio-head">
+        <div class="crm-msg-studio-brand">
+            <span class="crm-msg-studio-icon" aria-hidden="true"><i class="fas fa-envelope-open-text"></i></span>
+            <div>
+                <span class="crm-msg-studio-kicker">مرکز گفتگوی تیم</span>
+                <h2 class="crm-msg-studio-title">صندوق پیام داخلی</h2>
+                <p class="crm-msg-studio-desc">ارتباط خصوصی و گروهی — بدون نیاز به آنلاین بودن</p>
+            </div>
         </div>
-        <div class="crm-msg-hub-intro-actions">
-            <button type="button" class="crm-dash-act" data-msg-notifications title="اعلان‌ها">
+        <div class="crm-msg-studio-actions">
+            <button type="button" class="crm-msg-studio-btn crm-msg-studio-btn--ghost" data-msg-notifications title="اعلان‌ها" aria-label="اعلان‌های تیم">
                 <i class="fas fa-bell"></i>
-                <span class="crm-msg-badge" data-msg-notif-count hidden>0</span>
+                <span class="crm-msg-studio-badge" data-msg-notif-count hidden>0</span>
             </button>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-msg-compose>
-                <i class="fas fa-pen"></i><span>پیام جدید</span>
+            <button type="button" class="crm-msg-studio-btn crm-msg-studio-btn--primary" data-msg-compose>
+                <i class="fas fa-pen-nib"></i>
+                <span>پیام جدید</span>
             </button>
         </div>
     </header>
 
-    <div class="crm-msg-layout">
-        <aside class="crm-msg-sidebar" aria-label="پوشه‌ها">
+    <div class="crm-msg-inbox-shell">
+        <aside class="crm-msg-rail" aria-label="پوشه‌ها">
+            <p class="crm-msg-rail-label">پوشه‌ها</p>
             <nav class="crm-msg-folders">
                 <button type="button" class="crm-msg-folder active" data-folder="inbox">
-                    <i class="fas fa-inbox"></i><span>صندوق ورودی</span>
-                    <em data-folder-unread="inbox">0</em>
+                    <span class="crm-msg-folder-icon"><i class="fas fa-inbox"></i></span>
+                    <span class="crm-msg-folder-text">
+                        <strong>صندوق ورودی</strong>
+                        <small>همه مکالمات</small>
+                    </span>
+                    <em class="crm-msg-folder-count" data-folder-unread="inbox" hidden>0</em>
                 </button>
                 <button type="button" class="crm-msg-folder" data-folder="starred">
-                    <i class="fas fa-star"></i><span>ستاره‌دار</span>
+                    <span class="crm-msg-folder-icon crm-msg-folder-icon--star"><i class="fas fa-star"></i></span>
+                    <span class="crm-msg-folder-text">
+                        <strong>ستاره‌دار</strong>
+                        <small>نشان‌شده‌ها</small>
+                    </span>
                 </button>
                 <button type="button" class="crm-msg-folder" data-folder="archived">
-                    <i class="fas fa-box-archive"></i><span>آرشیو</span>
+                    <span class="crm-msg-folder-icon crm-msg-folder-icon--archive"><i class="fas fa-box-archive"></i></span>
+                    <span class="crm-msg-folder-text">
+                        <strong>آرشیو</strong>
+                        <small>بایگانی‌شده</small>
+                    </span>
                 </button>
             </nav>
             <p class="crm-msg-retention-hint">
-                <i class="fas fa-clock-rotate-left"></i>
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
                 پیام‌ها پس از ۳۰ روز خودکار حذف می‌شوند.
             </p>
         </aside>
 
-        <div class="crm-msg-threads-panel">
-            <div class="crm-msg-threads-head">
-                <input type="search" class="crm-input crm-msg-search" placeholder="جستجو در موضوع..." data-msg-search dir="rtl">
-            </div>
+        <div class="crm-msg-list-pane" data-msg-list-pane>
+            <header class="crm-msg-list-head">
+                <div>
+                    <h3 data-msg-folder-title>صندوق ورودی</h3>
+                    <span data-msg-thread-count>در حال بارگذاری...</span>
+                </div>
+                <label class="crm-msg-search-wrap">
+                    <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="search" class="crm-msg-search" placeholder="جستجو در مکالمات..." data-msg-search dir="rtl" aria-label="جستجو">
+                </label>
+            </header>
             <ul class="crm-msg-thread-list" data-msg-thread-list role="listbox" aria-label="لیست مکالمات">
-                <li class="crm-msg-thread-empty">در حال بارگذاری...</li>
+                <li class="crm-msg-state crm-msg-state--loading">
+                    <span class="crm-msg-state-icon"><i class="fas fa-circle-notch fa-spin"></i></span>
+                    <p>در حال بارگذاری مکالمات...</p>
+                </li>
             </ul>
         </div>
 
-        <div class="crm-msg-detail-panel" data-msg-detail hidden>
-            <header class="crm-msg-detail-head">
-                <div class="crm-msg-detail-meta">
-                    <h3 data-msg-subject>—</h3>
-                    <span data-msg-participants></span>
+        <div class="crm-msg-convo-pane" data-msg-detail hidden>
+            <header class="crm-msg-convo-head">
+                <button type="button" class="crm-msg-back-btn" data-msg-back aria-label="بازگشت به لیست">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="crm-msg-convo-identity">
+                    <span class="crm-msg-avatar crm-msg-avatar--lg" data-msg-header-avatar style="--hue: 250">—</span>
+                    <div class="crm-msg-convo-meta">
+                        <h3 data-msg-subject>—</h3>
+                        <span data-msg-participants></span>
+                    </div>
                 </div>
-                <div class="crm-msg-detail-actions">
-                    <button type="button" class="crm-msg-icon-btn" data-msg-star title="ستاره"><i class="far fa-star"></i></button>
-                    <button type="button" class="crm-msg-icon-btn" data-msg-archive title="آرشیو"><i class="fas fa-box-archive"></i></button>
+                <div class="crm-msg-convo-actions">
+                    <button type="button" class="crm-msg-icon-btn" data-msg-star title="ستاره‌دار کردن" aria-pressed="false">
+                        <i class="far fa-star"></i>
+                    </button>
+                    <button type="button" class="crm-msg-icon-btn" data-msg-archive title="آرشیو کردن">
+                        <i class="fas fa-box-archive"></i>
+                    </button>
                 </div>
             </header>
-            <div class="crm-msg-messages" data-msg-messages></div>
-            <form class="crm-msg-reply-form" data-msg-reply-form>
-                <textarea class="crm-input" name="body" rows="3" placeholder="پاسخ خود را بنویسید..." required></textarea>
-                <div class="crm-msg-reply-toolbar">
-                    <label class="crm-msg-attach-btn">
+            <div class="crm-msg-messages" data-msg-messages role="log" aria-live="polite"></div>
+            <form class="crm-msg-composer" data-msg-reply-form>
+                <div class="crm-msg-composer-inner">
+                    <label class="crm-msg-composer-attach" title="ضمیمه فایل">
                         <i class="fas fa-paperclip"></i>
                         <input type="file" name="attachments" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp" hidden>
                     </label>
-                    <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">
-                        <i class="fas fa-paper-plane"></i> ارسال
+                    <textarea name="body" class="crm-msg-composer-input" rows="1" placeholder="پیام خود را بنویسید..." required></textarea>
+                    <button type="submit" class="crm-msg-composer-send" aria-label="ارسال">
+                        <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
             </form>
         </div>
 
-        <div class="crm-msg-placeholder" data-msg-placeholder>
-            <i class="fas fa-comments"></i>
-            <p>یک مکالمه را انتخاب کنید یا پیام جدید بفرستید</p>
+        <div class="crm-msg-welcome" data-msg-placeholder>
+            <div class="crm-msg-welcome-art" aria-hidden="true">
+                <span class="crm-msg-welcome-ring"></span>
+                <i class="fas fa-comments"></i>
+            </div>
+            <h3>مکالمه‌ای انتخاب نشده</h3>
+            <p>از لیست کنار، یک گفتگو را باز کنید — یا با دکمه «پیام جدید» شروع کنید.</p>
+            <button type="button" class="crm-msg-studio-btn crm-msg-studio-btn--primary crm-msg-welcome-cta" data-msg-compose>
+                <i class="fas fa-pen-nib"></i><span>نوشتن پیام</span>
+            </button>
         </div>
     </div>
 </section>

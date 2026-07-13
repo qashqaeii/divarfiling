@@ -2368,12 +2368,6 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
                 status=CRMAgencyMembershipRequest.STATUS_PENDING,
             ).select_related('agency', 'requested_by')
             ctx['my_pending_join'] = []
-            ctx['command_center'] = None
-            ctx['team_goals'] = []
-            ctx['team_inbox'] = []
-            ctx['assigned_leads'] = []
-            ctx['sync_logs'] = []
-            ctx['audit_logs'] = []
         else:
             ctx['performance'] = None
             ctx['my_performance'] = None

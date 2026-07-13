@@ -166,7 +166,7 @@
         {% if can_manage_team %}
         <a href="?tab=command" class="crm-team-tab-v2 {% if tab == 'command' %}active{% endif %}">
             <i class="fas fa-gauge-high"></i><span>مرکز مدیریت</span>
-            {% if command_center.inbox_unassigned %}<em>{{ command_center.inbox_unassigned }}</em>{% endif %}
+            {% if command_center and command_center.inbox_unassigned %}<em>{{ command_center.inbox_unassigned }}</em>{% endif %}
         </a>
         {% endif %}
         {% if can_view_team_inbox %}

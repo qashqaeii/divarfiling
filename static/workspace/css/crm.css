@@ -15306,22 +15306,131 @@ select.crm-files-adv-control {
 }
 
 /* ══ Team pro — command, inbox, settings ══ */
+.crm-team-command { margin-bottom: 0.75rem; }
+.crm-team-command-body { padding: 0.85rem 1rem 1rem; }
+.crm-team-command .crm-team-panel-head-v2 { flex-wrap: wrap; }
+.crm-team-command .crm-team-command-toolbar { margin-bottom: 0; }
+.crm-team-section-title {
+    margin: 0 0 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+}
 .crm-team-command-kpis {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 0.65rem;
     margin-bottom: 0.85rem;
 }
-.crm-team-command-kpis article {
-    padding: 0.75rem;
-    border-radius: 10px;
+.crm-team-command-kpi {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.55rem;
+    align-items: center;
+    padding: 0.8rem 0.85rem;
+    border-radius: 12px;
     background: var(--ws-surface);
     border: 1px solid var(--ws-border);
-    text-align: center;
 }
-.crm-team-command-kpis span { display: block; font-size: 1.2rem; font-weight: 700; }
-.crm-team-command-kpis em { font-size: 0.62rem; color: var(--ws-text-muted); font-style: normal; }
-.crm-team-command-toolbar { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; margin-bottom: 0.75rem; }
+.crm-team-command-kpi-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    background: color-mix(in srgb, var(--ws-primary) 10%, transparent);
+    color: var(--ws-primary);
+}
+.crm-team-command-kpi-val { display: block; font-size: 1.15rem; font-weight: 800; line-height: 1.1; }
+.crm-team-command-kpi em { display: block; font-size: 0.6rem; color: var(--ws-text-muted); font-style: normal; margin-top: 0.1rem; }
+.crm-team-command-kpi-link {
+    grid-column: 1 / -1;
+    font-size: 0.6rem;
+    color: var(--ws-primary);
+    text-decoration: none;
+    margin-top: 0.15rem;
+}
+.crm-team-command-kpi--warn .crm-team-command-kpi-icon { background: #fffbeb; color: #b45309; }
+.crm-team-command-kpi--deals .crm-team-command-kpi-icon { background: #eff6ff; color: #2563eb; }
+.crm-team-command-kpi--conv .crm-team-command-kpi-icon { background: #f5f3ff; color: #7c3aed; }
+.crm-team-command-kpi--money .crm-team-command-kpi-icon { background: #ecfdf5; color: #059669; }
+.crm-team-command-ok {
+    padding: 0.65rem 0.8rem;
+    border-radius: 10px;
+    background: #ecfdf5;
+    color: #047857;
+    font-size: 0.68rem;
+    margin: 0 0 0.85rem;
+}
+.crm-team-command-toolbar { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+.crm-team-goal-head { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.65rem; margin-bottom: 0.2rem; }
+.crm-team-goals { margin-bottom: 0.85rem; }
+.crm-team-settings-v2 { display: flex; flex-direction: column; gap: 0.75rem; }
+.crm-team-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+.crm-team-settings-card {
+    border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    border-radius: var(--team-radius, 12px);
+    background: var(--ws-surface);
+    padding: 0.9rem 1rem 1rem;
+}
+.crm-team-settings-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+}
+.crm-team-settings-card-head h2 { margin: 0; font-size: 0.85rem; }
+.crm-team-settings-card-head p { margin: 0.15rem 0 0; font-size: 0.62rem; color: var(--ws-text-muted); }
+.crm-team-settings-logo { width: 2.5rem; height: 2.5rem; font-size: 0.8rem; border-radius: 11px; flex-shrink: 0; }
+.crm-team-settings-card-icon {
+    width: 2.5rem; height: 2.5rem; border-radius: 11px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--ws-primary) 10%, transparent);
+    color: var(--ws-primary);
+}
+.crm-team-settings-form .crm-field { margin-bottom: 0.75rem; }
+.crm-team-settings-form .crm-field span { display: block; font-size: 0.62rem; color: var(--ws-text-muted); margin-bottom: 0.25rem; }
+.crm-team-slug-row {
+    display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--ws-border);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ws-border) 25%, transparent);
+}
+.crm-team-slug-code { font-size: 0.72rem; flex: 1; }
+.crm-field-hint { display: block; margin-top: 0.3rem; font-size: 0.58rem; color: var(--ws-text-muted); }
+.crm-team-routing-cards { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 0.85rem; }
+.crm-team-routing-card {
+    display: block;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--ws-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+.crm-team-routing-card input { position: absolute; opacity: 0; pointer-events: none; }
+.crm-team-routing-card strong { display: block; font-size: 0.72rem; margin-bottom: 0.15rem; }
+.crm-team-routing-card span { display: block; font-size: 0.6rem; color: var(--ws-text-muted); line-height: 1.45; }
+.crm-team-routing-card.is-selected,
+.crm-team-routing-card:has(input:checked) {
+    border-color: color-mix(in srgb, var(--ws-primary) 55%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+}
+.crm-team-goals-panel-body { padding: 0.85rem 1rem 1rem; }
+.crm-team-goals-current { margin-bottom: 1rem; }
+.crm-team-goals-current h3,
+.crm-team-goals-form h3 { margin: 0 0 0.55rem; font-size: 0.72rem; color: var(--ws-text-muted); }
+.crm-team-goals-submit { display: flex; align-items: flex-end; }
+@media (max-width: 900px) {
+    .crm-team-settings-grid { grid-template-columns: 1fr; }
+}
 .crm-team-alert { padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.68rem; margin: 0.35rem 0; }
 .crm-team-alert--warn { background: #fffbeb; color: #b45309; }
 .crm-team-alert--danger { background: #fef2f2; color: #b91c1c; }

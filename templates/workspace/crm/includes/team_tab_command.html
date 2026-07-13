@@ -1,42 +1,95 @@
 {% load crm_tags workspace_tags %}
 {# تب مرکز مدیریت #}
-{% if tab == 'command' and can_manage_team and command_center %}
-<section class="crm-team-command" aria-label="مرکز مدیریت">
-    <div class="crm-team-command-toolbar">
-        <span>بازه زمانی:</span>
-        <a href="?tab=command&days=7" class="crm-dash-act {% if perf_days == 7 %}crm-dash-act--primary{% endif %}">۷ روز</a>
-        <a href="?tab=command&days=30" class="crm-dash-act {% if perf_days == 30 %}crm-dash-act--primary{% endif %}">۳۰ روز</a>
-        <a href="?tab=command&days=90" class="crm-dash-act {% if perf_days == 90 %}crm-dash-act--primary{% endif %}">۹۰ روز</a>
-        <a href="{{ crm_team_report_csv_url }}?days={{ perf_days }}" class="crm-dash-act"><i class="fas fa-file-csv"></i><span>خروجی CSV</span></a>
+{% if tab == 'command' and can_manage_team %}
+<section class="crm-team-command crm-team-panel-v2" aria-label="مرکز مدیریت">
+    <header class="crm-team-panel-head-v2">
+        <div>
+            <h2><i class="fas fa-gauge-high"></i> مرکز مدیریت</h2>
+            <p>نمای کلی عملیات تیم · بازه {{ perf_days }} روز اخیر</p>
+        </div>
+        <div class="crm-team-command-toolbar">
+            <a href="?tab=command&days=7" class="crm-dash-act {% if perf_days == 7 %}crm-dash-act--primary{% endif %}">۷ روز</a>
+            <a href="?tab=command&days=30" class="crm-dash-act {% if perf_days == 30 %}crm-dash-act--primary{% endif %}">۳۰ روز</a>
+            <a href="?tab=command&days=90" class="crm-dash-act {% if perf_days == 90 %}crm-dash-act--primary{% endif %}">۹۰ روز</a>
+            <a href="{{ crm_team_report_csv_url }}?days={{ perf_days }}" class="crm-dash-act"><i class="fas fa-file-csv"></i><span>خروجی CSV</span></a>
+        </div>
+    </header>
+
+    {% if command_center %}
+    <div class="crm-team-command-body">
+        <div class="crm-team-command-kpis">
+            <article class="crm-team-command-kpi crm-team-command-kpi--inbox">
+                <span class="crm-team-command-kpi-icon"><i class="fas fa-inbox"></i></span>
+                <div>
+                    <span class="crm-team-command-kpi-val">{{ command_center.inbox_unassigned }}</span>
+                    <em>سرنخ بدون تخصیص</em>
+                </div>
+                {% if command_center.inbox_unassigned %}
+                <a href="?tab=inbox" class="crm-team-command-kpi-link">مشاهده صندوق</a>
+                {% endif %}
+            </article>
+            <article class="crm-team-command-kpi crm-team-command-kpi--warn">
+                <span class="crm-team-command-kpi-icon"><i class="fas fa-clock"></i></span>
+                <div>
+                    <span class="crm-team-command-kpi-val">{{ command_center.overdue_followups }}</span>
+                    <em>پیگیری معوق</em>
+                </div>
+            </article>
+            <article class="crm-team-command-kpi crm-team-command-kpi--deals">
+                <span class="crm-team-command-kpi-icon"><i class="fas fa-bolt"></i></span>
+                <div>
+                    <span class="crm-team-command-kpi-val">{{ command_center.active_deals }}</span>
+                    <em>معامله فعال</em>
+                </div>
+            </article>
+            <article class="crm-team-command-kpi crm-team-command-kpi--conv">
+                <span class="crm-team-command-kpi-icon"><i class="fas fa-chart-line"></i></span>
+                <div>
+                    <span class="crm-team-command-kpi-val">{{ command_center.conversion_pct }}%</span>
+                    <em>نرخ تبدیل</em>
+                </div>
+            </article>
+            <article class="crm-team-command-kpi crm-team-command-kpi--money">
+                <span class="crm-team-command-kpi-icon"><i class="fas fa-coins"></i></span>
+                <div>
+                    <span class="crm-team-command-kpi-val">{{ command_center.commission_total|default:0|floatformat:0 }}</span>
+                    <em>کمیسیون (تومان)</em>
+                </div>
+            </article>
+        </div>
+
+        {% if command_center.alerts %}
+        <section class="crm-team-alerts" aria-label="هشدارهای عملیاتی">
+            <h3 class="crm-team-section-title">هشدارها</h3>
+            {% for alert in command_center.alerts %}
+            <p class="crm-team-alert crm-team-alert--{{ alert.level }}"><i class="fas fa-bell"></i> {{ alert.text }}</p>
+            {% endfor %}
+        </section>
+        {% else %}
+        <p class="crm-team-command-ok"><i class="fas fa-circle-check"></i> وضعیت عملیاتی تیم عادی است — هشداری ثبت نشده.</p>
+        {% endif %}
+
+        {% if team_goals %}
+        <section class="crm-team-goals" aria-label="اهداف تیم">
+            <h3 class="crm-team-section-title">اهداف دوره جاری</h3>
+            {% for g in team_goals %}
+            <article class="crm-team-goal-row">
+                <div class="crm-team-goal-head">
+                    <strong>{{ g.member_name }}</strong>
+                    <span>{{ g.goal.get_metric_display }}: {{ g.actual }}/{{ g.target }}</span>
+                </div>
+                <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
+            </article>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        {% if performance %}
+        {% include 'workspace/crm/includes/team_performance_overview.html' %}
+        {% endif %}
     </div>
-    <div class="crm-team-command-kpis">
-        <article><span>{{ command_center.inbox_unassigned }}</span><em>سرنخ بدون تخصیص</em></article>
-        <article><span>{{ command_center.overdue_followups }}</span><em>پیگیری معوق</em></article>
-        <article><span>{{ command_center.active_deals }}</span><em>معامله فعال</em></article>
-        <article><span>{{ command_center.conversion_pct }}%</span><em>نرخ تبدیل</em></article>
-        <article><span>{{ command_center.commission_total|default:0 }}</span><em>کمیسیون (تومان)</em></article>
-    </div>
-    {% if command_center.alerts %}
-    <section class="crm-team-alerts" aria-label="هشدارها">
-        {% for alert in command_center.alerts %}
-        <p class="crm-team-alert crm-team-alert--{{ alert.level }}"><i class="fas fa-bell"></i> {{ alert.text }}</p>
-        {% endfor %}
-    </section>
-    {% endif %}
-    {% if team_goals %}
-    <section class="crm-team-goals" aria-label="اهداف تیم">
-        <h3>اهداف دوره جاری</h3>
-        {% for g in team_goals %}
-        <article class="crm-team-goal-row">
-            <strong>{{ g.member_name }}</strong>
-            <span>{{ g.goal.get_metric_display }}: {{ g.actual }}/{{ g.target }}</span>
-            <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
-        </article>
-        {% endfor %}
-    </section>
-    {% endif %}
-    {% if performance %}
-    {% include 'workspace/crm/includes/team_performance_overview.html' %}
+    {% else %}
+    <p class="crm-team-empty-v2">داده‌ای برای نمایش در مرکز مدیریت موجود نیست.</p>
     {% endif %}
 </section>
 {% endif %}

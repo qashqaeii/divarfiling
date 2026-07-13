@@ -1,61 +1,142 @@
-{% load workspace_tags %}
+{% load workspace_tags crm_tags %}
 {# تب تنظیمات آژانس #}
 {% if tab == 'settings' and can_manage_team %}
-<section class="crm-team-panel-v2" aria-label="تنظیمات آژانس">
-    <header class="crm-team-panel-head-v2">
-        <div>
-            <h2>تنظیمات آژانس</h2>
-            <p>نام، شناسه و سیاست توزیع سرنخ API</p>
-        </div>
-    </header>
-    <form method="post" action="{{ crm_team_url }}" class="crm-team-settings-form">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="update_agency">
-        <input type="hidden" name="tab" value="settings">
-        <label class="crm-field">
-            <span>نام آژانس</span>
-            <input type="text" name="name" class="crm-input" value="{{ crm_agency.name }}" required>
-        </label>
-        <label class="crm-field">
-            <span>شناسه (slug) — فقط خواندنی</span>
-            <input type="text" class="crm-input" value="{{ crm_agency.slug }}" readonly dir="ltr">
-        </label>
-        <label class="crm-field">
-            <span>سیاست تخصیص سرنخ API</span>
-            <select name="lead_routing_policy" class="crm-select">
-                {% for val, lbl in lead_routing_choices %}
-                <option value="{{ val }}" {% if crm_agency.lead_routing_policy == val %}selected{% endif %}>{{ lbl }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <button type="submit" class="crm-dash-act crm-dash-act--primary">ذخیره تنظیمات</button>
-    </form>
-    <section class="crm-team-goals-form">
-        <h3>هدف عملکرد جدید</h3>
-        <form method="post" action="{{ crm_team_url }}">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="set_team_goal">
-            <input type="hidden" name="tab" value="settings">
-            <div class="crm-team-goals-grid">
-                <select name="member_id" class="crm-select">
-                    <option value="">کل تیم</option>
-                    {% for m in agency_members %}
-                    <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
+<div class="crm-team-settings-v2">
+    <section class="crm-team-settings-grid">
+        <article class="crm-team-settings-card crm-team-settings-card--profile">
+            <header class="crm-team-settings-card-head">
+                <span class="crm-team-hero-logo crm-team-settings-logo" style="--hue: {{ crm_agency.name|crm_avatar_hue }}">{{ crm_agency.name|crm_initials }}</span>
+                <div>
+                    <h2>هویت آژانس</h2>
+                    <p>نام نمایشی و شناسه عضویت</p>
+                </div>
+            </header>
+            <form method="post" action="{{ crm_team_url }}" class="crm-team-settings-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_agency">
+                <input type="hidden" name="tab" value="settings">
+                <label class="crm-field">
+                    <span>نام آژانس</span>
+                    <input type="text" name="name" class="crm-input" value="{{ crm_agency.name }}" required>
+                </label>
+                <div class="crm-field">
+                    <span>شناسه عضویت (slug)</span>
+                    <div class="crm-team-slug-row">
+                        <code class="crm-team-slug-code" dir="ltr">{{ crm_agency.slug }}</code>
+                        <button type="button" class="crm-dash-act crm-dash-act--ghost" data-copy-text="{{ crm_agency.slug }}" title="کپی شناسه">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <small class="crm-field-hint">اعضای جدید با این شناسه درخواست عضویت می‌دهند.</small>
+                </div>
+                <button type="submit" class="crm-dash-act crm-dash-act--primary">
+                    <i class="fas fa-save"></i><span>ذخیره نام آژانس</span>
+                </button>
+            </form>
+        </article>
+
+        <article class="crm-team-settings-card crm-team-settings-card--routing">
+            <header class="crm-team-settings-card-head">
+                <span class="crm-team-settings-card-icon"><i class="fas fa-route"></i></span>
+                <div>
+                    <h2>توزیع سرنخ API</h2>
+                    <p>سرنخ‌های ورودی از وب‌سایت و ابزارهای خارجی به کجا بروند؟</p>
+                </div>
+            </header>
+            <form method="post" action="{{ crm_team_url }}" class="crm-team-settings-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_agency">
+                <input type="hidden" name="tab" value="settings">
+                <input type="hidden" name="name" value="{{ crm_agency.name }}">
+                <div class="crm-team-routing-cards" role="radiogroup" aria-label="سیاست تخصیص سرنخ">
+                    {% for val, lbl in lead_routing_choices %}
+                    <label class="crm-team-routing-card {% if crm_agency.lead_routing_policy == val %}is-selected{% endif %}">
+                        <input type="radio" name="lead_routing_policy" value="{{ val }}" {% if crm_agency.lead_routing_policy == val %}checked{% endif %}>
+                        <strong>{{ lbl }}</strong>
+                        {% if val == 'owner' %}
+                        <span>مستقیم در پرونده‌های مالک آژانس ثبت می‌شود.</span>
+                        {% elif val == 'inbox' %}
+                        <span>در صندوق سرنخ تیم — مدیر تخصیص می‌دهد.</span>
+                        {% elif val == 'round_robin' %}
+                        <span>به‌صورت چرخشی بین مشاوران فعال توزیع می‌شود.</span>
+                        {% endif %}
+                    </label>
                     {% endfor %}
-                </select>
-                <select name="metric" class="crm-select">
-                    <option value="calls">تماس</option>
-                    <option value="visits">بازدید</option>
-                    <option value="deals_closed">معامله بسته</option>
-                </select>
-                <input type="number" name="target_value" class="crm-input" placeholder="هدف" min="1" required>
-                <input type="date" name="period_start" class="crm-input" required>
-                <input type="date" name="period_end" class="crm-input" required>
-                <button type="submit" class="crm-dash-act">ثبت هدف</button>
-            </div>
-        </form>
+                </div>
+                <button type="submit" class="crm-dash-act crm-dash-act--primary">
+                    <i class="fas fa-check"></i><span>ذخیره سیاست توزیع</span>
+                </button>
+            </form>
+        </article>
     </section>
-</section>
+
+    <section class="crm-team-panel-v2 crm-team-goals-panel">
+        <header class="crm-team-panel-head-v2">
+            <div>
+                <h2><i class="fas fa-bullseye"></i> اهداف عملکرد</h2>
+                <p>تعریف هدف برای کل تیم یا هر مشاور</p>
+            </div>
+        </header>
+        <div class="crm-team-goals-panel-body">
+            {% if team_goals %}
+            <div class="crm-team-goals-current">
+                <h3>اهداف فعال</h3>
+                {% for g in team_goals %}
+                <article class="crm-team-goal-row">
+                    <div class="crm-team-goal-head">
+                        <strong>{{ g.member_name }}</strong>
+                        <span>{{ g.goal.get_metric_display }} · {{ g.actual }}/{{ g.target }}</span>
+                    </div>
+                    <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
+                </article>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <form method="post" action="{{ crm_team_url }}" class="crm-team-goals-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="set_team_goal">
+                <input type="hidden" name="tab" value="settings">
+                <h3>هدف جدید</h3>
+                <div class="crm-team-goals-grid">
+                    <label class="crm-field">
+                        <span>عضو</span>
+                        <select name="member_id" class="crm-select">
+                            <option value="">کل تیم</option>
+                            {% for m in agency_members %}
+                            <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label class="crm-field">
+                        <span>شاخص</span>
+                        <select name="metric" class="crm-select">
+                            <option value="calls">تماس</option>
+                            <option value="visits">بازدید</option>
+                            <option value="deals_closed">معامله بسته</option>
+                        </select>
+                    </label>
+                    <label class="crm-field">
+                        <span>هدف عددی</span>
+                        <input type="number" name="target_value" class="crm-input" placeholder="مثلاً ۲۰" min="1" required>
+                    </label>
+                    <label class="crm-field">
+                        <span>شروع دوره</span>
+                        <input type="date" name="period_start" class="crm-input" required>
+                    </label>
+                    <label class="crm-field">
+                        <span>پایان دوره</span>
+                        <input type="date" name="period_end" class="crm-input" required>
+                    </label>
+                    <div class="crm-field crm-team-goals-submit">
+                        <button type="submit" class="crm-dash-act crm-dash-act--primary">
+                            <i class="fas fa-plus"></i><span>ثبت هدف</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
 {% endif %}
 
 {# تب ممیزی #}

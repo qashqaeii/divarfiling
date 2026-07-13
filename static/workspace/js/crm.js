@@ -2367,6 +2367,24 @@ function initCRMTeamPage() {
         }
     };
 
+    root.querySelectorAll('[data-copy-text]').forEach(btn => {
+        btn.addEventListener('click', e => {
+            copyText(btn.dataset.copyText || '', e.currentTarget);
+        });
+    });
+
+    root.querySelectorAll('.crm-team-routing-cards').forEach(group => {
+        const syncRoutingCards = () => {
+            group.querySelectorAll('.crm-team-routing-card').forEach(card => {
+                card.classList.toggle('is-selected', card.querySelector('input')?.checked);
+            });
+        };
+        group.querySelectorAll('input[type="radio"]').forEach(input => {
+            input.addEventListener('change', syncRoutingCards);
+        });
+        syncRoutingCards();
+    });
+
     document.getElementById('crm-api-key-copy')?.addEventListener('click', e => {
         copyText(window.__crmTeamApiKey || document.getElementById('crm-api-key')?.textContent?.trim(), e.currentTarget);
     });

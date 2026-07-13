@@ -59,6 +59,14 @@ class CRMTeamProTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'صندوق سرنخ')
 
+    def test_team_page_renders_command_tab(self):
+        client = Client()
+        client.force_login(self.owner)
+        resp = client.get(reverse('workspace:crm_team'), {'tab': 'command'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'مرکز مدیریت')
+        self.assertContains(resp, 'سرنخ بدون تخصیص')
+
     def test_regenerate_api_json_endpoint(self):
         client = Client()
         client.force_login(self.owner)

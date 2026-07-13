@@ -1,0 +1,42 @@
+{% load crm_tags workspace_tags %}
+{# تب مرکز مدیریت #}
+{% if tab == 'command' and can_manage_team and command_center %}
+<section class="crm-team-command" aria-label="مرکز مدیریت">
+    <div class="crm-team-command-toolbar">
+        <span>بازه زمانی:</span>
+        <a href="?tab=command&days=7" class="crm-dash-act {% if perf_days == 7 %}crm-dash-act--primary{% endif %}">۷ روز</a>
+        <a href="?tab=command&days=30" class="crm-dash-act {% if perf_days == 30 %}crm-dash-act--primary{% endif %}">۳۰ روز</a>
+        <a href="?tab=command&days=90" class="crm-dash-act {% if perf_days == 90 %}crm-dash-act--primary{% endif %}">۹۰ روز</a>
+        <a href="{{ crm_team_report_csv_url }}?days={{ perf_days }}" class="crm-dash-act"><i class="fas fa-file-csv"></i><span>خروجی CSV</span></a>
+    </div>
+    <div class="crm-team-command-kpis">
+        <article><span>{{ command_center.inbox_unassigned }}</span><em>سرنخ بدون تخصیص</em></article>
+        <article><span>{{ command_center.overdue_followups }}</span><em>پیگیری معوق</em></article>
+        <article><span>{{ command_center.active_deals }}</span><em>معامله فعال</em></article>
+        <article><span>{{ command_center.conversion_pct }}%</span><em>نرخ تبدیل</em></article>
+        <article><span>{{ command_center.commission_total|default:0 }}</span><em>کمیسیون (تومان)</em></article>
+    </div>
+    {% if command_center.alerts %}
+    <section class="crm-team-alerts" aria-label="هشدارها">
+        {% for alert in command_center.alerts %}
+        <p class="crm-team-alert crm-team-alert--{{ alert.level }}"><i class="fas fa-bell"></i> {{ alert.text }}</p>
+        {% endfor %}
+    </section>
+    {% endif %}
+    {% if team_goals %}
+    <section class="crm-team-goals" aria-label="اهداف تیم">
+        <h3>اهداف دوره جاری</h3>
+        {% for g in team_goals %}
+        <article class="crm-team-goal-row">
+            <strong>{{ g.member_name }}</strong>
+            <span>{{ g.goal.get_metric_display }}: {{ g.actual }}/{{ g.target }}</span>
+            <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
+        </article>
+        {% endfor %}
+    </section>
+    {% endif %}
+    {% if performance %}
+    {% include 'workspace/crm/includes/team_performance_overview.html' %}
+    {% endif %}
+</section>
+{% endif %}

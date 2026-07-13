@@ -386,6 +386,31 @@ AGENCY_ROLE_ADVISOR = 'advisor'
 AGENCY_ROLE_SECRETARY = 'secretary'
 AGENCY_MANAGER_ROLES = {AGENCY_ROLE_OWNER, AGENCY_ROLE_MANAGER}
 AGENCY_FULL_VIEW_ROLES = {AGENCY_ROLE_OWNER, AGENCY_ROLE_MANAGER, AGENCY_ROLE_SECRETARY}
+AGENCY_INBOX_ROLES = AGENCY_FULL_VIEW_ROLES
+
+TEAM_VISIBILITY_PRIVATE = 'private'
+TEAM_VISIBILITY_INBOX = 'team_inbox'
+TEAM_VISIBILITY_ASSIGNED = 'assigned'
+TEAM_VISIBILITY_CHOICES = [
+    (TEAM_VISIBILITY_PRIVATE, 'خصوصی'),
+    (TEAM_VISIBILITY_INBOX, 'صندوق تیم'),
+    (TEAM_VISIBILITY_ASSIGNED, 'تخصیص‌یافته'),
+]
+
+LEAD_ROUTING_OWNER = 'owner'
+LEAD_ROUTING_INBOX = 'inbox'
+LEAD_ROUTING_ROUND_ROBIN = 'round_robin'
+LEAD_ROUTING_CHOICES = [
+    (LEAD_ROUTING_OWNER, 'مالک آژانس'),
+    (LEAD_ROUTING_INBOX, 'صندوق سرنخ تیم'),
+    (LEAD_ROUTING_ROUND_ROBIN, 'چرخشی بین مشاوران'),
+]
+
+AUDIT_EVENTS = [
+    'agency.updated', 'api_key.regenerated', 'member.invited', 'member.role_changed',
+    'member.removed', 'lead.assigned', 'lead.bulk_assigned', 'customer.transferred',
+    'sync.export', 'sync.import', 'webhook.created', 'webhook.deleted', 'webhook.tested',
+]
 
 WEBHOOK_EVENTS = [
     'customer.created',

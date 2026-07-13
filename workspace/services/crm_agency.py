@@ -10,13 +10,18 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from accounts.phone_utils import find_user_by_phone, is_valid_iran_mobile, normalize_phone
-from workspace.constants import AGENCY_ROLE_ADVISOR, AGENCY_ROLE_OWNER
+from workspace.constants import (
+    AGENCY_ROLE_ADVISOR, AGENCY_ROLE_OWNER,
+    LEAD_ROUTING_INBOX, LEAD_ROUTING_OWNER, LEAD_ROUTING_ROUND_ROBIN,
+    TEAM_VISIBILITY_ASSIGNED, TEAM_VISIBILITY_INBOX, TEAM_VISIBILITY_PRIVATE,
+)
 from workspace.models import (
     CRMAgency, CRMAgencyMember, CRMAgencyMembershipRequest, CRMDeal, CRMDealCommissionSplit,
     CRMProperty, Customer, CustomerTransferLog,
 )
 from workspace.services.crm import log_activity
-from workspace.services.crm_scope import can_manage_team, get_membership
+from workspace.services.crm_audit import log_agency_audit
+from workspace.services.crm_scope import can_manage_team, can_operate_team_leads, get_membership
 
 User = get_user_model()
 
@@ -280,3 +285,142 @@ def member_display(member: CRMAgencyMember) -> str:
 
 def role_label(role: str) -> str:
     return dict(CRMAgencyMember._meta.get_field('role').choices).get(role, role)
+
+
+def regenerate_api_key(actor) -> str:
+    if not can_manage_team(actor):
+        raise ValueError('دسترسی ندارید')
+    m = get_membership(actor)
+    if not m:
+        raise ValueError('آژانس یافت نشد')
+    m.agency.api_key = _gen_api_key()
+    m.agency.save(update_fields=['api_key', 'updated_at'])
+    log_agency_audit(m.agency, actor, 'api_key.regenerated', {})
+    return m.agency.api_key
+
+
+def update_agency_settings(actor, *, name: str = '', lead_routing_policy: str = '') -> CRMAgency:
+    if not can_manage_team(actor):
+        raise ValueError('دسترسی ندارید')
+    m = get_membership(actor)
+    if not m:
+        raise ValueError('آژانس یافت نشد')
+    agency = m.agency
+    updates = []
+    name = (name or '').strip()
+    if name and name != agency.name:
+        agency.name = name
+        updates.append('name')
+    policy = (lead_routing_policy or '').strip()
+    if policy and policy in {LEAD_ROUTING_OWNER, LEAD_ROUTING_INBOX, LEAD_ROUTING_ROUND_ROBIN}:
+        agency.lead_routing_policy = policy
+        updates.append('lead_routing_policy')
+    if updates:
+        updates.append('updated_at')
+        agency.save(update_fields=updates)
+        log_agency_audit(agency, actor, 'agency.updated', {'fields': updates})
+    return agency
+
+
+def _next_round_robin_member(agency: CRMAgency) -> Optional[CRMAgencyMember]:
+    advisors = list(
+        agency.members.filter(is_active=True, role=AGENCY_ROLE_ADVISOR).order_by('joined_at', 'pk'),
+    )
+    if not advisors:
+        advisors = list(
+            agency.members.filter(is_active=True).exclude(role=AGENCY_ROLE_OWNER).order_by('joined_at', 'pk'),
+        )
+    if not advisors:
+        return None
+    idx = agency.round_robin_cursor % len(advisors)
+    agency.round_robin_cursor = (idx + 1) % len(advisors)
+    agency.save(update_fields=['round_robin_cursor', 'updated_at'])
+    return advisors[idx]
+
+
+def apply_lead_routing(agency: CRMAgency, customer: Customer) -> Customer:
+    """اعمال سیاست تخصیص سرنخ API/وب."""
+    policy = agency.lead_routing_policy or LEAD_ROUTING_INBOX
+    if policy == LEAD_ROUTING_OWNER:
+        customer.user = agency.owner
+        customer.assigned_to = agency.owner
+        customer.assigned_at = timezone.now()
+        customer.team_visibility = TEAM_VISIBILITY_ASSIGNED
+        customer.save(update_fields=['user', 'assigned_to', 'assigned_at', 'team_visibility', 'updated_at'])
+        return customer
+    if policy == LEAD_ROUTING_ROUND_ROBIN:
+        member = _next_round_robin_member(agency)
+        if member:
+            customer.user = member.user
+            customer.assigned_to = member.user
+            customer.assigned_at = timezone.now()
+            customer.team_visibility = TEAM_VISIBILITY_ASSIGNED
+            customer.save(update_fields=['user', 'assigned_to', 'assigned_at', 'team_visibility', 'updated_at'])
+            return customer
+    customer.team_visibility = TEAM_VISIBILITY_INBOX
+    customer.assigned_to = None
+    customer.save(update_fields=['team_visibility', 'assigned_to', 'updated_at'])
+    return customer
+
+
+def get_team_inbox(agency: CRMAgency):
+    return Customer.objects.filter(
+        agency=agency,
+        team_visibility=TEAM_VISIBILITY_INBOX,
+        assigned_to__isnull=True,
+    ).order_by('-created_at')
+
+
+@transaction.atomic
+def assign_lead_to_member(actor, customer: Customer, member_id: int) -> Customer:
+    if not can_operate_team_leads(actor):
+        raise ValueError('دسترسی ندارید')
+    m = get_membership(actor)
+    if not m or customer.agency_id != m.agency_id:
+        raise ValueError('مخاطب در آژانس شما نیست')
+    member = CRMAgencyMember.objects.get(pk=member_id, agency=m.agency, is_active=True)
+    customer.user = member.user
+    customer.assigned_to = member.user
+    customer.assigned_by = actor
+    customer.assigned_at = timezone.now()
+    customer.team_visibility = TEAM_VISIBILITY_ASSIGNED
+    customer.save(update_fields=[
+        'user', 'assigned_to', 'assigned_by', 'assigned_at', 'team_visibility', 'updated_at',
+    ])
+    log_activity(
+        customer, 'یادداشت',
+        title='تخصیص سرنخ',
+        content=f'به {member_display(member)}',
+    )
+    from workspace.services.crm_webhooks import dispatch_webhook
+    dispatch_webhook(m.agency, 'customer.assigned', {
+        'id': customer.pk,
+        'name': customer.name,
+        'phone': customer.phone,
+        'assigned_to': member.user_id,
+    })
+    log_agency_audit(m.agency, actor, 'lead.assigned', {
+        'customer_id': customer.pk,
+        'member_id': member.pk,
+    })
+    return customer
+
+
+@transaction.atomic
+def bulk_assign_leads(actor, customer_ids: List[int], member_id: int) -> int:
+    if not can_operate_team_leads(actor):
+        raise ValueError('دسترسی ندارید')
+    count = 0
+    for cid in customer_ids:
+        try:
+            customer = get_team_inbox(get_membership(actor).agency).get(pk=cid)
+            assign_lead_to_member(actor, customer, member_id)
+            count += 1
+        except Customer.DoesNotExist:
+            continue
+    if count:
+        log_agency_audit(get_membership(actor).agency, actor, 'lead.bulk_assigned', {
+            'count': count, 'member_id': member_id,
+        })
+    return count
+

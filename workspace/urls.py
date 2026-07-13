@@ -1,7 +1,7 @@
 """URLهای workspace."""
 from django.urls import include, path
 
-from workspace import crm_views, support_views, views
+from workspace import crm_views, support_views, team_api_views, views
 
 app_name = 'workspace'
 
@@ -43,13 +43,27 @@ urlpatterns = [
     # CRM
     path('crm/', crm_views.CRMDashboardView.as_view(), name='crm_dashboard'),
     path('crm/team/', crm_views.CRMTeamView.as_view(), name='crm_team'),
+    path('crm/team/api-key/regenerate/', crm_views.CRMTeamApiKeyRegenerateView.as_view(), name='crm_team_api_key_regenerate'),
+    path('crm/team/report.csv', crm_views.CRMTeamReportCSVView.as_view(), name='crm_team_report_csv'),
     path('crm/team/assign/<int:customer_id>/', crm_views.CRMTeamAssignView.as_view(), name='crm_team_assign'),
     path('crm/team/transfer/<int:customer_id>/', crm_views.CRMTeamTransferView.as_view(), name='crm_team_transfer'),
     path('crm/team/share-property/<int:property_id>/', crm_views.CRMPropertyShareView.as_view(), name='crm_property_share'),
+    path('crm/team/<path:bad_path>/', crm_views.CRMTeamBadPathRedirectView.as_view(), name='crm_team_bad_path'),
     path('crm/shares/<int:share_id>/revoke/', crm_views.CRMShareRevokeView.as_view(), name='crm_share_revoke'),
     path('crm/deals/<int:deal_id>/commission/', crm_views.CRMDealCommissionSplitView.as_view(), name='crm_deal_commission'),
     path('crm/sync/export/', crm_views.CRMSyncExportView.as_view(), name='crm_sync_export'),
     path('crm/sync/import/', crm_views.CRMSyncImportView.as_view(), name='crm_sync_import'),
+    path('api/crm/team/members/', team_api_views.TeamMembersAPIView.as_view(), name='api_crm_team_members'),
+    path('api/crm/team/members/<int:member_id>/', team_api_views.TeamMemberDetailAPIView.as_view(), name='api_crm_team_member_detail'),
+    path('api/crm/team/inbox/', team_api_views.TeamInboxAPIView.as_view(), name='api_crm_team_inbox'),
+    path('api/crm/team/performance/', team_api_views.TeamPerformanceAPIView.as_view(), name='api_crm_team_performance'),
+    path('api/crm/team/api-key/regenerate/', team_api_views.TeamApiKeyRegenerateAPIView.as_view(), name='api_crm_team_api_key_regenerate'),
+    path('api/crm/team/sync/export/', team_api_views.TeamSyncExportAPIView.as_view(), name='api_crm_team_sync_export'),
+    path('api/crm/team/sync/import/', team_api_views.TeamSyncImportAPIView.as_view(), name='api_crm_team_sync_import'),
+    path('api/crm/team/settings/', team_api_views.TeamSettingsAPIView.as_view(), name='api_crm_team_settings'),
+    path('api/crm/team/report.csv', team_api_views.TeamReportCSVView.as_view(), name='api_crm_team_report_csv'),
+    path('api/crm/team/goals/', team_api_views.TeamGoalsAPIView.as_view(), name='api_crm_team_goals'),
+    path('api/crm/team/webhooks/<int:webhook_id>/test/', team_api_views.TeamWebhookTestAPIView.as_view(), name='api_crm_team_webhook_test'),
     path('crm/api/leads/', crm_views.CRMInboundLeadAPIView.as_view(), name='crm_api_leads'),
     path('crm/today/', crm_views.CRMTodayView.as_view(), name='crm_today'),
     path('crm/search/', crm_views.CRMGlobalSearchView.as_view(), name='crm_search'),

@@ -51,7 +51,7 @@
             <p class="crm-team-hero-notice">
                 <i class="fas fa-shield-halved" aria-hidden="true"></i>
                 {% if can_view_team_performance %}
-                <span><strong>حریم خصوصی + گزارش مدیریتی</strong> — به‌عنوان مدیر، فقط <em>آمار عملکرد</em> اعضا (تعداد مخاطب، فایل، تماس، بازدید، معامله) را می‌بینید — بدون دسترسی به جزئیات پرونده، مخاطبین و فایل‌های شخصی آن‌ها.</span>
+                <span><strong>حریم خصوصی + گزارش مدیریتی</strong> — به‌عنوان مدیر، آمار عملکرد، صندوق سرنخ و پرونده‌های تخصیص‌یافته را می‌بینید — بدون دسترسی خودکار به پرونده‌های شخصی اعضا.</span>
                 {% else %}
                 <span><strong>حریم خصوصی اعضا</strong> — مخاطبین، فایل‌های املاک و اطلاعات هر عضو فقط برای خودش قابل مشاهده است. دسترسی دیگران تنها با «ارسال» صریح از طرف همان عضو ممکن است.</span>
                 {% endif %}
@@ -78,14 +78,14 @@
                     <span>از طرف {{ req.requested_by.get_full_name|default:req.requested_by.phone }}</span>
                 </div>
                 <div class="crm-team-request-actions">
-                    <form method="post" class="crm-team-inline-form">
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="respond_request">
                         <input type="hidden" name="request_id" value="{{ req.pk }}">
                         <input type="hidden" name="decision" value="accept">
                         <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">پذیرش</button>
                     </form>
-                    <form method="post" class="crm-team-inline-form">
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="respond_request">
                         <input type="hidden" name="request_id" value="{{ req.pk }}">
@@ -106,7 +106,7 @@
                 <span class="crm-team-onboard-icon"><i class="fas fa-people-group"></i></span>
                 <h2>آژانس مشترک بسازید</h2>
                 <p>یک فضای کاری واحد برای کل تیم — تخصیص مخاطب، انتقال پرونده، گزارش عملکرد، تقسیم کمیسیون و اتصال API.</p>
-                <form method="post" class="crm-team-create-form-v2">
+                <form method="post" action="{{ crm_team_url }}" class="crm-team-create-form-v2">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="create_agency">
                     <label class="crm-field">
@@ -130,7 +130,7 @@
                 {% if my_pending_join %}
                 <div class="crm-team-request-card crm-team-request-card--pending">
                     <strong>درخواست در انتظار: {{ my_pending_join.0.agency.name }}</strong>
-                    <form method="post" class="crm-team-inline-form">
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="cancel_request">
                         <input type="hidden" name="request_id" value="{{ my_pending_join.0.pk }}">
@@ -138,7 +138,7 @@
                     </form>
                 </div>
                 {% else %}
-                <form method="post" class="crm-team-join-form">
+                <form method="post" action="{{ crm_team_url }}" class="crm-team-join-form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="request_join">
                     <label class="crm-field">
@@ -163,6 +163,18 @@
         <a href="?tab=overview" class="crm-team-tab-v2 {% if tab == 'overview' %}active{% endif %}">
             <i class="fas fa-chart-line"></i><span>عملکرد</span>
         </a>
+        {% if can_manage_team %}
+        <a href="?tab=command" class="crm-team-tab-v2 {% if tab == 'command' %}active{% endif %}">
+            <i class="fas fa-gauge-high"></i><span>مرکز مدیریت</span>
+            {% if command_center.inbox_unassigned %}<em>{{ command_center.inbox_unassigned }}</em>{% endif %}
+        </a>
+        {% endif %}
+        {% if can_view_team_inbox %}
+        <a href="?tab=inbox" class="crm-team-tab-v2 {% if tab == 'inbox' %}active{% endif %}">
+            <i class="fas fa-inbox"></i><span>صندوق سرنخ</span>
+            {% if team_inbox %}<em>{{ team_inbox|length }}</em>{% endif %}
+        </a>
+        {% endif %}
         <a href="?tab=members" class="crm-team-tab-v2 {% if tab == 'members' %}active{% endif %}">
             <i class="fas fa-users"></i><span>اعضا</span>
             <em>{{ team_stats.members }}</em>
@@ -180,11 +192,25 @@
             <i class="fas fa-right-left"></i><span>انتقال‌ها</span>
             {% if transfer_count %}<em>{{ transfer_count }}</em>{% endif %}
         </a>
+        <a href="?tab=settings" class="crm-team-tab-v2 {% if tab == 'settings' %}active{% endif %}">
+            <i class="fas fa-gear"></i><span>تنظیمات</span>
+        </a>
+        <a href="?tab=audit" class="crm-team-tab-v2 {% if tab == 'audit' %}active{% endif %}">
+            <i class="fas fa-clipboard-list"></i><span>ممیزی</span>
+        </a>
         {% endif %}
     </nav>
 
     {# ── تب عملکرد ── #}
     {% if tab == 'overview' %}
+    {% if can_view_team_performance %}
+    <div class="crm-team-command-toolbar">
+        <span>بازه:</span>
+        <a href="?tab=overview&days=7" class="crm-dash-act {% if perf_days == 7 %}crm-dash-act--primary{% endif %}">۷ روز</a>
+        <a href="?tab=overview&days=30" class="crm-dash-act {% if perf_days == 30 %}crm-dash-act--primary{% endif %}">۳۰ روز</a>
+        <a href="?tab=overview&days=90" class="crm-dash-act {% if perf_days == 90 %}crm-dash-act--primary{% endif %}">۹۰ روز</a>
+    </div>
+    {% endif %}
     {% if can_view_team_performance and performance %}
     {% include 'workspace/crm/includes/team_performance_overview.html' %}
     {% elif my_performance %}
@@ -221,6 +247,10 @@
     <p class="crm-team-empty-v2">آمار عملکردی برای نمایش وجود ندارد.</p>
     {% endif %}
     {% endif %}
+
+    {% include 'workspace/crm/includes/team_tab_command.html' %}
+    {% include 'workspace/crm/includes/team_tab_inbox.html' %}
+    {% include 'workspace/crm/includes/team_tab_settings_audit.html' %}
 
     {# ── تب اعضا ── #}
     {% if tab == 'members' %}
@@ -264,7 +294,7 @@
                     <span>نقش: {{ req.get_role_display }}</span>
                 </div>
                 <div class="crm-team-request-actions">
-                    <form method="post" class="crm-team-inline-form">
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="respond_request">
                         <input type="hidden" name="request_id" value="{{ req.pk }}">
@@ -272,7 +302,7 @@
                         <input type="hidden" name="tab" value="members">
                         <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">پذیرش</button>
                     </form>
-                    <form method="post" class="crm-team-inline-form">
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="respond_request">
                         <input type="hidden" name="request_id" value="{{ req.pk }}">
@@ -304,7 +334,7 @@
                     {% if req.message %}<p class="crm-team-request-msg">{{ req.message }}</p>{% endif %}
                 </div>
                 <div class="crm-team-request-actions">
-                    <form method="post" class="crm-team-inline-form">
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="respond_request">
                         <input type="hidden" name="request_id" value="{{ req.pk }}">
@@ -312,7 +342,7 @@
                         <input type="hidden" name="tab" value="members">
                         <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">تأیید</button>
                     </form>
-                    <form method="post" class="crm-team-inline-form">
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="respond_request">
                         <input type="hidden" name="request_id" value="{{ req.pk }}">
@@ -350,7 +380,7 @@
                     <span title="پس از پیوستن"><i class="fas fa-building"></i>—</span>
                     <span title="پس از پیوستن"><i class="fas fa-phone"></i>—</span>
                 </div>
-                <form method="post" class="crm-team-inline-form">
+                <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="cancel_request">
                     <input type="hidden" name="request_id" value="{{ req.pk }}">
@@ -367,7 +397,7 @@
         {% for val, lbl in agency_roles %}
         <article class="crm-team-role-card">
             <span class="crm-team-role-pill" style="{% crm_agency_role_style val %}">{{ lbl }}</span>
-            <p>{% if val == 'owner' %}کنترل کامل آژانس و گزارش عملکرد تیم{% elif val == 'manager' %}مدیریت اعضا + مشاهده آمار عملکرد (بدون دسترسی به پرونده‌ها){% elif val == 'advisor' %}مخاطبین و معاملات خود — فقط آمار شخصی{% else %}دسترسی مشاهده محدود{% endif %}</p>
+            <p>{% if val == 'owner' %}کنترل کامل آژانس و گزارش عملکرد تیم{% elif val == 'manager' %}مدیریت اعضا، صندوق سرنخ و آمار عملکرد{% elif val == 'advisor' %}مخاطبین و معاملات خود — فقط آمار شخصی{% else %}دسترسی به صندوق سرنخ و ثبت تماس{% endif %}</p>
         </article>
         {% endfor %}
     </section>
@@ -395,6 +425,13 @@
                         <code class="crm-team-username" dir="ltr">@{{ m.user.username }}</code>
                     </div>
                     <span class="crm-team-role-pill" style="{% crm_agency_role_style m.role %}">{{ m.get_role_display }}</span>
+                    {% if license_dashboard and can_manage_team %}
+                    {% for tm in license_dashboard.team_members %}
+                    {% if tm.id == m.user_id and license_dashboard.assigned_seats %}
+                    <span class="crm-team-license-badge" title="لایسنس تخصیص‌یافته"><i class="fas fa-key"></i></span>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
                 </header>
                 {% if can_view_team_performance or m.user_id == request.user.id %}
                 <div class="crm-team-member-tile-stats">
@@ -414,7 +451,7 @@
                     <time><i class="fas fa-calendar-plus"></i> عضویت {{ m.joined_at|ws_jalali_date }}</time>
                     {% if can_manage_team and m.role != 'owner' %}
                     <div class="crm-team-member-tile-actions">
-                        <form method="post" class="crm-team-inline-form">
+                        <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="update_role">
                             <input type="hidden" name="tab" value="members">
@@ -461,9 +498,17 @@
                 <div class="crm-team-sync-step-icon crm-team-sync-step-icon--export"><i class="fas fa-file-export"></i></div>
                 <h3>خروجی JSON</h3>
                 <p>دانلود کامل داده‌های آژانس برای پشتیبان یا اپ دسکتاپ</p>
-                <button type="button" class="crm-dash-act crm-dash-act--primary" id="crm-sync-export-btn">
-                    <i class="fas fa-download"></i><span>دانلود فایل</span>
-                </button>
+                <div class="crm-team-sync-export-actions">
+                    <button type="button" class="crm-dash-act crm-dash-act--primary" id="crm-sync-export-btn" data-scope="user">
+                        <i class="fas fa-download"></i><span>دانلود داده من</span>
+                    </button>
+                    <button type="button" class="crm-dash-act" id="crm-sync-export-agency-btn" data-scope="agency">
+                        <i class="fas fa-building"></i><span>خروجی کل آژانس</span>
+                    </button>
+                    <button type="button" class="crm-dash-act crm-dash-act--ghost" id="crm-sync-dryrun-btn">
+                        <i class="fas fa-eye"></i><span>پیش‌نمایش ورودی</span>
+                    </button>
+                </div>
             </article>
             <div class="crm-team-sync-arrow" aria-hidden="true"><i class="fas fa-arrow-left-long"></i></div>
             <article class="crm-team-sync-step">
@@ -481,6 +526,22 @@
             </article>
         </div>
 
+        {% if sync_logs %}
+        <section class="crm-team-sync-history" aria-label="تاریخچه همگام‌سازی">
+            <h3>تاریخچه اخیر</h3>
+            <ul>
+                {% for log in sync_logs %}
+                <li>
+                    <strong>{{ log.get_sync_type_display }}</strong>
+                    {{ log.user.get_full_name|default:log.user.username|default:"—" }}
+                    · {{ log.created_at|ws_jalali }}
+                    {% if log.stats %}<code>{{ log.stats }}</code>{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
         {% if can_manage_team %}
         <section class="crm-team-api-panel">
             <header class="crm-team-panel-head-v2">
@@ -493,8 +554,9 @@
                 <div class="crm-team-api-field">
                     <label>کلید API</label>
                     <div class="crm-team-api-copy-row">
-                        <code class="crm-team-api-key-v2" id="crm-api-key" dir="ltr">{{ crm_agency.api_key }}</code>
-                        <button type="button" class="crm-dash-act" id="crm-api-key-copy" title="کپی"><i class="fas fa-copy"></i></button>
+                        <code class="crm-team-api-key-v2 crm-team-api-key-v2--masked" id="crm-api-key" dir="ltr" spellcheck="false">••••••••••••••••</code>
+                        <button type="button" class="crm-dash-act" id="crm-api-key-toggle" title="نمایش کلید" aria-pressed="false"><i class="fas fa-eye"></i></button>
+                        <button type="button" class="crm-dash-act" id="crm-api-key-copy" title="کپی" disabled><i class="fas fa-copy"></i></button>
                     </div>
                 </div>
                 <div class="crm-team-api-field">
@@ -508,15 +570,12 @@
                     <summary>نمونه درخواست cURL</summary>
                     <pre dir="ltr" id="crm-api-curl">curl -X POST "{{ request.scheme }}://{{ request.get_host }}{{ api_leads_path }}" \
   -H "Content-Type: application/json" \
-  -H "X-CRM-API-Key: {{ crm_agency.api_key }}" \
+  -H "X-CRM-API-Key: YOUR_API_KEY" \
   -d '{"name":"علی رضایی","phone":"09121234567","source":"وب‌سایت"}'</pre>
                 </details>
-                <form method="post" class="crm-team-api-regen" data-confirm="کلید قبلی باطل می‌شود. ادامه؟">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="regenerate_api_key">
-                    <input type="hidden" name="tab" value="sync">
-                    <button type="submit" class="crm-dash-act crm-dash-act--ghost"><i class="fas fa-rotate"></i><span>بازتولید کلید</span></button>
-                </form>
+                <button type="button" class="crm-dash-act crm-dash-act--ghost" id="crm-api-key-regen" data-confirm="کلید قبلی باطل می‌شود. ادامه؟">
+                    <i class="fas fa-rotate"></i><span>بازتولید کلید</span>
+                </button>
             </div>
         </section>
         {% else %}
@@ -551,7 +610,7 @@
                 <header>
                     <span class="crm-team-webhook-status" title="{% if w.is_active %}فعال{% else %}غیرفعال{% endif %}"></span>
                     <strong>{{ w.name }}</strong>
-                    <form method="post" class="crm-team-inline-form">
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form" data-confirm="وب‌هوک حذف شود؟">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="delete_webhook">
                         <input type="hidden" name="tab" value="webhooks">
@@ -570,6 +629,20 @@
                 <footer>
                     <time>{{ w.created_at|ws_jalali }}</time>
                     {% if w.secret %}<span class="crm-team-webhook-secret"><i class="fas fa-lock"></i> امضا فعال</span>{% endif %}
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="toggle_webhook">
+                        <input type="hidden" name="tab" value="webhooks">
+                        <input type="hidden" name="webhook_id" value="{{ w.pk }}">
+                        <button type="submit" class="crm-btn crm-btn-sm crm-btn-ghost">{% if w.is_active %}غیرفعال{% else %}فعال{% endif %}</button>
+                    </form>
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="test_webhook">
+                        <input type="hidden" name="tab" value="webhooks">
+                        <input type="hidden" name="webhook_id" value="{{ w.pk }}">
+                        <button type="submit" class="crm-btn crm-btn-sm crm-btn-primary">تست</button>
+                    </form>
                 </footer>
             </article>
             {% endfor %}
@@ -656,7 +729,7 @@
             <h2><i class="fas fa-user-plus"></i> عضو جدید</h2>
             <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times"></i></button>
         </header>
-        <form method="post" class="crm-drawer-form">
+        <form method="post" action="{{ crm_team_url }}" class="crm-drawer-form">
             {% csrf_token %}
             <input type="hidden" name="action" value="invite_member">
             <input type="hidden" name="tab" value="members">
@@ -692,7 +765,7 @@
             <h2><i class="fas fa-plug"></i> وب‌هوک جدید</h2>
             <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times"></i></button>
         </header>
-        <form method="post" class="crm-drawer-form">
+        <form method="post" action="{{ crm_team_url }}" class="crm-drawer-form">
             {% csrf_token %}
             <input type="hidden" name="action" value="add_webhook">
             <input type="hidden" name="tab" value="webhooks">
@@ -727,5 +800,7 @@
 <script>
 window.crmSyncExportUrl = '{% url "workspace:crm_sync_export" %}';
 window.crmSyncImportUrl = '{% url "workspace:crm_sync_import" %}';
+window.crmApiKeyRevealUrl = '{{ crm_api_key_reveal_url }}';
+window.crmApiKeyRegenerateUrl = '{{ crm_api_key_regenerate_url }}';
 </script>
 {% endblock %}

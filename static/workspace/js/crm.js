@@ -2368,52 +2368,141 @@ function initCRMTeamPage() {
     };
 
     document.getElementById('crm-api-key-copy')?.addEventListener('click', e => {
-        copyText(document.getElementById('crm-api-key')?.textContent?.trim(), e.currentTarget);
+        copyText(window.__crmTeamApiKey || document.getElementById('crm-api-key')?.textContent?.trim(), e.currentTarget);
     });
     document.getElementById('crm-api-url-copy')?.addEventListener('click', e => {
         copyText(document.getElementById('crm-api-url')?.textContent?.trim(), e.currentTarget);
     });
 
-    const exportBtn = document.getElementById('crm-sync-export-btn');
-    if (exportBtn && window.crmSyncExportUrl) {
-        exportBtn.addEventListener('click', async () => {
-            exportBtn.disabled = true;
-            const label = exportBtn.querySelector('span');
-            const prev = label?.textContent;
-            if (label) label.textContent = 'در حال آماده‌سازی…';
-            try {
-                const res = await fetch(window.crmSyncExportUrl, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                });
-                const data = await res.json();
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `crm-export-${new Date().toISOString().slice(0, 10)}.json`;
-                a.click();
-                URL.revokeObjectURL(a.href);
-            } catch {
-                window.alert('خروجی گرفته نشد.');
-            } finally {
-                exportBtn.disabled = false;
-                if (label && prev) label.textContent = prev;
-            }
-        });
-    }
+    const keyEl = document.getElementById('crm-api-key');
+    const keyToggle = document.getElementById('crm-api-key-toggle');
+    const keyCopy = document.getElementById('crm-api-key-copy');
+    const regenBtn = document.getElementById('crm-api-key-regen');
+    const revealUrl = window.crmApiKeyRevealUrl;
+    const regenUrl = window.crmApiKeyRegenerateUrl;
+
+    const maskApiKey = () => {
+        window.__crmTeamApiKey = '';
+        if (keyEl) {
+            keyEl.textContent = '••••••••••••••••';
+            keyEl.classList.add('crm-team-api-key-v2--masked');
+        }
+        if (keyToggle) {
+            keyToggle.setAttribute('aria-pressed', 'false');
+            keyToggle.querySelector('i').className = 'fas fa-eye';
+        }
+        if (keyCopy) keyCopy.disabled = true;
+    };
+
+    const showApiKey = key => {
+        window.__crmTeamApiKey = key;
+        if (keyEl) {
+            keyEl.textContent = key;
+            keyEl.classList.remove('crm-team-api-key-v2--masked');
+        }
+        if (keyToggle) {
+            keyToggle.setAttribute('aria-pressed', 'true');
+            keyToggle.querySelector('i').className = 'fas fa-eye-slash';
+        }
+        if (keyCopy) keyCopy.disabled = false;
+    };
+
+    keyToggle?.addEventListener('click', async () => {
+        if (keyToggle.getAttribute('aria-pressed') === 'true') {
+            maskApiKey();
+            return;
+        }
+        if (window.__crmTeamApiKey) {
+            showApiKey(window.__crmTeamApiKey);
+            return;
+        }
+        if (!revealUrl) return;
+        try {
+            const res = await fetch(revealUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || 'خطا');
+            showApiKey(data.key);
+        } catch (err) {
+            window.alert(err.message || 'نمایش کلید انجام نشد.');
+        }
+    });
+
+    regenBtn?.addEventListener('click', async () => {
+        const msg = regenBtn.dataset.confirm;
+        if (msg && !window.confirm(msg)) return;
+        if (!regenUrl) return;
+        regenBtn.disabled = true;
+        try {
+            const res = await fetch(regenUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || 'خطا');
+            showApiKey(data.key);
+            window.alert('کلید API بازتولید شد.');
+        } catch (err) {
+            window.alert(err.message || 'بازتولید کلید انجام نشد.');
+        } finally {
+            regenBtn.disabled = false;
+        }
+    });
+
+    const runExport = async (scope = 'user') => {
+        const btn = scope === 'agency'
+            ? document.getElementById('crm-sync-export-agency-btn')
+            : document.getElementById('crm-sync-export-btn');
+        if (!btn || !window.crmSyncExportUrl) return;
+        btn.disabled = true;
+        const label = btn.querySelector('span');
+        const prev = label?.textContent;
+        if (label) label.textContent = 'در حال آماده‌سازی…';
+        try {
+            const url = scope === 'agency'
+                ? `${window.crmSyncExportUrl}?scope=agency`
+                : window.crmSyncExportUrl;
+            const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `crm-export-${scope}-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        } catch {
+            window.alert('خروجی گرفته نشد.');
+        } finally {
+            btn.disabled = false;
+            if (label && prev) label.textContent = prev;
+        }
+    };
+
+    document.getElementById('crm-sync-export-btn')?.addEventListener('click', () => runExport('user'));
+    document.getElementById('crm-sync-export-agency-btn')?.addEventListener('click', () => runExport('agency'));
 
     const importInput = document.getElementById('crm-sync-import-file');
     const dropzone = document.getElementById('crm-sync-dropzone');
     const importStatus = document.getElementById('crm-sync-import-status');
 
-    const runImport = async file => {
+    const runImport = async (file, dryRun = false) => {
         if (!file || !window.crmSyncImportUrl) return;
         importStatus.hidden = false;
         importStatus.classList.remove('is-error', 'is-success');
-        importStatus.textContent = 'در حال بارگذاری…';
+        importStatus.textContent = dryRun ? 'در حال پیش‌نمایش…' : 'در حال بارگذاری…';
         try {
             const text = await file.text();
             const payload = JSON.parse(text);
-            const res = await fetch(window.crmSyncImportUrl, {
+            const url = dryRun ? `${window.crmSyncImportUrl}?dry_run=1` : window.crmSyncImportUrl;
+            const res = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2426,13 +2515,40 @@ function initCRMTeamPage() {
             if (!data.ok) throw new Error(data.error || 'خطا');
             const s = data.stats || {};
             importStatus.classList.add('is-success');
-            importStatus.textContent = `انجام شد — مخاطب: ${s.customers || 0} · ملک: ${s.properties || 0} · ردشده: ${s.skipped || 0}`;
+            const prefix = dryRun ? 'پیش‌نمایش' : 'انجام شد';
+            importStatus.textContent = `${prefix} — مخاطب: ${s.contacts || 0} · ملک: ${s.properties || 0} · معامله: ${s.deals || 0} · ردشده: ${s.skipped || 0}${s.conflicts ? ` · تعارض: ${s.conflicts}` : ''}`;
         } catch (err) {
             importStatus.classList.add('is-error');
             importStatus.textContent = err.message || 'ورودی نامعتبر بود.';
         }
         if (importInput) importInput.value = '';
     };
+
+    document.getElementById('crm-sync-dryrun-btn')?.addEventListener('click', () => {
+        if (importInput?.files?.[0]) runImport(importInput.files[0], true);
+        else importInput?.click();
+    });
+
+    document.getElementById('crm-inbox-select-all')?.addEventListener('change', e => {
+        document.querySelectorAll('.crm-team-inbox-table input[name="customer_ids"]').forEach(cb => {
+            cb.checked = e.target.checked;
+        });
+    });
+
+    document.querySelectorAll('.crm-inbox-quick-assign').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const form = document.getElementById('crm-team-inbox-quick-form');
+            const memberSelect = document.querySelector('.crm-team-inbox-toolbar select[name="member_id"]');
+            const quickMember = document.getElementById('crm-inbox-quick-member-id');
+            const quickCustomer = document.getElementById('crm-inbox-quick-customer-id');
+            if (!form || !quickCustomer) return;
+            quickCustomer.value = btn.dataset.customerId || '';
+            if (memberSelect && quickMember) quickMember.value = memberSelect.value;
+            const picked = window.prompt('شناسه عضو را تأیید کنید — Enter برای تخصیص');
+            if (picked === null) return;
+            form.submit();
+        });
+    });
 
     if (importInput) {
         importInput.addEventListener('change', () => runImport(importInput.files?.[0]));

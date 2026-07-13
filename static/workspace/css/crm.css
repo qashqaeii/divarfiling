@@ -15305,6 +15305,41 @@ select.crm-files-adv-control {
     .crm-team-leader-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
+/* ══ Team pro — command, inbox, settings ══ */
+.crm-team-command-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+}
+.crm-team-command-kpis article {
+    padding: 0.75rem;
+    border-radius: 10px;
+    background: var(--ws-surface);
+    border: 1px solid var(--ws-border);
+    text-align: center;
+}
+.crm-team-command-kpis span { display: block; font-size: 1.2rem; font-weight: 700; }
+.crm-team-command-kpis em { font-size: 0.62rem; color: var(--ws-text-muted); font-style: normal; }
+.crm-team-command-toolbar { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; margin-bottom: 0.75rem; }
+.crm-team-alert { padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.68rem; margin: 0.35rem 0; }
+.crm-team-alert--warn { background: #fffbeb; color: #b45309; }
+.crm-team-alert--danger { background: #fef2f2; color: #b91c1c; }
+.crm-team-alert--info { background: #eff6ff; color: #1d4ed8; }
+.crm-team-inbox-table { width: 100%; border-collapse: collapse; font-size: 0.68rem; }
+.crm-team-inbox-table th, .crm-team-inbox-table td { padding: 0.45rem 0.35rem; border-bottom: 1px solid var(--ws-border); }
+.crm-team-inbox-toolbar { display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; margin-bottom: 0.65rem; }
+.crm-team-assigned-list { list-style: none; padding: 0; margin: 0; font-size: 0.68rem; }
+.crm-team-assigned-list li { padding: 0.4rem 0; border-bottom: 1px solid var(--ws-border); }
+.crm-team-audit-row { display: flex; gap: 0.65rem; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid var(--ws-border); font-size: 0.65rem; }
+.crm-team-api-key-v2--masked { letter-spacing: 0.12em; }
+.crm-team-sync-export-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.crm-team-sync-history ul { list-style: none; padding: 0; margin: 0; font-size: 0.62rem; }
+.crm-team-goal-bar { height: 6px; background: var(--ws-border); border-radius: 99px; overflow: hidden; margin-top: 0.25rem; }
+.crm-team-goal-bar i { display: block; height: 100%; background: #2563eb; }
+.crm-team-goals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.45rem; align-items: end; }
+.crm-team-license-badge { color: #b45309; font-size: 0.75rem; }
+
 /* ══ Property detail v2 — unified hero + grid (contact-detail pro pattern) ══ */
 .crm-prop-detail-v2 {
     gap: 0.55rem;

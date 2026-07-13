@@ -1,30 +1,53 @@
 """همگام‌سازی CRM وب ↔ دسکتاپ — D8."""
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from workspace.models import CRMDeal, CRMProperty, Customer
-from workspace.services.crm_scope import customers_qs, deals_qs, properties_qs, get_agency
+from workspace.models import CRMDeal, CRMProperty, CRMSyncLog, Customer
+from workspace.services.crm_audit import log_agency_audit
+from workspace.services.crm_scope import (
+    agency_customers_qs, agency_deals_qs, agency_properties_qs,
+    can_manage_team, customers_qs, deals_qs, get_agency, properties_qs,
+)
 
 
-def export_crm_payload(user) -> Dict[str, Any]:
+def export_crm_payload(user, *, agency_scope: bool = False) -> Dict[str, Any]:
     agency = get_agency(user)
-    contacts = list(customers_qs(user).values(
-        'id', 'name', 'phone', 'phone_alt', 'email', 'customer_type', 'status',
-        'priority', 'source', 'city', 'tags', 'notes', 'next_follow_up',
-        'assigned_to_id', 'created_at', 'updated_at',
-    ))
-    properties = list(properties_qs(user).values(
-        'id', 'title', 'property_type', 'deal_mode', 'transaction_status',
-        'city', 'neighborhood', 'sale_price', 'deposit', 'monthly_rent', 'area',
-        'token', 'notes', 'created_at', 'updated_at',
-    ))
-    deals = list(deals_qs(user).values(
-        'id', 'title', 'stage', 'value', 'probability', 'customer_id',
-        'listing_token', 'commission_amount', 'created_at', 'updated_at',
-    ))
+    if agency_scope and agency and can_manage_team(user):
+        contacts = list(agency_customers_qs(agency).values(
+            'id', 'name', 'phone', 'phone_alt', 'email', 'customer_type', 'status',
+            'priority', 'source', 'city', 'tags', 'notes', 'next_follow_up',
+            'assigned_to_id', 'team_visibility', 'created_at', 'updated_at',
+        ))
+        properties = list(agency_properties_qs(agency).values(
+            'id', 'title', 'property_type', 'deal_mode', 'transaction_status',
+            'city', 'neighborhood', 'sale_price', 'deposit', 'monthly_rent', 'area',
+            'token', 'notes', 'user_id', 'created_at', 'updated_at',
+        ))
+        deals = list(agency_deals_qs(agency).values(
+            'id', 'title', 'stage', 'value', 'probability', 'customer_id',
+            'listing_token', 'commission_amount', 'user_id', 'created_at', 'updated_at',
+        ))
+        scope = 'agency'
+    else:
+        contacts = list(customers_qs(user).values(
+            'id', 'name', 'phone', 'phone_alt', 'email', 'customer_type', 'status',
+            'priority', 'source', 'city', 'tags', 'notes', 'next_follow_up',
+            'assigned_to_id', 'created_at', 'updated_at',
+        ))
+        properties = list(properties_qs(user).values(
+            'id', 'title', 'property_type', 'deal_mode', 'transaction_status',
+            'city', 'neighborhood', 'sale_price', 'deposit', 'monthly_rent', 'area',
+            'token', 'notes', 'created_at', 'updated_at',
+        ))
+        deals = list(deals_qs(user).values(
+            'id', 'title', 'stage', 'value', 'probability', 'customer_id',
+            'listing_token', 'commission_amount', 'created_at', 'updated_at',
+        ))
+        scope = 'user'
     return {
-        'version': 1,
+        'version': 2,
+        'scope': scope,
         'agency_id': agency.pk if agency else None,
         'contacts': contacts,
         'properties': properties,
@@ -32,10 +55,9 @@ def export_crm_payload(user) -> Dict[str, Any]:
     }
 
 
-def import_crm_payload(user, payload: dict, *, merge: bool = True) -> Dict[str, int]:
-    agency = get_agency(user)
-    stats = {'contacts': 0, 'properties': 0, 'skipped': 0}
-    for row in payload.get('contacts') or []:
+def _import_contacts(user, agency, rows: List[dict], *, merge: bool, dry_run: bool) -> Dict[str, int]:
+    stats = {'contacts': 0, 'skipped': 0, 'conflicts': 0}
+    for row in rows or []:
         phone = (row.get('phone') or '').strip()
         name = (row.get('name') or '').strip()
         if not name:
@@ -45,7 +67,11 @@ def import_crm_payload(user, payload: dict, *, merge: bool = True) -> Dict[str, 
         if phone:
             existing = customers_qs(user).filter(phone=phone).first()
         if existing and merge:
+            stats['conflicts'] += 1
             stats['skipped'] += 1
+            continue
+        if dry_run:
+            stats['contacts'] += 1
             continue
         Customer.objects.create(
             user=user,
@@ -63,10 +89,18 @@ def import_crm_payload(user, payload: dict, *, merge: bool = True) -> Dict[str, 
             notes=row.get('notes') or '',
         )
         stats['contacts'] += 1
-    for row in payload.get('properties') or []:
+    return stats
+
+
+def _import_properties(user, agency, rows: List[dict], *, dry_run: bool) -> Dict[str, int]:
+    stats = {'properties': 0, 'skipped': 0}
+    for row in rows or []:
         title = (row.get('title') or '').strip()
         if not title:
             stats['skipped'] += 1
+            continue
+        if dry_run:
+            stats['properties'] += 1
             continue
         CRMProperty.objects.create(
             user=user,
@@ -86,3 +120,64 @@ def import_crm_payload(user, payload: dict, *, merge: bool = True) -> Dict[str, 
         )
         stats['properties'] += 1
     return stats
+
+
+def _import_deals(user, agency, rows: List[dict], *, dry_run: bool) -> Dict[str, int]:
+    stats = {'deals': 0, 'skipped': 0}
+    for row in rows or []:
+        title = (row.get('title') or '').strip()
+        if not title:
+            stats['skipped'] += 1
+            continue
+        customer_id = row.get('customer_id')
+        if customer_id and not customers_qs(user).filter(pk=customer_id).exists():
+            stats['skipped'] += 1
+            continue
+        if dry_run:
+            stats['deals'] += 1
+            continue
+        CRMDeal.objects.create(
+            user=user,
+            agency=agency,
+            title=title,
+            stage=row.get('stage') or 'سرنخ',
+            value=row.get('value'),
+            probability=row.get('probability') or 0,
+            customer_id=customer_id,
+            listing_token=row.get('listing_token') or '',
+            commission_amount=row.get('commission_amount'),
+        )
+        stats['deals'] += 1
+    return stats
+
+
+def import_crm_payload(
+    user,
+    payload: dict,
+    *,
+    merge: bool = True,
+    dry_run: bool = False,
+) -> Dict[str, int]:
+    agency = get_agency(user)
+    stats: Dict[str, int] = {'contacts': 0, 'properties': 0, 'deals': 0, 'skipped': 0, 'conflicts': 0}
+    c = _import_contacts(user, agency, payload.get('contacts') or [], merge=merge, dry_run=dry_run)
+    p = _import_properties(user, agency, payload.get('properties') or [], dry_run=dry_run)
+    d = _import_deals(user, agency, payload.get('deals') or [], dry_run=dry_run)
+    for k, v in c.items():
+        stats[k] = stats.get(k, 0) + v
+    for k, v in p.items():
+        stats[k] = stats.get(k, 0) + v
+    for k, v in d.items():
+        stats[k] = stats.get(k, 0) + v
+    return stats
+
+
+def record_sync_log(user, sync_type: str, stats: dict) -> Optional[CRMSyncLog]:
+    agency = get_agency(user)
+    if not agency:
+        return None
+    log = CRMSyncLog.objects.create(agency=agency, user=user, sync_type=sync_type, stats=stats)
+    event = 'sync.export' if sync_type == CRMSyncLog.SYNC_EXPORT else 'sync.import'
+    if sync_type != CRMSyncLog.SYNC_DRY_RUN:
+        log_agency_audit(agency, user, event, stats)
+    return log

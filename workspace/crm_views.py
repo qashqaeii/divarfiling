@@ -20,7 +20,7 @@ from django.views.generic import CreateView, DetailView, ListView, TemplateView,
 
 from workspace.constants import (
     AGENCY_ROLES, CRM_PRIORITIES, CRM_PROPERTIES, CRM_SOURCES, CRM_STATUSES, CRM_TYPES,
-    DEAL_STAGES, DEFAULT_STAGNANT_DAYS, LOST_REASONS, MESSAGE_PLACEHOLDERS,
+    DEAL_STAGES, DEFAULT_STAGNANT_DAYS, LEAD_ROUTING_CHOICES, LOST_REASONS, MESSAGE_PLACEHOLDERS,
     MESSAGE_TEMPLATE_CATEGORIES, PROPERTY_ADVERTISER_TYPES, PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES,
     PROPERTY_TX_STATUSES, TYPE_PROFILES, VISIT_OUTCOMES, WEBHOOK_EVENTS,
     WEBHOOK_EVENT_LABELS,
@@ -35,22 +35,30 @@ from workspace.forms import (
     PropertyLinkForm, PropertyVisitForm, QuickLeadForm,
 )
 from workspace.models import (
-    CRMAgency, CRMAgencyMember, CRMAgencyMembershipRequest, CRMAgencyWebhook, CRMAutomationRule, CRMDeal,
+    CRMAgency, CRMAgencyAuditLog, CRMAgencyMember, CRMAgencyMembershipRequest, CRMAgencyTeamGoal,
+    CRMAgencyWebhook, CRMAutomationRule, CRMDeal, CRMSyncLog,
     CRMDealCommissionSplit, CRMMessageTemplate, CRMProperty, CRMSavedFilter, Customer,
     CustomerActivity, CustomerDocument, CustomerListing, CustomerTransferLog,
     Listing, PropertyContact, PropertyVisit, Reminder,
 )
 from workspace.services.crm_agency import (
-    assign_customer, cancel_membership_request, create_agency, invite_member_by_phone,
-    member_display, remove_member, request_join_agency, respond_membership_request,
-    role_label, set_commission_splits, sync_agency_member_records, transfer_customer, update_member_role,
+    assign_customer, assign_lead_to_member, bulk_assign_leads, cancel_membership_request,
+    create_agency, get_team_inbox, invite_member_by_phone,
+    member_display, regenerate_api_key, remove_member, request_join_agency,
+    respond_membership_request, role_label, set_commission_splits, sync_agency_member_records,
+    transfer_customer, update_agency_settings, update_member_role,
 )
-from workspace.services.crm_agency_analytics import get_member_performance_row, get_team_performance
+from workspace.services.crm_agency_analytics import (
+    get_command_center_stats, get_member_performance_row, get_team_goals_progress,
+    get_team_performance,
+)
 from workspace.services.crm_scope import (
-    agency_members, can_edit_customer, can_edit_property, can_manage_team, can_view_team_performance,
+    agency_members, can_edit_customer, can_edit_property, can_manage_team,
+    can_operate_team_leads, can_view_team_inbox, can_view_team_performance,
     customer_for_user,
     customers_qs, deal_for_user, deals_qs, get_agency, get_membership,
-    is_customer_owner, is_property_owner, properties_qs, property_for_user, reminders_qs,
+    is_customer_owner, is_property_owner, manager_assigned_customers_qs, properties_qs,
+    property_for_user, reminders_qs, team_inbox_qs,
 )
 from workspace.services.crm_sharing import (
     list_shares_for_customer, list_shares_for_property, revoke_share, share_customer, share_property,
@@ -59,8 +67,9 @@ from workspace.services.crm_sharing import (
 from workspace.services.crm_property_share import (
     build_property_share_context, list_outgoing_property_shares, location_display, share_mode_label,
 )
-from workspace.services.crm_sync import export_crm_payload, import_crm_payload
-from workspace.services.crm_webhooks import create_lead_from_api, dispatch_webhook, verify_api_key
+from workspace.services.crm_sync import export_crm_payload, import_crm_payload, record_sync_log
+from workspace.services.crm_webhooks import create_lead_from_api, dispatch_webhook, test_webhook, verify_api_key
+from workspace.services.crm_audit import log_agency_audit
 from workspace.services.display import to_jalali_display
 from workspace.services.jalali_input import format_jalali_date, to_persian_digits
 from workspace.services.listing_features import feature_highlights_for_listing, build_listing_feature_profile
@@ -2240,25 +2249,76 @@ class CRMSavedFilterCreateView(LoginRequiredMixin, View):
 
 # ── فاز ۴: تیم آژانس ─────────────────────────────────────────────────────────
 
+class CRMTeamBadPathRedirectView(LoginRequiredMixin, View):
+    """هدایت مسیرهای اشتباه مثل /crm/team/undefined به صفحه اصلی تیم."""
+
+    def get(self, request, bad_path=''):
+        return redirect(f"{reverse('workspace:crm_team')}?tab=sync")
+
+    def post(self, request, bad_path=''):
+        return redirect(f"{reverse('workspace:crm_team')}?tab=sync")
+
+
+class CRMTeamApiKeyRegenerateView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            key = regenerate_api_key(request.user)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
+        return JsonResponse({'ok': True, 'key': key})
+
+
+class CRMTeamReportCSVView(LoginRequiredMixin, View):
+    def get(self, request):
+        from django.http import HttpResponse
+        from workspace.services.crm_agency_analytics import export_team_performance_csv
+
+        agency = get_agency(request.user)
+        if not agency or not can_manage_team(request.user):
+            return JsonResponse({'ok': False, 'error': 'دسترسی مجاز نیست'}, status=403)
+        days = int(request.GET.get('days', 30))
+        csv_text = export_team_performance_csv(agency, days=days)
+        resp = HttpResponse(csv_text, content_type='text/csv; charset=utf-8')
+        resp['Content-Disposition'] = 'attachment; filename="team-performance.csv"'
+        return resp
+
+
 class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
     template_name = 'workspace/crm/team/index.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['crm_section'] = 'team'
+        ctx['crm_team_url'] = reverse('workspace:crm_team')
+        ctx['crm_api_key_reveal_url'] = reverse('workspace:docs_api_crm_key')
+        ctx['crm_api_key_regenerate_url'] = reverse('workspace:crm_team_api_key_regenerate')
+        ctx['crm_team_report_csv_url'] = reverse('workspace:crm_team_report_csv')
         membership = get_membership(self.request.user)
         agency = membership.agency if membership else None
         ctx['agency_roles'] = AGENCY_ROLES
         ctx['webhook_events'] = WEBHOOK_EVENTS
         ctx['webhook_event_labels'] = WEBHOOK_EVENT_LABELS
         user = self.request.user
+        perf_days = int(self.request.GET.get('days', 30) or 30)
+        if perf_days not in (7, 30, 90):
+            perf_days = 30
+        ctx['perf_days'] = perf_days
+        ctx['lead_routing_choices'] = LEAD_ROUTING_CHOICES
+        ctx['can_view_team_inbox'] = can_view_team_inbox(user)
+        ctx['can_operate_team_leads'] = can_operate_team_leads(user)
         if agency:
             sync_agency_member_records(agency)
-            full_performance = get_team_performance(agency)
+            full_performance = get_team_performance(agency, days=perf_days)
             can_view_perf = can_view_team_performance(user)
             ctx['can_view_team_performance'] = can_view_perf
             ctx['performance'] = full_performance if can_view_perf else None
-            ctx['my_performance'] = get_member_performance_row(agency, user.id)
+            ctx['my_performance'] = get_member_performance_row(agency, user.id, days=perf_days)
+            ctx['command_center'] = get_command_center_stats(agency, days=perf_days) if can_view_perf else None
+            ctx['team_goals'] = get_team_goals_progress(agency, days=perf_days) if can_view_perf else []
+            ctx['team_inbox'] = list(team_inbox_qs(user)[:50]) if can_view_team_inbox(user) else []
+            ctx['assigned_leads'] = list(manager_assigned_customers_qs(user)[:30]) if can_view_team_inbox(user) else []
+            ctx['sync_logs'] = list(CRMSyncLog.objects.filter(agency=agency).select_related('user')[:15]) if can_manage_team(user) else []
+            ctx['audit_logs'] = list(CRMAgencyAuditLog.objects.filter(agency=agency).select_related('actor')[:30]) if can_manage_team(user) else []
             ctx['webhooks'] = list(CRMAgencyWebhook.objects.filter(agency=agency).order_by('-created_at'))
             transfers_qs = CustomerTransferLog.objects.filter(agency=agency).filter(
                 Q(from_user=user) | Q(to_user=user) | Q(transferred_by=user),
@@ -2308,6 +2368,12 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
                 status=CRMAgencyMembershipRequest.STATUS_PENDING,
             ).select_related('agency', 'requested_by')
             ctx['my_pending_join'] = []
+            ctx['command_center'] = None
+            ctx['team_goals'] = []
+            ctx['team_inbox'] = []
+            ctx['assigned_leads'] = []
+            ctx['sync_logs'] = []
+            ctx['audit_logs'] = []
         else:
             ctx['performance'] = None
             ctx['my_performance'] = None
@@ -2319,6 +2385,12 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             ctx['member_rows'] = []
             ctx['team_roster_summary'] = None
             ctx['api_leads_path'] = ''
+            ctx['command_center'] = None
+            ctx['team_goals'] = []
+            ctx['team_inbox'] = []
+            ctx['assigned_leads'] = []
+            ctx['sync_logs'] = []
+            ctx['audit_logs'] = []
             ctx['pending_invites_sent'] = []
             ctx['pending_join_requests'] = []
             ctx['my_pending_invites'] = CRMAgencyMembershipRequest.objects.filter(
@@ -2332,9 +2404,17 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
                 status=CRMAgencyMembershipRequest.STATUS_PENDING,
             ).select_related('agency')
         tab = self.request.GET.get('tab', 'overview')
-        if tab in ('sync', 'webhooks', 'transfers') and not can_manage_team(user):
+        manager_only = {'sync', 'webhooks', 'transfers', 'command', 'settings', 'audit'}
+        if tab in manager_only and not can_manage_team(user):
+            tab = 'overview'
+        elif tab == 'inbox' and not can_view_team_inbox(user):
             tab = 'overview'
         ctx['tab'] = tab
+        if agency and can_manage_team(user):
+            from licenses.services.management import build_license_dashboard
+            ctx['license_dashboard'] = build_license_dashboard(user)
+        else:
+            ctx['license_dashboard'] = None
         return ctx
 
     def post(self, request):
@@ -2387,28 +2467,87 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
                 if not can_manage_team(request.user):
                     raise ValueError('دسترسی ندارید')
                 events = request.POST.getlist('events')
-                CRMAgencyWebhook.objects.create(
+                hook = CRMAgencyWebhook.objects.create(
                     agency=m.agency,
                     name=request.POST.get('name', '').strip() or 'وب‌هوک',
                     url=request.POST.get('url', '').strip(),
                     secret=request.POST.get('secret', '').strip(),
                     events=events,
                 )
+                log_agency_audit(m.agency, request.user, 'webhook.created', {'webhook_id': hook.pk})
                 messages.success(request, 'وب‌هوک ثبت شد.')
             elif action == 'delete_webhook':
                 m = get_membership(request.user)
+                if not can_manage_team(request.user):
+                    raise ValueError('دسترسی ندارید')
                 hook = get_object_or_404(
                     CRMAgencyWebhook, pk=request.POST.get('webhook_id'), agency=m.agency,
                 )
+                hook_id = hook.pk
                 hook.delete()
+                log_agency_audit(m.agency, request.user, 'webhook.deleted', {'webhook_id': hook_id})
                 messages.success(request, 'وب‌هوک حذف شد.')
-            elif action == 'regenerate_api_key':
+            elif action == 'toggle_webhook':
                 m = get_membership(request.user)
                 if not can_manage_team(request.user):
                     raise ValueError('دسترسی ندارید')
-                import secrets
-                m.agency.api_key = secrets.token_hex(24)
-                m.agency.save(update_fields=['api_key', 'updated_at'])
+                hook = get_object_or_404(
+                    CRMAgencyWebhook, pk=request.POST.get('webhook_id'), agency=m.agency,
+                )
+                hook.is_active = not hook.is_active
+                hook.save(update_fields=['is_active'])
+                messages.success(request, 'وضعیت وب‌هوک به‌روز شد.')
+            elif action == 'test_webhook':
+                m = get_membership(request.user)
+                if not can_manage_team(request.user):
+                    raise ValueError('دسترسی ندارید')
+                hook = get_object_or_404(
+                    CRMAgencyWebhook, pk=request.POST.get('webhook_id'), agency=m.agency,
+                )
+                ok, msg = test_webhook(hook)
+                log_agency_audit(m.agency, request.user, 'webhook.tested', {'webhook_id': hook.pk, 'ok': ok})
+                if ok:
+                    messages.success(request, 'تست وب‌هوک موفق بود.')
+                else:
+                    messages.error(request, f'تست وب‌هوک ناموفق: {msg}')
+            elif action == 'update_agency':
+                update_agency_settings(
+                    request.user,
+                    name=request.POST.get('name', ''),
+                    lead_routing_policy=request.POST.get('lead_routing_policy', ''),
+                )
+                messages.success(request, 'تنظیمات آژانس ذخیره شد.')
+            elif action == 'assign_inbox_lead':
+                customer = get_object_or_404(
+                    Customer, pk=int(request.POST.get('customer_id', 0)), agency=get_membership(request.user).agency,
+                )
+                assign_lead_to_member(
+                    request.user, customer, int(request.POST.get('member_id', 0)),
+                )
+                messages.success(request, 'سرنخ تخصیص داده شد.')
+            elif action == 'bulk_assign_inbox':
+                ids = [int(x) for x in request.POST.getlist('customer_ids') if x.isdigit()]
+                count = bulk_assign_leads(request.user, ids, int(request.POST.get('member_id', 0)))
+                messages.success(request, f'{count} سرنخ تخصیص داده شد.')
+            elif action == 'set_team_goal':
+                m = get_membership(request.user)
+                if not can_manage_team(request.user):
+                    raise ValueError('دسترسی ندارید')
+                member = None
+                member_id = request.POST.get('member_id', '').strip()
+                if member_id:
+                    member = CRMAgencyMember.objects.get(pk=int(member_id), agency=m.agency, is_active=True)
+                CRMAgencyTeamGoal.objects.create(
+                    agency=m.agency,
+                    member=member,
+                    metric=request.POST.get('metric', 'calls'),
+                    target_value=int(request.POST.get('target_value', 0) or 0),
+                    period_start=request.POST.get('period_start'),
+                    period_end=request.POST.get('period_end'),
+                )
+                messages.success(request, 'هدف تیم ثبت شد.')
+            elif action == 'regenerate_api_key':
+                regenerate_api_key(request.user)
                 messages.success(request, 'کلید API بازتولید شد.')
         except ValueError as exc:
             messages.error(request, str(exc))
@@ -2494,18 +2633,31 @@ class CRMDealCommissionSplitView(LoginRequiredMixin, View):
 class CRMSyncExportView(LoginRequiredMixin, View):
     def get(self, request):
         from django.http import JsonResponse as JR
-        payload = export_crm_payload(request.user)
+        if not can_manage_team(request.user):
+            return JsonResponse({'ok': False, 'error': 'دسترسی مجاز نیست'}, status=403)
+        agency_scope = request.GET.get('scope') == 'agency'
+        payload = export_crm_payload(request.user, agency_scope=agency_scope)
+        record_sync_log(request.user, 'export', {
+            'contacts': len(payload.get('contacts') or []),
+            'properties': len(payload.get('properties') or []),
+            'deals': len(payload.get('deals') or []),
+        })
         return JR(payload, json_dumps_params={'ensure_ascii': False})
 
 
 class CRMSyncImportView(LoginRequiredMixin, View):
     def post(self, request):
+        if not can_manage_team(request.user):
+            return JsonResponse({'ok': False, 'error': 'دسترسی مجاز نیست'}, status=403)
+        dry_run = request.GET.get('dry_run') == '1'
         try:
             payload = json.loads(request.body.decode('utf-8'))
-            stats = import_crm_payload(request.user, payload)
+            stats = import_crm_payload(request.user, payload, dry_run=dry_run)
         except (json.JSONDecodeError, UnicodeDecodeError):
             return JsonResponse({'ok': False, 'error': 'فایل نامعتبر'}, status=400)
-        return JsonResponse({'ok': True, 'stats': stats})
+        sync_type = 'dry_run' if dry_run else 'import'
+        record_sync_log(request.user, sync_type, stats)
+        return JsonResponse({'ok': True, 'stats': stats, 'dry_run': dry_run})
 
 
 @method_decorator(csrf_exempt, name='dispatch')

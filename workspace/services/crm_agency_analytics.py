@@ -1,17 +1,18 @@
 """گزارش عملکرد تیم — E4."""
 from __future__ import annotations
 
+import csv
+import io
 from datetime import timedelta
 from typing import Any, Dict, List
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
 from workspace.constants import DEAL_STAGE_WON
-from workspace.models import CRMAgency, CRMDeal, CRMProperty, Customer, CustomerActivity, PropertyVisit
-from workspace.services.crm_agency import member_display, role_label
+from workspace.models import CRMAgency, CRMAgencyTeamGoal, CRMDeal, CRMProperty, Customer, CustomerActivity, PropertyVisit
+from workspace.services.crm_agency import get_team_inbox, member_display, role_label
 from workspace.services.crm_scope import agency_members
-
 
 def get_team_performance(agency: CRMAgency, days: int = 30) -> Dict[str, Any]:
     since = timezone.now() - timedelta(days=days)
@@ -130,3 +131,103 @@ def get_member_performance_row(agency: CRMAgency, user_id: int, days: int = 30) 
         if row['member'].user_id == user_id:
             return row
     return {}
+
+
+def get_command_center_stats(agency: CRMAgency, days: int = 30) -> Dict[str, Any]:
+    since = timezone.now() - timedelta(days=days)
+    today = timezone.now().date()
+    inbox_count = get_team_inbox(agency).count()
+    overdue = Customer.objects.filter(
+        agency=agency,
+        next_follow_up__lt=today,
+        status__in=['جدید', 'در حال پیگیری'],
+    ).count()
+    stale_inbox = get_team_inbox(agency).filter(
+        created_at__lt=timezone.now() - timedelta(hours=48),
+    ).count()
+    active_deals = CRMDeal.objects.filter(agency=agency).exclude(
+        stage__in=['بسته‌شده', 'از دست رفته'],
+    ).count()
+    leads_period = Customer.objects.filter(agency=agency, created_at__gte=since).count()
+    won_period = CRMDeal.objects.filter(
+        agency=agency, stage=DEAL_STAGE_WON, closed_at__gte=since,
+    ).count()
+    conversion_pct = round(won_period * 100 / leads_period) if leads_period else 0
+    commission_total = CRMDeal.objects.filter(
+        agency=agency, stage=DEAL_STAGE_WON, closed_at__gte=since,
+    ).aggregate(total=Sum('commission_amount'))['total'] or 0
+
+    inactive_members = []
+    for member in agency_members(agency):
+        if member.role == 'owner':
+            continue
+        last_act = CustomerActivity.objects.filter(
+            _activity_user_q(agency, member.user_id),
+            created_at__gte=since,
+        ).exists()
+        if not last_act:
+            inactive_members.append(member_display(member))
+
+    return {
+        'days': days,
+        'inbox_unassigned': inbox_count,
+        'overdue_followups': overdue,
+        'stale_inbox': stale_inbox,
+        'active_deals': active_deals,
+        'conversion_pct': conversion_pct,
+        'commission_total': commission_total,
+        'inactive_members': inactive_members[:5],
+        'alerts': [
+            a for a in [
+                {'level': 'warn', 'text': f'{inbox_count} سرنخ در صندوق بدون تخصیص'} if inbox_count else None,
+                {'level': 'danger', 'text': f'{stale_inbox} سرنخ بیش از ۴۸ ساعت بدون تخصیص'} if stale_inbox else None,
+                {'level': 'warn', 'text': f'{overdue} پیگیری معوق تیم'} if overdue else None,
+                {'level': 'info', 'text': f'عضو بدون فعالیت: {", ".join(inactive_members[:3])}'} if inactive_members else None,
+            ] if a
+        ],
+    }
+
+
+def get_team_goals_progress(agency: CRMAgency, days: int = 30) -> List[Dict[str, Any]]:
+    today = timezone.now().date()
+    perf = get_team_performance(agency, days=days)
+    perf_by_member = {r['member'].pk: r for r in perf['members']}
+    rows = []
+    for goal in CRMAgencyTeamGoal.objects.filter(
+        agency=agency, period_start__lte=today, period_end__gte=today,
+    ).select_related('member', 'member__user'):
+        actual = 0
+        if goal.member_id and goal.member_id in perf_by_member:
+            actual = perf_by_member[goal.member_id].get(goal.metric, 0)
+        elif not goal.member_id:
+            actual = perf['totals'].get(goal.metric, 0)
+        pct = round(actual * 100 / goal.target_value) if goal.target_value else 0
+        rows.append({
+            'goal': goal,
+            'actual': actual,
+            'target': goal.target_value,
+            'pct': min(pct, 100),
+            'member_name': member_display(goal.member) if goal.member else 'کل تیم',
+        })
+    return rows
+
+
+def export_team_performance_csv(agency: CRMAgency, days: int = 30) -> str:
+    data = get_team_performance(agency, days=days)
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(['رتبه', 'نام', 'نقش', 'مخاطب', 'فایل', 'تماس', 'بازدید', 'معامله بسته', 'فعال', 'امتیاز'])
+    for r in data['members']:
+        writer.writerow([
+            r.get('rank', ''),
+            r['name'],
+            r['role'],
+            r['contacts'],
+            r['properties'],
+            r['calls'],
+            r['visits'],
+            r['deals_closed'],
+            r['active_deals'],
+            r.get('score', 0),
+        ])
+    return buf.getvalue()

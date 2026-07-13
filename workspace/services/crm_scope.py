@@ -12,7 +12,7 @@ from django.db.models import Q, QuerySet
 
 
 
-from workspace.constants import AGENCY_MANAGER_ROLES
+from workspace.constants import AGENCY_INBOX_ROLES, AGENCY_MANAGER_ROLES
 
 from workspace.models import (
 
@@ -81,6 +81,49 @@ def can_assign_contacts(user) -> bool:
     """مدیریت تیم — بدون دسترسی خودکار به داده‌های دیگران."""
 
     return can_manage_team(user)
+
+
+def can_view_team_inbox(user) -> bool:
+    m = get_membership(user)
+    return bool(m and m.role in AGENCY_INBOX_ROLES)
+
+
+def can_operate_team_leads(user) -> bool:
+    return can_view_team_inbox(user)
+
+
+def team_inbox_qs(user) -> QuerySet:
+    m = get_membership(user)
+    if not m or not can_view_team_inbox(user):
+        return Customer.objects.none()
+    return Customer.objects.filter(
+        agency=m.agency,
+        team_visibility='team_inbox',
+        assigned_to__isnull=True,
+    ).order_by('-created_at')
+
+
+def manager_assigned_customers_qs(user) -> QuerySet:
+    """پرونده‌های تخصیص‌یافته قابل مشاهده برای مدیر/منشی."""
+    m = get_membership(user)
+    if not m or not can_view_team_inbox(user):
+        return Customer.objects.none()
+    return Customer.objects.filter(
+        agency=m.agency,
+        team_visibility='assigned',
+    ).select_related('assigned_to', 'assigned_by').order_by('-assigned_at')
+
+
+def agency_customers_qs(agency: CRMAgency) -> QuerySet:
+    return Customer.objects.filter(agency=agency)
+
+
+def agency_properties_qs(agency: CRMAgency) -> QuerySet:
+    return CRMProperty.objects.filter(agency=agency, deleted_at__isnull=True)
+
+
+def agency_deals_qs(agency: CRMAgency) -> QuerySet:
+    return CRMDeal.objects.filter(agency=agency)
 
 
 

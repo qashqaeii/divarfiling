@@ -1,0 +1,80 @@
+{# تب صندوق سرنخ #}
+{% if tab == 'inbox' and can_view_team_inbox %}
+<section class="crm-team-panel-v2" aria-label="صندوق سرنخ تیم">
+    <header class="crm-team-panel-head-v2">
+        <div>
+            <h2>صندوق سرنخ</h2>
+            <p>{{ team_inbox|length }} سرنخ در انتظار تخصیص</p>
+        </div>
+    </header>
+    {% if team_inbox %}
+    <form method="post" action="{{ crm_team_url }}" class="crm-team-inbox-form" id="crm-team-inbox-bulk-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="bulk_assign_inbox">
+        <input type="hidden" name="tab" value="inbox">
+        <div class="crm-team-inbox-toolbar">
+            <label>تخصیص گروهی به:
+                <select name="member_id" class="crm-select" required>
+                    {% for m in agency_members %}
+                    {% if m.role != 'owner' %}
+                    <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </label>
+            <button type="submit" class="crm-dash-act crm-dash-act--primary">تخصیص انتخاب‌شده‌ها</button>
+        </div>
+        <div class="crm-team-inbox-table-wrap">
+            <table class="crm-team-inbox-table">
+                <thead>
+                    <tr><th><input type="checkbox" id="crm-inbox-select-all"></th><th>نام</th><th>تلفن</th><th>منبع</th><th>تاریخ</th><th>تخصیص سریع</th></tr>
+                </thead>
+                <tbody>
+                    {% for lead in team_inbox %}
+                    <tr>
+                        <td><input type="checkbox" name="customer_ids" value="{{ lead.pk }}" form="crm-team-inbox-bulk-form"></td>
+                        <td>{{ lead.name }}</td>
+                        <td dir="ltr">{{ lead.phone }}</td>
+                        <td>{{ lead.source|default:"—" }}</td>
+                        <td>{{ lead.created_at|ws_jalali_date }}</td>
+                        <td>
+                            <button type="button" class="crm-btn crm-btn-sm crm-btn-primary crm-inbox-quick-assign" data-customer-id="{{ lead.pk }}">تخصیص</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
+    <form method="post" action="{{ crm_team_url }}" id="crm-team-inbox-quick-form" hidden>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="assign_inbox_lead">
+        <input type="hidden" name="tab" value="inbox">
+        <input type="hidden" name="customer_id" id="crm-inbox-quick-customer-id">
+        <select name="member_id" id="crm-inbox-quick-member-id" class="crm-select crm-select-sm">
+            {% for m in agency_members %}
+            {% if m.role != 'owner' %}
+            <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+    </form>
+    {% else %}
+    <p class="crm-team-empty-v2">صندوق سرنخ خالی است.</p>
+    {% endif %}
+</section>
+{% if assigned_leads %}
+<section class="crm-team-panel-v2" aria-label="پرونده‌های تخصیص‌یافته">
+    <header class="crm-team-panel-head-v2"><h2>اخیراً تخصیص‌یافته</h2></header>
+    <ul class="crm-team-assigned-list">
+        {% for c in assigned_leads %}
+        <li>
+            <a href="{% url 'workspace:crm_detail' c.pk %}">{{ c.name }}</a>
+            → {{ c.assigned_to.get_full_name|default:c.assigned_to.username }}
+            <time>{{ c.assigned_at|ws_jalali }}</time>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+{% endif %}

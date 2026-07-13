@@ -262,6 +262,21 @@ class Customer(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='crm_assigned_customers', verbose_name='مشاور مسئول',
     )
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='crm_assignments_made', verbose_name='تخصیص‌دهنده',
+    )
+    assigned_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان تخصیص')
+    team_visibility = models.CharField(
+        max_length=20,
+        choices=[
+            ('private', 'خصوصی'),
+            ('team_inbox', 'صندوق تیم'),
+            ('assigned', 'تخصیص‌یافته'),
+        ],
+        default='private',
+        verbose_name='نمایش تیمی',
+    )
     name = models.CharField(max_length=200, verbose_name='نام')
     phone = models.CharField(max_length=20, blank=True, verbose_name='تلفن')
     phone_alt = models.CharField(max_length=20, blank=True, verbose_name='تلفن دوم')
@@ -760,6 +775,17 @@ class CRMAgency(models.Model):
         related_name='owned_crm_agencies', verbose_name='مالک',
     )
     api_key = models.CharField(max_length=64, unique=True, blank=True, verbose_name='کلید API')
+    lead_routing_policy = models.CharField(
+        max_length=20,
+        choices=[
+            ('owner', 'مالک آژانس'),
+            ('inbox', 'صندوق سرنخ تیم'),
+            ('round_robin', 'چرخشی بین مشاوران'),
+        ],
+        default='inbox',
+        verbose_name='سیاست تخصیص سرنخ API',
+    )
+    round_robin_cursor = models.PositiveIntegerField(default=0, verbose_name='شاخص چرخش')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -909,6 +935,103 @@ class CRMDealCommissionSplit(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['deal', 'member'], name='uniq_deal_commission_member'),
         ]
+
+
+class CRMSyncLog(models.Model):
+    """تاریخچه همگام‌سازی CRM."""
+    SYNC_EXPORT = 'export'
+    SYNC_IMPORT = 'import'
+    SYNC_DRY_RUN = 'dry_run'
+    SYNC_TYPE_CHOICES = [
+        (SYNC_EXPORT, 'خروجی'),
+        (SYNC_IMPORT, 'ورودی'),
+        (SYNC_DRY_RUN, 'پیش‌نمایش'),
+    ]
+
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.CASCADE,
+        related_name='sync_logs', verbose_name='آژانس',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='crm_sync_logs', verbose_name='کاربر',
+    )
+    sync_type = models.CharField(max_length=12, choices=SYNC_TYPE_CHOICES, verbose_name='نوع')
+    stats = models.JSONField(default=dict, blank=True, verbose_name='آمار')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'لاگ همگام‌سازی'
+        verbose_name_plural = 'لاگ‌های همگام‌سازی'
+        ordering = ['-created_at']
+
+
+class CRMAgencyAuditLog(models.Model):
+    """لاگ ممیزی عملیات تیم."""
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.CASCADE,
+        related_name='audit_logs', verbose_name='آژانس',
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='crm_audit_actions', verbose_name='کاربر',
+    )
+    event = models.CharField(max_length=40, verbose_name='رویداد')
+    payload = models.JSONField(default=dict, blank=True, verbose_name='جزئیات')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'ممیزی تیم'
+        verbose_name_plural = 'ممیزی‌های تیم'
+        ordering = ['-created_at']
+
+
+class CRMAgencyWebhookDelivery(models.Model):
+    """لاگ ارسال وب‌هوک."""
+    webhook = models.ForeignKey(
+        'CRMAgencyWebhook', on_delete=models.CASCADE,
+        related_name='deliveries', verbose_name='وب‌هوک',
+    )
+    event = models.CharField(max_length=40, verbose_name='رویداد')
+    status_code = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='کد HTTP')
+    success = models.BooleanField(default=False, verbose_name='موفق')
+    error = models.CharField(max_length=300, blank=True, verbose_name='خطا')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'ارسال وب‌هوک'
+        verbose_name_plural = 'ارسال‌های وب‌هوک'
+        ordering = ['-created_at']
+
+
+class CRMAgencyTeamGoal(models.Model):
+    """هدف عملکرد تیم یا عضو."""
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.CASCADE,
+        related_name='team_goals', verbose_name='آژانس',
+    )
+    member = models.ForeignKey(
+        'CRMAgencyMember', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='goals', verbose_name='عضو',
+    )
+    metric = models.CharField(
+        max_length=20,
+        choices=[
+            ('calls', 'تماس'),
+            ('visits', 'بازدید'),
+            ('deals_closed', 'معامله بسته'),
+        ],
+        verbose_name='شاخص',
+    )
+    target_value = models.PositiveIntegerField(default=0, verbose_name='هدف')
+    period_start = models.DateField(verbose_name='شروع دوره')
+    period_end = models.DateField(verbose_name='پایان دوره')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'هدف تیم'
+        verbose_name_plural = 'اهداف تیم'
+        ordering = ['-period_start']
 
 
 class CustomerTransferLog(models.Model):

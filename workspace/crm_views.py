@@ -2406,7 +2406,9 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
                 request_type=CRMAgencyMembershipRequest.TYPE_JOIN,
                 status=CRMAgencyMembershipRequest.STATUS_PENDING,
             ).select_related('agency')
-        tab = self.request.GET.get('tab', 'overview')
+        tab = self.request.GET.get('tab')
+        if not tab:
+            tab = 'command' if (agency and can_manage_team(user)) else 'overview'
         manager_only = {'sync', 'webhooks', 'transfers', 'command', 'settings', 'audit'}
         if tab in manager_only and not can_manage_team(user):
             tab = 'overview'

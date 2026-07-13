@@ -1,7 +1,7 @@
 {% extends 'workspace/crm/base_crm.html' %}
 {% load static workspace_tags crm_tags %}
 
-{% block page_title %}تیم آژانس{% endblock %}
+{% block page_title %}آژانس{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_actions %}{% endblock %}
@@ -34,12 +34,12 @@
                 </div>
                 {% else %}
                 <div class="crm-team-hero-titles">
-                    <h1 class="crm-dash-bar-title">تیم آژانس</h1>
-                    <p class="crm-dash-bar-sub">همکاری حرفه‌ای بین مشاوران املاک</p>
+                    <h1 class="crm-dash-bar-title">آژانس املاک</h1>
+                    <p class="crm-dash-bar-sub">ایجاد یا پیوستن به آژانس مشترک</p>
                 </div>
                 {% endif %}
                 {% if crm_agency and can_manage_team %}
-                <div class="crm-team-hero-actions" role="toolbar" aria-label="عملیات تیم">
+                <div class="crm-team-hero-actions" role="toolbar" aria-label="عملیات آژانس">
                     <a href="?tab=members" class="crm-dash-act" title="مدیریت اعضا"><i class="fas fa-users-gear"></i><span>اعضا</span></a>
                     <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-add-member">
                         <i class="fas fa-user-plus"></i><span>عضو جدید</span>
@@ -159,16 +159,16 @@
     </section>
     {% else %}
 
-    <nav class="crm-team-tabs-v2" aria-label="بخش‌های تیم">
-        <a href="?tab=overview" class="crm-team-tab-v2 {% if tab == 'overview' %}active{% endif %}">
-            <i class="fas fa-chart-line"></i><span>عملکرد</span>
-        </a>
+    <nav class="crm-team-tabs-v2" aria-label="بخش‌های آژانس">
         {% if can_manage_team %}
         <a href="?tab=command" class="crm-team-tab-v2 {% if tab == 'command' %}active{% endif %}">
-            <i class="fas fa-gauge-high"></i><span>مرکز مدیریت</span>
+            <i class="fas fa-gauge-high"></i><span>داشبورد</span>
             {% if command_center and command_center.inbox_unassigned %}<em>{{ command_center.inbox_unassigned }}</em>{% endif %}
         </a>
         {% endif %}
+        <a href="?tab=overview" class="crm-team-tab-v2 {% if tab == 'overview' %}active{% endif %}">
+            <i class="fas fa-chart-line"></i><span>{% if can_view_team_performance %}گزارش عملکرد{% else %}عملکرد من{% endif %}</span>
+        </a>
         {% if can_view_team_inbox %}
         <a href="?tab=inbox" class="crm-team-tab-v2 {% if tab == 'inbox' %}active{% endif %}">
             <i class="fas fa-inbox"></i><span>صندوق سرنخ</span>
@@ -201,8 +201,14 @@
         {% endif %}
     </nav>
 
-    {# ── تب عملکرد ── #}
+    {# ── تب گزارش عملکرد ── #}
     {% if tab == 'overview' %}
+    <header class="crm-agency-tab-intro">
+        <div>
+            <h2>{% if can_view_team_performance %}گزارش عملکرد تیم{% else %}عملکرد شخصی{% endif %}</h2>
+            <p>{% if can_view_team_performance %}تحلیل آماری، مقایسه اعضا و رتبه‌بندی — برای کنترل روزانه به <a href="?tab=command">داشبورد مدیریت</a> بروید.{% else %}آمار فعالیت شما در آژانس{% endif %}</p>
+        </div>
+    </header>
     {% if can_view_team_performance %}
     <div class="crm-team-command-toolbar">
         <span>بازه:</span>

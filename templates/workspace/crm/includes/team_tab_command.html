@@ -1,17 +1,17 @@
 {% load crm_tags workspace_tags %}
-{# تب مرکز مدیریت #}
+{# تب داشبورد مدیریت آژانس — عملیات روزانه، نه گزارش عملکرد #}
 {% if tab == 'command' and can_manage_team %}
-<section class="crm-team-command crm-team-panel-v2" aria-label="مرکز مدیریت">
+<section class="crm-team-command crm-team-panel-v2" aria-label="داشبورد مدیریت آژانس">
     <header class="crm-team-panel-head-v2">
         <div>
-            <h2><i class="fas fa-gauge-high"></i> مرکز مدیریت</h2>
-            <p>نمای کلی عملیات تیم · بازه {{ perf_days }} روز اخیر</p>
+            <h2><i class="fas fa-building-user"></i> داشبورد مدیریت</h2>
+            <p>کنترل عملیات روزانه آژانس · بازه {{ perf_days }} روز</p>
         </div>
         <div class="crm-team-command-toolbar">
             <a href="?tab=command&days=7" class="crm-dash-act {% if perf_days == 7 %}crm-dash-act--primary{% endif %}">۷ روز</a>
             <a href="?tab=command&days=30" class="crm-dash-act {% if perf_days == 30 %}crm-dash-act--primary{% endif %}">۳۰ روز</a>
             <a href="?tab=command&days=90" class="crm-dash-act {% if perf_days == 90 %}crm-dash-act--primary{% endif %}">۹۰ روز</a>
-            <a href="{{ crm_team_report_csv_url }}?days={{ perf_days }}" class="crm-dash-act"><i class="fas fa-file-csv"></i><span>خروجی CSV</span></a>
+            <a href="{{ crm_team_report_csv_url }}?days={{ perf_days }}" class="crm-dash-act"><i class="fas fa-file-csv"></i><span>CSV</span></a>
         </div>
     </header>
 
@@ -25,7 +25,7 @@
                     <em>سرنخ بدون تخصیص</em>
                 </div>
                 {% if command_center.inbox_unassigned %}
-                <a href="?tab=inbox" class="crm-team-command-kpi-link">مشاهده صندوق</a>
+                <a href="?tab=inbox" class="crm-team-command-kpi-link">رفتن به صندوق</a>
                 {% endif %}
             </article>
             <article class="crm-team-command-kpi crm-team-command-kpi--warn">
@@ -53,46 +53,25 @@
                 <span class="crm-team-command-kpi-icon"><i class="fas fa-coins"></i></span>
                 <div>
                     <span class="crm-team-command-kpi-val">{{ command_center.commission_total|default:0|floatformat:0 }}</span>
-                    <em>کمیسیون (تومان)</em>
+                    <em>کمیسیون دوره</em>
                 </div>
             </article>
         </div>
 
         {% if command_center.alerts %}
         <section class="crm-team-alerts" aria-label="هشدارهای عملیاتی">
-            <h3 class="crm-team-section-title">هشدارها</h3>
             {% for alert in command_center.alerts %}
             <p class="crm-team-alert crm-team-alert--{{ alert.level }}"><i class="fas fa-bell"></i> {{ alert.text }}</p>
             {% endfor %}
         </section>
         {% else %}
-        <p class="crm-team-command-ok"><i class="fas fa-circle-check"></i> وضعیت عملیاتی تیم عادی است — هشداری ثبت نشده.</p>
+        <p class="crm-team-command-ok"><i class="fas fa-circle-check"></i> وضعیت عملیاتی عادی است.</p>
         {% endif %}
 
-        {% if team_goals %}
-        <section class="crm-team-goals" aria-label="اهداف تیم">
-            <h3 class="crm-team-section-title">اهداف دوره جاری</h3>
-        {% for g in team_goals %}
-        <article class="crm-team-goal-row">
-            <div class="crm-team-goal-head">
-                <strong>{{ g.member_name }}</strong>
-                <span>{{ g.goal.get_metric_display }}: {{ g.actual }}/{{ g.target }}</span>
-            </div>
-            <div class="crm-team-goal-meta">
-                <time><i class="fas fa-calendar-alt" aria-hidden="true"></i> {{ g.period_label }}</time>
-            </div>
-            <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
-        </article>
-        {% endfor %}
-        </section>
-        {% endif %}
-
-        {% if performance %}
-        {% include 'workspace/crm/includes/team_performance_overview.html' %}
-        {% endif %}
+        {% include 'workspace/crm/includes/team_command_ops.html' %}
     </div>
     {% else %}
-    <p class="crm-team-empty-v2">داده‌ای برای نمایش در مرکز مدیریت موجود نیست.</p>
+    <p class="crm-team-empty-v2">داده‌ای برای داشبورد مدیریت موجود نیست.</p>
     {% endif %}
 </section>
 {% endif %}

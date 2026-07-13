@@ -1,0 +1,163 @@
+{% load crm_tags workspace_tags %}
+{# پنل عملیاتی مرکز مدیریت — بدون تکرار گزارش عملکرد #}
+<div class="crm-agency-cockpit">
+    <nav class="crm-agency-quick-actions" aria-label="دسترسی سریع">
+        <a href="?tab=inbox" class="crm-agency-qact {% if command_center.inbox_unassigned %}crm-agency-qact--alert{% endif %}">
+            <i class="fas fa-inbox"></i>
+            <span>صندوق سرنخ</span>
+            {% if command_center.inbox_unassigned %}<em>{{ command_center.inbox_unassigned }}</em>{% endif %}
+        </a>
+        <a href="?tab=members" class="crm-agency-qact">
+            <i class="fas fa-users-gear"></i><span>اعضا</span>
+        </a>
+        <button type="button" class="crm-agency-qact" data-drawer-open="drawer-add-member">
+            <i class="fas fa-user-plus"></i><span>دعوت عضو</span>
+        </button>
+        <a href="?tab=settings" class="crm-agency-qact">
+            <i class="fas fa-sliders"></i><span>تنظیمات</span>
+        </a>
+        <a href="?tab=overview&days={{ perf_days }}" class="crm-agency-qact crm-agency-qact--accent">
+            <i class="fas fa-chart-pie"></i><span>گزارش عملکرد</span>
+        </a>
+        <a href="?tab=sync" class="crm-agency-qact">
+            <i class="fas fa-arrows-rotate"></i><span>همگام‌سازی</span>
+        </a>
+    </nav>
+
+    <div class="crm-agency-ops-grid">
+        <div class="crm-agency-ops-col">
+            {% if team_goals %}
+            <section class="crm-agency-ops-card" aria-label="اهداف فعال">
+                <header class="crm-agency-ops-card-head">
+                    <h3><i class="fas fa-bullseye"></i> اهداف دوره</h3>
+                    <a href="?tab=settings">مدیریت</a>
+                </header>
+                {% for g in team_goals %}
+                <article class="crm-team-goal-row">
+                    <div class="crm-team-goal-head">
+                        <strong>{{ g.member_name }}</strong>
+                        <span>{{ g.goal.get_metric_display }} · {{ g.actual }}/{{ g.target }}</span>
+                    </div>
+                    <div class="crm-team-goal-meta">
+                        <time><i class="fas fa-calendar-alt" aria-hidden="true"></i> {{ g.period_label }}</time>
+                    </div>
+                    <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
+                </article>
+                {% endfor %}
+            </section>
+            {% endif %}
+
+            {% if pending_join_requests or pending_invites_sent %}
+            <section class="crm-agency-ops-card crm-agency-ops-card--pending" aria-label="درخواست‌های در انتظار">
+                <header class="crm-agency-ops-card-head">
+                    <h3><i class="fas fa-hourglass-half"></i> نیاز به اقدام</h3>
+                    <a href="?tab=members">مشاهده همه</a>
+                </header>
+                <ul class="crm-agency-pending-list">
+                    {% for req in pending_join_requests|slice:":4" %}
+                    <li>
+                        <strong>{{ req.user.get_full_name|default:req.user.phone }}</strong>
+                        <span>درخواست عضویت</span>
+                    </li>
+                    {% endfor %}
+                    {% for req in pending_invites_sent|slice:":4" %}
+                    <li>
+                        <strong>{{ req.user.get_full_name|default:req.user.phone }}</strong>
+                        <span>دعوت در انتظار تأیید</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+
+            {% if recent_transfers %}
+            <section class="crm-agency-ops-card" aria-label="انتقال‌های اخیر">
+                <header class="crm-agency-ops-card-head">
+                    <h3><i class="fas fa-right-left"></i> انتقال‌های اخیر</h3>
+                    <a href="?tab=transfers">همه</a>
+                </header>
+                <ul class="crm-agency-transfer-snippet">
+                    {% for t in recent_transfers|slice:":5" %}
+                    <li>
+                        <strong>{{ t.customer.name }}</strong>
+                        <span>{{ t.from_user.get_full_name|default:t.from_user.username }} → {{ t.to_user.get_full_name|default:t.to_user.username }}</span>
+                        <time>{{ t.created_at|ws_jalali_date }}</time>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+        </div>
+
+        <div class="crm-agency-ops-col">
+            {% if performance and performance.members %}
+            <section class="crm-agency-ops-card crm-agency-ops-card--rank" aria-label="برترین‌های دوره">
+                <header class="crm-agency-ops-card-head">
+                    <h3><i class="fas fa-trophy"></i> سه نفر برتر · {{ perf_days }} روز</h3>
+                    <a href="?tab=overview&days={{ perf_days }}">گزارش کامل</a>
+                </header>
+                <ol class="crm-agency-top3">
+                    {% for row in performance.members|slice:":3" %}
+                    <li class="crm-agency-top3-row crm-agency-top3-row--{{ forloop.counter }}">
+                        <span class="crm-agency-top3-rank">{{ forloop.counter }}</span>
+                        <span class="crm-team-avatar" style="--hue: {{ row.name|crm_avatar_hue }}">{{ row.name|crm_initials }}</span>
+                        <div class="crm-agency-top3-body">
+                            <strong>{{ row.name }}</strong>
+                            <span>{{ row.role }}</span>
+                        </div>
+                        <div class="crm-agency-top3-score">{{ row.score_pct }}%</div>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </section>
+            {% endif %}
+
+            {% if command_center.inactive_members %}
+            <section class="crm-agency-ops-card crm-agency-ops-card--warn" aria-label="اعضای کم‌فعال">
+                <header class="crm-agency-ops-card-head">
+                    <h3><i class="fas fa-user-clock"></i> نیاز به پیگیری</h3>
+                </header>
+                <p class="crm-agency-inactive-note">بدون فعالیت در {{ perf_days }} روز اخیر:</p>
+                <ul class="crm-agency-inactive-list">
+                    {% for name in command_center.inactive_members %}
+                    <li>{{ name }}</li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+
+            {% if license_dashboard and license_dashboard.portfolios %}
+            <section class="crm-agency-ops-card crm-agency-ops-card--license" aria-label="وضعیت لایسنس">
+                <header class="crm-agency-ops-card-head">
+                    <h3><i class="fas fa-key"></i> لایسنس آژانس</h3>
+                </header>
+                <div class="crm-agency-license-stats">
+                    {% with p=license_dashboard.portfolios.0 %}
+                    <div><span>{{ p.slots_used }}</span><em>صندلی استفاده</em></div>
+                    <div><span>{{ p.slots_available }}</span><em>صندلی آزاد</em></div>
+                    {% endwith %}
+                    <div><span>{{ license_dashboard.team_members|length }}</span><em>عضو</em></div>
+                </div>
+            </section>
+            {% endif %}
+
+            {% if audit_logs %}
+            <section class="crm-agency-ops-card" aria-label="آخرین رویدادها">
+                <header class="crm-agency-ops-card-head">
+                    <h3><i class="fas fa-clipboard-list"></i> رویدادهای اخیر</h3>
+                    <a href="?tab=audit">ممیزی</a>
+                </header>
+                <ul class="crm-agency-audit-snippet">
+                    {% for log in audit_logs|slice:":6" %}
+                    <li>
+                        <code>{{ log.event }}</code>
+                        <span>{{ log.actor.get_full_name|default:log.actor.username|default:"سیستم" }}</span>
+                        <time>{{ log.created_at|ws_jalali_date }}</time>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+        </div>
+    </div>
+</div>

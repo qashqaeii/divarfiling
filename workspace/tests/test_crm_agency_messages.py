@@ -90,7 +90,38 @@ class CRMAgencyMessagesTests(TestCase):
         self.assertIsNotNone(data.get('thread'))
         self.assertEqual(data['thread']['thread']['kind'], 'broadcast')
 
-    def test_team_messages_tab_renders(self):
+    def test_broadcast_two_advisors_all_members(self):
+        advisor2 = User.objects.create_user(username='advisor2', phone='09122222222', password='pass12345')
+        CRMAgencyMember.objects.create(agency=self.agency, user=advisor2, role='advisor')
+        thread = send_broadcast_message(self.owner, 'پیام برای همه', subject='اطلاعیه', target_roles=[])
+        self.assertEqual(thread.participants.count(), 3)
+        detail = get_thread_detail(self.owner, thread.pk)
+        self.assertIsNotNone(detail)
+        self.assertEqual(unread_message_count(self.advisor), 1)
+        self.assertEqual(unread_message_count(advisor2), 1)
+
+    def test_broadcast_two_advisors_via_api_form(self):
+        advisor2 = User.objects.create_user(username='advisor2b', phone='09123333333', password='pass12345')
+        CRMAgencyMember.objects.create(agency=self.agency, user=advisor2, role='advisor')
+        client = Client()
+        client.force_login(self.owner)
+        resp = client.post(
+            reverse('workspace:api_crm_team_messages'),
+            {
+                'kind': 'broadcast',
+                'body': 'سلام مشاوران',
+                'subject': 'جلسه',
+                'target_roles': 'advisor',
+            },
+        )
+        self.assertEqual(resp.status_code, 200, resp.content.decode())
+        data = resp.json()
+        self.assertTrue(data['ok'], data)
+        self.assertIsNotNone(data.get('thread'))
+        self.assertEqual(data['thread']['thread']['kind'], 'broadcast')
+        self.assertEqual(unread_message_count(self.advisor), 1)
+        self.assertEqual(unread_message_count(advisor2), 1)
+
         client = Client()
         client.force_login(self.owner)
         resp = client.get(reverse('workspace:crm_team'), {'tab': 'messages'})

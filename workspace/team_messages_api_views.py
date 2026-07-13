@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views import View
 
@@ -68,18 +69,22 @@ class TeamMessagesAPIView(_MessagesAPIBase):
         if err:
             return err
         try:
-            if request.content_type and 'multipart' in request.content_type:
+            if request.POST:
                 payload = request.POST
                 files = request.FILES.getlist('attachments')
-            else:
+            elif request.body:
                 payload = json.loads(request.body.decode('utf-8') or '{}')
                 files = []
-            kind = payload.get('kind', 'direct')
+            else:
+                payload = {}
+                files = []
+            kind = (payload.get('kind') or 'direct').strip()
             body = payload.get('body', '')
             if kind == 'broadcast':
                 roles = payload.getlist('target_roles') if hasattr(payload, 'getlist') else (payload.get('target_roles') or [])
                 if isinstance(roles, str):
                     roles = [roles]
+                roles = [r for r in roles if r]
                 thread = send_broadcast_message(
                     request.user,
                     body,
@@ -88,7 +93,8 @@ class TeamMessagesAPIView(_MessagesAPIBase):
                     attachments=files,
                 )
             else:
-                recipient_id = int(payload.get('recipient_member_id', 0))
+                recipient_raw = payload.get('recipient_member_id', 0) or 0
+                recipient_id = int(recipient_raw)
                 thread = send_direct_message(
                     request.user,
                     recipient_id,
@@ -98,7 +104,11 @@ class TeamMessagesAPIView(_MessagesAPIBase):
                 )
         except (json.JSONDecodeError, ValueError, TypeError) as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        except IntegrityError:
+            return JsonResponse({'ok': False, 'error': 'خطا در ثبت شرکت‌کنندگان پیام. دوباره تلاش کنید.'}, status=400)
         detail = get_thread_detail(request.user, thread.pk)
+        if not detail:
+            return JsonResponse({'ok': False, 'error': 'پیام ارسال شد اما دسترسی به مکالمه ممکن نشد.'}, status=500)
         return JsonResponse({'ok': True, 'thread': detail})
 
 

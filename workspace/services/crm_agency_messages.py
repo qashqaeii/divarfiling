@@ -100,10 +100,29 @@ def validate_attachment(uploaded_file) -> None:
 
 def _participants_for_broadcast(agency: CRMAgency, target_roles: List[str]) -> List[CRMAgencyMember]:
     members = list(agency_members(agency))
-    if not target_roles:
+    roles = [r for r in (target_roles or []) if r]
+    if not roles:
         return members
-    roles = set(target_roles)
-    return [m for m in members if m.role in roles]
+    role_set = set(roles)
+    return [m for m in members if m.role in role_set]
+
+
+def _dedupe_members(members: List[CRMAgencyMember]) -> List[CRMAgencyMember]:
+    seen: set[int] = set()
+    unique: List[CRMAgencyMember] = []
+    for member in members:
+        if member.pk in seen:
+            continue
+        seen.add(member.pk)
+        unique.append(member)
+    return unique
+
+
+def _broadcast_targets(agency: CRMAgency, membership: CRMAgencyMember, target_roles: List[str]) -> List[CRMAgencyMember]:
+    targets = _dedupe_members(_participants_for_broadcast(agency, target_roles))
+    if membership.pk not in {m.pk for m in targets}:
+        targets.append(membership)
+    return _dedupe_members(targets)
 
 
 def _get_or_create_direct_thread(
@@ -229,7 +248,7 @@ def send_broadcast_message(
     body = (body or '').strip()
     if not body and not attachments:
         raise ValueError('متن یا فایل ضمیمه الزامی است.')
-    roles = list(target_roles or [])
+    roles = [r for r in (target_roles or []) if r]
     thread = CRMAgencyMessageThread.objects.create(
         agency=membership.agency,
         kind=CRMAgencyMessageThread.KIND_BROADCAST,
@@ -237,12 +256,11 @@ def send_broadcast_message(
         created_by=actor,
         target_roles=roles,
     )
-    targets = _participants_for_broadcast(membership.agency, roles)
-    target_ids = {m.pk for m in targets}
-    if membership.pk not in target_ids:
-        targets.append(membership)
+    targets = _broadcast_targets(membership.agency, membership, roles)
+    if not targets:
+        raise ValueError('هیچ مخاطبی برای پیام گروهی یافت نشد.')
     for m in targets:
-        CRMAgencyMessageParticipant.objects.create(thread=thread, member=m)
+        _ensure_participant(thread, m)
     message = CRMAgencyMessage.objects.create(thread=thread, sender=actor, body=body)
     _save_attachments(message, attachments or [])
     _notify_recipients(thread, message, exclude_user_id=actor.pk)

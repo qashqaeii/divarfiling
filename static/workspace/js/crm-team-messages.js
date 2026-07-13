@@ -60,13 +60,29 @@
         folderUnread: root.querySelector('[data-folder-unread="inbox"]'),
     };
 
+    function parseResponse(r) {
+        return r.text().then(text => {
+            let data = {};
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch (_) {
+                data = { ok: false, error: r.ok ? 'پاسخ سرور نامعتبر بود.' : `خطای سرور (${r.status})` };
+            }
+            if (!r.ok && data.ok !== false) {
+                data.ok = false;
+                data.error = data.error || `خطای سرور (${r.status})`;
+            }
+            return data;
+        });
+    }
+
     function fetchJson(url, opts = {}) {
         const headers = Object.assign({ 'X-CSRFToken': csrf }, opts.headers || {});
         if (opts.body && !(opts.body instanceof FormData)) {
             headers['Content-Type'] = 'application/json';
         }
         return fetch(url, Object.assign({ credentials: 'same-origin' }, opts, { headers }))
-            .then(r => r.json());
+            .then(parseResponse);
     }
 
     function formatTime(iso) {
@@ -521,7 +537,7 @@
             credentials: 'same-origin',
             headers: { 'X-CSRFToken': csrf },
             body: fd,
-        }).then(r => r.json()).then(data => {
+        }).then(parseResponse).then(data => {
             if (data.ok) {
                 els.replyForm.reset();
                 const input = els.replyForm.querySelector('.crm-msg-composer-input');
@@ -536,14 +552,19 @@
 
     els.composeForm?.addEventListener('submit', e => {
         e.preventDefault();
+        if (composeKind === 'broadcast') {
+            els.recipientSelect?.removeAttribute('required');
+        }
         const fd = new FormData(els.composeForm);
-        fd.append('kind', composeKind);
+        fd.set('kind', composeKind);
         if (composeKind === 'broadcast') {
             fd.delete('recipient_member_id');
             fd.delete('target_roles');
             document.querySelectorAll('[name=target_roles]:checked').forEach(cb => {
                 fd.append('target_roles', cb.value);
             });
+        } else {
+            fd.delete('target_roles');
         }
         const submitBtn = els.composeSubmit;
         if (submitBtn) submitBtn.disabled = true;
@@ -552,7 +573,7 @@
             credentials: 'same-origin',
             headers: { 'X-CSRFToken': csrf },
             body: fd,
-        }).then(r => r.json()).then(data => {
+        }).then(parseResponse).then(data => {
             if (data.ok) {
                 hideCompose();
                 loadThreads().then(() => {

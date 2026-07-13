@@ -8,7 +8,7 @@ from typing import Optional, Set
 
 
 
-from django.db.models import Q, QuerySet
+from django.db.models import Case, IntegerField, Q, QuerySet, Value, When
 
 
 
@@ -37,6 +37,19 @@ def get_membership(user) -> Optional[CRMAgencyMember]:
         .filter(user=user, is_active=True)
 
         .select_related('agency', 'user')
+
+        .annotate(
+            role_rank=Case(
+                When(role='owner', then=Value(0)),
+                When(role='manager', then=Value(1)),
+                When(role='secretary', then=Value(2)),
+                When(role='advisor', then=Value(3)),
+                default=Value(9),
+                output_field=IntegerField(),
+            ),
+        )
+
+        .order_by('role_rank', 'joined_at')
 
         .first()
 

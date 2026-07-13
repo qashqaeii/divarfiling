@@ -1,11 +1,16 @@
 """تست دسترسی لایه‌ای میزکار."""
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from licenses.models import License
 from shop.models import LicensePlan, Order, Product
 from workspace.models import CRMAgency, CRMAgencyMember, CRMProperty, Dataset, Listing
+from workspace.services.access import get_bot_license_display
+from workspace.templatetags.workspace_tags import ws_subcategory_short
 
 User = get_user_model()
 
@@ -143,6 +148,38 @@ class WorkspaceAccessTests(TestCase):
         self.client.login(username='freeuser', password='pass1234')
         resp = self.client.get(reverse('workspace:dataset_list'))
         self.assertEqual(resp.status_code, 302)
+
+    def test_bot_license_display_without_license(self):
+        display = get_bot_license_display(self.user)
+        self.assertEqual(display['status_key'], 'none')
+        self.assertEqual(display['label'], 'بدون لایسنس')
+
+    def test_bot_license_display_active_with_days_remaining(self):
+        lic = self._create_active_license()
+        lic.expires_at = timezone.now() + timedelta(days=15)
+        lic.save(update_fields=['expires_at'])
+        display = get_bot_license_display(self.user)
+        self.assertTrue(display['active'])
+        self.assertEqual(display['days_remaining'], 15)
+        self.assertIn('۱۵ روز تا انقضا', display['label'])
+
+    def test_workspace_home_shows_license_pill(self):
+        lic = self._create_active_license()
+        lic.expires_at = timezone.now() + timedelta(days=10)
+        lic.save(update_fields=['expires_at'])
+        self.client.login(username='freeuser', password='pass1234')
+        resp = self.client.get(reverse('workspace:home'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'mk-hub-head-pill--license')
+        self.assertContains(resp, 'روز تا انقضا')
+
+    def test_ws_subcategory_short_labels(self):
+        self.assertEqual(
+            ws_subcategory_short('تجاری دفتر کار، اتاق اداری، مطب'),
+            'تجاری',
+        )
+        self.assertEqual(ws_subcategory_short('خانه و ویلا'), 'ویلایی')
+        self.assertEqual(ws_subcategory_short('آپارتمان'), 'آپارتمان')
 
 
 class PersonalFileFromListingTests(TestCase):

@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=97">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=9">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -20,6 +20,19 @@
             </h1>
             <p class="mk-hub-head-meta">
                 <span>{{ today_jalali }}</span>
+                {% if bot_license_display.active %}
+                <span class="mk-hub-head-pill mk-hub-head-pill--license{% if bot_license_display.expiring_soon %} is-warn{% endif %}" title="وضعیت لایسنس ربات">
+                    <i class="fas fa-key" aria-hidden="true"></i> {{ bot_license_display.label }}
+                </span>
+                {% elif bot_license_display.pending %}
+                <a href="{% url 'license_guide' %}" class="mk-hub-head-pill mk-hub-head-pill--license is-warn" title="فعال‌سازی لایسنس در ربات">
+                    <i class="fas fa-key" aria-hidden="true"></i> {{ bot_license_display.label }}
+                </a>
+                {% else %}
+                <a href="{% url 'workspace:upgrade' %}" class="mk-hub-head-pill mk-hub-head-pill--license" title="خرید لایسنس ربات">
+                    <i class="fas fa-lock" aria-hidden="true"></i> {{ bot_license_display.label }}
+                </a>
+                {% endif %}
                 {% if crm_stats.overdue_followups %}
                 <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="mk-hub-head-pill is-warn">{{ crm_stats.overdue_followups }} معوق</a>
                 {% elif crm_stats.due_today %}
@@ -255,7 +268,7 @@
                                     {% else %}<span class="mk-muted">—</span>{% endif %}
                                 </td>
                                 <td class="mk-col-subject" data-sort-value="{{ ds.subcategory|default:''|lower }}">
-                                    {% if ds.subcategory %}<span class="mk-subject">{{ ds.subcategory }}</span>{% else %}<span class="mk-muted">—</span>{% endif %}
+                                    {% if ds.subcategory %}<span class="mk-subject" title="{{ ds.subcategory }}">{{ ds.subcategory|ws_subcategory_short }}</span>{% else %}<span class="mk-muted">—</span>{% endif %}
                                 </td>
                                 <td class="mk-col-tx" data-sort-value="{{ tx.mode }}">
                                     {% if ds.transaction_type %}<span class="mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>{% else %}<span class="mk-muted">—</span>{% endif %}

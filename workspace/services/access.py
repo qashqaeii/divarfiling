@@ -1,4 +1,8 @@
 """کنترل دسترسی به امکانات ربات و میزکار."""
+from __future__ import annotations
+
+from typing import Any, Dict, Optional
+
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
@@ -68,6 +72,111 @@ def get_bot_access_state(user) -> dict:
         'has_purchased_bot': purchased,
         'has_pending_bot_activation': pending_activation,
         'bot_locked': not active,
+    }
+
+
+def _user_bot_license(user) -> Optional[License]:
+    """لایسنس مرتبط با کاربر — مالک یا عضو تیم با اسلات فعال."""
+    lic = (
+        _paid_license_qs(user)
+        .filter(status='active')
+        .select_related('plan')
+        .order_by('-expires_at')
+        .first()
+    )
+    if lic:
+        return lic
+    activation = (
+        _assigned_active_seat_qs(user)
+        .select_related('license', 'license__plan')
+        .order_by('-license__expires_at')
+        .first()
+    )
+    return activation.license if activation else None
+
+
+def get_bot_license_display(user) -> Dict[str, Any]:
+    """خلاصه نمایشی لایسنس ربات در هدر میزکار."""
+    from workspace.services.jalali_input import to_persian_digits
+
+    empty = {
+        'has_license': False,
+        'active': False,
+        'pending': False,
+        'expiring_soon': False,
+        'days_remaining': None,
+        'unlimited': False,
+        'label': 'بدون لایسنس',
+        'status_key': 'none',
+    }
+    if not user or not user.is_authenticated:
+        return empty
+
+    if getattr(settings, 'WORKSPACE_LICENSE_STAFF_BYPASS', False) and user.is_staff:
+        return {
+            'has_license': True,
+            'active': True,
+            'pending': False,
+            'expiring_soon': False,
+            'days_remaining': None,
+            'unlimited': True,
+            'label': 'لایسنس فعال',
+            'status_key': 'active',
+        }
+
+    state = get_bot_access_state(user)
+    if state['has_pending_bot_activation']:
+        return {
+            'has_license': True,
+            'active': False,
+            'pending': True,
+            'expiring_soon': False,
+            'days_remaining': None,
+            'unlimited': False,
+            'label': 'در انتظار فعال‌سازی',
+            'status_key': 'pending',
+        }
+
+    if not state['has_bot_license']:
+        return empty
+
+    lic = _user_bot_license(user)
+    if not lic:
+        return {
+            'has_license': True,
+            'active': True,
+            'pending': False,
+            'expiring_soon': False,
+            'days_remaining': None,
+            'unlimited': True,
+            'label': 'لایسنس فعال',
+            'status_key': 'active',
+        }
+
+    lic.sync_expiration_status(save=True)
+    days_remaining = None
+    unlimited = not lic.expires_at
+    expiring_soon = False
+    if lic.expires_at:
+        end_date = timezone.localtime(lic.expires_at).date()
+        today = timezone.localtime(timezone.now()).date()
+        days_remaining = max(0, (end_date - today).days)
+        expiring_soon = days_remaining <= 7
+
+    if unlimited:
+        label = 'لایسنس فعال — نامحدود'
+    else:
+        label = f'لایسنس فعال — {to_persian_digits(days_remaining)} روز تا انقضا'
+
+    return {
+        'has_license': True,
+        'active': True,
+        'pending': False,
+        'expiring_soon': expiring_soon,
+        'days_remaining': days_remaining,
+        'unlimited': unlimited,
+        'label': label,
+        'status_key': 'active',
     }
 
 

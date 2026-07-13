@@ -2,7 +2,11 @@
 from ai_workspace.constants import CRM_MESSAGE_TONE_CHOICES, is_ai_enabled
 from workspace.forms import DatasetUploadForm, ReminderForm, WorkspaceSettingsForm
 from workspace.mixins import get_or_create_settings
-from workspace.services.access import get_bot_access_state, get_bot_product_buy_url
+from workspace.services.access import (
+    get_bot_access_state,
+    get_bot_license_display,
+    get_bot_product_buy_url,
+)
 from workspace.services.jalali_input import format_jalali_today_label
 from workspace.services.support_tickets import get_user_ticket_stats
 from workspace.crm_views import _crm_nav_counts
@@ -17,6 +21,7 @@ def workspace_context(request):
     access = get_bot_access_state(user)
     ctx.update({
         'ws_settings': settings_obj,
+        'bot_license_display': get_bot_license_display(user),
         'bot_buy_url': get_bot_product_buy_url(),
         'crm_nav_counts': _crm_nav_counts(user),
         'support_nav_counts': get_user_ticket_stats(user),

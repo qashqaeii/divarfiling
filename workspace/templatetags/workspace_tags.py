@@ -10,6 +10,11 @@ from workspace.services.formatting import (
 
 register = template.Library()
 
+_SUBJECT_SHORT_LABELS = {
+    'تجاری دفتر کار، اتاق اداری، مطب': 'تجاری',
+    'خانه و ویلا': 'ویلایی',
+}
+
 
 @register.inclusion_tag('workspace/includes/fields.html')
 def render_fields(form, columns=1):
@@ -115,6 +120,15 @@ def ws_time(value):
 @register.filter
 def ws_tx_profile(transaction_type):
     return transaction_profile(transaction_type)
+
+
+@register.filter
+def ws_subcategory_short(value):
+    """برچسب کوتاه موضوع/زیردسته برای جداول فشرده."""
+    if not value:
+        return value
+    text = str(value).strip()
+    return _SUBJECT_SHORT_LABELS.get(text, text)
 
 
 @register.simple_tag

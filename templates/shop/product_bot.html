@@ -147,13 +147,13 @@
                 </div>
                 <div class="pb-plan-deck">
                     {% for plan in plans %}
-                    {% cycle 'sky' 'violet' 'emerald' as plan_accent silent %}
-                    {% cycle 'starter' 'pro' 'plus' as plan_tier silent %}
-                    {% cycle 'fa-calendar-day' 'fa-calendar-week' 'fa-calendar' as plan_icon silent %}
-                    <article class="pb-plan-card{% if forloop.counter == 2 %} pb-plan-card--featured{% endif %}" data-accent="{{ plan_accent }}" data-tier="{{ plan_tier }}">
+                    {% cycle 'amber' 'sky' 'violet' 'emerald' as plan_accent silent %}
+                    {% cycle 'trial' 'starter' 'pro' 'plus' as plan_tier silent %}
+                    {% cycle 'fa-bolt' 'fa-calendar-day' 'fa-calendar-week' 'fa-calendar' as plan_icon silent %}
+                    <article class="pb-plan-card{% if forloop.counter == 3 %} pb-plan-card--featured{% endif %}" data-accent="{{ plan_accent }}" data-tier="{{ plan_tier }}">
                         <span class="pb-plan-card-glow" aria-hidden="true"></span>
                         <span class="pb-plan-card-watermark" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
-                        {% if forloop.counter == 2 %}
+                        {% if forloop.counter == 3 %}
                         <span class="pb-plan-card-ribbon">
                             <i class="fas fa-star" aria-hidden="true"></i>
                             پیشنهادی
@@ -176,7 +176,7 @@
                                 <span class="pb-plan-card-amount">{{ plan.price|currency }}</span>
                                 <span class="pb-plan-card-unit">تومان</span>
                             </div>
-                            <span class="pb-plan-card-price-note">شامل ربات ویندوز و اپ اندروید</span>
+                            <span class="pb-plan-card-price-note">{% if plan.plan_type == 'daily' %}مناسب برای آشنایی با محصول{% else %}شامل ربات ویندوز و اپ اندروید{% endif %}</span>
                         </div>
                         <div class="pb-plan-card-platforms" aria-hidden="true">
                             <span class="pb-plan-card-platform pb-plan-card-platform--win">
@@ -194,7 +194,7 @@
                             <li><i class="fas fa-check" aria-hidden="true"></i> فعال‌سازی فوری پس از خرید</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> پشتیبانی نصب و راه‌اندازی</li>
                         </ul>
-                        <a href="{% url 'buy' product.slug %}?plan={{ plan.id }}" class="pb-plan-card-cta{% if forloop.counter == 2 %} pb-plan-card-cta--primary{% endif %}">
+                        <a href="{% url 'buy' product.slug %}?plan={{ plan.id }}" class="pb-plan-card-cta{% if forloop.counter == 3 %} pb-plan-card-cta--primary{% endif %}">
                             <span>خرید {{ plan.get_plan_type_display }}</span>
                             <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         </a>

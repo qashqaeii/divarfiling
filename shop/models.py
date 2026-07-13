@@ -157,6 +157,7 @@ class LicensePlan(models.Model):
         ('single', 'یک‌سیستمی'),
         ('multi', 'چندسیستمی'),
         ('lifetime', 'مادام‌العمر'),
+        ('daily', 'یک‌روزه'),
         ('monthly', 'یک‌ماهه'),
         ('quarterly', 'سه‌ماهه'),
         ('yearly', 'یک‌ساله'),

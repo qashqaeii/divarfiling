@@ -84,6 +84,17 @@
                     </div>
                     {% endif %}
 
+                    {% if phone_verification_required %}
+                    <div class="ck-promo-msg" role="status">
+                        <i class="fas fa-mobile-screen" aria-hidden="true"></i>
+                        <p>
+                            <strong>تأیید شماره موبایل لازم است.</strong>
+                            برای خرید پلن آزمایشی یک‌روزه، ابتدا شماره حساب خود را با پیامک تأیید کنید.
+                            <a href="{{ verify_phone_url }}">تأیید شماره موبایل</a>
+                        </p>
+                    </div>
+                    {% endif %}
+
                     {% if has_previous_purchase and product.repeat_purchase_discount > 0 %}
                     <div class="ck-loyalty" role="status">
                         <i class="fas fa-star" aria-hidden="true"></i>

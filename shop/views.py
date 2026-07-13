@@ -216,6 +216,11 @@ class BuyView(LoginRequiredMixin, CreateView):
     
     def dispatch(self, request, *args, **kwargs):
         self.product = get_object_or_404(Product, slug=kwargs['slug'], is_active=True)
+        if request.user.is_authenticated:
+            plan = self._get_selected_plan()
+            blocked = self._redirect_for_plan_requirements(plan)
+            if blocked:
+                return blocked
         return super().dispatch(request, *args, **kwargs)
     
     def get_form_kwargs(self):
@@ -234,6 +239,24 @@ class BuyView(LoginRequiredMixin, CreateView):
             return self.product.plans.get(pk=int(plan_id), is_active=True)
         except (LicensePlan.DoesNotExist, ValueError, TypeError):
             return None
+
+    def _get_selected_plan(self):
+        plan_id = self.request.POST.get('plan') if self.request.method == 'POST' else self.request.GET.get('plan')
+        if not plan_id:
+            return None
+        try:
+            return self.product.plans.get(pk=int(plan_id), is_active=True)
+        except (LicensePlan.DoesNotExist, ValueError, TypeError):
+            return None
+
+    def _redirect_for_plan_requirements(self, plan):
+        from shop.services.plan_guards import user_meets_plan_requirements, verify_phone_redirect_url
+
+        ok, message = user_meets_plan_requirements(self.request.user, plan)
+        if ok:
+            return None
+        messages.warning(self.request, message)
+        return redirect(verify_phone_redirect_url(self.request.get_full_path()))
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -314,10 +337,27 @@ class BuyView(LoginRequiredMixin, CreateView):
             'payment_methods': payment_methods,
             'show_payment_choice': len(payment_methods) > 1,
         })
+
+        from shop.services.plan_guards import requires_phone_verification_for_plan, verify_phone_redirect_url
+
+        selected_plan = None
+        if selected_plan_id:
+            selected_plan = self.product.plans.filter(pk=selected_plan_id, is_active=True).first()
+        context['phone_verification_required'] = (
+            self.request.user.is_authenticated
+            and requires_phone_verification_for_plan(selected_plan)
+            and not self.request.user.phone_verified
+        )
+        if context['phone_verification_required']:
+            context['verify_phone_url'] = verify_phone_redirect_url(self.request.get_full_path())
         
         return context
     
     def form_valid(self, form):
+        blocked = self._redirect_for_plan_requirements(form.cleaned_data.get('plan'))
+        if blocked:
+            return blocked
+
         order = form.save(commit=False)
         order.user = self.request.user
         order.product = self.product

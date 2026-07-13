@@ -38,6 +38,17 @@ def _get_payable_order(request, order_id) -> Order:
     return get_object_or_404(Order, id=order_id, user=request.user)
 
 
+def _guard_order_plan_requirements(request, order):
+    from shop.services.plan_guards import user_meets_plan_requirements, verify_phone_redirect_url
+
+    ok, message = user_meets_plan_requirements(request.user, order.plan)
+    if ok:
+        return None
+    messages.error(request, message)
+    next_url = f"{reverse('buy', kwargs={'slug': order.product.slug})}?plan={order.plan_id}"
+    return redirect(verify_phone_redirect_url(next_url))
+
+
 def _order_ready_for_online_payment(order: Order) -> bool:
     return order.status in ('pending', 'failed')
 
@@ -101,6 +112,9 @@ class PaymentCheckoutView(LoginRequiredMixin, View):
 
     def get(self, request, order_id):
         order = _get_payable_order(request, order_id)
+        blocked = _guard_order_plan_requirements(request, order)
+        if blocked:
+            return blocked
         pay_settings = _payment_settings()
 
         if order.status == 'paid':
@@ -150,6 +164,9 @@ class PaymentInitiateView(LoginRequiredMixin, View):
 
     def _initiate(self, request, order_id):
         order = _get_payable_order(request, order_id)
+        blocked = _guard_order_plan_requirements(request, order)
+        if blocked:
+            return blocked
         pay_settings = _payment_settings()
 
         if order.status == 'paid':
@@ -218,6 +235,9 @@ class CardTransferView(LoginRequiredMixin, View):
 
     def get(self, request, order_id):
         order = self._get_order(request, order_id)
+        blocked = _guard_order_plan_requirements(request, order)
+        if blocked:
+            return blocked
         pay_settings = _payment_settings()
 
         if order.status == 'paid':
@@ -243,6 +263,9 @@ class CardTransferView(LoginRequiredMixin, View):
 
     def post(self, request, order_id):
         order = self._get_order(request, order_id)
+        blocked = _guard_order_plan_requirements(request, order)
+        if blocked:
+            return blocked
         pay_settings = _payment_settings()
 
         if order.status == 'pending_verification':

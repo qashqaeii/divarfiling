@@ -407,6 +407,125 @@ class OtpRegisterPasswordView(View):
         return redirect(next_url)
 
 
+class OtpVerifyPhoneView(View):
+    """تأیید موبایل حساب جاری — برای خرید پلن آزمایشی و موارد مشابه."""
+
+    template_name = 'accounts/otp_verify_phone.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            login_url = reverse('login')
+            next_path = request.get_full_path()
+            return redirect(f'{login_url}?next={next_path}')
+        if request.user.phone_verified:
+            messages.info(request, 'شماره موبایل شما قبلاً تأیید شده است.')
+            return redirect(_safe_next(request, 'dashboard'))
+        return super().dispatch(request, *args, **kwargs)
+
+    def _account_phone(self, request) -> str:
+        from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
+
+        return normalize_phone(request.user.phone or '')
+
+    def _ensure_otp_sent(self, request, phone: str) -> bool:
+        if (
+            request.session.get(SESSION_PURPOSE) == 'verify_phone'
+            and request.session.get(SESSION_PHONE) == phone
+        ):
+            return True
+        try:
+            request_otp(phone, 'verify_phone', request=request)
+            _store_challenge(request, phone, 'verify_phone')
+            return True
+        except OtpRateLimitError as exc:
+            messages.error(request, str(exc))
+        except OtpError as exc:
+            messages.error(request, str(exc))
+        return False
+
+    def get(self, request):
+        from accounts.phone_utils import is_valid_iran_mobile
+
+        phone = self._account_phone(request)
+        if not is_valid_iran_mobile(phone):
+            messages.error(
+                request,
+                'شماره موبایل حساب شما معتبر نیست. ابتدا از پروفایل آن را اصلاح کنید.',
+            )
+            return redirect('profile')
+
+        self._ensure_otp_sent(request, phone)
+        return render(request, self.template_name, {
+            'form': OtpCodeForm(),
+            'phone_display': _display_phone(phone),
+            'next': request.GET.get('next', ''),
+            'resend_url': reverse('otp_verify_phone_resend'),
+        })
+
+    def post(self, request):
+        from accounts.phone_utils import is_valid_iran_mobile
+
+        phone = self._account_phone(request)
+        if not is_valid_iran_mobile(phone):
+            messages.error(request, 'شماره موبایل حساب شما معتبر نیست.')
+            return redirect('profile')
+
+        form = OtpCodeForm(request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {
+                'form': form,
+                'phone_display': _display_phone(phone),
+                'next': request.POST.get('next', ''),
+                'resend_url': reverse('otp_verify_phone_resend'),
+            })
+
+        session_phone = request.session.get(SESSION_PHONE)
+        if session_phone != phone:
+            messages.error(request, 'نشست تأیید منقضی شده — کد جدید درخواست دهید.')
+            return redirect(request.path + (f'?next={request.POST.get("next")}' if request.POST.get('next') else ''))
+
+        try:
+            verify_otp(phone, 'verify_phone', form.cleaned_data['code'])
+        except OtpError as exc:
+            messages.error(request, str(exc))
+            return render(request, self.template_name, {
+                'form': form,
+                'phone_display': _display_phone(phone),
+                'next': request.POST.get('next', ''),
+                'resend_url': reverse('otp_verify_phone_resend'),
+            })
+
+        request.user.mark_phone_verified()
+        next_url = _safe_next(request, 'dashboard')
+        _clear_otp_session(request)
+        messages.success(request, 'شماره موبایل شما با موفقیت تأیید شد.')
+        return redirect(next_url)
+
+
+class OtpVerifyPhoneResendView(View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request):
+        phone = normalize_phone(request.user.phone or '')
+        try:
+            request_otp(phone, 'verify_phone', request=request)
+            _store_challenge(request, phone, 'verify_phone')
+            messages.success(request, 'کد تأیید مجدداً ارسال شد.')
+        except OtpRateLimitError as exc:
+            messages.error(request, str(exc))
+        except OtpError as exc:
+            messages.error(request, str(exc))
+
+        url = reverse('otp_verify_phone')
+        next_url = request.POST.get('next')
+        if next_url:
+            url = f'{url}?next={next_url}'
+        return redirect(url)
+
+
 def _display_phone(phone: str) -> str:
     phone = normalize_phone(phone or '')
     if len(phone) == 11:

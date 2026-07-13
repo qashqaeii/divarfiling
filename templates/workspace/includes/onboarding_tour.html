@@ -143,16 +143,7 @@ window.wsOnboardingConfig = {
             title: "تیم",
             desc: "همکاری و تخصیص کار بین اعضای آژانس — نقش‌ها، دسترسی‌ها و پیگیری مشترک روی مخاطبین و معاملات."
         },
-        {
-            target: "[data-tour='nav-compare']",
-            icon: "fa-code-compare",
-            accent: "#14B8A6",
-            placement: "left",
-            openSidebar: true,
-            scrollSidebar: true,
-            title: "مقایسه",
-            desc: "{% if has_bot_license %}مقایسهٔ side-by-side چند ملک یا آگهی — تحلیل قیمت، متراژ و ویژگی‌ها برای مشاورهٔ دقیق‌تر.{% else %}ابزار مقایسهٔ حرفه‌ای ملک‌ها — با خرید ربات فعال می‌شود. روی این مورد کلیک کنید تا جزئیات ارتقا را ببینید.{% endif %}"
-        },
+        {% comment %}مقایسه — موقتاً مخفی از سایدبار{% endcomment %}
         {
             target: "[data-tour='nav-tools']",
             icon: "fa-wand-magic-sparkles",

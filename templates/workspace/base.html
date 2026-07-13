@@ -146,17 +146,12 @@
                 <div class="ws-nav-section">ابزارها</div>
 
                 {% if has_bot_license %}
-                <a href="{% url 'workspace:compare' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'compare' %}active{% endif %}" data-tour="nav-compare">
-                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='scale' size='nav' only %}</span><span>مقایسه</span>
-                </a>
+                {% comment %}مقایسه — موقتاً مخفی{% endcomment %}
                 <a href="{% url 'workspace:tools' %}" class="ws-nav-item {% if request.resolver_match.url_name == 'tools' %}active{% endif %}" data-tour="nav-tools">
                     <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calculator' size='nav' only %}</span><span>ابزارهای هوشمند</span>
                 </a>
                 {% else %}
-                <a href="{% url 'workspace:upgrade' %}?feature=compare" class="ws-nav-item ws-nav-locked" data-tour="nav-compare">
-                    <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='scale' size='nav' only %}</span><span>مقایسه</span>
-                    <i class="fas fa-lock ws-nav-lock"></i>
-                </a>
+                {% comment %}مقایسه — موقتاً مخفی{% endcomment %}
                 <a href="{% url 'workspace:upgrade' %}?feature=tools" class="ws-nav-item ws-nav-locked" data-tour="nav-tools">
                     <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calculator' size='nav' only %}</span><span>ابزارهای هوشمند</span>
                     <i class="fas fa-lock ws-nav-lock"></i>

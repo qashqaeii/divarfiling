@@ -25,7 +25,7 @@ from workspace.models import (
     CRMAgencyPanelNotification,
 )
 from workspace.services.crm_audit import log_agency_audit
-from workspace.services.crm_scope import agency_members, get_membership
+from workspace.services.crm_scope import agency_members, get_membership, can_manage_team
 
 
 def _member_display(member: CRMAgencyMember) -> str:
@@ -42,7 +42,12 @@ def _serialize_attachment(att: CRMAgencyMessageAttachment) -> Dict[str, Any]:
     }
 
 
-def _serialize_message(msg: CRMAgencyMessage, *, viewer_id: int) -> Dict[str, Any]:
+def _serialize_message(
+    msg: CRMAgencyMessage,
+    *,
+    viewer_id: int,
+    can_manage: bool = False,
+) -> Dict[str, Any]:
     sender = msg.sender
     return {
         'id': msg.pk,
@@ -50,6 +55,7 @@ def _serialize_message(msg: CRMAgencyMessage, *, viewer_id: int) -> Dict[str, An
         'sender_id': msg.sender_id,
         'sender_name': (sender.get_full_name() or sender.phone or sender.username) if sender else 'سیستم',
         'is_mine': msg.sender_id == viewer_id,
+        'can_delete': bool(msg.sender_id == viewer_id or can_manage),
         'reply_to_id': msg.reply_to_id,
         'created_at': msg.created_at.isoformat(),
         'attachments': [_serialize_attachment(a) for a in msg.attachments.all()],
@@ -61,6 +67,7 @@ def _serialize_thread_summary(
     participant: CRMAgencyMessageParticipant,
     *,
     viewer_id: int,
+    can_manage: bool = False,
 ) -> Dict[str, Any]:
     last_msg = (
         thread.messages.select_related('sender').prefetch_related('attachments').order_by('-created_at').first()
@@ -84,7 +91,9 @@ def _serialize_thread_summary(
         'is_archived': participant.is_archived,
         'unread_count': participant.unread_count,
         'updated_at': thread.updated_at.isoformat(),
-        'last_message': _serialize_message(last_msg, viewer_id=viewer_id) if last_msg else None,
+        'can_delete': True,
+        'can_purge': can_manage,
+        'last_message': _serialize_message(last_msg, viewer_id=viewer_id, can_manage=can_manage) if last_msg else None,
     }
 
 
@@ -343,8 +352,9 @@ def list_threads_for_user(
     total = qs.count()
     offset = max(0, (page - 1) * page_size)
     rows = list(qs.order_by('-thread__updated_at')[offset:offset + page_size])
+    can_manage = can_manage_team(user)
     items = [
-        _serialize_thread_summary(p.thread, p, viewer_id=user.pk)
+        _serialize_thread_summary(p.thread, p, viewer_id=user.pk, can_manage=can_manage)
         for p in rows
     ]
     return items, total
@@ -372,9 +382,12 @@ def get_thread_detail(user, thread_id: int) -> Optional[Dict[str, Any]]:
         .order_by('created_at')[:200]
     )
     mark_thread_read(part)
+    can_manage = can_manage_team(user)
     return {
-        'thread': _serialize_thread_summary(thread, part, viewer_id=user.pk),
-        'messages': [_serialize_message(m, viewer_id=user.pk) for m in messages],
+        'thread': _serialize_thread_summary(thread, part, viewer_id=user.pk, can_manage=can_manage),
+        'messages': [
+            _serialize_message(m, viewer_id=user.pk, can_manage=can_manage) for m in messages
+        ],
     }
 
 
@@ -423,6 +436,92 @@ def unread_message_count(user) -> int:
         unread_count__gt=0,
     ).aggregate(total=Sum('unread_count'))
     return int(result['total'] or 0)
+
+
+def _delete_message_files(message: CRMAgencyMessage) -> None:
+    for att in message.attachments.all():
+        if att.file:
+            att.file.delete(save=False)
+
+
+def _purge_thread(thread: CRMAgencyMessageThread) -> None:
+    for msg in thread.messages.prefetch_related('attachments'):
+        _delete_message_files(msg)
+    thread.delete()
+
+
+@transaction.atomic
+def delete_message(actor, thread_id: int, message_id: int) -> bool:
+    membership = get_membership(actor)
+    if not membership:
+        raise ValueError('عضو آژانس نیستید.')
+    msg = (
+        CRMAgencyMessage.objects.filter(
+            pk=message_id,
+            thread_id=thread_id,
+            thread__agency=membership.agency,
+        )
+        .select_related('thread')
+        .first()
+    )
+    if not msg:
+        raise ValueError('پیام یافت نشد.')
+    part = CRMAgencyMessageParticipant.objects.filter(thread=msg.thread, member=membership).first()
+    if not part:
+        raise ValueError('به این مکالمه دسترسی ندارید.')
+    manager = can_manage_team(actor)
+    if msg.sender_id != actor.pk and not manager:
+        raise ValueError('فقط فرستنده یا مدیر می‌تواند این پیام را حذف کند.')
+    thread = msg.thread
+    _delete_message_files(msg)
+    msg.delete()
+    last = thread.messages.order_by('-created_at').first()
+    if not last:
+        _purge_thread(thread)
+    else:
+        CRMAgencyMessageThread.objects.filter(pk=thread.pk).update(updated_at=last.created_at)
+    log_agency_audit(membership.agency, actor, 'message.deleted', {
+        'thread_id': thread.pk,
+        'message_id': message_id,
+    })
+    return True
+
+
+@transaction.atomic
+def delete_thread_for_user(actor, thread_id: int, *, purge_all: bool = False) -> bool:
+    membership = get_membership(actor)
+    if not membership:
+        raise ValueError('عضو آژانس نیستید.')
+    part = (
+        CRMAgencyMessageParticipant.objects.filter(
+            thread_id=thread_id,
+            member=membership,
+            thread__agency=membership.agency,
+        )
+        .select_related('thread')
+        .first()
+    )
+    if not part:
+        raise ValueError('مکالمه یافت نشد.')
+    thread = part.thread
+    manager = can_manage_team(actor)
+    if purge_all:
+        if not manager:
+            raise ValueError('فقط مدیر می‌تواند مکالمه را برای همه حذف کند.')
+        _purge_thread(thread)
+        log_agency_audit(membership.agency, actor, 'message.deleted', {
+            'thread_id': thread_id,
+            'purge_all': True,
+        })
+        return True
+    part.delete()
+    if not thread.participants.exists():
+        _purge_thread(thread)
+    log_agency_audit(membership.agency, actor, 'message.deleted', {
+        'thread_id': thread_id,
+        'purge_all': False,
+    })
+    return True
 
 
 def purge_old_messages(*, retention_days: int = MESSAGE_RETENTION_DAYS) -> Dict[str, int]:

@@ -69,6 +69,7 @@ urlpatterns = [
     path('api/crm/team/messages/unread/', team_messages_api_views.TeamMessagesUnreadAPIView.as_view(), name='api_crm_team_messages_unread'),
     path('api/crm/team/messages/members/', team_messages_api_views.TeamMessagesMembersAPIView.as_view(), name='api_crm_team_messages_members'),
     path('api/crm/team/messages/<int:thread_id>/', team_messages_api_views.TeamMessageDetailAPIView.as_view(), name='api_crm_team_message_detail'),
+    path('api/crm/team/messages/<int:thread_id>/items/<int:message_id>/', team_messages_api_views.TeamMessageItemAPIView.as_view(), name='api_crm_team_message_item'),
     path('api/crm/team/notifications/', team_messages_api_views.TeamPanelNotificationsAPIView.as_view(), name='api_crm_team_notifications'),
     path('api/crm/team/announcements/', team_messages_api_views.TeamAnnouncementsAPIView.as_view(), name='api_crm_team_announcements'),
     path('api/crm/team/announcements/<int:announcement_id>/', team_messages_api_views.TeamAnnouncementDetailAPIView.as_view(), name='api_crm_team_announcement_detail'),

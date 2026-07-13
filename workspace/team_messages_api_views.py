@@ -11,6 +11,8 @@ from django.views import View
 from workspace.constants import AGENCY_ROLES
 from workspace.services.crm_agency_features import is_agency_feature_enabled
 from workspace.services.crm_agency_messages import (
+    delete_message,
+    delete_thread_for_user,
     get_thread_detail,
     list_threads_for_user,
     reply_to_thread,
@@ -146,7 +148,7 @@ class TeamMessageDetailAPIView(_MessagesAPIBase):
         if err:
             return err
         try:
-            if request.content_type and 'multipart' in request.content_type:
+            if request.POST:
                 body = request.POST.get('body', '')
                 files = request.FILES.getlist('attachments')
             else:
@@ -158,6 +160,33 @@ class TeamMessageDetailAPIView(_MessagesAPIBase):
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
         detail = get_thread_detail(request.user, message.thread_id)
         return JsonResponse({'ok': True, **detail})
+
+    def delete(self, request, thread_id):
+        m, err = self._check_messages()
+        if err:
+            return err
+        try:
+            payload = json.loads(request.body.decode('utf-8') or '{}') if request.body else {}
+            purge_all = bool(payload.get('purge_all'))
+            delete_thread_for_user(request.user, thread_id, purge_all=purge_all)
+        except (json.JSONDecodeError, ValueError) as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({'ok': True})
+
+
+class TeamMessageItemAPIView(_MessagesAPIBase):
+    def delete(self, request, thread_id, message_id):
+        m, err = self._check_messages()
+        if err:
+            return err
+        try:
+            delete_message(request.user, thread_id, message_id)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        detail = get_thread_detail(request.user, thread_id)
+        if detail:
+            return JsonResponse({'ok': True, **detail})
+        return JsonResponse({'ok': True, 'thread_removed': True})
 
 
 class TeamMessagesUnreadAPIView(_MessagesAPIBase):

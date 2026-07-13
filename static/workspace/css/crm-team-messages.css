@@ -1,188 +1,187 @@
-/* ═══════════════════════════════════════════════════════════
-   CRM Team Messages Pro — صندوق پیام داخلی آژانس
-   ═══════════════════════════════════════════════════════════ */
+/* =============================================================================
+   CRM Team Messages — Studio
+   ============================================================================= */
 
-.crm-app--team .crm-msg-hub--pro {
-    --msg-radius: 16px;
-    --msg-radius-sm: 12px;
-    --msg-accent: var(--ws-primary, #7c3aed);
-    --msg-glow: color-mix(in srgb, var(--msg-accent) 14%, transparent);
-    --msg-surface: var(--ws-surface);
-    --msg-muted: var(--ws-surface-2, #f8fafc);
-    --msg-border: color-mix(in srgb, var(--ws-border) 88%, transparent);
-    gap: 0.85rem;
+.crm-msg-hub--studio {
+    --m-accent: var(--ws-primary, var(--crm-accent, #7c3aed));
+    --m-accent-soft: color-mix(in srgb, var(--m-accent) 14%, transparent);
+    --m-accent-ring: color-mix(in srgb, var(--m-accent) 22%, transparent);
+    --m-surface: var(--ws-surface, #fff);
+    --m-elevated: var(--ws-surface-raised, color-mix(in srgb, var(--m-surface) 92%, #0f172a 8%));
+    --m-line: var(--ws-border, rgba(15, 23, 42, 0.08));
+    --m-text: var(--ws-text, #0f172a);
+    --m-muted: var(--ws-text-muted, #64748b);
+    --m-radius: 16px;
+    --m-radius-sm: 12px;
+    --m-radius-xs: 10px;
+    --m-shadow: 0 12px 40px -18px rgba(15, 23, 42, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
     min-width: 0;
+    color: var(--m-text);
+}
+
+.crm-app--team .crm-msg-hub--studio {
     background:
-        radial-gradient(ellipse 80% 45% at 100% -5%, rgba(124, 58, 237, 0.06), transparent 55%),
-        radial-gradient(ellipse 60% 40% at 0% 100%, rgba(37, 99, 235, 0.04), transparent 50%);
-    border-radius: var(--msg-radius);
+        radial-gradient(ellipse 65% 45% at 100% 0%, color-mix(in srgb, var(--m-accent) 6%, transparent), transparent 58%),
+        radial-gradient(ellipse 50% 38% at 0% 100%, rgba(37, 99, 235, 0.04), transparent 52%);
+    border-radius: calc(var(--m-radius) + 4px);
     padding: 0.15rem 0 0.35rem;
 }
 
-/* ─── Studio header ─── */
-.crm-msg-studio-head {
+.crm-msg-topbar {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
     flex-wrap: wrap;
-    padding: 0 0.15rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem 1rem;
+    padding: 0.35rem 0.15rem 0.55rem;
+    border-bottom: 1px solid var(--m-line);
 }
 
-.crm-msg-studio-brand {
+.crm-msg-topbar-brand {
     display: flex;
-    align-items: flex-start;
-    gap: 0.85rem;
+    align-items: center;
+    gap: 0.75rem;
     min-width: 0;
 }
 
-.crm-msg-studio-icon {
-    flex-shrink: 0;
-    width: 2.75rem;
-    height: 2.75rem;
+.crm-msg-topbar-mark {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 14px;
     display: grid;
     place-items: center;
-    border-radius: 14px;
-    font-size: 1.05rem;
-    color: var(--msg-accent);
-    background: linear-gradient(145deg, var(--msg-glow), color-mix(in srgb, #2563eb 8%, transparent));
-    border: 1px solid color-mix(in srgb, var(--msg-accent) 22%, var(--msg-border));
-    box-shadow: 0 8px 24px -10px color-mix(in srgb, var(--msg-accent) 35%, transparent);
+    font-size: 1rem;
+    color: var(--m-accent);
+    background: var(--m-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--m-accent) 18%, var(--m-line));
+    flex-shrink: 0;
 }
 
-.crm-msg-studio-kicker {
+.crm-msg-topbar-kicker {
     display: block;
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--msg-accent);
-    margin-bottom: 0.15rem;
+    color: var(--m-muted);
 }
 
-.crm-msg-studio-title {
-    margin: 0;
-    font-size: 1.15rem;
+.crm-msg-topbar-title {
+    margin: 0.12rem 0 0;
+    font-size: 1.05rem;
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     line-height: 1.2;
 }
 
-.crm-msg-studio-desc {
-    margin: 0.25rem 0 0;
-    font-size: 0.78rem;
-    color: var(--ws-text-muted);
-    line-height: 1.5;
-}
-
-.crm-msg-studio-actions {
+.crm-msg-topbar-actions {
     display: flex;
     align-items: center;
     gap: 0.45rem;
 }
 
-.crm-msg-studio-btn {
+.crm-msg-pill {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
-    padding: 0.5rem 0.85rem;
-    border-radius: 11px;
-    border: 1px solid var(--msg-border);
-    background: var(--msg-surface);
-    color: var(--ws-text-secondary);
-    font: inherit;
-    font-size: 0.8rem;
-    font-weight: 600;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--m-line);
+    background: var(--m-surface);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--m-text);
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background 0.15s;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, transform 0.12s ease;
 }
 
-.crm-msg-studio-btn:hover {
-    border-color: color-mix(in srgb, var(--msg-accent) 28%, var(--msg-border));
-    box-shadow: 0 4px 14px -6px rgba(15, 23, 42, 0.12);
+.crm-msg-pill:hover {
+    border-color: color-mix(in srgb, var(--m-accent) 25%, var(--m-line));
+    box-shadow: 0 6px 20px -12px rgba(15, 23, 42, 0.2);
 }
 
-.crm-msg-studio-btn--primary {
-    background: linear-gradient(135deg, var(--msg-accent), color-mix(in srgb, #2563eb 55%, var(--msg-accent)));
-    border-color: transparent;
+.crm-msg-pill:active { transform: scale(0.98); }
+
+.crm-msg-pill--ghost {
+    background: transparent;
+    color: var(--m-muted);
+    padding-inline: 0.65rem;
+}
+
+.crm-msg-pill--ghost:hover {
+    color: var(--m-text);
+    background: color-mix(in srgb, var(--m-line) 40%, transparent);
+}
+
+.crm-msg-pill--accent {
+    border-color: color-mix(in srgb, var(--m-accent) 35%, transparent);
+    background: linear-gradient(135deg, var(--m-accent), color-mix(in srgb, var(--m-accent) 75%, #6366f1));
     color: #fff;
-    box-shadow: 0 6px 20px -6px color-mix(in srgb, var(--msg-accent) 45%, transparent);
+    box-shadow: 0 8px 24px -10px color-mix(in srgb, var(--m-accent) 55%, transparent);
 }
 
-.crm-msg-studio-btn--primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 28px -8px color-mix(in srgb, var(--msg-accent) 50%, transparent);
-}
-
-.crm-msg-studio-btn--ghost {
-    width: 2.5rem;
-    height: 2.5rem;
-    padding: 0;
-}
-
-.crm-msg-studio-badge {
+.crm-msg-pill-badge {
     position: absolute;
-    top: -5px;
-    inset-inline-start: -5px;
+    inset-block-start: -0.2rem;
+    inset-inline-end: -0.15rem;
     min-width: 1.05rem;
     height: 1.05rem;
-    padding: 0 0.22rem;
+    padding: 0 0.28rem;
     border-radius: 999px;
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: #f59e0b;
     color: #fff;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--m-surface);
+    font-variant-numeric: tabular-nums;
+}
+
+.crm-msg-pill-badge[hidden] { display: none !important; }
+
+.crm-msg-shell {
     display: grid;
-    place-items: center;
-    border: 2px solid var(--msg-surface);
+    grid-template-columns: minmax(11.5rem, 13.5rem) minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-rows: minmax(22rem, calc(100vh - 14rem));
+    gap: 0.65rem;
+    min-width: 0;
 }
 
-.crm-msg-studio-badge[hidden] {
-    display: none !important;
-}
-
-/* ─── Inbox shell ─── */
-.crm-msg-inbox-shell {
-    display: grid;
-    grid-template-columns: 12.5rem minmax(14rem, 0.95fr) minmax(18rem, 1.25fr);
-    gap: 0;
-    min-height: 34rem;
-    max-height: calc(100vh - 13.5rem);
-    border-radius: var(--msg-radius);
-    border: 1px solid var(--msg-border);
-    background: var(--msg-surface);
-    box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.04) inset,
-        0 16px 48px -24px rgba(15, 23, 42, 0.14);
-    overflow: hidden;
-    position: relative;
-}
-
-/* ─── Rail (folders) ─── */
 .crm-msg-rail {
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
-    padding: 0.85rem 0.65rem;
-    background: color-mix(in srgb, var(--msg-muted) 65%, var(--msg-surface));
-    border-inline-end: 1px solid var(--msg-border);
+    min-width: 0;
+    border: 1px solid var(--m-line);
+    border-radius: var(--m-radius);
+    background: var(--m-surface);
+    overflow: hidden;
 }
 
-.crm-msg-rail-label {
-    margin: 0 0.35rem;
+.crm-msg-rail-head { padding: 0.75rem 0.85rem 0.35rem; }
+
+.crm-msg-rail-title {
     font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-weight: 800;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--ws-text-muted);
+    color: var(--m-muted);
 }
 
 .crm-msg-folders {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.25rem;
+    padding: 0.35rem 0.5rem 0.5rem;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .crm-msg-folder {
@@ -190,304 +189,256 @@
     align-items: center;
     gap: 0.55rem;
     width: 100%;
-    padding: 0.55rem 0.5rem;
+    padding: 0.55rem 0.6rem;
     border: 1px solid transparent;
-    border-radius: var(--msg-radius-sm);
+    border-radius: var(--m-radius-sm);
     background: transparent;
-    color: var(--ws-text-secondary);
-    font: inherit;
-    cursor: pointer;
     text-align: start;
-    transition: background 0.16s, border-color 0.16s, box-shadow 0.16s;
+    cursor: pointer;
+    transition: background 0.16s ease, border-color 0.16s ease;
+    color: inherit;
+    font: inherit;
 }
 
-.crm-msg-folder:hover {
-    background: color-mix(in srgb, var(--msg-accent) 5%, var(--msg-surface));
-}
+.crm-msg-folder:hover { background: color-mix(in srgb, var(--m-line) 55%, transparent); }
 
 .crm-msg-folder.active {
-    background: var(--msg-surface);
-    border-color: color-mix(in srgb, var(--msg-accent) 20%, var(--msg-border));
-    box-shadow: 0 4px 16px -8px rgba(15, 23, 42, 0.1);
+    background: var(--m-accent-soft);
+    border-color: color-mix(in srgb, var(--m-accent) 22%, var(--m-line));
+    box-shadow: inset 3px 0 0 var(--m-accent);
 }
 
-.crm-msg-folder-icon {
-    flex-shrink: 0;
+.crm-msg-folder-glyph {
     width: 2rem;
     height: 2rem;
-    display: grid;
-    place-items: center;
-    border-radius: 9px;
-    font-size: 0.78rem;
-    color: var(--msg-accent);
-    background: var(--msg-glow);
-}
-
-.crm-msg-folder-icon--star { color: #d97706; background: color-mix(in srgb, #f59e0b 14%, transparent); }
-.crm-msg-folder-icon--archive { color: #64748b; background: color-mix(in srgb, #94a3b8 14%, transparent); }
-
-.crm-msg-folder-text {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.05rem;
-}
-
-.crm-msg-folder-text strong {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--ws-text);
-}
-
-.crm-msg-folder-text small {
-    font-size: 0.65rem;
-    color: var(--ws-text-muted);
-}
-
-.crm-msg-folder-count {
-    flex-shrink: 0;
-    min-width: 1.15rem;
-    height: 1.15rem;
-    padding: 0 0.3rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: #fff;
-    font-size: 0.62rem;
-    font-weight: 800;
-    font-style: normal;
-    display: grid;
-    place-items: center;
-}
-
-.crm-msg-folder-count[hidden] {
-    display: none !important;
-}
-
-.crm-msg-retention-hint {
-    margin: auto 0.25rem 0.15rem;
-    padding: 0.55rem 0.5rem;
     border-radius: 10px;
-    font-size: 0.68rem;
-    color: var(--ws-text-muted);
-    line-height: 1.55;
+    display: grid;
+    place-items: center;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+    color: var(--m-accent);
+    background: color-mix(in srgb, var(--m-accent) 10%, var(--m-surface));
+}
+
+.crm-msg-folder-glyph--gold { color: #b45309; background: rgba(251, 191, 36, 0.14); }
+.crm-msg-folder-glyph--muted { color: var(--m-muted); background: color-mix(in srgb, var(--m-line) 80%, transparent); }
+
+.crm-msg-folder-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.08rem; }
+.crm-msg-folder-copy strong { font-size: 0.74rem; font-weight: 800; }
+.crm-msg-folder-copy small { font-size: 0.58rem; color: var(--m-muted); }
+
+.crm-msg-folder-badge {
+    font-style: normal;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: var(--m-accent);
+    color: #fff;
+    font-size: 0.58rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.crm-msg-folder-badge[hidden] { display: none !important; }
+
+.crm-msg-rail-foot {
     display: flex;
-    gap: 0.4rem;
-    align-items: flex-start;
-    background: color-mix(in srgb, var(--msg-accent) 4%, transparent);
-    border: 1px dashed color-mix(in srgb, var(--msg-accent) 15%, var(--msg-border));
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.65rem 0.85rem;
+    border-top: 1px solid var(--m-line);
+    font-size: 0.58rem;
+    color: var(--m-muted);
+    background: color-mix(in srgb, var(--m-line) 35%, transparent);
 }
 
-.crm-msg-retention-hint i {
-    margin-top: 0.1rem;
-    color: var(--msg-accent);
-    opacity: 0.75;
-}
-
-/* ─── Thread list pane ─── */
 .crm-msg-list-pane {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    border-inline-end: 1px solid var(--msg-border);
-    background: var(--msg-surface);
+    border: 1px solid var(--m-line);
+    border-radius: var(--m-radius);
+    background: var(--m-surface);
+    overflow: hidden;
 }
 
-.crm-msg-list-head {
+.crm-msg-list-toolbar {
     display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-    padding: 0.85rem 0.85rem 0.7rem;
-    border-bottom: 1px solid var(--msg-border);
-    background: color-mix(in srgb, var(--msg-muted) 40%, var(--msg-surface));
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.55rem 0.75rem;
+    padding: 0.75rem 0.85rem;
+    border-bottom: 1px solid var(--m-line);
 }
 
-.crm-msg-list-head h3 {
-    margin: 0;
-    font-size: 0.92rem;
-    font-weight: 800;
-}
-
-.crm-msg-list-head [data-msg-thread-count] {
-    font-size: 0.68rem;
-    color: var(--ws-text-muted);
-}
-
-.crm-msg-search-wrap {
-    position: relative;
-    display: block;
-}
-
-.crm-msg-search-wrap i {
-    position: absolute;
-    inset-inline-start: 0.7rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.75rem;
-    color: var(--ws-text-muted);
-    pointer-events: none;
-}
+.crm-msg-list-toolbar-meta h3 { margin: 0; font-size: 0.82rem; font-weight: 800; }
+.crm-msg-list-toolbar-meta span { display: block; margin-top: 0.12rem; font-size: 0.6rem; color: var(--m-muted); }
 
 .crm-msg-search {
-    width: 100%;
-    padding: 0.55rem 0.7rem 0.55rem 2.1rem;
-    border-radius: 10px;
-    border: 1px solid var(--msg-border);
-    background: var(--msg-surface);
-    font: inherit;
-    font-size: 0.82rem;
-    color: var(--ws-text);
-    transition: border-color 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex: 1;
+    min-width: min(100%, 11rem);
+    max-width: 16rem;
+    padding: 0.42rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--m-line);
+    background: var(--m-elevated);
+    color: var(--m-muted);
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.crm-msg-search:focus {
+.crm-msg-search:focus-within {
+    border-color: color-mix(in srgb, var(--m-accent) 35%, var(--m-line));
+    box-shadow: 0 0 0 3px var(--m-accent-ring);
+    color: var(--m-text);
+}
+
+.crm-msg-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    font-size: 0.72rem;
+    font-weight: 600;
     outline: none;
-    border-color: color-mix(in srgb, var(--msg-accent) 40%, var(--msg-border));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--msg-accent) 12%, transparent);
+    color: inherit;
 }
 
 .crm-msg-thread-list {
     list-style: none;
     margin: 0;
     padding: 0.35rem;
-    overflow-y: auto;
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.crm-msg-thread-item {
-    position: relative;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 0.6rem;
-    align-items: start;
-    padding: 0.7rem 0.65rem;
-    border-radius: var(--msg-radius-sm);
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: background 0.14s, border-color 0.14s, transform 0.14s;
-}
-
-.crm-msg-thread-item:hover {
-    background: color-mix(in srgb, var(--msg-accent) 4%, var(--msg-muted));
-}
-
-.crm-msg-thread-item.active {
-    background: linear-gradient(135deg, color-mix(in srgb, var(--msg-accent) 10%, var(--msg-surface)), var(--msg-surface));
-    border-color: color-mix(in srgb, var(--msg-accent) 22%, var(--msg-border));
-    box-shadow: 0 4px 14px -8px color-mix(in srgb, var(--msg-accent) 25%, transparent);
-}
-
-.crm-msg-thread-item.unread .crm-msg-thread-body strong {
-    font-weight: 800;
-}
-
-.crm-msg-thread-body {
-    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
 }
 
-.crm-msg-thread-item-head {
+.crm-msg-thread {
     display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.55rem;
+    padding: 0.6rem 0.55rem;
+    border-radius: var(--m-radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.14s ease, border-color 0.14s ease;
 }
 
-.crm-msg-thread-item-head strong {
+.crm-msg-thread:hover { background: color-mix(in srgb, var(--m-line) 50%, transparent); }
+
+.crm-msg-thread.is-active {
+    background: var(--m-accent-soft);
+    border-color: color-mix(in srgb, var(--m-accent) 20%, var(--m-line));
+}
+
+.crm-msg-thread.is-unread .crm-msg-thread-top strong { font-weight: 900; }
+
+.crm-msg-thread-body { flex: 1; min-width: 0; }
+
+.crm-msg-thread-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.45rem;
+    margin-bottom: 0.2rem;
+}
+
+.crm-msg-thread-top strong {
+    font-size: 0.74rem;
     flex: 1;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.84rem;
 }
 
-.crm-msg-thread-item-head time {
-    font-size: 0.64rem;
-    color: var(--ws-text-muted);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
-}
+.crm-msg-thread-top time { font-size: 0.58rem; color: var(--m-muted); font-variant-numeric: tabular-nums; }
 
-.crm-msg-thread-kind {
-    font-size: 0.58rem;
-    font-weight: 700;
-    padding: 0.1rem 0.38rem;
+.crm-msg-tag {
+    font-size: 0.52rem;
+    font-weight: 800;
+    padding: 0.12rem 0.4rem;
     border-radius: 999px;
-    background: color-mix(in srgb, #6366f1 12%, transparent);
+    background: color-mix(in srgb, #6366f1 14%, transparent);
     color: #4f46e5;
 }
 
-.crm-msg-thread-kind[data-kind="broadcast"] {
-    background: color-mix(in srgb, #0ea5e9 12%, transparent);
-    color: #0369a1;
-}
-
-.crm-msg-thread-preview {
-    font-size: 0.76rem;
-    color: var(--ws-text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.crm-msg-thread-snippet {
+    margin: 0;
+    font-size: 0.65rem;
+    color: var(--m-muted);
     line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-.crm-msg-unread-dot {
+.crm-msg-thread-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.crm-msg-dot {
     width: 0.45rem;
     height: 0.45rem;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--msg-accent), #2563eb);
-    margin-top: 0.35rem;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--msg-accent) 18%, transparent);
+    background: var(--m-accent);
+    box-shadow: 0 0 0 3px var(--m-accent-soft);
 }
 
-.crm-msg-thread-item:not(.unread) .crm-msg-unread-dot {
-    display: none;
+.crm-msg-thread-del {
+    width: 1.65rem;
+    height: 1.65rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--m-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.14s ease, background 0.14s ease, color 0.14s ease;
 }
 
-/* Avatars */
+.crm-msg-thread:hover .crm-msg-thread-del { opacity: 1; }
+.crm-msg-thread-del:hover { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
+
 .crm-msg-avatar {
-    flex-shrink: 0;
-    width: 2.1rem;
-    height: 2.1rem;
-    border-radius: 10px;
-    display: inline-grid;
-    place-items: center;
-    font-size: 0.68rem;
+    --hue: 250;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
     font-weight: 800;
-    font-style: normal;
-    letter-spacing: -0.02em;
-    color: #fff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+    background: hsl(var(--hue) 68% 90%);
+    color: hsl(var(--hue) 42% 32%);
 }
 
-.crm-msg-avatar--lg {
-    width: 2.65rem;
-    height: 2.65rem;
-    font-size: 0.78rem;
-    border-radius: 12px;
-}
-
-.crm-msg-avatar--hue-0 { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
-.crm-msg-avatar--hue-1 { background: linear-gradient(135deg, #2563eb, #60a5fa); }
-.crm-msg-avatar--hue-2 { background: linear-gradient(135deg, #0d9488, #2dd4bf); }
-.crm-msg-avatar--hue-3 { background: linear-gradient(135deg, #d97706, #fbbf24); }
-.crm-msg-avatar--hue-4 { background: linear-gradient(135deg, #db2777, #f472b6); }
-.crm-msg-avatar--hue-5 { background: linear-gradient(135deg, #4f46e5, #818cf8); }
-
-.crm-msg-messages .crm-msg-state {
-    align-self: center;
-    margin: auto;
-    padding: 2rem 1rem;
-}
+.crm-msg-avatar--xl { width: 2.65rem; height: 2.65rem; border-radius: 13px; font-size: 0.72rem; }
+.crm-msg-avatar--hue-0 { --hue: 262; }
+.crm-msg-avatar--hue-1 { --hue: 220; }
+.crm-msg-avatar--hue-2 { --hue: 168; }
+.crm-msg-avatar--hue-3 { --hue: 32; }
+.crm-msg-avatar--hue-4 { --hue: 340; }
+.crm-msg-avatar--hue-5 { --hue: 199; }
 
 .crm-msg-state {
-    grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -495,806 +446,672 @@
     gap: 0.55rem;
     padding: 2.5rem 1rem;
     text-align: center;
-    color: var(--ws-text-muted);
+    color: var(--m-muted);
+    list-style: none;
 }
 
-.crm-msg-state-icon {
-    width: 2.5rem;
-    height: 2.5rem;
+.crm-msg-state p { margin: 0; font-size: 0.72rem; font-weight: 600; max-width: 16rem; line-height: 1.55; }
+
+.crm-msg-state-ring {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
     display: grid;
     place-items: center;
-    border-radius: 50%;
-    background: var(--msg-glow);
-    color: var(--msg-accent);
     font-size: 1rem;
+    color: var(--m-accent);
+    background: var(--m-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--m-accent) 15%, var(--m-line));
 }
 
-.crm-msg-state p {
-    margin: 0;
-    font-size: 0.82rem;
-    line-height: 1.55;
-}
-
-/* ─── Conversation pane ─── */
-.crm-msg-convo-pane[hidden] {
-    display: none !important;
-}
-
-.crm-msg-convo-pane {
+.crm-msg-convo {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    background:
-        radial-gradient(ellipse 90% 60% at 50% 0%, color-mix(in srgb, var(--msg-accent) 5%, transparent), transparent 70%),
-        var(--msg-surface);
-}
-
-.crm-msg-convo-head {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.75rem 0.85rem;
-    border-bottom: 1px solid var(--msg-border);
-    background: color-mix(in srgb, var(--msg-muted) 35%, var(--msg-surface));
-}
-
-.crm-msg-back-btn {
-    display: none;
-    width: 2.15rem;
-    height: 2.15rem;
-    border: 1px solid var(--msg-border);
-    border-radius: 10px;
-    background: var(--msg-surface);
-    color: var(--ws-text-muted);
-    cursor: pointer;
-    place-items: center;
-    flex-shrink: 0;
-}
-
-.crm-msg-convo-identity {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    flex: 1;
-    min-width: 0;
-}
-
-.crm-msg-convo-meta {
-    min-width: 0;
-}
-
-.crm-msg-convo-meta h3 {
-    margin: 0 0 0.12rem;
-    font-size: 0.95rem;
-    font-weight: 800;
+    border: 1px solid var(--m-line);
+    border-radius: var(--m-radius);
+    background: var(--m-surface);
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    box-shadow: var(--m-shadow);
 }
 
-.crm-msg-convo-meta span {
-    font-size: 0.72rem;
-    color: var(--ws-text-muted);
-}
+.crm-msg-convo[hidden], .crm-msg-empty[hidden] { display: none !important; }
 
-.crm-msg-convo-actions {
+.crm-msg-convo-toolbar {
     display: flex;
-    gap: 0.3rem;
-    flex-shrink: 0;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--m-line);
+    background: color-mix(in srgb, var(--m-elevated) 70%, var(--m-surface));
 }
+
+.crm-msg-convo-id { display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 0; }
+.crm-msg-convo-id-text h3 { margin: 0; font-size: 0.82rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crm-msg-convo-id-text span { display: block; margin-top: 0.1rem; font-size: 0.6rem; color: var(--m-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.crm-msg-convo-tools { display: flex; align-items: center; gap: 0.2rem; }
 
 .crm-msg-icon-btn {
     width: 2.15rem;
     height: 2.15rem;
-    border: 1px solid var(--msg-border);
+    border: 1px solid transparent;
     border-radius: 10px;
-    background: var(--msg-surface);
-    color: var(--ws-text-muted);
+    background: transparent;
+    color: var(--m-muted);
     cursor: pointer;
     display: grid;
     place-items: center;
-    transition: color 0.14s, border-color 0.14s, background 0.14s;
+    font-size: 0.82rem;
+    transition: background 0.14s ease, color 0.14s ease;
 }
 
-.crm-msg-icon-btn:hover {
-    color: var(--msg-accent);
-    border-color: color-mix(in srgb, var(--msg-accent) 30%, var(--msg-border));
+.crm-msg-icon-btn:hover { background: color-mix(in srgb, var(--m-line) 65%, transparent); color: var(--m-text); }
+.crm-msg-icon-btn.is-active { color: #b45309; background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.35); }
+.crm-msg-icon-btn--back { display: none; }
+
+.crm-msg-menu-wrap { position: relative; }
+
+.crm-msg-menu {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: calc(100% + 0.35rem);
+    min-width: 11.5rem;
+    padding: 0.35rem;
+    border-radius: var(--m-radius-sm);
+    border: 1px solid var(--m-line);
+    background: var(--m-surface);
+    box-shadow: var(--m-shadow);
+    z-index: 20;
 }
 
-.crm-msg-icon-btn.active {
-    color: #d97706;
-    border-color: color-mix(in srgb, #f59e0b 40%, var(--msg-border));
-    background: color-mix(in srgb, #f59e0b 8%, var(--msg-surface));
+.crm-msg-menu[hidden] { display: none !important; }
+
+.crm-msg-menu button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.55rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: start;
 }
 
-/* Messages stream */
-.crm-msg-messages {
+.crm-msg-menu button:hover { background: color-mix(in srgb, var(--m-line) 55%, transparent); }
+.crm-msg-menu button[data-msg-purge-thread] { color: #dc2626; }
+
+.crm-msg-stream {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    padding: 1rem 0.9rem;
+    padding: 0.85rem 0.75rem 0.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
-    scroll-behavior: smooth;
+    gap: 0.45rem;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--m-line) 25%, transparent), transparent 12%), var(--m-elevated);
+}
+
+.crm-msg-day { display: flex; justify-content: center; margin: 0.35rem 0 0.15rem; }
+
+.crm-msg-day span {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--m-muted);
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    background: var(--m-surface);
+    border: 1px solid var(--m-line);
 }
 
 .crm-msg-bubble {
     position: relative;
-    max-width: min(88%, 28rem);
-    padding: 0.7rem 0.85rem;
-    border-radius: 16px;
-    font-size: 0.86rem;
-    line-height: 1.6;
     align-self: flex-start;
-    background: var(--msg-muted);
-    border: 1px solid var(--msg-border);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    max-width: min(92%, 28rem);
+    padding: 0.55rem 0.7rem 0.5rem;
+    border-radius: 14px 14px 14px 6px;
+    background: var(--m-surface);
+    border: 1px solid var(--m-line);
+    box-shadow: 0 4px 16px -12px rgba(15, 23, 42, 0.25);
 }
 
-.crm-msg-bubble.mine {
+.crm-msg-bubble.is-mine {
     align-self: flex-end;
-    background: linear-gradient(145deg, color-mix(in srgb, var(--msg-accent) 14%, var(--msg-surface)), color-mix(in srgb, var(--msg-accent) 8%, var(--msg-muted)));
-    border-color: color-mix(in srgb, var(--msg-accent) 22%, var(--msg-border));
-    border-end-end-radius: 6px;
+    border-radius: 14px 14px 6px 14px;
+    background: linear-gradient(145deg, color-mix(in srgb, var(--m-accent) 92%, #fff), var(--m-accent));
+    border-color: color-mix(in srgb, var(--m-accent) 40%, transparent);
+    color: #fff;
 }
 
-.crm-msg-bubble:not(.mine) {
-    border-end-start-radius: 6px;
-}
-
-.crm-msg-bubble-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.5rem;
-    margin-bottom: 0.35rem;
-    font-size: 0.68rem;
-    color: var(--ws-text-muted);
-}
-
-.crm-msg-bubble-head strong {
-    color: var(--ws-text);
-    font-weight: 700;
-}
-
-.crm-msg-bubble-body {
-    word-break: break-word;
-}
-
-.crm-msg-attachments {
+.crm-msg-bubble-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-top: 0.5rem;
+    align-items: baseline;
+    gap: 0.35rem 0.5rem;
+    margin-bottom: 0.25rem;
+    font-size: 0.58rem;
 }
 
-.crm-msg-attach-link {
+.crm-msg-bubble.is-mine .crm-msg-bubble-meta { color: rgba(255, 255, 255, 0.88); }
+.crm-msg-bubble-meta time { margin-inline-start: auto; font-variant-numeric: tabular-nums; opacity: 0.85; }
+
+.crm-msg-bubble-text { font-size: 0.74rem; line-height: 1.55; word-break: break-word; }
+.crm-msg-bubble:not(.is-mine) .crm-msg-bubble-text { color: var(--m-text); }
+
+.crm-msg-bubble-del {
+    position: absolute;
+    inset-block-start: 0.35rem;
+    inset-inline-start: -1.85rem;
+    width: 1.55rem;
+    height: 1.55rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--m-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.14s ease;
+}
+
+.crm-msg-bubble:hover .crm-msg-bubble-del { opacity: 1; }
+
+.crm-msg-bubble.is-mine .crm-msg-bubble-del {
+    inset-inline-start: auto;
+    inset-inline-end: -1.85rem;
+}
+
+.crm-msg-bubble-files { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.45rem; }
+
+.crm-msg-attach {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.55rem;
+    gap: 0.4rem;
+    padding: 0.35rem 0.5rem;
     border-radius: 8px;
-    background: color-mix(in srgb, var(--msg-accent) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--msg-accent) 15%, transparent);
-    font-size: 0.72rem;
-    text-decoration: none;
-    color: var(--msg-accent);
+    font-size: 0.65rem;
     font-weight: 600;
-    transition: background 0.12s;
+    text-decoration: none;
+    background: color-mix(in srgb, var(--m-line) 45%, transparent);
+    border: 1px solid color-mix(in srgb, var(--m-line) 80%, transparent);
+    color: inherit;
 }
 
-.crm-msg-attach-link:hover {
-    background: color-mix(in srgb, var(--msg-accent) 14%, transparent);
+.crm-msg-bubble.is-mine .crm-msg-attach {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #fff;
 }
 
-/* Composer */
 .crm-msg-composer {
-    padding: 0.65rem 0.85rem 0.8rem;
-    border-top: 1px solid var(--msg-border);
-    background: color-mix(in srgb, var(--msg-muted) 50%, var(--msg-surface));
+    padding: 0.65rem 0.75rem 0.75rem;
+    border-top: 1px solid var(--m-line);
+    background: var(--m-surface);
 }
 
-.crm-msg-composer-inner {
+.crm-msg-composer-box {
     display: flex;
     align-items: flex-end;
     gap: 0.45rem;
-    padding: 0.4rem 0.45rem 0.4rem 0.55rem;
-    border-radius: 14px;
-    border: 1px solid var(--msg-border);
-    background: var(--msg-surface);
-    box-shadow: 0 2px 8px -4px rgba(15, 23, 42, 0.08);
-    transition: border-color 0.15s, box-shadow 0.15s;
+    padding: 0.45rem 0.5rem;
+    border-radius: var(--m-radius-sm);
+    border: 1px solid var(--m-line);
+    background: var(--m-elevated);
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.crm-msg-composer-inner:focus-within {
-    border-color: color-mix(in srgb, var(--msg-accent) 35%, var(--msg-border));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--msg-accent) 10%, transparent);
+.crm-msg-composer-box:focus-within {
+    border-color: color-mix(in srgb, var(--m-accent) 35%, var(--m-line));
+    box-shadow: 0 0 0 3px var(--m-accent-ring);
 }
 
-.crm-msg-composer-attach {
+.crm-msg-composer-icon {
     width: 2rem;
     height: 2rem;
+    border-radius: 10px;
     display: grid;
     place-items: center;
-    border-radius: 8px;
-    color: var(--ws-text-muted);
+    color: var(--m-muted);
     cursor: pointer;
-    flex-shrink: 0;
-    transition: color 0.12s, background 0.12s;
 }
 
-.crm-msg-composer-attach:hover {
-    color: var(--msg-accent);
-    background: var(--msg-glow);
-}
+.crm-msg-composer-icon:hover { background: color-mix(in srgb, var(--m-line) 55%, transparent); color: var(--m-accent); }
 
-.crm-msg-composer-input {
+.crm-msg-composer-field {
     flex: 1;
     min-width: 0;
+    min-height: 2rem;
+    max-height: 8rem;
+    resize: none;
     border: none;
     background: transparent;
-    resize: none;
-    font: inherit;
-    font-size: 0.86rem;
-    line-height: 1.5;
-    max-height: 7rem;
-    padding: 0.35rem 0;
-    color: var(--ws-text);
-}
-
-.crm-msg-composer-input:focus {
+    font-size: 0.74rem;
+    line-height: 1.45;
     outline: none;
+    font-family: inherit;
+    color: var(--m-text);
 }
 
 .crm-msg-composer-send {
-    width: 2.35rem;
-    height: 2.35rem;
-    flex-shrink: 0;
+    width: 2.15rem;
+    height: 2.15rem;
     border: none;
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--msg-accent), color-mix(in srgb, #2563eb 50%, var(--msg-accent)));
+    background: var(--m-accent);
     color: #fff;
     cursor: pointer;
     display: grid;
     place-items: center;
-    font-size: 0.85rem;
-    transition: transform 0.12s, box-shadow 0.12s;
+    box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--m-accent) 55%, transparent);
 }
 
-.crm-msg-composer-send:hover {
-    transform: scale(1.04);
-    box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--msg-accent) 45%, transparent);
-}
-
-/* Welcome placeholder */
-.crm-msg-welcome {
+.crm-msg-empty {
     grid-column: 3;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.65rem;
-    padding: 2rem 1.5rem;
     text-align: center;
-    background:
-        radial-gradient(ellipse 70% 50% at 50% 30%, color-mix(in srgb, var(--msg-accent) 6%, transparent), transparent),
-        color-mix(in srgb, var(--msg-muted) 30%, var(--msg-surface));
-}
-
-.crm-msg-welcome[hidden] {
-    display: none !important;
-}
-
-.crm-msg-welcome-art {
-    position: relative;
-    width: 4.5rem;
-    height: 4.5rem;
-    display: grid;
-    place-items: center;
-    margin-bottom: 0.35rem;
-}
-
-.crm-msg-welcome-art > i {
-    position: relative;
-    z-index: 1;
-    font-size: 1.65rem;
-    color: var(--msg-accent);
-    opacity: 0.85;
-}
-
-.crm-msg-welcome-ring {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    border: 2px dashed color-mix(in srgb, var(--msg-accent) 25%, var(--msg-border));
-    animation: crm-msg-ring-spin 24s linear infinite;
-}
-
-@keyframes crm-msg-ring-spin {
-    to { transform: rotate(360deg); }
-}
-
-.crm-msg-welcome h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 800;
-}
-
-.crm-msg-welcome p {
-    margin: 0;
-    max-width: 16rem;
-    font-size: 0.8rem;
-    color: var(--ws-text-muted);
-    line-height: 1.6;
-}
-
-.crm-msg-welcome-cta {
-    margin-top: 0.35rem;
-}
-
-/* ─── Compose modal ─── */
-.crm-msg-compose-modal {
-    z-index: calc(var(--ws-modal-z, 1050) + 2);
-}
-
-.crm-msg-compose-panel {
-    max-width: 34rem;
-    display: flex;
-    flex-direction: column;
-}
-
-.crm-msg-compose-panel .crm-msg-compose-form {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-}
-
-.crm-msg-compose-head {
-    padding-bottom: 0.85rem !important;
-    border-bottom: 1px solid var(--mk-modal-border, var(--ws-border));
-    background: var(--mk-modal-head, var(--ws-surface)) !important;
-}
-
-.crm-msg-compose-head-brand {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
+    gap: 0.65rem;
+    padding: 2rem 1.25rem;
+    border: 1px dashed color-mix(in srgb, var(--m-line) 90%, var(--m-accent));
+    border-radius: var(--m-radius);
+    background: color-mix(in srgb, var(--m-elevated) 60%, var(--m-surface));
     min-width: 0;
 }
 
-.crm-msg-compose-head-icon {
-    flex-shrink: 0;
-    width: 2.5rem;
-    height: 2.5rem;
+.crm-msg-empty h3 { margin: 0; font-size: 0.92rem; font-weight: 800; }
+.crm-msg-empty p { margin: 0; max-width: 18rem; font-size: 0.68rem; color: var(--m-muted); line-height: 1.55; }
+
+.crm-msg-empty-visual {
+    position: relative;
+    width: 5.5rem;
+    height: 5.5rem;
     display: grid;
     place-items: center;
-    border-radius: 12px;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--ws-primary) 18%, transparent), color-mix(in srgb, #2563eb 12%, transparent));
-    color: var(--ws-primary);
+    font-size: 1.65rem;
+    color: var(--m-accent);
+}
+
+.crm-msg-empty-orbit {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--m-accent) 25%, var(--m-line));
+    animation: crm-msg-orbit 9s linear infinite;
+}
+
+.crm-msg-empty-orbit--2 {
+    inset: 0.65rem;
+    border-style: dashed;
+    opacity: 0.65;
+    animation-duration: 14s;
+    animation-direction: reverse;
+}
+
+@keyframes crm-msg-orbit { to { transform: rotate(360deg); } }
+
+.crm-msg-compose-panel {
+    position: relative;
+    overflow: hidden;
+    border-radius: calc(var(--m-radius) + 6px) !important;
+    border: 1px solid var(--m-line) !important;
+    background: var(--m-surface) !important;
+    padding: 0 !important;
+}
+
+.crm-msg-compose-hero {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 7rem;
+    background:
+        radial-gradient(ellipse 80% 100% at 100% 0%, color-mix(in srgb, var(--m-accent) 18%, transparent), transparent 55%),
+        linear-gradient(180deg, color-mix(in srgb, var(--m-accent) 8%, var(--m-surface)), transparent);
+    pointer-events: none;
+}
+
+.crm-msg-compose-header {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1.15rem 1.25rem 0.85rem;
+    border-bottom: 1px solid var(--m-line);
+}
+
+.crm-msg-compose-logo {
+    width: 2.65rem;
+    height: 2.65rem;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
     font-size: 1rem;
-    box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--ws-primary) 35%, transparent);
+    color: var(--m-accent);
+    background: var(--m-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--m-accent) 18%, var(--m-line));
+}
+
+.crm-msg-compose-close {
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--m-line);
+    border-radius: 10px;
+    background: var(--m-surface);
+    color: var(--m-muted);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
 }
 
 .crm-msg-compose-body {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding-top: 1rem !important;
+    position: relative;
+    padding: 1rem 1.25rem 0.5rem;
+    max-height: min(70vh, 32rem);
+    overflow-y: auto;
 }
 
-.crm-msg-compose-segment {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.35rem;
-    padding: 0.3rem;
-    border-radius: 12px;
-    border: 1px solid var(--mk-modal-border, var(--ws-border));
-    background: var(--mk-input-bg, var(--ws-surface-2));
+.crm-msg-type-switch {
+    display: inline-flex;
+    padding: 0.25rem;
+    border-radius: 999px;
+    border: 1px solid var(--m-line);
+    background: var(--m-elevated);
+    gap: 0.2rem;
+    margin-bottom: 1rem;
 }
 
-.crm-msg-compose-segment:has(> :only-child) {
-    grid-template-columns: 1fr;
-}
-
-.crm-msg-compose-segment-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    padding: 0.55rem 0.65rem;
-    border: none;
-    border-radius: 9px;
-    background: transparent;
-    color: var(--ws-text-muted);
-    font: inherit;
-    font-size: 0.84rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-}
-
-.crm-msg-compose-segment-btn:hover { color: var(--ws-text); }
-
-.crm-msg-compose-segment-btn.active {
-    background: var(--mk-modal-bg, var(--ws-surface));
-    color: var(--ws-primary);
-    font-weight: 700;
-    box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.12);
-}
-
-.crm-msg-compose-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-}
-
-.crm-msg-compose-field[hidden] { display: none !important; }
-
-.crm-msg-compose-label-muted {
-    font-weight: 400;
-    color: var(--ws-text-muted);
-    margin-inline-start: 0.35rem;
-}
-
-.crm-msg-select-wrap { position: relative; }
-
-.crm-msg-select-icon {
-    position: absolute;
-    inset-inline-start: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--ws-text-muted);
-    font-size: 0.8rem;
-    pointer-events: none;
-}
-
-.crm-msg-select {
-    width: 100%;
-    padding-inline-start: 2.25rem !important;
-}
-
-.crm-msg-compose-textarea {
-    min-height: 7.5rem;
-    resize: vertical;
-    line-height: 1.6;
-}
-
-.crm-msg-compose-roles {
-    border: none;
-    margin: 0;
-    padding: 0;
-}
-
-.crm-msg-compose-roles legend { margin-bottom: 0.45rem; }
-
-.crm-msg-role-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-}
-
-.crm-msg-role-pill { cursor: pointer; }
-
-.crm-msg-role-pill input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.crm-msg-role-pill span {
+.crm-msg-type-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.4rem 0.7rem;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border: none;
     border-radius: 999px;
-    border: 1.5px solid var(--mk-input-border, var(--ws-border));
-    background: var(--mk-input-bg, var(--ws-surface-2));
-    font-size: 0.78rem;
-    color: var(--ws-text-secondary);
-    transition: border-color 0.15s, background 0.15s, color 0.15s;
-}
-
-.crm-msg-role-pill input:checked + span {
-    border-color: color-mix(in srgb, var(--ws-primary) 45%, var(--ws-border));
-    background: color-mix(in srgb, var(--ws-primary) 12%, transparent);
-    color: var(--ws-primary);
-    font-weight: 600;
-}
-
-.crm-msg-compose-hint {
-    margin: 0.5rem 0 0;
-    font-size: 0.72rem;
-    color: var(--ws-text-muted);
-    line-height: 1.5;
-}
-
-.crm-msg-upload-zone {
+    background: transparent;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--m-muted);
     cursor: pointer;
-    text-align: center;
 }
 
-.crm-msg-upload-zone.has-files {
-    padding: 1rem !important;
-    border-style: solid !important;
-    border-color: color-mix(in srgb, var(--ws-primary) 30%, var(--ws-border)) !important;
+.crm-msg-type-btn.active {
+    background: var(--m-surface);
+    color: var(--m-text);
+    box-shadow: 0 4px 14px -10px rgba(15, 23, 42, 0.35);
 }
 
-.crm-msg-file-list {
-    list-style: none;
-    margin: 0.5rem 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+.crm-msg-compose-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 0.85rem;
 }
 
+.crm-msg-field { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+.crm-msg-field--full { grid-column: 1 / -1; }
+.crm-msg-field[hidden] { display: none !important; }
+
+.crm-msg-label {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--m-muted);
+}
+
+.crm-msg-input, .crm-msg-select, .crm-msg-textarea {
+    width: 100%;
+    padding: 0.55rem 0.65rem;
+    border-radius: var(--m-radius-xs);
+    border: 1px solid var(--m-line);
+    background: var(--m-surface);
+    font-size: 0.74rem;
+    color: var(--m-text);
+    font-family: inherit;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.crm-msg-textarea { min-height: 5.5rem; resize: vertical; line-height: 1.5; }
+
+.crm-msg-input:focus, .crm-msg-select:focus, .crm-msg-textarea:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--m-accent) 40%, var(--m-line));
+    box-shadow: 0 0 0 3px var(--m-accent-ring);
+}
+
+.crm-msg-input-icon { position: relative; display: flex; align-items: center; }
+.crm-msg-input-icon > i { position: absolute; inset-inline-start: 0.65rem; font-size: 0.72rem; color: var(--m-muted); pointer-events: none; }
+.crm-msg-input-icon .crm-msg-select { padding-inline-start: 2.1rem; }
+
+.crm-msg-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.crm-msg-chip { display: inline-flex; cursor: pointer; }
+.crm-msg-chip input { position: absolute; opacity: 0; pointer-events: none; }
+
+.crm-msg-chip span {
+    display: inline-flex;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--m-line);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--m-muted);
+    background: var(--m-elevated);
+}
+
+.crm-msg-chip input:checked + span {
+    border-color: color-mix(in srgb, var(--m-accent) 35%, var(--m-line));
+    background: var(--m-accent-soft);
+    color: var(--m-accent);
+}
+
+.crm-msg-dropzone {
+    position: relative;
+    border-radius: var(--m-radius-sm);
+    border: 1px dashed color-mix(in srgb, var(--m-accent) 25%, var(--m-line));
+    background: color-mix(in srgb, var(--m-accent) 4%, var(--m-elevated));
+}
+
+.crm-msg-dropzone.is-dragover { border-color: var(--m-accent); background: var(--m-accent-soft); }
+.crm-msg-dropzone-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.crm-msg-dropzone-inner { padding: 1.25rem 1rem; text-align: center; pointer-events: none; }
+.crm-msg-dropzone-inner i { font-size: 1.35rem; color: var(--m-accent); margin-bottom: 0.35rem; display: block; }
+.crm-msg-dropzone-inner p { margin: 0; font-size: 0.72rem; font-weight: 700; }
+.crm-msg-dropzone-inner p span { color: var(--m-accent); text-decoration: underline; }
+.crm-msg-dropzone-inner small { display: block; margin-top: 0.25rem; font-size: 0.58rem; color: var(--m-muted); }
+
+.crm-msg-file-list { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
 .crm-msg-file-list[hidden] { display: none !important; }
 
 .crm-msg-file-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.45rem 0.6rem;
-    border-radius: 8px;
-    background: var(--mk-input-bg, var(--ws-surface-2));
-    border: 1px solid var(--mk-input-border, var(--ws-border));
-    font-size: 0.78rem;
-}
-
-.crm-msg-file-item i { color: var(--ws-primary); }
-
-.crm-msg-file-item span {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.crm-msg-file-item em {
-    font-style: normal;
+    gap: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: var(--m-radius-xs);
+    border: 1px solid var(--m-line);
+    background: var(--m-elevated);
     font-size: 0.68rem;
-    color: var(--ws-text-muted);
 }
 
-.crm-msg-compose-foot {
-    gap: 0.65rem !important;
-    background: var(--mk-modal-foot, var(--ws-surface)) !important;
+.crm-msg-file-item span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.crm-msg-file-item em { font-style: normal; font-size: 0.58rem; color: var(--m-muted); }
+
+.crm-msg-compose-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.85rem 1.25rem 1.1rem;
+    border-top: 1px solid var(--m-line);
+    background: color-mix(in srgb, var(--m-elevated) 50%, var(--m-surface));
 }
 
-.crm-msg-compose-submit {
+.crm-msg-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.4rem;
-    min-width: 7.5rem;
-    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--m-line);
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
 }
 
-.crm-msg-compose-submit:disabled {
-    opacity: 0.65;
-    cursor: wait;
+.crm-msg-btn--ghost { background: transparent; color: var(--m-muted); }
+.crm-msg-btn--ghost:hover { color: var(--m-text); background: color-mix(in srgb, var(--m-line) 55%, transparent); }
+
+.crm-msg-btn--accent {
+    border-color: color-mix(in srgb, var(--m-accent) 35%, transparent);
+    background: linear-gradient(135deg, var(--m-accent), color-mix(in srgb, var(--m-accent) 78%, #6366f1));
+    color: #fff;
 }
 
-/* Notifications drawer */
-.crm-msg-notif-drawer {
-    z-index: calc(var(--ws-modal-z, 1000) + 20);
+.crm-msg-btn--danger { border-color: rgba(239, 68, 68, 0.35); background: #ef4444; color: #fff; }
+.crm-msg-btn--danger:hover { background: #dc2626; }
+
+.crm-msg-confirm-modal.ws-modal[hidden] { display: none !important; }
+
+.crm-msg-confirm-panel {
+    text-align: center;
+    padding: 1.5rem 1.35rem 1.25rem !important;
+    border-radius: calc(var(--m-radius) + 4px) !important;
+    max-width: 22rem;
 }
 
-.crm-msg-notif-panel { max-width: 22rem; }
-
-.crm-msg-notif-head h2 {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 1rem;
+.crm-msg-confirm-icon {
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 0.75rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 1.15rem;
+    color: #b45309;
+    background: rgba(251, 191, 36, 0.14);
+    border: 1px solid rgba(251, 191, 36, 0.35);
 }
 
-.crm-msg-notif-head h2 i {
-    color: var(--ws-primary);
-    font-size: 0.9rem;
+.crm-msg-confirm-panel h3 { margin: 0 0 0.35rem; font-size: 0.92rem; font-weight: 800; }
+.crm-msg-confirm-panel p { margin: 0 0 1rem; font-size: 0.68rem; color: var(--m-muted); line-height: 1.55; }
+
+.crm-msg-confirm-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.45rem; }
+
+.crm-msg-notif-drawer .crm-msg-notif-panel {
+    border-inline-start: 1px solid var(--m-line);
+    background: var(--m-surface);
 }
 
-.crm-msg-notif-body {
-    padding-top: 0.65rem !important;
-    padding-bottom: 0.65rem !important;
-}
+.crm-msg-notif-head h2 { font-size: 0.92rem; font-weight: 800; }
+.crm-msg-notif-head h2 i { margin-inline-end: 0.35rem; color: var(--m-accent); }
+.crm-msg-notif-head p { margin: 0.2rem 0 0; font-size: 0.62rem; color: var(--m-muted); }
 
-.crm-msg-notif-foot { justify-content: stretch; }
-
-.crm-msg-notif-foot .crm-btn {
-    width: 100%;
-    justify-content: center;
-}
-
-.crm-msg-notif-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
+.crm-msg-notif-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
 
 .crm-msg-notif-item {
-    padding: 0.7rem 0.75rem;
-    border-radius: 10px;
-    border: 1px solid var(--ws-border);
-    background: var(--ws-surface);
-    font-size: 0.82rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--m-radius-sm);
+    border: 1px solid var(--m-line);
+    background: var(--m-elevated);
+    font-size: 0.68rem;
+    line-height: 1.45;
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
+    transition: border-color 0.14s ease, background 0.14s ease;
 }
 
 .crm-msg-notif-item:hover {
-    border-color: color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
-    background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+    border-color: color-mix(in srgb, var(--m-accent) 22%, var(--m-line));
+    background: color-mix(in srgb, var(--m-accent) 5%, var(--m-elevated));
 }
 
-.crm-msg-notif-item.unread {
-    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
-    background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+.crm-msg-notif-item.is-unread {
+    border-color: color-mix(in srgb, var(--m-accent) 28%, var(--m-line));
+    background: var(--m-accent-soft);
+    font-weight: 700;
 }
 
-.crm-msg-notif-item strong {
-    display: block;
-    margin-bottom: 0.2rem;
-    font-size: 0.84rem;
-}
+.crm-msg-notif-foot { border-top: 1px solid var(--m-line); padding-top: 0.65rem; }
 
-.crm-msg-notif-item p {
-    margin: 0 0 0.25rem;
-    color: var(--ws-text-muted);
-    line-height: 1.45;
-}
-
-.crm-msg-notif-item time {
-    font-size: 0.68rem;
-    color: var(--ws-text-muted);
-}
-
-/* ─── Responsive ─── */
 @media (max-width: 1100px) {
-    .crm-msg-inbox-shell {
-        grid-template-columns: 11rem minmax(12rem, 1fr) minmax(14rem, 1fr);
-    }
+    .crm-msg-shell { grid-template-columns: minmax(10rem, 12rem) minmax(0, 1fr) minmax(0, 1fr); }
 }
 
 @media (max-width: 960px) {
-    .crm-msg-inbox-shell {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
-        max-height: none;
-        min-height: 28rem;
+    .crm-msg-shell {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+        grid-template-rows: auto minmax(18rem, calc(100vh - 12rem));
     }
 
     .crm-msg-rail {
+        grid-column: 1 / -1;
         flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        border-inline-end: none;
-        border-bottom: 1px solid var(--msg-border);
-        padding: 0.55rem 0.65rem;
+        border-radius: var(--m-radius-sm);
     }
 
-    .crm-msg-rail-label,
-    .crm-msg-retention-hint {
-        display: none;
-    }
+    .crm-msg-rail-head, .crm-msg-rail-foot { display: none; }
 
     .crm-msg-folders {
         flex-direction: row;
         flex: 1;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 0.4rem;
         gap: 0.35rem;
     }
 
     .crm-msg-folder {
-        flex: 1;
-        min-width: 0;
-        padding: 0.45rem 0.5rem;
+        flex: 0 0 auto;
+        min-width: 9.5rem;
     }
 
-    .crm-msg-folder-text small {
-        display: none;
+    .crm-msg-folder.active { box-shadow: inset 0 -3px 0 var(--m-accent); }
+    .crm-msg-folder-copy small { display: none; }
+
+    .crm-msg-list-pane { grid-column: 1; grid-row: 2; }
+    .crm-msg-convo, .crm-msg-empty { grid-column: 2; grid-row: 2; }
+    .crm-msg-empty { display: none; }
+
+    .crm-msg-icon-btn--back { display: grid; }
+
+    .crm-msg-hub--studio.crm-msg-hub--detail-open .crm-msg-rail,
+    .crm-msg-hub--studio.crm-msg-hub--detail-open .crm-msg-list-pane { display: none; }
+
+    .crm-msg-hub--studio.crm-msg-hub--detail-open .crm-msg-shell { grid-template-columns: 1fr; }
+
+    .crm-msg-hub--studio.crm-msg-hub--detail-open .crm-msg-convo {
+        grid-column: 1;
+        grid-row: 1;
+        min-height: min(70vh, calc(100vh - 10rem));
     }
 
-    .crm-msg-list-pane {
-        border-inline-end: none;
-        min-height: 22rem;
-    }
-
-    .crm-msg-welcome {
-        display: none !important;
-    }
-
-    .crm-msg-hub--pro.crm-msg-hub--detail-open .crm-msg-rail,
-    .crm-msg-hub--pro.crm-msg-hub--detail-open .crm-msg-list-pane {
-        display: none;
-    }
-
-    .crm-msg-hub--pro.crm-msg-hub--detail-open .crm-msg-convo-pane {
-        display: flex !important;
-        grid-column: 1 / -1;
-        min-height: 28rem;
-    }
-
-    .crm-msg-back-btn {
-        display: grid;
-    }
-
-    .crm-msg-convo-pane[hidden] {
-        display: none !important;
-    }
+    .crm-msg-compose-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
-    .crm-msg-studio-head {
-        flex-direction: column;
-        align-items: stretch;
+    .crm-msg-topbar-title { font-size: 0.92rem; }
+    .crm-msg-pill--accent { padding-inline: 0.65rem; }
+    .crm-msg-pill--ghost i + span, .crm-msg-pill--accent i + span { display: none; }
+
+    .crm-msg-shell {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(16rem, 1fr);
+        gap: 0.5rem;
     }
 
-    .crm-msg-studio-actions {
-        width: 100%;
-    }
+    .crm-msg-list-pane, .crm-msg-convo, .crm-msg-empty { grid-column: 1; grid-row: 2; }
 
-    .crm-msg-studio-btn--primary {
-        flex: 1;
-    }
+    .crm-msg-hub--studio:not(.crm-msg-hub--detail-open) .crm-msg-convo[hidden] ~ .crm-msg-empty { display: flex; }
 
-    .crm-msg-compose-modal.ws-modal {
-        align-items: flex-end;
-        justify-content: center;
-        padding: 0;
-    }
+    .crm-msg-bubble { max-width: 96%; }
+    .crm-msg-bubble-del { display: none; }
 
-    .crm-msg-compose-panel.ws-modal-panel {
-        max-width: 100%;
-        width: 100%;
-        max-height: min(94vh, 100dvh);
-        border-radius: 18px 18px 0 0 !important;
-        transform: translateY(100%) !important;
-        margin: 0;
-        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1) !important;
-    }
-
-    .crm-msg-compose-modal.ws-modal.is-open .crm-msg-compose-panel.ws-modal-panel {
-        transform: translateY(0) !important;
-    }
-
-    .crm-msg-compose-foot {
-        flex-direction: column-reverse;
-    }
-
-    .crm-msg-compose-foot .ws-btn {
-        width: 100%;
-        justify-content: center;
-        min-height: 2.75rem;
-    }
-
-    .crm-msg-role-pills {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .crm-msg-notif-panel.crm-drawer-panel {
-        max-width: 100%;
-    }
-}
-
-@media (min-width: 641px) {
-    .crm-msg-compose-modal.ws-modal.is-open .crm-msg-compose-panel {
-        animation: crm-msg-compose-in 0.28s var(--ws-ease, ease) forwards;
-    }
-}
-
-@keyframes crm-msg-compose-in {
-    from {
-        opacity: 0;
-        transform: scale(0.97) translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
+    .crm-msg-compose-header, .crm-msg-compose-body, .crm-msg-compose-footer { padding-inline: 1rem; }
+    .crm-msg-type-switch { width: 100%; }
+    .crm-msg-type-btn { flex: 1; justify-content: center; }
 }

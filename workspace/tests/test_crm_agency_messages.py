@@ -9,6 +9,8 @@ from django.urls import reverse
 from workspace.models import CRMAgencyMember, CRMAgencyMessageThread
 from workspace.services.crm_agency import create_agency
 from workspace.services.crm_agency_messages import (
+    delete_message,
+    delete_thread_for_user,
     get_thread_detail,
     list_threads_for_user,
     send_broadcast_message,
@@ -122,11 +124,36 @@ class CRMAgencyMessagesTests(TestCase):
         self.assertEqual(unread_message_count(self.advisor), 1)
         self.assertEqual(unread_message_count(advisor2), 1)
 
+    def test_team_messages_tab_renders(self):
         client = Client()
         client.force_login(self.owner)
         resp = client.get(reverse('workspace:crm_team'), {'tab': 'messages'})
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'صندوق پیام داخلی')
+        self.assertContains(resp, 'مرکز پیام تیم')
+
+    def test_delete_own_message(self):
+        thread = send_direct_message(self.owner, self.advisor_member.pk, 'پیام قابل حذف')
+        msg_id = thread.messages.first().pk
+        thread_id = thread.pk
+        delete_message(self.owner, thread_id, msg_id)
+        self.assertFalse(CRMAgencyMessageThread.objects.filter(pk=thread_id).exists())
+
+    def test_delete_thread_for_user(self):
+        thread = send_direct_message(self.owner, self.advisor_member.pk, 'مکالمه')
+        delete_thread_for_user(self.owner, thread.pk)
+        items, total = list_threads_for_user(self.owner)
+        self.assertEqual(total, 0)
+
+    def test_delete_message_api(self):
+        thread = send_direct_message(self.owner, self.advisor_member.pk, 'حذف از API')
+        msg_id = thread.messages.first().pk
+        client = Client()
+        client.force_login(self.owner)
+        url = reverse('workspace:api_crm_team_message_item', args=[thread.pk, msg_id])
+        resp = client.delete(url)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data.get('thread_removed') or data.get('messages') == [])
 
     def test_attachment_validation(self):
         bad = SimpleUploadedFile('virus.exe', b'x', content_type='application/octet-stream')

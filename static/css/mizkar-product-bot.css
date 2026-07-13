@@ -1348,6 +1348,18 @@ html.mk-public[data-theme="light"] .pb-hero-pill--license {
     box-shadow: 0 18px 36px -12px rgba(124, 58, 237, 0.8);
 }
 
+.pb-plan-card-cta--disabled,
+.pb-plan-card-cta--disabled:hover {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+    box-shadow: none;
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: var(--mk-text-muted);
+}
+
 .pb-pricing-deck-guide {
     display: inline-flex;
     align-items: center;

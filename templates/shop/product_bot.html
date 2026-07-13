@@ -7,7 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=36">
+<link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=37">
 {% endblock %}
 
 {% block content %}
@@ -47,7 +47,12 @@
                     </ul>
 
                     <div class="pb-hero-actions">
-                        {% if plans.first %}
+                        {% if buyable_plans %}
+                        <a href="{% url 'buy' product.slug %}?plan={{ buyable_plans.0.id }}" class="pb-hero-cta pb-hero-cta--primary">
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                            خرید لایسنس
+                        </a>
+                        {% elif plans.first %}
                         <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pb-hero-cta pb-hero-cta--primary">
                             <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                             خرید لایسنس
@@ -194,8 +199,12 @@
                             <li><i class="fas fa-check" aria-hidden="true"></i> فعال‌سازی فوری پس از خرید</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> پشتیبانی نصب و راه‌اندازی</li>
                         </ul>
-                        <a href="{% url 'buy' product.slug %}?plan={{ plan.id }}" class="pb-plan-card-cta{% if forloop.counter == 3 %} pb-plan-card-cta--primary{% endif %}">
+                        <a href="{% if daily_plan_used and plan.plan_type == 'daily' %}{% url 'buy' product.slug %}{% else %}{% url 'buy' product.slug %}?plan={{ plan.id }}{% endif %}" class="pb-plan-card-cta{% if forloop.counter == 3 %} pb-plan-card-cta--primary{% endif %}{% if daily_plan_used and plan.plan_type == 'daily' %} pb-plan-card-cta--disabled{% endif %}"{% if daily_plan_used and plan.plan_type == 'daily' %} aria-disabled="true"{% endif %}>
+                            {% if daily_plan_used and plan.plan_type == 'daily' %}
+                            <span>قبلاً استفاده شده</span>
+                            {% else %}
                             <span>خرید {{ plan.get_plan_type_display }}</span>
+                            {% endif %}
                             <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         </a>
                     </article>

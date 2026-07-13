@@ -5,7 +5,11 @@ from urllib.parse import quote
 
 from django.urls import reverse
 
-from shop.models import LicensePlan
+from shop.models import LicensePlan, Order
+
+BLOCK_NONE = ''
+BLOCK_PHONE_VERIFY = 'phone_verify'
+BLOCK_DAILY_USED = 'daily_used'
 
 
 def is_daily_plan(plan: LicensePlan | None) -> bool:
@@ -17,17 +21,45 @@ def requires_phone_verification_for_plan(plan: LicensePlan | None) -> bool:
     return is_daily_plan(plan)
 
 
-def user_meets_plan_requirements(user, plan: LicensePlan | None) -> tuple[bool, str | None]:
-    if not requires_phone_verification_for_plan(plan):
-        return True, None
+def user_has_purchased_daily_plan(user) -> bool:
+    """کاربر قبلاً پلن آزمایشی یک‌روزه را خریده (حتی اگر منقضی شده باشد)."""
     if not user or not user.is_authenticated:
-        return False, 'برای خرید پلن آزمایشی یک‌روزه باید وارد حساب شوید.'
+        return False
+    return Order.objects.filter(
+        user=user,
+        status='paid',
+        plan__plan_type='daily',
+    ).exists()
+
+
+def evaluate_plan_purchase(user, plan: LicensePlan | None) -> tuple[bool, str | None, str]:
+    """بررسی امکان خرید پلن — (مجاز، پیام خطا، دلیل مسدودیت)."""
+    if not is_daily_plan(plan):
+        return True, None, BLOCK_NONE
+
+    if not user or not user.is_authenticated:
+        return False, 'برای خرید پلن آزمایشی یک‌روزه باید وارد حساب شوید.', BLOCK_DAILY_USED
+
+    if user_has_purchased_daily_plan(user):
+        return (
+            False,
+            'پلن آزمایشی یک‌روزه فقط یک‌بار قابل خرید است. لطفاً یکی از پلن‌های دیگر را انتخاب کنید.',
+            BLOCK_DAILY_USED,
+        )
+
     if not getattr(user, 'phone_verified', False):
         return (
             False,
             'برای خرید پلن آزمایشی یک‌روزه، تأیید شماره موبایل با پیامک الزامی است.',
+            BLOCK_PHONE_VERIFY,
         )
-    return True, None
+
+    return True, None, BLOCK_NONE
+
+
+def user_meets_plan_requirements(user, plan: LicensePlan | None) -> tuple[bool, str | None]:
+    ok, message, _reason = evaluate_plan_purchase(user, plan)
+    return ok, message
 
 
 def verify_phone_redirect_url(next_path: str) -> str:

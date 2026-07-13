@@ -27,12 +27,28 @@ class BuyForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         product = kwargs.pop('product', None)
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        self.user = user
         if product:
-            self.fields['plan'].queryset = LicensePlan.objects.filter(
+            qs = LicensePlan.objects.filter(
                 product=product,
-                is_active=True
+                is_active=True,
             )
+            if user and user.is_authenticated:
+                from shop.services.plan_guards import user_has_purchased_daily_plan
+                if user_has_purchased_daily_plan(user):
+                    qs = qs.exclude(plan_type='daily')
+            self.fields['plan'].queryset = qs
+
+    def clean_plan(self):
+        plan = self.cleaned_data.get('plan')
+        if plan and self.user and self.user.is_authenticated:
+            from shop.services.plan_guards import evaluate_plan_purchase
+            ok, message, _ = evaluate_plan_purchase(self.user, plan)
+            if not ok:
+                raise forms.ValidationError(message)
+        return plan
     
     def clean_discount_code(self):
         discount_code = self.cleaned_data.get('discount_code', '').strip().upper()

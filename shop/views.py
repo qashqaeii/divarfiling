@@ -6,7 +6,7 @@ from django.views.generic import ListView, DetailView, TemplateView, CreateView,
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.conf import settings
 from django.db import models
 from django.http import JsonResponse, HttpResponse, FileResponse
@@ -101,6 +101,8 @@ class ProductDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         product = self.object
         context['plans'] = product.plans.filter(is_active=True).order_by('order', 'price')
+        context['daily_plan_used'] = False
+        context['buyable_plans'] = list(context['plans'])
         context['bot_page'] = bot_page_content()
         if product.slug == BOT_PRODUCT_SLUG:
             context['excel_sample'] = get_sale_apartment_excel_preview()
@@ -130,6 +132,14 @@ class ProductDetailView(DetailView):
 
         # بررسی اینکه آیا کاربر قبلاً امتیاز داده یا نظر داده
         if self.request.user.is_authenticated:
+            from shop.services.plan_guards import user_has_purchased_daily_plan
+
+            context['daily_plan_used'] = user_has_purchased_daily_plan(self.request.user)
+            context['buyable_plans'] = [
+                plan for plan in context['plans']
+                if not (context['daily_plan_used'] and plan.plan_type == 'daily')
+            ]
+
             user_rating = ProductRating.objects.filter(
                 product=product,
                 user=self.request.user
@@ -226,6 +236,7 @@ class BuyView(LoginRequiredMixin, CreateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['product'] = self.product
+        kwargs['user'] = self.request.user
         requested_plan = self._get_requested_plan()
         if requested_plan and not kwargs.get('data'):
             kwargs.setdefault('initial', {})['plan'] = requested_plan.pk
@@ -250,16 +261,28 @@ class BuyView(LoginRequiredMixin, CreateView):
             return None
 
     def _redirect_for_plan_requirements(self, plan):
-        from shop.services.plan_guards import user_meets_plan_requirements, verify_phone_redirect_url
+        from shop.services.plan_guards import (
+            BLOCK_PHONE_VERIFY,
+            evaluate_plan_purchase,
+            verify_phone_redirect_url,
+        )
 
-        ok, message = user_meets_plan_requirements(self.request.user, plan)
+        ok, message, reason = evaluate_plan_purchase(self.request.user, plan)
         if ok:
             return None
         messages.warning(self.request, message)
-        return redirect(verify_phone_redirect_url(self.request.get_full_path()))
+        if reason == BLOCK_PHONE_VERIFY:
+            return redirect(verify_phone_redirect_url(self.request.get_full_path()))
+        return redirect(reverse('buy', kwargs={'slug': self.product.slug}))
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        from shop.services.plan_guards import (
+            evaluate_plan_purchase,
+            user_has_purchased_daily_plan,
+        )
+
+        daily_plan_used = user_has_purchased_daily_plan(self.request.user)
         
         # بررسی اینکه آیا کاربر قبلاً خرید پرداخت شده برای این محصول دارد
         has_previous_purchase = Order.objects.filter(
@@ -271,6 +294,10 @@ class BuyView(LoginRequiredMixin, CreateView):
         # محاسبه قیمت‌ها برای هر پلن
         plans_with_prices = []
         for plan in self.product.plans.filter(is_active=True).order_by('order', 'price'):
+            purchase_ok, purchase_message, _purchase_reason = evaluate_plan_purchase(
+                self.request.user,
+                plan,
+            )
             original_price = plan.price
             discount_amount = 0
             final_price = original_price
@@ -305,6 +332,8 @@ class BuyView(LoginRequiredMixin, CreateView):
                 'has_repeat_discount': has_previous_purchase and self.product.repeat_purchase_discount > 0,
                 'repeat_discount_percentage': int(self.product.repeat_purchase_discount) if has_previous_purchase else 0,
                 'discount_reasons': discount_reasons,
+                'purchase_blocked': not purchase_ok,
+                'purchase_block_message': purchase_message,
             })
         
         from shop.models import PaymentSettings
@@ -324,15 +353,21 @@ class BuyView(LoginRequiredMixin, CreateView):
                     pass
         if selected_plan_id is None:
             if requested_plan:
-                selected_plan_id = requested_plan.pk
-            elif plans_with_prices:
-                selected_plan_id = plans_with_prices[0]['plan'].pk
+                requested_ok, _, _ = evaluate_plan_purchase(self.request.user, requested_plan)
+                if requested_ok:
+                    selected_plan_id = requested_plan.pk
+            if selected_plan_id is None:
+                for plan_data in plans_with_prices:
+                    if not plan_data['purchase_blocked']:
+                        selected_plan_id = plan_data['plan'].pk
+                        break
 
         context.update({
             'product': self.product,
             'plans_with_prices': plans_with_prices,
             'selected_plan_id': selected_plan_id,
             'has_previous_purchase': has_previous_purchase,
+            'daily_plan_used': daily_plan_used,
             'pay_settings': pay_settings,
             'payment_methods': payment_methods,
             'show_payment_choice': len(payment_methods) > 1,
@@ -788,6 +823,14 @@ def apply_discount_code(request, slug):
         # دریافت محصول و پلن
         product = get_object_or_404(Product, slug=slug, is_active=True)
         plan = get_object_or_404(LicensePlan, id=plan_id, product=product, is_active=True)
+
+        from shop.services.plan_guards import evaluate_plan_purchase
+        purchase_ok, purchase_message, _ = evaluate_plan_purchase(request.user, plan)
+        if not purchase_ok:
+            return JsonResponse({
+                'success': False,
+                'message': purchase_message,
+            }, status=400)
         
         # محاسبه قیمت اولیه
         original_price = plan.price

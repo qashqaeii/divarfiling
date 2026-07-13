@@ -194,3 +194,77 @@ class DailyPlanPhoneVerificationTests(TestCase):
 
         response = self.client.get(next_url)
         self.assertEqual(response.status_code, 200)
+
+
+class DailyPlanRepeatPurchaseTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='repeat_daily_user',
+            password='pass1234',
+            phone='09127777777',
+            phone_verified=True,
+        )
+        self.product = Product.objects.create(
+            title='ربات',
+            slug='bot-daily-repeat-test',
+            description='test',
+            is_active=True,
+        )
+        self.daily_plan = LicensePlan.objects.create(
+            product=self.product,
+            name='لایسنس آزمایشی یک‌روزه',
+            plan_type='daily',
+            price=50_000,
+            duration_days=1,
+            max_activations=2,
+            is_active=True,
+            order=0,
+        )
+        self.monthly_plan = LicensePlan.objects.create(
+            product=self.product,
+            name='لایسنس یک‌ماهه',
+            plan_type='monthly',
+            price=1_000_000,
+            duration_days=30,
+            max_activations=2,
+            is_active=True,
+            order=1,
+        )
+
+    def _create_expired_daily_order(self):
+        order = Order.objects.create(
+            user=self.user,
+            product=self.product,
+            plan=self.daily_plan,
+            amount=self.daily_plan.price,
+            status='paid',
+        )
+        license_obj = fulfill_order_after_payment(order)
+        license_obj.status = 'active'
+        license_obj.expires_at = timezone.now() - timedelta(minutes=5)
+        license_obj.save(update_fields=['status', 'expires_at'])
+        return order
+
+    def test_repeat_daily_purchase_blocked_on_buy_page(self):
+        self._create_expired_daily_order()
+        self.client.force_login(self.user)
+        buy_url = reverse('buy', kwargs={'slug': self.product.slug})
+        response = self.client.get(f'{buy_url}?plan={self.daily_plan.pk}')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, buy_url)
+
+    def test_repeat_daily_purchase_blocked_on_post(self):
+        self._create_expired_daily_order()
+        self.client.force_login(self.user)
+        buy_url = reverse('buy', kwargs={'slug': self.product.slug})
+        response = self.client.post(buy_url, {'plan': self.daily_plan.pk})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, buy_url)
+
+    def test_monthly_purchase_still_allowed_after_daily_expired(self):
+        self._create_expired_daily_order()
+        self.client.force_login(self.user)
+        buy_url = reverse('buy', kwargs={'slug': self.product.slug})
+        response = self.client.get(f'{buy_url}?plan={self.monthly_plan.pk}')
+        self.assertEqual(response.status_code, 200)

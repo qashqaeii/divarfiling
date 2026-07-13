@@ -39,14 +39,21 @@ def _get_payable_order(request, order_id) -> Order:
 
 
 def _guard_order_plan_requirements(request, order):
-    from shop.services.plan_guards import user_meets_plan_requirements, verify_phone_redirect_url
+    from shop.services.plan_guards import (
+        BLOCK_PHONE_VERIFY,
+        evaluate_plan_purchase,
+        verify_phone_redirect_url,
+    )
 
-    ok, message = user_meets_plan_requirements(request.user, order.plan)
+    ok, message, reason = evaluate_plan_purchase(request.user, order.plan)
     if ok:
         return None
     messages.error(request, message)
-    next_url = f"{reverse('buy', kwargs={'slug': order.product.slug})}?plan={order.plan_id}"
-    return redirect(verify_phone_redirect_url(next_url))
+    buy_url = reverse('buy', kwargs={'slug': order.product.slug})
+    if reason == BLOCK_PHONE_VERIFY:
+        next_url = f'{buy_url}?plan={order.plan_id}'
+        return redirect(verify_phone_redirect_url(next_url))
+    return redirect(buy_url)
 
 
 def _order_ready_for_online_payment(order: Order) -> bool:

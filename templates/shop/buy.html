@@ -6,7 +6,7 @@
 {% block body_class %}mk-checkout-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=13">
 {% endblock %}
 
 {% block content %}
@@ -84,6 +84,16 @@
                     </div>
                     {% endif %}
 
+                    {% if daily_plan_used %}
+                    <div class="ck-promo-msg" role="status">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
+                        <p>
+                            <strong>پلن آزمایشی یک‌روزه قبلاً استفاده شده است.</strong>
+                            برای ادامه، یکی از پلن‌های ماهانه، سه‌ماهه یا سالانه را انتخاب کنید.
+                        </p>
+                    </div>
+                    {% endif %}
+
                     {% if phone_verification_required %}
                     <div class="ck-promo-msg" role="status">
                         <i class="fas fa-mobile-screen" aria-hidden="true"></i>
@@ -109,13 +119,14 @@
                         </legend>
                         <div class="ck-plans" role="radiogroup" aria-label="پلن لایسنس">
                             {% for plan_data in plans_with_prices %}
-                            <label class="ck-plan ck-plan--{% if plan_data.plan.max_activations > 1 %}team{% else %}solo{% endif %}{% if plan_data.plan.id == selected_plan_id %} is-selected{% endif %}">
+                            <label class="ck-plan ck-plan--{% if plan_data.plan.max_activations > 1 %}team{% else %}solo{% endif %}{% if plan_data.plan.id == selected_plan_id %} is-selected{% endif %}{% if plan_data.purchase_blocked %} is-disabled{% endif %}">
                                 <input
                                     type="radio"
                                     name="plan"
                                     value="{{ plan_data.plan.id }}"
                                     id="plan_{{ plan_data.plan.id }}"
                                     {% if plan_data.plan.id == selected_plan_id %}checked{% endif %}
+                                    {% if plan_data.purchase_blocked %}disabled{% endif %}
                                     data-original-price="{{ plan_data.original_price }}"
                                     data-final-price="{{ plan_data.final_price }}"
                                     data-has-repeat-discount="{% if plan_data.has_repeat_discount %}true{% else %}false{% endif %}"
@@ -153,6 +164,9 @@
                                 <ul class="ck-plan-feats">
                                     <li><span class="ck-plan-feat-icon"><i class="fas fa-clock"></i></span><span>{{ plan_data.plan.get_plan_type_display }} دسترسی</span></li>
                                     <li><span class="ck-plan-feat-icon"><i class="fas fa-microchip"></i></span><span>{{ plan_data.plan.max_activations }} دستگاه فعال</span></li>
+                                    {% if plan_data.purchase_blocked %}
+                                    <li><span class="ck-plan-feat-icon"><i class="fas fa-ban"></i></span><span>{{ plan_data.purchase_block_message }}</span></li>
+                                    {% endif %}
                                 </ul>
                             </label>
                             {% endfor %}

@@ -57,9 +57,19 @@ def share_property(
     if prop.user_id != actor.id:
         raise ValueError('فقط مالک ملک می‌تواند آن را به اشتراک بگذارد')
     m = get_membership(actor)
-    if not m or prop.agency_id != m.agency_id:
+    if not m:
+        raise ValueError('عضویت آژانس یافت نشد')
+    if not to_member_id:
+        raise ValueError('هم‌تیمی مقصد را انتخاب کنید')
+    if not prop.agency_id:
+        prop.agency_id = m.agency_id
+        prop.save(update_fields=['agency_id'])
+    elif prop.agency_id != m.agency_id:
         raise ValueError('ملک در آژانس شما نیست')
-    to_member = CRMAgencyMember.objects.get(pk=to_member_id, agency=m.agency, is_active=True)
+    try:
+        to_member = CRMAgencyMember.objects.get(pk=to_member_id, agency=m.agency, is_active=True)
+    except CRMAgencyMember.DoesNotExist:
+        raise ValueError('عضو تیم یافت نشد')
     if to_member.user_id == actor.id:
         raise ValueError('نمی‌توانید با خودتان به اشتراک بگذارید')
     mode = share_mode if share_mode in dict(CRMResourceShare.SHARE_MODE_CHOICES) else CRMResourceShare.SHARE_MODE_CONFIDENTIAL

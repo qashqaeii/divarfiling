@@ -4,8 +4,9 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from workspace.constants import TEAM_VISIBILITY_INBOX
-from workspace.models import CRMAgencyMember, Customer
+from workspace.models import CRMAgencyMember, CRMProperty, Customer
 from workspace.services.crm_agency import apply_lead_routing, create_agency, regenerate_api_key
+from workspace.services.crm_sharing import share_property
 from workspace.services.crm_webhooks import create_lead_from_api
 
 User = get_user_model()
@@ -44,6 +45,20 @@ class CRMTeamProTests(TestCase):
         self.assertEqual(resp.status_code, 302)
         self.assertIn('tab=sync', resp.url)
 
+    def test_bad_path_redirects_without_trailing_slash(self):
+        client = Client()
+        client.force_login(self.owner)
+        resp = client.get('/workspace/crm/team/undefined')
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn('tab=sync', resp.url)
+
+    def test_team_page_renders_inbox_tab(self):
+        client = Client()
+        client.force_login(self.owner)
+        resp = client.get(reverse('workspace:crm_team'), {'tab': 'inbox'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'صندوق سرنخ')
+
     def test_regenerate_api_json_endpoint(self):
         client = Client()
         client.force_login(self.owner)
@@ -60,3 +75,13 @@ class CRMTeamProTests(TestCase):
         client.force_login(advisor)
         resp = client.get(reverse('workspace:crm_sync_export'))
         self.assertEqual(resp.status_code, 403)
+
+    def test_share_property_without_agency_attaches_agency(self):
+        advisor = User.objects.create_user(username='adv2', password='pass12345', phone='09122222222')
+        CRMAgencyMember.objects.create(agency=self.agency, user=advisor, role='advisor')
+        prop = CRMProperty.objects.create(user=self.owner, title='ملک تست')
+        self.assertIsNone(prop.agency_id)
+        member = CRMAgencyMember.objects.get(agency=self.agency, user=advisor)
+        share_property(self.owner, prop, member.pk, share_mode='collaborative')
+        prop.refresh_from_db()
+        self.assertEqual(prop.agency_id, self.agency.pk)

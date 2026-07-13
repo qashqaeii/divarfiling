@@ -49,6 +49,7 @@ urlpatterns = [
     path('crm/team/transfer/<int:customer_id>/', crm_views.CRMTeamTransferView.as_view(), name='crm_team_transfer'),
     path('crm/team/share-property/<int:property_id>/', crm_views.CRMPropertyShareView.as_view(), name='crm_property_share'),
     path('crm/team/<path:bad_path>/', crm_views.CRMTeamBadPathRedirectView.as_view(), name='crm_team_bad_path'),
+    path('crm/team/<path:bad_path>', crm_views.CRMTeamBadPathRedirectView.as_view(), name='crm_team_bad_path_noslash'),
     path('crm/shares/<int:share_id>/revoke/', crm_views.CRMShareRevokeView.as_view(), name='crm_share_revoke'),
     path('crm/deals/<int:deal_id>/commission/', crm_views.CRMDealCommissionSplitView.as_view(), name='crm_deal_commission'),
     path('crm/sync/export/', crm_views.CRMSyncExportView.as_view(), name='crm_sync_export'),

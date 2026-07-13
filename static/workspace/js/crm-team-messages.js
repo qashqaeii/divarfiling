@@ -51,7 +51,7 @@
         uploadZone: document.querySelector('[data-msg-upload-zone]'),
         fileInput: document.querySelector('[data-msg-file-input]'),
         fileList: document.querySelector('[data-msg-file-list]'),
-        composeSubmit: document.querySelector('.crm-msg-compose-submit'),
+        composeSubmit: document.querySelector('[data-msg-compose-submit]'),
         notifDrawer: document.getElementById('drawer-msg-notifications'),
         notifList: document.querySelector('[data-msg-notif-list]'),
         notifCount: root.querySelector('[data-msg-notif-count]'),
@@ -428,7 +428,7 @@
         els.fileList.hidden = false;
         els.uploadZone.classList.add('has-files');
         els.fileList.innerHTML = Array.from(files).map(f =>
-            `<li class="crm-msg-file-item"><i class="fas fa-file-lines"></i><span>${escapeHtml(f.name)}</span><em>${formatFileSize(f.size)}</em></li>`
+            `<li><i class="fas fa-file-lines" aria-hidden="true"></i><span>${escapeHtml(f.name)}</span><em>${formatFileSize(f.size)}</em></li>`
         ).join('');
     }
 

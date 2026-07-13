@@ -31,10 +31,14 @@
         starBtn: root.querySelector('[data-msg-star]'),
         archiveBtn: root.querySelector('[data-msg-archive]'),
         search: root.querySelector('[data-msg-search]'),
-        composeModal: document.querySelector('[data-msg-compose-modal]'),
+        composeModal: document.getElementById('modal-msg-compose'),
         composeForm: document.querySelector('[data-msg-compose-form]'),
         recipientSelect: document.querySelector('[data-msg-recipient-select]'),
-        notifDrawer: document.querySelector('[data-msg-notif-drawer]'),
+        uploadZone: document.querySelector('[data-msg-upload-zone]'),
+        fileInput: document.querySelector('[data-msg-file-input]'),
+        fileList: document.querySelector('[data-msg-file-list]'),
+        composeSubmit: document.querySelector('.crm-msg-compose-submit'),
+        notifDrawer: document.getElementById('drawer-msg-notifications'),
         notifList: document.querySelector('[data-msg-notif-list]'),
         notifCount: root.querySelector('[data-msg-notif-count]'),
         folderUnread: root.querySelector('[data-folder-unread="inbox"]'),
@@ -169,29 +173,126 @@
         });
     }
 
-    function showCompose() {
+    function formatFileSize(bytes) {
+        if (!bytes) return '';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function renderFileList(files) {
+        if (!els.fileList || !els.uploadZone) return;
+        if (!files || !files.length) {
+            els.fileList.hidden = true;
+            els.fileList.innerHTML = '';
+            els.uploadZone.classList.remove('has-files');
+            return;
+        }
+        els.fileList.hidden = false;
+        els.uploadZone.classList.add('has-files');
+        els.fileList.innerHTML = Array.from(files).map(f => `
+            <li class="crm-msg-file-item">
+                <i class="fas fa-file-lines" aria-hidden="true"></i>
+                <span>${escapeHtml(f.name)}</span>
+                <em>${formatFileSize(f.size)}</em>
+            </li>
+        `).join('');
+    }
+
+    function initUploadZone() {
+        if (!els.uploadZone || !els.fileInput) return;
+        els.uploadZone.addEventListener('click', e => {
+            if (e.target.closest('a')) return;
+            els.fileInput.click();
+        });
+        els.fileInput.addEventListener('change', () => renderFileList(els.fileInput.files));
+        ['dragenter', 'dragover'].forEach(ev => {
+            els.uploadZone.addEventListener(ev, e => {
+                e.preventDefault();
+                els.uploadZone.classList.add('is-dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(ev => {
+            els.uploadZone.addEventListener(ev, e => {
+                e.preventDefault();
+                els.uploadZone.classList.remove('is-dragover');
+            });
+        });
+        els.uploadZone.addEventListener('drop', e => {
+            const files = e.dataTransfer?.files;
+            if (!files?.length) return;
+            els.fileInput.files = files;
+            renderFileList(files);
+        });
+    }
+
+    function openComposeModal() {
         if (!els.composeModal) return;
-        els.composeModal.hidden = false;
-        loadMembers();
+        if (window.WSModal && typeof window.WSModal.open === 'function') {
+            window.WSModal.open('modal-msg-compose');
+        } else {
+            els.composeModal.classList.add('is-open');
+            document.body.classList.add('ws-modal-open');
+        }
+        loadMembers().then(() => {
+            const focus = composeKind === 'direct' ? els.recipientSelect : document.getElementById('msg-compose-body');
+            focus?.focus();
+        });
+    }
+
+    function closeComposeModal() {
+        if (!els.composeModal) return;
+        if (window.WSModal && typeof window.WSModal.close === 'function') {
+            window.WSModal.close(els.composeModal);
+        } else {
+            els.composeModal.classList.remove('is-open');
+            document.body.classList.remove('ws-modal-open');
+        }
+        els.composeForm?.reset();
+        renderFileList(null);
+        setComposeKind('direct');
+    }
+
+    function showCompose() {
+        openComposeModal();
     }
 
     function hideCompose() {
-        if (els.composeModal) els.composeModal.hidden = true;
-        els.composeForm?.reset();
-        setComposeKind('direct');
+        closeComposeModal();
     }
 
     function setComposeKind(kind) {
         composeKind = kind;
-        document.querySelectorAll('[data-msg-compose-kind] button').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.kind === kind);
+        document.querySelectorAll('[data-msg-compose-kind] [data-kind]').forEach(btn => {
+            const active = btn.dataset.kind === kind;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-selected', active ? 'true' : 'false');
         });
         const showRecipient = kind === 'direct';
-        document.querySelector('[data-field-recipient]').hidden = !showRecipient;
-        document.querySelector('[data-field-subject]').hidden = showRecipient;
-        document.querySelector('[data-field-roles]').hidden = showRecipient;
+        const recipientField = document.querySelector('[data-field-recipient]');
+        const subjectField = document.querySelector('[data-field-subject]');
+        const rolesField = document.querySelector('[data-field-roles]');
+        if (recipientField) recipientField.hidden = !showRecipient;
+        if (subjectField) subjectField.hidden = showRecipient;
+        if (rolesField) rolesField.hidden = showRecipient;
+        if (els.recipientSelect) {
+            if (showRecipient) els.recipientSelect.setAttribute('required', 'required');
+            else els.recipientSelect.removeAttribute('required');
+        }
     }
 
+    function openNotifDrawer() {
+        if (!els.notifDrawer) return;
+        els.notifDrawer.classList.add('is-open');
+        document.body.classList.add('crm-drawer-open');
+        loadNotifications();
+    }
+
+    function closeNotifDrawer() {
+        if (!els.notifDrawer) return;
+        els.notifDrawer.classList.remove('is-open');
+        document.body.classList.remove('crm-drawer-open');
+    }
     function loadNotifications() {
         fetchJson(`${apiNotifications}?unread=1`).then(data => {
             if (!data.ok || !els.notifList) return;
@@ -210,7 +311,7 @@
                         const m = link.match(/thread=(\d+)/);
                         if (m) openThread(parseInt(m[1], 10));
                     }
-                    els.notifDrawer.hidden = true;
+                    closeNotifDrawer();
                 });
             });
         });
@@ -229,21 +330,24 @@
 
     root.querySelector('[data-msg-compose]')?.addEventListener('click', showCompose);
     document.querySelectorAll('[data-msg-compose-close]').forEach(b => b.addEventListener('click', hideCompose));
-    root.querySelector('[data-msg-notifications]')?.addEventListener('click', () => {
-        els.notifDrawer.hidden = false;
-        loadNotifications();
-    });
-    document.querySelector('[data-msg-notif-close]')?.addEventListener('click', () => {
-        els.notifDrawer.hidden = true;
-    });
+    root.querySelector('[data-msg-notifications]')?.addEventListener('click', openNotifDrawer);
+    document.querySelectorAll('[data-msg-notif-close]').forEach(b => b.addEventListener('click', closeNotifDrawer));
     document.querySelector('[data-msg-notif-read-all]')?.addEventListener('click', () => {
         fetchJson(apiNotifications, { method: 'POST', body: JSON.stringify({ action: 'read_all' }) })
             .then(() => { loadNotifications(); refreshUnread(); });
     });
 
-    document.querySelectorAll('[data-msg-compose-kind] button').forEach(btn => {
+    document.querySelectorAll('[data-msg-compose-kind] [data-kind]').forEach(btn => {
         btn.addEventListener('click', () => setComposeKind(btn.dataset.kind));
     });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && els.composeModal?.classList.contains('is-open')) {
+            hideCompose();
+        }
+    });
+
+    initUploadZone();
 
     els.starBtn?.addEventListener('click', () => {
         const starred = !els.starBtn.classList.contains('active');
@@ -287,10 +391,13 @@
         const fd = new FormData(els.composeForm);
         fd.append('kind', composeKind);
         if (composeKind === 'broadcast') {
+            fd.delete('recipient_member_id');
             document.querySelectorAll('[name=target_roles]:checked').forEach(cb => {
                 fd.append('target_roles', cb.value);
             });
         }
+        const submitBtn = els.composeSubmit;
+        if (submitBtn) submitBtn.disabled = true;
         fetch(apiThreads, {
             method: 'POST',
             credentials: 'same-origin',
@@ -305,6 +412,10 @@
             } else {
                 alert(data.error || 'خطا در ارسال');
             }
+        }).catch(() => {
+            alert('خطا در ارسال پیام');
+        }).finally(() => {
+            if (submitBtn) submitBtn.disabled = false;
         });
     });
 

@@ -1,0 +1,127 @@
+{% if agency_feature_messages %}
+{# مودال و drawer بیرون ws-main — جلوگیری از رفتن زیر سایدبار #}
+
+<div class="ws-modal crm-msg-compose-modal" id="modal-msg-compose" role="dialog" aria-modal="true" aria-labelledby="msg-compose-title">
+    <div class="ws-modal-overlay" data-msg-compose-close tabindex="-1" aria-hidden="true"></div>
+    <div class="ws-modal-panel ws-modal-panel-lg crm-msg-compose-panel">
+        <header class="ws-modal-head crm-msg-compose-head">
+            <div class="crm-msg-compose-head-brand">
+                <span class="crm-msg-compose-head-icon" aria-hidden="true"><i class="fas fa-paper-plane"></i></span>
+                <div>
+                    <h2 class="ws-modal-title" id="msg-compose-title">پیام جدید</h2>
+                    <p class="ws-modal-sub">ارسال خصوصی یا گروهی به اعضای آژانس</p>
+                </div>
+            </div>
+            <button type="button" class="ws-modal-close" data-msg-compose-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+
+        <form class="crm-msg-compose-form" data-msg-compose-form novalidate>
+            <div class="ws-modal-body crm-msg-compose-body">
+                <div class="crm-msg-compose-segment" data-msg-compose-kind role="tablist" aria-label="نوع پیام">
+                    <button type="button" class="crm-msg-compose-segment-btn active" data-kind="direct" role="tab" aria-selected="true">
+                        <i class="fas fa-user" aria-hidden="true"></i>
+                        <span>خصوصی</span>
+                    </button>
+                    {% if can_manage_team %}
+                    <button type="button" class="crm-msg-compose-segment-btn" data-kind="broadcast" role="tab" aria-selected="false">
+                        <i class="fas fa-users" aria-hidden="true"></i>
+                        <span>گروهی</span>
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div class="crm-msg-compose-fields">
+                    <div class="ws-field crm-msg-compose-field" data-field-recipient>
+                        <label class="ws-label" for="msg-recipient-select">گیرنده</label>
+                        <div class="crm-msg-select-wrap">
+                            <i class="fas fa-user-tie crm-msg-select-icon" aria-hidden="true"></i>
+                            <select name="recipient_member_id" id="msg-recipient-select" class="ws-select crm-msg-select" data-msg-recipient-select required>
+                                <option value="">انتخاب عضو...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="ws-field crm-msg-compose-field" data-field-subject hidden>
+                        <label class="ws-label" for="msg-compose-subject">موضوع</label>
+                        <input type="text" name="subject" id="msg-compose-subject" class="ws-input" placeholder="عنوان پیام گروهی" autocomplete="off">
+                    </div>
+
+                    <fieldset class="ws-field crm-msg-compose-field crm-msg-compose-roles" data-field-roles hidden>
+                        <legend class="ws-label">مخاطب</legend>
+                        <div class="crm-msg-role-pills">
+                            <label class="crm-msg-role-pill">
+                                <input type="checkbox" name="target_roles" value="advisor">
+                                <span><i class="fas fa-user-tie"></i> مشاور</span>
+                            </label>
+                            <label class="crm-msg-role-pill">
+                                <input type="checkbox" name="target_roles" value="secretary">
+                                <span><i class="fas fa-headset"></i> منشی</span>
+                            </label>
+                            <label class="crm-msg-role-pill">
+                                <input type="checkbox" name="target_roles" value="manager">
+                                <span><i class="fas fa-user-gear"></i> مدیر</span>
+                            </label>
+                            <label class="crm-msg-role-pill">
+                                <input type="checkbox" name="target_roles" value="owner">
+                                <span><i class="fas fa-crown"></i> مالک</span>
+                            </label>
+                        </div>
+                        <p class="crm-msg-compose-hint">اگر هیچ نقشی انتخاب نشود، پیام برای <strong>همه اعضا</strong> ارسال می‌شود.</p>
+                    </fieldset>
+
+                    <div class="ws-field crm-msg-compose-field">
+                        <label class="ws-label" for="msg-compose-body">متن پیام</label>
+                        <textarea name="body" id="msg-compose-body" class="ws-textarea crm-msg-compose-textarea" rows="5" placeholder="پیام خود را بنویسید..." required></textarea>
+                    </div>
+
+                    <div class="ws-field crm-msg-compose-field">
+                        <span class="ws-label">ضمیمه <small class="crm-msg-compose-label-muted">(اختیاری — حداکثر ۵ مگابایت)</small></span>
+                        <div class="ws-upload-zone crm-msg-upload-zone" data-msg-upload-zone>
+                            <input type="file" name="attachments" class="ws-upload-input" data-msg-file-input multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp">
+                            <div class="ws-upload-icon" aria-hidden="true"><i class="fas fa-cloud-arrow-up"></i></div>
+                            <p class="ws-upload-text">فایل را بکشید یا <span>انتخاب کنید</span></p>
+                            <p class="ws-upload-hint">PDF · Word · Excel · تصویر</p>
+                        </div>
+                        <ul class="crm-msg-file-list" data-msg-file-list hidden aria-live="polite"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="ws-modal-foot crm-msg-compose-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-msg-compose-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary crm-msg-compose-submit">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    <span>ارسال پیام</span>
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+<aside class="crm-drawer crm-msg-notif-drawer" id="drawer-msg-notifications" aria-label="اعلان‌های تیم">
+    <div class="crm-drawer-overlay" data-msg-notif-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-sm crm-msg-notif-panel">
+        <header class="crm-drawer-head crm-msg-notif-head">
+            <div>
+                <h2><i class="fas fa-bell"></i> اعلان‌های تیم</h2>
+                <p>پیام‌ها و رویدادهای جدید آژانس</p>
+            </div>
+            <button type="button" class="crm-drawer-close" data-msg-notif-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div class="crm-drawer-body crm-msg-notif-body">
+            <ul class="crm-msg-notif-list" data-msg-notif-list role="list">
+                <li class="crm-msg-thread-empty">در حال بارگذاری...</li>
+            </ul>
+        </div>
+        <footer class="crm-drawer-foot crm-msg-notif-foot">
+            <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-msg-notif-read-all>
+                علامت‌گذاری همه به‌عنوان خوانده‌شده
+            </button>
+        </footer>
+    </div>
+</aside>
+{% endif %}

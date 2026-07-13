@@ -10,7 +10,7 @@
 {% block extra_css %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-performance.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=3">
 {% endblock %}
 
 {% block crm_content %}
@@ -810,6 +810,13 @@
 {% endif %}
 {% endblock %}
 
+{% block modals %}
+{{ block.super }}
+{% if agency_feature_messages %}
+{% include 'workspace/crm/includes/team_messages_modals.html' %}
+{% endif %}
+{% endblock %}
+
 {% block crm_js %}
 <script>
 window.crmSyncExportUrl = '{% url "workspace:crm_sync_export" %}';
@@ -818,6 +825,6 @@ window.crmApiKeyRevealUrl = '{{ crm_api_key_reveal_url }}';
 window.crmApiKeyRegenerateUrl = '{{ crm_api_key_regenerate_url }}';
 </script>
 {% if agency_feature_messages %}
-<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=3"></script>
 {% endif %}
 {% endblock %}

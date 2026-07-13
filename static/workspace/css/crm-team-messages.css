@@ -468,6 +468,7 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+    max-width: 100%;
     border: 1px solid var(--m-line);
     border-radius: var(--m-radius);
     background: var(--m-surface);
@@ -481,16 +482,19 @@
     display: flex;
     align-items: center;
     gap: 0.55rem;
+    min-width: 0;
+    overflow: hidden;
     padding: 0.65rem 0.75rem;
     border-bottom: 1px solid var(--m-line);
     background: color-mix(in srgb, var(--m-elevated) 70%, var(--m-surface));
 }
 
-.crm-msg-convo-id { display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 0; }
+.crm-msg-convo-id { display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 0; overflow: hidden; }
+.crm-msg-convo-id-text { min-width: 0; flex: 1; overflow: hidden; }
 .crm-msg-convo-id-text h3 { margin: 0; font-size: 0.82rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .crm-msg-convo-id-text span { display: block; margin-top: 0.1rem; font-size: 0.6rem; color: var(--m-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.crm-msg-convo-tools { display: flex; align-items: center; gap: 0.2rem; }
+.crm-msg-convo-tools { display: flex; align-items: center; gap: 0.2rem; flex-shrink: 0; }
 
 .crm-msg-icon-btn {
     width: 2.15rem;
@@ -548,6 +552,8 @@
 .crm-msg-stream {
     flex: 1;
     min-height: 0;
+    min-width: 0;
+    overflow-x: hidden;
     overflow-y: auto;
     padding: 0.85rem 0.75rem 0.5rem;
     display: flex;
@@ -571,12 +577,14 @@
 .crm-msg-bubble {
     position: relative;
     align-self: flex-start;
-    max-width: min(92%, 28rem);
+    max-width: min(100%, 28rem);
+    width: fit-content;
     padding: 0.55rem 0.7rem 0.5rem;
     border-radius: 14px 14px 14px 6px;
     background: var(--m-surface);
     border: 1px solid var(--m-line);
     box-shadow: 0 4px 16px -12px rgba(15, 23, 42, 0.25);
+    overflow: hidden;
 }
 
 .crm-msg-bubble.is-mine {
@@ -589,40 +597,55 @@
 
 .crm-msg-bubble-meta {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.35rem 0.5rem;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
     margin-bottom: 0.25rem;
     font-size: 0.58rem;
+    min-width: 0;
+}
+
+.crm-msg-bubble-meta strong {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .crm-msg-bubble.is-mine .crm-msg-bubble-meta { color: rgba(255, 255, 255, 0.88); }
-.crm-msg-bubble-meta time { margin-inline-start: auto; font-variant-numeric: tabular-nums; opacity: 0.85; }
+.crm-msg-bubble-meta time { flex-shrink: 0; font-variant-numeric: tabular-nums; opacity: 0.85; }
 
-.crm-msg-bubble-text { font-size: 0.74rem; line-height: 1.55; word-break: break-word; }
+.crm-msg-bubble-text {
+    font-size: 0.74rem;
+    line-height: 1.55;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
 .crm-msg-bubble:not(.is-mine) .crm-msg-bubble-text { color: var(--m-text); }
 
 .crm-msg-bubble-del {
-    position: absolute;
-    inset-block-start: 0.35rem;
-    inset-inline-start: -1.85rem;
-    width: 1.55rem;
-    height: 1.55rem;
+    flex-shrink: 0;
+    width: 1.35rem;
+    height: 1.35rem;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     background: transparent;
     color: var(--m-muted);
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.14s ease;
+    display: grid;
+    place-items: center;
+    font-size: 0.62rem;
+    transition: opacity 0.14s ease, background 0.14s ease, color 0.14s ease;
 }
 
 .crm-msg-bubble:hover .crm-msg-bubble-del { opacity: 1; }
 
-.crm-msg-bubble.is-mine .crm-msg-bubble-del {
-    inset-inline-start: auto;
-    inset-inline-end: -1.85rem;
-}
+.crm-msg-bubble-del:hover { background: color-mix(in srgb, #ef4444 12%, transparent); color: #dc2626; }
+
+.crm-msg-bubble.is-mine .crm-msg-bubble-del { color: rgba(255, 255, 255, 0.75); }
+.crm-msg-bubble.is-mine .crm-msg-bubble-del:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
 
 .crm-msg-bubble-files { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.45rem; }
 
@@ -630,11 +653,15 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+    max-width: 100%;
     padding: 0.35rem 0.5rem;
     border-radius: 8px;
     font-size: 0.65rem;
     font-weight: 600;
     text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     background: color-mix(in srgb, var(--m-line) 45%, transparent);
     border: 1px solid color-mix(in srgb, var(--m-line) 80%, transparent);
     color: inherit;
@@ -650,12 +677,16 @@
     padding: 0.65rem 0.75rem 0.75rem;
     border-top: 1px solid var(--m-line);
     background: var(--m-surface);
+    min-width: 0;
+    overflow: hidden;
 }
 
 .crm-msg-composer-box {
     display: flex;
     align-items: flex-end;
     gap: 0.45rem;
+    min-width: 0;
+    max-width: 100%;
     padding: 0.45rem 0.5rem;
     border-radius: var(--m-radius-sm);
     border: 1px solid var(--m-line);
@@ -1114,4 +1145,34 @@
     .crm-msg-compose-header, .crm-msg-compose-body, .crm-msg-compose-footer { padding-inline: 1rem; }
     .crm-msg-type-switch { width: 100%; }
     .crm-msg-type-btn { flex: 1; justify-content: center; }
+}
+
+.crm-msg-compose-modal.ws-modal {
+    z-index: 1200;
+}
+
+.crm-msg-compose-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.crm-msg-compose-header-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.crm-msg-compose-header h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.crm-msg-compose-header p {
+    margin: 0.2rem 0 0;
+    font-size: 0.65rem;
+    color: var(--m-muted);
 }

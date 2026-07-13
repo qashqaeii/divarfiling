@@ -433,6 +433,53 @@ def _pending_withdrawals_rows() -> Tuple[List[str], Iterable[ExportRow]]:
     return headers, rows
 
 
+def _windows_downloads_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    from shop.models import DownloadLog
+
+    headers = ['کاربر', 'موبایل', 'پلن', 'محصول', 'IP', 'User Agent', 'تاریخ دانلود']
+    qs = (
+        DownloadLog.objects.select_related('user', 'order', 'order__plan', 'order__product')
+        .order_by('-created_at')
+    )
+    rows = [
+        {
+            'کاربر': _user_display(log.user),
+            'موبایل': log.user.phone or '',
+            'پلن': log.order.plan.name if log.order.plan_id else '',
+            'محصول': log.order.product.title if log.order.product_id else '',
+            'IP': log.ip_address or '',
+            'User Agent': log.user_agent or '',
+            'تاریخ دانلود': _jalali(log.created_at),
+        }
+        for log in qs
+    ]
+    return headers, rows
+
+
+def _windows_first_launches_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    from licenses.models import ClientAppEvent
+
+    headers = ['کاربر', 'موبایل', 'پلن', 'نسخه اپ', 'شناسه دستگاه', 'IP', 'تاریخ']
+    qs = (
+        ClientAppEvent.objects.filter(event_type=ClientAppEvent.EventType.FIRST_LAUNCH)
+        .select_related('user', 'license', 'license__plan')
+        .order_by('-created_at')
+    )
+    rows = [
+        {
+            'کاربر': _user_display(ev.user),
+            'موبایل': ev.user.phone or '',
+            'پلن': ev.license.plan.name if ev.license.plan_id else '',
+            'نسخه اپ': ev.app_version or '',
+            'شناسه دستگاه': ev.hardware_fingerprint,
+            'IP': ev.ip_address or '',
+            'تاریخ': _jalali(ev.created_at),
+        }
+        for ev in qs
+    ]
+    return headers, rows
+
+
 EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
     'pending_orders': {
         'title': 'سفارش‌های پرداخت‌نشده',
@@ -547,6 +594,22 @@ EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
         'icon': 'fa-wallet',
         'accent': 'rose',
         'builder': _pending_withdrawals_rows,
+    },
+    'windows_downloads': {
+        'title': 'دانلود اپ ویندوز',
+        'description': 'کاربرانی که فایل نصب را از سایت دانلود کرده‌اند',
+        'category': 'licenses',
+        'icon': 'fa-download',
+        'accent': 'blue',
+        'builder': _windows_downloads_rows,
+    },
+    'windows_first_launches': {
+        'title': 'اولین اجرای اپ ویندوز',
+        'description': 'اولین اجرای موفق اپ پس از فعال‌سازی لایسنس',
+        'category': 'licenses',
+        'icon': 'fa-play',
+        'accent': 'emerald',
+        'builder': _windows_first_launches_rows,
     },
 }
 

@@ -164,3 +164,61 @@ class AuditLog(models.Model):
         verbose_name_plural = 'لاگ‌های امنیتی'
         ordering = ['-created_at']
 
+
+class ClientAppEvent(models.Model):
+    """رویدادهای گزارش‌شده از اپ کلاینت (ویندوز) — نصب/اجرای واقعی."""
+
+    class EventType(models.TextChoices):
+        FIRST_LAUNCH = 'first_launch', 'اولین اجرا'
+        APP_LAUNCH = 'app_launch', 'اجرای برنامه'
+
+    class Platform(models.TextChoices):
+        WINDOWS = 'windows', 'ویندوز'
+
+    license = models.ForeignKey(
+        License,
+        on_delete=models.CASCADE,
+        related_name='client_events',
+        verbose_name='لایسنس',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='client_app_events',
+        verbose_name='کاربر',
+    )
+    activation = models.ForeignKey(
+        LicenseActivation,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='client_events',
+        verbose_name='اسلات دستگاه',
+    )
+    hardware_fingerprint = models.CharField(max_length=200, db_index=True, verbose_name='شناسه سخت‌افزاری')
+    event_type = models.CharField(max_length=32, choices=EventType.choices, verbose_name='نوع رویداد')
+    platform = models.CharField(
+        max_length=20,
+        choices=Platform.choices,
+        default=Platform.WINDOWS,
+        verbose_name='پلتفرم',
+    )
+    app_version = models.CharField(max_length=40, blank=True, verbose_name='نسخه اپ')
+    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name='آدرس IP')
+    user_agent = models.TextField(blank=True, verbose_name='User Agent')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ رویداد')
+
+    class Meta:
+        verbose_name = 'رویداد اپ کلاینت'
+        verbose_name_plural = 'رویدادهای اپ کلاینت'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['license', 'hardware_fingerprint', 'event_type'],
+                name='uniq_client_event_per_device',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.get_event_type_display()} — {self.user_id}'
+

@@ -9,5 +9,6 @@ urlpatterns = [
     path('licenses/validate/', api_views.ValidateLicenseView.as_view(), name='api_validate_license'),
     path('licenses/deactivate/', api_views.DeactivateLicenseView.as_view(), name='api_deactivate_license'),
     path('licenses/import-dataset/', api_views.BotDatasetImportView.as_view(), name='api_bot_import_dataset'),
+    path('licenses/client-event/', api_views.ClientAppEventView.as_view(), name='api_client_app_event'),
 ]
 

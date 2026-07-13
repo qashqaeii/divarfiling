@@ -2,7 +2,7 @@
 پنل مدیریت لایسنس‌ها
 """
 from django.contrib import admin
-from .models import License, LicenseActivation, AuditLog
+from .models import License, LicenseActivation, AuditLog, ClientAppEvent
 
 
 @admin.register(License)
@@ -28,4 +28,13 @@ class AuditLogAdmin(admin.ModelAdmin):
     list_filter = ['action_type', 'created_at']
     search_fields = ['license__license_key', 'ip_address']
     readonly_fields = ['created_at', 'details']
+
+
+@admin.register(ClientAppEvent)
+class ClientAppEventAdmin(admin.ModelAdmin):
+    list_display = ['user', 'event_type', 'app_version', 'hardware_fingerprint', 'license', 'ip_address', 'created_at']
+    list_filter = ['event_type', 'app_version', 'created_at']
+    search_fields = ['user__username', 'user__phone', 'hardware_fingerprint', 'license__license_key']
+    readonly_fields = ['created_at']
+    raw_id_fields = ['user', 'license']
 

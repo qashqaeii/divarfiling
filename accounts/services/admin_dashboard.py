@@ -14,6 +14,13 @@ from django.utils import timezone
 from workspace.services.jalali_input import to_persian_digits
 
 from accounts.services.admin_exports import get_export_catalog
+from accounts.services.admin_windows_app import (
+    get_windows_activations,
+    get_windows_app_stats,
+    get_windows_download_logs,
+    get_windows_first_launches,
+    get_windows_user_funnel,
+)
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES, get_pending_orders_for_display
 from accounts.services.sms import get_sms_balance_snapshot
 
@@ -718,4 +725,9 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
         },
         'chart_days': days,
         'products_count': Product.objects.filter(is_active=True).count(),
+        'windows_app_stats': get_windows_app_stats(),
+        'windows_download_logs': get_windows_download_logs(TABLE_FETCH_LIMIT),
+        'windows_activations': get_windows_activations(TABLE_FETCH_LIMIT),
+        'windows_first_launches': get_windows_first_launches(TABLE_FETCH_LIMIT),
+        'windows_user_funnel': get_windows_user_funnel(TABLE_FETCH_LIMIT),
     }

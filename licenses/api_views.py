@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from licenses.permissions import BotLicenseAPIPermission
 from licenses.services.api import LicenseAPIError, activate_license, deactivate_license, validate_license
 from licenses.services.bot_import import import_dataset_for_bot
+from licenses.services.client_events import ClientEventAPIError, record_client_event
 
 
 def _error_response(exc: LicenseAPIError) -> Response:
@@ -62,3 +63,16 @@ class BotDatasetImportView(APIView):
             return Response(import_dataset_for_bot(request))
         except LicenseAPIError as exc:
             return _error_response(exc)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ClientAppEventView(APIView):
+    permission_classes = [BotLicenseAPIPermission]
+
+    def post(self, request):
+        try:
+            return Response(record_client_event(request))
+        except ClientEventAPIError as exc:
+            payload = {'error': exc.message}
+            payload.update(exc.payload)
+            return Response(payload, status=exc.http_status)

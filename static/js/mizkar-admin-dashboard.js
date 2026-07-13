@@ -190,7 +190,7 @@
 
     function initTabs() {
         const tabs = document.querySelectorAll('.adm-tab');
-        const sections = ['adm-overview', 'adm-ops', 'adm-reports', 'adm-affiliates', 'adm-exports', 'adm-json'];
+        const sections = ['adm-overview', 'adm-ops', 'adm-reports', 'adm-windows', 'adm-affiliates', 'adm-exports', 'adm-json'];
 
         function setActiveTab(hash) {
             const id = (hash || '#adm-overview').replace('#', '');

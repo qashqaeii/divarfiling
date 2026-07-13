@@ -64,6 +64,7 @@
         <a href="#adm-overview" class="adm-tab is-active">نمای کلی</a>
         <a href="#adm-ops" class="adm-tab">عملیات{% if action_queue %} <span class="adm-tab-badge">{{ action_queue|length|to_persian_digits }}</span>{% endif %}</a>
         <a href="#adm-reports" class="adm-tab">گزارش‌ها</a>
+        <a href="#adm-windows" class="adm-tab">اپ ویندوز</a>
         <a href="#adm-affiliates" class="adm-tab">همکاری فروش</a>
         <a href="#adm-exports" class="adm-tab">خروجی</a>
         <a href="#adm-json" class="adm-tab">JSON</a>
@@ -599,6 +600,175 @@
                         </table>
                     </div>
                     {% include 'accounts/partials/adm_tbl_toggle.html' with total=recent_orders|length preview=table_preview_rows %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="adm-windows" class="adm-section">
+        <header class="adm-section-head">
+            <h2><i class="fab fa-windows"></i> اپ ویندوز — دانلود، فعال‌سازی و اجرا</h2>
+            <p>ردیابی مسیر کاربر از دانلود فایل نصب تا اولین اجرای ربات</p>
+        </header>
+
+        <section class="adm-dash-spotlight adm-dash-spotlight--compact" aria-label="شاخص‌های اپ ویندوز">
+            <div class="adm-kpi adm-kpi--blue">
+                <span class="adm-kpi-label">دانلود نصب‌کننده</span>
+                <strong class="adm-kpi-value">{{ windows_app_stats.windows_downloads_total|currency }}</strong>
+                <small>{{ windows_app_stats.windows_downloads_week|currency }} این هفته</small>
+            </div>
+            <div class="adm-kpi adm-kpi--emerald">
+                <span class="adm-kpi-label">فعال‌سازی ویندوز</span>
+                <strong class="adm-kpi-value">{{ windows_app_stats.windows_activations_total|currency }}</strong>
+                <small>{{ windows_app_stats.windows_activations_week|currency }} این هفته</small>
+            </div>
+            <div class="adm-kpi adm-kpi--violet">
+                <span class="adm-kpi-label">اولین اجرای اپ</span>
+                <strong class="adm-kpi-value">{{ windows_app_stats.windows_first_launches_total|currency }}</strong>
+                <small>{{ windows_app_stats.windows_first_launches_week|currency }} این هفته</small>
+            </div>
+        </section>
+
+        <div class="adm-bento adm-bento--tables">
+            <section class="adm-cell adm-cell--table adm-cell--wide adm-cell--pro" aria-labelledby="admWinFunnel">
+                <header class="adm-cell-head">
+                    <div>
+                        <h2 id="admWinFunnel">مسیر کاربران (دانلود → فعال → اجرا)</h2>
+                        <p>کاربرانی که فایل نصب را دانلود کرده‌اند</p>
+                    </div>
+                </header>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro">
+                            <thead>
+                                <tr>
+                                    <th>کاربر</th>
+                                    <th>دانلود</th>
+                                    <th>فعال‌سازی</th>
+                                    <th>اولین اجرا</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in windows_user_funnel %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td>
+                                        <strong>{{ row.user.get_full_name|default:row.user.username }}</strong>
+                                        <small>{{ row.user.phone|default:row.user.email }}</small>
+                                    </td>
+                                    <td>
+                                        {{ row.download_count|to_persian_digits }} بار
+                                        {% if row.last_download_at %}<small>{{ row.last_download_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</small>{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if row.activation %}
+                                        <span class="adm-badge adm-badge--paid">فعال</span>
+                                        <small>{{ row.activation.activated_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</small>
+                                        {% else %}
+                                        <span class="adm-badge adm-badge--pending">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if row.first_launch %}
+                                        <span class="adm-badge adm-badge--paid">ثبت شد</span>
+                                        <small>v{{ row.first_launch.app_version|default:"?" }} · {{ row.first_launch.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</small>
+                                        {% else %}
+                                        <span class="adm-badge adm-badge--pending">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="adm-empty">هنوز دانلودی ثبت نشده</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=windows_user_funnel|length preview=table_preview_rows %}
+                </div>
+            </section>
+
+            <section class="adm-cell adm-cell--table adm-cell--pro" aria-labelledby="admWinDownloads">
+                <header class="adm-cell-head">
+                    <div>
+                        <h2 id="admWinDownloads">لاگ دانلود نصب‌کننده</h2>
+                        <p>هر بار کلیک روی دانلود ZIP از داشبورد</p>
+                    </div>
+                    <a href="{% url 'admin_panel_export' 'windows_downloads' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-file-excel"></i></a>
+                </header>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro">
+                            <thead><tr><th>کاربر</th><th>پلن</th><th>IP</th><th>تاریخ</th></tr></thead>
+                            <tbody>
+                                {% for log in windows_download_logs %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ log.user.get_full_name|default:log.user.username }}</strong><small>{{ log.user.phone }}</small></td>
+                                    <td>{{ log.order.plan.name|default:"—" }}</td>
+                                    <td><small dir="ltr">{{ log.ip_address|default:"—" }}</small></td>
+                                    <td>{{ log.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="adm-empty">—</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=windows_download_logs|length preview=table_preview_rows %}
+                </div>
+            </section>
+
+            <section class="adm-cell adm-cell--table adm-cell--pro" aria-labelledby="admWinActivations">
+                <header class="adm-cell-head">
+                    <h2 id="admWinActivations">فعال‌سازی ربات ویندوز</h2>
+                </header>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro">
+                            <thead><tr><th>کاربر</th><th>پلن</th><th>دستگاه</th><th>تاریخ</th></tr></thead>
+                            <tbody>
+                                {% for act in windows_activations %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ act.license.order.user.get_full_name|default:act.license.order.user.username }}</strong><small>{{ act.license.order.user.phone }}</small></td>
+                                    <td>{{ act.license.plan.name|default:"—" }}</td>
+                                    <td><small dir="ltr">{{ act.masked_fingerprint }}</small></td>
+                                    <td>{{ act.activated_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="adm-empty">—</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=windows_activations|length preview=table_preview_rows %}
+                </div>
+            </section>
+
+            <section class="adm-cell adm-cell--table adm-cell--pro" aria-labelledby="admWinLaunches">
+                <header class="adm-cell-head">
+                    <div>
+                        <h2 id="admWinLaunches">اولین اجرای اپ (گزارش از کلاینت)</h2>
+                        <p>پس از نصب و فعال‌سازی لایسنس — یک‌بار per دستگاه</p>
+                    </div>
+                    <a href="{% url 'admin_panel_export' 'windows_first_launches' %}?format=xlsx" class="adm-dl-btn adm-dl-btn--ghost"><i class="fas fa-file-excel"></i></a>
+                </header>
+                <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table adm-table--pro">
+                            <thead><tr><th>کاربر</th><th>نسخه</th><th>دستگاه</th><th>تاریخ</th></tr></thead>
+                            <tbody>
+                                {% for ev in windows_first_launches %}
+                                <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                    <td><strong>{{ ev.user.get_full_name|default:ev.user.username }}</strong><small>{{ ev.user.phone }}</small></td>
+                                    <td>{{ ev.app_version|default:"—" }}</td>
+                                    <td><small dir="ltr">{{ ev.hardware_fingerprint|slice:":6" }}…{{ ev.hardware_fingerprint|slice:"-4:" }}</small></td>
+                                    <td>{{ ev.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="adm-empty">هنوز گزارشی از اپ دریافت نشده</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include 'accounts/partials/adm_tbl_toggle.html' with total=windows_first_launches|length preview=table_preview_rows %}
                 </div>
             </section>
         </div>

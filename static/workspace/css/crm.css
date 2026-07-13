@@ -26,15 +26,12 @@
 
 @media (max-width: 768px) {
     .crm-nav {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-        gap: 0.25rem;
-        padding: 0.3rem;
+        flex-wrap: wrap;
+        overflow: visible;
+        gap: 0.35rem;
+        row-gap: 0.4rem;
+        padding: 0.35rem;
     }
-    .crm-nav::-webkit-scrollbar { display: none; }
     .crm-nav-item {
         flex-shrink: 0;
         white-space: nowrap;
@@ -19651,5 +19648,83 @@ button.crm-prop-hero-cover {
     }
     .crm-areas-catalog {
         grid-template-columns: 1fr;
+    }
+}
+
+/* ─── CRM sub-nav: همه گزینه‌ها دیده شوند ─── */
+.crm-nav-shell {
+    width: 100%;
+    min-width: 0;
+}
+
+.crm-top-nav-row .crm-nav-shell {
+    flex: 1;
+    min-width: 0;
+}
+
+.crm-app .crm-top .crm-nav,
+.crm-app .crm-nav {
+    flex-wrap: wrap;
+    align-items: center;
+    overflow: visible;
+    gap: 0.35rem;
+    row-gap: 0.4rem;
+}
+
+.crm-app .crm-top .crm-nav-item,
+.crm-app .crm-nav-item {
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.crm-app .crm-top .crm-nav-item .ws-nav-icon,
+.crm-app .crm-nav-item .ws-nav-icon {
+    width: 1.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.crm-app .crm-top .crm-nav-item--video,
+.crm-nav-item--video {
+    margin-inline-start: auto;
+    color: #6d28d9;
+    border: 1px solid color-mix(in srgb, #7c3aed 22%, var(--ws-border));
+    background: color-mix(in srgb, #7c3aed 6%, var(--ws-surface));
+}
+
+.crm-app .crm-top .crm-nav-item--video:hover,
+.crm-nav-item--video:hover {
+    color: #5b21b6;
+    background: color-mix(in srgb, #7c3aed 11%, var(--ws-surface));
+    border-color: color-mix(in srgb, #7c3aed 32%, var(--ws-border));
+}
+
+.crm-app .crm-top .crm-nav-item--video .ws-nav-icon,
+.crm-nav-item--video .ws-nav-icon {
+    color: #7c3aed;
+}
+
+@media (max-width: 768px) {
+    .crm-app .crm-top .crm-nav,
+    .crm-app .crm-nav {
+        flex-wrap: wrap;
+        overflow: visible;
+        padding: 0.45rem 0 0.6rem;
+    }
+
+    .crm-app .crm-top .crm-nav-item,
+    .crm-app .crm-nav-item {
+        min-height: 40px;
+        padding: 0.42rem 0.75rem;
+        font-size: 0.78rem;
+    }
+
+    .crm-app .crm-top .crm-nav-item--video,
+    .crm-nav-item--video {
+        margin-inline-start: 0;
     }
 }

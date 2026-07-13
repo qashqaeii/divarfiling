@@ -63,16 +63,60 @@
                         <label class="ws-label" for="msg-compose-subject">موضوع گروهی</label>
                         <input type="text" name="subject" id="msg-compose-subject" class="ws-input" placeholder="مثلاً: جلسه هفتگی فروش" autocomplete="off">
                     </div>
-                    <fieldset class="ws-field">
-                        <legend class="ws-label">مخاطبان</legend>
-                        <div class="crm-msg-audience-chips">
-                            <label class="crm-msg-audience-chip"><input type="checkbox" name="target_roles" value="advisor"><span>مشاور</span></label>
-                            <label class="crm-msg-audience-chip"><input type="checkbox" name="target_roles" value="secretary"><span>منشی</span></label>
-                            <label class="crm-msg-audience-chip"><input type="checkbox" name="target_roles" value="manager"><span>مدیر</span></label>
-                            <label class="crm-msg-audience-chip"><input type="checkbox" name="target_roles" value="owner"><span>مالک</span></label>
+
+                    <div class="crm-msg-audience-panel">
+                        <div class="crm-msg-audience-head">
+                            <div class="crm-msg-audience-head-copy">
+                                <span class="crm-msg-audience-label">مخاطبان</span>
+                                <p>نقش‌هایی که این پیام را دریافت می‌کنند</p>
+                            </div>
+                            <span class="crm-msg-audience-scope is-all" data-audience-scope>همه اعضا</span>
                         </div>
-                        <p class="ws-settings-hint">بدون انتخاب نقش، پیام برای <strong>همه اعضا</strong> ارسال می‌شود.</p>
-                    </fieldset>
+
+                        <div class="crm-msg-audience-grid" data-audience-grid>
+                            <label class="crm-msg-audience-card">
+                                <input type="checkbox" name="target_roles" value="advisor">
+                                <span class="crm-msg-audience-card-icon" aria-hidden="true"><i class="fas fa-user-tie"></i></span>
+                                <span class="crm-msg-audience-card-copy">
+                                    <strong>مشاور</strong>
+                                    <small>کارشناسان فروش</small>
+                                </span>
+                                <span class="crm-msg-audience-check" aria-hidden="true"><i class="fas fa-check"></i></span>
+                            </label>
+                            <label class="crm-msg-audience-card">
+                                <input type="checkbox" name="target_roles" value="secretary">
+                                <span class="crm-msg-audience-card-icon" aria-hidden="true"><i class="fas fa-headset"></i></span>
+                                <span class="crm-msg-audience-card-copy">
+                                    <strong>منشی</strong>
+                                    <small>پشتیبانی و هماهنگی</small>
+                                </span>
+                                <span class="crm-msg-audience-check" aria-hidden="true"><i class="fas fa-check"></i></span>
+                            </label>
+                            <label class="crm-msg-audience-card">
+                                <input type="checkbox" name="target_roles" value="manager">
+                                <span class="crm-msg-audience-card-icon" aria-hidden="true"><i class="fas fa-user-gear"></i></span>
+                                <span class="crm-msg-audience-card-copy">
+                                    <strong>مدیر</strong>
+                                    <small>مدیریت آژانس</small>
+                                </span>
+                                <span class="crm-msg-audience-check" aria-hidden="true"><i class="fas fa-check"></i></span>
+                            </label>
+                            <label class="crm-msg-audience-card">
+                                <input type="checkbox" name="target_roles" value="owner">
+                                <span class="crm-msg-audience-card-icon" aria-hidden="true"><i class="fas fa-crown"></i></span>
+                                <span class="crm-msg-audience-card-copy">
+                                    <strong>مالک</strong>
+                                    <small>مالک آژانس</small>
+                                </span>
+                                <span class="crm-msg-audience-check" aria-hidden="true"><i class="fas fa-check"></i></span>
+                            </label>
+                        </div>
+
+                        <div class="crm-msg-audience-note">
+                            <i class="fas fa-circle-info" aria-hidden="true"></i>
+                            <p>بدون انتخاب نقش، پیام برای <strong>همه اعضای آژانس</strong> ارسال می‌شود.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 

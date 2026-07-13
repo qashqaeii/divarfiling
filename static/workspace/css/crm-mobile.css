@@ -61,25 +61,24 @@
         height: 40px;
     }
 
-    /* CRM top nav — chip scroll */
+    /* CRM top nav — wrap so all items stay visible */
     .crm-app .crm-nav {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        gap: 0.3rem;
-        padding: 0.35rem;
+        flex-wrap: wrap;
+        overflow: visible;
+        gap: 0.35rem;
+        row-gap: 0.4rem;
+        padding: 0.45rem 0.35rem 0.55rem;
         margin-bottom: 0;
         border-radius: 12px;
-        scroll-padding-inline: 0.5rem;
+        scroll-padding-inline: 0;
     }
-    .crm-app .crm-nav::-webkit-scrollbar { display: none; }
     .crm-app .crm-nav-item {
         flex-shrink: 0;
         min-height: 40px;
-        padding: 0.45rem 0.85rem;
+        padding: 0.45rem 0.8rem;
         border-radius: 999px;
-        font-size: 0.75rem;
+        font-family: inherit;
+        font-size: 0.78rem;
         font-weight: 600;
         border: 1px solid transparent;
         background: transparent;

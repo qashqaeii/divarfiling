@@ -480,6 +480,36 @@
         els.composeForm?.reset();
         renderFileList(null);
         setComposeKind('direct');
+        updateAudienceScope();
+    }
+
+    const AUDIENCE_ROLE_LABELS = {
+        advisor: 'مشاور',
+        secretary: 'منشی',
+        manager: 'مدیر',
+        owner: 'مالک',
+    };
+
+    function updateAudienceScope() {
+        const scope = document.querySelector('[data-audience-scope]');
+        if (!scope) return;
+        const checked = document.querySelectorAll('[name=target_roles]:checked');
+        if (!checked.length) {
+            scope.textContent = 'همه اعضا';
+            scope.classList.add('is-all');
+            return;
+        }
+        scope.textContent = Array.from(checked)
+            .map(cb => AUDIENCE_ROLE_LABELS[cb.value] || cb.value)
+            .join(' · ');
+        scope.classList.remove('is-all');
+    }
+
+    function initAudiencePanel() {
+        document.querySelectorAll('[name=target_roles]').forEach(cb => {
+            cb.addEventListener('change', updateAudienceScope);
+        });
+        updateAudienceScope();
     }
 
     function setComposeKind(kind) {
@@ -515,6 +545,7 @@
             if (isDirect) els.recipientSelect.setAttribute('required', 'required');
             else els.recipientSelect.removeAttribute('required');
         }
+        if (!isDirect) updateAudienceScope();
     }
 
     function openNotifDrawer() {
@@ -614,6 +645,7 @@
 
     initUploadZone();
     initComposer();
+    initAudiencePanel();
 
     els.starBtn?.addEventListener('click', () => {
         const starred = !els.starBtn.classList.contains('is-active');

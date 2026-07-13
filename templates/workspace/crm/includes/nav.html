@@ -1,4 +1,5 @@
 {% load crm_tags %}
+<div class="crm-nav-shell">
 <nav class="crm-nav" aria-label="ناوبری CRM">
     <a href="{% url 'workspace:crm_dashboard' %}" class="crm-nav-item {% if crm_section == 'dashboard' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='trending_up' size='nav' only %}</span><span>داشبورد</span>
@@ -42,3 +43,4 @@
     </a>
     {% endif %}
 </nav>
+</div>

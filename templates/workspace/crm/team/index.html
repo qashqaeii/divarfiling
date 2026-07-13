@@ -10,7 +10,7 @@
 {% block extra_css %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-performance.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=14">
 {% endblock %}
 
 {% block crm_content %}
@@ -825,6 +825,6 @@ window.crmApiKeyRevealUrl = '{{ crm_api_key_reveal_url }}';
 window.crmApiKeyRegenerateUrl = '{{ crm_api_key_regenerate_url }}';
 </script>
 {% if agency_feature_messages %}
-<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=12"></script>
+<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=14"></script>
 {% endif %}
 {% endblock %}

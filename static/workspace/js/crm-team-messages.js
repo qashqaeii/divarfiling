@@ -274,24 +274,51 @@
         </article>`;
     }
 
+    function formatBadgeCount(n) {
+        const count = Number(n) || 0;
+        if (count <= 0) return '';
+        return count > 99 ? '99+' : String(count);
+    }
+
+    function updateTeamNavBadge(n) {
+        const link = document.querySelector('[data-nav-team-badge]');
+        if (!link) return;
+        let badge = link.querySelector('[data-nav-team-messages-badge]');
+        const label = formatBadgeCount(n);
+        if (!label) {
+            if (badge) badge.hidden = true;
+            return;
+        }
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'ws-nav-badge';
+            badge.dataset.navTeamMessagesBadge = '';
+            link.appendChild(badge);
+        }
+        badge.textContent = label;
+        badge.hidden = false;
+    }
+
     function refreshUnread() {
         fetchJson(apiUnread).then(data => {
             if (!data.ok) return;
             const n = data.unread_messages || 0;
             if (els.folderUnread) {
-                els.folderUnread.textContent = n;
+                els.folderUnread.textContent = formatBadgeCount(n) || n;
                 els.folderUnread.hidden = !n;
             }
             if (els.notifCount) {
                 const nn = data.unread_notifications || 0;
-                els.notifCount.textContent = nn;
+                els.notifCount.textContent = formatBadgeCount(nn) || nn;
                 els.notifCount.hidden = !nn;
             }
             const tabBadge = document.querySelector('a[href="?tab=messages"] em');
             if (tabBadge) {
-                tabBadge.textContent = n;
-                tabBadge.style.display = n ? '' : 'none';
+                const label = formatBadgeCount(n);
+                tabBadge.textContent = label;
+                tabBadge.style.display = label ? '' : 'none';
             }
+            updateTeamNavBadge(n);
         });
     }
 

@@ -153,6 +153,10 @@ from workspace.services.access import has_active_bot_license
 
 
 def _crm_nav_counts(user):
+    membership = get_membership(user)
+    team_messages = 0
+    if membership and is_agency_feature_enabled('messages', membership.agency):
+        team_messages = unread_message_count(user)
     return {
         'contacts': customers_qs(user).count(),
         'properties': properties_qs(user).count(),
@@ -161,6 +165,7 @@ def _crm_nav_counts(user):
         'deals': deals_qs(user).exclude(
             stage__in=['بسته‌شده', 'از دست رفته'],
         ).count(),
+        'team_messages': team_messages,
     }
 
 

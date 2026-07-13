@@ -27,6 +27,20 @@ def crm_role_style_attr(role):
 
 
 @register.filter
+def nav_badge_count(value):
+    """نمایش شمارنده ناوبری — حداکثر ۹۹+."""
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        return ''
+    if n <= 0:
+        return ''
+    if n > 99:
+        return '99+'
+    return str(n)
+
+
+@register.filter
 def crm_initials(name):
     """حرف اول نام برای آواتار."""
     if not name:

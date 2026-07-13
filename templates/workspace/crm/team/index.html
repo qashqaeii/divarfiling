@@ -179,7 +179,7 @@
         {% if agency_feature_messages %}
         <a href="?tab=messages" class="crm-team-tab-v2 {% if tab == 'messages' %}active{% endif %}">
             <i class="fas fa-envelope"></i><span>پیام‌ها</span>
-            {% if messages_unread_count %}<em>{{ messages_unread_count }}</em>{% endif %}
+            {% if messages_unread_count %}<em>{{ messages_unread_count|nav_badge_count }}</em>{% endif %}
         </a>
         {% endif %}
         <a href="?tab=members" class="crm-team-tab-v2 {% if tab == 'members' %}active{% endif %}">
@@ -825,6 +825,6 @@ window.crmApiKeyRevealUrl = '{{ crm_api_key_reveal_url }}';
 window.crmApiKeyRegenerateUrl = '{{ crm_api_key_regenerate_url }}';
 </script>
 {% if agency_feature_messages %}
-<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=7"></script>
 {% endif %}
 {% endblock %}

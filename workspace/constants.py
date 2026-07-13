@@ -410,7 +410,27 @@ AUDIT_EVENTS = [
     'agency.updated', 'api_key.regenerated', 'member.invited', 'member.role_changed',
     'member.removed', 'lead.assigned', 'lead.bulk_assigned', 'customer.transferred',
     'sync.export', 'sync.import', 'webhook.created', 'webhook.deleted', 'webhook.tested',
+    'message.sent', 'message.broadcast', 'message.deleted', 'announcement.created',
+    'announcement.updated', 'announcement.deleted', 'knowledge.created', 'knowledge.updated',
 ]
+
+# ── مرکز فرماندهی آژانس — Feature Flags ماژولار ──
+AGENCY_COMMAND_CENTER_FEATURES = {
+    'messages': True,
+    'announcements': True,
+    'activity_feed': True,
+    'kpi_leaderboard': True,
+    'knowledge_base': True,
+    'team_calendar': True,
+    'heatmap': True,
+    'tv_mode': True,
+}
+
+MESSAGE_RETENTION_DAYS = 30
+MESSAGE_MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
+MESSAGE_ALLOWED_EXTENSIONS = frozenset({
+    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png', '.webp',
+})
 
 WEBHOOK_EVENTS = [
     'customer.created',

@@ -10,6 +10,7 @@
 {% block extra_css %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-performance.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
@@ -175,6 +176,12 @@
             {% if team_inbox %}<em>{{ team_inbox|length }}</em>{% endif %}
         </a>
         {% endif %}
+        {% if agency_feature_messages %}
+        <a href="?tab=messages" class="crm-team-tab-v2 {% if tab == 'messages' %}active{% endif %}">
+            <i class="fas fa-envelope"></i><span>پیام‌ها</span>
+            {% if messages_unread_count %}<em>{{ messages_unread_count }}</em>{% endif %}
+        </a>
+        {% endif %}
         <a href="?tab=members" class="crm-team-tab-v2 {% if tab == 'members' %}active{% endif %}">
             <i class="fas fa-users"></i><span>اعضا</span>
             <em>{{ team_stats.members }}</em>
@@ -256,6 +263,7 @@
 
     {% include 'workspace/crm/includes/team_tab_command.html' %}
     {% include 'workspace/crm/includes/team_tab_inbox.html' %}
+    {% include 'workspace/crm/includes/team_tab_messages.html' %}
     {% include 'workspace/crm/includes/team_tab_settings_audit.html' %}
 
     {# ── تب اعضا ── #}
@@ -809,4 +817,7 @@ window.crmSyncImportUrl = '{% url "workspace:crm_sync_import" %}';
 window.crmApiKeyRevealUrl = '{{ crm_api_key_reveal_url }}';
 window.crmApiKeyRegenerateUrl = '{{ crm_api_key_regenerate_url }}';
 </script>
+{% if agency_feature_messages %}
+<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=1"></script>
+{% endif %}
 {% endblock %}

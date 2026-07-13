@@ -70,6 +70,8 @@ from workspace.services.crm_property_share import (
 from workspace.services.crm_sync import export_crm_payload, import_crm_payload, record_sync_log
 from workspace.services.crm_webhooks import create_lead_from_api, dispatch_webhook, test_webhook, verify_api_key
 from workspace.services.crm_audit import log_agency_audit
+from workspace.services.crm_agency_features import is_agency_feature_enabled
+from workspace.services.crm_agency_messages import unread_message_count
 from workspace.services.display import to_jalali_display
 from workspace.services.jalali_input import (
     format_jalali_date, jalali_month_bounds_display, jalali_quarter_ahead_display,
@@ -2309,6 +2311,7 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['lead_routing_choices'] = LEAD_ROUTING_CHOICES
         ctx['can_view_team_inbox'] = can_view_team_inbox(user)
         ctx['can_operate_team_leads'] = can_operate_team_leads(user)
+        ctx['agency_feature_messages'] = is_agency_feature_enabled('messages', agency) if agency else False
         goal_start_jalali, goal_end_jalali = jalali_month_bounds_display()
         quarter_start_jalali, quarter_end_jalali = jalali_quarter_ahead_display()
         ctx['goal_period_start_default'] = to_persian_digits(goal_start_jalali)
@@ -2377,6 +2380,11 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
                 status=CRMAgencyMembershipRequest.STATUS_PENDING,
             ).select_related('agency', 'requested_by')
             ctx['my_pending_join'] = []
+            ctx['messages_unread_count'] = unread_message_count(user) if ctx['agency_feature_messages'] else 0
+            ctx['api_crm_team_messages_url'] = reverse('workspace:api_crm_team_messages')
+            ctx['api_crm_team_messages_unread_url'] = reverse('workspace:api_crm_team_messages_unread')
+            ctx['api_crm_team_messages_members_url'] = reverse('workspace:api_crm_team_messages_members')
+            ctx['api_crm_team_notifications_url'] = reverse('workspace:api_crm_team_notifications')
         else:
             ctx['performance'] = None
             ctx['my_performance'] = None
@@ -2394,6 +2402,8 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             ctx['assigned_leads'] = []
             ctx['sync_logs'] = []
             ctx['audit_logs'] = []
+            ctx['messages_unread_count'] = 0
+            ctx['agency_feature_messages'] = False
             ctx['pending_invites_sent'] = []
             ctx['pending_join_requests'] = []
             ctx['my_pending_invites'] = CRMAgencyMembershipRequest.objects.filter(
@@ -2413,6 +2423,8 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         if tab in manager_only and not can_manage_team(user):
             tab = 'overview'
         elif tab == 'inbox' and not can_view_team_inbox(user):
+            tab = 'overview'
+        elif tab == 'messages' and not (agency and is_agency_feature_enabled('messages', agency)):
             tab = 'overview'
         ctx['tab'] = tab
         if agency and can_manage_team(user):

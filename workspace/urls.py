@@ -1,7 +1,7 @@
 """URLهای workspace."""
 from django.urls import include, path
 
-from workspace import crm_views, support_views, team_api_views, views
+from workspace import crm_views, support_views, team_api_views, team_messages_api_views, views
 
 app_name = 'workspace'
 
@@ -65,6 +65,13 @@ urlpatterns = [
     path('api/crm/team/report.csv', team_api_views.TeamReportCSVView.as_view(), name='api_crm_team_report_csv'),
     path('api/crm/team/goals/', team_api_views.TeamGoalsAPIView.as_view(), name='api_crm_team_goals'),
     path('api/crm/team/webhooks/<int:webhook_id>/test/', team_api_views.TeamWebhookTestAPIView.as_view(), name='api_crm_team_webhook_test'),
+    path('api/crm/team/messages/', team_messages_api_views.TeamMessagesAPIView.as_view(), name='api_crm_team_messages'),
+    path('api/crm/team/messages/unread/', team_messages_api_views.TeamMessagesUnreadAPIView.as_view(), name='api_crm_team_messages_unread'),
+    path('api/crm/team/messages/members/', team_messages_api_views.TeamMessagesMembersAPIView.as_view(), name='api_crm_team_messages_members'),
+    path('api/crm/team/messages/<int:thread_id>/', team_messages_api_views.TeamMessageDetailAPIView.as_view(), name='api_crm_team_message_detail'),
+    path('api/crm/team/notifications/', team_messages_api_views.TeamPanelNotificationsAPIView.as_view(), name='api_crm_team_notifications'),
+    path('api/crm/team/announcements/', team_messages_api_views.TeamAnnouncementsAPIView.as_view(), name='api_crm_team_announcements'),
+    path('api/crm/team/announcements/<int:announcement_id>/', team_messages_api_views.TeamAnnouncementDetailAPIView.as_view(), name='api_crm_team_announcement_detail'),
     path('crm/api/leads/', crm_views.CRMInboundLeadAPIView.as_view(), name='crm_api_leads'),
     path('crm/today/', crm_views.CRMTodayView.as_view(), name='crm_today'),
     path('crm/search/', crm_views.CRMGlobalSearchView.as_view(), name='crm_search'),

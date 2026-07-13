@@ -1347,6 +1347,202 @@ class TicketAttachment(models.Model):
         return os.path.splitext(self.original_filename)[1].lower().lstrip('.')
 
 
+class CRMAgencyMessageThread(models.Model):
+    """رشته مکالمه داخلی آژانس — خصوصی یا گروهی."""
+    KIND_DIRECT = 'direct'
+    KIND_BROADCAST = 'broadcast'
+    KIND_CHOICES = [
+        (KIND_DIRECT, 'خصوصی'),
+        (KIND_BROADCAST, 'گروهی'),
+    ]
+
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.CASCADE,
+        related_name='message_threads', verbose_name='آژانس',
+    )
+    kind = models.CharField(max_length=12, choices=KIND_CHOICES, default=KIND_DIRECT)
+    subject = models.CharField(max_length=200, blank=True, verbose_name='موضوع')
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='agency_threads_created', verbose_name='ایجادکننده',
+    )
+    target_roles = models.JSONField(default=list, blank=True, verbose_name='نقش‌های هدف')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'رشته پیام آژانس'
+        verbose_name_plural = 'رشته‌های پیام آژانس'
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return self.subject or f'رشته #{self.pk}'
+
+
+class CRMAgencyMessageParticipant(models.Model):
+    """وضعیت هر عضو در یک رشته پیام."""
+    thread = models.ForeignKey(
+        CRMAgencyMessageThread, on_delete=models.CASCADE,
+        related_name='participants', verbose_name='رشته',
+    )
+    member = models.ForeignKey(
+        'CRMAgencyMember', on_delete=models.CASCADE,
+        related_name='message_participations', verbose_name='عضو',
+    )
+    is_archived = models.BooleanField(default=False, verbose_name='آرشیو')
+    is_starred = models.BooleanField(default=False, verbose_name='ستاره‌دار')
+    last_read_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین خواندن')
+    unread_count = models.PositiveIntegerField(default=0, verbose_name='خوانده‌نشده')
+
+    class Meta:
+        verbose_name = 'شرکت‌کننده پیام'
+        verbose_name_plural = 'شرکت‌کنندگان پیام'
+        constraints = [
+            models.UniqueConstraint(fields=['thread', 'member'], name='uniq_msg_thread_member'),
+        ]
+
+    def __str__(self):
+        return f'{self.member} @ thread {self.thread_id}'
+
+
+class CRMAgencyMessage(models.Model):
+    """پیام داخلی آژانس."""
+    thread = models.ForeignKey(
+        CRMAgencyMessageThread, on_delete=models.CASCADE,
+        related_name='messages', verbose_name='رشته',
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='agency_messages_sent', verbose_name='فرستنده',
+    )
+    body = models.TextField(verbose_name='متن')
+    reply_to = models.ForeignKey(
+        'self', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='replies', verbose_name='پاسخ به',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'پیام آژانس'
+        verbose_name_plural = 'پیام‌های آژانس'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return (self.body or '')[:60]
+
+
+class CRMAgencyMessageAttachment(models.Model):
+    """ضمیمه پیام داخلی."""
+    message = models.ForeignKey(
+        CRMAgencyMessage, on_delete=models.CASCADE,
+        related_name='attachments', verbose_name='پیام',
+    )
+    file = models.FileField(upload_to='workspace/crm/messages/', verbose_name='فایل')
+    original_name = models.CharField(max_length=255, verbose_name='نام اصلی')
+    file_size = models.PositiveIntegerField(default=0, verbose_name='حجم')
+    content_type = models.CharField(max_length=100, blank=True, verbose_name='نوع')
+
+    class Meta:
+        verbose_name = 'ضمیمه پیام'
+        verbose_name_plural = 'ضمیمه‌های پیام'
+        ordering = ['id']
+
+    def __str__(self):
+        return self.original_name
+
+
+class CRMAgencyAnnouncement(models.Model):
+    """تابلو اطلاعیه‌های آژانس."""
+    IMPORTANCE_LOW = 'low'
+    IMPORTANCE_NORMAL = 'normal'
+    IMPORTANCE_HIGH = 'high'
+    IMPORTANCE_URGENT = 'urgent'
+    IMPORTANCE_CHOICES = [
+        (IMPORTANCE_LOW, 'عادی'),
+        (IMPORTANCE_NORMAL, 'متوسط'),
+        (IMPORTANCE_HIGH, 'مهم'),
+        (IMPORTANCE_URGENT, 'فوری'),
+    ]
+
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.CASCADE,
+        related_name='announcements', verbose_name='آژانس',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='agency_announcements_created', verbose_name='ایجادکننده',
+    )
+    title = models.CharField(max_length=200, verbose_name='عنوان')
+    body = models.TextField(verbose_name='متن')
+    importance = models.CharField(
+        max_length=10, choices=IMPORTANCE_CHOICES,
+        default=IMPORTANCE_NORMAL, verbose_name='اهمیت',
+    )
+    is_pinned = models.BooleanField(default=False, verbose_name='سنجاق')
+    target_roles = models.JSONField(default=list, blank=True, verbose_name='نقش‌های هدف')
+    published_at = models.DateTimeField(verbose_name='تاریخ انتشار')
+    expires_at = models.DateTimeField(null=True, blank=True, verbose_name='انقضا')
+    attachment = models.FileField(
+        upload_to='workspace/crm/announcements/', blank=True, null=True, verbose_name='ضمیمه',
+    )
+    attachment_name = models.CharField(max_length=255, blank=True, verbose_name='نام ضمیمه')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'اطلاعیه آژانس'
+        verbose_name_plural = 'اطلاعیه‌های آژانس'
+        ordering = ['-is_pinned', '-published_at']
+
+    def __str__(self):
+        return self.title
+
+
+class CRMAgencyAnnouncementRead(models.Model):
+    """وضعیت خواندن اطلاعیه توسط عضو."""
+    announcement = models.ForeignKey(
+        CRMAgencyAnnouncement, on_delete=models.CASCADE,
+        related_name='reads', verbose_name='اطلاعیه',
+    )
+    member = models.ForeignKey(
+        'CRMAgencyMember', on_delete=models.CASCADE,
+        related_name='announcement_reads', verbose_name='عضو',
+    )
+    read_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'خواندن اطلاعیه'
+        verbose_name_plural = 'خواندن اطلاعیه‌ها'
+        constraints = [
+            models.UniqueConstraint(fields=['announcement', 'member'], name='uniq_announcement_read'),
+        ]
+
+
+class CRMAgencyPanelNotification(models.Model):
+    """اعلان درون‌پنلی CRM برای اعضای آژانس."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='agency_panel_notifications', verbose_name='کاربر',
+    )
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.CASCADE,
+        related_name='panel_notifications', verbose_name='آژانس',
+    )
+    kind = models.CharField(max_length=40, db_index=True, verbose_name='نوع')
+    title = models.CharField(max_length=200, verbose_name='عنوان')
+    body = models.TextField(blank=True, verbose_name='متن')
+    link = models.CharField(max_length=300, blank=True, verbose_name='لینک')
+    data = models.JSONField(default=dict, blank=True, verbose_name='داده')
+    is_read = models.BooleanField(default=False, db_index=True, verbose_name='خوانده‌شده')
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'اعلان پنل آژانس'
+        verbose_name_plural = 'اعلان‌های پنل آژانس'
+        ordering = ['-created_at']
+
+
 class WorkspaceSettings(models.Model):
     """تنظیمات workspace کاربر."""
     THEME_CHOICES = [('light', 'روشن'), ('cheerful', 'شاد'), ('dark', 'تیره')]

@@ -11,6 +11,12 @@
     --m-line: var(--ws-border, rgba(15, 23, 42, 0.08));
     --m-text: var(--ws-text, #0f172a);
     --m-muted: var(--ws-text-muted, #64748b);
+    --m-font: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+    --m-fs-2xs: 0.75rem;
+    --m-fs-xs: 0.8125rem;
+    --m-fs-sm: 0.875rem;
+    --m-fs-md: 1rem;
+    --m-fs-lg: 1.0625rem;
     --m-radius: 16px;
     --m-radius-sm: 12px;
     --m-radius-xs: 10px;
@@ -20,6 +26,31 @@
     gap: 0.75rem;
     min-width: 0;
     color: var(--m-text);
+    font-family: var(--m-font);
+    font-size: var(--m-fs-xs);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.crm-msg-hub--studio :where(
+    button, input, select, textarea, optgroup, label, legend, h1, h2, h3, h4, p, span, time, strong, em
+) {
+    font-family: inherit;
+}
+
+.crm-msg-compose-modal,
+.crm-msg-confirm-modal,
+.crm-msg-notif-drawer {
+    font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+.crm-msg-compose-modal :where(button, input, select, textarea, optgroup, label, legend),
+.crm-msg-confirm-modal :where(button, input, select, textarea, label) {
+    font-family: inherit;
 }
 
 .crm-app--team .crm-msg-hub--studio {
@@ -62,7 +93,7 @@
 
 .crm-msg-topbar-kicker {
     display: block;
-    font-size: 0.58rem;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -71,10 +102,10 @@
 
 .crm-msg-topbar-title {
     margin: 0.12rem 0 0;
-    font-size: 1.05rem;
-    font-weight: 800;
+    font-size: var(--m-fs-lg);
+    font-weight: 700;
     letter-spacing: -0.03em;
-    line-height: 1.2;
+    line-height: 1.3;
 }
 
 .crm-msg-topbar-actions {
@@ -93,8 +124,9 @@
     border-radius: 999px;
     border: 1px solid var(--m-line);
     background: var(--m-surface);
-    font-size: 0.72rem;
-    font-weight: 700;
+    font-family: inherit;
+    font-size: var(--m-fs-xs);
+    font-weight: 600;
     color: var(--m-text);
     cursor: pointer;
     transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, transform 0.12s ease;
@@ -135,7 +167,7 @@
     border-radius: 999px;
     background: #f59e0b;
     color: #fff;
-    font-size: 0.55rem;
+    font-size: 0.6875rem;
     font-weight: 800;
     display: inline-flex;
     align-items: center;
@@ -167,7 +199,7 @@
 .crm-msg-rail-head { padding: 0.75rem 0.85rem 0.35rem; }
 
 .crm-msg-rail-title {
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -224,8 +256,8 @@
 .crm-msg-folder-glyph--muted { color: var(--m-muted); background: color-mix(in srgb, var(--m-line) 80%, transparent); }
 
 .crm-msg-folder-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.08rem; }
-.crm-msg-folder-copy strong { font-size: 0.74rem; font-weight: 800; }
-.crm-msg-folder-copy small { font-size: 0.58rem; color: var(--m-muted); }
+.crm-msg-folder-copy strong { font-size: 0.8125rem; font-weight: 800; }
+.crm-msg-folder-copy small { font-size: 0.75rem; color: var(--m-muted); }
 
 .crm-msg-folder-badge {
     font-style: normal;
@@ -235,7 +267,7 @@
     border-radius: 999px;
     background: var(--m-accent);
     color: #fff;
-    font-size: 0.58rem;
+    font-size: 0.75rem;
     font-weight: 800;
     display: inline-flex;
     align-items: center;
@@ -251,7 +283,7 @@
     gap: 0.45rem;
     padding: 0.65rem 0.85rem;
     border-top: 1px solid var(--m-line);
-    font-size: 0.58rem;
+    font-size: 0.75rem;
     color: var(--m-muted);
     background: color-mix(in srgb, var(--m-line) 35%, transparent);
 }
@@ -276,8 +308,8 @@
     border-bottom: 1px solid var(--m-line);
 }
 
-.crm-msg-list-toolbar-meta h3 { margin: 0; font-size: 0.82rem; font-weight: 800; }
-.crm-msg-list-toolbar-meta span { display: block; margin-top: 0.12rem; font-size: 0.6rem; color: var(--m-muted); }
+.crm-msg-list-toolbar-meta h3 { margin: 0; font-size: var(--m-fs-md); font-weight: 700; }
+.crm-msg-list-toolbar-meta span { display: block; margin-top: 0.12rem; font-size: var(--m-fs-2xs); color: var(--m-muted); }
 
 .crm-msg-search {
     display: flex;
@@ -305,7 +337,7 @@
     min-width: 0;
     border: none;
     background: transparent;
-    font-size: 0.72rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     outline: none;
     color: inherit;
@@ -354,7 +386,7 @@
 }
 
 .crm-msg-thread-top strong {
-    font-size: 0.74rem;
+    font-size: 0.8125rem;
     flex: 1;
     min-width: 0;
     overflow: hidden;
@@ -362,10 +394,10 @@
     white-space: nowrap;
 }
 
-.crm-msg-thread-top time { font-size: 0.58rem; color: var(--m-muted); font-variant-numeric: tabular-nums; }
+.crm-msg-thread-top time { font-size: 0.75rem; color: var(--m-muted); font-variant-numeric: tabular-nums; }
 
 .crm-msg-tag {
-    font-size: 0.52rem;
+    font-size: 0.6875rem;
     font-weight: 800;
     padding: 0.12rem 0.4rem;
     border-radius: 999px;
@@ -375,7 +407,7 @@
 
 .crm-msg-thread-snippet {
     margin: 0;
-    font-size: 0.65rem;
+    font-size: 0.8125rem;
     color: var(--m-muted);
     line-height: 1.45;
     display: -webkit-box;
@@ -423,14 +455,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     font-weight: 800;
     flex-shrink: 0;
     background: hsl(var(--hue) 68% 90%);
     color: hsl(var(--hue) 42% 32%);
 }
 
-.crm-msg-avatar--xl { width: 2.65rem; height: 2.65rem; border-radius: 13px; font-size: 0.72rem; }
+.crm-msg-avatar--xl { width: 2.65rem; height: 2.65rem; border-radius: 13px; font-size: 0.8125rem; }
 .crm-msg-avatar--hue-0 { --hue: 262; }
 .crm-msg-avatar--hue-1 { --hue: 220; }
 .crm-msg-avatar--hue-2 { --hue: 168; }
@@ -450,7 +482,7 @@
     list-style: none;
 }
 
-.crm-msg-state p { margin: 0; font-size: 0.72rem; font-weight: 600; max-width: 16rem; line-height: 1.55; }
+.crm-msg-state p { margin: 0; font-size: 0.8125rem; font-weight: 600; max-width: 16rem; line-height: 1.55; }
 
 .crm-msg-state-ring {
     width: 2.75rem;
@@ -495,8 +527,8 @@
 
 .crm-msg-convo-id { display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 0; overflow: hidden; }
 .crm-msg-convo-id-text { min-width: 0; flex: 1; overflow: hidden; }
-.crm-msg-convo-id-text h3 { margin: 0; font-size: 0.82rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.crm-msg-convo-id-text span { display: block; margin-top: 0.1rem; font-size: 0.6rem; color: var(--m-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crm-msg-convo-id-text h3 { margin: 0; font-size: var(--m-fs-md); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crm-msg-convo-id-text span { display: block; margin-top: 0.1rem; font-size: var(--m-fs-2xs); color: var(--m-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .crm-msg-convo-tools { display: flex; align-items: center; gap: 0.2rem; flex-shrink: 0; position: relative; z-index: 13; }
 
@@ -510,7 +542,8 @@
     cursor: pointer;
     display: grid;
     place-items: center;
-    font-size: 0.82rem;
+    font-family: inherit;
+    font-size: 0.875rem;
     transition: background 0.14s ease, color 0.14s ease;
 }
 
@@ -540,11 +573,12 @@
     align-items: center;
     gap: 0.5rem;
     width: 100%;
-    padding: 0.5rem 0.55rem;
+    padding: 0.55rem 0.65rem;
     border: none;
     border-radius: 8px;
     background: transparent;
-    font-size: 0.68rem;
+    font-family: inherit;
+    font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
     text-align: start;
@@ -571,7 +605,7 @@
 .crm-msg-day { display: flex; justify-content: center; margin: 0.35rem 0 0.15rem; }
 
 .crm-msg-day span {
-    font-size: 0.58rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--m-muted);
     padding: 0.2rem 0.65rem;
@@ -607,7 +641,7 @@
     align-items: center;
     gap: 0.35rem;
     margin-bottom: 0.25rem;
-    font-size: 0.58rem;
+    font-size: 0.75rem;
     min-width: 0;
 }
 
@@ -623,8 +657,8 @@
 .crm-msg-bubble-meta time { flex-shrink: 0; font-variant-numeric: tabular-nums; opacity: 0.85; }
 
 .crm-msg-bubble-text {
-    font-size: 0.74rem;
-    line-height: 1.55;
+    font-size: var(--m-fs-sm);
+    line-height: 1.6;
     word-break: break-word;
     overflow-wrap: anywhere;
 }
@@ -642,7 +676,7 @@
     opacity: 0;
     display: grid;
     place-items: center;
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     transition: opacity 0.14s ease, background 0.14s ease, color 0.14s ease;
 }
 
@@ -662,7 +696,7 @@
     max-width: 100%;
     padding: 0.35rem 0.5rem;
     border-radius: 8px;
-    font-size: 0.65rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     text-decoration: none;
     overflow: hidden;
@@ -727,8 +761,9 @@
     resize: none;
     border: none;
     background: transparent;
-    font-size: 0.74rem;
-    line-height: 1.45;
+    font-family: inherit;
+    font-size: var(--m-fs-sm);
+    line-height: 1.5;
     outline: none;
     font-family: inherit;
     color: var(--m-text);
@@ -763,7 +798,7 @@
 }
 
 .crm-msg-empty h3 { margin: 0; font-size: 0.92rem; font-weight: 800; }
-.crm-msg-empty p { margin: 0; max-width: 18rem; font-size: 0.68rem; color: var(--m-muted); line-height: 1.55; }
+.crm-msg-empty p { margin: 0; max-width: 18rem; font-size: 0.8125rem; color: var(--m-muted); line-height: 1.55; }
 
 .crm-msg-empty-visual {
     position: relative;
@@ -793,58 +828,66 @@
 
 @keyframes crm-msg-orbit { to { transform: rotate(360deg); } }
 
-/* ─── Compose modal — wider + distinct direct/broadcast ─── */
+/* ─── Compose modal — typography + polished layout ─── */
 .crm-msg-compose-modal .crm-msg-compose-panel {
     width: min(94vw, 52rem);
     max-width: min(94vw, 52rem);
 }
 
+.crm-msg-compose-modal .ws-modal-body {
+    padding: 1.25rem 1.5rem 1rem !important;
+}
+
 .crm-msg-kind-picker {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 1.1rem;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
 }
 
 .crm-msg-kind-card {
     display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 0.9rem;
     width: 100%;
-    padding: 0.85rem 0.95rem;
-    border-radius: 12px;
+    min-height: 4.75rem;
+    padding: 1rem 1.1rem;
+    border-radius: 14px;
     border: 1px solid var(--mk-modal-border, var(--ws-border));
     background: var(--mk-input-bg, var(--ws-surface-2));
     color: var(--ws-text, inherit);
     cursor: pointer;
     text-align: start;
-    transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, transform 0.12s ease;
 }
 
 .crm-msg-kind-card:hover {
-    border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
+    border-color: color-mix(in srgb, var(--ws-primary) 30%, var(--ws-border));
+    transform: translateY(-1px);
 }
 
 .crm-msg-kind-card.active {
-    border-color: color-mix(in srgb, var(--ws-primary) 45%, var(--ws-border));
-    background: color-mix(in srgb, var(--ws-primary) 8%, var(--mk-input-bg, var(--ws-surface-2)));
+    border-color: color-mix(in srgb, var(--ws-primary) 48%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary) 9%, var(--mk-input-bg, var(--ws-surface-2)));
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 14%, transparent);
 }
 
 .crm-msg-compose-modal.is-compose-broadcast .crm-msg-kind-card[data-kind="broadcast"].active {
-    border-color: color-mix(in srgb, #f59e0b 45%, var(--ws-border));
-    background: color-mix(in srgb, #f59e0b 10%, var(--mk-input-bg, var(--ws-surface-2)));
+    border-color: color-mix(in srgb, #f59e0b 48%, var(--ws-border));
+    background: color-mix(in srgb, #f59e0b 11%, var(--mk-input-bg, var(--ws-surface-2)));
     box-shadow: 0 0 0 3px color-mix(in srgb, #f59e0b 16%, transparent);
 }
 
 .crm-msg-kind-card-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 11px;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 12px;
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    font-size: 1rem;
+    font-size: 1.05rem;
 }
 
 .crm-msg-kind-card-icon--direct {
@@ -860,20 +903,22 @@
 .crm-msg-kind-card-copy {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.28rem;
     min-width: 0;
 }
 
 .crm-msg-kind-card-copy strong {
-    font-size: 0.86rem;
+    font-size: 0.9375rem;
     font-weight: 700;
     letter-spacing: -0.02em;
+    line-height: 1.35;
 }
 
 .crm-msg-kind-card-copy span {
-    font-size: 0.72rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
     color: var(--ws-text-muted);
-    line-height: 1.45;
+    line-height: 1.5;
 }
 
 .crm-msg-compose-pane[hidden] { display: none !important; }
@@ -881,34 +926,36 @@
 .crm-msg-compose-callout {
     display: flex;
     align-items: flex-start;
-    gap: 0.7rem;
-    padding: 0.8rem 0.9rem;
-    border-radius: 10px;
-    margin-bottom: 1rem;
+    gap: 0.85rem;
+    padding: 0.95rem 1.05rem;
+    border-radius: 12px;
+    margin-bottom: 1.1rem;
     border: 1px solid transparent;
 }
 
 .crm-msg-compose-callout i {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 9px;
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 10px;
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    font-size: 0.82rem;
+    font-size: 0.95rem;
 }
 
 .crm-msg-compose-callout strong {
     display: block;
-    font-size: 0.8rem;
+    font-size: 0.875rem;
     font-weight: 700;
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.2rem;
+    line-height: 1.4;
 }
 
 .crm-msg-compose-callout p {
     margin: 0;
-    font-size: 0.72rem;
-    line-height: 1.5;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.6;
     color: var(--ws-text-muted);
 }
 
@@ -934,18 +981,18 @@
 
 .crm-msg-compose-broadcast-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: 0.85rem 1rem;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 1rem 1.15rem;
     align-items: start;
 }
 
 .crm-msg-audience-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.45rem;
+    gap: 0.5rem;
 }
 
-.crm-msg-audience-chip { cursor: pointer; }
+.crm-msg-audience-chip { cursor: pointer; font-family: inherit; }
 
 .crm-msg-audience-chip input {
     position: absolute;
@@ -956,11 +1003,11 @@
 .crm-msg-audience-chip span {
     display: inline-flex;
     align-items: center;
-    padding: 0.42rem 0.8rem;
+    padding: 0.5rem 0.9rem;
     border-radius: 999px;
     border: 1px solid var(--mk-modal-border, var(--ws-border));
     background: var(--mk-input-bg, var(--ws-surface-2));
-    font-size: 0.78rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: var(--ws-text-secondary);
     transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
@@ -972,9 +1019,17 @@
     color: #b45309;
 }
 
+.crm-msg-compose-section-title {
+    margin: 0 0 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--ws-text);
+    letter-spacing: -0.02em;
+}
+
 .crm-msg-compose-shared {
-    margin-top: 0.15rem;
-    padding-top: 1rem;
+    margin-top: 0.35rem;
+    padding-top: 1.15rem;
     border-top: 1px solid var(--mk-modal-border, var(--ws-border));
 }
 
@@ -982,13 +1037,37 @@
     border-top-color: color-mix(in srgb, #f59e0b 22%, var(--ws-border));
 }
 
+.crm-msg-compose-modal .ws-textarea {
+    min-height: 7.5rem;
+    font-size: 0.875rem !important;
+    line-height: 1.65 !important;
+}
+
+.crm-msg-compose-modal .ws-label {
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+}
+
+.crm-msg-compose-modal .ws-settings-hint {
+    font-size: 0.75rem !important;
+    line-height: 1.55;
+}
+
 .crm-msg-compose-modal.is-compose-broadcast .ws-btn-primary {
     background: linear-gradient(135deg, #f59e0b, #ea580c);
     border-color: color-mix(in srgb, #f59e0b 50%, transparent);
+    font-size: 0.8125rem;
+    font-weight: 600;
 }
 
 .crm-msg-compose-modal.is-compose-broadcast .ws-btn-primary:hover {
     background: linear-gradient(135deg, #ea580c, #c2410c);
+}
+
+.crm-msg-compose-modal .ws-btn-primary,
+.crm-msg-compose-modal .ws-btn-ghost {
+    font-size: 0.8125rem;
+    font-weight: 600;
 }
 
 .crm-msg-compose-upload-hint {
@@ -1028,7 +1107,7 @@
 
 .crm-msg-compose-files li em {
     font-style: normal;
-    font-size: 0.72rem;
+    font-size: 0.8125rem;
     color: var(--ws-text-muted);
 }
 
@@ -1061,7 +1140,7 @@
 
 .crm-msg-notif-head h2 { font-size: 0.92rem; font-weight: 800; }
 .crm-msg-notif-head h2 i { margin-inline-end: 0.35rem; color: var(--m-accent); }
-.crm-msg-notif-head p { margin: 0.2rem 0 0; font-size: 0.62rem; color: var(--m-muted); }
+.crm-msg-notif-head p { margin: 0.2rem 0 0; font-size: 0.75rem; color: var(--m-muted); }
 
 .crm-msg-notif-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
 
@@ -1070,7 +1149,7 @@
     border-radius: var(--m-radius-sm);
     border: 1px solid var(--m-line);
     background: var(--m-elevated);
-    font-size: 0.68rem;
+    font-size: 0.8125rem;
     line-height: 1.45;
     cursor: pointer;
     transition: border-color 0.14s ease, background 0.14s ease;

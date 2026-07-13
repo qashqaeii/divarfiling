@@ -9,7 +9,9 @@ from django.urls import reverse
 from workspace.models import CRMAgencyMember, CRMAgencyMessageThread
 from workspace.services.crm_agency import create_agency
 from workspace.services.crm_agency_messages import (
+    get_thread_detail,
     list_threads_for_user,
+    send_broadcast_message,
     send_direct_message,
     unread_message_count,
 )
@@ -54,6 +56,39 @@ class CRMAgencyMessagesTests(TestCase):
             content_type='application/json',
         )
         self.assertEqual(resp.status_code, 400)
+
+    def test_broadcast_sender_sees_thread_when_targeting_other_roles(self):
+        """فرستنده باید مکالمه گروهی را ببیند حتی اگر نقش خودش در مخاطبان نباشد."""
+        thread = send_broadcast_message(
+            self.owner,
+            'اطلاعیه برای مشاوران',
+            subject='جلسه فردا',
+            target_roles=['advisor'],
+        )
+        detail = get_thread_detail(self.owner, thread.pk)
+        self.assertIsNotNone(detail)
+        items, total = list_threads_for_user(self.owner)
+        self.assertEqual(total, 1)
+        self.assertEqual(items[0]['id'], thread.pk)
+        self.assertEqual(unread_message_count(self.advisor), 1)
+
+    def test_broadcast_api_multipart_target_roles(self):
+        client = Client()
+        client.force_login(self.owner)
+        resp = client.post(
+            reverse('workspace:api_crm_team_messages'),
+            {
+                'kind': 'broadcast',
+                'body': 'پیام گروهی تست',
+                'subject': 'موضوع',
+                'target_roles': ['advisor', 'secretary'],
+            },
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['ok'])
+        self.assertIsNotNone(data.get('thread'))
+        self.assertEqual(data['thread']['thread']['kind'], 'broadcast')
 
     def test_team_messages_tab_renders(self):
         client = Client()

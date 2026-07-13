@@ -238,6 +238,9 @@ def send_broadcast_message(
         target_roles=roles,
     )
     targets = _participants_for_broadcast(membership.agency, roles)
+    target_ids = {m.pk for m in targets}
+    if membership.pk not in target_ids:
+        targets.append(membership)
     for m in targets:
         CRMAgencyMessageParticipant.objects.create(thread=thread, member=m)
     message = CRMAgencyMessage.objects.create(thread=thread, sender=actor, body=body)

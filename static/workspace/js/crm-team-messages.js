@@ -540,6 +540,7 @@
         fd.append('kind', composeKind);
         if (composeKind === 'broadcast') {
             fd.delete('recipient_member_id');
+            fd.delete('target_roles');
             document.querySelectorAll('[name=target_roles]:checked').forEach(cb => {
                 fd.append('target_roles', cb.value);
             });
@@ -555,8 +556,14 @@
             if (data.ok) {
                 hideCompose();
                 loadThreads().then(() => {
-                    if (data.thread && data.thread.thread) openThread(data.thread.thread.id);
+                    const threadId = data.thread?.thread?.id;
+                    if (threadId) {
+                        openThread(threadId);
+                    } else {
+                        alert('پیام ارسال شد اما نمایش مکالمه ممکن نشد. لیست را به‌روز کنید.');
+                    }
                 });
+                refreshUnread();
             } else {
                 alert(data.error || 'خطا در ارسال');
             }

@@ -77,11 +77,14 @@ class TeamMessagesAPIView(_MessagesAPIBase):
             kind = payload.get('kind', 'direct')
             body = payload.get('body', '')
             if kind == 'broadcast':
+                roles = payload.getlist('target_roles') if hasattr(payload, 'getlist') else (payload.get('target_roles') or [])
+                if isinstance(roles, str):
+                    roles = [roles]
                 thread = send_broadcast_message(
                     request.user,
                     body,
                     subject=payload.get('subject', ''),
-                    target_roles=payload.get('target_roles') or [],
+                    target_roles=roles,
                     attachments=files,
                 )
             else:

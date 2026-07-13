@@ -15,14 +15,14 @@
 
 
 
-<link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=141">
+<link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=143">
 
 {% if crm_video.available %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 {% endif %}
 
-<link rel="stylesheet" href="{% static 'workspace/css/minimal.css' %}?v=71">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/minimal.css' %}?v=73">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-mobile.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=25">
 
@@ -104,7 +104,7 @@ window.crmFilterDeleteUrlBase = '{% url "workspace:crm_filter_delete" filter_id=
 window.crmFilterPinUrlBase = '{% url "workspace:crm_filter_pin" filter_id=0 %}'.replace('/0/', '/');
 </script>
 
-<script src="{% static 'workspace/js/crm.js' %}?v=48"></script>
+<script src="{% static 'workspace/js/crm.js' %}?v=50"></script>
 
 {% if crm_video.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>

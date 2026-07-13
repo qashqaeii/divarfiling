@@ -26,17 +26,18 @@
 
 @media (max-width: 768px) {
     .crm-nav {
-        flex-wrap: wrap;
-        overflow: visible;
-        gap: 0.35rem;
-        row-gap: 0.4rem;
-        padding: 0.35rem;
+        flex-wrap: nowrap;
+        overflow: hidden;
+        gap: 0.12rem;
+        padding: 0.3rem;
     }
     .crm-nav-item {
-        flex-shrink: 0;
+        flex-shrink: 1;
+        min-width: 0;
         white-space: nowrap;
-        padding: 0.5rem 0.85rem;
-        min-height: 44px;
+        padding: 0.45rem 0.65rem;
+        font-size: 0.72rem;
+        min-height: 40px;
     }
 }
 
@@ -5766,7 +5767,7 @@ body.crm-side-open { overflow: hidden; }
     gap: 0;
     background: var(--ws-surface);
     border-bottom: 1px solid var(--ws-border);
-    padding: 0 1.25rem;
+    padding: 0 0.85rem;
 }
 .crm-app--shell-full .crm-main,
 .crm-app--today-full .crm-main,
@@ -19651,7 +19652,7 @@ button.crm-prop-hero-cover {
     }
 }
 
-/* ─── CRM sub-nav: همه گزینه‌ها دیده شوند ─── */
+/* ─── CRM sub-nav: تک‌ردیف فشرده، بدون اسکرول ─── */
 .crm-nav-shell {
     width: 100%;
     min-width: 0;
@@ -19662,38 +19663,56 @@ button.crm-prop-hero-cover {
     min-width: 0;
 }
 
+.crm-nav-shell .crm-nav,
 .crm-app .crm-top .crm-nav,
 .crm-app .crm-nav {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    overflow: visible;
-    gap: 0.35rem;
-    row-gap: 0.4rem;
+    justify-content: flex-start;
+    overflow: hidden;
+    gap: 0.12rem;
 }
 
 .crm-app .crm-top .crm-nav-item,
 .crm-app .crm-nav-item {
     font-family: inherit;
-    font-size: 0.8125rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    line-height: 1.35;
+    line-height: 1.3;
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 0.32rem 0.48rem;
+    gap: 0.28rem;
 }
 
 .crm-app .crm-top .crm-nav-item .ws-nav-icon,
 .crm-app .crm-nav-item .ws-nav-icon {
-    width: 1.15rem;
+    width: 0.9rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
 
+.crm-app .crm-top .crm-nav-item .ws-nav-icon .df-decor-icon,
+.crm-app .crm-nav-item .ws-nav-icon .df-decor-icon {
+    font-size: 0.62rem;
+}
+
+.crm-app .crm-top .crm-nav-count,
+.crm-app .crm-nav-count {
+    font-size: 0.55rem;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 0.22rem;
+}
+
 .crm-app .crm-top .crm-nav-item--video,
 .crm-nav-item--video {
-    margin-inline-start: auto;
     color: #6d28d9;
     border: 1px solid color-mix(in srgb, #7c3aed 22%, var(--ws-border));
     background: color-mix(in srgb, #7c3aed 6%, var(--ws-surface));
+    flex-shrink: 0;
 }
 
 .crm-app .crm-top .crm-nav-item--video:hover,
@@ -19711,20 +19730,14 @@ button.crm-prop-hero-cover {
 @media (max-width: 768px) {
     .crm-app .crm-top .crm-nav,
     .crm-app .crm-nav {
-        flex-wrap: wrap;
-        overflow: visible;
-        padding: 0.45rem 0 0.6rem;
+        gap: 0.08rem;
+        padding: 0.35rem 0 0.45rem;
     }
 
     .crm-app .crm-top .crm-nav-item,
     .crm-app .crm-nav-item {
-        min-height: 40px;
-        padding: 0.42rem 0.75rem;
-        font-size: 0.78rem;
-    }
-
-    .crm-app .crm-top .crm-nav-item--video,
-    .crm-nav-item--video {
-        margin-inline-start: 0;
+        min-height: 36px;
+        padding: 0.28rem 0.4rem;
+        font-size: 0.68rem;
     }
 }

@@ -61,24 +61,23 @@
         height: 40px;
     }
 
-    /* CRM top nav — wrap so all items stay visible */
+    /* CRM top nav — تک‌ردیف فشرده */
     .crm-app .crm-nav {
-        flex-wrap: wrap;
-        overflow: visible;
-        gap: 0.35rem;
-        row-gap: 0.4rem;
-        padding: 0.45rem 0.35rem 0.55rem;
+        flex-wrap: nowrap;
+        overflow: hidden;
+        gap: 0.08rem;
+        padding: 0.35rem 0 0.45rem;
         margin-bottom: 0;
         border-radius: 12px;
-        scroll-padding-inline: 0;
     }
     .crm-app .crm-nav-item {
-        flex-shrink: 0;
-        min-height: 40px;
-        padding: 0.45rem 0.8rem;
+        flex: 0 1 auto;
+        min-width: 0;
+        min-height: 36px;
+        padding: 0.28rem 0.4rem;
         border-radius: 999px;
         font-family: inherit;
-        font-size: 0.78rem;
+        font-size: 0.68rem;
         font-weight: 600;
         border: 1px solid transparent;
         background: transparent;

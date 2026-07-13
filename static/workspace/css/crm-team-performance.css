@@ -731,3 +731,134 @@
     border-radius: 6px;
     background: rgba(148, 163, 184, 0.12);
 }
+
+/* ─── Roster summary ─── */
+.crm-team-roster-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.crm-team-roster-kpi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: 0.65rem 0.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--crm-border, rgba(148, 163, 184, 0.22));
+    background: var(--crm-surface, rgba(255, 255, 255, 0.02));
+    text-align: center;
+}
+
+.crm-team-roster-kpi-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.crm-team-roster-kpi-lbl {
+    font-size: 0.62rem;
+    color: var(--crm-text-muted, #94a3b8);
+}
+
+.crm-team-roster-kpi--pending .crm-team-roster-kpi-val { color: #b45309; }
+.crm-team-roster-kpi--join .crm-team-roster-kpi-val { color: #2563eb; }
+
+.crm-team-tab-badge {
+    position: absolute;
+    top: 0.2rem;
+    inset-inline-start: 0.2rem;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 0.25rem;
+    border-radius: 999px;
+    background: #f59e0b;
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.crm-team-tab-v2 { position: relative; }
+
+.crm-team-request-card--invite {
+    align-items: center;
+}
+
+.crm-team-request-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: hsl(var(--hue, 220) 65% 88%);
+    color: hsl(var(--hue, 220) 45% 28%);
+    flex-shrink: 0;
+}
+
+.crm-team-request-meta {
+    font-size: 0.68rem !important;
+    color: var(--crm-text-muted, #94a3b8) !important;
+}
+
+.crm-team-request-meta i {
+    margin-inline-end: 0.2rem;
+    opacity: 0.75;
+}
+
+.crm-team-request-pending-stats {
+    display: flex;
+    gap: 0.45rem;
+    font-size: 0.72rem;
+    color: var(--crm-text-muted, #94a3b8);
+    opacity: 0.65;
+}
+
+.crm-team-request-pending-stats i {
+    margin-inline-end: 0.15rem;
+}
+
+.crm-team-member-tile-stats .is-zero {
+    opacity: 0.55;
+}
+
+.crm-team-member-score {
+    margin-inline-start: auto;
+    padding: 0.15rem 0.4rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ws-primary, #2563eb) 12%, transparent);
+    color: var(--ws-primary, #2563eb);
+    font-weight: 700;
+    font-size: 0.62rem !important;
+}
+
+.crm-team-member-tile-privacy {
+    margin: 0;
+    padding: 0.45rem 0.55rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--crm-border, #94a3b8) 8%, transparent);
+    font-size: 0.62rem;
+    color: var(--crm-text-muted, #94a3b8);
+}
+
+.crm-team-member-tile-privacy i {
+    margin-inline-end: 0.25rem;
+    opacity: 0.7;
+}
+
+@media (max-width: 720px) {
+    .crm-team-roster-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .crm-team-request-pending-stats {
+        display: none;
+    }
+}

@@ -9,7 +9,7 @@
 
 {% block extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-performance.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-performance.css' %}?v=3">
 {% endblock %}
 
 {% block crm_content %}
@@ -25,7 +25,7 @@
                         <h1 class="crm-dash-bar-title">{{ crm_agency.name }}</h1>
                         <p class="crm-dash-bar-sub">
                             <span class="crm-team-hero-role" style="{% crm_agency_role_style crm_membership.role %}">{{ crm_membership.get_role_display }}</span>
-                            <span class="crm-team-hero-meta">{{ team_stats.members }} عضو · {{ team_stats.contacts }} مخاطب · {{ team_stats.deals }} معامله</span>
+                            <span class="crm-team-hero-meta">{{ team_stats.members }} عضو · {{ team_stats.contacts }} مخاطب · {{ team_stats.properties }} فایل · {{ team_stats.deals }} معامله بسته{% if can_view_team_performance and team_stats.active_deals %} · {{ team_stats.active_deals }} فعال{% endif %}</span>
                             {% if can_manage_team %}
                             <span class="crm-team-hero-slug" title="شناسه آژانس برای درخواست عضویت">شناسه: <code dir="ltr">{{ crm_agency.slug }}</code></span>
                             {% endif %}
@@ -166,6 +166,7 @@
         <a href="?tab=members" class="crm-team-tab-v2 {% if tab == 'members' %}active{% endif %}">
             <i class="fas fa-users"></i><span>اعضا</span>
             <em>{{ team_stats.members }}</em>
+            {% if can_manage_team and team_roster_summary.pending_invites %}<span class="crm-team-tab-badge" title="دعوت در انتظار">{{ team_roster_summary.pending_invites }}</span>{% endif %}
         </a>
         {% if can_manage_team %}
         <a href="?tab=sync" class="crm-team-tab-v2 {% if tab == 'sync' %}active{% endif %}">
@@ -223,6 +224,29 @@
 
     {# ── تب اعضا ── #}
     {% if tab == 'members' %}
+
+    {% if can_manage_team and team_roster_summary %}
+    <section class="crm-team-roster-kpis" aria-label="خلاصه ترکیب تیم">
+        <article class="crm-team-roster-kpi">
+            <span class="crm-team-roster-kpi-val">{{ team_roster_summary.active }}</span>
+            <span class="crm-team-roster-kpi-lbl">عضو فعال</span>
+        </article>
+        <article class="crm-team-roster-kpi crm-team-roster-kpi--pending">
+            <span class="crm-team-roster-kpi-val">{{ team_roster_summary.pending_invites }}</span>
+            <span class="crm-team-roster-kpi-lbl">دعوت در انتظار</span>
+        </article>
+        <article class="crm-team-roster-kpi crm-team-roster-kpi--join">
+            <span class="crm-team-roster-kpi-val">{{ team_roster_summary.pending_joins }}</span>
+            <span class="crm-team-roster-kpi-lbl">درخواست عضویت</span>
+        </article>
+        {% if can_view_team_performance and performance %}
+        <article class="crm-team-roster-kpi crm-team-roster-kpi--wide">
+            <span class="crm-team-roster-kpi-val">{{ performance.totals.calls }}</span>
+            <span class="crm-team-roster-kpi-lbl">تماس تیم · {{ performance.days }} روز</span>
+        </article>
+        {% endif %}
+    </section>
+    {% endif %}
 
     {% if my_pending_invites %}
     <section class="crm-team-requests-v2" aria-label="دعوت‌های دریافتی">
@@ -308,15 +332,23 @@
         <header class="crm-team-panel-head-v2">
             <div>
                 <h2>دعوت‌های در انتظار تأیید</h2>
-                <p>منتظر پاسخ کاربر دعوت‌شده</p>
+                <p>{{ pending_invites_sent|length }} دعوت منتظر پاسخ — آمار پس از پیوستن در کارت عضو نمایش داده می‌شود</p>
             </div>
         </header>
         <div class="crm-team-request-list">
             {% for req in pending_invites_sent %}
-            <article class="crm-team-request-card">
+            <article class="crm-team-request-card crm-team-request-card--invite">
+                <div class="crm-team-request-avatar" style="--hue: {{ req.user.phone|crm_avatar_hue }}">{{ req.user.get_full_name|default:req.user.phone|crm_initials }}</div>
                 <div class="crm-team-request-main">
-                    <strong dir="ltr">{{ req.user.phone }}</strong>
-                    <span>نقش: {{ req.get_role_display }}</span>
+                    <strong>{{ req.user.get_full_name|default:req.user.phone }}</strong>
+                    <span dir="ltr">{{ req.user.phone }}</span>
+                    <span class="crm-team-role-pill" style="{% crm_agency_role_style req.role %}">{{ req.get_role_display }}</span>
+                    <span class="crm-team-request-meta"><i class="fas fa-clock"></i> ارسال {{ req.created_at|ws_jalali_date }} · از طرف {{ req.requested_by.get_full_name|default:req.requested_by.phone }}</span>
+                </div>
+                <div class="crm-team-request-pending-stats" aria-hidden="true">
+                    <span title="پس از پیوستن"><i class="fas fa-users"></i>—</span>
+                    <span title="پس از پیوستن"><i class="fas fa-building"></i>—</span>
+                    <span title="پس از پیوستن"><i class="fas fa-phone"></i>—</span>
                 </div>
                 <form method="post" class="crm-team-inline-form">
                     {% csrf_token %}
@@ -364,16 +396,19 @@
                     </div>
                     <span class="crm-team-role-pill" style="{% crm_agency_role_style m.role %}">{{ m.get_role_display }}</span>
                 </header>
-                {% if p %}
+                {% if can_view_team_performance or m.user_id == request.user.id %}
                 <div class="crm-team-member-tile-stats">
-                    {% if can_view_team_performance or m.user_id == request.user.id %}
-                    <span title="تعداد مخاطب"><i class="fas fa-users"></i>{{ p.contacts|default:0 }}</span>
-                    <span title="تعداد فایل"><i class="fas fa-building"></i>{{ p.properties|default:0 }}</span>
-                    <span title="تماس"><i class="fas fa-phone"></i>{{ p.calls|default:0 }}</span>
-                    <span title="بازدید"><i class="fas fa-door-open"></i>{{ p.visits|default:0 }}</span>
-                    <span title="معامله بسته"><i class="fas fa-handshake"></i>{{ p.deals_closed|default:0 }}</span>
+                    <span title="تعداد مخاطب" class="{% if not p.contacts %}is-zero{% endif %}"><i class="fas fa-users"></i>{{ p.contacts|default:0 }}</span>
+                    <span title="تعداد فایل" class="{% if not p.properties %}is-zero{% endif %}"><i class="fas fa-building"></i>{{ p.properties|default:0 }}</span>
+                    <span title="تماس · ۳۰ روز" class="{% if not p.calls %}is-zero{% endif %}"><i class="fas fa-phone"></i>{{ p.calls|default:0 }}</span>
+                    <span title="بازدید · ۳۰ روز" class="{% if not p.visits %}is-zero{% endif %}"><i class="fas fa-door-open"></i>{{ p.visits|default:0 }}</span>
+                    <span title="معامله بسته · ۳۰ روز" class="{% if not p.deals_closed %}is-zero{% endif %}"><i class="fas fa-handshake"></i>{{ p.deals_closed|default:0 }}</span>
+                    {% if p.score_pct %}
+                    <span class="crm-team-member-score" title="امتیاز عملکرد"><i class="fas fa-chart-line"></i>{{ p.score_pct }}%</span>
                     {% endif %}
                 </div>
+                {% elif can_manage_team %}
+                <p class="crm-team-member-tile-privacy"><i class="fas fa-lock"></i> آمار فقط برای خود مشاور قابل مشاهده است</p>
                 {% endif %}
                 <footer class="crm-team-member-tile-foot">
                     <time><i class="fas fa-calendar-plus"></i> عضویت {{ m.joined_at|ws_jalali_date }}</time>

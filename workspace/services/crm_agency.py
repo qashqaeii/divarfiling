@@ -66,9 +66,16 @@ def create_agency(user, name: str) -> CRMAgency:
 
 
 def _attach_user_records(user, agency: CRMAgency) -> None:
-    Customer.objects.filter(user=user, agency__isnull=True).update(agency=agency)
-    CRMProperty.objects.filter(user=user, agency__isnull=True).update(agency=agency)
-    CRMDeal.objects.filter(user=user, agency__isnull=True).update(agency=agency)
+    user_id = user.id if hasattr(user, 'id') else int(user)
+    Customer.objects.filter(user_id=user_id, agency__isnull=True).update(agency=agency)
+    CRMProperty.objects.filter(user_id=user_id, agency__isnull=True).update(agency=agency)
+    CRMDeal.objects.filter(user_id=user_id, agency__isnull=True).update(agency=agency)
+
+
+def sync_agency_member_records(agency: CRMAgency) -> None:
+    """اتصال داده‌های بدون آژانس همهٔ اعضای فعال — برای اعضای دعوت‌شدهٔ قدیمی."""
+    for uid in agency.members.filter(is_active=True).values_list('user_id', flat=True):
+        _attach_user_records(uid, agency)
 
 
 @transaction.atomic
@@ -132,6 +139,7 @@ def _finalize_membership(request: CRMAgencyMembershipRequest) -> CRMAgencyMember
         agency=request.agency, user=request.user,
         defaults={'role': request.role, 'is_active': True},
     )
+    _attach_user_records(request.user, request.agency)
     return member
 
 

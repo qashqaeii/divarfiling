@@ -24,25 +24,24 @@ def get_team_performance(agency: CRMAgency, days: int = 30) -> Dict[str, Any]:
         properties = _member_properties_count(agency, uid)
 
         calls = CustomerActivity.objects.filter(
-            customer__agency=agency,
             activity_type='تماس',
             created_at__gte=since,
-        ).filter(_activity_user_q(uid)).count()
+        ).filter(_activity_user_q(agency, uid)).count()
 
         visits = PropertyVisit.objects.filter(
             user_id=uid,
-            customer__agency=agency,
             visit_date__gte=since.date(),
+        ).filter(
+            Q(customer__agency=agency) | Q(customer__agency__isnull=True, customer__user_id=uid),
         ).count()
 
         deals_closed = CRMDeal.objects.filter(
-            agency=agency,
             stage=DEAL_STAGE_WON,
             closed_at__gte=since,
-        ).filter(_deal_user_q(uid)).count()
+        ).filter(_deal_user_q(agency, uid)).count()
 
-        active_deals = CRMDeal.objects.filter(agency=agency).filter(
-            _deal_user_q(uid),
+        active_deals = CRMDeal.objects.filter(
+            _deal_user_q(agency, uid),
         ).exclude(stage__in=['بسته‌شده', 'از دست رفته']).count()
 
         rows.append({
@@ -98,20 +97,30 @@ def get_team_performance(agency: CRMAgency, days: int = 30) -> Dict[str, Any]:
     }
 
 
+def _member_scope_q(agency, user_id: int):
+    """رکوردهای عضو — شامل داده‌های قبل از پیوستن که هنوز agency ندارند."""
+    return Q(user_id=user_id) & (Q(agency=agency) | Q(agency__isnull=True))
+
+
 def _member_contacts_count(agency, user_id: int) -> int:
-    return Customer.objects.filter(agency=agency, user_id=user_id).count()
+    return Customer.objects.filter(_member_scope_q(agency, user_id)).count()
 
 
 def _member_properties_count(agency, user_id: int) -> int:
-    return CRMProperty.objects.filter(agency=agency, user_id=user_id).count()
+    return CRMProperty.objects.filter(
+        _member_scope_q(agency, user_id),
+        deleted_at__isnull=True,
+    ).count()
 
 
-def _activity_user_q(user_id: int):
-    return Q(customer__user_id=user_id)
+def _activity_user_q(agency, user_id: int):
+    return Q(customer__user_id=user_id) & (
+        Q(customer__agency=agency) | Q(customer__agency__isnull=True)
+    )
 
 
-def _deal_user_q(user_id: int):
-    return Q(user_id=user_id)
+def _deal_user_q(agency, user_id: int):
+    return Q(user_id=user_id) & (Q(agency=agency) | Q(agency__isnull=True))
 
 
 def get_member_performance_row(agency: CRMAgency, user_id: int, days: int = 30) -> Dict[str, Any]:

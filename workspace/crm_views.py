@@ -43,7 +43,7 @@ from workspace.models import (
 from workspace.services.crm_agency import (
     assign_customer, cancel_membership_request, create_agency, invite_member_by_phone,
     member_display, remove_member, request_join_agency, respond_membership_request,
-    role_label, set_commission_splits, transfer_customer, update_member_role,
+    role_label, set_commission_splits, sync_agency_member_records, transfer_customer, update_member_role,
 )
 from workspace.services.crm_agency_analytics import get_member_performance_row, get_team_performance
 from workspace.services.crm_scope import (
@@ -2253,6 +2253,7 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['webhook_event_labels'] = WEBHOOK_EVENT_LABELS
         user = self.request.user
         if agency:
+            sync_agency_member_records(agency)
             full_performance = get_team_performance(agency)
             can_view_perf = can_view_team_performance(user)
             ctx['can_view_team_performance'] = can_view_perf
@@ -2266,19 +2267,25 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             )
             ctx['recent_transfers'] = transfers_qs[:20]
             ctx['transfer_count'] = transfers_qs.count()
+            members_list = list(ctx.get('agency_members') or list(agency_members(agency)))
+            perf_by_member = {r['member'].pk: r for r in full_performance['members']}
+            perf_by_user = {r['member'].user_id: r for r in full_performance['members']}
+            totals = full_performance['totals']
             ctx['team_stats'] = {
-                'contacts': customers_qs(user).count(),
-                'properties': properties_qs(user).count(),
-                'deals': deals_qs(user).count(),
-                'members': len(ctx.get('agency_members') or list(agency_members(agency))),
+                'contacts': totals['contacts'] if can_view_perf else customers_qs(user).count(),
+                'properties': totals['properties'] if can_view_perf else properties_qs(user).count(),
+                'deals': totals['deals_closed'] if can_view_perf else deals_qs(user).count(),
+                'active_deals': totals['active_deals'] if can_view_perf else 0,
+                'members': len(members_list),
             }
-            perf_map = {r['member'].pk: r for r in full_performance['members']}
             ctx['member_rows'] = [
                 {
                     'member': m,
-                    'perf': perf_map.get(m.pk, {}) if can_view_perf or m.user_id == user.id else {},
+                    'perf': (
+                        perf_by_member.get(m.pk) or perf_by_user.get(m.user_id) or {}
+                    ) if can_view_perf or m.user_id == user.id else {},
                 }
-                for m in (ctx.get('agency_members') or list(agency_members(agency)))
+                for m in members_list
             ]
             ctx['api_leads_path'] = reverse('workspace:crm_api_leads')
             pending = CRMAgencyMembershipRequest.objects.filter(
@@ -2290,6 +2297,11 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             ctx['pending_join_requests'] = pending.filter(
                 request_type=CRMAgencyMembershipRequest.TYPE_JOIN,
             )
+            ctx['team_roster_summary'] = {
+                'active': len(members_list),
+                'pending_invites': ctx['pending_invites_sent'].count(),
+                'pending_joins': ctx['pending_join_requests'].count(),
+            }
             ctx['my_pending_invites'] = CRMAgencyMembershipRequest.objects.filter(
                 user=user,
                 request_type=CRMAgencyMembershipRequest.TYPE_INVITE,
@@ -2305,6 +2317,7 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             ctx['transfer_count'] = 0
             ctx['team_stats'] = None
             ctx['member_rows'] = []
+            ctx['team_roster_summary'] = None
             ctx['api_leads_path'] = ''
             ctx['pending_invites_sent'] = []
             ctx['pending_join_requests'] = []

@@ -793,17 +793,202 @@
 
 @keyframes crm-msg-orbit { to { transform: rotate(360deg); } }
 
-/* ─── Compose modal — platform ws-modal tokens ─── */
-.crm-msg-compose-modal .ws-tabs .ws-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
+/* ─── Compose modal — wider + distinct direct/broadcast ─── */
+.crm-msg-compose-modal .crm-msg-compose-panel {
+    width: min(94vw, 52rem);
+    max-width: min(94vw, 52rem);
 }
 
-.crm-msg-role-checks {
+.crm-msg-kind-picker {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.35rem 0.75rem;
+    gap: 0.75rem;
+    margin-bottom: 1.1rem;
+}
+
+.crm-msg-kind-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.85rem 0.95rem;
+    border-radius: 12px;
+    border: 1px solid var(--mk-modal-border, var(--ws-border));
+    background: var(--mk-input-bg, var(--ws-surface-2));
+    color: var(--ws-text, inherit);
+    cursor: pointer;
+    text-align: start;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.crm-msg-kind-card:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
+}
+
+.crm-msg-kind-card.active {
+    border-color: color-mix(in srgb, var(--ws-primary) 45%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary) 8%, var(--mk-input-bg, var(--ws-surface-2)));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 14%, transparent);
+}
+
+.crm-msg-compose-modal.is-compose-broadcast .crm-msg-kind-card[data-kind="broadcast"].active {
+    border-color: color-mix(in srgb, #f59e0b 45%, var(--ws-border));
+    background: color-mix(in srgb, #f59e0b 10%, var(--mk-input-bg, var(--ws-surface-2)));
+    box-shadow: 0 0 0 3px color-mix(in srgb, #f59e0b 16%, transparent);
+}
+
+.crm-msg-kind-card-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+.crm-msg-kind-card-icon--direct {
+    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 14%, transparent);
+}
+
+.crm-msg-kind-card-icon--broadcast {
+    color: #d97706;
+    background: color-mix(in srgb, #f59e0b 16%, transparent);
+}
+
+.crm-msg-kind-card-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.crm-msg-kind-card-copy strong {
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.crm-msg-kind-card-copy span {
+    font-size: 0.72rem;
+    color: var(--ws-text-muted);
+    line-height: 1.45;
+}
+
+.crm-msg-compose-pane[hidden] { display: none !important; }
+
+.crm-msg-compose-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.8rem 0.9rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+}
+
+.crm-msg-compose-callout i {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+}
+
+.crm-msg-compose-callout strong {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+}
+
+.crm-msg-compose-callout p {
+    margin: 0;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--ws-text-muted);
+}
+
+.crm-msg-compose-callout--direct {
+    border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary) 7%, var(--mk-modal-bg, var(--ws-surface)));
+}
+
+.crm-msg-compose-callout--direct i {
+    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 14%, transparent);
+}
+
+.crm-msg-compose-callout--broadcast {
+    border-color: color-mix(in srgb, #f59e0b 28%, var(--ws-border));
+    background: color-mix(in srgb, #f59e0b 8%, var(--mk-modal-bg, var(--ws-surface)));
+}
+
+.crm-msg-compose-callout--broadcast i {
+    color: #d97706;
+    background: color-mix(in srgb, #f59e0b 16%, transparent);
+}
+
+.crm-msg-compose-broadcast-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 0.85rem 1rem;
+    align-items: start;
+}
+
+.crm-msg-audience-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.crm-msg-audience-chip { cursor: pointer; }
+
+.crm-msg-audience-chip input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.crm-msg-audience-chip span {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.42rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--mk-modal-border, var(--ws-border));
+    background: var(--mk-input-bg, var(--ws-surface-2));
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
+}
+
+.crm-msg-audience-chip input:checked + span {
+    border-color: color-mix(in srgb, #f59e0b 40%, var(--ws-border));
+    background: color-mix(in srgb, #f59e0b 14%, transparent);
+    color: #b45309;
+}
+
+.crm-msg-compose-shared {
+    margin-top: 0.15rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--mk-modal-border, var(--ws-border));
+}
+
+.crm-msg-compose-modal.is-compose-broadcast .crm-msg-compose-shared {
+    border-top-color: color-mix(in srgb, #f59e0b 22%, var(--ws-border));
+}
+
+.crm-msg-compose-modal.is-compose-broadcast .ws-btn-primary {
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    border-color: color-mix(in srgb, #f59e0b 50%, transparent);
+}
+
+.crm-msg-compose-modal.is-compose-broadcast .ws-btn-primary:hover {
+    background: linear-gradient(135deg, #ea580c, #c2410c);
 }
 
 .crm-msg-compose-upload-hint {
@@ -956,17 +1141,11 @@
         min-height: min(70vh, calc(100vh - 10rem));
     }
 
-    .crm-msg-compose-modal .ws-tabs {
-        width: 100%;
+    .crm-msg-compose-broadcast-grid {
+        grid-template-columns: 1fr;
     }
 
-    .crm-msg-compose-modal .ws-tab {
-        flex: 1;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .crm-msg-role-checks {
+    .crm-msg-kind-picker {
         grid-template-columns: 1fr;
     }
 }
@@ -1012,7 +1191,16 @@
     z-index: 0;
 }
 
-.crm-msg-compose-modal .ws-modal-panel,
+.crm-msg-compose-modal .crm-msg-compose-panel,
+.crm-msg-compose-modal .ws-modal-panel {
+    grid-area: 1 / 1;
+    position: relative;
+    z-index: 1;
+    width: min(94vw, 52rem);
+    max-width: min(94vw, 52rem);
+    max-height: calc(100vh - 2rem);
+}
+
 .crm-msg-confirm-modal .ws-modal-panel {
     grid-area: 1 / 1;
     position: relative;

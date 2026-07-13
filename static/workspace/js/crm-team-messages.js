@@ -52,6 +52,10 @@
         fileInput: document.querySelector('[data-msg-file-input]'),
         fileList: document.querySelector('[data-msg-file-list]'),
         composeSubmit: document.querySelector('[data-msg-compose-submit]'),
+        composeSubmitLabel: document.querySelector('[data-msg-compose-submit-label]'),
+        composeTitle: document.querySelector('[data-msg-compose-title]'),
+        composeSub: document.querySelector('[data-msg-compose-sub]'),
+        composeBody: document.getElementById('msg-compose-body'),
         notifDrawer: document.getElementById('drawer-msg-notifications'),
         notifList: document.querySelector('[data-msg-notif-list]'),
         notifCount: root.querySelector('[data-msg-notif-count]'),
@@ -480,20 +484,35 @@
 
     function setComposeKind(kind) {
         composeKind = kind;
+        const isDirect = kind === 'direct';
+        if (els.composeModal) {
+            els.composeModal.classList.toggle('is-compose-direct', isDirect);
+            els.composeModal.classList.toggle('is-compose-broadcast', !isDirect);
+        }
         document.querySelectorAll('[data-msg-compose-kind] [data-kind]').forEach(btn => {
             const active = btn.dataset.kind === kind;
             btn.classList.toggle('active', active);
             btn.setAttribute('aria-selected', active ? 'true' : 'false');
         });
-        const showRecipient = kind === 'direct';
-        const rf = document.querySelector('[data-field-recipient]');
-        const sf = document.querySelector('[data-field-subject]');
-        const ro = document.querySelector('[data-field-roles]');
-        if (rf) rf.hidden = !showRecipient;
-        if (sf) sf.hidden = showRecipient;
-        if (ro) ro.hidden = showRecipient;
+        document.querySelectorAll('[data-compose-pane]').forEach(pane => {
+            pane.hidden = pane.dataset.composePane !== kind;
+        });
+        if (els.composeTitle) els.composeTitle.textContent = isDirect ? 'پیام خصوصی' : 'پیام گروهی';
+        if (els.composeSub) {
+            els.composeSub.textContent = isDirect
+                ? 'مکالمه یک‌به‌یک با یک عضو تیم'
+                : 'اطلاع‌رسانی به چند نفر یا کل اعضای آژانس';
+        }
+        if (els.composeSubmitLabel) {
+            els.composeSubmitLabel.textContent = isDirect ? 'ارسال خصوصی' : 'ارسال گروهی';
+        }
+        if (els.composeBody) {
+            els.composeBody.placeholder = isDirect
+                ? 'پیام خصوصی خود را بنویسید...'
+                : 'متن اعلان یا پیام گروهی را بنویسید...';
+        }
         if (els.recipientSelect) {
-            if (showRecipient) els.recipientSelect.setAttribute('required', 'required');
+            if (isDirect) els.recipientSelect.setAttribute('required', 'required');
             else els.recipientSelect.removeAttribute('required');
         }
     }

@@ -885,7 +885,18 @@ class CRMAutomationRuleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         from workspace.constants import CRM_STATUSES
-        self.fields['action_status'].choices = [('', '—')] + [(s, s) for s in CRM_STATUSES]
+        self.fields['action_status'] = forms.ChoiceField(
+            label='وضعیت جدید',
+            required=False,
+            choices=[('', 'انتخاب وضعیت…')] + [(s, s) for s in CRM_STATUSES],
+            widget=forms.Select(attrs={'class': 'crm-select'}),
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get('action') == 'set_status' and not cleaned.get('action_status'):
+            self.add_error('action_status', 'برای تغییر وضعیت، یک وضعیت جدید انتخاب کنید.')
+        return cleaned
 
 
 class WorkspaceSettingsForm(forms.ModelForm):

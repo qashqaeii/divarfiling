@@ -372,7 +372,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     ['trigger_days', 'action_reminder_title', 'action_status'].forEach(name => {
-        form.querySelector(`[name="${name}"]`)?.addEventListener('input', syncPreview);
+        const el = form.querySelector(`[name="${name}"]`);
+        el?.addEventListener('input', syncPreview);
+        el?.addEventListener('change', syncPreview);
     });
     actionSel?.addEventListener('change', syncExtras);
 

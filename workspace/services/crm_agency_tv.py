@@ -475,7 +475,7 @@ def _build_status_doughnut(agency: CRMAgency) -> Dict[str, Any]:
             'color': '#334155',
         })
     return {
-        'title': 'پرونده مخاطبین',
+        'heading': 'پرونده مخاطبین',
         'center_label': 'مخاطب',
         'center_value': total,
         'slices': slices,

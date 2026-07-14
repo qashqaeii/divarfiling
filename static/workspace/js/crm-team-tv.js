@@ -271,7 +271,7 @@
         var center = root.querySelector('[data-tv-donut-center]');
         var title = root.querySelector('[data-tv-donut-title]');
         if (!svg) return;
-        doughnut = doughnut || { slices: [], center_value: 0, center_label: 'مخاطب', title: 'پرونده مخاطبین' };
+        doughnut = doughnut || { slices: [], center_value: 0, center_label: 'مخاطب', heading: 'پرونده مخاطبین' };
 
         var slices = (doughnut.slices || []).filter(function (sl) { return sl.value > 0; });
         var total = slices.reduce(function (sum, sl) { return sum + sl.value; }, 0);
@@ -279,7 +279,7 @@
         var cx = 50;
         var cy = 50;
         var rOut = 46;
-        var rIn = 36;
+        var rIn = 32;
         var start = -Math.PI / 2;
         var defs = [
             '<filter id="tvDonutGlow" x="-30%" y="-30%" width="160%" height="160%">',
@@ -305,12 +305,12 @@
                     shapes.push(
                         '<path d="' + donutPath(cx, cy, rOut, rIn, start, end) + '" fill="url(#' + gradId + ')" stroke="rgba(15,23,42,0.65)" stroke-width="0.6" filter="url(#tvDonutGlow)"/>'
                     );
-                    if (sl.pct >= 10) {
+                    if (sl.pct >= 8) {
                         var mid = start + sweep / 2;
                         var labelR = (rOut + rIn) / 2;
                         var lp = polar(cx, cy, labelR, mid);
                         shapes.push(
-                            '<text x="' + lp[0].toFixed(1) + '" y="' + lp[1].toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" class="tv-donut-label" fill="#f8fafc" font-size="5.5" font-weight="700">' +
+                            '<text x="' + lp[0].toFixed(1) + '" y="' + lp[1].toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" class="tv-donut-label" fill="#f8fafc" font-size="6" font-weight="700">' +
                             toFa(sl.pct) + '%</text>'
                         );
                     }
@@ -325,12 +325,13 @@
                 '<span class="tv-cmd__chart-donut-val">' + toFa(doughnut.center_value || 0) + '</span>' +
                 '<span class="tv-cmd__chart-donut-lbl">' + esc(doughnut.center_label || 'مخاطب') + '</span>';
         }
-        if (title) title.textContent = doughnut.title || 'پرونده مخاطبین';
+        if (title) title.textContent = doughnut.heading || doughnut.title || 'پرونده مخاطبین';
     }
 
     function renderTrend(chart) {
         var svg = root.querySelector('[data-tv-chart]');
         var daysEl = root.querySelector('[data-tv-chart-days]');
+        var pillsEl = root.querySelector('[data-tv-trend-legend]');
         if (!svg) return;
 
         var points = chart.points || [];
@@ -344,22 +345,23 @@
         if (!points.length) {
             svg.innerHTML = '';
             if (daysEl) daysEl.innerHTML = '';
+            if (pillsEl) pillsEl.innerHTML = '';
             return;
         }
 
-        var w = 400;
-        var h = 110;
-        var padL = 10;
-        var padR = 10;
-        var padT = 8;
-        var padB = 4;
+        var w = 560;
+        var h = 150;
+        var padL = 34;
+        var padR = 14;
+        var padT = 16;
+        var padB = 6;
         var chartW = w - padL - padR;
         var chartH = h - padT - padB;
         var allVals = [];
         points.forEach(function (p) {
             series.forEach(function (s) { allVals.push(p[s.key] || 0); });
         });
-        var max = softChartMax(allVals);
+        var max = Math.max(softChartMax(allVals), 1);
 
         function xAt(i) {
             return padL + (i / Math.max(points.length - 1, 1)) * chartW;
@@ -368,40 +370,74 @@
             return padT + chartH - (v / max) * chartH;
         }
 
-        var grid = [0.25, 0.5, 0.75, 1].map(function (frac) {
-            var y = padT + chartH * (1 - frac);
-            return '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (w - padR) + '" y2="' + y.toFixed(1) + '" class="tv-chart-grid"/>';
+        var defs = series.map(function (s, idx) {
+            return (
+                '<linearGradient id="tvArea' + idx + '" x1="0" y1="0" x2="0" y2="1">' +
+                '<stop offset="0%" stop-color="' + s.color + '" stop-opacity="0.35"/>' +
+                '<stop offset="100%" stop-color="' + s.color + '" stop-opacity="0.02"/>' +
+                '</linearGradient>'
+            );
         }).join('');
 
-        var areas = series.map(function (s) {
+        var yLabels = [0, Math.round(max / 2), max].map(function (v) {
+            var y = yAt(v);
+            return (
+                '<text x="' + (padL - 5) + '" y="' + y.toFixed(1) + '" text-anchor="end" dominant-baseline="middle" class="tv-chart-axis">' +
+                toFa(v) + '</text>' +
+                '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (w - padR) + '" y2="' + y.toFixed(1) + '" class="tv-chart-grid"/>'
+            );
+        }).join('');
+
+        var dayLines = points.map(function (p, i) {
+            var x = xAt(i).toFixed(1);
+            return '<line x1="' + x + '" y1="' + padT + '" x2="' + x + '" y2="' + (padT + chartH).toFixed(1) + '" class="tv-chart-grid tv-chart-grid--day"/>';
+        }).join('');
+
+        var areas = series.map(function (s, idx) {
             var top = points.map(function (p, i) {
                 return xAt(i).toFixed(1) + ',' + yAt(p[s.key] || 0).toFixed(1);
             }).join(' L');
             var baseline = (padT + chartH).toFixed(1);
             var d = 'M' + xAt(0).toFixed(1) + ',' + baseline + ' L' + top + ' L' + xAt(points.length - 1).toFixed(1) + ',' + baseline + ' Z';
-            return '<path d="' + d + '" fill="' + s.color + '" class="tv-chart-area"/>';
+            return '<path d="' + d + '" fill="url(#tvArea' + idx + ')" class="tv-chart-area"/>';
         }).join('');
 
         var lines = series.map(function (s) {
             var coords = points.map(function (p, i) {
                 return xAt(i).toFixed(1) + ',' + yAt(p[s.key] || 0).toFixed(1);
             }).join(' ');
-            return '<polyline fill="none" stroke="' + s.color + '" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" points="' + coords + '"/>';
+            return '<polyline fill="none" stroke="' + s.color + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" points="' + coords + '"/>';
         }).join('');
 
         var dots = series.map(function (s) {
             return points.map(function (p, i) {
                 var v = p[s.key] || 0;
                 if (!v) return '';
-                return '<circle cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(v).toFixed(1) + '" r="3.2" fill="' + s.color + '" stroke="rgba(15,23,42,0.9)" stroke-width="1.2"/>';
+                var x = xAt(i).toFixed(1);
+                var y = yAt(v).toFixed(1);
+                return (
+                    '<circle cx="' + x + '" cy="' + y + '" r="3.8" fill="' + s.color + '" stroke="rgba(15,23,42,0.92)" stroke-width="1.4"/>' +
+                    '<text x="' + x + '" y="' + (y - 6).toFixed(1) + '" text-anchor="middle" class="tv-chart-val">' + toFa(v) + '</text>'
+                );
             }).join('');
         }).join('');
 
-        svg.innerHTML = '<g class="tv-chart-grid-group">' + grid + '</g>' + areas + lines + dots;
+        svg.innerHTML = '<defs>' + defs + '</defs>' + yLabels + dayLines + areas + lines + dots;
 
         if (daysEl) {
             daysEl.innerHTML = points.map(function (p) {
                 return '<span>' + esc(p.label) + '</span>';
+            }).join('');
+        }
+
+        if (pillsEl) {
+            pillsEl.innerHTML = series.map(function (s) {
+                return (
+                    '<span class="tv-cmd__chart-pill">' +
+                    '<i style="background:' + s.color + '"></i>' +
+                    esc(s.label) + ' <b>' + toFa(s.total || 0) + '</b>' +
+                    '</span>'
+                );
             }).join('');
         }
     }
@@ -411,34 +447,21 @@
         if (!legend) return;
 
         var doughnut = chart.doughnut || {};
-        var slices = doughnut.slices || [];
-        var series = chart.series || [];
-        var donutHtml = slices.map(function (sl) {
+        var slices = (doughnut.slices || []).filter(function (sl) { return sl.value > 0; });
+        if (!slices.length) {
+            legend.innerHTML = '<p class="tv-cmd__empty">مخاطبی ثبت نشده</p>';
+            return;
+        }
+
+        legend.innerHTML = slices.map(function (sl) {
             return (
-                '<div class="tv-cmd__legend-row">' +
-                '<span class="tv-cmd__legend-dot" style="background:' + sl.color + '"></span>' +
-                '<em>' + esc(sl.label) + '</em>' +
-                '<b>' + toFa(sl.value || 0) + '</b>' +
-                '<i>' + toFa(sl.pct || 0) + '%</i>' +
+                '<div class="tv-cmd__legend-card" style="--c:' + sl.color + '">' +
+                '<div class="tv-cmd__legend-card-head"><em>' + esc(sl.label) + '</em></div>' +
+                '<div class="tv-cmd__legend-card-val"><b>' + toFa(sl.value || 0) + '</b><i>' + toFa(sl.pct || 0) + '%</i></div>' +
+                '<div class="tv-cmd__legend-card-bar"><i style="width:' + (sl.pct || 0) + '%"></i></div>' +
                 '</div>'
             );
         }).join('');
-
-        var trendHtml = series.map(function (s) {
-            var share = s.share_pct != null ? '<i>' + toFa(s.share_pct) + '%</i>' : '';
-            return (
-                '<div class="tv-cmd__legend-row tv-cmd__legend-row--trend">' +
-                '<span class="tv-cmd__legend-dot" style="background:' + s.color + '"></span>' +
-                '<em>' + esc(s.label) + '</em>' +
-                '<b>' + toFa(s.total || 0) + '</b>' +
-                share +
-                '</div>'
-            );
-        }).join('');
-
-        legend.innerHTML =
-            '<div class="tv-cmd__legend-block tv-cmd__legend-block--donut">' + donutHtml + '</div>' +
-            '<div class="tv-cmd__legend-block tv-cmd__legend-block--trend">' + trendHtml + '</div>';
     }
 
     function renderChart(data) {
@@ -721,6 +744,7 @@
         window.addEventListener('resize', function () {
             if (state.lastData) {
                 renderLeaderboard(state.lastData);
+                renderChart(state.lastData);
             }
         });
         fetchData().finally(scheduleNext);

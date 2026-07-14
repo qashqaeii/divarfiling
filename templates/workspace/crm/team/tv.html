@@ -43,26 +43,24 @@
     </section>
 
     <section class="tv-cmd__main">
-        <article class="tv-cmd__panel tv-cmd__panel--board" data-widget="leaderboard">
-            <header class="tv-cmd__panel-head">
-                <h2><i class="fas fa-ranking-star"></i> رتبه‌بندی زنده تیم</h2>
-                <span>۳۰ روز اخیر</span>
-            </header>
-            <ol class="tv-cmd__board" data-tv-leaderboard></ol>
-        </article>
         <article class="tv-cmd__panel tv-cmd__panel--chart" data-widget="chart">
             <header class="tv-cmd__panel-head">
-                <h2><i class="fas fa-chart-pie"></i> تحلیل عملکرد</h2>
+                <h2><i class="fas fa-chart-line"></i> تحلیل عملکرد</h2>
                 <span data-tv-chart-subtitle>توزیع مخاطبین · روند ۷ روزه</span>
             </header>
             <div class="tv-cmd__chart-wrap">
                 <div class="tv-cmd__chart-trend-block">
-                    <p class="tv-cmd__chart-section-label">روند ۷ روزه</p>
-                    <svg class="tv-cmd__chart" data-tv-chart viewBox="0 0 400 110" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
-                    <div class="tv-cmd__chart-days" data-tv-chart-days aria-hidden="true"></div>
+                    <div class="tv-cmd__chart-trend-head">
+                        <p class="tv-cmd__chart-section-label">روند فعالیت ۷ روز</p>
+                        <div class="tv-cmd__chart-trend-pills" data-tv-trend-legend></div>
+                    </div>
+                    <div class="tv-cmd__chart-trend-stage">
+                        <svg class="tv-cmd__chart" data-tv-chart viewBox="0 0 560 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+                        <div class="tv-cmd__chart-days" data-tv-chart-days aria-hidden="true"></div>
+                    </div>
                 </div>
-                <div class="tv-cmd__chart-bottom">
-                    <div class="tv-cmd__chart-donut-block">
+                <div class="tv-cmd__chart-split">
+                    <div class="tv-cmd__chart-donut-card">
                         <p class="tv-cmd__chart-section-label" data-tv-donut-title>پرونده مخاطبین</p>
                         <div class="tv-cmd__chart-donut-stage">
                             <svg class="tv-cmd__chart-donut" data-tv-donut viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
@@ -72,6 +70,13 @@
                     <div class="tv-cmd__chart-legend" data-tv-chart-legend></div>
                 </div>
             </div>
+        </article>
+        <article class="tv-cmd__panel tv-cmd__panel--board" data-widget="leaderboard">
+            <header class="tv-cmd__panel-head">
+                <h2><i class="fas fa-ranking-star"></i> رتبه‌بندی زنده</h2>
+                <span>۳۰ روز</span>
+            </header>
+            <ol class="tv-cmd__board" data-tv-leaderboard></ol>
         </article>
     </section>
 
@@ -140,5 +145,5 @@ window.crmTeamTV = {
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=8"></script>
+<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=9"></script>
 {% endblock %}

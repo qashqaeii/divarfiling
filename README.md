@@ -1,34 +1,34 @@
-# سیستم فروش ربات دیوار
+# Divar Bot Sales System
 
-سیستم فروشگاهی مبتنی بر Django برای عرضه و فروش نسخه‌های مختلف ربات دیوار.
+A Django-based e-commerce platform for selling and distributing Divar bot editions.
 
-## ویژگی‌ها
+## Features
 
-- ✅ طراحی RTL و فارسی با تم Glassmorphism
-- ✅ سیستم پرداخت آنلاین با درگاه زیبال
-- ✅ سیستم لایسنس یک‌سیستمی با فعال‌سازی سخت‌افزاری
-- ✅ سیستم همکاری در فروش (Affiliate)
-- ✅ داشبورد کاربر و مدیر
-- ✅ سیستم بلاگ و مقالات
-- ✅ API برای فعال‌سازی لایسنس
+- RTL and Persian UI with a Glassmorphism theme
+- Online payments via Zibal gateway
+- Single-machine licensing with hardware activation
+- Affiliate program
+- User and admin dashboards
+- Blog and articles
+- License activation API
 
-## نصب و راه‌اندازی
+## Installation
 
-### پیش‌نیازها
+### Prerequisites
 
-- Python 3.9 یا بالاتر
+- Python 3.9 or newer
 - pip
-- virtualenv (پیشنهادی)
+- virtualenv (recommended)
 
-### مراحل نصب
+### Setup steps
 
-1. ایجاد محیط مجازی:
+1. Create a virtual environment:
 
 ```bash
 python -m venv venv
 ```
 
-2. فعال‌سازی محیط مجازی:
+2. Activate the virtual environment:
 
 **Windows (CMD):**
 ```cmd
@@ -45,41 +45,44 @@ venv\Scripts\Activate.ps1
 source venv/bin/activate
 ```
 
-**ویندوز لوکال (Locally on Windows):**
-اگر از محیط گرافیکی یا فایل اکسپلورر روی ویندوز استفاده می‌کنید، می‌توانید CMD یا PowerShell را در همان پوشه پروژه باز کرده و یکی از دستورات بالا را وارد کنید.
+**Local Windows note:** If you use File Explorer or a GUI on Windows, open CMD or PowerShell in the project folder and run one of the activation commands above.
 
-3. نصب وابستگی‌ها:
+3. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. اجرای migrations:
+4. Run migrations:
 
 ```bash
 python manage.py migrate
 ```
 
-5. ایجاد کاربر مدیر:
+5. Create a superuser:
 
 ```bash
 python manage.py createsuperuser
 ```
 
-6. اجرای سرور توسعه:
+6. Start the development server:
 
 ```bash
 python manage.py runserver
 ```
-وقتی Robot.zip واقعی را جایگزین کردی:
 
+After you replace the real `Robot.zip` bundle:
+
+```bash
 cd django
 python manage.py sync_bot_product
-## تنظیمات
+```
 
-### متغیرهای محیطی
+## Configuration
 
-Production: `cp env_template.txt .env` — Dev: `cp .env.example .env`
+### Environment variables
+
+Production: `cp env_template.txt .env` — Development: `cp .env.example .env`
 
 ```env
 DATABASE_NAME=divarfilingDb
@@ -90,30 +93,30 @@ EMAIL_HOST=mail.divarfiling.ir
 DEFAULT_FROM_EMAIL=noreply@divarfiling.ir
 ```
 
-### تنظیمات زیبال
+### Zibal settings
 
-1. وارد پنل زیبال شوید
-2. Merchant ID خود را دریافت کنید
-3. Callback URL: `https://divarfiling.ir/payment/callback/`
+1. Log in to the Zibal dashboard
+2. Copy your Merchant ID
+3. Set the callback URL to: `https://divarfiling.ir/payment/callback/`
 
-## ساختار پروژه
+## Project structure
 
 ```
 django/
-├── divar_shop/          # تنظیمات اصلی پروژه
-├── accounts/            # مدیریت کاربران
-├── shop/                # فروشگاه و محصولات
-├── licenses/            # سیستم لایسنس
-├── affiliates/          # همکاری در فروش
-├── blog/                # بلاگ و مقالات
-├── templates/           # قالب‌های HTML
-├── static/              # فایل‌های استاتیک (CSS, JS)
-└── media/               # فایل‌های رسانه (آپلود شده)
+├── divar_shop/          # Main project settings
+├── accounts/            # User management
+├── shop/                # Store and products
+├── licenses/            # Licensing system
+├── affiliates/          # Affiliate program
+├── blog/                # Blog and articles
+├── templates/           # HTML templates
+├── static/              # Static assets (CSS, JS)
+└── media/               # Uploaded media files
 ```
 
-## استفاده از API لایسنس
+## License API
 
-### فعال‌سازی لایسنس
+### Activate a license
 
 ```bash
 POST /api/licenses/activate/
@@ -125,7 +128,7 @@ Content-Type: application/json
 }
 ```
 
-### اعتبارسنجی لایسنس
+### Validate a license
 
 ```bash
 POST /api/licenses/validate/
@@ -137,15 +140,14 @@ Content-Type: application/json
 }
 ```
 
-## مستندات
+## Documentation
 
-برای اطلاعات بیشتر به فایل `django-info.txt` مراجعه کنید.
+For more details, see `django-info.txt`.
 
-## پشتیبانی
+## Support
 
-برای پشتیبانی و گزارش مشکل، با ما تماس بگیرید.
+Contact us for support or to report issues.
 
-## مجوز
+## License
 
-تمامی حقوق محفوظ است.
-
+All rights reserved.

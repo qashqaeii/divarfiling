@@ -223,18 +223,70 @@ html.mk-public:not([data-theme="light"]) .adm-map-illu-card {
     background: rgba(245, 158, 11, 0.1);
 }
 
-/* Tabs */
+/* Tabs — pin below site header on scroll */
+.adm-map-page {
+    --mk-site-header-h: 3.55rem;
+    --adm-map-tabs-top: var(--mk-site-header-h);
+    --adm-map-tabs-h: 2.85rem;
+}
+
 .adm-map-tabs {
-    position: sticky;
-    top: 4.25rem;
-    z-index: 25;
+    position: relative;
+    z-index: 900;
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
     padding: 0.45rem 0;
     margin-bottom: 0.85rem;
-    backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    transition: box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.adm-map-tabs.is-pinned {
+    position: fixed;
+    top: var(--adm-map-tabs-top, 3.55rem);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0.5rem clamp(0.85rem, 2.5vw, 1.25rem);
+    background: rgba(248, 250, 252, 0.97);
+    backdrop-filter: blur(12px) saturate(1.1);
+    -webkit-backdrop-filter: blur(12px) saturate(1.1);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+}
+
+html.mk-public:not([data-theme="light"]) .adm-map-tabs.is-pinned {
+    background: rgba(15, 23, 42, 0.94);
+    border-bottom-color: rgba(148, 163, 184, 0.14);
+    box-shadow: 0 8px 28px -10px rgba(0, 0, 0, 0.45);
+}
+
+.adm-map-tabs__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.adm-map-tabs:not(.is-pinned) .adm-map-tabs__inner {
+    max-width: none;
+}
+
+.adm-map-tabs-spacer {
+    display: none;
+    width: 100%;
+}
+
+.adm-map-tabs-spacer.is-active {
+    display: block;
+}
+
+.adm-map-section {
+    scroll-margin-top: calc(var(--adm-map-tabs-top) + var(--adm-map-tabs-h) + 0.85rem);
+    margin-bottom: 1.25rem;
 }
 
 .adm-map-tab {
@@ -257,11 +309,6 @@ html.mk-public:not([data-theme="light"]) .adm-map-illu-card {
     color: #fff;
     background: var(--map-purple);
     border-color: var(--map-purple);
-}
-
-.adm-map-section {
-    scroll-margin-top: 6rem;
-    margin-bottom: 1.25rem;
 }
 
 /* KPI Dashboard */

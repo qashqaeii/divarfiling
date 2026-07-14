@@ -9,7 +9,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -57,15 +57,18 @@
         </div>
     </header>
 
-    <nav class="adm-map-tabs" aria-label="بخش‌های بازاریابی">
-        <a href="#map-overview" class="adm-map-tab is-active">نمای کلی</a>
-        <a href="#map-compose" class="adm-map-tab">ساخت کمپین</a>
-        <a href="#map-templates" class="adm-map-tab">قالب‌ها</a>
-        <a href="#map-automation" class="adm-map-tab">اتوماسیون</a>
-        <a href="#map-phonebook" class="adm-map-tab">دفترچه</a>
-        <a href="#map-history" class="adm-map-tab">تاریخچه</a>
-        <a href="#map-analytics" class="adm-map-tab">Analytics</a>
+    <nav class="adm-map-tabs" id="adm-map-tabs" aria-label="بخش‌های بازاریابی">
+        <div class="adm-map-tabs__inner">
+            <a href="#map-overview" class="adm-map-tab is-active">نمای کلی</a>
+            <a href="#map-compose" class="adm-map-tab">ساخت کمپین</a>
+            <a href="#map-templates" class="adm-map-tab">قالب‌ها</a>
+            <a href="#map-automation" class="adm-map-tab">اتوماسیون</a>
+            <a href="#map-phonebook" class="adm-map-tab">دفترچه</a>
+            <a href="#map-history" class="adm-map-tab">تاریخچه</a>
+            <a href="#map-analytics" class="adm-map-tab">Analytics</a>
+        </div>
     </nav>
+    <div class="adm-map-tabs-spacer" id="adm-map-tabs-spacer" aria-hidden="true"></div>
 
     {% if messages %}
     <section class="adm-alerts" aria-label="پیام‌ها">
@@ -680,5 +683,5 @@ window.admMapMeta = {
     })()
 };
 </script>
-<script src="{% static 'js/admin-marketing.js' %}?v=1"></script>
+<script src="{% static 'js/admin-marketing.js' %}?v=2"></script>
 {% endblock %}

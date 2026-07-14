@@ -17,6 +17,73 @@
         return formatNum(n) + ' ت';
     }
 
+    /* ─── Pinned tabs below site header ─── */
+    function initPinnedTabs() {
+        var tabsBar = document.getElementById('adm-map-tabs');
+        var spacer = document.getElementById('adm-map-tabs-spacer');
+        var page = document.querySelector('.adm-map-page');
+        if (!tabsBar || !spacer || !page) return;
+
+        var anchorTop = 0;
+
+        function siteHeaderHeight() {
+            var header = document.querySelector('.mk-site-header');
+            if (header) return header.getBoundingClientRect().height;
+            var root = getComputedStyle(document.documentElement);
+            var h = parseFloat(root.getPropertyValue('--mk-site-header-h'));
+            return Number.isFinite(h) && h > 0 ? h : 56;
+        }
+
+        function syncTabsHeight() {
+            var h = tabsBar.offsetHeight;
+            page.style.setProperty('--adm-map-tabs-h', h + 'px');
+            if (tabsBar.classList.contains('is-pinned')) {
+                spacer.style.height = h + 'px';
+            }
+        }
+
+        function measureAnchor() {
+            tabsBar.classList.remove('is-pinned');
+            spacer.classList.remove('is-active');
+            spacer.style.height = '';
+            anchorTop = tabsBar.getBoundingClientRect().top + window.scrollY;
+            syncTabsHeight();
+        }
+
+        function updatePin() {
+            var headerH = siteHeaderHeight();
+            page.style.setProperty('--adm-map-tabs-top', headerH + 'px');
+            var shouldPin = window.scrollY + headerH >= anchorTop - 1;
+
+            if (shouldPin) {
+                if (!tabsBar.classList.contains('is-pinned')) {
+                    tabsBar.classList.add('is-pinned');
+                    spacer.classList.add('is-active');
+                }
+                syncTabsHeight();
+            } else {
+                tabsBar.classList.remove('is-pinned');
+                spacer.classList.remove('is-active');
+                spacer.style.height = '';
+            }
+        }
+
+        window.addEventListener('scroll', updatePin, { passive: true });
+        window.addEventListener('resize', function () {
+            measureAnchor();
+            updatePin();
+        });
+
+        if (typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(function () {
+                syncTabsHeight();
+            }).observe(tabsBar);
+        }
+
+        measureAnchor();
+        updatePin();
+    }
+
     /* ─── Tabs ─── */
     function initTabs() {
         var tabs = document.querySelectorAll('.adm-map-tab');
@@ -583,6 +650,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        initPinnedTabs();
         initTabs();
         initWizard();
         initPreview();

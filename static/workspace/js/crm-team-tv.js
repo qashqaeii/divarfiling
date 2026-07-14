@@ -30,7 +30,7 @@
         inflight: null,
         trendChart: null,
         donutChart: null,
-        donutCenter: { value: 0, label: 'مخاطب' },
+        donutCenter: { value: 0, label: 'مخاطب فعال' },
         seriesHidden: {},
         numCache: {}
     };
@@ -492,29 +492,22 @@
         });
     }
 
-    var donutCenterPlugin = {
-        id: 'tvDonutCenter',
-        afterDraw: function (chart) {
-            if (chart.config.type !== 'doughnut') return;
-            var meta = state.donutCenter || {};
-            var area = chart.chartArea;
-            if (!area) return;
-            var cx = (area.left + area.right) / 2;
-            var cy = (area.top + area.bottom) / 2;
-            var ctx = chart.ctx;
-            var size = Math.min(area.width, area.height);
-            ctx.save();
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = CHART_THEME.tooltipText;
-            ctx.font = '800 ' + Math.round(size * 0.22) + 'px Vazirmatn, sans-serif';
-            ctx.fillText(toFa(meta.value || 0), cx, cy - 5);
-            ctx.fillStyle = CHART_THEME.text;
-            ctx.font = '600 ' + Math.round(size * 0.11) + 'px Vazirmatn, sans-serif';
-            ctx.fillText(meta.label || 'مخاطب', cx, cy + Math.round(size * 0.14));
-            ctx.restore();
+    function setDonutCenter(doughnut, total, isEmpty) {
+        var centerEl = root.querySelector('[data-tv-donut-center]');
+        var valEl = root.querySelector('[data-tv-donut-center-val]');
+        var lblEl = root.querySelector('[data-tv-donut-center-lbl]');
+        if (!centerEl) return;
+
+        if (isEmpty) {
+            centerEl.hidden = true;
+            return;
         }
-    };
+
+        var value = doughnut.center_value != null ? doughnut.center_value : total;
+        if (valEl) valEl.textContent = toFa(value || 0);
+        if (lblEl) lblEl.textContent = doughnut.center_label || 'مخاطب فعال';
+        centerEl.hidden = false;
+    }
 
     function renderDonutChart(doughnut) {
         var canvas = root.querySelector('[data-tv-donut]');
@@ -522,7 +515,7 @@
         var title = root.querySelector('[data-tv-donut-title]');
         if (!canvas || !window.Chart) return;
 
-        doughnut = doughnut || { slices: [], center_value: 0, center_label: 'مخاطب', heading: 'توزیع مخاطبین' };
+        doughnut = doughnut || { slices: [], center_value: 0, center_label: 'مخاطب فعال', heading: 'توزیع مخاطبین' };
         var slices = (doughnut.slices || []).filter(function (sl) {
             return sl.value > 0 && sl.label !== 'بدون مخاطب';
         });
@@ -530,10 +523,7 @@
         var isEmpty = total <= 0;
 
         if (title) title.textContent = doughnut.heading || doughnut.title || 'توزیع مخاطبین';
-        state.donutCenter = {
-            value: doughnut.center_value || total || 0,
-            label: doughnut.center_label || 'مخاطب'
-        };
+        setDonutCenter(doughnut, total, isEmpty);
 
         canvas.hidden = isEmpty;
         if (emptyEl) emptyEl.hidden = !isEmpty;
@@ -600,8 +590,7 @@
                         }
                     }
                 }
-            },
-            plugins: [donutCenterPlugin]
+            }
         });
     }
 
@@ -798,11 +787,13 @@
         }
 
         legend.innerHTML = slices.map(function (sl) {
+            var isOther = sl.label === 'سایر';
             return (
-                '<div class="lcc-leg" style="--c:' + sl.color + '">' +
-                '<span class="lcc-leg__dot"></span>' +
+                '<div class="lcc-leg' + (isOther ? ' lcc-leg--other' : '') + '" style="--c:' + sl.color + '">' +
+                '<span class="lcc-leg__dot" aria-hidden="true"></span>' +
                 '<span class="lcc-leg__lbl">' + esc(sl.label) + '</span>' +
-                '<span class="lcc-leg__val"><small>(' + toFa(sl.pct || 0) + '%)</small>' + toFa(sl.value || 0) + '</span>' +
+                '<span class="lcc-leg__cnt">' + toFa(sl.value || 0) + ' نفر</span>' +
+                '<span class="lcc-leg__pct">' + toFa(sl.pct || 0) + '٪</span>' +
                 '</div>'
             );
         }).join('');

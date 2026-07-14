@@ -46,7 +46,7 @@ CONTACT_TYPE_DONUT_COLORS = {
     'سازنده': '#ef4444',
     'موجر': '#64748b',
     'سرنخ': '#a78bfa',
-    'سایر': '#475569',
+    'سایر': '#94a3b8',
 }
 
 TREND_SERIES = (
@@ -583,7 +583,7 @@ def _build_contact_type_doughnut(agency: CRMAgency) -> Dict[str, Any]:
         })
     return {
         'heading': 'توزیع مخاطبین',
-        'center_label': 'مخاطب',
+        'center_label': 'مخاطب فعال',
         'center_value': total,
         'slices': slices,
     }

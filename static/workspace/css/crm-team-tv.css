@@ -700,19 +700,20 @@ body.crm-tv-body {
 .lcc-donut {
     flex: 1;
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
-    gap: clamp(8px, 0.75vw, 12px);
+    direction: rtl;
+    grid-template-columns: minmax(0, 1.32fr) minmax(148px, 1fr);
+    grid-template-areas: "chart legend";
+    gap: clamp(10px, 0.85vw, 14px);
     align-items: stretch;
     min-height: 0;
 }
 
 .lcc-donut__chart {
+    grid-area: chart;
     position: relative;
     width: 100%;
-    min-height: clamp(130px, 22vh, 210px);
+    min-height: clamp(140px, 24vh, 220px);
     height: 100%;
-    max-height: none;
-    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -721,51 +722,100 @@ body.crm-tv-body {
 .lcc-donut__chart canvas {
     width: 100% !important;
     height: 100% !important;
+    max-width: min(100%, 220px);
+    max-height: min(100%, 220px);
+    margin: 0 auto;
+}
+
+.lcc-donut__center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.12rem;
+    pointer-events: none;
+    text-align: center;
+    z-index: 2;
+}
+
+.lcc-donut__center[hidden] { display: none !important; }
+
+.lcc-donut__total {
+    font-size: clamp(1.45rem, 3.2vh, 2.15rem);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+}
+
+.lcc-donut__center-lbl {
+    font-size: clamp(0.52rem, 0.95vh, 0.66rem);
+    font-weight: 600;
+    color: var(--muted);
 }
 
 .lcc-donut__legend {
+    grid-area: legend;
     display: flex;
     flex-direction: column;
-    gap: clamp(4px, 0.45vh, 6px);
+    justify-content: center;
+    gap: clamp(5px, 0.5vh, 7px);
     overflow: hidden;
+    padding: clamp(2px, 0.3vh, 4px) 0;
 }
 
 .lcc-leg {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     align-items: center;
-    gap: 0.35rem;
-    padding: clamp(4px, 0.4vh, 6px) clamp(6px, 0.5vw, 8px);
-    border-radius: 8px;
+    gap: 0.35rem 0.5rem;
+    padding: clamp(5px, 0.48vh, 7px) clamp(7px, 0.55vw, 9px);
+    border-radius: 9px;
     background: var(--surface2);
     border: 1px solid var(--border);
-    font-size: clamp(0.52rem, 0.92vh, 0.64rem);
+    font-size: clamp(0.56rem, 1vh, 0.68rem);
+}
+
+.lcc-leg--other {
+    border-color: rgba(148, 163, 184, 0.28);
+    background: rgba(148, 163, 184, 0.08);
 }
 
 .lcc-leg__dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
     background: var(--c, var(--accent));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--c, var(--accent)) 22%, transparent);
+    flex-shrink: 0;
 }
 
 .lcc-leg__lbl {
-    color: var(--muted);
+    color: var(--text);
+    font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.lcc-leg__val {
-    font-weight: 800;
+.lcc-leg__cnt {
+    color: var(--muted);
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 
-.lcc-leg__val small {
-    font-weight: 600;
+.lcc-leg__pct {
     color: var(--c, var(--accent));
-    margin-right: 0.2rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    min-width: 2.1rem;
+    text-align: end;
 }
 
 /* ═══ BOTTOM ROW ═══ */
@@ -1237,8 +1287,11 @@ div.lcc-empty--inline {
     .lcc-lb__row:nth-child(n+5) { display: none; }
 
     .lcc-chart__summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .lcc-donut { grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr); }
-    .lcc-donut__chart { min-height: clamp(108px, 18vh, 160px); }
+    .lcc-donut {
+        grid-template-columns: minmax(0, 1.2fr) minmax(130px, 0.95fr);
+    }
+    .lcc-donut__chart { min-height: clamp(112px, 19vh, 168px); }
+    .lcc-donut__chart canvas { max-width: min(100%, 168px); max-height: min(100%, 168px); }
 
     .lcc-head__sync { display: none; }
 }

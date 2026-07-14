@@ -1,12 +1,7 @@
-{% extends 'workspace/base.html' %}
+{% extends 'workspace/crm/team/tv_base.html' %}
 {% load static crm_tags %}
 
 {% block title %}مرکز فرمان — {{ crm_agency.name|default:'آژانس' }}{% endblock %}
-{% block body_extra_class %} ws-body--tv{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-tv.css' %}?v=3">
-{% endblock %}
 
 {% block content %}
 <div class="tv-cmd" id="crm-tv-app" data-crm-tv data-tv-role="{{ tv_payload.role|default:'advisor' }}" dir="rtl">
@@ -55,7 +50,7 @@
                 <span>تماس · بازدید · لید · قرارداد</span>
             </header>
             <div class="tv-cmd__chart-wrap">
-                <svg class="tv-cmd__chart" data-tv-chart viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true"></svg>
+                <svg class="tv-cmd__chart" data-tv-chart viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
                 <div class="tv-cmd__chart-legend" data-tv-chart-legend></div>
             </div>
         </article>
@@ -106,6 +101,13 @@
         </div>
     </aside>
 
+    <div class="tv-cmd__fs-overlay" data-tv-fs-overlay hidden>
+        <div class="tv-cmd__fs-overlay-inner">
+            <i class="fas fa-tv"></i>
+            <p>برای نمایش تلویزیونی کلیک کنید یا <kbd>F11</kbd> را بزنید</p>
+            <button type="button" class="tv-cmd__fs-start" data-tv-fs-start>شروع نمایش</button>
+        </div>
+    </div>
     <p class="tv-cmd__fs-hint" data-tv-fs-hint hidden>برای تمام‌صفحه <kbd>F11</kbd> را بزنید</p>
 </div>
 
@@ -119,5 +121,5 @@ window.crmTeamTV = {
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=4"></script>
 {% endblock %}

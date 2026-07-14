@@ -39,6 +39,50 @@
         return d.innerHTML;
     }
 
+    function isCompactViewport() {
+        return window.innerWidth <= 1450 || window.innerHeight <= 820;
+    }
+
+    function maxLeaderboardRows() {
+        return isCompactViewport() ? 4 : 5;
+    }
+
+    function softChartMax(values) {
+        var filtered = values.filter(function (v) { return v > 0; }).sort(function (a, b) { return a - b; });
+        if (!filtered.length) return 1;
+        var top = filtered[filtered.length - 1];
+        var ref = filtered[Math.max(0, Math.floor(filtered.length * 0.7))];
+        return Math.max(ref * 1.35, top * 0.6, 1);
+    }
+
+    function enterFullscreen() {
+        var doc = document.documentElement;
+        var req = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.msRequestFullscreen;
+        if (!req) return Promise.reject(new Error('unsupported'));
+        try {
+            return Promise.resolve(req.call(doc, { navigationUI: 'hide' }));
+        } catch (e) {
+            return Promise.resolve(req.call(doc));
+        }
+    }
+
+    function exitFullscreen() {
+        var exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+        if (exit && document.fullscreenElement) return Promise.resolve(exit.call(document));
+        return Promise.resolve();
+    }
+
+    function showFsHint() {
+        var hint = root.querySelector('[data-tv-fs-hint]');
+        if (hint) hint.hidden = false;
+    }
+
+    function hideFsOverlay() {
+        var overlay = root.querySelector('[data-tv-fs-overlay]');
+        if (overlay) overlay.hidden = true;
+        try { sessionStorage.setItem('crm-tv-fs-dismissed', '1'); } catch (e) { /* ignore */ }
+    }
+
     function loadSettings() {
         try {
             var raw = localStorage.getItem(STORAGE_KEY);
@@ -122,7 +166,7 @@
         var defs = KPI_DEFS[data.role] || KPI_DEFS.advisor;
         var kpis = data.kpis || {};
 
-        defs.forEach(function (def) {
+        defs.forEach(function (def, idx) {
             var key = def[0];
             var card = row.querySelector('[data-kpi="' + key + '"]');
             if (!card) {
@@ -132,6 +176,7 @@
                 card.innerHTML = '<span class="tv-cmd__kpi-val" data-val>۰</span><span class="tv-cmd__kpi-lbl"></span><span class="tv-cmd__kpi-delta" data-delta></span>';
                 row.appendChild(card);
             }
+            card.classList.toggle('tv-cmd__kpi--optional', idx === defs.length - 1);
             card.querySelector('.tv-cmd__kpi-lbl').textContent = def[1];
             var k = kpis[key] || { value: 0, delta: null, status: def[2] };
             var valEl = card.querySelector('[data-val]');
@@ -157,7 +202,7 @@
     function renderLeaderboard(data) {
         var list = root.querySelector('[data-tv-leaderboard]');
         if (!list) return;
-        var rows = data.leaderboard || [];
+        var rows = (data.leaderboard || []).slice(0, maxLeaderboardRows());
         if (!rows.length) {
             if (!list.querySelector('.tv-cmd__empty')) {
                 list.innerHTML = '<li class="tv-cmd__empty">هنوز فعالیتی ثبت نشده</li>';
@@ -188,6 +233,10 @@
             li.querySelector('.tv-cmd__board-score').textContent = toFa(r.score);
             li.querySelector('.tv-cmd__board-bar i').style.width = (r.score_pct || 0) + '%';
         });
+        list.querySelectorAll('[data-rank]').forEach(function (li) {
+            var rank = li.getAttribute('data-rank');
+            if (!rows.some(function (r) { return String(r.rank) === rank; })) li.remove();
+        });
     }
 
     function renderChart(data) {
@@ -208,12 +257,13 @@
             { key: 'leads', color: '#f59e0b', label: 'لید' },
             { key: 'deals', color: '#22c55e', label: 'قرارداد' }
         ];
-        var max = 1;
+        var allVals = [];
         points.forEach(function (p) {
-            series.forEach(function (s) { max = Math.max(max, p[s.key] || 0); });
+            series.forEach(function (s) { allVals.push(p[s.key] || 0); });
         });
+        var max = softChartMax(allVals);
 
-        var w = 400, h = 120, pad = 8;
+        var w = 400, h = 120, pad = 10;
         var paths = series.map(function (s) {
             var coords = points.map(function (p, i) {
                 var x = pad + (i / Math.max(points.length - 1, 1)) * (w - pad * 2);
@@ -239,7 +289,7 @@
     function renderGoals(data) {
         var el = root.querySelector('[data-tv-goals]');
         if (!el) return;
-        var goals = data.goals || [];
+        var goals = (data.goals || []).slice(0, 4);
         if (!goals.length) {
             if (!el.querySelector('.tv-cmd__empty')) el.innerHTML = '<p class="tv-cmd__empty">هدفی ثبت نشده</p>';
             return;
@@ -273,7 +323,7 @@
     function renderActivity(data) {
         var list = root.querySelector('[data-tv-activity]');
         if (!list) return;
-        var items = data.activity || [];
+        var items = (data.activity || []).slice(0, 5);
         if (!items.length) {
             if (!list.querySelector('.tv-cmd__empty')) list.innerHTML = '<li class="tv-cmd__empty">رویدادی نیست</li>';
             return;
@@ -413,15 +463,34 @@
             });
     }
 
+    function toggleFullscreen() {
+        if (document.fullscreenElement) {
+            exitFullscreen();
+            return;
+        }
+        enterFullscreen().then(hideFsOverlay).catch(showFsHint);
+    }
+
     function bindControls() {
         var fs = root.querySelector('[data-tv-fullscreen]');
-        if (fs) fs.addEventListener('click', function () {
-            var hint = root.querySelector('[data-tv-fs-hint]');
-            var req = root.requestFullscreen || root.webkitRequestFullscreen;
-            if (!req) { if (hint) hint.hidden = false; return; }
-            if (!document.fullscreenElement) {
-                Promise.resolve(req.call(root)).catch(function () { if (hint) hint.hidden = false; });
-            } else if (document.exitFullscreen) document.exitFullscreen();
+        if (fs) fs.addEventListener('click', toggleFullscreen);
+
+        var fsStart = root.querySelector('[data-tv-fs-start]');
+        if (fsStart) fsStart.addEventListener('click', toggleFullscreen);
+
+        var fsOverlay = root.querySelector('[data-tv-fs-overlay]');
+        if (fsOverlay) {
+            fsOverlay.addEventListener('click', function (e) {
+                if (e.target === fsOverlay) hideFsOverlay();
+            });
+        }
+
+        document.addEventListener('fullscreenchange', function () {
+            var icon = fs && fs.querySelector('i');
+            if (icon) {
+                icon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
+            }
+            if (document.fullscreenElement) hideFsOverlay();
         });
 
         var drawer = root.querySelector('[data-tv-widget-drawer]');
@@ -459,6 +528,15 @@
         tickClock();
         setInterval(tickClock, 1000);
         bindControls();
+        var overlay = root.querySelector('[data-tv-fs-overlay]');
+        var dismissed = false;
+        try { dismissed = !!sessionStorage.getItem('crm-tv-fs-dismissed'); } catch (e) { /* ignore */ }
+        if (overlay && !document.fullscreenElement && !dismissed) overlay.hidden = false;
+        window.addEventListener('resize', function () {
+            if (state.lastData) {
+                renderLeaderboard(state.lastData);
+            }
+        });
         fetchData().finally(scheduleNext);
     }
 

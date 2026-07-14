@@ -221,6 +221,7 @@ class CRMAgencyTVHardeningTests(TestCase):
         client.force_login(self.owner)
         resp = client.get(reverse('workspace:crm_team_tv'))
         self.assertContains(resp, 'tv-cmd')
+        self.assertContains(resp, 'crm-tv-body')
         self.assertContains(resp, 'id="crm-tv-initial"')
         self.assertContains(resp, '"ok": true', html=False)
 

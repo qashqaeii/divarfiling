@@ -93,6 +93,26 @@ class CRMAgencyTVHardeningTests(TestCase):
         self.assertIn('activity', payload)
         self.assertIn('schedule', payload)
 
+    def test_chart_doughnut_status_distribution(self):
+        Customer.objects.create(
+            agency=self.agency, user=self.owner, name='A', phone='09121111111', status='جدید',
+        )
+        Customer.objects.create(
+            agency=self.agency, user=self.owner, name='B', phone='09122222222', status='در حال پیگیری',
+        )
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        chart = payload['chart']
+        self.assertIn('doughnut', chart)
+        self.assertIn('series', chart)
+        donut = chart['doughnut']
+        self.assertEqual(donut['center_value'], 2)
+        labels = {s['label'] for s in donut['slices']}
+        self.assertIn('جدید', labels)
+        self.assertIn('در حال پیگیری', labels)
+        self.assertEqual(sum(s['pct'] for s in donut['slices'] if s['value']), 100)
+        self.assertEqual(len(chart['series']), 4)
+        self.assertIn('share_pct', chart['series'][0])
+
     def test_role_payload_secretary_no_commission(self):
         payload = get_tv_dashboard_payload(self.secretary, use_cache=False)
         self.assertEqual(payload['role'], TV_ROLE_SECRETARY)

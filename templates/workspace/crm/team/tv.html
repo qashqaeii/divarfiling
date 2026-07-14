@@ -52,11 +52,23 @@
         </article>
         <article class="tv-cmd__panel tv-cmd__panel--chart" data-widget="chart">
             <header class="tv-cmd__panel-head">
-                <h2><i class="fas fa-chart-area"></i> روند ۷ روزه</h2>
-                <span>تماس · بازدید · لید · قرارداد</span>
+                <h2><i class="fas fa-chart-pie"></i> تحلیل عملکرد</h2>
+                <span data-tv-chart-subtitle>توزیع مخاطبین · روند ۷ روزه</span>
             </header>
             <div class="tv-cmd__chart-wrap">
-                <svg class="tv-cmd__chart" data-tv-chart viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+                <div class="tv-cmd__chart-layout">
+                    <div class="tv-cmd__chart-donut-col" data-tv-donut-wrap>
+                        <div class="tv-cmd__chart-donut-stage">
+                            <svg class="tv-cmd__chart-donut" data-tv-donut viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+                            <div class="tv-cmd__chart-donut-center" data-tv-donut-center aria-hidden="true"></div>
+                        </div>
+                        <p class="tv-cmd__chart-donut-title" data-tv-donut-title>پرونده مخاطبین</p>
+                    </div>
+                    <div class="tv-cmd__chart-trend-col">
+                        <svg class="tv-cmd__chart" data-tv-chart viewBox="0 0 400 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+                        <div class="tv-cmd__chart-days" data-tv-chart-days aria-hidden="true"></div>
+                    </div>
+                </div>
                 <div class="tv-cmd__chart-legend" data-tv-chart-legend></div>
             </div>
         </article>
@@ -94,7 +106,7 @@
                 <label class="tv-cmd__check">
                     <input type="checkbox" name="widget" value="{{ w }}" checked>
                     <span>
-                        {% if w == 'chart' %}نمودار روند
+                        {% if w == 'chart' %}تحلیل عملکرد
                         {% elif w == 'goals' %}اهداف
                         {% elif w == 'activity' %}فعالیت اخیر
                         {% elif w == 'schedule' %}برنامه امروز
@@ -127,5 +139,5 @@ window.crmTeamTV = {
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=5"></script>
+<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=6"></script>
 {% endblock %}

@@ -10,7 +10,7 @@ from django.core.cache import cache
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
-from workspace.constants import AGENCY_MANAGER_ROLES, DEAL_STAGE_WON
+from workspace.constants import AGENCY_MANAGER_ROLES, CRM_STATUSES, DEAL_STAGE_WON
 from workspace.models import (
     CRMAgency, CRMAgencyAuditLog, CRMAgencyMember, CRMDeal, Customer, CustomerActivity, PropertyVisit,
     WorkspaceSettings,
@@ -28,13 +28,28 @@ from workspace.services.crm_scope import get_membership
 from workspace.services.jalali_input import format_jalali_date, to_persian_digits
 
 # ── نسخه Schema — با تغییر ساختار Payload افزایش دهید ──
-TV_PAYLOAD_SCHEMA_VERSION = 3
+TV_PAYLOAD_SCHEMA_VERSION = 4
 TV_CACHE_SECONDS = 35
 TV_REFRESH_AFTER_SECONDS = 45
 
 TV_ROLE_MANAGER = 'manager'
 TV_ROLE_SECRETARY = 'secretary'
 TV_ROLE_ADVISOR = 'advisor'
+
+STATUS_DONUT_COLORS = {
+    'جدید': '#3b82f6',
+    'در حال پیگیری': '#f59e0b',
+    'بازدید انجام شد': '#10b981',
+    'قرارداد': '#f43f5e',
+    'بایگانی': '#8b5cf6',
+}
+
+TREND_SERIES = (
+    {'key': 'calls', 'color': '#7c3aed', 'label': 'تماس'},
+    {'key': 'visits', 'color': '#06b6d4', 'label': 'بازدید'},
+    {'key': 'leads', 'color': '#f59e0b', 'label': 'لید'},
+    {'key': 'deals', 'color': '#22c55e', 'label': 'قرارداد'},
+)
 
 TV_WIDGETS_ALL = (
     'kpis',
@@ -423,9 +438,49 @@ def _build_sanitized_alerts(kpis: Dict[str, Any]) -> List[Dict[str, Any]]:
     return alerts[:4]
 
 
+def _build_status_doughnut(agency: CRMAgency) -> Dict[str, Any]:
+    """توزیع مخاطبین آژانس — نمودار دایره‌ای مرکز فرمان."""
+    counts = dict(
+        Customer.objects.filter(agency=agency)
+        .values('status')
+        .annotate(c=Count('id'))
+        .values_list('status', 'c')
+    )
+    total = sum(counts.get(s, 0) for s in CRM_STATUSES)
+    slices: List[Dict[str, Any]] = []
+    for status in CRM_STATUSES:
+        value = int(counts.get(status, 0) or 0)
+        if not value:
+            continue
+        slices.append({
+            'label': status,
+            'value': value,
+            'pct': round(value * 100 / total) if total else 0,
+            'color': STATUS_DONUT_COLORS.get(status, '#64748b'),
+        })
+    if slices and total:
+        drift = 100 - sum(s['pct'] for s in slices)
+        if drift:
+            slices[0]['pct'] += drift
+    if not slices:
+        slices.append({
+            'label': 'بدون مخاطب',
+            'value': 0,
+            'pct': 100,
+            'color': '#334155',
+        })
+    return {
+        'title': 'پرونده مخاطبین',
+        'center_label': 'مخاطب',
+        'center_value': total,
+        'slices': slices,
+    }
+
+
 def _build_chart_trend(agency: CRMAgency, days: int = 7) -> Dict[str, Any]:
     today = timezone.now().date()
     points = []
+    series_keys = [s['key'] for s in TREND_SERIES]
     for offset in range(days - 1, -1, -1):
         day = today - timedelta(days=offset)
         points.append({
@@ -437,7 +492,25 @@ def _build_chart_trend(agency: CRMAgency, days: int = 7) -> Dict[str, Any]:
                 agency=agency, stage=DEAL_STAGE_WON, closed_at__date=day,
             ).count(),
         })
-    return {'days': days, 'points': points}
+    series_totals = {
+        key: sum(int(p.get(key) or 0) for p in points)
+        for key in series_keys
+    }
+    activity_total = sum(series_totals.values())
+    return {
+        'days': days,
+        'points': points,
+        'doughnut': _build_status_doughnut(agency),
+        'series': [
+            {
+                **meta,
+                'total': series_totals[meta['key']],
+                'share_pct': round(series_totals[meta['key']] * 100 / activity_total) if activity_total else 0,
+            }
+            for meta in TREND_SERIES
+        ],
+        'activity_total': activity_total,
+    }
 
 
 def _tv_audit_text(event: str) -> str:

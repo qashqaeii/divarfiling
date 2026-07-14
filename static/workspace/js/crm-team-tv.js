@@ -239,50 +239,197 @@
         });
     }
 
-    function renderChart(data) {
-        var svg = root.querySelector('[data-tv-chart]');
-        var legend = root.querySelector('[data-tv-chart-legend]');
-        if (!svg) return;
-        var chart = data.chart || {};
-        var points = chart.points || [];
-        if (!points.length) {
-            svg.innerHTML = '';
-            if (legend) legend.innerHTML = '<span class="tv-cmd__empty">داده کافی نیست</span>';
-            return;
-        }
+    function polar(cx, cy, r, angle) {
+        return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+    }
 
-        var series = [
+    function donutPath(cx, cy, rOut, rIn, start, end) {
+        var large = end - start > Math.PI ? 1 : 0;
+        var p1 = polar(cx, cy, rOut, start);
+        var p2 = polar(cx, cy, rOut, end);
+        var p3 = polar(cx, cy, rIn, end);
+        var p4 = polar(cx, cy, rIn, start);
+        return [
+            'M', p1[0].toFixed(2), p1[1].toFixed(2),
+            'A', rOut, rOut, 0, large, 1, p2[0].toFixed(2), p2[1].toFixed(2),
+            'L', p3[0].toFixed(2), p3[1].toFixed(2),
+            'A', rIn, rIn, 0, large, 0, p4[0].toFixed(2), p4[1].toFixed(2),
+            'Z'
+        ].join(' ');
+    }
+
+    function renderDonut(doughnut) {
+        var svg = root.querySelector('[data-tv-donut]');
+        var center = root.querySelector('[data-tv-donut-center]');
+        var title = root.querySelector('[data-tv-donut-title]');
+        if (!svg) return;
+        doughnut = doughnut || { slices: [], center_value: 0, center_label: 'مخاطب', title: 'پرونده مخاطبین' };
+
+        var slices = (doughnut.slices || []).filter(function (sl) { return sl.value > 0; });
+        var total = slices.reduce(function (sum, sl) { return sum + sl.value; }, 0);
+        var gap = 0.035;
+        var cx = 50;
+        var cy = 50;
+        var rOut = 44;
+        var rIn = 28;
+        var start = -Math.PI / 2;
+        var parts = [
+            '<defs>',
+            '<filter id="tvDonutShadow" x="-25%" y="-25%" width="150%" height="150%">',
+            '<feDropShadow dx="0" dy="1.2" stdDeviation="1.4" flood-color="#000" flood-opacity="0.35"/>',
+            '</filter>',
+            '</defs>'
+        ];
+
+        if (!total) {
+            parts.push('<circle cx="50" cy="50" r="36" fill="none" stroke="#334155" stroke-width="14" opacity="0.55"/>');
+        } else {
+            slices.forEach(function (sl) {
+                var sweep = (sl.value / total) * Math.PI * 2;
+                var end = start + sweep - gap;
+                if (end > start) {
+                    parts.push(
+                        '<path d="' + donutPath(cx, cy, rOut, rIn, start, end) + '" fill="' + sl.color + '" filter="url(#tvDonutShadow)"/>'
+                    );
+                }
+                start += sweep;
+            });
+        }
+        svg.innerHTML = parts.join('');
+
+        if (center) {
+            center.innerHTML =
+                '<span class="tv-cmd__chart-donut-val">' + toFa(doughnut.center_value || 0) + '</span>' +
+                '<span class="tv-cmd__chart-donut-lbl">' + esc(doughnut.center_label || 'مخاطب') + '</span>';
+        }
+        if (title) title.textContent = doughnut.title || 'پرونده مخاطبین';
+    }
+
+    function renderTrend(chart) {
+        var svg = root.querySelector('[data-tv-chart]');
+        var daysEl = root.querySelector('[data-tv-chart-days]');
+        if (!svg) return;
+
+        var points = chart.points || [];
+        var series = chart.series || [
             { key: 'calls', color: '#7c3aed', label: 'تماس' },
             { key: 'visits', color: '#06b6d4', label: 'بازدید' },
             { key: 'leads', color: '#f59e0b', label: 'لید' },
             { key: 'deals', color: '#22c55e', label: 'قرارداد' }
         ];
+
+        if (!points.length) {
+            svg.innerHTML = '';
+            if (daysEl) daysEl.innerHTML = '';
+            return;
+        }
+
+        var w = 400;
+        var h = 100;
+        var padL = 8;
+        var padR = 8;
+        var padT = 6;
+        var padB = 2;
+        var chartW = w - padL - padR;
+        var chartH = h - padT - padB;
         var allVals = [];
         points.forEach(function (p) {
             series.forEach(function (s) { allVals.push(p[s.key] || 0); });
         });
         var max = softChartMax(allVals);
 
-        var w = 400, h = 120, pad = 10;
-        var paths = series.map(function (s) {
-            var coords = points.map(function (p, i) {
-                var x = pad + (i / Math.max(points.length - 1, 1)) * (w - pad * 2);
-                var y = h - pad - ((p[s.key] || 0) / max) * (h - pad * 2);
-                return x + ',' + y;
-            }).join(' ');
-            return '<polyline fill="none" stroke="' + s.color + '" stroke-width="2" points="' + coords + '"/>';
+        function xAt(i) {
+            return padL + (i / Math.max(points.length - 1, 1)) * chartW;
+        }
+        function yAt(v) {
+            return padT + chartH - (v / max) * chartH;
+        }
+
+        var grid = [0.25, 0.5, 0.75, 1].map(function (frac) {
+            var y = padT + chartH * (1 - frac);
+            return '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (w - padR) + '" y2="' + y.toFixed(1) + '" class="tv-chart-grid"/>';
         }).join('');
 
-        var newSvg = paths;
-        if (svg.innerHTML !== newSvg) svg.innerHTML = newSvg;
+        var areas = series.map(function (s) {
+            var top = points.map(function (p, i) {
+                return xAt(i).toFixed(1) + ',' + yAt(p[s.key] || 0).toFixed(1);
+            }).join(' L');
+            var baseline = (padT + chartH).toFixed(1);
+            var d = 'M' + xAt(0).toFixed(1) + ',' + baseline + ' L' + top + ' L' + xAt(points.length - 1).toFixed(1) + ',' + baseline + ' Z';
+            return '<path d="' + d + '" fill="' + s.color + '" class="tv-chart-area"/>';
+        }).join('');
 
-        if (legend) {
-            legend.innerHTML = series.map(function (s) {
-                return '<span style="--c:' + s.color + '">' + s.label + '</span>';
+        var lines = series.map(function (s) {
+            var coords = points.map(function (p, i) {
+                return xAt(i).toFixed(1) + ',' + yAt(p[s.key] || 0).toFixed(1);
+            }).join(' ');
+            return '<polyline fill="none" stroke="' + s.color + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="' + coords + '"/>';
+        }).join('');
+
+        var dots = series.map(function (s) {
+            return points.map(function (p, i) {
+                var v = p[s.key] || 0;
+                if (!v) return '';
+                return '<circle cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(v).toFixed(1) + '" r="2.6" fill="' + s.color + '" stroke="rgba(15,23,42,0.85)" stroke-width="1"/>';
             }).join('');
-            legend.querySelectorAll('span').forEach(function (sp, i) {
-                sp.style.setProperty('--c', series[i].color);
-            });
+        }).join('');
+
+        svg.innerHTML = '<g class="tv-chart-grid-group">' + grid + '</g>' + areas + lines + dots;
+
+        if (daysEl) {
+            daysEl.innerHTML = points.map(function (p) {
+                return '<span>' + esc(p.label) + '</span>';
+            }).join('');
+        }
+    }
+
+    function renderChartLegend(chart) {
+        var legend = root.querySelector('[data-tv-chart-legend]');
+        if (!legend) return;
+
+        var doughnut = chart.doughnut || {};
+        var slices = doughnut.slices || [];
+        var series = chart.series || [];
+        var donutHtml = slices.map(function (sl) {
+            var val = toFa(sl.value || 0);
+            var pct = toFa(sl.pct || 0);
+            return (
+                '<span class="tv-cmd__legend-item tv-cmd__legend-item--donut" style="--c:' + sl.color + '">' +
+                '<em>' + esc(sl.label) + '</em>' +
+                '<b>' + val + '</b>' +
+                '<i>' + pct + '%</i>' +
+                '</span>'
+            );
+        }).join('');
+
+        var trendHtml = series.map(function (s) {
+            var share = s.share_pct != null ? '<i>' + toFa(s.share_pct) + '%</i>' : '';
+            return (
+                '<span class="tv-cmd__legend-item tv-cmd__legend-item--trend" style="--c:' + s.color + '">' +
+                '<em>' + esc(s.label) + '</em>' +
+                '<b>' + toFa(s.total || 0) + '</b>' +
+                share +
+                '</span>'
+            );
+        }).join('');
+
+        legend.innerHTML =
+            '<div class="tv-cmd__legend-block tv-cmd__legend-block--donut">' + donutHtml + '</div>' +
+            '<div class="tv-cmd__legend-block tv-cmd__legend-block--trend">' + trendHtml + '</div>';
+    }
+
+    function renderChart(data) {
+        var chart = data.chart || {};
+        renderDonut(chart.doughnut);
+        renderTrend(chart);
+        renderChartLegend(chart);
+
+        var sub = root.querySelector('[data-tv-chart-subtitle]');
+        if (sub) {
+            var total = chart.activity_total || 0;
+            sub.textContent = total
+                ? toFa(total) + ' فعالیت در ۷ روز · توزیع مخاطبین'
+                : 'توزیع مخاطبین · روند ۷ روزه';
         }
     }
 

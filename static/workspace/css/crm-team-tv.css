@@ -431,6 +431,79 @@ body.crm-tv-body {
     min-height: 0;
     overflow: hidden;
     position: relative;
+    gap: clamp(2px, 0.35vh, 6px);
+}
+
+.tv-cmd__chart-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(88px, 32%) minmax(0, 1fr);
+    gap: clamp(6px, 1vh, 12px);
+    min-height: 0;
+    align-items: stretch;
+}
+
+.tv-cmd__chart-donut-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+}
+
+.tv-cmd__chart-donut-stage {
+    position: relative;
+    width: 100%;
+    max-width: 148px;
+    aspect-ratio: 1;
+    flex-shrink: 0;
+}
+
+.tv-cmd__chart-donut {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.tv-cmd__chart-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.tv-cmd__chart-donut-val {
+    font-size: clamp(1rem, 2.4vh, 1.55rem);
+    font-weight: 700;
+    color: var(--tv-text);
+    letter-spacing: -0.02em;
+}
+
+.tv-cmd__chart-donut-lbl {
+    font-size: clamp(0.5rem, 1.1vh, 0.68rem);
+    color: var(--tv-muted);
+    margin-top: 2px;
+}
+
+.tv-cmd__chart-donut-title {
+    margin: clamp(2px, 0.4vh, 6px) 0 0;
+    font-size: clamp(0.55rem, 1vh, 0.68rem);
+    color: var(--tv-muted);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.tv-cmd__chart-trend-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
 }
 
 .tv-cmd__chart {
@@ -442,10 +515,31 @@ body.crm-tv-body {
     display: block;
 }
 
+.tv-cmd__chart .tv-chart-grid {
+    stroke: rgba(148, 163, 184, 0.14);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+}
+
+.tv-cmd__chart .tv-chart-area {
+    opacity: 0.14;
+}
+
+.tv-cmd__chart-days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 2px;
+    font-size: clamp(0.5rem, 0.9vh, 0.62rem);
+    color: var(--tv-muted);
+    text-align: center;
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
 .tv-cmd__chart-legend {
     display: flex;
-    flex-wrap: nowrap;
-    gap: 0.45rem;
+    flex-direction: column;
+    gap: clamp(2px, 0.35vh, 5px);
     font-size: clamp(0.55rem, 0.95vh, 0.64rem);
     color: var(--tv-muted);
     padding-top: clamp(2px, 0.25vh, 4px);
@@ -453,19 +547,51 @@ body.crm-tv-body {
     overflow: hidden;
 }
 
-.tv-cmd__chart-legend span {
+.tv-cmd__legend-block {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.55rem;
+    align-items: center;
+}
+
+.tv-cmd__legend-block--donut {
+    padding-bottom: 2px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.tv-cmd__legend-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25rem;
     white-space: nowrap;
 }
 
-.tv-cmd__chart-legend span::before {
+.tv-cmd__legend-item::before {
     content: '';
     display: inline-block;
     width: 7px;
     height: 7px;
-    border-radius: 2px;
-    margin-left: 3px;
-    vertical-align: middle;
+    border-radius: 50%;
+    flex-shrink: 0;
     background: var(--c, var(--tv-accent));
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.35);
+}
+
+.tv-cmd__legend-item em {
+    font-style: normal;
+    color: var(--tv-text);
+    opacity: 0.9;
+}
+
+.tv-cmd__legend-item b {
+    font-weight: 600;
+    color: var(--tv-text);
+}
+
+.tv-cmd__legend-item i {
+    font-style: normal;
+    font-size: 0.92em;
+    opacity: 0.75;
 }
 
 /* ─── Bottom panels ─── */
@@ -776,6 +902,14 @@ body.crm-tv-body {
 
     .tv-cmd__chart-legend {
         font-size: 0.58rem;
+    }
+
+    .tv-cmd__chart-donut-stage {
+        max-width: 120px;
+    }
+
+    .tv-cmd__chart-layout {
+        grid-template-columns: minmax(72px, 28%) minmax(0, 1fr);
     }
 }
 

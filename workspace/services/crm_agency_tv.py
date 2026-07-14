@@ -11,8 +11,11 @@ from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
 from workspace.constants import AGENCY_MANAGER_ROLES, DEAL_STAGE_WON
-from workspace.models import CRMAgency, CRMAgencyMember, CRMDeal, Customer, CustomerActivity, PropertyVisit
-from workspace.services.crm_agency import get_team_inbox, member_display
+from workspace.models import (
+    CRMAgency, CRMAgencyAuditLog, CRMAgencyMember, CRMDeal, Customer, CustomerActivity, PropertyVisit,
+)
+from workspace.services.crm_agency import get_team_inbox, role_label
+from workspace.services.crm_audit import get_audit_event_meta
 from workspace.services.crm_agency_analytics import (
     get_member_performance_row,
     get_team_goals_progress,
@@ -24,7 +27,7 @@ from workspace.services.crm_scope import get_membership
 from workspace.services.jalali_input import format_jalali_date, to_persian_digits
 
 # ── نسخه Schema — با تغییر ساختار Payload افزایش دهید ──
-TV_PAYLOAD_SCHEMA_VERSION = 2
+TV_PAYLOAD_SCHEMA_VERSION = 3
 TV_CACHE_SECONDS = 35
 TV_REFRESH_AFTER_SECONDS = 45
 
@@ -34,18 +37,41 @@ TV_ROLE_ADVISOR = 'advisor'
 
 TV_WIDGETS_ALL = (
     'kpis',
-    'goals',
     'leaderboard',
-    'announcements',
-    'leads',
-    'deals',
+    'chart',
+    'goals',
+    'activity',
+    'schedule',
     'alerts',
 )
 
+# KPI و Leaderboard همیشه نمایش داده می‌شوند؛ ticker جداگانه است.
 ALLOWED_WIDGETS_BY_ROLE: Dict[str, Tuple[str, ...]] = {
     TV_ROLE_MANAGER: TV_WIDGETS_ALL,
-    TV_ROLE_SECRETARY: ('kpis', 'goals', 'leaderboard', 'announcements', 'leads', 'deals', 'alerts'),
-    TV_ROLE_ADVISOR: ('kpis', 'leaderboard', 'goals', 'announcements'),
+    TV_ROLE_SECRETARY: ('kpis', 'leaderboard', 'chart', 'goals', 'activity', 'schedule', 'alerts'),
+    TV_ROLE_ADVISOR: ('kpis', 'leaderboard', 'chart', 'goals', 'activity'),
+}
+
+PUBLIC_TV_AUDIT_EVENTS = frozenset({
+    'lead.assigned',
+    'lead.bulk_assigned',
+    'announcement.created',
+})
+
+DEAL_STAGE_TV_LABELS = {
+    'سرنخ': 'سرنخ جدید',
+    'مذاکره': 'مذاکره جدید',
+    'پیش‌قرارداد': 'پیش‌قرارداد جدید',
+    'قرارداد': 'قرارداد جدید',
+    'بسته‌شده': 'معامله بسته‌شده',
+    'از دست رفته': 'معامله از دست رفته',
+    DEAL_STAGE_WON: 'قرارداد موفق',
+}
+
+GOAL_METRIC_TITLES = {
+    'calls': 'هدف تماس‌های تیم',
+    'visits': 'هدف بازدیدهای تیم',
+    'deals_closed': 'هدف قراردادهای تیم',
 }
 
 # کلیدهای ممنوع در JSON خروجی
@@ -58,8 +84,33 @@ FORBIDDEN_PAYLOAD_KEYS = frozenset({
 METRIC_LABELS = {
     'calls': 'تماس',
     'visits': 'بازدید',
-    'deals_closed': 'معامله بسته',
+    'deals_closed': 'قرارداد',
 }
+
+
+def _looks_like_phone(value: str) -> bool:
+    digits = ''.join(c for c in (value or '') if c.isdigit())
+    return len(digits) >= 10 and digits.startswith('09')
+
+
+def tv_safe_display_name(user) -> str:
+    """نام امن برای TV — بدون شماره موبایل یا username عددی."""
+    if not user:
+        return 'عضو تیم'
+    full = (user.get_full_name() or '').strip()
+    if full and not _looks_like_phone(full):
+        return full
+    username = (user.username or '').strip()
+    if username and not _looks_like_phone(username) and not username.isdigit():
+        return username
+    return 'عضو تیم'
+
+
+def tv_safe_first_name(user) -> str:
+    name = tv_safe_display_name(user)
+    if name == 'عضو تیم':
+        return name
+    return name.split()[0]
 
 
 def resolve_tv_role(membership: CRMAgencyMember) -> str:
@@ -233,37 +284,31 @@ def _deal_scope_q(agency: CRMAgency, user_id: int):
     return Q(user_id=user_id) & (Q(agency=agency) | Q(agency__isnull=True))
 
 
-def _advisor_first_name(user) -> str:
-    if not user:
-        return ''
-    full = (user.get_full_name() or '').strip()
-    if full:
-        return full.split()[0]
-    return user.username or ''
-
-
 def _deal_public_summary(deal: CRMDeal, index: int) -> Dict[str, Any]:
+    stage = (deal.stage or '').strip()
+    label = DEAL_STAGE_TV_LABELS.get(stage, stage or 'معامله فعال')
+    advisor = tv_safe_first_name(deal.assigned_to)
     return {
-        'summary': f'معامله {deal.stage}',
-        'stage': deal.stage,
-        'advisor': _advisor_first_name(deal.assigned_to),
+        'summary': label,
+        'advisor': advisor,
         'slot': index,
     }
 
 
-def _sanitize_leaderboard(performance: Dict[str, Any], limit: int = 8) -> List[Dict[str, Any]]:
+def _sanitize_leaderboard(performance: Dict[str, Any], limit: int = 5) -> List[Dict[str, Any]]:
     rows = []
     for row in performance.get('members', [])[:limit]:
+        member = row.get('member')
+        user = member.user if member else None
         rows.append({
             'rank': row.get('rank'),
-            'name': row['name'],
+            'name': tv_safe_display_name(user),
             'role': row['role'],
             'score': row.get('score', 0),
             'score_pct': row.get('score_pct', 0),
             'calls': row['calls'],
             'visits': row['visits'],
             'deals_closed': row['deals_closed'],
-            'active_deals': row['active_deals'],
         })
     return rows
 
@@ -272,22 +317,34 @@ def _sanitize_goals(
     goals: List[Dict[str, Any]],
     *,
     team_only: bool = False,
-    limit: int = 6,
+    limit: int = 3,
 ) -> List[Dict[str, Any]]:
+    today = timezone.now().date()
     rows = []
     for item in goals:
         goal = item['goal']
         if team_only and goal.member_id:
             continue
+        days_left = max((goal.period_end - today).days, 0)
+        pct = item['pct']
+        completed = pct >= 100
+        if team_only:
+            title = GOAL_METRIC_TITLES.get(goal.metric, f'هدف {METRIC_LABELS.get(goal.metric, goal.metric)}')
+        elif goal.member_id:
+            member_label = tv_safe_display_name(goal.member.user) if goal.member else 'عضو تیم'
+            title = f'هدف {METRIC_LABELS.get(goal.metric, goal.metric)} — {member_label}'
+        else:
+            title = GOAL_METRIC_TITLES.get(goal.metric, f'هدف {METRIC_LABELS.get(goal.metric, goal.metric)}')
         rows.append({
             'goal_key': f'g{goal.pk}',
-            'member_name': item['member_name'] if not team_only else 'هدف تیم',
+            'title': title,
             'metric': goal.metric,
-            'metric_label': METRIC_LABELS.get(goal.metric, goal.metric),
             'actual': item['actual'],
             'target': item['target'],
-            'pct': item['pct'],
-            'period_label': item['period_label'],
+            'pct': pct,
+            'days_left': days_left,
+            'completed': completed,
+            'status': 'ok' if completed else ('warn' if pct >= 50 else 'low'),
         })
         if len(rows) >= limit:
             break
@@ -352,6 +409,99 @@ def _build_sanitized_alerts(kpis: Dict[str, Any]) -> List[Dict[str, Any]]:
     return alerts[:4]
 
 
+def _build_chart_trend(agency: CRMAgency, days: int = 7) -> Dict[str, Any]:
+    today = timezone.now().date()
+    points = []
+    for offset in range(days - 1, -1, -1):
+        day = today - timedelta(days=offset)
+        points.append({
+            'label': to_persian_digits(format_jalali_date(day)[-5:]),
+            'calls': _count_calls(agency, day),
+            'visits': _count_visits(agency, day),
+            'leads': Customer.objects.filter(agency=agency, created_at__date=day).count(),
+            'deals': CRMDeal.objects.filter(
+                agency=agency, stage=DEAL_STAGE_WON, closed_at__date=day,
+            ).count(),
+        })
+    return {'days': days, 'points': points}
+
+
+def _tv_audit_text(event: str) -> str:
+    templates = {
+        'lead.assigned': 'یک سرنخ جدید تخصیص یافت',
+        'lead.bulk_assigned': 'تخصیص گروهی سرنخ انجام شد',
+        'announcement.created': 'اطلاعیه جدید منتشر شد',
+    }
+    return templates.get(event) or get_audit_event_meta(event).get('title', 'رویداد تیم')
+
+
+def _build_activity_feed(agency: CRMAgency, limit: int = 5) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    today = timezone.now().date()
+
+    for log in CRMAgencyAuditLog.objects.filter(
+        agency=agency,
+        event__in=PUBLIC_TV_AUDIT_EVENTS,
+    ).select_related('actor').order_by('-created_at')[:limit]:
+        rows.append({
+            'key': f'audit-{log.pk}',
+            'text': _tv_audit_text(log.event),
+            'time': to_persian_digits(log.created_at.strftime('%H:%M')),
+        })
+
+    for visit in PropertyVisit.objects.filter(
+        visit_date=today,
+    ).filter(_agency_visit_q(agency)).select_related('user').order_by('-created_at')[:3]:
+        name = tv_safe_first_name(visit.user)
+        rows.append({
+            'key': f'visit-{visit.pk}',
+            'text': f'{name} یک بازدید ثبت کرد',
+            'time': to_persian_digits(visit.created_at.strftime('%H:%M')) if visit.created_at else '',
+        })
+
+    for deal in CRMDeal.objects.filter(
+        agency=agency, stage=DEAL_STAGE_WON, closed_at__date=today,
+    ).select_related('assigned_to').order_by('-closed_at')[:3]:
+        advisor = tv_safe_first_name(deal.assigned_to)
+        rows.append({
+            'key': f'deal-{deal.pk}',
+            'text': f'{DEAL_STAGE_TV_LABELS.get(DEAL_STAGE_WON, "قرارداد موفق")} — {advisor}',
+            'time': to_persian_digits(deal.closed_at.strftime('%H:%M')) if deal.closed_at else '',
+        })
+
+    rows.sort(key=lambda r: r.get('time', ''), reverse=True)
+    return rows[:limit]
+
+
+def _build_today_schedule(agency: CRMAgency) -> Dict[str, Any]:
+    today = timezone.now().date()
+    visits_today = PropertyVisit.objects.filter(
+        visit_date=today,
+    ).filter(_agency_visit_q(agency)).count()
+    followups_today = Customer.objects.filter(
+        agency=agency,
+        next_follow_up=today,
+        status__in=['جدید', 'در حال پیگیری'],
+    ).count()
+    overdue = Customer.objects.filter(
+        agency=agency,
+        next_follow_up__lt=today,
+        status__in=['جدید', 'در حال پیگیری'],
+    ).count()
+    inbox = get_team_inbox(agency).count()
+    return {
+        'visits_today': visits_today,
+        'followups_today': followups_today,
+        'overdue_followups': overdue,
+        'inbox_unassigned': inbox,
+        'next_hint': (
+            f'{followups_today} پیگیری برای امروز'
+            if followups_today
+            else (f'{visits_today} بازدید ثبت‌شده' if visits_today else 'برنامه‌ای ثبت نشده')
+        ),
+    }
+
+
 def _conversion_pct(agency: CRMAgency, days: int = 30) -> int:
     since = timezone.now() - timedelta(days=days)
     leads_period = Customer.objects.filter(agency=agency, created_at__gte=since).count()
@@ -365,10 +515,11 @@ def _payload_version_hash(payload: Dict[str, Any]) -> str:
     core = {
         'kpis': payload.get('kpis'),
         'leaderboard': payload.get('leaderboard'),
+        'chart': payload.get('chart'),
         'goals': payload.get('goals'),
+        'activity': payload.get('activity'),
+        'schedule': payload.get('schedule'),
         'announcements': payload.get('announcements'),
-        'leads': payload.get('leads'),
-        'deals': payload.get('deals'),
         'alerts': payload.get('alerts'),
     }
     raw = json.dumps(core, sort_keys=True, ensure_ascii=False, default=str)
@@ -398,67 +549,60 @@ def _build_payload_for_role(
         'role': role,
         'allowed_widgets': allowed,
         'agency': {'name': agency.name},
-        'member_name': member_display(membership),
+        'member_name': tv_safe_display_name(membership.user),
         'member_role': membership.get_role_display(),
     }
+
+    chart = _build_chart_trend(agency)
+    announcements = _sanitize_announcements(user, limit=8)
 
     if role == TV_ROLE_MANAGER:
         goals = get_team_goals_progress(agency, days=30, perf=performance)
         kpis = _build_team_kpis(agency, include_commission=True)
         payload['kpis'] = kpis
-        payload['leaderboard'] = _sanitize_leaderboard(performance)
-        payload['top'] = _spotlight_from_performance(performance)
+        payload['leaderboard'] = _sanitize_leaderboard(performance, limit=5)
+        payload['chart'] = chart
         payload['goals'] = _sanitize_goals(goals)
-        payload['announcements'] = _sanitize_announcements(user)
-        payload['leads'] = _sanitize_leads(agency)
-        payload['deals'] = _sanitize_deals(agency)
+        payload['activity'] = _build_activity_feed(agency)
+        payload['schedule'] = _build_today_schedule(agency)
+        payload['announcements'] = announcements
         payload['alerts'] = _build_sanitized_alerts(kpis)
         payload['conversion_pct'] = _conversion_pct(agency)
+        payload['recent_deals'] = _sanitize_deals(agency, limit=4)
     elif role == TV_ROLE_SECRETARY:
         goals = get_team_goals_progress(agency, days=30, perf=performance)
         kpis = _build_team_kpis(agency, include_commission=False)
         payload['kpis'] = kpis
-        payload['leaderboard'] = _sanitize_leaderboard(performance)
-        payload['top'] = _spotlight_from_performance(performance)
+        payload['leaderboard'] = _sanitize_leaderboard(performance, limit=5)
+        payload['chart'] = chart
         payload['goals'] = _sanitize_goals(goals)
-        payload['announcements'] = _sanitize_announcements(user)
-        payload['leads'] = _sanitize_leads(agency)
-        payload['deals'] = _sanitize_deals(agency)
+        payload['activity'] = _build_activity_feed(agency)
+        payload['schedule'] = _build_today_schedule(agency)
+        payload['announcements'] = announcements
         payload['alerts'] = _build_sanitized_alerts(kpis)
         payload['conversion_pct'] = _conversion_pct(agency)
+        payload['recent_deals'] = _sanitize_deals(agency, limit=4)
     else:
         payload['kpis'] = _build_advisor_kpis(agency, user.id)
         payload['leaderboard'] = _sanitize_leaderboard(performance, limit=5)
-        payload['top'] = None
+        payload['chart'] = chart
         goals = get_team_goals_progress(agency, days=30, perf=performance)
         payload['goals'] = _sanitize_goals(goals, team_only=True)
-        payload['announcements'] = _sanitize_announcements(user)
-        payload['leads'] = {'unassigned': 0, 'new_today': 0, 'stale': 0}
-        payload['deals'] = {
-            'active': [],
-            'closed_today': [],
-            'active_count': 0,
-            'closed_today_count': 0,
+        payload['activity'] = _build_activity_feed(agency, limit=4)
+        payload['schedule'] = {
+            'visits_today': payload['kpis'].get('visits_today', {}).get('value', 0),
+            'followups_today': 0,
+            'overdue_followups': 0,
+            'inbox_unassigned': 0,
+            'next_hint': 'عملکرد شخصی امروز',
         }
+        payload['announcements'] = announcements
         payload['alerts'] = []
         payload['conversion_pct'] = 0
+        payload['recent_deals'] = {'active': [], 'closed_today': [], 'active_count': 0, 'closed_today_count': 0}
 
     payload['payload_version'] = _payload_version_hash(payload)
     return payload
-
-
-def _spotlight_from_performance(performance: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    top = performance.get('top')
-    if not top:
-        return None
-    return {
-        'name': top['name'],
-        'role': top['role'],
-        'score_pct': top.get('score_pct', 0),
-        'calls': top['calls'],
-        'visits': top['visits'],
-        'deals_closed': top['deals_closed'],
-    }
 
 
 def get_tv_dashboard_payload(user, *, days: int = 1, use_cache: bool = True) -> Dict[str, Any]:

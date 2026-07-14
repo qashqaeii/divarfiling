@@ -2350,7 +2350,7 @@ class CRMTeamTVView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx['crm_section'] = 'team-tv'
         ctx['tv_payload'] = get_tv_dashboard_payload(self.request.user, use_cache=False)
-        optional = ('chart', 'goals', 'activity', 'schedule', 'alerts')
+        optional = ('chart', 'goals', 'activity', 'schedule', 'announcements', 'alerts')
         ctx['tv_widgets'] = [w for w in ctx['tv_payload'].get('allowed_widgets', []) if w in optional]
         ctx['api_crm_team_tv_url'] = reverse('workspace:api_crm_team_tv')
         ctx['crm_team_url'] = reverse('workspace:crm_team')

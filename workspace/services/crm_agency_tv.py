@@ -10,7 +10,7 @@ from django.core.cache import cache
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
-from workspace.constants import AGENCY_MANAGER_ROLES, CRM_STATUSES, DEAL_STAGE_WON
+from workspace.constants import AGENCY_MANAGER_ROLES, DEAL_STAGE_WON
 from workspace.models import (
     CRMAgency, CRMAgencyAuditLog, CRMAgencyMember, CRMDeal, Customer, CustomerActivity, PropertyVisit,
     WorkspaceSettings,
@@ -28,7 +28,7 @@ from workspace.services.crm_scope import get_membership
 from workspace.services.jalali_input import format_jalali_date, to_persian_digits
 
 # ── نسخه Schema — با تغییر ساختار Payload افزایش دهید ──
-TV_PAYLOAD_SCHEMA_VERSION = 4
+TV_PAYLOAD_SCHEMA_VERSION = 5
 TV_CACHE_SECONDS = 35
 TV_REFRESH_AFTER_SECONDS = 45
 
@@ -36,20 +36,27 @@ TV_ROLE_MANAGER = 'manager'
 TV_ROLE_SECRETARY = 'secretary'
 TV_ROLE_ADVISOR = 'advisor'
 
-STATUS_DONUT_COLORS = {
-    'جدید': '#3b82f6',
-    'در حال پیگیری': '#f59e0b',
-    'بازدید انجام شد': '#10b981',
-    'قرارداد': '#f43f5e',
-    'بایگانی': '#8b5cf6',
+CONTACT_TYPE_DONUT_ORDER = ('مالک', 'خریدار', 'فروشنده', 'مستاجر', 'سازنده')
+
+CONTACT_TYPE_DONUT_COLORS = {
+    'مالک': '#7c3aed',
+    'خریدار': '#38bdf8',
+    'فروشنده': '#f59e0b',
+    'مستاجر': '#22c55e',
+    'سازنده': '#ef4444',
+    'موجر': '#64748b',
+    'سرنخ': '#a78bfa',
+    'سایر': '#475569',
 }
 
 TREND_SERIES = (
-    {'key': 'calls', 'color': '#7c3aed', 'label': 'تماس'},
-    {'key': 'visits', 'color': '#06b6d4', 'label': 'بازدید'},
-    {'key': 'leads', 'color': '#f59e0b', 'label': 'لید'},
-    {'key': 'deals', 'color': '#22c55e', 'label': 'قرارداد'},
+    {'key': 'calls', 'color': '#38bdf8', 'label': 'تماس'},
+    {'key': 'visits', 'color': '#f59e0b', 'label': 'بازدید'},
+    {'key': 'followups', 'color': '#22c55e', 'label': 'پیگیری'},
+    {'key': 'leads', 'color': '#7c3aed', 'label': 'لید'},
 )
+
+TREND_SUMMARY_KEYS = ('calls', 'visits', 'leads', 'deals')
 
 TV_WIDGETS_ALL = (
     'kpis',
@@ -58,14 +65,15 @@ TV_WIDGETS_ALL = (
     'goals',
     'activity',
     'schedule',
+    'announcements',
     'alerts',
 )
 
 # KPI و Leaderboard همیشه نمایش داده می‌شوند؛ ticker جداگانه است.
 ALLOWED_WIDGETS_BY_ROLE: Dict[str, Tuple[str, ...]] = {
     TV_ROLE_MANAGER: TV_WIDGETS_ALL,
-    TV_ROLE_SECRETARY: ('kpis', 'leaderboard', 'chart', 'goals', 'activity', 'schedule', 'alerts'),
-    TV_ROLE_ADVISOR: ('kpis', 'leaderboard', 'chart', 'goals', 'activity'),
+    TV_ROLE_SECRETARY: ('kpis', 'leaderboard', 'chart', 'goals', 'activity', 'schedule', 'announcements', 'alerts'),
+    TV_ROLE_ADVISOR: ('kpis', 'leaderboard', 'chart', 'goals', 'activity', 'announcements'),
 }
 
 PUBLIC_TV_AUDIT_EVENTS = frozenset({
@@ -207,6 +215,21 @@ def _count_visits(agency: CRMAgency, day) -> int:
     ).filter(_agency_visit_q(agency)).count()
 
 
+def _count_followups(agency: CRMAgency, day) -> int:
+    return CustomerActivity.objects.filter(
+        activity_type='پیگیری',
+        created_at__date=day,
+    ).filter(_agency_activity_q(agency)).count()
+
+
+def _count_followups_due(agency: CRMAgency, day) -> int:
+    return Customer.objects.filter(
+        agency=agency,
+        next_follow_up=day,
+        status__in=['جدید', 'در حال پیگیری'],
+    ).count()
+
+
 def _build_team_kpis(agency: CRMAgency, *, include_commission: bool) -> Dict[str, Any]:
     today = timezone.now().date()
     yesterday = today - timedelta(days=1)
@@ -240,11 +263,16 @@ def _build_team_kpis(agency: CRMAgency, *, include_commission: bool) -> Dict[str
     calls_yesterday = _count_calls(agency, yesterday)
     visits_today = _count_visits(agency, today)
     visits_yesterday = _count_visits(agency, yesterday)
+    followups_today = _count_followups(agency, today)
+    followups_yesterday = _count_followups(agency, yesterday)
 
     kpis = {
         'new_leads_today': _kpi_entry(new_today, _delta_pct(new_today, new_yesterday), 'new_leads_today'),
         'calls_today': _kpi_entry(calls_today, _delta_pct(calls_today, calls_yesterday), 'calls_today'),
         'visits_today': _kpi_entry(visits_today, _delta_pct(visits_today, visits_yesterday), 'visits_today'),
+        'followups_today': _kpi_entry(
+            followups_today, _delta_pct(followups_today, followups_yesterday), 'followups_today',
+        ),
         'deals_won_today': _kpi_entry(
             deals_closed_today, _delta_pct(deals_closed_today, deals_closed_yesterday), 'deals_won_today',
         ),
@@ -443,25 +471,37 @@ def _build_sanitized_alerts(kpis: Dict[str, Any]) -> List[Dict[str, Any]]:
     return alerts[:4]
 
 
-def _build_status_doughnut(agency: CRMAgency) -> Dict[str, Any]:
-    """توزیع مخاطبین آژانس — نمودار دایره‌ای مرکز فرمان."""
-    counts = dict(
+def _build_contact_type_doughnut(agency: CRMAgency) -> Dict[str, Any]:
+    """توزیع مخاطبین آژانس بر اساس نوع — نمودار دایره‌ای مرکز فرمان."""
+    raw_counts = dict(
         Customer.objects.filter(agency=agency)
-        .values('status')
+        .values('customer_type')
         .annotate(c=Count('id'))
-        .values_list('status', 'c')
+        .values_list('customer_type', 'c')
     )
-    total = sum(counts.get(s, 0) for s in CRM_STATUSES)
+    counts: Dict[str, int] = {}
+    other = 0
+    for ctype, value in raw_counts.items():
+        label = (ctype or '').strip() or 'سایر'
+        if label in CONTACT_TYPE_DONUT_ORDER:
+            counts[label] = counts.get(label, 0) + int(value or 0)
+        else:
+            other += int(value or 0)
+    if other:
+        counts['سایر'] = counts.get('سایر', 0) + other
+
+    total = sum(counts.values())
     slices: List[Dict[str, Any]] = []
-    for status in CRM_STATUSES:
-        value = int(counts.get(status, 0) or 0)
+    ordered_labels = list(CONTACT_TYPE_DONUT_ORDER) + (['سایر'] if counts.get('سایر') else [])
+    for label in ordered_labels:
+        value = int(counts.get(label, 0) or 0)
         if not value:
             continue
         slices.append({
-            'label': status,
+            'label': label,
             'value': value,
             'pct': round(value * 100 / total) if total else 0,
-            'color': STATUS_DONUT_COLORS.get(status, '#64748b'),
+            'color': CONTACT_TYPE_DONUT_COLORS.get(label, '#64748b'),
         })
     if slices and total:
         drift = 100 - sum(s['pct'] for s in slices)
@@ -475,7 +515,7 @@ def _build_status_doughnut(agency: CRMAgency) -> Dict[str, Any]:
             'color': '#334155',
         })
     return {
-        'heading': 'پرونده مخاطبین',
+        'heading': 'توزیع مخاطبین',
         'center_label': 'مخاطب',
         'center_value': total,
         'slices': slices,
@@ -492,6 +532,7 @@ def _build_chart_trend(agency: CRMAgency, days: int = 7) -> Dict[str, Any]:
             'label': to_persian_digits(format_jalali_date(day)[-5:]),
             'calls': _count_calls(agency, day),
             'visits': _count_visits(agency, day),
+            'followups': _count_followups(agency, day),
             'leads': Customer.objects.filter(agency=agency, created_at__date=day).count(),
             'deals': CRMDeal.objects.filter(
                 agency=agency, stage=DEAL_STAGE_WON, closed_at__date=day,
@@ -501,11 +542,18 @@ def _build_chart_trend(agency: CRMAgency, days: int = 7) -> Dict[str, Any]:
         key: sum(int(p.get(key) or 0) for p in points)
         for key in series_keys
     }
+    deals_total = sum(int(p.get('deals') or 0) for p in points)
     activity_total = sum(series_totals.values())
+    summary_meta = {
+        'calls': {'color': '#38bdf8', 'label': 'کل تماس'},
+        'visits': {'color': '#f59e0b', 'label': 'کل بازدید'},
+        'leads': {'color': '#7c3aed', 'label': 'کل لید'},
+        'deals': {'color': '#22c55e', 'label': 'کل قرارداد'},
+    }
     return {
         'days': days,
         'points': points,
-        'doughnut': _build_status_doughnut(agency),
+        'doughnut': _build_contact_type_doughnut(agency),
         'series': [
             {
                 **meta,
@@ -513,6 +561,15 @@ def _build_chart_trend(agency: CRMAgency, days: int = 7) -> Dict[str, Any]:
                 'share_pct': round(series_totals[meta['key']] * 100 / activity_total) if activity_total else 0,
             }
             for meta in TREND_SERIES
+        ],
+        'summary': [
+            {
+                'key': key,
+                'label': summary_meta[key]['label'],
+                'color': summary_meta[key]['color'],
+                'total': series_totals.get(key, 0) if key != 'deals' else deals_total,
+            }
+            for key in TREND_SUMMARY_KEYS
         ],
         'activity_total': activity_total,
     }
@@ -565,31 +622,85 @@ def _build_activity_feed(agency: CRMAgency, limit: int = 5) -> List[Dict[str, An
     return rows[:limit]
 
 
-def _build_today_schedule(agency: CRMAgency) -> Dict[str, Any]:
+def _visit_schedule_summary(visit: PropertyVisit) -> str:
+    title = (visit.listing_title or '').strip()
+    if title:
+        return title[:48] + ('…' if len(title) > 48 else '')
+    return 'بازدید ملک'
+
+
+def _visit_schedule_status(outcome: str) -> str:
+    outcome = (outcome or '').strip()
+    if outcome in ('پسندید', 'بازدید مجدد'):
+        return 'done'
+    if outcome == 'رد':
+        return 'cancelled'
+    return 'pending'
+
+
+def _build_today_schedule(agency: CRMAgency, *, limit: int = 6) -> Dict[str, Any]:
     today = timezone.now().date()
     visits_today = PropertyVisit.objects.filter(
         visit_date=today,
     ).filter(_agency_visit_q(agency)).count()
-    followups_today = Customer.objects.filter(
-        agency=agency,
-        next_follow_up=today,
-        status__in=['جدید', 'در حال پیگیری'],
-    ).count()
+    followups_today = _count_followups_due(agency, today)
     overdue = Customer.objects.filter(
         agency=agency,
         next_follow_up__lt=today,
         status__in=['جدید', 'در حال پیگیری'],
     ).count()
     inbox = get_team_inbox(agency).count()
+
+    items: List[Dict[str, Any]] = []
+    slot = 0
+
+    for visit in PropertyVisit.objects.filter(
+        visit_date=today,
+    ).filter(_agency_visit_q(agency)).order_by('created_at')[:limit]:
+        slot += 1
+        when = visit.created_at
+        items.append({
+            'key': f'sv-{slot}',
+            'time': to_persian_digits(when.strftime('%H:%M')) if when else '--:--',
+            'summary': _visit_schedule_summary(visit),
+            'status': _visit_schedule_status(visit.outcome),
+            'kind': 'visit',
+        })
+
+    for _ in Customer.objects.filter(
+        agency=agency,
+        next_follow_up=today,
+        status__in=['جدید', 'در حال پیگیری'],
+    ).order_by('updated_at')[: max(0, limit - len(items))]:
+        slot += 1
+        items.append({
+            'key': f'fu-{slot}',
+            'time': '--:--',
+            'summary': 'پیگیری مخاطب',
+            'status': 'pending',
+            'kind': 'followup',
+        })
+
+    if overdue and len(items) < limit:
+        slot += 1
+        items.append({
+            'key': f'od-{slot}',
+            'time': '--:--',
+            'summary': f'{to_persian_digits(overdue)} پیگیری معوق',
+            'status': 'overdue',
+            'kind': 'overdue',
+        })
+
     return {
+        'items': items[:limit],
         'visits_today': visits_today,
         'followups_today': followups_today,
         'overdue_followups': overdue,
         'inbox_unassigned': inbox,
         'next_hint': (
-            f'{followups_today} پیگیری برای امروز'
+            f'{to_persian_digits(followups_today)} پیگیری برای امروز'
             if followups_today
-            else (f'{visits_today} بازدید ثبت‌شده' if visits_today else 'برنامه‌ای ثبت نشده')
+            else (f'{to_persian_digits(visits_today)} بازدید ثبت‌شده' if visits_today else 'برنامه‌ای ثبت نشده')
         ),
     }
 
@@ -682,6 +793,7 @@ def _build_payload_for_role(
         payload['goals'] = _sanitize_goals(goals, team_only=True)
         payload['activity'] = _build_activity_feed(agency, limit=4)
         payload['schedule'] = {
+            'items': [],
             'visits_today': payload['kpis'].get('visits_today', {}).get('value', 0),
             'followups_today': 0,
             'overdue_followups': 0,

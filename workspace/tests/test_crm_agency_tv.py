@@ -93,25 +93,31 @@ class CRMAgencyTVHardeningTests(TestCase):
         self.assertIn('activity', payload)
         self.assertIn('schedule', payload)
 
-    def test_chart_doughnut_status_distribution(self):
+    def test_chart_doughnut_contact_type_distribution(self):
         Customer.objects.create(
-            agency=self.agency, user=self.owner, name='A', phone='09121111111', status='جدید',
+            agency=self.agency, user=self.owner, name='A', phone='09121111111',
+            customer_type='مالک', status='جدید',
         )
         Customer.objects.create(
-            agency=self.agency, user=self.owner, name='B', phone='09122222222', status='در حال پیگیری',
+            agency=self.agency, user=self.owner, name='B', phone='09122222222',
+            customer_type='خریدار', status='در حال پیگیری',
         )
         payload = get_tv_dashboard_payload(self.owner, use_cache=False)
         chart = payload['chart']
         self.assertIn('doughnut', chart)
         self.assertIn('series', chart)
+        self.assertIn('summary', chart)
         donut = chart['doughnut']
         self.assertEqual(donut['center_value'], 2)
         labels = {s['label'] for s in donut['slices']}
-        self.assertIn('جدید', labels)
-        self.assertIn('در حال پیگیری', labels)
+        self.assertIn('مالک', labels)
+        self.assertIn('خریدار', labels)
         self.assertEqual(sum(s['pct'] for s in donut['slices'] if s['value']), 100)
         self.assertEqual(len(chart['series']), 4)
-        self.assertIn('share_pct', chart['series'][0])
+        series_keys = {s['key'] for s in chart['series']}
+        self.assertIn('followups', series_keys)
+        self.assertEqual(len(chart['summary']), 4)
+        self.assertIn('followups_today', payload['kpis'])
 
     def test_role_payload_secretary_no_commission(self):
         payload = get_tv_dashboard_payload(self.secretary, use_cache=False)
@@ -240,7 +246,7 @@ class CRMAgencyTVHardeningTests(TestCase):
         client = Client()
         client.force_login(self.owner)
         resp = client.get(reverse('workspace:crm_team_tv'))
-        self.assertContains(resp, 'tv-cmd')
+        self.assertContains(resp, 'lcc')
         self.assertContains(resp, 'crm-tv-body')
         self.assertContains(resp, 'id="crm-tv-initial"')
         self.assertContains(resp, '"ok": true', html=False)

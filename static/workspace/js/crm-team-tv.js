@@ -1,5 +1,5 @@
 /**
- * TV Command Center — incremental render + polling + Chart.js visualizations
+ * Live Command Center — TV Dashboard (Blueprint rebuild)
  */
 (function () {
     'use strict';
@@ -8,18 +8,18 @@
     if (!root) return;
 
     var cfg = window.crmTeamTV || {};
-    var STORAGE_KEY = 'crm-tv-settings-v3';
-    var SETTINGS_SCHEMA = 3;
-    var OPTIONAL = ['chart', 'goals', 'activity', 'schedule', 'alerts'];
+    var STORAGE_KEY = 'crm-tv-settings-v4';
+    var SETTINGS_SCHEMA = 4;
+    var OPTIONAL = ['chart', 'goals', 'activity', 'schedule', 'announcements', 'alerts'];
     var ALWAYS = ['kpis', 'leaderboard'];
 
     var CHART_THEME = {
-        text: '#8b93a8',
-        textBright: '#e8eaf0',
-        grid: 'rgba(255, 255, 255, 0.05)',
-        tooltipBg: 'rgba(18, 18, 32, 0.96)',
-        tooltipBorder: 'rgba(124, 58, 237, 0.3)',
-        tooltipText: '#f0f0f5'
+        text: '#94a3b8',
+        textBright: '#f8fafc',
+        grid: 'rgba(148, 163, 184, 0.08)',
+        tooltipBg: 'rgba(15, 23, 42, 0.96)',
+        tooltipBorder: 'rgba(124, 58, 237, 0.35)',
+        tooltipText: '#f8fafc'
     };
 
     var state = {
@@ -28,7 +28,6 @@
         pollTimer: null,
         backoffMs: 0,
         inflight: null,
-        tickerIdx: 0,
         trendChart: null,
         donutChart: null,
         donutCenter: { value: 0, label: 'مخاطب' },
@@ -90,6 +89,19 @@
         return timeStr;
     }
 
+    function formatAnnTime(iso) {
+        if (!iso) return '';
+        try {
+            var d = new Date(iso);
+            return toFa(
+                String(d.getHours()).padStart(2, '0') + ':' +
+                String(d.getMinutes()).padStart(2, '0')
+            );
+        } catch (e) {
+            return '';
+        }
+    }
+
     function animateCount(el, target, formatter, duration) {
         if (!el) return;
         var key = el.getAttribute('data-animate-key') || '';
@@ -146,7 +158,7 @@
         var area = chart.chartArea;
         if (!area) return hexToRgba(color, 0.12);
         var g = ctx.createLinearGradient(0, area.top, 0, area.bottom);
-        g.addColorStop(0, hexToRgba(color, 0.28));
+        g.addColorStop(0, hexToRgba(color, 0.3));
         g.addColorStop(0.55, hexToRgba(color, 0.08));
         g.addColorStop(1, hexToRgba(color, 0));
         return g;
@@ -214,7 +226,7 @@
             form.querySelectorAll('input[name="widget"]').forEach(function (inp) {
                 var ok = allowed.indexOf(inp.value) !== -1;
                 inp.disabled = !ok;
-                inp.closest('.tv__check').hidden = !ok;
+                inp.closest('.lcc-check').hidden = !ok;
                 inp.checked = ok && sel.indexOf(inp.value) !== -1;
             });
         }
@@ -254,16 +266,16 @@
         manager: [
             ['new_leads_today', 'سرنخ جدید امروز', 'ok', 'fa-user-plus'],
             ['calls_today', 'تماس‌های امروز', 'ok', 'fa-phone'],
+            ['followups_today', 'پیگیری‌های امروز', 'ok', 'fa-phone-volume'],
             ['visits_today', 'بازدیدهای امروز', 'ok', 'fa-door-open'],
-            ['followups_today', 'پیگیری‌های امروز', 'ok', 'fa-phone-volume', true],
             ['active_deals', 'معاملات فعال', 'ok', 'fa-briefcase'],
-            ['commission_month', 'کمیسیون ماه', 'gold', 'fa-coins']
+            ['commission_month', 'کمیسیون این ماه', 'gold', 'fa-coins']
         ],
         secretary: [
             ['new_leads_today', 'سرنخ جدید امروز', 'ok', 'fa-user-plus'],
             ['calls_today', 'تماس‌های امروز', 'ok', 'fa-phone'],
+            ['followups_today', 'پیگیری‌های امروز', 'ok', 'fa-phone-volume'],
             ['visits_today', 'بازدیدهای امروز', 'ok', 'fa-door-open'],
-            ['followups_today', 'پیگیری‌های امروز', 'ok', 'fa-phone-volume', true],
             ['deals_won_today', 'قرارداد موفق', 'ok', 'fa-handshake'],
             ['inbox_unassigned', 'بدون تخصیص', 'warn', 'fa-inbox']
         ],
@@ -278,19 +290,25 @@
     };
 
     function resolveKpiEntry(data, key, fallbackStatus) {
+        var kpis = data.kpis || {};
+        if (kpis[key]) return kpis[key];
         if (key === 'followups_today') {
             var v = (data.schedule && data.schedule.followups_today) || 0;
             return { value: v, delta: null, status: fallbackStatus || 'ok' };
         }
-        var kpis = data.kpis || {};
-        return kpis[key] || { value: 0, delta: null, status: fallbackStatus || 'ok' };
+        return { value: 0, delta: null, status: fallbackStatus || 'ok' };
     }
 
     function formatKpiValue(key, value) {
-        if (key === 'commission_month' && value >= 1000000) {
-            return toFa(Math.round(value / 1000000)) + 'M';
+        if (key === 'commission_month') {
+            if (value >= 1000000) return toFa(Math.round(value / 1000000 * 10) / 10);
+            return toFa(value);
         }
         return toFa(value);
+    }
+
+    function kpiHasUnit(key) {
+        return key === 'commission_month';
     }
 
     function renderKpis(data) {
@@ -298,48 +316,59 @@
         if (!row) return;
         var defs = KPI_DEFS[data.role] || KPI_DEFS.advisor;
 
-        defs.forEach(function (def, idx) {
+        defs.forEach(function (def) {
             var key = def[0];
             var card = row.querySelector('[data-kpi="' + key + '"]');
             if (!card) {
                 card = document.createElement('article');
-                card.className = 'tv__kpi';
+                card.className = 'lcc-kpi';
                 card.setAttribute('data-kpi', key);
                 card.innerHTML =
-                    '<span class="tv__kpi-icon"><i class="fas"></i></span>' +
-                    '<span class="tv__kpi-val" data-val data-animate-key="kpi-' + key + '">۰</span>' +
-                    '<span class="tv__kpi-lbl"></span>' +
-                    '<span class="tv__kpi-delta" data-delta></span>';
+                    '<span class="lcc-kpi__icon"><i class="fas"></i></span>' +
+                    '<span class="lcc-kpi__label"></span>' +
+                    '<span class="lcc-kpi__value" data-val data-animate-key="kpi-' + key + '">۰</span>' +
+                    '<span class="lcc-kpi__delta" data-delta></span>';
                 row.appendChild(card);
             }
             card.style.setProperty('--kc', KPI_COLORS[key] || '#7c3aed');
-            card.querySelector('.tv__kpi-lbl').textContent = def[1];
-            var icon = card.querySelector('.tv__kpi-icon i');
+            card.querySelector('.lcc-kpi__label').textContent = def[1];
+            var icon = card.querySelector('.lcc-kpi__icon i');
             if (icon) icon.className = 'fas ' + (def[3] || 'fa-chart-simple');
 
             var k = resolveKpiEntry(data, key, def[2]);
             var valEl = card.querySelector('[data-val]');
-            animateCount(valEl, Number(k.value) || 0, function (v) { return formatKpiValue(key, v); });
+            var num = Number(k.value) || 0;
+            var unitEl = card.querySelector('.lcc-kpi__unit');
+            if (unitEl) unitEl.remove();
+            animateCount(valEl, num, function (v) {
+                if (kpiHasUnit(key) && v >= 1000000) {
+                    return formatKpiValue(key, v) + 'M';
+                }
+                return formatKpiValue(key, v);
+            });
+            if (kpiHasUnit(key) && num >= 1000000) {
+                valEl.insertAdjacentHTML('beforeend', '<span class="lcc-kpi__unit">تومان</span>');
+            }
 
-            card.classList.toggle('tv__kpi--warn', k.status === 'warn');
-            card.classList.toggle('tv__kpi--danger', k.status === 'danger');
+            card.classList.toggle('lcc-kpi--warn', k.status === 'warn');
+            card.classList.toggle('lcc-kpi--danger', k.status === 'danger');
 
             var dEl = card.querySelector('[data-delta]');
             if (k.delta != null) {
                 var up = k.delta >= 0;
-                dEl.className = 'tv__kpi-delta tv__kpi-delta--' + (up ? 'up' : 'down');
-                dEl.innerHTML = (up ? '▲ ' : '▼ ') + toFa(Math.abs(k.delta)) + '%';
+                dEl.className = 'lcc-kpi__delta lcc-kpi__delta--' + (up ? 'up' : 'down');
+                dEl.innerHTML = (up ? '▲ ' : '▼ ') + toFa(Math.abs(k.delta)) + '% نسبت به دیروز';
             } else {
                 dEl.textContent = '';
-                dEl.className = 'tv__kpi-delta';
+                dEl.className = 'lcc-kpi__delta';
             }
         });
     }
 
     function rankBadgeClass(rank) {
-        if (rank === 1) return 'tv__lb-rank--gold';
-        if (rank === 2) return 'tv__lb-rank--silver';
-        if (rank === 3) return 'tv__lb-rank--bronze';
+        if (rank === 1) return 'lcc-lb__rank--gold';
+        if (rank === 2) return 'lcc-lb__rank--silver';
+        if (rank === 3) return 'lcc-lb__rank--bronze';
         return '';
     }
 
@@ -355,14 +384,14 @@
         if (!list) return;
         var rows = (data.leaderboard || []).slice(0, maxLeaderboardRows());
         if (!rows.length) {
-            if (!list.querySelector('.tv__empty--inline')) {
+            if (!list.querySelector('.lcc-empty--inline')) {
                 list.innerHTML =
-                    '<li class="tv__empty tv__empty--inline">' +
+                    '<li class="lcc-empty lcc-empty--inline">' +
                     '<i class="fas fa-ranking-star"></i><p>هنوز فعالیتی ثبت نشده</p></li>';
             }
             return;
         }
-        var empty = list.querySelector('.tv__empty--inline');
+        var empty = list.querySelector('.lcc-empty--inline');
         if (empty) empty.remove();
 
         rows.forEach(function (r) {
@@ -370,32 +399,32 @@
             var li = list.querySelector('[data-rank="' + key + '"]');
             if (!li) {
                 li = document.createElement('li');
-                li.className = 'tv__lb-row';
+                li.className = 'lcc-lb__row';
                 li.setAttribute('data-rank', key);
                 li.innerHTML =
-                    '<span class="tv__lb-rank"></span>' +
-                    '<span class="tv__lb-avatar"></span>' +
-                    '<div class="tv__lb-body">' +
-                    '<div class="tv__lb-name"></div>' +
-                    '<div class="tv__lb-role"></div>' +
-                    '<div class="tv__lb-bar"><span></span></div>' +
+                    '<span class="lcc-lb__rank"></span>' +
+                    '<span class="lcc-lb__avatar"></span>' +
+                    '<div class="lcc-lb__body">' +
+                    '<div class="lcc-lb__name"></div>' +
+                    '<div class="lcc-lb__role"></div>' +
+                    '<div class="lcc-lb__bar"><span></span></div>' +
                     '</div>' +
-                    '<span class="tv__lb-score" data-animate-key="score-' + key + '"></span>';
+                    '<span class="lcc-lb__score" data-animate-key="score-' + key + '"></span>';
                 list.appendChild(li);
             }
 
-            li.className = 'tv__lb-row' + (r.rank === 1 ? ' tv__lb-row--top' : '');
+            li.className = 'lcc-lb__row' + (r.rank === 1 ? ' lcc-lb__row--top' : '');
 
-            var rankEl = li.querySelector('.tv__lb-rank');
+            var rankEl = li.querySelector('.lcc-lb__rank');
             rankEl.textContent = rankDisplay(r.rank);
-            rankEl.className = 'tv__lb-rank ' + rankBadgeClass(r.rank);
+            rankEl.className = 'lcc-lb__rank ' + rankBadgeClass(r.rank);
 
-            li.querySelector('.tv__lb-avatar').textContent = initials(r.name);
-            li.querySelector('.tv__lb-name').textContent = r.name;
-            li.querySelector('.tv__lb-role').textContent = r.role;
+            li.querySelector('.lcc-lb__avatar').textContent = initials(r.name);
+            li.querySelector('.lcc-lb__name').textContent = r.name;
+            li.querySelector('.lcc-lb__role').textContent = r.role;
 
-            li.querySelector('.tv__lb-bar span').style.width = (r.score_pct || 0) + '%';
-            animateCount(li.querySelector('.tv__lb-score'), Number(r.score) || 0);
+            li.querySelector('.lcc-lb__bar span').style.width = (r.score_pct || 0) + '%';
+            animateCount(li.querySelector('.lcc-lb__score'), Number(r.score) || 0);
         });
 
         list.querySelectorAll('[data-rank]').forEach(function (li) {
@@ -414,15 +443,16 @@
             var cx = (area.left + area.right) / 2;
             var cy = (area.top + area.bottom) / 2;
             var ctx = chart.ctx;
+            var size = Math.min(area.width, area.height);
             ctx.save();
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = CHART_THEME.tooltipText;
-            ctx.font = '800 ' + Math.round(Math.min(area.width, area.height) * 0.22) + 'px Vazirmatn, sans-serif';
-            ctx.fillText(toFa(meta.value || 0), cx, cy - 6);
+            ctx.font = '800 ' + Math.round(size * 0.22) + 'px Vazirmatn, sans-serif';
+            ctx.fillText(toFa(meta.value || 0), cx, cy - 5);
             ctx.fillStyle = CHART_THEME.text;
-            ctx.font = '600 ' + Math.round(Math.min(area.width, area.height) * 0.11) + 'px Vazirmatn, sans-serif';
-            ctx.fillText(meta.label || 'مخاطب', cx, cy + Math.round(Math.min(area.width, area.height) * 0.14));
+            ctx.font = '600 ' + Math.round(size * 0.11) + 'px Vazirmatn, sans-serif';
+            ctx.fillText(meta.label || 'مخاطب', cx, cy + Math.round(size * 0.14));
             ctx.restore();
         }
     };
@@ -433,14 +463,14 @@
         var title = root.querySelector('[data-tv-donut-title]');
         if (!canvas || !window.Chart) return;
 
-        doughnut = doughnut || { slices: [], center_value: 0, center_label: 'مخاطب', heading: 'پرونده مخاطبین' };
+        doughnut = doughnut || { slices: [], center_value: 0, center_label: 'مخاطب', heading: 'توزیع مخاطبین' };
         var slices = (doughnut.slices || []).filter(function (sl) {
             return sl.value > 0 && sl.label !== 'بدون مخاطب';
         });
         var total = slices.reduce(function (sum, sl) { return sum + sl.value; }, 0);
         var isEmpty = !total;
 
-        if (title) title.textContent = doughnut.heading || doughnut.title || 'پرونده مخاطبین';
+        if (title) title.textContent = doughnut.heading || doughnut.title || 'توزیع مخاطبین';
         state.donutCenter = {
             value: doughnut.center_value || total || 0,
             label: doughnut.center_label || 'مخاطب'
@@ -487,7 +517,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '72%',
+                cutout: '70%',
                 animation: { animateRotate: true, duration: 700, easing: 'easeOutQuart' },
                 plugins: {
                     legend: { display: false },
@@ -521,11 +551,10 @@
         pillsEl.innerHTML = series.map(function (s, idx) {
             var hidden = state.seriesHidden[s.key];
             return (
-                '<button type="button" class="tv__chip' + (hidden ? ' is-off' : '') + '" ' +
+                '<button type="button" class="lcc-chip' + (hidden ? ' is-off' : '') + '" ' +
                 'data-series-idx="' + idx + '" data-series-key="' + esc(s.key) + '" ' +
                 'style="--cc:' + s.color + '" aria-pressed="' + (!hidden) + '">' +
                 '<i></i><span>' + esc(s.label) + '</span>' +
-                '<b>' + toFa(s.total || 0) + '</b>' +
                 '</button>'
             );
         }).join('');
@@ -548,27 +577,20 @@
         });
     }
 
-    var SUMMARY_LABELS = {
-        calls: 'کل تماس',
-        leads: 'کل لید',
-        visits: 'کل بازدید',
-        deals: 'کل قرارداد'
-    };
-
-    function renderTrendKpis(series, activityTotal) {
+    function renderTrendKpis(chart) {
         var el = root.querySelector('[data-tv-trend-kpis]');
         if (!el) return;
-        if (!series.length || !activityTotal) {
+        var summary = chart.summary || [];
+        if (!summary.length) {
             el.innerHTML = '';
             return;
         }
 
-        el.innerHTML = series.map(function (s) {
-            var lbl = SUMMARY_LABELS[s.key] || s.label;
+        el.innerHTML = summary.map(function (s) {
             return (
-                '<div class="tv__sum" style="--sc:' + s.color + '">' +
-                '<span class="tv__sum-lbl">' + esc(lbl) + '</span>' +
-                '<span class="tv__sum-val">' + toFa(s.total || 0) + '</span>' +
+                '<div class="lcc-sum" style="--sc:' + s.color + '">' +
+                '<span class="lcc-sum__lbl">' + esc(s.label) + '</span>' +
+                '<span class="lcc-sum__val">' + toFa(s.total || 0) + '</span>' +
                 '</div>'
             );
         }).join('');
@@ -581,10 +603,10 @@
 
         var points = chart.points || [];
         var series = chart.series || [
-            { key: 'calls', color: '#7c3aed', label: 'تماس' },
-            { key: 'visits', color: '#06b6d4', label: 'بازدید' },
-            { key: 'leads', color: '#f59e0b', label: 'لید' },
-            { key: 'deals', color: '#22c55e', label: 'قرارداد' }
+            { key: 'calls', color: '#38bdf8', label: 'تماس' },
+            { key: 'visits', color: '#f59e0b', label: 'بازدید' },
+            { key: 'followups', color: '#22c55e', label: 'پیگیری' },
+            { key: 'leads', color: '#7c3aed', label: 'لید' }
         ];
         var activityTotal = chart.activity_total || 0;
         var allVals = [];
@@ -595,7 +617,7 @@
         var isEmpty = !activityTotal || !points.length;
 
         bindTrendLegend(series);
-        renderTrendKpis(series, activityTotal);
+        renderTrendKpis(chart);
 
         canvas.hidden = isEmpty;
         if (emptyEl) emptyEl.hidden = !isEmpty;
@@ -615,10 +637,10 @@
                 borderColor: s.color,
                 backgroundColor: function (ctx) { return lineAreaGradient(ctx.chart, s.color); },
                 borderWidth: 2.5,
-                pointRadius: 3.5,
+                pointRadius: 4,
                 pointHoverRadius: 6,
                 pointBackgroundColor: s.color,
-                pointBorderColor: '#090912',
+                pointBorderColor: '#0b0f1a',
                 pointBorderWidth: 2,
                 tension: 0.42,
                 fill: true,
@@ -683,10 +705,7 @@
                     y: {
                         beginAtZero: true,
                         suggestedMax: suggestedMax,
-                        grid: {
-                            color: CHART_THEME.grid,
-                            drawTicks: false
-                        },
+                        grid: { color: CHART_THEME.grid, drawTicks: false },
                         ticks: {
                             color: CHART_THEME.text,
                             stepSize: Math.max(1, Math.ceil(suggestedMax / 4)),
@@ -711,17 +730,17 @@
         });
         if (!slices.length) {
             legend.innerHTML =
-                '<div class="tv__empty tv__empty--inline">' +
+                '<div class="lcc-empty lcc-empty--inline">' +
                 '<i class="fas fa-users"></i><p>مخاطبی ثبت نشده</p></div>';
             return;
         }
 
         legend.innerHTML = slices.map(function (sl) {
             return (
-                '<div class="tv__leg" style="--c:' + sl.color + '">' +
-                '<span class="tv__leg-dot"></span>' +
-                '<span class="tv__leg-lbl">' + esc(sl.label) + '</span>' +
-                '<span class="tv__leg-val"><small>(' + toFa(sl.pct || 0) + '%)</small>' + toFa(sl.value || 0) + '</span>' +
+                '<div class="lcc-leg" style="--c:' + sl.color + '">' +
+                '<span class="lcc-leg__dot"></span>' +
+                '<span class="lcc-leg__lbl">' + esc(sl.label) + '</span>' +
+                '<span class="lcc-leg__val"><small>(' + toFa(sl.pct || 0) + '%)</small>' + toFa(sl.value || 0) + '</span>' +
                 '</div>'
             );
         }).join('');
@@ -735,9 +754,9 @@
     }
 
     function goalStatusClass(g) {
-        if (g.completed) return ' tv__goal-bar--done';
-        if (g.status === 'warn') return ' tv__goal-bar--warn';
-        if (g.status === 'low') return ' tv__goal-bar--low';
+        if (g.completed) return ' lcc-goal__bar--done';
+        if (g.status === 'warn') return ' lcc-goal__bar--warn';
+        if (g.status === 'low') return ' lcc-goal__bar--low';
         return '';
     }
 
@@ -746,14 +765,14 @@
         if (!el) return;
         var goals = (data.goals || []).slice(0, 3);
         if (!goals.length) {
-            if (!el.querySelector('.tv__empty--inline')) {
+            if (!el.querySelector('.lcc-empty--inline')) {
                 el.innerHTML =
-                    '<div class="tv__empty tv__empty--inline">' +
+                    '<div class="lcc-empty lcc-empty--inline">' +
                     '<i class="fas fa-bullseye"></i><p>هدفی ثبت نشده</p></div>';
             }
             return;
         }
-        var empty = el.querySelector('.tv__empty--inline');
+        var empty = el.querySelector('.lcc-empty--inline');
         if (empty) empty.remove();
 
         var minDays = null;
@@ -764,20 +783,20 @@
             var node = el.querySelector('[data-goal="' + g.goal_key + '"]');
             if (!node) {
                 node = document.createElement('div');
-                node.className = 'tv__goal';
+                node.className = 'lcc-goal';
                 node.setAttribute('data-goal', g.goal_key);
                 node.innerHTML =
-                    '<div class="tv__goal-top">' +
-                    '<span class="tv__goal-title"></span>' +
-                    '<span class="tv__goal-nums"><span data-act></span><b data-pct></b></span>' +
+                    '<div class="lcc-goal__top">' +
+                    '<span class="lcc-goal__title"></span>' +
+                    '<span class="lcc-goal__nums"><span data-act></span><b data-pct></b></span>' +
                     '</div>' +
-                    '<div class="tv__goal-bar"><span></span></div>';
+                    '<div class="lcc-goal__bar"><span></span></div>';
                 el.appendChild(node);
             }
-            node.classList.toggle('tv__goal--done', !!g.completed);
-            node.querySelector('.tv__goal-title').textContent = g.title;
-            var bar = node.querySelector('.tv__goal-bar');
-            bar.className = 'tv__goal-bar' + goalStatusClass(g);
+            node.classList.toggle('lcc-goal--done', !!g.completed);
+            node.querySelector('.lcc-goal__title').textContent = g.title;
+            var bar = node.querySelector('.lcc-goal__bar');
+            bar.className = 'lcc-goal__bar' + goalStatusClass(g);
             bar.querySelector('span').style.width = g.pct + '%';
             node.querySelector('[data-act]').textContent = toFa(g.actual) + ' / ' + toFa(g.target);
             node.querySelector('[data-pct]').textContent = toFa(g.pct) + '%';
@@ -787,11 +806,11 @@
         if (minDays != null) {
             if (!foot) {
                 foot = document.createElement('p');
-                foot.className = 'tv__goals-foot';
+                foot.className = 'lcc-goals__foot';
                 foot.setAttribute('data-tv-goals-foot', '');
                 el.appendChild(foot);
             }
-            foot.innerHTML = toFa(minDays) + ' روز تا پایان ماه';
+            foot.textContent = toFa(minDays) + ' روز تا پایان ماه';
             foot.hidden = false;
         } else if (foot) {
             foot.hidden = true;
@@ -818,14 +837,14 @@
         if (!list) return;
         var items = (data.activity || []).slice(0, 6);
         if (!items.length) {
-            if (!list.querySelector('.tv__empty--inline')) {
+            if (!list.querySelector('.lcc-empty--inline')) {
                 list.innerHTML =
-                    '<li class="tv__empty tv__empty--inline">' +
+                    '<li class="lcc-empty lcc-empty--inline">' +
                     '<i class="fas fa-bolt"></i><p>رویدادی نیست</p></li>';
             }
             return;
         }
-        var empty = list.querySelector('.tv__empty--inline');
+        var empty = list.querySelector('.lcc-empty--inline');
         if (empty) empty.remove();
 
         items.forEach(function (a) {
@@ -833,18 +852,16 @@
             var tone = activityTone(a.key);
             if (!li) {
                 li = document.createElement('li');
-                li.className = 'tv__tl';
+                li.className = 'lcc-feed__item';
                 li.setAttribute('data-act-key', a.key);
                 li.innerHTML =
-                    '<span class="tv__tl-ico"><i class="fas"></i></span>' +
-                    '<div class="tv__tl-body">' +
-                    '<span class="tv__tl-text" data-txt></span>' +
-                    '<span class="tv__tl-time" data-time></span>' +
-                    '</div>';
+                    '<span class="lcc-feed__text" data-txt></span>' +
+                    '<span class="lcc-feed__time" data-time></span>' +
+                    '<span class="lcc-feed__ico"><i class="fas"></i></span>';
                 list.appendChild(li);
             }
-            var ico = li.querySelector('.tv__tl-ico');
-            ico.className = 'tv__tl-ico tv__tl-ico--' + tone;
+            var ico = li.querySelector('.lcc-feed__ico');
+            ico.className = 'lcc-feed__ico lcc-feed__ico--' + tone;
             ico.querySelector('i').className = 'fas ' + activityIcon(a.key);
             li.querySelector('[data-txt]').textContent = a.text;
             li.querySelector('[data-time]').textContent = relativeTimeFromClock(a.time) || a.time || '';
@@ -856,47 +873,78 @@
         });
     }
 
+    function scheduleStatusClass(status) {
+        return 'lcc-today__status lcc-today__status--' + (status || 'pending');
+    }
+
     function renderSchedule(data) {
         var el = root.querySelector('[data-tv-schedule]');
         if (!el) return;
         var s = data.schedule || {};
-        var rows = [
-            { key: 'visits', icon: 'fa-door-open', val: s.visits_today || 0, label: 'بازدید امروز', tone: 'ok' },
-            { key: 'followups', icon: 'fa-phone-volume', val: s.followups_today || 0, label: 'پیگیری امروز', tone: 'info' },
-            { key: 'overdue', icon: 'fa-clock', val: s.overdue_followups || 0, label: 'پیگیری معوق', tone: s.overdue_followups ? 'warn' : 'muted' },
-            { key: 'inbox', icon: 'fa-inbox', val: s.inbox_unassigned || 0, label: 'صندوق ورودی', tone: s.inbox_unassigned ? 'warn' : 'muted' }
-        ];
-        var hasAny = rows.some(function (r) { return r.val > 0; });
-        var hint = s.next_hint || '';
+        var items = s.items || [];
 
-        if (!hasAny && !hint) {
-            el.innerHTML =
-                '<div class="tv__empty tv__empty--inline">' +
-                '<i class="fas fa-calendar-day"></i><p>برنامه‌ای برای امروز ثبت نشده</p></div>';
+        if (!items.length) {
+            var hint = s.next_hint || '';
+            if (hint) {
+                el.innerHTML =
+                    '<div class="lcc-today">' +
+                    '<div class="lcc-today__row">' +
+                    '<span class="lcc-today__time">--:--</span>' +
+                    '<span class="lcc-today__title">' + esc(hint) + '</span>' +
+                    '<span class="lcc-today__status lcc-today__status--pending"></span>' +
+                    '</div></div>';
+            } else {
+                el.innerHTML =
+                    '<div class="lcc-empty lcc-empty--inline">' +
+                    '<i class="fas fa-calendar-day"></i><p>برنامه‌ای برای امروز ثبت نشده</p></div>';
+            }
             return;
         }
 
-        var html = '<div class="tv__today">';
-        rows.forEach(function (r) {
+        var html = '<div class="lcc-today">';
+        items.forEach(function (item) {
             html +=
-                '<div class="tv__today-row tv__today-row--' + r.tone + '" data-sched="' + r.key + '">' +
-                '<span class="tv__today-ico"><i class="fas ' + r.icon + '"></i></span>' +
-                '<span class="tv__today-lbl">' + r.label + '</span>' +
-                '<span class="tv__today-val">' + toFa(r.val) + '</span>' +
-                '<span class="tv__today-dot' + (r.val > 0 ? ' is-on' : '') + '"></span>' +
+                '<div class="lcc-today__row" data-sched="' + esc(item.key) + '">' +
+                '<span class="lcc-today__time">' + esc(item.time || '--:--') + '</span>' +
+                '<span class="lcc-today__title">' + esc(item.summary || '') + '</span>' +
+                '<span class="' + scheduleStatusClass(item.status) + '"></span>' +
                 '</div>';
         });
-        if (hint) {
-            html += '<p class="tv__today-hint">' + esc(hint) + '</p>';
-        }
         html += '</div>';
         if (el.innerHTML !== html) el.innerHTML = html;
     }
 
-    function alertEmoji(level) {
-        if (level === 'danger') return '🔴';
-        if (level === 'warn') return '🟠';
-        return '🟢';
+    function renderAnnouncements(data) {
+        var el = root.querySelector('[data-tv-announcements]');
+        if (!el) return;
+        var items = (data.announcements || []).slice(0, 4);
+        if (!items.length) {
+            el.innerHTML =
+                '<div class="lcc-empty lcc-empty--inline">' +
+                '<i class="fas fa-bullhorn"></i><p>اعلانی ثبت نشده</p></div>';
+            return;
+        }
+
+        el.innerHTML = items.map(function (a) {
+            var cls = 'lcc-ann__item';
+            var badge = '';
+            if (a.importance === 'urgent') {
+                cls += ' lcc-ann__item--urgent';
+                badge = '<span class="lcc-ann__badge">مهم</span>';
+            } else if (a.importance === 'high') {
+                cls += ' lcc-ann__item--high';
+                badge = '<span class="lcc-ann__badge lcc-ann__badge--high">اولویت بالا</span>';
+            }
+            var pin = a.is_pinned ? '<i class="fas fa-thumbtack" style="opacity:0.6;font-size:0.65em"></i> ' : '';
+            return (
+                '<article class="' + cls + '" data-ann="' + esc(a.ann_key) + '">' +
+                '<div class="lcc-ann__head">' + badge +
+                '<span class="lcc-ann__time">' + esc(formatAnnTime(a.published_at)) + '</span></div>' +
+                '<div class="lcc-ann__title">' + pin + esc(a.title) + '</div>' +
+                (a.preview ? '<div class="lcc-ann__preview">' + esc(a.preview) + '</div>' : '') +
+                '</article>'
+            );
+        }).join('');
     }
 
     function renderAlerts(data) {
@@ -906,8 +954,7 @@
         if (!alerts.length) { strip.hidden = true; strip.innerHTML = ''; return; }
         strip.hidden = false;
         strip.innerHTML = alerts.map(function (a) {
-            return '<span class="tv__alert tv__alert--' + esc(a.level) + '">' +
-                alertEmoji(a.level) + ' ' + esc(a.text) + '</span>';
+            return '<span class="lcc-alert lcc-alert--' + esc(a.level) + '">' + esc(a.text) + '</span>';
         }).join('');
     }
 
@@ -915,8 +962,13 @@
         var track = root.querySelector('[data-tv-ticker-track]');
         if (!track) return;
         var items = data.announcements || [];
-        if (!items.length) {
-            track.className = 'tv__ticker-track tv__ticker-track--static';
+        var deals = data.recent_deals || {};
+        var extras = [];
+        if (deals.closed_today_count) {
+            extras.push('امروز ' + toFa(deals.closed_today_count) + ' قرارداد بسته شد');
+        }
+        if (!items.length && !extras.length) {
+            track.className = 'lcc-ticker__track lcc-ticker__track--static';
             track.textContent = 'اطلاعیه فعالی نیست';
             return;
         }
@@ -924,9 +976,9 @@
             var pin = a.is_pinned ? '📌 ' : '';
             var imp = a.importance === 'urgent' ? '⚠ ' : (a.importance === 'high' ? '● ' : '');
             return pin + imp + a.title + (a.preview ? ' — ' + a.preview : '');
-        });
+        }).concat(extras);
         var text = '🏆  ' + parts.join('    •    ');
-        track.className = 'tv__ticker-track' + (parts.length < 2 ? ' tv__ticker-track--static' : '');
+        track.className = 'lcc-ticker__track' + (parts.length < 2 ? ' lcc-ticker__track--static' : '');
         if (parts.length >= 2) text = text + '    •    ' + text;
         track.textContent = text;
     }
@@ -942,10 +994,9 @@
             var img = logoWrap.querySelector('[data-tv-agency-logo]');
             if (!img) {
                 img = document.createElement('img');
-                img.className = 'tv__logo tv__logo--img';
                 img.setAttribute('data-tv-agency-logo', '');
-                img.width = 48;
-                img.height = 48;
+                img.width = 44;
+                img.height = 44;
                 img.alt = data.agency.name || '';
                 logoWrap.innerHTML = '';
                 logoWrap.appendChild(img);
@@ -975,6 +1026,7 @@
         renderGoals(data);
         renderActivity(data);
         renderSchedule(data);
+        renderAnnouncements(data);
         renderAlerts(data);
         renderTicker(data);
         renderMeta(data);
@@ -1067,7 +1119,7 @@
 
         var theme = root.querySelector('[data-tv-theme]');
         if (theme) theme.addEventListener('click', function () {
-            root.classList.toggle('tv--bright');
+            root.classList.toggle('lcc--bright');
         });
 
         var drawer = root.querySelector('[data-tv-widget-drawer]');
@@ -1090,10 +1142,17 @@
 
         var hideTimer;
         root.addEventListener('mousemove', function () {
-            root.classList.remove('tv--fs-hide');
+            root.classList.remove('lcc--fs-hide');
             clearTimeout(hideTimer);
             if (document.fullscreenElement) {
-                hideTimer = setTimeout(function () { root.classList.add('tv--fs-hide'); }, 4000);
+                hideTimer = setTimeout(function () { root.classList.add('lcc--fs-hide'); }, 4000);
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
             }
         });
     }

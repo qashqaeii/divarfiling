@@ -135,6 +135,21 @@ class CRMAgencyAnnouncementsTests(TestCase):
         self.assertEqual(total_mgr, 1)
         self.assertEqual(items_mgr[0]['status'], 'scheduled')
 
+    def test_create_with_jalali_datetime(self):
+        client = Client()
+        client.force_login(self.owner)
+        resp = client.post(
+            reverse('workspace:api_crm_team_announcements'),
+            data={
+                'title': 'شمسی',
+                'body': 'متن',
+                'published_at': '1404/04/23 10:30',
+            },
+        )
+        self.assertEqual(resp.status_code, 200)
+        ann = CRMAgencyAnnouncement.objects.get(pk=resp.json()['id'])
+        self.assertIsNotNone(ann.published_at)
+
     def test_delete_announcement(self):
         ann = create_announcement(self.owner, title='حذف', body='متن')
         client = Client()

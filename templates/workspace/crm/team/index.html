@@ -11,7 +11,7 @@
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-performance.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=14">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-announcements.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-announcements.css' %}?v=3">
 {% endblock %}
 
 {% block crm_content %}
@@ -844,6 +844,6 @@ window.crmApiKeyRegenerateUrl = '{{ crm_api_key_regenerate_url }}';
 <script src="{% static 'workspace/js/crm-team-messages.js' %}?v=15"></script>
 {% endif %}
 {% if agency_feature_announcements %}
-<script src="{% static 'workspace/js/crm-team-announcements.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/crm-team-announcements.js' %}?v=3"></script>
 {% endif %}
 {% endblock %}

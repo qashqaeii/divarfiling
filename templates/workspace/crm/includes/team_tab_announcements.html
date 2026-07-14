@@ -16,6 +16,20 @@
                 <h2 class="crm-ann-topbar-title">تابلو اطلاعیه‌ها</h2>
             </div>
         </div>
+        <div class="crm-ann-topbar-stats" data-ann-stats aria-label="آمار اطلاعیه‌ها">
+            <div class="crm-ann-stat">
+                <span class="crm-ann-stat-val" data-ann-stats-total>—</span>
+                <span class="crm-ann-stat-lbl">فعال</span>
+            </div>
+            <div class="crm-ann-stat crm-ann-stat--accent">
+                <span class="crm-ann-stat-val" data-ann-stats-unread>—</span>
+                <span class="crm-ann-stat-lbl">خوانده‌نشده</span>
+            </div>
+            <div class="crm-ann-stat crm-ann-stat--warn">
+                <span class="crm-ann-stat-val" data-ann-stats-important>—</span>
+                <span class="crm-ann-stat-lbl">مهم</span>
+            </div>
+        </div>
         <div class="crm-ann-topbar-actions">
             {% if can_manage_team %}
             <button type="button" class="crm-ann-pill crm-ann-pill--accent" data-ann-compose>
@@ -66,7 +80,7 @@
             </nav>
             <footer class="crm-ann-rail-foot">
                 <i class="fas fa-thumbtack" aria-hidden="true"></i>
-                <span>سنجاق‌شده‌ها همیشه بالا نمایش داده می‌شوند</span>
+                <span>سنجاق‌شده‌ها همیشه بالای لیست نمایش داده می‌شوند</span>
             </footer>
         </aside>
 
@@ -78,7 +92,7 @@
                 </div>
                 <label class="crm-ann-search">
                     <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
-                    <input type="search" placeholder="جستجو در عنوان..." data-ann-search dir="rtl" aria-label="جستجو در اطلاعیه‌ها">
+                    <input type="search" placeholder="جستجو در عنوان و متن..." data-ann-search dir="rtl" aria-label="جستجو در اطلاعیه‌ها">
                 </label>
             </header>
             <ul class="crm-ann-list" data-ann-list role="listbox" aria-label="لیست اطلاعیه‌ها">
@@ -90,43 +104,45 @@
         </div>
 
         <div class="crm-ann-detail" data-ann-detail hidden>
-            <header class="crm-ann-detail-toolbar">
-                <button type="button" class="crm-ann-icon-btn crm-ann-icon-btn--back" data-ann-back aria-label="بازگشت">
-                    <i class="fas fa-arrow-right"></i>
-                </button>
-                <div class="crm-ann-detail-id">
-                    <span class="crm-ann-importance-badge" data-ann-header-importance>—</span>
-                    <div class="crm-ann-detail-id-text">
-                        <h3 data-ann-title>—</h3>
-                        <span data-ann-meta></span>
+            <div class="crm-ann-detail-scroll">
+                <header class="crm-ann-detail-toolbar">
+                    <button type="button" class="crm-ann-icon-btn crm-ann-icon-btn--back" data-ann-back aria-label="بازگشت">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    {% if can_manage_team %}
+                    <div class="crm-ann-detail-tools">
+                        <button type="button" class="crm-ann-icon-btn" data-ann-edit title="ویرایش">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button type="button" class="crm-ann-icon-btn crm-ann-icon-btn--danger" data-ann-delete title="حذف">
+                            <i class="fas fa-trash-can"></i>
+                        </button>
                     </div>
-                </div>
-                {% if can_manage_team %}
-                <div class="crm-ann-detail-tools">
-                    <button type="button" class="crm-ann-icon-btn" data-ann-edit title="ویرایش">
-                        <i class="fas fa-pen"></i>
-                    </button>
-                    <button type="button" class="crm-ann-icon-btn crm-ann-icon-btn--danger" data-ann-delete title="حذف">
-                        <i class="fas fa-trash-can"></i>
-                    </button>
-                </div>
-                {% endif %}
-            </header>
-            <div class="crm-ann-body" data-ann-body></div>
-            <footer class="crm-ann-detail-foot" data-ann-foot hidden></footer>
+                    {% endif %}
+                </header>
+                <article class="crm-ann-article">
+                    <header class="crm-ann-article-hero" data-ann-hero>
+                        <div class="crm-ann-article-badges" data-ann-hero-badges></div>
+                        <h2 class="crm-ann-article-title" data-ann-title>—</h2>
+                        <div class="crm-ann-article-chips" data-ann-chips></div>
+                    </header>
+                    <div class="crm-ann-article-body" data-ann-body></div>
+                    <footer class="crm-ann-article-foot" data-ann-foot hidden></footer>
+                </article>
+            </div>
         </div>
 
         <div class="crm-ann-empty" data-ann-placeholder>
             <div class="crm-ann-empty-visual" aria-hidden="true">
                 <span class="crm-ann-empty-orbit"></span>
                 <span class="crm-ann-empty-orbit crm-ann-empty-orbit--2"></span>
-                <i class="fas fa-bullhorn"></i>
+                <span class="crm-ann-empty-core"><i class="fas fa-bullhorn"></i></span>
             </div>
             <h3>یک اطلاعیه انتخاب کنید</h3>
-            <p>از لیست سمت راست انتخاب کنید یا اطلاعیه جدیدی منتشر کنید.</p>
+            <p>از فهرست کنار، اطلاعیه‌ای را باز کنید تا جزئیات کامل، ضمیمه و وضعیت انتشار را ببینید.</p>
             {% if can_manage_team %}
             <button type="button" class="crm-ann-pill crm-ann-pill--accent" data-ann-compose>
-                <i class="fas fa-plus"></i><span>اطلاعیه جدید</span>
+                <i class="fas fa-plus"></i><span>انتشار اولین اطلاعیه</span>
             </button>
             {% endif %}
         </div>

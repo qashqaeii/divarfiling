@@ -46,9 +46,7 @@
         placeholder: root.querySelector('[data-ann-placeholder]'),
         body: root.querySelector('[data-ann-body]'),
         title: root.querySelector('[data-ann-title]'),
-        meta: root.querySelector('[data-ann-meta]'),
         foot: root.querySelector('[data-ann-foot]'),
-        headerImportance: root.querySelector('[data-ann-header-importance]'),
         filterTitle: root.querySelector('[data-ann-filter-title]'),
         count: root.querySelector('[data-ann-count]'),
         search: root.querySelector('[data-ann-search]'),
@@ -69,6 +67,11 @@
         confirmModal: document.getElementById('modal-ann-confirm'),
         confirmTitle: document.querySelector('[data-ann-confirm-title]'),
         confirmText: document.querySelector('[data-ann-confirm-text]'),
+        statsTotal: root.querySelector('[data-ann-stats-total]'),
+        statsUnread: root.querySelector('[data-ann-stats-unread]'),
+        statsImportant: root.querySelector('[data-ann-stats-important]'),
+        heroBadges: root.querySelector('[data-ann-hero-badges]'),
+        chips: root.querySelector('[data-ann-chips]'),
     };
 
     function apiDetail(id) {
@@ -107,6 +110,17 @@
 
     function formatTime(iso) {
         if (!iso) return '';
+        if (typeof crmFormatJalaliDatetime === 'function') {
+            try {
+                const d = new Date(iso);
+                if (!isNaN(d.getTime())) {
+                    const pad = n => String(n).padStart(2, '0');
+                    const local = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                    return crmFormatJalaliDatetime(local);
+                }
+            } catch (_) { /* fall through */ }
+            return crmFormatJalaliDatetime(iso);
+        }
         try {
             return new Date(iso).toLocaleString('fa-IR', {
                 year: 'numeric', month: 'short', day: 'numeric',
@@ -115,17 +129,111 @@
         } catch (_) { return ''; }
     }
 
-    function toDatetimeLocal(iso) {
+    function annNormalizeDigits(s) {
+        return String(s || '').replace(/[۰-۹]/g, ch => '۰۱۲۳۴۵۶۷۸۹'.indexOf(ch));
+    }
+
+    function annJalaliToGregorian(jy, jm, jd) {
+        let gy; let gm; let gd; let days;
+        jy = parseInt(jy, 10);
+        jm = parseInt(jm, 10);
+        jd = parseInt(jd, 10);
+        jy += 1595;
+        days = -355668 + (365 * jy) + Math.floor(jy / 33) * 8 + Math.floor(((jy % 33) + 3) / 4)
+            + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+        gy = 400 * Math.floor(days / 146097);
+        days %= 146097;
+        if (days > 36524) {
+            gy += 100 * Math.floor(--days / 36524);
+            days %= 36524;
+            if (days >= 365) days++;
+        }
+        gy += 4 * Math.floor(days / 1461);
+        days %= 1461;
+        if (days > 365) {
+            gy += Math.floor((days - 1) / 365);
+            days = (days - 1) % 365;
+        }
+        gd = days + 1;
+        const sal_a = [0, 31, ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0)) ? 29 : 28,
+            31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        for (gm = 0; gm < 13 && gd > sal_a[gm]; gm++) gd -= sal_a[gm];
+        return [gy, gm, gd];
+    }
+
+    function annLocalJalaliDatetime(date) {
+        const d = date || new Date();
+        if (typeof crmGregorianToJalali === 'function' && typeof crmToPersianDigits === 'function') {
+            const [jy, jm, jd] = crmGregorianToJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+            const ds = `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
+            const ts = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            return crmToPersianDigits(`${ds} ${ts}`);
+        }
+        return d.toLocaleString('fa-IR');
+    }
+
+    function annIsoToJalaliInput(iso) {
         if (!iso) return '';
         try {
             const d = new Date(iso);
-            const pad = n => String(n).padStart(2, '0');
-            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            if (isNaN(d.getTime())) return '';
+            return annLocalJalaliDatetime(d);
         } catch (_) { return ''; }
     }
 
-    function nowDatetimeLocal() {
-        return toDatetimeLocal(new Date().toISOString());
+    function annParseJalaliInput(value) {
+        const s = annNormalizeDigits(value).trim();
+        if (!s) return null;
+        const m = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
+        if (!m) return null;
+        const [gy, gm, gd] = annJalaliToGregorian(+m[1], +m[2], +m[3]);
+        return new Date(gy, gm - 1, gd, m[4] != null ? +m[4] : 0, m[5] != null ? +m[5] : 0, 0);
+    }
+
+    function annInitJalaliPickers() {
+        if (typeof initCRMJalaliPickers === 'function' && els.composeModal) {
+            initCRMJalaliPickers(els.composeModal);
+        }
+    }
+
+    function annSyncImportanceCards() {
+        const picker = document.querySelector('[data-ann-importance-picker]');
+        if (!picker) return;
+        picker.querySelectorAll('.crm-ann-importance-card').forEach(card => {
+            const input = card.querySelector('input[type=radio]');
+            card.classList.toggle('active', !!input?.checked);
+        });
+    }
+
+    function annApplyPublishPreset(preset) {
+        const input = els.composeForm?.querySelector('[data-ann-published]');
+        if (!input) return;
+        const d = new Date();
+        if (preset === 'tomorrow') {
+            d.setDate(d.getDate() + 1);
+            d.setHours(9, 0, 0, 0);
+        } else if (preset === 'nextweek') {
+            d.setDate(d.getDate() + 7);
+            d.setHours(9, 0, 0, 0);
+        }
+        input.value = annLocalJalaliDatetime(d);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function annApplyExpirePreset(preset) {
+        const input = els.composeForm?.querySelector('[data-ann-expires]');
+        if (!input) return;
+        if (preset === 'none') {
+            input.value = '';
+            return;
+        }
+        const pubInput = els.composeForm?.querySelector('[data-ann-published]');
+        const base = annParseJalaliInput(pubInput?.value) || new Date();
+        const d = new Date(base.getTime());
+        d.setDate(d.getDate() + (preset === '30d' ? 30 : 7));
+        d.setHours(23, 59, 0, 0);
+        input.value = annLocalJalaliDatetime(d);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     function importanceBadgeClass(level) {
@@ -177,12 +285,48 @@
         return `<li class="crm-ann-state"><span class="crm-ann-state-ring"><i class="fas ${icon}"></i></span><p>${text}</p></li>`;
     }
 
+    function initials(name) {
+        if (!name) return '؟';
+        const parts = String(name).trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return '؟';
+        return parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : parts[0][0];
+    }
+
+    function importanceIcon(level) {
+        const map = {
+            low: 'fa-circle',
+            normal: 'fa-circle-half-stroke',
+            high: 'fa-triangle-exclamation',
+            urgent: 'fa-bolt',
+        };
+        return map[level] || map.normal;
+    }
+
+    function updateStats(items, unread) {
+        const active = items.filter(a => a.status === 'active');
+        const important = active.filter(a => a.importance === 'high' || a.importance === 'urgent');
+        if (els.statsTotal) els.statsTotal.textContent = active.length.toLocaleString('fa-IR');
+        if (els.statsUnread) els.statsUnread.textContent = (unread || 0).toLocaleString('fa-IR');
+        if (els.statsImportant) els.statsImportant.textContent = important.length.toLocaleString('fa-IR');
+    }
+
+    function cardTags(a) {
+        const parts = [];
+        if (a.is_pinned) parts.push('<span class="crm-ann-tag crm-ann-tag--pin"><i class="fas fa-thumbtack"></i> سنجاق</span>');
+        if (a.status === 'scheduled') parts.push('<span class="crm-ann-tag crm-ann-tag--scheduled">زمان‌بندی</span>');
+        if (a.status === 'expired') parts.push('<span class="crm-ann-tag crm-ann-tag--expired">منقضی</span>');
+        if (a.target_roles && a.target_roles.length) {
+            parts.push(`<span class="crm-ann-tag crm-ann-tag--audience">${escapeHtml(audienceLabel(a.target_roles))}</span>`);
+        }
+        return parts.join('');
+    }
+
     function cardBadges(a) {
         const parts = [];
-        if (a.is_pinned) parts.push('<span class="crm-ann-badge crm-ann-badge--pin"><i class="fas fa-thumbtack"></i></span>');
+        if (a.is_pinned) parts.push(`<span class="crm-ann-badge crm-ann-badge--pin"><i class="fas fa-thumbtack"></i> سنجاق</span>`);
+        parts.push(`<span class="crm-ann-badge ${importanceBadgeClass(a.importance)}">${IMPORTANCE_LABELS[a.importance] || a.importance}</span>`);
         if (a.status === 'scheduled') parts.push('<span class="crm-ann-badge crm-ann-badge--scheduled">زمان‌بندی</span>');
         if (a.status === 'expired') parts.push('<span class="crm-ann-badge crm-ann-badge--expired">منقضی</span>');
-        parts.push(`<span class="${importanceBadgeClass(a.importance)}">${IMPORTANCE_LABELS[a.importance] || a.importance}</span>`);
         return parts.join('');
     }
 
@@ -209,18 +353,36 @@
 
         els.list.innerHTML = filtered.map(a => {
             const unread = !a.is_read && a.status === 'active';
-            const impClass = a.importance === 'urgent' ? 'is-urgent' : (a.importance === 'high' ? 'is-high' : '');
+            const imp = a.importance || 'normal';
+            const impClass = imp === 'urgent' ? 'is-urgent' : (imp === 'high' ? 'is-high' : '');
+            const author = a.created_by || 'تیم';
+            const attach = a.attachment_url
+                ? '<span class="crm-ann-card-attach" title="دارای ضمیمه"><i class="fas fa-paperclip"></i></span>'
+                : '';
             return `
-            <li class="crm-ann-card ${unread ? 'is-unread' : ''} ${impClass} ${a.id === currentAnnId ? 'is-active' : ''}"
+            <li class="crm-ann-card ${unread ? 'is-unread' : ''} ${impClass} ${a.is_pinned ? 'is-pinned' : ''} ${a.id === currentAnnId ? 'is-active' : ''}"
                 data-ann-id="${a.id}" role="option" aria-selected="${a.id === currentAnnId}">
-                <div class="crm-ann-card-head">
+                <span class="crm-ann-card-accent" aria-hidden="true"></span>
+                <div class="crm-ann-card-inner">
+                    <header class="crm-ann-card-top">
+                        <span class="crm-ann-card-imp crm-ann-card-imp--${imp}" title="${IMPORTANCE_LABELS[imp] || imp}">
+                            <i class="fas ${importanceIcon(imp)}"></i>
+                        </span>
+                        <div class="crm-ann-card-tags">${cardTags(a)}</div>
+                        <span class="crm-ann-card-unread" ${unread ? '' : 'hidden'} aria-label="خوانده‌نشده"></span>
+                    </header>
                     <h4 class="crm-ann-card-title">${escapeHtml(a.title)}</h4>
-                    <div class="crm-ann-card-badges">${cardBadges(a)}</div>
-                </div>
-                <p class="crm-ann-card-preview">${escapeHtml(a.body_preview || a.body || '')}</p>
-                <div class="crm-ann-card-foot">
-                    <span>${escapeHtml(a.created_by || 'تیم')}</span>
-                    <time datetime="${escapeHtml(a.published_at)}">${formatTime(a.published_at)}</time>
+                    <p class="crm-ann-card-preview">${escapeHtml(a.body_preview || a.body || '')}</p>
+                    <footer class="crm-ann-card-foot">
+                        <span class="crm-ann-card-author">
+                            <span class="crm-ann-card-avatar">${escapeHtml(initials(author))}</span>
+                            <span>${escapeHtml(author)}</span>
+                        </span>
+                        <div class="crm-ann-card-meta">
+                            <time datetime="${escapeHtml(a.published_at)}">${formatTime(a.published_at)}</time>
+                            ${attach}
+                        </div>
+                    </footer>
                 </div>
             </li>`;
         }).join('');
@@ -233,31 +395,40 @@
     function renderDetail(a) {
         if (!a) return;
         if (els.title) els.title.textContent = a.title || '—';
-        if (els.meta) {
-            const parts = [a.created_by, formatTime(a.published_at)].filter(Boolean);
-            if (a.target_roles && a.target_roles.length) parts.push(audienceLabel(a.target_roles));
-            els.meta.textContent = parts.join(' · ');
-        }
-        if (els.headerImportance) {
-            els.headerImportance.className = `crm-ann-importance-badge ${importanceBadgeClass(a.importance)}`;
-            els.headerImportance.textContent = IMPORTANCE_LABELS[a.importance] || a.importance;
+        if (els.heroBadges) els.heroBadges.innerHTML = cardBadges(a);
+        if (els.chips) {
+            const chips = [];
+            if (a.created_by) {
+                chips.push(`<span class="crm-ann-chip"><i class="fas fa-user-pen"></i>${escapeHtml(a.created_by)}</span>`);
+            }
+            if (a.published_at) {
+                chips.push(`<span class="crm-ann-chip"><i class="fas fa-calendar-check"></i>${formatTime(a.published_at)}</span>`);
+            }
+            chips.push(`<span class="crm-ann-chip"><i class="fas fa-users"></i>${escapeHtml(audienceLabel(a.target_roles))}</span>`);
+            if (!a.is_read && a.status === 'active') {
+                chips.push('<span class="crm-ann-chip"><i class="fas fa-circle-dot"></i>خوانده‌نشده</span>');
+            }
+            els.chips.innerHTML = chips.join('');
         }
         if (els.body) {
-            let html = escapeHtml(a.body || '');
+            let html = `<div class="crm-ann-prose">${escapeHtml(a.body || '')}</div>`;
             if (a.attachment_url) {
                 html += `<a class="crm-ann-attachment" href="${escapeHtml(a.attachment_url)}" target="_blank" rel="noopener">
-                    <i class="fas fa-paperclip"></i>
-                    <span>${escapeHtml(a.attachment_name || 'دانلود ضمیمه')}</span>
+                    <i class="fas fa-file-arrow-down"></i>
+                    <span>
+                        <strong>${escapeHtml(a.attachment_name || 'دانلود ضمیمه')}</strong>
+                        <small>فایل پیوست اطلاعیه</small>
+                    </span>
                 </a>`;
             }
             els.body.innerHTML = html;
         }
         if (els.foot) {
             const bits = [];
-            if (a.is_pinned) bits.push('<span><i class="fas fa-thumbtack"></i> سنجاق‌شده</span>');
-            if (a.expires_at) bits.push(`<span>انقضا: ${formatTime(a.expires_at)}</span>`);
-            if (a.status === 'scheduled') bits.push('<span>منتشر نشده — زمان‌بندی شده</span>');
-            if (a.status === 'expired') bits.push('<span>منقضی شده</span>');
+            if (a.is_pinned) bits.push('<span><i class="fas fa-thumbtack"></i> سنجاق‌شده در بالای تابلو</span>');
+            if (a.expires_at) bits.push(`<span><i class="fas fa-hourglass-end"></i> انقضا: ${formatTime(a.expires_at)}</span>`);
+            if (a.status === 'scheduled') bits.push('<span><i class="fas fa-clock"></i> منتشر نشده — زمان‌بندی شده</span>');
+            if (a.status === 'expired') bits.push('<span><i class="fas fa-ban"></i> منقضی شده</span>');
             if (bits.length) {
                 els.foot.innerHTML = bits.join('');
                 els.foot.hidden = false;
@@ -307,6 +478,7 @@
             announcementsCache = data.announcements || [];
             renderList(announcementsCache);
             updateUnreadBadges(data.unread || 0);
+            updateStats(announcementsCache, data.unread || 0);
             const initialId = root.dataset.initialId;
             if (initialId && !currentAnnId) {
                 root.dataset.initialId = '';
@@ -364,19 +536,21 @@
         if (els.audienceGrid) {
             els.audienceGrid.querySelectorAll('input').forEach(i => { i.checked = false; });
         }
+        const pub = els.composeForm.querySelector('[data-ann-published]');
+        const exp = els.composeForm.querySelector('[data-ann-expires]');
         if (ann) {
             if (els.composeTitle) els.composeTitle.textContent = 'ویرایش اطلاعیه';
-            if (els.composeSub) els.composeSub.textContent = 'تغییر محتوا، مخاطبان یا زمان انتشار';
+            if (els.composeSub) els.composeSub.textContent = 'تغییر محتوا، زمان‌بندی شمسی یا مخاطبان';
             if (els.composeSubmitLabel) els.composeSubmitLabel.textContent = 'ذخیره تغییرات';
             els.composeForm.title.value = ann.title || '';
             els.composeForm.body.value = ann.body || '';
-            els.composeForm.importance.value = ann.importance || 'normal';
+            const imp = ann.importance || 'normal';
+            const impInput = els.composeForm.querySelector(`input[name=importance][value="${imp}"]`);
+            if (impInput) impInput.checked = true;
             const pinInput = els.composeForm.querySelector('[data-ann-pin-input]');
             if (pinInput) pinInput.checked = !!ann.is_pinned;
-            const pub = els.composeForm.querySelector('[data-ann-published]');
-            const exp = els.composeForm.querySelector('[data-ann-expires]');
-            if (pub) pub.value = toDatetimeLocal(ann.published_at);
-            if (exp) exp.value = toDatetimeLocal(ann.expires_at);
+            if (pub) pub.value = annIsoToJalaliInput(ann.published_at);
+            if (exp) exp.value = ann.expires_at ? annIsoToJalaliInput(ann.expires_at) : '';
             (ann.target_roles || []).forEach(role => {
                 const cb = els.audienceGrid?.querySelector(`input[value="${role}"]`);
                 if (cb) cb.checked = true;
@@ -389,15 +563,19 @@
             }
         } else {
             if (els.composeTitle) els.composeTitle.textContent = 'اطلاعیه جدید';
-            if (els.composeSub) els.composeSub.textContent = 'انتشار برای همه یا نقش‌های مشخص';
+            if (els.composeSub) els.composeSub.textContent = 'انتشار حرفه‌ای برای کل تیم یا نقش‌های مشخص';
             if (els.composeSubmitLabel) els.composeSubmitLabel.textContent = 'انتشار اطلاعیه';
-            const pub = els.composeForm.querySelector('[data-ann-published]');
-            if (pub) pub.value = nowDatetimeLocal();
+            const normalImp = els.composeForm.querySelector('input[name=importance][value=normal]');
+            if (normalImp) normalImp.checked = true;
+            if (pub) pub.value = annLocalJalaliDatetime(new Date());
+            if (exp) exp.value = '';
             if (els.currentFile) els.currentFile.hidden = true;
         }
+        annSyncImportanceCards();
         initAudiencePanel();
         els.composeModal.classList.add('is-open');
         document.body.classList.add('ws-modal-open');
+        annInitJalaliPickers();
     }
 
     function closeComposeModal() {
@@ -498,6 +676,22 @@
         if (cb) cb();
     });
     document.querySelectorAll('[data-ann-confirm-cancel]').forEach(b => b.addEventListener('click', closeConfirm));
+
+    document.querySelector('[data-ann-importance-picker]')?.addEventListener('change', annSyncImportanceCards);
+
+    document.querySelector('[data-ann-publish-presets]')?.addEventListener('click', e => {
+        const btn = e.target.closest('[data-preset]');
+        if (!btn) return;
+        e.preventDefault();
+        annApplyPublishPreset(btn.dataset.preset);
+    });
+
+    document.querySelector('[data-ann-expire-presets]')?.addEventListener('click', e => {
+        const btn = e.target.closest('[data-preset]');
+        if (!btn) return;
+        e.preventDefault();
+        annApplyExpirePreset(btn.dataset.preset);
+    });
 
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {

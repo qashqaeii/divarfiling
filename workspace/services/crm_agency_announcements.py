@@ -245,7 +245,13 @@ def parse_announcement_datetime(value) -> Optional[datetime]:
         raw = str(value).strip()
         if not raw:
             return None
-        dt = datetime.fromisoformat(raw.replace('Z', '+00:00'))
+        from workspace.services.jalali_input import parse_jalali_datetime_string
+        dt = parse_jalali_datetime_string(raw)
+        if dt is None:
+            try:
+                dt = datetime.fromisoformat(raw.replace('Z', '+00:00'))
+            except ValueError:
+                return None
     if timezone.is_naive(dt):
         return timezone.make_aware(dt, timezone.get_current_timezone())
     return dt

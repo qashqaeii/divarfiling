@@ -1342,19 +1342,28 @@ def apply_property_suggestions(
     *,
     note: str = '',
     request=None,
-) -> str:
-    """ثبت پیشنهادها در activity و پیوند ملک‌ها."""
+) -> tuple[str, int]:
+    """ثبت پیشنهادها در activity و پیوند ملک‌ها. برگشت: (متن واتساپ, تعداد پیوند موفق)."""
     if not matches:
-        return ''
+        return '', 0
+    from workspace.services.crm_scope import property_for_user
+
     if request is not None:
         from workspace.services.property_suggestion_share import enrich_matches_with_public_urls
         matches = enrich_matches_with_public_urls(user, request, matches)
     titles = []
+    linked = 0
     for m in matches:
         title = m.get('title') or 'ملک'
         titles.append(title)
         if m.get('source') == 'crm' and m.get('property_id'):
-            prop = CRMProperty.objects.filter(pk=m['property_id'], user=user).first()
+            try:
+                prop_id = int(m['property_id'])
+            except (TypeError, ValueError):
+                continue
+            prop = property_for_user(user, prop_id)
+            if prop is None and m.get('token'):
+                prop = get_crm_property_by_token(user, m['token'])
             if prop:
                 link_customer_property(
                     customer, prop, 'پیشنهادی',
@@ -1362,25 +1371,31 @@ def apply_property_suggestions(
                     interest_level='متوسط',
                     notes='پیشنهاد خودکار',
                 )
+                linked += 1
         elif m.get('source') == 'divar' and m.get('token'):
             listing = Listing.objects.filter(
-                token=m['token'], dataset__user=user,
+                token=m['token'],
+                dataset__user=user,
+                dataset__is_active=True,
+                is_expired=False,
             ).select_related('dataset').first()
             if listing:
                 from workspace.services.display import transaction_profile
 
                 tx = transaction_profile(listing.dataset.transaction_type)
                 link_listing_to_customer(customer, listing, tx, role='پیشنهادی')
+                linked += 1
 
-    content = note.strip() or f'پیشنهاد {len(matches)} ملک: ' + '، '.join(titles[:5])
-    log_activity(
-        customer,
-        'املاک',
-        content=content,
-        title='ارسال پیشنهاد ملک',
-        metadata={'suggestion_count': len(matches), 'titles': titles},
-    )
-    return build_suggestions_whatsapp_text(customer, matches)
+    if linked:
+        content = note.strip() or f'پیشنهاد {linked} ملک: ' + '، '.join(titles[:5])
+        log_activity(
+            customer,
+            'املاک',
+            content=content,
+            title='ارسال پیشنهاد ملک',
+            metadata={'suggestion_count': linked, 'titles': titles[:linked]},
+        )
+    return build_suggestions_whatsapp_text(customer, matches), linked
 
 
 def build_customer_whatsapp_text(customer, listing=None) -> str:

@@ -795,8 +795,15 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 messages.success(request, 'بازدید ثبت شد.')
                 redirect_url += '?tab=visits'
             else:
-                messages.error(request, 'فرم بازدید نامعتبر است.')
-                redirect_url += '?tab=visits&drawer=visit'
+                self.object = customer
+                ctx = self.get_context_data(object=customer)
+                ctx['visit_form'] = form
+                ctx['open_drawer'] = 'visit'
+                ctx['active_tab'] = 'visits'
+                for errors in form.errors.values():
+                    for err in errors:
+                        messages.error(request, str(err))
+                return render(request, self.template_name, ctx)
 
         elif action == 'add_deal':
             form = CRMDealForm(request.POST, user=request.user)
@@ -850,14 +857,24 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                     messages.info(request, 'تطبیق فایلینگ دیوار نیاز به لایسنس فعال دارد.')
                     redirect_url += '?tab=matches'
                     return redirect(redirect_url)
-                text = apply_property_suggestions(
+                text, linked = apply_property_suggestions(
                     customer, request.user, selected,
                     note=request.POST.get('suggest_note', ''),
                     request=request,
                 )
-                request.session['crm_last_suggestion_text'] = text
-                messages.success(request, f'{len(selected)} ملک پیشنهاد و ثبت شد.')
-                redirect_url += '?tab=properties&suggested=1'
+                if linked:
+                    request.session['crm_last_suggestion_text'] = text
+                    messages.success(
+                        request,
+                        f'{linked} ملک پیشنهاد و به پرونده مخاطب پیوند شد.',
+                    )
+                    redirect_url += '?tab=properties&suggested=1'
+                else:
+                    messages.error(
+                        request,
+                        'ثبت پیشنهاد انجام نشد — ملک‌های انتخاب‌شده در دسترس شما نیستند.',
+                    )
+                    redirect_url += '?tab=matches'
 
         return redirect(redirect_url)
 

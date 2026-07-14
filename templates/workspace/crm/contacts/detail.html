@@ -843,13 +843,31 @@
             {% csrf_token %}
             <input type="hidden" name="action" value="add_visit">
             <div class="ws-fields">
-                <div class="ws-field"><label class="ws-label">تاریخ *</label>{{ visit_form.visit_date }}</div>
-                <div class="ws-field"><label class="ws-label">ملک CRM</label>{{ visit_form.property }}</div>
-                <div class="ws-field"><label class="ws-label">شناسه آگهی</label>{{ visit_form.listing_token }}</div>
-                <div class="ws-field"><label class="ws-label">عنوان آگهی</label>{{ visit_form.listing_title }}</div>
-                <div class="ws-field"><label class="ws-label">نتیجه</label>{{ visit_form.outcome }}</div>
-                <div class="ws-field crm-visit-reject-field"><label class="ws-label">دلیل رد</label>{{ visit_form.reject_reason }}</div>
-                <div class="ws-field"><label class="ws-label">یادداشت</label>{{ visit_form.notes }}</div>
+                <div class="ws-field{% if visit_form.visit_date.errors %} ws-field-error{% endif %}">
+                    <label class="ws-label">تاریخ *</label>
+                    {{ visit_form.visit_date }}
+                    {% for error in visit_form.visit_date.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="ws-field{% if visit_form.property.errors %} ws-field-error{% endif %}">
+                    <label class="ws-label">ملک CRM *</label>
+                    {{ visit_form.property }}
+                    {% for error in visit_form.property.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="ws-field{% if visit_form.outcome.errors %} ws-field-error{% endif %}">
+                    <label class="ws-label">نتیجه</label>
+                    {{ visit_form.outcome }}
+                    {% for error in visit_form.outcome.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="ws-field crm-visit-reject-field{% if visit_form.reject_reason.errors %} ws-field-error{% endif %}">
+                    <label class="ws-label">دلیل رد</label>
+                    {{ visit_form.reject_reason }}
+                    {% for error in visit_form.reject_reason.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="ws-field{% if visit_form.notes.errors %} ws-field-error{% endif %}">
+                    <label class="ws-label">یادداشت</label>
+                    {{ visit_form.notes }}
+                    {% for error in visit_form.notes.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                </div>
             </div>
             </div>
             <div class="crm-drawer-foot">

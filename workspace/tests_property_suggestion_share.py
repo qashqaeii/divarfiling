@@ -3,7 +3,8 @@ from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
-from workspace.models import CRMProperty, Customer, Dataset, Listing, ListingPublicShare
+from workspace.models import CRMProperty, Customer, Dataset, Listing, ListingPublicShare, PropertyContact
+from workspace.models import CRMAgency, CRMAgencyMember
 from workspace.services.crm import (
     apply_property_suggestions,
     build_portfolio_whatsapp_text,
@@ -68,9 +69,10 @@ class PropertySuggestionShareTests(TestCase):
             'title': self.prop.title,
             'link': 'https://divar.ir/v/abc123',
         }]
-        text = apply_property_suggestions(
+        text, linked = apply_property_suggestions(
             self.customer, self.user, matches, request=request,
         )
+        self.assertEqual(linked, 1)
         self.assertIn('/p/', text)
         self.assertNotIn('divar.ir', text)
 
@@ -98,13 +100,63 @@ class PropertySuggestionShareTests(TestCase):
             'title': listing.title,
             'link': listing.link,
         }]
-        text = apply_property_suggestions(
+        text, linked = apply_property_suggestions(
             self.customer, self.user, matches, request=request,
         )
+        self.assertEqual(linked, 1)
         share = ListingPublicShare.objects.get(listing=listing, created_by=self.user)
         expected_path = reverse('listing_public:view', kwargs={'share_token': share.share_token})
         self.assertIn(expected_path, text)
         self.assertNotIn('divar.ir', text)
+
+    def test_apply_property_suggestions_links_shared_agency_property(self):
+        from workspace.services.crm_sharing import share_property
+
+        owner = User.objects.create_user(username='09123334444', phone='09123334444', password='x')
+        advisor = User.objects.create_user(username='09125556666', phone='09125556666', password='x')
+        agency = CRMAgency.objects.create(name='آژانس پیشنهاد', owner=owner)
+        owner_member = CRMAgencyMember.objects.create(
+            agency=agency, user=owner, role='owner', is_active=True,
+        )
+        advisor_member = CRMAgencyMember.objects.create(
+            agency=agency, user=advisor, role='advisor', is_active=True,
+        )
+        shared_prop = CRMProperty.objects.create(
+            user=owner,
+            agency=agency,
+            title='ملک هم‌تیمی',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=5_000_000_000,
+            neighborhood='نیاوران',
+            city='تهران',
+            area=100,
+        )
+        share_property(owner, shared_prop, advisor_member.pk)
+        customer = Customer.objects.create(
+            user=advisor,
+            agency=agency,
+            name='خریدار تست',
+            phone='09127778888',
+            customer_type='خریدار',
+            status='در حال پیگیری',
+        )
+        matches = [{
+            'source': 'crm',
+            'property_id': shared_prop.pk,
+            'title': shared_prop.title,
+        }]
+        text, linked = apply_property_suggestions(customer, advisor, matches)
+        self.assertEqual(linked, 1)
+        self.assertTrue(
+            PropertyContact.objects.filter(
+                customer=customer,
+                property=shared_prop,
+                role='پیشنهادی',
+            ).exists()
+        )
+        self.assertIn(shared_prop.title, text)
 
     def test_portfolio_owner_whatsapp_text_not_buyer_copy(self):
         matches = [{

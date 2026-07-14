@@ -336,7 +336,7 @@ def suggest_contact_matches(
         selected = [m for m in selected if m.get('source') != 'divar']
     if not selected:
         raise ValueError('تطبیق فایلینگ دیوار نیاز به لایسنس فعال دارد.')
-    text = apply_property_suggestions(customer, user, selected, note=note, request=request)
+    text, linked = apply_property_suggestions(customer, user, selected, note=note, request=request)
     now = timezone.now()
     for m in selected:
         key = _match_key(m)
@@ -357,4 +357,4 @@ def suggest_contact_matches(
                 'notified_at': now,
             },
         )
-    return text, len(selected)
+    return text, linked

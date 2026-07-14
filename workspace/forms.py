@@ -752,14 +752,28 @@ class CRMDealForm(CRMMoneyFieldsMixin, forms.ModelForm):
 
 
 class PropertyVisitForm(forms.ModelForm):
+    visit_date = forms.CharField(
+        label='تاریخ بازدید',
+        widget=forms.TextInput(attrs={
+            'class': 'crm-input crm-jalali-date',
+            'data-jdp': '',
+            'data-jdp-only-date': '',
+            'placeholder': '۱۴۰۴/۰۶/۱۵',
+            'autocomplete': 'off',
+        }),
+    )
+
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user:
             from workspace.services.crm_scope import properties_qs
             self.fields['property'].queryset = properties_qs(user).order_by('-updated_at')
-        self.fields['property'].required = False
+        self.fields['property'].required = True
+        self.fields['property'].empty_label = 'انتخاب ملک'
         if self.instance.pk and self.instance.visit_date:
             self.fields['visit_date'].initial = format_jalali_date(self.instance.visit_date)
+        elif not self.data:
+            self.fields['visit_date'].initial = format_jalali_date(timezone.now().date())
 
     def clean_visit_date(self):
         raw = self.cleaned_data.get('visit_date')
@@ -769,23 +783,31 @@ class PropertyVisitForm(forms.ModelForm):
             return raw
         parsed = parse_jalali_date_string(str(raw))
         if parsed is None:
-            raise forms.ValidationError('تاریخ شمسی نامعتبر است.')
+            raise forms.ValidationError('تاریخ شمسی نامعتبر است. مثال: ۱۴۰۴/۰۶/۱۵')
         return parsed
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get('property'):
+            self.add_error('property', 'انتخاب ملک الزامی است.')
+        if cleaned.get('outcome') == 'رد' and not cleaned.get('reject_reason'):
+            self.add_error('reject_reason', 'دلیل رد الزامی است.')
+        return cleaned
+
+    def save(self, commit=True):
+        visit = super().save(commit=False)
+        if visit.property_id:
+            visit.listing_token = visit.property.token or ''
+            visit.listing_title = visit.property.title or ''
+        if commit:
+            visit.save()
+        return visit
 
     class Meta:
         model = PropertyVisit
-        fields = [
-            'property', 'listing_token', 'listing_title',
-            'visit_date', 'outcome', 'reject_reason', 'notes',
-        ]
+        fields = ['property', 'visit_date', 'outcome', 'reject_reason', 'notes']
         widgets = {
             'property': forms.Select(attrs={'class': 'crm-select'}),
-            'listing_token': forms.TextInput(attrs={'class': 'crm-input', 'dir': 'ltr'}),
-            'listing_title': forms.TextInput(attrs={'class': 'crm-input'}),
-            'visit_date': forms.TextInput(attrs={
-                'class': 'crm-input crm-jalali-date', 'data-jdp': '', 'data-jdp-only-date': '',
-                'autocomplete': 'off',
-            }),
             'outcome': forms.Select(attrs={'class': 'crm-select', 'data-visit-outcome': '1'}),
             'reject_reason': forms.Select(attrs={'class': 'crm-select'}),
             'notes': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),

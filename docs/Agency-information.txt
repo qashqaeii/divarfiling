@@ -12,7 +12,7 @@ MVP اولویت‌بندی:
 [ ] 5. Knowledge Base
 [ ] 6. تقویم تیمی
 [ ] 7. Heatmap
-[ ] 8. Dashboard TV Mode
+[x] 8. Dashboard TV Mode
 
 ═══════════════════════════════════════
 
@@ -80,7 +80,7 @@ MVP اولویت‌بندی:
 - دسترسی خواندن و ویرایش بر اساس نقش
 - ثبت نسخه و تاریخ آخرین بروزرسانی
 
-9. Dashboard TV Mode  [ ]
+9. Dashboard TV Mode  [x]
 - صفحه تمام‌صفحه، فقط خواندنی و مناسب نمایش روی تلویزیون دفتر
 - نمایش KPI امروز، اهداف، رتبه اعضا، آخرین اطلاعیه‌ها، سرنخ‌های جدید و معاملات
 - Refresh خودکار سبک
@@ -127,4 +127,15 @@ MVP اولویت‌بندی:
 - static/workspace/js/crm-team-hub-badges.js
 - workspace/tests/test_crm_agency_announcements.py
 
+فایل‌های ایجادشده — قابلیت ۸ (Dashboard TV Mode):
+- workspace/services/crm_agency_tv.py
+- workspace/crm_views.py — CRMTeamTVView
+- workspace/team_api_views.py — TeamTVDataAPIView
+- workspace/urls.py — crm/team/tv/ و api/crm/team/tv/
+- templates/workspace/crm/team/tv.html
+- static/workspace/css/crm-team-tv.css
+- static/workspace/js/crm-team-tv.js
+- workspace/tests/test_crm_agency_tv.py
+
 تب جدید: ?tab=announcements در صفحه آژانس (/workspace/crm/team/)
+آدرس TV: /workspace/crm/team/tv/

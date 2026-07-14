@@ -15,6 +15,8 @@ from workspace.services.crm_agency import (
 from workspace.services.crm_agency_analytics import (
     export_team_performance_csv, get_team_performance,
 )
+from workspace.services.crm_agency_features import is_agency_feature_enabled
+from workspace.services.crm_agency_tv import get_tv_dashboard_payload
 from workspace.services.jalali_input import parse_goal_period_strings
 from workspace.services.crm_scope import agency_members, can_manage_team, can_operate_team_leads, get_membership
 from workspace.services.crm_sync import export_crm_payload, import_crm_payload, record_sync_log
@@ -200,6 +202,20 @@ class TeamReportCSVView(_TeamAPIBase):
         resp = HttpResponse(csv_text, content_type='text/csv; charset=utf-8')
         resp['Content-Disposition'] = 'attachment; filename="team-performance.csv"'
         return resp
+
+
+class TeamTVDataAPIView(_TeamAPIBase):
+    def get(self, request):
+        agency = self._agency()
+        if not agency:
+            return self._deny('آژانس یافت نشد', 404)
+        if not is_agency_feature_enabled('tv_mode', agency):
+            return self._deny('حالت TV غیرفعال است')
+        days = int(request.GET.get('days', 1) or 1)
+        payload = get_tv_dashboard_payload(request.user, days=days)
+        if not payload.get('ok'):
+            return JsonResponse(payload, status=404)
+        return JsonResponse(payload, json_dumps_params={'ensure_ascii': False})
 
 
 class TeamGoalsAPIView(_TeamAPIBase):

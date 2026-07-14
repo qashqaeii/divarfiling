@@ -42,6 +42,7 @@ urlpatterns = [
 
     # CRM
     path('crm/', crm_views.CRMDashboardView.as_view(), name='crm_dashboard'),
+    path('crm/team/tv/', crm_views.CRMTeamTVView.as_view(), name='crm_team_tv'),
     path('crm/team/', crm_views.CRMTeamView.as_view(), name='crm_team'),
     path('crm/team/api-key/regenerate/', crm_views.CRMTeamApiKeyRegenerateView.as_view(), name='crm_team_api_key_regenerate'),
     path('crm/team/report.csv', crm_views.CRMTeamReportCSVView.as_view(), name='crm_team_report_csv'),
@@ -63,6 +64,7 @@ urlpatterns = [
     path('api/crm/team/sync/import/', team_api_views.TeamSyncImportAPIView.as_view(), name='api_crm_team_sync_import'),
     path('api/crm/team/settings/', team_api_views.TeamSettingsAPIView.as_view(), name='api_crm_team_settings'),
     path('api/crm/team/report.csv', team_api_views.TeamReportCSVView.as_view(), name='api_crm_team_report_csv'),
+    path('api/crm/team/tv/', team_api_views.TeamTVDataAPIView.as_view(), name='api_crm_team_tv'),
     path('api/crm/team/goals/', team_api_views.TeamGoalsAPIView.as_view(), name='api_crm_team_goals'),
     path('api/crm/team/webhooks/<int:webhook_id>/test/', team_api_views.TeamWebhookTestAPIView.as_view(), name='api_crm_team_webhook_test'),
     path('api/crm/team/messages/', team_messages_api_views.TeamMessagesAPIView.as_view(), name='api_crm_team_messages'),

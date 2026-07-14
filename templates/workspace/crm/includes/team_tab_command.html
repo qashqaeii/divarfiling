@@ -12,6 +12,9 @@
             <a href="?tab=command&days=30" class="crm-dash-act {% if perf_days == 30 %}crm-dash-act--primary{% endif %}">۳۰ روز</a>
             <a href="?tab=command&days=90" class="crm-dash-act {% if perf_days == 90 %}crm-dash-act--primary{% endif %}">۹۰ روز</a>
             <a href="{{ crm_team_report_csv_url }}?days={{ perf_days }}" class="crm-dash-act"><i class="fas fa-file-csv"></i><span>CSV</span></a>
+            {% if agency_feature_tv %}
+            <a href="{{ crm_team_tv_url }}" class="crm-dash-act crm-dash-act--tv" target="_blank" rel="noopener" title="نمایش TV دفتر"><i class="fas fa-tv"></i><span>TV</span></a>
+            {% endif %}
         </div>
     </header>
 

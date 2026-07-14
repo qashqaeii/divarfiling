@@ -1,0 +1,159 @@
+{% extends 'workspace/base.html' %}
+{% load static crm_tags %}
+
+{% block title %}داشبورد TV — {{ crm_agency.name|default:'آژانس' }}{% endblock %}
+
+{% block body_extra_class %} ws-body--tv{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/design-system.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-tv.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="crm-tv-app" id="crm-tv-app" data-crm-tv dir="rtl">
+    <div class="crm-tv-bg" aria-hidden="true">
+        <span class="crm-tv-bg-orb crm-tv-bg-orb--1"></span>
+        <span class="crm-tv-bg-orb crm-tv-bg-orb--2"></span>
+        <span class="crm-tv-bg-orb crm-tv-bg-orb--3"></span>
+        <span class="crm-tv-bg-grid"></span>
+    </div>
+
+    <header class="crm-tv-header">
+        <div class="crm-tv-brand">
+            {% if crm_agency %}
+            <span class="crm-tv-logo" style="--hue: {{ crm_agency.name|crm_avatar_hue }}">{{ crm_agency.name|crm_initials }}</span>
+            <div class="crm-tv-brand-text">
+                <h1>{{ crm_agency.name }}</h1>
+                <p>مرکز فرماندهی · حالت نمایش TV</p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="crm-tv-clock">
+            <span class="crm-tv-clock-time" data-tv-clock>--:--</span>
+            <span class="crm-tv-clock-date" data-tv-date>{{ tv_payload.jalali_date|default:'' }}</span>
+        </div>
+        <div class="crm-tv-toolbar" role="toolbar" aria-label="کنترل‌های TV">
+            <button type="button" class="crm-tv-btn" data-tv-theme title="تغییر تم" aria-label="تغییر تم">
+                <i class="fas fa-circle-half-stroke"></i>
+            </button>
+            <button type="button" class="crm-tv-btn" data-tv-widgets title="ویجت‌ها" aria-label="انتخاب ویجت‌ها">
+                <i class="fas fa-table-cells-large"></i>
+            </button>
+            <button type="button" class="crm-tv-btn" data-tv-fullscreen title="تمام‌صفحه" aria-label="تمام‌صفحه">
+                <i class="fas fa-expand"></i>
+            </button>
+            <a href="{{ crm_team_url }}" class="crm-tv-btn crm-tv-btn--exit" title="خروج از TV">
+                <i class="fas fa-arrow-right-from-bracket"></i>
+            </a>
+        </div>
+    </header>
+
+    <div class="crm-tv-sync" data-tv-sync aria-live="polite">
+        <span class="crm-tv-sync-dot"></span>
+        <span data-tv-updated>در حال بارگذاری…</span>
+    </div>
+
+    <main class="crm-tv-grid" data-tv-grid>
+        <!-- KPIs -->
+        <section class="crm-tv-panel crm-tv-panel--kpis" data-widget="kpis" aria-label="شاخص‌های امروز">
+            <header class="crm-tv-panel-head">
+                <h2><i class="fas fa-gauge-high"></i> امروز</h2>
+            </header>
+            <div class="crm-tv-kpis" data-tv-kpis></div>
+        </section>
+
+        <!-- Spotlight / Top performer -->
+        <section class="crm-tv-panel crm-tv-panel--spotlight" data-widget="leaderboard" aria-label="برترین عملکرد">
+            <div class="crm-tv-spotlight" data-tv-spotlight hidden>
+                <div class="crm-tv-spotlight-glow" aria-hidden="true"></div>
+                <span class="crm-tv-spotlight-badge"><i class="fas fa-crown"></i> برترین عملکرد</span>
+                <div class="crm-tv-spotlight-body" data-tv-spotlight-body></div>
+            </div>
+        </section>
+
+        <!-- Leaderboard -->
+        <section class="crm-tv-panel crm-tv-panel--board" data-widget="leaderboard" aria-label="رتبه‌بندی تیم">
+            <header class="crm-tv-panel-head">
+                <h2><i class="fas fa-ranking-star"></i> رتبه‌بندی</h2>
+                <span class="crm-tv-panel-sub">امتیاز ترکیبی · ۳۰ روز</span>
+            </header>
+            <ol class="crm-tv-leaderboard" data-tv-leaderboard></ol>
+        </section>
+
+        <!-- Goals -->
+        <section class="crm-tv-panel crm-tv-panel--goals" data-widget="goals" aria-label="اهداف تیم">
+            <header class="crm-tv-panel-head">
+                <h2><i class="fas fa-bullseye"></i> اهداف</h2>
+            </header>
+            <div class="crm-tv-goals" data-tv-goals></div>
+        </section>
+
+        <!-- Announcements -->
+        <section class="crm-tv-panel crm-tv-panel--announcements" data-widget="announcements" aria-label="اطلاعیه‌ها">
+            <header class="crm-tv-panel-head">
+                <h2><i class="fas fa-bullhorn"></i> اطلاعیه‌ها</h2>
+            </header>
+            <div class="crm-tv-announcements" data-tv-announcements></div>
+        </section>
+
+        <!-- Leads + Deals -->
+        <section class="crm-tv-panel crm-tv-panel--pipeline" data-widget="leads" aria-label="سرنخ‌ها">
+            <header class="crm-tv-panel-head">
+                <h2><i class="fas fa-inbox"></i> سرنخ‌ها</h2>
+            </header>
+            <div class="crm-tv-leads" data-tv-leads></div>
+        </section>
+
+        <section class="crm-tv-panel crm-tv-panel--deals" data-widget="deals" aria-label="معاملات">
+            <header class="crm-tv-panel-head">
+                <h2><i class="fas fa-handshake"></i> معاملات</h2>
+            </header>
+            <div class="crm-tv-deals" data-tv-deals></div>
+        </section>
+
+        <!-- Alerts ticker -->
+        <section class="crm-tv-panel crm-tv-panel--alerts" data-widget="alerts" aria-label="هشدارها">
+            <div class="crm-tv-alerts" data-tv-alerts></div>
+        </section>
+    </main>
+
+    <aside class="crm-tv-widget-drawer" data-tv-widget-drawer hidden>
+        <div class="crm-tv-widget-drawer-inner">
+            <header>
+                <h3>ویجت‌های نمایش</h3>
+                <button type="button" class="crm-tv-btn crm-tv-btn--sm" data-tv-widgets-close aria-label="بستن"><i class="fas fa-xmark"></i></button>
+            </header>
+            <form class="crm-tv-widget-form" data-tv-widget-form>
+                {% for w in tv_widgets %}
+                <label class="crm-tv-widget-check">
+                    <input type="checkbox" name="widget" value="{{ w }}" checked>
+                    <span>
+                        {% if w == 'kpis' %}شاخص‌های امروز
+                        {% elif w == 'goals' %}اهداف تیم
+                        {% elif w == 'leaderboard' %}رتبه‌بندی
+                        {% elif w == 'announcements' %}اطلاعیه‌ها
+                        {% elif w == 'leads' %}سرنخ‌های جدید
+                        {% elif w == 'deals' %}معاملات
+                        {% elif w == 'alerts' %}هشدارها
+                        {% else %}{{ w }}{% endif %}
+                    </span>
+                </label>
+                {% endfor %}
+            </form>
+        </div>
+    </aside>
+</div>
+
+<script id="crm-tv-initial" type="application/json">{{ tv_payload_json }}</script>
+<script>
+window.crmTeamTV = {
+    apiUrl: '{{ api_crm_team_tv_url|escapejs }}',
+    pollMs: 45000
+};
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=1" defer></script>
+{% endblock %}

@@ -71,6 +71,7 @@ from workspace.services.crm_sync import export_crm_payload, import_crm_payload, 
 from workspace.services.crm_webhooks import create_lead_from_api, dispatch_webhook, test_webhook, verify_api_key
 from workspace.services.crm_audit import log_agency_audit, build_audit_timeline
 from workspace.services.crm_agency_features import is_agency_feature_enabled
+from workspace.services.crm_agency_tv import get_tv_dashboard_payload, TV_WIDGETS
 from workspace.services.crm_agency_messages import unread_message_count
 from workspace.services.crm_agency_announcements import unread_announcement_count
 from workspace.services.display import to_jalali_display
@@ -2299,6 +2300,32 @@ class CRMTeamReportCSVView(LoginRequiredMixin, View):
         return resp
 
 
+class CRMTeamTVView(CRMContextMixin, LoginRequiredMixin, TemplateView):
+    """داشبورد تمام‌صفحه TV — فقط خواندنی."""
+    template_name = 'workspace/crm/team/tv.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        membership = get_membership(request.user)
+        agency = membership.agency if membership else None
+        if not agency:
+            messages.error(request, 'ابتدا به یک آژانس بپیوندید.')
+            return redirect('workspace:crm_team')
+        if not is_agency_feature_enabled('tv_mode', agency):
+            messages.error(request, 'حالت TV برای این آژانس فعال نیست.')
+            return redirect('workspace:crm_team')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['crm_section'] = 'team-tv'
+        ctx['tv_payload'] = get_tv_dashboard_payload(self.request.user)
+        ctx['tv_payload_json'] = json.dumps(ctx['tv_payload'], ensure_ascii=False)
+        ctx['tv_widgets'] = TV_WIDGETS
+        ctx['api_crm_team_tv_url'] = reverse('workspace:api_crm_team_tv')
+        ctx['crm_team_url'] = reverse('workspace:crm_team')
+        return ctx
+
+
 class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
     template_name = 'workspace/crm/team/index.html'
 
@@ -2324,6 +2351,8 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['can_operate_team_leads'] = can_operate_team_leads(user)
         ctx['agency_feature_messages'] = is_agency_feature_enabled('messages', agency) if agency else False
         ctx['agency_feature_announcements'] = is_agency_feature_enabled('announcements', agency) if agency else False
+        ctx['agency_feature_tv'] = is_agency_feature_enabled('tv_mode', agency) if agency else False
+        ctx['crm_team_tv_url'] = reverse('workspace:crm_team_tv')
         goal_start_jalali, goal_end_jalali = jalali_month_bounds_display()
         quarter_start_jalali, quarter_end_jalali = jalali_quarter_ahead_display()
         ctx['goal_period_start_default'] = to_persian_digits(goal_start_jalali)
@@ -2428,6 +2457,7 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             ctx['announcements_unread_count'] = 0
             ctx['agency_feature_messages'] = False
             ctx['agency_feature_announcements'] = False
+            ctx['agency_feature_tv'] = False
             ctx['pending_invites_sent'] = []
             ctx['pending_join_requests'] = []
             ctx['my_pending_invites'] = CRMAgencyMembershipRequest.objects.filter(

@@ -45,6 +45,11 @@
                 {% endif %}
                 {% if crm_agency and can_manage_team %}
                 <div class="crm-team-hero-actions" role="toolbar" aria-label="عملیات آژانس">
+                    {% if agency_feature_tv %}
+                    <a href="{{ crm_team_tv_url }}" class="crm-dash-act crm-dash-act--tv" target="_blank" rel="noopener" title="نمایش TV دفتر">
+                        <i class="fas fa-tv"></i><span>TV</span>
+                    </a>
+                    {% endif %}
                     <a href="?tab=members" class="crm-dash-act" title="مدیریت اعضا"><i class="fas fa-users-gear"></i><span>اعضا</span></a>
                     <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-add-member">
                         <i class="fas fa-user-plus"></i><span>عضو جدید</span>

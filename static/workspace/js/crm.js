@@ -127,6 +127,7 @@ const CRMDrawer = {
         initCRMAreasPicker(drawer);
         initCRMFormErrors();
         if (id === 'drawer-import' || id === 'drawer-property-import') initCRMImportDrawer(drawer);
+        else if (id === 'drawer-activity') initCRMActivityDrawer(drawer);
         else initCRMVisitOutcome(drawer);
         initCRMPropertyImages(drawer);
     },
@@ -1203,6 +1204,57 @@ function initCRMVisitOutcome(root) {
         sel.addEventListener('change', sync);
         sync();
     });
+}
+
+function initCRMActivityDrawer(root) {
+    const scope = (root && root.id === 'drawer-activity') ? root : (root || document).querySelector('#drawer-activity');
+    if (!scope) return;
+
+    const select = scope.querySelector('.crm-act-type-native');
+    const chips = scope.querySelectorAll('[data-act-type]');
+    const otherBtn = scope.querySelector('[data-act-other]');
+    const otherWrap = scope.querySelector('.crm-act-type-other');
+    const content = scope.querySelector('.crm-act-content');
+    const quickTypes = new Set([...chips].map(c => c.dataset.actType).filter(Boolean));
+
+    function setQuickType(type) {
+        chips.forEach(c => c.classList.toggle('is-active', c.dataset.actType === type));
+        otherBtn?.classList.remove('is-active');
+        if (otherWrap) otherWrap.hidden = true;
+        if (select && type) select.value = type;
+    }
+
+    function showOther() {
+        chips.forEach(c => c.classList.remove('is-active'));
+        otherBtn?.classList.add('is-active');
+        if (otherWrap) otherWrap.hidden = false;
+        if (select) {
+            if (!select.value || quickTypes.has(select.value)) {
+                const firstOther = [...select.options].find(opt => opt.value && !quickTypes.has(opt.value));
+                if (firstOther) select.value = firstOther.value;
+            }
+            select.focus();
+        }
+    }
+
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => setQuickType(chip.dataset.actType));
+    });
+    otherBtn?.addEventListener('click', showOther);
+
+    select?.addEventListener('change', () => {
+        const value = select.value;
+        if (quickTypes.has(value)) setQuickType(value);
+        else showOther();
+    });
+
+    const current = select?.value || 'تماس';
+    if (quickTypes.has(current)) setQuickType(current);
+    else showOther();
+
+    if (scope.classList.contains('is-open') && content) {
+        window.setTimeout(() => content.focus({ preventScroll: true }), 90);
+    }
 }
 
 function crmEscapeHtml(value) {
@@ -3113,6 +3165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMImportDrawer();
     initCRMMatches();
     initCRMContactPortfolio();
+    initCRMActivityDrawer(document);
     initCRMTabJump();
     initCRMVisitOutcome(document);
     initCRMNotifications();

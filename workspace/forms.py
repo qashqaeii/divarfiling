@@ -462,19 +462,36 @@ class ActivityForm(forms.Form):
     activity_type = forms.ChoiceField(
         label='نوع فعالیت',
         choices=[(a, a) for a in ACTIVITY_TYPES],
-        widget=forms.Select(attrs={'class': 'ws-select'}),
+        initial='تماس',
+        widget=forms.Select(attrs={'class': 'crm-select crm-act-type-native'}),
     )
     title = forms.CharField(
-        label='عنوان', required=False,
-        widget=forms.TextInput(attrs={'class': 'ws-input'}),
+        label='عنوان',
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'crm-input',
+            'placeholder': 'عنوان اختیاری',
+            'autocomplete': 'off',
+        }),
     )
     content = forms.CharField(
         label='توضیحات',
-        widget=forms.Textarea(attrs={'class': 'ws-textarea', 'rows': 3}),
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'crm-textarea crm-act-content',
+            'rows': 4,
+            'placeholder': 'توضیحات اختیاری',
+        }),
     )
     duration_minutes = forms.IntegerField(
-        label='مدت (دقیقه)', required=False,
-        widget=forms.NumberInput(attrs={'class': 'ws-input'}),
+        label='مدت (دقیقه)',
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'crm-input',
+            'placeholder': 'مثلاً ۱۵',
+            'inputmode': 'numeric',
+            'min': 0,
+        }),
     )
     next_follow_up = forms.CharField(
         label='پیگیری بعدی',

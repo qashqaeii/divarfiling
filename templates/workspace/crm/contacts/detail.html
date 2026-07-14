@@ -721,25 +721,68 @@
 </aside>
 
 <!-- Drawer: فعالیت -->
-<aside class="crm-drawer" id="drawer-activity">
+<aside class="crm-drawer" id="drawer-activity" {% if open_drawer == 'activity' %}data-open="1"{% endif %}>
     <div class="crm-drawer-overlay" data-drawer-close></div>
-    <div class="crm-drawer-panel">
-        <div class="crm-drawer-head"><h2>ثبت فعالیت</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button></div>
-        <form method="post" class="crm-drawer-form">
+    <div class="crm-drawer-panel crm-drawer-panel-sm crm-act-drawer">
+        <div class="crm-drawer-head">
+            <div>
+                <h2>ثبت فعالیت</h2>
+                <p>{{ customer.name }}</p>
+            </div>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" class="crm-drawer-form" id="crmActivityForm">
             <div class="crm-drawer-body">
             {% csrf_token %}
             <input type="hidden" name="action" value="add_activity">
-            <div class="ws-fields">
-                <div class="ws-field"><label class="ws-label">نوع</label>{{ activity_form.activity_type }}</div>
-                <div class="ws-field"><label class="ws-label">عنوان</label>{{ activity_form.title }}</div>
-                <div class="ws-field"><label class="ws-label">توضیحات</label>{{ activity_form.content }}</div>
-                <div class="ws-field"><label class="ws-label">مدت (دقیقه)</label>{{ activity_form.duration_minutes }}</div>
-                <div class="ws-field"><label class="ws-label">پیگیری بعدی <span class="crm-label-hint">اختیاری</span></label>{{ activity_form.next_follow_up }}</div>
+            <div class="crm-act-section">
+                <span class="ws-label">نوع فعالیت</span>
+                <div class="crm-act-type-grid" role="group" aria-label="نوع فعالیت">
+                    {% for t in activity_quick_types %}
+                    <button type="button" class="crm-act-type-chip" data-act-type="{{ t }}">
+                        <i class="{{ t|crm_activity_icon }}" aria-hidden="true"></i>
+                        <span>{{ t }}</span>
+                    </button>
+                    {% endfor %}
+                    <button type="button" class="crm-act-type-chip crm-act-type-chip--more" data-act-other>
+                        <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                        <span>سایر</span>
+                    </button>
+                </div>
+                <div class="crm-act-type-other ws-field" hidden>
+                    <label class="ws-label" for="{{ activity_form.activity_type.id_for_label }}">انتخاب نوع</label>
+                    {{ activity_form.activity_type }}
+                </div>
             </div>
+            <div class="ws-field crm-act-field-main{% if activity_form.content.errors %} ws-field-error{% endif %}">
+                <label class="ws-label" for="{{ activity_form.content.id_for_label }}">توضیحات <span class="crm-label-hint">اختیاری</span></label>
+                {{ activity_form.content }}
+                {% for error in activity_form.content.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+            </div>
+            <details class="crm-act-more">
+                <summary>جزئیات بیشتر <span class="crm-label-hint">اختیاری</span></summary>
+                <div class="crm-act-more-body ws-fields">
+                    <div class="ws-field{% if activity_form.title.errors %} ws-field-error{% endif %}">
+                        <label class="ws-label" for="{{ activity_form.title.id_for_label }}">عنوان</label>
+                        {{ activity_form.title }}
+                        {% for error in activity_form.title.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="ws-field{% if activity_form.duration_minutes.errors %} ws-field-error{% endif %}">
+                        <label class="ws-label" for="{{ activity_form.duration_minutes.id_for_label }}">مدت تماس</label>
+                        {{ activity_form.duration_minutes }}
+                        {% for error in activity_form.duration_minutes.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="ws-field{% if activity_form.next_follow_up.errors %} ws-field-error{% endif %}">
+                        <label class="ws-label" for="{{ activity_form.next_follow_up.id_for_label }}">پیگیری بعدی</label>
+                        {{ activity_form.next_follow_up }}
+                        {% for error in activity_form.next_follow_up.errors %}<p class="ws-error">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+            </details>
             </div>
             <div class="crm-drawer-foot">
                 <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
-                <button type="submit" class="crm-btn crm-btn-primary">ثبت</button>
+                <button type="submit" class="crm-btn crm-btn-primary"><i class="fas fa-check" aria-hidden="true"></i> ثبت فعالیت</button>
             </div>
         </form>
     </div>

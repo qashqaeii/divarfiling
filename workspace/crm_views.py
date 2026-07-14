@@ -22,7 +22,7 @@ from workspace.constants import (
     AGENCY_ROLES, CRM_PRIORITIES, CRM_PROPERTIES, CRM_SOURCES, CRM_STATUSES, CRM_TYPES,
     DEAL_STAGES, DEFAULT_STAGNANT_DAYS, LEAD_ROUTING_CHOICES, LOST_REASONS, MESSAGE_PLACEHOLDERS,
     MESSAGE_TEMPLATE_CATEGORIES, PROPERTY_ADVERTISER_TYPES, PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES,
-    PROPERTY_TX_STATUSES, TYPE_PROFILES, VISIT_OUTCOMES, WEBHOOK_EVENTS,
+    PROPERTY_TX_STATUSES, QUICK_ACTIVITY_TYPES, TYPE_PROFILES, VISIT_OUTCOMES, WEBHOOK_EVENTS,
     WEBHOOK_EVENT_LABELS,
 )
 from workspace.services.property_images import (
@@ -603,6 +603,7 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['documents'] = c.documents.all()
         ctx['customer_form'] = CustomerForm(instance=c)
         ctx['activity_form'] = ActivityForm()
+        ctx['activity_quick_types'] = QUICK_ACTIVITY_TYPES
         ctx['followup_form'] = FollowUpForm()
         ctx['reminder_form'] = CRMReminderForm()
         today = timezone.now().date()
@@ -666,19 +667,32 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         if action == 'add_activity':
             form = ActivityForm(request.POST)
             if form.is_valid():
+                title = (form.cleaned_data.get('title') or '').strip()
+                content = (form.cleaned_data.get('content') or '').strip()
+                if not content:
+                    content = title or form.cleaned_data['activity_type']
                 log_activity(
                     customer,
                     form.cleaned_data['activity_type'],
-                    form.cleaned_data['content'],
-                    title=form.cleaned_data.get('title', ''),
+                    content,
+                    title=title,
                     duration_minutes=form.cleaned_data.get('duration_minutes'),
                 )
                 follow_date = form.cleaned_data.get('next_follow_up')
                 if follow_date:
                     set_next_follow_up(customer, follow_date)
                 messages.success(request, 'فعالیت ثبت شد.')
+                redirect_url += '?tab=timeline'
             else:
-                messages.error(request, 'فرم فعالیت نامعتبر است.')
+                self.object = customer
+                ctx = self.get_context_data(object=customer)
+                ctx['activity_form'] = form
+                ctx['open_drawer'] = 'activity'
+                ctx['active_tab'] = 'timeline'
+                for errors in form.errors.values():
+                    for err in errors:
+                        messages.error(request, str(err))
+                return render(request, self.template_name, ctx)
 
         elif action == 'schedule_followup':
             form = FollowUpForm(request.POST)

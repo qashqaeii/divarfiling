@@ -4158,6 +4158,117 @@ body.crm-side-open { overflow: hidden; }
 
 /* â”€â”€ Quick lead (A4) â”€â”€ */
 .crm-drawer-panel-sm { max-width: 400px; }
+
+/* ── Activity drawer — quick log ── */
+.crm-act-drawer .crm-drawer-head {
+    align-items: flex-start;
+}
+.crm-act-drawer .crm-drawer-head h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+}
+.crm-act-drawer .crm-drawer-head p {
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    color: var(--ws-text-muted);
+}
+.crm-act-section {
+    margin-bottom: 0.85rem;
+}
+.crm-act-section > .ws-label {
+    display: block;
+    margin-bottom: 0.35rem;
+}
+.crm-act-type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+}
+.crm-act-type-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    min-height: 4.1rem;
+    padding: 0.45rem 0.35rem;
+    border: 1px solid var(--ws-border);
+    border-radius: 12px;
+    background: var(--ws-surface);
+    color: var(--ws-text-secondary);
+    font-family: inherit;
+    font-size: 0.74rem;
+    font-weight: 500;
+    line-height: 1.25;
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s, color 0.12s, box-shadow 0.12s;
+}
+.crm-act-type-chip i {
+    font-size: 1rem;
+    opacity: 0.85;
+}
+.crm-act-type-chip:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+    color: var(--ws-primary);
+}
+.crm-act-type-chip.is-active {
+    border-color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+    color: var(--ws-primary);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ws-primary) 25%, transparent);
+}
+.crm-act-type-chip.is-active i { opacity: 1; }
+.crm-act-type-other {
+    margin-top: 0.55rem;
+}
+.crm-act-field-main {
+    margin-bottom: 0.65rem;
+}
+.crm-act-field-main .crm-act-content {
+    min-height: 5.5rem;
+    resize: vertical;
+}
+.crm-act-more {
+    border: 1px solid var(--ws-border-light);
+    border-radius: 12px;
+    background: var(--ws-surface-2, var(--ws-surface));
+    overflow: hidden;
+}
+.crm-act-more summary {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.62rem 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+.crm-act-more summary::-webkit-details-marker { display: none; }
+.crm-act-more summary::before {
+    content: '';
+    width: 0.45rem;
+    height: 0.45rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 0.15s;
+    opacity: 0.65;
+}
+.crm-act-more[open] summary::before {
+    transform: rotate(45deg);
+    margin-top: -0.15rem;
+}
+.crm-act-more-body {
+    padding: 0 0.8rem 0.8rem;
+    border-top: 1px solid var(--ws-border-light);
+}
+.crm-act-drawer .crm-drawer-foot .crm-btn-primary {
+    gap: 0.35rem;
+}
 .crm-drawer-head-accent { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; }
 .crm-drawer-head-accent h2 { color: #fff; }
 .crm-drawer-head-accent p { color: rgba(255,255,255,.8); }
@@ -17351,17 +17462,22 @@ button.crm-prop-hero-cover {
     flex-wrap: wrap;
     gap: 0.35rem;
     padding: 0.15rem 0;
+    font-family: 'Vazirmatn', system-ui, sans-serif;
 }
 .crm-portfolio-filter {
     border: 1px solid var(--ws-border);
     background: var(--ws-surface);
     color: var(--ws-text-secondary);
-    font-size: 0.68rem;
-    font-weight: 600;
-    padding: 0.32rem 0.7rem;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: 0;
+    padding: 0.38rem 0.85rem;
     border-radius: 999px;
     cursor: pointer;
     transition: background 0.12s, border-color 0.12s, color 0.12s;
+    -webkit-font-smoothing: antialiased;
 }
 .crm-portfolio-filter:hover {
     border-color: color-mix(in srgb, var(--ws-primary) 30%, var(--ws-border));

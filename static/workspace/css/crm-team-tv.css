@@ -87,17 +87,33 @@ body.crm-tv-body {
     min-width: 0;
 }
 
+.tv-cmd__logo-wrap {
+    flex-shrink: 0;
+    display: block;
+}
+
 .tv-cmd__logo {
     width: clamp(1.85rem, 3.6vh, 2.5rem);
     height: clamp(1.85rem, 3.6vh, 2.5rem);
     border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.tv-cmd__logo--initials {
     display: grid;
     place-items: center;
     font-weight: 700;
     font-size: 0.8rem;
     background: linear-gradient(135deg, hsl(var(--hue, 260) 65% 48%), hsl(calc(var(--hue, 260) + 30) 60% 38%));
     color: #fff;
-    flex-shrink: 0;
+}
+
+.tv-cmd__logo--img {
+    display: block;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--tv-border);
+    padding: 2px;
 }
 
 .tv-cmd__brand h1 {

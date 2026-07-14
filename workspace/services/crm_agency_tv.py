@@ -13,6 +13,7 @@ from django.utils import timezone
 from workspace.constants import AGENCY_MANAGER_ROLES, DEAL_STAGE_WON
 from workspace.models import (
     CRMAgency, CRMAgencyAuditLog, CRMAgencyMember, CRMDeal, Customer, CustomerActivity, PropertyVisit,
+    WorkspaceSettings,
 )
 from workspace.services.crm_agency import get_team_inbox, role_label
 from workspace.services.crm_audit import get_audit_event_meta
@@ -111,6 +112,19 @@ def tv_safe_first_name(user) -> str:
     if name == 'عضو تیم':
         return name
     return name.split()[0]
+
+
+def _agency_logo_url(agency: CRMAgency) -> Optional[str]:
+    """لوگوی ثبت‌شده مالک آژانس در تنظیمات میزکار."""
+    ws = (
+        WorkspaceSettings.objects
+        .filter(user_id=agency.owner_id)
+        .only('agency_logo')
+        .first()
+    )
+    if ws and ws.agency_logo:
+        return ws.agency_logo.url
+    return None
 
 
 def resolve_tv_role(membership: CRMAgencyMember) -> str:
@@ -548,7 +562,7 @@ def _build_payload_for_role(
         'clock': to_persian_digits(now.strftime('%H:%M')),
         'role': role,
         'allowed_widgets': allowed,
-        'agency': {'name': agency.name},
+        'agency': {'name': agency.name, 'logo_url': _agency_logo_url(agency)},
         'member_name': tv_safe_display_name(membership.user),
         'member_role': membership.get_role_display(),
     }

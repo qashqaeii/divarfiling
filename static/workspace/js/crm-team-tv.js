@@ -394,6 +394,22 @@
         if (d && data.jalali_date) d.textContent = data.jalali_date;
         var n = root.querySelector('[data-tv-agency-name]');
         if (n && data.agency) n.textContent = data.agency.name;
+        var logoWrap = root.querySelector('[data-tv-logo]');
+        if (logoWrap && data.agency && data.agency.logo_url) {
+            var logoUrl = data.agency.logo_url;
+            var img = logoWrap.querySelector('[data-tv-agency-logo]');
+            if (!img) {
+                img = document.createElement('img');
+                img.className = 'tv-cmd__logo tv-cmd__logo--img';
+                img.setAttribute('data-tv-agency-logo', '');
+                img.width = 48;
+                img.height = 48;
+                img.alt = data.agency.name || '';
+                logoWrap.innerHTML = '';
+                logoWrap.appendChild(img);
+            }
+            if (img.src !== logoUrl) img.src = logoUrl;
+        }
     }
 
     function renderAll(data, force) {

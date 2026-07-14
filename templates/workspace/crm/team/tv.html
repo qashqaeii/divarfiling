@@ -8,7 +8,13 @@
     <header class="tv-cmd__header" data-tv-chrome>
         <div class="tv-cmd__brand">
             {% if crm_agency %}
-            <span class="tv-cmd__logo" style="--hue: {{ crm_agency.name|crm_avatar_hue }}">{{ crm_agency.name|crm_initials }}</span>
+            <span class="tv-cmd__logo-wrap" data-tv-logo>
+                {% if tv_payload.agency.logo_url %}
+                <img src="{{ tv_payload.agency.logo_url }}" alt="{{ crm_agency.name }}" class="tv-cmd__logo tv-cmd__logo--img" data-tv-agency-logo width="48" height="48">
+                {% else %}
+                <span class="tv-cmd__logo tv-cmd__logo--initials" style="--hue: {{ crm_agency.name|crm_avatar_hue }}" data-tv-agency-initials>{{ crm_agency.name|crm_initials }}</span>
+                {% endif %}
+            </span>
             <div>
                 <h1 data-tv-agency-name>{{ crm_agency.name }}</h1>
                 <p>مرکز فرمان زنده</p>
@@ -121,5 +127,5 @@ window.crmTeamTV = {
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=4"></script>
+<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=5"></script>
 {% endblock %}

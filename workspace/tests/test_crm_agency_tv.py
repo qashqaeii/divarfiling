@@ -247,5 +247,19 @@ class CRMAgencyTVHardeningTests(TestCase):
         self.assertEqual(len(payload['goals']), 1)
         self.assertIn('هدف', payload['goals'][0]['title'])
 
+    def test_agency_logo_in_payload_when_set(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from workspace.models import WorkspaceSettings
+
+        ws, _ = WorkspaceSettings.objects.get_or_create(user=self.owner)
+        ws.agency_logo = SimpleUploadedFile('logo.png', b'\x89PNG', content_type='image/png')
+        ws.save()
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        self.assertTrue(payload['agency']['logo_url'])
+
+    def test_agency_logo_null_when_not_set(self):
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        self.assertIsNone(payload['agency']['logo_url'])
+
     def test_feature_flag_enabled_by_default(self):
         self.assertTrue(is_agency_feature_enabled('tv_mode', self.agency))

@@ -31,7 +31,7 @@
     </a>
     <a href="{% url 'workspace:crm_team' %}" class="crm-nav-item {% if crm_section == 'team' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}</span><span>آژانس</span>
-        {% if crm_nav_counts.team_messages %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.team_messages|nav_badge_count }}</em>{% endif %}
+        {% if crm_nav_counts.team_hub_unread %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.team_hub_unread|nav_badge_count }}</em>{% endif %}
     </a>
     <a href="{% url 'workspace:crm_reminders' %}" class="crm-nav-item {% if crm_section == 'reminders' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='bell' size='nav' only %}</span><span>یادآورها</span>

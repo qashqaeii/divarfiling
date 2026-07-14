@@ -1,0 +1,135 @@
+{% if tab == 'announcements' and agency_feature_announcements %}
+{% load crm_tags %}
+<section class="crm-ann-hub crm-ann-hub--studio" data-crm-announcements
+    data-api-list="{{ api_crm_team_announcements_url }}"
+    data-can-manage="{% if can_manage_team %}1{% else %}0{% endif %}"
+    data-initial-id="{{ request.GET.id|default:'' }}"
+    aria-label="تابلو اطلاعیه‌های آژانس">
+
+    <header class="crm-ann-topbar">
+        <div class="crm-ann-topbar-brand">
+            <div class="crm-ann-topbar-mark" aria-hidden="true">
+                <i class="fas fa-bullhorn"></i>
+            </div>
+            <div>
+                <span class="crm-ann-topbar-kicker">Announcement Board</span>
+                <h2 class="crm-ann-topbar-title">تابلو اطلاعیه‌ها</h2>
+            </div>
+        </div>
+        <div class="crm-ann-topbar-actions">
+            {% if can_manage_team %}
+            <button type="button" class="crm-ann-pill crm-ann-pill--accent" data-ann-compose>
+                <i class="fas fa-plus"></i>
+                <span>اطلاعیه جدید</span>
+            </button>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="crm-ann-shell">
+        <aside class="crm-ann-rail" aria-label="فیلترها">
+            <div class="crm-ann-rail-head">
+                <span class="crm-ann-rail-title">نمایش</span>
+            </div>
+            <nav class="crm-ann-filters">
+                <button type="button" class="crm-ann-filter active" data-filter="all">
+                    <span class="crm-ann-filter-glyph"><i class="fas fa-layer-group"></i></span>
+                    <span class="crm-ann-filter-copy">
+                        <strong>همه</strong>
+                        <small>اطلاعیه‌های فعال</small>
+                    </span>
+                </button>
+                <button type="button" class="crm-ann-filter" data-filter="unread">
+                    <span class="crm-ann-filter-glyph crm-ann-filter-glyph--accent"><i class="fas fa-circle-dot"></i></span>
+                    <span class="crm-ann-filter-copy">
+                        <strong>خوانده‌نشده</strong>
+                        <small>نیاز به بررسی</small>
+                    </span>
+                    <em class="crm-ann-filter-badge" data-ann-unread-badge hidden>0</em>
+                </button>
+                <button type="button" class="crm-ann-filter" data-filter="important">
+                    <span class="crm-ann-filter-glyph crm-ann-filter-glyph--warn"><i class="fas fa-triangle-exclamation"></i></span>
+                    <span class="crm-ann-filter-copy">
+                        <strong>مهم</strong>
+                        <small>اولویت بالا و فوری</small>
+                    </span>
+                </button>
+                {% if can_manage_team %}
+                <button type="button" class="crm-ann-filter" data-filter="manage">
+                    <span class="crm-ann-filter-glyph crm-ann-filter-glyph--muted"><i class="fas fa-sliders"></i></span>
+                    <span class="crm-ann-filter-copy">
+                        <strong>مدیریت</strong>
+                        <small>همه وضعیت‌ها</small>
+                    </span>
+                </button>
+                {% endif %}
+            </nav>
+            <footer class="crm-ann-rail-foot">
+                <i class="fas fa-thumbtack" aria-hidden="true"></i>
+                <span>سنجاق‌شده‌ها همیشه بالا نمایش داده می‌شوند</span>
+            </footer>
+        </aside>
+
+        <div class="crm-ann-list-pane" data-ann-list-pane>
+            <header class="crm-ann-list-toolbar">
+                <div class="crm-ann-list-toolbar-meta">
+                    <h3 data-ann-filter-title>همه اطلاعیه‌ها</h3>
+                    <span data-ann-count>در حال بارگذاری...</span>
+                </div>
+                <label class="crm-ann-search">
+                    <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="search" placeholder="جستجو در عنوان..." data-ann-search dir="rtl" aria-label="جستجو در اطلاعیه‌ها">
+                </label>
+            </header>
+            <ul class="crm-ann-list" data-ann-list role="listbox" aria-label="لیست اطلاعیه‌ها">
+                <li class="crm-ann-state">
+                    <span class="crm-ann-state-ring"><i class="fas fa-circle-notch fa-spin"></i></span>
+                    <p>در حال بارگذاری...</p>
+                </li>
+            </ul>
+        </div>
+
+        <div class="crm-ann-detail" data-ann-detail hidden>
+            <header class="crm-ann-detail-toolbar">
+                <button type="button" class="crm-ann-icon-btn crm-ann-icon-btn--back" data-ann-back aria-label="بازگشت">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="crm-ann-detail-id">
+                    <span class="crm-ann-importance-badge" data-ann-header-importance>—</span>
+                    <div class="crm-ann-detail-id-text">
+                        <h3 data-ann-title>—</h3>
+                        <span data-ann-meta></span>
+                    </div>
+                </div>
+                {% if can_manage_team %}
+                <div class="crm-ann-detail-tools">
+                    <button type="button" class="crm-ann-icon-btn" data-ann-edit title="ویرایش">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                    <button type="button" class="crm-ann-icon-btn crm-ann-icon-btn--danger" data-ann-delete title="حذف">
+                        <i class="fas fa-trash-can"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </header>
+            <div class="crm-ann-body" data-ann-body></div>
+            <footer class="crm-ann-detail-foot" data-ann-foot hidden></footer>
+        </div>
+
+        <div class="crm-ann-empty" data-ann-placeholder>
+            <div class="crm-ann-empty-visual" aria-hidden="true">
+                <span class="crm-ann-empty-orbit"></span>
+                <span class="crm-ann-empty-orbit crm-ann-empty-orbit--2"></span>
+                <i class="fas fa-bullhorn"></i>
+            </div>
+            <h3>یک اطلاعیه انتخاب کنید</h3>
+            <p>از لیست سمت راست انتخاب کنید یا اطلاعیه جدیدی منتشر کنید.</p>
+            {% if can_manage_team %}
+            <button type="button" class="crm-ann-pill crm-ann-pill--accent" data-ann-compose>
+                <i class="fas fa-plus"></i><span>اطلاعیه جدید</span>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}

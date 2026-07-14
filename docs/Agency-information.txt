@@ -6,7 +6,7 @@
 
 MVP اولویت‌بندی:
 [x] 1. صندوق پیام داخلی          — پیاده‌سازی کامل (مدل، API، UI، تست، purge command)
-[ ] 2. Announcement Board         — مدل و API آماده؛ UI در حال تکمیل
+[x] 2. Announcement Board         — پیاده‌سازی کامل (مدل، API، UI، تست)
 [ ] 3. Activity Feed
 [ ] 4. KPI و Leaderboard
 [ ] 5. Knowledge Base
@@ -35,7 +35,7 @@ MVP اولویت‌بندی:
 - فیلتر بر اساس نوع رویداد، عضو و بازه زمانی
 - بدون نیاز به Real-time؛ با Refresh یا Polling سبک
 
-3. Announcement Board  [ ]
+3. Announcement Board  [x]
 - ثبت اطلاعیه توسط مالک یا مدیر
 - تعیین عنوان، متن، فایل ضمیمه، سطح اهمیت، تاریخ انتشار و انقضا
 - امکان سنجاق‌کردن اطلاعیه
@@ -115,4 +115,16 @@ MVP اولویت‌بندی:
 - static/workspace/js/crm-team-messages.js
 - workspace/tests/test_crm_agency_messages.py
 
-تب جدید: ?tab=messages در صفحه آژانس (/workspace/crm/team/)
+فایل‌های ایجادشده — قابلیت ۲ (تابلو اطلاعیه):
+- workspace/models.py — CRMAgencyAnnouncement*
+- workspace/migrations/0031_crm_agency_announcements.py
+- workspace/services/crm_agency_announcements.py
+- workspace/team_messages_api_views.py — TeamAnnouncementsAPIView
+- templates/workspace/crm/includes/team_tab_announcements.html
+- templates/workspace/crm/includes/team_announcements_modals.html
+- static/workspace/css/crm-team-announcements.css
+- static/workspace/js/crm-team-announcements.js
+- static/workspace/js/crm-team-hub-badges.js
+- workspace/tests/test_crm_agency_announcements.py
+
+تب جدید: ?tab=announcements در صفحه آژانس (/workspace/crm/team/)

@@ -134,7 +134,7 @@
 
                 <a href="{% url 'workspace:crm_team' %}" class="ws-nav-item {% if '/crm/team' in request.path %}active{% endif %}" data-tour="nav-team" data-nav-team-badge>
                     <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}</span><span>آژانس</span>
-                    <span class="ws-nav-badge" data-nav-team-messages-badge {% if not crm_nav_counts.team_messages %}hidden{% endif %}>{{ crm_nav_counts.team_messages|nav_badge_count }}</span>
+                    <span class="ws-nav-badge" data-nav-team-hub-badge {% if not crm_nav_counts.team_hub_unread %}hidden{% endif %}>{{ crm_nav_counts.team_hub_unread|nav_badge_count }}</span>
                 </a>
 
                 <div class="ws-nav-section">پشتیبانی</div>

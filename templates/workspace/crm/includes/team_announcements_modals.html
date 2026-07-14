@@ -1,0 +1,126 @@
+{% if agency_feature_announcements %}
+<div class="ws-modal crm-ann-compose-modal" id="modal-ann-compose" role="dialog" aria-modal="true" aria-labelledby="ann-compose-title">
+    <div class="ws-modal-overlay" data-modal-close data-ann-compose-close tabindex="-1" aria-hidden="true"></div>
+    <div class="ws-modal-panel crm-ann-compose-panel">
+        <div class="ws-modal-head">
+            <div>
+                <h2 id="ann-compose-title" class="ws-modal-title" data-ann-compose-title>اطلاعیه جدید</h2>
+                <p class="ws-modal-sub" data-ann-compose-sub>انتشار برای همه یا نقش‌های مشخص</p>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close data-ann-compose-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <form class="ws-modal-body" data-ann-compose-form novalidate>
+            <div class="crm-ann-compose-grid">
+                <div class="ws-field crm-ann-compose-span-2">
+                    <label class="ws-label" for="ann-compose-title-input">عنوان</label>
+                    <input type="text" name="title" id="ann-compose-title-input" class="ws-input" placeholder="مثلاً: جلسه فروش هفتگی" required autocomplete="off">
+                </div>
+
+                <div class="ws-field">
+                    <label class="ws-label" for="ann-compose-importance">سطح اهمیت</label>
+                    <select name="importance" id="ann-compose-importance" class="ws-select">
+                        <option value="low">عادی</option>
+                        <option value="normal" selected>متوسط</option>
+                        <option value="high">مهم</option>
+                        <option value="urgent">فوری</option>
+                    </select>
+                </div>
+
+                <div class="ws-field">
+                    <label class="ws-label crm-ann-pin-label">
+                        <input type="checkbox" name="is_pinned" value="1" data-ann-pin-input>
+                        <span><i class="fas fa-thumbtack"></i> سنجاق در بالای لیست</span>
+                    </label>
+                </div>
+
+                <div class="ws-field crm-ann-compose-span-2">
+                    <label class="ws-label" for="ann-compose-body">متن اطلاعیه</label>
+                    <textarea name="body" id="ann-compose-body" class="ws-textarea" rows="6" placeholder="متن کامل اطلاعیه..." required></textarea>
+                </div>
+
+                <div class="ws-field">
+                    <label class="ws-label" for="ann-compose-published">تاریخ انتشار</label>
+                    <input type="datetime-local" name="published_at" id="ann-compose-published" class="ws-input" data-ann-published>
+                </div>
+
+                <div class="ws-field">
+                    <label class="ws-label" for="ann-compose-expires">تاریخ انقضا (اختیاری)</label>
+                    <input type="datetime-local" name="expires_at" id="ann-compose-expires" class="ws-input" data-ann-expires>
+                </div>
+            </div>
+
+            <div class="crm-ann-audience-panel">
+                <div class="crm-ann-audience-head">
+                    <div class="crm-ann-audience-head-copy">
+                        <span class="crm-ann-audience-label">مخاطبان</span>
+                        <p>نقش‌هایی که این اطلاعیه را می‌بینند</p>
+                    </div>
+                    <span class="crm-ann-audience-scope is-all" data-ann-audience-scope>همه اعضا</span>
+                </div>
+                <div class="crm-ann-audience-grid" data-ann-audience-grid>
+                    {% for val, lbl in agency_roles %}
+                    {% if val != 'owner' %}
+                    <label class="crm-ann-audience-card">
+                        <input type="checkbox" name="target_roles" value="{{ val }}">
+                        <span class="crm-ann-audience-card-icon" aria-hidden="true">
+                            {% if val == 'advisor' %}<i class="fas fa-user-tie"></i>
+                            {% elif val == 'secretary' %}<i class="fas fa-headset"></i>
+                            {% elif val == 'manager' %}<i class="fas fa-user-gear"></i>
+                            {% endif %}
+                        </span>
+                        <span class="crm-ann-audience-card-copy">
+                            <strong>{{ lbl }}</strong>
+                        </span>
+                        <span class="crm-ann-audience-check" aria-hidden="true"><i class="fas fa-check"></i></span>
+                    </label>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="crm-ann-audience-note">
+                    <i class="fas fa-circle-info" aria-hidden="true"></i>
+                    <p>بدون انتخاب نقش، اطلاعیه برای <strong>همه اعضای آژانس</strong> نمایش داده می‌شود.</p>
+                </div>
+            </div>
+
+            <div class="ws-field">
+                <span class="ws-label">فایل ضمیمه (اختیاری)</span>
+                <p class="ws-settings-hint crm-ann-compose-upload-hint">حداکثر ۵ مگابایت — PDF، Word، Excel، تصویر</p>
+                <div class="ws-upload-zone" data-ann-upload-zone>
+                    <input type="file" name="attachment" class="ws-upload-input" data-ann-file-input accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp">
+                    <div class="ws-upload-icon"><i class="fas fa-cloud-arrow-up" aria-hidden="true"></i></div>
+                    <p class="ws-upload-text">فایل را بکشید یا <span>انتخاب کنید</span></p>
+                    <p class="ws-upload-hint">PDF · Word · Excel · تصویر</p>
+                </div>
+                <p class="crm-ann-current-file" data-ann-current-file hidden></p>
+            </div>
+
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close data-ann-compose-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary" data-ann-compose-submit>
+                    <i class="fas fa-bullhorn" aria-hidden="true"></i>
+                    <span data-ann-compose-submit-label>انتشار اطلاعیه</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ws-modal crm-ann-confirm-modal" id="modal-ann-confirm" role="alertdialog" aria-modal="true" aria-labelledby="ann-confirm-title">
+    <div class="ws-modal-overlay" data-ann-confirm-cancel tabindex="-1" aria-hidden="true"></div>
+    <div class="ws-modal-panel crm-ann-confirm-panel">
+        <div class="ws-modal-head">
+            <h2 id="ann-confirm-title" class="ws-modal-title" data-ann-confirm-title>تأیید</h2>
+        </div>
+        <div class="ws-modal-body">
+            <p data-ann-confirm-text>آیا مطمئن هستید؟</p>
+        </div>
+        <div class="ws-modal-foot">
+            <button type="button" class="ws-btn ws-btn-ghost" data-ann-confirm-cancel>انصراف</button>
+            <button type="button" class="ws-btn ws-btn-danger" data-ann-confirm-ok>تأیید</button>
+        </div>
+    </div>
+</div>
+{% endif %}

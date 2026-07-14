@@ -11,10 +11,13 @@
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-performance.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-announcements.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-shell-page crm-team-pro crm-team-pro-v2 crm-page-chrome" data-crm-team data-tab="{{ tab }}">
+<div class="crm-shell-page crm-team-pro crm-team-pro-v2 crm-page-chrome" data-crm-team data-tab="{{ tab }}"
+    data-hub-messages-unread="{{ messages_unread_count|default:0 }}"
+    data-hub-announcements-unread="{{ announcements_unread_count|default:0 }}">
 
     <header class="crm-dash-bar crm-team-hero">
         <div class="crm-team-hero-inner">
@@ -177,9 +180,15 @@
         </a>
         {% endif %}
         {% if agency_feature_messages %}
-        <a href="?tab=messages" class="crm-team-tab-v2 {% if tab == 'messages' %}active{% endif %}">
+        <a href="?tab=messages" class="crm-team-tab-v2 {% if tab == 'messages' %}active{% endif %}" data-team-messages-tab>
             <i class="fas fa-envelope"></i><span>پیام‌ها</span>
-            {% if messages_unread_count %}<em>{{ messages_unread_count|nav_badge_count }}</em>{% endif %}
+            {% if messages_unread_count %}<em data-team-messages-badge>{{ messages_unread_count|nav_badge_count }}</em>{% else %}<em data-team-messages-badge hidden>0</em>{% endif %}
+        </a>
+        {% endif %}
+        {% if agency_feature_announcements %}
+        <a href="?tab=announcements" class="crm-team-tab-v2 {% if tab == 'announcements' %}active{% endif %}" data-team-announcements-tab>
+            <i class="fas fa-bullhorn"></i><span>اطلاعیه‌ها</span>
+            {% if announcements_unread_count %}<em data-team-announcements-badge>{{ announcements_unread_count|nav_badge_count }}</em>{% else %}<em data-team-announcements-badge hidden>0</em>{% endif %}
         </a>
         {% endif %}
         <a href="?tab=members" class="crm-team-tab-v2 {% if tab == 'members' %}active{% endif %}">
@@ -264,6 +273,7 @@
     {% include 'workspace/crm/includes/team_tab_command.html' %}
     {% include 'workspace/crm/includes/team_tab_inbox.html' %}
     {% include 'workspace/crm/includes/team_tab_messages.html' %}
+    {% include 'workspace/crm/includes/team_tab_announcements.html' %}
     {% include 'workspace/crm/includes/team_tab_settings_audit.html' %}
 
     {# ── تب اعضا ── #}
@@ -815,6 +825,9 @@
 {% if agency_feature_messages %}
 {% include 'workspace/crm/includes/team_messages_modals.html' %}
 {% endif %}
+{% if agency_feature_announcements %}
+{% include 'workspace/crm/includes/team_announcements_modals.html' %}
+{% endif %}
 {% endblock %}
 
 {% block crm_js %}
@@ -824,7 +837,13 @@ window.crmSyncImportUrl = '{% url "workspace:crm_sync_import" %}';
 window.crmApiKeyRevealUrl = '{{ crm_api_key_reveal_url }}';
 window.crmApiKeyRegenerateUrl = '{{ crm_api_key_regenerate_url }}';
 </script>
+{% if agency_feature_messages or agency_feature_announcements %}
+<script src="{% static 'workspace/js/crm-team-hub-badges.js' %}?v=1"></script>
+{% endif %}
 {% if agency_feature_messages %}
-<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=14"></script>
+<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=15"></script>
+{% endif %}
+{% if agency_feature_announcements %}
+<script src="{% static 'workspace/js/crm-team-announcements.js' %}?v=1"></script>
 {% endif %}
 {% endblock %}

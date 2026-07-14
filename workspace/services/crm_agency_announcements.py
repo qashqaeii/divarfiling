@@ -32,38 +32,82 @@ def _visible_for_member(announcement: CRMAgencyAnnouncement, member: CRMAgencyMe
     return True
 
 
+def _announcement_status(announcement: CRMAgencyAnnouncement, now=None) -> str:
+    now = now or timezone.now()
+    if announcement.published_at > now:
+        return 'scheduled'
+    if announcement.expires_at and announcement.expires_at < now:
+        return 'expired'
+    return 'active'
+
+
 def _serialize_announcement(a: CRMAgencyAnnouncement, member: CRMAgencyMember) -> Dict[str, Any]:
     is_read = CRMAgencyAnnouncementRead.objects.filter(announcement=a, member=member).exists()
+    now = timezone.now()
     return {
         'id': a.pk,
         'title': a.title,
         'body': a.body,
+        'body_preview': (a.body or '')[:160],
         'importance': a.importance,
         'is_pinned': a.is_pinned,
-        'target_roles': a.target_roles,
+        'target_roles': a.target_roles or [],
         'published_at': a.published_at.isoformat(),
         'expires_at': a.expires_at.isoformat() if a.expires_at else None,
         'is_read': is_read,
+        'status': _announcement_status(a, now),
         'attachment_url': a.attachment.url if a.attachment else '',
         'attachment_name': a.attachment_name or (a.attachment.name if a.attachment else ''),
         'created_by': a.created_by.get_full_name() if a.created_by else '',
+        'created_at': a.created_at.isoformat(),
     }
 
 
-def list_announcements(user, *, unread_only: bool = False, page: int = 1, page_size: int = 30) -> Tuple[List[Dict], int]:
+def _filter_for_role(qs, role: str):
+    from django.db import connection
+    if connection.vendor == 'postgresql':
+        return qs.filter(Q(target_roles=[]) | Q(target_roles__contains=[role]))
+    visible_ids = [
+        pk for pk, roles in qs.values_list('pk', 'target_roles')
+        if not (roles or []) or role in (roles or [])
+    ]
+    if not visible_ids:
+        return qs.none()
+    return qs.filter(pk__in=visible_ids)
+
+
+def _announcement_queryset(membership: CRMAgencyMember, *, include_all: bool = False):
+    qs = CRMAgencyAnnouncement.objects.filter(agency=membership.agency)
+    if not include_all:
+        now = timezone.now()
+        qs = qs.filter(published_at__lte=now).filter(Q(expires_at__isnull=True) | Q(expires_at__gte=now))
+        qs = _filter_for_role(qs, membership.role)
+    return qs
+
+
+def list_announcements(
+    user,
+    *,
+    unread_only: bool = False,
+    important_only: bool = False,
+    page: int = 1,
+    page_size: int = 30,
+    include_all: bool = False,
+) -> Tuple[List[Dict], int]:
     membership = get_membership(user)
     if not membership:
         return [], 0
-    now = timezone.now()
-    qs = CRMAgencyAnnouncement.objects.filter(
-        agency=membership.agency,
-        published_at__lte=now,
-    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gte=now))
-    roles = membership.role
-    qs = qs.filter(Q(target_roles=[]) | Q(target_roles__contains=[roles]))
+    if include_all and membership.role not in AGENCY_MANAGER_ROLES:
+        include_all = False
+    qs = _announcement_queryset(membership, include_all=include_all)
     if unread_only:
         read_ids = CRMAgencyAnnouncementRead.objects.filter(member=membership).values_list('announcement_id', flat=True)
         qs = qs.exclude(pk__in=read_ids)
+    if important_only:
+        qs = qs.filter(importance__in=[
+            CRMAgencyAnnouncement.IMPORTANCE_HIGH,
+            CRMAgencyAnnouncement.IMPORTANCE_URGENT,
+        ])
     total = qs.count()
     offset = max(0, (page - 1) * page_size)
     items = [
@@ -73,15 +117,23 @@ def list_announcements(user, *, unread_only: bool = False, page: int = 1, page_s
     return items, total
 
 
+def get_announcement(user, announcement_id: int) -> Optional[Dict[str, Any]]:
+    membership = get_membership(user)
+    if not membership:
+        return None
+    ann = CRMAgencyAnnouncement.objects.filter(pk=announcement_id, agency=membership.agency).select_related('created_by').first()
+    if not ann:
+        return None
+    if membership.role not in AGENCY_MANAGER_ROLES and not _visible_for_member(ann, membership):
+        return None
+    return _serialize_announcement(ann, membership)
+
+
 def unread_announcement_count(user) -> int:
     membership = get_membership(user)
     if not membership:
         return 0
-    now = timezone.now()
-    qs = CRMAgencyAnnouncement.objects.filter(
-        agency=membership.agency, published_at__lte=now,
-    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gte=now))
-    qs = qs.filter(Q(target_roles=[]) | Q(target_roles__contains=[membership.role]))
+    qs = _announcement_queryset(membership, include_all=False)
     read_ids = set(
         CRMAgencyAnnouncementRead.objects.filter(member=membership).values_list('announcement_id', flat=True)
     )
@@ -123,6 +175,7 @@ def create_announcement(
         attachment=attachment,
         attachment_name=getattr(attachment, 'name', '') if attachment else '',
     )
+    CRMAgencyAnnouncementRead.objects.get_or_create(announcement=ann, member=membership)
     _notify_announcement(ann, membership)
     log_agency_audit(membership.agency, actor, 'announcement.created', {'announcement_id': ann.pk})
     return ann
@@ -181,6 +234,21 @@ def _validate_attachment(uploaded_file) -> None:
         raise ValueError('نوع فایل مجاز نیست.')
     if uploaded_file.size > MESSAGE_MAX_ATTACHMENT_BYTES:
         raise ValueError('حجم فایل بیش از حد مجاز است.')
+
+
+def parse_announcement_datetime(value) -> Optional[datetime]:
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        dt = value
+    else:
+        raw = str(value).strip()
+        if not raw:
+            return None
+        dt = datetime.fromisoformat(raw.replace('Z', '+00:00'))
+    if timezone.is_naive(dt):
+        return timezone.make_aware(dt, timezone.get_current_timezone())
+    return dt
 
 
 def _notify_announcement(ann: CRMAgencyAnnouncement, creator: CRMAgencyMember) -> None:

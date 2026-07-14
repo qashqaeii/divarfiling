@@ -257,8 +257,16 @@ class TeamAnnouncementsAPIView(_TeamHubAPIBase):
             return err
         from workspace.services.crm_agency_announcements import list_announcements, unread_announcement_count
         unread_only = request.GET.get('unread') == '1'
+        important_only = request.GET.get('important') == '1'
+        include_all = request.GET.get('manage') == '1'
         page = max(1, int(request.GET.get('page', 1) or 1))
-        items, total = list_announcements(request.user, unread_only=unread_only, page=page)
+        items, total = list_announcements(
+            request.user,
+            unread_only=unread_only,
+            important_only=important_only,
+            include_all=include_all,
+            page=page,
+        )
         return JsonResponse({
             'ok': True, 'announcements': items, 'total': total,
             'unread': unread_announcement_count(request.user),
@@ -268,7 +276,7 @@ class TeamAnnouncementsAPIView(_TeamHubAPIBase):
         m, err = self._check_feature('announcements')
         if err:
             return err
-        from workspace.services.crm_agency_announcements import create_announcement
+        from workspace.services.crm_agency_announcements import create_announcement, parse_announcement_datetime
         try:
             if request.content_type and 'multipart' in request.content_type:
                 p = request.POST
@@ -284,6 +292,8 @@ class TeamAnnouncementsAPIView(_TeamHubAPIBase):
                 importance=p.get('importance', 'normal'),
                 is_pinned=p.get('is_pinned') in (True, '1', 'true', 'on'),
                 target_roles=roles,
+                published_at=parse_announcement_datetime(p.get('published_at')),
+                expires_at=parse_announcement_datetime(p.get('expires_at')),
                 attachment=attachment,
             )
         except (json.JSONDecodeError, ValueError, TypeError) as exc:
@@ -292,17 +302,50 @@ class TeamAnnouncementsAPIView(_TeamHubAPIBase):
 
 
 class TeamAnnouncementDetailAPIView(_TeamHubAPIBase):
+    def get(self, request, announcement_id):
+        m, err = self._check_feature('announcements')
+        if err:
+            return err
+        from workspace.services.crm_agency_announcements import get_announcement
+        item = get_announcement(request.user, announcement_id)
+        if not item:
+            return JsonResponse({'ok': False, 'error': 'اطلاعیه یافت نشد.'}, status=404)
+        return JsonResponse({'ok': True, 'announcement': item})
+
     def patch(self, request, announcement_id):
         m, err = self._check_feature('announcements')
         if err:
             return err
-        from workspace.services.crm_agency_announcements import mark_announcement_read, update_announcement
+        from workspace.services.crm_agency_announcements import (
+            mark_announcement_read,
+            parse_announcement_datetime,
+            update_announcement,
+        )
         try:
-            payload = json.loads(request.body.decode('utf-8') or '{}')
+            if request.content_type and 'multipart' in request.content_type:
+                payload = dict(request.POST.items())
+                if request.FILES.get('attachment'):
+                    payload['attachment'] = request.FILES['attachment']
+                roles = request.POST.getlist('target_roles')
+                if roles:
+                    payload['target_roles'] = roles
+            else:
+                payload = json.loads(request.body.decode('utf-8') or '{}')
             if payload.get('action') == 'read':
                 mark_announcement_read(request.user, announcement_id)
                 return JsonResponse({'ok': True})
-            update_announcement(request.user, announcement_id, **payload)
+            fields = {}
+            for key in ('title', 'body', 'importance', 'is_pinned', 'target_roles', 'attachment'):
+                if key in payload and payload[key] is not None:
+                    if key == 'is_pinned':
+                        fields[key] = payload[key] in (True, '1', 'true', 'on')
+                    else:
+                        fields[key] = payload[key]
+            if 'published_at' in payload:
+                fields['published_at'] = parse_announcement_datetime(payload.get('published_at'))
+            if 'expires_at' in payload:
+                fields['expires_at'] = parse_announcement_datetime(payload.get('expires_at'))
+            update_announcement(request.user, announcement_id, **fields)
         except (json.JSONDecodeError, ValueError) as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
         return JsonResponse({'ok': True})

@@ -310,19 +310,26 @@
     }
 
     function updateTeamNavBadge(n) {
+        if (window.crmTeamHubUnread) {
+            window.crmTeamHubUnread.setMessages(n);
+            return;
+        }
         const link = document.querySelector('[data-nav-team-badge]');
         if (!link) return;
-        let badge = link.querySelector('[data-nav-team-messages-badge]');
+        let hubBadge = link.querySelector('[data-nav-team-hub-badge]');
         const label = formatBadgeCount(n);
-        if (!label) { if (badge) badge.hidden = true; return; }
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.className = 'ws-nav-badge';
-            badge.dataset.navTeamMessagesBadge = '';
-            link.appendChild(badge);
+        if (!label) {
+            if (hubBadge) hubBadge.hidden = true;
+            return;
         }
-        badge.textContent = label;
-        badge.hidden = false;
+        if (!hubBadge) {
+            hubBadge = document.createElement('span');
+            hubBadge.className = 'ws-nav-badge';
+            hubBadge.dataset.navTeamHubBadge = '';
+            link.appendChild(hubBadge);
+        }
+        hubBadge.textContent = label;
+        hubBadge.hidden = false;
     }
 
     function refreshUnread() {

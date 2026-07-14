@@ -302,14 +302,17 @@ class CRMAgencyTVHardeningTests(TestCase):
     def test_leaderboard_avatar_url_from_consultant_photo(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
         from workspace.models import WorkspaceSettings
+        from workspace.services.crm_agency_tv import tv_safe_display_name
 
         ws, _ = WorkspaceSettings.objects.get_or_create(user=self.owner)
         ws.consultant_photo = SimpleUploadedFile('photo.jpg', b'\xff\xd8\xff', content_type='image/jpeg')
         ws.save()
         payload = get_tv_dashboard_payload(self.owner, use_cache=False)
-        top = payload['leaderboard'][0]
-        self.assertTrue(top.get('avatar_url'))
-        self.assertIn('initials', top)
+        owner_name = tv_safe_display_name(self.owner)
+        row = next((r for r in payload['leaderboard'] if r['name'] == owner_name), None)
+        self.assertIsNotNone(row, msg='owner not in leaderboard')
+        self.assertTrue(row.get('avatar_url'))
+        self.assertIn('initials', row)
 
     def test_chart_has_activity_when_visit_exists(self):
         from workspace.models import Customer, PropertyVisit

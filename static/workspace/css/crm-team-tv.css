@@ -41,8 +41,9 @@ body.crm-tv-body {
 
     width: 100vw;
     height: 100dvh;
-    padding: clamp(8px, 0.85vh, 14px);
-    gap: clamp(8px, 0.75vh, 12px);
+    position: relative;
+    padding: clamp(10px, 0.8vw, 16px);
+    gap: clamp(8px, 0.7vw, 14px);
     overflow: hidden;
     background:
         radial-gradient(1200px 600px at 15% -10%, rgba(124, 58, 237, 0.14), transparent 55%),
@@ -51,16 +52,15 @@ body.crm-tv-body {
     color: var(--text);
 
     display: grid;
+    align-content: start;
     grid-template-rows:
-        auto
-        minmax(0, auto)
-        clamp(92px, 13vh, 124px)
-        minmax(0, 0.56fr)
-        clamp(132px, 22vh, 210px)
-        clamp(30px, 4vh, 40px);
+        clamp(58px, 8vh, 82px)
+        clamp(96px, 14vh, 138px)
+        minmax(0, 1fr)
+        clamp(150px, 22vh, 230px)
+        clamp(34px, 5vh, 50px);
     grid-template-areas:
         "head"
-        "alerts"
         "kpis"
         "mid"
         "bot"
@@ -74,14 +74,28 @@ body.crm-tv-body {
 
 .lcc > *, .lcc-mid > *, .lcc-bot > *, .lcc-card { min-width: 0; min-height: 0; }
 
+.lcc > .lcc-drawer,
+.lcc > .lcc-fs,
+.lcc > .lcc-fs-hint {
+    position: fixed;
+    grid-row: auto;
+    grid-column: auto;
+}
+
 /* ═══ HEADER ═══ */
 .lcc-head {
     grid-area: head;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    align-self: stretch;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    gap: clamp(8px, 1vw, 16px);
-    padding: 0 clamp(2px, 0.3vw, 6px);
+    gap: clamp(8px, 1vw, 14px);
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
 }
 
 .lcc-head__cluster {
@@ -239,11 +253,21 @@ body.crm-tv-body {
 
 /* ═══ ALERTS ═══ */
 .lcc-alerts {
-    grid-area: alerts;
+    position: absolute;
+    top: clamp(10px, 0.8vw, 16px);
+    left: clamp(10px, 0.8vw, 16px);
+    right: clamp(10px, 0.8vw, 16px);
+    z-index: 12;
     display: flex;
     gap: 0.45rem;
     overflow: hidden;
     align-items: center;
+    pointer-events: none;
+}
+
+.lcc-alerts:not([hidden]) {
+    top: calc(clamp(58px, 8vh, 82px) + clamp(10px, 0.8vw, 16px) + clamp(4px, 0.4vh, 6px));
+    pointer-events: auto;
 }
 
 .lcc-alerts[hidden] { display: none !important; }
@@ -265,7 +289,13 @@ body.crm-tv-body {
 .lcc-alert--warn { border-color: rgba(245, 158, 11, 0.35); color: #fcd34d; }
 
 /* ═══ KPI STRIP ═══ */
-.lcc-kpis { grid-area: kpis; }
+.lcc-kpis {
+    grid-area: kpis;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    align-self: stretch;
+}
 
 .lcc-kpis__grid {
     display: grid;
@@ -370,6 +400,9 @@ body.crm-tv-body {
     display: grid;
     grid-template-columns: 1.35fr 1fr 0.88fr;
     gap: clamp(8px, 0.75vw, 12px);
+    height: 100%;
+    min-height: 0;
+    align-self: stretch;
 }
 
 .lcc-card {
@@ -742,6 +775,9 @@ body.crm-tv-body {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: clamp(8px, 0.75vw, 12px);
+    height: 100%;
+    min-height: 0;
+    align-self: stretch;
 }
 
 /* Goals */
@@ -1188,12 +1224,11 @@ div.lcc-empty--inline {
 @media (max-width: 1450px), (max-height: 820px) {
     .lcc {
         grid-template-rows:
-            auto
-            minmax(0, auto)
-            clamp(80px, 12vh, 112px)
-            minmax(0, 0.52fr)
-            clamp(120px, 20vh, 188px)
-            clamp(28px, 3.6vh, 36px);
+            clamp(52px, 7.5vh, 74px)
+            clamp(88px, 13vh, 124px)
+            minmax(0, 1fr)
+            clamp(132px, 20vh, 200px)
+            clamp(30px, 4.5vh, 44px);
     }
 
     .lcc-kpi__value { font-size: clamp(1.25rem, 3.8vh, 2.2rem); }

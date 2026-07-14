@@ -4,130 +4,133 @@
 {% block title %}مرکز فرمان — {{ crm_agency.name|default:'آژانس' }}{% endblock %}
 
 {% block content %}
-<div class="tv-cmd" id="crm-tv-app" data-crm-tv data-tv-role="{{ tv_payload.role|default:'advisor' }}" dir="rtl">
-    {# ── Header: brand (right) · controls + clock (left) ── #}
-    <header class="tv-cmd__header" data-tv-chrome>
-        <div class="tv-cmd__brand">
+<div class="tv tv-cmd" id="crm-tv-app" data-crm-tv data-tv-role="{{ tv_payload.role|default:'advisor' }}" dir="rtl">
+
+    {# ── ۱) Header ~8% ── #}
+    <header class="tv__header" data-tv-chrome>
+        <div class="tv__brand">
             {% if crm_agency %}
-            <span class="tv-cmd__logo-wrap" data-tv-logo>
+            <span class="tv__logo-wrap" data-tv-logo>
                 {% if tv_payload.agency.logo_url %}
-                <img src="{{ tv_payload.agency.logo_url }}" alt="{{ crm_agency.name }}" class="tv-cmd__logo tv-cmd__logo--img" data-tv-agency-logo width="44" height="44">
+                <img src="{{ tv_payload.agency.logo_url }}" alt="{{ crm_agency.name }}" class="tv__logo tv__logo--img" data-tv-agency-logo width="40" height="40">
                 {% else %}
-                <span class="tv-cmd__logo tv-cmd__logo--initials" style="--hue: {{ crm_agency.name|crm_avatar_hue }}" data-tv-agency-initials>{{ crm_agency.name|crm_initials }}</span>
+                <span class="tv__logo tv__logo--initials" style="--hue: {{ crm_agency.name|crm_avatar_hue }}" data-tv-agency-initials>{{ crm_agency.name|crm_initials }}</span>
                 {% endif %}
             </span>
-            <div class="tv-cmd__brand-text">
+            <div class="tv__brand-text">
                 <h1 data-tv-agency-name>{{ crm_agency.name }}</h1>
                 <p>مرکز فرمان زنده</p>
             </div>
             {% endif %}
         </div>
 
-        <div class="tv-cmd__header-end" data-tv-chrome>
-            <nav class="tv-cmd__toolbar" aria-label="ابزارها">
-                <button type="button" class="tv-cmd__btn" data-tv-widgets title="تنظیمات نمایش"><i class="fas fa-sliders"></i></button>
-                <button type="button" class="tv-cmd__btn" data-tv-fullscreen title="تمام‌صفحه"><i class="fas fa-expand"></i></button>
-                <a href="{{ crm_team_url }}" class="tv-cmd__btn tv-cmd__btn--exit" title="خروج"><i class="fas fa-arrow-right-from-bracket"></i></a>
-            </nav>
-            <div class="tv-cmd__clock" data-tv-sync aria-live="polite">
-                <span class="tv-cmd__clock-time" data-tv-clock>--:--:--</span>
-                <div class="tv-cmd__clock-meta">
-                    <span class="tv-cmd__clock-date" data-tv-date>{{ tv_payload.jalali_date|default:'' }}</span>
-                    <span class="tv-cmd__clock-status">
-                        <span class="tv-cmd__sync-dot"></span>
-                        <span data-tv-updated>در حال بارگذاری…</span>
-                    </span>
-                </div>
-            </div>
+        <div class="tv__header-center" data-tv-sync aria-live="polite">
+            <span class="tv__live"><span class="tv__live-dot"></span><span data-tv-live-label>آنلاین</span></span>
+            <span class="tv__sync-text" data-tv-updated>در حال بارگذاری…</span>
+            <span class="tv__clock" data-tv-clock>--:--:--</span>
+            <span class="tv__date" data-tv-date>{{ tv_payload.jalali_date|default:'' }}</span>
         </div>
+
+        <nav class="tv__tools" data-tv-chrome aria-label="ابزارها">
+            <button type="button" class="tv__tool" data-tv-fullscreen title="تمام‌صفحه (F11)"><i class="fas fa-expand"></i></button>
+            <button type="button" class="tv__tool" data-tv-theme title="تم"><i class="fas fa-sun"></i></button>
+            <button type="button" class="tv__tool" data-tv-widgets title="تنظیمات"><i class="fas fa-gear"></i></button>
+            <a href="{{ crm_team_url }}" class="tv__tool tv__tool--exit" title="خروج"><i class="fas fa-arrow-right-from-bracket"></i></a>
+        </nav>
     </header>
 
-    <div class="tv-cmd__alerts" data-widget="alerts" data-tv-alerts-strip hidden></div>
+    {# ── Alerts strip ── #}
+    <div class="tv__alerts" data-widget="alerts" data-tv-alerts-strip hidden></div>
 
-    <section class="tv-cmd__kpis" data-widget="kpis" aria-label="شاخص‌های امروز">
-        <div class="tv-cmd__kpi-row" data-tv-kpis></div>
+    {# ── ۲) KPI Strip ~15% ── #}
+    <section class="tv__kpis" data-widget="kpis" aria-label="شاخص‌های امروز">
+        <div class="tv__kpi-grid" data-tv-kpis></div>
     </section>
 
-    {# ── Main: Leaderboard (col 1 / right) · Analytics (col 2 / left) ── #}
-    <section class="tv-cmd__main" data-tv-main>
-        <article class="tv-cmd__card tv-cmd__card--board" data-widget="leaderboard">
-            <header class="tv-cmd__card-head">
-                <h2><i class="fas fa-ranking-star"></i> رتبه‌بندی مشاوران</h2>
-                <span class="tv-cmd__badge">۳۰ روز</span>
+    {# ── ۳) Main: Leaderboard | Analytics | Donut ── #}
+    <section class="tv__main" data-tv-main>
+
+        <article class="tv__panel tv__panel--lb" data-widget="leaderboard">
+            <header class="tv__panel-head">
+                <h2><i class="fas fa-ranking-star"></i> رتبه‌بندی زنده تیم</h2>
+                <span class="tv__tag">۳۰ روز</span>
             </header>
-            <ol class="tv-cmd__board" data-tv-leaderboard></ol>
+            <ol class="tv__lb" data-tv-leaderboard></ol>
         </article>
 
-        <article class="tv-cmd__card tv-cmd__card--analytics" data-widget="chart">
-            <header class="tv-cmd__card-head">
-                <h2><i class="fas fa-chart-line"></i> تحلیل عملکرد</h2>
-                <span data-tv-chart-subtitle>روند ۷ روزه · توزیع مخاطبین</span>
+        <article class="tv__panel tv__panel--chart" data-widget="chart">
+            <header class="tv__panel-head">
+                <h2><i class="fas fa-chart-line"></i> عملکرد ۷ روز اخیر</h2>
             </header>
-
-            <div class="tv-cmd__analytics">
-                <div class="tv-cmd__analytics-trend">
-                    <div class="tv-cmd__trend-head">
-                        <p class="tv-cmd__section-label">روند فعالیت</p>
-                        <div class="tv-cmd__legend-chips" data-tv-trend-legend role="toolbar" aria-label="سری‌های نمودار"></div>
+            <div class="tv__chart-zone">
+                <div class="tv__chips" data-tv-trend-legend role="toolbar" aria-label="سری‌های نمودار"></div>
+                <div class="tv__chart-box">
+                    <canvas data-tv-chart aria-label="نمودار روند هفتگی"></canvas>
+                    <div class="tv__empty" data-tv-chart-empty hidden>
+                        <i class="fas fa-chart-area"></i>
+                        <p>داده‌ای برای نمایش وجود ندارد</p>
                     </div>
-                    <div class="tv-cmd__chart-stage">
-                        <canvas data-tv-chart aria-label="نمودار روند فعالیت هفتگی"></canvas>
-                        <div class="tv-cmd__empty-state" data-tv-chart-empty hidden>
-                            <i class="fas fa-chart-area"></i>
-                            <p>داده‌ای برای نمایش روند وجود ندارد</p>
-                        </div>
-                    </div>
-                    <div class="tv-cmd__summary-row" data-tv-trend-kpis aria-label="خلاصه هفتگی"></div>
                 </div>
-
-                <div class="tv-cmd__analytics-audience">
-                    <p class="tv-cmd__section-label" data-tv-donut-title>پرونده مخاطبین</p>
-                    <div class="tv-cmd__donut-stage">
-                        <canvas data-tv-donut aria-label="نمودار توزیع مخاطبین"></canvas>
-                        <div class="tv-cmd__empty-state tv-cmd__empty-state--sm" data-tv-donut-empty hidden>
-                            <i class="fas fa-users"></i>
-                            <p>مخاطبی ثبت نشده</p>
-                        </div>
-                    </div>
-                    <div class="tv-cmd__audience-legend" data-tv-chart-legend></div>
-                </div>
+                <div class="tv__summaries" data-tv-trend-kpis aria-label="خلاصه هفتگی"></div>
             </div>
         </article>
+
+        <article class="tv__panel tv__panel--donut" data-widget="chart">
+            <header class="tv__panel-head">
+                <h2><i class="fas fa-chart-pie"></i> <span data-tv-donut-title>توزیع مخاطبین</span></h2>
+            </header>
+            <div class="tv__donut-zone">
+                <div class="tv__donut-box">
+                    <canvas data-tv-donut aria-label="نمودار دونات"></canvas>
+                    <div class="tv__empty tv__empty--sm" data-tv-donut-empty hidden>
+                        <i class="fas fa-users"></i>
+                        <p>مخاطبی ثبت نشده</p>
+                    </div>
+                </div>
+                <div class="tv__donut-legend" data-tv-chart-legend></div>
+            </div>
+        </article>
+
     </section>
 
-    {# ── Bottom: Goals · Activity · Schedule ── #}
-    <section class="tv-cmd__bottom" data-tv-bottom>
-        <article class="tv-cmd__card tv-cmd__card--sm" data-widget="goals">
-            <header class="tv-cmd__card-head"><h2><i class="fas fa-bullseye"></i> اهداف تیم</h2></header>
-            <div class="tv-cmd__goals" data-tv-goals></div>
+    {# ── ۴) Bottom: Goals | Activity | Today ── #}
+    <section class="tv__bottom" data-tv-bottom>
+
+        <article class="tv__panel tv__panel--goals" data-widget="goals">
+            <header class="tv__panel-head"><h2><i class="fas fa-bullseye"></i> اهداف تیم</h2></header>
+            <div class="tv__goals" data-tv-goals></div>
         </article>
-        <article class="tv-cmd__card tv-cmd__card--sm" data-widget="activity">
-            <header class="tv-cmd__card-head"><h2><i class="fas fa-bolt"></i> فعالیت اخیر</h2></header>
-            <ul class="tv-cmd__feed" data-tv-activity></ul>
+
+        <article class="tv__panel tv__panel--feed" data-widget="activity">
+            <header class="tv__panel-head"><h2><i class="fas fa-bolt"></i> فعالیت‌های اخیر</h2></header>
+            <ul class="tv__timeline" data-tv-activity></ul>
         </article>
-        <article class="tv-cmd__card tv-cmd__card--sm" data-widget="schedule">
-            <header class="tv-cmd__card-head"><h2><i class="fas fa-calendar-day"></i> برنامه امروز</h2></header>
-            <div class="tv-cmd__schedule" data-tv-schedule></div>
+
+        <article class="tv__panel tv__panel--today" data-widget="schedule">
+            <header class="tv__panel-head"><h2><i class="fas fa-calendar-day"></i> برنامه امروز</h2></header>
+            <div class="tv__today" data-tv-schedule></div>
         </article>
+
     </section>
 
-    <footer class="tv-cmd__ticker" data-tv-ticker aria-live="polite">
-        <span class="tv-cmd__ticker-icon"><i class="fas fa-bullhorn"></i></span>
-        <div class="tv-cmd__ticker-viewport">
-            <div class="tv-cmd__ticker-track" data-tv-ticker-track>اطلاعیه‌ای برای نمایش نیست</div>
+    {# ── ۵) Ticker ── #}
+    <footer class="tv__ticker" data-tv-ticker aria-live="polite">
+        <span class="tv__ticker-ico"><i class="fas fa-trophy"></i></span>
+        <div class="tv__ticker-view">
+            <div class="tv__ticker-track" data-tv-ticker-track>اطلاعیه‌ای برای نمایش نیست</div>
         </div>
     </footer>
 
-    <aside class="tv-cmd__drawer" data-tv-widget-drawer hidden>
-        <div class="tv-cmd__drawer-panel">
-            <header class="tv-cmd__drawer-head">
+    <aside class="tv__drawer" data-tv-widget-drawer hidden>
+        <div class="tv__drawer-box">
+            <header class="tv__drawer-head">
                 <h3>نمایش بخش‌ها</h3>
-                <button type="button" class="tv-cmd__btn" data-tv-widgets-close><i class="fas fa-xmark"></i></button>
+                <button type="button" class="tv__tool" data-tv-widgets-close><i class="fas fa-xmark"></i></button>
             </header>
-            <p class="tv-cmd__drawer-note">KPI و رتبه‌بندی همیشه فعال هستند.</p>
+            <p class="tv__drawer-note">KPI و رتبه‌بندی همیشه فعال هستند.</p>
             <form data-tv-widget-form>
                 {% for w in tv_widgets %}
-                <label class="tv-cmd__check">
+                <label class="tv__check">
                     <input type="checkbox" name="widget" value="{{ w }}" checked>
                     <span>
                         {% if w == 'chart' %}تحلیل عملکرد
@@ -143,14 +146,14 @@
         </div>
     </aside>
 
-    <div class="tv-cmd__fs-overlay" data-tv-fs-overlay hidden>
-        <div class="tv-cmd__fs-panel">
+    <div class="tv__fs" data-tv-fs-overlay hidden>
+        <div class="tv__fs-box">
             <i class="fas fa-tv"></i>
             <p>برای نمایش تلویزیونی کلیک کنید یا <kbd>F11</kbd> را بزنید</p>
-            <button type="button" class="tv-cmd__fs-start" data-tv-fs-start>شروع نمایش</button>
+            <button type="button" class="tv__fs-btn" data-tv-fs-start>شروع نمایش</button>
         </div>
     </div>
-    <p class="tv-cmd__fs-hint" data-tv-fs-hint hidden>برای تمام‌صفحه <kbd>F11</kbd> را بزنید</p>
+    <p class="tv__fs-hint" data-tv-fs-hint hidden>برای تمام‌صفحه <kbd>F11</kbd> را بزنید</p>
 </div>
 
 {{ tv_payload|json_script:"crm-tv-initial" }}
@@ -164,5 +167,5 @@ window.crmTeamTV = {
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=11"></script>
+<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=12"></script>
 {% endblock %}

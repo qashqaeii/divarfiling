@@ -214,7 +214,7 @@
             form.querySelectorAll('input[name="widget"]').forEach(function (inp) {
                 var ok = allowed.indexOf(inp.value) !== -1;
                 inp.disabled = !ok;
-                inp.closest('.tv-cmd__check').hidden = !ok;
+                inp.closest('.tv__check').hidden = !ok;
                 inp.checked = ok && sel.indexOf(inp.value) !== -1;
             });
         }
@@ -226,25 +226,45 @@
             sync.classList.toggle('is-loading', mode === 'loading');
             sync.classList.toggle('is-offline', mode === 'offline');
         }
+        var live = root.querySelector('[data-tv-live-label]');
+        if (live) {
+            live.textContent = mode === 'offline' ? 'آفلاین' : (mode === 'loading' ? 'بروزرسانی' : 'آنلاین');
+        }
         var el = root.querySelector('[data-tv-updated]');
-        if (el && text) el.textContent = text;
+        if (el && text) {
+            el.textContent = mode === 'live' ? 'به‌روز' : text;
+        }
     }
+
+    var KPI_COLORS = {
+        new_leads_today: '#7c3aed',
+        calls_today: '#38bdf8',
+        visits_today: '#f59e0b',
+        followups_today: '#22c55e',
+        active_deals: '#06b6d4',
+        deals_won_today: '#22c55e',
+        commission_month: '#fbbf24',
+        overdue_followups: '#ef4444',
+        inbox_unassigned: '#f59e0b',
+        my_score: '#7c3aed',
+        my_rank: '#fbbf24'
+    };
 
     var KPI_DEFS = {
         manager: [
-            ['new_leads_today', 'سرنخ جدید', 'ok', 'fa-user-plus'],
-            ['overdue_followups', 'پیگیری عقب‌افتاده', 'danger', 'fa-clock'],
-            ['calls_today', 'تماس امروز', 'ok', 'fa-phone'],
-            ['visits_today', 'بازدید امروز', 'ok', 'fa-door-open'],
-            ['deals_won_today', 'قرارداد موفق', 'ok', 'fa-handshake'],
-            ['commission_month', 'کمیسیون ماه', 'ok', 'fa-coins']
+            ['new_leads_today', 'سرنخ جدید امروز', 'ok', 'fa-user-plus'],
+            ['calls_today', 'تماس‌های امروز', 'ok', 'fa-phone'],
+            ['visits_today', 'بازدیدهای امروز', 'ok', 'fa-door-open'],
+            ['followups_today', 'پیگیری‌های امروز', 'ok', 'fa-phone-volume', true],
+            ['active_deals', 'معاملات فعال', 'ok', 'fa-briefcase'],
+            ['commission_month', 'کمیسیون ماه', 'gold', 'fa-coins']
         ],
         secretary: [
-            ['new_leads_today', 'سرنخ جدید', 'ok', 'fa-user-plus'],
-            ['overdue_followups', 'پیگیری عقب‌افتاده', 'danger', 'fa-clock'],
-            ['calls_today', 'تماس', 'ok', 'fa-phone'],
-            ['visits_today', 'بازدید', 'ok', 'fa-door-open'],
-            ['deals_won_today', 'قرارداد', 'ok', 'fa-handshake'],
+            ['new_leads_today', 'سرنخ جدید امروز', 'ok', 'fa-user-plus'],
+            ['calls_today', 'تماس‌های امروز', 'ok', 'fa-phone'],
+            ['visits_today', 'بازدیدهای امروز', 'ok', 'fa-door-open'],
+            ['followups_today', 'پیگیری‌های امروز', 'ok', 'fa-phone-volume', true],
+            ['deals_won_today', 'قرارداد موفق', 'ok', 'fa-handshake'],
             ['inbox_unassigned', 'بدون تخصیص', 'warn', 'fa-inbox']
         ],
         advisor: [
@@ -257,6 +277,15 @@
         ]
     };
 
+    function resolveKpiEntry(data, key, fallbackStatus) {
+        if (key === 'followups_today') {
+            var v = (data.schedule && data.schedule.followups_today) || 0;
+            return { value: v, delta: null, status: fallbackStatus || 'ok' };
+        }
+        var kpis = data.kpis || {};
+        return kpis[key] || { value: 0, delta: null, status: fallbackStatus || 'ok' };
+    }
+
     function formatKpiValue(key, value) {
         if (key === 'commission_month' && value >= 1000000) {
             return toFa(Math.round(value / 1000000)) + 'M';
@@ -268,53 +297,57 @@
         var row = root.querySelector('[data-tv-kpis]');
         if (!row) return;
         var defs = KPI_DEFS[data.role] || KPI_DEFS.advisor;
-        var kpis = data.kpis || {};
 
         defs.forEach(function (def, idx) {
             var key = def[0];
             var card = row.querySelector('[data-kpi="' + key + '"]');
             if (!card) {
                 card = document.createElement('article');
-                card.className = 'tv-cmd__kpi';
+                card.className = 'tv__kpi';
                 card.setAttribute('data-kpi', key);
                 card.innerHTML =
-                    '<span class="tv-cmd__kpi-icon"><i class="fas"></i></span>' +
-                    '<span class="tv-cmd__kpi-val" data-val data-animate-key="kpi-' + key + '">۰</span>' +
-                    '<span class="tv-cmd__kpi-lbl"></span>' +
-                    '<span class="tv-cmd__kpi-delta" data-delta></span>';
+                    '<span class="tv__kpi-icon"><i class="fas"></i></span>' +
+                    '<span class="tv__kpi-val" data-val data-animate-key="kpi-' + key + '">۰</span>' +
+                    '<span class="tv__kpi-lbl"></span>' +
+                    '<span class="tv__kpi-delta" data-delta></span>';
                 row.appendChild(card);
             }
-            card.classList.toggle('tv-cmd__kpi--optional', idx === defs.length - 1);
-            card.querySelector('.tv-cmd__kpi-lbl').textContent = def[1];
-            var icon = card.querySelector('.tv-cmd__kpi-icon i');
+            card.style.setProperty('--kc', KPI_COLORS[key] || '#7c3aed');
+            card.querySelector('.tv__kpi-lbl').textContent = def[1];
+            var icon = card.querySelector('.tv__kpi-icon i');
             if (icon) icon.className = 'fas ' + (def[3] || 'fa-chart-simple');
 
-            var k = kpis[key] || { value: 0, delta: null, status: def[2] };
+            var k = resolveKpiEntry(data, key, def[2]);
             var valEl = card.querySelector('[data-val]');
             animateCount(valEl, Number(k.value) || 0, function (v) { return formatKpiValue(key, v); });
 
-            card.classList.toggle('tv-cmd__kpi--warn', k.status === 'warn');
-            card.classList.toggle('tv-cmd__kpi--danger', k.status === 'danger');
-            card.classList.toggle('tv-cmd__kpi--gold', key === 'commission_month');
+            card.classList.toggle('tv__kpi--warn', k.status === 'warn');
+            card.classList.toggle('tv__kpi--danger', k.status === 'danger');
 
             var dEl = card.querySelector('[data-delta]');
             if (k.delta != null) {
                 var up = k.delta >= 0;
-                dEl.className = 'tv-cmd__kpi-delta tv-cmd__kpi-delta--' + (up ? 'up' : 'down');
-                dEl.innerHTML = '<i class="fas fa-' + (up ? 'arrow-trend-up' : 'arrow-trend-down') + '"></i> ' +
-                    toFa(Math.abs(k.delta)) + '% دیروز';
+                dEl.className = 'tv__kpi-delta tv__kpi-delta--' + (up ? 'up' : 'down');
+                dEl.innerHTML = (up ? '▲ ' : '▼ ') + toFa(Math.abs(k.delta)) + '%';
             } else {
                 dEl.textContent = '';
-                dEl.className = 'tv-cmd__kpi-delta';
+                dEl.className = 'tv__kpi-delta';
             }
         });
     }
 
     function rankBadgeClass(rank) {
-        if (rank === 1) return 'tv-cmd__board-rank--gold';
-        if (rank === 2) return 'tv-cmd__board-rank--silver';
-        if (rank === 3) return 'tv-cmd__board-rank--bronze';
+        if (rank === 1) return 'tv__lb-rank--gold';
+        if (rank === 2) return 'tv__lb-rank--silver';
+        if (rank === 3) return 'tv__lb-rank--bronze';
         return '';
+    }
+
+    function rankDisplay(rank) {
+        if (rank === 1) return '🥇';
+        if (rank === 2) return '🥈';
+        if (rank === 3) return '🥉';
+        return toFa(rank);
     }
 
     function renderLeaderboard(data) {
@@ -322,14 +355,14 @@
         if (!list) return;
         var rows = (data.leaderboard || []).slice(0, maxLeaderboardRows());
         if (!rows.length) {
-            if (!list.querySelector('.tv-cmd__empty-state--inline')) {
+            if (!list.querySelector('.tv__empty--inline')) {
                 list.innerHTML =
-                    '<li class="tv-cmd__empty-state tv-cmd__empty-state--inline">' +
+                    '<li class="tv__empty tv__empty--inline">' +
                     '<i class="fas fa-ranking-star"></i><p>هنوز فعالیتی ثبت نشده</p></li>';
             }
             return;
         }
-        var empty = list.querySelector('.tv-cmd__empty-state--inline');
+        var empty = list.querySelector('.tv__empty--inline');
         if (empty) empty.remove();
 
         rows.forEach(function (r) {
@@ -337,38 +370,32 @@
             var li = list.querySelector('[data-rank="' + key + '"]');
             if (!li) {
                 li = document.createElement('li');
-                li.className = 'tv-cmd__board-row';
+                li.className = 'tv__lb-row';
                 li.setAttribute('data-rank', key);
                 li.innerHTML =
-                    '<span class="tv-cmd__board-rank"></span>' +
-                    '<span class="tv-cmd__board-avatar"></span>' +
-                    '<div class="tv-cmd__board-info">' +
-                    '<div class="tv-cmd__board-name"></div>' +
-                    '<div class="tv-cmd__board-role"></div>' +
-                    '<div class="tv-cmd__board-bar"><i></i></div>' +
+                    '<span class="tv__lb-rank"></span>' +
+                    '<span class="tv__lb-avatar"></span>' +
+                    '<div class="tv__lb-body">' +
+                    '<div class="tv__lb-name"></div>' +
+                    '<div class="tv__lb-role"></div>' +
+                    '<div class="tv__lb-bar"><span></span></div>' +
                     '</div>' +
-                    '<span class="tv-cmd__board-score" data-animate-key="score-' + key + '"></span>';
+                    '<span class="tv__lb-score" data-animate-key="score-' + key + '"></span>';
                 list.appendChild(li);
             }
 
-            li.classList.toggle('tv-cmd__board-row--top', r.rank === 1);
-            li.classList.toggle('tv-cmd__board-row--second', r.rank === 2);
-            li.classList.toggle('tv-cmd__board-row--third', r.rank === 3);
+            li.className = 'tv__lb-row' + (r.rank === 1 ? ' tv__lb-row--top' : '');
 
-            var rankEl = li.querySelector('.tv-cmd__board-rank');
-            rankEl.textContent = toFa(r.rank);
-            rankEl.className = 'tv-cmd__board-rank ' + rankBadgeClass(r.rank);
+            var rankEl = li.querySelector('.tv__lb-rank');
+            rankEl.textContent = rankDisplay(r.rank);
+            rankEl.className = 'tv__lb-rank ' + rankBadgeClass(r.rank);
 
-            li.querySelector('.tv-cmd__board-avatar').textContent = initials(r.name);
-            li.querySelector('.tv-cmd__board-name').textContent = r.name;
-            li.querySelector('.tv-cmd__board-role').textContent = r.role;
+            li.querySelector('.tv__lb-avatar').textContent = initials(r.name);
+            li.querySelector('.tv__lb-name').textContent = r.name;
+            li.querySelector('.tv__lb-role').textContent = r.role;
 
-            var barInner = li.querySelector('.tv-cmd__board-bar i');
-            var pct = r.score_pct || 0;
-            barInner.style.width = pct + '%';
-
-            var scoreEl = li.querySelector('.tv-cmd__board-score');
-            animateCount(scoreEl, Number(r.score) || 0);
+            li.querySelector('.tv__lb-bar span').style.width = (r.score_pct || 0) + '%';
+            animateCount(li.querySelector('.tv__lb-score'), Number(r.score) || 0);
         });
 
         list.querySelectorAll('[data-rank]').forEach(function (li) {
@@ -494,9 +521,9 @@
         pillsEl.innerHTML = series.map(function (s, idx) {
             var hidden = state.seriesHidden[s.key];
             return (
-                '<button type="button" class="tv-cmd__chip' + (hidden ? ' is-off' : '') + '" ' +
+                '<button type="button" class="tv__chip' + (hidden ? ' is-off' : '') + '" ' +
                 'data-series-idx="' + idx + '" data-series-key="' + esc(s.key) + '" ' +
-                'style="--chip-color:' + s.color + '" aria-pressed="' + (!hidden) + '">' +
+                'style="--cc:' + s.color + '" aria-pressed="' + (!hidden) + '">' +
                 '<i></i><span>' + esc(s.label) + '</span>' +
                 '<b>' + toFa(s.total || 0) + '</b>' +
                 '</button>'
@@ -521,6 +548,13 @@
         });
     }
 
+    var SUMMARY_LABELS = {
+        calls: 'کل تماس',
+        leads: 'کل لید',
+        visits: 'کل بازدید',
+        deals: 'کل قرارداد'
+    };
+
     function renderTrendKpis(series, activityTotal) {
         var el = root.querySelector('[data-tv-trend-kpis]');
         if (!el) return;
@@ -530,17 +564,12 @@
         }
 
         el.innerHTML = series.map(function (s) {
-            var pct = s.share_pct || 0;
+            var lbl = SUMMARY_LABELS[s.key] || s.label;
             return (
-                '<div class="tv-cmd__summary-card" style="--sc-color:' + s.color + '">' +
-                '<div class="tv-cmd__summary-card-head">' +
-                '<span><i></i>' + esc(s.label) + '</span>' +
-                '<strong>' + toFa(s.total || 0) + '</strong>' +
-                '</div>' +
-                '<div class="tv-cmd__summary-card-bar"><i style="width:' + pct + '%"></i></div>' +
-                '<div class="tv-cmd__summary-card-foot">' +
-                toFa(pct) + '% از کل' +
-                '</div></div>'
+                '<div class="tv__sum" style="--sc:' + s.color + '">' +
+                '<span class="tv__sum-lbl">' + esc(lbl) + '</span>' +
+                '<span class="tv__sum-val">' + toFa(s.total || 0) + '</span>' +
+                '</div>'
             );
         }).join('');
     }
@@ -682,22 +711,17 @@
         });
         if (!slices.length) {
             legend.innerHTML =
-                '<div class="tv-cmd__empty-state tv-cmd__empty-state--inline">' +
+                '<div class="tv__empty tv__empty--inline">' +
                 '<i class="fas fa-users"></i><p>مخاطبی ثبت نشده</p></div>';
             return;
         }
 
         legend.innerHTML = slices.map(function (sl) {
             return (
-                '<div class="tv-cmd__audience-item" style="--c:' + sl.color + '">' +
-                '<span class="tv-cmd__audience-dot"></span>' +
-                '<div class="tv-cmd__audience-body">' +
-                '<em>' + esc(sl.label) + '</em>' +
-                '<span class="tv-cmd__audience-meta">' +
-                '<b>' + toFa(sl.value || 0) + '</b>' +
-                '<i>(' + toFa(sl.pct || 0) + '%)</i>' +
-                '</span></div>' +
-                '<div class="tv-cmd__audience-bar"><span style="width:' + (sl.pct || 0) + '%"></span></div>' +
+                '<div class="tv__leg" style="--c:' + sl.color + '">' +
+                '<span class="tv__leg-dot"></span>' +
+                '<span class="tv__leg-lbl">' + esc(sl.label) + '</span>' +
+                '<span class="tv__leg-val"><small>(' + toFa(sl.pct || 0) + '%)</small>' + toFa(sl.value || 0) + '</span>' +
                 '</div>'
             );
         }).join('');
@@ -708,36 +732,28 @@
         renderTrendChart(chart);
         renderDonutChart(chart.doughnut);
         renderChartLegend(chart);
-
-        var sub = root.querySelector('[data-tv-chart-subtitle]');
-        if (sub) {
-            var total = chart.activity_total || 0;
-            sub.textContent = total
-                ? toFa(total) + ' فعالیت در ۷ روز · توزیع مخاطبین'
-                : 'توزیع مخاطبین · روند ۷ روزه';
-        }
     }
 
     function goalStatusClass(g) {
-        if (g.completed) return ' tv-cmd__goal-bar--done';
-        if (g.status === 'warn') return ' tv-cmd__goal-bar--warn';
-        if (g.status === 'low') return ' tv-cmd__goal-bar--low';
+        if (g.completed) return ' tv__goal-bar--done';
+        if (g.status === 'warn') return ' tv__goal-bar--warn';
+        if (g.status === 'low') return ' tv__goal-bar--low';
         return '';
     }
 
     function renderGoals(data) {
         var el = root.querySelector('[data-tv-goals]');
         if (!el) return;
-        var goals = (data.goals || []).slice(0, 4);
+        var goals = (data.goals || []).slice(0, 3);
         if (!goals.length) {
-            if (!el.querySelector('.tv-cmd__empty-state--inline')) {
+            if (!el.querySelector('.tv__empty--inline')) {
                 el.innerHTML =
-                    '<div class="tv-cmd__empty-state tv-cmd__empty-state--inline">' +
+                    '<div class="tv__empty tv__empty--inline">' +
                     '<i class="fas fa-bullseye"></i><p>هدفی ثبت نشده</p></div>';
             }
             return;
         }
-        var empty = el.querySelector('.tv-cmd__empty-state--inline');
+        var empty = el.querySelector('.tv__empty--inline');
         if (empty) empty.remove();
 
         var minDays = null;
@@ -748,21 +764,21 @@
             var node = el.querySelector('[data-goal="' + g.goal_key + '"]');
             if (!node) {
                 node = document.createElement('div');
-                node.className = 'tv-cmd__goal';
+                node.className = 'tv__goal';
                 node.setAttribute('data-goal', g.goal_key);
                 node.innerHTML =
-                    '<div class="tv-cmd__goal-head">' +
-                    '<span class="tv-cmd__goal-title"></span>' +
-                    '<span class="tv-cmd__goal-metrics"><b data-pct></b><span data-act></span></span>' +
+                    '<div class="tv__goal-top">' +
+                    '<span class="tv__goal-title"></span>' +
+                    '<span class="tv__goal-nums"><span data-act></span><b data-pct></b></span>' +
                     '</div>' +
-                    '<div class="tv-cmd__goal-bar"><i></i></div>';
+                    '<div class="tv__goal-bar"><span></span></div>';
                 el.appendChild(node);
             }
-            node.classList.toggle('tv-cmd__goal--done', !!g.completed);
-            node.querySelector('.tv-cmd__goal-title').textContent = g.title;
-            var bar = node.querySelector('.tv-cmd__goal-bar');
-            bar.className = 'tv-cmd__goal-bar' + goalStatusClass(g);
-            bar.querySelector('i').style.width = g.pct + '%';
+            node.classList.toggle('tv__goal--done', !!g.completed);
+            node.querySelector('.tv__goal-title').textContent = g.title;
+            var bar = node.querySelector('.tv__goal-bar');
+            bar.className = 'tv__goal-bar' + goalStatusClass(g);
+            bar.querySelector('span').style.width = g.pct + '%';
             node.querySelector('[data-act]').textContent = toFa(g.actual) + ' / ' + toFa(g.target);
             node.querySelector('[data-pct]').textContent = toFa(g.pct) + '%';
         });
@@ -771,55 +787,65 @@
         if (minDays != null) {
             if (!foot) {
                 foot = document.createElement('p');
-                foot.className = 'tv-cmd__goals-foot';
+                foot.className = 'tv__goals-foot';
                 foot.setAttribute('data-tv-goals-foot', '');
                 el.appendChild(foot);
             }
-            foot.innerHTML = '<i class="fas fa-hourglass-half"></i> ' + toFa(minDays) + ' روز تا پایان ماه';
+            foot.innerHTML = toFa(minDays) + ' روز تا پایان ماه';
             foot.hidden = false;
         } else if (foot) {
             foot.hidden = true;
         }
     }
 
+    function activityTone(key) {
+        if (!key) return 'sys';
+        if (key.indexOf('visit') === 0) return 'visit';
+        if (key.indexOf('deal') === 0) return 'deal';
+        if (key.indexOf('audit') === 0) return 'lead';
+        return 'sys';
+    }
+
     function activityIcon(key) {
-        if (!key) return 'fa-bolt';
-        if (key.indexOf('audit') === 0) return 'fa-user-plus';
         if (key.indexOf('visit') === 0) return 'fa-door-open';
         if (key.indexOf('deal') === 0) return 'fa-handshake';
-        return 'fa-circle-dot';
+        if (key.indexOf('audit') === 0) return 'fa-user-plus';
+        return 'fa-bolt';
     }
 
     function renderActivity(data) {
         var list = root.querySelector('[data-tv-activity]');
         if (!list) return;
-        var items = (data.activity || []).slice(0, 5);
+        var items = (data.activity || []).slice(0, 6);
         if (!items.length) {
-            if (!list.querySelector('.tv-cmd__empty-state--inline')) {
+            if (!list.querySelector('.tv__empty--inline')) {
                 list.innerHTML =
-                    '<li class="tv-cmd__empty-state tv-cmd__empty-state--inline">' +
+                    '<li class="tv__empty tv__empty--inline">' +
                     '<i class="fas fa-bolt"></i><p>رویدادی نیست</p></li>';
             }
             return;
         }
-        var empty = list.querySelector('.tv-cmd__empty-state--inline');
+        var empty = list.querySelector('.tv__empty--inline');
         if (empty) empty.remove();
 
         items.forEach(function (a) {
             var li = list.querySelector('[data-act-key="' + a.key + '"]');
+            var tone = activityTone(a.key);
             if (!li) {
                 li = document.createElement('li');
-                li.className = 'tv-cmd__feed-item';
+                li.className = 'tv__tl';
                 li.setAttribute('data-act-key', a.key);
                 li.innerHTML =
-                    '<span class="tv-cmd__feed-icon"><i class="fas"></i></span>' +
-                    '<div class="tv-cmd__feed-body">' +
-                    '<span class="tv-cmd__feed-text" data-txt></span>' +
-                    '<span class="tv-cmd__feed-time" data-time></span>' +
+                    '<span class="tv__tl-ico"><i class="fas"></i></span>' +
+                    '<div class="tv__tl-body">' +
+                    '<span class="tv__tl-text" data-txt></span>' +
+                    '<span class="tv__tl-time" data-time></span>' +
                     '</div>';
                 list.appendChild(li);
             }
-            li.querySelector('.tv-cmd__feed-icon i').className = 'fas ' + activityIcon(a.key);
+            var ico = li.querySelector('.tv__tl-ico');
+            ico.className = 'tv__tl-ico tv__tl-ico--' + tone;
+            ico.querySelector('i').className = 'fas ' + activityIcon(a.key);
             li.querySelector('[data-txt]').textContent = a.text;
             li.querySelector('[data-time]').textContent = relativeTimeFromClock(a.time) || a.time || '';
         });
@@ -845,28 +871,32 @@
 
         if (!hasAny && !hint) {
             el.innerHTML =
-                '<div class="tv-cmd__empty-state tv-cmd__empty-state--inline">' +
+                '<div class="tv__empty tv__empty--inline">' +
                 '<i class="fas fa-calendar-day"></i><p>برنامه‌ای برای امروز ثبت نشده</p></div>';
             return;
         }
 
-        var html = '<div class="tv-cmd__sched-list">';
+        var html = '<div class="tv__today">';
         rows.forEach(function (r) {
             html +=
-                '<div class="tv-cmd__sched-row tv-cmd__sched-row--' + r.tone + '" data-sched="' + r.key + '">' +
-                '<span class="tv-cmd__sched-icon"><i class="fas ' + r.icon + '"></i></span>' +
-                '<div class="tv-cmd__sched-body">' +
-                '<span class="tv-cmd__sched-label">' + r.label + '</span>' +
-                '<span class="tv-cmd__sched-val">' + toFa(r.val) + '</span>' +
-                '</div>' +
-                '<span class="tv-cmd__sched-dot' + (r.val > 0 ? ' is-active' : '') + '"></span>' +
+                '<div class="tv__today-row tv__today-row--' + r.tone + '" data-sched="' + r.key + '">' +
+                '<span class="tv__today-ico"><i class="fas ' + r.icon + '"></i></span>' +
+                '<span class="tv__today-lbl">' + r.label + '</span>' +
+                '<span class="tv__today-val">' + toFa(r.val) + '</span>' +
+                '<span class="tv__today-dot' + (r.val > 0 ? ' is-on' : '') + '"></span>' +
                 '</div>';
         });
         if (hint) {
-            html += '<p class="tv-cmd__sched-hint"><i class="fas fa-circle-info"></i> ' + esc(hint) + '</p>';
+            html += '<p class="tv__today-hint">' + esc(hint) + '</p>';
         }
         html += '</div>';
         if (el.innerHTML !== html) el.innerHTML = html;
+    }
+
+    function alertEmoji(level) {
+        if (level === 'danger') return '🔴';
+        if (level === 'warn') return '🟠';
+        return '🟢';
     }
 
     function renderAlerts(data) {
@@ -876,7 +906,8 @@
         if (!alerts.length) { strip.hidden = true; strip.innerHTML = ''; return; }
         strip.hidden = false;
         strip.innerHTML = alerts.map(function (a) {
-            return '<span class="tv-cmd__alert-pill tv-cmd__alert-pill--' + esc(a.level) + '">' + esc(a.text) + '</span>';
+            return '<span class="tv__alert tv__alert--' + esc(a.level) + '">' +
+                alertEmoji(a.level) + ' ' + esc(a.text) + '</span>';
         }).join('');
     }
 
@@ -885,7 +916,7 @@
         if (!track) return;
         var items = data.announcements || [];
         if (!items.length) {
-            track.className = 'tv-cmd__ticker-track tv-cmd__ticker-track--static';
+            track.className = 'tv__ticker-track tv__ticker-track--static';
             track.textContent = 'اطلاعیه فعالی نیست';
             return;
         }
@@ -894,9 +925,9 @@
             var imp = a.importance === 'urgent' ? '⚠ ' : (a.importance === 'high' ? '● ' : '');
             return pin + imp + a.title + (a.preview ? ' — ' + a.preview : '');
         });
-        var text = parts.join('    ·    ');
-        track.className = 'tv-cmd__ticker-track' + (parts.length < 2 ? ' tv-cmd__ticker-track--static' : '');
-        if (parts.length >= 2) text = text + '    ·    ' + text;
+        var text = '🏆  ' + parts.join('    •    ');
+        track.className = 'tv__ticker-track' + (parts.length < 2 ? ' tv__ticker-track--static' : '');
+        if (parts.length >= 2) text = text + '    •    ' + text;
         track.textContent = text;
     }
 
@@ -911,7 +942,7 @@
             var img = logoWrap.querySelector('[data-tv-agency-logo]');
             if (!img) {
                 img = document.createElement('img');
-                img.className = 'tv-cmd__logo tv-cmd__logo--img';
+                img.className = 'tv__logo tv__logo--img';
                 img.setAttribute('data-tv-agency-logo', '');
                 img.width = 48;
                 img.height = 48;
@@ -1034,6 +1065,11 @@
             resizeCharts();
         });
 
+        var theme = root.querySelector('[data-tv-theme]');
+        if (theme) theme.addEventListener('click', function () {
+            root.classList.toggle('tv--bright');
+        });
+
         var drawer = root.querySelector('[data-tv-widget-drawer]');
         root.querySelector('[data-tv-widgets]')?.addEventListener('click', function () { if (drawer) drawer.hidden = false; });
         root.querySelector('[data-tv-widgets-close]')?.addEventListener('click', function () { if (drawer) drawer.hidden = true; });
@@ -1054,10 +1090,10 @@
 
         var hideTimer;
         root.addEventListener('mousemove', function () {
-            root.classList.remove('tv-cmd--fs-hide-chrome');
+            root.classList.remove('tv--fs-hide');
             clearTimeout(hideTimer);
             if (document.fullscreenElement) {
-                hideTimer = setTimeout(function () { root.classList.add('tv-cmd--fs-hide-chrome'); }, 4000);
+                hideTimer = setTimeout(function () { root.classList.add('tv--fs-hide'); }, 4000);
             }
         });
     }

@@ -414,12 +414,49 @@ body.crm-tv-body {
     padding: clamp(8px, 0.85vh, 12px) clamp(10px, 0.85vw, 14px);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: hidden;
     transition: border-color 0.25s var(--ease);
+}
+
+/* اسکرول عمودی در بدنه کارت‌ها — بدون نمایش اسکرولر، بدون اسکرول افقی */
+.lcc-card :where(
+    .lcc-lb,
+    .lcc-goals,
+    .lcc-feed,
+    .lcc-today,
+    .lcc-ann,
+    .lcc-donut__legend
+) {
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.lcc-card :where(
+    .lcc-lb,
+    .lcc-goals,
+    .lcc-feed,
+    .lcc-today,
+    .lcc-ann,
+    .lcc-donut__legend
+)::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 .lcc-card:hover { border-color: rgba(148, 163, 184, 0.22); }
 .lcc-card[hidden] { display: none !important; }
+
+.lcc-card > :not(.lcc-card__head) {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow-x: hidden;
+}
 
 .lcc-card__head {
     display: flex;
@@ -561,7 +598,7 @@ body.crm-tv-body {
     display: flex;
     flex-direction: column;
     gap: clamp(5px, 0.55vh, 8px);
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 .lcc-lb__row {
@@ -738,6 +775,12 @@ body.crm-tv-body {
 
 .lcc-donut__center[hidden] { display: none !important; }
 
+.lcc-donut__center.is-hidden-hover {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
 .lcc-donut__total {
     font-size: clamp(1.45rem, 3.2vh, 2.15rem);
     font-weight: 800;
@@ -760,9 +803,7 @@ body.crm-tv-body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(4px, 0.45vh, 6px);
     max-height: clamp(90px, 14vh, 132px);
-    overflow: hidden auto;
     padding: 0;
-    scrollbar-width: thin;
 }
 
 .lcc-leg {
@@ -833,7 +874,6 @@ body.crm-tv-body {
     display: flex;
     flex-direction: column;
     gap: clamp(5px, 0.5vh, 8px);
-    overflow: hidden;
 }
 
 .lcc-goal {
@@ -915,7 +955,6 @@ body.crm-tv-body {
     margin: 0;
     padding: 0;
     flex: 1;
-    overflow: hidden;
 }
 
 .lcc-feed__item {
@@ -963,7 +1002,6 @@ body.crm-tv-body {
     display: flex;
     flex-direction: column;
     gap: clamp(4px, 0.45vh, 6px);
-    overflow: hidden;
 }
 
 .lcc-today__row {
@@ -1036,7 +1074,6 @@ body.crm-tv-body {
     display: flex;
     flex-direction: column;
     gap: clamp(5px, 0.5vh, 7px);
-    overflow: hidden;
 }
 
 .lcc-ann__item {

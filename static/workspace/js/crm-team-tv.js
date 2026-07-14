@@ -17,8 +17,8 @@
         text: '#94a3b8',
         textBright: '#f8fafc',
         grid: 'rgba(148, 163, 184, 0.08)',
-        tooltipBg: 'rgba(15, 23, 42, 0.96)',
-        tooltipBorder: 'rgba(124, 58, 237, 0.35)',
+        tooltipBg: '#0f172a',
+        tooltipBorder: '#475569',
         tooltipText: '#f8fafc'
     };
 
@@ -492,6 +492,34 @@
         });
     }
 
+    function bindDonutCenterHover(canvas) {
+        var centerEl = root.querySelector('[data-tv-donut-center]');
+        if (!canvas || !centerEl || canvas._tvCenterHoverBound) return;
+        canvas._tvCenterHoverBound = true;
+        canvas.addEventListener('mouseenter', function () {
+            if (!centerEl.hidden) centerEl.classList.add('is-hidden-hover');
+        });
+        canvas.addEventListener('mouseleave', function () {
+            centerEl.classList.remove('is-hidden-hover');
+        });
+    }
+
+    function donutTooltipPosition(items, eventPosition) {
+        var chart = items[0].chart;
+        var area = chart.chartArea;
+        if (!area) return { x: eventPosition.x, y: eventPosition.y };
+        var cx = (area.left + area.right) / 2;
+        var cy = (area.top + area.bottom) / 2;
+        var dx = eventPosition.x - cx;
+        var dy = eventPosition.y - cy;
+        var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        var push = Math.min(area.width, area.height) * 0.22;
+        return {
+            x: eventPosition.x + (dx / dist) * push,
+            y: eventPosition.y + (dy / dist) * push
+        };
+    }
+
     function setDonutCenter(doughnut, total, isEmpty) {
         var centerEl = root.querySelector('[data-tv-donut-center]');
         var valEl = root.querySelector('[data-tv-donut-center-val]');
@@ -524,6 +552,7 @@
 
         if (title) title.textContent = doughnut.heading || doughnut.title || 'توزیع مخاطبین';
         setDonutCenter(doughnut, total, isEmpty);
+        bindDonutCenterHover(canvas);
 
         canvas.hidden = isEmpty;
         if (emptyEl) emptyEl.hidden = !isEmpty;
@@ -578,10 +607,12 @@
                         bodyColor: CHART_THEME.tooltipText,
                         borderColor: CHART_THEME.tooltipBorder,
                         borderWidth: 1,
-                        padding: 12,
-                        cornerRadius: 10,
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: true,
                         rtl: true,
                         textDirection: 'rtl',
+                        position: donutTooltipPosition,
                         callbacks: {
                             label: function (ctx) {
                                 var pct = total ? Math.round(ctx.parsed / total * 100) : 0;

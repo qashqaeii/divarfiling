@@ -289,3 +289,88 @@ class CRMAgencyTVHardeningTests(TestCase):
 
     def test_feature_flag_enabled_by_default(self):
         self.assertTrue(is_agency_feature_enabled('tv_mode', self.agency))
+
+    def test_commission_month_delta_for_manager(self):
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        self.assertIn('commission_month', payload['kpis'])
+        self.assertIn('delta', payload['kpis']['commission_month'])
+
+    def test_commission_month_absent_for_secretary(self):
+        payload = get_tv_dashboard_payload(self.secretary, use_cache=False)
+        self.assertNotIn('commission_month', payload['kpis'])
+
+    def test_leaderboard_avatar_url_from_consultant_photo(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from workspace.models import WorkspaceSettings
+
+        ws, _ = WorkspaceSettings.objects.get_or_create(user=self.owner)
+        ws.consultant_photo = SimpleUploadedFile('photo.jpg', b'\xff\xd8\xff', content_type='image/jpeg')
+        ws.save()
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        top = payload['leaderboard'][0]
+        self.assertTrue(top.get('avatar_url'))
+        self.assertIn('initials', top)
+
+    def test_chart_has_activity_when_visit_exists(self):
+        from workspace.models import Customer, PropertyVisit
+
+        customer = Customer.objects.create(
+            agency=self.agency, user=self.owner, name='X', phone='09123334444',
+        )
+        PropertyVisit.objects.create(
+            user=self.owner,
+            customer=customer,
+            visit_date=timezone.now().date(),
+        )
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        chart = payload['chart']
+        self.assertGreater(chart['activity_total'], 0)
+        self.assertGreater(chart['summary'][1]['total'], 0)
+
+    def test_schedule_summary_truncated(self):
+        from workspace.models import Customer, PropertyVisit
+
+        customer = Customer.objects.create(
+            agency=self.agency, user=self.owner, name='X', phone='09124445555',
+        )
+        long_title = 'واقعی و تکرارنشدنی(ویوی کل تهران)فقط ۹۲ متر و توضیحات اضافه برای تست'
+        PropertyVisit.objects.create(
+            user=self.owner,
+            customer=customer,
+            visit_date=timezone.now().date(),
+            listing_title=long_title,
+        )
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        item = payload['schedule']['items'][0]
+        self.assertLessEqual(len(item['summary']), 55)
+        self.assertNotEqual(item['summary'], long_title)
+
+    def test_goals_separate_pct_and_period_note(self):
+        CRMAgencyTeamGoal.objects.create(
+            agency=self.agency,
+            member=None,
+            metric='calls',
+            target_value=10,
+            period_start=timezone.now().date(),
+            period_end=timezone.now().date() + timedelta(days=5),
+        )
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        goal = payload['goals'][0]
+        self.assertIn('period_note', goal)
+        self.assertIn('pct', goal)
+        self.assertIn('actual', goal)
+        self.assertIn('target', goal)
+
+    def test_donut_total_matches_slices(self):
+        Customer.objects.create(
+            agency=self.agency, user=self.owner, name='A', phone='09125556666',
+            customer_type='مالک',
+        )
+        Customer.objects.create(
+            agency=self.agency, user=self.owner, name='B', phone='09126667777',
+            customer_type='خریدار',
+        )
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        donut = payload['chart']['doughnut']
+        slice_total = sum(s['value'] for s in donut['slices'] if s['label'] != 'بدون مخاطب')
+        self.assertEqual(donut['center_value'], slice_total)

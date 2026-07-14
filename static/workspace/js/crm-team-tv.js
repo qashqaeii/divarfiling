@@ -145,6 +145,62 @@
         return isCompactViewport() ? 4 : 5;
     }
 
+    function toNum(v) {
+        var n = Number(v);
+        return isNaN(n) ? 0 : n;
+    }
+
+    function chartHasTrendData(chart) {
+        var points = chart.points || [];
+        if (!points.length) return false;
+        var series = chart.series || [];
+        var i;
+        for (i = 0; i < points.length; i++) {
+            var p = points[i];
+            var j;
+            for (j = 0; j < series.length; j++) {
+                if (toNum(p[series[j].key]) > 0) return true;
+            }
+        }
+        var summary = chart.summary || [];
+        for (i = 0; i < summary.length; i++) {
+            if (toNum(summary[i].total) > 0) return true;
+        }
+        return toNum(chart.activity_total) > 0;
+    }
+
+    function formatCommission(value) {
+        var v = toNum(value);
+        if (v >= 1000000000) {
+            return toFa(Math.round(v / 1000000000 * 10) / 10) + ' میلیارد';
+        }
+        if (v >= 1000000) {
+            return toFa(Math.round(v / 1000000 * 10) / 10) + ' میلیون';
+        }
+        return toFa(v) + ' تومان';
+    }
+
+    function kpiDeltaLabel(key) {
+        if (key === 'commission_month') return 'نسبت به ماه قبل';
+        return 'نسبت به دیروز';
+    }
+
+    function clampText(text, maxLen) {
+        var s = String(text || '').trim();
+        if (s.length <= maxLen) return s;
+        return s.slice(0, maxLen - 1) + '…';
+    }
+
+    function setLbAvatar(el, row) {
+        if (!el) return;
+        if (row.avatar_url) {
+            el.className = 'lcc-lb__avatar lcc-lb__avatar--img';
+            el.innerHTML = '<img src="' + esc(row.avatar_url) + '" alt="" loading="lazy">';
+        } else {
+            el.className = 'lcc-lb__avatar';
+            el.textContent = row.initials || initials(row.name);
+        }
+    }
     function softChartMax(values) {
         var filtered = values.filter(function (v) { return v > 0; }).sort(function (a, b) { return a - b; });
         if (!filtered.length) return 1;
@@ -300,21 +356,19 @@
     }
 
     function formatKpiValue(key, value) {
-        if (key === 'commission_month') {
-            if (value >= 1000000) return toFa(Math.round(value / 1000000 * 10) / 10);
-            return toFa(value);
-        }
+        if (key === 'commission_month') return formatCommission(value);
         return toFa(value);
     }
 
     function kpiHasUnit(key) {
-        return key === 'commission_month';
+        return false;
     }
 
     function renderKpis(data) {
         var row = root.querySelector('[data-tv-kpis]');
         if (!row) return;
         var defs = KPI_DEFS[data.role] || KPI_DEFS.advisor;
+        row.style.setProperty('--kpi-cols', String(defs.length));
 
         defs.forEach(function (def) {
             var key = def[0];
@@ -330,6 +384,7 @@
                     '<span class="lcc-kpi__delta" data-delta></span>';
                 row.appendChild(card);
             }
+            card.hidden = false;
             card.style.setProperty('--kc', KPI_COLORS[key] || '#7c3aed');
             card.querySelector('.lcc-kpi__label').textContent = def[1];
             var icon = card.querySelector('.lcc-kpi__icon i');
@@ -337,17 +392,16 @@
 
             var k = resolveKpiEntry(data, key, def[2]);
             var valEl = card.querySelector('[data-val]');
-            var num = Number(k.value) || 0;
+            var num = toNum(k.value);
             var unitEl = card.querySelector('.lcc-kpi__unit');
             if (unitEl) unitEl.remove();
-            animateCount(valEl, num, function (v) {
-                if (kpiHasUnit(key) && v >= 1000000) {
-                    return formatKpiValue(key, v) + 'M';
-                }
-                return formatKpiValue(key, v);
-            });
-            if (kpiHasUnit(key) && num >= 1000000) {
-                valEl.insertAdjacentHTML('beforeend', '<span class="lcc-kpi__unit">تومان</span>');
+
+            if (key === 'commission_month') {
+                valEl.textContent = formatCommission(num);
+                valEl.setAttribute('data-num', String(num));
+                state.numCache['kpi-' + key] = num;
+            } else {
+                animateCount(valEl, num, function (v) { return formatKpiValue(key, v); });
             }
 
             card.classList.toggle('lcc-kpi--warn', k.status === 'warn');
@@ -357,11 +411,16 @@
             if (k.delta != null) {
                 var up = k.delta >= 0;
                 dEl.className = 'lcc-kpi__delta lcc-kpi__delta--' + (up ? 'up' : 'down');
-                dEl.innerHTML = (up ? '▲ ' : '▼ ') + toFa(Math.abs(k.delta)) + '% نسبت به دیروز';
+                dEl.innerHTML = (up ? '▲ ' : '▼ ') + toFa(Math.abs(k.delta)) + '% ' + kpiDeltaLabel(key);
             } else {
                 dEl.textContent = '';
                 dEl.className = 'lcc-kpi__delta';
             }
+        });
+
+        row.querySelectorAll('[data-kpi]').forEach(function (card) {
+            var k = card.getAttribute('data-kpi');
+            if (!defs.some(function (d) { return d[0] === k; })) card.remove();
         });
     }
 
@@ -419,7 +478,7 @@
             rankEl.textContent = rankDisplay(r.rank);
             rankEl.className = 'lcc-lb__rank ' + rankBadgeClass(r.rank);
 
-            li.querySelector('.lcc-lb__avatar').textContent = initials(r.name);
+            setLbAvatar(li.querySelector('.lcc-lb__avatar'), r);
             li.querySelector('.lcc-lb__name').textContent = r.name;
             li.querySelector('.lcc-lb__role').textContent = r.role;
 
@@ -467,8 +526,8 @@
         var slices = (doughnut.slices || []).filter(function (sl) {
             return sl.value > 0 && sl.label !== 'بدون مخاطب';
         });
-        var total = slices.reduce(function (sum, sl) { return sum + sl.value; }, 0);
-        var isEmpty = !total;
+        var total = slices.reduce(function (sum, sl) { return sum + toNum(sl.value); }, 0);
+        var isEmpty = total <= 0;
 
         if (title) title.textContent = doughnut.heading || doughnut.title || 'توزیع مخاطبین';
         state.donutCenter = {
@@ -487,7 +546,7 @@
         }
 
         var labels = slices.map(function (sl) { return sl.label; });
-        var values = slices.map(function (sl) { return sl.value; });
+        var values = slices.map(function (sl) { return toNum(sl.value); });
         var colors = slices.map(function (sl) { return sl.color; });
         var borderColors = colors.map(function (c) { return hexToRgba(c, 0.35); });
 
@@ -497,6 +556,8 @@
             state.donutChart.data.datasets[0].backgroundColor = colors;
             state.donutChart.data.datasets[0].borderColor = borderColors;
             state.donutChart.update('none');
+            canvas.hidden = false;
+            if (emptyEl) emptyEl.hidden = true;
             return;
         }
 
@@ -517,7 +578,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '70%',
+                cutout: '58%',
                 animation: { animateRotate: true, duration: 700, easing: 'easeOutQuart' },
                 plugins: {
                     legend: { display: false },
@@ -608,13 +669,12 @@
             { key: 'followups', color: '#22c55e', label: 'پیگیری' },
             { key: 'leads', color: '#7c3aed', label: 'لید' }
         ];
-        var activityTotal = chart.activity_total || 0;
         var allVals = [];
         points.forEach(function (p) {
-            series.forEach(function (s) { allVals.push(p[s.key] || 0); });
+            series.forEach(function (s) { allVals.push(toNum(p[s.key])); });
         });
         var suggestedMax = Math.ceil(softChartMax(allVals));
-        var isEmpty = !activityTotal || !points.length;
+        var isEmpty = !chartHasTrendData(chart);
 
         bindTrendLegend(series);
         renderTrendKpis(chart);
@@ -633,7 +693,7 @@
         var datasets = series.map(function (s, idx) {
             return {
                 label: s.label,
-                data: points.map(function (p) { return p[s.key] || 0; }),
+                data: points.map(function (p) { return toNum(p[s.key]); }),
                 borderColor: s.color,
                 backgroundColor: function (ctx) { return lineAreaGradient(ctx.chart, s.color); },
                 borderWidth: 2.5,
@@ -656,6 +716,8 @@
             });
             state.trendChart.options.scales.y.suggestedMax = suggestedMax;
             state.trendChart.update('none');
+            canvas.hidden = false;
+            if (emptyEl) emptyEl.hidden = true;
             return;
         }
 
@@ -775,10 +837,12 @@
         var empty = el.querySelector('.lcc-empty--inline');
         if (empty) empty.remove();
 
-        var minDays = null;
+        var footNote = null;
+        var footDays = null;
         goals.forEach(function (g) {
-            if (!g.completed && g.days_left != null) {
-                minDays = minDays == null ? g.days_left : Math.min(minDays, g.days_left);
+            if (g.period_note && (footDays == null || (g.days_left != null && g.days_left <= footDays))) {
+                footDays = g.days_left;
+                footNote = g.period_note;
             }
             var node = el.querySelector('[data-goal="' + g.goal_key + '"]');
             if (!node) {
@@ -786,10 +850,11 @@
                 node.className = 'lcc-goal';
                 node.setAttribute('data-goal', g.goal_key);
                 node.innerHTML =
-                    '<div class="lcc-goal__top">' +
+                    '<div class="lcc-goal__head">' +
                     '<span class="lcc-goal__title"></span>' +
-                    '<span class="lcc-goal__nums"><span data-act></span><b data-pct></b></span>' +
+                    '<span class="lcc-goal__pct" data-pct></span>' +
                     '</div>' +
+                    '<div class="lcc-goal__meta"><span data-act></span></div>' +
                     '<div class="lcc-goal__bar"><span></span></div>';
                 el.appendChild(node);
             }
@@ -797,20 +862,22 @@
             node.querySelector('.lcc-goal__title').textContent = g.title;
             var bar = node.querySelector('.lcc-goal__bar');
             bar.className = 'lcc-goal__bar' + goalStatusClass(g);
-            bar.querySelector('span').style.width = g.pct + '%';
-            node.querySelector('[data-act]').textContent = toFa(g.actual) + ' / ' + toFa(g.target);
-            node.querySelector('[data-pct]').textContent = toFa(g.pct) + '%';
+            var pct = Math.min(toNum(g.pct), 100);
+            bar.querySelector('span').style.width = pct + '%';
+            node.querySelector('[data-act]').textContent =
+                toFa(g.actual) + ' از ' + toFa(g.target);
+            node.querySelector('[data-pct]').textContent = toFa(g.pct) + '٪';
         });
 
         var foot = el.querySelector('[data-tv-goals-foot]');
-        if (minDays != null) {
+        if (footNote) {
             if (!foot) {
                 foot = document.createElement('p');
                 foot.className = 'lcc-goals__foot';
                 foot.setAttribute('data-tv-goals-foot', '');
                 el.appendChild(foot);
             }
-            foot.textContent = toFa(minDays) + ' روز تا پایان ماه';
+            foot.textContent = footNote;
             foot.hidden = false;
         } else if (foot) {
             foot.hidden = true;
@@ -835,7 +902,7 @@
     function renderActivity(data) {
         var list = root.querySelector('[data-tv-activity]');
         if (!list) return;
-        var items = (data.activity || []).slice(0, 6);
+        var items = (data.activity || []).slice(0, 5);
         if (!items.length) {
             if (!list.querySelector('.lcc-empty--inline')) {
                 list.innerHTML =
@@ -877,11 +944,17 @@
         return 'lcc-today__status lcc-today__status--' + (status || 'pending');
     }
 
+    function scheduleKindIcon(kind) {
+        if (kind === 'followup') return 'fa-phone-volume';
+        if (kind === 'overdue') return 'fa-clock';
+        return 'fa-door-open';
+    }
+
     function renderSchedule(data) {
         var el = root.querySelector('[data-tv-schedule]');
         if (!el) return;
         var s = data.schedule || {};
-        var items = s.items || [];
+        var items = (s.items || []).slice(0, 4);
 
         if (!items.length) {
             var hint = s.next_hint || '';
@@ -890,7 +963,8 @@
                     '<div class="lcc-today">' +
                     '<div class="lcc-today__row">' +
                     '<span class="lcc-today__time">--:--</span>' +
-                    '<span class="lcc-today__title">' + esc(hint) + '</span>' +
+                    '<span class="lcc-today__ico"><i class="fas fa-calendar-day"></i></span>' +
+                    '<span class="lcc-today__title">' + esc(clampText(hint, 55)) + '</span>' +
                     '<span class="lcc-today__status lcc-today__status--pending"></span>' +
                     '</div></div>';
             } else {
@@ -906,7 +980,8 @@
             html +=
                 '<div class="lcc-today__row" data-sched="' + esc(item.key) + '">' +
                 '<span class="lcc-today__time">' + esc(item.time || '--:--') + '</span>' +
-                '<span class="lcc-today__title">' + esc(item.summary || '') + '</span>' +
+                '<span class="lcc-today__ico"><i class="fas ' + scheduleKindIcon(item.kind) + '"></i></span>' +
+                '<span class="lcc-today__title">' + esc(clampText(item.summary || '', 55)) + '</span>' +
                 '<span class="' + scheduleStatusClass(item.status) + '"></span>' +
                 '</div>';
         });
@@ -917,7 +992,7 @@
     function renderAnnouncements(data) {
         var el = root.querySelector('[data-tv-announcements]');
         if (!el) return;
-        var items = (data.announcements || []).slice(0, 4);
+        var items = (data.announcements || []).slice(0, 3);
         if (!items.length) {
             el.innerHTML =
                 '<div class="lcc-empty lcc-empty--inline">' +

@@ -28,7 +28,7 @@ from workspace.services.crm_scope import get_membership
 from workspace.services.jalali_input import format_jalali_date, to_persian_digits
 
 # ── نسخه Schema — با تغییر ساختار Payload افزایش دهید ──
-TV_PAYLOAD_SCHEMA_VERSION = 5
+TV_PAYLOAD_SCHEMA_VERSION = 6
 TV_CACHE_SECONDS = 35
 TV_REFRESH_AFTER_SECONDS = 45
 
@@ -111,6 +111,8 @@ METRIC_LABELS = {
     'deals_closed': 'قرارداد',
 }
 
+SCHEDULE_SUMMARY_MAX = 55
+
 
 def _looks_like_phone(value: str) -> bool:
     digits = ''.join(c for c in (value or '') if c.isdigit())
@@ -137,6 +139,16 @@ def tv_safe_first_name(user) -> str:
     return name.split()[0]
 
 
+def tv_initials(user) -> str:
+    name = tv_safe_display_name(user)
+    if name == 'عضو تیم':
+        return '؟'
+    parts = name.split()
+    if len(parts) == 1:
+        return parts[0][:1]
+    return parts[0][:1] + parts[-1][:1]
+
+
 def _agency_logo_url(agency: CRMAgency) -> Optional[str]:
     """لوگوی ثبت‌شده مالک آژانس در تنظیمات میزکار."""
     ws = (
@@ -148,6 +160,41 @@ def _agency_logo_url(agency: CRMAgency) -> Optional[str]:
     if ws and ws.agency_logo:
         return ws.agency_logo.url
     return None
+
+
+def _tv_member_avatar_url(user) -> Optional[str]:
+    """عکس پروفایل مشاور از تنظیمات میزکار — بدون PII."""
+    if not user:
+        return None
+    ws = (
+        WorkspaceSettings.objects
+        .filter(user_id=user.id)
+        .only('consultant_photo')
+        .first()
+    )
+    if ws and ws.consultant_photo:
+        return ws.consultant_photo.url
+    return None
+
+
+def _truncate_tv_text(text: str, limit: int = SCHEDULE_SUMMARY_MAX) -> str:
+    clean = ' '.join((text or '').split())
+    if not clean:
+        return ''
+    if len(clean) <= limit:
+        return clean
+    return clean[: max(0, limit - 1)].rstrip() + '…'
+
+
+def _goal_period_note(*, days_left: int, completed: bool, period_end) -> str:
+    today = timezone.now().date()
+    if completed:
+        return 'هدف تکمیل شد'
+    if period_end and period_end < today:
+        return 'دوره به پایان رسید'
+    if days_left == 0:
+        return 'امروز آخرین روز دوره است'
+    return f'{to_persian_digits(days_left)} روز تا پایان ماه'
 
 
 def resolve_tv_role(membership: CRMAgencyMember) -> str:
@@ -288,7 +335,19 @@ def _build_team_kpis(agency: CRMAgency, *, include_commission: bool) -> Dict[str
             stage=DEAL_STAGE_WON,
             closed_at__date__gte=month_start,
         ).aggregate(total=Sum('commission_amount'))['total'] or 0
-        kpis['commission_month'] = _kpi_entry(int(commission_month), None, 'commission_month')
+        prev_month_end = month_start - timedelta(days=1)
+        prev_month_start = prev_month_end.replace(day=1)
+        commission_prev = CRMDeal.objects.filter(
+            agency=agency,
+            stage=DEAL_STAGE_WON,
+            closed_at__date__gte=prev_month_start,
+            closed_at__date__lte=prev_month_end,
+        ).aggregate(total=Sum('commission_amount'))['total'] or 0
+        kpis['commission_month'] = _kpi_entry(
+            int(commission_month),
+            _delta_pct(int(commission_month), int(commission_prev)),
+            'commission_month',
+        )
 
     return kpis
 
@@ -362,9 +421,12 @@ def _sanitize_leaderboard(performance: Dict[str, Any], limit: int = 5) -> List[D
     for row in performance.get('members', [])[:limit]:
         member = row.get('member')
         user = member.user if member else None
+        name = tv_safe_display_name(user)
         rows.append({
             'rank': row.get('rank'),
-            'name': tv_safe_display_name(user),
+            'name': name,
+            'initials': tv_initials(user),
+            'avatar_url': _tv_member_avatar_url(user),
             'role': row['role'],
             'score': row.get('score', 0),
             'score_pct': row.get('score_pct', 0),
@@ -403,9 +465,14 @@ def _sanitize_goals(
             'metric': goal.metric,
             'actual': item['actual'],
             'target': item['target'],
-            'pct': pct,
+            'pct': min(int(pct), 999),
             'days_left': days_left,
             'completed': completed,
+            'period_note': _goal_period_note(
+                days_left=days_left,
+                completed=completed,
+                period_end=goal.period_end,
+            ),
             'status': 'ok' if completed else ('warn' if pct >= 50 else 'low'),
         })
         if len(rows) >= limit:
@@ -625,7 +692,7 @@ def _build_activity_feed(agency: CRMAgency, limit: int = 5) -> List[Dict[str, An
 def _visit_schedule_summary(visit: PropertyVisit) -> str:
     title = (visit.listing_title or '').strip()
     if title:
-        return title[:48] + ('…' if len(title) > 48 else '')
+        return _truncate_tv_text(title, SCHEDULE_SUMMARY_MAX)
     return 'بازدید ملک'
 
 

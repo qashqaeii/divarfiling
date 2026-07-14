@@ -258,6 +258,14 @@
         ].join(' ');
     }
 
+    function lightenColor(hex, amount) {
+        var n = parseInt(hex.slice(1), 16);
+        var r = Math.min(255, ((n >> 16) & 255) + amount);
+        var g = Math.min(255, ((n >> 8) & 255) + amount);
+        var b = Math.min(255, (n & 255) + amount);
+        return 'rgb(' + r + ',' + g + ',' + b + ')';
+    }
+
     function renderDonut(doughnut) {
         var svg = root.querySelector('[data-tv-donut]');
         var center = root.querySelector('[data-tv-donut-center]');
@@ -267,35 +275,50 @@
 
         var slices = (doughnut.slices || []).filter(function (sl) { return sl.value > 0; });
         var total = slices.reduce(function (sum, sl) { return sum + sl.value; }, 0);
-        var gap = 0.035;
+        var gap = 0.04;
         var cx = 50;
         var cy = 50;
-        var rOut = 44;
-        var rIn = 28;
+        var rOut = 46;
+        var rIn = 36;
         var start = -Math.PI / 2;
-        var parts = [
-            '<defs>',
-            '<filter id="tvDonutShadow" x="-25%" y="-25%" width="150%" height="150%">',
-            '<feDropShadow dx="0" dy="1.2" stdDeviation="1.4" flood-color="#000" flood-opacity="0.35"/>',
-            '</filter>',
-            '</defs>'
+        var defs = [
+            '<filter id="tvDonutGlow" x="-30%" y="-30%" width="160%" height="160%">',
+            '<feDropShadow dx="0" dy="0" stdDeviation="1.2" flood-color="#000" flood-opacity="0.45"/>',
+            '</filter>'
         ];
+        var shapes = ['<circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>'];
 
         if (!total) {
-            parts.push('<circle cx="50" cy="50" r="36" fill="none" stroke="#334155" stroke-width="14" opacity="0.55"/>');
+            shapes.push('<circle cx="50" cy="50" r="41" fill="none" stroke="#475569" stroke-width="10" opacity="0.5"/>');
         } else {
-            slices.forEach(function (sl) {
+            slices.forEach(function (sl, idx) {
                 var sweep = (sl.value / total) * Math.PI * 2;
                 var end = start + sweep - gap;
+                var gradId = 'tvDonutGrad' + idx;
+                defs.push(
+                    '<linearGradient id="' + gradId + '" x1="0%" y1="0%" x2="100%" y2="100%">',
+                    '<stop offset="0%" stop-color="' + lightenColor(sl.color, 36) + '"/>',
+                    '<stop offset="100%" stop-color="' + sl.color + '"/>',
+                    '</linearGradient>'
+                );
                 if (end > start) {
-                    parts.push(
-                        '<path d="' + donutPath(cx, cy, rOut, rIn, start, end) + '" fill="' + sl.color + '" filter="url(#tvDonutShadow)"/>'
+                    shapes.push(
+                        '<path d="' + donutPath(cx, cy, rOut, rIn, start, end) + '" fill="url(#' + gradId + ')" stroke="rgba(15,23,42,0.65)" stroke-width="0.6" filter="url(#tvDonutGlow)"/>'
                     );
+                    if (sl.pct >= 10) {
+                        var mid = start + sweep / 2;
+                        var labelR = (rOut + rIn) / 2;
+                        var lp = polar(cx, cy, labelR, mid);
+                        shapes.push(
+                            '<text x="' + lp[0].toFixed(1) + '" y="' + lp[1].toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" class="tv-donut-label" fill="#f8fafc" font-size="5.5" font-weight="700">' +
+                            toFa(sl.pct) + '%</text>'
+                        );
+                    }
                 }
                 start += sweep;
             });
         }
-        svg.innerHTML = parts.join('');
+        svg.innerHTML = '<defs>' + defs.join('') + '</defs>' + shapes.join('');
 
         if (center) {
             center.innerHTML =
@@ -325,11 +348,11 @@
         }
 
         var w = 400;
-        var h = 100;
-        var padL = 8;
-        var padR = 8;
-        var padT = 6;
-        var padB = 2;
+        var h = 110;
+        var padL = 10;
+        var padR = 10;
+        var padT = 8;
+        var padB = 4;
         var chartW = w - padL - padR;
         var chartH = h - padT - padB;
         var allVals = [];
@@ -363,14 +386,14 @@
             var coords = points.map(function (p, i) {
                 return xAt(i).toFixed(1) + ',' + yAt(p[s.key] || 0).toFixed(1);
             }).join(' ');
-            return '<polyline fill="none" stroke="' + s.color + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="' + coords + '"/>';
+            return '<polyline fill="none" stroke="' + s.color + '" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" points="' + coords + '"/>';
         }).join('');
 
         var dots = series.map(function (s) {
             return points.map(function (p, i) {
                 var v = p[s.key] || 0;
                 if (!v) return '';
-                return '<circle cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(v).toFixed(1) + '" r="2.6" fill="' + s.color + '" stroke="rgba(15,23,42,0.85)" stroke-width="1"/>';
+                return '<circle cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(v).toFixed(1) + '" r="3.2" fill="' + s.color + '" stroke="rgba(15,23,42,0.9)" stroke-width="1.2"/>';
             }).join('');
         }).join('');
 
@@ -391,25 +414,25 @@
         var slices = doughnut.slices || [];
         var series = chart.series || [];
         var donutHtml = slices.map(function (sl) {
-            var val = toFa(sl.value || 0);
-            var pct = toFa(sl.pct || 0);
             return (
-                '<span class="tv-cmd__legend-item tv-cmd__legend-item--donut" style="--c:' + sl.color + '">' +
+                '<div class="tv-cmd__legend-row">' +
+                '<span class="tv-cmd__legend-dot" style="background:' + sl.color + '"></span>' +
                 '<em>' + esc(sl.label) + '</em>' +
-                '<b>' + val + '</b>' +
-                '<i>' + pct + '%</i>' +
-                '</span>'
+                '<b>' + toFa(sl.value || 0) + '</b>' +
+                '<i>' + toFa(sl.pct || 0) + '%</i>' +
+                '</div>'
             );
         }).join('');
 
         var trendHtml = series.map(function (s) {
             var share = s.share_pct != null ? '<i>' + toFa(s.share_pct) + '%</i>' : '';
             return (
-                '<span class="tv-cmd__legend-item tv-cmd__legend-item--trend" style="--c:' + s.color + '">' +
+                '<div class="tv-cmd__legend-row tv-cmd__legend-row--trend">' +
+                '<span class="tv-cmd__legend-dot" style="background:' + s.color + '"></span>' +
                 '<em>' + esc(s.label) + '</em>' +
                 '<b>' + toFa(s.total || 0) + '</b>' +
                 share +
-                '</span>'
+                '</div>'
             );
         }).join('');
 

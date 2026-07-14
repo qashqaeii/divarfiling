@@ -56,20 +56,21 @@
                 <span data-tv-chart-subtitle>توزیع مخاطبین · روند ۷ روزه</span>
             </header>
             <div class="tv-cmd__chart-wrap">
-                <div class="tv-cmd__chart-layout">
-                    <div class="tv-cmd__chart-donut-col" data-tv-donut-wrap>
+                <div class="tv-cmd__chart-trend-block">
+                    <p class="tv-cmd__chart-section-label">روند ۷ روزه</p>
+                    <svg class="tv-cmd__chart" data-tv-chart viewBox="0 0 400 110" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+                    <div class="tv-cmd__chart-days" data-tv-chart-days aria-hidden="true"></div>
+                </div>
+                <div class="tv-cmd__chart-bottom">
+                    <div class="tv-cmd__chart-donut-block">
+                        <p class="tv-cmd__chart-section-label" data-tv-donut-title>پرونده مخاطبین</p>
                         <div class="tv-cmd__chart-donut-stage">
                             <svg class="tv-cmd__chart-donut" data-tv-donut viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
                             <div class="tv-cmd__chart-donut-center" data-tv-donut-center aria-hidden="true"></div>
                         </div>
-                        <p class="tv-cmd__chart-donut-title" data-tv-donut-title>پرونده مخاطبین</p>
                     </div>
-                    <div class="tv-cmd__chart-trend-col">
-                        <svg class="tv-cmd__chart" data-tv-chart viewBox="0 0 400 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
-                        <div class="tv-cmd__chart-days" data-tv-chart-days aria-hidden="true"></div>
-                    </div>
+                    <div class="tv-cmd__chart-legend" data-tv-chart-legend></div>
                 </div>
-                <div class="tv-cmd__chart-legend" data-tv-chart-legend></div>
             </div>
         </article>
     </section>
@@ -139,5 +140,5 @@ window.crmTeamTV = {
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=7"></script>
 {% endblock %}

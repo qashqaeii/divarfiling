@@ -429,34 +429,49 @@ body.crm-tv-body {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    overflow: hidden;
-    position: relative;
-    gap: clamp(2px, 0.35vh, 6px);
+    gap: clamp(4px, 0.5vh, 8px);
 }
 
-.tv-cmd__chart-layout {
-    flex: 1;
-    display: grid;
-    grid-template-columns: minmax(88px, 32%) minmax(0, 1fr);
-    gap: clamp(6px, 1vh, 12px);
-    min-height: 0;
+.tv-cmd__chart-section-label {
+    margin: 0 0 clamp(2px, 0.3vh, 4px);
+    font-size: clamp(0.55rem, 1vh, 0.68rem);
+    font-weight: 600;
+    color: var(--tv-muted);
+    flex-shrink: 0;
+}
+
+.tv-cmd__chart-trend-block {
+    flex: 1 1 52%;
+    display: flex;
+    flex-direction: column;
+    min-height: 64px;
+    padding: clamp(4px, 0.45vh, 7px) clamp(5px, 0.5vw, 8px);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.tv-cmd__chart-bottom {
+    flex: 0 0 auto;
+    display: flex;
     align-items: stretch;
+    gap: clamp(8px, 1vw, 14px);
+    min-height: 0;
+    padding-top: 2px;
 }
 
-.tv-cmd__chart-donut-col {
+.tv-cmd__chart-donut-block {
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-width: 0;
-    min-height: 0;
+    width: clamp(76px, 11vw, 108px);
 }
 
 .tv-cmd__chart-donut-stage {
     position: relative;
-    width: 100%;
-    max-width: 148px;
-    aspect-ratio: 1;
+    width: clamp(68px, 10vw, 96px);
+    height: clamp(68px, 10vw, 96px);
     flex-shrink: 0;
 }
 
@@ -475,123 +490,122 @@ body.crm-tv-body {
     justify-content: center;
     pointer-events: none;
     text-align: center;
-    line-height: 1.1;
+    line-height: 1.05;
 }
 
 .tv-cmd__chart-donut-val {
-    font-size: clamp(1rem, 2.4vh, 1.55rem);
-    font-weight: 700;
+    font-size: clamp(0.95rem, 2.2vh, 1.35rem);
+    font-weight: 800;
     color: var(--tv-text);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
 }
 
 .tv-cmd__chart-donut-lbl {
-    font-size: clamp(0.5rem, 1.1vh, 0.68rem);
+    font-size: clamp(0.48rem, 1vh, 0.62rem);
     color: var(--tv-muted);
-    margin-top: 2px;
-}
-
-.tv-cmd__chart-donut-title {
-    margin: clamp(2px, 0.4vh, 6px) 0 0;
-    font-size: clamp(0.55rem, 1vh, 0.68rem);
-    color: var(--tv-muted);
-    text-align: center;
-    white-space: nowrap;
-}
-
-.tv-cmd__chart-trend-col {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 0;
+    margin-top: 1px;
 }
 
 .tv-cmd__chart {
     flex: 1;
     width: 100%;
-    height: 100%;
-    min-height: 0;
-    max-height: 100%;
+    min-height: 48px;
     display: block;
 }
 
 .tv-cmd__chart .tv-chart-grid {
-    stroke: rgba(148, 163, 184, 0.14);
+    stroke: rgba(148, 163, 184, 0.16);
     stroke-width: 1;
-    stroke-dasharray: 3 4;
+    stroke-dasharray: 4 5;
 }
 
 .tv-cmd__chart .tv-chart-area {
-    opacity: 0.14;
+    opacity: 0.16;
+}
+
+.tv-cmd__chart-donut .tv-donut-label {
+    paint-order: stroke fill;
+    stroke: rgba(15, 23, 42, 0.75);
+    stroke-width: 0.35px;
 }
 
 .tv-cmd__chart-days {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 2px;
-    font-size: clamp(0.5rem, 0.9vh, 0.62rem);
+    font-size: clamp(0.52rem, 0.95vh, 0.64rem);
     color: var(--tv-muted);
     text-align: center;
     flex-shrink: 0;
-    padding-top: 2px;
+    padding-top: 3px;
 }
 
 .tv-cmd__chart-legend {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: clamp(2px, 0.35vh, 5px);
-    font-size: clamp(0.55rem, 0.95vh, 0.64rem);
-    color: var(--tv-muted);
-    padding-top: clamp(2px, 0.25vh, 4px);
-    flex-shrink: 0;
-    overflow: hidden;
+    justify-content: center;
+    gap: clamp(4px, 0.5vh, 7px);
+    min-width: 0;
 }
 
 .tv-cmd__legend-block {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem 0.55rem;
-    align-items: center;
+    display: grid;
+    gap: clamp(2px, 0.35vh, 5px);
 }
 
 .tv-cmd__legend-block--donut {
-    padding-bottom: 2px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.tv-cmd__legend-item {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.25rem;
-    white-space: nowrap;
+.tv-cmd__legend-block--trend {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding-top: clamp(3px, 0.4vh, 6px);
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
 
-.tv-cmd__legend-item::before {
-    content: '';
-    display: inline-block;
-    width: 7px;
-    height: 7px;
+.tv-cmd__legend-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: clamp(0.58rem, 1.05vh, 0.72rem);
+    padding: clamp(2px, 0.25vh, 4px) clamp(4px, 0.4vw, 6px);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.tv-cmd__legend-row--trend {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.tv-cmd__legend-dot {
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
-    background: var(--c, var(--tv-accent));
-    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.35);
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.4);
 }
 
-.tv-cmd__legend-item em {
+.tv-cmd__legend-row em {
     font-style: normal;
     color: var(--tv-text);
-    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.tv-cmd__legend-item b {
-    font-weight: 600;
+.tv-cmd__legend-row b {
+    font-weight: 700;
     color: var(--tv-text);
+    font-variant-numeric: tabular-nums;
 }
 
-.tv-cmd__legend-item i {
+.tv-cmd__legend-row i {
     font-style: normal;
-    font-size: 0.92em;
-    opacity: 0.75;
+    font-size: 0.9em;
+    color: var(--tv-muted);
+    font-variant-numeric: tabular-nums;
 }
 
 /* ─── Bottom panels ─── */
@@ -900,16 +914,21 @@ body.crm-tv-body {
         display: none;
     }
 
-    .tv-cmd__chart-legend {
-        font-size: 0.58rem;
-    }
-
     .tv-cmd__chart-donut-stage {
-        max-width: 120px;
+        width: 64px;
+        height: 64px;
     }
 
-    .tv-cmd__chart-layout {
-        grid-template-columns: minmax(72px, 28%) minmax(0, 1fr);
+    .tv-cmd__chart-donut-block {
+        width: 72px;
+    }
+
+    .tv-cmd__legend-block--donut {
+        grid-template-columns: 1fr;
+    }
+
+    .tv-cmd__legend-block--trend {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 

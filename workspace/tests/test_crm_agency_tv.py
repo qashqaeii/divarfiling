@@ -102,20 +102,34 @@ class CRMAgencyTVHardeningTests(TestCase):
             agency=self.agency, user=self.owner, name='B', phone='09122222222',
             customer_type='خریدار', status='در حال پیگیری',
         )
+        Customer.objects.create(
+            agency=self.agency, user=self.owner, name='C', phone='09123333333',
+            customer_type='متقاضی خرید', status='جدید',
+        )
+        Customer.objects.create(
+            agency=self.agency, user=self.owner, name='D', phone='09124444444',
+            customer_type='متقاضی اجاره', status='جدید',
+        )
         payload = get_tv_dashboard_payload(self.owner, use_cache=False)
         chart = payload['chart']
         self.assertIn('doughnut', chart)
         self.assertIn('series', chart)
         self.assertIn('summary', chart)
         donut = chart['doughnut']
-        self.assertEqual(donut['center_value'], 2)
+        self.assertEqual(donut['center_value'], 4)
         labels = {s['label'] for s in donut['slices']}
         self.assertIn('مالک', labels)
         self.assertIn('خریدار', labels)
+        self.assertIn('متقاضی خرید', labels)
+        self.assertIn('متقاضی رهن و اجاره', labels)
         self.assertEqual(sum(s['pct'] for s in donut['slices'] if s['value']), 100)
         self.assertEqual(len(chart['series']), 4)
         series_keys = {s['key'] for s in chart['series']}
         self.assertIn('followups', series_keys)
+        leads_series = next(s for s in chart['series'] if s['key'] == 'leads')
+        self.assertEqual(leads_series['label'], 'سرنخ')
+        leads_summary = next(s for s in chart['summary'] if s['key'] == 'leads')
+        self.assertEqual(leads_summary['label'], 'کل سرنخ')
         self.assertEqual(len(chart['summary']), 4)
         self.assertIn('followups_today', payload['kpis'])
 

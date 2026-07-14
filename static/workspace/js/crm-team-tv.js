@@ -656,7 +656,7 @@
             { key: 'calls', color: '#38bdf8', label: 'تماس' },
             { key: 'visits', color: '#f59e0b', label: 'بازدید' },
             { key: 'followups', color: '#22c55e', label: 'پیگیری' },
-            { key: 'leads', color: '#7c3aed', label: 'لید' }
+            { key: 'leads', color: '#7c3aed', label: 'سرنخ' }
         ];
         var allVals = [];
         points.forEach(function (p) {

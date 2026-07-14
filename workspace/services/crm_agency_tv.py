@@ -36,13 +36,27 @@ TV_ROLE_MANAGER = 'manager'
 TV_ROLE_SECRETARY = 'secretary'
 TV_ROLE_ADVISOR = 'advisor'
 
-CONTACT_TYPE_DONUT_ORDER = ('مالک', 'خریدار', 'فروشنده', 'مستاجر', 'سازنده')
+CONTACT_TYPE_DONUT_ORDER = (
+    'مالک', 'خریدار', 'متقاضی خرید', 'فروشنده', 'مستاجر', 'متقاضی رهن و اجاره', 'سازنده',
+)
+
+CONTACT_TYPE_TO_DONUT = {
+    'مالک': 'مالک',
+    'خریدار': 'خریدار',
+    'متقاضی خرید': 'متقاضی خرید',
+    'فروشنده': 'فروشنده',
+    'مستاجر': 'مستاجر',
+    'متقاضی اجاره': 'متقاضی رهن و اجاره',
+    'سازنده': 'سازنده',
+}
 
 CONTACT_TYPE_DONUT_COLORS = {
     'مالک': '#7c3aed',
     'خریدار': '#38bdf8',
+    'متقاضی خرید': '#10b981',
     'فروشنده': '#f59e0b',
     'مستاجر': '#22c55e',
+    'متقاضی رهن و اجاره': '#ea580c',
     'سازنده': '#ef4444',
     'موجر': '#64748b',
     'سرنخ': '#a78bfa',
@@ -53,7 +67,7 @@ TREND_SERIES = (
     {'key': 'calls', 'color': '#38bdf8', 'label': 'تماس'},
     {'key': 'visits', 'color': '#f59e0b', 'label': 'بازدید'},
     {'key': 'followups', 'color': '#22c55e', 'label': 'پیگیری'},
-    {'key': 'leads', 'color': '#7c3aed', 'label': 'لید'},
+    {'key': 'leads', 'color': '#7c3aed', 'label': 'سرنخ'},
 )
 
 TREND_SUMMARY_KEYS = ('calls', 'visits', 'leads', 'deals')
@@ -550,8 +564,9 @@ def _build_contact_type_doughnut(agency: CRMAgency) -> Dict[str, Any]:
     other = 0
     for ctype, value in raw_counts.items():
         label = (ctype or '').strip() or 'سایر'
-        if label in CONTACT_TYPE_DONUT_ORDER:
-            counts[label] = counts.get(label, 0) + int(value or 0)
+        bucket = CONTACT_TYPE_TO_DONUT.get(label)
+        if bucket:
+            counts[bucket] = counts.get(bucket, 0) + int(value or 0)
         else:
             other += int(value or 0)
     if other:
@@ -614,7 +629,7 @@ def _build_chart_trend(agency: CRMAgency, days: int = 7) -> Dict[str, Any]:
     summary_meta = {
         'calls': {'color': '#38bdf8', 'label': 'کل تماس'},
         'visits': {'color': '#f59e0b', 'label': 'کل بازدید'},
-        'leads': {'color': '#7c3aed', 'label': 'کل لید'},
+        'leads': {'color': '#7c3aed', 'label': 'کل سرنخ'},
         'deals': {'color': '#22c55e', 'label': 'کل قرارداد'},
     }
     return {

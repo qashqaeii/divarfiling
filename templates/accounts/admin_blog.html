@@ -5,263 +5,399 @@
 
 {% block title %}مدیریت مقالات | پنل مدیریت{% endblock %}
 
-{% block body_class %}mk-admin-dashboard{% endblock %}
+{% block body_class %}mk-admin-dashboard ab-luxe{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
-<div class="adm-page adm-blog-page adm-map-page">
+<div class="ab-page">
 
-    <header class="adm-map-hero adm-blog-hero">
-        <div class="adm-map-hero-copy">
-            <p class="adm-map-hero-kicker">
-                <i class="fas fa-newspaper" aria-hidden="true"></i>
-                Blog Content Hub
-            </p>
-            <h1 class="adm-map-hero-title">مدیریت مقالات و آمار بازدید</h1>
-            <p class="adm-map-hero-tagline">محتوای سئو، بازدید و درون‌ریزی حرفه‌ای JSON.</p>
-            <p class="adm-map-hero-desc">لیست مقالات، آمار بازدید، برترین محتوا و درون‌ریزی مقاله کامل از JSON — مشابه روند seed مقالات فاز A/B/C.</p>
-            <nav class="adm-map-quick-actions" aria-label="دسترسی سریع">
-                <a href="#blog-overview" class="adm-map-quick-btn"><i class="fas fa-chart-line"></i> آمار</a>
-                <a href="#blog-posts" class="adm-map-quick-btn"><i class="fas fa-list"></i> مقالات</a>
-                <a href="#blog-import" class="adm-map-quick-btn"><i class="fas fa-file-import"></i> درون‌ریزی</a>
-                <a href="{% static 'samples/article-import-sample.json' %}" download="article-import-sample.json" class="adm-map-quick-btn"><i class="fas fa-download"></i> نمونه JSON</a>
-                <a href="/blog/" target="_blank" rel="noopener" class="adm-map-quick-btn"><i class="fas fa-external-link-alt"></i> بلاگ عمومی</a>
-                <a href="/admin/blog/post/" target="_blank" rel="noopener" class="adm-map-quick-btn"><i class="fas fa-cog"></i> Django Admin</a>
-            </nav>
-            <div class="adm-map-hero-meta">
-                <a href="{% url 'admin_panel' %}" class="adm-map-balance"><i class="fas fa-arrow-right"></i> داشبورد</a>
+    {# ─── Ambient background ─── #}
+    <div class="ab-ambient" aria-hidden="true">
+        <span class="ab-orb ab-orb--1"></span>
+        <span class="ab-orb ab-orb--2"></span>
+        <span class="ab-orb ab-orb--3"></span>
+        <span class="ab-grain"></span>
+    </div>
+
+    {# ─── Hero ─── #}
+    <header class="ab-hero">
+        <div class="ab-hero__main">
+            <div class="ab-hero__top">
+                <a href="{% url 'admin_panel' %}" class="ab-back">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>بازگشت به داشبورد</span>
+                </a>
+                <div class="ab-hero__badges">
+                    <span class="ab-pill ab-pill--live"><span class="ab-pill__dot"></span> Content Studio</span>
+                    <span class="ab-pill">{{ blog_stats.posts_published|currency }} منتشر</span>
+                </div>
+            </div>
+
+            <div class="ab-hero__body">
+                <p class="ab-hero__eyebrow">Editorial Command Center</p>
+                <h1 class="ab-hero__title">استودیو مدیریت <em>مقالات</em></h1>
+                <p class="ab-hero__lead">آمار بازدید، آرشیو محتوا و درون‌ریزی JSON — یک تجربه یکپارچه برای تیم محتوای فایلینگ دیوار.</p>
+            </div>
+
+            <div class="ab-hero__actions">
+                <a href="#blog-import" class="ab-btn ab-btn--gold">
+                    <i class="fas fa-cloud-arrow-up"></i>
+                    <span>درون‌ریزی مقاله</span>
+                </a>
+                <a href="{% static 'samples/article-import-sample.json' %}" download="article-import-sample.json" class="ab-btn ab-btn--ghost">
+                    <i class="fas fa-download"></i>
+                    <span>نمونه JSON</span>
+                </a>
+                <a href="/blog/" target="_blank" rel="noopener" class="ab-btn ab-btn--ghost">
+                    <i class="fas fa-arrow-up-right-from-square"></i>
+                    <span>بلاگ عمومی</span>
+                </a>
             </div>
         </div>
-        <div class="adm-map-hero-visual" aria-hidden="true">
-            <div class="adm-map-illustration adm-blog-illu">
-                <div class="adm-map-illu-hub adm-blog-illu-hub"><i class="fas fa-pen-nib"></i></div>
-                <div class="adm-map-illu-card adm-map-illu-card--chart"><i class="fas fa-eye"></i> Views</div>
-                <div class="adm-map-illu-card adm-map-illu-card--sms"><i class="fas fa-file-code"></i> JSON</div>
-                <div class="adm-map-illu-card adm-map-illu-card--users"><i class="fas fa-tags"></i> Tags</div>
-                <div class="adm-map-illu-card adm-map-illu-card--conv"><i class="fas fa-ranking-star"></i> SEO</div>
+
+        <div class="ab-hero__visual" aria-hidden="true">
+            <div class="ab-editorial-stack">
+                <article class="ab-stack-card ab-stack-card--1">
+                    <span class="ab-stack-icon"><i class="fas fa-pen-nib"></i></span>
+                    <strong>SEO Content</strong>
+                    <small>فاز A · B · C</small>
+                </article>
+                <article class="ab-stack-card ab-stack-card--2">
+                    <span class="ab-stack-metric">{{ blog_stats.views_total|currency }}</span>
+                    <small>بازدید کل</small>
+                </article>
+                <article class="ab-stack-card ab-stack-card--3">
+                    <span class="ab-stack-icon"><i class="fas fa-code"></i></span>
+                    <strong>JSON Import</strong>
+                    <small>v1.0</small>
+                </article>
+                <div class="ab-stack-glow"></div>
             </div>
         </div>
     </header>
 
-    <nav class="adm-map-tabs" id="adm-map-tabs" aria-label="بخش‌های مقالات">
-        <div class="adm-map-tabs__inner">
-            <a href="#blog-overview" class="adm-map-tab is-active">نمای کلی</a>
-            <a href="#blog-posts" class="adm-map-tab">مقالات</a>
-            <a href="#blog-analytics" class="adm-map-tab">Analytics</a>
-            <a href="#blog-import" class="adm-map-tab">درون‌ریزی JSON</a>
+    {# ─── Navigation ─── #}
+    <nav class="ab-nav" id="ab-nav" aria-label="بخش‌های مقالات">
+        <div class="ab-nav__track">
+            <span class="ab-nav__indicator" id="ab-nav-indicator"></span>
+            <a href="#blog-overview" class="ab-nav__item is-active" data-tab="blog-overview">
+                <i class="fas fa-gauge-high"></i><span>نمای کلی</span>
+            </a>
+            <a href="#blog-posts" class="ab-nav__item" data-tab="blog-posts">
+                <i class="fas fa-layer-group"></i><span>آرشیو مقالات</span>
+            </a>
+            <a href="#blog-analytics" class="ab-nav__item" data-tab="blog-analytics">
+                <i class="fas fa-chart-line"></i><span>Analytics</span>
+            </a>
+            <a href="#blog-import" class="ab-nav__item" data-tab="blog-import">
+                <i class="fas fa-file-import"></i><span>درون‌ریزی</span>
+            </a>
         </div>
     </nav>
-    <div class="adm-map-tabs-spacer" id="adm-map-tabs-spacer" aria-hidden="true"></div>
+    <div class="ab-nav-spacer" id="ab-nav-spacer"></div>
 
     {# ─── Overview ─── #}
-    <div id="blog-overview" class="adm-map-section">
-        <section class="adm-map-kpis" aria-label="شاخص‌های مقالات">
-            <article class="adm-map-kpi" data-accent="violet">
-                <span class="adm-map-kpi-val">{{ blog_stats.posts_total|currency }}</span>
-                <span class="adm-map-kpi-lbl">کل مقالات</span>
-            </article>
-            <article class="adm-map-kpi" data-accent="emerald">
-                <span class="adm-map-kpi-val">{{ blog_stats.posts_published|currency }}</span>
-                <span class="adm-map-kpi-lbl">منتشر شده</span>
-            </article>
-            <article class="adm-map-kpi" data-accent="amber">
-                <span class="adm-map-kpi-val">{{ blog_stats.posts_draft|currency }}</span>
-                <span class="adm-map-kpi-lbl">پیش‌نویس</span>
-            </article>
-            <article class="adm-map-kpi" data-accent="cyan">
-                <span class="adm-map-kpi-val">{{ blog_stats.views_total|currency }}</span>
-                <span class="adm-map-kpi-lbl">بازدید کل</span>
-            </article>
-            <article class="adm-map-kpi" data-accent="rose">
-                <span class="adm-map-kpi-val">{{ blog_stats.avg_views|currency }}</span>
-                <span class="adm-map-kpi-lbl">میانگین بازدید</span>
-            </article>
-            <article class="adm-map-kpi" data-accent="violet">
-                <span class="adm-map-kpi-val">{{ blog_stats.categories_total|currency }}</span>
-                <span class="adm-map-kpi-lbl">دسته‌بندی</span>
-            </article>
-        </section>
-
-        <div class="adm-blog-grid-2">
-            <section class="adm-map-card">
-                <div class="adm-map-card-head">
-                    <h2><i class="fas fa-fire"></i> پربازدیدترین مقالات</h2>
-                    <p>بر اساس views_count</p>
+    <section id="blog-overview" class="ab-panel is-visible">
+        <div class="ab-kpi-grid">
+            <article class="ab-kpi" data-accent="teal">
+                <div class="ab-kpi__icon"><i class="fas fa-newspaper"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ blog_stats.posts_total }}">{{ blog_stats.posts_total|currency }}</span>
+                    <span class="ab-kpi__lbl">کل مقالات</span>
                 </div>
-                <ol class="adm-blog-top-list">
+            </article>
+            <article class="ab-kpi" data-accent="emerald">
+                <div class="ab-kpi__icon"><i class="fas fa-circle-check"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ blog_stats.posts_published }}">{{ blog_stats.posts_published|currency }}</span>
+                    <span class="ab-kpi__lbl">منتشر شده</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="amber">
+                <div class="ab-kpi__icon"><i class="fas fa-pencil"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ blog_stats.posts_draft }}">{{ blog_stats.posts_draft|currency }}</span>
+                    <span class="ab-kpi__lbl">پیش‌نویس</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="violet">
+                <div class="ab-kpi__icon"><i class="fas fa-eye"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ blog_stats.views_total }}">{{ blog_stats.views_total|currency }}</span>
+                    <span class="ab-kpi__lbl">بازدید کل</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="rose">
+                <div class="ab-kpi__icon"><i class="fas fa-chart-simple"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ blog_stats.avg_views }}">{{ blog_stats.avg_views|currency }}</span>
+                    <span class="ab-kpi__lbl">میانگین بازدید</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="gold">
+                <div class="ab-kpi__icon"><i class="fas fa-folder-tree"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ blog_stats.categories_total }}">{{ blog_stats.categories_total|currency }}</span>
+                    <span class="ab-kpi__lbl">دسته‌بندی · {{ blog_stats.tags_total|currency }} برچسب</span>
+                </div>
+            </article>
+        </div>
+
+        <div class="ab-bento">
+            <article class="ab-glass ab-bento__ranking">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-crown"></i> پربازدیدترین‌ها</h2>
+                        <p>رتبه‌بندی بر اساس بازدید واقعی</p>
+                    </div>
+                    <a href="#blog-posts" class="ab-link">مشاهده همه</a>
+                </header>
+                <ol class="ab-rank-list">
                     {% for p in blog_stats.top_posts %}
-                    <li>
-                        <a href="/blog/{{ p.slug }}/" target="_blank" rel="noopener">{{ p.title|truncatechars:55 }}</a>
-                        <span class="adm-blog-views"><i class="fas fa-eye"></i> {{ p.views_count|currency }}</span>
+                    <li class="ab-rank-item">
+                        <span class="ab-rank-num">{{ forloop.counter|to_persian_digits }}</span>
+                        <div class="ab-rank-body">
+                            <a href="/blog/{{ p.slug }}/" target="_blank" rel="noopener">{{ p.title|truncatechars:52 }}</a>
+                            <small>{% if p.category__name %}{{ p.category__name }}{% else %}بدون دسته{% endif %}</small>
+                        </div>
+                        <span class="ab-rank-views"><i class="fas fa-eye"></i> {{ p.views_count|currency }}</span>
                     </li>
                     {% empty %}
-                    <li class="adm-blog-empty">هنوز مقاله منتشر‌شده‌ای نیست.</li>
+                    <li class="ab-empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>هنوز مقاله منتشر‌شده‌ای ثبت نشده.</p>
+                    </li>
                     {% endfor %}
                 </ol>
-            </section>
+            </article>
 
-            <section class="adm-map-card">
-                <div class="adm-map-card-head">
-                    <h2><i class="fas fa-folder-open"></i> دسته‌بندی‌ها</h2>
-                    <p>{{ blog_stats.tags_total|currency }} برچسب</p>
-                </div>
-                <ul class="adm-blog-cat-list">
+            <article class="ab-glass ab-bento__categories">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-shapes"></i> دسته‌بندی‌ها</h2>
+                        <p>توزیع محتوا در کلusters</p>
+                    </div>
+                </header>
+                <ul class="ab-cat-bars">
                     {% for c in blog_stats.categories %}
-                    <li>
-                        <span>{{ c.name }}</span>
-                        <strong>{{ c.post_count|currency }}</strong>
+                    <li class="ab-cat-bar">
+                        <div class="ab-cat-bar__top">
+                            <span>{{ c.name }}</span>
+                            <strong>{{ c.post_count|currency }}</strong>
+                        </div>
+                        <div class="ab-cat-bar__track">
+                            <span class="ab-cat-bar__fill" style="width: {% if blog_stats.posts_published %}{% widthratio c.post_count blog_stats.posts_published 100 %}{% else %}0{% endif %}%"></span>
+                        </div>
                     </li>
                     {% empty %}
-                    <li class="adm-blog-empty">دسته‌بندی ثبت نشده.</li>
+                    <li class="ab-empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <p>دسته‌بندی ثبت نشده.</p>
+                    </li>
                     {% endfor %}
                 </ul>
-            </section>
-        </div>
-    </div>
+            </article>
 
-    {# ─── Posts table ─── #}
-    <div id="blog-posts" class="adm-map-section" hidden>
-        <section class="adm-map-card adm-blog-table-card">
-            <div class="adm-map-card-head adm-blog-table-head">
+            <article class="ab-glass ab-bento__cta">
+                <div class="ab-cta-card">
+                    <span class="ab-cta-icon"><i class="fas fa-wand-magic-sparkles"></i></span>
+                    <h3>مقاله جدید از JSON</h3>
+                    <p>فایل JSON کامل را import کنید — دسته، برچسب، HTML و slug به‌صورت خودکار ساخته می‌شود.</p>
+                    <div class="ab-cta-actions">
+                        <a href="#blog-import" class="ab-btn ab-btn--gold ab-btn--sm">شروع درون‌ریزی</a>
+                        <a href="{% static 'samples/article-import-sample.json' %}" download class="ab-btn ab-btn--ghost ab-btn--sm">دانلود نمونه</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    {# ─── Posts ─── #}
+    <section id="blog-posts" class="ab-panel" hidden>
+        <article class="ab-glass ab-posts-panel">
+            <header class="ab-glass__head ab-posts-head">
                 <div>
-                    <h2><i class="fas fa-table-list"></i> لیست مقالات</h2>
-                    <p>وضعیت انتشار، بازدید و لینک مستقیم</p>
+                    <h2><i class="fas fa-layer-group"></i> آرشیو مقالات</h2>
+                    <p>{{ blog_posts|length }} مورد · فیلتر و جستجو</p>
                 </div>
-                <div class="adm-blog-filters">
-                    <a href="?status=all#blog-posts" class="adm-blog-filter {% if status_filter == 'all' %}is-active{% endif %}">همه</a>
-                    <a href="?status=published#blog-posts" class="adm-blog-filter {% if status_filter == 'published' %}is-active{% endif %}">منتشر</a>
-                    <a href="?status=draft#blog-posts" class="adm-blog-filter {% if status_filter == 'draft' %}is-active{% endif %}">پیش‌نویس</a>
+                <div class="ab-posts-toolbar">
+                    <div class="ab-search">
+                        <i class="fas fa-search"></i>
+                        <input type="search" id="ab-post-search" placeholder="جستجو در عنوان یا slug..." autocomplete="off">
+                    </div>
+                    <div class="ab-segment" role="tablist">
+                        <a href="?status=all#blog-posts" class="ab-segment__btn {% if status_filter == 'all' %}is-active{% endif %}">همه</a>
+                        <a href="?status=published#blog-posts" class="ab-segment__btn {% if status_filter == 'published' %}is-active{% endif %}">منتشر</a>
+                        <a href="?status=draft#blog-posts" class="ab-segment__btn {% if status_filter == 'draft' %}is-active{% endif %}">پیش‌نویس</a>
+                    </div>
                 </div>
+            </header>
+
+            <div class="ab-posts-list" id="ab-posts-list">
+                {% for p in blog_posts %}
+                <article class="ab-post-row" data-search="{{ p.title }} {{ p.slug }} {{ p.category }}">
+                    <div class="ab-post-row__main">
+                        <div class="ab-post-row__status">
+                            {% if p.is_published %}
+                            <span class="ab-status ab-status--live"><span class="ab-status__dot"></span>منتشر</span>
+                            {% else %}
+                            <span class="ab-status ab-status--draft">پیش‌نویس</span>
+                            {% endif %}
+                        </div>
+                        <div class="ab-post-row__content">
+                            <h3>{{ p.title }}</h3>
+                            <p class="ab-post-row__meta">
+                                <span><i class="fas fa-folder"></i> {{ p.category }}</span>
+                                <span dir="ltr"><i class="fas fa-link"></i> /blog/{{ p.slug }}/</span>
+                                <span><i class="fas fa-user"></i> {{ p.author }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="ab-post-row__stats">
+                        <div class="ab-post-stat">
+                            <span class="ab-post-stat__val">{{ p.views_count|currency }}</span>
+                            <span class="ab-post-stat__lbl">بازدید</span>
+                        </div>
+                        <div class="ab-post-stat">
+                            <span class="ab-post-stat__val">{{ p.tag_count|currency }}</span>
+                            <span class="ab-post-stat__lbl">برچسب</span>
+                        </div>
+                        <div class="ab-post-stat">
+                            <span class="ab-post-stat__val">{% if p.published_at %}{{ p.published_at|date:"m/d" }}{% else %}{{ p.created_at|date:"m/d" }}{% endif %}</span>
+                            <span class="ab-post-stat__lbl">تاریخ</span>
+                        </div>
+                    </div>
+                    <div class="ab-post-row__actions">
+                        <a href="{{ p.url }}" target="_blank" rel="noopener" class="ab-icon-btn" title="مشاهده"><i class="fas fa-arrow-up-right-from-square"></i></a>
+                        <a href="/admin/blog/post/{{ p.id }}/change/" target="_blank" rel="noopener" class="ab-icon-btn" title="ویرایش"><i class="fas fa-pen-to-square"></i></a>
+                    </div>
+                </article>
+                {% empty %}
+                <div class="ab-empty-state ab-empty-state--lg">
+                    <i class="fas fa-file-circle-xmark"></i>
+                    <p>مقاله‌ای یافت نشد.</p>
+                </div>
+                {% endfor %}
             </div>
-            <div class="adm-blog-table-wrap">
-                <table class="adm-blog-table">
-                    <thead>
-                        <tr>
-                            <th>عنوان</th>
-                            <th>دسته</th>
-                            <th>وضعیت</th>
-                            <th>بازدید</th>
-                            <th>تاریخ</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in blog_posts %}
-                        <tr>
-                            <td>
-                                <strong>{{ p.title|truncatechars:48 }}</strong>
-                                <small dir="ltr">/blog/{{ p.slug }}/</small>
-                            </td>
-                            <td>{{ p.category }}</td>
-                            <td>
-                                {% if p.is_published %}
-                                <span class="adm-blog-badge adm-blog-badge--pub">منتشر</span>
-                                {% else %}
-                                <span class="adm-blog-badge adm-blog-badge--draft">پیش‌نویس</span>
-                                {% endif %}
-                            </td>
-                            <td><span class="adm-blog-views">{{ p.views_count|currency }}</span></td>
-                            <td>
-                                {% if p.published_at %}
-                                {{ p.published_at|date:"Y/m/d" }}
-                                {% else %}
-                                {{ p.created_at|date:"Y/m/d" }}
-                                {% endif %}
-                            </td>
-                            <td class="adm-blog-actions">
-                                <a href="{{ p.url }}" target="_blank" rel="noopener" title="مشاهده"><i class="fas fa-external-link-alt"></i></a>
-                                <a href="/admin/blog/post/{{ p.id }}/change/" target="_blank" rel="noopener" title="ویرایش"><i class="fas fa-pen"></i></a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="6" class="adm-blog-empty">مقاله‌ای یافت نشد.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
+            <p class="ab-search-empty" id="ab-search-empty" hidden>نتیجه‌ای برای جستجو یافت نشد.</p>
+        </article>
+    </section>
 
     {# ─── Analytics ─── #}
-    <div id="blog-analytics" class="adm-map-section" hidden>
-        <section class="adm-map-analytics">
-            <div class="adm-map-card-head">
-                <h2><i class="fas fa-chart-bar"></i> Analytics مقالات</h2>
-                <p>انتشار ۳۰ روز اخیر و برترین بازدیدها</p>
-            </div>
-            <div class="adm-map-analytics-grid adm-blog-charts">
-                <div class="adm-map-chart-card">
-                    <h3><i class="fas fa-calendar-plus"></i> انتشار روزانه</h3>
-                    <div class="adm-map-chart-wrap"><canvas id="adm-blog-chart-publish"></canvas></div>
-                </div>
-                <div class="adm-map-chart-card">
-                    <h3><i class="fas fa-eye"></i> Top Views</h3>
-                    <div class="adm-map-chart-wrap adm-map-chart-wrap--sm"><canvas id="adm-blog-chart-views"></canvas></div>
-                </div>
-            </div>
-        </section>
-    </div>
+    <section id="blog-analytics" class="ab-panel" hidden>
+        <div class="ab-analytics-grid">
+            <article class="ab-glass ab-chart-card ab-chart-card--wide">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-calendar-days"></i> روند انتشار</h2>
+                        <p>۳۰ روز اخیر</p>
+                    </div>
+                </header>
+                <div class="ab-chart-wrap"><canvas id="adm-blog-chart-publish"></canvas></div>
+            </article>
+            <article class="ab-glass ab-chart-card">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-trophy"></i> Top Views</h2>
+                        <p>برترین مقالات</p>
+                    </div>
+                </header>
+                <div class="ab-chart-wrap ab-chart-wrap--tall"><canvas id="adm-blog-chart-views"></canvas></div>
+            </article>
+        </div>
+    </section>
 
     {# ─── Import ─── #}
-    <div id="blog-import" class="adm-map-section" hidden>
-        <section class="adm-map-card adm-blog-import-card">
-            <div class="adm-map-card-head">
-                <h2><i class="fas fa-file-import"></i> درون‌ریزی مقاله از JSON</h2>
-                <p>فایل JSON کامل را بارگذاری یا paste کنید — تصویر شاخص اختیاری است و بعداً اضافه می‌شود.</p>
-            </div>
-
-            <div class="adm-blog-import-layout">
-                <aside class="adm-blog-import-guide">
-                    <h3>ساختار JSON</h3>
-                    <ul>
-                        <li><code>format_version</code> — نسخه 1.0</li>
-                        <li><code>options.publish</code> — انتشار فوری</li>
-                        <li><code>options.force_update</code> — بازنویسی در صورت تکرار slug</li>
-                        <li><code>article.slug_base</code> — نامک URL</li>
-                        <li><code>article.title</code> — عنوان</li>
-                        <li><code>article.excerpt</code> — خلاصه (حداکثر ۳۰۰)</li>
-                        <li><code>article.category</code> — slug, name, description, order</li>
-                        <li><code>article.tags</code> — آرایه برچسب‌ها</li>
-                        <li><code>article.content</code> — HTML کامل مقاله</li>
-                    </ul>
-                    <a href="{% static 'samples/article-import-sample.json' %}" download="article-import-sample.json" class="adm-map-quick-btn adm-blog-dl-sample">
+    <section id="blog-import" class="ab-panel" hidden>
+        <div class="ab-import-grid">
+            <aside class="ab-glass ab-import-sidebar">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-book-open"></i> راهنمای JSON</h2>
+                        <p>ساختار استاندارد v1.0</p>
+                    </div>
+                </header>
+                <ol class="ab-schema-list">
+                    <li><code>format_version</code><span>نسخه 1.0 (الزامی)</span></li>
+                    <li><code>documentation</code><span>راهنما — import نمی‌شود</span></li>
+                    <li><code>meta</code><span>متادیتای سئو — import نمی‌شود</span></li>
+                    <li><code>options.publish</code><span>انتشار فوری</span></li>
+                    <li><code>options.force_update</code><span>بازنویسی slug</span></li>
+                    <li><code>options.author_username</code><span>نویسنده</span></li>
+                    <li><code>article.slug_base</code><span>نامک URL (الزامی)</span></li>
+                    <li><code>article.title</code><span>عنوان ≤۲۰۰</span></li>
+                    <li><code>article.excerpt</code><span>خلاصه ≤۳۰۰</span></li>
+                    <li><code>article.keyword</code><span>کلمه کلیدی سئو</span></li>
+                    <li><code>article.category</code><span>slug, name, order</span></li>
+                    <li><code>article.tags</code><span>آرایه برچسب</span></li>
+                    <li><code>article.content</code><span>HTML + FAQ schema</span></li>
+                    <li><code>featured_image</code><span>بعداً در Admin</span></li>
+                </ol>
+                <div class="ab-import-sidebar__foot">
+                    <a href="{% static 'samples/article-import-sample.json' %}" download class="ab-btn ab-btn--gold ab-btn--block">
                         <i class="fas fa-download"></i> دانلود نمونه JSON
                     </a>
-                </aside>
-
-                <div class="adm-blog-import-main">
-                    <div class="adm-blog-import-toolbar">
-                        <label class="adm-blog-file-btn">
-                            <i class="fas fa-folder-open"></i> انتخاب فایل JSON
-                            <input type="file" id="adm-blog-json-file" accept=".json,application/json" hidden>
-                        </label>
-                        <label class="adm-blog-check">
-                            <input type="checkbox" id="adm-blog-opt-publish">
-                            <span>انتشار فوری (publish)</span>
-                        </label>
-                        <label class="adm-blog-check">
-                            <input type="checkbox" id="adm-blog-opt-force">
-                            <span>بازنویسی در صورت وجود (force_update)</span>
-                        </label>
-                    </div>
-
-                    <textarea id="adm-blog-json-input" class="adm-blog-json-editor" dir="ltr" spellcheck="false" placeholder='{"format_version":"1.0","options":{...},"article":{...}}'></textarea>
-
-                    <div class="adm-blog-import-actions">
-                        <button type="button" id="adm-blog-btn-validate" class="adm-map-quick-btn"><i class="fas fa-check-double"></i> اعتبارسنجی</button>
-                        <button type="button" id="adm-blog-btn-import" class="adm-map-quick-btn adm-blog-btn-primary"><i class="fas fa-cloud-arrow-up"></i> درون‌ریزی مقاله</button>
-                    </div>
-
-                    <div id="adm-blog-import-result" class="adm-blog-import-result" hidden></div>
+                    <button type="button" id="ab-load-sample" class="ab-btn ab-btn--ghost ab-btn--block">
+                        <i class="fas fa-file-code"></i> بارگذاری نمونه در ویرایشگر
+                    </button>
                 </div>
-            </div>
-        </section>
-    </div>
+            </aside>
+
+            <article class="ab-glass ab-import-main">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-terminal"></i> ویرایشگر JSON</h2>
+                        <p>فایل را بکشید، انتخاب کنید یا مستقیم paste کنید</p>
+                    </div>
+                    <span class="ab-editor-meta" id="ab-editor-meta">۰ خط</span>
+                </header>
+
+                <div class="ab-import-options">
+                    <label class="ab-toggle">
+                        <input type="checkbox" id="adm-blog-opt-publish">
+                        <span class="ab-toggle__track"><span class="ab-toggle__thumb"></span></span>
+                        <span class="ab-toggle__label">انتشار فوری</span>
+                    </label>
+                    <label class="ab-toggle">
+                        <input type="checkbox" id="adm-blog-opt-force">
+                        <span class="ab-toggle__track"><span class="ab-toggle__thumb"></span></span>
+                        <span class="ab-toggle__label">بازنویسی در صورت وجود</span>
+                    </label>
+                </div>
+
+                <div class="ab-dropzone" id="ab-dropzone">
+                    <div class="ab-dropzone__inner">
+                        <label class="ab-dropzone__label" for="adm-blog-json-file">
+                            <i class="fas fa-cloud-arrow-up"></i>
+                            <strong>فایل JSON را اینجا رها کنید</strong>
+                            <span>یا کلیک کنید برای انتخاب</span>
+                        </label>
+                        <input type="file" id="adm-blog-json-file" accept=".json,application/json" hidden>
+                    </div>
+                    <textarea id="adm-blog-json-input" class="ab-code-editor" dir="ltr" spellcheck="false" placeholder='{
+  "format_version": "1.0",
+  "options": { "publish": false },
+  "article": { ... }
+}'></textarea>
+                </div>
+
+                <div class="ab-import-actions">
+                    <button type="button" id="adm-blog-btn-validate" class="ab-btn ab-btn--ghost">
+                        <i class="fas fa-shield-check"></i> اعتبارسنجی
+                    </button>
+                    <button type="button" id="adm-blog-btn-import" class="ab-btn ab-btn--gold">
+                        <i class="fas fa-rocket"></i> درون‌ریزی مقاله
+                    </button>
+                </div>
+
+                <div id="adm-blog-import-result" class="ab-result" hidden></div>
+            </article>
+        </div>
+    </section>
 
 </div>
 {% endblock %}
@@ -277,5 +413,5 @@ window.admBlogMeta = {
     sampleUrl: '{% static "samples/article-import-sample.json" %}',
 };
 </script>
-<script src="{% static 'js/admin-blog.js' %}?v=1"></script>
+<script src="{% static 'js/admin-blog.js' %}?v=2"></script>
 {% endblock %}

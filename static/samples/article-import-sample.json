@@ -1,30 +1,119 @@
 {
   "format_version": "1.0",
   "schema": "divarfiling.blog.article-import",
-  "description": "نمونه درون‌ریزی مقاله — فایلینگ دیوار / میزکار CRM",
+  "documentation": {
+    "title_fa": "راهنمای رسمی فرمت درون‌ریزی مقاله — فایلینگ دیوار",
+    "description": "این فایل همزمان نمونه عملی و مرجع ساختار JSON v1.0 است. فیلدهای documentation و meta فقط راهنما هستند و در import ذخیره نمی‌شوند.",
+    "required_root_fields": [
+      "format_version",
+      "article"
+    ],
+    "required_article_fields": [
+      "slug_base",
+      "title",
+      "excerpt",
+      "category",
+      "tags",
+      "content"
+    ],
+    "required_category_fields": [
+      "slug",
+      "name"
+    ],
+    "optional_category_fields": [
+      "description",
+      "order"
+    ],
+    "optional_article_fields": [
+      "keyword"
+    ],
+    "optional_options_fields": [
+      "publish",
+      "force_update",
+      "author_username"
+    ],
+    "not_imported_via_json": [
+      "featured_image",
+      "og_image",
+      "seo_extras",
+      "related_slugs",
+      "documentation",
+      "meta"
+    ],
+    "limits": {
+      "title_max_chars": 200,
+      "excerpt_max_chars": 300,
+      "slug_base_max_chars": 200,
+      "category_slug_max_chars": 100,
+      "tags_min_count": 1
+    },
+    "content_html_guidelines": [
+      "محتوا باید HTML معتبر باشد (نه Markdown).",
+      "حداقل یک تگ <h2> و چند پاراگراف <p> داشته باشد.",
+      "برای سئو: لینک داخلی به pillar page و مقالات مرتبط.",
+      "FAQ با schema.org (FAQPage / Question / Answer) توصیه می‌شود.",
+      "جدول مقایسه (<table>) برای engagement مفید است.",
+      "تصویر شاخص بعد از import در Django Admin یا پنل اضافه می‌شود."
+    ],
+    "import_checklist": [
+      "1. slug_base یکتا و انگلیسی/لاتین (مثلاً ghif-forush-moshaver-amlak)",
+      "2. excerpt حداکثر 300 کاراکتر",
+      "3. tags حداقل یک برچسب معتبر",
+      "4. category.slug با slug موجود merge می‌شود (get_or_create)",
+      "5. publish=true برای انتشار فوری | force_update=true برای بازنویسی",
+      "6. قبل از import در محیط واقعی، publish را false نگه دارید"
+    ]
+  },
+  "meta": {
+    "content_type": "seo_guide",
+    "content_phase": "sample_template",
+    "locale": "fa-IR",
+    "target_keyword": "قیف فروش مشاور املاک",
+    "secondary_keywords": [
+      "CRM مشاور املاک",
+      "کانبان معامله املاک",
+      "پیگیری مشتری املاک"
+    ],
+    "pillar_page": {
+      "url": "/real-estate-crm/",
+      "title": "CRM مشاور املاک"
+    },
+    "suggested_featured_image": {
+      "note": "پس از import آپلود کنید — JSON تصویر را import نمی‌کند",
+      "suggested_path": "blog/ghif-forush-moshaver-amlak.jpg",
+      "suggested_alt": "قیف فروش مشاور املاک در CRM فایلینگ دیوار"
+    },
+    "suggested_related_slugs": [
+      "crm-amlak-raygan-rahnama",
+      "peigiri-moshtari-moshaver-amlak",
+      "narm-afzar-crm-amlak-rahnama-kamel"
+    ],
+    "estimated_reading_minutes": 6
+  },
   "options": {
     "publish": false,
     "force_update": false,
     "author_username": "admin"
   },
   "article": {
-    "keyword": "CRM مشاور املاک رایگان",
-    "slug_base": "crm-moshaver-amlak-shoro-sari",
-    "title": "CRM مشاور املاک: از کجا شروع کنیم؟ (راهنمای ۵ دقیقه‌ای)",
-    "excerpt": "اگر هر روز بین تماس مشتری، فایل دیوار و پیگیری بازدید گیر می‌کنید، CRM مشاور املاک اولین قدم برای نظم دادن به کار است. در این راهنمای کوتاه، ۴ مرحله عملی برای شروع سریع می‌بینید.",
+    "keyword": "قیف فروش مشاور املاک",
+    "slug_base": "sample-ghif-forush-crm-import-template",
+    "title": "قیف فروش مشاور املاک: نمونه کامل JSON برای درون‌ریزی (راهنمای عملی)",
+    "excerpt": "این مقاله نمونه، ساختار استاندارد JSON v1.0 را نشان می‌دهد: slug، دسته، برچسب، HTML با h2، جدول، FAQ schema و لینک داخلی. قبل از publish واقعی، slug را تغییر دهید.",
     "category": {
       "slug": "crm-moshaver-amlak",
       "name": "CRM مشاور املاک",
-      "description": "راهنماهای CRM، پیگیری مشتری و میزکار مشاوران املاک",
+      "description": "راهنماهای CRM، پیگیری مشتری، قیف فروش و میزکار مشاوران املاک",
       "order": 2
     },
     "tags": [
+      "قیف فروش مشاور املاک",
+      "کانبان معامله املاک",
       "CRM مشاور املاک",
-      "CRM املاک رایگان",
+      "پیگیری مشتری املاک",
       "فایلینگ دیوار",
-      "پیگیری مشتری",
-      "میزکار مشاور املاک"
+      "نمونه JSON مقاله"
     ],
-    "content": "<p><strong>CRM مشاور املاک</strong> یعنی به‌جای پراکنده بودن اطلاعات در واتساپ، دفترچه و حافظه، هر مشتری، فایل و پیگیری در یک جای مشخص ثبت شود. اگر امروز چند تماس دارید اما آخر هفته نمی‌دانید کدام مشتری جدی‌تر است، مشکل از کمبود مشتری نیست — مشکل از نبودن سیستم است.</p>\n\n<p>در این راهنمای کوتاه، چهار قدم عملی برای شروع سریع با <a href=\"/real-estate-crm/\">CRM میزکار فایلینگ دیوار</a> می‌بینید. تصویر شاخص را بعداً در پنل مدیریت یا Django Admin اضافه کنید.</p>\n\n<h2>قدم ۱: هر تماس را همان لحظه ثبت کنید</h2>\n\n<p>وقتی مشتری تماس می‌گیرد، حداقل این سه مورد را یادداشت کنید: نوع نیاز (خرید، فروش، رهن، اجاره)، محدوده ملک و بودجه تقریبی. اگر ثبت عقب بیفتد، تا شب جزئیات فراموش می‌شود.</p>\n\n<ul>\n    <li>نام و شماره تماس</li>\n    <li>نوع معامله و محدوده جغرافیایی</li>\n    <li>بودجه یا رنج قیمت</li>\n    <li>منبع تماس (دیوار، معرف، سایت)</li>\n</ul>\n\n<h2>قدم ۲: فایل‌ها را برچسب‌گذاری کنید</h2>\n\n<p>وقتی فایل‌های دیوار یا منابع دیگر را جمع می‌کنید، بدون برچسب «محله + متراژ + قیمت» پیدا کردن فایل مناسب برای هر مشتری سخت می‌شود. در CRM، هر فایل را با ویژگی‌های کلیدی ذخیره کنید تا جستجو سریع باشد.</p>\n\n<table>\n    <thead>\n        <tr>\n            <th>بدون CRM</th>\n            <th>با CRM</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>فایل‌ها در گروه واتساپ پخش‌اند</td>\n            <td>فیلتر بر اساس محله، متراژ و قیمت</td>\n        </tr>\n        <tr>\n            <td>پیگیری بازدید فراموش می‌شود</td>\n            <td>یادآور برای تماس بعد از بازدید</td>\n        </tr>\n        <tr>\n            <td>اولویت روز مشخص نیست</td>\n            <td>لیست کارهای امروز بر اساس مرحله معامله</td>\n        </tr>\n    </tbody>\n</table>\n\n<h2>قدم ۳: مرحله هر مشتری را مشخص کنید</h2>\n\n<p>هر مشتری در یکی از این مراحل است: سرنخ جدید، ارسال فایل، بازدید، مذاکره، قرارداد. وقتی مرحله مشخص باشد، می‌دانید امروز باید با چه کسی تماس بگیرید — نه همه را یکجا.</p>\n\n<h2>قدم ۴: یک ریتم روزانه ثابت بسازید</h2>\n\n<p>صبح: مرور سرنخ‌های جدید و یادآورها. ظهر: ارسال فایل به مشتریان در انتظار. عصر: پیگیری بازدیدهای انجام‌شده. این ریتم ساده، بدون نرم‌افزار پیچیده، خروجی ملموس می‌دهد.</p>\n\n<h2>جمع‌بندی</h2>\n\n<p>CRM مشاور املاک ابزار جادویی نیست؛ نظم عملی است. با ثبت فوری تماس، برچسب فایل، تعیین مرحله مشتری و ریتم روزانه، همان تعداد تماس امروز، نتیجه بهتری می‌دهد. برای شروع، <a href=\"/blog/\">مقالات بلاگ فایلینگ دیوار</a> و صفحه CRM را ببینید.</p>\n\n<section class=\"blog-faq\" itemscope itemtype=\"https://schema.org/FAQPage\">\n    <h2>سوالات متداول</h2>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">CRM مشاور املاک رایگان دارید؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">بله — میزکار CRM پایه برای مدیریت مخاطب، معامله و پیگیری در دسترس است. امکانات پیشرفته‌تر مثل ربات استخراج دیوار لایسنس جداگانه دارند.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">چند دقیقه در روز برای CRM کافی است؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">۱۵ تا ۲۰ دقیقه در ابتدای روز برای مرور یادآورها و ثبت تماس‌های جدید معمولاً کافی است.</p>\n        </div>\n    </details>\n</section>"
+    "content": "<p><strong>قیف فروش مشاور املاک</strong> یعنی هر تماس، هر فایل و هر بازدید از یک مسیر مشخص عبور کند — از سرنخ تا قرارداد یا «از دست رفته» با دلیل ثبت‌شده. اگر امروز ۱۰ تماس دارید اما نمی‌دانید کدام مشتری اولویت دارد، مشکل از کمبود سرنخ نیست؛ از نبودن سیستم پیگیری است.</p>\n\n<p>این صفحه یک <em>نمونه رسمی</em> برای درون‌ریزی JSON در پنل مدیریت فایلینگ دیوار است. محتوای زیر از نظر ساختار HTML، لینک‌سازی داخلی، جدول مقایسه و FAQ schema مطابق استاندارد مقالات سئو پروژه (فاز A/B/C) نوشته شده است. پس از import، <strong>slug</strong> و <strong>تصویر شاخص</strong> را برای انتشار واقعی تنظیم کنید.</p>\n\n<p>برای پیاده‌سازی قیف در عمل، <a href=\"/real-estate-crm/\">CRM مشاور املاک</a> میزکار فایلینگ دیوار ابزار کانبان، یادآور و پرونده مشتری را فراهم می‌کند. ربات استخراج دیوار و برخی ماژول‌های فایلینگ حجیم لایسنس جداگانه دارند.</p>\n\n<h2>قیف فروش در CRM چه مشکلی را حل می‌کند؟</h2>\n\n<p>در کار روزانه مشاور، اطلاعات بین واتساپ، تماس‌های تلفنی، دفترچه یادداشت و حافظه پخش می‌شود. نتیجه: پیگیری دیرهنگام، فراموشی بازدید، ارسال فایل نامرتبط و از دست رفتن معاملات جدی. قیف فروش این پراکندگی را به مراحل قابل اندازه‌گیری تبدیل می‌کند.</p>\n\n<table>\n    <thead>\n        <tr>\n            <th>بدون قیف / CRM</th>\n            <th>با قیف در CRM</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>لیست بلند شماره بدون مرحله معامله</td>\n            <td>هر مشتری در مرحله مشخص (سرنخ، بازدید، مذاکره، …)</td>\n        </tr>\n        <tr>\n            <td>اولویت روز بر اساس حدس</td>\n            <td>لیست کار امروز بر اساس یادآور و مرحله</td>\n        </tr>\n        <tr>\n            <td>گزارش ماهانه مبهم</td>\n            <td>شمارش سرنخ، بازدید، قرارداد و از دست‌رفته</td>\n        </tr>\n        <tr>\n            <td>فایل‌ها در گروه‌های پخش‌شده</td>\n            <td>فایل بانک با فیلتر محله، متراژ و قیمت</td>\n        </tr>\n    </tbody>\n</table>\n\n<h2>مراحل پیشنهادی قیف (۷ مرحله)</h2>\n\n<p>برای اکثر مشاوران مستقل و آژانس‌های کوچک، قیف ۷ مرحله‌ای ساده و قابل اجرا است. نام مراحل را می‌توانید با سبک کاری خود هماهنگ کنید؛ مهم ثبت یکنواخت در CRM است.</p>\n\n<ol>\n    <li><strong>سرنخ:</strong> ثبت نام، تماس، نوع نیاز (خرید/فروش/رهن/اجاره)، محدوده و بودجه.</li>\n    <li><strong>بررسی نیاز:</strong> تأیید جدی بودن مشتری؛ ثبت جزئیات ملک ایده‌آل.</li>\n    <li><strong>ارسال فایل:</strong> ارسال گزینه‌های متناسب و ثبت بازخورد.</li>\n    <li><strong>بازدید:</strong> زمان‌بندی، انجام بازدید، یادآور تماس پس از بازدید.</li>\n    <li><strong>پیش‌قرارداد:</strong> مذاکره قیمت، شرایط پرداخت، مدارک.</li>\n    <li><strong>قرارداد:</strong> امضا، تحویل و بستن معامله.</li>\n    <li><strong>بسته / از دست رفته:</strong> ثبت نتیجه نهایی با دلیل (قیمت، انصراف، رقیب، …).</li>\n</ol>\n\n<h3>اقدام روزانه مشاور (چک‌لیست ۱۵ دقیقه‌ای)</h3>\n\n<ul>\n    <li>مرور سرنخ‌های جدید و تکمیل فیلدهای خالی.</li>\n    <li>پیگیری مشتریانی که فایل گرفته‌اند اما ۴۸ ساعت سکوت کرده‌اند.</li>\n    <li>تماس پس از بازدید — حداکثر تا ۲۴ ساعت بعد.</li>\n    <li>انتقال معاملات راکد به «از دست رفته» تا گزارش‌ها واقعی بمانند.</li>\n</ul>\n\n<h2>اشتباهات رایج در پیاده‌سازی قیف</h2>\n\n<p>قیف فقط وقتی کار می‌کند که تیم (یا خود مشاور) به ثبت عادت کند. رایج‌ترین خطاها:</p>\n\n<ul>\n    <li><strong>مراحل زیاد:</strong> بیش از ۸ مرحله باعث می‌شود کسی مرحله را به‌روز نکند.</li>\n    <li><strong>ثبت دیرهنگام:</strong> اگر تماس شب ثبت شود، جزئیات از دست می‌رود.</li>\n    <li><strong>بدون یادآور:</strong> CRM بدون reminder همان دفترچه دیجیتال است.</li>\n    <li><strong>عدم ثبت «از دست رفته»:</strong> قیف همیشه شلوغ به نظر می‌رسد و اولویت‌بندی غیرممکن می‌شود.</li>\n</ul>\n\n<h2>راهنمای فیلدهای JSON این نمونه</h2>\n\n<p>برای درون‌ریزی از پنل <code>/accounts/admin-panel/blog/</code>، ساختار root باید شامل <code>format_version</code>، <code>options</code> و <code>article</code> باشد. فیلدهای <code>documentation</code> و <code>meta</code> در این فایل فقط مرجع هستند.</p>\n\n<table>\n    <thead>\n        <tr>\n            <th>فیلد</th>\n            <th>الزامی</th>\n            <th>توضیح</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td><code>article.slug_base</code></td>\n            <td>بله</td>\n            <td>نامک URL — یکتا، بدون فاصله</td>\n        </tr>\n        <tr>\n            <td><code>article.title</code></td>\n            <td>بله</td>\n            <td>عنوان — حداکثر ۲۰۰ کاراکتر</td>\n        </tr>\n        <tr>\n            <td><code>article.excerpt</code></td>\n            <td>بله</td>\n            <td>خلاصه meta — حداکثر ۳۰۰ کاراکتر</td>\n        </tr>\n        <tr>\n            <td><code>article.content</code></td>\n            <td>بله</td>\n            <td>HTML کامل مقاله</td>\n        </tr>\n        <tr>\n            <td><code>options.publish</code></td>\n            <td>خیر</td>\n            <td>true = انتشار فوری</td>\n        </tr>\n        <tr>\n            <td><code>featured_image</code></td>\n            <td>—</td>\n            <td>via JSON import نمی‌شود — بعداً در Admin</td>\n        </tr>\n    </tbody>\n</table>\n\n<h2>جمع‌بندی</h2>\n\n<p>قیف فروش مشاور املاک یک مفهوم فروش عمومی نیست؛ نقشه راه تبدیل تماس به قرارداد در بازار ملک است. با CRM، کانبان و عادت ثبت روزانه، همان حجم تماس امروز خروجی قابل پیش‌بینی‌تری می‌دهد. این فایل JSON را کپی کنید، slug و محتوا را برای مقاله واقعی خودتان جایگزین کنید، سپس از تب «درون‌ریزی» import کنید.</p>\n\n<p>مطالب مرتبط: <a href=\"/blog/crm-amlak-raygan-rahnama/\">CRM املاک رایگان</a> · <a href=\"/blog/peigiri-moshtari-moshaver-amlak/\">پیگیری مشتری مشاور املاک</a></p>\n\n<section class=\"blog-faq\" itemscope itemtype=\"https://schema.org/FAQPage\">\n    <h2>سوالات متداول</h2>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">آیا JSON تصویر شاخص را هم import می‌کند؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">خیر. در نسخه 1.0 فقط متادیتا و HTML import می‌شود. تصویر شاخص را پس از ایجاد مقاله در Django Admin یا پنل مدیریت آپلود کنید.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">اگر slug از قبل وجود داشته باشد چه می‌شود؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">به‌صورت پیش‌فرض import رد می‌شود (skip). برای بازنویسی، در options مقدار force_update را true قرار دهید.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">دسته‌بندی و برچسب‌ها چطور ساخته می‌شوند؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">دسته با get_or_create از روی category.slug ساخته یا بازیابی می‌شود. هر tag در آرایه tags نیز get_or_create می‌شود — مشابه management commandهای seed_phase_a_articles.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">آیا می‌توانم HTML را از Markdown تبدیل کنم؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">import فقط HTML می‌پذیرد. قبل از قرار دادن در article.content، Markdown را به HTML تبدیل کنید (مثلاً h2 → &lt;h2&gt;، لیست → &lt;ul&gt;&lt;li&gt;).</p>\n        </div>\n    </details>\n</section>"
   }
 }

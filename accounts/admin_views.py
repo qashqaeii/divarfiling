@@ -13,9 +13,16 @@ from accounts.models import MarketingCampaign, MarketingCampaignRecipient
 from accounts.services.admin_dashboard import get_admin_dashboard_context
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 from accounts.services.admin_marketing import (
+    AUTOMATION_FLOWS,
+    MESSAGE_TEMPLATE_CATALOG,
     SEGMENT_DEFAULT_TEMPLATES,
     SEGMENT_REGISTRY,
     active_products_for_filter,
+    campaign_timeline_events,
+    enrich_campaign_row,
+    get_ai_campaign_suggestion,
+    get_all_segment_insights,
+    get_marketing_analytics,
     get_marketing_dashboard_stats,
     get_segment_catalog,
     preview_segment,
@@ -170,17 +177,22 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
             MarketingCampaign.objects.select_related('shared_discount', 'created_by')[:12]
         )
         for campaign in recent_campaigns:
-            attempted = campaign.sent_count + campaign.failed_count
-            campaign.success_pct = (
-                round(100 * campaign.sent_count / attempted) if attempted else None
-            )
-            seg_meta = SEGMENT_REGISTRY.get(campaign.segment_key, {})
-            campaign.segment_icon = seg_meta.get('icon', 'fa-bullhorn')
-            campaign.segment_accent = seg_meta.get('accent', 'violet')
-            campaign.segment_title = seg_meta.get('title', campaign.segment_key)
+            enrich_campaign_row(campaign)
+
+        sms_balance = get_sms_balance_snapshot()
+        sms_credit = None
+        if sms_balance.get('ok'):
+            sms_credit = sms_balance.get('sms_count') or sms_balance.get('credit')
+
+        analytics = get_marketing_analytics(days=30)
+        timeline_campaign = recent_campaigns[0] if recent_campaigns else None
+        timeline_events = (
+            campaign_timeline_events(timeline_campaign) if timeline_campaign else []
+        )
 
         ctx.update({
             'segments': catalog,
+            'segment_insights': get_all_segment_insights(),
             'selected_segment': segment,
             'preview': preview,
             'stale_hours': stale_hours or '',
@@ -191,11 +203,22 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
             'default_template': template,
             'sample_message': render_message(template, sample_ctx) if sample_ctx else template,
             'sample_context': sample_ctx,
-            'sms_balance': get_sms_balance_snapshot(),
+            'sms_balance': sms_balance,
             'phonebook_id': phonebook_users_id(),
-            'marketing_stats': get_marketing_dashboard_stats(),
+            'marketing_stats': get_marketing_dashboard_stats(sms_credit=sms_credit),
+            'marketing_analytics': analytics,
+            'message_templates': MESSAGE_TEMPLATE_CATALOG,
+            'automation_flows': AUTOMATION_FLOWS,
+            'ai_suggestion': get_ai_campaign_suggestion(
+                segment, count=preview.get('count', 0),
+            ),
             'recent_campaigns': recent_campaigns,
+            'timeline_events': timeline_events,
+            'timeline_campaign': timeline_campaign,
             'segment_meta': next((c for c in catalog if c['key'] == segment), catalog[0]),
+            'marketing_analytics_json': json.dumps(
+                analytics, ensure_ascii=False, default=str,
+            ),
         })
         return ctx
 

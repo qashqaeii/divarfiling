@@ -242,8 +242,8 @@ class MarketingViewTests(TestCase):
         self.client.login(username='staffview', password='pass1234')
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'کمپین پیامکی هوشمند')
-        self.assertContains(resp, 'سگمنت‌های آماده')
+        self.assertContains(resp, 'مرکز اتوماسیون بازاریابی')
+        self.assertContains(resp, 'سگمنت‌های هوشمند')
 
     def test_preview_json(self):
         self.client.login(username='staffview', password='pass1234')

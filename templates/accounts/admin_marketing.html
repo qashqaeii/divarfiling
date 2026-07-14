@@ -3,61 +3,75 @@
 {% load persian_tags %}
 {% load currency_tags %}
 
-{% block title %}بازاریابی پیامکی | پنل مدیریت{% endblock %}
+{% block title %}اتوماسیون بازاریابی | پنل مدیریت{% endblock %}
 
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="adm-page adm-mkt-page">
-    <header class="adm-hero adm-mkt-hero">
-        <div class="adm-hero-main">
-            <p class="adm-hero-kicker">
-                <i class="fas fa-bullhorn" aria-hidden="true"></i>
-                مرکز بازاریابی
+<div class="adm-page adm-mkt-page adm-map-page">
+
+    {# ─── Hero ─── #}
+    <header class="adm-map-hero">
+        <div class="adm-map-hero-copy">
+            <p class="adm-map-hero-kicker">
+                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                Marketing Automation
             </p>
-            <h1 class="adm-hero-title">کمپین پیامکی هوشمند</h1>
-            <p class="adm-hero-desc">سگمنت‌بندی مخاطب، پیش‌نمایش زنده، کد تخفیف و ارسال حرفه‌ای از طریق فراز اس‌ام‌اس</p>
+            <h1 class="adm-map-hero-title">مرکز اتوماسیون بازاریابی</h1>
+            <p class="adm-map-hero-tagline">مشتری مناسب، پیام مناسب، در زمان مناسب.</p>
+            <p class="adm-map-hero-desc">کمپین‌های هوشمند پیامکی برای کاربران فایلینگ دیوار با سگمنت‌بندی، کد تخفیف، شخصی‌سازی و گزارش لحظه‌ای.</p>
+            <nav class="adm-map-quick-actions" aria-label="دسترسی سریع">
+                <a href="#map-compose" class="adm-map-quick-btn"><i class="fas fa-plus"></i> کمپین جدید</a>
+                <a href="#map-phonebook" class="adm-map-quick-btn"><i class="fas fa-address-book"></i> دفترچه مخاطبین</a>
+                <a href="#map-overview" class="adm-map-quick-btn"><i class="fas fa-bullseye"></i> سگمنت‌ها</a>
+                <a href="#map-compose" class="adm-map-quick-btn"><i class="fas fa-gift"></i> کدهای تخفیف</a>
+                <a href="#map-analytics" class="adm-map-quick-btn"><i class="fas fa-chart-line"></i> گزارش‌ها</a>
+                <a href="https://farazsms.com/" target="_blank" rel="noopener" class="adm-map-quick-btn"><i class="fas fa-gear"></i> تنظیمات فراز SMS</a>
+            </nav>
+            <div class="adm-map-hero-meta">
+                <a href="{% url 'admin_panel' %}" class="adm-map-balance"><i class="fas fa-arrow-right"></i> داشبورد</a>
+                {% if sms_balance.ok %}
+                <span class="adm-map-balance {% if sms_balance.is_low %}adm-map-balance--low{% endif %}">
+                    <i class="fas fa-comment-sms"></i>
+                    اعتبار: {% if sms_balance.sms_count is not None %}{{ sms_balance.sms_count|currency }} پیامک{% else %}{{ sms_balance.credit|floatformat:0|currency }} ت{% endif %}
+                </span>
+                {% elif sms_balance.error %}
+                <span class="adm-map-balance adm-map-balance--low"><i class="fas fa-triangle-exclamation"></i> خطا در موجودی</span>
+                {% endif %}
+            </div>
         </div>
-        <div class="adm-hero-actions">
-            <a href="{% url 'admin_panel' %}" class="adm-hero-link">
-                <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                داشبورد
-            </a>
-            {% if sms_balance.ok %}
-            <span class="adm-hero-link adm-mkt-balance {% if sms_balance.is_low %}adm-mkt-balance--low{% endif %}">
-                <i class="fas fa-comment-sms" aria-hidden="true"></i>
-                موجودی: {{ sms_balance.credit|floatformat:0|currency }} ت
-                {% if sms_balance.sms_count is not None %}· {{ sms_balance.sms_count|currency }} پیامک{% endif %}
-            </span>
-            {% elif sms_balance.error %}
-            <span class="adm-hero-link adm-mkt-balance adm-mkt-balance--err">
-                <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
-                خطا در خواندن موجودی
-            </span>
-            {% endif %}
-            <a href="https://farazsms.com/" target="_blank" rel="noopener" class="adm-hero-link adm-hero-link--json">
-                <i class="fas fa-wallet" aria-hidden="true"></i>
-                شارژ پنل SMS
-            </a>
+        <div class="adm-map-hero-visual" aria-hidden="true">
+            <div class="adm-map-illustration">
+                <div class="adm-map-illu-hub"><i class="fas fa-bullhorn"></i></div>
+                <div class="adm-map-illu-card adm-map-illu-card--phone"><i class="fas fa-mobile-screen"></i> پیامک</div>
+                <div class="adm-map-illu-card adm-map-illu-card--chart"><i class="fas fa-chart-pie"></i> Analytics</div>
+                <div class="adm-map-illu-card adm-map-illu-card--sms"><i class="fas fa-comment-dots"></i> Campaign</div>
+                <div class="adm-map-illu-card adm-map-illu-card--users"><i class="fas fa-users"></i> Segments</div>
+                <div class="adm-map-illu-card adm-map-illu-card--conv"><i class="fas fa-arrow-trend-up"></i> Conversion</div>
+            </div>
         </div>
     </header>
 
-    <nav class="adm-tabs adm-mkt-tabs" aria-label="بخش‌های بازاریابی">
-        <a href="#mkt-overview" class="adm-tab is-active">نمای کلی</a>
-        <a href="#mkt-compose" class="adm-tab">ساخت کمپین</a>
-        <a href="#mkt-phonebook" class="adm-tab">دفترچه تلفن</a>
-        <a href="#mkt-history" class="adm-tab">تاریخچه</a>
+    <nav class="adm-map-tabs" aria-label="بخش‌های بازاریابی">
+        <a href="#map-overview" class="adm-map-tab is-active">نمای کلی</a>
+        <a href="#map-compose" class="adm-map-tab">ساخت کمپین</a>
+        <a href="#map-templates" class="adm-map-tab">قالب‌ها</a>
+        <a href="#map-automation" class="adm-map-tab">اتوماسیون</a>
+        <a href="#map-phonebook" class="adm-map-tab">دفترچه</a>
+        <a href="#map-history" class="adm-map-tab">تاریخچه</a>
+        <a href="#map-analytics" class="adm-map-tab">Analytics</a>
     </nav>
 
     {% if messages %}
     <section class="adm-alerts" aria-label="پیام‌ها">
         {% for message in messages %}
         <div class="adm-alert {% if message.tags == 'error' %}adm-alert--warn{% else %}adm-alert--info{% endif %}">
-            <i class="fas fa-{% if message.tags == 'error' %}triangle-exclamation{% else %}circle-check{% endif %}" aria-hidden="true"></i>
+            <i class="fas fa-{% if message.tags == 'error' %}triangle-exclamation{% else %}circle-check{% endif %}"></i>
             <span>{{ message }}</span>
         </div>
         {% endfor %}
@@ -67,737 +81,604 @@
     {% if sms_balance.is_low and sms_balance.ok %}
     <section class="adm-alerts">
         <div class="adm-alert adm-alert--warn">
-            <i class="fas fa-comment-sms" aria-hidden="true"></i>
+            <i class="fas fa-comment-sms"></i>
             <span>موجودی فراز اس‌ام‌اس کم است — قبل از کمپین بزرگ شارژ کنید.</span>
             <a href="https://farazsms.com/" target="_blank" rel="noopener">شارژ پنل</a>
         </div>
     </section>
     {% endif %}
 
-    <div id="mkt-overview" class="adm-section">
-        <section class="adm-kpis adm-mkt-kpis" aria-label="شاخص‌های بازاریابی">
-            <article class="adm-kpi" data-accent="violet">
-                <span class="adm-kpi-icon"><i class="fas fa-paper-plane"></i></span>
-                <span class="adm-kpi-body">
-                    <span class="adm-kpi-val">{{ marketing_stats.sent_total|currency }}</span>
-                    <span class="adm-kpi-lbl">پیامک ارسال‌شده</span>
-                </span>
+    {# ─── Overview ─── #}
+    <div id="map-overview" class="adm-map-section">
+        <section class="adm-map-kpis" aria-label="شاخص‌های بازاریابی">
+            <article class="adm-map-kpi" data-accent="violet">
+                <span class="adm-map-kpi-val">{{ marketing_stats.sent_total|currency }}</span>
+                <span class="adm-map-kpi-lbl">پیام ارسال‌شده</span>
             </article>
-            <article class="adm-kpi" data-accent="emerald">
-                <span class="adm-kpi-icon"><i class="fas fa-chart-line"></i></span>
-                <span class="adm-kpi-body">
-                    <span class="adm-kpi-val">{% if marketing_stats.success_rate is not None %}{{ marketing_stats.success_rate|to_persian_digits }}٪{% else %}—{% endif %}</span>
-                    <span class="adm-kpi-lbl">نرخ موفقیت</span>
-                </span>
+            <article class="adm-map-kpi" data-accent="emerald">
+                <span class="adm-map-kpi-val">{{ marketing_stats.delivered_total|currency }}</span>
+                <span class="adm-map-kpi-lbl">تحویل‌شده</span>
             </article>
-            <article class="adm-kpi" data-accent="cyan">
-                <span class="adm-kpi-icon"><i class="fas fa-bullhorn"></i></span>
-                <span class="adm-kpi-body">
-                    <span class="adm-kpi-val">{{ marketing_stats.campaigns_total|currency }}</span>
-                    <span class="adm-kpi-lbl">کمپین تکمیل‌شده</span>
-                </span>
+            <article class="adm-map-kpi" data-accent="cyan">
+                <span class="adm-map-kpi-val">{% if marketing_stats.delivery_rate is not None %}{{ marketing_stats.delivery_rate|to_persian_digits }}٪{% else %}—{% endif %}</span>
+                <span class="adm-map-kpi-lbl">نرخ تحویل</span>
             </article>
-            <article class="adm-kpi" data-accent="amber">
-                <span class="adm-kpi-icon"><i class="fas fa-calendar-days"></i></span>
-                <span class="adm-kpi-body">
-                    <span class="adm-kpi-val">{{ marketing_stats.sms_marketing_30d|currency }}</span>
-                    <span class="adm-kpi-lbl">پیامک ۳۰ روز اخیر</span>
-                </span>
+            <article class="adm-map-kpi" data-accent="amber">
+                <span class="adm-map-kpi-val">{% if marketing_stats.click_rate is not None %}{{ marketing_stats.click_rate|to_persian_digits }}٪{% else %}—{% endif %}</span>
+                <span class="adm-map-kpi-lbl">نرخ تعامل</span>
+            </article>
+            <article class="adm-map-kpi" data-accent="emerald">
+                <span class="adm-map-kpi-val">{{ marketing_stats.purchases|currency }}</span>
+                <span class="adm-map-kpi-lbl">خرید ایجاد‌شده</span>
+            </article>
+            <article class="adm-map-kpi" data-accent="violet">
+                <span class="adm-map-kpi-val">{{ marketing_stats.revenue|currency }}</span>
+                <span class="adm-map-kpi-lbl">درآمد ایجاد‌شده (ت)</span>
+            </article>
+            <article class="adm-map-kpi" data-accent="rose">
+                <span class="adm-map-kpi-val">{{ marketing_stats.pending_send|currency }}</span>
+                <span class="adm-map-kpi-lbl">در انتظار ارسال</span>
+            </article>
+            <article class="adm-map-kpi" data-accent="cyan">
+                <span class="adm-map-kpi-val">{% if marketing_stats.sms_credit is not None %}{{ marketing_stats.sms_credit|currency }}{% else %}—{% endif %}</span>
+                <span class="adm-map-kpi-lbl">اعتبار پیامک</span>
             </article>
         </section>
 
-        <section class="adm-cell adm-mkt-segments" aria-labelledby="admMktSegments">
+        <section class="adm-cell" aria-labelledby="admMapSegments">
             <header class="adm-cell-head">
                 <div>
-                    <h2 id="admMktSegments">سگمنت‌های آماده</h2>
-                    <p>مخاطب هدف را انتخاب کنید — تعداد واجد شرایط به‌صورت زنده نمایش داده می‌شود</p>
+                    <h2 id="admMapSegments">سگمنت‌های هوشمند</h2>
+                    <p>مخاطب هدف، ارزش میانگین و پیشنهاد کمپین — یک کلیک تا شروع</p>
                 </div>
-                <a href="#mkt-compose" class="adm-dl-btn adm-dl-btn--primary">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                    شروع کمپین
-                </a>
+                <a href="#map-compose" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-plus"></i> کمپین جدید</a>
             </header>
-            <div class="adm-mkt-segment-grid">
-                {% for seg in segments %}
-                <a href="?segment={{ seg.key }}#mkt-compose"
-                   class="adm-mkt-segment-card{% if seg.key == selected_segment %} is-active{% endif %}"
-                   data-accent="{{ seg.accent }}">
-                    <span class="adm-mkt-segment-icon"><i class="fas {{ seg.icon }}" aria-hidden="true"></i></span>
-                    <span class="adm-mkt-segment-body">
-                        <strong>{{ seg.title }}</strong>
-                        <em>{{ seg.description }}</em>
-                        <span class="adm-mkt-segment-count">
-                            {{ marketing_stats.segment_sizes|get_item:seg.key|default:0|currency }} مخاطب
-                        </span>
-                    </span>
-                    {% if seg.key == selected_segment %}
-                    <span class="adm-mkt-segment-badge">فعال</span>
-                    {% endif %}
-                </a>
+            <div class="adm-map-segment-grid">
+                {% for seg in segment_insights %}
+                <article class="adm-map-segment-pro{% if seg.key == selected_segment %} is-active{% endif %}" data-accent="{{ seg.accent }}">
+                    <div class="adm-map-segment-pro-head">
+                        <span class="adm-map-segment-dot"></span>
+                        <div>
+                            <h3 class="adm-map-segment-pro-title">{{ seg.title }}</h3>
+                            <span class="adm-map-segment-pro-count">{{ seg.count|currency }} مخاطب</span>
+                        </div>
+                    </div>
+                    <div class="adm-map-segment-pro-meta">
+                        {% if seg.avg_value %}
+                        <div>میانگین ارزش خرید: <strong>{{ seg.avg_value|currency }} تومان</strong></div>
+                        {% endif %}
+                        {% if seg.last_activity %}
+                        <div>آخرین فعالیت: <strong>{{ seg.last_activity|timesince }} پیش</strong></div>
+                        {% endif %}
+                    </div>
+                    <div class="adm-map-segment-pro-suggest">
+                        <strong>پیشنهاد</strong>
+                        {{ seg.suggestion }}
+                    </div>
+                    <div class="adm-map-segment-pro-actions">
+                        <a href="?segment={{ seg.key }}#map-overview" class="adm-dl-btn" data-map-segment="{{ seg.key }}" data-map-action="view">مشاهده</a>
+                        <a href="?segment={{ seg.key }}#map-compose" class="adm-dl-btn adm-dl-btn--primary" data-map-segment="{{ seg.key }}" data-map-action="campaign">شروع کمپین</a>
+                        <a href="?segment={{ seg.key }}#map-compose" class="adm-dl-btn">ویرایش شرط</a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="adm-map-ai-card" aria-labelledby="admMapAi">
+            <div class="adm-map-ai-head">
+                <i class="fas fa-sparkles"></i>
+                <h2 id="admMapAi">دستیار هوشمند کمپین</h2>
+            </div>
+            <div class="adm-map-ai-body">
+                <p>{{ ai_suggestion.message }}</p>
+                <div class="adm-map-ai-stats">
+                    <span class="adm-map-ai-stat">تخفیف: {{ ai_suggestion.discount }}</span>
+                    <span class="adm-map-ai-stat">{{ ai_suggestion.tone }}</span>
+                    <span class="adm-map-ai-stat">ارسال: {{ ai_suggestion.send_hour }}</span>
+                    <span class="adm-map-ai-stat adm-map-ai-conversion">احتمال تبدیل: {{ ai_suggestion.conversion_estimate|to_persian_digits }}٪</span>
+                </div>
+                <button type="button" class="adm-dl-btn adm-dl-btn--primary adm-map-ai-btn" id="adm-map-ai-generate">
+                    <i class="fas fa-wand-magic-sparkles"></i> تولید متن با هوش مصنوعی
+                </button>
+            </div>
+        </section>
+    </div>
+
+    {# ─── Campaign Wizard ─── #}
+    <div id="map-compose" class="adm-map-section">
+        <section class="adm-cell" aria-labelledby="admMapWizard">
+            <header class="adm-cell-head">
+                <div>
+                    <h2 id="admMapWizard">ساخت کمپین</h2>
+                    <p>Wizard چهار مرحله‌ای: مخاطب → پیام → تخفیف → بررسی و ارسال</p>
+                </div>
+            </header>
+
+            <div class="adm-map-wizard">
+                <div class="adm-map-wizard-main">
+                    <ol class="adm-map-wizard-steps" role="tablist">
+                        <li class="adm-map-wizard-step is-active" data-step="0" role="tab"><span class="adm-map-wizard-step-num">۱</span> انتخاب مخاطب</li>
+                        <li class="adm-map-wizard-step" data-step="1" role="tab"><span class="adm-map-wizard-step-num">۲</span> پیام</li>
+                        <li class="adm-map-wizard-step" data-step="2" role="tab"><span class="adm-map-wizard-step-num">۳</span> کد تخفیف</li>
+                        <li class="adm-map-wizard-step" data-step="3" role="tab"><span class="adm-map-wizard-step-num">۴</span> Review</li>
+                    </ol>
+
+                    <form method="get" class="adm-mkt-filters" id="adm-mkt-filter-form">
+                        <div id="adm-map-filter-panel">
+                            <div class="adm-map-audience-radios" role="radiogroup" aria-label="سگمنت">
+                                <label class="adm-map-audience-opt{% if selected_segment == 'users_without_license' %} is-selected{% endif %}">
+                                    <input type="radio" name="wizard_segment" value="users_without_license" {% if selected_segment == 'users_without_license' %}checked{% endif %}>
+                                    <span class="adm-map-audience-opt-body"><strong>کاربران بدون لایسنس</strong><em>{{ marketing_stats.segment_sizes.users_without_license|default:0|currency }} مخاطب</em></span>
+                                </label>
+                                <label class="adm-map-audience-opt{% if selected_segment == 'pending_orders' %} is-selected{% endif %}">
+                                    <input type="radio" name="wizard_segment" value="pending_orders" {% if selected_segment == 'pending_orders' %}checked{% endif %}>
+                                    <span class="adm-map-audience-opt-body"><strong>سفارش پرداخت‌نشده</strong><em>{{ marketing_stats.segment_sizes.pending_orders|default:0|currency }} مخاطب</em></span>
+                                </label>
+                                <label class="adm-map-audience-opt{% if selected_segment == 'failed_orders' %} is-selected{% endif %}">
+                                    <input type="radio" name="wizard_segment" value="failed_orders" {% if selected_segment == 'failed_orders' %}checked{% endif %}>
+                                    <span class="adm-map-audience-opt-body"><strong>مشتری غیرفعال / پرداخت ناموفق</strong><em>{{ marketing_stats.segment_sizes.failed_orders|default:0|currency }} مخاطب</em></span>
+                                </label>
+                                <label class="adm-map-audience-opt is-disabled">
+                                    <input type="radio" name="wizard_segment" value="new_users" disabled>
+                                    <span class="adm-map-audience-opt-body"><strong>کاربران جدید</strong><em>به‌زودی</em></span>
+                                </label>
+                                <label class="adm-map-audience-opt is-disabled">
+                                    <input type="radio" name="wizard_segment" value="custom" disabled>
+                                    <span class="adm-map-audience-opt-body"><strong>سفارشی</strong><em>به‌زودی</em></span>
+                                </label>
+                            </div>
+                            <div class="adm-mkt-filter-row">
+                                <label class="adm-mkt-field adm-mkt-field--wide">
+                                    <span>سگمنت فعال</span>
+                                    <select name="segment" class="adm-mkt-input" id="adm-mkt-segment-select">
+                                        {% for seg in segments %}
+                                        <option value="{{ seg.key }}" {% if seg.key == selected_segment %}selected{% endif %}>{{ seg.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                                <label class="adm-mkt-field">
+                                    <span>عدم تکرار (روز)</span>
+                                    <input type="number" name="dedupe_days" class="adm-mkt-input" min="0" max="90" value="{{ dedupe_days }}">
+                                </label>
+                            </div>
+                            <div class="adm-mkt-filter-row">
+                                {% if segment_meta.supports_stale_hours %}
+                                <label class="adm-mkt-field">
+                                    <span>حداقل سن سفارش (ساعت)</span>
+                                    <input type="number" name="stale_hours" class="adm-mkt-input" min="1" max="720" value="{{ stale_hours }}" placeholder="مثلاً ۲۴">
+                                </label>
+                                {% endif %}
+                                {% if segment_meta.supports_days_lookback %}
+                                <label class="adm-mkt-field">
+                                    <span>بازه روز</span>
+                                    <input type="number" name="days_lookback" class="adm-mkt-input" min="1" max="90" value="{{ days_lookback }}">
+                                </label>
+                                {% endif %}
+                                {% if segment_meta.supports_product %}
+                                <label class="adm-mkt-field">
+                                    <span>محصول (اختیاری)</span>
+                                    <select name="product_id" class="adm-mkt-input">
+                                        <option value="">همه محصولات</option>
+                                        {% for p in products %}
+                                        <option value="{{ p.id }}" {% if product_id == p.id %}selected{% endif %}>{{ p.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                                {% endif %}
+                                <button type="submit" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-filter"></i> اعمال فیلتر</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <form method="post" class="adm-mkt-send-form" id="adm-mkt-send-form">
+                        {% csrf_token %}
+                        {{ sample_context|json_script:"adm-mkt-sample-context" }}
+                        <input type="hidden" name="segment_key" value="{{ selected_segment }}">
+                        <input type="hidden" name="stale_hours" value="{{ stale_hours }}">
+                        <input type="hidden" name="days_lookback" value="{{ days_lookback }}">
+                        <input type="hidden" name="product_id" value="{{ product_id }}">
+                        <input type="hidden" name="dedupe_days" value="{{ dedupe_days }}">
+
+                        <div class="adm-map-wizard-panel is-active" data-panel="0">
+                            <div class="adm-mkt-preview-box">
+                                <div class="adm-mkt-preview-stats">
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong id="adm-mkt-selected-count">{{ preview.capped_count|currency }}</strong>
+                                        <span>انتخاب‌شده</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.count|currency }}</strong>
+                                        <span>واجد شرایط</span>
+                                    </div>
+                                    {% if preview.count > preview.batch_limit %}
+                                    <div class="adm-mkt-preview-stat adm-mkt-preview-stat--warn">
+                                        <strong>{{ preview.batch_limit|currency }}</strong>
+                                        <span>سقف ارسال</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% if preview.recipients %}
+                                <div class="adm-mkt-select-bar">
+                                    <label class="adm-mkt-select-all">
+                                        <input type="checkbox" id="adm-mkt-toggle-all" checked>
+                                        <span>انتخاب همه</span>
+                                    </label>
+                                    <div class="adm-mkt-select-actions">
+                                        <input type="search" id="adm-mkt-recipient-search" class="adm-mkt-input adm-mkt-input--sm" placeholder="جستجو…">
+                                        <button type="button" class="adm-mkt-link-btn" id="adm-mkt-select-none">حذف همه</button>
+                                    </div>
+                                </div>
+                                <div class="adm-mkt-recipient-list" id="adm-mkt-recipient-list">
+                                    {% for row in preview.recipients %}
+                                    <label class="adm-mkt-recipient" data-search="{{ row.phone }} {{ row.name }} {{ row.product }}">
+                                        <input type="checkbox" name="selected_phones" value="{{ row.phone }}" checked
+                                               data-name="{{ row.name }}" data-name-part="{{ row.name_part }}"
+                                               data-product="{{ row.product }}" data-amount="{{ row.amount }}" data-link="{{ row.link }}">
+                                        <span class="adm-mkt-recipient-main">
+                                            <strong dir="ltr">{{ row.phone }}</strong>
+                                            {% if row.name %}<em>{{ row.name }}</em>{% endif %}
+                                        </span>
+                                        <span class="adm-mkt-recipient-meta">{% if row.product %}{{ row.product }}{% endif %}{% if row.amount %} · {{ row.amount }} ت{% endif %}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <p class="adm-mkt-empty">گیرنده‌ای با این فیلتر پیدا نشد.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="adm-map-wizard-panel" data-panel="1">
+                            <label class="adm-mkt-field">
+                                <span>نام کمپین</span>
+                                <input type="text" name="name" class="adm-mkt-input" maxlength="200" placeholder="مثلاً بازیابی سفارش — {{ segment_meta.title }}">
+                            </label>
+                            <label class="adm-mkt-field">
+                                <span>متن پیام</span>
+                                <textarea name="message_template" id="adm-mkt-template" class="adm-mkt-input adm-mkt-textarea" rows="6" required>{{ default_template }}</textarea>
+                                <div class="adm-map-var-picker" aria-label="متغیرها">
+                                    <span class="adm-mkt-vars-lbl">Variable Picker:</span>
+                                    <button type="button" class="adm-map-var-btn" data-var="{name}">{{name}}</button>
+                                    <button type="button" class="adm-map-var-btn" data-var="{name_part}">{{name_part}}</button>
+                                    <button type="button" class="adm-map-var-btn" data-var="{product}">{{product}}</button>
+                                    <button type="button" class="adm-map-var-btn" data-var="{amount}">{{price}}</button>
+                                    <button type="button" class="adm-map-var-btn" data-var="{code}">{{discount}}</button>
+                                    <button type="button" class="adm-map-var-btn" data-var="{link}">{{link}}</button>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="adm-map-wizard-panel" data-panel="2">
+                            <fieldset class="adm-mkt-fieldset">
+                                <legend>نوع کد تخفیف</legend>
+                                <div class="adm-mkt-radios adm-mkt-discount-modes">
+                                    <label class="adm-mkt-radio-card">
+                                        <input type="radio" name="discount_mode" value="none" checked>
+                                        <span><i class="fas fa-ban"></i> بدون تخفیف</span>
+                                    </label>
+                                    <label class="adm-mkt-radio-card">
+                                        <input type="radio" name="discount_mode" value="shared">
+                                        <span><i class="fas fa-users"></i> عمومی / مشترک</span>
+                                    </label>
+                                    <label class="adm-mkt-radio-card">
+                                        <input type="radio" name="discount_mode" value="unique">
+                                        <span><i class="fas fa-fingerprint"></i> اختصاصی / یکتا</span>
+                                    </label>
+                                </div>
+                                <div class="adm-mkt-discount-fields" data-discount-fields>
+                                    <div class="adm-mkt-filter-row">
+                                        <label class="adm-mkt-field">
+                                            <span>نوع</span>
+                                            <select name="discount_type" class="adm-mkt-input">
+                                                <option value="percentage">درصدی — هوشمند</option>
+                                                <option value="fixed">مبلغ ثابت</option>
+                                            </select>
+                                        </label>
+                                        <label class="adm-mkt-field">
+                                            <span>مقدار</span>
+                                            <input type="number" name="discount_value" class="adm-mkt-input" min="1" value="15">
+                                        </label>
+                                        <label class="adm-mkt-field">
+                                            <span>اعتبار (روز) — انقضا</span>
+                                            <input type="number" name="discount_valid_days" class="adm-mkt-input" min="1" max="90" value="7">
+                                        </label>
+                                        <label class="adm-mkt-field" data-shared-code-field hidden>
+                                            <span>کد مشترک</span>
+                                            <input type="text" name="shared_code" id="adm-mkt-shared-code" class="adm-mkt-input" maxlength="40" placeholder="RECOVER15" style="text-transform:uppercase">
+                                        </label>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <div class="adm-map-wizard-panel" data-panel="3">
+                            <div class="adm-map-review-grid">
+                                <div class="adm-map-review-item">
+                                    <strong id="adm-map-review-count">{{ preview.capped_count|currency }}</strong>
+                                    <span>مخاطب</span>
+                                </div>
+                                <div class="adm-map-review-item">
+                                    <strong id="adm-map-review-discount">بدون تخفیف</strong>
+                                    <span>کد تخفیف</span>
+                                </div>
+                                <div class="adm-map-review-item">
+                                    <strong id="adm-map-review-credit">{% if marketing_stats.sms_credit %}{{ marketing_stats.sms_credit|currency }}{% else %}—{% endif %}</strong>
+                                    <span>اعتبار باقی‌مانده</span>
+                                </div>
+                            </div>
+                            <p class="adm-mkt-vars-lbl">نمونه پیام:</p>
+                            <div class="adm-map-review-sample" id="adm-map-review-sample">{{ sample_message }}</div>
+                            <label class="adm-mkt-confirm">
+                                <input type="checkbox" name="confirm_send" value="1" required>
+                                <span>تأیید ارسال برای <strong id="adm-mkt-confirm-count">{{ preview.capped_count|currency }}</strong> نفر</span>
+                            </label>
+                        </div>
+
+                        <div class="adm-map-wizard-nav">
+                            <button type="button" class="adm-dl-btn" id="adm-map-wizard-prev" hidden>مرحله قبل</button>
+                            <button type="button" class="adm-dl-btn adm-dl-btn--primary" id="adm-map-wizard-next">مرحله بعد</button>
+                        </div>
+                        <div id="adm-map-wizard-submit" hidden>
+                            <button type="submit" class="adm-dl-btn adm-dl-btn--primary adm-mkt-submit" id="adm-mkt-submit" {% if preview.capped_count == 0 %}disabled{% endif %}>
+                                <i class="fas fa-paper-plane"></i> ارسال نهایی کمپین
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <aside class="adm-map-preview-sidebar">
+                    <section class="adm-cell">
+                        <header class="adm-cell-head adm-cell-head--compact">
+                            <h2>پیش‌نمایش زنده</h2>
+                        </header>
+                        <div class="adm-map-device-tabs">
+                            <button type="button" class="adm-map-device-tab" data-device="android">Android</button>
+                            <button type="button" class="adm-map-device-tab is-active" data-device="iphone">iPhone</button>
+                        </div>
+                        <div class="adm-map-phone-pro" id="adm-map-phone-pro" data-device="iphone">
+                            <div class="adm-map-phone-pro-screen">
+                                <div class="adm-map-phone-pro-header">
+                                    <span>۹:۴۱</span>
+                                    <span>پیامک</span>
+                                    <span><i class="fas fa-signal"></i></span>
+                                </div>
+                                <div class="adm-map-phone-pro-bubble">
+                                    <p id="adm-mkt-live-text">{{ sample_message }}</p>
+                                </div>
+                                <div class="adm-map-phone-pro-meta" id="adm-mkt-live-len">۰ کاراکتر</div>
+                            </div>
+                        </div>
+                        <div class="adm-map-preview-fields">
+                            <label>
+                                <span>شماره نمونه</span>
+                                <input type="text" id="adm-map-sample-phone" class="adm-mkt-input adm-mkt-input--sm" dir="ltr"
+                                       value="{% if preview.recipients %}{{ preview.recipients.0.phone }}{% else %}09121234567{% endif %}">
+                            </label>
+                            <label>
+                                <span>نام نمونه</span>
+                                <input type="text" id="adm-map-sample-name" class="adm-mkt-input adm-mkt-input--sm"
+                                       value="{{ sample_context.name|default:'' }}">
+                            </label>
+                            <label>
+                                <span>محصول نمونه</span>
+                                <input type="text" id="adm-map-sample-product" class="adm-mkt-input adm-mkt-input--sm"
+                                       value="{{ sample_context.product|default:'محصول' }}">
+                            </label>
+                            <label>
+                                <span>کد تخفیف نمونه</span>
+                                <input type="text" id="adm-map-sample-code" class="adm-mkt-input adm-mkt-input--sm" dir="ltr"
+                                       value="SAMPLE15">
+                            </label>
+                        </div>
+                    </section>
+                </aside>
+            </div>
+        </section>
+    </div>
+
+    {# ─── Templates ─── #}
+    <div id="map-templates" class="adm-map-section">
+        <section class="adm-cell" aria-labelledby="admMapTemplates">
+            <header class="adm-cell-head">
+                <div>
+                    <h2 id="admMapTemplates">قالب‌های آماده</h2>
+                    <p>یک کلیک برای استفاده در کمپین — قابل شخصی‌سازی با متغیرها</p>
+                </div>
+            </header>
+            <div class="adm-map-template-grid">
+                {% for tpl in message_templates %}
+                <button type="button" class="adm-map-template-card" data-template="{{ tpl.text }}" data-accent="{{ tpl.accent }}">
+                    <i class="fas {{ tpl.icon }}"></i>
+                    <strong>{{ tpl.title }}</strong>
+                    <em>{{ tpl.text|truncatechars:80 }}</em>
+                </button>
                 {% endfor %}
             </div>
         </section>
     </div>
 
-    <div id="mkt-compose" class="adm-section">
-        <div class="adm-mkt-workspace">
-            <section class="adm-cell adm-mkt-compose" aria-labelledby="admMktCompose">
-                <header class="adm-cell-head">
-                    <div>
-                        <h2 id="admMktCompose">ساخت کمپین</h2>
-                        <p>مراحل: مخاطب → پیام و تخفیف → تأیید و ارسال</p>
+    {# ─── Automation ─── #}
+    <div id="map-automation" class="adm-map-section">
+        <section class="adm-cell" aria-labelledby="admMapAutomation">
+            <header class="adm-cell-head">
+                <div>
+                    <h2 id="admMapAutomation">اتوماسیون بازاریابی</h2>
+                    <p>جریان‌های خودکار — از پیامک تا تماس مدیر</p>
+                </div>
+            </header>
+            <div class="adm-map-automation-list">
+                {% for flow in automation_flows %}
+                <article class="adm-map-automation-flow">
+                    <div class="adm-map-automation-head">
+                        <h3>{{ flow.title }}</h3>
+                        <span class="adm-map-automation-badge">{% if flow.status == 'draft' %}پیش‌نویس{% else %}فعال{% endif %}</span>
                     </div>
-                </header>
-
-                <ol class="adm-mkt-steps" aria-label="مراحل ساخت کمپین">
-                    <li class="adm-mkt-step is-active"><span>۱</span> مخاطب</li>
-                    <li class="adm-mkt-step"><span>۲</span> پیام</li>
-                    <li class="adm-mkt-step"><span>۳</span> ارسال</li>
-                </ol>
-
-                <form method="get" class="adm-mkt-filters" id="adm-mkt-filter-form">
-                    <div class="adm-mkt-filter-row">
-                        <label class="adm-mkt-field adm-mkt-field--wide">
-                            <span>سگمنت فعال</span>
-                            <select name="segment" class="adm-mkt-input" id="adm-mkt-segment-select">
-                                {% for seg in segments %}
-                                <option value="{{ seg.key }}" {% if seg.key == selected_segment %}selected{% endif %}>{{ seg.title }}</option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <label class="adm-mkt-field">
-                            <span>عدم تکرار (روز)</span>
-                            <input type="number" name="dedupe_days" class="adm-mkt-input" min="0" max="90" value="{{ dedupe_days }}">
-                        </label>
+                    <div class="adm-map-flow-steps">
+                        {% for step in flow.steps %}
+                        {% if not forloop.first %}<div class="adm-map-flow-arrow">↓</div>{% endif %}
+                        <div class="adm-map-flow-step" data-type="{{ step.type }}">
+                            <i class="fas {{ step.icon }}"></i>
+                            {{ step.label }}
+                        </div>
+                        {% endfor %}
                     </div>
-                    <div class="adm-mkt-filter-row">
-                        {% if segment_meta.supports_stale_hours %}
-                        <label class="adm-mkt-field">
-                            <span>حداقل سن سفارش (ساعت)</span>
-                            <input type="number" name="stale_hours" class="adm-mkt-input" min="1" max="720" value="{{ stale_hours }}" placeholder="مثلاً ۲۴">
-                        </label>
-                        {% endif %}
-                        {% if segment_meta.supports_days_lookback %}
-                        <label class="adm-mkt-field">
-                            <span>بازه روز</span>
-                            <input type="number" name="days_lookback" class="adm-mkt-input" min="1" max="90" value="{{ days_lookback }}">
-                        </label>
-                        {% endif %}
-                        {% if segment_meta.supports_product %}
-                        <label class="adm-mkt-field">
-                            <span>محصول (اختیاری)</span>
-                            <select name="product_id" class="adm-mkt-input">
-                                <option value="">همه محصولات</option>
-                                {% for p in products %}
-                                <option value="{{ p.id }}" {% if product_id == p.id %}selected{% endif %}>{{ p.title }}</option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        {% endif %}
-                        <button type="submit" class="adm-dl-btn adm-dl-btn--primary">
-                            <i class="fas fa-filter" aria-hidden="true"></i>
-                            اعمال فیلتر
-                        </button>
+                    <div style="margin-top:0.75rem">
+                        <a href="?segment={{ flow.segment_key }}#map-compose" class="adm-dl-btn adm-dl-btn--primary">
+                            <i class="fas fa-play"></i> شروع دستی این جریان
+                        </a>
                     </div>
-                </form>
-
-                <form method="post" class="adm-mkt-send-form" id="adm-mkt-send-form">
-                    {% csrf_token %}
-                    {{ sample_context|json_script:"adm-mkt-sample-context" }}
-                    <input type="hidden" name="segment_key" value="{{ selected_segment }}">
-                    <input type="hidden" name="stale_hours" value="{{ stale_hours }}">
-                    <input type="hidden" name="days_lookback" value="{{ days_lookback }}">
-                    <input type="hidden" name="product_id" value="{{ product_id }}">
-                    <input type="hidden" name="dedupe_days" value="{{ dedupe_days }}">
-
-                    <div class="adm-mkt-preview-box">
-                        <div class="adm-mkt-preview-stats">
-                            <div class="adm-mkt-preview-stat">
-                                <strong id="adm-mkt-selected-count">{{ preview.capped_count|currency }}</strong>
-                                <span>انتخاب‌شده</span>
-                            </div>
-                            <div class="adm-mkt-preview-stat">
-                                <strong>{{ preview.count|currency }}</strong>
-                                <span>واجد شرایط</span>
-                            </div>
-                            {% if preview.count > preview.batch_limit %}
-                            <div class="adm-mkt-preview-stat adm-mkt-preview-stat--warn">
-                                <strong>{{ preview.batch_limit|currency }}</strong>
-                                <span>سقف ارسال</span>
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        {% if preview.recipients %}
-                        <div class="adm-mkt-select-bar">
-                            <label class="adm-mkt-select-all">
-                                <input type="checkbox" id="adm-mkt-toggle-all" checked>
-                                <span>انتخاب همه</span>
-                            </label>
-                            <div class="adm-mkt-select-actions">
-                                <input type="search" id="adm-mkt-recipient-search" class="adm-mkt-input adm-mkt-input--sm" placeholder="جستجو شماره یا نام…" aria-label="جستجو گیرندگان">
-                                <button type="button" class="adm-mkt-link-btn" id="adm-mkt-select-none">حذف همه</button>
-                            </div>
-                        </div>
-                        <div class="adm-mkt-recipient-list" role="group" aria-label="گیرندگان" id="adm-mkt-recipient-list">
-                            {% for row in preview.recipients %}
-                            <label class="adm-mkt-recipient" data-search="{{ row.phone }} {{ row.name }} {{ row.product }}">
-                                <input type="checkbox" name="selected_phones" value="{{ row.phone }}" checked
-                                       data-name="{{ row.name }}"
-                                       data-name-part="{{ row.name_part }}"
-                                       data-product="{{ row.product }}"
-                                       data-amount="{{ row.amount }}"
-                                       data-link="{{ row.link }}">
-                                <span class="adm-mkt-recipient-main">
-                                    <strong dir="ltr">{{ row.phone }}</strong>
-                                    {% if row.name %}<em>{{ row.name }}</em>{% endif %}
-                                </span>
-                                <span class="adm-mkt-recipient-meta">
-                                    {% if row.product %}{{ row.product }}{% endif %}
-                                    {% if row.amount %} · {{ row.amount }} ت{% endif %}
-                                </span>
-                            </label>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <p class="adm-mkt-empty">گیرنده‌ای با این فیلتر پیدا نشد. سگمنت یا فیلترها را تغییر دهید.</p>
-                        {% endif %}
-                    </div>
-
-                    <label class="adm-mkt-field">
-                        <span>نام کمپین</span>
-                        <input type="text" name="name" class="adm-mkt-input" maxlength="200" placeholder="مثلاً بازیابی سفارش‌های معلق — {{ segment_meta.title }}">
-                    </label>
-
-                    <fieldset class="adm-mkt-fieldset">
-                        <legend>کد تخفیف</legend>
-                        <div class="adm-mkt-radios adm-mkt-discount-modes">
-                            <label class="adm-mkt-radio-card">
-                                <input type="radio" name="discount_mode" value="none" checked>
-                                <span><i class="fas fa-ban"></i> بدون تخفیف</span>
-                            </label>
-                            <label class="adm-mkt-radio-card">
-                                <input type="radio" name="discount_mode" value="shared">
-                                <span><i class="fas fa-users"></i> کد مشترک</span>
-                            </label>
-                            <label class="adm-mkt-radio-card">
-                                <input type="radio" name="discount_mode" value="unique">
-                                <span><i class="fas fa-fingerprint"></i> کد یکتا</span>
-                            </label>
-                        </div>
-                        <div class="adm-mkt-discount-fields" data-discount-fields>
-                            <label class="adm-mkt-field">
-                                <span>نوع</span>
-                                <select name="discount_type" class="adm-mkt-input">
-                                    <option value="percentage">درصدی</option>
-                                    <option value="fixed">مبلغ ثابت (تومان)</option>
-                                </select>
-                            </label>
-                            <label class="adm-mkt-field">
-                                <span>مقدار</span>
-                                <input type="number" name="discount_value" class="adm-mkt-input" min="1" value="15" placeholder="۱۵">
-                            </label>
-                            <label class="adm-mkt-field">
-                                <span>اعتبار (روز)</span>
-                                <input type="number" name="discount_valid_days" class="adm-mkt-input" min="1" max="90" value="7">
-                            </label>
-                            <label class="adm-mkt-field" data-shared-code-field hidden>
-                                <span>کد مشترک</span>
-                                <input type="text" name="shared_code" id="adm-mkt-shared-code" class="adm-mkt-input" maxlength="40" placeholder="مثلاً RECOVER15" style="text-transform:uppercase">
-                            </label>
-                        </div>
-                    </fieldset>
-
-                    <label class="adm-mkt-field">
-                        <span>متن پیام</span>
-                        <textarea name="message_template" id="adm-mkt-template" class="adm-mkt-input adm-mkt-textarea" rows="5" required>{{ default_template }}</textarea>
-                        <div class="adm-mkt-vars" aria-label="متغیرهای قالب">
-                            <span class="adm-mkt-vars-lbl">درج سریع:</span>
-                            <button type="button" class="adm-mkt-var-chip" data-var="{name}">نام</button>
-                            <button type="button" class="adm-mkt-var-chip" data-var="{name_part}">نام (با فاصله)</button>
-                            <button type="button" class="adm-mkt-var-chip" data-var="{product}">محصول</button>
-                            <button type="button" class="adm-mkt-var-chip" data-var="{amount}">مبلغ</button>
-                            <button type="button" class="adm-mkt-var-chip" data-var="{code}">کد تخفیف</button>
-                            <button type="button" class="adm-mkt-var-chip" data-var="{link}">لینک</button>
-                        </div>
-                    </label>
-
-                    <label class="adm-mkt-confirm">
-                        <input type="checkbox" name="confirm_send" value="1" required>
-                        <span>تأیید می‌کنم پیامک فقط برای افراد تیک‌خورده ارسال شود (<strong id="adm-mkt-confirm-count">{{ preview.capped_count|currency }}</strong> نفر).</span>
-                    </label>
-
-                    <button type="submit" class="adm-dl-btn adm-dl-btn--primary adm-mkt-submit" id="adm-mkt-submit" {% if preview.capped_count == 0 %}disabled{% endif %}>
-                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
-                        ارسال قطعی کمپین
-                    </button>
-                </form>
-            </section>
-
-            <aside class="adm-mkt-sidebar">
-                <section class="adm-cell adm-mkt-phone-preview" aria-labelledby="admMktPreview">
-                    <header class="adm-cell-head adm-cell-head--compact">
-                        <h2 id="admMktPreview">پیش‌نمایش پیامک</h2>
-                    </header>
-                    <div class="adm-mkt-phone" aria-hidden="true">
-                        <div class="adm-mkt-phone-notch"></div>
-                        <div class="adm-mkt-phone-screen">
-                            <div class="adm-mkt-phone-header">
-                                <i class="fas fa-signal"></i>
-                                <span>پیامک</span>
-                                <i class="fas fa-battery-full"></i>
-                            </div>
-                            <div class="adm-mkt-phone-bubble">
-                                <p id="adm-mkt-live-text">{{ sample_message }}</p>
-                            </div>
-                            <small class="adm-mkt-hint" id="adm-mkt-live-len">۰ کاراکتر</small>
-                        </div>
-                    </div>
-                    <label class="adm-mkt-preview-pick adm-mkt-preview-pick--block">
-                        <span>نمونه از گیرنده</span>
-                        <select id="adm-mkt-preview-phone" class="adm-mkt-input adm-mkt-input--sm">
-                            {% for row in preview.recipients %}
-                            <option value="{{ row.phone }}" {% if forloop.first %}selected{% endif %}>{{ row.phone }}{% if row.name %} — {{ row.name }}{% endif %}</option>
-                            {% empty %}
-                            <option value="">—</option>
-                            {% endfor %}
-                        </select>
-                    </label>
-                </section>
-
-                <section class="adm-cell adm-mkt-guide" aria-labelledby="admMktGuide">
-                    <header class="adm-cell-head adm-cell-head--compact">
-                        <h2 id="admMktGuide"><i class="fas fa-lightbulb"></i> راهنمای سریع</h2>
-                    </header>
-                    <ul class="adm-mkt-guide-list">
-                        <li><strong>عدم تکرار:</strong> کاربرانی که اخیراً پیام بازاریابی گرفته‌اند رد می‌شوند.</li>
-                        <li><strong>سقف ارسال:</strong> حداکثر {{ preview.batch_limit|currency }} نفر در هر کمپین.</li>
-                        <li><strong>کد یکتا:</strong> برای هر گیرنده کد تخفیف جدا ساخته می‌شود.</li>
-                        <li><strong>دفترچه تلفن:</strong> قبل از کمپین بزرگ، همگام‌سازی کنید.</li>
-                    </ul>
-                </section>
-            </aside>
-        </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
     </div>
 
-    <div id="mkt-phonebook" class="adm-section">
+    {# ─── Phonebook ─── #}
+    <div id="map-phonebook" class="adm-map-section">
         <section class="adm-cell adm-mkt-phonebook" aria-labelledby="admMktPhonebook">
             <header class="adm-cell-head">
                 <div>
-                    <h2 id="admMktPhonebook">دفترچه تلفن فراز — کاربران</h2>
-                    <p>همگام‌سازی کاربران سایت با دفترچه <strong dir="ltr">{{ phonebook_id }}</strong> برای ارسال کمپین حرفه‌ای</p>
+                    <h2 id="admMktPhonebook">دفترچه مخاطبین فراز</h2>
+                    <p>همگام‌سازی کاربران با دفترچه <strong dir="ltr">{{ phonebook_id }}</strong></p>
                 </div>
                 <div class="adm-mkt-phonebook-actions">
-                    <button type="button" class="adm-dl-btn" id="adm-phonebook-refresh" title="بارگذاری مجدد وضعیت">
-                        <i class="fas fa-rotate" aria-hidden="true"></i>
-                        بروزرسانی
-                    </button>
-                    <button type="button" class="adm-dl-btn adm-dl-btn--primary" id="adm-phonebook-sync">
-                        <i class="fas fa-address-book" aria-hidden="true"></i>
-                        همگام‌سازی
-                    </button>
+                    <button type="button" class="adm-dl-btn" id="adm-phonebook-refresh"><i class="fas fa-rotate"></i> بروزرسانی</button>
+                    <button type="button" class="adm-dl-btn adm-dl-btn--primary" id="adm-phonebook-sync"><i class="fas fa-address-book"></i> همگام‌سازی</button>
                 </div>
             </header>
-
-            <div class="adm-mkt-phonebook-stats" id="adm-phonebook-stats" aria-live="polite">
-                <div class="adm-mkt-phonebook-stat">
-                    <span class="adm-mkt-phonebook-stat-icon"><i class="fas fa-users"></i></span>
-                    <span class="adm-mkt-phonebook-stat-lbl">کاربران سایت (معتبر)</span>
-                    <strong id="adm-pb-site-valid">—</strong>
-                </div>
-                <div class="adm-mkt-phonebook-stat">
-                    <span class="adm-mkt-phonebook-stat-icon"><i class="fas fa-address-book"></i></span>
-                    <span class="adm-mkt-phonebook-stat-lbl">مخاطبین دفترچه</span>
-                    <strong id="adm-pb-book-total">—</strong>
-                </div>
-                <div class="adm-mkt-phonebook-stat adm-mkt-phonebook-stat--warn">
-                    <span class="adm-mkt-phonebook-stat-icon"><i class="fas fa-sync"></i></span>
-                    <span class="adm-mkt-phonebook-stat-lbl">نیاز به همگام‌سازی</span>
-                    <strong id="adm-pb-missing">—</strong>
-                </div>
-                <div class="adm-mkt-phonebook-stat">
-                    <span class="adm-mkt-phonebook-stat-icon"><i class="fas fa-user-plus"></i></span>
-                    <span class="adm-mkt-phonebook-stat-lbl">فقط در دفترچه</span>
-                    <strong id="adm-pb-extra">—</strong>
-                </div>
+            <div class="adm-mkt-phonebook-stats" id="adm-phonebook-stats">
+                <div class="adm-mkt-phonebook-stat"><span class="adm-mkt-phonebook-stat-lbl">کاربران سایت</span><strong id="adm-pb-site-valid">—</strong></div>
+                <div class="adm-mkt-phonebook-stat"><span class="adm-mkt-phonebook-stat-lbl">مخاطبین دفترچه</span><strong id="adm-pb-book-total">—</strong></div>
+                <div class="adm-mkt-phonebook-stat adm-mkt-phonebook-stat--warn"><span class="adm-mkt-phonebook-stat-lbl">نیاز به همگام‌سازی</span><strong id="adm-pb-missing">—</strong></div>
+                <div class="adm-mkt-phonebook-stat"><span class="adm-mkt-phonebook-stat-lbl">فقط در دفترچه</span><strong id="adm-pb-extra">—</strong></div>
             </div>
-            <p class="adm-mkt-hint adm-mkt-phonebook-hint" id="adm-phonebook-hint">
-                با هر همگام‌سازی، کاربران با موبایل معتبر به‌صورت دسته‌ای (حداکثر ۵۰۰ نفر در هر درخواست) در دفترچه ثبت یا به‌روز می‌شوند.
-            </p>
+            <p class="adm-mkt-hint" id="adm-phonebook-hint">حداکثر ۵۰۰ نفر در هر درخواست همگام‌سازی.</p>
             <p class="adm-mkt-phonebook-msg" id="adm-phonebook-msg" hidden></p>
         </section>
     </div>
 
-    <div id="mkt-history" class="adm-section">
-        <section class="adm-cell adm-mkt-history" aria-labelledby="admMktHistory">
+    {# ─── History + Timeline ─── #}
+    <div id="map-history" class="adm-map-section">
+        <section class="adm-cell" aria-labelledby="admMapHistory">
             <header class="adm-cell-head">
                 <div>
-                    <h2 id="admMktHistory">تاریخچه کمپین‌ها</h2>
-                    <p>گزارش ارسال، نرخ موفقیت و جزئیات هر کمپین</p>
+                    <h2 id="admMapHistory">تاریخچه کمپین‌ها</h2>
+                    <p>عملکرد هر کمپین — ارسال، تحویل، تبدیل و درآمد</p>
                 </div>
             </header>
-            {% if recent_campaigns %}
-            <div class="adm-mkt-campaign-grid">
-                {% for c in recent_campaigns %}
-                <a href="{% url 'admin_panel_marketing_detail' c.pk %}" class="adm-mkt-campaign-card">
-                    <div class="adm-mkt-campaign-head">
-                        <span class="adm-mkt-campaign-icon" data-accent="{{ c.segment_accent }}">
-                            <i class="fas {{ c.segment_icon }}" aria-hidden="true"></i>
-                        </span>
-                        <div class="adm-mkt-campaign-titles">
-                            <strong>{{ c.name }}</strong>
-                            <em>{{ c.segment_title }}</em>
-                        </div>
-                        <span class="adm-badge adm-badge--{{ c.status }}">{{ c.get_status_display }}</span>
-                    </div>
-                    <div class="adm-mkt-campaign-stats">
-                        <span><i class="fas fa-paper-plane"></i> {{ c.sent_count|currency }} ارسال</span>
-                        {% if c.failed_count %}<span class="adm-mkt-campaign-fail"><i class="fas fa-circle-xmark"></i> {{ c.failed_count|currency }} ناموفق</span>{% endif %}
-                        {% if c.skipped_count %}<span><i class="fas fa-forward"></i> {{ c.skipped_count|currency }} ردشده</span>{% endif %}
-                    </div>
-                    {% if c.success_pct is not None %}
-                    <div class="adm-mkt-progress" role="progressbar" aria-valuenow="{{ c.success_pct }}" aria-valuemin="0" aria-valuemax="100">
-                        <div class="adm-mkt-progress-bar" style="width: {{ c.success_pct }}%"></div>
-                        <span class="adm-mkt-progress-lbl">{{ c.success_pct|to_persian_digits }}٪ موفق</span>
+            <div class="adm-map-history-layout">
+                <div class="adm-map-history-table-wrap">
+                    {% if recent_campaigns %}
+                    <table class="adm-map-history-table">
+                        <thead>
+                            <tr>
+                                <th>نام کمپین</th>
+                                <th>مخاطب</th>
+                                <th>ارسال</th>
+                                <th>تحویل</th>
+                                <th>موفق</th>
+                                <th>تعامل</th>
+                                <th>خرید</th>
+                                <th>درآمد</th>
+                                <th>زمان</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in recent_campaigns %}
+                            <tr>
+                                <td><a href="{% url 'admin_panel_marketing_detail' c.pk %}">{{ c.name }}</a></td>
+                                <td>{{ c.recipients_total|currency }}</td>
+                                <td>{{ c.sent_count|currency }}</td>
+                                <td>{{ c.sent_count|currency }}</td>
+                                <td>
+                                    {% if c.success_pct is not None %}{{ c.success_pct|to_persian_digits }}٪{% else %}—{% endif %}
+                                    {% if c.success_pct %}<span class="adm-map-mini-progress"><span class="adm-map-mini-progress-bar" style="width:{{ c.success_pct }}%"></span></span>{% endif %}
+                                </td>
+                                <td>{% if c.click_pct is not None %}{{ c.click_pct|to_persian_digits }}٪{% else %}—{% endif %}</td>
+                                <td>{{ c.purchase_count|default:0|currency }}</td>
+                                <td>{{ c.revenue|default:0|currency }}</td>
+                                <td>{{ c.created_at|to_jalali_fa:"%m/%d %H:%M" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="adm-mkt-empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>هنوز کمپینی ارسال نشده.</p>
+                        <a href="#map-compose" class="adm-dl-btn adm-dl-btn--primary">اولین کمپین</a>
                     </div>
                     {% endif %}
-                    <time class="adm-mkt-campaign-date">{{ c.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</time>
-                </a>
-                {% endfor %}
+                </div>
+
+                {% if timeline_campaign %}
+                <aside class="adm-map-timeline" aria-label="Timeline آخرین کمپین">
+                    <h3>{{ timeline_campaign.name }}</h3>
+                    {% for ev in timeline_events %}
+                    {% if not forloop.first %}<div class="adm-map-timeline-arrow">↓</div>{% endif %}
+                    <div class="adm-map-timeline-item">
+                        <time class="adm-map-timeline-time">{{ ev.time|to_jalali_fa:"%H:%M" }}</time>
+                        <span class="adm-map-timeline-body{% if ev.highlight %} is-highlight{% endif %}">{{ ev.label }}</span>
+                    </div>
+                    {% endfor %}
+                </aside>
+                {% endif %}
             </div>
-            {% else %}
-            <div class="adm-mkt-empty-state">
-                <i class="fas fa-inbox" aria-hidden="true"></i>
-                <p>هنوز کمپینی ارسال نشده.</p>
-                <a href="#mkt-compose" class="adm-dl-btn adm-dl-btn--primary">اولین کمپین را بسازید</a>
-            </div>
-            {% endif %}
         </section>
     </div>
+
+    {# ─── Analytics ─── #}
+    <div id="map-analytics" class="adm-map-section">
+        <section class="adm-cell" aria-labelledby="admMapAnalytics">
+            <header class="adm-cell-head">
+                <div>
+                    <h2 id="admMapAnalytics">Analytics</h2>
+                    <p>ارسال روزانه، تبدیل، درآمد و بهترین کمپین‌ها</p>
+                </div>
+            </header>
+            <div class="adm-map-analytics-pills">
+                <span class="adm-map-analytics-pill"><em>CTR / تعامل</em><strong>{% if marketing_analytics.engagement_rate %}{{ marketing_analytics.engagement_rate|to_persian_digits }}٪{% else %}—{% endif %}</strong></span>
+                <span class="adm-map-analytics-pill"><em>Conversion</em><strong>{% if marketing_analytics.conversion_rate %}{{ marketing_analytics.conversion_rate|to_persian_digits }}٪{% else %}—{% endif %}</strong></span>
+                <span class="adm-map-analytics-pill"><em>Revenue</em><strong>{{ marketing_analytics.revenue|currency }} ت</strong></span>
+                <span class="adm-map-analytics-pill"><em>Top Campaign</em><strong>{% if marketing_analytics.top_campaign %}{{ marketing_analytics.top_campaign.name|truncatechars:20 }}{% else %}—{% endif %}</strong></span>
+                <span class="adm-map-analytics-pill"><em>Best Segment</em><strong>{{ marketing_analytics.best_segment_title }}</strong></span>
+                <span class="adm-map-analytics-pill"><em>Best Discount</em><strong dir="ltr">{{ marketing_analytics.best_discount_code }}</strong></span>
+            </div>
+            <div class="adm-map-analytics-grid">
+                <div class="adm-map-chart-card">
+                    <h3><i class="fas fa-paper-plane"></i> ارسال روزانه</h3>
+                    <div class="adm-map-chart-wrap"><canvas id="adm-map-chart-daily"></canvas></div>
+                </div>
+                <div class="adm-map-chart-card">
+                    <h3><i class="fas fa-filter"></i> CTR & Conversion</h3>
+                    <div class="adm-map-chart-wrap adm-map-chart-wrap--sm"><canvas id="adm-map-chart-funnel"></canvas></div>
+                </div>
+                <div class="adm-map-chart-card">
+                    <h3><i class="fas fa-coins"></i> Revenue</h3>
+                    <div class="adm-map-chart-wrap adm-map-chart-wrap--sm"><canvas id="adm-map-chart-revenue"></canvas></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ default_template|json_script:"adm-map-ai-template" }}
 <script>
-(function () {
-  var tabs = document.querySelectorAll('.adm-mkt-tabs .adm-tab');
-  var sections = ['mkt-overview', 'mkt-compose', 'mkt-phonebook', 'mkt-history'];
-
-  function setActiveTab() {
-    var hash = (location.hash || '#mkt-overview').replace('#', '');
-    if (sections.indexOf(hash) === -1) hash = 'mkt-overview';
-    tabs.forEach(function (tab) {
-      var href = (tab.getAttribute('href') || '').replace('#', '');
-      tab.classList.toggle('is-active', href === hash);
-    });
-  }
-  tabs.forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      setTimeout(setActiveTab, 0);
-    });
-  });
-  window.addEventListener('hashchange', setActiveTab);
-  setActiveTab();
-
-})();
-
-(function () {
-  var form = document.getElementById('adm-mkt-send-form');
-  if (!form) return;
-
-  var sharedField = form.querySelector('[data-shared-code-field]');
-  var discountFields = form.querySelector('[data-discount-fields]');
-  var templateEl = document.getElementById('adm-mkt-template');
-  var liveText = document.getElementById('adm-mkt-live-text');
-  var liveLen = document.getElementById('adm-mkt-live-len');
-  var previewPhone = document.getElementById('adm-mkt-preview-phone');
-  var sharedCodeEl = document.getElementById('adm-mkt-shared-code');
-  var toggleAll = document.getElementById('adm-mkt-toggle-all');
-  var selectNone = document.getElementById('adm-mkt-select-none');
-  var selectedCountEl = document.getElementById('adm-mkt-selected-count');
-  var confirmCountEl = document.getElementById('adm-mkt-confirm-count');
-  var submitBtn = document.getElementById('adm-mkt-submit');
-  var searchEl = document.getElementById('adm-mkt-recipient-search');
-  var recipientList = document.getElementById('adm-mkt-recipient-list');
-
-  function toFaDigits(n) {
-    return String(n).replace(/\d/g, function (d) {
-      return '۰۱۲۳۴۵۶۷۸۹'[d];
-    });
-  }
-
-  function formatNum(n) {
-    return toFaDigits(Number(n || 0).toLocaleString('en-US'));
-  }
-
-  function syncDiscount() {
-    var mode = (form.querySelector('input[name="discount_mode"]:checked') || {}).value || 'none';
-    if (discountFields) discountFields.hidden = mode === 'none';
-    if (sharedField) sharedField.hidden = mode !== 'shared';
-    form.querySelectorAll('.adm-mkt-radio-card').forEach(function (card) {
-      var input = card.querySelector('input[type="radio"]');
-      card.classList.toggle('is-active', input && input.checked);
-    });
-    updateLivePreview();
-  }
-
-  function selectedCheckboxes() {
-    return Array.prototype.slice.call(form.querySelectorAll('input[name="selected_phones"]'));
-  }
-
-  function visibleCheckboxes() {
-    if (!recipientList) return selectedCheckboxes();
-    return selectedCheckboxes().filter(function (b) {
-      var row = b.closest('.adm-mkt-recipient');
-      return row && row.style.display !== 'none';
-    });
-  }
-
-  function updateSelectedCount() {
-    var boxes = selectedCheckboxes();
-    var n = boxes.filter(function (b) { return b.checked; }).length;
-    if (selectedCountEl) selectedCountEl.textContent = formatNum(n);
-    if (confirmCountEl) confirmCountEl.textContent = formatNum(n);
-    if (toggleAll) {
-      var visible = visibleCheckboxes();
-      var visChecked = visible.filter(function (b) { return b.checked; }).length;
-      toggleAll.checked = visible.length > 0 && visChecked === visible.length;
-      toggleAll.indeterminate = visChecked > 0 && visChecked < visible.length;
-    }
-    if (submitBtn) submitBtn.disabled = n === 0;
-  }
-
-  function resolveCode() {
-    var mode = (form.querySelector('input[name="discount_mode"]:checked') || {}).value || 'none';
-    if (mode === 'none') return '—';
-    if (mode === 'shared') {
-      var code = (sharedCodeEl && sharedCodeEl.value || '').trim().toUpperCase();
-      return code || 'RECOVER15';
-    }
-    return 'MK-XXXXXX';
-  }
-
-  function contextForPhone(phone) {
-    var box = null;
-    selectedCheckboxes().forEach(function (b) {
-      if (b.value === phone) box = b;
-    });
-    if (!box) {
-      var el = document.getElementById('adm-mkt-sample-context');
-      try {
-        return el ? JSON.parse(el.textContent) : {};
-      } catch (e) {
-        return {};
-      }
-    }
-    return {
-      name: box.getAttribute('data-name') || '',
-      name_part: box.getAttribute('data-name-part') || '',
-      product: box.getAttribute('data-product') || '',
-      amount: box.getAttribute('data-amount') || '',
-      link: box.getAttribute('data-link') || '',
-      code: resolveCode()
-    };
-  }
-
-  function renderTemplate(tpl, ctx) {
-    return String(tpl || '').replace(/\{(\w+)\}/g, function (_, key) {
-      return ctx[key] != null ? String(ctx[key]) : '';
-    });
-  }
-
-  function updateLivePreview() {
-    if (!templateEl || !liveText) return;
-    var phone = previewPhone ? previewPhone.value : '';
-    var ctx = contextForPhone(phone);
-    ctx.code = resolveCode();
-    var text = renderTemplate(templateEl.value, ctx);
-    liveText.textContent = text || '—';
-    if (liveLen) liveLen.textContent = toFaDigits(text.length) + ' کاراکتر · ' + (text.length <= 70 ? '۱ پیامک' : toFaDigits(Math.ceil(text.length / 67)) + ' پیامک');
-  }
-
-  form.querySelectorAll('input[name="discount_mode"]').forEach(function (el) {
-    el.addEventListener('change', syncDiscount);
-  });
-  if (templateEl) templateEl.addEventListener('input', updateLivePreview);
-  if (sharedCodeEl) sharedCodeEl.addEventListener('input', updateLivePreview);
-  if (previewPhone) previewPhone.addEventListener('change', updateLivePreview);
-
-  document.querySelectorAll('.adm-mkt-var-chip').forEach(function (chip) {
-    chip.addEventListener('click', function () {
-      if (!templateEl) return;
-      var v = chip.getAttribute('data-var') || '';
-      var start = templateEl.selectionStart;
-      var end = templateEl.selectionEnd;
-      var val = templateEl.value;
-      templateEl.value = val.slice(0, start) + v + val.slice(end);
-      templateEl.focus();
-      templateEl.selectionStart = templateEl.selectionEnd = start + v.length;
-      updateLivePreview();
-    });
-  });
-
-  if (searchEl && recipientList) {
-    searchEl.addEventListener('input', function () {
-      var q = (searchEl.value || '').trim().toLowerCase();
-      recipientList.querySelectorAll('.adm-mkt-recipient').forEach(function (row) {
-        var hay = (row.getAttribute('data-search') || '').toLowerCase();
-        row.style.display = !q || hay.indexOf(q) !== -1 ? '' : 'none';
-      });
-      updateSelectedCount();
-    });
-  }
-
-  selectedCheckboxes().forEach(function (box) {
-    box.addEventListener('change', function () {
-      updateSelectedCount();
-      if (previewPhone && box.value === previewPhone.value && !box.checked) {
-        var firstChecked = selectedCheckboxes().find(function (b) { return b.checked; });
-        if (firstChecked) previewPhone.value = firstChecked.value;
-      }
-      updateLivePreview();
-    });
-  });
-
-  if (toggleAll) {
-    toggleAll.addEventListener('change', function () {
-      visibleCheckboxes().forEach(function (b) { b.checked = toggleAll.checked; });
-      updateSelectedCount();
-      updateLivePreview();
-    });
-  }
-  if (selectNone) {
-    selectNone.addEventListener('click', function () {
-      selectedCheckboxes().forEach(function (b) { b.checked = false; });
-      if (toggleAll) toggleAll.checked = false;
-      updateSelectedCount();
-      updateLivePreview();
-    });
-  }
-
-  form.addEventListener('submit', function (e) {
-    if (selectedCheckboxes().filter(function (b) { return b.checked; }).length === 0) {
-      e.preventDefault();
-      alert('حداقل یک گیرنده را انتخاب کنید.');
-    }
-  });
-
-  syncDiscount();
-  updateSelectedCount();
-  updateLivePreview();
-})();
-
-(function () {
-  var statusUrl = '{% url "admin_panel_phonebook_status" %}';
-  var syncUrl = '{% url "admin_panel_phonebook_sync" %}';
-  var refreshBtn = document.getElementById('adm-phonebook-refresh');
-  var syncBtn = document.getElementById('adm-phonebook-sync');
-  var msgEl = document.getElementById('adm-phonebook-msg');
-  var hintEl = document.getElementById('adm-phonebook-hint');
-  var elSite = document.getElementById('adm-pb-site-valid');
-  var elBook = document.getElementById('adm-pb-book-total');
-  var elMissing = document.getElementById('adm-pb-missing');
-  var elExtra = document.getElementById('adm-pb-extra');
-  var csrf = document.querySelector('#adm-mkt-send-form input[name="csrfmiddlewaretoken"]');
-
-  if (!refreshBtn || !syncBtn) return;
-
-  function toFaDigits(n) {
-    return String(n).replace(/\d/g, function (d) {
-      return '۰۱۲۳۴۵۶۷۸۹'[d];
-    });
-  }
-
-  function formatNum(n) {
-    return toFaDigits(Number(n || 0).toLocaleString('en-US'));
-  }
-
-  function setMsg(text, isError) {
-    if (!msgEl) return;
-    if (!text) {
-      msgEl.hidden = true;
-      msgEl.textContent = '';
-      msgEl.classList.remove('adm-mkt-phonebook-msg--error', 'adm-mkt-phonebook-msg--ok');
-      return;
-    }
-    msgEl.hidden = false;
-    msgEl.textContent = text;
-    msgEl.classList.toggle('adm-mkt-phonebook-msg--error', !!isError);
-    msgEl.classList.toggle('adm-mkt-phonebook-msg--ok', !isError);
-  }
-
-  function renderStatus(data) {
-    if (elSite) elSite.textContent = formatNum(data.site_users_valid);
-    if (elBook) elBook.textContent = formatNum(data.phonebook_total);
-    if (elMissing) elMissing.textContent = formatNum(data.missing_in_phonebook);
-    if (elExtra) elExtra.textContent = formatNum(data.extra_in_phonebook);
-    if (!data.ok && data.error) {
-      setMsg(data.error, true);
-    } else {
-      setMsg('');
-    }
-  }
-
-  function setLoading(loading) {
-    refreshBtn.disabled = loading;
-    syncBtn.disabled = loading;
-    if (hintEl) hintEl.style.opacity = loading ? '0.55' : '';
-  }
-
-  function loadStatus() {
-    setLoading(true);
-    return fetch(statusUrl, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        renderStatus(data);
-        return data;
-      })
-      .catch(function () {
-        setMsg('بارگذاری وضعیت دفترچه ناموفق بود.', true);
-      })
-      .finally(function () {
-        setLoading(false);
-      });
-  }
-
-  function syncPhonebook() {
-    if (!window.confirm('کاربران سایت در دفترچه تلفن فراز ثبت/به‌روز شوند؟')) return;
-    setLoading(true);
-    setMsg('در حال همگام‌سازی…', false);
-    fetch(syncUrl, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        Accept: 'application/json',
-        'X-CSRFToken': csrf ? csrf.value : '',
-      },
-    })
-      .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
-      .then(function (res) {
-        if (!res.ok || !res.body.ok) {
-          setMsg((res.body && res.body.error) || 'همگام‌سازی ناموفق بود.', true);
-          return;
-        }
-        var b = res.body;
-        setMsg(
-          'همگام‌سازی انجام شد: ' + formatNum(b.synced) + ' کاربر در ' +
-          formatNum(b.batches) + ' دسته. مخاطبین دفترچه: ' +
-          formatNum(b.phonebook_total_before) + ' ← ' + formatNum(b.phonebook_total_after),
-          false
-        );
-        return loadStatus();
-      })
-      .catch(function () {
-        setMsg('خطا در ارتباط با سرور.', true);
-      })
-      .finally(function () {
-        setLoading(false);
-      });
-  }
-
-  refreshBtn.addEventListener('click', loadStatus);
-  syncBtn.addEventListener('click', syncPhonebook);
-  loadStatus();
-})();
+window.admMapAnalytics = {{ marketing_analytics_json|safe }};
+window.admMapMeta = {
+    smsCredit: {% if marketing_stats.sms_credit %}{{ marketing_stats.sms_credit }}{% else %}null{% endif %},
+    phonebookStatusUrl: '{% url "admin_panel_phonebook_status" %}',
+    phonebookSyncUrl: '{% url "admin_panel_phonebook_sync" %}',
+    aiTemplate: (function () {
+        var el = document.getElementById('adm-map-ai-template');
+        try { return el ? JSON.parse(el.textContent) : ''; } catch (e) { return ''; }
+    })()
+};
 </script>
+<script src="{% static 'js/admin-marketing.js' %}?v=1"></script>
 {% endblock %}

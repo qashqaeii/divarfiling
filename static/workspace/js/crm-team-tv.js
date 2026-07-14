@@ -586,7 +586,7 @@
         if (!data || !data.ok) return;
         if (!force && data.payload_version && data.payload_version === state.lastPayloadVersion) {
             renderMeta(data);
-            setStatus('live', 'به‌روز · ' + (data.clock || ''));
+            setStatus('live', 'به‌روز');
             return;
         }
         state.lastPayloadVersion = data.payload_version;
@@ -601,7 +601,7 @@
         renderAlerts(data);
         renderTicker(data);
         renderMeta(data);
-        setStatus('live', 'به‌روز · ' + (data.clock || ''));
+        setStatus('live', 'به‌روز');
     }
 
     function tickClock() {
@@ -645,7 +645,7 @@
                 state.inflight = null;
                 if (err && err.name === 'AbortError') return;
                 state.backoffMs = Math.min(state.backoffMs ? state.backoffMs * 2 : 5000, 60000);
-                setStatus('offline', state.lastData ? 'قطع · ' + (state.lastData.clock || '') : 'خطا در اتصال');
+                setStatus('offline', state.lastData ? 'قطع' : 'خطا در اتصال');
             });
     }
 

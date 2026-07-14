@@ -74,7 +74,7 @@ body.crm-tv-body {
 .tv-cmd__header {
     grid-area: header;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
     gap: clamp(0.5rem, 1vw, 1rem);
     padding: 0 0.15rem;
@@ -131,18 +131,24 @@ body.crm-tv-body {
     color: var(--tv-muted);
 }
 
-.tv-cmd__status {
-    display: flex;
+.tv-cmd__status,
+.tv-cmd__clock-status {
+    display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    font-size: clamp(0.62rem, 1.1vh, 0.72rem);
+    justify-content: center;
+    gap: 0.3rem;
+    font-size: clamp(0.55rem, 1vh, 0.66rem);
     color: var(--tv-muted);
     white-space: nowrap;
+    margin-top: 2px;
 }
 
+.tv-cmd__clock.is-loading .tv-cmd__sync-dot { background: var(--tv-warn); }
+.tv-cmd__clock.is-offline .tv-cmd__sync-dot { background: var(--tv-danger); }
+
 .tv-cmd__sync-dot {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--tv-ok);
     flex-shrink: 0;
@@ -153,10 +159,11 @@ body.crm-tv-body {
 
 .tv-cmd__clock {
     text-align: center;
-    padding: 0.2rem 0.65rem;
+    padding: 0.25rem 0.75rem;
     border-radius: 8px;
     background: var(--tv-surface);
     border: 1px solid var(--tv-border);
+    min-width: clamp(5.5rem, 9vw, 7rem);
 }
 
 .tv-cmd__clock-time {

@@ -154,6 +154,11 @@ def get_tv_cache_key(agency_id: int, role: str) -> str:
     return f'crm:agency:{agency_id}:tv:v{TV_PAYLOAD_SCHEMA_VERSION}:{role}'
 
 
+def _tv_now():
+    """زمان محلی آژانس (TIME_ZONE) برای ساعت و تاریخ هدر TV."""
+    return timezone.localtime(timezone.now())
+
+
 def invalidate_tv_cache(agency_id: int) -> None:
     for role in ALLOWED_WIDGETS_BY_ROLE:
         cache.delete(get_tv_cache_key(agency_id, role))
@@ -621,7 +626,7 @@ def _build_payload_for_role(
     *,
     days: int = 1,
 ) -> Dict[str, Any]:
-    now = timezone.now()
+    now = _tv_now()
     allowed = list(ALLOWED_WIDGETS_BY_ROLE.get(role, ALLOWED_WIDGETS_BY_ROLE[TV_ROLE_ADVISOR]))
     performance = get_team_performance(agency, days=max(days, 30))
 
@@ -704,7 +709,7 @@ def get_tv_dashboard_payload(user, *, days: int = 1, use_cache: bool = True) -> 
         cached = cache.get(cache_key)
         if cached:
             cached = dict(cached)
-            now = timezone.now()
+            now = _tv_now()
             cached['generated_at'] = now.isoformat()
             cached['jalali_date'] = to_persian_digits(format_jalali_date(now.date()))
             cached['clock'] = to_persian_digits(now.strftime('%H:%M'))

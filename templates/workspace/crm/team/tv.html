@@ -21,13 +21,13 @@
             </div>
             {% endif %}
         </div>
-        <div class="tv-cmd__status" data-tv-sync aria-live="polite">
-            <span class="tv-cmd__sync-dot"></span>
-            <span data-tv-updated>در حال بارگذاری…</span>
-        </div>
-        <div class="tv-cmd__clock">
+        <div class="tv-cmd__clock" data-tv-sync aria-live="polite">
             <span class="tv-cmd__clock-time" data-tv-clock>--:--</span>
             <span class="tv-cmd__clock-date" data-tv-date>{{ tv_payload.jalali_date|default:'' }}</span>
+            <span class="tv-cmd__clock-status">
+                <span class="tv-cmd__sync-dot"></span>
+                <span data-tv-updated>در حال بارگذاری…</span>
+            </span>
         </div>
         <div class="tv-cmd__toolbar" data-tv-chrome>
             <button type="button" class="tv-cmd__icon" data-tv-widgets title="ویجت‌ها"><i class="fas fa-sliders"></i></button>
@@ -140,5 +140,5 @@ window.crmTeamTV = {
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=7"></script>
+<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=8"></script>
 {% endblock %}

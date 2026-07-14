@@ -331,19 +331,18 @@ def _plan_short_label(plan: LicensePlan) -> str:
 
 
 def get_plan_sales_breakdown(limit: int | None = None) -> List[Dict[str, Any]]:
-    """فروش هر پلن — همیشه همه پلن‌های فعال با ترتیب کاتالوگ."""
+    """فروش هر پلن — همه پلن‌های فعال؛ تجمیع فروش بر اساس نوع پلن (نه فقط plan_id)."""
+    sales_by_type: Dict[tuple, Dict[str, int]] = {}
     sales_rows = (
         Order.objects.filter(status='paid', plan_id__isnull=False)
-        .values('plan_id')
+        .values('plan__product_id', 'plan__plan_type')
         .annotate(count=Count('id'), total=Sum('amount'))
     )
-    sales_by_plan = {
-        row['plan_id']: {
-            'count': int(row['count'] or 0),
-            'total': int(row['total'] or 0),
-        }
-        for row in sales_rows
-    }
+    for row in sales_rows:
+        key = (row['plan__product_id'], row['plan__plan_type'] or '')
+        bucket = sales_by_type.setdefault(key, {'count': 0, 'total': 0})
+        bucket['count'] += int(row['count'] or 0)
+        bucket['total'] += int(row['total'] or 0)
 
     plans_qs = (
         LicensePlan.objects.filter(is_active=True)
@@ -355,7 +354,8 @@ def get_plan_sales_breakdown(limit: int | None = None) -> List[Dict[str, Any]]:
 
     result: List[Dict[str, Any]] = []
     for plan in plans_qs:
-        stats = sales_by_plan.get(plan.id, {'count': 0, 'total': 0})
+        key = (plan.product_id, plan.plan_type or '')
+        stats = sales_by_type.get(key, {'count': 0, 'total': 0})
         result.append({
             'plan_id': plan.id,
             'label': plan.name,
@@ -383,6 +383,7 @@ def build_plan_sales_chart_payload(plan_sales: List[Dict[str, Any]]) -> Dict[str
         'fullLabels': [item['full_label'] for item in plan_sales],
         'orderCounts': [item['count'] for item in plan_sales],
         'planPrices': [item['price'] for item in plan_sales],
+        'planTotals': [item['total'] for item in plan_sales],
         'accents': [item['accent'] for item in plan_sales],
         'datasets': [{
             'label': 'درآمد (تومان)',

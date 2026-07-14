@@ -142,6 +142,7 @@
             opts.plugins.legend.display = false;
             opts.layout.padding = { left: 4, right: 16, top: 6, bottom: 6 };
             opts.indexAxis = 'y';
+            opts.interaction = { mode: 'nearest', axis: 'y', intersect: true };
             opts.scales = {
                 x: {
                     grid: { color: theme.grid },
@@ -175,10 +176,30 @@
                     return (chartConfig.fullLabels && chartConfig.fullLabels[idx]) || items[0].label;
                 },
                 label: function (ctx) {
-                    const idx = ctx.dataIndex;
-                    const revenue = ctx.parsed.x != null ? ctx.parsed.x : 0;
-                    const count = chartConfig.orderCounts ? chartConfig.orderCounts[idx] : 0;
-                    const price = chartConfig.planPrices ? chartConfig.planPrices[idx] : 0;
+                    return [];
+                },
+                afterBody: function (items) {
+                    if (!items.length) return [];
+                    const item = items[0];
+                    const idx = item.dataIndex;
+                    const totals = chartConfig.planTotals
+                        || (chartConfig.datasets && chartConfig.datasets[0] && chartConfig.datasets[0].data);
+                    let revenue = 0;
+                    if (totals && totals[idx] != null) {
+                        revenue = Number(totals[idx]) || 0;
+                    } else if (item.raw != null) {
+                        revenue = Number(item.raw) || 0;
+                    } else if (item.parsed) {
+                        revenue = Number(item.parsed.x != null ? item.parsed.x : item.parsed.y) || 0;
+                    }
+                    const count = Number(
+                        chartConfig.orderCounts && chartConfig.orderCounts[idx] != null
+                            ? chartConfig.orderCounts[idx] : 0
+                    );
+                    const price = Number(
+                        chartConfig.planPrices && chartConfig.planPrices[idx] != null
+                            ? chartConfig.planPrices[idx] : 0
+                    );
                     return [
                         'درآمد: ' + formatMoney(revenue) + ' تومان',
                         'تعداد سفارش: ' + toPersianDigits(count),
@@ -233,7 +254,6 @@
                         copy.tension = 0.4;
                     }
                     if (config.chartKind === 'plan_sales') {
-                        copy.minBarLength = 8;
                         copy.borderRadius = 8;
                     }
                     return copy;

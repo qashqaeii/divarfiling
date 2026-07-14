@@ -60,7 +60,34 @@ class AdminDashboardServiceTests(TestCase):
         chart = build_plan_sales_chart_payload(plans)
         self.assertEqual(chart['chartKind'], 'plan_sales')
         self.assertEqual(len(chart['labels']), len(plans))
+        self.assertIn('planTotals', chart)
+        self.assertEqual(chart['planTotals'], [p['total'] for p in plans])
         self.assertEqual(len(chart['datasets'][0]['backgroundColor']), len(plans))
+
+    def test_plan_sales_aggregates_by_plan_type(self):
+        from shop.bot_catalog import bot_license_plans
+        from shop.models import LicensePlan, Order, Product
+
+        product = Product.objects.create(title='ربات تجمیع', slug='test-bot-agg', is_active=True)
+        user = User.objects.create_user(username='buyer1', password='x', phone='09121111111')
+        plan_data = bot_license_plans()[0]
+        old_plan = LicensePlan.objects.create(product=product, **plan_data)
+        Order.objects.create(
+            user=user,
+            product=product,
+            plan=old_plan,
+            amount=old_plan.price,
+            status='paid',
+        )
+        old_plan.is_active = False
+        old_plan.save(update_fields=['is_active'])
+        new_plan = LicensePlan.objects.create(product=product, **plan_data)
+
+        plans = get_plan_sales_breakdown()
+        daily = next(p for p in plans if p['plan_type'] == 'daily')
+        self.assertEqual(daily['plan_id'], new_plan.id)
+        self.assertEqual(daily['count'], 1)
+        self.assertEqual(daily['total'], int(old_plan.price))
 
     def test_affiliate_queries(self):
         partners = get_affiliate_partners(limit=5)

@@ -1,47 +1,121 @@
-"""تست داشبورد TV آژانس."""
+"""تست‌های Hardening داشبورد TV آژانس."""
 import json
+from datetime import timedelta
+from unittest import mock
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.core.cache import cache
+from django.db import connection
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
-from workspace.models import CRMAgencyAnnouncement, CRMAgencyMember, CRMDeal, Customer
+from workspace.models import (
+    CRMAgencyAnnouncement,
+    CRMAgencyMember,
+    CRMAgencyTeamGoal,
+    CRMDeal,
+    Customer,
+)
 from workspace.services.crm_agency import create_agency
 from workspace.services.crm_agency_announcements import create_announcement
-from workspace.services.crm_agency_tv import get_tv_dashboard_payload
+from workspace.services.crm_agency_features import is_agency_feature_enabled
+from workspace.services.crm_agency_tv import (
+    TV_ROLE_ADVISOR,
+    TV_ROLE_MANAGER,
+    TV_ROLE_SECRETARY,
+    get_tv_cache_key,
+    get_tv_dashboard_payload,
+    invalidate_tv_cache,
+    scan_payload_for_pii,
+)
 
 User = get_user_model()
 
+PII_SAMPLES = (
+    '09120000000',
+    'مشتری محرمانه',
+    'معامله تست',
+    'آدرس دقیق',
+)
 
-class CRMAgencyTVTests(TestCase):
+
+class CRMAgencyTVHardeningTests(TestCase):
     def setUp(self):
-        self.owner = User.objects.create_user(username='owner_tv', password='pass12345')
-        self.advisor = User.objects.create_user(username='advisor_tv', phone='09123333333', password='pass12345')
-        self.agency = create_agency(self.owner, 'آژانس TV')
+        cache.clear()
+        self.owner = User.objects.create_user(username='owner_tv2', password='pass12345')
+        self.manager = User.objects.create_user(username='mgr_tv2', phone='09126666666', password='pass12345')
+        self.secretary = User.objects.create_user(username='sec_tv2', phone='09127777777', password='pass12345')
+        self.advisor = User.objects.create_user(username='advisor_tv2', phone='09128888888', password='pass12345')
+        self.agency = create_agency(self.owner, 'آژانس TV Hardening')
+        CRMAgencyMember.objects.create(agency=self.agency, user=self.manager, role='manager')
+        CRMAgencyMember.objects.create(agency=self.agency, user=self.secretary, role='secretary')
         CRMAgencyMember.objects.create(agency=self.agency, user=self.advisor, role='advisor')
 
-    def test_tv_page_requires_membership(self):
-        outsider = User.objects.create_user(username='outsider_tv', phone='09124444444', password='pass12345')
+        self.other_owner = User.objects.create_user(username='other_owner', phone='09129999999', password='pass12345')
+        self.other_agency = create_agency(self.other_owner, 'آژانس دیگر')
+
+    def _assert_no_pii(self, payload):
+        raw = json.dumps(payload, ensure_ascii=False)
+        for sample in PII_SAMPLES:
+            self.assertNotIn(sample, raw)
+        self.assertEqual(scan_payload_for_pii(payload), [])
+
+    def test_active_member_can_access_page_and_api(self):
+        for user in (self.owner, self.manager, self.secretary, self.advisor):
+            client = Client()
+            client.force_login(user)
+            page = client.get(reverse('workspace:crm_team_tv'))
+            self.assertEqual(page.status_code, 200, msg=user.username)
+            api = client.get(reverse('workspace:api_crm_team_tv'))
+            self.assertEqual(api.status_code, 200, msg=user.username)
+            self.assertTrue(api.json()['ok'])
+
+    def test_outsider_denied(self):
+        outsider = User.objects.create_user(username='outsider_tv2', phone='09121112222', password='pass12345')
         client = Client()
         client.force_login(outsider)
-        resp = client.get(reverse('workspace:crm_team_tv'))
-        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(client.get(reverse('workspace:crm_team_tv')).status_code, 302)
+        self.assertEqual(client.get(reverse('workspace:api_crm_team_tv')).status_code, 404)
 
-    def test_tv_page_loads_for_manager(self):
+    def test_cross_agency_isolation(self):
         client = Client()
-        client.force_login(self.owner)
-        resp = client.get(reverse('workspace:crm_team_tv'))
-        self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'crm-tv-app')
-        self.assertContains(resp, 'آژانس TV')
+        client.force_login(self.other_owner)
+        data = client.get(reverse('workspace:api_crm_team_tv')).json()
+        self.assertEqual(data['agency']['name'], 'آژانس دیگر')
+        self.assertNotEqual(data['agency']['name'], 'آژانس TV Hardening')
 
-    def test_tv_api_returns_sanitized_payload(self):
+    def test_role_payload_manager_includes_commission(self):
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        self.assertEqual(payload['role'], TV_ROLE_MANAGER)
+        self.assertIn('commission_month', payload['kpis'])
+        self.assertIn('leads', payload)
+        self.assertIn('deals', payload)
+
+    def test_role_payload_secretary_no_commission(self):
+        payload = get_tv_dashboard_payload(self.secretary, use_cache=False)
+        self.assertEqual(payload['role'], TV_ROLE_SECRETARY)
+        self.assertNotIn('commission_month', payload['kpis'])
+        self.assertIn('leads', payload)
+        self.assertIn('deals', payload)
+
+    def test_role_payload_advisor_reduced(self):
+        payload = get_tv_dashboard_payload(self.advisor, use_cache=False)
+        self.assertEqual(payload['role'], TV_ROLE_ADVISOR)
+        self.assertNotIn('commission_month', payload['kpis'])
+        self.assertEqual(payload['leads']['unassigned'], 0)
+        self.assertEqual(payload['deals']['active_count'], 0)
+        self.assertNotIn('leads', payload['allowed_widgets'])
+        self.assertNotIn('deals', payload['allowed_widgets'])
+
+    def test_pii_sanitization(self):
         customer = Customer.objects.create(
             agency=self.agency,
             user=self.owner,
             name='مشتری محرمانه',
             phone='09120000000',
             source='دیوار',
+            notes='آدرس دقیق',
         )
         CRMDeal.objects.create(
             agency=self.agency,
@@ -50,42 +124,127 @@ class CRMAgencyTVTests(TestCase):
             title='معامله تست',
             stage='مذاکره',
         )
-        create_announcement(self.owner, title='اطلاعیه TV', body='متن عمومی')
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        self._assert_no_pii(payload)
+        for deal in payload['deals']['active']:
+            self.assertIn('summary', deal)
+            self.assertNotIn('title', deal)
+            self.assertNotIn('id', deal)
 
-        client = Client()
-        client.force_login(self.owner)
-        resp = client.get(reverse('workspace:api_crm_team_tv'))
-        self.assertEqual(resp.status_code, 200)
-        data = resp.json()
-        self.assertTrue(data['ok'])
-        self.assertEqual(data['agency_name'], 'آژانس TV')
-        self.assertIn('kpis', data)
-        self.assertIn('leaderboard', data)
-        raw = json.dumps(data, ensure_ascii=False)
-        self.assertNotIn('09120000000', raw)
-        self.assertNotIn('مشتری محرمانه', raw)
+    def test_forbidden_keys_not_in_payload(self):
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        self.assertEqual(scan_payload_for_pii(payload), [])
 
-    def test_advisor_gets_reduced_tv_view(self):
-        payload = get_tv_dashboard_payload(self.advisor)
-        self.assertTrue(payload['ok'])
-        self.assertFalse(payload['team_view'])
-        self.assertIn('kpis', payload)
-        self.assertEqual(payload['leads']['unassigned'], 0)
-
-    def test_tv_payload_includes_announcements(self):
+    def test_expired_announcement_excluded(self):
         create_announcement(
             self.owner,
-            title='جلسه صبح',
-            body='حضور اجباری',
-            importance=CRMAgencyAnnouncement.IMPORTANCE_HIGH,
+            title='منقضی',
+            body='متن',
+            expires_at=timezone.now() - timedelta(hours=1),
         )
-        payload = get_tv_dashboard_payload(self.advisor)
-        self.assertEqual(len(payload['announcements']), 1)
-        self.assertEqual(payload['announcements'][0]['title'], 'جلسه صبح')
+        create_announcement(self.owner, title='فعال', body='متن')
+        payload = get_tv_dashboard_payload(self.advisor, use_cache=False)
+        titles = [a['title'] for a in payload['announcements']]
+        self.assertIn('فعال', titles)
+        self.assertNotIn('منقضی', titles)
 
-    def test_tv_api_denied_without_agency(self):
-        outsider = User.objects.create_user(username='no_agency_tv', phone='09125555555', password='pass12345')
+    def test_empty_state_payload(self):
+        payload = get_tv_dashboard_payload(self.advisor, use_cache=False)
+        self.assertTrue(payload['ok'])
+        self.assertIsInstance(payload['leaderboard'], list)
+        self.assertIsInstance(payload['goals'], list)
+        self.assertIsInstance(payload['announcements'], list)
+
+    def test_cache_isolation_by_role(self):
+        get_tv_dashboard_payload(self.owner, use_cache=True)
+        get_tv_dashboard_payload(self.advisor, use_cache=True)
+        self.assertNotEqual(
+            get_tv_cache_key(self.agency.pk, TV_ROLE_MANAGER),
+            get_tv_cache_key(self.agency.pk, TV_ROLE_ADVISOR),
+        )
+        cached_mgr = cache.get(get_tv_cache_key(self.agency.pk, TV_ROLE_MANAGER))
+        cached_adv = cache.get(get_tv_cache_key(self.agency.pk, TV_ROLE_ADVISOR))
+        self.assertIsNotNone(cached_mgr)
+        self.assertIsNotNone(cached_adv)
+        self.assertNotEqual(cached_mgr['role'], cached_adv['role'])
+
+    def test_cache_hit_updates_clock_only(self):
+        first = get_tv_dashboard_payload(self.owner, use_cache=False)
+        cache.set(get_tv_cache_key(self.agency.pk, TV_ROLE_MANAGER), first, 60)
+        second = get_tv_dashboard_payload(self.owner, use_cache=True)
+        self.assertEqual(second['payload_version'], first['payload_version'])
+        self.assertNotEqual(second['generated_at'], first['generated_at'])
+
+    def test_invalidate_tv_cache(self):
+        get_tv_dashboard_payload(self.owner, use_cache=True)
+        self.assertIsNotNone(cache.get(get_tv_cache_key(self.agency.pk, TV_ROLE_MANAGER)))
+        invalidate_tv_cache(self.agency.pk)
+        self.assertIsNone(cache.get(get_tv_cache_key(self.agency.pk, TV_ROLE_MANAGER)))
+
+    @override_settings(USE_TZ=True, TIME_ZONE='Asia/Tehran')
+    def test_timezone_in_generated_at(self):
+        payload = get_tv_dashboard_payload(self.owner, use_cache=False)
+        self.assertIn('+', payload['generated_at'])
+
+    def test_feature_flag_disabled(self):
+        with mock.patch('workspace.crm_views.is_agency_feature_enabled', return_value=False):
+            with mock.patch('workspace.team_api_views.is_agency_feature_enabled', return_value=False):
+                client = Client()
+                client.force_login(self.owner)
+                self.assertEqual(client.get(reverse('workspace:crm_team_tv')).status_code, 302)
+                self.assertEqual(client.get(reverse('workspace:api_crm_team_tv')).status_code, 403)
+
+    def test_query_count_bounded(self):
+        from django.test.utils import CaptureQueriesContext
+        with CaptureQueriesContext(connection) as ctx:
+            get_tv_dashboard_payload(self.owner, use_cache=False)
+        small_team_queries = len(ctx)
+        self.assertLessEqual(small_team_queries, 95, msg=f'{small_team_queries} queries for small team')
+
+        for i in range(3):
+            CRMAgencyMember.objects.create(
+                agency=self.agency,
+                user=User.objects.create_user(
+                    username=f'adv_q_{i}',
+                    phone=f'0913000000{i}',
+                    password='pass12345',
+                ),
+                role='advisor',
+            )
+        with CaptureQueriesContext(connection) as ctx_large:
+            get_tv_dashboard_payload(self.owner, use_cache=False)
+        large_team_queries = len(ctx_large)
+        self.assertLessEqual(large_team_queries, 130, msg=f'{large_team_queries} queries for larger team')
+        self.assertGreater(large_team_queries, small_team_queries)
+
+    def test_template_uses_json_script(self):
         client = Client()
-        client.force_login(outsider)
-        resp = client.get(reverse('workspace:api_crm_team_tv'))
-        self.assertEqual(resp.status_code, 404)
+        client.force_login(self.owner)
+        resp = client.get(reverse('workspace:crm_team_tv'))
+        self.assertContains(resp, 'id="crm-tv-initial"')
+        self.assertContains(resp, '"ok": true', html=False)
+
+    def test_team_goals_advisor_team_only(self):
+        member = CRMAgencyMember.objects.get(user=self.advisor)
+        CRMAgencyTeamGoal.objects.create(
+            agency=self.agency,
+            member=member,
+            metric='calls',
+            target_value=10,
+            period_start=timezone.now().date(),
+            period_end=timezone.now().date() + timedelta(days=30),
+        )
+        CRMAgencyTeamGoal.objects.create(
+            agency=self.agency,
+            member=None,
+            metric='visits',
+            target_value=20,
+            period_start=timezone.now().date(),
+            period_end=timezone.now().date() + timedelta(days=30),
+        )
+        payload = get_tv_dashboard_payload(self.advisor, use_cache=False)
+        self.assertEqual(len(payload['goals']), 1)
+        self.assertEqual(payload['goals'][0]['member_name'], 'هدف تیم')
+
+    def test_feature_flag_enabled_by_default(self):
+        self.assertTrue(is_agency_feature_enabled('tv_mode', self.agency))

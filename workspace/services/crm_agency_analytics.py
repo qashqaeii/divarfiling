@@ -189,9 +189,13 @@ def get_command_center_stats(agency: CRMAgency, days: int = 30) -> Dict[str, Any
     }
 
 
-def get_team_goals_progress(agency: CRMAgency, days: int = 30) -> List[Dict[str, Any]]:
+def get_team_goals_progress(
+    agency: CRMAgency,
+    days: int = 30,
+    perf: Dict[str, Any] | None = None,
+) -> List[Dict[str, Any]]:
     today = timezone.now().date()
-    perf = get_team_performance(agency, days=days)
+    perf = perf or get_team_performance(agency, days=days)
     perf_by_member = {r['member'].pk: r for r in perf['members']}
     rows = []
     for goal in CRMAgencyTeamGoal.objects.filter(

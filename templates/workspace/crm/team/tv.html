@@ -7,11 +7,11 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/design-system.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-tv.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-tv.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
-<div class="crm-tv-app" id="crm-tv-app" data-crm-tv dir="rtl">
+<div class="crm-tv-app" id="crm-tv-app" data-crm-tv data-tv-role="{{ tv_payload.role|default:'advisor' }}" dir="rtl">
     <div class="crm-tv-bg" aria-hidden="true">
         <span class="crm-tv-bg-orb crm-tv-bg-orb--1"></span>
         <span class="crm-tv-bg-orb crm-tv-bg-orb--2"></span>
@@ -24,7 +24,7 @@
             {% if crm_agency %}
             <span class="crm-tv-logo" style="--hue: {{ crm_agency.name|crm_avatar_hue }}">{{ crm_agency.name|crm_initials }}</span>
             <div class="crm-tv-brand-text">
-                <h1>{{ crm_agency.name }}</h1>
+                <h1 data-tv-agency-name>{{ crm_agency.name }}</h1>
                 <p>مرکز فرماندهی · حالت نمایش TV</p>
             </div>
             {% endif %}
@@ -49,13 +49,16 @@
         </div>
     </header>
 
+    <p class="crm-tv-fs-hint" data-tv-fs-hint hidden>
+        <i class="fas fa-keyboard"></i> برای تمام‌صفحه از کلید <kbd>F11</kbd> استفاده کنید.
+    </p>
+
     <div class="crm-tv-sync" data-tv-sync aria-live="polite">
         <span class="crm-tv-sync-dot"></span>
         <span data-tv-updated>در حال بارگذاری…</span>
     </div>
 
     <main class="crm-tv-grid" data-tv-grid>
-        <!-- KPIs -->
         <section class="crm-tv-panel crm-tv-panel--kpis" data-widget="kpis" aria-label="شاخص‌های امروز">
             <header class="crm-tv-panel-head">
                 <h2><i class="fas fa-gauge-high"></i> امروز</h2>
@@ -63,16 +66,13 @@
             <div class="crm-tv-kpis" data-tv-kpis></div>
         </section>
 
-        <!-- Spotlight / Top performer -->
         <section class="crm-tv-panel crm-tv-panel--spotlight" data-widget="leaderboard" aria-label="برترین عملکرد">
             <div class="crm-tv-spotlight" data-tv-spotlight hidden>
-                <div class="crm-tv-spotlight-glow" aria-hidden="true"></div>
                 <span class="crm-tv-spotlight-badge"><i class="fas fa-crown"></i> برترین عملکرد</span>
                 <div class="crm-tv-spotlight-body" data-tv-spotlight-body></div>
             </div>
         </section>
 
-        <!-- Leaderboard -->
         <section class="crm-tv-panel crm-tv-panel--board" data-widget="leaderboard" aria-label="رتبه‌بندی تیم">
             <header class="crm-tv-panel-head">
                 <h2><i class="fas fa-ranking-star"></i> رتبه‌بندی</h2>
@@ -81,7 +81,6 @@
             <ol class="crm-tv-leaderboard" data-tv-leaderboard></ol>
         </section>
 
-        <!-- Goals -->
         <section class="crm-tv-panel crm-tv-panel--goals" data-widget="goals" aria-label="اهداف تیم">
             <header class="crm-tv-panel-head">
                 <h2><i class="fas fa-bullseye"></i> اهداف</h2>
@@ -89,7 +88,6 @@
             <div class="crm-tv-goals" data-tv-goals></div>
         </section>
 
-        <!-- Announcements -->
         <section class="crm-tv-panel crm-tv-panel--announcements" data-widget="announcements" aria-label="اطلاعیه‌ها">
             <header class="crm-tv-panel-head">
                 <h2><i class="fas fa-bullhorn"></i> اطلاعیه‌ها</h2>
@@ -97,7 +95,6 @@
             <div class="crm-tv-announcements" data-tv-announcements></div>
         </section>
 
-        <!-- Leads + Deals -->
         <section class="crm-tv-panel crm-tv-panel--pipeline" data-widget="leads" aria-label="سرنخ‌ها">
             <header class="crm-tv-panel-head">
                 <h2><i class="fas fa-inbox"></i> سرنخ‌ها</h2>
@@ -112,7 +109,6 @@
             <div class="crm-tv-deals" data-tv-deals></div>
         </section>
 
-        <!-- Alerts ticker -->
         <section class="crm-tv-panel crm-tv-panel--alerts" data-widget="alerts" aria-label="هشدارها">
             <div class="crm-tv-alerts" data-tv-alerts></div>
         </section>
@@ -124,6 +120,7 @@
                 <h3>ویجت‌های نمایش</h3>
                 <button type="button" class="crm-tv-btn crm-tv-btn--sm" data-tv-widgets-close aria-label="بستن"><i class="fas fa-xmark"></i></button>
             </header>
+            <p class="crm-tv-widget-note">فقط ویجت‌های مجاز نقش شما قابل انتخاب هستند.</p>
             <form class="crm-tv-widget-form" data-tv-widget-form>
                 {% for w in tv_widgets %}
                 <label class="crm-tv-widget-check">
@@ -145,15 +142,16 @@
     </aside>
 </div>
 
-<script id="crm-tv-initial" type="application/json">{{ tv_payload_json }}</script>
+{{ tv_payload|json_script:"crm-tv-initial" }}
 <script>
 window.crmTeamTV = {
-    apiUrl: '{{ api_crm_team_tv_url|escapejs }}',
-    pollMs: 45000
+    apiUrl: '{% url "workspace:api_crm_team_tv" %}',
+    pollMs: {{ tv_payload.refresh_after|default:45 }}000
 };
 </script>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=1" defer></script>
+<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=2"></script>
 {% endblock %}
+

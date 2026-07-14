@@ -228,7 +228,7 @@
     <header class="crm-agency-tab-intro">
         <div>
             <h2>{% if can_view_team_performance %}گزارش عملکرد تیم{% else %}عملکرد شخصی{% endif %}</h2>
-            <p>{% if can_view_team_performance %}تحلیل آماری، مقایسه اعضا و رتبه‌بندی — برای کنترل روزانه به <a href="?tab=command">داشبورد مدیریت</a> بروید.{% else %}آمار فعالیت شما در آژانس{% endif %}</p>
+            <p>{% if can_view_team_performance %}تحلیل آماری، مقایسه اعضا و رتبه‌بندی — برای کنترل روزانه به <a href="?tab=command">داشبورد مدیریت</a> بروید.{% elif agency_feature_tv %}آمار فعالیت شما در آژانس — <a href="{{ crm_team_tv_url }}" target="_blank" rel="noopener">نمایش TV دفتر</a> از مسیر مستقیم <code dir="ltr">/workspace/crm/team/tv/</code> (بدون دکمه در هدر؛ فقط برای مدیر/مالک){% else %}آمار فعالیت شما در آژانس{% endif %}</p>
         </div>
     </header>
     {% if can_view_team_performance %}

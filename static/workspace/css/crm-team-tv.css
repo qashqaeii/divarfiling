@@ -536,3 +536,29 @@
     .crm-tv-panel--deals { grid-column: span 3; }
     .crm-tv-kpis { grid-template-columns: repeat(2, 1fr); }
 }
+
+.crm-tv-sync.is-offline .crm-tv-sync-dot { background: #EF4444; animation: none; }
+.crm-tv-sync.is-live .crm-tv-sync-dot { background: #10B981; }
+.crm-tv-kpi--warn { border-color: rgba(245, 158, 11, 0.35); }
+.crm-tv-kpi--danger { border-color: rgba(239, 68, 68, 0.45); }
+.crm-tv-lb-row--moved { animation: crm-tv-rank-move 0.45s ease; }
+.crm-tv-fs-hint { position: relative; z-index: 2; font-size: 0.75rem; color: var(--tv-muted); margin: 0 0 0.5rem; }
+.crm-tv-widget-note { font-size: 0.75rem; color: var(--tv-muted); margin: 0 0 0.75rem; }
+
+@keyframes crm-tv-rank-move {
+    0% { transform: translateX(6px); background: rgba(124, 58, 237, 0.15); }
+    100% { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crm-tv-bg-orb, .crm-tv-sync-dot, .crm-tv-lb-row--moved { animation: none !important; }
+}
+
+@media (min-width: 1920px) {
+    .crm-tv-kpi-val { font-size: 2.5rem; }
+}
+
+@media (min-width: 2560px) {
+    .crm-tv-app { padding: 2rem 2.5rem; }
+    .crm-tv-kpi-val { font-size: 3rem; }
+}

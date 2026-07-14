@@ -2318,9 +2318,8 @@ class CRMTeamTVView(CRMContextMixin, LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['crm_section'] = 'team-tv'
-        ctx['tv_payload'] = get_tv_dashboard_payload(self.request.user)
-        ctx['tv_payload_json'] = json.dumps(ctx['tv_payload'], ensure_ascii=False)
-        ctx['tv_widgets'] = TV_WIDGETS
+        ctx['tv_payload'] = get_tv_dashboard_payload(self.request.user, use_cache=False)
+        ctx['tv_widgets'] = ctx['tv_payload'].get('allowed_widgets', list(TV_WIDGETS))
         ctx['api_crm_team_tv_url'] = reverse('workspace:api_crm_team_tv')
         ctx['crm_team_url'] = reverse('workspace:crm_team')
         return ctx

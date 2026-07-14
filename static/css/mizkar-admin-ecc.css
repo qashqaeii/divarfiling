@@ -601,8 +601,32 @@ html.mk-public:not([data-theme="light"]) .ecc-alerts-head h2 {
 
 .ecc-card--wide { grid-column: span 8; }
 .ecc-card--full { grid-column: span 12; }
-.ecc-card--chart { min-height: 320px; }
-.ecc-card--chart-tall { min-height: 380px; }
+
+/* کارت‌های نمودار — flex تا نمودار کل فضای باقی‌مانده را بگیرد */
+.ecc-card--chart,
+.ecc-card--chart-tall {
+    display: flex;
+    flex-direction: column;
+    min-height: 360px;
+    padding-bottom: var(--ecc-space-3);
+}
+
+.ecc-card--chart-tall {
+    min-height: 440px;
+}
+
+.ecc-card--wide.ecc-card--chart {
+    min-height: 380px;
+}
+
+.ecc-card--chart .ecc-card-head {
+    flex-shrink: 0;
+    margin-bottom: var(--ecc-space-3);
+}
+
+.ecc-card--chart .ecc-metrics-row {
+    flex-shrink: 0;
+}
 
 .ecc-card-head {
     display: flex;
@@ -656,17 +680,47 @@ html.mk-public:not([data-theme="light"]) .ecc-alerts-head h2 {
 
 .ecc-chart-wrap {
     position: relative;
-    height: 260px;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 280px;
+    height: 300px;
+    border-radius: var(--ecc-radius-md);
+    background: var(--ecc-surface-2);
+    padding: var(--ecc-space-2) var(--ecc-space-1);
+    box-sizing: border-box;
 }
 
-.ecc-chart-wrap--tall { height: 320px; }
+.ecc-card--wide .ecc-chart-wrap {
+    min-height: 300px;
+    height: 320px;
+}
+
+.ecc-chart-wrap--tall {
+    min-height: 340px;
+    height: 380px;
+}
+
 .ecc-chart-wrap--donut {
-    height: 220px;
-    max-width: 280px;
-    margin: 0 auto;
+    min-height: 260px;
+    height: 300px;
+    max-width: none;
+    width: 100%;
+    margin: 0;
 }
 
-.ecc-chart-wrap--spark { height: 40px; }
+.ecc-chart-wrap--bar {
+    min-height: 300px;
+    height: 340px;
+}
+
+.ecc-chart-wrap--spark { height: 40px; min-height: 40px; flex: 0 0 40px; }
+
+.ecc-chart-wrap canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100%;
+}
 
 /* ─── Range picker ─── */
 .ecc-range {
@@ -929,6 +983,21 @@ html.mk-public:not([data-theme="light"]) .ecc-alerts-head h2 {
     .ecc-card,
     .ecc-card--wide {
         grid-column: span 6;
+    }
+
+    .ecc-card--chart,
+    .ecc-card--chart-tall {
+        min-height: 340px;
+    }
+
+    .ecc-chart-wrap {
+        min-height: 260px;
+        height: 280px;
+    }
+
+    .ecc-chart-wrap--donut {
+        min-height: 240px;
+        height: 270px;
     }
 }
 

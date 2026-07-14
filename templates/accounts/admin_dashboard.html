@@ -9,7 +9,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=12">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -188,7 +188,7 @@
                         </article>
                         <article class="ecc-card ecc-card--wide ecc-card--chart">
                             <div class="ecc-card-head"><h3>فروش پلن</h3></div>
-                            <div class="ecc-chart-wrap"><canvas id="chart-plans"></canvas></div>
+                            <div class="ecc-chart-wrap ecc-chart-wrap--bar"><canvas id="chart-plans"></canvas></div>
                         </article>
                     </div>
                 </section>
@@ -811,5 +811,5 @@
 window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=7"></script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=8"></script>
 {% endblock %}

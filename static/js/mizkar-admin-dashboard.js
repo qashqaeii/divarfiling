@@ -52,6 +52,9 @@
             maintainAspectRatio: false,
             animation: { duration: 700, easing: 'easeOutQuart' },
             interaction: { mode: 'index', intersect: false },
+            layout: {
+                padding: chartConfig.type === 'doughnut' ? { top: 4, bottom: 2, left: 4, right: 4 } : { top: 0, bottom: 0 },
+            },
             plugins: {
                 legend: {
                     display: chartConfig.type !== 'sparkline',
@@ -127,6 +130,14 @@
             return opts;
         }
 
+        if (chartConfig.type === 'doughnut') {
+            opts.cutout = '58%';
+            opts.plugins.legend.labels.boxWidth = 10;
+            opts.plugins.legend.labels.font = { family: 'Vazirmatn, Vazir, Tahoma, sans-serif', size: 10 };
+            opts.plugins.legend.labels.padding = 10;
+            return opts;
+        }
+
         if (chartConfig.type !== 'doughnut') {
             opts.scales = {
                 x: {
@@ -179,6 +190,26 @@
 
     const chartInstances = [];
 
+    function resizeCharts() {
+        chartInstances.forEach(function (chart) {
+            try {
+                chart.resize();
+            } catch (e) {
+                /* noop */
+            }
+        });
+    }
+
+    function observeChartContainers() {
+        if (typeof ResizeObserver === 'undefined') return;
+        const observer = new ResizeObserver(function () {
+            window.requestAnimationFrame(resizeCharts);
+        });
+        document.querySelectorAll('.ecc-section .ecc-chart-wrap').forEach(function (el) {
+            observer.observe(el);
+        });
+    }
+
     function initCharts() {
         const charts = window.admCharts;
         if (!charts) return;
@@ -205,6 +236,11 @@
             const inst = renderChart(item[0], cfg);
             if (inst) chartInstances.push(inst);
         });
+
+        window.requestAnimationFrame(resizeCharts);
+        setTimeout(resizeCharts, 120);
+        setTimeout(resizeCharts, 450);
+        observeChartContainers();
 
         document.querySelectorAll('[data-sparkline]').forEach(function (el) {
             const raw = el.getAttribute('data-sparkline');
@@ -452,6 +488,10 @@
         initTableTools();
         initCollapsibleTables();
         initRefresh();
+
+        window.addEventListener('resize', function () {
+            window.requestAnimationFrame(resizeCharts);
+        }, { passive: true });
 
         document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
             btn.addEventListener('click', function () {

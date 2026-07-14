@@ -34,6 +34,11 @@ from accounts.services.admin_marketing_send import (
     create_campaign_draft,
     run_campaign_send,
 )
+from accounts.services.admin_blog import (
+    get_blog_analytics_chart,
+    get_blog_dashboard_stats,
+    get_blog_posts_table,
+)
 from accounts.services.admin_phonebook_sync import (
     PhonebookSyncError,
     get_phonebook_sync_status,
@@ -42,6 +47,11 @@ from accounts.services.admin_phonebook_sync import (
 )
 from accounts.services.admin_system_summary import system_summary_json_response
 from accounts.services.sms import get_sms_balance_snapshot
+from blog.services.article_import import (
+    ArticleImportError,
+    import_article_from_payload,
+    validate_article_payload,
+)
 
 
 class StaffRequiredMixin(UserPassesTestMixin, LoginRequiredMixin):
@@ -338,3 +348,85 @@ class AdminPhonebookSyncView(StaffRequiredMixin, View):
                 status=500,
             )
         return JsonResponse({'ok': True, **result.to_dict()})
+
+
+class AdminBlogView(StaffRequiredMixin, TemplateView):
+    """مدیریت مقالات، آمار بازدید و درون‌ریزی JSON."""
+
+    template_name = 'accounts/admin_blog.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        status = self.request.GET.get('status', 'all')
+        if status not in ('all', 'published', 'draft'):
+            status = 'all'
+
+        stats = get_blog_dashboard_stats()
+        analytics = get_blog_analytics_chart(days=30)
+        ctx.update({
+            'blog_stats': stats,
+            'blog_posts': get_blog_posts_table(limit=80, status=status),
+            'status_filter': status,
+            'blog_analytics_json': json.dumps(analytics, ensure_ascii=False, default=str),
+            'sample_json_url': '/static/samples/article-import-sample.json',
+        })
+        return ctx
+
+
+class AdminBlogImportPreviewView(StaffRequiredMixin, View):
+    """اعتبارسنجی JSON مقاله قبل از درون‌ریزی."""
+
+    def post(self, request):
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'errors': ['JSON نامعتبر است.']}, status=400)
+
+        preview = validate_article_payload(payload)
+        return JsonResponse({
+            'ok': preview.ok,
+            'errors': preview.errors,
+            'warnings': preview.warnings,
+            'action': preview.action,
+            'existing_slug': preview.existing_slug,
+            'article': {
+                'slug_base': (preview.article or {}).get('slug_base'),
+                'title': (preview.article or {}).get('title'),
+                'excerpt': (preview.article or {}).get('excerpt'),
+                'tag_count': len((preview.article or {}).get('tags') or []),
+                'category': (preview.article or {}).get('category', {}).get('name'),
+            } if preview.article else None,
+        })
+
+
+class AdminBlogImportView(StaffRequiredMixin, View):
+    """درون‌ریزی مقاله از JSON."""
+
+    def post(self, request):
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'errors': ['JSON نامعتبر است.']}, status=400)
+
+        try:
+            post, action = import_article_from_payload(payload)
+        except ArticleImportError as exc:
+            return JsonResponse({'ok': False, 'errors': [str(exc)]}, status=400)
+
+        action_labels = {
+            'created': 'ایجاد شد',
+            'updated': 'به‌روزرسانی شد',
+            'skipped': 'رد شد (از قبل موجود)',
+        }
+        return JsonResponse({
+            'ok': True,
+            'action': action,
+            'action_label': action_labels.get(action, action),
+            'post': {
+                'id': post.id,
+                'title': post.title,
+                'slug': post.slug,
+                'url': post.get_absolute_url(),
+                'is_published': post.is_published,
+            },
+        })

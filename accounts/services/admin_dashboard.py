@@ -16,6 +16,7 @@ from workspace.services.jalali_input import to_persian_digits
 from accounts.models import SmsMessageLog
 from accounts.services.admin_exports import get_export_catalog
 from accounts.services.admin_marketing import SEGMENT_REGISTRY, get_marketing_dashboard_stats
+from accounts.services.admin_blog import get_blog_dashboard_stats
 from accounts.services.admin_windows_app import (
     get_windows_activations,
     get_windows_app_stats,
@@ -1369,6 +1370,7 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
         'users_analytics': get_users_analytics_stats(stats),
         'marketing_stats': marketing_stats,
         'marketing_segments': marketing_segments,
+        'blog_stats': get_blog_dashboard_stats(),
         'system_meta': get_system_meta(),
         'failed_orders': get_failed_orders_recent(),
         'top_users': get_top_users_by_revenue(),

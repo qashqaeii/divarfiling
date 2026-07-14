@@ -6,6 +6,9 @@ from django.urls import path
 
 from . import otp_views, views
 from .admin_views import (
+    AdminBlogImportPreviewView,
+    AdminBlogImportView,
+    AdminBlogView,
     AdminDashboardView,
     AdminExportView,
     AdminMarketingDetailView,
@@ -44,6 +47,9 @@ urlpatterns = [
     path('admin-panel/marketing/phonebook/status.json', AdminPhonebookStatusView.as_view(), name='admin_panel_phonebook_status'),
     path('admin-panel/marketing/phonebook/sync/', AdminPhonebookSyncView.as_view(), name='admin_panel_phonebook_sync'),
     path('admin-panel/marketing/<int:pk>/', AdminMarketingDetailView.as_view(), name='admin_panel_marketing_detail'),
+    path('admin-panel/blog/', AdminBlogView.as_view(), name='admin_panel_blog'),
+    path('admin-panel/blog/import/preview.json', AdminBlogImportPreviewView.as_view(), name='admin_panel_blog_import_preview'),
+    path('admin-panel/blog/import/', AdminBlogImportView.as_view(), name='admin_panel_blog_import'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path(
         'password-reset/',

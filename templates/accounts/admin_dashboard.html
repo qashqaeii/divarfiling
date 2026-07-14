@@ -88,6 +88,7 @@
                 <a href="#ecc-licensing" class="ecc-nav-item"><i class="fas fa-key"></i> لایسنس</a>
                 <a href="#ecc-crm" class="ecc-nav-item"><i class="fas fa-building"></i> CRM</a>
                 <a href="#ecc-marketing" class="ecc-nav-item"><i class="fas fa-bullhorn"></i> بازاریابی</a>
+                <a href="#ecc-blog" class="ecc-nav-item"><i class="fas fa-newspaper"></i> مقالات</a>
                 <a href="#ecc-operations" class="ecc-nav-item"><i class="fas fa-server"></i> عملیات</a>
                 <a href="#ecc-support" class="ecc-nav-item">
                     <i class="fas fa-headset"></i> پشتیبانی
@@ -536,6 +537,24 @@
                         </article>
                         {% endfor %}
                     </div>
+                </section>
+
+                {# ─── 9b. Blog Dashboard ─── #}
+                <section class="ecc-section" id="ecc-blog" aria-labelledby="eccBlogTitle">
+                    <div class="ecc-section-head">
+                        <div>
+                            <h2 id="eccBlogTitle"><i class="fas fa-newspaper"></i> مقالات و بلاگ</h2>
+                            <p>آمار بازدید، مدیریت محتوا و درون‌ریزی JSON</p>
+                        </div>
+                        <a href="{% url 'admin_panel_blog' %}" class="ecc-btn ecc-btn--primary"><i class="fas fa-file-import"></i> پنل مقالات</a>
+                    </div>
+                    <ul class="ecc-stat-strip" style="margin-bottom:1rem">
+                        <li><span>کل مقالات</span><strong data-count-up="{{ blog_stats.posts_total|default:0 }}">۰</strong></li>
+                        <li><span>منتشر شده</span><strong data-count-up="{{ blog_stats.posts_published|default:0 }}">۰</strong></li>
+                        <li><span>بازدید کل</span><strong data-count-up="{{ blog_stats.views_total|default:0 }}">۰</strong></li>
+                        <li><span>میانگین بازدید</span><strong data-count-up="{{ blog_stats.avg_views|default:0 }}">۰</strong></li>
+                    </ul>
+                    <a href="{% static 'samples/article-import-sample.json' %}" download="article-import-sample.json" class="ecc-btn ecc-btn--ghost"><i class="fas fa-download"></i> دانلود نمونه JSON مقاله</a>
                 </section>
 
                 {# ─── 10. Operations Center ─── #}

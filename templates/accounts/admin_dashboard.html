@@ -9,7 +9,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=12">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -186,9 +186,24 @@
                             <div class="ecc-card-head"><h3>درآمد محصول</h3></div>
                             <div class="ecc-chart-wrap"><canvas id="chart-product"></canvas></div>
                         </article>
-                        <article class="ecc-card ecc-card--wide ecc-card--chart">
-                            <div class="ecc-card-head"><h3>فروش پلن</h3></div>
-                            <div class="ecc-chart-wrap ecc-chart-wrap--bar"><canvas id="chart-plans"></canvas></div>
+                        <article class="ecc-card ecc-card--wide ecc-card--chart ecc-card--chart-plans">
+                            <div class="ecc-card-head">
+                                <div>
+                                    <h3>فروش پلن</h3>
+                                    <p>مقایسه درآمد ۴ پلن لایسنس</p>
+                                </div>
+                            </div>
+                            <div class="ecc-plan-legend" aria-hidden="true">
+                                {% for plan in plan_sales %}
+                                <span class="ecc-plan-pill" data-accent="{{ plan.accent }}">
+                                    {{ plan.short_label }}
+                                    <em>{{ plan.count|currency }} سفارش · {{ plan.total|currency }} ت</em>
+                                </span>
+                                {% endfor %}
+                            </div>
+                            <div class="ecc-chart-wrap ecc-chart-wrap--plans" style="--plan-count: {{ plan_sales|length|default:4 }}">
+                                <canvas id="chart-plans"></canvas>
+                            </div>
                         </article>
                     </div>
                 </section>
@@ -811,5 +826,5 @@
 window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=8"></script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=9"></script>
 {% endblock %}

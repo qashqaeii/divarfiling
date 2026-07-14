@@ -28,7 +28,7 @@ from accounts.services.sms import get_sms_balance_snapshot
 
 from affiliates.models import Affiliate, AffiliateSale, Withdrawal
 from licenses.models import License, LicenseActivation
-from shop.models import CardTransferSubmission, Order, Product
+from shop.models import CardTransferSubmission, LicensePlan, Order, Product
 from workspace.models import (
     CRMAgency,
     CRMAgencyMember,
@@ -299,21 +299,106 @@ def get_license_status_breakdown() -> List[Dict[str, Any]]:
     ]
 
 
-def get_plan_sales_breakdown(limit: int = 8) -> List[Dict[str, Any]]:
-    rows = (
-        Order.objects.filter(status='paid')
-        .values('plan__name', 'plan__product__title')
-        .annotate(count=Count('id'), total=Sum('amount'))
-        .order_by('-total')[:limit]
+PLAN_TYPE_SHORT_LABELS = {
+    'daily': 'آزمایشی ۱روزه',
+    'monthly': 'لایسنس ۱ماهه',
+    'quarterly': 'لایسنس ۳ماهه',
+    'yearly': 'لایسنس ۱ساله',
+}
+
+PLAN_TYPE_ACCENTS = {
+    'daily': 'emerald',
+    'monthly': 'violet',
+    'quarterly': 'blue',
+    'yearly': 'amber',
+}
+
+PLAN_CHART_COLORS = [
+    'rgba(16, 185, 129, 0.88)',
+    'rgba(124, 58, 237, 0.88)',
+    'rgba(59, 130, 246, 0.88)',
+    'rgba(245, 158, 11, 0.88)',
+    'rgba(6, 182, 212, 0.88)',
+    'rgba(244, 63, 94, 0.88)',
+]
+
+
+def _plan_short_label(plan: LicensePlan) -> str:
+    return PLAN_TYPE_SHORT_LABELS.get(
+        plan.plan_type,
+        plan.name.replace('لایسنس ', '').strip()[:18] or plan.name[:18],
     )
-    return [
-        {
-            'label': f"{row['plan__product__title']} — {row['plan__name']}",
-            'count': row['count'],
+
+
+def get_plan_sales_breakdown(limit: int | None = None) -> List[Dict[str, Any]]:
+    """فروش هر پلن — همیشه همه پلن‌های فعال با ترتیب کاتالوگ."""
+    sales_rows = (
+        Order.objects.filter(status='paid', plan_id__isnull=False)
+        .values('plan_id')
+        .annotate(count=Count('id'), total=Sum('amount'))
+    )
+    sales_by_plan = {
+        row['plan_id']: {
+            'count': int(row['count'] or 0),
             'total': int(row['total'] or 0),
         }
-        for row in rows
+        for row in sales_rows
+    }
+
+    plans_qs = (
+        LicensePlan.objects.filter(is_active=True)
+        .select_related('product')
+        .order_by('order', 'price', 'id')
+    )
+    if limit:
+        plans_qs = plans_qs[:limit]
+
+    result: List[Dict[str, Any]] = []
+    for plan in plans_qs:
+        stats = sales_by_plan.get(plan.id, {'count': 0, 'total': 0})
+        result.append({
+            'plan_id': plan.id,
+            'label': plan.name,
+            'full_label': f'{plan.product.title} — {plan.name}',
+            'short_label': _plan_short_label(plan),
+            'plan_type': plan.plan_type,
+            'accent': PLAN_TYPE_ACCENTS.get(plan.plan_type, 'violet'),
+            'price': int(plan.price or 0),
+            'count': stats['count'],
+            'total': stats['total'],
+        })
+    return result
+
+
+def build_plan_sales_chart_payload(plan_sales: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """نمودار افقی حرفه‌ای فروش پلن — ۴ پلن با رنگ اختصاصی."""
+    colors = [
+        PLAN_CHART_COLORS[i % len(PLAN_CHART_COLORS)]
+        for i in range(len(plan_sales))
     ]
+    return {
+        'type': 'bar',
+        'chartKind': 'plan_sales',
+        'labels': [item['short_label'] for item in plan_sales],
+        'fullLabels': [item['full_label'] for item in plan_sales],
+        'orderCounts': [item['count'] for item in plan_sales],
+        'planPrices': [item['price'] for item in plan_sales],
+        'accents': [item['accent'] for item in plan_sales],
+        'datasets': [{
+            'label': 'درآمد (تومان)',
+            'data': [item['total'] for item in plan_sales],
+            'backgroundColor': colors,
+            'borderColor': [c.replace('0.88', '1') for c in colors],
+            'borderWidth': 1,
+            'borderRadius': 8,
+            'borderSkipped': False,
+            'barThickness': 32,
+            'maxBarThickness': 40,
+        }],
+        'horizontal': True,
+        'axis': 'money',
+        'planCount': len(plan_sales),
+    }
 
 
 def get_product_revenue() -> List[Dict[str, Any]]:
@@ -562,18 +647,7 @@ def build_charts_payload(days: int = 30) -> Dict[str, Any]:
             }],
             'axis': 'count',
         },
-        'plan_sales': {
-            'type': 'bar',
-            'labels': [item['label'][:28] for item in plan_sales],
-            'datasets': [{
-                'label': 'درآمد (تومان)',
-                'data': [item['total'] for item in plan_sales],
-                'backgroundColor': 'rgba(245, 158, 11, 0.8)',
-                'borderRadius': 6,
-            }],
-            'horizontal': True,
-            'axis': 'money',
-        },
+        'plan_sales': build_plan_sales_chart_payload(plan_sales),
         'user_analytics': {
             'type': 'line',
             'labels': signups['labels'],

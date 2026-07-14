@@ -8,6 +8,7 @@ from accounts.services.admin_dashboard import (
     get_activity_feed,
     get_admin_dashboard_context,
     get_affiliate_partners,
+    get_plan_sales_breakdown,
     get_recent_affiliate_sales,
     get_today_stats,
 )
@@ -37,6 +38,29 @@ class AdminDashboardServiceTests(TestCase):
     def test_activity_feed_returns_list(self):
         feed = get_activity_feed(limit=5)
         self.assertIsInstance(feed, list)
+
+    def test_plan_sales_includes_all_active_plans(self):
+        from shop.bot_catalog import bot_license_plans
+        from shop.models import LicensePlan, Product
+
+        product = Product.objects.create(title='ربات تست', slug='test-bot-plans', is_active=True)
+        for data in bot_license_plans():
+            LicensePlan.objects.create(product=product, **data)
+
+        plans = get_plan_sales_breakdown()
+        self.assertEqual(len(plans), 4)
+        self.assertEqual(plans[0]['plan_type'], 'daily')
+        self.assertIn('short_label', plans[0])
+        self.assertIn('total', plans[0])
+
+    def test_plan_sales_chart_payload(self):
+        from accounts.services.admin_dashboard import build_plan_sales_chart_payload
+
+        plans = get_plan_sales_breakdown()
+        chart = build_plan_sales_chart_payload(plans)
+        self.assertEqual(chart['chartKind'], 'plan_sales')
+        self.assertEqual(len(chart['labels']), len(plans))
+        self.assertEqual(len(chart['datasets'][0]['backgroundColor']), len(plans))
 
     def test_affiliate_queries(self):
         partners = get_affiliate_partners(limit=5)

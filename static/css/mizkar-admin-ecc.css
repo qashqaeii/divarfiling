@@ -713,6 +713,64 @@ html.mk-public:not([data-theme="light"]) .ecc-alerts-head h2 {
     height: 340px;
 }
 
+.ecc-card--chart-plans {
+    min-height: 440px;
+}
+
+.ecc-plan-legend {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--ecc-space-2);
+    margin-bottom: var(--ecc-space-3);
+    flex-shrink: 0;
+}
+
+.ecc-plan-pill {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: var(--ecc-radius-sm);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ecc-text);
+    background: var(--ecc-surface-2);
+    border: 1px solid var(--ecc-border);
+    position: relative;
+    overflow: hidden;
+}
+
+.ecc-plan-pill::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 0 8px 8px 0;
+}
+
+.ecc-plan-pill[data-accent="emerald"]::before { background: var(--ecc-accent-emerald); }
+.ecc-plan-pill[data-accent="violet"]::before { background: var(--ecc-accent-violet); }
+.ecc-plan-pill[data-accent="blue"]::before { background: var(--ecc-accent-blue); }
+.ecc-plan-pill[data-accent="amber"]::before { background: var(--ecc-accent-amber); }
+.ecc-plan-pill[data-accent="cyan"]::before { background: var(--ecc-accent-cyan); }
+.ecc-plan-pill[data-accent="rose"]::before { background: var(--ecc-accent-rose); }
+
+.ecc-plan-pill em {
+    font-style: normal;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--ecc-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.ecc-chart-wrap--plans {
+    min-height: calc(var(--plan-count, 4) * 58px + 36px);
+    height: calc(var(--plan-count, 4) * 58px + 36px);
+    flex: 0 0 auto;
+}
+
 .ecc-chart-wrap--spark { height: 40px; min-height: 40px; flex: 0 0 40px; }
 
 .ecc-chart-wrap canvas {
@@ -1004,6 +1062,10 @@ html.mk-public:not([data-theme="light"]) .ecc-alerts-head h2 {
 @media (max-width: 1024px) {
     .ecc-header {
         grid-template-columns: 1fr;
+    }
+
+    .ecc-plan-legend {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .ecc-header-side {

@@ -138,6 +138,57 @@
             return opts;
         }
 
+        if (chartConfig.chartKind === 'plan_sales') {
+            opts.plugins.legend.display = false;
+            opts.layout.padding = { left: 4, right: 16, top: 6, bottom: 6 };
+            opts.indexAxis = 'y';
+            opts.scales = {
+                x: {
+                    grid: { color: theme.grid },
+                    border: { display: false },
+                    ticks: {
+                        color: theme.text,
+                        font: { size: 11 },
+                        callback: tickCallback,
+                        maxTicksLimit: 6,
+                    },
+                    beginAtZero: true,
+                },
+                y: {
+                    grid: { display: false },
+                    border: { display: false },
+                    ticks: {
+                        color: theme.text,
+                        font: { family: 'Vazirmatn, Vazir, Tahoma, sans-serif', size: 12, weight: '600' },
+                        autoSkip: false,
+                        padding: 8,
+                        callback: function (val) {
+                            return this.getLabelForValue(val);
+                        },
+                    },
+                },
+            };
+            opts.plugins.tooltip.callbacks = {
+                title: function (items) {
+                    if (!items.length) return '';
+                    const idx = items[0].dataIndex;
+                    return (chartConfig.fullLabels && chartConfig.fullLabels[idx]) || items[0].label;
+                },
+                label: function (ctx) {
+                    const idx = ctx.dataIndex;
+                    const revenue = ctx.parsed.x != null ? ctx.parsed.x : 0;
+                    const count = chartConfig.orderCounts ? chartConfig.orderCounts[idx] : 0;
+                    const price = chartConfig.planPrices ? chartConfig.planPrices[idx] : 0;
+                    return [
+                        'درآمد: ' + formatMoney(revenue) + ' تومان',
+                        'تعداد سفارش: ' + toPersianDigits(count),
+                        'قیمت پلن: ' + formatMoney(price) + ' تومان',
+                    ];
+                },
+            };
+            return opts;
+        }
+
         if (chartConfig.type !== 'doughnut') {
             opts.scales = {
                 x: {
@@ -180,6 +231,10 @@
                         copy.pointRadius = 0;
                         copy.borderWidth = 1.5;
                         copy.tension = 0.4;
+                    }
+                    if (config.chartKind === 'plan_sales') {
+                        copy.minBarLength = 8;
+                        copy.borderRadius = 8;
                     }
                     return copy;
                 }),

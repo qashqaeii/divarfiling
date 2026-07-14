@@ -316,8 +316,7 @@ def update_agency_settings(actor, *, name: str = '', lead_routing_policy: str = 
         agency.lead_routing_policy = policy
         updates.append('lead_routing_policy')
     if updates:
-        updates.append('updated_at')
-        agency.save(update_fields=updates)
+        agency.save(update_fields=updates + ['updated_at'])
         log_agency_audit(agency, actor, 'agency.updated', {'fields': updates})
     return agency
 

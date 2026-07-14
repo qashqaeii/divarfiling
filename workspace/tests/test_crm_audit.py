@@ -44,6 +44,15 @@ class CRMAuditServiceTests(TestCase):
         self.assertGreaterEqual(len(timeline['groups']), 1)
         self.assertEqual(timeline['groups'][0]['label'], 'امروز')
 
+    def test_agency_updated_summary_uses_persian_labels(self):
+        log = log_agency_audit(self.agency, self.owner, 'agency.updated', {'fields': ['name', 'updated_at']})
+        meta = describe_audit_log(log)
+        self.assertIn('نام آژانس', meta['summary'])
+        self.assertNotIn('name', meta['summary'])
+        self.assertNotIn('updated_at', meta['summary'])
+        chip_values = ' '.join(c['value'] for c in meta['payload_chips'])
+        self.assertNotIn('updated_at', chip_values)
+
     def test_system_actor_label(self):
         log = CRMAgencyAuditLog.objects.create(
             agency=self.agency, actor=None, event='sync.import',

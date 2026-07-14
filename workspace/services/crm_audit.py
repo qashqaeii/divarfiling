@@ -135,6 +135,37 @@ _DEFAULT_META = {
     'verb': 'عملیات',
 }
 
+_AUDIT_SKIP_FIELDS = frozenset({
+    'updated_at', 'created_at', 'id', 'pk',
+})
+
+_AUDIT_AGENCY_FIELD_LABELS = {
+    'name': 'نام آژانس',
+    'lead_routing_policy': 'سیاست تخصیص سرنخ',
+    'api_key': 'کلید API',
+    'slug': 'شناسه آژانس',
+}
+
+
+def _audit_field_labels(fields: List[str]) -> List[str]:
+    labels: List[str] = []
+    for field in fields or []:
+        if field in _AUDIT_SKIP_FIELDS:
+            continue
+        label = _AUDIT_AGENCY_FIELD_LABELS.get(field)
+        if label and label not in labels:
+            labels.append(label)
+    return labels
+
+
+def _agency_update_summary(actor_name: str, fields: List[str]) -> str:
+    labels = _audit_field_labels(fields)
+    if len(labels) == 1:
+        return f'{actor_name} {labels[0]} را به‌روز کرد.'
+    if len(labels) > 1:
+        return f'{actor_name} تنظیمات آژانس ({ " و ".join(labels) }) را به‌روز کرد.'
+    return f'{actor_name} تنظیمات آژانس را تغییر داد.'
+
 
 def log_agency_audit(
     agency: CRMAgency,
@@ -211,9 +242,9 @@ def _payload_chips(event: str, payload: Dict[str, Any]) -> List[Dict[str, str]]:
             chips.append({'label': 'مشاور', 'value': str(p['member_id'])})
 
     elif event == 'agency.updated':
-        fields = p.get('fields') or []
-        if fields:
-            chips.append({'label': 'فیلدها', 'value': '، '.join(fields)})
+        labels = _audit_field_labels(p.get('fields') or [])
+        if labels:
+            chips.append({'label': 'موارد', 'value': ' و '.join(labels)})
 
     elif event.startswith('webhook.'):
         if p.get('webhook_id'):
@@ -253,10 +284,7 @@ def _summary(event: str, payload: Dict[str, Any], actor_name: str) -> str:
         return f'{actor_name} {to_persian_digits(str(count))} سرنخ را به‌صورت گروهی تخصیص داد.'
 
     if event == 'agency.updated':
-        fields = p.get('fields') or []
-        if fields:
-            return f'{actor_name} فیلدهای { "، ".join(fields) } را به‌روز کرد.'
-        return f'{actor_name} تنظیمات آژانس را تغییر داد.'
+        return _agency_update_summary(actor_name, p.get('fields') or [])
 
     if event == 'api_key.regenerated':
         return f'{actor_name} کلید API آژانس را بازتولید کرد — اتصال‌های قبلی باطل می‌شوند.'

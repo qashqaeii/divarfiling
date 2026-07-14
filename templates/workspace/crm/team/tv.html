@@ -86,11 +86,11 @@
             </header>
             <div class="lcc-donut">
                 <div class="lcc-donut__chart">
-                    <canvas data-tv-donut aria-label="نمودار دونات"></canvas>
                     <div class="lcc-donut__center" data-tv-donut-center hidden>
                         <strong class="lcc-donut__total" data-tv-donut-center-val>۰</strong>
                         <span class="lcc-donut__center-lbl" data-tv-donut-center-lbl>مخاطب فعال</span>
                     </div>
+                    <canvas data-tv-donut aria-label="نمودار دونات"></canvas>
                     <div class="lcc-empty lcc-empty--sm" data-tv-donut-empty hidden>
                         <i class="fas fa-users"></i>
                         <p>مخاطبی ثبت نشده</p>
@@ -177,5 +177,5 @@ window.crmTeamTV = {
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=18"></script>
+<script src="{% static 'workspace/js/crm-team-tv.js' %}?v=19"></script>
 {% endblock %}

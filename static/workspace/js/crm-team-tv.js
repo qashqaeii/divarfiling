@@ -492,31 +492,27 @@
         });
     }
 
-    function bindDonutCenterHover(canvas) {
-        var centerEl = root.querySelector('[data-tv-donut-center]');
-        if (!canvas || !centerEl || canvas._tvCenterHoverBound) return;
-        canvas._tvCenterHoverBound = true;
-        canvas.addEventListener('mouseenter', function () {
-            if (!centerEl.hidden) centerEl.classList.add('is-hidden-hover');
-        });
-        canvas.addEventListener('mouseleave', function () {
-            centerEl.classList.remove('is-hidden-hover');
-        });
-    }
-
-    function donutTooltipPosition(items, eventPosition) {
-        var chart = items[0].chart;
-        var area = chart.chartArea;
-        if (!area) return { x: eventPosition.x, y: eventPosition.y };
-        var cx = (area.left + area.right) / 2;
-        var cy = (area.top + area.bottom) / 2;
-        var dx = eventPosition.x - cx;
-        var dy = eventPosition.y - cy;
-        var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        var push = Math.min(area.width, area.height) * 0.22;
-        return {
-            x: eventPosition.x + (dx / dist) * push,
-            y: eventPosition.y + (dy / dist) * push
+    function ensureDonutTooltipPositioner() {
+        if (!window.Chart || !Chart.Tooltip || !Chart.Tooltip.positioners) return;
+        if (Chart.Tooltip.positioners.tvDonutOutward) return;
+        Chart.Tooltip.positioners.tvDonutOutward = function (elements, eventPosition) {
+            var chart = this.chart;
+            var area = chart && chart.chartArea;
+            if (!area) {
+                return { x: eventPosition.x, y: eventPosition.y, xAlign: 'center', yAlign: 'center' };
+            }
+            var cx = (area.left + area.right) / 2;
+            var cy = (area.top + area.bottom) / 2;
+            var dx = eventPosition.x - cx;
+            var dy = eventPosition.y - cy;
+            var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            var push = Math.min(area.width, area.height) * 0.2;
+            return {
+                x: eventPosition.x + (dx / dist) * push,
+                y: eventPosition.y + (dy / dist) * push,
+                xAlign: 'center',
+                yAlign: 'center'
+            };
         };
     }
 
@@ -552,7 +548,7 @@
 
         if (title) title.textContent = doughnut.heading || doughnut.title || 'توزیع مخاطبین';
         setDonutCenter(doughnut, total, isEmpty);
-        bindDonutCenterHover(canvas);
+        ensureDonutTooltipPositioner();
 
         canvas.hidden = isEmpty;
         if (emptyEl) emptyEl.hidden = !isEmpty;
@@ -612,7 +608,7 @@
                         displayColors: true,
                         rtl: true,
                         textDirection: 'rtl',
-                        position: donutTooltipPosition,
+                        position: 'tvDonutOutward',
                         callbacks: {
                             label: function (ctx) {
                                 var pct = total ? Math.round(ctx.parsed / total * 100) : 0;

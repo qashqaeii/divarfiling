@@ -147,11 +147,16 @@
                     <h3><i class="fas fa-clipboard-list"></i> رویدادهای اخیر</h3>
                     <a href="?tab=audit">ممیزی</a>
                 </header>
-                <ul class="crm-agency-audit-snippet">
+                <ul class="crm-agency-audit-snippet crm-agency-audit-snippet--rich">
                     {% for log in audit_logs|slice:":6" %}
                     <li>
-                        <code>{{ log.event }}</code>
-                        <span>{{ log.actor.get_full_name|default:log.actor.username|default:"سیستم" }}</span>
+                        <span class="crm-audit-snippet-icon" aria-hidden="true">
+                            <i class="fas {{ log.event|crm_audit_icon }}"></i>
+                        </span>
+                        <div>
+                            <strong>{{ log.event|crm_audit_label }}</strong>
+                            <span>{{ log.actor.get_full_name|default:log.actor.username|default:"سیستم" }}</span>
+                        </div>
                         <time>{{ log.created_at|ws_jalali_date }}</time>
                     </li>
                     {% endfor %}

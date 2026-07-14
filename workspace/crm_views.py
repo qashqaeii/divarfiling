@@ -69,7 +69,7 @@ from workspace.services.crm_property_share import (
 )
 from workspace.services.crm_sync import export_crm_payload, import_crm_payload, record_sync_log
 from workspace.services.crm_webhooks import create_lead_from_api, dispatch_webhook, test_webhook, verify_api_key
-from workspace.services.crm_audit import log_agency_audit
+from workspace.services.crm_audit import log_agency_audit, build_audit_timeline
 from workspace.services.crm_agency_features import is_agency_feature_enabled
 from workspace.services.crm_agency_messages import unread_message_count
 from workspace.services.crm_agency_announcements import unread_announcement_count
@@ -2342,7 +2342,14 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             ctx['team_inbox'] = list(team_inbox_qs(user)[:50]) if can_view_team_inbox(user) else []
             ctx['assigned_leads'] = list(manager_assigned_customers_qs(user)[:30]) if can_view_team_inbox(user) else []
             ctx['sync_logs'] = list(CRMSyncLog.objects.filter(agency=agency).select_related('user')[:15]) if can_manage_team(user) else []
-            ctx['audit_logs'] = list(CRMAgencyAuditLog.objects.filter(agency=agency).select_related('actor')[:30]) if can_manage_team(user) else []
+            audit_logs_qs = CRMAgencyAuditLog.objects.filter(agency=agency).select_related('actor')
+            if can_manage_team(user):
+                audit_logs = list(audit_logs_qs[:80])
+                ctx['audit_logs'] = audit_logs
+                ctx['audit_timeline'] = build_audit_timeline(audit_logs)
+            else:
+                ctx['audit_logs'] = []
+                ctx['audit_timeline'] = None
             ctx['webhooks'] = list(CRMAgencyWebhook.objects.filter(agency=agency).order_by('-created_at'))
             transfers_qs = CustomerTransferLog.objects.filter(agency=agency).filter(
                 Q(from_user=user) | Q(to_user=user) | Q(transferred_by=user),
@@ -2416,6 +2423,7 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             ctx['assigned_leads'] = []
             ctx['sync_logs'] = []
             ctx['audit_logs'] = []
+            ctx['audit_timeline'] = None
             ctx['messages_unread_count'] = 0
             ctx['announcements_unread_count'] = 0
             ctx['agency_feature_messages'] = False

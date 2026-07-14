@@ -226,6 +226,18 @@ def crm_amenity_chips(amenities, limit=3):
     return items[: int(limit)]
 
 
+@register.filter
+def crm_audit_label(event):
+    from workspace.services.crm_audit import audit_event_label
+    return audit_event_label(event or '')
+
+
+@register.filter
+def crm_audit_icon(event):
+    from workspace.services.crm_audit import get_audit_event_meta
+    return get_audit_event_meta(event or '').get('icon', 'fa-circle-info')
+
+
 @register.simple_tag
 def crm_portfolio_suggested_count(property_links, linked_listings):
     n = sum(1 for l in property_links if l.role == 'پیشنهادی')

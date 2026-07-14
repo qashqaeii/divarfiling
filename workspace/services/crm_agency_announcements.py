@@ -117,6 +117,58 @@ def list_announcements(
     return items, total
 
 
+def _audience_members(ann: CRMAgencyAnnouncement) -> List[CRMAgencyMember]:
+    qs = CRMAgencyMember.objects.filter(agency=ann.agency, is_active=True).select_related('user')
+    roles = ann.target_roles or []
+    if roles:
+        qs = qs.filter(role__in=roles)
+    return list(qs)
+
+
+def _build_read_stats(ann: CRMAgencyAnnouncement) -> Dict[str, Any]:
+    audience = _audience_members(ann)
+    if not audience:
+        return {
+            'total_audience': 0,
+            'read_count': 0,
+            'unread_count': 0,
+            'read': [],
+            'unread': [],
+        }
+    audience_ids = [m.pk for m in audience]
+    reads = {
+        r.member_id: r
+        for r in CRMAgencyAnnouncementRead.objects.filter(
+            announcement=ann,
+            member_id__in=audience_ids,
+        ).select_related('member__user')
+    }
+    read_list = []
+    unread_list = []
+    for m in audience:
+        name = m.user.get_full_name() or m.user.username
+        entry = {
+            'member_id': m.pk,
+            'name': name,
+            'role': m.role,
+            'role_label': m.get_role_display(),
+        }
+        if m.pk in reads:
+            entry['read_at'] = reads[m.pk].read_at.isoformat()
+            read_list.append(entry)
+        else:
+            unread_list.append(entry)
+    read_list.sort(key=lambda x: x.get('read_at', ''), reverse=True)
+    unread_list.sort(key=lambda x: x['name'])
+    return {
+        'total_audience': len(audience),
+        'read_count': len(read_list),
+        'unread_count': len(unread_list),
+        'read': read_list,
+        'unread': unread_list,
+    }
+
+
 def get_announcement(user, announcement_id: int) -> Optional[Dict[str, Any]]:
     membership = get_membership(user)
     if not membership:
@@ -126,7 +178,10 @@ def get_announcement(user, announcement_id: int) -> Optional[Dict[str, Any]]:
         return None
     if membership.role not in AGENCY_MANAGER_ROLES and not _visible_for_member(ann, membership):
         return None
-    return _serialize_announcement(ann, membership)
+    data = _serialize_announcement(ann, membership)
+    if membership.role in AGENCY_MANAGER_ROLES:
+        data['read_stats'] = _build_read_stats(ann)
+    return data
 
 
 def unread_announcement_count(user) -> int:

@@ -766,6 +766,176 @@
     word-break: break-word;
 }
 
+/* ── Manager read stats ── */
+.crm-ann-read-panel {
+    margin: 0 1.15rem 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    border: 1px solid var(--a-line);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--a-accent) 4%, var(--a-surface)), var(--a-elevated));
+}
+
+.crm-ann-read-panel[hidden] { display: none !important; }
+
+.crm-ann-read-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.crm-ann-read-head h4 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.crm-ann-read-head h4 i { color: var(--a-accent); font-size: 0.8rem; }
+
+.crm-ann-read-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.crm-ann-read-pill {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+}
+
+.crm-ann-read-pill--ok {
+    color: #15803d;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+}
+
+.crm-ann-read-pill--pending {
+    color: #c2410c;
+    background: var(--a-warn-soft);
+    border: 1px solid color-mix(in srgb, var(--a-warn) 25%, transparent);
+}
+
+.crm-ann-read-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--a-line) 80%, transparent);
+    overflow: hidden;
+    margin-bottom: 0.85rem;
+}
+
+.crm-ann-read-progress-bar {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--a-accent), color-mix(in srgb, var(--a-accent) 70%, #22c55e));
+    transition: width 0.35s ease;
+}
+
+.crm-ann-read-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+}
+
+.crm-ann-read-col h5 {
+    margin: 0 0 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--a-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.crm-ann-read-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 11rem;
+    overflow-y: auto;
+}
+
+.crm-ann-read-member {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 10px;
+    border: 1px solid var(--a-line);
+    background: var(--a-surface);
+    font-size: 0.74rem;
+}
+
+.crm-ann-read-member--unread {
+    border-color: color-mix(in srgb, var(--a-warn) 22%, var(--a-line));
+    background: color-mix(in srgb, var(--a-warn) 5%, var(--a-surface));
+}
+
+.crm-ann-read-avatar {
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 0.62rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    color: var(--a-accent);
+    background: var(--a-accent-soft);
+}
+
+.crm-ann-read-member--unread .crm-ann-read-avatar {
+    color: var(--a-warn);
+    background: var(--a-warn-soft);
+}
+
+.crm-ann-read-member-copy {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+}
+
+.crm-ann-read-member-copy strong {
+    font-size: 0.76rem;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.crm-ann-read-member-copy small {
+    font-size: 0.66rem;
+    color: var(--a-muted);
+}
+
+.crm-ann-read-member time {
+    font-size: 0.64rem;
+    color: var(--a-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.crm-ann-read-empty {
+    font-size: 0.72rem;
+    color: var(--a-muted);
+    padding: 0.35rem 0.15rem;
+}
+
+@media (max-width: 768px) {
+    .crm-ann-read-cols { grid-template-columns: 1fr; }
+}
+
 .crm-ann-article-foot {
     display: flex;
     flex-wrap: wrap;
@@ -893,6 +1063,22 @@
     color: var(--a-accent);
     border-radius: 50%;
     background: var(--a-accent-soft);
+}
+
+/* ── Detail + empty share column 3 ── */
+.crm-ann-detail,
+.crm-ann-empty {
+    grid-column: 3;
+    grid-row: 1;
+    min-height: 0;
+}
+
+.crm-ann-hub--has-detail .crm-ann-empty {
+    display: none !important;
+}
+
+.crm-ann-empty[hidden] {
+    display: none !important;
 }
 
 /* ── Mobile detail mode ── */

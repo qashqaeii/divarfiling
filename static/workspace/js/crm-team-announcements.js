@@ -72,6 +72,7 @@
         statsImportant: root.querySelector('[data-ann-stats-important]'),
         heroBadges: root.querySelector('[data-ann-hero-badges]'),
         chips: root.querySelector('[data-ann-chips]'),
+        readStats: root.querySelector('[data-ann-read-stats]'),
     };
 
     function apiDetail(id) {
@@ -246,6 +247,7 @@
     }
 
     function setDetailOpen(open) {
+        root.classList.toggle('crm-ann-hub--has-detail', open);
         root.classList.toggle('crm-ann-hub--detail-open', open && mobileMq.matches);
     }
 
@@ -254,6 +256,10 @@
         renderList(announcementsCache);
         if (els.detail) els.detail.hidden = true;
         if (els.placeholder) els.placeholder.hidden = false;
+        if (els.readStats) {
+            els.readStats.hidden = true;
+            els.readStats.innerHTML = '';
+        }
         setDetailOpen(false);
     }
 
@@ -392,6 +398,58 @@
         });
     }
 
+    function renderReadStats(stats) {
+        if (!els.readStats) return;
+        if (!canManage || !stats) {
+            els.readStats.hidden = true;
+            els.readStats.innerHTML = '';
+            return;
+        }
+        const total = stats.total_audience || 0;
+        const readN = stats.read_count || 0;
+        const unreadN = stats.unread_count || 0;
+        const pct = total ? Math.round((readN / total) * 100) : 0;
+
+        const memberRow = (m, unread) => `
+            <li class="crm-ann-read-member ${unread ? 'crm-ann-read-member--unread' : ''}">
+                <span class="crm-ann-read-avatar">${escapeHtml(initials(m.name))}</span>
+                <span class="crm-ann-read-member-copy">
+                    <strong>${escapeHtml(m.name)}</strong>
+                    <small>${escapeHtml(m.role_label || m.role || '')}</small>
+                </span>
+                ${m.read_at ? `<time>${formatTime(m.read_at)}</time>` : ''}
+            </li>`;
+
+        const readItems = (stats.read || []).map(m => memberRow(m, false)).join('')
+            || '<li class="crm-ann-read-empty">هنوز کسی نخوانده</li>';
+        const unreadItems = (stats.unread || []).map(m => memberRow(m, true)).join('')
+            || '<li class="crm-ann-read-empty">همه مخاطبان خوانده‌اند</li>';
+
+        els.readStats.innerHTML = `
+            <header class="crm-ann-read-head">
+                <h4><i class="fas fa-chart-pie"></i> آمار خواندن</h4>
+                <div class="crm-ann-read-summary">
+                    <span class="crm-ann-read-pill crm-ann-read-pill--ok">${readN.toLocaleString('fa-IR')} خوانده</span>
+                    <span class="crm-ann-read-pill crm-ann-read-pill--pending">${unreadN.toLocaleString('fa-IR')} نخوانده</span>
+                </div>
+            </header>
+            <div class="crm-ann-read-progress" aria-hidden="true">
+                <div class="crm-ann-read-progress-bar" style="width:${pct}%"></div>
+            </div>
+            <p class="crm-ann-read-empty" style="margin:0 0 0.65rem">${readN.toLocaleString('fa-IR')} از ${total.toLocaleString('fa-IR')} مخاطب (${pct.toLocaleString('fa-IR')}٪)</p>
+            <div class="crm-ann-read-cols">
+                <div class="crm-ann-read-col">
+                    <h5>خوانده‌اند</h5>
+                    <ul class="crm-ann-read-list">${readItems}</ul>
+                </div>
+                <div class="crm-ann-read-col">
+                    <h5>نخوانده‌اند</h5>
+                    <ul class="crm-ann-read-list">${unreadItems}</ul>
+                </div>
+            </div>`;
+        els.readStats.hidden = false;
+    }
+
     function renderDetail(a) {
         if (!a) return;
         if (els.title) els.title.textContent = a.title || '—';
@@ -436,6 +494,7 @@
                 els.foot.hidden = true;
             }
         }
+        renderReadStats(a.read_stats);
     }
 
     function openAnnouncement(id) {

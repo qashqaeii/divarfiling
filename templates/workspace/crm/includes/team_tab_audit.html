@@ -1,0 +1,157 @@
+{% load workspace_tags crm_tags %}
+{% if tab == 'audit' and can_manage_team %}
+<section class="crm-audit-hub crm-audit-hub--studio" data-crm-audit aria-label="تاریخچه عملیات تیم">
+
+    <header class="crm-audit-topbar">
+        <div class="crm-audit-topbar-brand">
+            <div class="crm-audit-topbar-mark" aria-hidden="true">
+                <i class="fas fa-timeline"></i>
+            </div>
+            <div>
+                <h2 class="crm-audit-topbar-title">تاریخچه عملیات تیم</h2>
+                <p class="crm-audit-topbar-sub">ردیابی شفاف اقدامات مدیران و مشاوران در آژانس</p>
+            </div>
+        </div>
+        {% if audit_timeline %}
+        <div class="crm-audit-topbar-stats" aria-label="آمار ممیزی">
+            <div class="crm-audit-stat crm-audit-stat--pulse">
+                <span class="crm-audit-stat-val">{{ audit_timeline.stats.today|default:0 }}</span>
+                <span class="crm-audit-stat-lbl">امروز</span>
+            </div>
+            <div class="crm-audit-stat">
+                <span class="crm-audit-stat-val">{{ audit_timeline.stats.total|default:0 }}</span>
+                <span class="crm-audit-stat-lbl">کل رویدادها</span>
+            </div>
+            <div class="crm-audit-stat crm-audit-stat--accent">
+                <span class="crm-audit-stat-val">{{ audit_timeline.stats.by_category.messages|default:0 }}</span>
+                <span class="crm-audit-stat-lbl">پیام</span>
+            </div>
+            <div class="crm-audit-stat crm-audit-stat--warn">
+                <span class="crm-audit-stat-val">{{ audit_timeline.stats.by_category.leads|default:0 }}</span>
+                <span class="crm-audit-stat-lbl">سرنخ</span>
+            </div>
+        </div>
+        {% endif %}
+    </header>
+
+    {% if audit_timeline and audit_timeline.groups %}
+    <div class="crm-audit-shell">
+        <aside class="crm-audit-rail" aria-label="فیلتر دسته‌بندی">
+            <div class="crm-audit-rail-head">
+                <span class="crm-audit-rail-title">دسته‌بندی</span>
+            </div>
+            <nav class="crm-audit-filters" role="tablist">
+                {% for key, cat in audit_timeline.categories.items %}
+                <button type="button"
+                    class="crm-audit-filter{% if key == 'all' %} active{% endif %}"
+                    data-audit-filter="{{ key }}"
+                    role="tab"
+                    aria-selected="{% if key == 'all' %}true{% else %}false{% endif %}">
+                    <span class="crm-audit-filter-glyph"><i class="fas {{ cat.icon }}"></i></span>
+                    <span class="crm-audit-filter-copy">
+                        <strong>{{ cat.label }}</strong>
+                        {% if key != 'all' %}
+                        <small data-audit-cat-count="{{ key }}">{{ audit_timeline.stats.by_category|dict_get:key|default:0 }} رویداد</small>
+                        {% else %}
+                        <small>نمایش همه</small>
+                        {% endif %}
+                    </span>
+                </button>
+                {% endfor %}
+            </nav>
+            <footer class="crm-audit-rail-foot">
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                <span>فقط مدیر آژانس به این لاگ دسترسی دارد</span>
+            </footer>
+        </aside>
+
+        <div class="crm-audit-main">
+            <header class="crm-audit-toolbar">
+                <label class="crm-audit-search">
+                    <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="search"
+                        placeholder="جستجو در رویداد، کاربر یا جزئیات..."
+                        data-audit-search
+                        dir="rtl"
+                        aria-label="جستجو در تاریخچه عملیات">
+                </label>
+                <span class="crm-audit-toolbar-meta" data-audit-visible-count></span>
+            </header>
+
+            <div class="crm-audit-timeline" data-audit-timeline>
+                {% for group in audit_timeline.groups %}
+                <section class="crm-audit-day" data-audit-day>
+                    <header class="crm-audit-day-head">
+                        <span class="crm-audit-day-label">{{ group.label }}</span>
+                        <em class="crm-audit-day-count">{{ group.entries|length }} رویداد</em>
+                    </header>
+                    <div class="crm-audit-day-track">
+                        {% for entry in group.entries %}
+                        <article class="crm-audit-event crm-audit-event--{{ entry.tone }}"
+                            data-audit-event
+                            data-category="{{ entry.category }}"
+                            data-search="{{ entry.search_text }}">
+                            <div class="crm-audit-event-spine" aria-hidden="true">
+                                <span class="crm-audit-event-node"></span>
+                            </div>
+                            <div class="crm-audit-event-card">
+                                <header class="crm-audit-event-head">
+                                    <span class="crm-audit-event-icon" aria-hidden="true">
+                                        <i class="fas {{ entry.icon }}"></i>
+                                    </span>
+                                    <div class="crm-audit-event-titles">
+                                        <h3>{{ entry.title }}</h3>
+                                        <span class="crm-audit-event-code" dir="ltr">{{ entry.event }}</span>
+                                    </div>
+                                    <time class="crm-audit-event-time" datetime="{{ entry.datetime_label }}">{{ entry.time_label }}</time>
+                                </header>
+                                <p class="crm-audit-event-summary">{{ entry.summary }}</p>
+                                <footer class="crm-audit-event-foot">
+                                    <div class="crm-audit-event-actor">
+                                        {% if entry.actor_is_system %}
+                                        <span class="crm-audit-avatar crm-audit-avatar--system" aria-hidden="true"><i class="fas fa-robot"></i></span>
+                                        {% else %}
+                                        <span class="crm-audit-avatar" style="--hue: {{ entry.actor_name|crm_avatar_hue }}" aria-hidden="true">{{ entry.actor_name|crm_initials }}</span>
+                                        {% endif %}
+                                        <span>{{ entry.actor_name }}</span>
+                                    </div>
+                                    {% if entry.payload_chips %}
+                                    <div class="crm-audit-event-chips">
+                                        {% for chip in entry.payload_chips %}
+                                        <span class="crm-audit-chip">
+                                            <em>{{ chip.label }}</em>
+                                            <strong dir="ltr">{{ chip.value }}</strong>
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </footer>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endfor %}
+            </div>
+
+            <div class="crm-audit-filter-empty" data-audit-filter-empty hidden>
+                <span class="crm-audit-filter-empty-ring"><i class="fas fa-filter-circle-xmark"></i></span>
+                <h3>رویدادی با این فیلتر پیدا نشد</h3>
+                <p>فیلتر دیگری انتخاب کنید یا عبارت جستجو را تغییر دهید.</p>
+                <button type="button" class="crm-audit-pill" data-audit-reset>بازنشانی فیلترها</button>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="crm-audit-empty">
+        <div class="crm-audit-empty-visual" aria-hidden="true">
+            <span class="crm-audit-empty-orbit"></span>
+            <span class="crm-audit-empty-orbit crm-audit-empty-orbit--2"></span>
+            <span class="crm-audit-empty-core"><i class="fas fa-clipboard-list"></i></span>
+        </div>
+        <h3>هنوز رویدادی ثبت نشده</h3>
+        <p>با شروع فعالیت تیم — ارسال پیام، تخصیص سرنخ، تغییر تنظیمات — تاریخچه اینجا نمایش داده می‌شود.</p>
+    </div>
+    {% endif %}
+</section>
+{% endif %}

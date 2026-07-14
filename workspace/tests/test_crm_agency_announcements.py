@@ -150,6 +150,33 @@ class CRMAgencyAnnouncementsTests(TestCase):
         ann = CRMAgencyAnnouncement.objects.get(pk=resp.json()['id'])
         self.assertIsNotNone(ann.published_at)
 
+    def test_detail_includes_read_stats_for_manager(self):
+        ann = create_announcement(
+            self.owner,
+            title='آمار',
+            body='متن',
+            target_roles=['advisor'],
+        )
+        mark_announcement_read(self.advisor, ann.pk)
+        client = Client()
+        client.force_login(self.owner)
+        url = reverse('workspace:api_crm_team_announcement_detail', kwargs={'announcement_id': ann.pk})
+        resp = client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()['announcement']
+        self.assertIn('read_stats', data)
+        self.assertEqual(data['read_stats']['read_count'], 1)
+        self.assertEqual(data['read_stats']['unread_count'], 0)
+
+    def test_detail_hides_read_stats_for_advisor(self):
+        ann = create_announcement(self.owner, title='مخفی', body='متن')
+        client = Client()
+        client.force_login(self.advisor)
+        url = reverse('workspace:api_crm_team_announcement_detail', kwargs={'announcement_id': ann.pk})
+        resp = client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotIn('read_stats', resp.json()['announcement'])
+
     def test_delete_announcement(self):
         ann = create_announcement(self.owner, title='حذف', body='متن')
         client = Client()

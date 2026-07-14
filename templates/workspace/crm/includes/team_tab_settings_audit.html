@@ -175,21 +175,4 @@
 {% endif %}
 
 {# تب ممیزی #}
-{% if tab == 'audit' and can_manage_team %}
-<section class="crm-team-panel-v2" aria-label="لاگ ممیزی">
-    <header class="crm-team-panel-head-v2"><h2>تاریخچه عملیات تیم</h2></header>
-    {% if audit_logs %}
-    <div class="crm-team-audit-list">
-        {% for log in audit_logs %}
-        <article class="crm-team-audit-row">
-            <code>{{ log.event }}</code>
-            <span>{{ log.actor.get_full_name|default:log.actor.username|default:"سیستم" }}</span>
-            <time>{{ log.created_at|ws_jalali }}</time>
-        </article>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p class="crm-team-empty-v2">هنوز رویدادی ثبت نشده.</p>
-    {% endif %}
-</section>
-{% endif %}
+{% include 'workspace/crm/includes/team_tab_audit.html' %}

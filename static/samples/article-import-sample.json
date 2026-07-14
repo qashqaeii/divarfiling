@@ -3,7 +3,7 @@
   "schema": "divarfiling.blog.article-import",
   "documentation": {
     "title_fa": "راهنمای رسمی فرمت درون‌ریزی مقاله — فایلینگ دیوار",
-    "description": "این فایل همزمان نمونه عملی و مرجع ساختار JSON v1.0 است. فیلدهای documentation و meta فقط راهنما هستند و در import ذخیره نمی‌شوند.",
+    "description": "این فایل شامل یک مقاله کامل نمونه درباره فایلینگ دیوار + مرجع ساختار JSON v1.0 است. فیلدهای documentation و meta در import ذخیره نمی‌شوند.",
     "required_root_fields": [
       "format_version",
       "article"
@@ -49,46 +49,48 @@
     },
     "content_html_guidelines": [
       "محتوا باید HTML معتبر باشد (نه Markdown).",
-      "حداقل یک تگ <h2> و چند پاراگراف <p> داشته باشد.",
-      "برای سئو: لینک داخلی به pillar page و مقالات مرتبط.",
-      "FAQ با schema.org (FAQPage / Question / Answer) توصیه می‌شود.",
-      "جدول مقایسه (<table>) برای engagement مفید است.",
-      "تصویر شاخص بعد از import در Django Admin یا پنل اضافه می‌شود."
+      "حداقل یک h2 و چند پاراگراف p.",
+      "لینک داخلی به pillar page و مقالات مرتبط.",
+      "FAQ با schema.org توصیه می‌شود.",
+      "جدول مقایسه برای engagement.",
+      "تصویر شاخص بعد از import در Admin."
     ],
     "import_checklist": [
-      "1. slug_base یکتا و انگلیسی/لاتین (مثلاً ghif-forush-moshaver-amlak)",
+      "1. slug_base یکتا (این نمونه: sample-filing-divar-rahnama-kamel)",
       "2. excerpt حداکثر 300 کاراکتر",
-      "3. tags حداقل یک برچسب معتبر",
-      "4. category.slug با slug موجود merge می‌شود (get_or_create)",
-      "5. publish=true برای انتشار فوری | force_update=true برای بازنویسی",
-      "6. قبل از import در محیط واقعی، publish را false نگه دارید"
+      "3. tags حداقل یک برچسب",
+      "4. publish=false برای پیش‌نویس | force_update=true برای بازنویسی",
+      "5. محتوای article.content را برای مقاله واقعی جایگزین کنید"
     ]
   },
   "meta": {
     "content_type": "seo_guide",
-    "content_phase": "sample_template",
+    "content_phase": "sample_complete_article",
     "locale": "fa-IR",
-    "target_keyword": "قیف فروش مشاور املاک",
+    "target_keyword": "فایلینگ دیوار",
     "secondary_keywords": [
-      "CRM مشاور املاک",
-      "کانبان معامله املاک",
-      "پیگیری مشتری املاک"
+      "فایلینگ املاک",
+      "بانک فایل املاک",
+      "استخراج آگهی دیوار",
+      "ربات دیوار"
     ],
     "pillar_page": {
-      "url": "/real-estate-crm/",
-      "title": "CRM مشاور املاک"
+      "url": "/real-estate-filing/",
+      "title": "فایلینگ املاک"
     },
     "suggested_featured_image": {
-      "note": "پس از import آپلود کنید — JSON تصویر را import نمی‌کند",
-      "suggested_path": "blog/ghif-forush-moshaver-amlak.jpg",
-      "suggested_alt": "قیف فروش مشاور املاک در CRM فایلینگ دیوار"
+      "note": "پس از import آپلود کنید",
+      "suggested_path": "blog/filing-divar-rahnama.jpg",
+      "suggested_alt": "فایلینگ دیوار — بانک فایل مشاور املاک"
     },
     "suggested_related_slugs": [
-      "crm-amlak-raygan-rahnama",
-      "peigiri-moshtari-moshaver-amlak",
-      "narm-afzar-crm-amlak-rahnama-kamel"
+      "filing-amlak-yani-chi",
+      "bank-file-amlak",
+      "chetor-agahi-divar-download",
+      "narm-afzar-filing-amlak"
     ],
-    "estimated_reading_minutes": 6
+    "estimated_reading_minutes": 8,
+    "word_count_approx": 1288
   },
   "options": {
     "publish": false,
@@ -96,24 +98,25 @@
     "author_username": "admin"
   },
   "article": {
-    "keyword": "قیف فروش مشاور املاک",
-    "slug_base": "sample-ghif-forush-crm-import-template",
-    "title": "قیف فروش مشاور املاک: نمونه کامل JSON برای درون‌ریزی (راهنمای عملی)",
-    "excerpt": "این مقاله نمونه، ساختار استاندارد JSON v1.0 را نشان می‌دهد: slug، دسته، برچسب، HTML با h2، جدول، FAQ schema و لینک داخلی. قبل از publish واقعی، slug را تغییر دهید.",
+    "keyword": "فایلینگ دیوار",
+    "slug_base": "sample-filing-divar-rahnama-kamel",
+    "title": "فایلینگ دیوار: راهنمای کامل بانک فایل برای مشاور املاک (نمونه JSON)",
+    "excerpt": "فایلینگ دیوار یعنی آگهی‌های دیوار را ساختاریافته جمع، دسته‌بندی و قابل جستجو نگه دارید. در این راهنمای کامل: تعریف، مراحل راه‌اندازی، تفاوت با CRM، اشتباهات رایج و FAQ — نمونه آماده import از JSON.",
     "category": {
-      "slug": "crm-moshaver-amlak",
-      "name": "CRM مشاور املاک",
-      "description": "راهنماهای CRM، پیگیری مشتری، قیف فروش و میزکار مشاوران املاک",
-      "order": 2
+      "slug": "filing-amlak",
+      "name": "فایلینگ املاک",
+      "description": "راهنمای بانک فایل، فایلینگ دیوار و مدیریت آگهی مشاوران املاک",
+      "order": 4
     },
     "tags": [
-      "قیف فروش مشاور املاک",
-      "کانبان معامله املاک",
-      "CRM مشاور املاک",
-      "پیگیری مشتری املاک",
       "فایلینگ دیوار",
+      "فایلینگ املاک",
+      "بانک فایل املاک",
+      "استخراج آگهی دیوار",
+      "ربات دیوار",
+      "نرم افزار فایلینگ املاک",
       "نمونه JSON مقاله"
     ],
-    "content": "<p><strong>قیف فروش مشاور املاک</strong> یعنی هر تماس، هر فایل و هر بازدید از یک مسیر مشخص عبور کند — از سرنخ تا قرارداد یا «از دست رفته» با دلیل ثبت‌شده. اگر امروز ۱۰ تماس دارید اما نمی‌دانید کدام مشتری اولویت دارد، مشکل از کمبود سرنخ نیست؛ از نبودن سیستم پیگیری است.</p>\n\n<p>این صفحه یک <em>نمونه رسمی</em> برای درون‌ریزی JSON در پنل مدیریت فایلینگ دیوار است. محتوای زیر از نظر ساختار HTML، لینک‌سازی داخلی، جدول مقایسه و FAQ schema مطابق استاندارد مقالات سئو پروژه (فاز A/B/C) نوشته شده است. پس از import، <strong>slug</strong> و <strong>تصویر شاخص</strong> را برای انتشار واقعی تنظیم کنید.</p>\n\n<p>برای پیاده‌سازی قیف در عمل، <a href=\"/real-estate-crm/\">CRM مشاور املاک</a> میزکار فایلینگ دیوار ابزار کانبان، یادآور و پرونده مشتری را فراهم می‌کند. ربات استخراج دیوار و برخی ماژول‌های فایلینگ حجیم لایسنس جداگانه دارند.</p>\n\n<h2>قیف فروش در CRM چه مشکلی را حل می‌کند؟</h2>\n\n<p>در کار روزانه مشاور، اطلاعات بین واتساپ، تماس‌های تلفنی، دفترچه یادداشت و حافظه پخش می‌شود. نتیجه: پیگیری دیرهنگام، فراموشی بازدید، ارسال فایل نامرتبط و از دست رفتن معاملات جدی. قیف فروش این پراکندگی را به مراحل قابل اندازه‌گیری تبدیل می‌کند.</p>\n\n<table>\n    <thead>\n        <tr>\n            <th>بدون قیف / CRM</th>\n            <th>با قیف در CRM</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>لیست بلند شماره بدون مرحله معامله</td>\n            <td>هر مشتری در مرحله مشخص (سرنخ، بازدید، مذاکره، …)</td>\n        </tr>\n        <tr>\n            <td>اولویت روز بر اساس حدس</td>\n            <td>لیست کار امروز بر اساس یادآور و مرحله</td>\n        </tr>\n        <tr>\n            <td>گزارش ماهانه مبهم</td>\n            <td>شمارش سرنخ، بازدید، قرارداد و از دست‌رفته</td>\n        </tr>\n        <tr>\n            <td>فایل‌ها در گروه‌های پخش‌شده</td>\n            <td>فایل بانک با فیلتر محله، متراژ و قیمت</td>\n        </tr>\n    </tbody>\n</table>\n\n<h2>مراحل پیشنهادی قیف (۷ مرحله)</h2>\n\n<p>برای اکثر مشاوران مستقل و آژانس‌های کوچک، قیف ۷ مرحله‌ای ساده و قابل اجرا است. نام مراحل را می‌توانید با سبک کاری خود هماهنگ کنید؛ مهم ثبت یکنواخت در CRM است.</p>\n\n<ol>\n    <li><strong>سرنخ:</strong> ثبت نام، تماس، نوع نیاز (خرید/فروش/رهن/اجاره)، محدوده و بودجه.</li>\n    <li><strong>بررسی نیاز:</strong> تأیید جدی بودن مشتری؛ ثبت جزئیات ملک ایده‌آل.</li>\n    <li><strong>ارسال فایل:</strong> ارسال گزینه‌های متناسب و ثبت بازخورد.</li>\n    <li><strong>بازدید:</strong> زمان‌بندی، انجام بازدید، یادآور تماس پس از بازدید.</li>\n    <li><strong>پیش‌قرارداد:</strong> مذاکره قیمت، شرایط پرداخت، مدارک.</li>\n    <li><strong>قرارداد:</strong> امضا، تحویل و بستن معامله.</li>\n    <li><strong>بسته / از دست رفته:</strong> ثبت نتیجه نهایی با دلیل (قیمت، انصراف، رقیب، …).</li>\n</ol>\n\n<h3>اقدام روزانه مشاور (چک‌لیست ۱۵ دقیقه‌ای)</h3>\n\n<ul>\n    <li>مرور سرنخ‌های جدید و تکمیل فیلدهای خالی.</li>\n    <li>پیگیری مشتریانی که فایل گرفته‌اند اما ۴۸ ساعت سکوت کرده‌اند.</li>\n    <li>تماس پس از بازدید — حداکثر تا ۲۴ ساعت بعد.</li>\n    <li>انتقال معاملات راکد به «از دست رفته» تا گزارش‌ها واقعی بمانند.</li>\n</ul>\n\n<h2>اشتباهات رایج در پیاده‌سازی قیف</h2>\n\n<p>قیف فقط وقتی کار می‌کند که تیم (یا خود مشاور) به ثبت عادت کند. رایج‌ترین خطاها:</p>\n\n<ul>\n    <li><strong>مراحل زیاد:</strong> بیش از ۸ مرحله باعث می‌شود کسی مرحله را به‌روز نکند.</li>\n    <li><strong>ثبت دیرهنگام:</strong> اگر تماس شب ثبت شود، جزئیات از دست می‌رود.</li>\n    <li><strong>بدون یادآور:</strong> CRM بدون reminder همان دفترچه دیجیتال است.</li>\n    <li><strong>عدم ثبت «از دست رفته»:</strong> قیف همیشه شلوغ به نظر می‌رسد و اولویت‌بندی غیرممکن می‌شود.</li>\n</ul>\n\n<h2>راهنمای فیلدهای JSON این نمونه</h2>\n\n<p>برای درون‌ریزی از پنل <code>/accounts/admin-panel/blog/</code>، ساختار root باید شامل <code>format_version</code>، <code>options</code> و <code>article</code> باشد. فیلدهای <code>documentation</code> و <code>meta</code> در این فایل فقط مرجع هستند.</p>\n\n<table>\n    <thead>\n        <tr>\n            <th>فیلد</th>\n            <th>الزامی</th>\n            <th>توضیح</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td><code>article.slug_base</code></td>\n            <td>بله</td>\n            <td>نامک URL — یکتا، بدون فاصله</td>\n        </tr>\n        <tr>\n            <td><code>article.title</code></td>\n            <td>بله</td>\n            <td>عنوان — حداکثر ۲۰۰ کاراکتر</td>\n        </tr>\n        <tr>\n            <td><code>article.excerpt</code></td>\n            <td>بله</td>\n            <td>خلاصه meta — حداکثر ۳۰۰ کاراکتر</td>\n        </tr>\n        <tr>\n            <td><code>article.content</code></td>\n            <td>بله</td>\n            <td>HTML کامل مقاله</td>\n        </tr>\n        <tr>\n            <td><code>options.publish</code></td>\n            <td>خیر</td>\n            <td>true = انتشار فوری</td>\n        </tr>\n        <tr>\n            <td><code>featured_image</code></td>\n            <td>—</td>\n            <td>via JSON import نمی‌شود — بعداً در Admin</td>\n        </tr>\n    </tbody>\n</table>\n\n<h2>جمع‌بندی</h2>\n\n<p>قیف فروش مشاور املاک یک مفهوم فروش عمومی نیست؛ نقشه راه تبدیل تماس به قرارداد در بازار ملک است. با CRM، کانبان و عادت ثبت روزانه، همان حجم تماس امروز خروجی قابل پیش‌بینی‌تری می‌دهد. این فایل JSON را کپی کنید، slug و محتوا را برای مقاله واقعی خودتان جایگزین کنید، سپس از تب «درون‌ریزی» import کنید.</p>\n\n<p>مطالب مرتبط: <a href=\"/blog/crm-amlak-raygan-rahnama/\">CRM املاک رایگان</a> · <a href=\"/blog/peigiri-moshtari-moshaver-amlak/\">پیگیری مشتری مشاور املاک</a></p>\n\n<section class=\"blog-faq\" itemscope itemtype=\"https://schema.org/FAQPage\">\n    <h2>سوالات متداول</h2>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">آیا JSON تصویر شاخص را هم import می‌کند؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">خیر. در نسخه 1.0 فقط متادیتا و HTML import می‌شود. تصویر شاخص را پس از ایجاد مقاله در Django Admin یا پنل مدیریت آپلود کنید.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">اگر slug از قبل وجود داشته باشد چه می‌شود؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">به‌صورت پیش‌فرض import رد می‌شود (skip). برای بازنویسی، در options مقدار force_update را true قرار دهید.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">دسته‌بندی و برچسب‌ها چطور ساخته می‌شوند؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">دسته با get_or_create از روی category.slug ساخته یا بازیابی می‌شود. هر tag در آرایه tags نیز get_or_create می‌شود — مشابه management commandهای seed_phase_a_articles.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">آیا می‌توانم HTML را از Markdown تبدیل کنم؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">import فقط HTML می‌پذیرد. قبل از قرار دادن در article.content، Markdown را به HTML تبدیل کنید (مثلاً h2 → &lt;h2&gt;، لیست → &lt;ul&gt;&lt;li&gt;).</p>\n        </div>\n    </details>\n</section>"
+    "content": "<p>اگر هر روز ساعت‌ها در دیوار جستجو می‌کنید، آگهی‌ها را اسکرین‌شات می‌گیرید و هنوز وقتی مشتری زنگ می‌زند نمی‌توانید در کمتر از یک دقیقه سه فایل مناسب پیدا کنید، مشکل از کمبود آگهی نیست — مشکل از نداشتن <strong>فایلینگ دیوار</strong> منظم است.</p>\n\n<p><strong>فایلینگ دیوار</strong> یعنی آگهی‌های املاک دیوار را به‌صورت ساختاریافته جمع، دسته‌بندی، به‌روز و قابل جستجو نگه دارید — نه پراکنده در گالری گوشی، گروه واتساپ یا چند فایل اکسل قدیمی. در این راهنما می‌بینید فایلینگ دیوار دقیقاً چیست، چرا برای مشاور املاک ضروری است، چطور با <a href=\"/\">میزکار فایلینگ دیوار</a> از صفر شروع کنید و چه اشتباهاتی باعث می‌شود بانک فایل‌تان بعد از یک ماه دوباره شلوغ و بی‌فایده شود.</p>\n\n<p>CRM برای مدیریت مشتری است؛ فایلینگ برای مدیریت ملک و آگهی. در <a href=\"/real-estate-filing/\">فایلینگ املاک</a> میزکار، هر دو در یک محیط در دسترس‌اند. ربات استخراج آگهی دیوار و برخی ماژول‌های فایلینگ حجیم، لایسنس جداگانه دارند.</p>\n\n<h2>فایلینگ دیوار یعنی چه؟</h2>\n\n<p>دیوار بزرگ‌ترین منبع آگهی املاک در ایران است. اما صفحه دیوار برای «مرور» ساخته شده، نه برای «کار مشاور». فایلینگ دیوار یعنی:</p>\n\n<ul>\n    <li>آگهی‌ها را با فیلتر (شهر، محله، متراژ، قیمت) جمع کنید</li>\n    <li>اطلاعات را در ستون‌های مشخص ذخیره کنید: قیمت، متراژ، محله، لینک، تماس</li>\n    <li>فایل تکراری، منقضی یا فروخته‌شده را علامت بزنید</li>\n    <li>هر فایل را سریع به مشتری مناسب وصل کنید</li>\n</ul>\n\n<p>تفاوت اصلی با «ذخیره آگهی در گوشی» این است که فایلینگ <strong>قابل جستجو</strong> و <strong>قابل گزارش</strong> است. وقتی مشتری می‌گوید «آپارتمان ۹۰ متری زیر ۵ میلیارد در سعادت‌آباد»، شما فیلتر می‌زنید — نه اینکه از صفر دیوار را بگردید.</p>\n\n<h2>چرا مشاور املاک به فایلینگ دیوار نیاز دارد؟</h2>\n\n<p>در بازار پر رقابت امروز، سرعت پاسخ‌گویی اعتبار شماست. مشتری با دو سه مشاور صحبت می‌کند؛ کسی که همان تماس اول فایل دقیق بفرستد، شانس قرارداد بیشتری دارد.</p>\n\n<table>\n    <thead>\n        <tr>\n            <th>بدون فایلینگ دیوار</th>\n            <th>با فایلینگ دیوار</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>جستجوی دستی تکراری هر روز</td>\n            <td>بانک فایل آماده با فیلتر لحظه‌ای</td>\n        </tr>\n        <tr>\n            <td>اسکرین‌شات و گم شدن آگهی</td>\n            <td>لینک، قیمت و تاریخچه ثبت‌شده</td>\n        </tr>\n        <tr>\n            <td>قیمت‌گذاری بر اساس حدس</td>\n            <td>مقایسه با ده‌ها فایل همان محله</td>\n        </tr>\n        <tr>\n            <td>ارسال فایل نامرتبط به مشتری</td>\n            <td>تطبیق سریع نیاز مشتری با فیلتر</td>\n        </tr>\n        <tr>\n            <td>فراموشی پیگیری مالک</td>\n            <td>یادآور و اتصال به CRM</td>\n        </tr>\n    </tbody>\n</table>\n\n<h2>تفاوت فایلینگ دیوار با CRM</h2>\n\n<p>خیلی از مشاوران CRM و فایلینگ را یکی می‌پندارند. هر دو لازم‌اند اما کار متفاوتی می‌کنند:</p>\n\n<table>\n    <thead>\n        <tr>\n            <th>موضوع</th>\n            <th>فایلینگ دیوار</th>\n            <th>CRM</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>تمرکز</td>\n            <td>ملک و آگهی</td>\n            <td>مشتری و معامله</td>\n        </tr>\n        <tr>\n            <td>سوال اصلی</td>\n            <td>چه فایل‌هایی داریم؟</td>\n            <td>مشتری الان کجای مسیر است؟</td>\n        </tr>\n        <tr>\n            <td>ورودی</td>\n            <td>آگهی دیوار، مالک، همکار</td>\n            <td>تماس، بازدید، مذاکره</td>\n        </tr>\n        <tr>\n            <td>خروجی</td>\n            <td>لیست فایل منطبق</td>\n            <td>قرارداد و پیگیری</td>\n        </tr>\n    </tbody>\n</table>\n\n<p>ترکیب درست: فایلینگ دیوار بانک فایل را می‌سازد؛ <a href=\"/real-estate-crm/\">CRM مشاور املاک</a> مسیر تبدیل مشتری به قرارداد را مدیریت می‌کند.</p>\n\n<h2>مراحل راه‌اندازی فایلینگ دیوار (گام‌به‌گام)</h2>\n\n<p>برای شروع عملی، این مسیر ۶ مرحله‌ای را دنبال کنید. نیازی نیست همه‌چیز را یک‌شبه کامل کنید — از یک محله شروع کنید و بعد گسترش دهید.</p>\n\n<h3>مرحله ۱: تعریف محدوده جغرافیایی</h3>\n\n<p>به‌جای «کل تهران»، ۲ یا ۳ محله اصلی کاری خود را انتخاب کنید. فایلینگ منطقه‌ای دقیق‌تر، سریع‌تر و قابل نگهداری‌تر است.</p>\n\n<h3>مرحله ۲: جمع‌آوری آگهی</h3>\n\n<p>دو روش رایج:</p>\n<ul>\n    <li><strong>دستی:</strong> کپی در اکسل — فقط برای حجم کم (زیر ۳۰ آگهی)</li>\n    <li><strong>ربات استخراج:</strong> فیلتر محله/قیمت/متراژ و خروجی ساختاریافته — برای کار روزانه</li>\n</ul>\n\n<p>برای استخراج خودکار، <a href=\"/robot-divar/\">ربات دیوار</a> فایلینگ دیوار بر اساس فیلتر شما آگهی‌ها را جمع می‌کند. راهنمای دانلود: <a href=\"/blog/chetor-agahi-divar-download/\">چطور آگهی دیوار را دانلود کنیم</a>.</p>\n\n<h3>مرحله ۳: ساختاردهی داده</h3>\n\n<p>حداقل فیلدهایی که هر فایل باید داشته باشد:</p>\n<ol>\n    <li>نوع معامله (فروش / رهن / اجاره)</li>\n    <li>محله و آدرس تقریبی</li>\n    <li>متراژ و تعداد اتاق</li>\n    <li>قیمت کل و در صورت امکان قیمت هر متر</li>\n    <li>لینک آگهی و منبع (دیوار / مالک / همکار)</li>\n    <li>وضعیت (فعال / زیر قرارداد / منقضی)</li>\n</ol>\n\n<h3>مرحله ۴: حذف تکراری و به‌روزرسانی</h3>\n\n<p>همان ملک ممکن است با قیمت‌های مختلف چند بار منتشر شود. بدون حذف تکراری، بانک فایل inflated به نظر می‌رسد و تحلیل قیمت غلط می‌شود. هفته‌ای یک بار:</p>\n<ul>\n    <li>فایل‌های قدیمی را بررسی کنید</li>\n    <li>آگهی‌های منقضی را غیرفعال کنید</li>\n    <li>تغییر قیمت را ثبت کنید</li>\n</ul>\n\n<h3>مرحله ۵: اتصال به CRM</h3>\n\n<p>وقتی مشتری تماس گرفت، فایل را از بانک انتخاب و به پرونده مشتری وصل کنید. مرحله بعدی (بازدید، مذاکره) در CRM پیگیری می‌شود. بدون این اتصال، فایلینگ و CRM دو جزیره جدا هستند.</p>\n\n<h3>مرحله ۶: ریتم هفتگی</h3>\n\n<p>فایلینگ یک‌بار برای همیشه نیست. ریتم پیشنهادی:</p>\n<ul>\n    <li><strong>روزانه:</strong> ۱۵ دقیقه — افزودن آگهی‌های تازه محله هدف</li>\n    <li><strong>هفتگی:</strong> ۳۰ دقیقه — پاکسازی تکراری و به‌روز وضعیت</li>\n    <li><strong>ماهانه:</strong> مرور آمار — کدام محله بیشترین تماس را آورده؟</li>\n</ul>\n\n<h2>مدل‌های بانک فایل در فایلینگ دیوار</h2>\n\n<p>بسته به سبک کاری، معمولاً سه نوع بانک فایل دارید:</p>\n\n<h3>۱. بانک فایل محله (Regional)</h3>\n<p>آگهی‌های ۱ تا ۳ محله اصلی — برای پاسخ سریع به تماس‌های روزانه.</p>\n\n<h3>۲. فایل انحصاری آژانس</h3>\n<p>ملک‌هایی که مستقیم با شما قرارداد دارند؛ اولویت بالاتر و اطلاعات کامل‌تر.</p>\n\n<h3>۳. فایل رزرو (Watchlist)</h3>\n<p>آگهی‌هایی که الان مشتری ندارند اما ممکن است هفته بعد مناسب شوند — با برچسب «رزرو».</p>\n\n<h2>اشتباهات رایج در فایلینگ دیوار</h2>\n\n<ul>\n    <li><strong>جمع کردن بدون فیلتر:</strong> هزار آگهی بی‌ربط = شلوغی، نه ثروت</li>\n    <li><strong>نداشتن وضعیت فایل:</strong> نمی‌دانید کدام فروخته شده</li>\n    <li><strong>عدم ثبت منبع:</strong> نمی‌دانید فایل از دیوار است یا مالک مستقیم</li>\n    <li><strong>جداسازی کامل از CRM:</strong> فایل پیدا می‌شود اما پیگیری مشتری گم می‌شود</li>\n    <li><strong>تکیه ۱۰۰٪ بر حافظه:</strong> «این فایل را دیدم» بدون ثبت = فراموشی</li>\n</ul>\n\n<h2>چطور بفهمیم فایلینگ دیوار درست کار می‌کند؟</h2>\n\n<p>سه شاخص ساده:</p>\n<ol>\n    <li><strong>زمان پیدا کردن فایل:</strong> باید زیر ۶۰ ثانیه باشد</li>\n    <li><strong>نرخ بازخورد مشتری:</strong> فایل‌های ارسالی بیشتر «مناسب» ارزیابی شوند</li>\n    <li><strong>کاهش جستجوی دستی در دیوار:</strong> اگر هنوز هر تماس = باز کردن دیوار، فایلینگ ناقص است</li>\n</ol>\n\n<div class=\"mk-blog-inline-cta\">\n    <strong>میزکار فایلینگ دیوار</strong>\n    <p>بانک فایل، Dataset، CRM و تحلیل بازار — یک پلتفرم برای مشاور املاک حرفه‌ای.</p>\n    <a href=\"/real-estate-filing/\">شروع فایلینگ املاک</a>\n</div>\n\n<h2>جمع‌بندی</h2>\n\n<p>فایلینگ دیوار فقط «ذخیره آگهی» نیست — زیرساخت سرعت، اعتبار و درآمد مشاور املاک است. با تعریف محدوده، جمع‌آوری ساختاریافته، حذف تکراری، اتصال به CRM و ریتم هفتگی، همان آگهی‌هایی که قبلاً گم می‌شدند تبدیل به بانک فایل قابل اتکا می‌شوند.</p>\n\n<p>برای شروع: یک محله انتخاب کنید، ۵۰ آگهی ساختاریافته وارد کنید، سه مشتری واقعی را با فیلتر تست کنید. اگر در کمتر از یک دقیقه فایل مناسب پیدا کردید، مسیر درست است.</p>\n\n<p>مطالب مرتبط: <a href=\"/blog/filing-amlak-yani-chi/\">فایلینگ املاک یعنی چی</a> · <a href=\"/blog/bank-file-amlak/\">بانک فایل املاک</a> · <a href=\"/blog/narm-afzar-filing-amlak/\">نرم‌افزار فایلینگ املاک</a></p>\n\n<section class=\"blog-faq\" itemscope itemtype=\"https://schema.org/FAQPage\">\n    <h2>سوالات متداول</h2>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">فایلینگ دیوار با CRM چه فرقی دارد؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">فایلینگ دیوار روی ملک و آگهی متمرکز است — جمع، دسته‌بندی و جستجوی فایل. CRM روی مشتری و معامله — تماس، بازدید، مذاکره و قرارداد. هر دو در میزکار فایلینگ دیوار قابل استفاده‌اند.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">آیا می‌توان فقط با اکسل فایلینگ دیوار کرد؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">برای حجم کم (زیر ۵۰ آگهی) بله. اما با رشد فایل‌ها، جستجو، حذف تکراری و اتصال به CRM در اکسل سخت می‌شود. سیستم فایلینگ آنلاین برای کار روزانه پایدارتر است.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">ربات دیوار برای فایلینگ ضروری است؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">ضروری نیست اما برای مشاورانی که هر روز با حجم بالای آگهی کار می‌کنند، استخراج خودکار زمان زیادی صرفه‌جویی می‌کند. می‌توانید با جمع‌آوری دستی شروع و بعد automate کنید.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">چند محله را در بانک فایل اول نگه دارم؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">پیشنهاد: ۱ تا ۳ محله اصلی. فایلینگ منطقه‌ای عمیق بهتر از پوشش سطحی کل شهر است. بعد از تثبیت روند، محله‌های جدید اضافه کنید.</p>\n        </div>\n    </details>\n    <details itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n        <summary itemprop=\"name\">تصویر شاخص مقاله از JSON import می‌شود؟</summary>\n        <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n            <p itemprop=\"text\">خیر. در فرمت JSON v1.0 فقط متن و HTML import می‌شود. تصویر شاخص را پس از import در Django Admin آپلود کنید.</p>\n        </div>\n    </details>\n</section>"
   }
 }

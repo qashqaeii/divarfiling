@@ -64,12 +64,11 @@ class AdminDashboardViewTests(TestCase):
         self.client.login(username='admstaff', password='pass1234')
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'مرکز فرمان')
-        self.assertContains(resp, 'همکاری در فروش')
-        self.assertContains(resp, 'adm-tbl-box')
+        self.assertContains(resp, 'Executive Command Center')
+        self.assertContains(resp, 'ecc-kpi-grid')
 
     def test_dashboard_with_days_param(self):
         self.client.login(username='admstaff', password='pass1234')
         resp = self.client.get(reverse('admin_panel'), {'days': 7})
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'chart-revenue')
+        self.assertContains(resp, 'chart-revenue-analytics')

@@ -54,9 +54,11 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
             days = int(days)
         except (TypeError, ValueError):
             days = 30
-        days = max(7, min(days, 90))
+        days = max(7, min(days, 365))
 
         dashboard = get_admin_dashboard_context(days=days)
+        for card in dashboard.get('kpi_cards', []):
+            card['sparkline_json'] = json.dumps(card.get('sparkline', []))
         ctx.update(dashboard)
         ctx['charts_json'] = json.dumps(dashboard['charts'], ensure_ascii=False)
         return ctx

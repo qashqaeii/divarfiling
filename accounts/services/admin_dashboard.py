@@ -13,7 +13,9 @@ from django.utils import timezone
 
 from workspace.services.jalali_input import to_persian_digits
 
+from accounts.models import SmsMessageLog
 from accounts.services.admin_exports import get_export_catalog
+from accounts.services.admin_marketing import SEGMENT_REGISTRY, get_marketing_dashboard_stats
 from accounts.services.admin_windows_app import (
     get_windows_activations,
     get_windows_app_stats,
@@ -27,7 +29,16 @@ from accounts.services.sms import get_sms_balance_snapshot
 from affiliates.models import Affiliate, AffiliateSale, Withdrawal
 from licenses.models import License, LicenseActivation
 from shop.models import CardTransferSubmission, Order, Product
-from workspace.models import Dataset, Ticket
+from workspace.models import (
+    CRMAgency,
+    CRMAgencyMember,
+    CRMDeal,
+    CRMProperty,
+    Customer,
+    Dataset,
+    Reminder,
+    Ticket,
+)
 
 User = get_user_model()
 
@@ -408,6 +419,7 @@ def get_pending_withdrawals(limit: int = TABLE_FETCH_LIMIT):
 
 def build_charts_payload(days: int = 30) -> Dict[str, Any]:
     revenue = get_revenue_series(days)
+    orders = get_order_count_series(days)
     signups = get_user_registration_series(days)
     order_status = get_order_status_breakdown()
     license_status = get_license_status_breakdown()
@@ -415,7 +427,58 @@ def build_charts_payload(days: int = 30) -> Dict[str, Any]:
     plan_sales = get_plan_sales_breakdown()
     product_revenue = get_product_revenue()
 
+    aov_values = []
+    for rev, cnt in zip(revenue['values'], orders['values']):
+        aov_values.append(int(rev / cnt) if cnt else 0)
+
+    paid_users = User.objects.filter(orders__status='paid').distinct().count()
+    revenue_total = int(Order.objects.filter(status='paid').aggregate(total=Sum('amount'))['total'] or 0)
+    ltv = int(revenue_total / paid_users) if paid_users else 0
+    users_total = User.objects.count()
+    orders_paid = Order.objects.filter(status='paid').count()
+    conversion = round((orders_paid / users_total * 100), 1) if users_total else 0
+
     return {
+        'revenue_analytics': {
+            'type': 'combo',
+            'labels': revenue['labels'],
+            'datasets': [
+                {
+                    'label': 'درآمد (تومان)',
+                    'data': revenue['values'],
+                    'type': 'line',
+                    'borderColor': 'rgba(16, 185, 129, 1)',
+                    'backgroundColor': 'rgba(16, 185, 129, 0.12)',
+                    'fill': True,
+                    'tension': 0.4,
+                    'yAxisID': 'y',
+                },
+                {
+                    'label': 'تعداد سفارش',
+                    'data': orders['values'],
+                    'type': 'bar',
+                    'backgroundColor': 'rgba(124, 58, 237, 0.55)',
+                    'borderRadius': 4,
+                    'yAxisID': 'y1',
+                },
+                {
+                    'label': 'میانگین سفارش (AOV)',
+                    'data': aov_values,
+                    'type': 'line',
+                    'borderColor': 'rgba(245, 158, 11, 1)',
+                    'backgroundColor': 'transparent',
+                    'borderDash': [4, 4],
+                    'tension': 0.35,
+                    'yAxisID': 'y',
+                },
+            ],
+            'axis': 'money',
+            'metrics': {
+                'aov': int(Order.objects.filter(status='paid').aggregate(avg=Avg('amount'))['avg'] or 0),
+                'ltv': ltv,
+                'conversion_rate': conversion,
+            },
+        },
         'revenue_trend': {
             'type': 'line',
             'labels': revenue['labels'],
@@ -430,13 +493,43 @@ def build_charts_payload(days: int = 30) -> Dict[str, Any]:
             'axis': 'money',
         },
         'user_signups': {
-            'type': 'bar',
+            'type': 'line',
             'labels': signups['labels'],
             'datasets': [{
                 'label': 'ثبت‌نام جدید',
                 'data': signups['values'],
-                'backgroundColor': 'rgba(59, 130, 246, 0.75)',
-                'borderRadius': 6,
+                'borderColor': 'rgba(59, 130, 246, 1)',
+                'backgroundColor': 'rgba(59, 130, 246, 0.15)',
+                'fill': True,
+                'tension': 0.35,
+            }],
+            'axis': 'count',
+        },
+        'user_retention': {
+            'type': 'doughnut',
+            'labels': ['کاربران بازگشتی ۳۰روز', 'کاربران جدید', 'بدون لایسنس'],
+            'datasets': [{
+                'data': [
+                    max(0, User.objects.filter(
+                        is_active=True,
+                        last_login__gte=timezone.now() - timedelta(days=30),
+                        date_joined__lt=timezone.now() - timedelta(days=30),
+                    ).count()),
+                    User.objects.filter(date_joined__gte=timezone.now() - timedelta(days=30)).count(),
+                    User.objects.filter(is_active=True).annotate(
+                        has_active_license=Exists(
+                            License.objects.filter(
+                                order__user=OuterRef('pk'),
+                                status='active',
+                            ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+                        ),
+                    ).filter(has_active_license=False).count(),
+                ],
+                'backgroundColor': [
+                    'rgba(16, 185, 129, 0.85)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(245, 158, 11, 0.8)',
+                ],
             }],
             'axis': 'count',
         },
@@ -481,6 +574,64 @@ def build_charts_payload(days: int = 30) -> Dict[str, Any]:
             'horizontal': True,
             'axis': 'money',
         },
+        'user_analytics': {
+            'type': 'line',
+            'labels': signups['labels'],
+            'datasets': [
+                {
+                    'label': 'ثبت‌نام جدید',
+                    'data': signups['values'],
+                    'borderColor': 'rgba(59, 130, 246, 1)',
+                    'backgroundColor': 'rgba(59, 130, 246, 0.15)',
+                    'fill': True,
+                    'tension': 0.35,
+                },
+            ],
+            'axis': 'count',
+        },
+        'sales_trend': {
+            'type': 'bar',
+            'labels': orders['labels'],
+            'datasets': [{
+                'label': 'سفارش پرداخت‌شده',
+                'data': orders['values'],
+                'backgroundColor': 'rgba(6, 182, 212, 0.75)',
+                'borderRadius': 6,
+            }],
+            'axis': 'count',
+        },
+        'crm_growth': {
+            'type': 'doughnut',
+            'labels': ['مخاطب', 'ملک', 'معامله', 'یادآور'],
+            'datasets': [{
+                'data': [
+                    Customer.objects.count(),
+                    CRMProperty.objects.count(),
+                    CRMDeal.objects.count(),
+                    Reminder.objects.count(),
+                ],
+                'backgroundColor': CHART_COLORS[:4],
+            }],
+            'axis': 'count',
+        },
+        'operations_gauge': {
+            'type': 'doughnut',
+            'labels': ['SMS موفق', 'SMS ناموفق'],
+            'datasets': [{
+                'data': [
+                    SmsMessageLog.objects.filter(status__in=('sent', 'fake')).count(),
+                    SmsMessageLog.objects.filter(status='failed').count(),
+                ],
+                'backgroundColor': ['rgba(16, 185, 129, 0.85)', 'rgba(239, 68, 68, 0.75)'],
+            }],
+            'axis': 'count',
+        },
+        'kpi_sparklines': {
+            'revenue': _revenue_sparkline(7),
+            'orders': _orders_sparkline(7),
+            'signups': _signups_sparkline(7),
+            'licenses': _licenses_sparkline(7),
+        },
         'product_revenue': {
             'type': 'bar',
             'labels': [item['label'] for item in product_revenue],
@@ -495,10 +646,23 @@ def build_charts_payload(days: int = 30) -> Dict[str, Any]:
     }
 
 
+def get_yesterday_stats() -> Dict[str, Any]:
+    """آمار دیروز برای مقایسه KPI."""
+    yesterday = _today() - timedelta(days=1)
+    orders_paid_yesterday = Order.objects.filter(status='paid', paid_at__date=yesterday)
+    return {
+        'revenue_yesterday': int(orders_paid_yesterday.aggregate(total=Sum('amount'))['total'] or 0),
+        'orders_paid_yesterday': orders_paid_yesterday.count(),
+        'signups_yesterday': User.objects.filter(date_joined__date=yesterday).count(),
+    }
+
+
 def get_today_stats() -> Dict[str, Any]:
     """آمار امروز برای کارت‌های Spotlight."""
     today = _today()
     orders_paid_today = Order.objects.filter(status='paid', paid_at__date=today)
+    paid_users = User.objects.filter(orders__status='paid').distinct().count()
+    revenue_total = int(Order.objects.filter(status='paid').aggregate(total=Sum('amount'))['total'] or 0)
     return {
         'revenue_today': int(orders_paid_today.aggregate(total=Sum('amount'))['total'] or 0),
         'orders_paid_today': orders_paid_today.count(),
@@ -506,20 +670,425 @@ def get_today_stats() -> Dict[str, Any]:
         'avg_order_value': int(
             Order.objects.filter(status='paid').aggregate(avg=Avg('amount'))['avg'] or 0
         ),
+        'ltv': int(revenue_total / paid_users) if paid_users else 0,
+        'orders_failed_today': Order.objects.filter(status='failed', created_at__date=today).count(),
     }
+
+
+def get_users_online_count(minutes: int = 15) -> int:
+    threshold = timezone.now() - timedelta(minutes=minutes)
+    return User.objects.filter(is_active=True, last_login__gte=threshold).count()
+
+
+def get_order_count_series(days: int = 30) -> Dict[str, List]:
+    start, end = _date_range(days)
+    rows = (
+        Order.objects.filter(status='paid', paid_at__date__gte=start, paid_at__date__lte=end)
+        .annotate(day=TruncDate('paid_at'))
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+    labels, values = _fill_daily_series(start, end, rows, days=days)
+    return {'labels': labels, 'values': values}
+
+
+def _sparkline_values(days: int, rows, value_key: str = 'count', money: bool = False) -> List[int]:
+    start, end = _date_range(days)
+    _, values = _fill_daily_series(start, end, rows, value_key=value_key, money=money, days=days)
+    return values
+
+
+def _revenue_sparkline(days: int = 7) -> List[int]:
+    start, end = _date_range(days)
+    rows = (
+        Order.objects.filter(status='paid', paid_at__date__gte=start, paid_at__date__lte=end)
+        .annotate(day=TruncDate('paid_at'))
+        .values('day')
+        .annotate(total=Sum('amount'))
+        .order_by('day')
+    )
+    return _sparkline_values(days, rows, value_key='total', money=True)
+
+
+def _orders_sparkline(days: int = 7) -> List[int]:
+    start, end = _date_range(days)
+    rows = (
+        Order.objects.filter(status='paid', paid_at__date__gte=start, paid_at__date__lte=end)
+        .annotate(day=TruncDate('paid_at'))
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+    return _sparkline_values(days, rows)
+
+
+def _signups_sparkline(days: int = 7) -> List[int]:
+    start, end = _date_range(days)
+    rows = (
+        User.objects.filter(date_joined__date__gte=start, date_joined__date__lte=end)
+        .annotate(day=TruncDate('date_joined'))
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+    return _sparkline_values(days, rows)
+
+
+def _licenses_sparkline(days: int = 7) -> List[int]:
+    start, end = _date_range(days)
+    rows = (
+        License.objects.filter(created_at__date__gte=start, created_at__date__lte=end)
+        .annotate(day=TruncDate('created_at'))
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+    return _sparkline_values(days, rows)
+
+
+def build_kpi_cards(stats: Dict[str, Any], today_stats: Dict[str, Any], yesterday_stats: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """۸ کارت KPI اصلی با اسپارکلاین و دلتا."""
+    users_online = get_users_online_count()
+    spark_rev = _revenue_sparkline(7)
+    spark_orders = _orders_sparkline(7)
+    spark_signups = _signups_sparkline(7)
+    spark_lic = _licenses_sparkline(7)
+
+    def _delta(current, previous):
+        return _pct_change(int(current or 0), int(previous or 0))
+
+    return [
+        {
+            'key': 'revenue_total',
+            'label': 'کل درآمد',
+            'sublabel': 'تومان',
+            'value': stats['revenue_total'],
+            'format': 'money',
+            'delta': stats.get('revenue_month_change'),
+            'delta_label': 'ماه جاری',
+            'sparkline': spark_rev,
+            'icon': 'fa-sack-dollar',
+            'accent': 'emerald',
+            'status': 'ok',
+        },
+        {
+            'key': 'revenue_today',
+            'label': 'درآمد امروز',
+            'sublabel': 'تومان',
+            'value': today_stats['revenue_today'],
+            'format': 'money',
+            'delta': _delta(today_stats['revenue_today'], yesterday_stats['revenue_yesterday']),
+            'delta_label': 'نسبت دیروز',
+            'sparkline': spark_rev,
+            'icon': 'fa-coins',
+            'accent': 'violet',
+            'status': 'ok' if today_stats['revenue_today'] else 'warn',
+        },
+        {
+            'key': 'users_active',
+            'label': 'کاربران فعال',
+            'sublabel': f"+{stats['users_new_month']} این ماه",
+            'value': stats['users_active'],
+            'format': 'count',
+            'delta': _delta(today_stats['signups_today'], yesterday_stats['signups_yesterday']),
+            'delta_label': 'ثبت‌نام امروز',
+            'sparkline': spark_signups,
+            'icon': 'fa-users',
+            'accent': 'blue',
+            'status': 'ok',
+        },
+        {
+            'key': 'licenses_active',
+            'label': 'لایسنس فعال',
+            'sublabel': f"{stats['licenses_expiring_soon']} در شرف انقضا",
+            'value': stats['licenses_active'],
+            'format': 'count',
+            'delta': None,
+            'delta_label': f"{stats['activations_total']} دستگاه",
+            'sparkline': spark_lic,
+            'icon': 'fa-key',
+            'accent': 'amber',
+            'status': 'warn' if stats['licenses_expiring_soon'] > 3 else 'ok',
+        },
+        {
+            'key': 'orders_today',
+            'label': 'سفارش امروز',
+            'sublabel': 'پرداخت‌شده',
+            'value': today_stats['orders_paid_today'],
+            'format': 'count',
+            'delta': _delta(today_stats['orders_paid_today'], yesterday_stats['orders_paid_yesterday']),
+            'delta_label': 'نسبت دیروز',
+            'sparkline': spark_orders,
+            'icon': 'fa-shopping-cart',
+            'accent': 'cyan',
+            'status': 'ok',
+        },
+        {
+            'key': 'conversion_rate',
+            'label': 'نرخ تبدیل',
+            'sublabel': 'کاربر به خرید',
+            'value': stats['conversion_rate'],
+            'format': 'percent',
+            'delta': None,
+            'delta_label': f"{stats['orders_paid']} سفارش",
+            'sparkline': spark_orders,
+            'icon': 'fa-chart-line',
+            'accent': 'indigo',
+            'status': 'ok' if stats['conversion_rate'] >= 5 else 'warn',
+        },
+        {
+            'key': 'revenue_month',
+            'label': 'درآمد ماه',
+            'sublabel': '۳۰ روز اخیر',
+            'value': stats['revenue_month'],
+            'format': 'money',
+            'delta': stats.get('revenue_month_change'),
+            'delta_label': 'نسبت ماه قبل',
+            'sparkline': spark_rev,
+            'icon': 'fa-calendar-days',
+            'accent': 'rose',
+            'status': 'ok',
+        },
+        {
+            'key': 'users_online',
+            'label': 'کاربران آنلاین',
+            'sublabel': '۱۵ دقیقه اخیر',
+            'value': users_online,
+            'format': 'count',
+            'delta': None,
+            'delta_label': f"{stats['users_total']} کل",
+            'sparkline': spark_signups,
+            'icon': 'fa-signal',
+            'accent': 'emerald',
+            'status': 'ok' if users_online else 'warn',
+        },
+    ]
+
+
+def build_alerts_center(stats: Dict[str, Any], sms_balance: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """هشدارهای مدیریتی با اولویت."""
+    alerts: List[Dict[str, Any]] = []
+    catalog = [
+        ('orders_failed', 'پرداخت ناموفق', 'fa-circle-xmark', 'rose', '#ecc-sales', 'failed'),
+        ('licenses_expiring_soon', 'لایسنس در حال انقضا', 'fa-hourglass-half', 'amber', '#ecc-licensing', 'expiring'),
+        ('sms_low', 'موجودی SMS کم', 'fa-comment-sms', 'amber', '#ecc-operations', 'sms'),
+        ('unread_tickets', 'تیکت بحرانی', 'fa-headset', 'rose', '#ecc-support', 'tickets'),
+        ('pending_withdrawals', 'درخواست برداشت', 'fa-wallet', 'violet', '#ecc-support', 'withdrawals'),
+        ('pending_card_transfers', 'کارت‌به‌کارت معلق', 'fa-money-check', 'cyan', '#ecc-sales', 'card'),
+        ('orders_pending', 'سفارش پرداخت‌نشده', 'fa-clock', 'blue', '#ecc-sales', 'pending'),
+        ('users_without_license', 'بدون لایسنس فعال', 'fa-user-slash', 'indigo', '#ecc-users', 'no_license'),
+    ]
+    failed_orders = Order.objects.filter(status='failed').count()
+    extra_counts = {'orders_failed': failed_orders, 'sms_low': 1 if sms_balance.get('is_low') and sms_balance.get('ok') else 0}
+
+    for key, title, icon, accent, anchor, slug in catalog:
+        count = int(extra_counts.get(key, stats.get(key) or 0))
+        if count <= 0:
+            continue
+        severity = 'critical' if key in ('unread_tickets', 'sms_low', 'orders_failed') and count > 0 else 'warning'
+        if key == 'sms_low':
+            count = int(sms_balance.get('credit') or 0)
+            detail = f'{count:,} تومان باقی‌مانده'
+        else:
+            detail = f'{count} مورد نیاز به اقدام'
+        alerts.append({
+            'key': key,
+            'title': title,
+            'count': count,
+            'detail': detail,
+            'icon': icon,
+            'accent': accent,
+            'anchor': anchor,
+            'severity': severity,
+            'slug': slug,
+        })
+
+    alerts.sort(key=lambda a: (0 if a['severity'] == 'critical' else 1, -a['count']))
+    return alerts
+
+
+def get_crm_overview_stats() -> Dict[str, Any]:
+    """آمار CRM برای بخش نمای کلی."""
+    now = timezone.now()
+    month_ago = now - timedelta(days=30)
+    week_ago = now - timedelta(days=7)
+    properties_new_month = CRMProperty.objects.filter(created_at__gte=month_ago).count()
+    deals_open = CRMDeal.objects.exclude(stage__in=('موفق', 'ناموفق', 'لغو')).count()
+    return {
+        'contacts_total': Customer.objects.count(),
+        'properties_total': CRMProperty.objects.count(),
+        'deals_total': CRMDeal.objects.count(),
+        'deals_open': deals_open,
+        'reminders_total': Reminder.objects.count(),
+        'reminders_due': Reminder.objects.filter(is_done=False, due_at__lte=now).count(),
+        'agencies_total': CRMAgency.objects.count(),
+        'team_members_total': CRMAgencyMember.objects.filter(is_active=True).count(),
+        'datasets_total': Dataset.objects.count(),
+        'properties_new_month': properties_new_month,
+        'properties_new_week': CRMProperty.objects.filter(created_at__gte=week_ago).count(),
+        'crm_growth_pct': _pct_change(
+            properties_new_month,
+            CRMProperty.objects.filter(
+                created_at__gte=month_ago - timedelta(days=30),
+                created_at__lt=month_ago,
+            ).count(),
+        ),
+    }
+
+
+def get_sales_center_stats() -> Dict[str, Any]:
+    """آمار مرکز فروش."""
+    today = _today()
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    paid_qs = Order.objects.filter(status='paid')
+    return {
+        'revenue_today': int(paid_qs.filter(paid_at__date=today).aggregate(t=Sum('amount'))['t'] or 0),
+        'revenue_week': int(paid_qs.filter(paid_at__date__gte=week_ago).aggregate(t=Sum('amount'))['t'] or 0),
+        'revenue_month': int(paid_qs.filter(paid_at__date__gte=month_ago).aggregate(t=Sum('amount'))['t'] or 0),
+        'orders_failed': Order.objects.filter(status='failed').count(),
+        'orders_pending': Order.objects.filter(status__in=PENDING_ORDER_STATUSES).count(),
+        'orders_paid_total': paid_qs.count(),
+        'avg_order_value': int(paid_qs.aggregate(avg=Avg('amount'))['avg'] or 0),
+    }
+
+
+def get_licensing_center_stats() -> Dict[str, Any]:
+    """آمار مرکز لایسنس."""
+    now = timezone.now()
+    today = _today()
+    week_end = today + timedelta(days=7)
+    return {
+        'active': License.objects.filter(status='active').count(),
+        'expiring': License.objects.filter(
+            status='active',
+            expires_at__isnull=False,
+            expires_at__gt=now,
+            expires_at__lte=now + timedelta(days=14),
+        ).count(),
+        'expired': License.objects.filter(status='expired').count(),
+        'issued_today': License.objects.filter(created_at__date=today).count(),
+        'issued_week': License.objects.filter(created_at__date__gte=today - timedelta(days=7)).count(),
+        'renewals_week': License.objects.filter(
+            status='active',
+            expires_at__isnull=False,
+            expires_at__date__gte=today,
+            expires_at__date__lte=week_end,
+        ).count(),
+        'activations': LicenseActivation.objects.filter(is_active=True).count(),
+    }
+
+
+def get_operations_stats() -> Dict[str, Any]:
+    """آمار عملیات سیستم."""
+    since_24h = timezone.now() - timedelta(hours=24)
+    since_7d = timezone.now() - timedelta(days=7)
+    sms_24h = SmsMessageLog.objects.filter(created_at__gte=since_24h).count()
+    sms_7d = SmsMessageLog.objects.filter(created_at__gte=since_7d).count()
+    sms_failed_7d = SmsMessageLog.objects.filter(created_at__gte=since_7d, status='failed').count()
+    return {
+        'sms_sent_24h': sms_24h,
+        'sms_sent_7d': sms_7d,
+        'sms_failed_7d': sms_failed_7d,
+        'marketing_campaigns': get_marketing_dashboard_stats().get('campaigns_total', 0),
+        'datasets_total': Dataset.objects.count(),
+        'webhooks_pending': 0,
+    }
+
+
+def get_users_analytics_stats(stats: Dict[str, Any]) -> Dict[str, Any]:
+    """آمار تحلیل کاربران."""
+    now = timezone.now()
+    month_ago = now - timedelta(days=30)
+    returning = User.objects.filter(
+        is_active=True,
+        last_login__gte=month_ago,
+        date_joined__lt=month_ago,
+    ).count()
+    new_month = stats.get('users_new_month', 0)
+    retention = round((returning / stats['users_active'] * 100), 1) if stats.get('users_active') else 0
+    return {
+        'total': stats['users_total'],
+        'active': stats['users_active'],
+        'new_month': new_month,
+        'new_week': stats.get('users_new_week', 0),
+        'without_license': stats['users_without_license'],
+        'expiring_license_users': stats['licenses_expiring_soon'],
+        'online': get_users_online_count(),
+        'retention_30d': retention,
+        'pending_payment': stats['users_pending_payment'],
+    }
+
+
+def get_failed_orders_recent(limit: int = TABLE_FETCH_LIMIT):
+    return (
+        Order.objects.filter(status='failed')
+        .select_related('user', 'product', 'plan')
+        .order_by('-created_at')[:limit]
+    )
+
+
+def get_top_users_by_revenue(limit: int = 8):
+    return (
+        User.objects.annotate(
+            total_spent=Sum('orders__amount', filter=Q(orders__status='paid')),
+            order_count=Count('orders', filter=Q(orders__status='paid')),
+        )
+        .filter(total_spent__gt=0)
+        .order_by('-total_spent')[:limit]
+    )
+
+
+def get_system_meta() -> Dict[str, Any]:
+    from django.conf import settings
+
+    return {
+        'version': getattr(settings, 'ADMIN_PANEL_VERSION', '2.0'),
+        'server_status': 'operational',
+        'server_label': 'عملیاتی',
+    }
+
+
+def _user_initials(user) -> str:
+    name = (user.get_full_name() or user.username or '?').strip()
+    parts = name.split()
+    if len(parts) >= 2:
+        return (parts[0][:1] + parts[1][:1]).upper()
+    return name[:2].upper()
+
+
+def enrich_activity_feed(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """غنی‌سازی فید فعالیت با آواتار و لینک."""
+    type_colors = {
+        'order_paid': 'emerald',
+        'signup': 'blue',
+        'ticket': 'rose',
+        'card_transfer': 'amber',
+    }
+    for ev in events:
+        ev['accent'] = ev.get('accent') or type_colors.get(ev['type'], 'violet')
+        meta = ev.get('meta') or ''
+        ev['initials'] = _user_initials(type('U', (), {'get_full_name': lambda: meta, 'username': meta})())
+        if len(meta) >= 2:
+            ev['initials'] = meta[:2]
+        ev['href'] = '#ecc-sales' if ev['type'] == 'order_paid' else (
+            '#ecc-support' if ev['type'] == 'ticket' else '#ecc-users'
+        )
+    return events
 
 
 def build_action_queue(stats: Dict[str, Any]) -> List[Dict[str, Any]]:
     """صف اقدامات فوری — اولویت‌بندی شده."""
     items: List[Dict[str, Any]] = []
     queue = [
-        ('pending_card_transfers', 'پرداخت کارت‌به‌کارت', 'fa-money-check', 'amber', '#adm-ops', 'بررسی'),
-        ('unread_tickets', 'تیکت خوانده‌نشده', 'fa-headset', 'rose', '#adm-ops', 'پاسخ'),
-        ('orders_pending', 'سفارش پرداخت‌نشده', 'fa-clock', 'violet', '#adm-reports', 'پیگیری'),
-        ('users_pending_payment', 'کاربر با سفارش معلق', 'fa-user-clock', 'blue', '#adm-reports', 'تماس'),
-        ('licenses_expiring_soon', 'لایسنس در شرف انقضا', 'fa-hourglass-half', 'cyan', '#adm-reports', 'تمدید'),
-        ('pending_withdrawals', 'برداشت همکار فروش', 'fa-wallet', 'emerald', '#adm-ops', 'تأیید'),
-        ('users_without_license', 'بدون لایسنس فعال', 'fa-user-slash', 'indigo', '#adm-reports', 'فروش'),
+        ('pending_card_transfers', 'پرداخت کارت‌به‌کارت', 'fa-money-check', 'amber', '#ecc-sales', 'بررسی'),
+        ('unread_tickets', 'تیکت خوانده‌نشده', 'fa-headset', 'rose', '#ecc-support', 'پاسخ'),
+        ('orders_pending', 'سفارش پرداخت‌نشده', 'fa-clock', 'violet', '#ecc-sales', 'پیگیری'),
+        ('users_pending_payment', 'کاربر با سفارش معلق', 'fa-user-clock', 'blue', '#ecc-users', 'تماس'),
+        ('licenses_expiring_soon', 'لایسنس در شرف انقضا', 'fa-hourglass-half', 'cyan', '#ecc-licensing', 'تمدید'),
+        ('pending_withdrawals', 'برداشت همکار فروش', 'fa-wallet', 'emerald', '#ecc-support', 'تأیید'),
+        ('users_without_license', 'بدون لایسنس فعال', 'fa-user-slash', 'indigo', '#ecc-users', 'فروش'),
     ]
     for key, title, icon, accent, anchor, action in queue:
         count = int(stats.get(key) or 0)
@@ -553,8 +1122,10 @@ def get_activity_feed(limit: int = 14) -> List[Dict[str, Any]]:
             'accent': 'emerald',
             'title': f'پرداخت {order.product.title if order.product_id else "سفارش"}',
             'meta': order.user.get_full_name() or order.user.username,
+            'initials': _user_initials(order.user),
             'amount': int(order.amount or 0),
             'at': order.paid_at,
+            'href': '#ecc-sales',
         })
 
     for user in User.objects.order_by('-date_joined')[:6]:
@@ -564,8 +1135,10 @@ def get_activity_feed(limit: int = 14) -> List[Dict[str, Any]]:
             'accent': 'blue',
             'title': 'ثبت‌نام جدید',
             'meta': user.get_full_name() or user.username or user.phone,
+            'initials': _user_initials(user),
             'amount': None,
             'at': user.date_joined,
+            'href': '#ecc-users',
         })
 
     for ticket in (
@@ -579,9 +1152,11 @@ def get_activity_feed(limit: int = 14) -> List[Dict[str, Any]]:
             'accent': 'rose',
             'title': ticket.subject[:60],
             'meta': ticket.user.get_full_name() or ticket.user.username,
+            'initials': _user_initials(ticket.user),
             'amount': None,
             'at': ticket.created_at,
             'unread': ticket.staff_has_unread,
+            'href': '#ecc-support',
         })
 
     for ct in (
@@ -595,8 +1170,10 @@ def get_activity_feed(limit: int = 14) -> List[Dict[str, Any]]:
             'accent': 'amber',
             'title': 'کارت‌به‌کارت در انتظار',
             'meta': ct.order.user.get_full_name() or ct.order.user.username,
+            'initials': _user_initials(ct.order.user),
             'amount': int(ct.order.amount or 0),
             'at': ct.created_at,
+            'href': '#ecc-sales',
         })
 
     events.sort(key=lambda e: e['at'], reverse=True)
@@ -687,11 +1264,39 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
     product_revenue = get_product_revenue()
     status_max = max((item['count'] for item in order_status), default=1) or 1
     today_stats = get_today_stats()
+    yesterday_stats = get_yesterday_stats()
+    marketing_stats = get_marketing_dashboard_stats()
+    alerts_center = build_alerts_center(stats, sms_balance)
+    alert_count = len(alerts_center)
+    marketing_segments = [
+        {
+            'key': key,
+            'title': meta.get('title', key),
+            'accent': meta.get('accent', 'violet'),
+            'icon': meta.get('icon', 'fa-bullhorn'),
+            'size': marketing_stats.get('segment_sizes', {}).get(key, 0),
+        }
+        for key, meta in SEGMENT_REGISTRY.items()
+    ]
 
     return {
         'stats': stats,
         'today_stats': today_stats,
+        'yesterday_stats': yesterday_stats,
         'sms_balance': sms_balance,
+        'kpi_cards': build_kpi_cards(stats, today_stats, yesterday_stats),
+        'alerts_center': alerts_center,
+        'alert_count': alert_count,
+        'crm_stats': get_crm_overview_stats(),
+        'sales_stats': get_sales_center_stats(),
+        'licensing_stats': get_licensing_center_stats(),
+        'operations_stats': get_operations_stats(),
+        'users_analytics': get_users_analytics_stats(stats),
+        'marketing_stats': marketing_stats,
+        'marketing_segments': marketing_segments,
+        'system_meta': get_system_meta(),
+        'failed_orders': get_failed_orders_recent(),
+        'top_users': get_top_users_by_revenue(),
         'action_queue': build_action_queue(stats),
         'activity_feed': get_activity_feed(),
         'health_indicators': build_health_indicators(stats, sms_balance),

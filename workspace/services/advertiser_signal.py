@@ -97,6 +97,41 @@ _DISGUISED_AMLAK_CONTEXTS: tuple[str, ...] = (
     'لطفاً املاک',
 )
 
+# عباراتی که صریحاً مالک بودن آگهی‌دهنده را تأیید می‌کنند — اولویت بالاتر از مشاور پنهان.
+_OWNER_AFFIRMATION_PHRASES: tuple[str, ...] = (
+    'مالک هستم',
+    'من مالک هستم',
+    'مالکم',
+    'من مالکم',
+    'مالک مستقیم',
+    'مستقیم از مالک',
+    'خودم مالک هستم',
+    'خودم صاحب ملک هستم',
+    'صاحب ملک هستم',
+    'صاحبخانه هستم',
+    'این ملک متعلق به خودم است',
+    'ملک شخصی خودم',
+    'واحد شخصی خودم',
+    'خانه خودم',
+    'آپارتمان خودم',
+    'فروش توسط مالک',
+    'اجاره توسط مالک',
+    'رهن توسط مالک',
+    'بدون واسطه از مالک',
+    'بدون واسطه',
+    'مستقیم با مالک',
+    'ارتباط مستقیم با مالک',
+    'تماس با مالک',
+    'بدون دخالت مشاور',
+    'بدون دخالت املاک',
+    'سند به نام خودم',
+    'سند به نام اینجانب',
+    'مالک سند هستم',
+    'مالک شش دانگ',
+    'صاحب سند هستم',
+    'خودم سازنده هستم',
+)
+
 # نام دفتر املاک: «املاک افشین»، «املاک بزرگ فردا» و مشابه.
 _AMLAK_AGENCY_NAME_RE = re.compile(
     r'املاک\s+[\u0600-\u06FF]{2,}(?:\s+[\u0600-\u06FF]{2,}){0,2}'
@@ -151,6 +186,10 @@ def _normalized_phrases(phrases: Iterable[str]) -> tuple[str, ...]:
 
 _NORMALIZED_DISGUISED_PHRASES = _normalized_phrases(_DISGUISED_CONSULTANT_PHRASES)
 _NORMALIZED_AMLAK_CONTEXTS = _normalized_phrases(_DISGUISED_AMLAK_CONTEXTS)
+# عبارات بلندتر اول تا زیررشته‌های کوتاه‌تر جایگزین نشوند؛ جستجو به ترتیب طول نزولی.
+_NORMALIZED_OWNER_PHRASES = tuple(
+    sorted(_normalized_phrases(_OWNER_AFFIRMATION_PHRASES), key=len, reverse=True)
+)
 
 
 def is_official_consultant(business_type: str = '', data: Optional[Dict[str, Any]] = None) -> bool:
@@ -218,11 +257,12 @@ def _description_from_data(data: Optional[Dict[str, Any]]) -> str:
     return ''
 
 
-def has_disguised_consultant_markers(
+def _combined_ad_text(
     title: str = '',
     description: str = '',
     data: Optional[Dict[str, Any]] = None,
-) -> bool:
+) -> tuple[str, str]:
+    """(normalized_combined, raw_combined) برای جستجوی الگو در عنوان/توضیحات."""
     title_norm = normalize_ad_text(title)
     desc_norm = normalize_ad_text(description)
     raw_desc = description
@@ -231,6 +271,30 @@ def has_disguised_consultant_markers(
         desc_norm = normalize_ad_text(raw_desc)
     combined = f'{title_norm} {desc_norm}'.strip()
     raw_combined = f'{title} {raw_desc}'.strip()
+    return combined, raw_combined
+
+
+def has_owner_markers(
+    title: str = '',
+    description: str = '',
+    data: Optional[Dict[str, Any]] = None,
+) -> bool:
+    """عبارات صریح مالکیت در متن — آگهی‌دهنده مالک است."""
+    combined, _ = _combined_ad_text(title, description, data)
+    if not combined:
+        return False
+    for phrase in _NORMALIZED_OWNER_PHRASES:
+        if phrase and phrase in combined:
+            return True
+    return False
+
+
+def has_disguised_consultant_markers(
+    title: str = '',
+    description: str = '',
+    data: Optional[Dict[str, Any]] = None,
+) -> bool:
+    combined, raw_combined = _combined_ad_text(title, description, data)
     if not combined:
         return False
 
@@ -279,6 +343,9 @@ def detect_advertiser_signal(
         return ADVERTISER_SIGNAL_CONSULTANT
     if not is_personal_category(business_type, data):
         return ''
+    # عبارات صریح مالکیت بر نشانه‌های مشاور پنهان اولویت دارند.
+    if has_owner_markers(title, description, data):
+        return ADVERTISER_SIGNAL_GENUINE_PERSONAL
     if has_disguised_consultant_markers(title, description, data):
         return ADVERTISER_SIGNAL_DISGUISED
     return ADVERTISER_SIGNAL_GENUINE_PERSONAL

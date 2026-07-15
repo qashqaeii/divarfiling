@@ -22,10 +22,70 @@ class AdvertiserSignalDetectionTest(TestCase):
     def test_genuine_personal_without_markers(self):
         signal = detect_advertiser_signal(
             title='اجاره آپارتمان ۶۵ متری',
-            description='واحد تمیز و نوساز. بدون واسطه.',
+            description='واحد تمیز و نوساز. نورگیر عالی.',
             business_type='personal',
         )
         self.assertEqual(signal, ADVERTISER_SIGNAL_GENUINE_PERSONAL)
+
+    def test_owner_affirmation_phrases_mark_genuine(self):
+        from workspace.services.advertiser_signal import has_owner_markers
+
+        phrases = (
+            'مالک هستم',
+            'من مالک هستم',
+            'مالکم',
+            'من مالکم',
+            'مالک مستقیم',
+            'مستقیم از مالک',
+            'خودم مالک هستم',
+            'خودم صاحب ملک هستم',
+            'صاحب ملک هستم',
+            'صاحبخانه هستم',
+            'این ملک متعلق به خودم است',
+            'ملک شخصی خودم',
+            'واحد شخصی خودم',
+            'خانه خودم',
+            'آپارتمان خودم',
+            'فروش توسط مالک',
+            'اجاره توسط مالک',
+            'رهن توسط مالک',
+            'بدون واسطه از مالک',
+            'بدون واسطه',
+            'مستقیم با مالک',
+            'ارتباط مستقیم با مالک',
+            'تماس با مالک',
+            'بدون دخالت مشاور',
+            'بدون دخالت املاک',
+            'بدون واسطه‌',
+            'سند به نام خودم',
+            'سند به نام اینجانب',
+            'مالک سند هستم',
+            'مالک شش دانگ',
+            'صاحب سند هستم',
+            'خودم سازنده هستم',
+        )
+        for phrase in phrases:
+            with self.subTest(phrase=phrase):
+                self.assertTrue(has_owner_markers(title='', description=f'واحد نوساز. {phrase}.'))
+                signal = detect_advertiser_signal(
+                    title='فروش آپارتمان',
+                    description=f'واحد نوساز. {phrase}.',
+                    business_type='personal',
+                )
+                self.assertEqual(signal, ADVERTISER_SIGNAL_GENUINE_PERSONAL)
+
+    def test_owner_affirmation_overrides_disguised_markers(self):
+        """عبارت صریح مالکیت حتی اگر عبارت مشاور پنهان هم باشد → مالک."""
+        signal = detect_advertiser_signal(
+            title='اجاره آپارتمان',
+            description='من مالک هستم. لطفاً همکارهای عزیز تماس نگیرید.',
+            business_type='personal',
+        )
+        self.assertEqual(signal, ADVERTISER_SIGNAL_GENUINE_PERSONAL)
+        self.assertTrue(has_disguised_consultant_markers(
+            title='',
+            description='لطفاً همکارهای عزیز تماس نگیرید.',
+        ))
 
     def test_disguised_consultant_with_phrase_in_description(self):
         signal = detect_advertiser_signal(

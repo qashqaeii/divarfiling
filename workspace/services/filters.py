@@ -5,6 +5,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from django.db.models import Case, Count, IntegerField, Q, QuerySet, Value, When
 
+from workspace.services.advertiser_signal import (
+    ADVERTISER_SIGNAL_DISGUISED,
+    ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+    listing_advertiser_signal,
+)
 from workspace.services.columns import consultant_q
 
 from workspace.models import ListingMeta
@@ -206,6 +211,24 @@ _CONSULTANT_FILTER_Q = (
     | Q(business_type__icontains='business')
     | Q(business_type__icontains='agency')
 )
+
+_ADVERTISER_SIGNAL_FILTER_VALUES = frozenset({
+    ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+    ADVERTISER_SIGNAL_DISGUISED,
+})
+
+
+def needs_advertiser_signal_filter(filters: Dict) -> bool:
+    return filters.get('consultant') in _ADVERTISER_SIGNAL_FILTER_VALUES
+
+
+def apply_advertiser_signal_filter(listings: List, consultant: str) -> List:
+    if consultant not in _ADVERTISER_SIGNAL_FILTER_VALUES:
+        return listings
+    return [
+        lst for lst in listings
+        if listing_advertiser_signal(lst) == consultant
+    ]
 
 
 def _advertiser_rank_annotation():

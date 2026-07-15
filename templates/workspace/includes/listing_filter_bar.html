@@ -17,6 +17,8 @@
         <select name="consultant" class="mk-filter-select mk-filter-select-narrow" aria-label="آگهی‌دهنده">
             <option value="">آگهی‌دهنده</option>
             <option value="1" {% if filters.consultant == '1' %}selected{% endif %}>مشاور</option>
+            <option value="genuine_personal" {% if filters.consultant == 'genuine_personal' %}selected{% endif %}>مالک واقعی</option>
+            <option value="disguised_consultant" {% if filters.consultant == 'disguised_consultant' %}selected{% endif %}>مشاور پنهان</option>
             <option value="0" {% if filters.consultant == '0' %}selected{% endif %}>شخصی</option>
         </select>
         <div class="mk-filter-actions">
@@ -127,7 +129,7 @@
     <div class="mk-filter-active" aria-label="فیلترهای فعال">
         {% if filters.q %}<span class="mk-filter-chip">جستجو: {{ filters.q|truncatechars:20 }}</span>{% endif %}
         {% if filters.neighborhood %}<span class="mk-filter-chip">محله: {{ filters.neighborhood }}</span>{% endif %}
-        {% if filters.consultant == '1' %}<span class="mk-filter-chip">مشاور</span>{% elif filters.consultant == '0' %}<span class="mk-filter-chip">شخصی</span>{% endif %}
+        {% if filters.consultant == '1' %}<span class="mk-filter-chip">مشاور</span>{% elif filters.consultant == 'genuine_personal' %}<span class="mk-filter-chip">مالک واقعی</span>{% elif filters.consultant == 'disguised_consultant' %}<span class="mk-filter-chip">مشاور پنهان</span>{% elif filters.consultant == '0' %}<span class="mk-filter-chip">شخصی</span>{% endif %}
         {% if filters.value == 'below' %}<span class="mk-filter-chip">زیر بازار</span>{% elif filters.value == 'fair' %}<span class="mk-filter-chip">متعارف</span>{% elif filters.value == 'above' %}<span class="mk-filter-chip">بالای بازار</span>{% endif %}
         {% if advanced_filter_count %}<span class="mk-filter-chip mk-filter-chip-muted">+{{ advanced_filter_count }} فیلتر دیگر</span>{% endif %}
     </div>

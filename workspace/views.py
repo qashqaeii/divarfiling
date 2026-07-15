@@ -71,8 +71,9 @@ from workspace.services.listing_edit import (
     owner_name_from_listing, owner_phone_from_listing,
 )
 from workspace.services.filters import (
-    active_filter_count, advanced_filter_count, apply_amenity_filters,
-    apply_listing_filters, apply_value_filter, get_neighborhoods,
+    active_filter_count, advanced_filter_count, apply_advertiser_signal_filter,
+    apply_amenity_filters, apply_listing_filters, apply_value_filter,
+    get_neighborhoods, needs_advertiser_signal_filter,
     get_neighborhoods_qs, parse_filter_params, sort_queryset,
 )
 from workspace.services.formatting import format_toman
@@ -580,9 +581,11 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
 
         needs_post = any(filters.get(k) for k in (
             'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
-        ))
+        )) or needs_advertiser_signal_filter(filters)
         if needs_post:
             filtered = list(qs)
+            if needs_advertiser_signal_filter(filters):
+                filtered = apply_advertiser_signal_filter(filtered, filters['consultant'])
             filtered = apply_amenity_filters(filtered, filters)
             filtered = apply_value_filter(filtered, value_map, filters.get('value', ''))
             qs_ids = [x.pk for x in filtered]
@@ -784,9 +787,11 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
 
         needs_post = any(filters.get(k) for k in (
             'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
-        ))
+        )) or needs_advertiser_signal_filter(filters)
         if needs_post:
             filtered = list(qs)
+            if needs_advertiser_signal_filter(filters):
+                filtered = apply_advertiser_signal_filter(filtered, filters['consultant'])
             filtered = apply_amenity_filters(filtered, filters)
             filtered = apply_value_filter(filtered, value_map, filters.get('value', ''))
             qs_ids = [x.pk for x in filtered]

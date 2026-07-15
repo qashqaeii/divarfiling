@@ -445,8 +445,17 @@
                     var p = res.data.post || {};
                     var html = '<strong>✓ ' + (res.data.action_label || 'انجام شد') + '</strong>';
                     html += '<p>' + (p.title || '') + '</p>';
-                    if (p.url) html += '<p><a href="' + p.url + '" target="_blank" rel="noopener">مشاهده مقاله →</a></p>';
-                    showResult('ok', html);
+                    if (p.is_published && p.url) {
+                        html += '<p><a href="' + p.url + '" target="_blank" rel="noopener">مشاهده مقاله منتشرشده →</a></p>';
+                    } else {
+                        html += '<p><strong>پیش‌نویس است</strong> — URL عمومی 404 می‌دهد تا publish کنید.</p>';
+                        html += '<p>۱) تیک «انتشار فوری» را بزنید و با force_update دوباره import کنید<br>';
+                        html += '۲) یا در <a href="' + (p.admin_edit_url || '/admin/blog/post/') + '" target="_blank" rel="noopener">Django Admin</a> گزینه «منتشر شده» را فعال کنید.</p>';
+                        if (p.url) {
+                            html += '<p style="font-size:0.78rem;color:var(--mk-text-muted)">پیش‌نمایش staff (بعد از login): <a href="' + p.url + '" target="_blank" rel="noopener">' + p.url + '</a></p>';
+                        }
+                    }
+                    showResult(p.is_published ? 'ok' : 'warn', html);
                 }).catch(function () {
                     btnImport.disabled = false;
                     btnImport.innerHTML = '<i class="fas fa-rocket"></i> درون‌ریزی مقاله';

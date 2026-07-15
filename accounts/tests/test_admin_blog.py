@@ -101,3 +101,30 @@ class AdminBlogPanelTests(TestCase):
             content_type='application/json',
         )
         self.assertEqual(resp.status_code, 400)
+
+
+class DraftPostPreviewTests(TestCase):
+    def setUp(self):
+        self.author = User.objects.create_user(username='blogauth', password='pass1234')
+        self.staff = User.objects.create_user(
+            username='staffprev', password='pass1234', phone='09123333333', is_staff=True,
+        )
+        self.draft = Post.objects.create(
+            title='پیش‌نویس تست',
+            slug='sample-filing-divar-rahnama-kamel',
+            author=self.author,
+            content='<p>تست</p><h2>بخش</h2>',
+            excerpt='خلاصه',
+            is_published=False,
+        )
+
+    def test_draft_returns_404_for_public(self):
+        resp = Client().get(reverse('blog:post_detail', kwargs={'slug': self.draft.slug}))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_draft_visible_for_staff(self):
+        client = Client()
+        client.force_login(self.staff)
+        resp = client.get(reverse('blog:post_detail', kwargs={'slug': self.draft.slug}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'پیش‌نویس')

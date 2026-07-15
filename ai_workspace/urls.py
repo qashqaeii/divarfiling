@@ -13,6 +13,11 @@ urlpatterns = [
         name='listing_summary',
     ),
     path(
+        'crm/properties/<int:property_id>/summary/',
+        views.PropertySummaryView.as_view(),
+        name='property_summary',
+    ),
+    path(
         'crm/contacts/<int:customer_id>/message/',
         views.CRMMessageView.as_view(),
         name='crm_message',

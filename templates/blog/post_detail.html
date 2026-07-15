@@ -11,10 +11,24 @@
 {% endblock %}
 
 {% block content %}
+{% if is_draft_preview %}
+<meta name="robots" content="noindex, nofollow">
+{% endif %}
 {% schema_article post request %}
 {% schema_faq_page post.content request post %}
 {% schema_breadcrumb breadcrumb_items %}
 <div class="mk-pub-wrap mk-blog-detail-page">
+
+    {% if is_draft_preview %}
+    <div class="container" style="margin-top:1rem">
+        <div class="adm-alert adm-alert--warn" style="padding:0.85rem 1rem;border-radius:12px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);font-size:0.85rem;line-height:1.7">
+            <strong><i class="fas fa-eye-slash"></i> پیش‌نویس — فقط برای staff قابل مشاهده است.</strong>
+            بازدیدکنندگان عادی 404 می‌بینند تا زمانی که «منتشر شده» را در
+            <a href="/admin/blog/post/{{ post.id }}/change/" target="_blank" rel="noopener">Django Admin</a>
+            فعال کنید یا دوباره import با <code>publish: true</code>.
+        </div>
+    </div>
+    {% endif %}
 
     <div class="mk-blog-read-progress" id="blog-read-progress" aria-hidden="true"></div>
 

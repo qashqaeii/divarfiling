@@ -428,5 +428,6 @@ class AdminBlogImportView(StaffRequiredMixin, View):
                 'slug': post.slug,
                 'url': post.get_absolute_url(),
                 'is_published': post.is_published,
+                'admin_edit_url': f'/admin/blog/post/{post.id}/change/',
             },
         })

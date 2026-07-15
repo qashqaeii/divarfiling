@@ -84,21 +84,25 @@ class PostDetailView(DetailView):
     slug_url_kwarg = 'slug'
 
     def get_queryset(self):
-        return (
-            Post.objects.filter(is_published=True)
-            .select_related('category', 'author')
+        qs = (
+            Post.objects.select_related('category', 'author')
             .prefetch_related('tags')
         )
+        if self.request.user.is_authenticated and self.request.user.is_staff:
+            return qs
+        return qs.filter(is_published=True)
 
     def get_object(self):
         obj = super().get_object()
-        obj.views_count += 1
-        obj.save(update_fields=['views_count'])
+        if obj.is_published:
+            obj.views_count += 1
+            obj.save(update_fields=['views_count'])
         return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = context['post']
+        context['is_draft_preview'] = not post.is_published
         context['reading_time'] = _reading_time_minutes(post.content)
         context['meta_title'] = post.title
         context['meta_description'] = _meta_description(post)

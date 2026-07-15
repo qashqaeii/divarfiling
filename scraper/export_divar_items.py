@@ -3429,7 +3429,7 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
     result_df["آگهی‌های فعال مشاور"] = combine_excel_and_source("آگهی‌های فعال مشاور", "مشاور_آگهی_فعال")
     
     # 26. لینک
-    result_df["لینک"] = get_col("لینک")
+    result_df["لینک"] = combine_excel_and_source("لینک", "share_link")
     
     # 27. شماره تماس (ستون خالی)
     result_df["شماره تماس"] = pd.Series(["-"] * len(df))

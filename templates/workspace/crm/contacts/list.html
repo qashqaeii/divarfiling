@@ -107,34 +107,138 @@
 
     <form method="get" class="crm-contacts-filters crm-page-filters" id="crmContactFilters">
         <input type="hidden" name="view" value="{{ view_mode }}">
-        <label class="crm-contacts-search">
-            <i class="fas fa-search" aria-hidden="true"></i>
-            <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو نام، تلفن..." autocomplete="off" aria-label="جستجو">
-        </label>
-        <select name="customer_type" class="crm-contacts-select" aria-label="نوع" onchange="this.form.submit()">
-            <option value="">همه انواع</option>
-            {% for t in crm_types %}<option value="{{ t }}" {% if request.GET.customer_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
-        </select>
-        <select name="status" class="crm-contacts-select" aria-label="وضعیت" onchange="this.form.submit()">
-            <option value="">همه وضعیت‌ها</option>
-            {% for s in crm_statuses %}<option value="{{ s }}" {% if request.GET.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
-        </select>
-        <select name="priority" class="crm-contacts-select" aria-label="اولویت" onchange="this.form.submit()">
-            <option value="">اولویت</option>
-            {% for p in crm_priorities %}<option value="{{ p }}" {% if request.GET.priority == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
-        </select>
-        <select name="due" class="crm-contacts-select" aria-label="پیگیری" onchange="this.form.submit()">
-            <option value="">پیگیری</option>
-            <option value="today" {% if request.GET.due == 'today' %}selected{% endif %}>امروز</option>
-            <option value="overdue" {% if request.GET.due == 'overdue' %}selected{% endif %}>معوق</option>
-            <option value="none" {% if request.GET.due == 'none' %}selected{% endif %}>بدون تاریخ</option>
-        </select>
-        <div class="crm-contacts-filter-actions">
+
+        <div class="crm-contacts-filter-primary">
+            <label class="crm-contacts-search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو نام، تلفن..." autocomplete="off" aria-label="جستجو">
+            </label>
+            <button type="button"
+                    class="crm-contacts-mob-filter-trigger"
+                    id="crmContactsFilterOpen"
+                    aria-expanded="false"
+                    aria-controls="crmContactsFilterPanel"
+                    title="فیلترها">
+                <i class="fas fa-sliders" aria-hidden="true"></i>
+                <span class="crm-contacts-mob-filter-trigger-label">فیلتر</span>
+                {% if request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due %}
+                <span class="crm-contacts-mob-filter-badge" aria-hidden="true"></span>
+                {% endif %}
+            </button>
+            <div class="crm-contacts-view-toggle crm-contacts-mob-view-toggle" role="tablist" aria-label="نمای لیست">
+                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-contacts-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-contacts-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+            </div>
+        </div>
+
+        {% if request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due %}
+        <div class="crm-contacts-mob-active-chips" aria-label="فیلترهای فعال">
+            {% if request.GET.customer_type %}
+            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}{% if request.GET.due %}&due={{ request.GET.due|urlencode }}{% endif %}" class="crm-contacts-mob-chip">
+                <span>{{ request.GET.customer_type }}</span><i class="fas fa-times" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+            {% if request.GET.status %}
+            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}{% if request.GET.due %}&due={{ request.GET.due|urlencode }}{% endif %}" class="crm-contacts-mob-chip">
+                <span>{{ request.GET.status }}</span><i class="fas fa-times" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+            {% if request.GET.priority %}
+            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.due %}&due={{ request.GET.due|urlencode }}{% endif %}" class="crm-contacts-mob-chip">
+                <span>{{ request.GET.priority }}</span><i class="fas fa-times" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+            {% if request.GET.due %}
+            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}" class="crm-contacts-mob-chip">
+                <span>{% if request.GET.due == 'today' %}امروز{% elif request.GET.due == 'overdue' %}معوق{% else %}بدون تاریخ{% endif %}</span><i class="fas fa-times" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="crm-contacts-mob-filter-sheet" id="crmContactsFilterSheet" aria-hidden="true">
+            <div class="crm-contacts-mob-filter-backdrop" data-contacts-filter-close tabindex="-1" aria-hidden="true"></div>
+            <div class="crm-contacts-mob-filter-panel" id="crmContactsFilterPanel" role="dialog" aria-modal="true" aria-labelledby="crmContactsFilterTitle">
+                <header class="crm-contacts-mob-filter-head">
+                    <div class="crm-contacts-mob-filter-head-text">
+                        <h2 id="crmContactsFilterTitle">فیلتر مخاطبین</h2>
+                        <p>نوع، وضعیت، اولویت و پیگیری</p>
+                    </div>
+                    <button type="button" class="crm-contacts-mob-filter-close" data-contacts-filter-close aria-label="بستن">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                </header>
+                <div class="crm-contacts-mob-filter-body">
+                    <label class="crm-contacts-mob-filter-field">
+                        <span class="crm-contacts-mob-filter-label">نوع مخاطب</span>
+                        <select name="customer_type" class="crm-contacts-select crm-contacts-mob-select" aria-label="نوع">
+                            <option value="">همه انواع</option>
+                            {% for t in crm_types %}<option value="{{ t }}" {% if request.GET.customer_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label class="crm-contacts-mob-filter-field">
+                        <span class="crm-contacts-mob-filter-label">وضعیت</span>
+                        <select name="status" class="crm-contacts-select crm-contacts-mob-select" aria-label="وضعیت">
+                            <option value="">همه وضعیت‌ها</option>
+                            {% for s in crm_statuses %}<option value="{{ s }}" {% if request.GET.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label class="crm-contacts-mob-filter-field">
+                        <span class="crm-contacts-mob-filter-label">اولویت</span>
+                        <select name="priority" class="crm-contacts-select crm-contacts-mob-select" aria-label="اولویت">
+                            <option value="">همه اولویت‌ها</option>
+                            {% for p in crm_priorities %}<option value="{{ p }}" {% if request.GET.priority == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label class="crm-contacts-mob-filter-field">
+                        <span class="crm-contacts-mob-filter-label">پیگیری</span>
+                        <select name="due" class="crm-contacts-select crm-contacts-mob-select" aria-label="پیگیری">
+                            <option value="">همه</option>
+                            <option value="today" {% if request.GET.due == 'today' %}selected{% endif %}>امروز</option>
+                            <option value="overdue" {% if request.GET.due == 'overdue' %}selected{% endif %}>معوق</option>
+                            <option value="none" {% if request.GET.due == 'none' %}selected{% endif %}>بدون تاریخ</option>
+                        </select>
+                    </label>
+                    <div class="crm-contacts-mob-filter-saved">
+                        {% include 'workspace/crm/includes/saved_filters.html' %}
+                    </div>
+                </div>
+                <footer class="crm-contacts-mob-filter-foot">
+                    {% if request.GET.q or request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due %}
+                    <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}" class="crm-contacts-mob-filter-clear">پاک کردن</a>
+                    {% endif %}
+                    <button type="submit" class="crm-contacts-mob-filter-apply">اعمال فیلتر</button>
+                </footer>
+            </div>
+        </div>
+
+        <div class="crm-contacts-filter-fields crm-contacts-desk-filter-fields">
+            <select name="customer_type" class="crm-contacts-select" aria-label="نوع" onchange="this.form.submit()">
+                <option value="">همه انواع</option>
+                {% for t in crm_types %}<option value="{{ t }}" {% if request.GET.customer_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+            </select>
+            <select name="status" class="crm-contacts-select" aria-label="وضعیت" onchange="this.form.submit()">
+                <option value="">همه وضعیت‌ها</option>
+                {% for s in crm_statuses %}<option value="{{ s }}" {% if request.GET.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+            </select>
+            <select name="priority" class="crm-contacts-select" aria-label="اولویت" onchange="this.form.submit()">
+                <option value="">اولویت</option>
+                {% for p in crm_priorities %}<option value="{{ p }}" {% if request.GET.priority == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+            </select>
+            <select name="due" class="crm-contacts-select" aria-label="پیگیری" onchange="this.form.submit()">
+                <option value="">پیگیری</option>
+                <option value="today" {% if request.GET.due == 'today' %}selected{% endif %}>امروز</option>
+                <option value="overdue" {% if request.GET.due == 'overdue' %}selected{% endif %}>معوق</option>
+                <option value="none" {% if request.GET.due == 'none' %}selected{% endif %}>بدون تاریخ</option>
+            </select>
+        </div>
+
+        <div class="crm-contacts-filter-actions crm-contacts-desk-filter-actions">
             {% include 'workspace/crm/includes/saved_filters.html' %}
             {% if request.GET.q or request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due %}
             <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}" class="crm-dash-act crm-dash-act--icon" title="پاک کردن فیلتر"><i class="fas fa-times" aria-hidden="true"></i></a>
             {% endif %}
-            <div class="crm-contacts-view-toggle" role="tablist">
+            <div class="crm-contacts-view-toggle crm-contacts-desk-view-toggle" role="tablist">
                 <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-contacts-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
                 <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-contacts-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
             </div>

@@ -3109,6 +3109,73 @@ function initCRMPropGalleryLightbox() {
     });
 }
 
+
+function initContactsMobileFilters() {
+    const form = document.getElementById('crmContactFilters');
+    const sheet = document.getElementById('crmContactsFilterSheet');
+    const openBtn = document.getElementById('crmContactsFilterOpen');
+    if (!form || !sheet || !openBtn) return;
+
+    const mq = window.matchMedia('(max-width: 768px)');
+
+    const setOpen = (open) => {
+        sheet.classList.toggle('is-open', open);
+        sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+        openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        openBtn.classList.toggle('is-open', open);
+        document.body.classList.toggle('crm-contacts-filter-open', open);
+    };
+
+    const close = () => setOpen(false);
+    const open = () => {
+        if (!mq.matches) return;
+        setOpen(true);
+    };
+
+    openBtn.addEventListener('click', () => {
+        if (sheet.classList.contains('is-open')) close();
+        else open();
+    });
+
+    sheet.querySelectorAll('[data-contacts-filter-close]').forEach(el => {
+        el.addEventListener('click', close);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sheet.classList.contains('is-open')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            close();
+        }
+    }, true);
+
+    form.addEventListener('submit', () => {
+        if (mq.matches) close();
+    });
+
+    form.querySelectorAll('.crm-contacts-desk-filter-fields select').forEach(sel => {
+        sel.disabled = mq.matches;
+    });
+    form.querySelectorAll('.crm-contacts-mob-select').forEach(sel => {
+        sel.disabled = !mq.matches;
+    });
+
+    const syncSelectDisabled = () => {
+        const mobile = mq.matches;
+        form.querySelectorAll('.crm-contacts-desk-filter-fields select').forEach(sel => {
+            sel.disabled = mobile;
+        });
+        form.querySelectorAll('.crm-contacts-mob-select').forEach(sel => {
+            sel.disabled = !mobile;
+        });
+        if (!mobile) close();
+    };
+
+    if (typeof mq.addEventListener === 'function') mq.addEventListener('change', syncSelectDisabled);
+    else if (typeof mq.addListener === 'function') mq.addListener(syncSelectDisabled);
+    syncSelectDisabled();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-drawer-open]').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -3150,6 +3217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMDealPipeline();
     initCRMPropertyPipeline();
     initCRMSavedFilters();
+    initContactsMobileFilters();
     initCRMPropertyAdvFilters();
     initCRMDealStagesEditor();
     initCRMDealChecklist();

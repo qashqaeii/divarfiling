@@ -114,6 +114,61 @@ class AdvertiserSignalDetectionTest(TestCase):
         )
         self.assertEqual(signal, ADVERTISER_SIGNAL_GENUINE_PERSONAL)
 
+    def test_disguised_consultant_karshenas_phrases(self):
+        for description in (
+            'کارشناس منطقه: محمدی',
+            'کارشناس شما در خدمت',
+            'کارشناس حرفه ای منطقه',
+            'تماس با کارشناس',
+        ):
+            with self.subTest(description=description):
+                signal = detect_advertiser_signal(
+                    title='اجاره آپارتمان',
+                    description=description,
+                    business_type='personal',
+                )
+                self.assertEqual(signal, ADVERTISER_SIGNAL_DISGUISED)
+
+    def test_disguised_consultant_karshenas_in_parentheses(self):
+        signal = detect_advertiser_signal(
+            title='فروش آپارتمان',
+            description='((کارشناس))\nواحد ۸۰ متری',
+            business_type='personal',
+        )
+        self.assertEqual(signal, ADVERTISER_SIGNAL_DISGUISED)
+
+    def test_genuine_personal_karshenasi_not_karshenas(self):
+        """کارشناسی / کارشناسی شده نباید مشاور پنهان شمرده شود."""
+        for description in (
+            'واحد کارشناسی شده',
+            'دارای سند کارشناسی',
+            'ملک کارشناسی شده و آماده تحویل',
+        ):
+            with self.subTest(description=description):
+                signal = detect_advertiser_signal(
+                    title='فروش آپارتمان',
+                    description=description,
+                    business_type='personal',
+                )
+                self.assertEqual(signal, ADVERTISER_SIGNAL_GENUINE_PERSONAL)
+
+    def test_disguised_consultant_similar_listing_phrases(self):
+        for description in (
+            'موارد مشابه',
+            'موارد مشابه موجود است',
+            'موارد دیگر در منطقه',
+            'فایل مشابه',
+            'فایل مشابه موجود است',
+            '((فایل مشابه)) موجود',
+        ):
+            with self.subTest(description=description):
+                signal = detect_advertiser_signal(
+                    title='اجاره آپارتمان',
+                    description=description,
+                    business_type='personal',
+                )
+                self.assertEqual(signal, ADVERTISER_SIGNAL_DISGUISED)
+
     def test_stored_genuine_personal_reclassified_on_display(self):
         from types import SimpleNamespace
         from workspace.services.advertiser_signal import listing_advertiser_display

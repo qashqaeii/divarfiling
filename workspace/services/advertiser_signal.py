@@ -37,6 +37,14 @@ _DISGUISED_CONSULTANT_PHRASES: tuple[str, ...] = (
     'کارشناس شما در منطقه',
     'کارشناس شما',
     'کارشناس املاک',
+    'کارشناس منطقه',
+    'کارشناس حرفه ای',
+    'کارشناس حرفه ای منطقه',
+    'کارشناس حرفه',
+    'کارشناس ملکی',
+    'کارشناس ملک',
+    'کارشناس فروش',
+    'کارشناس ارشد',
     'فایل شخصی',
     'فایل املاک',
     'لطفا املاک تماس نگیرد',
@@ -53,6 +61,13 @@ _DISGUISED_CONSULTANT_PHRASES: tuple[str, ...] = (
     'همکار تماس نگیرید',
     'تماس همکاران',
     'آگهی مشابه',
+    'آگهی های مشابه',
+    'فایل مشابه',
+    'فایل های مشابه',
+    'فایل مشابه موجود',
+    'موارد مشابه',
+    'موارد مشابه موجود',
+    'موارد دیگر',
     'بنگاه املاک',
     'آژانس املاک',
     'دفتر املاک',
@@ -110,6 +125,12 @@ _DECORATIVE_AMLAK_RE = re.compile(
 )
 # «املاک» به‌تنهایی در ابتدای متن/خط (مثلاً بعد از حذف پرانتز).
 _AMLAK_LINE_BRANDING_RE = re.compile(r'(?:^|\n)\s*املاک\s*(?:\n|$)')
+# برندینگ «کارشناس» با تزئین: ((کارشناس))، ***کارشناس***
+_DECORATIVE_KARSHENAS_RE = re.compile(
+    r'[\(\[\{«「*•._\-|~]{1,}\s*کارشناس\s*[\)\]\}»」*•._\-|~]{1,}',
+)
+# «کارشناس» به‌تنهایی — نه «کارشناسی» (مثلاً کارشناسی شده، سند کارشناسی)
+_KARSHENAS_WORD_RE = re.compile(r'کارشناس(?!ی)')
 
 
 def normalize_ad_text(text: str) -> str:
@@ -177,6 +198,13 @@ def _has_decorative_amlak_branding(raw_text: str, normalized_text: str) -> bool:
     return False
 
 
+def _has_karshenas_marker(raw_text: str, normalized_text: str) -> bool:
+    """کارشناس/کارشناس منطقه/... — بدون «کارشناسی»."""
+    if _DECORATIVE_KARSHENAS_RE.search(raw_text):
+        return True
+    return bool(_KARSHENAS_WORD_RE.search(normalized_text))
+
+
 def _description_from_data(data: Optional[Dict[str, Any]]) -> str:
     if not data:
         return ''
@@ -207,6 +235,9 @@ def has_disguised_consultant_markers(
         return False
 
     if _has_decorative_amlak_branding(raw_combined, combined):
+        return True
+
+    if _has_karshenas_marker(raw_combined, combined):
         return True
 
     for phrase in _NORMALIZED_DISGUISED_PHRASES:

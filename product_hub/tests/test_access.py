@@ -2,6 +2,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from licenses.models import License
 from product_hub.models import (
@@ -12,7 +13,6 @@ from product_hub.models import (
     ProductFeature,
     ProductHubNotification,
     ProductRelease,
-    ReleaseChange,
 )
 from product_hub.services import workflow as workflow_svc
 from product_hub.services.seed import seed_product_hub
@@ -114,8 +114,14 @@ class ProductHubAccessTests(TestCase):
 
     def test_staff_can_complete_request_and_notify(self):
         self._license()
-        release = ProductRelease.objects.filter(is_published=True).first()
-        self.assertIsNotNone(release)
+        release = ProductRelease.objects.create(
+            version='1.0.0-test',
+            title='نسخه تست',
+            summary='آزادسازی تست',
+            released_at=timezone.now(),
+            is_published=True,
+            created_by=self.staff,
+        )
         req = FeatureRequest.objects.create(
             user=self.user, title='ارسال مستقیم فایل', category='crm',
             problem='p', why_important='w', priority='high', status='in_development',
@@ -161,10 +167,13 @@ class ProductHubAccessTests(TestCase):
 
     def test_seed_creates_features_and_releases(self):
         self.assertGreaterEqual(ProductFeature.objects.filter(is_published=True).count(), 40)
-        self.assertGreaterEqual(ProductRelease.objects.filter(is_published=True).count(), 4)
-        self.assertTrue(ReleaseChange.objects.exists())
-        self.assertTrue(FeatureRequest.objects.filter(is_public=True).exists())
-        self.assertTrue(BugReport.objects.filter(is_public=True).exists())
+        # seed دیگر داده فیک (پیشنهاد/باگ/نسخه نمونه) ایجاد نمی‌کند
+        self.assertFalse(
+            FeatureRequest.objects.filter(user__username='product_hub_seed').exists()
+        )
+        self.assertFalse(
+            BugReport.objects.filter(user__username='product_hub_seed').exists()
+        )
 
     def test_changelog_tab_renders(self):
         self.client.login(username='phuser', password='pass1234')

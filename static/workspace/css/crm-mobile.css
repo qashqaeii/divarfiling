@@ -61,37 +61,26 @@
         height: 40px;
     }
 
-    /* CRM top nav — تک‌ردیف فشرده */
+    /* CRM top sub-nav: hidden on mobile — sidebar hamburger is enough */
+    .crm-nav-shell,
+    .crm-app .crm-top .crm-nav,
     .crm-app .crm-nav {
-        flex-wrap: nowrap;
-        overflow: hidden;
-        gap: 0.08rem;
-        padding: 0.35rem 0 0.45rem;
-        margin-bottom: 0;
-        border-radius: 12px;
+        display: none !important;
     }
-    .crm-app .crm-nav-item {
-        flex: 0 1 auto;
+
+    .crm-top-nav-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.35rem;
         min-width: 0;
-        min-height: 36px;
-        padding: 0.28rem 0.4rem;
-        border-radius: 999px;
-        font-family: inherit;
-        font-size: 0.68rem;
-        font-weight: 600;
-        border: 1px solid transparent;
-        background: transparent;
+        width: auto;
+        margin: 0;
+        padding: 0;
     }
-    .crm-app .crm-nav-item.active {
-        background: var(--ws-primary-soft);
-        border-color: color-mix(in srgb, var(--ws-primary) 25%, transparent);
-        color: var(--ws-primary);
-        box-shadow: 0 1px 3px rgba(124, 58, 237, 0.12);
-    }
-    .crm-app .crm-nav-count {
-        font-size: 0.58rem;
-        min-width: 1.1rem;
-        height: 1.1rem;
+
+    .crm-top-nav-row:not(:has(.ws-mobile-menu)) {
+        display: none !important;
     }
 
     /* Page headers */

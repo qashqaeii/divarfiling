@@ -448,7 +448,7 @@ def listing_advertiser_display(listing) -> Dict[str, str]:
         return {
             'signal': signal,
             'label': label,
-            'short_label': 'پنهان',
+            'short_label': 'مشاور پنهان',
             'pill_class': 'mk-pub-pill--disguised',
             'tag_class': 'mk-adv-tag--disguised',
             'icon': 'fa-user-secret',

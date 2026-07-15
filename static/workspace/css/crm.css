@@ -25,19 +25,9 @@
 .crm-nav-item--video:hover { background: color-mix(in srgb, #7c3aed 10%, var(--ws-surface)); color: #5b21b6; }
 
 @media (max-width: 768px) {
-    .crm-nav {
-        flex-wrap: nowrap;
-        overflow: hidden;
-        gap: 0.12rem;
-        padding: 0.3rem;
-    }
-    .crm-nav-item {
-        flex-shrink: 1;
-        min-width: 0;
-        white-space: nowrap;
-        padding: 0.45rem 0.65rem;
-        font-size: 0.72rem;
-        min-height: 40px;
+    .crm-nav,
+    .crm-nav-shell {
+        display: none !important;
     }
 }
 
@@ -5935,12 +5925,9 @@ body.crm-side-open { overflow: hidden; }
         padding-inline-end: 0.65rem;
     }
 
-    .crm-app .crm-top .crm-nav {
-        flex: 1;
-        min-width: 0;
-        border-bottom: none;
-        padding: 0;
-        scroll-padding-inline: 0.35rem;
+    .crm-app .crm-top .crm-nav,
+    .crm-nav-shell {
+        display: none !important;
     }
 }
 

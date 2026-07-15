@@ -1,0 +1,28 @@
+{# CRM urgent action notice — mobile-first premium card
+   Required: tone (error|warning|info|success), icon, title, cta_label
+   Optional: text, count
+   Link: pass cta_url  |  Button: set is_button=True and button_attrs
+#}
+{% if is_button %}
+<button type="button" class="crm-action-card crm-action-card--{{ tone|default:'warning' }}" {{ button_attrs|default:''|safe }}>
+{% else %}
+<a href="{{ cta_url }}" class="crm-action-card crm-action-card--{{ tone|default:'warning' }}">
+{% endif %}
+    <span class="crm-action-card-glow" aria-hidden="true"></span>
+    <span class="crm-action-card-icon" aria-hidden="true">
+        <i class="fas {{ icon }}"></i>
+    </span>
+    <span class="crm-action-card-body">
+        <strong class="crm-action-card-title">{{ title }}</strong>
+        {% if text %}<em class="crm-action-card-text">{{ text }}</em>{% endif %}
+    </span>
+    {% if count %}<span class="crm-action-card-count" aria-label="{{ count }} مورد">{{ count }}</span>{% endif %}
+    <span class="crm-action-card-cta">
+        <span>{{ cta_label }}</span>
+        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+    </span>
+{% if is_button %}
+</button>
+{% else %}
+</a>
+{% endif %}

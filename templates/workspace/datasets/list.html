@@ -162,11 +162,10 @@
 
         {% if datasets %}
         <div class="mk-ds-layout{% if view_mode == 'auto' %} mk-ds-layout--auto{% elif view_mode == 'grid' %} mk-ds-layout--grid-only{% else %} mk-ds-layout--table-only{% endif %}">
-            {% if view_mode == 'grid' or view_mode == 'auto' %}
+            {# Cards always rendered so mobile can force photo-card layout even when view=table #}
             <div class="mk-ds-layout-grid" aria-label="نمای کارت">
                 {% include 'workspace/includes/datasets_grid_cards.html' with datasets=datasets %}
             </div>
-            {% endif %}
             {% if view_mode == 'table' or view_mode == 'auto' %}
             <div class="mk-ds-layout-table" aria-label="نمای جدول">
                 <div class="mk-table-wrap mk-filing-table-wrap">

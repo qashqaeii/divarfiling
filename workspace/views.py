@@ -198,6 +198,38 @@ def _dataset_stats(user):
     }
 
 
+def _attach_dataset_covers(datasets):
+    """اولین تصویر موجود هر دیتاست را برای کارت کاور ست می‌کند."""
+    items = list(datasets)
+    ids = [ds.pk for ds in items]
+    for ds in items:
+        ds.cover_image = ''
+    if not ids:
+        return items
+
+    covers = {}
+    rows = (
+        Listing.objects.filter(dataset_id__in=ids)
+        .exclude(images=[])
+        .order_by('dataset_id', 'id')
+        .values_list('dataset_id', 'images')
+    )
+    for dataset_id, images in rows:
+        if dataset_id in covers:
+            continue
+        if not images:
+            continue
+        urls = deduplicate_divar_image_urls(
+            [normalize_external_image_url(u) for u in images if u],
+        )
+        if urls:
+            covers[dataset_id] = urls[0]
+
+    for ds in items:
+        ds.cover_image = covers.get(ds.pk, '')
+    return items
+
+
 def _dataset_list_context(request, extra=None):
     qs = _apply_dataset_filters(
         _dataset_base_qs(request.user),
@@ -205,6 +237,7 @@ def _dataset_list_context(request, extra=None):
     ).order_by('-last_opened_at', '-created_at')
     paginator = Paginator(qs, 25)
     page_obj = paginator.get_page(request.GET.get('page', 1))
+    _attach_dataset_covers(page_obj.object_list)
     filters = _dataset_filter_params(request)
     upload_batch = request.session.pop('upload_batch', None)
     ctx = {
@@ -244,6 +277,9 @@ class DatasetListView(LicenseRequiredMixin, ListView):
         ctx = super().get_context_data(**kwargs)
         filters = _dataset_filter_params(self.request)
         upload_batch = self.request.session.pop('upload_batch', None)
+        page_obj = ctx.get('page_obj')
+        if page_obj is not None:
+            _attach_dataset_covers(page_obj.object_list)
         ctx.update({
             'open_modal': self.request.GET.get('open', ctx.get('open_modal', '')),
             'upload_batch': upload_batch,

@@ -69,17 +69,6 @@
     }
 
     .crm-top-nav-row {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 0.35rem;
-        min-width: 0;
-        width: auto;
-        margin: 0;
-        padding: 0;
-    }
-
-    .crm-top-nav-row:not(:has(.ws-mobile-menu)) {
         display: none !important;
     }
 
@@ -1190,6 +1179,166 @@
 @media (prefers-reduced-motion: reduce) {
     .crm-contacts-table tbody tr:active,
     .crm-deals-table tbody tr.crm-deals-row:active {
+        transform: none;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CRM Action Rail — mobile masterpiece (urgent alerts)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .crm-action-rail {
+        gap: 0.55rem;
+        margin-block: 0.05rem 0.15rem;
+    }
+
+    .crm-action-card {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+            "icon body count"
+            "cta  cta  cta";
+        align-items: center;
+        column-gap: 0.75rem;
+        row-gap: 0.7rem;
+        padding: 0.95rem 0.95rem 0.9rem;
+        border-radius: 20px;
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.5) inset,
+            0 12px 32px rgba(15, 23, 42, 0.08);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-action-card::before {
+        top: 12%;
+        bottom: 12%;
+        width: 3.5px;
+    }
+
+    .crm-action-card-glow {
+        width: 62%;
+        inset-inline-end: -24%;
+        opacity: 1;
+    }
+
+    .crm-action-card-icon {
+        grid-area: icon;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 15px;
+        font-size: 1.08rem;
+    }
+
+    .crm-action-card-body {
+        grid-area: body;
+        justify-content: center;
+        gap: 0.18rem;
+        min-width: 0;
+    }
+
+    .crm-action-card-title {
+        font-size: 1.02rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
+    }
+
+    .crm-action-card-text {
+        font-size: 0.8rem;
+        opacity: 0.8;
+        line-height: 1.35;
+    }
+
+    .crm-action-card-count {
+        grid-area: count;
+        align-self: start;
+        margin-inline-start: 0;
+        min-width: 1.85rem;
+        height: 1.85rem;
+        font-size: 0.78rem;
+        box-shadow: 0 6px 16px color-mix(in srgb, var(--crm-ac-accent) 40%, transparent);
+    }
+
+    .crm-action-card-cta {
+        grid-area: cta;
+        width: 100%;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 46px;
+        padding: 0.62rem 1.1rem;
+        border-radius: 14px;
+        font-size: 0.88rem;
+        letter-spacing: -0.01em;
+        background: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--crm-ac-accent) 20%, #fff),
+            var(--crm-ac-cta-bg)
+        );
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.55) inset,
+            0 4px 12px color-mix(in srgb, var(--crm-ac-accent) 12%, transparent);
+    }
+
+    .crm-action-card-cta i {
+        font-size: 0.72rem;
+        transition: transform 0.18s ease;
+    }
+
+    .crm-action-card:active .crm-action-card-cta i {
+        transform: translateX(-2px);
+    }
+
+    [data-theme='dark'] .crm-action-card {
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    [data-theme='dark'] .crm-action-card-cta {
+        background: color-mix(in srgb, var(--crm-ac-accent) 22%, transparent);
+        box-shadow: none;
+    }
+}
+
+@media (max-width: 430px) {
+    .crm-action-card {
+        padding: 0.85rem 0.8rem 0.8rem;
+        border-radius: 18px;
+        column-gap: 0.65rem;
+        row-gap: 0.65rem;
+    }
+
+    .crm-action-card-icon {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 14px;
+        font-size: 1rem;
+    }
+
+    .crm-action-card-title {
+        font-size: 0.95rem;
+    }
+
+    .crm-action-card-text {
+        font-size: 0.76rem;
+    }
+
+    .crm-action-card-count {
+        min-width: 1.7rem;
+        height: 1.7rem;
+        font-size: 0.74rem;
+    }
+
+    .crm-action-card-cta {
+        min-height: 44px;
+        font-size: 0.84rem;
+        border-radius: 13px;
+    }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+    .crm-action-card:active {
+        transform: none;
+    }
+    .crm-action-card:active .crm-action-card-cta i {
         transform: none;
     }
 }

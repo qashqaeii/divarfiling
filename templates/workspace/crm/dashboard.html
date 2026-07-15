@@ -40,28 +40,39 @@
 
     {% include 'workspace/crm/includes/crm_video_band.html' %}
 
-    {% if stagnant_count %}
-    <div class="mk-notice mk-notice--error mk-notice--inline mk-notice--compact">
-        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-bed"></i></span>
-        <div class="mk-notice__body">
-            <span class="mk-notice__text"><strong>{{ stagnant_count }}</strong> مخاطب بیش از ۷ روز بدون فعالیت</span>
-        </div>
-        <div class="mk-notice__actions">
-            <a href="{% url 'workspace:crm_automation' %}" class="mk-notice__cta">اتوماسیون</a>
-        </div>
-    </div>
-    {% endif %}
-
-    {% if overdue_contacts %}
-    <div class="mk-notice mk-notice--warning mk-notice--inline mk-notice--compact">
-        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></span>
-        <div class="mk-notice__body">
-            <span class="mk-notice__text"><strong>{{ overdue_contacts|length }}</strong> پیگیری معوق</span>
-        </div>
-        <div class="mk-notice__actions">
-            <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="mk-notice__cta">مشاهده</a>
-        </div>
-    </div>
+    {% if stagnant_count or overdue_contacts %}
+    <section class="crm-action-rail" aria-label="اقدامات فوری">
+        {% if stagnant_count %}
+        <a href="{% url 'workspace:crm_automation' %}" class="crm-action-card crm-action-card--error">
+            <span class="crm-action-card-glow" aria-hidden="true"></span>
+            <span class="crm-action-card-icon" aria-hidden="true"><i class="fas fa-user-clock"></i></span>
+            <span class="crm-action-card-body">
+                <strong class="crm-action-card-title">مخاطب راکد</strong>
+                <em class="crm-action-card-text">بیش از ۷ روز بدون فعالیت</em>
+            </span>
+            <span class="crm-action-card-count" aria-label="{{ stagnant_count }} مورد">{{ stagnant_count }}</span>
+            <span class="crm-action-card-cta">
+                <span>اتوماسیون</span>
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </span>
+        </a>
+        {% endif %}
+        {% if overdue_contacts %}
+        <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="crm-action-card crm-action-card--warning">
+            <span class="crm-action-card-glow" aria-hidden="true"></span>
+            <span class="crm-action-card-icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></span>
+            <span class="crm-action-card-body">
+                <strong class="crm-action-card-title">پیگیری معوق</strong>
+                <em class="crm-action-card-text">نیاز به اقدام فوری</em>
+            </span>
+            <span class="crm-action-card-count" aria-label="{{ overdue_contacts|length }} مورد">{{ overdue_contacts|length }}</span>
+            <span class="crm-action-card-cta">
+                <span>مشاهده</span>
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </span>
+        </a>
+        {% endif %}
+    </section>
     {% endif %}
 
     <section class="crm-dash-kpis" aria-label="شاخص‌ها">

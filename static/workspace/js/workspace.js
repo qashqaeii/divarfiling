@@ -71,28 +71,6 @@ const WSModal = {
     },
 };
 
-function initCrmMobileMenuDock() {
-    const row = document.querySelector('.crm-top-nav-row');
-    const toggle = document.getElementById('sidebarToggle');
-    const main = document.querySelector('.ws-main');
-    if (!row || !toggle || !main) return;
-
-    const mq = window.matchMedia('(max-width: 768px)');
-
-    function dock() {
-        if (mq.matches) {
-            if (toggle.parentElement !== row) row.insertBefore(toggle, row.firstChild);
-            toggle.classList.add('ws-mobile-menu--crm-inline');
-        } else {
-            toggle.classList.remove('ws-mobile-menu--crm-inline');
-            if (toggle.parentElement !== main) main.insertBefore(toggle, main.firstChild);
-        }
-    }
-
-    dock();
-    mq.addEventListener('change', dock);
-}
-
 function initWSGalleryLightbox() {
     const galleries = document.querySelectorAll('[data-ws-gallery]');
     if (!galleries.length) return;
@@ -252,8 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    initCrmMobileMenuDock();
 
     // Modal triggers
     document.querySelectorAll('[data-modal-open]').forEach(btn => {

@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'blog',
     'workspace',
     'ai_workspace',
+    'product_hub',
     'mobile_api',
 ]
 

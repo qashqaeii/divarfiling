@@ -1,0 +1,66 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags product_hub_tags %}
+
+{% block title %}مدیریت قابلیت‌ها{% endblock %}
+{% block mobile_bar_title %}قابلیت‌ها{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="mk-page ph-page">
+    <header class="mk-hub-head">
+        <div class="mk-hub-head-main">
+            <h1 class="mk-hub-head-title">کاتالوگ قابلیت‌ها</h1>
+        </div>
+    </header>
+
+    {% include 'workspace/product_hub/manage/_nav.html' with active='features' %}
+
+    <section class="ph-panel">
+        <h2>افزودن قابلیت</h2>
+        <form method="post" class="ph-form-grid">
+            {% csrf_token %}
+            <div class="ph-form-row">
+                <div class="ph-field"><label>عنوان</label>{{ feature_form.title }}</div>
+                <div class="ph-field"><label>اسلاگ</label>{{ feature_form.slug }}</div>
+            </div>
+            <div class="ph-field"><label>توضیح</label>{{ feature_form.summary }}</div>
+            <div class="ph-form-row">
+                <div class="ph-field"><label>دسته</label>{{ feature_form.category }}</div>
+                <div class="ph-field"><label>وضعیت</label>{{ feature_form.status }}</div>
+            </div>
+            <div class="ph-form-row">
+                <div class="ph-field"><label>افزوده</label>{{ feature_form.added_at }}</div>
+                <div class="ph-field"><label>آخرین تغییر</label>{{ feature_form.last_changed_at }}</div>
+            </div>
+            <div class="ph-form-row">
+                <div class="ph-field"><label>ترتیب</label>{{ feature_form.sort_order }}</div>
+                <div class="ph-field"><label>منتشر</label>{{ feature_form.is_published }}</div>
+            </div>
+            <div class="ph-actions">
+                <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">ثبت</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="ph-panel">
+        <table class="ph-table">
+            <thead><tr><th>عنوان</th><th>دسته</th><th>وضعیت</th><th>منتشر</th></tr></thead>
+            <tbody>
+            {% for f in features %}
+            <tr>
+                <td>{{ f.title }}</td>
+                <td>{{ f.category|ph_label:'category' }}</td>
+                <td><span class="ph-badge {% ph_feature_status_class f.status %}">{{ f.status|ph_label:'feature_status' }}</span></td>
+                <td>{% if f.is_published %}بله{% else %}خیر{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="ph-empty">خالی</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+{% endblock %}

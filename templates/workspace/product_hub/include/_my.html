@@ -1,0 +1,79 @@
+{% load workspace_tags product_hub_tags %}
+<section class="ph-panel">
+    <h2>پیشنهادهای من</h2>
+    {% if my_requests %}
+    <table class="ph-table">
+        <thead>
+            <tr>
+                <th>عنوان</th>
+                <th>وضعیت</th>
+                <th>رای</th>
+                <th>تاریخ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in my_requests %}
+            <tr>
+                <td>{{ req.title }}</td>
+                <td><span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span></td>
+                <td>{{ req.votes_count }}</td>
+                <td>{{ req.created_at|ws_jalali }}</td>
+            </tr>
+            {% if req.status == 'completed' and req.release_note %}
+            <tr>
+                <td colspan="4" style="color:var(--ws-muted);font-size:0.82rem;padding-top:0">
+                    {% if req.released_in %}در نسخه {{ req.released_in.version }}: {% endif %}{{ req.release_note }}
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="ph-empty">هنوز پیشنهادی ثبت نکرده‌اید.</p>
+    {% endif %}
+</section>
+
+<section class="ph-panel">
+    <h2>گزارش‌های باگ من</h2>
+    {% if my_bugs %}
+    <table class="ph-table">
+        <thead>
+            <tr>
+                <th>عنوان</th>
+                <th>شدت</th>
+                <th>وضعیت</th>
+                <th>تاریخ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bug in my_bugs %}
+            <tr>
+                <td>{{ bug.title }}</td>
+                <td><span class="ph-badge {% ph_bug_severity_class bug.severity %}">{{ bug.severity|ph_label:'severity' }}</span></td>
+                <td><span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span></td>
+                <td>{{ bug.created_at|ws_jalali }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="ph-empty">گزارشی ندارید.</p>
+    {% endif %}
+</section>
+
+<section class="ph-panel">
+    <h2>در حال دنبال</h2>
+    {% if my_follows %}
+    <div class="ph-req">
+        {% for f in my_follows %}
+        <div class="ph-road-item">
+            {{ f.request.title }}
+            <small>{{ f.request.status|ph_label:'request_status' }} · {{ f.request.votes_count }} رای</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="ph-empty">پیشنهادی را دنبال نمی‌کنید.</p>
+    {% endif %}
+</section>

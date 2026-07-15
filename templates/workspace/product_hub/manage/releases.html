@@ -1,0 +1,84 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags product_hub_tags %}
+
+{% block title %}مدیریت نسخه‌ها{% endblock %}
+{% block mobile_bar_title %}نسخه‌ها{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="mk-page ph-page">
+    <header class="mk-hub-head">
+        <div class="mk-hub-head-main">
+            <h1 class="mk-hub-head-title">انتشار نسخه‌ها</h1>
+            <p class="mk-hub-head-meta">ثبت changelog و اطلاع‌رسانی نسخه جدید</p>
+        </div>
+    </header>
+
+    {% include 'workspace/product_hub/manage/_nav.html' with active='releases' %}
+
+    <section class="ph-panel">
+        <h2>نسخه جدید</h2>
+        <form method="post" class="ph-form-grid">
+            {% csrf_token %}
+            <div class="ph-form-row">
+                <div class="ph-field">
+                    <label>{{ release_form.version.label }}</label>
+                    {{ release_form.version }}
+                </div>
+                <div class="ph-field">
+                    <label>{{ release_form.released_at.label }}</label>
+                    {{ release_form.released_at }}
+                </div>
+            </div>
+            <div class="ph-field">
+                <label>{{ release_form.title.label }}</label>
+                {{ release_form.title }}
+            </div>
+            <div class="ph-field">
+                <label>{{ release_form.summary.label }}</label>
+                {{ release_form.summary }}
+            </div>
+            <div class="ph-field">
+                <label>{{ release_form.is_published.label }}</label>
+                {{ release_form.is_published }}
+            </div>
+            <h3 style="margin:0.5rem 0;font-size:0.95rem">آیتم‌های تغییر</h3>
+            {{ change_formset.management_form }}
+            {% for f in change_formset %}
+            <div class="ph-form-row" style="align-items:end">
+                <div class="ph-field">{{ f.change_type }}</div>
+                <div class="ph-field" style="grid-column: span 1; flex:2">{{ f.text }}</div>
+                {% if f.DELETE %}<div class="ph-field"><label>حذف</label>{{ f.DELETE }}</div>{% endif %}
+                {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+            </div>
+            {% endfor %}
+            <div class="ph-actions">
+                <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">ثبت نسخه</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="ph-panel">
+        <h2>نسخه‌های موجود</h2>
+        <table class="ph-table">
+            <thead><tr><th>نسخه</th><th>عنوان</th><th>تاریخ</th><th>منتشر</th><th></th></tr></thead>
+            <tbody>
+            {% for r in releases %}
+            <tr>
+                <td dir="ltr">{{ r.version }}</td>
+                <td>{{ r.title }}</td>
+                <td>{{ r.released_at|ws_jalali }}</td>
+                <td>{% if r.is_published %}بله{% else %}خیر{% endif %}</td>
+                <td><a href="{% url 'workspace:product_hub:manage_release_edit' r.id %}">ویرایش</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="ph-empty">نسخه‌ای نیست</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+{% endblock %}

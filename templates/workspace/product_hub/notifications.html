@@ -1,0 +1,41 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags %}
+
+{% block title %}اعلان‌های محصول{% endblock %}
+{% block mobile_bar_title %}اعلان‌ها{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="mk-page ph-page">
+    <header class="mk-hub-head">
+        <div class="mk-hub-head-main">
+            <h1 class="mk-hub-head-title">اعلان‌های مرکز توسعه</h1>
+            <p class="mk-hub-head-meta">انتشار قابلیت‌ها و تغییر وضعیت درخواست‌ها</p>
+        </div>
+        <div class="mk-hub-head-actions">
+            <form method="post" action="{% url 'workspace:product_hub:notifications_mark_all' %}">
+                {% csrf_token %}
+                <button type="submit" class="mk-hub-head-btn">علامت‌گذاری همه به‌عنوان خوانده</button>
+            </form>
+            <a href="{% url 'workspace:product_hub:hub' %}" class="mk-hub-head-btn mk-hub-head-btn--primary">بازگشت</a>
+        </div>
+    </header>
+
+    <div class="ph-notif-list">
+        {% for n in notifications %}
+        <a class="ph-notif {% if not n.is_read %}is-unread{% endif %}" href="{{ n.link_path|default:'#' }}">
+            <div>
+                <strong>{{ n.title }}</strong>
+                <p style="margin:0.25rem 0 0;font-size:0.85rem;color:var(--ws-muted)">{{ n.body }}</p>
+                <small style="color:var(--ws-muted)">{{ n.created_at|ws_jalali }}</small>
+            </div>
+        </a>
+        {% empty %}
+        <p class="ph-empty">اعلانی ندارید.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

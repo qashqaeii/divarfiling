@@ -1,0 +1,52 @@
+{% load workspace_tags product_hub_tags %}
+<section class="ph-panel">
+    <h2>قابلیت‌های سیستم</h2>
+    <form method="get" class="ph-filters" role="search">
+        <input type="hidden" name="tab" value="features">
+        <div class="ph-field ph-field--grow">
+            <label for="ph-fq">جستجو</label>
+            <input id="ph-fq" type="search" name="fq" value="{{ feature_q }}" class="ws-input" placeholder="نام یا توضیح قابلیت…">
+        </div>
+        <div class="ph-field">
+            <label for="ph-fcat">دسته‌بندی</label>
+            <select id="ph-fcat" name="fcat" class="ws-select">
+                <option value="">همه</option>
+                {% for val, label in category_choices %}
+                <option value="{{ val }}" {% if feature_cat == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="ph-field">
+            <label for="ph-fstatus">وضعیت</label>
+            <select id="ph-fstatus" name="fstatus" class="ws-select">
+                <option value="">همه</option>
+                {% for val, label in feature_status_choices %}
+                <option value="{{ val }}" {% if feature_status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">اعمال فیلتر</button>
+    </form>
+
+    <div class="ph-grid">
+        {% for f in features %}
+        <article class="ph-card">
+            <div class="ph-card-top">
+                <span class="ph-badge ph-badge--gray">{{ f.category|ph_label:'category' }}</span>
+                <span class="ph-badge {% ph_feature_status_class f.status %}">{{ f.status|ph_label:'feature_status' }}</span>
+            </div>
+            <h3 class="ph-card-title">{{ f.title }}</h3>
+            <p class="ph-card-sum">{{ f.summary }}</p>
+            <div class="ph-card-meta">
+                <span>افزوده: {{ f.added_at|ws_jalali_date }}</span>
+                {% if f.last_changed_at %}
+                <span>·</span>
+                <span>آخرین تغییر: {{ f.last_changed_at|ws_jalali_date }}</span>
+                {% endif %}
+            </div>
+        </article>
+        {% empty %}
+        <p class="ph-empty" style="grid-column:1/-1">قابلیتی با این فیلتر یافت نشد.</p>
+        {% endfor %}
+    </div>
+</section>

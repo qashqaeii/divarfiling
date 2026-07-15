@@ -1,0 +1,35 @@
+{% load workspace_tags product_hub_tags %}
+<section class="ph-panel">
+    <h2>تاریخچه نسخه‌ها</h2>
+    {% if releases %}
+    <ol class="ph-timeline">
+        {% for release in releases %}
+        <li class="ph-tl-item">
+            <article class="ph-tl-card">
+                <div class="ph-tl-head">
+                    <span class="ph-tl-ver">نسخه {{ release.version }}</span>
+                    <time class="ph-tl-date" datetime="{{ release.released_at|date:'c' }}">
+                        {{ release.released_at|ws_jalali }}
+                    </time>
+                </div>
+                <h3 class="ph-tl-title">{{ release.title }}</h3>
+                {% if release.summary and release.summary != release.title %}
+                <p style="margin:0 0 0.75rem;font-size:0.85rem;color:var(--ws-muted)">{{ release.summary }}</p>
+                {% endif %}
+                <ul class="ph-tl-changes">
+                    {% for ch in release.changes.all %}
+                    <li class="ph-tl-change {% ph_change_type_class ch.change_type %}">
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                        <span>{{ ch.text }}</span>
+                        <span class="ph-change-tag">{{ ch.change_type|ph_label:'change_type' }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </article>
+        </li>
+        {% endfor %}
+    </ol>
+    {% else %}
+    <p class="ph-empty">هنوز changelog منتشر نشده است.</p>
+    {% endif %}
+</section>

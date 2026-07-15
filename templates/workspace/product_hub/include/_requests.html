@@ -1,0 +1,96 @@
+{% load workspace_tags product_hub_tags %}
+<section class="ph-panel">
+    <h2>پیشنهاد قابلیت جدید</h2>
+    {% if has_product_action_access %}
+    <form method="post" action="{% url 'workspace:product_hub:request_create' %}" class="ph-form-grid">
+        {% csrf_token %}
+        <div class="ph-field">
+            <label for="id_title">{{ request_form.title.label }}</label>
+            {{ request_form.title }}
+        </div>
+        <div class="ph-form-row">
+            <div class="ph-field">
+                <label for="id_category">{{ request_form.category.label }}</label>
+                {{ request_form.category }}
+            </div>
+            <div class="ph-field">
+                <label for="id_priority">{{ request_form.priority.label }}</label>
+                {{ request_form.priority }}
+            </div>
+        </div>
+        <div class="ph-field">
+            <label for="id_problem">{{ request_form.problem.label }}</label>
+            {{ request_form.problem }}
+        </div>
+        <div class="ph-field">
+            <label for="id_why_important">{{ request_form.why_important.label }}</label>
+            {{ request_form.why_important }}
+        </div>
+        <div class="ph-actions">
+            <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>ثبت پیشنهاد</span>
+            </button>
+        </div>
+    </form>
+    {% else %}
+    <div class="ph-lock">
+        <i class="fas fa-lock" aria-hidden="true"></i>
+        <div>
+            <strong>ثبت پیشنهاد نیاز به لایسنس فعال دارد</strong>
+            <p style="margin:0.35rem 0 0;font-size:0.88rem">می‌توانید پیشنهادهای دیگران را مشاهده کنید. برای ثبت و رای‌دهی لایسنس تهیه کنید.</p>
+            <a href="{% url 'workspace:upgrade' %}?feature=product_hub" class="mk-hub-head-btn mk-hub-head-btn--primary" style="margin-top:0.65rem;display:inline-flex">ارتقا لایسنس</a>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<section class="ph-panel">
+    <h2>پیشنهادهای کاربران</h2>
+    <div class="ph-req">
+        {% for req in feature_requests %}
+        <article class="ph-req-card">
+            {% if has_product_action_access %}
+            <button type="button"
+                    class="ph-vote-btn {% if req.id in voted_ids %}is-on{% endif %}"
+                    data-ph-vote="{% url 'workspace:product_hub:request_vote' req.id %}"
+                    aria-label="رای به پیشنهاد">
+                <i class="fas fa-caret-up" aria-hidden="true"></i>
+                <span data-ph-count>{{ req.votes_count }}</span>
+            </button>
+            {% else %}
+            <div class="ph-vote-btn" title="رای‌دهی با لایسنس فعال">
+                <i class="fas fa-caret-up" aria-hidden="true"></i>
+                <span>{{ req.votes_count }}</span>
+            </div>
+            {% endif %}
+            <div class="ph-req-body">
+                <h3>{{ req.title }}</h3>
+                <p class="ph-req-desc">{{ req.problem }}</p>
+                <div class="ph-req-foot">
+                    <span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span>
+                    <span class="ph-badge ph-badge--gray">{{ req.category|ph_label:'category' }}</span>
+                    <span class="ph-badge ph-badge--amber">اولویت {{ req.priority|ph_label:'priority' }}</span>
+                    <span style="font-size:0.78rem;color:var(--ws-muted)">
+                        {{ req.user.get_full_name|default:req.user.username }} · {{ req.created_at|ws_jalali }}
+                    </span>
+                    {% if has_product_action_access %}
+                    <button type="button"
+                            class="ph-follow-btn {% if req.id in followed_ids %}is-on{% endif %}"
+                            data-ph-follow="{% url 'workspace:product_hub:request_follow' req.id %}">
+                        {% if req.id in followed_ids %}در حال دنبال{% else %}دنبال کردن{% endif %}
+                    </button>
+                    <span style="font-size:0.75rem;color:var(--ws-muted)">
+                        <span data-ph-follows>{{ req.follows_count }}</span> دنبال‌کننده
+                    </span>
+                    {% endif %}
+                    {% if req.status == 'completed' and req.release_note %}
+                    <span class="ph-badge ph-badge--green">منتشر شد{% if req.released_in %} · v{{ req.released_in.version }}{% endif %}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% empty %}
+        <p class="ph-empty">هنوز پیشنهادی ثبت نشده است.</p>
+        {% endfor %}
+    </div>
+</section>

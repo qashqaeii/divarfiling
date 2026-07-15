@@ -19,12 +19,18 @@ def workspace_context(request):
         return ctx
     settings_obj = get_or_create_settings(user)
     access = get_bot_access_state(user)
+    try:
+        from product_hub.services.notifications import unread_count as product_hub_unread_count
+        product_hub_unread = product_hub_unread_count(user)
+    except Exception:
+        product_hub_unread = 0
     ctx.update({
         'ws_settings': settings_obj,
         'bot_license_display': get_bot_license_display(user),
         'bot_buy_url': get_bot_product_buy_url(),
         'crm_nav_counts': _crm_nav_counts(user),
         'support_nav_counts': get_user_ticket_stats(user),
+        'product_hub_unread': product_hub_unread,
         'ai_enabled': is_ai_enabled(),
         'crm_message_tones': CRM_MESSAGE_TONE_CHOICES,
         **access,

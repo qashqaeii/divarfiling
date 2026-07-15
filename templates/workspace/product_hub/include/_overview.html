@@ -1,0 +1,59 @@
+{% load workspace_tags product_hub_tags %}
+<section class="ph-panel">
+    <h2>آخرین بروزرسانی{% if hub_stats.latest_version != '—' %} — <span dir="ltr">v{{ hub_stats.latest_version }}</span>{% endif %}</h2>
+    {% if hub_stats.latest_title %}
+    <p style="margin:0 0 1rem;color:var(--ws-muted)">{{ hub_stats.latest_title }}</p>
+    {% endif %}
+    {% with release=releases.0 %}
+    {% if release %}
+    <ul class="ph-tl-changes">
+        {% for ch in release.changes.all %}
+        <li class="ph-tl-change {% ph_change_type_class ch.change_type %}">
+            <i class="fas fa-check" aria-hidden="true"></i>
+            <span>{{ ch.text }}</span>
+            <span class="ph-change-tag">{{ ch.change_type|ph_label:'change_type' }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    <div class="ph-actions">
+        <a href="?tab=changelog" class="mk-hub-head-btn">مشاهده همه تغییرات</a>
+        <a href="?tab=roadmap" class="mk-hub-head-btn">Roadmap محصول</a>
+    </div>
+    {% else %}
+    <p class="ph-empty">هنوز نسخه‌ای منتشر نشده است.</p>
+    {% endif %}
+    {% endwith %}
+</section>
+
+<section class="ph-panel">
+    <h2>مسیر توسعه در یک نگاه</h2>
+    <div class="ph-road">
+        <div class="ph-road-col">
+            <h3><i class="fas fa-hammer" style="color:#d97706"></i> در حال توسعه</h3>
+            {% for f in roadmap.in_progress|slice:':5' %}
+            <div class="ph-road-item">{{ f.title }}</div>
+            {% empty %}
+            <p class="ph-empty" style="padding:0.5rem">موردی نیست</p>
+            {% endfor %}
+        </div>
+        <div class="ph-road-col">
+            <h3><i class="fas fa-map" style="color:#2563eb"></i> آینده</h3>
+            {% for f in roadmap.planned|slice:':5' %}
+            <div class="ph-road-item">{{ f.title }}</div>
+            {% empty %}
+            <p class="ph-empty" style="padding:0.5rem">موردی نیست</p>
+            {% endfor %}
+        </div>
+        <div class="ph-road-col">
+            <h3><i class="fas fa-fire" style="color:#dc2626"></i> ایده‌های محبوب</h3>
+            {% for r in roadmap.popular_ideas|slice:':5' %}
+            <div class="ph-road-item">
+                {{ r.title }}
+                <small>{{ r.votes_count }} رای · {{ r.status|ph_label:'request_status' }}</small>
+            </div>
+            {% empty %}
+            <p class="ph-empty" style="padding:0.5rem">هنوز پیشنهادی نیست</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>

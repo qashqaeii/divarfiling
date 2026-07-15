@@ -1,0 +1,92 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags product_hub_tags %}
+
+{% block title %}مدیریت مرکز توسعه{% endblock %}
+{% block mobile_bar_title %}مدیریت محصول{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="mk-page ph-page">
+    <header class="mk-hub-head">
+        <div class="mk-hub-head-main">
+            <p class="mk-hub-head-eyebrow">Staff</p>
+            <h1 class="mk-hub-head-title">مدیریت مرکز توسعه</h1>
+            <p class="mk-hub-head-meta">وضعیت پیشنهادها، باگ‌ها و انتشار نسخه</p>
+        </div>
+        <div class="mk-hub-head-actions">
+            <a href="{% url 'workspace:product_hub:hub' %}" class="mk-hub-head-btn">بازگشت به Hub</a>
+        </div>
+    </header>
+
+    {% include 'workspace/product_hub/manage/_nav.html' with active='dashboard' %}
+
+    <section class="mk-hub-metrics">
+        <div class="mk-hub-metric" data-tone="amber">
+            <span class="mk-hub-metric-body">
+                <span class="mk-hub-metric-val">{{ manage_stats.requests_pending }}</span>
+                <span class="mk-hub-metric-lbl">در انتظار بررسی</span>
+            </span>
+        </div>
+        <div class="mk-hub-metric" data-tone="blue">
+            <span class="mk-hub-metric-body">
+                <span class="mk-hub-metric-val">{{ manage_stats.requests_dev }}</span>
+                <span class="mk-hub-metric-lbl">در حال توسعه</span>
+            </span>
+        </div>
+        <div class="mk-hub-metric" data-tone="red">
+            <span class="mk-hub-metric-body">
+                <span class="mk-hub-metric-val">{{ manage_stats.bugs_open }}</span>
+                <span class="mk-hub-metric-lbl">باگ باز</span>
+            </span>
+        </div>
+        <div class="mk-hub-metric" data-tone="purple">
+            <span class="mk-hub-metric-body">
+                <span class="mk-hub-metric-val">{{ manage_stats.bugs_critical }}</span>
+                <span class="mk-hub-metric-lbl">بحرانی</span>
+            </span>
+        </div>
+    </section>
+
+    <section class="ph-panel">
+        <h2>پیشنهادهای فعال</h2>
+        <table class="ph-table">
+            <thead><tr><th>عنوان</th><th>کاربر</th><th>وضعیت</th><th>رای</th><th></th></tr></thead>
+            <tbody>
+            {% for req in pending_requests %}
+            <tr>
+                <td>{{ req.title }}</td>
+                <td>{{ req.user }}</td>
+                <td><span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span></td>
+                <td>{{ req.votes_count }}</td>
+                <td><a href="{% url 'workspace:product_hub:manage_request' req.id %}">مدیریت</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="ph-empty">موردی نیست</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <section class="ph-panel">
+        <h2>باگ‌های باز</h2>
+        <table class="ph-table">
+            <thead><tr><th>عنوان</th><th>شدت</th><th>وضعیت</th><th></th></tr></thead>
+            <tbody>
+            {% for bug in open_bugs %}
+            <tr>
+                <td>{{ bug.title }}</td>
+                <td><span class="ph-badge {% ph_bug_severity_class bug.severity %}">{{ bug.severity|ph_label:'severity' }}</span></td>
+                <td><span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span></td>
+                <td><a href="{% url 'workspace:product_hub:manage_bug' bug.id %}">مدیریت</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="ph-empty">موردی نیست</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+{% endblock %}

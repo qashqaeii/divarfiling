@@ -1,0 +1,57 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags product_hub_tags %}
+
+{% block title %}مدیریت باگ{% endblock %}
+{% block mobile_bar_title %}مدیریت باگ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="mk-page ph-page">
+    <header class="mk-hub-head">
+        <div class="mk-hub-head-main">
+            <p class="mk-hub-head-eyebrow">باگ #{{ bug.id }}</p>
+            <h1 class="mk-hub-head-title">{{ bug.title }}</h1>
+            <p class="mk-hub-head-meta">{{ bug.user }} · {{ bug.created_at|ws_jalali }}</p>
+        </div>
+        <div class="mk-hub-head-actions">
+            <a href="{% url 'workspace:product_hub:manage' %}" class="mk-hub-head-btn">بازگشت</a>
+        </div>
+    </header>
+
+    {% include 'workspace/product_hub/manage/_nav.html' with active='dashboard' %}
+
+    <section class="ph-panel">
+        <p>
+            <span class="ph-badge {% ph_bug_severity_class bug.severity %}">{{ bug.severity|ph_label:'severity' }}</span>
+            <span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span>
+        </p>
+        <p style="white-space:pre-wrap">{{ bug.description }}</p>
+    </section>
+
+    <section class="ph-panel">
+        <h2>تغییر وضعیت</h2>
+        <form method="post" class="ph-form-grid">
+            {% csrf_token %}
+            <div class="ph-field">
+                <label>{{ status_form.status.label }}</label>
+                {{ status_form.status }}
+            </div>
+            <div class="ph-field">
+                <label>{{ status_form.resolution_note.label }}</label>
+                {{ status_form.resolution_note }}
+                <small style="color:var(--ws-muted)">برای وضعیت «رفع شده» توضیح رفع الزامی است.</small>
+            </div>
+            <div class="ph-field">
+                <label>{{ status_form.note.label }}</label>
+                {{ status_form.note }}
+            </div>
+            <div class="ph-actions">
+                <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">ذخیره</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

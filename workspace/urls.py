@@ -9,6 +9,7 @@ urlpatterns = [
     path('', views.WorkspaceHomeView.as_view(), name='home'),
     path('api/onboarding/complete/', views.OnboardingCompleteView.as_view(), name='onboarding_complete'),
     path('ai/', include(('ai_workspace.urls', 'ai_workspace'))),
+    path('product/', include(('product_hub.urls', 'product_hub'))),
 
     # Datasets
     path('datasets/', views.DatasetListView.as_view(), name='dataset_list'),

@@ -1,0 +1,63 @@
+{% load workspace_tags product_hub_tags %}
+<section class="ph-panel">
+    <h2>گزارش مشکل</h2>
+    {% if has_product_action_access %}
+    <form method="post" action="{% url 'workspace:product_hub:bug_create' %}" class="ph-form-grid">
+        {% csrf_token %}
+        <div class="ph-form-row">
+            <div class="ph-field">
+                <label for="id_title">{{ bug_form.title.label }}</label>
+                {{ bug_form.title }}
+            </div>
+            <div class="ph-field">
+                <label for="id_severity">{{ bug_form.severity.label }}</label>
+                {{ bug_form.severity }}
+            </div>
+        </div>
+        <div class="ph-field">
+            <label for="id_description">{{ bug_form.description.label }}</label>
+            {{ bug_form.description }}
+        </div>
+        <div class="ph-actions">
+            <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">
+                <i class="fas fa-bug" aria-hidden="true"></i><span>ثبت گزارش</span>
+            </button>
+        </div>
+    </form>
+    {% else %}
+    <div class="ph-lock">
+        <i class="fas fa-lock" aria-hidden="true"></i>
+        <div>
+            <strong>گزارش باگ نیاز به لایسنس فعال دارد</strong>
+            <p style="margin:0.35rem 0 0;font-size:0.88rem">مشکلات رفع‌شده را می‌توانید در لیست زیر ببینید.</p>
+            <a href="{% url 'workspace:upgrade' %}?feature=product_hub" class="mk-hub-head-btn mk-hub-head-btn--primary" style="margin-top:0.65rem;display:inline-flex">ارتقا لایسنس</a>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<section class="ph-panel">
+    <h2>وضعیت مشکلات</h2>
+    <div class="ph-req">
+        {% for bug in bug_reports %}
+        <article class="ph-req-card" style="grid-template-columns:1fr">
+            <div class="ph-req-body">
+                <h3>{{ bug.title }}</h3>
+                <p class="ph-req-desc">{{ bug.description }}</p>
+                <div class="ph-req-foot">
+                    <span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span>
+                    <span class="ph-badge {% ph_bug_severity_class bug.severity %}">شدت {{ bug.severity|ph_label:'severity' }}</span>
+                    <span style="font-size:0.78rem;color:var(--ws-muted)">{{ bug.created_at|ws_jalali }}</span>
+                    {% if bug.status == 'resolved' and bug.resolution_note %}
+                    <span style="font-size:0.82rem;width:100%;margin-top:0.25rem;color:var(--ws-text)">
+                        <strong>رفع:</strong> {{ bug.resolution_note }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% empty %}
+        <p class="ph-empty">گزارش عمومی‌ای ثبت نشده است.</p>
+        {% endfor %}
+    </div>
+</section>

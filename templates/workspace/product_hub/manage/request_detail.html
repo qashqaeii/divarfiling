@@ -1,0 +1,89 @@
+{% extends 'workspace/base.html' %}
+{% load static workspace_tags product_hub_tags %}
+
+{% block title %}مدیریت پیشنهاد{% endblock %}
+{% block mobile_bar_title %}مدیریت پیشنهاد{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="mk-page ph-page">
+    <header class="mk-hub-head">
+        <div class="mk-hub-head-main">
+            <p class="mk-hub-head-eyebrow">پیشنهاد #{{ req.id }}</p>
+            <h1 class="mk-hub-head-title">{{ req.title }}</h1>
+            <p class="mk-hub-head-meta">{{ req.user }} · {{ req.created_at|ws_jalali }} · {{ req.votes_count }} رای</p>
+        </div>
+        <div class="mk-hub-head-actions">
+            <a href="{% url 'workspace:product_hub:manage' %}" class="mk-hub-head-btn">بازگشت</a>
+        </div>
+    </header>
+
+    {% include 'workspace/product_hub/manage/_nav.html' with active='dashboard' %}
+
+    <section class="ph-panel">
+        <h2>جزئیات</h2>
+        <p><strong>دسته‌بندی:</strong> {{ req.category|ph_label:'category' }} · <strong>اولویت:</strong> {{ req.priority|ph_label:'priority' }}</p>
+        <p><strong>وضعیت فعلی:</strong> <span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span></p>
+        <p><strong>مشکل:</strong></p>
+        <p style="white-space:pre-wrap">{{ req.problem }}</p>
+        <p><strong>اهمیت:</strong></p>
+        <p style="white-space:pre-wrap">{{ req.why_important }}</p>
+    </section>
+
+    <section class="ph-panel">
+        <h2>تغییر وضعیت / انتشار</h2>
+        <form method="post" class="ph-form-grid">
+            {% csrf_token %}
+            <div class="ph-form-row">
+                <div class="ph-field">
+                    <label>{{ status_form.status.label }}</label>
+                    {{ status_form.status }}
+                </div>
+                <div class="ph-field">
+                    <label>{{ status_form.released_in.label }}</label>
+                    {{ status_form.released_in }}
+                </div>
+            </div>
+            <div class="ph-field">
+                <label>{{ status_form.linked_feature.label }}</label>
+                {{ status_form.linked_feature }}
+            </div>
+            <div class="ph-field">
+                <label>{{ status_form.release_note.label }}</label>
+                {{ status_form.release_note }}
+                <small style="color:var(--ws-muted)">برای وضعیت «تکمیل شده» نسخه و توضیح انتشار الزامی است.</small>
+            </div>
+            <div class="ph-field">
+                <label>{{ status_form.note.label }}</label>
+                {{ status_form.note }}
+            </div>
+            <div class="ph-actions">
+                <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">ذخیره وضعیت</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="ph-panel">
+        <h2>تاریخچه وضعیت</h2>
+        <table class="ph-table">
+            <thead><tr><th>از</th><th>به</th><th>توسط</th><th>توضیح</th><th>زمان</th></tr></thead>
+            <tbody>
+            {% for log in status_logs %}
+            <tr>
+                <td>{{ log.from_status|ph_label:'request_status'|default:'—' }}</td>
+                <td>{{ log.to_status|ph_label:'request_status' }}</td>
+                <td>{{ log.actor|default:'—' }}</td>
+                <td>{{ log.note|default:'—' }}</td>
+                <td>{{ log.created_at|ws_jalali }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="ph-empty">هنوز تغییری ثبت نشده</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+{% endblock %}

@@ -440,6 +440,34 @@
         background: var(--ws-surface-2);
     }
 
+    /* Defer card layout to crm-contacts-mobile.css when present */
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable {
+        padding: 0;
+        padding-inline-end: 0;
+        gap: 0;
+        cursor: default;
+    }
+    .crm-contacts-mobile .crm-contacts-table td.crm-contacts-col-check {
+        display: none !important;
+        position: static;
+    }
+    .crm-contacts-mobile .crm-contacts-table td.crm-contacts-col-phone,
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable > td.crm-contacts-col-type,
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable > td.crm-contacts-col-status,
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable > td.crm-contacts-col-priority,
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable > td.crm-contacts-col-date {
+        display: none !important;
+    }
+    .crm-contacts-mobile .crm-contacts-table td.crm-contacts-col-phone::before {
+        content: none;
+        display: none;
+    }
+    .crm-contacts-mobile .crm-contacts-table td.crm-contacts-col-actions {
+        border-top: none;
+        padding-top: 0 !important;
+        margin-top: 0;
+    }
+
     .crm-contacts-alert {
         flex-wrap: wrap;
         gap: 0.4rem;

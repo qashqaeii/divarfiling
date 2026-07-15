@@ -269,13 +269,15 @@
                     </thead>
                     <tbody>
                         {% for c in customers %}
-                        <tr data-id="{{ c.id }}" class="crm-row-selectable{% if c.next_follow_up %} crm-row-has-followup{% endif %}" data-panel-url="{% url 'workspace:crm_contact_panel' c.id %}">
+                        <tr data-id="{{ c.id }}" class="crm-row-selectable{% if c.next_follow_up %} crm-row-has-followup{% endif %}{% if c.next_follow_up and c.next_follow_up < today %} crm-row-followup-overdue{% elif c.next_follow_up == today %} crm-row-followup-today{% endif %}" data-panel-url="{% url 'workspace:crm_contact_panel' c.id %}" style="--crm-card-accent: {{ c.status|crm_status_dot }}">
                             <td class="crm-contacts-col-check"><input type="checkbox" class="crm-checkbox crm-row-check" value="{{ c.id }}"></td>
                             <td>
                                 <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-person crm-contacts-person-link">
+                                    <span class="crm-contacts-avatar crm-contacts-avatar--hue-{{ c.name|crm_avatar_hue }}" aria-hidden="true">{{ c.name|crm_initials }}</span>
                                     <div class="crm-contacts-person-text">
                                         <span class="crm-contacts-name">{{ c.name }}</span>
                                         {% if c.company_name %}<span class="crm-contacts-sub">{{ c.company_name }}</span>{% endif %}
+                                        {% if c.phone %}<span class="crm-contacts-mob-phone" dir="ltr">{{ c.phone }}</span>{% endif %}
                                         <span class="crm-contacts-mob-meta">
                                             <span class="crm-contacts-type">{{ c.customer_type }}</span>
                                             <span class="crm-contacts-status">
@@ -283,6 +285,12 @@
                                                 {{ c.status }}
                                             </span>
                                             {% if c.priority == 'بالا' %}<span class="crm-contacts-priority crm-contacts-priority--high">بالا</span>{% endif %}
+                                            {% if c.next_follow_up %}
+                                            <span class="crm-contacts-mob-followup{% if c.next_follow_up < today %} crm-contacts-followup--overdue{% elif c.next_follow_up == today %} crm-contacts-followup--today{% endif %}">
+                                                <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                                                {{ c.next_follow_up|ws_jalali }}
+                                            </span>
+                                            {% endif %}
                                         </span>
                                     </div>
                                     <i class="fas fa-chevron-left crm-contacts-mob-chevron" aria-hidden="true"></i>
@@ -309,7 +317,33 @@
                                 {% else %}<span class="crm-contacts-muted">—</span>{% endif %}
                             </td>
                             <td class="crm-contacts-col-actions">
-                                <div class="crm-contacts-row-actions">
+                                <div class="crm-contacts-mob-actions" role="group" aria-label="عملیات سریع">
+                                    {% if c.phone %}
+                                    <a href="{{ c.phone|phone_tel_href }}" class="crm-contacts-mob-act crm-contacts-mob-act--call" title="تماس" aria-label="تماس با {{ c.name }}">
+                                        <span class="crm-contacts-mob-act-icon"><i class="fas fa-phone" aria-hidden="true"></i></span>
+                                        <span class="crm-contacts-mob-act-label">تماس</span>
+                                    </a>
+                                    <a href="{{ c.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-contacts-mob-act crm-contacts-mob-act--wa" title="واتساپ" aria-label="واتساپ {{ c.name }}">
+                                        <span class="crm-contacts-mob-act-icon"><i class="fab fa-whatsapp" aria-hidden="true"></i></span>
+                                        <span class="crm-contacts-mob-act-label">واتساپ</span>
+                                    </a>
+                                    <a href="{{ c.phone|phone_sms_href }}" class="crm-contacts-mob-act crm-contacts-mob-act--sms" title="پیامک" aria-label="پیامک به {{ c.name }}">
+                                        <span class="crm-contacts-mob-act-icon"><i class="fas fa-comment-sms" aria-hidden="true"></i></span>
+                                        <span class="crm-contacts-mob-act-label">پیامک</span>
+                                    </a>
+                                    {% endif %}
+                                    {% if c.customer_type in match_eligible_types %}
+                                    <a href="{% url 'workspace:crm_detail' c.id %}?tab=matches" class="crm-contacts-mob-act crm-contacts-mob-act--match" title="پیشنهاد ملک" aria-label="پیشنهاد ملک برای {{ c.name }}">
+                                        <span class="crm-contacts-mob-act-icon"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                                        <span class="crm-contacts-mob-act-label">ملک</span>
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-mob-act crm-contacts-mob-act--profile" title="پروفایل" aria-label="پروفایل {{ c.name }}">
+                                        <span class="crm-contacts-mob-act-icon"><i class="fas fa-user" aria-hidden="true"></i></span>
+                                        <span class="crm-contacts-mob-act-label">پروفایل</span>
+                                    </a>
+                                </div>
+                                <div class="crm-contacts-row-actions crm-contacts-desk-actions">
                                     {% if c.customer_type in match_eligible_types %}
                                     <a href="{% url 'workspace:crm_detail' c.id %}?tab=matches" class="crm-contacts-row-act crm-contacts-row-act--match" title="پیشنهاد ملک"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></a>
                                     {% endif %}

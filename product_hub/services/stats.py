@@ -35,12 +35,12 @@ def get_hub_stats():
 def get_roadmap_data():
     features = ProductFeature.objects.filter(is_published=True)
     return {
-        'in_progress': features.filter(status='in_progress'),
-        'planned': features.filter(status='planned'),
-        'popular_ideas': FeatureRequest.objects.filter(
+        'in_progress': list(features.filter(status='in_progress')),
+        'planned': list(features.filter(status='planned')),
+        'popular_ideas': list(FeatureRequest.objects.filter(
             is_public=True,
             status__in=('approved', 'in_development', 'submitted', 'reviewing'),
-        ).order_by('-votes_count', '-created_at')[:12],
+        ).order_by('-votes_count', '-created_at')[:12]),
     }
 
 

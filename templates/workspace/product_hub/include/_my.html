@@ -1,98 +1,115 @@
 ﻿{% load workspace_tags product_hub_tags %}
+<div class="ph-stack">
 <section class="ph-panel">
     <div class="ph-panel-head">
-        <div>
-            <h2>پیشنهادهای من</h2>
-            <p>وضعیت پیشرفت درخواست‌هایی که خودتان ثبت کرده‌اید</p>
+        <div class="ph-panel-head-main">
+            <span class="ph-panel-ico ph-panel-ico--amber" aria-hidden="true"><i class="fas fa-user-pen"></i></span>
+            <div>
+                <h2>پیشنهادهای من</h2>
+                <p>وضعیت پیشرفت پیشنهادهایی که خودتان ثبت کرده‌اید</p>
+            </div>
         </div>
+        <a href="?tab=requests" class="ph-btn ph-btn--ghost">ثبت پیشنهاد تازه</a>
     </div>
+
     {% if my_requests %}
-    <div style="overflow-x:auto">
-    <table class="ph-table">
-        <thead>
-            <tr>
-                <th>عنوان</th>
-                <th>وضعیت</th>
-                <th>رای</th>
-                <th>تاریخ</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for req in my_requests %}
-            <tr>
-                <td>{{ req.title }}</td>
-                <td><span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span></td>
-                <td>{{ req.votes_count }}</td>
-                <td>{{ req.created_at|ws_jalali_date }}</td>
-            </tr>
-            {% if req.status == 'completed' and req.release_note %}
-            <tr>
-                <td colspan="4" style="color:var(--ds-text-muted);font-size:0.8rem;padding-top:0">
-                    {% if req.released_in %}در نسخه {{ req.released_in.version }}: {% endif %}{{ req.release_note }}
-                </td>
-            </tr>
-            {% endif %}
-            {% endfor %}
-        </tbody>
-    </table>
-    </div>
-    {% else %}
-    <p class="ph-empty">هنوز پیشنهادی ثبت نکرده‌اید. از تب «پیشنهادها» شروع کنید.</p>
-    {% endif %}
-</section>
-
-<section class="ph-panel">
-    <div class="ph-panel-head">
-        <div>
-            <h2>گزارش‌های باگ من</h2>
-            <p>پیگیری مشکلاتی که گزارش کرده‌اید</p>
-        </div>
-    </div>
-    {% if my_bugs %}
-    <div style="overflow-x:auto">
-    <table class="ph-table">
-        <thead>
-            <tr>
-                <th>عنوان</th>
-                <th>شدت</th>
-                <th>وضعیت</th>
-                <th>تاریخ</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for bug in my_bugs %}
-            <tr>
-                <td>{{ bug.title }}</td>
-                <td><span class="ph-badge {% ph_bug_severity_class bug.severity %}">{{ bug.severity|ph_label:'severity' }}</span></td>
-                <td><span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span></td>
-                <td>{{ bug.created_at|ws_jalali_date }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    </div>
-    {% else %}
-    <p class="ph-empty">گزارشی ندارید.</p>
-    {% endif %}
-</section>
-
-<section class="ph-panel">
-    <div class="ph-panel-head">
-        <div>
-            <h2>در حال دنبال</h2>
-            <p>پیشنهادهایی که دنبال می‌کنید — با انتشار به شما خبر می‌دهیم</p>
-        </div>
-    </div>
-    {% if my_follows %}
-    <div class="ph-req">
-        {% for f in my_follows %}
-        <div class="ph-road-item">
-            {{ f.request.title }}
-            <small>{{ f.request.status|ph_label:'request_status' }} · {{ f.request.votes_count }} رای</small>
-        </div>
+    <div class="ph-mine-list">
+        {% for req in my_requests %}
+        <article class="ph-mine-card">
+            <div class="ph-mine-card-main">
+                <h3>{{ req.title }}</h3>
+                <div class="ph-mine-meta">
+                    <span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span>
+                    <span class="ph-mine-stat"><i class="fas fa-caret-up" aria-hidden="true"></i> {{ req.votes_count }} رای</span>
+                    <span class="ph-mine-stat"><i class="far fa-calendar" aria-hidden="true"></i> {{ req.created_at|ws_jalali_date }}</span>
+                </div>
+                {% if req.status == 'completed' and req.release_note %}
+                <p class="ph-mine-note">
+                    {% if req.released_in %}<strong>نسخه {{ req.released_in.version }}:</strong> {% endif %}{{ req.release_note }}
+                </p>
+                {% endif %}
+            </div>
+        </article>
         {% endfor %}
     </div>
     {% else %}
-    <p class="ph-empty">پیشنهادی را دنبال نمی‌کنید.</p>
+    <div class="ph-empty-state">
+        <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-inbox"></i></span>
+        <strong>هنوز پیشنهادی ثبت نکرده‌اید</strong>
+        <p>از تب «پیشنهادها» ایده خودتان را بفرستید.</p>
+        <a href="?tab=requests" class="ph-btn ph-btn--primary">رفتن به پیشنهادها</a>
+    </div>
     {% endif %}
 </section>
+
+<section class="ph-panel">
+    <div class="ph-panel-head">
+        <div class="ph-panel-head-main">
+            <span class="ph-panel-ico ph-panel-ico--rose" aria-hidden="true"><i class="fas fa-bug"></i></span>
+            <div>
+                <h2>گزارش‌های باگ من</h2>
+                <p>پیگیری مشکلاتی که گزارش کرده‌اید</p>
+            </div>
+        </div>
+        <a href="?tab=bugs" class="ph-btn ph-btn--ghost">ثبت گزارش تازه</a>
+    </div>
+
+    {% if my_bugs %}
+    <div class="ph-mine-list">
+        {% for bug in my_bugs %}
+        <article class="ph-mine-card">
+            <div class="ph-mine-card-main">
+                <h3>{{ bug.title }}</h3>
+                <div class="ph-mine-meta">
+                    <span class="ph-badge {% ph_bug_severity_class bug.severity %}">شدت {{ bug.severity|ph_label:'severity' }}</span>
+                    <span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span>
+                    <span class="ph-mine-stat"><i class="far fa-calendar" aria-hidden="true"></i> {{ bug.created_at|ws_jalali_date }}</span>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="ph-empty-state">
+        <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-clipboard"></i></span>
+        <strong>گزارشی ندارید</strong>
+        <p>اگر مشکلی دیدید، از تب باگ‌ها گزارش دهید.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section class="ph-panel">
+    <div class="ph-panel-head">
+        <div class="ph-panel-head-main">
+            <span class="ph-panel-ico ph-panel-ico--teal" aria-hidden="true"><i class="fas fa-bell"></i></span>
+            <div>
+                <h2>در حال دنبال</h2>
+                <p>پیشنهادهایی که دنبال می‌کنید — با انتشار خبر می‌دهیم</p>
+            </div>
+        </div>
+    </div>
+
+    {% if my_follows %}
+    <div class="ph-mine-list">
+        {% for f in my_follows %}
+        <article class="ph-mine-card ph-mine-card--follow">
+            <div class="ph-mine-card-main">
+                <h3>{{ f.request.title }}</h3>
+                <div class="ph-mine-meta">
+                    <span class="ph-badge {% ph_request_status_class f.request.status %}">{{ f.request.status|ph_label:'request_status' }}</span>
+                    <span class="ph-mine-stat"><i class="fas fa-caret-up" aria-hidden="true"></i> {{ f.request.votes_count }} رای</span>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="ph-empty-state">
+        <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-eye"></i></span>
+        <strong>پیشنهادی را دنبال نمی‌کنید</strong>
+        <p>در تب پیشنهادها، موارد مهم را دنبال کنید تا از پیشرفت خبر بگیرید.</p>
+        <a href="?tab=requests" class="ph-btn ph-btn--ghost">مشاهده پیشنهادها</a>
+    </div>
+    {% endif %}
+</section>
+</div>

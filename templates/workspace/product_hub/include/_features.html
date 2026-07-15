@@ -1,13 +1,16 @@
 ﻿{% load workspace_tags product_hub_tags %}
 <section class="ph-panel ph-feat-panel">
     <div class="ph-panel-head">
-        <div>
-            <h2>چه کارهایی می‌توانید بکنید؟</h2>
-            <p>
-                همه امکانات فایلینگ دیوار، به زبان خودتان و به‌تفکیک کار روزمره مشاور —
-                از گرفتن فایل تا بستن معامله.
-                {% if features_count %}<span class="ph-feat-total">{{ features_count }} قابلیت</span>{% endif %}
-            </p>
+        <div class="ph-panel-head-main">
+            <span class="ph-panel-ico ph-panel-ico--teal" aria-hidden="true"><i class="fas fa-puzzle-piece"></i></span>
+            <div>
+                <h2>چه کارهایی می‌توانید بکنید؟</h2>
+                <p>
+                    همه امکانات فایلینگ دیوار، به زبان کار روزمره مشاور —
+                    از گرفتن فایل تا بستن معامله.
+                    {% if features_count %}<span class="ph-feat-total">{{ features_count }} قابلیت</span>{% endif %}
+                </p>
+            </div>
         </div>
     </div>
 
@@ -36,7 +39,7 @@
                 {% endfor %}
             </select>
         </div>
-        <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">اعمال</button>
+        <button type="submit" class="ph-btn ph-btn--primary">اعمال فیلتر</button>
     </form>
 
     {% if feature_groups %}
@@ -63,8 +66,8 @@
     <div class="ph-feat-sections">
         {% for g in feature_groups %}
         <section class="ph-feat-section" id="feat-cat-{{ g.key }}" data-cat="{{ g.key }}">
-            <header class="ph-feat-section-head">
-                <div class="ph-feat-section-mark ph-feat-section-mark--{{ g.key }}" aria-hidden="true">
+            <header class="ph-feat-section-head ph-feat-section-head--{{ g.key }}">
+                <div class="ph-feat-section-mark" aria-hidden="true">
                     {% if g.key == 'filing' %}<i class="fas fa-folder-open"></i>
                     {% elif g.key == 'extraction' %}<i class="fas fa-magnet"></i>
                     {% elif g.key == 'crm' %}<i class="fas fa-briefcase"></i>
@@ -95,18 +98,60 @@
 
             <div class="ph-feat-grid">
                 {% for f in g.items %}
-                <article class="ph-feat-card ph-feat-card--{{ f.status }}">
-                    <div class="ph-feat-card-top">
-                        <span class="ph-badge {% ph_feature_status_class f.status %}">{{ f.status|ph_label:'feature_status' }}</span>
+                <article class="ph-feat-card ph-feat-card--{{ f.status }} ph-feat-card-cat--{{ g.key }}"
+                         style="--ph-stagger: {{ forloop.counter0 }}">
+                    <div class="ph-feat-card-shine" aria-hidden="true"></div>
+                    <div class="ph-feat-card-inner">
+                        <header class="ph-feat-card-head">
+                            <span class="ph-feat-card-ico" aria-hidden="true">
+                                {% if g.key == 'filing' %}<i class="fas fa-folder-open"></i>
+                                {% elif g.key == 'extraction' %}<i class="fas fa-magnet"></i>
+                                {% elif g.key == 'crm' %}<i class="fas fa-briefcase"></i>
+                                {% elif g.key == 'customers' %}<i class="fas fa-address-book"></i>
+                                {% elif g.key == 'deals' %}<i class="fas fa-handshake"></i>
+                                {% elif g.key == 'reports' %}<i class="fas fa-chart-pie"></i>
+                                {% elif g.key == 'tools' %}<i class="fas fa-scale-balanced"></i>
+                                {% elif g.key == 'mobile' %}<i class="fas fa-mobile-screen-button"></i>
+                                {% else %}<i class="fas fa-desktop"></i>{% endif %}
+                            </span>
+                            <span class="ph-feat-status ph-feat-status--{{ f.status }}">
+                                <span class="ph-feat-status-dot" aria-hidden="true"></span>
+                                {{ f.status|ph_label:'feature_status' }}
+                            </span>
+                        </header>
+
+                        <h4 class="ph-feat-card-title">{{ f.title }}</h4>
+                        <p class="ph-feat-card-sum">{{ f.summary }}</p>
+
+                        <div class="ph-feat-card-cue">
+                            {% if f.status == 'active' %}
+                            <i class="fas fa-circle-check" aria-hidden="true"></i>
+                            <span>همین الان در میزکار در دسترس است</span>
+                            {% elif f.status == 'beta' %}
+                            <i class="fas fa-flask" aria-hidden="true"></i>
+                            <span>نسخه آزمایشی — امتحان کنید و نظر بدهید</span>
+                            {% elif f.status == 'in_progress' %}
+                            <i class="fas fa-hammer" aria-hidden="true"></i>
+                            <span>در حال ساخت؛ به‌زودی کامل‌تر می‌شود</span>
+                            {% else %}
+                            <i class="fas fa-road" aria-hidden="true"></i>
+                            <span>روی نقشه راه است؛ هنوز آماده نیست</span>
+                            {% endif %}
+                        </div>
+
+                        <footer class="ph-feat-card-foot">
+                            <span class="ph-feat-meta">
+                                <i class="far fa-calendar" aria-hidden="true"></i>
+                                از {{ f.added_at|ws_jalali_date }}
+                            </span>
+                            {% if f.last_changed_at and f.last_changed_at != f.added_at %}
+                            <span class="ph-feat-meta ph-feat-meta--fresh">
+                                <i class="fas fa-rotate" aria-hidden="true"></i>
+                                به‌روز {{ f.last_changed_at|ws_jalali_date }}
+                            </span>
+                            {% endif %}
+                        </footer>
                     </div>
-                    <h4 class="ph-feat-card-title">{{ f.title }}</h4>
-                    <p class="ph-feat-card-sum">{{ f.summary }}</p>
-                    <footer class="ph-feat-card-foot">
-                        <span>از {{ f.added_at|ws_jalali_date }}</span>
-                        {% if f.last_changed_at and f.last_changed_at != f.added_at %}
-                        <span>به‌روز {{ f.last_changed_at|ws_jalali_date }}</span>
-                        {% endif %}
-                    </footer>
                 </article>
                 {% endfor %}
             </div>
@@ -114,6 +159,10 @@
         {% endfor %}
     </div>
     {% else %}
-    <p class="ph-empty">قابلیتی با این فیلتر پیدا نشد. فیلتر را عوض کنید یا جستجو را خالی بگذارید.</p>
+    <div class="ph-empty-state">
+        <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-search"></i></span>
+        <strong>قابلیتی با این فیلتر پیدا نشد</strong>
+        <p>فیلتر را عوض کنید یا جستجو را خالی بگذارید.</p>
+    </div>
     {% endif %}
 </section>

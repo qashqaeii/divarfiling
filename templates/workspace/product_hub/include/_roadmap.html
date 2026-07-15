@@ -1,43 +1,69 @@
 ﻿{% load product_hub_tags %}
 <section class="ph-panel">
     <div class="ph-panel-head">
-        <div>
-            <h2>Roadmap محصول</h2>
-            <p>نقشه راه فایلینگ دیوار — شفاف، اولویت‌بندی‌شده و قابل پیگیری</p>
+        <div class="ph-panel-head-main">
+            <span class="ph-panel-ico ph-panel-ico--blue" aria-hidden="true"><i class="fas fa-map"></i></span>
+            <div>
+                <h2>نقشه راه محصول</h2>
+                <p>چه چیزهایی در حال ساخت است، چه چیزهایی در راه است، و ایده‌های محبوب شما</p>
+            </div>
         </div>
     </div>
+
     <div class="ph-road">
-        <div class="ph-road-col">
-            <h3><span class="ph-badge ph-badge--amber"><i class="fas fa-hammer" aria-hidden="true"></i> در حال توسعه</span></h3>
+        <div class="ph-road-col ph-road-col--building">
+            <header class="ph-road-col-head">
+                <div>
+                    <span class="ph-badge ph-badge--amber"><i class="fas fa-hammer" aria-hidden="true"></i> در حال ساخت</span>
+                    <p class="ph-road-col-hint">تیم الان روی این‌ها کار می‌کند</p>
+                </div>
+                <span class="ph-road-col-count">{{ roadmap.in_progress|length }}</span>
+            </header>
             {% for f in roadmap.in_progress %}
-            <div class="ph-road-item">
-                {{ f.title }}
-                <small>{{ f.category|ph_label:'category' }} · {{ f.summary|truncatechars:70 }}</small>
-            </div>
+            <article class="ph-road-item">
+                <strong>{{ f.title }}</strong>
+                <small>{{ f.category|ph_label:'category' }}</small>
+                {% if f.summary %}<p class="ph-road-item-sum">{{ f.summary|truncatechars:90 }}</p>{% endif %}
+            </article>
             {% empty %}
-            <p class="ph-empty" style="padding:0.5rem">موردی نیست</p>
+            <p class="ph-empty-inline">الان موردی در ساخت نیست</p>
             {% endfor %}
         </div>
-        <div class="ph-road-col">
-            <h3><span class="ph-badge ph-badge--blue"><i class="fas fa-road" aria-hidden="true"></i> قابلیت‌های آینده</span></h3>
+
+        <div class="ph-road-col ph-road-col--planned">
+            <header class="ph-road-col-head">
+                <div>
+                    <span class="ph-badge ph-badge--blue"><i class="fas fa-road" aria-hidden="true"></i> به‌زودی</span>
+                    <p class="ph-road-col-hint">روی نقشه راه است و هنوز شروع نشده</p>
+                </div>
+                <span class="ph-road-col-count">{{ roadmap.planned|length }}</span>
+            </header>
             {% for f in roadmap.planned %}
-            <div class="ph-road-item">
-                {{ f.title }}
-                <small>{{ f.category|ph_label:'category' }} · {{ f.summary|truncatechars:70 }}</small>
-            </div>
+            <article class="ph-road-item">
+                <strong>{{ f.title }}</strong>
+                <small>{{ f.category|ph_label:'category' }}</small>
+                {% if f.summary %}<p class="ph-road-item-sum">{{ f.summary|truncatechars:90 }}</p>{% endif %}
+            </article>
             {% empty %}
-            <p class="ph-empty" style="padding:0.5rem">موردی نیست</p>
+            <p class="ph-empty-inline">موردی در لیست آینده نیست</p>
             {% endfor %}
         </div>
-        <div class="ph-road-col">
-            <h3><span class="ph-badge ph-badge--purple"><i class="fas fa-fire" aria-hidden="true"></i> ایده‌های محبوب</span></h3>
+
+        <div class="ph-road-col ph-road-col--ideas">
+            <header class="ph-road-col-head">
+                <div>
+                    <span class="ph-badge ph-badge--purple"><i class="fas fa-fire" aria-hidden="true"></i> ایده‌های محبوب</span>
+                    <p class="ph-road-col-hint">بیشترین رای از بین پیشنهادهای شما</p>
+                </div>
+                <span class="ph-road-col-count">{{ roadmap.popular_ideas|length }}</span>
+            </header>
             {% for r in roadmap.popular_ideas %}
-            <div class="ph-road-item">
-                {{ r.title }}
+            <article class="ph-road-item">
+                <strong>{{ r.title }}</strong>
                 <small>{{ r.votes_count }} رای · {{ r.status|ph_label:'request_status' }}</small>
-            </div>
+            </article>
             {% empty %}
-            <p class="ph-empty" style="padding:0.5rem">هنوز ایده‌ای نیست</p>
+            <p class="ph-empty-inline">هنوز ایده‌ای ثبت نشده</p>
             {% endfor %}
         </div>
     </div>

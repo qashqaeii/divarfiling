@@ -1,93 +1,125 @@
 ﻿{% load workspace_tags product_hub_tags %}
-<section class="ph-panel">
+<div class="ph-stack">
+<section class="ph-panel ph-panel--accent">
     <div class="ph-panel-head">
-        <div>
-            <h2>تازه‌ترین نسخه{% if hub_stats.latest_version != '—' %} · <span dir="ltr">v{{ hub_stats.latest_version }}</span>{% endif %}</h2>
-            <p>{% if hub_stats.latest_title %}{{ hub_stats.latest_title }}{% else %}خلاصه آخرین بروزرسانی منتشرشده{% endif %}</p>
+        <div class="ph-panel-head-main">
+            <span class="ph-panel-ico ph-panel-ico--teal" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
+            <div>
+                <h2>تازه‌ترین نسخه{% if hub_stats.latest_version != '—' %} · <span dir="ltr">v{{ hub_stats.latest_version }}</span>{% endif %}</h2>
+                <p>{% if hub_stats.latest_title %}{{ hub_stats.latest_title }}{% else %}خلاصه آخرین بروزرسانی منتشرشده برای کار روزانه شما{% endif %}</p>
+            </div>
         </div>
-        <a href="?tab=changelog" class="mk-hub-head-btn">همه تغییرات</a>
+        <a href="?tab=changelog" class="ph-btn ph-btn--ghost">
+            <span>همه تغییرات</span>
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        </a>
     </div>
+
     {% with release=releases.0 %}
     {% if release %}
-    <ul class="ph-tl-changes">
-        {% for ch in release.changes.all %}
-        <li class="ph-tl-change {% ph_change_type_class ch.change_type %}">
-            <i class="fas fa-check" aria-hidden="true"></i>
-            <span>{{ ch.text }}</span>
-            <span class="ph-change-tag">{{ ch.change_type|ph_label:'change_type' }}</span>
-        </li>
-        {% endfor %}
-    </ul>
+    <div class="ph-overview-release">
+        <div class="ph-overview-release-meta">
+            <span class="ph-pill ph-pill--teal" dir="ltr">v{{ release.version }}</span>
+            <time datetime="{{ release.released_at|date:'c' }}">{{ release.released_at|ws_jalali }}</time>
+        </div>
+        <ul class="ph-tl-changes">
+            {% for ch in release.changes.all %}
+            <li class="ph-tl-change {% ph_change_type_class ch.change_type %}">
+                <i class="fas fa-check" aria-hidden="true"></i>
+                <span>{{ ch.text }}</span>
+                <span class="ph-change-tag">{{ ch.change_type|ph_label:'change_type' }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
     {% else %}
-    <p class="ph-empty">هنوز نسخه‌ای منتشر نشده است.</p>
+    <div class="ph-empty-state">
+        <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-clock"></i></span>
+        <strong>هنوز نسخه‌ای منتشر نشده</strong>
+        <p>به‌محض انتشار، خلاصه تغییرات اینجا می‌آید.</p>
+    </div>
     {% endif %}
     {% endwith %}
 
     <div class="ph-quick">
         <a class="ph-quick-link" href="?tab=features">
-            <i class="fas fa-puzzle-piece" aria-hidden="true"></i>
-            <span>
+            <span class="ph-quick-ico" aria-hidden="true"><i class="fas fa-puzzle-piece"></i></span>
+            <span class="ph-quick-copy">
                 <strong>کاتالوگ قابلیت‌ها</strong>
                 <span>{{ hub_stats.features_total }} قابلیت مستندشده</span>
             </span>
+            <i class="fas fa-chevron-left ph-quick-arrow" aria-hidden="true"></i>
         </a>
         <a class="ph-quick-link" href="?tab=requests">
-            <i class="fas fa-lightbulb" aria-hidden="true"></i>
-            <span>
+            <span class="ph-quick-ico ph-quick-ico--amber" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
+            <span class="ph-quick-copy">
                 <strong>پیشنهاد قابلیت</strong>
                 <span>{{ hub_stats.requests_open }} پیشنهاد باز</span>
             </span>
+            <i class="fas fa-chevron-left ph-quick-arrow" aria-hidden="true"></i>
         </a>
         <a class="ph-quick-link" href="?tab=roadmap">
-            <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-            <span>
-                <strong>Roadmap محصول</strong>
+            <span class="ph-quick-ico ph-quick-ico--blue" aria-hidden="true"><i class="fas fa-map-location-dot"></i></span>
+            <span class="ph-quick-copy">
+                <strong>نقشه راه محصول</strong>
                 <span>{{ hub_stats.features_in_progress }} مورد در حال توسعه</span>
             </span>
+            <i class="fas fa-chevron-left ph-quick-arrow" aria-hidden="true"></i>
         </a>
     </div>
 </section>
 
 <section class="ph-panel">
     <div class="ph-panel-head">
-        <div>
-            <h2>مسیر توسعه در یک نگاه</h2>
-            <p>آنچه تیم محصول الان می‌سازد و آنچه در راه است</p>
+        <div class="ph-panel-head-main">
+            <span class="ph-panel-ico ph-panel-ico--blue" aria-hidden="true"><i class="fas fa-route"></i></span>
+            <div>
+                <h2>مسیر توسعه در یک نگاه</h2>
+                <p>آنچه تیم الان می‌سازد و آنچه در راه است</p>
+            </div>
         </div>
+        <a href="?tab=roadmap" class="ph-btn ph-btn--ghost">نقشه راه کامل</a>
     </div>
-    <div class="ph-road">
-        <div class="ph-road-col">
-            <h3><span class="ph-badge ph-badge--amber">در حال توسعه</span></h3>
+    <div class="ph-road ph-road--compact">
+        <div class="ph-road-col ph-road-col--building">
+            <header class="ph-road-col-head">
+                <span class="ph-badge ph-badge--amber"><i class="fas fa-hammer" aria-hidden="true"></i> در حال ساخت</span>
+            </header>
             {% for f in roadmap.in_progress|slice:':6' %}
             <div class="ph-road-item">
-                {{ f.title }}
+                <strong>{{ f.title }}</strong>
                 <small>{{ f.category|ph_label:'category' }}</small>
             </div>
             {% empty %}
-            <p class="ph-empty" style="padding:0.5rem">موردی ثبت نشده</p>
+            <p class="ph-empty-inline">موردی ثبت نشده</p>
             {% endfor %}
         </div>
-        <div class="ph-road-col">
-            <h3><span class="ph-badge ph-badge--blue">برنامه آینده</span></h3>
+        <div class="ph-road-col ph-road-col--planned">
+            <header class="ph-road-col-head">
+                <span class="ph-badge ph-badge--blue"><i class="fas fa-road" aria-hidden="true"></i> به‌زودی</span>
+            </header>
             {% for f in roadmap.planned|slice:':6' %}
             <div class="ph-road-item">
-                {{ f.title }}
+                <strong>{{ f.title }}</strong>
                 <small>{{ f.category|ph_label:'category' }}</small>
             </div>
             {% empty %}
-            <p class="ph-empty" style="padding:0.5rem">موردی ثبت نشده</p>
+            <p class="ph-empty-inline">موردی ثبت نشده</p>
             {% endfor %}
         </div>
-        <div class="ph-road-col">
-            <h3><span class="ph-badge ph-badge--purple">ایده‌های محبوب</span></h3>
+        <div class="ph-road-col ph-road-col--ideas">
+            <header class="ph-road-col-head">
+                <span class="ph-badge ph-badge--purple"><i class="fas fa-fire" aria-hidden="true"></i> ایده‌های محبوب</span>
+            </header>
             {% for r in roadmap.popular_ideas|slice:':6' %}
             <div class="ph-road-item">
-                {{ r.title }}
+                <strong>{{ r.title }}</strong>
                 <small>{{ r.votes_count }} رای · {{ r.status|ph_label:'request_status' }}</small>
             </div>
             {% empty %}
-            <p class="ph-empty" style="padding:0.5rem">با لایسنس پیشنهاد ثبت کنید</p>
+            <p class="ph-empty-inline">با لایسنس پیشنهاد ثبت کنید</p>
             {% endfor %}
         </div>
     </div>
 </section>
+</div>

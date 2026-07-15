@@ -1,15 +1,19 @@
 ﻿{% load workspace_tags product_hub_tags %}
 <section class="ph-panel">
     <div class="ph-panel-head">
-        <div>
-            <h2>تاریخچه نسخه‌ها</h2>
-            <p>ببینید در هر نسخه چه امکانات تازه‌ای برای کار روزانه شما آمده است</p>
+        <div class="ph-panel-head-main">
+            <span class="ph-panel-ico ph-panel-ico--cyan" aria-hidden="true"><i class="fas fa-timeline"></i></span>
+            <div>
+                <h2>تاریخچه نسخه‌ها</h2>
+                <p>ببینید در هر نسخه چه چیزهایی برای کار روزانه شما آمده است</p>
+            </div>
         </div>
     </div>
+
     {% if releases %}
     <ol class="ph-timeline">
         {% for release in releases %}
-        <li class="ph-tl-item">
+        <li class="ph-tl-item" style="--ph-stagger: {{ forloop.counter0 }}">
             <div class="ph-tl-meta">
                 <span class="ph-tl-ver">v{{ release.version }}</span>
                 <time class="ph-tl-date" datetime="{{ release.released_at|date:'c' }}">
@@ -17,9 +21,12 @@
                 </time>
             </div>
             <article class="ph-tl-card">
-                <h3 class="ph-tl-title">{{ release.title }}</h3>
+                <div class="ph-tl-card-top">
+                    <h3 class="ph-tl-title">{{ release.title }}</h3>
+                    <span class="ph-pill ph-pill--soft" dir="ltr">v{{ release.version }}</span>
+                </div>
                 {% if release.summary and release.summary != release.title %}
-                <p style="margin:0 0 0.75rem;font-size:0.84rem;color:var(--ds-text-secondary)">{{ release.summary }}</p>
+                <p class="ph-tl-sum">{{ release.summary }}</p>
                 {% endif %}
                 <ul class="ph-tl-changes">
                     {% for ch in release.changes.all %}
@@ -35,6 +42,10 @@
         {% endfor %}
     </ol>
     {% else %}
-    <p class="ph-empty">هنوز changelog منتشر نشده است.</p>
+    <div class="ph-empty-state">
+        <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-book-open"></i></span>
+        <strong>هنوز تاریخچه نسخه‌ای نیست</strong>
+        <p>وقتی نسخه جدید منتشر شود، اینجا به‌زبان ساده می‌بینید چه چیزی آمده است.</p>
+    </div>
     {% endif %}
 </section>

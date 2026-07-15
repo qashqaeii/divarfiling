@@ -5,7 +5,7 @@
 {% block mobile_bar_title %}مرکز توسعه{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -13,32 +13,32 @@
 
     <section class="ph-hero" aria-label="مرکز توسعه محصول">
         <div class="ph-hero-inner">
-            <div>
+            <div class="ph-hero-copy">
                 <p class="ph-hero-kicker">
                     <i class="fas fa-rocket" aria-hidden="true"></i>
-                    Product Hub · فایلینگ دیوار
+                    مرکز توسعه · فایلینگ دیوار
                 </p>
-                <h1 class="ph-hero-title">مرکز توسعه فایلینگ دیوار</h1>
+                <h1 class="ph-hero-title">هر چه برای کار شما ساخته می‌شود، اینجا شفاف است</h1>
                 <p class="ph-hero-desc">
-                    شفافیت کامل درباره قابلیت‌های فعلی، مسیر توسعه، نسخه‌های منتشرشده و پیشنهادهای شما — طراحی‌شده برای مشاوران املاک، بدون پیچیدگی فنی.
+                    قابلیت‌ها، نسخه‌های جدید، پیشنهادها و نقشه راه را به زبان مشاور ببینید — ساده، شفاف و به‌روز.
                 </p>
             </div>
             <div class="ph-hero-actions">
                 <div class="ph-ver-chip">
-                    <span class="ph-ver-chip-label">آخرین نسخه منتشرشده</span>
+                    <span class="ph-ver-chip-label">آخرین نسخه</span>
                     <span class="ph-ver-chip-val">{{ hub_stats.latest_version }}</span>
                     <span class="ph-ver-chip-date">
                         {% if hub_stats.latest_released_at %}{{ hub_stats.latest_released_at|ws_jalali }}{% else %}به‌زودی{% endif %}
                     </span>
                 </div>
                 {% if unread_count %}
-                <a href="{% url 'workspace:product_hub:notifications' %}" class="mk-hub-head-btn">
+                <a href="{% url 'workspace:product_hub:notifications' %}" class="ph-btn ph-btn--ghost">
                     <i class="fas fa-bell" aria-hidden="true"></i><span>اعلان‌ها</span>
                     <span class="ws-nav-badge">{{ unread_count }}</span>
                 </a>
                 {% endif %}
                 {% if is_product_staff %}
-                <a href="{% url 'workspace:product_hub:manage' %}" class="mk-hub-head-btn mk-hub-head-btn--primary">
+                <a href="{% url 'workspace:product_hub:manage' %}" class="ph-btn ph-btn--primary">
                     <i class="fas fa-sliders" aria-hidden="true"></i><span>مدیریت</span>
                 </a>
                 {% endif %}
@@ -112,10 +112,10 @@
                 <i class="fas fa-bug" aria-hidden="true"></i><span class="ph-tab-label">باگ‌ها</span>
             </a>
             <a class="ph-tab {% if active_tab == 'roadmap' %}is-active{% endif %}" href="?tab=roadmap" data-ph-tab>
-                <i class="fas fa-map" aria-hidden="true"></i><span class="ph-tab-label">Roadmap</span>
+                <i class="fas fa-map" aria-hidden="true"></i><span class="ph-tab-label">نقشه راه</span>
             </a>
             <a class="ph-tab {% if active_tab == 'my' %}is-active{% endif %}" href="?tab=my" data-ph-tab>
-                <i class="fas fa-user-check" aria-hidden="true"></i><span class="ph-tab-label">درخواست‌های من</span>
+                <i class="fas fa-user-check" aria-hidden="true"></i><span class="ph-tab-label">مال من</span>
             </a>
         </nav>
     </div>
@@ -141,5 +141,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/product-hub.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/product-hub.js' %}?v=4"></script>
 {% endblock %}

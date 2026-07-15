@@ -1,32 +1,36 @@
-{% load product_hub_tags %}
+﻿{% load product_hub_tags %}
 <section class="ph-panel">
-    <h2>Roadmap محصول</h2>
-    <p style="margin:0 0 1rem;color:var(--ws-muted);font-size:0.9rem">مسیر توسعه فایلینگ دیوار — آنچه در حال ساخت است و آنچه در راه است.</p>
+    <div class="ph-panel-head">
+        <div>
+            <h2>Roadmap محصول</h2>
+            <p>نقشه راه فایلینگ دیوار — شفاف، اولویت‌بندی‌شده و قابل پیگیری</p>
+        </div>
+    </div>
     <div class="ph-road">
         <div class="ph-road-col">
-            <h3><span class="ph-badge ph-badge--amber">در حال توسعه</span></h3>
+            <h3><span class="ph-badge ph-badge--amber"><i class="fas fa-hammer" aria-hidden="true"></i> در حال توسعه</span></h3>
             {% for f in roadmap.in_progress %}
             <div class="ph-road-item">
                 {{ f.title }}
-                <small>{{ f.category|ph_label:'category' }}</small>
+                <small>{{ f.category|ph_label:'category' }} · {{ f.summary|truncatechars:70 }}</small>
             </div>
             {% empty %}
             <p class="ph-empty" style="padding:0.5rem">موردی نیست</p>
             {% endfor %}
         </div>
         <div class="ph-road-col">
-            <h3><span class="ph-badge ph-badge--blue">قابلیت‌های آینده</span></h3>
+            <h3><span class="ph-badge ph-badge--blue"><i class="fas fa-road" aria-hidden="true"></i> قابلیت‌های آینده</span></h3>
             {% for f in roadmap.planned %}
             <div class="ph-road-item">
                 {{ f.title }}
-                <small>{{ f.category|ph_label:'category' }}</small>
+                <small>{{ f.category|ph_label:'category' }} · {{ f.summary|truncatechars:70 }}</small>
             </div>
             {% empty %}
             <p class="ph-empty" style="padding:0.5rem">موردی نیست</p>
             {% endfor %}
         </div>
         <div class="ph-road-col">
-            <h3><span class="ph-badge ph-badge--purple">ایده‌های محبوب کاربران</span></h3>
+            <h3><span class="ph-badge ph-badge--purple"><i class="fas fa-fire" aria-hidden="true"></i> ایده‌های محبوب</span></h3>
             {% for r in roadmap.popular_ideas %}
             <div class="ph-road-item">
                 {{ r.title }}

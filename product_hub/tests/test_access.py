@@ -160,9 +160,11 @@ class ProductHubAccessTests(TestCase):
         )
 
     def test_seed_creates_features_and_releases(self):
-        self.assertTrue(ProductFeature.objects.filter(is_published=True).exists())
-        self.assertTrue(ProductRelease.objects.filter(is_published=True).exists())
+        self.assertGreaterEqual(ProductFeature.objects.filter(is_published=True).count(), 40)
+        self.assertGreaterEqual(ProductRelease.objects.filter(is_published=True).count(), 4)
         self.assertTrue(ReleaseChange.objects.exists())
+        self.assertTrue(FeatureRequest.objects.filter(is_public=True).exists())
+        self.assertTrue(BugReport.objects.filter(is_public=True).exists())
 
     def test_changelog_tab_renders(self):
         self.client.login(username='phuser', password='pass1234')

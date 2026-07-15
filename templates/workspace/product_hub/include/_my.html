@@ -1,7 +1,13 @@
-{% load workspace_tags product_hub_tags %}
+﻿{% load workspace_tags product_hub_tags %}
 <section class="ph-panel">
-    <h2>پیشنهادهای من</h2>
+    <div class="ph-panel-head">
+        <div>
+            <h2>پیشنهادهای من</h2>
+            <p>وضعیت پیشرفت درخواست‌هایی که خودتان ثبت کرده‌اید</p>
+        </div>
+    </div>
     {% if my_requests %}
+    <div style="overflow-x:auto">
     <table class="ph-table">
         <thead>
             <tr>
@@ -17,11 +23,11 @@
                 <td>{{ req.title }}</td>
                 <td><span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span></td>
                 <td>{{ req.votes_count }}</td>
-                <td>{{ req.created_at|ws_jalali }}</td>
+                <td>{{ req.created_at|ws_jalali_date }}</td>
             </tr>
             {% if req.status == 'completed' and req.release_note %}
             <tr>
-                <td colspan="4" style="color:var(--ws-muted);font-size:0.82rem;padding-top:0">
+                <td colspan="4" style="color:var(--ds-text-muted);font-size:0.8rem;padding-top:0">
                     {% if req.released_in %}در نسخه {{ req.released_in.version }}: {% endif %}{{ req.release_note }}
                 </td>
             </tr>
@@ -29,14 +35,21 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
     {% else %}
-    <p class="ph-empty">هنوز پیشنهادی ثبت نکرده‌اید.</p>
+    <p class="ph-empty">هنوز پیشنهادی ثبت نکرده‌اید. از تب «پیشنهادها» شروع کنید.</p>
     {% endif %}
 </section>
 
 <section class="ph-panel">
-    <h2>گزارش‌های باگ من</h2>
+    <div class="ph-panel-head">
+        <div>
+            <h2>گزارش‌های باگ من</h2>
+            <p>پیگیری مشکلاتی که گزارش کرده‌اید</p>
+        </div>
+    </div>
     {% if my_bugs %}
+    <div style="overflow-x:auto">
     <table class="ph-table">
         <thead>
             <tr>
@@ -52,18 +65,24 @@
                 <td>{{ bug.title }}</td>
                 <td><span class="ph-badge {% ph_bug_severity_class bug.severity %}">{{ bug.severity|ph_label:'severity' }}</span></td>
                 <td><span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span></td>
-                <td>{{ bug.created_at|ws_jalali }}</td>
+                <td>{{ bug.created_at|ws_jalali_date }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    </div>
     {% else %}
     <p class="ph-empty">گزارشی ندارید.</p>
     {% endif %}
 </section>
 
 <section class="ph-panel">
-    <h2>در حال دنبال</h2>
+    <div class="ph-panel-head">
+        <div>
+            <h2>در حال دنبال</h2>
+            <p>پیشنهادهایی که دنبال می‌کنید — با انتشار به شما خبر می‌دهیم</p>
+        </div>
+    </div>
     {% if my_follows %}
     <div class="ph-req">
         {% for f in my_follows %}

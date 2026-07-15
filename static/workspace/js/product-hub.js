@@ -30,6 +30,18 @@
     });
   }
 
+  function scrollActiveTabIntoView() {
+    var active = document.querySelector('[data-ph-tabs] .ph-tab.is-active');
+    if (!active || typeof active.scrollIntoView !== 'function') return;
+    try {
+      active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    } catch (e) {
+      active.scrollIntoView(false);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', scrollActiveTabIntoView);
+
   document.addEventListener('click', function (ev) {
     var voteBtn = ev.target.closest('[data-ph-vote]');
     if (voteBtn) {
@@ -39,6 +51,7 @@
       voteBtn.disabled = true;
       postJson(url).then(function (data) {
         voteBtn.classList.toggle('is-on', !!data.voted);
+        voteBtn.setAttribute('aria-pressed', data.voted ? 'true' : 'false');
         var countEl = voteBtn.querySelector('[data-ph-count]');
         if (countEl) countEl.textContent = data.votes_count;
         if (typeof showToast === 'function') {
@@ -67,7 +80,8 @@
       postJson(furl).then(function (data) {
         followBtn.classList.toggle('is-on', !!data.following);
         followBtn.textContent = data.following ? 'در حال دنبال' : 'دنبال کردن';
-        var fc = followBtn.parentElement && followBtn.parentElement.querySelector('[data-ph-follows]');
+        var wrap = followBtn.parentElement;
+        var fc = wrap && wrap.querySelector('[data-ph-follows]');
         if (fc) fc.textContent = data.follows_count;
         if (typeof showToast === 'function') {
           showToast(data.following ? 'اکنون این پیشنهاد را دنبال می‌کنید' : 'دنبال کردن لغو شد', 'info');

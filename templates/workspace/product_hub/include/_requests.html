@@ -1,6 +1,11 @@
-{% load workspace_tags product_hub_tags %}
+﻿{% load workspace_tags product_hub_tags %}
 <section class="ph-panel">
-    <h2>پیشنهاد قابلیت جدید</h2>
+    <div class="ph-panel-head">
+        <div>
+            <h2>پیشنهاد قابلیت جدید</h2>
+            <p>ایده‌تان را ثبت کنید تا در اولویت‌بندی محصول دیده شود</p>
+        </div>
+    </div>
     {% if has_product_action_access %}
     <form method="post" action="{% url 'workspace:product_hub:request_create' %}" class="ph-form-grid">
         {% csrf_token %}
@@ -37,15 +42,20 @@
         <i class="fas fa-lock" aria-hidden="true"></i>
         <div>
             <strong>ثبت پیشنهاد نیاز به لایسنس فعال دارد</strong>
-            <p style="margin:0.35rem 0 0;font-size:0.88rem">می‌توانید پیشنهادهای دیگران را مشاهده کنید. برای ثبت و رای‌دهی لایسنس تهیه کنید.</p>
-            <a href="{% url 'workspace:upgrade' %}?feature=product_hub" class="mk-hub-head-btn mk-hub-head-btn--primary" style="margin-top:0.65rem;display:inline-flex">ارتقا لایسنس</a>
+            <p>می‌توانید پیشنهادهای دیگران را ببینید. برای ثبت، رای‌دهی و دنبال کردن، لایسنس تهیه کنید.</p>
+            <a href="{% url 'workspace:upgrade' %}?feature=product_hub" class="mk-hub-head-btn mk-hub-head-btn--primary" style="margin-top:0.75rem;display:inline-flex">ارتقا لایسنس</a>
         </div>
     </div>
     {% endif %}
 </section>
 
 <section class="ph-panel">
-    <h2>پیشنهادهای کاربران</h2>
+    <div class="ph-panel-head">
+        <div>
+            <h2>پیشنهادهای کاربران</h2>
+            <p>با رای دادن، اولویت توسعه را مشخص کنید</p>
+        </div>
+    </div>
     <div class="ph-req">
         {% for req in feature_requests %}
         <article class="ph-req-card">
@@ -53,13 +63,14 @@
             <button type="button"
                     class="ph-vote-btn {% if req.id in voted_ids %}is-on{% endif %}"
                     data-ph-vote="{% url 'workspace:product_hub:request_vote' req.id %}"
-                    aria-label="رای به پیشنهاد">
+                    aria-label="رای به پیشنهاد"
+                    aria-pressed="{% if req.id in voted_ids %}true{% else %}false{% endif %}">
                 <i class="fas fa-caret-up" aria-hidden="true"></i>
                 <span data-ph-count>{{ req.votes_count }}</span>
             </button>
             {% else %}
-            <div class="ph-vote-btn" title="رای‌دهی با لایسنس فعال">
-                <i class="fas fa-caret-up" aria-hidden="true"></i>
+            <div class="ph-vote-btn" title="رای‌دهی با لایسنس فعال" aria-hidden="true">
+                <i class="fas fa-caret-up"></i>
                 <span>{{ req.votes_count }}</span>
             </div>
             {% endif %}
@@ -69,9 +80,9 @@
                 <div class="ph-req-foot">
                     <span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span>
                     <span class="ph-badge ph-badge--gray">{{ req.category|ph_label:'category' }}</span>
-                    <span class="ph-badge ph-badge--amber">اولویت {{ req.priority|ph_label:'priority' }}</span>
-                    <span style="font-size:0.78rem;color:var(--ws-muted)">
-                        {{ req.user.get_full_name|default:req.user.username }} · {{ req.created_at|ws_jalali }}
+                    <span class="ph-badge ph-badge--amber">{{ req.priority|ph_label:'priority' }}</span>
+                    <span style="font-size:0.74rem;color:var(--ds-text-muted)">
+                        {{ req.user.get_full_name|default:req.user.username }} · {{ req.created_at|ws_jalali_date }}
                     </span>
                     {% if has_product_action_access %}
                     <button type="button"
@@ -79,12 +90,12 @@
                             data-ph-follow="{% url 'workspace:product_hub:request_follow' req.id %}">
                         {% if req.id in followed_ids %}در حال دنبال{% else %}دنبال کردن{% endif %}
                     </button>
-                    <span style="font-size:0.75rem;color:var(--ws-muted)">
+                    <span style="font-size:0.72rem;color:var(--ds-text-muted)">
                         <span data-ph-follows>{{ req.follows_count }}</span> دنبال‌کننده
                     </span>
                     {% endif %}
-                    {% if req.status == 'completed' and req.release_note %}
-                    <span class="ph-badge ph-badge--green">منتشر شد{% if req.released_in %} · v{{ req.released_in.version }}{% endif %}</span>
+                    {% if req.status == 'completed' and req.released_in %}
+                    <span class="ph-badge ph-badge--green">منتشر در v{{ req.released_in.version }}</span>
                     {% endif %}
                 </div>
             </div>

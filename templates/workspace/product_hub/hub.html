@@ -5,49 +5,44 @@
 {% block mobile_bar_title %}مرکز توسعه{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=9">
 {% endblock %}
 
 {% block content %}
 <div class="mk-page mk-hub ph-page" data-ph-hub>
 
-    <section class="ph-hero" aria-label="مرکز توسعه محصول">
-        <div class="ph-hero-inner">
+    <header class="ph-hero" aria-label="مرکز توسعه محصول">
+        <div class="ph-hero-row">
             <div class="ph-hero-copy">
-                <p class="ph-hero-kicker">
-                    <i class="fas fa-rocket" aria-hidden="true"></i>
-                    مرکز توسعه · فایلینگ دیوار
-                </p>
-                <h1 class="ph-hero-title">هر چه برای کار شما ساخته می‌شود، اینجا شفاف است</h1>
-                <p class="ph-hero-desc">
-                    قابلیت‌ها، نسخه‌های جدید، پیشنهادها و نقشه راه را به زبان مشاور ببینید — ساده، شفاف و به‌روز.
+                <h1 class="ph-hero-title">مرکز توسعه</h1>
+                <p class="ph-hero-meta">
+                    <span dir="ltr">v{{ hub_stats.latest_version }}</span>
+                    <span class="ph-hero-dot" aria-hidden="true"></span>
+                    <span>
+                        {% if hub_stats.latest_released_at %}{{ hub_stats.latest_released_at|ws_jalali_date }}{% else %}به‌زودی{% endif %}
+                    </span>
                 </p>
             </div>
             <div class="ph-hero-actions">
-                <div class="ph-ver-chip">
-                    <span class="ph-ver-chip-label">آخرین نسخه</span>
-                    <span class="ph-ver-chip-val">{{ hub_stats.latest_version }}</span>
-                    <span class="ph-ver-chip-date">
-                        {% if hub_stats.latest_released_at %}{{ hub_stats.latest_released_at|ws_jalali }}{% else %}به‌زودی{% endif %}
-                    </span>
-                </div>
                 {% if unread_count %}
-                <a href="{% url 'workspace:product_hub:notifications' %}" class="ph-btn ph-btn--ghost">
-                    <i class="fas fa-bell" aria-hidden="true"></i><span>اعلان‌ها</span>
+                <a href="{% url 'workspace:product_hub:notifications' %}" class="ph-btn ph-btn--ghost ph-btn--sm" title="اعلان‌ها">
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                    <span class="ph-btn-label">اعلان‌ها</span>
                     <span class="ws-nav-badge">{{ unread_count }}</span>
                 </a>
                 {% endif %}
                 {% if is_product_staff %}
-                <a href="{% url 'workspace:product_hub:manage' %}" class="ph-btn ph-btn--primary">
-                    <i class="fas fa-sliders" aria-hidden="true"></i><span>مدیریت</span>
+                <a href="{% url 'workspace:product_hub:manage' %}" class="ph-btn ph-btn--primary ph-btn--sm">
+                    <i class="fas fa-sliders" aria-hidden="true"></i>
+                    <span class="ph-btn-label">مدیریت</span>
                 </a>
                 {% endif %}
             </div>
         </div>
-    </section>
+    </header>
 
     {% if unread_notifications %}
-    <div class="mk-notice mk-notice--info mk-notice--inline mk-notice--compact">
+    <div class="mk-notice mk-notice--info mk-notice--inline mk-notice--compact" style="margin-bottom:0.55rem">
         <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
         <div class="mk-notice__body">
             <strong class="mk-notice__title">{{ unread_notifications.0.title }}</strong>

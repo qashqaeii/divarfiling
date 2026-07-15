@@ -24,11 +24,11 @@ FEATURE_STATUS_CHOICES = [
 ]
 
 CHANGE_TYPE_CHOICES = [
-    ('feature', 'Feature جدید'),
-    ('fix', 'Bug Fix'),
-    ('improvement', 'Improvement'),
-    ('security', 'Security'),
-    ('performance', 'Performance'),
+    ('feature', 'قابلیت جدید'),
+    ('fix', 'رفع مشکل'),
+    ('improvement', 'بهبود'),
+    ('security', 'امنیت'),
+    ('performance', 'سرعت'),
 ]
 
 REQUEST_PRIORITY_CHOICES = [

@@ -70,15 +70,19 @@
         {% include 'workspace/includes/listing_filter_bar.html' with filter_form_action=filter_form_action %}
     </section>
 
-    <section class="ws-glass-panel mk-panel mk-panel-flush mk-listing-panel">
+    <section class="ws-glass-panel mk-panel mk-panel-flush mk-listing-panel" data-list-view="{{ listing_view_mode|default:'auto' }}">
         <header class="ws-glass-head mk-panel-head mk-panel-head-table">
             <div class="mk-panel-head-text">
                 <h2>لیست آگهی‌ها</h2>
                 <span class="mk-panel-count">{{ filtered_count|intcomma }} ردیف<span class="mk-panel-count-sep"> · </span><span class="mk-panel-count-hint">ستون فایل مشخص می‌کند آگهی از کدام مجموعه‌داده است</span></span>
             </div>
+            <div class="mk-filing-view-toggle mk-listing-view-toggle" role="group" aria-label="نحوه نمایش">
+                <a href="?{% if filter_qs_noview %}{{ filter_qs_noview }}&{% endif %}view=table" class="mk-filing-view-btn mk-filing-view-btn--table{% if listing_view_mode == 'table' or listing_view_mode == 'auto' %} is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+                <a href="?{% if filter_qs_noview %}{{ filter_qs_noview }}&{% endif %}view=grid" class="mk-filing-view-btn mk-filing-view-btn--grid{% if listing_view_mode == 'grid' %} is-active{% endif %}" title="کارت"><i class="fas fa-th-large" aria-hidden="true"></i></a>
+            </div>
         </header>
 
-        <div class="mk-listing-cards-mobile" aria-label="لیست آگهی‌ها">
+        <div class="mk-listing-cards-shell" aria-label="لیست آگهی‌ها">
             {% include 'workspace/includes/listing_cards.html' %}
         </div>
 

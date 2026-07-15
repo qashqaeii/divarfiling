@@ -448,11 +448,11 @@ def listing_advertiser_display(listing) -> Dict[str, str]:
         return {
             'signal': signal,
             'label': label,
-            'short_label': 'مشاور پنهان',
+            'short_label': 'پنهان',
             'pill_class': 'mk-pub-pill--disguised',
             'tag_class': 'mk-adv-tag--disguised',
             'icon': 'fa-user-secret',
-            'title': 'آگهی با برچسب شخصی اما نشانه‌های مشاور در متن',
+            'title': 'مشاور پنهان — آگهی با برچسب شخصی اما نشانه‌های مشاور در متن',
         }
     if signal == ADVERTISER_SIGNAL_CONSULTANT or is_official_consultant(
         getattr(listing, 'business_type', '') or '',

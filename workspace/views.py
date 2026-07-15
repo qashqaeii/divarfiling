@@ -578,14 +578,24 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
             str(lst.pk): listing_edit_payload(lst, ctx['listing_features'].get(lst.pk))
             for lst in ctx['listings']
         }
-        ctx['filter_qs'] = urlencode({
+        listing_view = self.request.GET.get('view', '').strip()
+        if listing_view not in ('table', 'grid'):
+            listing_view = 'auto'
+        ctx['listing_view_mode'] = listing_view
+        base_filter = {
             k: v for k, v in filters.items()
             if v not in ('', None) and k != 'sort'
-        })
+        }
+        ctx['filter_qs_noview'] = urlencode(base_filter)
+        if listing_view in ('table', 'grid'):
+            base_filter['view'] = listing_view
+        ctx['filter_qs'] = urlencode(base_filter)
         ctx['page_query'] = {
             k: str(v) for k, v in filters.items()
             if v not in ('', None)
         }
+        if listing_view in ('table', 'grid'):
+            ctx['page_query']['view'] = listing_view
         ctx['rename_form'] = DatasetRenameForm(instance=dataset)
         ctx['open_modal'] = self.request.GET.get('open', '')
         page_tokens = [lst.token for lst in ctx['listings']]
@@ -777,6 +787,13 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
             (k, str(v)) for k, v in filters.items()
             if v not in ('', None) and k != 'sort'
         )
+        listing_view = self.request.GET.get('view', '').strip()
+        if listing_view not in ('table', 'grid'):
+            listing_view = 'auto'
+        ctx['listing_view_mode'] = listing_view
+        ctx['filter_qs_noview'] = urlencode(filter_pairs)
+        if listing_view in ('table', 'grid'):
+            filter_pairs = list(filter_pairs) + [('view', listing_view)]
         ctx['filter_qs'] = urlencode(filter_pairs)
         ctx['page_query'] = {
             'dataset_ids': self.dataset_ids_param,
@@ -785,6 +802,8 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
                 if v not in ('', None)
             },
         }
+        if listing_view in ('table', 'grid'):
+            ctx['page_query']['view'] = listing_view
         page_tokens = [lst.token for lst in ctx['listings']]
         metas = ListingMeta.objects.filter(
             user=self.request.user, token__in=page_tokens,

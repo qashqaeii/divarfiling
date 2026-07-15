@@ -5,7 +5,7 @@
 {% block mobile_bar_title %}مرکز توسعه{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -60,35 +60,29 @@
     {% endif %}
 
     <section class="ph-metrics" aria-label="خلاصه محصول">
-        <div class="ph-metric" data-tone="purple">
-            <span class="ph-metric-icon"><i class="fas fa-code-branch" aria-hidden="true"></i></span>
+        <div class="ph-metric">
             <span class="ph-metric-val" dir="ltr">{{ hub_stats.latest_version }}</span>
             <span class="ph-metric-lbl">آخرین نسخه</span>
         </div>
-        <div class="ph-metric" data-tone="blue">
-            <span class="ph-metric-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span>
-            <span class="ph-metric-val" style="font-size:0.92rem">
+        <div class="ph-metric">
+            <span class="ph-metric-val">
                 {% if hub_stats.latest_released_at %}{{ hub_stats.latest_released_at|ws_jalali_date }}{% else %}—{% endif %}
             </span>
             <span class="ph-metric-lbl">آخرین بروزرسانی</span>
         </div>
-        <div class="ph-metric" data-tone="green">
-            <span class="ph-metric-icon"><i class="fas fa-circle-check" aria-hidden="true"></i></span>
+        <div class="ph-metric">
             <span class="ph-metric-val">{{ hub_stats.features_active }}</span>
             <span class="ph-metric-lbl">قابلیت فعال</span>
         </div>
-        <div class="ph-metric" data-tone="amber">
-            <span class="ph-metric-icon"><i class="fas fa-hammer" aria-hidden="true"></i></span>
+        <div class="ph-metric">
             <span class="ph-metric-val">{{ hub_stats.features_in_progress }}</span>
             <span class="ph-metric-lbl">در حال توسعه</span>
         </div>
-        <div class="ph-metric" data-tone="cyan">
-            <span class="ph-metric-icon"><i class="fas fa-lightbulb" aria-hidden="true"></i></span>
+        <div class="ph-metric">
             <span class="ph-metric-val">{{ hub_stats.requests_total }}</span>
             <span class="ph-metric-lbl">پیشنهاد کاربران</span>
         </div>
-        <div class="ph-metric" data-tone="rose">
-            <span class="ph-metric-icon"><i class="fas fa-bug-slash" aria-hidden="true"></i></span>
+        <div class="ph-metric">
             <span class="ph-metric-val">{{ hub_stats.bugs_resolved }}</span>
             <span class="ph-metric-lbl">مشکلات رفع‌شده</span>
         </div>

@@ -115,7 +115,7 @@ class ProductHubView(WorkspaceLoginMixin, TemplateView):
         fq = self.request.GET.get('fq', '').strip()
         fcat = self.request.GET.get('fcat', '').strip()
         fstatus = self.request.GET.get('fstatus', '').strip()
-        features = ProductFeature.objects.filter(is_published=True)
+        features = ProductFeature.objects.filter(is_published=True).order_by('sort_order', 'title')
         if fq:
             features = features.filter(
                 Q(title__icontains=fq) | Q(summary__icontains=fq),
@@ -124,8 +124,21 @@ class ProductHubView(WorkspaceLoginMixin, TemplateView):
             features = features.filter(category=fcat)
         if fstatus:
             features = features.filter(status=fstatus)
+        feature_list = list(features)
+        feature_groups = []
+        for cat_key, cat_label in FEATURE_CATEGORY_CHOICES:
+            items = [f for f in feature_list if f.category == cat_key]
+            if items:
+                feature_groups.append({
+                    'key': cat_key,
+                    'label': cat_label,
+                    'count': len(items),
+                    'items': items,
+                })
         ctx.update({
-            'features': features,
+            'features': feature_list,
+            'feature_groups': feature_groups,
+            'features_count': len(feature_list),
             'feature_q': fq,
             'feature_cat': fcat,
             'feature_status': fstatus,

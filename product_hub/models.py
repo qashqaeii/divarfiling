@@ -5,21 +5,21 @@ from django.utils import timezone
 
 
 FEATURE_CATEGORY_CHOICES = [
-    ('filing', 'فایلینگ'),
+    ('filing', 'فایل‌های دیوار'),
     ('extraction', 'استخراج آگهی'),
-    ('crm', 'CRM'),
-    ('customers', 'مشتریان'),
+    ('crm', 'میزکار مشتری'),
+    ('customers', 'مخاطبین'),
     ('deals', 'معاملات'),
-    ('reports', 'گزارشات'),
-    ('tools', 'ابزارهای هوشمند'),
-    ('mobile', 'اپلیکیشن موبایل'),
-    ('desktop_bot', 'ربات دسکتاپ'),
+    ('reports', 'گزارش تیم'),
+    ('tools', 'ابزار قیمت و بازار'),
+    ('mobile', 'اپ موبایل'),
+    ('desktop_bot', 'ربات ویندوز'),
 ]
 
 FEATURE_STATUS_CHOICES = [
-    ('active', 'فعال'),
-    ('in_progress', 'در حال توسعه'),
-    ('planned', 'برنامه آینده'),
+    ('active', 'آماده استفاده'),
+    ('in_progress', 'در حال ساخت'),
+    ('planned', 'به‌زودی'),
     ('beta', 'آزمایشی'),
 ]
 

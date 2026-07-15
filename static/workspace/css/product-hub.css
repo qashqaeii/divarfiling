@@ -462,7 +462,7 @@
   border: 1px solid var(--ds-border);
 }
 
-/* ─── Feature cards ─── */
+/* ─── Feature catalog (legacy grid keep for manage) ─── */
 .ph-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -536,6 +536,228 @@
   padding-top: 0.35rem;
   border-top: 1px dashed var(--ds-border);
 }
+
+/* ─── Features catalog — consultant-facing ─── */
+.ph-feat-total {
+  display: inline-block;
+  margin-inline-start: 0.35rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ph-accent);
+  background: var(--ph-accent-soft);
+  vertical-align: middle;
+}
+
+.ph-feat-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 1.35rem;
+  padding: 0.15rem 0 0.85rem;
+  border-bottom: 1px solid var(--ds-border);
+}
+
+.ph-feat-nav-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.7rem 0.42rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--ds-border);
+  background: var(--ds-card, var(--ws-surface));
+  color: var(--ds-text-secondary);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 650;
+  transition: border-color .18s var(--ph-ease), background .18s var(--ph-ease), color .18s var(--ph-ease), transform .18s var(--ph-ease);
+}
+
+.ph-feat-nav-chip:hover {
+  border-color: color-mix(in srgb, var(--ph-accent) 35%, var(--ds-border));
+  color: var(--ds-text);
+  transform: translateY(-1px);
+}
+
+.ph-feat-nav-ico {
+  width: 1.45rem;
+  height: 1.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  background: var(--ph-accent-soft);
+  color: var(--ph-accent);
+}
+
+.ph-feat-nav-count {
+  min-width: 1.2rem;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 750;
+  color: var(--ds-text-muted);
+  background: var(--ds-surface, var(--ws-surface-2));
+  border-radius: 999px;
+  padding: 0.1rem 0.35rem;
+}
+
+.ph-feat-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.ph-feat-section {
+  scroll-margin-top: 5.5rem;
+}
+
+.ph-feat-section-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.85rem;
+  align-items: center;
+  margin-bottom: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--ph-radius-sm);
+  background:
+    linear-gradient(105deg, color-mix(in srgb, var(--ph-accent) 8%, transparent), transparent 55%),
+    var(--ds-surface, var(--ws-surface-2));
+  border: 1px solid var(--ds-border);
+}
+
+.ph-feat-section-mark {
+  width: 2.6rem;
+  height: 2.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--ph-accent-soft);
+  color: var(--ph-accent);
+  font-size: 1rem;
+}
+
+.ph-feat-section-copy h3 {
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ds-text);
+  letter-spacing: -0.01em;
+}
+
+.ph-feat-section-copy p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--ds-text-secondary);
+}
+
+.ph-feat-section-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ds-text-muted);
+  white-space: nowrap;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  background: var(--ds-card, var(--ws-surface));
+  border: 1px solid var(--ds-border);
+}
+
+.ph-feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 0.7rem;
+}
+
+.ph-feat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.05rem 1.1rem 0.95rem;
+  border-radius: var(--ph-radius-sm);
+  background: var(--ds-card, var(--ws-surface));
+  border: 1px solid var(--ds-border);
+  border-inline-start: 3px solid color-mix(in srgb, var(--ph-accent) 55%, var(--ds-border));
+  min-height: 8.5rem;
+  transition: transform .2s var(--ph-ease), border-color .2s var(--ph-ease), box-shadow .2s var(--ph-ease);
+}
+
+.ph-feat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+  border-color: color-mix(in srgb, var(--ph-accent) 22%, var(--ds-border));
+}
+
+.ph-feat-card--planned {
+  border-inline-start-color: #94a3b8;
+  opacity: 0.92;
+}
+
+.ph-feat-card--beta {
+  border-inline-start-color: #f59e0b;
+}
+
+.ph-feat-card--in_progress {
+  border-inline-start-color: #3b82f6;
+}
+
+.ph-feat-card--active {
+  border-inline-start-color: #10b981;
+}
+
+.ph-feat-card-top {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ph-feat-card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--ds-text);
+  line-height: 1.4;
+}
+
+.ph-feat-card-sum {
+  margin: 0;
+  flex: 1;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--ds-text-secondary);
+}
+
+.ph-feat-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.68rem;
+  color: var(--ds-text-muted);
+  padding-top: 0.4rem;
+  margin-top: 0.15rem;
+  border-top: 1px dashed var(--ds-border);
+}
+
+/* Category accent marks */
+.ph-feat-section-mark--filing,
+.ph-feat-nav-chip--filing .ph-feat-nav-ico { background: color-mix(in srgb, #0d9488 16%, transparent); color: #0d9488; }
+.ph-feat-section-mark--extraction,
+.ph-feat-nav-chip--extraction .ph-feat-nav-ico { background: color-mix(in srgb, #2563eb 16%, transparent); color: #2563eb; }
+.ph-feat-section-mark--crm,
+.ph-feat-nav-chip--crm .ph-feat-nav-ico { background: color-mix(in srgb, #7c3aed 16%, transparent); color: #7c3aed; }
+.ph-feat-section-mark--customers,
+.ph-feat-nav-chip--customers .ph-feat-nav-ico { background: color-mix(in srgb, #db2777 16%, transparent); color: #db2777; }
+.ph-feat-section-mark--deals,
+.ph-feat-nav-chip--deals .ph-feat-nav-ico { background: color-mix(in srgb, #ca8a04 16%, transparent); color: #ca8a04; }
+.ph-feat-section-mark--reports,
+.ph-feat-nav-chip--reports .ph-feat-nav-ico { background: color-mix(in srgb, #ea580c 16%, transparent); color: #ea580c; }
+.ph-feat-section-mark--tools,
+.ph-feat-nav-chip--tools .ph-feat-nav-ico { background: color-mix(in srgb, #0891b2 16%, transparent); color: #0891b2; }
+.ph-feat-section-mark--mobile,
+.ph-feat-nav-chip--mobile .ph-feat-nav-ico { background: color-mix(in srgb, #4f46e5 16%, transparent); color: #4f46e5; }
+.ph-feat-section-mark--desktop_bot,
+.ph-feat-nav-chip--desktop_bot .ph-feat-nav-ico { background: color-mix(in srgb, #475569 16%, transparent); color: #475569; }
 
 /* ─── Requests / bugs ─── */
 .ph-req { display: grid; gap: 0.7rem; }
@@ -920,6 +1142,15 @@
 @media (max-width: 420px) {
   .ph-metrics { grid-template-columns: 1fr 1fr; }
   .ph-grid { grid-template-columns: 1fr; }
+  .ph-feat-section-head {
+    grid-template-columns: auto 1fr;
+  }
+  .ph-feat-section-count {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .ph-feat-grid { grid-template-columns: 1fr; }
+  .ph-feat-nav { gap: 0.35rem; }
 }
 
 /* Cheerful / dark polish */

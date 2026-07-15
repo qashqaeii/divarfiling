@@ -24,7 +24,7 @@ class Command(BaseCommand):
         purged = result['purged']
         self.stdout.write(self.style.SUCCESS(
             f"Features +{result['features_created']} / ~{result['features_updated']} "
-            f"(total {result['features_total']}), "
+            f"(total {result['features_total']}, removed {result.get('features_removed', 0)}), "
             f"published releases left: {result['releases_total']}, "
             f"purged fake: requests={purged['requests']} bugs={purged['bugs']} "
             f"releases={purged['releases']} users={purged['users']}"

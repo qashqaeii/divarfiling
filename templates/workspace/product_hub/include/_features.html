@@ -1,9 +1,13 @@
 ﻿{% load workspace_tags product_hub_tags %}
-<section class="ph-panel">
+<section class="ph-panel ph-feat-panel">
     <div class="ph-panel-head">
         <div>
-            <h2>قابلیت‌های سیستم</h2>
-            <p>همه امکانات فایلینگ دیوار به‌صورت دسته‌بندی‌شده و قابل جستجو</p>
+            <h2>چه کارهایی می‌توانید بکنید؟</h2>
+            <p>
+                همه امکانات فایلینگ دیوار، به زبان خودتان و به‌تفکیک کار روزمره مشاور —
+                از گرفتن فایل تا بستن معامله.
+                {% if features_count %}<span class="ph-feat-total">{{ features_count }} قابلیت</span>{% endif %}
+            </p>
         </div>
     </div>
 
@@ -11,10 +15,11 @@
         <input type="hidden" name="tab" value="features">
         <div class="ph-field ph-field--grow">
             <label for="ph-fq">جستجو</label>
-            <input id="ph-fq" type="search" name="fq" value="{{ feature_q }}" class="ws-input" placeholder="مثلاً CRM، نقشه، لایسنس…">
+            <input id="ph-fq" type="search" name="fq" value="{{ feature_q }}" class="ws-input"
+                   placeholder="مثلاً نقشه، مشتری، کمیسیون، لایسنس…">
         </div>
         <div class="ph-field">
-            <label for="ph-fcat">دسته‌بندی</label>
+            <label for="ph-fcat">دسته کار</label>
             <select id="ph-fcat" name="fcat" class="ws-select">
                 <option value="">همه دسته‌ها</option>
                 {% for val, label in category_choices %}
@@ -34,35 +39,81 @@
         <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">اعمال</button>
     </form>
 
-    <div class="ph-grid">
-        {% for f in features %}
-        <article class="ph-card">
-            <div class="ph-card-top">
-                <span class="ph-card-icon" aria-hidden="true">
-                    {% if f.category == 'filing' %}<i class="fas fa-folder-open"></i>
-                    {% elif f.category == 'extraction' %}<i class="fas fa-download"></i>
-                    {% elif f.category == 'crm' %}<i class="fas fa-chart-line"></i>
-                    {% elif f.category == 'customers' %}<i class="fas fa-users"></i>
-                    {% elif f.category == 'deals' %}<i class="fas fa-handshake"></i>
-                    {% elif f.category == 'reports' %}<i class="fas fa-chart-pie"></i>
-                    {% elif f.category == 'tools' %}<i class="fas fa-wand-magic-sparkles"></i>
-                    {% elif f.category == 'mobile' %}<i class="fas fa-mobile-screen"></i>
+    {% if feature_groups %}
+    <nav class="ph-feat-nav" aria-label="پرش به دسته">
+        {% for g in feature_groups %}
+        <a class="ph-feat-nav-chip ph-feat-nav-chip--{{ g.key }}" href="#feat-cat-{{ g.key }}">
+            <span class="ph-feat-nav-ico" aria-hidden="true">
+                {% if g.key == 'filing' %}<i class="fas fa-folder-open"></i>
+                {% elif g.key == 'extraction' %}<i class="fas fa-magnet"></i>
+                {% elif g.key == 'crm' %}<i class="fas fa-briefcase"></i>
+                {% elif g.key == 'customers' %}<i class="fas fa-address-book"></i>
+                {% elif g.key == 'deals' %}<i class="fas fa-handshake"></i>
+                {% elif g.key == 'reports' %}<i class="fas fa-chart-pie"></i>
+                {% elif g.key == 'tools' %}<i class="fas fa-scale-balanced"></i>
+                {% elif g.key == 'mobile' %}<i class="fas fa-mobile-screen-button"></i>
+                {% else %}<i class="fas fa-desktop"></i>{% endif %}
+            </span>
+            <span class="ph-feat-nav-label">{{ g.label }}</span>
+            <span class="ph-feat-nav-count">{{ g.count }}</span>
+        </a>
+        {% endfor %}
+    </nav>
+
+    <div class="ph-feat-sections">
+        {% for g in feature_groups %}
+        <section class="ph-feat-section" id="feat-cat-{{ g.key }}" data-cat="{{ g.key }}">
+            <header class="ph-feat-section-head">
+                <div class="ph-feat-section-mark ph-feat-section-mark--{{ g.key }}" aria-hidden="true">
+                    {% if g.key == 'filing' %}<i class="fas fa-folder-open"></i>
+                    {% elif g.key == 'extraction' %}<i class="fas fa-magnet"></i>
+                    {% elif g.key == 'crm' %}<i class="fas fa-briefcase"></i>
+                    {% elif g.key == 'customers' %}<i class="fas fa-address-book"></i>
+                    {% elif g.key == 'deals' %}<i class="fas fa-handshake"></i>
+                    {% elif g.key == 'reports' %}<i class="fas fa-chart-pie"></i>
+                    {% elif g.key == 'tools' %}<i class="fas fa-scale-balanced"></i>
+                    {% elif g.key == 'mobile' %}<i class="fas fa-mobile-screen-button"></i>
                     {% else %}<i class="fas fa-desktop"></i>{% endif %}
-                </span>
-                <span class="ph-badge {% ph_feature_status_class f.status %}">{{ f.status|ph_label:'feature_status' }}</span>
+                </div>
+                <div class="ph-feat-section-copy">
+                    <h3>{{ g.label }}</h3>
+                    <p>
+                        {% if g.key == 'filing' %}آرشیو، جستجو و کار روزمره روی فایل‌های گرفته‌شده از دیوار
+                        {% elif g.key == 'extraction' %}گرفتن آگهی از دیوار با ربات و آوردن به میزکار
+                        {% elif g.key == 'crm' %}کار روزانه مشاور، یادآور، پیام و هماهنگی تیم
+                        {% elif g.key == 'customers' %}پرونده مشتری، بودجه، نیاز و پیگیری تماس
+                        {% elif g.key == 'deals' %}از پیشنهاد تا قرارداد؛ کمیسیون و چک‌لیست بستن
+                        {% elif g.key == 'reports' %}عملکرد تیم برای مدیر و مشاور ارشد
+                        {% elif g.key == 'tools' %}قیمت‌گذاری، خلاصه آگهی و کمک به گفتگو با مشتری
+                        {% elif g.key == 'mobile' %}کار در رفت‌وآمد و بازدید، از روی موبایل
+                        {% else %}ربات ویندوز، لایسنس و آماده‌به‌کار شدن تیم
+                        {% endif %}
+                    </p>
+                </div>
+                <span class="ph-feat-section-count">{{ g.count }} مورد</span>
+            </header>
+
+            <div class="ph-feat-grid">
+                {% for f in g.items %}
+                <article class="ph-feat-card ph-feat-card--{{ f.status }}">
+                    <div class="ph-feat-card-top">
+                        <span class="ph-badge {% ph_feature_status_class f.status %}">{{ f.status|ph_label:'feature_status' }}</span>
+                    </div>
+                    <h4 class="ph-feat-card-title">{{ f.title }}</h4>
+                    <p class="ph-feat-card-sum">{{ f.summary }}</p>
+                    <footer class="ph-feat-card-foot">
+                        <span>از {{ f.added_at|ws_jalali_date }}</span>
+                        {% if f.last_changed_at and f.last_changed_at != f.added_at %}
+                        <span>به‌روز {{ f.last_changed_at|ws_jalali_date }}</span>
+                        {% endif %}
+                    </footer>
+                </article>
+                {% endfor %}
             </div>
-            <h3 class="ph-card-title">{{ f.title }}</h3>
-            <p class="ph-card-sum">{{ f.summary }}</p>
-            <div class="ph-card-meta">
-                <span class="ph-badge ph-badge--gray">{{ f.category|ph_label:'category' }}</span>
-                <span>از {{ f.added_at|ws_jalali_date }}</span>
-                {% if f.last_changed_at %}
-                <span>به‌روز {{ f.last_changed_at|ws_jalali_date }}</span>
-                {% endif %}
-            </div>
-        </article>
-        {% empty %}
-        <p class="ph-empty" style="grid-column:1/-1">قابلیتی با این فیلتر یافت نشد.</p>
+        </section>
         {% endfor %}
     </div>
+    {% else %}
+    <p class="ph-empty">قابلیتی با این فیلتر پیدا نشد. فیلتر را عوض کنید یا جستجو را خالی بگذارید.</p>
+    {% endif %}
 </section>

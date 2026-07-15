@@ -3064,11 +3064,30 @@ body.ws-body::before { opacity: 0.45; }
     border-radius: 6px;
 }
 
-.mk-filing-pro .mk-ds-grid {
-    padding: 0.65rem;
-    margin: 0;
-    gap: 0.55rem;
-    grid-template-columns: 1fr;
+.mk-filing-row-meta { display: none; }
+.mk-filing-row-tx-inline { display: none; }
+
+.mk-filing-count-pill {
+    display: inline;
+    font-weight: inherit;
+    color: inherit;
+    padding: 0;
+    border: none;
+    background: none;
+}
+.mk-filing-count-pill strong {
+    font-weight: inherit;
+    color: inherit;
+    font-size: inherit;
+}
+.mk-filing-count-pill em { display: none; }
+
+.mk-file-title-row {
+    display: contents;
+}
+
+@media (min-width: 769px) {
+    .mk-filing-desk-only { display: table-cell; }
 }
 .mk-filing-pro .mk-ds-card-glass {
     box-shadow:
@@ -3144,6 +3163,76 @@ body.ws-body::before { opacity: 0.45; }
 
     .mk-filing-head .mk-hub-head-btn--primary {
         grid-column: 1 / -1;
+    }
+
+    .mk-filing-pro .mk-filing-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(4.8rem, 1fr));
+        gap: 0.4rem;
+        overflow-x: auto;
+        padding-bottom: 0.15rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .mk-filing-pro .mk-filing-metrics::-webkit-scrollbar { display: none; }
+
+    .mk-filing-pro .mk-hub-metric {
+        min-width: 0;
+        padding: 0.55rem 0.45rem;
+        border-radius: 14px;
+    }
+
+    .mk-filing-pro .mk-hub-metric-val {
+        font-size: 0.95rem;
+    }
+
+    .mk-filing-pro .mk-hub-metric-lbl {
+        font-size: 0.62rem;
+    }
+
+    .mk-filing-pro .mk-hub-metric-sub {
+        display: none;
+    }
+
+    .mk-filing-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 12;
+        border-radius: 14px;
+        padding: 0.55rem 0.65rem;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        background: color-mix(in srgb, var(--ws-surface) 92%, transparent);
+    }
+
+    .mk-filing-view-toggle {
+        height: 40px;
+        padding: 3px;
+        border-radius: 11px;
+        margin-inline-start: auto;
+    }
+
+    .mk-filing-view-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+    }
+
+    .mk-filing-panel {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .mk-filing-panel-head {
+        padding: 0.75rem 0.85rem;
+    }
+
+    .mk-filing-pro .mk-ds-grid {
+        padding: 0.65rem;
+        gap: 0.75rem;
     }
 }
 @media (max-width: 640px) {
@@ -3473,8 +3562,8 @@ body.ws-body::before { opacity: 0.45; }
 .mk-ds-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0.55rem;
-    padding: 0.65rem;
+    gap: 0.7rem;
+    padding: 0.7rem;
     margin: 0;
     min-width: 0;
 }
@@ -3489,23 +3578,22 @@ body.ws-body::before { opacity: 0.45; }
     display: flex;
     flex-direction: column;
     height: 100%;
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
-    background: color-mix(in srgb, var(--ws-surface) 90%, transparent);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
+    background:
+        radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--ws-primary) 7%, transparent), transparent 55%),
+        var(--ws-surface);
+    border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
     box-shadow:
         0 1px 2px rgba(15, 23, 42, 0.04),
-        0 4px 14px rgba(15, 23, 42, 0.03),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        0 8px 24px rgba(15, 23, 42, 0.045);
     transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
 }
 
 .mk-ds-card-glass::before {
     content: '';
     display: block;
-    height: 2px;
+    height: 3px;
     background: linear-gradient(90deg, var(--ws-primary), rgba(124, 58, 237, 0.15));
     flex-shrink: 0;
 }
@@ -3513,30 +3601,32 @@ body.ws-body::before { opacity: 0.45; }
 .mk-ds-card--sale .mk-ds-card-glass::before {
     background: linear-gradient(90deg, #7c3aed, rgba(124, 58, 237, 0.12));
 }
-
 .mk-ds-card--rent .mk-ds-card-glass::before {
     background: linear-gradient(90deg, #2563eb, rgba(37, 99, 235, 0.12));
 }
-
 .mk-ds-card--mixed .mk-ds-card-glass::before {
     background: linear-gradient(90deg, #d97706, rgba(217, 119, 6, 0.12));
 }
 
 .mk-ds-card:hover .mk-ds-card-glass {
-    border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
+    border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
+    box-shadow:
+        0 2px 6px rgba(15, 23, 42, 0.05),
+        0 14px 36px rgba(124, 58, 237, 0.1);
+    transform: translateY(-2px);
 }
 
 .mk-ds-card.is-selected .mk-ds-card-glass {
     border-color: color-mix(in srgb, var(--ws-primary) 45%, var(--ws-border));
     box-shadow:
         0 0 0 1px color-mix(in srgb, var(--ws-primary) 18%, transparent),
-        0 6px 20px rgba(124, 58, 237, 0.1);
+        0 8px 24px rgba(124, 58, 237, 0.12);
 }
 
 .mk-ds-card-main {
     display: block;
     flex: 1;
-    padding: 0.65rem 0.7rem 0.55rem;
+    padding: 0.85rem 0.9rem 0.65rem;
     text-decoration: none;
     color: inherit;
     min-width: 0;
@@ -3546,68 +3636,73 @@ body.ws-body::before { opacity: 0.45; }
     color: var(--ws-primary);
 }
 
-.mk-ds-card-head {
+.mk-ds-card-hero {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.45rem;
-    margin-bottom: 0.45rem;
+    align-items: flex-start;
+    gap: 0.7rem;
     direction: rtl;
-}
-
-.mk-ds-card-format {
-    width: 2rem;
-    height: 2rem;
-    font-size: 0.5rem;
-    border-radius: 8px;
-    flex-shrink: 0;
-}
-
-.mk-ds-card-head-end {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    flex-shrink: 0;
     min-width: 0;
 }
 
-.mk-ds-card-head .mk-tx-badge {
+.mk-ds-card-avatar {
+    width: 2.6rem;
+    height: 2.6rem;
     font-size: 0.58rem;
-    padding: 0.12rem 0.4rem;
+    border-radius: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.mk-ds-card-hero-body {
+    min-width: 0;
+    flex: 1;
+}
+
+.mk-ds-card-hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+}
+
+.mk-ds-card-hero-top .mk-tx-badge {
+    font-size: 0.6rem;
+    padding: 0.16rem 0.48rem;
     border-radius: 999px;
 }
 
 .mk-ds-card-count {
     display: inline-flex;
     align-items: baseline;
-    gap: 0.12rem;
-    padding: 0.15rem 0.42rem;
+    gap: 0.15rem;
+    padding: 0.2rem 0.5rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface));
-    border: 1px solid color-mix(in srgb, var(--ws-primary) 12%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
     font-variant-numeric: tabular-nums;
     line-height: 1;
 }
 
 .mk-ds-card-count strong {
-    font-size: 0.76rem;
+    font-size: 0.82rem;
     font-weight: 800;
     color: var(--ws-primary);
     letter-spacing: -0.02em;
 }
 
 .mk-ds-card-count em {
-    font-size: 0.56rem;
+    font-size: 0.58rem;
     font-style: normal;
-    font-weight: 600;
+    font-weight: 650;
     color: var(--ws-text-muted);
 }
 
 .mk-ds-card-title {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 800;
-    line-height: 1.38;
+    line-height: 1.35;
     letter-spacing: -0.025em;
     color: var(--ws-text);
     display: -webkit-box;
@@ -3619,14 +3714,14 @@ body.ws-body::before { opacity: 0.45; }
 }
 
 .mk-ds-card-sub {
-    margin: 0.2rem 0 0;
-    font-size: 0.6rem;
+    margin: 0.22rem 0 0;
+    font-size: 0.62rem;
     color: var(--ws-text-muted);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    opacity: 0.82;
+    opacity: 0.85;
     direction: ltr;
     text-align: right;
 }
@@ -3635,8 +3730,8 @@ body.ws-body::before { opacity: 0.45; }
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.22rem;
-    margin-top: 0.4rem;
+    gap: 0.28rem;
+    margin-top: 0.55rem;
     direction: rtl;
 }
 
@@ -3646,21 +3741,21 @@ body.ws-body::before { opacity: 0.45; }
     gap: 0.22rem;
     max-width: 100%;
     min-width: 0;
-    padding: 0.1rem 0.38rem;
+    padding: 0.18rem 0.45rem;
     border-radius: 999px;
-    font-size: 0.58rem;
-    font-weight: 600;
+    font-size: 0.62rem;
+    font-weight: 650;
     color: var(--ws-text-secondary);
-    background: color-mix(in srgb, var(--ws-surface-2) 75%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 80%, transparent);
     border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
     line-height: 1.35;
 }
 
 .mk-ds-chip i {
     flex-shrink: 0;
-    font-size: 0.52rem;
-    opacity: 0.75;
-    color: var(--ws-text-muted);
+    font-size: 0.55rem;
+    opacity: 0.8;
+    color: var(--ws-primary);
 }
 
 .mk-ds-chip--loc span {
@@ -3681,28 +3776,35 @@ body.ws-body::before { opacity: 0.45; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.4rem;
-    padding: 0.4rem 0.45rem 0.45rem;
-    border-top: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
-    background: color-mix(in srgb, var(--ws-surface-2) 40%, transparent);
+    gap: 0.45rem;
+    padding: 0.5rem 0.55rem 0.55rem;
+    border-top: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 55%, transparent);
     direction: rtl;
 }
 
 .mk-ds-card-date {
-    font-size: 0.56rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    font-size: 0.6rem;
     color: var(--ws-text-muted);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
     flex-shrink: 0;
-    opacity: 0.9;
     letter-spacing: -0.01em;
+}
+
+.mk-ds-card-date i {
+    font-size: 0.55rem;
+    opacity: 0.7;
 }
 
 .mk-ds-card-acts {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 0.12rem;
+    gap: 0.2rem;
     flex: 1;
     min-width: 0;
 }
@@ -3711,24 +3813,24 @@ body.ws-body::before { opacity: 0.45; }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.22rem;
-    min-width: 2rem;
-    height: 2rem;
-    padding: 0 0.32rem;
-    border-radius: 8px;
+    gap: 0.25rem;
+    min-width: 2.2rem;
+    height: 2.2rem;
+    padding: 0 0.35rem;
+    border-radius: 10px;
     border: 1px solid transparent;
     background: transparent;
     color: var(--ws-text-muted);
     text-decoration: none;
     font-family: inherit;
-    font-size: 0.66rem;
+    font-size: 0.68rem;
     cursor: pointer;
     flex-shrink: 0;
     transition: color 0.12s, background 0.12s, border-color 0.12s, box-shadow 0.12s;
 }
 
 .mk-ds-card-act i {
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     line-height: 1;
 }
 
@@ -3739,22 +3841,24 @@ body.ws-body::before { opacity: 0.45; }
 }
 
 .mk-ds-card-act--open {
-    padding-inline: 0.5rem;
+    padding-inline: 0.65rem;
     min-width: auto;
-    background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface));
-    border-color: color-mix(in srgb, var(--ws-primary) 16%, transparent);
-    color: var(--ws-primary);
+    background: var(--ws-primary);
+    border-color: transparent;
+    color: #fff;
     font-weight: 700;
-    font-size: 0.6rem;
+    font-size: 0.68rem;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--ws-primary) 28%, transparent);
 }
 
 .mk-ds-card-act--open span {
-    display: none;
+    display: inline;
 }
 
 .mk-ds-card-act--open:hover {
-    background: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface));
-    color: var(--ws-primary-hover, #6d28d9);
+    filter: brightness(1.05);
+    color: #fff;
+    background: var(--ws-primary);
 }
 
 .mk-ds-card-act--danger:hover {
@@ -3764,13 +3868,13 @@ body.ws-body::before { opacity: 0.45; }
 }
 
 button.mk-ds-card-act {
-    padding: 0 0.32rem;
+    padding: 0 0.35rem;
 }
 
 .mk-ds-card-check {
     position: absolute;
-    top: 0.5rem;
-    inset-inline-end: 0.5rem;
+    top: 0.7rem;
+    inset-inline-end: 0.7rem;
     z-index: 4;
     cursor: pointer;
     opacity: 0.55;
@@ -3787,48 +3891,68 @@ button.mk-ds-card-act {
     opacity: 1;
 }
 
-@media (min-width: 400px) {
-    .mk-ds-card-act--open span {
-        display: inline;
-    }
-}
-
 @media (min-width: 769px) {
     .mk-ds-grid {
-        grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-        gap: 0.7rem;
-        padding: 0.85rem 1rem 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+        gap: 0.85rem;
+        padding: 0.9rem 1rem 1.1rem;
     }
 
     .mk-ds-card-main {
-        padding: 0.75rem 0.8rem 0.6rem;
+        padding: 0.9rem 0.95rem 0.7rem;
     }
 
     .mk-ds-card-title {
-        font-size: 0.86rem;
+        font-size: 0.9rem;
     }
 
     .mk-ds-card-act {
         min-width: 2.1rem;
         height: 2.1rem;
     }
-
-    .mk-ds-card-act--open span {
-        display: inline;
-    }
 }
 
 @media (max-width: 768px) {
     .mk-filing-pro .mk-ds-card-check {
-        opacity: 0.7;
+        opacity: 0.85;
+        top: 0.85rem;
+        inset-inline-end: 0.85rem;
     }
 
     .mk-filing-pro .mk-ds-card-glass {
-        border-radius: 12px;
+        border-radius: 18px;
     }
 
     .mk-filing-pro .mk-ds-card-main {
-        padding-inline-end: 1.85rem;
+        padding: 1rem 1rem 0.75rem;
+        padding-inline-end: 2.4rem;
+    }
+
+    .mk-filing-pro .mk-ds-card-avatar {
+        width: 3rem;
+        height: 3rem;
+        font-size: 0.62rem;
+        border-radius: 14px;
+    }
+
+    .mk-filing-pro .mk-ds-card-title {
+        font-size: 1rem;
+    }
+
+    .mk-filing-pro .mk-ds-card-foot {
+        padding: 0.55rem 0.65rem 0.65rem;
+    }
+
+    .mk-filing-pro .mk-ds-card-act {
+        min-width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 11px;
+    }
+
+    .mk-filing-pro .mk-ds-card-act--open {
+        flex: 1 1 auto;
+        justify-content: center;
+        min-height: 2.35rem;
     }
 }
 
@@ -4695,88 +4819,254 @@ button.mk-ds-card-act {
         direction: rtl;
     }
 
-    /* Dataset list page — premium mobile table cards */
+    /* Dataset list page — mobile-first masterpiece table cards */
     .mk-filing-pro .mk-filing-table-wrap {
-        padding: 0.2rem 0 0.45rem;
-        background: color-mix(in srgb, var(--ws-surface-2) 28%, var(--ws-surface));
+        padding: 0.55rem 0.55rem 0.85rem;
+        background: transparent;
+        border: none;
     }
 
+    .mk-filing-pro .mk-data-table-filing tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+
+    .mk-filing-pro .mk-data-table-filing tbody tr.mk-filing-row,
     .mk-filing-pro .mk-data-table-filing tbody tr {
-        margin: 0.45rem 0.6rem;
-        border-radius: 12px;
-        background: color-mix(in srgb, var(--ws-surface) 90%, transparent);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+            "check file count"
+            "actions actions actions";
+        gap: 0;
+        margin: 0;
+        width: 100% !important;
+        border-radius: 18px;
+        overflow: hidden;
+        background:
+            radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--ws-primary) 8%, transparent), transparent 55%),
+            var(--ws-surface);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 68%, transparent);
         box-shadow:
             0 1px 2px rgba(15, 23, 42, 0.04),
-            0 4px 14px rgba(15, 23, 42, 0.03);
+            0 10px 28px rgba(15, 23, 42, 0.05);
+        position: relative;
     }
 
-    .mk-filing-pro .mk-data-table-filing td.mk-col-file {
-        padding: 0.65rem 0.75rem;
-        background: color-mix(in srgb, var(--ws-surface-2) 48%, var(--ws-surface));
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    .mk-filing-pro .mk-data-table-filing tbody tr::before {
+        content: '';
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        width: 3px;
+        background: linear-gradient(180deg, var(--ws-primary), color-mix(in srgb, var(--ws-primary) 20%, transparent));
+        pointer-events: none;
+        z-index: 1;
     }
 
-    .mk-filing-pro .mk-data-table-filing .mk-file-name {
-        font-size: 0.88rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        line-height: 1.35;
-    }
-
-    .mk-filing-pro .mk-data-table-filing .mk-file-sub {
-        font-size: 0.58rem;
-        margin-top: 0.12rem;
-        opacity: 0.82;
+    .mk-filing-pro .mk-data-table-filing tbody tr.is-selected {
+        border-color: color-mix(in srgb, var(--ws-primary) 40%, var(--ws-border));
+        box-shadow:
+            0 0 0 1px color-mix(in srgb, var(--ws-primary) 16%, transparent),
+            0 10px 28px rgba(124, 58, 237, 0.12);
     }
 
     .mk-filing-pro .mk-data-table-filing tbody td {
-        padding: 0.42rem 0.75rem;
-        border-bottom-color: color-mix(in srgb, var(--ws-border) 48%, transparent);
+        display: none !important;
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
     }
 
     .mk-filing-pro .mk-data-table-filing tbody td::before {
-        flex: 0 0 3.65rem;
-        font-size: 0.62rem;
-        font-weight: 600;
-        color: var(--ws-text-muted);
+        display: none !important;
+        content: none !important;
     }
 
     .mk-filing-pro .mk-data-table-filing td.mk-col-check {
-        background: transparent;
-        padding: 0.35rem 0.75rem 0.25rem;
+        display: flex !important;
+        grid-area: check;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 1rem 0.25rem 0.85rem 0.75rem !important;
+        direction: rtl;
+    }
+
+    .mk-filing-pro .mk-data-table-filing td.mk-col-file {
+        display: block !important;
+        grid-area: file;
+        padding: 0.9rem 0.35rem 0.45rem !important;
+        min-width: 0;
+    }
+
+    .mk-filing-pro .mk-data-table-filing td.mk-col-num {
+        display: flex !important;
+        grid-area: count;
+        align-items: flex-start;
         justify-content: flex-end;
+        padding: 0.95rem 0.85rem 0.85rem 0.25rem !important;
+        direction: rtl;
     }
 
     .mk-filing-pro .mk-data-table-filing td.mk-col-actions {
-        padding: 0.4rem 0.55rem 0.5rem;
-        background: color-mix(in srgb, var(--ws-surface-2) 42%, transparent);
+        display: block !important;
+        grid-area: actions;
+        padding: 0.55rem 0.65rem 0.65rem !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 55%, transparent) !important;
+    }
+
+    .mk-filing-pro .mk-filing-desk-only {
+        display: none !important;
+    }
+
+    .mk-filing-pro .mk-filing-row-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.28rem;
+        margin-top: 0.5rem;
+        direction: rtl;
+    }
+
+    .mk-filing-pro .mk-file-title-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        direction: rtl;
+    }
+
+    .mk-filing-pro .mk-filing-row-tx-inline {
+        flex-shrink: 0;
+        font-size: 0.58rem;
+        padding: 0.14rem 0.42rem;
+        margin-top: 0.1rem;
+    }
+
+    .mk-filing-pro .mk-filing-count-pill {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
+        padding: 0.35rem 0.55rem;
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
+        line-height: 1;
+    }
+
+    .mk-filing-pro .mk-filing-count-pill strong {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: var(--ws-primary);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+    }
+
+    .mk-filing-pro .mk-filing-count-pill em {
+        font-size: 0.58rem;
+        font-style: normal;
+        font-weight: 650;
+        color: var(--ws-text-muted);
+    }
+
+    .mk-filing-pro .mk-data-table-filing .mk-file-cell {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.7rem;
+        width: 100%;
+        min-width: 0;
+        direction: rtl;
+    }
+
+    .mk-filing-pro .mk-data-table-filing .mk-file-icon {
+        width: 2.85rem;
+        height: 2.85rem;
+        border-radius: 13px;
+        font-size: 0.58rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    .mk-filing-pro .mk-data-table-filing .mk-file-text {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.12rem;
+    }
+
+    .mk-filing-pro .mk-data-table-filing .mk-file-name {
+        font-size: 0.95rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        white-space: normal;
+        text-overflow: unset;
+    }
+
+    .mk-filing-pro .mk-data-table-filing .mk-file-sub {
+        font-size: 0.6rem;
+        opacity: 0.8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .mk-filing-pro .mk-data-table-filing .mk-row-actions {
-        display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 0.22rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
         width: 100%;
+        direction: rtl;
     }
 
     .mk-filing-pro .mk-data-table-filing .mk-row-btn {
-        min-width: 0;
-        width: 100%;
-        min-height: 2.15rem;
-        height: auto;
-        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.35rem;
+        width: 2.35rem;
+        height: 2.35rem;
+        min-height: 2.35rem;
+        border-radius: 11px;
         border: 1px solid color-mix(in srgb, var(--ws-border) 58%, transparent);
-        background: color-mix(in srgb, var(--ws-surface) 82%, transparent);
+        background: var(--ws-surface);
+        color: var(--ws-text-muted);
+        font-size: 0.78rem;
+        flex: 0 0 auto;
+        gap: 0.3rem;
+    }
+
+    .mk-filing-pro .mk-data-table-filing .mk-row-btn--open,
+    .mk-filing-pro .mk-data-table-filing .mk-row-btn:first-child {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
+        background: var(--ws-primary);
+        border-color: transparent;
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+    }
+
+    .mk-filing-pro .mk-data-table-filing .mk-row-btn--open::after,
+    .mk-filing-pro .mk-data-table-filing .mk-row-btn:first-child::after {
+        content: "باز کردن";
         font-size: 0.72rem;
     }
 
-    .mk-filing-pro .mk-data-table-filing .mk-row-btn:first-child {
-        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface));
-        border-color: color-mix(in srgb, var(--ws-primary) 16%, transparent);
-        color: var(--ws-primary);
+    .mk-filing-pro .mk-data-table-filing .mk-row-btn-danger {
+        color: #e11d48;
     }
 
     /* ─── Workspace home — homeFilesTable mobile cards (نمای کلی) ─── */

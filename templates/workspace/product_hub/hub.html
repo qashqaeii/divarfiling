@@ -5,7 +5,7 @@
 {% block mobile_bar_title %}مرکز توسعه{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -42,7 +42,7 @@
     </header>
 
     {% if unread_notifications %}
-    <div class="mk-notice mk-notice--info mk-notice--inline mk-notice--compact" style="margin-bottom:0.55rem">
+    <div class="mk-notice mk-notice--info mk-notice--inline mk-notice--compact" style="margin:0">
         <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
         <div class="mk-notice__body">
             <strong class="mk-notice__title">{{ unread_notifications.0.title }}</strong>

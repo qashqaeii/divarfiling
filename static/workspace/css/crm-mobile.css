@@ -497,7 +497,20 @@
 
 /* ─── Contact detail ─── */
 @media (max-width: 768px) {
-    .crm-contact-detail-pro {
+    /* When premium contact mobile sheet is active, defer chrome to it */
+    .crm-contact-detail-pro.crm-contact-mobile {
+        padding: 0;
+        gap: 0.55rem;
+    }
+    .crm-contact-mobile .crm-contact-hero {
+        border-radius: 0 0 24px 24px;
+        margin-bottom: 0;
+    }
+    .crm-contact-mobile .crm-contact-hero__actions {
+        display: none !important;
+    }
+
+    .crm-contact-detail-pro:not(.crm-contact-mobile) {
         padding: 0.5rem 0.65rem 0.75rem;
         gap: 0.45rem;
     }

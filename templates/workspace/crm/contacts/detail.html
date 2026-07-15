@@ -73,6 +73,26 @@
                     {% endif %}
                 </div>
             </div>
+            {% if customer.phone %}
+            <div class="crm-contact-mob-quick" role="group" aria-label="دسترسی سریع تماس">
+                <a href="{{ customer.phone|phone_tel_href }}" class="crm-contact-mob-quick__btn crm-contact-mob-quick__btn--call">
+                    <span class="crm-contact-mob-quick__icon"><i class="fas fa-phone" aria-hidden="true"></i></span>
+                    <span>تماس</span>
+                </a>
+                <a href="{{ customer.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-contact-mob-quick__btn crm-contact-mob-quick__btn--wa">
+                    <span class="crm-contact-mob-quick__icon"><i class="fab fa-whatsapp" aria-hidden="true"></i></span>
+                    <span>واتساپ</span>
+                </a>
+                <a href="{{ customer.phone|phone_sms_href }}" class="crm-contact-mob-quick__btn crm-contact-mob-quick__btn--sms">
+                    <span class="crm-contact-mob-quick__icon"><i class="fas fa-comment-sms" aria-hidden="true"></i></span>
+                    <span>پیامک</span>
+                </a>
+                <button type="button" class="crm-contact-mob-quick__btn crm-contact-mob-quick__btn--copy" data-copy="{{ customer.phone }}" title="کپی شماره">
+                    <span class="crm-contact-mob-quick__icon"><i class="fas fa-copy" aria-hidden="true"></i></span>
+                    <span>کپی</span>
+                </button>
+            </div>
+            {% endif %}
             {% include 'workspace/crm/includes/contact_detail_actions.html' %}
         </div>
         {% if crm_agency %}
@@ -674,26 +694,32 @@
     </div>
 
     <nav class="crm-contact-mobile-dock" aria-label="عملیات سریع موبایل">
-        {% if customer.phone %}
-        <a href="tel:{{ customer.phone }}" class="crm-contact-dock-btn" title="تماس">
-            <i class="fas fa-phone" aria-hidden="true"></i>
-            <span>تماس</span>
-        </a>
-        <a href="https://wa.me/98{{ customer.phone|slice:'1:' }}" target="_blank" rel="noopener" class="crm-contact-dock-btn crm-contact-dock-btn--wa" title="واتساپ">
-            <i class="fab fa-whatsapp" aria-hidden="true"></i>
-            <span>واتساپ</span>
-        </a>
-        {% endif %}
-        {% if not customer_is_shared %}
-        <button type="button" class="crm-contact-dock-btn crm-contact-dock-btn--primary" data-drawer-open="drawer-edit" title="ویرایش">
-            <i class="fas fa-pen" aria-hidden="true"></i>
-            <span>ویرایش</span>
-        </button>
-        {% endif %}
-        <button type="button" class="crm-contact-dock-btn crm-contact-dock-btn--menu" data-drawer-open="drawer-activity" title="فعالیت جدید">
-            <i class="fas fa-plus" aria-hidden="true"></i>
-            <span>فعالیت</span>
-        </button>
+        <div class="crm-contact-mobile-dock__inner">
+            {% if customer.phone %}
+            <a href="{{ customer.phone|phone_tel_href }}" class="crm-contact-dock-btn crm-contact-dock-btn--call" title="تماس">
+                <i class="fas fa-phone" aria-hidden="true"></i>
+                <span>تماس</span>
+            </a>
+            <a href="{{ customer.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-contact-dock-btn crm-contact-dock-btn--wa" title="واتساپ">
+                <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                <span>واتساپ</span>
+            </a>
+            <a href="{{ customer.phone|phone_sms_href }}" class="crm-contact-dock-btn crm-contact-dock-btn--sms" title="پیامک">
+                <i class="fas fa-comment-sms" aria-hidden="true"></i>
+                <span>پیامک</span>
+            </a>
+            {% endif %}
+            {% if not customer_is_shared %}
+            <button type="button" class="crm-contact-dock-btn crm-contact-dock-btn--primary" data-drawer-open="drawer-edit" title="ویرایش">
+                <i class="fas fa-pen" aria-hidden="true"></i>
+                <span>ویرایش</span>
+            </button>
+            {% endif %}
+            <button type="button" class="crm-contact-dock-btn crm-contact-dock-btn--menu" data-drawer-open="drawer-activity" title="فعالیت جدید">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                <span>فعالیت</span>
+            </button>
+        </div>
     </nav>
     </div>
 {% endblock %}

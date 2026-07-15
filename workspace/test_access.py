@@ -178,8 +178,17 @@ class WorkspaceAccessTests(TestCase):
             ws_subcategory_short('تجاری دفتر کار، اتاق اداری، مطب'),
             'تجاری',
         )
+        self.assertEqual(
+            ws_subcategory_short('دفتر کار، اتاق اداری، مطب'),
+            'تجاری',
+        )
+        self.assertEqual(
+            ws_subcategory_short('دفتر کار اتاق اداری مطب'),
+            'تجاری',
+        )
         self.assertEqual(ws_subcategory_short('خانه و ویلا'), 'ویلایی')
         self.assertEqual(ws_subcategory_short('آپارتمان'), 'آپارتمان')
+        self.assertEqual(ws_subcategory_short('مغازه و غرفه'), 'مغازه و غرفه')
 
 
 class PersonalFileFromListingTests(TestCase):

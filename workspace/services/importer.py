@@ -584,6 +584,8 @@ def import_dataset(
             len(existing_tokens) + added_count if is_update else added_count
         )
         dataset.file_size = file_size
+        dataset.original_filename = basename
+        dataset.file_format = file_format
         dataset.row_count = total_listings
         dataset.column_count = len(df.columns)
         merged_columns = list(dict.fromkeys(

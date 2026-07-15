@@ -201,6 +201,58 @@ class LicenseAPITests(TestCase):
         self.assertEqual(second_data['dataset_id'], dataset_id)
         self.assertEqual(Dataset.objects.filter(user=self.user).count(), 1)
 
+    def test_bot_import_dataset_updates_file_format_on_reimport(self):
+        act = self.client.post('/api/licenses/activate/', {
+            'license_key': TEST_KEY,
+            'hardware_fingerprint': TEST_HW,
+        }, format='json')
+        self.assertEqual(act.status_code, 200, act.content)
+
+        json_payload = json.dumps([
+            {'token': 'tok-001', 'title': 'آگهی تست'},
+        ], ensure_ascii=False).encode('utf-8')
+        rel_json = 'تهران/تهران/جردن/اجاره_آپارتمان/اجاره_آپارتمان.json'
+
+        first = self.client.post(
+            '/api/licenses/import-dataset/',
+            {
+                'license_key': TEST_KEY,
+                'hardware_fingerprint': TEST_HW,
+                'relative_path': rel_json,
+                'file': io.BytesIO(json_payload),
+            },
+            format='multipart',
+        )
+        self.assertEqual(first.status_code, 200, first.content)
+        dataset = Dataset.objects.get(user=self.user)
+        self.assertEqual(dataset.file_format, 'json')
+        self.assertEqual(dataset.original_filename, 'اجاره_آپارتمان.json')
+
+        xlsx_payload = io.BytesIO()
+        import pandas as pd
+        pd.DataFrame([
+            {'token': 'tok-001', 'title': 'آگهی تست'},
+            {'token': 'tok-002', 'title': 'آگهی دوم'},
+        ]).to_excel(xlsx_payload, index=False)
+        xlsx_payload.seek(0)
+        rel_xlsx = 'تهران/تهران/جردن/اجاره_آپارتمان/اجاره_آپارتمان.xlsx'
+
+        second = self.client.post(
+            '/api/licenses/import-dataset/',
+            {
+                'license_key': TEST_KEY,
+                'hardware_fingerprint': TEST_HW,
+                'relative_path': rel_xlsx,
+                'file': xlsx_payload,
+            },
+            format='multipart',
+        )
+        self.assertEqual(second.status_code, 200, second.content)
+        dataset.refresh_from_db()
+        self.assertEqual(dataset.file_format, 'xlsx')
+        self.assertEqual(dataset.original_filename, 'اجاره_آپارتمان.xlsx')
+        self.assertEqual(Dataset.objects.filter(user=self.user).count(), 1)
+
 
 @override_settings(DEBUG=False, LICENSE_ALLOW_LOCAL_DEV=False, LICENSE_BOT_API_KEY='test-bot-key')
 class LicenseAPIBotKeyTests(TestCase):

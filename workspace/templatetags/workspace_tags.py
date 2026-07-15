@@ -1,4 +1,5 @@
 from urllib.parse import urlencode
+import re
 
 from django import template
 
@@ -12,8 +13,41 @@ register = template.Library()
 
 _SUBJECT_SHORT_LABELS = {
     'تجاری دفتر کار، اتاق اداری، مطب': 'تجاری',
+    'دفتر کار، اتاق اداری، مطب': 'تجاری',
+    'دفتر کار، مطب': 'تجاری',
     'خانه و ویلا': 'ویلایی',
 }
+
+_OFFICE_SUBJECT_MARKERS = ('دفتر کار', 'اتاق اداری', 'مطب')
+_NON_OFFICE_SUBJECT_MARKERS = ('مغازه', 'غرفه', 'صنعتی', 'کشاورزی')
+
+
+def _normalize_subject_text(value: str) -> str:
+    text = str(value or '').strip().replace('،', ' ').replace('_', ' ')
+    return re.sub(r'\s+', ' ', text).strip()
+
+
+def subcategory_short_label(value):
+    """برچسب کوتاه موضوع/زیردسته برای جداول فشرده."""
+    if not value:
+        return value
+    text = str(value).strip()
+    if text in _SUBJECT_SHORT_LABELS:
+        return _SUBJECT_SHORT_LABELS[text]
+    norm = _normalize_subject_text(text)
+    if norm in {_normalize_subject_text(k) for k in _SUBJECT_SHORT_LABELS}:
+        return _SUBJECT_SHORT_LABELS.get(text, 'تجاری')
+    lower = norm.lower()
+    if any(marker in lower for marker in _NON_OFFICE_SUBJECT_MARKERS):
+        return text
+    if any(marker in lower for marker in _OFFICE_SUBJECT_MARKERS):
+        return 'تجاری'
+    if lower.startswith('تجاری ') and any(
+        marker.replace(' ', '') in lower.replace(' ', '')
+        for marker in _OFFICE_SUBJECT_MARKERS
+    ):
+        return 'تجاری'
+    return text
 
 
 @register.inclusion_tag('workspace/includes/fields.html')
@@ -133,10 +167,7 @@ def ws_tx_profile(transaction_type):
 @register.filter
 def ws_subcategory_short(value):
     """برچسب کوتاه موضوع/زیردسته برای جداول فشرده."""
-    if not value:
-        return value
-    text = str(value).strip()
-    return _SUBJECT_SHORT_LABELS.get(text, text)
+    return subcategory_short_label(value)
 
 
 @register.simple_tag

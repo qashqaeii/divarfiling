@@ -29,7 +29,7 @@
     </td>
     <td class="mk-col-subject" data-label="موضوع" data-sort-value="{{ ds.subcategory|default:''|lower }}">
         {% if ds.subcategory %}
-        <span class="mk-subject">{{ ds.subcategory }}</span>
+        <span class="mk-subject" title="{{ ds.subcategory }}">{{ ds.subcategory|ws_subcategory_short }}</span>
         {% else %}
         <span class="mk-muted">—</span>
         {% endif %}

@@ -329,6 +329,7 @@
 
 {% block extra_js %}
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/listing-cards.js' %}?v=1"></script>
 <script>
 (function () {
     const advToggle = document.getElementById('wsAdvToggle');
@@ -368,7 +369,7 @@
 
     document.querySelectorAll('.mk-listing-row[data-href], .mk-lcard[data-href]').forEach(function (row) {
         row.addEventListener('click', function (e) {
-            if (e.target.closest('a, button, input, select, textarea, summary, details, label, form')) return;
+            if (e.target.closest('a, button, input, select, textarea, summary, details, label, form, .mk-lcard-nav, .mk-lcard-cover--gallery')) return;
             window.location.href = row.dataset.href;
         });
     });

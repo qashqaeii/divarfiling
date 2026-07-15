@@ -1,13 +1,35 @@
 {% load humanize workspace_tags %}
 {% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token %}
 <article class="mk-lcard" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
-    <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-cover" tabindex="-1" aria-hidden="true">
+    <div class="mk-lcard-cover{% if listing.images|length > 1 %} mk-lcard-cover--gallery{% endif %}">
         {% if listing.images %}
-        <img src="{{ listing.images.0 }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-        {% else %}
-        <div class="mk-lcard-cover-empty">
-            <i class="fas fa-building" aria-hidden="true"></i>
+        <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-cover-link" tabindex="-1" aria-label="مشاهده آگهی">
+            <img class="mk-lcard-cover-img" src="{{ listing.images.0 }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+        </a>
+        {% if listing.images|length > 1 %}
+        {% with gallery_imgs=listing.images|slice:":16" %}
+        <div class="mk-lcard-gallery-urls" hidden aria-hidden="true">
+            {% for img in gallery_imgs %}
+            <span data-url="{{ img }}"></span>
+            {% endfor %}
         </div>
+        <button type="button" class="mk-lcard-nav mk-lcard-nav--prev" aria-label="عکس قبلی">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="mk-lcard-nav mk-lcard-nav--next" aria-label="عکس بعدی">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        <span class="mk-lcard-cover-count" aria-live="polite">
+            <b data-gallery-idx>1</b><span class="mk-lcard-cover-count-sep">/</span><span data-gallery-total>{{ gallery_imgs|length }}</span>
+        </span>
+        {% endwith %}
+        {% endif %}
+        {% else %}
+        <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-cover-link mk-lcard-cover-link--empty" tabindex="-1" aria-label="مشاهده آگهی">
+            <div class="mk-lcard-cover-empty">
+                <i class="fas fa-building" aria-hidden="true"></i>
+            </div>
+        </a>
         {% endif %}
         <span class="mk-lcard-cover-shade" aria-hidden="true"></span>
         <div class="mk-lcard-cover-top">
@@ -22,10 +44,7 @@
             {% endif %}
             {% endwith %}
         </div>
-        {% if listing.images|length > 1 %}
-        <span class="mk-lcard-cover-count"><i class="fas fa-images" aria-hidden="true"></i>{{ listing.images|length }}</span>
-        {% endif %}
-    </a>
+    </div>
 
     <div class="mk-lcard-body">
         <div class="mk-lcard-head">

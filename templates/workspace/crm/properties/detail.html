@@ -235,12 +235,12 @@
                                 </span>
                             </div>
                             {% endif %}
-                            {% if property.floor %}
+                            {% if property.floor is not None %}
                             <div class="crm-prop-hero-kpi">
                                 <span class="crm-prop-hero-kpi-ico"><i class="fas fa-layer-group"></i></span>
                                 <span class="crm-prop-hero-kpi-body">
                                     <em>طبقه</em>
-                                    <strong>{{ property.floor }}{% if property.total_floors %}/{{ property.total_floors }}{% endif %}</strong>
+                                    <strong>{{ property.floor|ws_floor_display:property.total_floors }}</strong>
                                 </span>
                             </div>
                             {% endif %}

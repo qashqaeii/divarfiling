@@ -117,3 +117,51 @@ class ListingFeatureDisplayTests(TestCase):
         for it in items:
             self.assertTrue(it['tip'])
             self.assertTrue(it['icon'].startswith('fa-'))
+
+    def test_extract_core_specs_from_attributes_and_sale_columns(self):
+        """فروش بدون ستون مستقیم طبقه — استخراج از attributes."""
+        listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='sell001',
+            title='فروش ۸۵ متری',
+            data={
+                'attributes': 'متراژ:85|ساخت:1400|اتاق:2|طبقه:3 از 5',
+                'قیمت': 5000000000,
+            },
+        )
+        feat = extract_listing_features(listing)
+        self.assertEqual(feat['rooms'], '2')
+        self.assertEqual(feat['build_year'], 1400)
+        self.assertEqual(feat['floor'], '3 از 5')
+
+    def test_floor_special_values(self):
+        from workspace.services.features import format_floor_display, parse_floor_int
+
+        self.assertEqual(parse_floor_int('همکف'), 0)
+        self.assertEqual(parse_floor_int('زیر همکف'), -1)
+        self.assertEqual(parse_floor_int('3 از 5'), 3)
+        self.assertEqual(format_floor_display('همکف'), 'همکف')
+        self.assertEqual(format_floor_display('3 از 5', 5), '3 از 5')
+        self.assertEqual(format_floor_display(-1), 'زیر همکف')
+
+    def test_rent_listing_with_explicit_columns(self):
+        rent_dataset = Dataset.objects.create(
+            user=self.user,
+            name='اجاره',
+            original_filename='r.xlsx',
+            file_format='xlsx',
+            transaction_type='اجاره',
+            subcategory='آپارتمان',
+            city='تهران',
+        )
+        listing = Listing.objects.create(
+            dataset=rent_dataset,
+            token='rent001',
+            title='اجاره ۵۵ متری',
+            rooms='1',
+            data={'ساخت': '1394', 'طبقه': 'همکف', 'اتاق': '۱'},
+        )
+        feat = extract_listing_features(listing)
+        self.assertEqual(feat['rooms'], '1')
+        self.assertEqual(feat['build_year'], 1394)
+        self.assertEqual(feat['floor'], 'همکف')

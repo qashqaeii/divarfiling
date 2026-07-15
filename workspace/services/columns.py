@@ -244,11 +244,24 @@ def _export_data_from_row(row: Dict[str, Any]) -> Dict[str, Any]:
     return assert_json_serializable(dict(row))
 
 
+def _rooms_from_row_data(row: Dict[str, Any], rooms: str) -> str:
+    if rooms:
+        return rooms
+    for key in ('اتاق', 'تعداد اتاق', 'rooms'):
+        val = row.get(key)
+        if val is not None and str(val).strip() not in ('', '-', '—'):
+            return _safe_str(val)
+    return ''
+
+
 def export_record_to_listing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
     """تبدیل یک ردیف export فارسی (اکسل/JSON) به فیلدهای Listing — بدون DataFrame."""
     token = _safe_str(_pick_row_value(row, 'token'))
     if not token:
         token = f'row_{hash(tuple(row.values())) % 10**8}'
+
+    data = _export_data_from_row(row)
+    rooms = _rooms_from_row_data(row, _safe_str(_pick_row_value(row, 'rooms')))
 
     return {
         'token': token,
@@ -257,7 +270,7 @@ def export_record_to_listing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
         'deposit': _safe_int(_pick_row_value(row, 'deposit')),
         'rent': _safe_int(_pick_row_value(row, 'rent')),
         'area': _safe_float(_pick_row_value(row, 'area')),
-        'rooms': _safe_str(_pick_row_value(row, 'rooms')),
+        'rooms': rooms,
         'neighborhood': normalize_location_label(_pick_row_value(row, 'neighborhood')),
         'city': normalize_location_label(_pick_row_value(row, 'city')),
         'latitude': _safe_float(_pick_row_value(row, 'latitude')),
@@ -268,7 +281,7 @@ def export_record_to_listing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
         'images': _parse_images(_pick_row_value(row, 'images')),
         'published_at': _parse_datetime(_pick_row_value(row, 'published_at')),
         'expires_at': _parse_datetime(_pick_row_value(row, 'expires_at')),
-        'data': _export_data_from_row(row),
+        'data': data,
     }
 
 
@@ -305,7 +318,7 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
         'deposit': _safe_int(row[cols['deposit']]) if cols['deposit'] else None,
         'rent': _safe_int(row[cols['rent']]) if cols['rent'] else None,
         'area': _safe_float(row[cols['area']]) if cols['area'] else None,
-        'rooms': _safe_str(row[cols['rooms']]) if cols['rooms'] else '',
+        'rooms': _rooms_from_row_data(data, _safe_str(row[cols['rooms']]) if cols['rooms'] else ''),
         'neighborhood': normalize_location_label(row[cols['neighborhood']]) if cols['neighborhood'] else '',
         'city': normalize_location_label(row[cols['city']]) if cols['city'] else '',
         'latitude': _safe_float(row[cols['latitude']]) if cols['latitude'] else None,

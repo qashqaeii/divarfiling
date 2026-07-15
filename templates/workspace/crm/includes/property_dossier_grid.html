@@ -54,10 +54,10 @@
                 <dd>{{ property.rooms }}</dd>
             </div>
             {% endif %}
-            {% if property.floor %}
+            {% if property.floor is not None %}
             <div>
                 <dt><i class="fas {{ 'طبقه'|feature_icon }}" aria-hidden="true"></i> طبقه</dt>
-                <dd>{{ property.floor }}{% if property.total_floors %} از {{ property.total_floors }}{% endif %}</dd>
+                <dd>{{ property.floor|ws_floor_display:property.total_floors }}</dd>
             </div>
             {% endif %}
             {% if property.build_year %}

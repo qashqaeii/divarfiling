@@ -511,14 +511,14 @@ def property_from_listing(user, listing) -> CRMProperty:
         for item in group.get('items', []):
             amenity_lines.append(f"{item['label']}: {item['value']}")
     parking_count = (listing.data or {}).get('تعداد پارکینگ')
-    floor_raw = feat.get('floor') or (listing.data or {}).get('طبقه')
-    floor_val = None
-    if floor_raw:
-        try:
-            floor_val = int(re.search(r'\d+', str(floor_raw)).group())
-        except (AttributeError, ValueError, TypeError):
-            pass
-    total_floors_raw = (listing.data or {}).get('تعداد کل طبقات ساختمان')
+    from workspace.services.features import merge_data_with_attributes, parse_floor_int
+
+    merged_data = merge_data_with_attributes(listing.data or {})
+    floor_raw = feat.get('floor') or merged_data.get('طبقه')
+    floor_val = parse_floor_int(floor_raw)
+    if floor_val is None and floor_raw:
+        floor_val = parse_floor_int(str(floor_raw).split(' از ', 1)[0])
+    total_floors_raw = merged_data.get('تعداد کل طبقات ساختمان')
     total_floors = None
     if total_floors_raw:
         try:

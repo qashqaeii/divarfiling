@@ -115,11 +115,11 @@ def update_property_public_share(share: CRMPropertyPublicShare, payload: dict) -
 
 
 def _floor_display(prop: CRMProperty) -> str:
-    if prop.floor is not None and prop.total_floors:
-        return f'{prop.floor} از {prop.total_floors}'
-    if prop.floor is not None:
-        return str(prop.floor)
-    return ''
+    from workspace.services.features import format_floor_display
+
+    if prop.floor is None:
+        return ''
+    return format_floor_display(prop.floor, prop.total_floors)
 
 
 def _property_feat(prop: CRMProperty) -> Dict[str, Any]:

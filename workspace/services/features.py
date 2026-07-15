@@ -170,21 +170,133 @@ def parse_build_year(value: Any) -> Optional[int]:
     return None
 
 
+_ATTRIBUTES_BLOB_KEYS = (
+    'attributes',
+    'ویژگی_ها_و_امکانات',
+    'ویژگی‌ها و امکانات',
+)
+
+
+def _is_empty_data_value(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, float) and value != value:
+        return True
+    s = str(value).strip()
+    return not s or s in ('-', '—', 'nan', 'None')
+
+
+def parse_attributes_string(raw: Any) -> Dict[str, str]:
+    """تبدیل رشته attributes (مثلاً «متراژ:50|ساخت:1400|طبقه:3 از 5») به dict."""
+    text = str(raw or '').strip()
+    if not text:
+        return {}
+    out: Dict[str, str] = {}
+    for part in re.split(r'\s*[|]\s*', text):
+        piece = part.strip()
+        if not piece or ':' not in piece:
+            continue
+        key, val = piece.split(':', 1)
+        key, val = key.strip(), val.strip()
+        if key and val and not _is_empty_data_value(val):
+            out[key] = val
+    return out
+
+
+def merge_data_with_attributes(data: Optional[dict]) -> dict:
+    """ادغام attributes با data — فقط برای کلیدهای خالی."""
+    merged = dict(data or {})
+    for attr_key in _ATTRIBUTES_BLOB_KEYS:
+        blob = merged.get(attr_key)
+        if _is_empty_data_value(blob):
+            continue
+        for key, val in parse_attributes_string(blob).items():
+            if key not in merged or _is_empty_data_value(merged.get(key)):
+                merged[key] = val
+    return merged
+
+
+def parse_floor_int(value: Any) -> Optional[int]:
+    """تبدیل طبقه به عدد: 2، 3 از 5 -> 3، همکف -> 0، زیر همکف -> -1."""
+    if value is None or _is_empty_data_value(value):
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        if value != value:
+            return None
+        return int(value)
+
+    val_str = str(value).strip()
+    val_norm = val_str.translate(_FA_DIGITS)
+    compact = val_norm.replace('\u200c', '').replace(' ', '').lower()
+
+    if 'زیرهمکف' in compact or ('زیر' in val_norm and 'همکف' in val_norm):
+        return -1
+    if compact == 'همکف' or val_str.strip() == 'همکف':
+        return 0
+    if 'همکف' in val_str and 'زیر' not in val_str and not re.search(r'\d', val_norm):
+        return 0
+
+    numbers = re.findall(r'\d+', val_norm)
+    if numbers:
+        return int(numbers[0])
+    return None
+
+
+def format_floor_display(value: Any, total_floors: Any = None) -> str:
+    """نمایش خوانا برای UI — شامل همکف و «N از M»."""
+    val_str = str(value or '').strip()
+    val_norm = val_str.translate(_FA_DIGITS)
+    az_match = re.search(r'(\d+)\s*از\s*(\d+)', val_norm)
+
+    floor_int = parse_floor_int(value)
+    total_int = parse_floor_int(total_floors) if total_floors is not None else None
+    if total_int is None and total_floors not in (None, ''):
+        try:
+            total_int = int(str(total_floors).translate(_FA_DIGITS).strip())
+        except (ValueError, TypeError):
+            total_int = None
+    if az_match:
+        floor_int = int(az_match.group(1))
+        if total_int is None:
+            total_int = int(az_match.group(2))
+
+    if floor_int == 0:
+        base = 'همکف'
+    elif floor_int == -1:
+        base = 'زیر همکف'
+    elif floor_int is not None:
+        base = str(floor_int)
+    else:
+        return '' if _is_empty_data_value(val_str) else val_str
+
+    if total_int and floor_int not in (None, 0, -1):
+        return f'{base} از {total_int}'
+    return base
+
+
 def extract_listing_features(listing) -> Dict[str, Any]:
     """ویژگی‌های استاندارد از مدل Listing."""
-    data = listing.data or {}
+    data = merge_data_with_attributes(listing.data or {})
     build_year = parse_build_year(_get_from_data(data, FEATURE_KEYS['build_year']))
     if not build_year and listing.title:
         m = re.search(r'(13|14)\d{2}', listing.title.translate(_FA_DIGITS))
         if m:
             build_year = parse_build_year(m.group())
 
+    total_floors_raw = _get_from_data(
+        data,
+        ('تعداد کل طبقات ساختمان', 'تعداد طبقات', 'total_floors'),
+    )
     floor_raw = _get_from_data(data, FEATURE_KEYS['floor'])
-    floor = str(floor_raw).strip() if floor_raw not in (None, '', '-') else ''
-    if not floor and listing.title:
+    if _is_empty_data_value(floor_raw) and listing.title:
         m = re.search(r'طبقه\s*(\d+)', listing.title.translate(_FA_DIGITS))
         if m:
-            floor = m.group(1)
+            floor_raw = m.group(1)
+    floor = format_floor_display(floor_raw, total_floors_raw)
 
     rooms_raw = listing.rooms or _get_from_data(data, FEATURE_KEYS['rooms'])
     rooms = parse_rooms_value(rooms_raw)
@@ -204,6 +316,17 @@ def extract_listing_features(listing) -> Dict[str, Any]:
     # همیشه از فیلد ترکیبی / ستون‌های خام دیوار بک‌فیل کن
     from workspace.services.listing_features import _collect_raw_features
     raw = _collect_raw_features(data)
+    if not build_year:
+        build_year = parse_build_year(raw.get('ساخت') or raw.get('سال ساخت'))
+    if not rooms:
+        rooms = parse_rooms_value(raw.get('اتاق') or raw.get('تعداد اتاق'))
+    if not floor:
+        backfill_floor = raw.get('طبقه')
+        if backfill_floor:
+            floor = format_floor_display(
+                backfill_floor,
+                total_floors_raw or raw.get('تعداد کل طبقات ساختمان'),
+            )
     if elevator is None:
         elevator = parse_bool_feature(raw.get('آسانسور'))
     if parking is None:

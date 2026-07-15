@@ -67,6 +67,14 @@ def ws_area(value):
 
 
 @register.filter
+def ws_floor_display(floor, total_floors=None):
+    from workspace.services.features import format_floor_display
+    if floor is None:
+        return ''
+    return format_floor_display(floor, total_floors)
+
+
+@register.filter
 def ws_jalali(value):
     return to_jalali_display(value)
 

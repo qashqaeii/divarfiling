@@ -273,8 +273,8 @@
                         <td class="crm-ft-td-specs">
                             {% if p.area %}<span>{{ p.area|ws_area }}</span>{% endif %}
                             {% if p.rooms %}<span>{{ p.rooms }} اتاق</span>{% endif %}
-                            {% if p.floor %}<span>طبقه {{ p.floor }}{% if p.total_floors %}/{{ p.total_floors }}{% endif %}</span>{% endif %}
-                            {% if not p.area and not p.rooms and not p.floor %}<span class="crm-ft-empty">—</span>{% endif %}
+                            {% if p.floor is not None %}<span>طبقه {{ p.floor|ws_floor_display:p.total_floors }}</span>{% endif %}
+                            {% if not p.area and not p.rooms and p.floor is None %}<span class="crm-ft-empty">—</span>{% endif %}
                         </td>
                         <td class="crm-ft-td-price">
                             {% if p.sale_price %}
@@ -340,11 +340,11 @@
                 {% if p.owner_name %}
                 <p class="crm-files-card-owner"><i class="fas fa-user-tie" aria-hidden="true"></i>{{ p.owner_name }}</p>
                 {% endif %}
-                {% if p.area or p.rooms or p.floor %}
+                {% if p.area or p.rooms or p.floor is not None %}
                 <div class="crm-files-card-metrics">
                     {% if p.area %}<span class="crm-files-metric-chip"><em>متراژ</em><strong>{{ p.area|ws_area }}</strong></span>{% endif %}
                     {% if p.rooms %}<span class="crm-files-metric-chip"><em>اتاق</em><strong>{{ p.rooms }}</strong></span>{% endif %}
-                    {% if p.floor %}<span class="crm-files-metric-chip"><em>طبقه</em><strong>{{ p.floor }}{% if p.total_floors %}/{{ p.total_floors }}{% endif %}</strong></span>{% endif %}
+                    {% if p.floor is not None %}<span class="crm-files-metric-chip"><em>طبقه</em><strong>{{ p.floor|ws_floor_display:p.total_floors }}</strong></span>{% endif %}
                 </div>
                 {% endif %}
                 <div class="crm-files-card-amenities" aria-label="امکانات">

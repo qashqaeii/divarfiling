@@ -262,6 +262,9 @@ def _explode_multi_amenity_entries(raw: Dict[str, str]) -> None:
 
 
 def _collect_raw_features(data: dict) -> Dict[str, str]:
+    from workspace.services.features import merge_data_with_attributes
+
+    data = merge_data_with_attributes(data)
     raw: Dict[str, str] = {}
     for key in LISTING_FEATURE_COLUMNS:
         _store_feature(raw, key, get_exact_from_data(data, key))

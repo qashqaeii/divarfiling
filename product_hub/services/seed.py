@@ -16,8 +16,8 @@ from product_hub.models import (
 User = get_user_model()
 
 SEED_USERNAMES = ('product_hub_seed',)
-# نسخه‌هایی که قبلاً به‌صورت نمونه (غیرواقعی) seed شده بودند
-LEGACY_SAMPLE_VERSIONS = ('2.9.0', '2.8.1', '2.8.0', '2.7.2', '2.7.0')
+# فقط نسخه‌های نمونه قدیمی (دیگر استفاده نمی‌شوند؛ changelog واقعی با build_product_changelog ساخته می‌شود)
+LEGACY_SAMPLE_VERSIONS = ()
 
 # کاتالوگ واقعی امکانات موجود در Workspace / محصول
 # (title, category, status, summary, days_since_added)

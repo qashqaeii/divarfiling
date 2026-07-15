@@ -80,6 +80,40 @@ class AdvertiserSignalDetectionTest(TestCase):
         )
         self.assertEqual(signal, ADVERTISER_SIGNAL_DISGUISED)
 
+    def test_disguised_consultant_amlak_in_parentheses(self):
+        description = (
+            '((املاک))\n'
+            '5طبقه دو واحدی.رو به آفتاب.دوپار سندی باکس.\n'
+            'داکت اسپلیت سرد وگرم.انباری بزرگ وکوچک.مستر.'
+        )
+        signal = detect_advertiser_signal(
+            title='فروش آپارتمان',
+            description=description,
+            business_type='personal',
+        )
+        self.assertEqual(signal, ADVERTISER_SIGNAL_DISGUISED)
+        self.assertTrue(has_disguised_consultant_markers(
+            title='',
+            description=description,
+        ))
+
+    def test_disguised_consultant_moshaver_in_parentheses(self):
+        signal = detect_advertiser_signal(
+            title='اجاره آپارتمان',
+            description='((مشاور)) واحد تمیز',
+            business_type='personal',
+        )
+        self.assertEqual(signal, ADVERTISER_SIGNAL_DISGUISED)
+
+    def test_genuine_personal_amlak_in_normal_phrase(self):
+        """«فروش املاک مسکونی» نباید به‌تنهایی مشاور پنهان شمرده شود."""
+        signal = detect_advertiser_signal(
+            title='فروش آپارتمان',
+            description='واحد مناسب برای فروش املاک مسکونی در منطقه خوب.',
+            business_type='personal',
+        )
+        self.assertEqual(signal, ADVERTISER_SIGNAL_GENUINE_PERSONAL)
+
     def test_stored_genuine_personal_reclassified_on_display(self):
         from types import SimpleNamespace
         from workspace.services.advertiser_signal import listing_advertiser_display

@@ -101,6 +101,15 @@ _AMLAK_AGENCY_FALSE_POSITIVES: tuple[str, ...] = (
 
 _ZWNJ_RE = re.compile(r'[\u200c\u200d\u200e\u200f\ufeff]')
 _WS_RE = re.compile(r'\s+')
+# پرانتز، ستاره، خط تیره و نمادهای تزئینی که مشاوران برای دور کلیدواژه می‌گذارند.
+_DECORATIVE_CHARS_RE = re.compile(r'[\(\)\[\]\{\}«»「」\*•·._\-|~]+')
+# برندینگ «املاک» با تزئین: ((املاک))، ***املاک*** و مشابه.
+_DECORATIVE_AMLAK_RE = re.compile(
+    r'[\(\[\{«「*•._\-|~]{1,}\s*املاک\s*[\)\]\}»」*•._\-|~]{1,}',
+    re.IGNORECASE,
+)
+# «املاک» به‌تنهایی در ابتدای متن/خط (مثلاً بعد از حذف پرانتز).
+_AMLAK_LINE_BRANDING_RE = re.compile(r'(?:^|\n)\s*املاک\s*(?:\n|$)')
 
 
 def normalize_ad_text(text: str) -> str:
@@ -110,6 +119,7 @@ def normalize_ad_text(text: str) -> str:
     normalized = unicodedata.normalize('NFKC', str(text))
     normalized = normalized.replace('ي', 'ی').replace('ك', 'ک').replace('‌', ' ')
     normalized = _ZWNJ_RE.sub(' ', normalized)
+    normalized = _DECORATIVE_CHARS_RE.sub(' ', normalized)
     normalized = _WS_RE.sub(' ', normalized).strip().lower()
     return normalized
 
@@ -158,6 +168,15 @@ def _has_amlak_agency_branding(text: str) -> bool:
     return False
 
 
+def _has_decorative_amlak_branding(raw_text: str, normalized_text: str) -> bool:
+    """برندینگ «املاک» با پرانتز/ستاره یا به‌تنهایی در خط اول."""
+    if _DECORATIVE_AMLAK_RE.search(raw_text):
+        return True
+    if _AMLAK_LINE_BRANDING_RE.search(normalized_text):
+        return True
+    return False
+
+
 def _description_from_data(data: Optional[Dict[str, Any]]) -> str:
     if not data:
         return ''
@@ -178,11 +197,17 @@ def has_disguised_consultant_markers(
 ) -> bool:
     title_norm = normalize_ad_text(title)
     desc_norm = normalize_ad_text(description)
+    raw_desc = description
     if not desc_norm.strip() and data:
-        desc_norm = normalize_ad_text(_description_from_data(data))
+        raw_desc = _description_from_data(data)
+        desc_norm = normalize_ad_text(raw_desc)
     combined = f'{title_norm} {desc_norm}'.strip()
+    raw_combined = f'{title} {raw_desc}'.strip()
     if not combined:
         return False
+
+    if _has_decorative_amlak_branding(raw_combined, combined):
+        return True
 
     for phrase in _NORMALIZED_DISGUISED_PHRASES:
         if phrase and phrase in combined:

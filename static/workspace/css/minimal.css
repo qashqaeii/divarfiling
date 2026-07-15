@@ -8917,6 +8917,53 @@ html[data-theme="dark"] .mk-lcard-cover-top .mk-adv-tag {
 .mk-lcard-cover-count b { font-weight: 800; }
 .mk-lcard-cover-count-sep { opacity: 0.65; margin-inline: 0.05rem; }
 
+/* Image authenticity tag — bottom-left of cover (visual left in RTL) */
+.mk-img-auth {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.64rem;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+}
+
+.mk-img-auth i { font-size: 0.58rem; }
+
+.mk-img-auth--real {
+    color: #047857;
+    background: rgba(236, 253, 245, 0.95);
+    border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.mk-img-auth--fake {
+    color: #b91c1c;
+    background: rgba(254, 242, 242, 0.95);
+    border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+.mk-img-auth--cover {
+    position: absolute;
+    inset-block-end: 0.5rem;
+    inset-inline-end: 0.55rem;
+    z-index: 3;
+}
+
+.mk-img-auth--hero {
+    position: absolute;
+    inset-block-end: 0.65rem;
+    inset-inline-end: 0.65rem;
+    z-index: 4;
+    font-size: 0.7rem;
+    padding: 0.28rem 0.58rem;
+}
+
 .mk-lcard-body {
     display: flex;
     flex-direction: column;

@@ -27,6 +27,14 @@ FEATURE_KEYS = {
     'rooms': ('اتاق', 'rooms', 'تعداد اتاق', 'اتاق خواب'),
 }
 
+IMAGE_AUTH_KEYS = (
+    'اصالت تصویر',
+    'رسانه_اصالت_تصویر_برای_همین_ملک',
+    'تصویر‌ها برای همین ملک است؟',
+    'تصاویر برای همین ملک است؟',
+    'تصویرها برای همین ملک است؟',
+)
+
 POSITIVE = ('دارد', 'yes', 'true', '1', 'هست', 'داره', 'می‌باشد', 'میباشد')
 NEGATIVE = ('ندارد', 'no', 'false', '0', 'نیست', 'نداره', '-', '—', 'خیر')
 _POSITIVE_EXACT = frozenset(p.lower() for p in POSITIVE)
@@ -116,6 +124,25 @@ def parse_bool_feature(value: Any) -> Optional[bool]:
         return False
     if any(p in sl for p in _POSITIVE_SUB):
         return True
+    return None
+
+
+def parse_image_authenticity(value: Any) -> Optional[str]:
+    """اصالت تصویر: 'real' (بله)، 'fake' (خیر)، یا None."""
+    flag = parse_bool_feature(value)
+    if flag is True:
+        return 'real'
+    if flag is False:
+        return 'fake'
+    if value is None:
+        return None
+    s = str(value).strip().replace('\u200c', '').lower()
+    if not s or s in ('-', '—', 'nan', 'none'):
+        return None
+    if s in ('بله', 'بلی', 'آره', 'اری', 'yes', 'true', 'real', 'authentic', 'اصلی', 'واقعی'):
+        return 'real'
+    if s in ('خیر', 'نه', 'no', 'false', 'fake', 'غیرواقعی', 'نمونه'):
+        return 'fake'
     return None
 
 
@@ -358,6 +385,11 @@ def extract_listing_features(listing) -> Dict[str, Any]:
     from workspace.services.advertiser_signal import listing_advertiser_display
     highlights = feature_highlights_for_listing(listing)
     advertiser = listing_advertiser_display(listing)
+    image_authenticity = parse_image_authenticity(_get_from_data(data, IMAGE_AUTH_KEYS))
+    if image_authenticity is None:
+        image_authenticity = parse_image_authenticity(
+            raw.get('اصالت تصویر') or raw.get('رسانه_اصالت_تصویر_برای_همین_ملک')
+        )
 
     amenities = []
     for flag, name in (
@@ -392,6 +424,7 @@ def extract_listing_features(listing) -> Dict[str, Any]:
         'advertiser_label': advertiser['label'],
         'has_amenity_data': any(x is not None for x in amenity_flags),
         'highlights': highlights,
+        'image_authenticity': image_authenticity,
     }
 
 

@@ -85,6 +85,7 @@
                     {% if gallery_images|length > 1 %}
                     <span class="crm-prop-hero-img-badge"><i class="fas fa-images"></i> {{ gallery_images|length }}</span>
                     {% endif %}
+                    {% include 'workspace/includes/listing_image_auth_badge.html' with auth_class='mk-img-auth--hero' %}
                     {% else %}
                     <div class="crm-prop-hero-cover crm-prop-hero-cover--empty" aria-hidden="true">
                         <i class="fas fa-building"></i>

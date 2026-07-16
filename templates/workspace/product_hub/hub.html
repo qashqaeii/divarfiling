@@ -5,34 +5,53 @@
 {% block mobile_bar_title %}مرکز توسعه{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=11">
 {% endblock %}
 
 {% block content %}
 <div class="mk-page mk-hub ph-page" data-ph-hub>
 
     <header class="ph-hero" aria-label="مرکز توسعه محصول">
-        <div class="ph-hero-row">
-            <div class="ph-hero-copy">
-                <h1 class="ph-hero-title">مرکز توسعه</h1>
-                <p class="ph-hero-meta">
-                    <span dir="ltr">v{{ hub_stats.latest_version }}</span>
-                    <span class="ph-hero-dot" aria-hidden="true"></span>
-                    <span>
-                        {% if hub_stats.latest_released_at %}{{ hub_stats.latest_released_at|ws_jalali_date }}{% else %}به‌زودی{% endif %}
+        <div class="ph-hero-glow" aria-hidden="true"></div>
+        <div class="ph-hero-inner">
+            <div class="ph-hero-main">
+                <div class="ph-hero-eyebrow">
+                    <span class="ph-hero-kicker">Product Hub</span>
+                    <span class="ph-hero-status">
+                        <span class="ph-hero-status-dot" aria-hidden="true"></span>
+                        <span>محصول فعال</span>
                     </span>
-                </p>
+                </div>
+                <h1 class="ph-hero-title">مرکز توسعه</h1>
+                <p class="ph-hero-desc">شفافیت کامل درباره نسخه‌ها، قابلیت‌ها، نقشه راه و پیشنهادهای شما</p>
+                <div class="ph-hero-meta">
+                    <span class="ph-ver-chip" dir="ltr">
+                        <i class="fas fa-tag" aria-hidden="true"></i>
+                        v{{ hub_stats.latest_version }}
+                    </span>
+                    <span class="ph-hero-dot" aria-hidden="true"></span>
+                    <span class="ph-hero-date">
+                        {% if hub_stats.latest_released_at %}
+                        <i class="far fa-calendar-check" aria-hidden="true"></i>
+                        {{ hub_stats.latest_released_at|ws_jalali_date }}
+                        {% else %}
+                        <i class="far fa-clock" aria-hidden="true"></i>
+                        به‌زودی
+                        {% endif %}
+                    </span>
+                    {% if hub_stats.latest_title %}
+                    <span class="ph-hero-dot" aria-hidden="true"></span>
+                    <span class="ph-hero-release-title">{{ hub_stats.latest_title|truncatechars:48 }}</span>
+                    {% endif %}
+                </div>
             </div>
             <div class="ph-hero-actions">
-                {% if unread_count %}
-                <a href="{% url 'workspace:product_hub:notifications' %}" class="ph-btn ph-btn--ghost ph-btn--sm" title="اعلان‌ها">
+                <a href="{% url 'workspace:product_hub:notifications' %}" class="ph-btn ph-btn--ghost ph-btn--icon" title="اعلان‌ها" aria-label="اعلان‌ها">
                     <i class="fas fa-bell" aria-hidden="true"></i>
-                    <span class="ph-btn-label">اعلان‌ها</span>
-                    <span class="ws-nav-badge">{{ unread_count }}</span>
+                    {% if unread_count %}<span class="ph-notif-badge">{{ unread_count }}</span>{% endif %}
                 </a>
-                {% endif %}
                 {% if is_product_staff %}
-                <a href="{% url 'workspace:product_hub:manage' %}" class="ph-btn ph-btn--primary ph-btn--sm">
+                <a href="{% url 'workspace:product_hub:manage' %}" class="ph-btn ph-btn--primary">
                     <i class="fas fa-sliders" aria-hidden="true"></i>
                     <span class="ph-btn-label">مدیریت</span>
                 </a>
@@ -42,44 +61,60 @@
     </header>
 
     {% if unread_notifications %}
-    <div class="mk-notice mk-notice--info mk-notice--inline mk-notice--compact" style="margin:0">
-        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
-        <div class="mk-notice__body">
-            <strong class="mk-notice__title">{{ unread_notifications.0.title }}</strong>
-            <p class="mk-notice__text">{{ unread_notifications.0.body|truncatechars:120 }}</p>
-        </div>
-        <div class="mk-notice__actions">
-            <a href="{% url 'workspace:product_hub:notifications' %}" class="mk-notice__cta">مشاهده</a>
-        </div>
-    </div>
+    <a href="{% url 'workspace:product_hub:notifications' %}" class="ph-notif-banner">
+        <span class="ph-notif-banner-ico" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
+        <span class="ph-notif-banner-body">
+            <strong>{{ unread_notifications.0.title }}</strong>
+            <span>{{ unread_notifications.0.body|truncatechars:100 }}</span>
+        </span>
+        <span class="ph-notif-banner-cta">مشاهده <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+    </a>
     {% endif %}
 
-    <section class="ph-metrics" aria-label="خلاصه محصول">
-        <div class="ph-metric">
-            <span class="ph-metric-val" dir="ltr">{{ hub_stats.latest_version }}</span>
-            <span class="ph-metric-lbl">آخرین نسخه</span>
+    <section class="ph-metrics" aria-label="آمار محصول">
+        <div class="ph-metric ph-metric--teal">
+            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-tag"></i></span>
+            <div class="ph-metric-body">
+                <span class="ph-metric-val" dir="ltr">{{ hub_stats.latest_version }}</span>
+                <span class="ph-metric-lbl">آخرین نسخه</span>
+            </div>
         </div>
-        <div class="ph-metric">
-            <span class="ph-metric-val">
-                {% if hub_stats.latest_released_at %}{{ hub_stats.latest_released_at|ws_jalali_date }}{% else %}—{% endif %}
-            </span>
-            <span class="ph-metric-lbl">آخرین بروزرسانی</span>
+        <div class="ph-metric ph-metric--blue">
+            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-calendar-day"></i></span>
+            <div class="ph-metric-body">
+                <span class="ph-metric-val ph-metric-val--sm">
+                    {% if hub_stats.latest_released_at %}{{ hub_stats.latest_released_at|ws_jalali_date }}{% else %}—{% endif %}
+                </span>
+                <span class="ph-metric-lbl">آخرین بروزرسانی</span>
+            </div>
         </div>
-        <div class="ph-metric">
-            <span class="ph-metric-val">{{ hub_stats.features_active }}</span>
-            <span class="ph-metric-lbl">قابلیت فعال</span>
+        <div class="ph-metric ph-metric--green">
+            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+            <div class="ph-metric-body">
+                <span class="ph-metric-val">{{ hub_stats.features_active }}</span>
+                <span class="ph-metric-lbl">قابلیت فعال</span>
+            </div>
         </div>
-        <div class="ph-metric">
-            <span class="ph-metric-val">{{ hub_stats.features_in_progress }}</span>
-            <span class="ph-metric-lbl">در حال توسعه</span>
+        <div class="ph-metric ph-metric--amber">
+            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-hammer"></i></span>
+            <div class="ph-metric-body">
+                <span class="ph-metric-val">{{ hub_stats.features_in_progress }}</span>
+                <span class="ph-metric-lbl">در حال توسعه</span>
+            </div>
         </div>
-        <div class="ph-metric">
-            <span class="ph-metric-val">{{ hub_stats.requests_total }}</span>
-            <span class="ph-metric-lbl">پیشنهاد کاربران</span>
+        <div class="ph-metric ph-metric--purple">
+            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
+            <div class="ph-metric-body">
+                <span class="ph-metric-val">{{ hub_stats.requests_total }}</span>
+                <span class="ph-metric-lbl">پیشنهاد کاربران</span>
+            </div>
         </div>
-        <div class="ph-metric">
-            <span class="ph-metric-val">{{ hub_stats.bugs_resolved }}</span>
-            <span class="ph-metric-lbl">مشکلات رفع‌شده</span>
+        <div class="ph-metric ph-metric--cyan">
+            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+            <div class="ph-metric-body">
+                <span class="ph-metric-val">{{ hub_stats.bugs_resolved }}</span>
+                <span class="ph-metric-lbl">مشکلات رفع‌شده</span>
+            </div>
         </div>
     </section>
 
@@ -109,26 +144,28 @@
         </nav>
     </div>
 
-    {% if active_tab == 'overview' %}
-        {% include 'workspace/product_hub/include/_overview.html' %}
-    {% elif active_tab == 'changelog' %}
-        {% include 'workspace/product_hub/include/_timeline.html' %}
-    {% elif active_tab == 'features' %}
-        {% include 'workspace/product_hub/include/_features.html' %}
-    {% elif active_tab == 'requests' %}
-        {% include 'workspace/product_hub/include/_requests.html' %}
-    {% elif active_tab == 'bugs' %}
-        {% include 'workspace/product_hub/include/_bugs.html' %}
-    {% elif active_tab == 'roadmap' %}
-        {% include 'workspace/product_hub/include/_roadmap.html' %}
-    {% elif active_tab == 'my' %}
-        {% include 'workspace/product_hub/include/_my.html' %}
-    {% endif %}
+    <div class="ph-content">
+        {% if active_tab == 'overview' %}
+            {% include 'workspace/product_hub/include/_overview.html' %}
+        {% elif active_tab == 'changelog' %}
+            {% include 'workspace/product_hub/include/_timeline.html' %}
+        {% elif active_tab == 'features' %}
+            {% include 'workspace/product_hub/include/_features.html' %}
+        {% elif active_tab == 'requests' %}
+            {% include 'workspace/product_hub/include/_requests.html' %}
+        {% elif active_tab == 'bugs' %}
+            {% include 'workspace/product_hub/include/_bugs.html' %}
+        {% elif active_tab == 'roadmap' %}
+            {% include 'workspace/product_hub/include/_roadmap.html' %}
+        {% elif active_tab == 'my' %}
+            {% include 'workspace/product_hub/include/_my.html' %}
+        {% endif %}
+    </div>
 
 </div>
 {% csrf_token %}
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/product-hub.js' %}?v=4"></script>
+<script src="{% static 'workspace/js/product-hub.js' %}?v=5"></script>
 {% endblock %}

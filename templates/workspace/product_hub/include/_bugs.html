@@ -1,6 +1,6 @@
 ﻿{% load workspace_tags product_hub_tags %}
 <div class="ph-stack">
-<section class="ph-panel ph-panel--form">
+<section class="ph-panel ph-panel--form" id="ph-bug-form">
     <div class="ph-panel-head">
         <div class="ph-panel-head-main">
             <span class="ph-panel-ico ph-panel-ico--rose" aria-hidden="true"><i class="fas fa-bug"></i></span>
@@ -12,24 +12,26 @@
     </div>
 
     {% if has_product_action_access %}
-    <form method="post" action="{% url 'workspace:product_hub:bug_create' %}" class="ph-form-grid">
+    <form method="post" action="{% url 'workspace:product_hub:bug_create' %}" class="ph-form">
         {% csrf_token %}
-        <div class="ph-form-row">
-            <div class="ph-field">
-                <label for="id_title">{{ bug_form.title.label }}</label>
-                {{ bug_form.title }}
+        <div class="ph-form-section">
+            <div class="ph-form-row">
+                <div class="ph-field">
+                    <label for="id_title">{{ bug_form.title.label }}</label>
+                    {{ bug_form.title }}
+                </div>
+                <div class="ph-field">
+                    <label for="id_severity">{{ bug_form.severity.label }}</label>
+                    {{ bug_form.severity }}
+                </div>
             </div>
             <div class="ph-field">
-                <label for="id_severity">{{ bug_form.severity.label }}</label>
-                {{ bug_form.severity }}
+                <label for="id_description">{{ bug_form.description.label }}</label>
+                {{ bug_form.description }}
             </div>
-        </div>
-        <div class="ph-field">
-            <label for="id_description">{{ bug_form.description.label }}</label>
-            {{ bug_form.description }}
         </div>
         <div class="ph-actions">
-            <button type="submit" class="ph-btn ph-btn--primary">
+            <button type="submit" class="ph-btn ph-btn--primary ph-btn--lg">
                 <i class="fas fa-paper-plane" aria-hidden="true"></i><span>ثبت گزارش</span>
             </button>
         </div>
@@ -40,7 +42,7 @@
         <div>
             <strong>گزارش مشکل نیاز به لایسنس فعال دارد</strong>
             <p>وضعیت مشکلات رفع‌شده را می‌توانید همین پایین ببینید.</p>
-            <a href="{% url 'workspace:upgrade' %}?feature=product_hub" class="ph-btn ph-btn--primary">ارتقا لایسنس</a>
+            <a href="{% url 'workspace:upgrade' %}?feature=product_hub" class="ph-btn ph-btn--primary ph-btn--lg">ارتقا لایسنس</a>
         </div>
     </div>
     {% endif %}
@@ -55,6 +57,7 @@
                 <p>شفافیت درباره گزارش‌های عمومی و موارد رفع‌شده</p>
             </div>
         </div>
+        <span class="ph-pill ph-pill--soft">{{ bug_reports|length }} گزارش</span>
     </div>
 
     <div class="ph-feed">

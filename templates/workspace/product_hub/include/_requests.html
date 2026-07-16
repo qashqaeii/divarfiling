@@ -1,6 +1,6 @@
 ﻿{% load workspace_tags product_hub_tags %}
 <div class="ph-stack">
-<section class="ph-panel ph-panel--form">
+<section class="ph-panel ph-panel--form" id="ph-request-form">
     <div class="ph-panel-head">
         <div class="ph-panel-head-main">
             <span class="ph-panel-ico ph-panel-ico--amber" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
@@ -12,32 +12,36 @@
     </div>
 
     {% if has_product_action_access %}
-    <form method="post" action="{% url 'workspace:product_hub:request_create' %}" class="ph-form-grid">
+    <form method="post" action="{% url 'workspace:product_hub:request_create' %}" class="ph-form">
         {% csrf_token %}
-        <div class="ph-field">
-            <label for="id_title">{{ request_form.title.label }}</label>
-            {{ request_form.title }}
-        </div>
-        <div class="ph-form-row">
+        <div class="ph-form-section">
             <div class="ph-field">
-                <label for="id_category">{{ request_form.category.label }}</label>
-                {{ request_form.category }}
+                <label for="id_title">{{ request_form.title.label }}</label>
+                {{ request_form.title }}
+            </div>
+            <div class="ph-form-row">
+                <div class="ph-field">
+                    <label for="id_category">{{ request_form.category.label }}</label>
+                    {{ request_form.category }}
+                </div>
+                <div class="ph-field">
+                    <label for="id_priority">{{ request_form.priority.label }}</label>
+                    {{ request_form.priority }}
+                </div>
+            </div>
+        </div>
+        <div class="ph-form-section">
+            <div class="ph-field">
+                <label for="id_problem">{{ request_form.problem.label }}</label>
+                {{ request_form.problem }}
             </div>
             <div class="ph-field">
-                <label for="id_priority">{{ request_form.priority.label }}</label>
-                {{ request_form.priority }}
+                <label for="id_why_important">{{ request_form.why_important.label }}</label>
+                {{ request_form.why_important }}
             </div>
-        </div>
-        <div class="ph-field">
-            <label for="id_problem">{{ request_form.problem.label }}</label>
-            {{ request_form.problem }}
-        </div>
-        <div class="ph-field">
-            <label for="id_why_important">{{ request_form.why_important.label }}</label>
-            {{ request_form.why_important }}
         </div>
         <div class="ph-actions">
-            <button type="submit" class="ph-btn ph-btn--primary">
+            <button type="submit" class="ph-btn ph-btn--primary ph-btn--lg">
                 <i class="fas fa-plus" aria-hidden="true"></i><span>ثبت پیشنهاد</span>
             </button>
         </div>
@@ -48,7 +52,7 @@
         <div>
             <strong>ثبت پیشنهاد نیاز به لایسنس فعال دارد</strong>
             <p>می‌توانید پیشنهادهای دیگران را ببینید. برای ثبت، رای و دنبال کردن، لایسنس تهیه کنید.</p>
-            <a href="{% url 'workspace:upgrade' %}?feature=product_hub" class="ph-btn ph-btn--primary">ارتقا لایسنس</a>
+            <a href="{% url 'workspace:upgrade' %}?feature=product_hub" class="ph-btn ph-btn--primary ph-btn--lg">ارتقا لایسنس</a>
         </div>
     </div>
     {% endif %}
@@ -63,6 +67,7 @@
                 <p>با رای دادن، اولویت ساخت را مشخص کنید</p>
             </div>
         </div>
+        <span class="ph-pill ph-pill--soft">{{ feature_requests|length }} پیشنهاد</span>
     </div>
 
     <div class="ph-feed">

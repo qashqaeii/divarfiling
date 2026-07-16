@@ -1,5 +1,5 @@
 ﻿{% load workspace_tags product_hub_tags %}
-<section class="ph-panel">
+<section class="ph-panel ph-panel--timeline">
     <div class="ph-panel-head">
         <div class="ph-panel-head-main">
             <span class="ph-panel-ico ph-panel-ico--cyan" aria-hidden="true"><i class="fas fa-timeline"></i></span>
@@ -8,22 +8,31 @@
                 <p>ببینید در هر نسخه چه چیزهایی برای کار روزانه شما آمده است</p>
             </div>
         </div>
+        {% if releases %}
+        <span class="ph-pill ph-pill--soft">{{ releases|length }} نسخه</span>
+        {% endif %}
     </div>
 
     {% if releases %}
     <ol class="ph-timeline">
         {% for release in releases %}
         <li class="ph-tl-item" style="--ph-stagger: {{ forloop.counter0 }}">
+            <div class="ph-tl-rail" aria-hidden="true">
+                <span class="ph-tl-node {% if forloop.first %}is-latest{% endif %}"></span>
+            </div>
             <div class="ph-tl-meta">
                 <span class="ph-tl-ver">v{{ release.version }}</span>
                 <time class="ph-tl-date" datetime="{{ release.released_at|date:'c' }}">
                     {{ release.released_at|ws_jalali }}
                 </time>
+                {% if forloop.first %}
+                <span class="ph-badge ph-badge--green ph-tl-latest-badge"><i class="fas fa-star" aria-hidden="true"></i> جدیدترین</span>
+                {% endif %}
             </div>
             <article class="ph-tl-card">
                 <div class="ph-tl-card-top">
                     <h3 class="ph-tl-title">{{ release.title }}</h3>
-                    <span class="ph-pill ph-pill--soft" dir="ltr">v{{ release.version }}</span>
+                    <span class="ph-pill ph-pill--teal" dir="ltr">v{{ release.version }}</span>
                 </div>
                 {% if release.summary and release.summary != release.title %}
                 <p class="ph-tl-sum">{{ release.summary }}</p>

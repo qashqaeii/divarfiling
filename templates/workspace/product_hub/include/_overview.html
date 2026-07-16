@@ -17,13 +17,14 @@
 
     {% with release=releases.0 %}
     {% if release %}
-    <div class="ph-overview-release">
-        <div class="ph-overview-release-meta">
-            <span class="ph-pill ph-pill--teal" dir="ltr">v{{ release.version }}</span>
+    <div class="ph-release-highlight">
+        <div class="ph-release-highlight-head">
+            <span class="ph-release-ver" dir="ltr">v{{ release.version }}</span>
             <time datetime="{{ release.released_at|date:'c' }}">{{ release.released_at|ws_jalali }}</time>
+            <span class="ph-badge ph-badge--green"><i class="fas fa-circle-check" aria-hidden="true"></i> منتشر شده</span>
         </div>
         <ul class="ph-tl-changes">
-            {% for ch in release.changes.all %}
+            {% for ch in release.changes.all|slice:':6' %}
             <li class="ph-tl-change {% ph_change_type_class ch.change_type %}">
                 <i class="fas fa-check" aria-hidden="true"></i>
                 <span>{{ ch.text }}</span>
@@ -31,6 +32,9 @@
             </li>
             {% endfor %}
         </ul>
+        {% if release.changes.count > 6 %}
+        <a href="?tab=changelog" class="ph-release-more">+ {{ release.changes.count|add:'-6' }} مورد دیگر</a>
+        {% endif %}
     </div>
     {% else %}
     <div class="ph-empty-state">
@@ -80,45 +84,63 @@
         </div>
         <a href="?tab=roadmap" class="ph-btn ph-btn--ghost">نقشه راه کامل</a>
     </div>
-    <div class="ph-road ph-road--compact">
-        <div class="ph-road-col ph-road-col--building">
-            <header class="ph-road-col-head">
-                <span class="ph-badge ph-badge--amber"><i class="fas fa-hammer" aria-hidden="true"></i> در حال ساخت</span>
+    <div class="ph-kanban ph-kanban--compact">
+        <div class="ph-kanban-col ph-kanban-col--building">
+            <header class="ph-kanban-head">
+                <div class="ph-kanban-head-main">
+                    <span class="ph-kanban-dot" aria-hidden="true"></span>
+                    <h3>در حال ساخت</h3>
+                </div>
+                <span class="ph-kanban-count">{{ roadmap.in_progress|length }}</span>
             </header>
-            {% for f in roadmap.in_progress|slice:':6' %}
-            <div class="ph-road-item">
-                <strong>{{ f.title }}</strong>
-                <small>{{ f.category|ph_label:'category' }}</small>
+            <div class="ph-kanban-body">
+                {% for f in roadmap.in_progress|slice:':5' %}
+                <article class="ph-kanban-card ph-kanban-card--compact">
+                    <h4>{{ f.title }}</h4>
+                    <span class="ph-badge ph-badge--gray">{{ f.category|ph_label:'category' }}</span>
+                </article>
+                {% empty %}
+                <div class="ph-kanban-empty"><span>موردی ثبت نشده</span></div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <p class="ph-empty-inline">موردی ثبت نشده</p>
-            {% endfor %}
         </div>
-        <div class="ph-road-col ph-road-col--planned">
-            <header class="ph-road-col-head">
-                <span class="ph-badge ph-badge--blue"><i class="fas fa-road" aria-hidden="true"></i> به‌زودی</span>
+        <div class="ph-kanban-col ph-kanban-col--planned">
+            <header class="ph-kanban-head">
+                <div class="ph-kanban-head-main">
+                    <span class="ph-kanban-dot" aria-hidden="true"></span>
+                    <h3>به‌زودی</h3>
+                </div>
+                <span class="ph-kanban-count">{{ roadmap.planned|length }}</span>
             </header>
-            {% for f in roadmap.planned|slice:':6' %}
-            <div class="ph-road-item">
-                <strong>{{ f.title }}</strong>
-                <small>{{ f.category|ph_label:'category' }}</small>
+            <div class="ph-kanban-body">
+                {% for f in roadmap.planned|slice:':5' %}
+                <article class="ph-kanban-card ph-kanban-card--compact">
+                    <h4>{{ f.title }}</h4>
+                    <span class="ph-badge ph-badge--gray">{{ f.category|ph_label:'category' }}</span>
+                </article>
+                {% empty %}
+                <div class="ph-kanban-empty"><span>موردی ثبت نشده</span></div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <p class="ph-empty-inline">موردی ثبت نشده</p>
-            {% endfor %}
         </div>
-        <div class="ph-road-col ph-road-col--ideas">
-            <header class="ph-road-col-head">
-                <span class="ph-badge ph-badge--purple"><i class="fas fa-fire" aria-hidden="true"></i> ایده‌های محبوب</span>
+        <div class="ph-kanban-col ph-kanban-col--ideas">
+            <header class="ph-kanban-head">
+                <div class="ph-kanban-head-main">
+                    <span class="ph-kanban-dot" aria-hidden="true"></span>
+                    <h3>ایده‌های محبوب</h3>
+                </div>
+                <span class="ph-kanban-count">{{ roadmap.popular_ideas|length }}</span>
             </header>
-            {% for r in roadmap.popular_ideas|slice:':6' %}
-            <div class="ph-road-item">
-                <strong>{{ r.title }}</strong>
-                <small>{{ r.votes_count }} رای · {{ r.status|ph_label:'request_status' }}</small>
+            <div class="ph-kanban-body">
+                {% for r in roadmap.popular_ideas|slice:':5' %}
+                <article class="ph-kanban-card ph-kanban-card--compact ph-kanban-card--idea">
+                    <h4>{{ r.title }}</h4>
+                    <span class="ph-badge ph-badge--purple">{{ r.votes_count }} رای</span>
+                </article>
+                {% empty %}
+                <div class="ph-kanban-empty"><span>با لایسنس پیشنهاد ثبت کنید</span></div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <p class="ph-empty-inline">با لایسنس پیشنهاد ثبت کنید</p>
-            {% endfor %}
         </div>
     </div>
 </section>

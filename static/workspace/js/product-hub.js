@@ -40,7 +40,18 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', scrollActiveTabIntoView);
+  function initStickyTabsOffset() {
+    var wrap = document.querySelector('.ph-tabs-wrap');
+    if (!wrap) return;
+    var h = wrap.offsetHeight;
+    document.documentElement.style.setProperty('--ph-tabs-h', h + 'px');
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    scrollActiveTabIntoView();
+    initStickyTabsOffset();
+    window.addEventListener('resize', initStickyTabsOffset);
+  });
 
   document.addEventListener('click', function (ev) {
     var voteBtn = ev.target.closest('[data-ph-vote]');

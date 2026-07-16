@@ -14,7 +14,7 @@
 
 {% block content %}
 <div class="mk-pub-wrap mk-platform plat-page" style="--plat-accent: var(--plat-accent-{{ platform_page.accent }}, #8b5cf6);">
-    {% if platform_page.variant == 'hub' and platform_page.section == 'features' %}
+    {% if platform_page.content_key == 'features_hub' %}
         {% include 'platform/variants/features_hub.html' %}
     {% elif platform_page.variant == 'hub' and platform_page.section == 'solutions' %}
         {% include 'platform/variants/solutions_hub.html' %}
@@ -35,7 +35,9 @@
 {% endblock %}
 
 {% block extra_css %}
-{% if platform_page.content_key == 'crm_product_line' %}
+{% if platform_page.content_key == 'features_hub' %}
+<link rel="stylesheet" href="{% static 'css/mizkar-platform-features-hub.css' %}?v=1">
+{% elif platform_page.content_key == 'crm_product_line' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-crm.css' %}?v=1">
 {% elif platform_page.content_key == 'crm_reminders' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-reminders.css' %}?v=1">

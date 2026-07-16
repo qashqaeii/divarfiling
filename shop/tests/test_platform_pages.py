@@ -27,10 +27,17 @@ class PlatformPageViewTests(TestCase):
     def test_features_hub(self):
         resp = self.client.get('/features/')
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'امکانات پلتفرم فایلینگ دیوار')
+        self.assertContains(resp, 'نقشه امکانات')
+        self.assertContains(resp, 'fhub-hero')
+        self.assertContains(resp, 'fhub-pillars')
+        self.assertContains(resp, 'fhub-lifecycle')
+        self.assertContains(resp, 'help-crm-dashboard.png')
+        self.assertContains(resp, '/features/crm/')
+        self.assertContains(resp, '/solutions/customer-follow-up/')
         self.assertContains(resp, '<h1', count=1)
         self.assertContains(resp, 'application/ld+json')
         self.assertContains(resp, 'BreadcrumbList')
+        self.assertContains(resp, 'plat-faq__item', count=6)
 
     def test_crm_product_line(self):
         resp = self.client.get('/features/crm/')

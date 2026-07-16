@@ -1,0 +1,31 @@
+{% load static %}
+<header class="fhub-hero plat-reveal">
+    <div class="fhub-wrap fhub-hero__grid">
+        <div class="fhub-hero__copy">
+            <p class="fhub-eyebrow">{{ platform_content.hero.eyebrow }}</p>
+            <h1>{{ platform_page.seo.h1 }}</h1>
+            <p class="fhub-hero__lead">{{ platform_content.hero.lead }}</p>
+            {% if platform_content.hero.promise %}
+            <p class="fhub-hero__promise">{{ platform_content.hero.promise }}</p>
+            {% endif %}
+            <div class="fhub-hero__cta">
+                {% include 'platform/includes/cta_pair.html' %}
+            </div>
+            {% if platform_content.hero.highlights %}
+            <ul class="fhub-highlights">
+                {% for h in platform_content.hero.highlights %}
+                <li class="fhub-highlight">
+                    <strong>{{ h.label }}</strong>
+                    <span>{{ h.desc }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% if platform_content.hero.screenshot %}
+        <div class="fhub-hero__visual plat-reveal plat-reveal--delay">
+            {% include 'platform/includes/screenshot_story.html' with shot=platform_content.hero.screenshot loading='eager' hero=True %}
+        </div>
+        {% endif %}
+    </div>
+</header>

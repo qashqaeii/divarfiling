@@ -55,7 +55,9 @@ html.mk-public .mk-nav-item--mega.is-open .mk-nav-mega-chevron {
 
 html.mk-public .mk-mega-backdrop {
     position: fixed;
-    inset: 0;
+    top: var(--mk-site-header-h, 3.55rem);
+    inset-inline: 0;
+    bottom: 0;
     z-index: 11980;
     border: none;
     padding: 0;
@@ -64,6 +66,17 @@ html.mk-public .mk-mega-backdrop {
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
     cursor: default;
+}
+
+/* نوبار همیشه بالای backdrop بماند تا hover روی «امکانات» قطع نشود */
+html.mk-public.mk-mega-open .mk-site-header {
+    position: relative;
+    z-index: 12200;
+}
+
+html.mk-public.mk-mega-open.mk-mega-hover .mk-mega-backdrop {
+    display: none !important;
+    pointer-events: none;
 }
 
 html.mk-public[data-theme="light"] .mk-mega-backdrop {
@@ -96,10 +109,10 @@ html.mk-public .mk-mega-panel {
 html.mk-public .mk-mega-panel::before {
     content: '';
     position: absolute;
-    top: -12px;
-    left: 0;
-    right: 0;
-    height: 12px;
+    top: -20px;
+    left: -8px;
+    right: -8px;
+    height: 24px;
 }
 
 html.mk-public .mk-mega-panel[hidden] {
@@ -116,6 +129,7 @@ html.mk-public[data-theme="light"] .mk-mega-panel {
 /* جلوگیری از پرش layout هنگام باز شدن منو — scrollbar حفظ شود */
 html.mk-public {
     scrollbar-gutter: stable;
+    --mk-site-header-h: 3.55rem;
 }
 
 html.mk-public.mk-mega-open {

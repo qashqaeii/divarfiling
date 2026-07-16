@@ -1,6 +1,6 @@
 /**
  * Mega menu امکانات — fixed panel, hover (desktop), keyboard nav
- * v4: fix page jump (no overflow lock, smart scroll close, hover bridge)
+ * v5: fix hover flicker (backdrop was covering nav, stealing mouse events)
  */
 (function () {
     'use strict';
@@ -14,6 +14,7 @@
     var closeTimer = null;
     var openScrollY = 0;
     var isOpen = false;
+    var openMode = null; /* 'hover' | 'click' */
 
     var backdrop = document.getElementById('mkFeaturesMegaBackdrop');
     if (!backdrop) {
@@ -36,10 +37,15 @@
         );
     }
 
+    function isInHoverZone(target) {
+        if (!target) return false;
+        return megaItem?.contains(target) || panel.contains(target) || btn.contains(target);
+    }
+
     function positionPanel() {
         var rect = btn.getBoundingClientRect();
         var panelWidth = Math.min(760, window.innerWidth - 24);
-        var top = rect.bottom + 4;
+        var top = rect.bottom - 2;
         var left = rect.left + rect.width / 2 - panelWidth / 2;
 
         if (left < 12) left = 12;
@@ -53,16 +59,33 @@
         panel.style.right = 'auto';
     }
 
-    function openPanel() {
-        if (isOpen) return;
+    function syncOpenClasses() {
+        var root = document.documentElement;
+        root.classList.toggle('mk-mega-open', isOpen);
+        root.classList.toggle('mk-mega-hover', isOpen && openMode === 'hover');
+    }
+
+    function openPanel(mode) {
         clearTimeout(closeTimer);
+        var nextMode = mode || 'click';
+
+        if (isOpen) {
+            if (openMode === 'click' && nextMode === 'hover') return;
+            openMode = nextMode;
+            positionPanel();
+            syncOpenClasses();
+            backdrop.hidden = openMode !== 'click';
+            return;
+        }
+
+        openMode = nextMode;
         openScrollY = window.scrollY;
         positionPanel();
         panel.hidden = false;
-        backdrop.hidden = false;
+        backdrop.hidden = openMode !== 'click';
         btn.setAttribute('aria-expanded', 'true');
         megaItem?.classList.add('is-open');
-        document.documentElement.classList.add('mk-mega-open');
+        syncOpenClasses();
         isOpen = true;
     }
 
@@ -73,13 +96,14 @@
         backdrop.hidden = true;
         btn.setAttribute('aria-expanded', 'false');
         megaItem?.classList.remove('is-open');
-        document.documentElement.classList.remove('mk-mega-open');
+        document.documentElement.classList.remove('mk-mega-open', 'mk-mega-hover');
         isOpen = false;
+        openMode = null;
     }
 
     function scheduleClose() {
         clearTimeout(closeTimer);
-        closeTimer = setTimeout(closePanel, 220);
+        closeTimer = setTimeout(closePanel, 280);
     }
 
     function cancelClose() {
@@ -87,18 +111,8 @@
     }
 
     function togglePanel() {
-        if (isOpen) closePanel();
-        else openPanel();
-    }
-
-    function isMovingToPanel(e) {
-        var target = e.relatedTarget;
-        return target && (panel.contains(target) || btn.contains(target));
-    }
-
-    function isMovingToTrigger(e) {
-        var target = e.relatedTarget;
-        return target && (megaItem?.contains(target) || btn.contains(target));
+        if (isOpen && openMode === 'click') closePanel();
+        else openPanel('click');
     }
 
     btn.addEventListener('click', function (e) {
@@ -111,21 +125,37 @@
 
     document.addEventListener('click', function (e) {
         if (!isOpen) return;
-        if (panel.contains(e.target) || btn.contains(e.target)) return;
+        if (isInHoverZone(e.target)) return;
         closePanel();
     });
 
     if (hoverCapable && megaItem) {
-        megaItem.addEventListener('mouseenter', openPanel);
+        megaItem.addEventListener('mouseenter', function () {
+            openPanel('hover');
+        });
+
         megaItem.addEventListener('mouseleave', function (e) {
-            if (isMovingToPanel(e)) return;
+            if (openMode !== 'hover') return;
+            if (isInHoverZone(e.relatedTarget)) return;
             scheduleClose();
         });
-        panel.addEventListener('mouseenter', cancelClose);
+
+        panel.addEventListener('mouseenter', function () {
+            if (openMode === 'hover') cancelClose();
+        });
+
         panel.addEventListener('mouseleave', function (e) {
-            if (isMovingToTrigger(e)) return;
+            if (openMode !== 'hover') return;
+            if (isInHoverZone(e.relatedTarget)) return;
             scheduleClose();
         });
+
+        /* fallback: اگر relatedTarget null شد (backdrop قبلی)، موقعیت موس را چک کن */
+        document.addEventListener('mousemove', function (e) {
+            if (!isOpen || openMode !== 'hover') return;
+            var hit = document.elementFromPoint(e.clientX, e.clientY);
+            if (isInHoverZone(hit)) cancelClose();
+        }, { passive: true });
     }
 
     document.addEventListener('keydown', function (e) {
@@ -160,7 +190,7 @@
     btn.addEventListener('keydown', function (e) {
         if (e.key === 'ArrowDown' && !isOpen) {
             e.preventDefault();
-            openPanel();
+            openPanel('click');
             var first = focusables()[0];
             if (first) first.focus();
         }
@@ -170,7 +200,6 @@
         if (isOpen) positionPanel();
     });
 
-    /* فقط اسکرول واقعی کاربر — نه layout shift از باز شدن منو */
     window.addEventListener('scroll', function () {
         if (!isOpen) return;
         if (Math.abs(window.scrollY - openScrollY) > 12) {

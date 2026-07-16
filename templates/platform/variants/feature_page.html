@@ -2,23 +2,39 @@
 {% include 'platform/includes/hero.html' %}
 
 {% if platform_content.problem %}
-<section class="plat-section plat-problem">
-    <div class="container plat-section__inner">
-        <h2 class="plat-section__title">{{ platform_content.problem.title }}</h2>
+<section class="plat-section plat-problem plat-problem--feature">
+    <div class="container plat-problem__inner plat-reveal">
+        {% include 'platform/includes/section_head.html' with eyebrow='مشکل واقعی' title=platform_content.problem.title %}
         {% for p in platform_content.problem.paragraphs %}
-        <p>{{ p }}</p>
+        <p class="plat-problem__p">{{ p }}</p>
         {% endfor %}
     </div>
 </section>
 {% endif %}
 
-{% if platform_content.how_it_works %}
-<section class="plat-section" aria-labelledby="plat-how-title">
+{% if platform_content.scenario %}
+<section class="plat-section plat-section--scenario">
     <div class="container plat-section__inner">
-        <h2 id="plat-how-title" class="plat-section__title">چطور کار می‌کند</h2>
-        <ol class="plat-steps plat-steps--compact">
+        <div class="plat-scenario-card plat-reveal">
+            {% include 'platform/includes/section_head.html' with eyebrow='سناریو' title=platform_content.scenario.title %}
+            <ol class="plat-scenario-card__steps">
+                {% for step in platform_content.scenario.steps %}
+                <li><span class="plat-scenario-card__dot" aria-hidden="true"></span>{{ step }}</li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.how_it_works %}
+<section class="plat-section plat-section--how" aria-labelledby="plat-how-title">
+    <div class="container plat-section__inner">
+        {% include 'platform/includes/section_head.html' with eyebrow='نحوه کار' title='چطور کار می‌کند' id='plat-how-title' centered=True %}
+        <ol class="plat-how-grid">
             {% for step in platform_content.how_it_works %}
-            <li class="plat-steps__item">
+            <li class="plat-how-card plat-reveal">
+                <span class="plat-how-card__num">{{ forloop.counter }}</span>
                 <strong>{{ step.title }}</strong>
                 <p>{{ step.text }}</p>
             </li>
@@ -28,16 +44,31 @@
 </section>
 {% endif %}
 
-{% if platform_content.screenshots|length > 1 %}
+{% if platform_content.when_to_use %}
 <section class="plat-section plat-section--muted">
     <div class="container plat-section__inner">
-        <h2 class="plat-section__title">نمای واقعی میزکار</h2>
-        <div class="plat-gallery">
+        {% include 'platform/includes/section_head.html' with title='چه زمانی استفاده کنید' centered=True %}
+        <ul class="plat-when-grid">
+            {% for item in platform_content.when_to_use %}
+            <li class="plat-when-card plat-reveal">
+                <strong>{{ item.title }}</strong>
+                <p>{{ item.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.screenshots %}
+<section class="plat-section plat-section--gallery" aria-labelledby="plat-gallery-title">
+    <div class="container plat-section__inner">
+        {% include 'platform/includes/section_head.html' with eyebrow='پیش‌نمایش' title='نمای واقعی میزکار' id='plat-gallery-title' centered=True %}
+        <div class="plat-gallery plat-gallery--devices">
             {% for shot in platform_content.screenshots %}
-            <figure class="plat-gallery__item">
-                <img src="{% static shot.image %}" alt="{{ shot.caption }}" loading="lazy" decoding="async" width="1200" height="720" class="plat-shot-img">
-                <figcaption>{{ shot.caption }}</figcaption>
-            </figure>
+            <div class="plat-gallery__item plat-reveal">
+                {% include 'platform/includes/device_frame.html' with image=shot.image caption=shot.caption %}
+            </div>
             {% endfor %}
         </div>
     </div>
@@ -47,10 +78,26 @@
 {% if platform_content.benefits %}
 <section class="plat-section">
     <div class="container plat-section__inner">
-        <h2 class="plat-section__title">مزیت‌های قابل لمس</h2>
-        <ul class="plat-benefits">
+        {% include 'platform/includes/section_head.html' with title='مزیت‌های قابل لمس' centered=True %}
+        <ul class="plat-benefits plat-benefits--cards">
             {% for b in platform_content.benefits %}
-            <li><i class="fas fa-check" aria-hidden="true"></i> {{ b }}</li>
+            <li class="plat-reveal"><i class="fas fa-check" aria-hidden="true"></i> {{ b }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.pro_tips %}
+<section class="plat-section plat-section--muted">
+    <div class="container plat-section__inner">
+        {% include 'platform/includes/section_head.html' with eyebrow='نکات حرفه‌ای' title='برای مشاوران حرفه‌ای' centered=True %}
+        <ul class="plat-tips">
+            {% for tip in platform_content.pro_tips %}
+            <li class="plat-tips__item plat-reveal">
+                <span class="plat-tips__icon" aria-hidden="true"><i class="fas fa-star"></i></span>
+                <p>{{ tip }}</p>
+            </li>
             {% endfor %}
         </ul>
     </div>
@@ -58,12 +105,29 @@
 {% endif %}
 
 {% if platform_content.related_solution %}
-<section class="plat-section plat-section--accent">
-    <div class="container plat-section__inner plat-related-solution">
-        <p>این قابلیت بخشی از راه‌حل:</p>
+<section class="plat-section plat-section--accent plat-related-solution">
+    <div class="container plat-section__inner plat-related-solution__inner plat-reveal">
+        <p class="plat-related-solution__eyebrow">بخشی از راه‌حل</p>
+        <h2>{{ platform_content.related_solution.title }}</h2>
         <a href="{% url platform_content.related_solution.url_name slug=platform_content.related_solution.url_kwargs.slug %}" class="plat-btn plat-btn--primary">
-            {{ platform_content.related_solution.title }}
+            مشاهده راه‌حل
         </a>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.related_links %}
+<section class="plat-section plat-crosslinks plat-crosslinks--inline">
+    <div class="container plat-section__inner">
+        <h2 class="plat-section__title">لینک‌های مرتبط</h2>
+        <div class="plat-crosslinks__grid">
+            {% for link in platform_content.related_links %}
+            <a href="{% if link.url_kwargs.slug_path %}{% url link.url_name slug_path=link.url_kwargs.slug_path %}{% elif link.url_kwargs.slug %}{% url link.url_name slug=link.url_kwargs.slug %}{% else %}{% url link.url_name %}{% endif %}" class="plat-crosslink">
+                <i class="fas fa-link" aria-hidden="true"></i>
+                {{ link.title }}
+            </a>
+            {% endfor %}
+        </div>
     </div>
 </section>
 {% endif %}

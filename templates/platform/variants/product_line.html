@@ -1,47 +1,73 @@
 {% include 'platform/includes/hero.html' %}
 
 {% if platform_content.problem %}
-<section class="plat-section plat-problem">
-    <div class="container plat-section__inner plat-problem__grid">
-        <div>
-            <h2 class="plat-section__title">{{ platform_content.problem.title }}</h2>
+<section class="plat-section plat-problem plat-problem--crm">
+    <div class="container plat-problem__inner plat-reveal">
+        <div class="plat-problem__content">
+            {% include 'platform/includes/section_head.html' with eyebrow='چالش' title=platform_content.problem.title %}
             {% for p in platform_content.problem.paragraphs %}
-            <p>{{ p }}</p>
+            <p class="plat-problem__p">{{ p }}</p>
             {% endfor %}
         </div>
     </div>
 </section>
 {% endif %}
 
-<section class="plat-section" aria-labelledby="plat-caps-title">
+{% if platform_content.feature_modules %}
+<section class="plat-section plat-section--modules" aria-labelledby="plat-modules-title">
     <div class="container plat-section__inner">
-        <h2 id="plat-caps-title" class="plat-section__title">امکانات کلیدی CRM</h2>
-        <ul class="plat-grid plat-grid--features">
-            {% for cap in platform_content.capabilities %}
-            <li class="plat-feature-chip">
-                <span class="plat-feature-chip__icon"><i class="fas {{ cap.icon }}" aria-hidden="true"></i></span>
-                <div>
-                    <strong>{{ cap.title }}</strong>
-                    <p>{{ cap.text }}</p>
+        {% include 'platform/includes/section_head.html' with eyebrow='نمای محصول' title='تمام ماژول‌های CRM' lead='هر بخش با تصویر واقعی میزکار — بدون ادعای غیرواقعی.' id='plat-modules-title' centered=True %}
+        <div class="plat-modules">
+            {% for mod in platform_content.feature_modules %}
+            <article class="plat-module plat-module--{{ mod.accent }}{% if forloop.counter|divisibleby:2 %} plat-module--flip{% endif %} plat-reveal">
+                <div class="plat-module__copy">
+                    <div class="plat-module__head">
+                        <span class="plat-module__icon"><i class="fas {{ mod.icon }}" aria-hidden="true"></i></span>
+                        <h3>{{ mod.title }}</h3>
+                        {% if mod.badge %}
+                        {% include 'platform/includes/badge.html' with label=mod.badge.label tone=mod.badge.tone %}
+                        {% endif %}
+                    </div>
+                    <dl class="plat-module__meta">
+                        <div>
+                            <dt>مشکل</dt>
+                            <dd>{{ mod.problem }}</dd>
+                        </div>
+                        <div>
+                            <dt>مزیت</dt>
+                            <dd>{{ mod.benefit }}</dd>
+                        </div>
+                        <div>
+                            <dt>کی استفاده کنید</dt>
+                            <dd>{{ mod.when }}</dd>
+                        </div>
+                    </dl>
+                    {% if mod.link %}
+                    <a href="{% if mod.link.url_kwargs.slug_path %}{% url mod.link.url_name slug_path=mod.link.url_kwargs.slug_path %}{% elif mod.link.url_kwargs.slug %}{% url mod.link.url_name slug=mod.link.url_kwargs.slug %}{% else %}{% url mod.link.url_name %}{% endif %}" class="plat-link-arrow">
+                        {{ mod.link.label }}
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
                 </div>
-            </li>
+                <div class="plat-module__visual">
+                    {% include 'platform/includes/device_frame.html' with image=mod.image caption=mod.title compact=True %}
+                </div>
+            </article>
             {% endfor %}
-        </ul>
+        </div>
     </div>
 </section>
+{% endif %}
 
-{% if platform_content.deep_features %}
+{% if platform_content.pro_tips %}
 <section class="plat-section plat-section--muted">
     <div class="container plat-section__inner">
-        <h2 class="plat-section__title">جزئیات بیشتر</h2>
-        <ul class="plat-deep-links">
-            {% for feat in platform_content.deep_features %}
-            <li>
-                <a href="{% url feat.url_name slug_path=feat.url_kwargs.slug_path %}" class="plat-deep-link">
-                    <strong>{{ feat.title }}</strong>
-                    <span>{{ feat.desc }}</span>
-                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                </a>
+        {% include 'platform/includes/section_head.html' with eyebrow='نکات حرفه‌ای' title='از تجربه مشاوران' centered=True %}
+        <ul class="plat-tips">
+            {% for tip in platform_content.pro_tips %}
+            <li class="plat-tips__item plat-reveal">
+                <span class="plat-tips__icon" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
+                <p>{{ tip }}</p>
             </li>
             {% endfor %}
         </ul>
@@ -51,13 +77,28 @@
 
 {% if platform_content.audience %}
 <section class="plat-section">
-    <div class="container plat-section__inner">
-        <h2 class="plat-section__title">مناسب برای</h2>
+    <div class="container plat-section__inner plat-audience">
+        {% include 'platform/includes/section_head.html' with title='مناسب برای' centered=True %}
         <ul class="plat-tags">
             {% for a in platform_content.audience %}
             <li>{{ a }}</li>
             {% endfor %}
         </ul>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.related_solution %}
+<section class="plat-section plat-section--accent plat-related-solution">
+    <div class="container plat-section__inner plat-related-solution__inner plat-reveal">
+        <p class="plat-related-solution__eyebrow">راه‌حل مرتبط</p>
+        <h2>{{ platform_content.related_solution.title }}</h2>
+        {% if platform_content.related_solution.desc %}
+        <p>{{ platform_content.related_solution.desc }}</p>
+        {% endif %}
+        <a href="{% url platform_content.related_solution.url_name slug=platform_content.related_solution.url_kwargs.slug %}" class="plat-btn plat-btn--primary">
+            مشاهده راه‌حل
+        </a>
     </div>
 </section>
 {% endif %}

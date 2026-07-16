@@ -6,7 +6,6 @@ from shop.platform.registry import published_pages
 
 def platform_mega_menu() -> dict:
     """منوی مگا — بخش‌های اصلی پلتفرم (فاز ۱)."""
-    # فقط صفحات واقعی — بدون placeholder «به‌زودی»
     featured_lines = [
         {
             'title': 'CRM املاک',
@@ -44,6 +43,12 @@ def platform_mega_menu() -> dict:
 
     crm_features = [
         {
+            'label': 'خط محصول CRM',
+            'desc': 'همه ماژول‌ها',
+            'url_name': 'platform_features_page',
+            'url_kwargs': {'slug_path': 'crm'},
+        },
+        {
             'label': 'یادآور و تقویم',
             'desc': 'پیگیری به‌موقع',
             'url_name': 'platform_features_page',
@@ -66,14 +71,38 @@ def platform_mega_menu() -> dict:
         },
     ]
 
+    quick_links = [
+        {
+            'label': 'همه امکانات',
+            'url_name': 'platform_features_hub',
+        },
+        {
+            'label': 'همه راه‌حل‌ها',
+            'url_name': 'platform_solutions_hub',
+        },
+        {
+            'label': 'ربات دیوار',
+            'url_name': 'seo_landing_robot_divar',
+        },
+    ]
+
     published_count = len(published_pages('features')) + len(published_pages('solutions'))
 
     return {
         'label': 'امکانات',
         'hub_url_name': 'platform_features_hub',
         'solutions_url_name': 'platform_solutions_hub',
+        'featured_product': {
+            'title': 'CRM املاک',
+            'desc': 'مشتری، معامله، یادآور و تیم — ثبت‌نام رایگان',
+            'badge': 'رایگان',
+            'url_name': 'platform_features_page',
+            'url_kwargs': {'slug_path': 'crm'},
+            'image': 'images/help-crm-dashboard.png',
+        },
         'product_lines': featured_lines,
         'crm_highlights': crm_features,
         'solution_highlights': solutions,
+        'quick_links': quick_links,
         'published_page_count': published_count,
     }

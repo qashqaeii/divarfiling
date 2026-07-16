@@ -1,0 +1,21 @@
+{% load static %}
+<figure class="plat-device{% if compact %} plat-device--compact{% endif %}{% if class %} {{ class }}{% endif %}">
+    <div class="plat-device__chrome" aria-hidden="true">
+        <span class="plat-device__dot"></span>
+        <span class="plat-device__dot"></span>
+        <span class="plat-device__dot"></span>
+        <span class="plat-device__bar">فایلینگ دیوار — میزکار</span>
+    </div>
+    <div class="plat-device__screen">
+        <img src="{% static image %}"
+             alt="{{ caption }}"
+             class="plat-device__img"
+             width="{{ width|default:1280 }}"
+             height="{{ height|default:760 }}"
+             loading="{{ loading|default:'lazy' }}"
+             decoding="async">
+    </div>
+    {% if caption %}
+    <figcaption class="plat-device__caption">{{ caption }}</figcaption>
+    {% endif %}
+</figure>

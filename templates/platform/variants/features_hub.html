@@ -1,19 +1,21 @@
 {% include 'platform/includes/hero.html' %}
 
-<section class="plat-section" aria-labelledby="plat-pillars-title">
+<section class="plat-section plat-section--bento" aria-labelledby="plat-pillars-title">
     <div class="container plat-section__inner">
-        <h2 id="plat-pillars-title" class="plat-section__title">بخش‌های اصلی پلتفرم</h2>
-        <p class="plat-section__lead">فایلینگ دیوار یک میزکار یکپارچه است — هر بخش برای بخشی از کار مشاور و مدیر آژانس.</p>
-        <ul class="plat-grid plat-grid--pillars">
+        {% include 'platform/includes/section_head.html' with eyebrow='خطوط محصول' title='بخش‌های اصلی پلتفرم' lead='فایلینگ دیوار یک میزکار یکپارچه است — هر بخش برای بخشی از کار مشاور و مدیر آژانس.' id='plat-pillars-title' %}
+        <ul class="plat-bento">
             {% for item in platform_content.platform_pillars %}
-            <li>
-                <a href="{% if item.url_name == 'platform_features_page' %}{% url item.url_name slug_path=item.url_kwargs.slug_path %}{% elif item.url_name == 'blog:post_detail' %}{% url item.url_name slug=item.url_kwargs.slug %}{% else %}{% url item.url_name %}{% endif %}" class="plat-card plat-card--{{ item.accent }}">
-                    <span class="plat-card__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
-                    <h3>{{ item.title }}</h3>
-                    <p>{{ item.desc }}</p>
-                    {% if item.status == 'guide' %}
-                    <span class="plat-card__meta">راهنمای آموزشی</span>
-                    {% endif %}
+            <li class="plat-bento__item{% if item.size == 'large' %} plat-bento__item--featured{% endif %}">
+                <a href="{% if item.url_name == 'platform_features_page' %}{% url item.url_name slug_path=item.url_kwargs.slug_path %}{% elif item.url_name == 'blog:post_detail' %}{% url item.url_name slug=item.url_kwargs.slug %}{% else %}{% url item.url_name %}{% endif %}" class="plat-bento-card plat-bento-card--{{ item.accent }}">
+                    <span class="plat-bento-card__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
+                    <div class="plat-bento-card__body">
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.desc }}</p>
+                        {% if item.status == 'guide' %}
+                        <span class="plat-badge plat-badge--guide">راهنمای آموزشی</span>
+                        {% endif %}
+                    </div>
+                    <span class="plat-bento-card__arrow" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
                 </a>
             </li>
             {% endfor %}
@@ -21,14 +23,14 @@
     </div>
 </section>
 
-<section class="plat-section plat-section--muted" aria-labelledby="plat-workflow-title">
+<section class="plat-section plat-section--muted plat-section--workflow" aria-labelledby="plat-workflow-title">
     <div class="container plat-section__inner">
-        <h2 id="plat-workflow-title" class="plat-section__title">گردش کار یکپارچه</h2>
-        <ol class="plat-steps">
+        {% include 'platform/includes/section_head.html' with eyebrow='گردش کار' title='از استخراج تا تصمیم' lead='چهار مرحله که در میزکار به هم وصل می‌شوند.' id='plat-workflow-title' centered=True %}
+        <ol class="plat-timeline">
             {% for step in platform_content.workflow %}
-            <li class="plat-steps__item">
-                <span class="plat-steps__num">{{ step.step }}</span>
-                <div>
+            <li class="plat-timeline__step plat-reveal">
+                <span class="plat-timeline__num">{{ step.step }}</span>
+                <div class="plat-timeline__body">
                     <strong>{{ step.title }}</strong>
                     <p>{{ step.text }}</p>
                 </div>
@@ -39,19 +41,27 @@
 </section>
 
 {% if platform_content.outcomes_teaser %}
-<section class="plat-section" aria-labelledby="plat-outcomes-title">
+<section class="plat-section plat-section--outcome" aria-labelledby="plat-outcomes-title">
     <div class="container plat-section__inner">
-        <h2 id="plat-outcomes-title" class="plat-section__title">{{ platform_content.outcomes_teaser.title }}</h2>
-        <ul class="plat-grid plat-grid--solutions">
-            {% for item in platform_content.outcomes_teaser.items %}
-            <li>
-                <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="plat-card plat-card--outline">
-                    <h3>{{ item.title }}</h3>
-                    <p>{{ item.desc }}</p>
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
+        <div class="plat-outcome-split">
+            <div class="plat-outcome-split__copy">
+                {% include 'platform/includes/section_head.html' with title=platform_content.outcomes_teaser.title lead=platform_content.outcomes_teaser.lead id='plat-outcomes-title' %}
+            </div>
+            <ul class="plat-outcome-cards">
+                {% for item in platform_content.outcomes_teaser.items %}
+                <li>
+                    <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="plat-outcome-card plat-reveal">
+                        <span class="plat-outcome-card__icon"><i class="fas fa-bullseye" aria-hidden="true"></i></span>
+                        <div>
+                            <h3>{{ item.title }}</h3>
+                            <p>{{ item.desc }}</p>
+                        </div>
+                        <span class="plat-outcome-card__cta">مشاهده راه‌حل</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 </section>
 {% endif %}

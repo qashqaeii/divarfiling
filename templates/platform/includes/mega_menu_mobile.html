@@ -7,17 +7,34 @@
         </summary>
         <div class="mk-mobile-accordion__panel">
             <a href="{% url menu.hub_url_name %}" class="mk-mobile-sub-link mk-mobile-sub-link--hub">همه امکانات</a>
+
+            {% if menu.featured_product %}
+            <a href="{% url menu.featured_product.url_name slug_path=menu.featured_product.url_kwargs.slug_path %}" class="mk-mobile-featured">
+                <strong>{{ menu.featured_product.title }}</strong>
+                <span>{{ menu.featured_product.desc }}</span>
+                <span class="mk-mobile-featured__badge">{{ menu.featured_product.badge }}</span>
+            </a>
+            {% endif %}
+
             {% for item in menu.product_lines %}
             <a href="{% if item.url_kwargs.slug_path %}{% url item.url_name slug_path=item.url_kwargs.slug_path %}{% else %}{% url item.url_name %}{% endif %}" class="mk-mobile-sub-link">
                 <strong>{{ item.title }}</strong>
                 <span>{{ item.desc }}</span>
             </a>
             {% endfor %}
+
             <span class="mk-mobile-sub-label">راه‌حل‌ها</span>
             {% for sol in menu.solution_highlights %}
             <a href="{% url sol.url_name slug=sol.url_kwargs.slug %}" class="mk-mobile-sub-link">{{ sol.label }}</a>
             {% endfor %}
-            <a href="{% url menu.solutions_url_name %}" class="mk-mobile-sub-link">همه راه‌حل‌ها</a>
+            <a href="{% url menu.solutions_url_name %}" class="mk-mobile-sub-link mk-mobile-sub-link--hub">همه راه‌حل‌ها</a>
+
+            {% if menu.quick_links %}
+            <span class="mk-mobile-sub-label">دسترسی سریع</span>
+            {% for link in menu.quick_links %}
+            <a href="{% url link.url_name %}" class="mk-mobile-sub-link">{{ link.label }}</a>
+            {% endfor %}
+            {% endif %}
         </div>
     </details>
 </li>

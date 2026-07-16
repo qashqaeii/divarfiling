@@ -1,15 +1,44 @@
 {% include 'platform/includes/hero.html' %}
 
-<section class="plat-section">
+{% if platform_content.how_to_choose %}
+<section class="plat-section plat-section--choose">
     <div class="container plat-section__inner">
-        <h2 class="plat-section__title">راه‌حل‌های موجود</h2>
-        <ul class="plat-grid plat-grid--solutions">
+        {% include 'platform/includes/section_head.html' with eyebrow='راهنما' title=platform_content.how_to_choose.title centered=True %}
+        <ol class="plat-choose-steps">
+            {% for item in platform_content.how_to_choose.items %}
+            <li class="plat-choose-step plat-reveal">
+                <span class="plat-choose-step__num">{{ forloop.counter }}</span>
+                <div>
+                    <strong>{{ item.title }}</strong>
+                    <p>{{ item.text }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+{% endif %}
+
+<section class="plat-section plat-section--solutions-list" aria-labelledby="plat-solutions-title">
+    <div class="container plat-section__inner">
+        {% include 'platform/includes/section_head.html' with eyebrow='موجود' title='راه‌حل‌های موجود' id='plat-solutions-title' centered=True %}
+        <ul class="plat-solution-showcase">
             {% for item in platform_content.solutions %}
             <li>
-                <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="plat-card plat-card--{{ item.accent }}">
-                    <span class="plat-card__outcome">{{ item.outcome }}</span>
-                    <h3>{{ item.title }}</h3>
-                    <p>{{ item.desc }}</p>
+                <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="plat-solution-showcase__card plat-solution-showcase__card--{{ item.accent }} plat-reveal">
+                    <div class="plat-solution-showcase__head">
+                        <span class="plat-solution-showcase__outcome">{{ item.outcome }}</span>
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.desc }}</p>
+                    </div>
+                    {% if item.features %}
+                    <ul class="plat-solution-showcase__tags">
+                        {% for f in item.features %}
+                        <li>{{ f }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    <span class="plat-solution-showcase__cta">مشاهده راه‌حل <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                 </a>
             </li>
             {% endfor %}

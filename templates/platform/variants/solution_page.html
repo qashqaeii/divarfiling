@@ -1,14 +1,45 @@
 {% include 'platform/includes/hero.html' %}
 
 {% if platform_content.scenario %}
-<section class="plat-section plat-scenario">
+<section class="plat-section plat-section--story">
     <div class="container plat-section__inner">
-        <h2 class="plat-section__title">{{ platform_content.scenario.title }}</h2>
-        <ol class="plat-scenario__steps">
-            {% for step in platform_content.scenario.steps %}
-            <li>{{ step }}</li>
-            {% endfor %}
-        </ol>
+        <div class="plat-story-block plat-reveal">
+            {% include 'platform/includes/section_head.html' with eyebrow='سناریو' title=platform_content.scenario.title %}
+            <ol class="plat-story-block__timeline">
+                {% for step in platform_content.scenario.steps %}
+                <li>
+                    <time class="plat-story-block__marker" aria-hidden="true"></time>
+                    <p>{{ step }}</p>
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.comparison %}
+<section class="plat-section plat-section--compare">
+    <div class="container plat-section__inner">
+        {% include 'platform/includes/section_head.html' with title=platform_content.comparison.title centered=True %}
+        <div class="plat-compare-grid plat-compare-grid--premium">
+            <div class="plat-compare-col plat-compare-col--before plat-reveal">
+                <h3><i class="fas fa-times-circle" aria-hidden="true"></i> قبل</h3>
+                <ul>
+                    {% for item in platform_content.comparison.before %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="plat-compare-col plat-compare-col--after plat-reveal">
+                <h3><i class="fas fa-check-circle" aria-hidden="true"></i> با فایلینگ دیوار</h3>
+                <ul>
+                    {% for item in platform_content.comparison.after %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
     </div>
 </section>
 {% endif %}
@@ -16,20 +47,23 @@
 {% if platform_content.features_used %}
 <section class="plat-section plat-section--muted">
     <div class="container plat-section__inner">
-        <h2 class="plat-section__title">امکانات درگیر این راه‌حل</h2>
-        <ul class="plat-deep-links">
+        {% include 'platform/includes/section_head.html' with eyebrow='امکانات' title='ابزارهای درگیر این راه‌حل' centered=True %}
+        <ul class="plat-feature-stack">
             {% for feat in platform_content.features_used %}
-            <li>
+            <li class="plat-reveal">
                 {% if feat.url_kwargs.slug_path %}
-                <a href="{% url feat.url_name slug_path=feat.url_kwargs.slug_path %}" class="plat-deep-link">
+                <a href="{% url feat.url_name slug_path=feat.url_kwargs.slug_path %}" class="plat-feature-stack__link">
                 {% elif feat.url_kwargs.slug %}
-                <a href="{% url feat.url_name slug=feat.url_kwargs.slug %}" class="plat-deep-link">
+                <a href="{% url feat.url_name slug=feat.url_kwargs.slug %}" class="plat-feature-stack__link">
                 {% else %}
-                <a href="{% url feat.url_name %}" class="plat-deep-link">
+                <a href="{% url feat.url_name %}" class="plat-feature-stack__link">
                 {% endif %}
-                    <strong>{{ feat.title }}</strong>
-                    <span>{{ feat.text }}</span>
-                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    <span class="plat-feature-stack__icon"><i class="fas fa-puzzle-piece" aria-hidden="true"></i></span>
+                    <span class="plat-feature-stack__body">
+                        <strong>{{ feat.title }}</strong>
+                        <span>{{ feat.text }}</span>
+                    </span>
+                    <i class="fas fa-arrow-left plat-feature-stack__arrow" aria-hidden="true"></i>
                 </a>
             </li>
             {% endfor %}
@@ -38,28 +72,31 @@
 </section>
 {% endif %}
 
-{% if platform_content.comparison %}
+{% if platform_content.when_to_use %}
 <section class="plat-section">
+    <div class="container plat-section__inner plat-audience">
+        {% include 'platform/includes/section_head.html' with title='چه زمانی این راه‌حل مناسب است' centered=True %}
+        <ul class="plat-tags plat-tags--emerald">
+            {% for item in platform_content.when_to_use %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.pro_tips %}
+<section class="plat-section plat-section--muted">
     <div class="container plat-section__inner">
-        <h2 class="plat-section__title">{{ platform_content.comparison.title }}</h2>
-        <div class="plat-compare-grid">
-            <div class="plat-compare-col plat-compare-col--before">
-                <h3>قبل</h3>
-                <ul>
-                    {% for item in platform_content.comparison.before %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="plat-compare-col plat-compare-col--after">
-                <h3>با فایلینگ دیوار</h3>
-                <ul>
-                    {% for item in platform_content.comparison.after %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
+        {% include 'platform/includes/section_head.html' with eyebrow='نکات' title='توصیه‌های عملی' centered=True %}
+        <ul class="plat-tips">
+            {% for tip in platform_content.pro_tips %}
+            <li class="plat-tips__item plat-reveal">
+                <span class="plat-tips__icon" aria-hidden="true"><i class="fas fa-check"></i></span>
+                <p>{{ tip }}</p>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
 </section>
 {% endif %}

@@ -3,11 +3,7 @@
 {% load seo_tags %}
 
 {% block title %}{{ meta_title }}{% endblock %}
-{% block body_class %}mk-pub-page platform-page platform-page--{{ platform_page.variant }} platform-page--{{ platform_page.section }}{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-platform.css' %}?v=1">
-{% endblock %}
+{% block body_class %}mk-pub-page platform-page plat-page--{{ platform_page.content_key }} platform-page--{{ platform_page.variant }}{% endblock %}
 
 {% block breadcrumbs %}
 <div class="container mk-platform-bc-wrap">
@@ -17,7 +13,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="mk-pub-wrap mk-platform" style="--plat-accent: var(--plat-accent-{{ platform_page.accent }}, #8b5cf6);">
+<div class="mk-pub-wrap mk-platform plat-page" style="--plat-accent: var(--plat-accent-{{ platform_page.accent }}, #8b5cf6);">
     {% if platform_page.variant == 'hub' and platform_page.section == 'features' %}
         {% include 'platform/variants/features_hub.html' %}
     {% elif platform_page.variant == 'hub' and platform_page.section == 'solutions' %}
@@ -33,4 +29,5 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/mk-platform-page.js' %}?v=1" defer></script>
 {% endblock %}

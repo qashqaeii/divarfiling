@@ -1,8 +1,10 @@
 {% load static %}
-<header class="plat-hero plat-hero--{{ platform_page.accent }}">
+{% with layout=platform_content.hero.layout|default:'split' %}
+<header class="plat-hero plat-hero--{{ platform_page.accent }} plat-hero--{{ layout }}">
     <div class="plat-hero__mesh" aria-hidden="true"></div>
+    <div class="plat-hero__glow" aria-hidden="true"></div>
     <div class="container plat-hero__inner">
-        <div class="plat-hero__copy mk-reveal">
+        <div class="plat-hero__copy plat-reveal">
             <span class="plat-kicker">
                 <span class="plat-kicker__icon mk-icon mk-icon--xs mk-icon--{{ platform_page.accent }}">
                     <i class="fas {{ platform_page.icon }}" aria-hidden="true"></i>
@@ -13,24 +15,29 @@
             <p class="plat-hero__lead">{{ platform_content.hero.lead }}</p>
             {% include 'platform/includes/cta_pair.html' %}
         </div>
-        {% if platform_content.screenshot %}
-        <figure class="plat-hero__shot mk-reveal">
-            <img src="{% static platform_content.screenshot.image %}"
-                 alt="{{ platform_content.screenshot.caption }}"
-                 width="1680" height="1000" loading="eager" decoding="async"
-                 class="plat-shot-img">
-            <figcaption>{{ platform_content.screenshot.caption }}</figcaption>
-        </figure>
-        {% elif platform_content.screenshots %}
-        <div class="plat-hero__shots mk-reveal">
-            {% with shot=platform_content.screenshots.0 %}
-            <figure class="plat-hero__shot">
-                <img src="{% static shot.image %}" alt="{{ shot.caption }}"
-                     width="1680" height="1000" loading="eager" decoding="async" class="plat-shot-img">
-                <figcaption>{{ shot.caption }}</figcaption>
-            </figure>
-            {% endwith %}
-        </div>
+        {% if layout != 'centered' and layout != 'story' %}
+            {% if platform_content.screenshot %}
+            <div class="plat-hero__visual plat-reveal plat-reveal--delay">
+                {% include 'platform/includes/device_frame.html' with image=platform_content.screenshot.image caption=platform_content.screenshot.caption loading='eager' %}
+            </div>
+            {% elif platform_content.screenshots %}
+            <div class="plat-hero__visual plat-reveal plat-reveal--delay">
+                {% with shot=platform_content.screenshots.0 %}
+                {% include 'platform/includes/device_frame.html' with image=shot.image caption=shot.caption loading='eager' %}
+                {% endwith %}
+            </div>
+            {% endif %}
         {% endif %}
     </div>
+    {% if platform_content.stats %}
+    <div class="container plat-stat-row plat-reveal plat-reveal--delay-2">
+        {% for stat in platform_content.stats %}
+        <div class="plat-stat">
+            <strong class="plat-stat__value">{{ stat.value }}</strong>
+            <span class="plat-stat__label">{{ stat.label }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 </header>
+{% endwith %}

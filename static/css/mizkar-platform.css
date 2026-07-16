@@ -78,7 +78,7 @@ html.mk-public .mk-mega-panel {
     position: fixed;
     top: 0;
     left: 0;
-    width: 720px;
+    width: 760px;
     max-width: calc(100vw - 1.5rem);
     min-width: 280px;
     box-sizing: border-box;
@@ -92,6 +92,16 @@ html.mk-public .mk-mega-panel {
     word-wrap: break-word;
 }
 
+/* پل نامرئی بین دکمه و پنل — برای hover بدون بسته شدن ناگهانی */
+html.mk-public .mk-mega-panel::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 0;
+    right: 0;
+    height: 12px;
+}
+
 html.mk-public .mk-mega-panel[hidden] {
     display: none !important;
 }
@@ -103,8 +113,14 @@ html.mk-public[data-theme="light"] .mk-mega-panel {
     color: #0f172a;
 }
 
+/* جلوگیری از پرش layout هنگام باز شدن منو — scrollbar حفظ شود */
+html.mk-public {
+    scrollbar-gutter: stable;
+}
+
 html.mk-public.mk-mega-open {
-    overflow: clip;
+    /* overflow: clip حذف شد — باعث حذف scrollbar و پرش افقی صفحه می‌شد */
+    overscroll-behavior: none;
 }
 
 html.mk-public .mk-mega-panel__head {

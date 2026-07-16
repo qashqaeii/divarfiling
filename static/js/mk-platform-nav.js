@@ -1,6 +1,6 @@
 /**
  * Mega menu امکانات — fixed panel, hover (desktop), keyboard nav
- * v5: fix hover flicker (backdrop was covering nav, stealing mouse events)
+ * v6: premium layout, enter animation, wider panel
  */
 (function () {
     'use strict';
@@ -44,7 +44,7 @@
 
     function positionPanel() {
         var rect = btn.getBoundingClientRect();
-        var panelWidth = Math.min(760, window.innerWidth - 24);
+        var panelWidth = Math.min(840, window.innerWidth - 24);
         var top = rect.bottom - 2;
         var left = rect.left + rect.width / 2 - panelWidth / 2;
 
@@ -85,6 +85,8 @@
         backdrop.hidden = openMode !== 'click';
         btn.setAttribute('aria-expanded', 'true');
         megaItem?.classList.add('is-open');
+        panel.classList.remove('mk-mega-panel--leave');
+        panel.classList.add('mk-mega-panel--enter');
         syncOpenClasses();
         isOpen = true;
     }
@@ -92,18 +94,35 @@
     function closePanel() {
         if (!isOpen) return;
         clearTimeout(closeTimer);
-        panel.hidden = true;
-        backdrop.hidden = true;
-        btn.setAttribute('aria-expanded', 'false');
-        megaItem?.classList.remove('is-open');
-        document.documentElement.classList.remove('mk-mega-open', 'mk-mega-hover');
-        isOpen = false;
-        openMode = null;
+        var instant = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        panel.classList.remove('mk-mega-panel--enter');
+        if (instant) {
+            panel.hidden = true;
+            panel.classList.remove('mk-mega-panel--leave');
+            backdrop.hidden = true;
+            btn.setAttribute('aria-expanded', 'false');
+            megaItem?.classList.remove('is-open');
+            document.documentElement.classList.remove('mk-mega-open', 'mk-mega-hover');
+            isOpen = false;
+            openMode = null;
+            return;
+        }
+        panel.classList.add('mk-mega-panel--leave');
+        closeTimer = setTimeout(function () {
+            panel.hidden = true;
+            panel.classList.remove('mk-mega-panel--leave');
+            backdrop.hidden = true;
+            btn.setAttribute('aria-expanded', 'false');
+            megaItem?.classList.remove('is-open');
+            document.documentElement.classList.remove('mk-mega-open', 'mk-mega-hover');
+            isOpen = false;
+            openMode = null;
+        }, 160);
     }
 
     function scheduleClose() {
         clearTimeout(closeTimer);
-        closeTimer = setTimeout(closePanel, 280);
+        closeTimer = setTimeout(closePanel, 300);
     }
 
     function cancelClose() {

@@ -14,10 +14,11 @@ def platform_mega_menu() -> dict:
             'url_kwargs': {'slug_path': 'crm'},
             'icon': 'fa-users',
             'accent': 'rose',
+            'tag': 'رایگان',
         },
         {
             'title': 'یادآور و تقویم',
-            'desc': 'پیگیری به‌موقع مشتری',
+            'desc': 'صف امروز و پیگیری به‌موقع',
             'url_name': 'platform_features_page',
             'url_kwargs': {'slug_path': 'crm/reminders'},
             'icon': 'fa-bell',
@@ -65,7 +66,7 @@ def platform_mega_menu() -> dict:
     solutions = [
         {
             'label': 'پیگیری مشتری',
-            'desc': 'فراموش نکنید',
+            'desc': 'تماس دوم از قلم نیفتد',
             'url_name': 'platform_solutions_page',
             'url_kwargs': {'slug': 'customer-follow-up'},
         },
@@ -103,6 +104,12 @@ def platform_mega_menu() -> dict:
         'product_lines': featured_lines,
         'crm_highlights': crm_features,
         'solution_highlights': solutions,
+        'solution_spotlight': {
+            'title': 'پیگیری مشتری',
+            'outcome': 'تماس دوم از قلم نیفتد',
+            'url_name': 'platform_solutions_page',
+            'url_kwargs': {'slug': 'customer-follow-up'},
+        },
         'quick_links': quick_links,
         'published_page_count': published_count,
     }

@@ -1,0 +1,37 @@
+{% load static %}
+<figure class="plat-shot-story{% if hero %} plat-shot-story--hero{% endif %}">
+    <div class="plat-shot-story__frame">
+        <div class="plat-device__chrome" aria-hidden="true">
+            <span class="plat-device__dot"></span>
+            <span class="plat-device__dot"></span>
+            <span class="plat-device__dot"></span>
+            <span class="plat-device__bar">میزکار CRM — فایلینگ دیوار</span>
+        </div>
+        <div class="plat-device__screen plat-shot-story__screen">
+            <img src="{% static shot.image %}"
+                 alt="{{ shot.alt|default:shot.caption }}"
+                 class="plat-device__img"
+                 width="{{ shot.width|default:1280 }}"
+                 height="{{ shot.height|default:800 }}"
+                 loading="{{ loading|default:'lazy' }}"
+                 decoding="async"
+                 {% if shot.srcset %}srcset="{{ shot.srcset }}" sizes="{{ shot.sizes|default:'(min-width:960px) 560px, 100vw' }}"{% endif %}>
+            {% if shot.callouts %}
+            <ol class="plat-shot-story__pins" aria-label="نکات کلیدی تصویر">
+                {% for pin in shot.callouts %}
+                <li class="plat-shot-story__pin plat-shot-story__pin--{{ pin.pos|default:'tr' }}" style="--pin-x: {{ pin.x|default:'72' }}%; --pin-y: {{ pin.y|default:'28' }}%;">
+                    <span class="plat-shot-story__pin-num">{{ forloop.counter }}</span>
+                    <span class="plat-shot-story__pin-text">{{ pin.text }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+            {% endif %}
+        </div>
+    </div>
+    {% if shot.caption %}
+    <figcaption class="plat-shot-story__caption">
+        <strong>{{ shot.caption }}</strong>
+        {% if shot.explain %}<span>{{ shot.explain }}</span>{% endif %}
+    </figcaption>
+    {% endif %}
+</figure>

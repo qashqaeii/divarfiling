@@ -36,7 +36,12 @@ class PlatformPageViewTests(TestCase):
         resp = self.client.get('/features/crm/')
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'CRM املاک')
+        self.assertContains(resp, 'یک میزکار نگه دارید')
+        self.assertContains(resp, 'crm-chaos')
+        self.assertContains(resp, 'حریم خصوصی')
+        self.assertContains(resp, 'help-crm-contacts.png')
         self.assertContains(resp, '/real-estate-crm/')
+        self.assertContains(resp, 'plat-faq__item', count=7)
 
     def test_crm_reminders_feature(self):
         resp = self.client.get('/features/crm/reminders/')

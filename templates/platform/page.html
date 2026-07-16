@@ -18,6 +18,8 @@
         {% include 'platform/variants/features_hub.html' %}
     {% elif platform_page.variant == 'hub' and platform_page.section == 'solutions' %}
         {% include 'platform/variants/solutions_hub.html' %}
+    {% elif platform_page.content_key == 'crm_product_line' %}
+        {% include 'platform/variants/crm_product_line.html' %}
     {% elif platform_page.variant == 'product_line' %}
         {% include 'platform/variants/product_line.html' %}
     {% elif platform_page.variant == 'feature' %}
@@ -26,6 +28,12 @@
         {% include 'platform/variants/solution_page.html' %}
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_css %}
+{% if platform_page.content_key == 'crm_product_line' %}
+<link rel="stylesheet" href="{% static 'css/mizkar-platform-crm.css' %}?v=1">
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

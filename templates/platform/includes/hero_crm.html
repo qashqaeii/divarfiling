@@ -1,0 +1,25 @@
+{% load static %}
+<header class="plat-crm-hero plat-reveal">
+    <div class="plat-crm-hero__inner">
+        <div class="plat-crm-hero__copy">
+            <p class="plat-crm-hero__eyebrow">{{ platform_content.hero.eyebrow }}</p>
+            <h1>{{ platform_page.seo.h1 }}</h1>
+            <p class="plat-crm-hero__lead">{{ platform_content.hero.lead }}</p>
+            {% if platform_content.hero.bullets %}
+            <ul class="plat-crm-hero__bullets">
+                {% for item in platform_content.hero.bullets %}
+                <li><i class="fas fa-check" aria-hidden="true"></i> {{ item }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="plat-crm-hero__cta">
+                {% include 'platform/includes/cta_pair.html' %}
+            </div>
+        </div>
+        {% if platform_content.hero.screenshot %}
+        <div class="plat-crm-hero__visual plat-reveal plat-reveal--delay">
+            {% include 'platform/includes/screenshot_story.html' with shot=platform_content.hero.screenshot loading='eager' hero=True %}
+        </div>
+        {% endif %}
+    </div>
+</header>

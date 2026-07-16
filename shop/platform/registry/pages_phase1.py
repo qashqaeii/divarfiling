@@ -54,7 +54,7 @@ def _crm_product_line() -> PageSpec:
         ),
         keywords='CRM املاک, CRM مشاور املاک, مدیریت مشتری املاک, CRM رایگان',
         og_title='CRM املاک — خط محصول فایلینگ دیوار',
-        h1='CRM املاک: مشتری، معامله و پیگیری در یک میزکار',
+        h1='CRM املاک: مشتری، معامله و پیگیری را در یک میزکار نگه دارید',
     )
     return PageSpec(
         section='features',
@@ -72,7 +72,12 @@ def _crm_product_line() -> PageSpec:
         primary_keyword='CRM املاک',
         content_key='crm_product_line',
         related_solutions=('customer-follow-up',),
-        related_articles=('crm-amlak-raygan-rahnama', 'behtarin-crm-moshaver-amlak-iran-1405'),
+        related_articles=(
+            'crm-amlak-raygan-rahnama',
+            'behtarin-crm-moshaver-amlak-iran-1405',
+            'peigiri-moshtari-moshaver-amlak',
+            'crm-team-modiriyat-ajans-rahnama',
+        ),
         related_seo_landings=('real-estate-crm',),
         sitemap_priority=0.88,
     )

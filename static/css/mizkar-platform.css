@@ -10,21 +10,37 @@
 }
 
 /* ── Mega menu (global nav) ── */
+html.mk-public .mk-navbar,
+html.mk-public .mk-nav-inner,
+html.mk-public .mk-nav-desktop,
+html.mk-public .mk-nav-links,
+html.mk-public .mk-nav-links > li,
 html.mk-public .mk-nav-item--mega {
-    position: relative;
+    overflow: visible !important;
+}
+
+html.mk-public .mk-nav-item--mega {
+    position: static;
 }
 
 html.mk-public .mk-nav-link--mega {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    background: none;
-    border: none;
+    background: none !important;
+    border: none !important;
     cursor: pointer;
     font: inherit;
     color: inherit;
-    padding: 0.5rem 0.75rem;
-    border-radius: 10px;
+    padding: 0.38rem 0.7rem !important;
+    border-radius: 7px !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+html.mk-public .mk-nav-item--mega.is-open .mk-nav-link--mega {
+    color: var(--mk-text) !important;
+    background: var(--mk-hover-bg) !important;
 }
 
 html.mk-public .mk-nav-mega-chevron {
@@ -37,32 +53,67 @@ html.mk-public .mk-nav-item--mega.is-open .mk-nav-mega-chevron {
     transform: rotate(180deg);
 }
 
+html.mk-public .mk-mega-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 11980;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background: rgba(7, 11, 23, 0.35);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    cursor: default;
+}
+
+html.mk-public[data-theme="light"] .mk-mega-backdrop {
+    background: rgba(15, 23, 42, 0.18);
+}
+
+html.mk-public .mk-mega-backdrop[hidden] {
+    display: none !important;
+}
+
 html.mk-public .mk-mega-panel {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    inset-inline-end: 0;
-    inset-inline-start: auto;
-    width: min(720px, calc(100vw - 2rem));
-    background: var(--mk-surface-elevated, rgba(15, 20, 35, 0.98));
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 720px;
+    max-width: calc(100vw - 1.5rem);
+    min-width: 280px;
+    box-sizing: border-box;
+    background: var(--mk-card, #0f172a);
+    border: 1px solid var(--mk-border, rgba(148, 163, 184, 0.12));
     border-radius: 16px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
-    padding: 1.25rem;
-    z-index: 12000;
+    padding: 1.25rem 1.35rem 1.1rem;
+    z-index: 12050;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+html.mk-public .mk-mega-panel[hidden] {
+    display: none !important;
 }
 
 html.mk-public[data-theme="light"] .mk-mega-panel {
     background: #fff;
-    border-color: rgba(0, 0, 0, 0.08);
-    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.14);
+    color: #0f172a;
+}
+
+html.mk-public.mk-mega-open {
+    overflow: clip;
 }
 
 html.mk-public .mk-mega-panel__head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
     gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
 }
 
 html.mk-public .mk-mega-panel__eyebrow {
@@ -80,7 +131,7 @@ html.mk-public .mk-mega-panel__hub-link {
 
 html.mk-public .mk-mega-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.65rem;
 }
 
@@ -120,21 +171,29 @@ html.mk-public .mk-mega-card--amber .mk-mega-card__icon { background: rgba(245, 
 html.mk-public .mk-mega-card--cyan .mk-mega-card__icon { background: rgba(6, 182, 212, 0.15); color: var(--plat-accent-cyan); }
 html.mk-public .mk-mega-card--violet .mk-mega-card__icon { background: rgba(139, 92, 246, 0.15); color: var(--plat-accent-violet); }
 
+html.mk-public .mk-mega-card__body {
+    flex: 1;
+    min-width: 0;
+}
+
 html.mk-public .mk-mega-card__body strong {
     display: block;
     font-size: 0.92rem;
     margin-bottom: 0.15rem;
+    line-height: 1.35;
 }
 
 html.mk-public .mk-mega-card__body span {
+    display: block;
     font-size: 0.78rem;
     opacity: 0.75;
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 html.mk-public .mk-mega-footer {
-    display: flex;
-    gap: 2rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.06);

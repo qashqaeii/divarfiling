@@ -1,15 +1,31 @@
-{% include 'platform/includes/hero.html' %}
+{% include 'platform/includes/hero_solutions_hub.html' %}
 
-{% if platform_content.how_to_choose %}
-<section class="plat-section plat-section--choose">
-    <div class="container plat-section__inner">
-        {% include 'platform/includes/section_head.html' with eyebrow='راهنما' title=platform_content.how_to_choose.title centered=True %}
-        <ol class="plat-choose-steps">
+{# ── فلسفه ── #}
+<section class="shub-sec" aria-labelledby="shub-philosophy-title">
+    <div class="shub-wrap shub-philosophy">
+        <div class="shub-prose">
+            <h2 id="shub-philosophy-title">{{ platform_content.philosophy.title }}</h2>
+            {% for p in platform_content.philosophy.paragraphs %}
+            <p>{{ p }}</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── چطور انتخاب کنیم ── #}
+<section class="shub-sec shub-sec--soft" aria-labelledby="shub-choose-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <h2 id="shub-choose-title">{{ platform_content.how_to_choose.title }}</h2>
+            <p>{{ platform_content.how_to_choose.lead }}</p>
+        </div>
+        <ol class="shub-choose">
             {% for item in platform_content.how_to_choose.items %}
-            <li class="plat-choose-step plat-reveal">
-                <span class="plat-choose-step__num">{{ forloop.counter }}</span>
+            <li class="shub-choose__step plat-reveal">
+                <span class="shub-choose__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
+                <span class="shub-choose__num">{{ forloop.counter }}</span>
                 <div>
-                    <strong>{{ item.title }}</strong>
+                    <h3>{{ item.title }}</h3>
                     <p>{{ item.text }}</p>
                 </div>
             </li>
@@ -17,28 +33,44 @@
         </ol>
     </div>
 </section>
-{% endif %}
 
-<section class="plat-section plat-section--solutions-list" aria-labelledby="plat-solutions-title">
-    <div class="container plat-section__inner">
-        {% include 'platform/includes/section_head.html' with eyebrow='موجود' title='راه‌حل‌های موجود' id='plat-solutions-title' centered=True %}
-        <ul class="plat-solution-showcase">
+{# ── راه‌حل‌های منتشرشده ── #}
+<section class="shub-sec shub-sec--showcase" aria-labelledby="shub-solutions-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <h2 id="shub-solutions-title">راه‌حل‌های منتشرشده</h2>
+        </div>
+        <ul class="shub-showcase">
             {% for item in platform_content.solutions %}
-            <li>
-                <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="plat-solution-showcase__card plat-solution-showcase__card--{{ item.accent }} plat-reveal">
-                    <div class="plat-solution-showcase__head">
-                        <span class="plat-solution-showcase__outcome">{{ item.outcome }}</span>
+            <li class="plat-reveal">
+                <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="shub-showcase__card shub-showcase__card--{{ item.accent }}">
+                    <div class="shub-showcase__head">
+                        <span class="shub-showcase__outcome">{{ item.outcome }}</span>
+                        {% if item.free %}
+                        <span class="shub-showcase__badge">CRM رایگان</span>
+                        {% endif %}
                         <h3>{{ item.title }}</h3>
+                        <p class="shub-showcase__problem"><strong>مشکل:</strong> {{ item.problem }}</p>
                         <p>{{ item.desc }}</p>
+                        {% if item.scenario_snippet %}
+                        <blockquote class="shub-showcase__snippet">{{ item.scenario_snippet }}</blockquote>
+                        {% endif %}
                     </div>
                     {% if item.features %}
-                    <ul class="plat-solution-showcase__tags">
+                    <ul class="shub-showcase__tags">
                         {% for f in item.features %}
                         <li>{{ f }}</li>
                         {% endfor %}
                     </ul>
                     {% endif %}
-                    <span class="plat-solution-showcase__cta">مشاهده راه‌حل <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    {% if item.for_whom %}
+                    <ul class="shub-showcase__audience">
+                        {% for who in item.for_whom %}
+                        <li>{{ who }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    <span class="shub-showcase__cta">مشاهده راه‌حل <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                 </a>
             </li>
             {% endfor %}
@@ -46,5 +78,110 @@
     </div>
 </section>
 
-{% include 'platform/includes/faq.html' %}
-{% include 'platform/includes/footer_blocks.html' %}
+{# ── نقشه مشکل ── #}
+<section class="shub-sec" aria-labelledby="shub-map-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <h2 id="shub-map-title">{{ platform_content.problem_map.title }}</h2>
+            <p>{{ platform_content.problem_map.lead }}</p>
+        </div>
+        <ul class="shub-map">
+            {% for row in platform_content.problem_map.items %}
+            <li class="shub-map__row shub-map__row--{{ row.status }} plat-reveal">
+                <span class="shub-map__problem">{{ row.problem }}</span>
+                {% if row.status == 'published' %}
+                <a href="{% url row.url_name slug=row.url_kwargs.slug %}" class="shub-map__link">
+                    {{ row.solution_title }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                {% else %}
+                <span class="shub-map__soon">{{ row.solution_title }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── مقایسه ── #}
+<section class="shub-sec shub-sec--soft" aria-labelledby="shub-compare-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <h2 id="shub-compare-title">{{ platform_content.compare.title }}</h2>
+        </div>
+        <div class="shub-compare">
+            <div class="shub-compare__col shub-compare__col--solution plat-reveal">
+                <h3><i class="fas fa-lightbulb" aria-hidden="true"></i> {{ platform_content.compare.solution_col.title }}</h3>
+                <ul>
+                    {% for item in platform_content.compare.solution_col.items %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="shub-compare__col shub-compare__col--feature plat-reveal">
+                <h3><i class="fas fa-puzzle-piece" aria-hidden="true"></i> {{ platform_content.compare.feature_col.title }}</h3>
+                <ul>
+                    {% for item in platform_content.compare.feature_col.items %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── مسیر به Feature ── #}
+<section class="shub-sec" aria-labelledby="shub-path-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <h2 id="shub-path-title">{{ platform_content.path_to_features.title }}</h2>
+            <p>{{ platform_content.path_to_features.lead }}</p>
+        </div>
+        <ul class="shub-path">
+            {% for link in platform_content.path_to_features.links %}
+            <li class="plat-reveal">
+                <a href="{% if link.url_kwargs.slug_path %}{% url link.url_name slug_path=link.url_kwargs.slug_path %}{% elif link.url_kwargs.slug %}{% url link.url_name slug=link.url_kwargs.slug %}{% else %}{% url link.url_name %}{% endif %}" class="shub-path__link">
+                    <strong>{{ link.title }}</strong>
+                    <span>{{ link.desc }}</span>
+                    <i class="fas fa-arrow-left shub-path__arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── هزینه ── #}
+<section class="shub-sec shub-sec--soft" aria-labelledby="shub-access-title">
+    <div class="shub-wrap shub-access plat-reveal">
+        <h2 id="shub-access-title">{{ platform_content.access_note.title }}</h2>
+        <p>{{ platform_content.access_note.text }}</p>
+    </div>
+</section>
+
+{# ── FAQ ── #}
+{% if platform_content.faq %}
+<section class="shub-sec plat-faq" aria-labelledby="shub-faq-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <h2 id="shub-faq-title">سوالات متداول</h2>
+        </div>
+        <div class="plat-faq__list">
+            {% for item in platform_content.faq %}
+            <details class="plat-faq__item plat-reveal">
+                <summary>{{ item.q }}</summary>
+                <div class="plat-faq__answer"><p>{{ item.a }}</p></div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# ── CTA ── #}
+<section class="shub-sec shub-final-cta">
+    <div class="shub-wrap shub-final-cta__inner plat-reveal">
+        <h2>{{ platform_content.final_cta.title }}</h2>
+        <p>{{ platform_content.final_cta.lead }}</p>
+        {% include 'platform/includes/cta_pair.html' %}
+    </div>
+</section>

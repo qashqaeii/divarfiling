@@ -1,0 +1,24 @@
+<header class="shub-hero plat-reveal">
+    <div class="shub-wrap shub-hero__inner">
+        <p class="shub-eyebrow">{{ platform_content.hero.eyebrow }}</p>
+        <p class="shub-hero__question">{{ platform_content.hero.question }}</p>
+        <h1>{{ platform_page.seo.h1 }}</h1>
+        <p class="shub-hero__lead">{{ platform_content.hero.lead }}</p>
+        {% if platform_content.hero.contrast %}
+        <div class="shub-contrast plat-reveal plat-reveal--delay">
+            <div class="shub-contrast__item shub-contrast__item--weak">
+                <span class="shub-contrast__label">Feature-first</span>
+                <p>{{ platform_content.hero.contrast.problem }}</p>
+            </div>
+            <div class="shub-contrast__arrow" aria-hidden="true"><i class="fas fa-arrow-left"></i></div>
+            <div class="shub-contrast__item shub-contrast__item--strong">
+                <span class="shub-contrast__label">Outcome-first</span>
+                <p>{{ platform_content.hero.contrast.outcome }}</p>
+            </div>
+        </div>
+        {% endif %}
+        <div class="shub-hero__cta">
+            {% include 'platform/includes/cta_pair.html' %}
+        </div>
+    </div>
+</header>

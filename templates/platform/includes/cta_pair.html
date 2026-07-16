@@ -24,6 +24,10 @@
     <a href="{% url 'platform_solutions_hub' %}" class="plat-btn plat-btn--ghost">
         <i class="fas fa-lightbulb" aria-hidden="true"></i> راه‌حل‌ها
     </a>
+    {% elif platform_content.cta.secondary == 'features_hub' %}
+    <a href="{% url 'platform_features_hub' %}" class="plat-btn plat-btn--ghost">
+        <i class="fas fa-layer-group" aria-hidden="true"></i> نقشه امکانات
+    </a>
     {% else %}
     <a href="{% url 'platform_solutions_hub' %}" class="plat-btn plat-btn--ghost">
         <i class="fas fa-lightbulb" aria-hidden="true"></i> راه‌حل‌ها

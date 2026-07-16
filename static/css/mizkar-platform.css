@@ -881,11 +881,16 @@ html.mk-public[data-theme="light"] .plat-card {
     font-size: 1rem;
 }
 
-/* Reveal */
+/* Reveal — progressive enhancement (visible before JS) */
 .plat-reveal {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.55s var(--plat-ease), transform 0.55s var(--plat-ease);
+}
+
+html.plat-motion-ready .plat-reveal:not(.is-visible) {
     opacity: 0;
     transform: translateY(14px);
-    transition: opacity 0.55s var(--plat-ease), transform 0.55s var(--plat-ease);
 }
 
 .plat-reveal.is-visible,
@@ -1842,13 +1847,13 @@ html.mk-public .mk-mega-panel.mk-mega-panel--leave {
 }
 
 @keyframes mkMegaIn {
-    from { opacity: 0; transform: translateY(-8px) scale(0.985); }
+    from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: none; }
 }
 
 @keyframes mkMegaOut {
     from { opacity: 1; transform: none; }
-    to { opacity: 0; transform: translateY(-6px) scale(0.985); }
+    to { opacity: 0; transform: translateY(-4px); }
 }
 
 html.mk-public .mk-mega-panel__head {
@@ -2530,5 +2535,73 @@ html.mk-public .mk-mega-footer--compact a:hover {
 
     html.mk-public .mk-mega-solution--compact .mk-mega-solution__outcome {
         display: none;
+    }
+}
+
+/* Mega menu v8 — motion polish */
+html.mk-public .mk-mega-panel {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow:
+        0 16px 40px rgba(15, 23, 42, 0.1),
+        0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+
+html.mk-public[data-theme="light"] .mk-mega-panel {
+    box-shadow:
+        0 16px 40px rgba(15, 23, 42, 0.08),
+        0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+html.mk-public .mk-mega-panel.mk-mega-panel--enter {
+    animation-duration: 0.22s;
+}
+
+html.mk-public .mk-mega-panel.mk-mega-panel--leave {
+    animation-duration: 0.18s;
+}
+
+html.mk-public .mk-mega-card,
+html.mk-public .mk-mega-featured--compact,
+html.mk-public .mk-mega-solution--compact,
+html.mk-public .mk-mega-footer--compact a {
+    transition:
+        background 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+        color 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.mk-public .mk-mega-card:hover,
+    html.mk-public .mk-mega-featured--compact:hover,
+    html.mk-public .mk-mega-solution--compact:hover {
+        transform: translateY(-2px);
+    }
+
+    html.mk-public .mk-mega-featured--compact:hover .mk-mega-featured__cta,
+    html.mk-public .mk-mega-solution--compact:hover > .fa-arrow-left {
+        transform: translateX(-2px);
+        opacity: 0.85;
+    }
+}
+
+html.mk-public .mk-mega-featured__cta,
+html.mk-public .mk-mega-solution--compact > .fa-arrow-left {
+    transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.mk-public .mk-mega-panel.mk-mega-panel--enter,
+    html.mk-public .mk-mega-panel.mk-mega-panel--leave {
+        animation: none !important;
+    }
+
+    html.mk-public .mk-mega-card,
+    html.mk-public .mk-mega-featured--compact,
+    html.mk-public .mk-mega-solution--compact {
+        transition: none !important;
+        transform: none !important;
     }
 }

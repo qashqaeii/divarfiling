@@ -1,5 +1,6 @@
 /**
- * Platform page — subtle scroll reveal (respects reduced motion)
+ * Platform page — motion system (reveal, flow, stagger, subtle parallax)
+ * Progressive enhancement: content visible before JS runs.
  */
 (function () {
     'use strict';
@@ -7,28 +8,140 @@
     var root = document.querySelector('.plat-page');
     if (!root) return;
 
+    var html = document.documentElement;
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
-        root.querySelectorAll('.plat-reveal').forEach(function (el) {
-            el.classList.add('is-visible');
+    var vh = window.innerHeight || document.documentElement.clientHeight || 800;
+
+    var STAGGER_SEL = [
+        '.fhub-pillars', '.fhub-lifecycle', '.fhub-audience', '.fhub-explore', '.fhub-related',
+        '.fhub-kpis', '.fhub-signals', '.fhub-mistakes', '.fhub-reasons',
+        '.rem-concepts', '.rem-gallery', '.rem-use-grid', '.rem-limits', '.rem-states',
+        '.shub-choose', '.shub-map', '.shub-path', '.fhub-tools',
+        '.sol-reasons', '.sol-mistakes', '.sol-framework', '.sol-personas', '.sol-kpis',
+        '.sol-signals', '.sol-tools', '.sol-related-grid', '.mk-mega-grid'
+    ].join(',');
+
+    var FLOW_SEL = [
+        '.rem-timeline', '.sol-timeline', '.fhub-lifecycle', '.rem-workflow',
+        '.sol-framework', '.shub-choose', '.rem-workflow'
+    ].join(',');
+
+    function markVisible(el) {
+        el.classList.add('is-visible');
+    }
+
+    function inViewport(el, ratio) {
+        var rect = el.getBoundingClientRect();
+        return rect.top < vh * (ratio || 0.92) && rect.bottom > 0;
+    }
+
+    function applyStagger() {
+        root.querySelectorAll(STAGGER_SEL).forEach(function (group) {
+            var items = group.querySelectorAll(':scope > li, :scope > .plat-reveal');
+            items.forEach(function (el, i) {
+                el.style.setProperty('--plat-stagger', Math.min(i * 50, 200) + 'ms');
+            });
         });
-        return;
     }
 
-    var items = root.querySelectorAll('.plat-reveal');
-    if (!items.length || !('IntersectionObserver' in window)) {
-        items.forEach(function (el) { el.classList.add('is-visible'); });
-        return;
-    }
-
-    var observer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
+    function initFlows() {
+        root.querySelectorAll(FLOW_SEL).forEach(function (flow) {
+            flow.classList.add('plat-flow');
+            if (reduced || inViewport(flow, 0.88)) {
+                flow.classList.add('is-flow-visible');
             }
         });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    }
 
-    items.forEach(function (el) { observer.observe(el); });
+    function initReveals() {
+        var reveals = root.querySelectorAll('.plat-reveal');
+        var shots = root.querySelectorAll('.plat-shot-story');
+
+        if (reduced) {
+            reveals.forEach(markVisible);
+            shots.forEach(markVisible);
+            html.classList.add('plat-motion-ready');
+            return;
+        }
+
+        reveals.forEach(function (el) {
+            if (inViewport(el, 0.94)) markVisible(el);
+        });
+
+        shots.forEach(function (el) {
+            if (inViewport(el, 0.94)) markVisible(el);
+        });
+
+        html.classList.add('plat-motion-ready');
+
+        if (!('IntersectionObserver' in window)) {
+            reveals.forEach(markVisible);
+            shots.forEach(markVisible);
+            root.querySelectorAll('.plat-flow').forEach(function (f) {
+                f.classList.add('is-flow-visible');
+            });
+            return;
+        }
+
+        var revealObs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    markVisible(entry.target);
+                    revealObs.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '0px 0px -6% 0px', threshold: 0.06 });
+
+        reveals.forEach(function (el) {
+            if (!el.classList.contains('is-visible')) revealObs.observe(el);
+        });
+
+        shots.forEach(function (el) {
+            if (!el.classList.contains('is-visible')) revealObs.observe(el);
+        });
+
+        var flowObs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-flow-visible');
+                    flowObs.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '0px 0px -10% 0px', threshold: 0.12 });
+
+        root.querySelectorAll('.plat-flow:not(.is-flow-visible)').forEach(function (flow) {
+            flowObs.observe(flow);
+        });
+    }
+
+    function initParallax() {
+        if (reduced) return;
+        if (!window.matchMedia('(min-width: 1024px)').matches) return;
+
+        var shots = root.querySelectorAll('.plat-shot-story--hero .plat-shot-story__frame');
+        if (!shots.length) return;
+
+        var ticking = false;
+        window.addEventListener('scroll', function () {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(function () {
+                var viewH = window.innerHeight;
+                shots.forEach(function (frame) {
+                    var shot = frame.closest('.plat-shot-story');
+                    if (!shot) return;
+                    var rect = shot.getBoundingClientRect();
+                    if (rect.bottom < 0 || rect.top > viewH) return;
+                    var offset = Math.max(-8, Math.min(8, (rect.top - viewH * 0.32) * 0.012));
+                    frame.style.transform = 'translate3d(0,' + offset + 'px,0)';
+                });
+                ticking = false;
+            });
+        }, { passive: true });
+    }
+
+    applyStagger();
+    initFlows();
+    initReveals();
+    initParallax();
 })();

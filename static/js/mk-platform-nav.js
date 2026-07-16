@@ -140,7 +140,7 @@
 
     function scheduleClose() {
         clearTimeout(closeTimer);
-        closeTimer = setTimeout(closePanel, 300);
+        closeTimer = setTimeout(closePanel, 220);
     }
 
     function cancelClose() {

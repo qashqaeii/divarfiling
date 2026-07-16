@@ -132,7 +132,7 @@ def crm_product_line_content() -> dict[str, Any]:
                 'title': 'تقویم و برنامه بازدید',
                 'badge': {'label': 'رایگان', 'tone': 'free'},
                 'layout': 'text',
-                'problem': 'بازدید segunda با قرار دیگر تداخل پیدا می‌کند.',
+                'problem': 'بازدید دوم با قرار دیگر تداخل پیدا می‌کند.',
                 'how': 'نمای ماه و هفته — یادآور بازدید کنار تماس و جلسه.',
                 'outcome': 'برنامه روز و هفته یک‌جا — بدون تقویم جدا.',
                 'image': 'images/help-crm-calendar.png',

@@ -1,0 +1,72 @@
+{% load static %}
+{% include 'platform/includes/hero.html' %}
+
+{% if platform_content.problem %}
+<section class="plat-section plat-problem">
+    <div class="container plat-section__inner">
+        <h2 class="plat-section__title">{{ platform_content.problem.title }}</h2>
+        {% for p in platform_content.problem.paragraphs %}
+        <p>{{ p }}</p>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.how_it_works %}
+<section class="plat-section" aria-labelledby="plat-how-title">
+    <div class="container plat-section__inner">
+        <h2 id="plat-how-title" class="plat-section__title">چطور کار می‌کند</h2>
+        <ol class="plat-steps plat-steps--compact">
+            {% for step in platform_content.how_it_works %}
+            <li class="plat-steps__item">
+                <strong>{{ step.title }}</strong>
+                <p>{{ step.text }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.screenshots|length > 1 %}
+<section class="plat-section plat-section--muted">
+    <div class="container plat-section__inner">
+        <h2 class="plat-section__title">نمای واقعی میزکار</h2>
+        <div class="plat-gallery">
+            {% for shot in platform_content.screenshots %}
+            <figure class="plat-gallery__item">
+                <img src="{% static shot.image %}" alt="{{ shot.caption }}" loading="lazy" decoding="async" width="1200" height="720" class="plat-shot-img">
+                <figcaption>{{ shot.caption }}</figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.benefits %}
+<section class="plat-section">
+    <div class="container plat-section__inner">
+        <h2 class="plat-section__title">مزیت‌های قابل لمس</h2>
+        <ul class="plat-benefits">
+            {% for b in platform_content.benefits %}
+            <li><i class="fas fa-check" aria-hidden="true"></i> {{ b }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.related_solution %}
+<section class="plat-section plat-section--accent">
+    <div class="container plat-section__inner plat-related-solution">
+        <p>این قابلیت بخشی از راه‌حل:</p>
+        <a href="{% url platform_content.related_solution.url_name slug=platform_content.related_solution.url_kwargs.slug %}" class="plat-btn plat-btn--primary">
+            {{ platform_content.related_solution.title }}
+        </a>
+    </div>
+</section>
+{% endif %}
+
+{% include 'platform/includes/faq.html' %}
+{% include 'platform/includes/footer_blocks.html' %}

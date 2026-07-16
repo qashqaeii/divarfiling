@@ -1,0 +1,68 @@
+{% include 'platform/includes/hero.html' %}
+
+{% if platform_content.scenario %}
+<section class="plat-section plat-scenario">
+    <div class="container plat-section__inner">
+        <h2 class="plat-section__title">{{ platform_content.scenario.title }}</h2>
+        <ol class="plat-scenario__steps">
+            {% for step in platform_content.scenario.steps %}
+            <li>{{ step }}</li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.features_used %}
+<section class="plat-section plat-section--muted">
+    <div class="container plat-section__inner">
+        <h2 class="plat-section__title">امکانات درگیر این راه‌حل</h2>
+        <ul class="plat-deep-links">
+            {% for feat in platform_content.features_used %}
+            <li>
+                {% if feat.url_kwargs.slug_path %}
+                <a href="{% url feat.url_name slug_path=feat.url_kwargs.slug_path %}" class="plat-deep-link">
+                {% elif feat.url_kwargs.slug %}
+                <a href="{% url feat.url_name slug=feat.url_kwargs.slug %}" class="plat-deep-link">
+                {% else %}
+                <a href="{% url feat.url_name %}" class="plat-deep-link">
+                {% endif %}
+                    <strong>{{ feat.title }}</strong>
+                    <span>{{ feat.text }}</span>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.comparison %}
+<section class="plat-section">
+    <div class="container plat-section__inner">
+        <h2 class="plat-section__title">{{ platform_content.comparison.title }}</h2>
+        <div class="plat-compare-grid">
+            <div class="plat-compare-col plat-compare-col--before">
+                <h3>قبل</h3>
+                <ul>
+                    {% for item in platform_content.comparison.before %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="plat-compare-col plat-compare-col--after">
+                <h3>با فایلینگ دیوار</h3>
+                <ul>
+                    {% for item in platform_content.comparison.after %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% include 'platform/includes/faq.html' %}
+{% include 'platform/includes/footer_blocks.html' %}

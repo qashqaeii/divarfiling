@@ -1,0 +1,21 @@
+{% include 'platform/includes/hero.html' %}
+
+<section class="plat-section">
+    <div class="container plat-section__inner">
+        <h2 class="plat-section__title">راه‌حل‌های موجود</h2>
+        <ul class="plat-grid plat-grid--solutions">
+            {% for item in platform_content.solutions %}
+            <li>
+                <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="plat-card plat-card--{{ item.accent }}">
+                    <span class="plat-card__outcome">{{ item.outcome }}</span>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.desc }}</p>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{% include 'platform/includes/faq.html' %}
+{% include 'platform/includes/footer_blocks.html' %}

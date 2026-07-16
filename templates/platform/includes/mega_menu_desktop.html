@@ -1,0 +1,45 @@
+{% load static %}
+<li class="mk-nav-item mk-nav-item--mega">
+    <button type="button"
+            class="mk-nav-link mk-nav-link--mega"
+            id="mkFeaturesMenuBtn"
+            aria-expanded="false"
+            aria-controls="mkFeaturesMegaPanel"
+            aria-haspopup="true">
+        <span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-cubes"></i></span>
+        <span class="mk-nav-link-text">{{ menu.label }}</span>
+        <i class="fas fa-chevron-down mk-nav-mega-chevron" aria-hidden="true"></i>
+    </button>
+    <div class="mk-mega-panel" id="mkFeaturesMegaPanel" role="region" aria-labelledby="mkFeaturesMenuBtn" hidden>
+        <div class="mk-mega-panel__head">
+            <p class="mk-mega-panel__eyebrow">بخش‌های اصلی پلتفرم</p>
+            <a href="{% url menu.hub_url_name %}" class="mk-mega-panel__hub-link">مشاهده همه امکانات</a>
+        </div>
+        <div class="mk-mega-grid">
+            {% for item in menu.product_lines %}
+            <a href="{% if item.url_kwargs.slug_path %}{% url item.url_name slug_path=item.url_kwargs.slug_path %}{% else %}{% url item.url_name %}{% endif %}" class="mk-mega-card mk-mega-card--{{ item.accent }}">
+                <span class="mk-mega-card__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
+                <span class="mk-mega-card__body">
+                    <strong>{{ item.title }}</strong>
+                    <span>{{ item.desc }}</span>
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+        <div class="mk-mega-footer">
+            <div class="mk-mega-footer__col">
+                <span class="mk-mega-footer__label">راه‌حل‌ها</span>
+                {% for sol in menu.solution_highlights %}
+                <a href="{% url sol.url_name slug=sol.url_kwargs.slug %}">{{ sol.label }}</a>
+                {% endfor %}
+                <a href="{% url menu.solutions_url_name %}">همه راه‌حل‌ها</a>
+            </div>
+            <div class="mk-mega-footer__col">
+                <span class="mk-mega-footer__label">CRM</span>
+                {% for feat in menu.crm_highlights %}
+                <a href="{% if feat.url_kwargs.slug_path %}{% url feat.url_name slug_path=feat.url_kwargs.slug_path %}{% else %}{% url feat.url_name %}{% endif %}">{{ feat.label }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</li>

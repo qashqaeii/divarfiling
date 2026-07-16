@@ -1,5 +1,12 @@
 <ul class="nav-menu mk-nav-links"{% if menu_id %} id="{{ menu_id }}"{% endif %}>
     <li><a href="{% url 'home' %}" class="mk-nav-link"><span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-house"></i></span><span class="mk-nav-link-text">خانه</span></a></li>
+    {% if platform_menu %}
+    {% if menu_id %}
+        {% include 'platform/includes/mega_menu_mobile.html' with menu=platform_menu %}
+    {% else %}
+        {% include 'platform/includes/mega_menu_desktop.html' with menu=platform_menu %}
+    {% endif %}
+    {% endif %}
     <li><a href="{% url 'product_list' %}" class="mk-nav-link"><span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-robot"></i></span><span class="mk-nav-link-text">ربات استخراج</span></a></li>
     <li><a href="{% url 'blog:post_list' %}" class="mk-nav-link"><span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-newspaper"></i></span><span class="mk-nav-link-text">مقالات</span></a></li>
     <li><a href="{% url 'education' %}" class="mk-nav-link{% if request.resolver_match.url_name == 'education' %} is-active{% endif %}"><span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span><span class="mk-nav-link-text">آموزش</span></a></li>

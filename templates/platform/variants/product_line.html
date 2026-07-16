@@ -1,0 +1,66 @@
+{% include 'platform/includes/hero.html' %}
+
+{% if platform_content.problem %}
+<section class="plat-section plat-problem">
+    <div class="container plat-section__inner plat-problem__grid">
+        <div>
+            <h2 class="plat-section__title">{{ platform_content.problem.title }}</h2>
+            {% for p in platform_content.problem.paragraphs %}
+            <p>{{ p }}</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="plat-section" aria-labelledby="plat-caps-title">
+    <div class="container plat-section__inner">
+        <h2 id="plat-caps-title" class="plat-section__title">امکانات کلیدی CRM</h2>
+        <ul class="plat-grid plat-grid--features">
+            {% for cap in platform_content.capabilities %}
+            <li class="plat-feature-chip">
+                <span class="plat-feature-chip__icon"><i class="fas {{ cap.icon }}" aria-hidden="true"></i></span>
+                <div>
+                    <strong>{{ cap.title }}</strong>
+                    <p>{{ cap.text }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{% if platform_content.deep_features %}
+<section class="plat-section plat-section--muted">
+    <div class="container plat-section__inner">
+        <h2 class="plat-section__title">جزئیات بیشتر</h2>
+        <ul class="plat-deep-links">
+            {% for feat in platform_content.deep_features %}
+            <li>
+                <a href="{% url feat.url_name slug_path=feat.url_kwargs.slug_path %}" class="plat-deep-link">
+                    <strong>{{ feat.title }}</strong>
+                    <span>{{ feat.desc }}</span>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+
+{% if platform_content.audience %}
+<section class="plat-section">
+    <div class="container plat-section__inner">
+        <h2 class="plat-section__title">مناسب برای</h2>
+        <ul class="plat-tags">
+            {% for a in platform_content.audience %}
+            <li>{{ a }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+
+{% include 'platform/includes/faq.html' %}
+{% include 'platform/includes/footer_blocks.html' %}

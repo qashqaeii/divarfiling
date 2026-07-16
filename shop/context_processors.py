@@ -42,7 +42,7 @@ def shop_context(request):
 
     bot = get_bot_product()
     goftino_id = getattr(settings, 'GOFTINO_WIDGET_ID', '') or ''
-    return {
+    ctx = {
         'products': [bot] if bot else [],
         'bot_product': bot,
         'footer_content': footer_content(),
@@ -54,4 +54,8 @@ def shop_context(request):
         'app_downloads': build_app_download_context(request),
         'app_download_hub': app_download_hub_content(),
     }
+    if _is_public_site_request(request):
+        from shop.platform.registry.menu import platform_mega_menu
+        ctx['platform_menu'] = platform_mega_menu()
+    return ctx
 

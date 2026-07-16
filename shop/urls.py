@@ -1,12 +1,13 @@
 """
 URLهای فروشگاه
 """
-from django.urls import path
+from django.urls import path, include
 from . import notice_views, views
 from .seo_landings import landing_urlpatterns
 
 urlpatterns = [
     path('', views.HomeView.as_view(), name='home'),
+    path('', include('shop.platform.urls')),
     path('products/', views.ProductListView.as_view(), name='product_list'),
     path('products/<slug:slug>/', views.ProductDetailView.as_view(), name='product_detail'),
     path('products/<slug:slug>/buy/', views.BuyView.as_view(), name='buy'),

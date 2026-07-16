@@ -104,9 +104,27 @@ class SeoLandingSitemap(SiteAwareSitemap):
         return reverse(landing_url_name(item))
 
 
+class PlatformPagesSitemap(SiteAwareSitemap):
+    """صفحات پلتفرم — features و solutions فاز ۱."""
+
+    def items(self):
+        from shop.platform.registry import sitemap_entries
+        return sitemap_entries()
+
+    def location(self, item):
+        return item.url_path
+
+    def changefreq(self, item):
+        return item.sitemap_changefreq
+
+    def priority(self, item):
+        return item.sitemap_priority
+
+
 sitemaps = {
     'static': StaticViewSitemap,
     'products': ProductSitemap,
     'blog': BlogPostSitemap,
     'landings': SeoLandingSitemap,
+    'platform': PlatformPagesSitemap,
 }

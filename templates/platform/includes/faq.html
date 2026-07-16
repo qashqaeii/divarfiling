@@ -1,0 +1,15 @@
+{% if platform_content.faq %}
+<section class="plat-section plat-faq" aria-labelledby="plat-faq-title">
+    <div class="container plat-section__inner">
+        <h2 id="plat-faq-title" class="plat-section__title">سوالات متداول</h2>
+        <div class="plat-faq__list">
+            {% for item in platform_content.faq %}
+            <details class="plat-faq__item">
+                <summary>{{ item.q }}</summary>
+                <p>{{ item.a }}</p>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

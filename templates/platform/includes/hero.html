@@ -1,0 +1,36 @@
+{% load static %}
+<header class="plat-hero plat-hero--{{ platform_page.accent }}">
+    <div class="plat-hero__mesh" aria-hidden="true"></div>
+    <div class="container plat-hero__inner">
+        <div class="plat-hero__copy mk-reveal">
+            <span class="plat-kicker">
+                <span class="plat-kicker__icon mk-icon mk-icon--xs mk-icon--{{ platform_page.accent }}">
+                    <i class="fas {{ platform_page.icon }}" aria-hidden="true"></i>
+                </span>
+                {{ platform_content.hero.eyebrow }}
+            </span>
+            <h1>{{ platform_page.seo.h1 }}</h1>
+            <p class="plat-hero__lead">{{ platform_content.hero.lead }}</p>
+            {% include 'platform/includes/cta_pair.html' %}
+        </div>
+        {% if platform_content.screenshot %}
+        <figure class="plat-hero__shot mk-reveal">
+            <img src="{% static platform_content.screenshot.image %}"
+                 alt="{{ platform_content.screenshot.caption }}"
+                 width="1680" height="1000" loading="eager" decoding="async"
+                 class="plat-shot-img">
+            <figcaption>{{ platform_content.screenshot.caption }}</figcaption>
+        </figure>
+        {% elif platform_content.screenshots %}
+        <div class="plat-hero__shots mk-reveal">
+            {% with shot=platform_content.screenshots.0 %}
+            <figure class="plat-hero__shot">
+                <img src="{% static shot.image %}" alt="{{ shot.caption }}"
+                     width="1680" height="1000" loading="eager" decoding="async" class="plat-shot-img">
+                <figcaption>{{ shot.caption }}</figcaption>
+            </figure>
+            {% endwith %}
+        </div>
+        {% endif %}
+    </div>
+</header>

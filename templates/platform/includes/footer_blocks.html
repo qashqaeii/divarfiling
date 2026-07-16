@@ -1,0 +1,53 @@
+{% if related_posts %}
+<section class="plat-section plat-related" aria-labelledby="plat-related-title">
+    <div class="container plat-section__inner">
+        <h2 id="plat-related-title" class="plat-section__title">مقالات مرتبط</h2>
+        <ul class="plat-related__grid">
+            {% for post in related_posts %}
+            <li>
+                <a href="{{ post.get_absolute_url }}" class="plat-related__card">
+                    <span class="plat-related__cat">{{ post.category.name }}</span>
+                    <strong>{{ post.title }}</strong>
+                    <span class="plat-related__link">مطالعه راهنما</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+
+<section class="plat-section plat-crosslinks" aria-labelledby="plat-cross-title">
+    <div class="container plat-section__inner">
+        <h2 id="plat-cross-title" class="plat-section__title">صفحات مرتبط</h2>
+        <div class="plat-crosslinks__grid">
+            {% if platform_page.section == 'features' %}
+            <a href="{% url 'seo_landing_real_estate_crm' %}" class="plat-crosslink">
+                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                CRM مشاور املاک — لندینگ تخصصی
+            </a>
+            <a href="{% url 'platform_solutions_hub' %}" class="plat-crosslink">
+                <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                راه‌حل‌های فایلینگ دیوار
+            </a>
+            {% else %}
+            <a href="{% url 'platform_features_hub' %}" class="plat-crosslink">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                همه امکانات پلتفرم
+            </a>
+            <a href="{% url 'platform_features_page' slug_path='crm/reminders' %}" class="plat-crosslink">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                یادآور CRM
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="plat-final-cta">
+    <div class="container plat-final-cta__inner">
+        <h2>آماده‌اید کار روزمره‌تان را منظم کنید؟</h2>
+        <p>CRM فایلینگ دیوار رایگان است — ثبت‌نام کمتر از یک دقیقه.</p>
+        {% include 'platform/includes/cta_pair.html' %}
+    </div>
+</section>

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load seo_tags %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block body_class %}mk-pub-page platform-page platform-page--{{ platform_page.variant }} platform-page--{{ platform_page.section }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-platform.css' %}?v=1">
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container mk-platform-bc-wrap">
+    {% include 'platform/includes/breadcrumbs.html' %}
+</div>
+{% schema_breadcrumb breadcrumbs %}
+{% endblock %}
+
+{% block content %}
+<div class="mk-pub-wrap mk-platform" style="--plat-accent: var(--plat-accent-{{ platform_page.accent }}, #8b5cf6);">
+    {% if platform_page.variant == 'hub' and platform_page.section == 'features' %}
+        {% include 'platform/variants/features_hub.html' %}
+    {% elif platform_page.variant == 'hub' and platform_page.section == 'solutions' %}
+        {% include 'platform/variants/solutions_hub.html' %}
+    {% elif platform_page.variant == 'product_line' %}
+        {% include 'platform/variants/product_line.html' %}
+    {% elif platform_page.variant == 'feature' %}
+        {% include 'platform/variants/feature_page.html' %}
+    {% elif platform_page.variant == 'solution' %}
+        {% include 'platform/variants/solution_page.html' %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

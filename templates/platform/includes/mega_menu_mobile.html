@@ -1,0 +1,23 @@
+<li class="mk-mobile-accordion">
+    <details class="mk-mobile-accordion__details" id="mkMobileFeaturesAccordion">
+        <summary class="mk-mobile-accordion__summary">
+            <span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-cubes"></i></span>
+            <span>{{ menu.label }}</span>
+            <i class="fas fa-chevron-down mk-mobile-accordion__chev" aria-hidden="true"></i>
+        </summary>
+        <div class="mk-mobile-accordion__panel">
+            <a href="{% url menu.hub_url_name %}" class="mk-mobile-sub-link mk-mobile-sub-link--hub">همه امکانات</a>
+            {% for item in menu.product_lines %}
+            <a href="{% if item.url_kwargs.slug_path %}{% url item.url_name slug_path=item.url_kwargs.slug_path %}{% else %}{% url item.url_name %}{% endif %}" class="mk-mobile-sub-link">
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.desc }}</span>
+            </a>
+            {% endfor %}
+            <span class="mk-mobile-sub-label">راه‌حل‌ها</span>
+            {% for sol in menu.solution_highlights %}
+            <a href="{% url sol.url_name slug=sol.url_kwargs.slug %}" class="mk-mobile-sub-link">{{ sol.label }}</a>
+            {% endfor %}
+            <a href="{% url menu.solutions_url_name %}" class="mk-mobile-sub-link">همه راه‌حل‌ها</a>
+        </div>
+    </details>
+</li>

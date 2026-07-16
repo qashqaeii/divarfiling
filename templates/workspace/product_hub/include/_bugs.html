@@ -68,7 +68,9 @@
                 <p class="ph-feed-desc">{{ bug.description }}</p>
                 <div class="ph-feed-meta">
                     <span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span>
-                    <span class="ph-feed-who">{{ bug.created_at|ws_jalali_date }}</span>
+                    <span class="ph-feed-who" title="ثبت‌کننده">
+                        ثبت‌کننده: <span dir="auto">{{ bug.user|ph_submitter }}</span> · {{ bug.created_at|ws_jalali_date }}
+                    </span>
                 </div>
                 {% if bug.status == 'resolved' and bug.resolution_note %}
                 <div class="ph-bug-fix">

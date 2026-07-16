@@ -1,5 +1,6 @@
 from django import template
 
+from product_hub.services.privacy import public_submitter_label
 from product_hub.models import (
     BUG_SEVERITY_CHOICES,
     BUG_STATUS_CHOICES,
@@ -74,6 +75,11 @@ def ph_bug_severity_class(severity):
 @register.simple_tag
 def ph_change_type_class(change_type):
     return CHANGE_TYPE_CLASS.get(change_type, '')
+
+
+@register.filter
+def ph_submitter(user):
+    return public_submitter_label(user)
 
 
 @register.filter

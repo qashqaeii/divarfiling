@@ -1,0 +1,16 @@
+<header class="sol-hero plat-reveal">
+    <div class="sol-wrap sol-hero__inner">
+        <p class="sol-eyebrow">{{ platform_content.hero.eyebrow }}</p>
+        <blockquote class="sol-hero__story">
+            <p>{{ platform_content.hero.story_open }}</p>
+        </blockquote>
+        <h1>{{ platform_page.seo.h1 }}</h1>
+        <p class="sol-hero__lead">{{ platform_content.hero.lead }}</p>
+        {% if platform_content.hero.outcome %}
+        <p class="sol-hero__outcome">{{ platform_content.hero.outcome }}</p>
+        {% endif %}
+        <div class="sol-hero__cta">
+            {% include 'platform/includes/cta_pair.html' %}
+        </div>
+    </div>
+</header>

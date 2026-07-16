@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from shop.platform.content.crm_hub import crm_product_line_content
+from shop.platform.content.customer_follow_up import customer_follow_up_content
 from shop.platform.content.reminders_feature import crm_reminders_content
 
 
@@ -173,73 +174,4 @@ def _solutions_hub_content() -> dict[str, Any]:
 
 
 def _customer_follow_up_content() -> dict[str, Any]:
-    return {
-        'hero': {
-            'layout': 'story',
-            'eyebrow': 'راه‌حل · پیگیری مشتری',
-            'lead': (
-                'پیگیری منظم بخش بزرگی از موفقیت در املاک است — نه فقط تماس اول. '
-                'این راه‌حل ترکیب یادآور، صف کار امروز، تقویم و اتوماسیون CRM '
-                'فایلینگ دیوار است تا تماس دوم، سوم و چهارم از قلم نیفتد.'
-            ),
-        },
-        'scenario': {
-            'title': 'سناریوی واقعی: بعد از بازدید',
-            'steps': [
-                'شنبه ۱۱:۰۰ — بازدید ملک با خانم احمدی. او می‌گوید «با همسرم مشورت می‌کنم».',
-                'همان لحظه در CRM یادآور برای دوشنبه ۱۰:۰۰ ثبت می‌کنید.',
-                'دوشنبه ۹:۵۵ — «صف کار امروز» یادآوری می‌دهد: تماس با خانم احمدی.',
-                'بعد از تماس — یادداشت در پرونده: «همسر موافق — بازدید segunda پیشنهاد».',
-            ],
-        },
-        'features_used': [
-            {
-                'title': 'یادآور CRM',
-                'text': 'زمان‌بندی دقیق پیگیری',
-                'url_name': 'platform_features_page',
-                'url_kwargs': {'slug_path': 'crm/reminders'},
-            },
-            {
-                'title': 'صف کار امروز',
-                'text': 'اولویت‌بندی روزانه',
-                'url_name': 'platform_features_page',
-                'url_kwargs': {'slug_path': 'crm/reminders'},
-            },
-            {
-                'title': 'اتوماسیون',
-                'text': 'قوانین پیگیری (Beta)',
-                'url_name': 'blog:post_detail',
-                'url_kwargs': {'slug': 'automation-crm-5-ghanon-pigiri-rahnama'},
-            },
-        ],
-        'comparison': {
-            'title': 'قبل و بعد',
-            'before': ['یادداشت روی کاغذ', 'فراموشی تماس دوم', 'مدیر بی‌خبر از پیگیری معوق'],
-            'after': ['یادآور زمان‌دار', 'صف امروز هر صبح', 'گزارش معوق تیم بدون لو رفتن محتوا'],
-        },
-        'when_to_use': [
-            'بعد از هر بازدید یا تماس اول',
-            'وقتی چند مشتری همزمان در جریان است',
-            'برای تیم آژانس با چند مشاور',
-        ],
-        'pro_tips': [
-            'تماس دوم را حداکثر ۴۸ ساعت بعد برنامه‌ریزی کنید.',
-            'یادداشت کوتاه بعد از هر تماس — برای تماس بعدی.',
-            'مدیر هفتگی گزارش معوق را مرور کند.',
-        ],
-        'faq': [
-            {
-                'q': 'آیا به ربات دیوار نیاز دارم؟',
-                'a': 'خیر — پیگیری مشتری بخش CRM رایگان است. تطبیق فایل دیوار جداگانه لایسنس می‌خواهد.',
-            },
-            {
-                'q': 'منشی هم می‌تواند پیگیری ثبت کند؟',
-                'a': 'بله — با نقش منشی در آژانس، inbox و مخاطبین در دسترس است.',
-            },
-            {
-                'q': 'تفاوت با صفحه یادآور CRM چیست؟',
-                'a': 'صفحه یادآور جزئیات یک قابلیت است. این راه‌حل ترکیب چند ابزار برای حل مشکل فراموشی پیگیری است.',
-            },
-        ],
-        'cta': _cta_block(),
-    }
+    return customer_follow_up_content()

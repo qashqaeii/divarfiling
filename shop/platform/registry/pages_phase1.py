@@ -160,7 +160,7 @@ def _customer_follow_up_solution() -> PageSpec:
         ),
         keywords='پیگیری مشتری مشاور املاک, فراموشی پیگیری, CRM پیگیری, یادآور مشتری',
         og_title='پیگیری مشتری — راه‌حل فایلینگ دیوار',
-        h1='هیچ مشتری‌ای را فراموش نکنید',
+        h1='پیگیری مشتری: تماس دوم را از دست ندهید',
     )
     return PageSpec(
         section='solutions',

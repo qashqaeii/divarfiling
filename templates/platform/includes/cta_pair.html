@@ -16,6 +16,10 @@
     <a href="{% url 'platform_features_page' slug_path='crm' %}" class="plat-btn plat-btn--ghost">
         <i class="fas fa-users" aria-hidden="true"></i> خط محصول CRM
     </a>
+    {% elif platform_content.cta.secondary == 'reminders_feature' %}
+    <a href="{% url 'platform_features_page' slug_path='crm/reminders' %}" class="plat-btn plat-btn--ghost">
+        <i class="fas fa-bell" aria-hidden="true"></i> یادآور CRM
+    </a>
     {% else %}
     <a href="{% url 'platform_solutions_hub' %}" class="plat-btn plat-btn--ghost">
         <i class="fas fa-lightbulb" aria-hidden="true"></i> راه‌حل‌ها

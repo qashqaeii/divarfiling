@@ -60,8 +60,13 @@ class PlatformPageViewTests(TestCase):
     def test_customer_follow_up_solution(self):
         resp = self.client.get('/solutions/customer-follow-up/')
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'فراموش نکنید')
+        self.assertContains(resp, 'تماس دوم را از دست ندهید')
+        self.assertContains(resp, 'sol-hero__story')
+        self.assertContains(resp, 'sol-framework')
+        self.assertContains(resp, 'sol-timeline')
+        self.assertContains(resp, 'help-crm-today.png')
         self.assertContains(resp, '/features/crm/reminders/')
+        self.assertContains(resp, 'plat-faq__item', count=8)
 
     def test_unknown_feature_404(self):
         resp = self.client.get('/features/crm/unknown-feature/')

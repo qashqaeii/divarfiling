@@ -650,6 +650,7 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['customer_share'] = (
             share_for_customer_recipient(self.request.user, c) if ctx['customer_is_shared'] else None
         )
+        ctx['crm_statuses'] = CRM_STATUSES
         ctx.update(_contact_areas_context(self.request.user))
         return ctx
 

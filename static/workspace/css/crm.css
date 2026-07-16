@@ -2722,26 +2722,6 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
     gap: .65rem;
     min-width: 0;
 }
-.crm-contacts-avatar {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .72rem;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -.02em;
-}
-.crm-contacts-avatar--hue-0 { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-.crm-contacts-avatar--hue-1 { background: linear-gradient(135deg, #0ea5e9, #3b82f6); }
-.crm-contacts-avatar--hue-2 { background: linear-gradient(135deg, #10b981, #14b8a6); }
-.crm-contacts-avatar--hue-3 { background: linear-gradient(135deg, #f59e0b, #f97316); }
-.crm-contacts-avatar--hue-4 { background: linear-gradient(135deg, #ec4899, #d946ef); }
-.crm-contacts-avatar--hue-5 { background: linear-gradient(135deg, #64748b, #475569); }
-
 .crm-contacts-person-text {
     min-width: 0;
     display: flex;
@@ -9043,6 +9023,38 @@ select.crm-files-adv-control {
 .crm-contact-hero__status {
     background: color-mix(in srgb, var(--ws-primary) 8%, transparent);
     color: var(--ws-primary);
+}
+.crm-contact-hero__status-picker {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.crm-contact-hero__status-select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 0.18rem 0.55rem 0.18rem 1.45rem;
+    border-radius: 999px;
+    font-size: 0.64rem;
+    font-weight: 700;
+    line-height: 1.35;
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, transparent);
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236366f1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") left 0.42rem center / 0.55rem no-repeat,
+        color-mix(in srgb, var(--ws-primary) 8%, transparent);
+    color: var(--ws-primary);
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.crm-contact-hero__status-select:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 28%, transparent);
+}
+.crm-contact-hero__status-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary) 22%, transparent);
+}
+.crm-contact-hero__status-select.is-loading {
+    opacity: 0.65;
+    pointer-events: none;
 }
 .crm-contact-hero__priority {
     background: rgba(239, 68, 68, 0.1);

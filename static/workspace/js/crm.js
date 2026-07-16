@@ -2674,6 +2674,39 @@ function initCRMTeamPage() {
     });
 }
 
+function initCRMContactStatusPicker() {
+    const picker = document.querySelector('[data-crm-status-picker]');
+    if (!picker) return;
+    const select = picker.querySelector('.crm-contact-hero__status-select');
+    const url = picker.dataset.url || window.crmContactStatusUrl || '';
+    if (!select || !url) return;
+
+    let previous = select.value;
+    select.addEventListener('change', async () => {
+        const newStatus = select.value;
+        select.classList.add('is-loading');
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || 'خطا');
+            previous = newStatus;
+        } catch (err) {
+            select.value = previous;
+            window.alert(err.message || 'تغییر وضعیت انجام نشد.');
+        } finally {
+            select.classList.remove('is-loading');
+        }
+    });
+}
+
 function initCRMContactTeam() {
     const bar = document.querySelector('[data-crm-contact-team]');
     if (!bar) return;
@@ -3223,6 +3256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMDealChecklist();
     initCRMCommissionSplit();
     initCRMContactTeam();
+    initCRMContactStatusPicker();
     initCRMPropGalleryLightbox();
         initCRMPropertyTeam();
         initCRMPropertyImages();

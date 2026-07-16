@@ -28,7 +28,18 @@
                     </nav>
                     <div class="crm-contact-hero__badges">
                         <span class="crm-contact-hero__type" style="{% crm_role_style customer.customer_type %}">{{ customer.customer_type }}</span>
+                        {% if not customer_is_shared %}
+                        <div class="crm-contact-hero__status-picker" data-crm-status-picker data-url="{% url 'workspace:crm_contact_status' customer.id %}">
+                            <label class="sr-only" for="crmContactStatusSelect">وضعیت مخاطب</label>
+                            <select id="crmContactStatusSelect" class="crm-contact-hero__status-select" aria-label="تغییر وضعیت">
+                                {% for s in crm_statuses %}
+                                <option value="{{ s }}" {% if customer.status == s %}selected{% endif %}>{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% else %}
                         <span class="crm-contact-hero__status">{{ customer.status }}</span>
+                        {% endif %}
                         {% if customer.priority == 'بالا' %}<span class="crm-contact-hero__priority">اولویت بالا</span>{% endif %}
                     </div>
                     <h1 class="crm-contact-hero__title">{{ customer.name }}</h1>
@@ -1074,6 +1085,7 @@
 {% block crm_js %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>
 <script>window.crmTypeProfiles = {{ type_profiles_json|safe }};</script>
+<script>window.crmContactStatusUrl = "{% url 'workspace:crm_contact_status' customer.id %}";</script>
 {% if crm_agency and is_customer_owner %}
 <script>
 window.crmTeamShareUrl = "{% url 'workspace:crm_team_assign' customer.id %}";

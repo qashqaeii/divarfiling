@@ -1,0 +1,60 @@
+<div class="crm-prop-side-card crm-prop-side-card--pro crm-contact-side-card--followup crm-followup-v2">
+    <header class="crm-contact-side-head">
+        <span class="crm-contact-side-icon crm-contact-side-icon--followup" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+        <h3>پیگیری</h3>
+        {% if follow_up_state == 'overdue' %}
+        <span class="crm-followup-badge overdue">معوق</span>
+        {% elif follow_up_state == 'today' %}
+        <span class="crm-followup-badge today">امروز</span>
+        {% elif follow_up_state == 'upcoming' %}
+        <span class="crm-followup-badge upcoming">برنامه‌ریزی</span>
+        {% endif %}
+    </header>
+
+    {% if property.next_follow_up %}
+    <div class="crm-followup-v2-current {% if follow_up_state == 'overdue' %}is-overdue{% elif follow_up_state == 'today' %}is-today{% endif %}">
+        <i class="fas fa-calendar-day" aria-hidden="true"></i>
+        <div>
+            <strong>{{ property.next_follow_up|ws_jalali }}</strong>
+            <span>تاریخ پیگیری بعدی</span>
+        </div>
+    </div>
+    {% if can_edit_property %}
+    <form method="post" class="crm-followup-v2-done">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="complete_followup">
+        <button type="submit" class="crm-btn crm-btn-sm crm-btn-primary crm-btn-block">
+            <i class="fas fa-check" aria-hidden="true"></i> انجام شد
+        </button>
+    </form>
+    {% endif %}
+    {% else %}
+    <p class="crm-followup-v2-empty">پیگیری بعدی ثبت نشده</p>
+    {% endif %}
+
+    {% if can_edit_property %}
+    <div class="crm-followup-v2-quick">
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="1"><button type="submit">فردا</button></form>
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="3"><button type="submit">۳ روز</button></form>
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="7"><button type="submit">۱ هفته</button></form>
+    </div>
+
+    <button type="button" class="crm-dash-act crm-dash-act--block" data-drawer-open="drawer-followup">
+        <i class="fas fa-calendar-plus" aria-hidden="true"></i><span>ثبت پیگیری</span>
+    </button>
+    {% endif %}
+
+    {% if follow_up_logs %}
+    <div class="crm-followup-v2-history">
+        <span class="crm-followup-v2-history-title">سوابق پیگیری</span>
+        <ul>
+            {% for a in follow_up_logs %}
+            <li>
+                <time>{{ a.created_at|ws_jalali }}</time>
+                <span>{{ a.content|truncatechars:60 }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>

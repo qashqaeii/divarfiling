@@ -15,7 +15,7 @@ from workspace.services.advertiser_signal import (
 from workspace.services.columns import consultant_q
 
 from workspace.models import ListingMeta
-from workspace.services.features import extract_listing_features, parse_build_year
+from workspace.services.features import extract_listing_features, parse_build_year, parse_rooms_value
 
 
 def _normalize_numeric_str(val: str) -> str:
@@ -83,8 +83,7 @@ def apply_listing_filters(qs: QuerySet, filters: Dict, user) -> QuerySet:
         qs = qs.filter(description__icontains=filters['desc'])
     if filters.get('neighborhood'):
         qs = qs.filter(neighborhood__icontains=filters['neighborhood'])
-    if filters.get('rooms'):
-        qs = qs.filter(rooms__icontains=filters['rooms'])
+    # rooms — در apply_rooms_filter (هم‌راستا با extract_listing_features)
 
     if filters.get('area_min') is not None:
         qs = qs.filter(area__gte=filters['area_min'])
@@ -130,9 +129,30 @@ def apply_listing_filters(qs: QuerySet, filters: Dict, user) -> QuerySet:
     return qs
 
 
+def apply_rooms_filter(listings: List, rooms_filter: str) -> List:
+    """فیلتر اتاق — از data/عنوان هم می‌خواند، نه فقط ستون rooms."""
+    needle = parse_rooms_value(rooms_filter)
+    if not needle:
+        raw = _normalize_numeric_str(rooms_filter)
+        if not raw:
+            return listings
+        return [
+            lst for lst in listings
+            if raw in _normalize_numeric_str(extract_listing_features(lst).get('rooms') or '')
+            or raw in _normalize_numeric_str(getattr(lst, 'rooms', '') or '')
+        ]
+    return [
+        lst for lst in listings
+        if parse_rooms_value(extract_listing_features(lst).get('rooms')) == needle
+        or parse_rooms_value(getattr(lst, 'rooms', '') or '') == needle
+    ]
+
+
 def apply_amenity_filters(listings: List, filters: Dict) -> List:
-    """فیلتر امکانات و سال ساخت (از data JSON)."""
+    """فیلتر امکانات، سال ساخت و اتاق (از data JSON)."""
     result = list(listings)
+    if filters.get('rooms'):
+        result = apply_rooms_filter(result, filters['rooms'])
     for key in ('elevator', 'parking', 'storage'):
         want = filters.get(key)
         if want not in ('1', '0'):

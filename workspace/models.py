@@ -430,6 +430,7 @@ class CRMProperty(models.Model):
     notes = models.TextField(blank=True, verbose_name='یادداشت')
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان حذف')
     pipeline_order = models.PositiveIntegerField(default=0, verbose_name='ترتیب کانبان')
+    next_follow_up = models.DateField(null=True, blank=True, verbose_name='پیگیری بعدی')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

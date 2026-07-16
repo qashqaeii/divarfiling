@@ -338,6 +338,89 @@ def complete_follow_up(customer: Customer, note: str = '') -> Optional[CustomerA
     )
 
 
+def _property_follow_up_customer(user, prop: CRMProperty) -> Optional[Customer]:
+    customer = primary_owner_contact(crm_property=prop)
+    if customer:
+        return customer
+    phone = (prop.phone or '').strip()
+    if phone:
+        return upsert_property_owner(
+            user,
+            phone=phone,
+            name=(prop.owner_name or '').strip() or 'مالک',
+            crm_property=prop,
+            source='سایر',
+        )
+    link = (
+        prop.contact_links.select_related('customer')
+        .order_by('-is_primary', '-updated_at')
+        .first()
+    )
+    return link.customer if link else None
+
+
+def set_property_next_follow_up(prop: CRMProperty, follow_date: date) -> None:
+    prop.next_follow_up = follow_date
+    prop.save(update_fields=['next_follow_up', 'updated_at'])
+
+
+def schedule_property_follow_up(
+    user,
+    prop: CRMProperty,
+    follow_date: date,
+    note: str = '',
+) -> Optional[CustomerActivity]:
+    set_property_next_follow_up(prop, follow_date)
+    jdate = format_jalali_date(follow_date)
+    content = (note or '').strip() or f'پیگیری بعدی: {jdate}'
+    customer = _property_follow_up_customer(user, prop)
+    if not customer:
+        return None
+    return log_activity(
+        customer,
+        'پیگیری',
+        content=content,
+        title='ثبت پیگیری فایل',
+        property_obj=prop,
+        metadata={'follow_up_date': follow_date.isoformat(), 'property_id': prop.pk},
+    )
+
+
+def complete_property_follow_up(
+    user,
+    prop: CRMProperty,
+    note: str = '',
+) -> Optional[CustomerActivity]:
+    if not prop.next_follow_up:
+        return None
+    old = prop.next_follow_up
+    prop.next_follow_up = None
+    prop.save(update_fields=['next_follow_up', 'updated_at'])
+    content = (note or '').strip() or f'پیگیری {format_jalali_date(old)} انجام شد.'
+    customer = _property_follow_up_customer(user, prop)
+    if not customer:
+        return None
+    return log_activity(
+        customer,
+        'پیگیری',
+        content=content,
+        title='انجام پیگیری فایل',
+        property_obj=prop,
+        metadata={'completed_follow_up': old.isoformat(), 'property_id': prop.pk},
+    )
+
+
+def property_follow_up_state(prop: CRMProperty, today: date) -> str:
+    fu = prop.next_follow_up
+    if fu is None:
+        return 'none'
+    if fu < today:
+        return 'overdue'
+    if fu == today:
+        return 'today'
+    return 'upcoming'
+
+
 def log_phone_call(
     customer: Customer,
     note: str = '',

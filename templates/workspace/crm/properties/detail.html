@@ -267,6 +267,15 @@
                                     <strong>{{ property.updated_at|ws_jalali }}</strong>
                                 </span>
                             </div>
+                            {% if property.next_follow_up and not mask_sensitive %}
+                            <div class="crm-prop-hero-kpi crm-prop-hero-kpi--accent{% if follow_up_state == 'overdue' %} is-overdue{% elif follow_up_state == 'today' %} is-today{% endif %}">
+                                <span class="crm-prop-hero-kpi-ico"><i class="fas fa-calendar-check"></i></span>
+                                <span class="crm-prop-hero-kpi-body">
+                                    <em>پیگیری</em>
+                                    <strong>{{ property.next_follow_up|ws_jalali }}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -598,6 +607,9 @@
             {% url 'workspace:crm_property_detail' property.id as prop_owner_action %}
             {% include 'workspace/includes/owner_contact_box.html' with owner_form_action=prop_owner_action owner_phone=owner_phone owner_name=owner_name owner_contact=owner_contact can_edit_owner=can_edit_property owner_id_prefix='prop-owner' %}
             {% endif %}
+            {% if not mask_sensitive %}
+            {% include 'workspace/crm/includes/property_followup_sidebar.html' %}
+            {% endif %}
             <div class="crm-prop-side-card crm-prop-side-card--pro">
                 <h3>خلاصه پرونده</h3>
                 <dl class="crm-prop-side-dl">
@@ -806,6 +818,7 @@
     </div>
 </aside>
 {% include 'workspace/crm/includes/drawer_property_contacts.html' %}
+{% include 'workspace/crm/includes/drawer_property_followup.html' %}
 {% endif %}
 {% endblock %}
 

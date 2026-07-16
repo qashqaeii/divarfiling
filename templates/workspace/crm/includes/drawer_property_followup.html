@@ -1,0 +1,23 @@
+<aside class="crm-drawer" id="drawer-followup" {% if open_drawer == 'followup' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head">
+            <div><h2>ثبت پیگیری</h2><p>{{ property.title }}</p></div>
+            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" class="crm-drawer-form">
+            <div class="crm-drawer-body">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="schedule_followup">
+            <div class="ws-fields">
+                <div class="ws-field"><label class="ws-label">تاریخ پیگیری *</label>{{ followup_form.next_follow_up }}</div>
+                <div class="ws-field"><label class="ws-label">یادداشت</label>{{ followup_form.note }}</div>
+            </div>
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ثبت پیگیری</button>
+            </div>
+        </form>
+    </div>
+</aside>

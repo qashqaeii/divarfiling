@@ -580,7 +580,7 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
             value_map[int(r['listing_id'])] = float(score)
 
         needs_post = any(filters.get(k) for k in (
-            'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
+            'rooms', 'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
         )) or needs_advertiser_signal_filter(filters)
         if needs_post:
             filtered = list(qs)
@@ -786,7 +786,7 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
         value_map = _value_map_for_datasets(datasets)
 
         needs_post = any(filters.get(k) for k in (
-            'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
+            'rooms', 'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
         )) or needs_advertiser_signal_filter(filters)
         if needs_post:
             filtered = list(qs)

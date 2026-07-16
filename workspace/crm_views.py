@@ -100,15 +100,15 @@ from workspace.services.features import extract_listing_features
 from workspace.services.crm import (
     resolve_listing_for_property,
     apply_property_suggestions, build_customer_whatsapp_text, build_dashboard_charts,
-    complete_follow_up, convert_lead, export_customers_excel_response,
+    complete_follow_up, complete_property_follow_up, convert_lead, export_customers_excel_response,
     export_properties_csv_response, export_properties_excel_response, filter_contacts,
     filter_properties, get_communication_stats, get_dashboard_stats,
     get_overdue_contacts, get_pipeline_data, get_property_pipeline, get_recent_contacts,
     get_recent_properties, get_upcoming_reminders, global_search,
     link_customer_property, log_activity, log_phone_call, log_status_change,
     advance_recurring_reminder, primary_owner_contact, property_advanced_filter_count,
-    recent_activities,
-    schedule_follow_up, set_next_follow_up, sync_follow_up_from_reminder,
+    property_follow_up_state, recent_activities,
+    schedule_follow_up, schedule_property_follow_up, set_next_follow_up, sync_follow_up_from_reminder,
     update_customer_status, update_property_transaction_status, reorder_property_pipeline,
     upsert_property_owner,
 )
@@ -1292,6 +1292,14 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['quick_lead_form'] = QuickLeadForm()
             ctx['user_contacts'] = customers_qs(self.request.user).order_by('-updated_at')[:200]
             ctx['crm_sources'] = CRM_SOURCES
+        if not share_ctx.mask_sensitive:
+            today = timezone.now().date()
+            ctx['followup_form'] = FollowUpForm()
+            ctx['follow_up_state'] = property_follow_up_state(p, today)
+            ctx['follow_up_logs'] = (
+                CustomerActivity.objects.filter(property=p, activity_type='پیگیری')
+                .select_related('customer')[:8]
+            )
         ctx['active_tab'] = self.request.GET.get('tab', '')
         if ctx.get('is_property_owner') and not ctx.get('property_is_deleted'):
             from workspace.services.property_public_share import (
@@ -1446,6 +1454,34 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 link.delete()
                 messages.success(request, f'پیوند «{name}» حذف شد.')
             return redirect(self._detail_redirect(property_id, tab='contacts'))
+        elif action == 'schedule_followup':
+            form = FollowUpForm(request.POST)
+            if form.is_valid():
+                schedule_property_follow_up(
+                    request.user,
+                    prop,
+                    form.cleaned_data['next_follow_up'],
+                    form.cleaned_data.get('note', ''),
+                )
+                messages.success(request, 'پیگیری فایل ثبت شد.')
+            else:
+                for err in form.errors.get('next_follow_up', form.non_field_errors()):
+                    messages.error(request, str(err))
+                return redirect(self._detail_redirect(property_id, drawer='followup'))
+        elif action == 'quick_followup':
+            try:
+                days = int(request.POST.get('days', 1))
+            except (TypeError, ValueError):
+                days = 1
+            days = max(1, min(days, 365))
+            follow_date = timezone.now().date() + timedelta(days=days)
+            schedule_property_follow_up(request.user, prop, follow_date)
+            messages.success(request, f'پیگیری برای {days} روز دیگر ثبت شد.')
+        elif action == 'complete_followup':
+            if complete_property_follow_up(request.user, prop, request.POST.get('note', '')):
+                messages.success(request, 'پیگیری انجام‌شده علامت خورد.')
+            else:
+                messages.warning(request, 'پیگیری فعالی برای بستن وجود ندارد.')
         return redirect(redirect_url)
 
 

@@ -6,8 +6,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from django.db.models import Case, Count, IntegerField, Q, QuerySet, Value, When
 
 from workspace.services.advertiser_signal import (
+    ADVERTISER_SIGNAL_CONSULTANT,
     ADVERTISER_SIGNAL_DISGUISED,
     ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+    listing_advertiser_display,
     listing_advertiser_signal,
 )
 from workspace.services.columns import consultant_q
@@ -232,12 +234,58 @@ def apply_advertiser_signal_filter(listings: List, consultant: str) -> List:
 
 
 def _advertiser_rank_annotation():
-    """۰ = شخصی/خالی، ۱ = مشاور — برای اولویت نمایش شخصی‌ها."""
+    """۰ = غیرمشاور رسمی، ۱ = مشاور — برای اولویت پیش‌فرض در سایر ستون‌ها."""
     return Case(
+        When(advertiser_signal=ADVERTISER_SIGNAL_CONSULTANT, then=Value(1)),
         When(_CONSULTANT_FILTER_Q, then=Value(1)),
         default=Value(0),
         output_field=IntegerField(),
     )
+
+
+def _advertiser_display_rank_for_listing(listing) -> int:
+    """هم‌راستا با برچسب ستون آگهی‌دهنده در جدول."""
+    order = {'مالک': 0, 'شخصی': 1, 'مشاور پنهان': 2, 'مشاور': 3}
+    short_label = listing_advertiser_display(listing).get('short_label', 'شخصی')
+    return order.get(short_label, 1)
+
+
+def _default_sort_key(listing, default: str):
+    field = default.lstrip('-')
+    val = getattr(listing, field, None)
+    if val is None:
+        val = '' if field in ('title', 'neighborhood', 'business_type') else 0
+    if default.startswith('-') and isinstance(val, (int, float)):
+        return -val
+    if isinstance(val, str):
+        return val.lower()
+    return val
+
+
+def _sort_queryset_by_advertiser_display(qs: QuerySet, sort: str, default: str) -> QuerySet:
+    """مرتب‌سازی با سیگنال محاسبه‌شده از متن — هم‌راستا با نمایش جدول."""
+    reverse = sort.startswith('-')
+    pks = list(qs.values_list('pk', flat=True))
+    if not pks:
+        return qs
+
+    rows = list(qs.model.objects.filter(pk__in=pks))
+
+    def sort_key(lst):
+        rank = _advertiser_display_rank_for_listing(lst)
+        if reverse:
+            rank = -rank
+        return (rank, _default_sort_key(lst, default), lst.pk)
+
+    rows.sort(key=sort_key)
+    whens = [When(pk=row.pk, then=Value(idx)) for idx, row in enumerate(rows)]
+    return qs.model.objects.filter(pk__in=[row.pk for row in rows]).annotate(
+        _advertiser_display_order=Case(
+            *whens,
+            default=Value(len(rows)),
+            output_field=IntegerField(),
+        )
+    ).order_by('_advertiser_display_order')
 
 
 def sort_queryset(qs: QuerySet, sort: str, default: str) -> QuerySet:
@@ -253,9 +301,7 @@ def sort_queryset(qs: QuerySet, sort: str, default: str) -> QuerySet:
     qs = qs.annotate(_advertiser_rank=_advertiser_rank_annotation())
     field = sort.lstrip('-')
     if field == 'business_type':
-        if sort == 'business_type':
-            return qs.order_by('_advertiser_rank', default)
-        return qs.order_by('-_advertiser_rank', default)
+        return _sort_queryset_by_advertiser_display(qs, sort, default)
     return qs.order_by('_advertiser_rank', sort)
 
 

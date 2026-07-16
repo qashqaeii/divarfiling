@@ -1089,17 +1089,43 @@ class ListingAdvertiserSortTests(TestCase):
             token='c1',
             title='مشاور اول',
             business_type='مشاور',
+            advertiser_signal='consultant',
             price=999_999,
+        )
+        self.genuine = Listing.objects.create(
+            dataset=self.dataset,
+            token='g1',
+            title='مالک واقعی',
+            business_type='شخصی',
+            advertiser_signal='genuine_personal',
+            price=50,
+        )
+        self.disguised = Listing.objects.create(
+            dataset=self.dataset,
+            token='d1',
+            title='مشاور پنهان',
+            business_type='شخصی',
+            advertiser_signal='disguised_consultant',
+            price=200,
         )
 
     def test_personal_listings_before_consultants(self):
         qs = sort_queryset(self.dataset.listings.all(), '-price', '-price')
         ordered = list(qs.values_list('token', flat=True))
-        self.assertEqual(ordered[0], 'p1')
-        self.assertEqual(ordered[1], 'c1')
+        self.assertEqual(ordered[-1], 'c1')
+        self.assertNotIn('c1', ordered[:-1])
 
     def test_business_type_desc_puts_consultants_first(self):
         qs = sort_queryset(self.dataset.listings.all(), '-business_type', '-price')
         ordered = list(qs.values_list('token', flat=True))
         self.assertEqual(ordered[0], 'c1')
-        self.assertEqual(ordered[1], 'p1')
+
+    def test_business_type_asc_groups_by_display_category(self):
+        qs = sort_queryset(self.dataset.listings.all(), 'business_type', '-price')
+        ordered = list(qs.values_list('token', flat=True))
+        self.assertEqual(ordered, ['g1', 'p1', 'd1', 'c1'])
+
+    def test_business_type_desc_groups_by_display_category(self):
+        qs = sort_queryset(self.dataset.listings.all(), '-business_type', '-price')
+        ordered = list(qs.values_list('token', flat=True))
+        self.assertEqual(ordered, ['c1', 'd1', 'p1', 'g1'])

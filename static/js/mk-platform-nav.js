@@ -1,6 +1,6 @@
 /**
  * Mega menu امکانات — fixed panel, hover (desktop), keyboard nav
- * v6: premium layout, enter animation, wider panel
+ * v7: compact layout, viewport-aware max-height
  */
 (function () {
     'use strict';
@@ -44,8 +44,14 @@
 
     function positionPanel() {
         var rect = btn.getBoundingClientRect();
-        var panelWidth = Math.min(840, window.innerWidth - 24);
-        var top = rect.bottom - 2;
+        var panelWidth = Math.min(720, window.innerWidth - 24);
+        var headerH = 57;
+        try {
+            headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mk-site-header-h')) || headerH;
+        } catch (e) { /* ignore */ }
+        var margin = 10;
+        var maxH = Math.max(240, window.innerHeight - headerH - margin * 2);
+        var top = rect.bottom + 4;
         var left = rect.left + rect.width / 2 - panelWidth / 2;
 
         if (left < 12) left = 12;
@@ -54,9 +60,21 @@
         }
 
         panel.style.width = panelWidth + 'px';
+        panel.style.maxHeight = maxH + 'px';
         panel.style.top = top + 'px';
         panel.style.left = left + 'px';
         panel.style.right = 'auto';
+
+        var panelRect = panel.getBoundingClientRect();
+        if (panelRect.bottom > window.innerHeight - margin) {
+            var flippedTop = rect.top - panelRect.height - 4;
+            if (flippedTop >= headerH + margin) {
+                panel.style.top = flippedTop + 'px';
+            } else {
+                panel.style.top = (headerH + margin) + 'px';
+                panel.style.maxHeight = Math.max(200, window.innerHeight - headerH - margin * 2) + 'px';
+            }
+        }
     }
 
     function syncOpenClasses() {

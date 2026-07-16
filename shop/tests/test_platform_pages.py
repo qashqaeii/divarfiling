@@ -95,8 +95,8 @@ class PlatformPageViewTests(TestCase):
         self.assertContains(resp, 'mkFeaturesMenuBtn')
         self.assertContains(resp, 'امکانات')
         self.assertContains(resp, '/features/crm/')
-        self.assertContains(resp, 'mk-mega-panel__body')
-        self.assertContains(resp, 'mk-mega-solution')
+        self.assertContains(resp, 'mk-mega-panel__scroll')
+        self.assertContains(resp, 'mk-mega-featured--compact')
         self.assertContains(resp, 'customer-follow-up')
 
     def test_sitemap_includes_platform(self):

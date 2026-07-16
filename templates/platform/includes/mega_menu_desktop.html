@@ -12,99 +12,74 @@
     </button>
     <div class="mk-mega-panel" id="mkFeaturesMegaPanel" role="dialog" aria-modal="false" aria-labelledby="mkFeaturesMenuBtn" hidden>
         <header class="mk-mega-panel__head">
-            <div class="mk-mega-panel__brand">
-                <p class="mk-mega-panel__eyebrow">پلتفرم فایلینگ دیوار</p>
-                {% if menu.published_page_count %}
-                <span class="mk-mega-panel__count">{{ menu.published_page_count }} صفحه منتشرشده</span>
-                {% endif %}
-            </div>
+            <p class="mk-mega-panel__eyebrow">پلتفرم فایلینگ دیوار</p>
             <nav class="mk-mega-panel__hubs" aria-label="Hubهای پلتفرم">
-                <a href="{% url menu.hub_url_name %}" class="mk-mega-panel__hub-link">
-                    <i class="fas fa-layer-group" aria-hidden="true"></i> همه امکانات
-                </a>
-                <a href="{% url menu.solutions_url_name %}" class="mk-mega-panel__hub-link mk-mega-panel__hub-link--alt">
-                    <i class="fas fa-lightbulb" aria-hidden="true"></i> راه‌حل‌ها
-                </a>
+                <a href="{% url menu.hub_url_name %}" class="mk-mega-panel__hub-link">همه امکانات</a>
+                <a href="{% url menu.solutions_url_name %}" class="mk-mega-panel__hub-link mk-mega-panel__hub-link--alt">راه‌حل‌ها</a>
             </nav>
         </header>
 
-        <div class="mk-mega-panel__body">
-            <aside class="mk-mega-panel__aside" aria-label="پیشنهاد ویژه">
-                {% if menu.featured_product %}
-                <a href="{% url menu.featured_product.url_name slug_path=menu.featured_product.url_kwargs.slug_path %}" class="mk-mega-featured">
-                    <span class="mk-mega-featured__thumb">
-                        <img src="{% static menu.featured_product.image %}"
-                             alt=""
-                             width="360" height="220"
-                             loading="lazy" decoding="async">
-                    </span>
-                    <span class="mk-mega-featured__body">
-                        <span class="mk-mega-featured__badge">{{ menu.featured_product.badge }}</span>
-                        <strong>{{ menu.featured_product.title }}</strong>
-                        <span>{{ menu.featured_product.desc }}</span>
-                    </span>
-                    <span class="mk-mega-featured__cta" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
-                </a>
-                {% endif %}
+        <div class="mk-mega-panel__scroll">
+            {% if menu.featured_product %}
+            <a href="{% url menu.featured_product.url_name slug_path=menu.featured_product.url_kwargs.slug_path %}" class="mk-mega-featured mk-mega-featured--compact">
+                <span class="mk-mega-featured__thumb">
+                    <img src="{% static menu.featured_product.image %}"
+                         alt=""
+                         width="96" height="60"
+                         loading="lazy" decoding="async">
+                </span>
+                <span class="mk-mega-featured__body">
+                    <span class="mk-mega-featured__badge">{{ menu.featured_product.badge }}</span>
+                    <strong>{{ menu.featured_product.title }}</strong>
+                    <span>{{ menu.featured_product.desc }}</span>
+                </span>
+                <i class="fas fa-arrow-left mk-mega-featured__arrow" aria-hidden="true"></i>
+            </a>
+            {% endif %}
 
-                {% if menu.solution_spotlight %}
-                <a href="{% url menu.solution_spotlight.url_name slug=menu.solution_spotlight.url_kwargs.slug %}" class="mk-mega-solution">
-                    <span class="mk-mega-solution__label">راه‌حل پیشنهادی</span>
-                    <strong>{{ menu.solution_spotlight.title }}</strong>
-                    <span class="mk-mega-solution__outcome">{{ menu.solution_spotlight.outcome }}</span>
-                    <span class="mk-mega-solution__cta">مشاهده <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+            <div class="mk-mega-grid" role="navigation" aria-label="خطوط محصول">
+                {% for item in menu.product_lines %}
+                <a href="{% if item.url_kwargs.slug_path %}{% url item.url_name slug_path=item.url_kwargs.slug_path %}{% else %}{% url item.url_name %}{% endif %}" class="mk-mega-card mk-mega-card--{{ item.accent }}">
+                    <span class="mk-mega-card__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
+                    <span class="mk-mega-card__body">
+                        <strong>{{ item.title }}{% if item.tag %} <em class="mk-mega-card__tag">{{ item.tag }}</em>{% endif %}</strong>
+                        <span>{{ item.desc }}</span>
+                    </span>
                 </a>
-                {% endif %}
-            </aside>
+                {% endfor %}
+            </div>
 
-            <div class="mk-mega-panel__main">
-                <p class="mk-mega-panel__section-label">خطوط محصول</p>
-                <div class="mk-mega-grid" role="navigation" aria-label="خطوط محصول">
-                    {% for item in menu.product_lines %}
-                    <a href="{% if item.url_kwargs.slug_path %}{% url item.url_name slug_path=item.url_kwargs.slug_path %}{% else %}{% url item.url_name %}{% endif %}" class="mk-mega-card mk-mega-card--{{ item.accent }}">
-                        <span class="mk-mega-card__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
-                        <span class="mk-mega-card__body">
-                            {% if item.tag %}<span class="mk-mega-card__tag">{{ item.tag }}</span>{% endif %}
-                            <strong>{{ item.title }}</strong>
-                            <span>{{ item.desc }}</span>
-                        </span>
-                        <span class="mk-mega-card__arrow" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
-                    </a>
+            {% if menu.solution_spotlight %}
+            <a href="{% url menu.solution_spotlight.url_name slug=menu.solution_spotlight.url_kwargs.slug %}" class="mk-mega-solution mk-mega-solution--compact">
+                <span class="mk-mega-solution__label">راه‌حل</span>
+                <strong>{{ menu.solution_spotlight.title }}</strong>
+                <span class="mk-mega-solution__outcome">{{ menu.solution_spotlight.outcome }}</span>
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+
+            <footer class="mk-mega-footer mk-mega-footer--compact">
+                <div class="mk-mega-footer__col">
+                    <span class="mk-mega-footer__label">CRM</span>
+                    {% for feat in menu.crm_highlights %}
+                    <a href="{% if feat.url_kwargs.slug_path %}{% url feat.url_name slug_path=feat.url_kwargs.slug_path %}{% else %}{% url feat.url_name %}{% endif %}">{{ feat.label }}</a>
                     {% endfor %}
                 </div>
-            </div>
+                <div class="mk-mega-footer__col">
+                    <span class="mk-mega-footer__label">راه‌حل‌ها</span>
+                    {% for sol in menu.solution_highlights %}
+                    <a href="{% url sol.url_name slug=sol.url_kwargs.slug %}">{{ sol.label }}</a>
+                    {% endfor %}
+                </div>
+                {% if menu.quick_links %}
+                <div class="mk-mega-footer__col">
+                    <span class="mk-mega-footer__label">سریع</span>
+                    {% for link in menu.quick_links %}
+                    <a href="{% url link.url_name %}">{{ link.label }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </footer>
         </div>
-
-        <footer class="mk-mega-footer">
-            <div class="mk-mega-footer__col">
-                <span class="mk-mega-footer__label"><i class="fas fa-users" aria-hidden="true"></i> CRM</span>
-                {% for feat in menu.crm_highlights %}
-                <a href="{% if feat.url_kwargs.slug_path %}{% url feat.url_name slug_path=feat.url_kwargs.slug_path %}{% else %}{% url feat.url_name %}{% endif %}" class="mk-mega-footer__link">
-                    <span>{{ feat.label }}</span>
-                    {% if feat.desc %}<small>{{ feat.desc }}</small>{% endif %}
-                </a>
-                {% endfor %}
-            </div>
-            <div class="mk-mega-footer__col">
-                <span class="mk-mega-footer__label"><i class="fas fa-bullseye" aria-hidden="true"></i> راه‌حل‌ها</span>
-                {% for sol in menu.solution_highlights %}
-                <a href="{% url sol.url_name slug=sol.url_kwargs.slug %}" class="mk-mega-footer__link">
-                    <span>{{ sol.label }}</span>
-                    {% if sol.desc %}<small>{{ sol.desc }}</small>{% endif %}
-                </a>
-                {% endfor %}
-                <a href="{% url menu.solutions_url_name %}" class="mk-mega-footer__all">همه راه‌حل‌ها</a>
-            </div>
-            {% if menu.quick_links %}
-            <div class="mk-mega-footer__col mk-mega-footer__col--quick">
-                <span class="mk-mega-footer__label"><i class="fas fa-bolt" aria-hidden="true"></i> دسترسی سریع</span>
-                {% for link in menu.quick_links %}
-                <a href="{% url link.url_name %}" class="mk-mega-footer__link mk-mega-footer__link--plain">
-                    <span>{{ link.label }}</span>
-                </a>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </footer>
     </div>
 </li>

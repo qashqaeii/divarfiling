@@ -31,6 +31,9 @@
                         {% if consultant_count %}
                         <button type="button" class="mk-ds-mobile-more-item mk-ds-mobile-more-item--danger" role="menuitem" data-modal-open="modal-delete-consultants"><i class="fas fa-user-slash" aria-hidden="true"></i> حذف مشاورین</button>
                         {% endif %}
+                        {% if disguised_consultant_count %}
+                        <button type="button" class="mk-ds-mobile-more-item mk-ds-mobile-more-item--danger" role="menuitem" data-modal-open="modal-delete-disguised"><i class="fas fa-user-secret" aria-hidden="true"></i> حذف مشاور پنهان</button>
+                        {% endif %}
                     </div>
                 </details>
             </header>
@@ -118,6 +121,11 @@
                         {% if consultant_count %}
                         <button type="button" class="mk-ds-action mk-ds-action-tool mk-ds-action-danger" data-modal-open="modal-delete-consultants" title="حذف مشاورین" aria-label="حذف مشاورین">
                             <i class="fas fa-user-slash" aria-hidden="true"></i>
+                        </button>
+                        {% endif %}
+                        {% if disguised_consultant_count %}
+                        <button type="button" class="mk-ds-action mk-ds-action-tool mk-ds-action-danger mk-ds-action-danger--disguised" data-modal-open="modal-delete-disguised" title="حذف مشاور پنهان" aria-label="حذف مشاور پنهان">
+                            <i class="fas fa-user-secret" aria-hidden="true"></i>
                         </button>
                         {% endif %}
                     </div>
@@ -320,6 +328,29 @@
             <div class="ws-modal-foot">
                 <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
                 <button type="submit" class="ws-btn ws-btn-danger">🧹 حذف همه مشاورین</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if disguised_consultant_count %}
+<div class="ws-modal" id="modal-delete-disguised" role="dialog" aria-modal="true">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-sm">
+        <div class="ws-modal-head">
+            <h2 class="ws-modal-title">حذف آگهی‌های مشاور پنهان</h2>
+            <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:dataset_delete_disguised_consultants' dataset.id %}" class="ws-modal-body">
+            {% csrf_token %}
+            <p class="ws-modal-text">
+                <strong>{{ disguised_consultant_count|intcomma }}</strong> آگهی «مشاور پنهان» (شخصی در دیوار با نشانه مشاور در متن) از این فایل حذف می‌شود.
+                این عمل قابل بازگشت نیست.
+            </p>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-danger">حذف مشاور پنهان</button>
             </div>
         </form>
     </div>

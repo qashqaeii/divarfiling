@@ -498,3 +498,14 @@ def count_listings_by_advertiser_display(qs) -> Dict[str, int]:
         else:
             counts['personal_other'] += 1
     return counts
+
+
+def disguised_consultant_listing_ids(qs) -> list[int]:
+    """شناسه آگهی‌های مشاور پنهان — هم‌راستا با count_listings_by_advertiser_display."""
+    ids: list[int] = []
+    for listing in qs.only(
+        'id', 'advertiser_signal', 'title', 'description', 'business_type', 'data',
+    ).iterator():
+        if listing_advertiser_signal(listing) == ADVERTISER_SIGNAL_DISGUISED:
+            ids.append(listing.id)
+    return ids

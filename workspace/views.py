@@ -1287,6 +1287,21 @@ class DeleteConsultantsView(DatasetOwnerMixin, View):
         return redirect('workspace:dataset_detail', dataset_id=dataset.pk)
 
 
+class DeleteDisguisedConsultantsView(DatasetOwnerMixin, View):
+    def post(self, request, dataset_id):
+        from workspace.services.advertiser_signal import disguised_consultant_listing_ids
+
+        dataset = self.get_dataset()
+        ids = disguised_consultant_listing_ids(dataset.listings.all())
+        if ids:
+            dataset.listings.filter(pk__in=ids).delete()
+            dataset.sync_row_count()
+            messages.success(request, f'{len(ids):,} آگهی مشاور پنهان حذف شد.')
+        else:
+            messages.info(request, 'آگهی مشاور پنهانی برای حذف یافت نشد.')
+        return redirect('workspace:dataset_detail', dataset_id=dataset.pk)
+
+
 # ─── Analyze ──────────────────────────────────────────────────────────────────
 
 class DatasetAnalyzeView(DatasetOwnerMixin, TemplateView):

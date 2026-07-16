@@ -13,7 +13,7 @@ ANDROID_APP_BUILD = 34
 ANDROID_PACKAGE_ID = 'ir.divarfiling.mobile'
 ANDROID_MIN_ANDROID = '8.0'
 
-WINDOWS_INSTALLER_FILENAME = 'DivarFilingExtractor_Setup_1.0.0.zip'
+WINDOWS_INSTALLER_FILENAME = 'DivarFilingExtractor_Setup_2.13.0.ZIP'
 
 
 def _files_dir() -> str:

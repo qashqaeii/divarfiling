@@ -1,0 +1,286 @@
+{% include 'platform/includes/hero_reminders.html' %}
+
+{# ── سناریو ── #}
+<section class="rem-sec" aria-labelledby="rem-scenario-title">
+    <div class="rem-wrap">
+        <div class="rem-prose">
+            <p class="rem-eyebrow">سناریوی واقعی</p>
+            <h2 id="rem-scenario-title">{{ platform_content.scenario.title }}</h2>
+            <p class="rem-scenario__intro">{{ platform_content.scenario.intro }}</p>
+        </div>
+        <ol class="rem-timeline">
+            {% for step in platform_content.scenario.steps %}
+            <li class="rem-timeline__item plat-reveal">
+                <time class="rem-timeline__time">{{ step.time }}</time>
+                <p>{{ step.action }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+        <p class="rem-prose rem-scenario__outcome plat-reveal">{{ platform_content.scenario.outcome }}</p>
+    </div>
+</section>
+
+{# ── پنج مفهوم ── #}
+<section class="rem-sec rem-sec--soft" aria-labelledby="rem-concepts-title">
+    <div class="rem-wrap">
+        <div class="rem-prose rem-prose--center">
+            <h2 id="rem-concepts-title">{{ platform_content.concepts.title }}</h2>
+            <p>{{ platform_content.concepts.lead }}</p>
+        </div>
+        <ul class="rem-concepts">
+            {% for item in platform_content.concepts.items %}
+            <li class="rem-concept plat-reveal">
+                <span class="rem-concept__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
+                <div>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.desc }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── انواع یادآور ── #}
+<section class="rem-sec" aria-labelledby="rem-types-title">
+    <div class="rem-wrap">
+        <div class="rem-prose">
+            <h2 id="rem-types-title">{{ platform_content.reminder_types.title }}</h2>
+        </div>
+        <ul class="rem-type-list">
+            {% for t in platform_content.reminder_types.items %}
+            <li class="rem-type-list__item plat-reveal">
+                <strong>{{ t.title }}</strong>
+                <span>{{ t.text }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── اتصال به پرونده ── #}
+<section class="rem-sec rem-sec--soft" aria-labelledby="rem-attach-title">
+    <div class="rem-wrap">
+        <div class="rem-prose rem-prose--center">
+            <h2 id="rem-attach-title">{{ platform_content.attachments.title }}</h2>
+            <p>{{ platform_content.attachments.lead }}</p>
+        </div>
+        <div class="rem-attach-grid">
+            {% for att in platform_content.attachments.items %}
+            <article class="rem-attach plat-reveal">
+                <div class="rem-attach__copy">
+                    <h3>{{ att.title }}</h3>
+                    <p>{{ att.text }}</p>
+                </div>
+                <div class="rem-attach__shot">
+                    {% include 'platform/includes/screenshot_story.html' with shot=att %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── وضعیت‌ها ── #}
+<section class="rem-sec" aria-labelledby="rem-states-title">
+    <div class="rem-wrap">
+        <div class="rem-prose rem-prose--center">
+            <h2 id="rem-states-title">{{ platform_content.states.title }}</h2>
+            <p>{{ platform_content.states.lead }}</p>
+        </div>
+        <ul class="rem-states">
+            {% for s in platform_content.states.items %}
+            <li class="rem-state rem-state--{{ s.tone }} plat-reveal">
+                <h3>{{ s.title }}</h3>
+                <p>{{ s.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── صف امروز ── #}
+<section class="rem-sec rem-sec--soft" aria-labelledby="rem-today-title">
+    <div class="rem-wrap rem-today">
+        <div class="rem-prose">
+            <h2 id="rem-today-title">{{ platform_content.today_queue.title }}</h2>
+            {% for p in platform_content.today_queue.paragraphs %}
+            <p>{{ p }}</p>
+            {% endfor %}
+            <ul class="rem-today__tips">
+                {% for tip in platform_content.today_queue.tips %}
+                <li><i class="fas fa-arrow-left" aria-hidden="true"></i> {{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</section>
+
+{# ── نقش‌ها ── #}
+<section class="rem-sec" aria-labelledby="rem-roles-title">
+    <div class="rem-wrap">
+        <div class="rem-prose rem-prose--center">
+            <h2 id="rem-roles-title">{{ platform_content.roles_view.title }}</h2>
+        </div>
+        <ul class="rem-roles">
+            {% for r in platform_content.roles_view.items %}
+            <li class="rem-role plat-reveal">
+                <h3>{{ r.title }}</h3>
+                <p>{{ r.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="rem-privacy-box plat-reveal">
+            <h3>{{ platform_content.privacy.title }}</h3>
+            <p>{{ platform_content.privacy.text }}</p>
+        </div>
+    </div>
+</section>
+
+{# ── Workflow ── #}
+<section class="rem-sec rem-sec--soft" aria-labelledby="rem-workflow-title">
+    <div class="rem-wrap">
+        <div class="rem-prose rem-prose--center">
+            <h2 id="rem-workflow-title">{{ platform_content.workflow.title }}</h2>
+        </div>
+        <ol class="rem-workflow">
+            {% for step in platform_content.workflow.steps %}
+            <li class="rem-workflow__step plat-reveal">
+                <span class="rem-workflow__num">{{ forloop.counter }}</span>
+                <div>
+                    <strong>{{ step.title }}</strong>
+                    <p>{{ step.text }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+{# ── گالری ── #}
+<section class="rem-sec" aria-labelledby="rem-gallery-title">
+    <div class="rem-wrap">
+        <div class="rem-prose rem-prose--center">
+            <h2 id="rem-gallery-title">{{ platform_content.screenshot_gallery.title }}</h2>
+            <p>{{ platform_content.screenshot_gallery.lead }}</p>
+        </div>
+        <div class="rem-gallery">
+            {% for shot in platform_content.screenshot_gallery.items %}
+            <div class="rem-gallery__item plat-reveal">
+                {% include 'platform/includes/screenshot_story.html' with shot=shot %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── موارد استفاده ── #}
+<section class="rem-sec rem-sec--soft" aria-labelledby="rem-use-title">
+    <div class="rem-wrap">
+        <div class="rem-prose rem-prose--center">
+            <h2 id="rem-use-title">{{ platform_content.use_cases.title }}</h2>
+        </div>
+        <ul class="rem-use-grid">
+            {% for u in platform_content.use_cases.items %}
+            <li class="rem-use plat-reveal">
+                <h3>{{ u.title }}</h3>
+                <p>{{ u.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── نکات حرفه‌ای ── #}
+<section class="rem-sec" aria-labelledby="rem-tips-title">
+    <div class="rem-wrap">
+        <div class="rem-prose">
+            <h2 id="rem-tips-title">{{ platform_content.pro_tips.title }}</h2>
+        </div>
+        <ul class="rem-tips">
+            {% for tip in platform_content.pro_tips.items %}
+            <li class="rem-tips__item plat-reveal">{{ tip }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── محدودیت‌ها ── #}
+<section class="rem-sec rem-sec--soft" aria-labelledby="rem-limits-title">
+    <div class="rem-wrap">
+        <div class="rem-prose rem-prose--center">
+            <h2 id="rem-limits-title">{{ platform_content.limitations.title }}</h2>
+        </div>
+        <ul class="rem-limits">
+            {% for lim in platform_content.limitations.items %}
+            <li class="rem-limit plat-reveal">
+                <span class="rem-limit__badge">{{ lim.badge }}</span>
+                <h3>{{ lim.title }}</h3>
+                <p>{{ lim.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── FAQ ── #}
+{% if platform_content.faq %}
+<section class="rem-sec plat-faq" aria-labelledby="rem-faq-title">
+    <div class="rem-wrap">
+        <div class="rem-prose rem-prose--center">
+            <h2 id="rem-faq-title">سوالات متداول</h2>
+        </div>
+        <div class="plat-faq__list">
+            {% for item in platform_content.faq %}
+            <details class="plat-faq__item plat-reveal">
+                <summary>{{ item.q }}</summary>
+                <div class="plat-faq__answer"><p>{{ item.a }}</p></div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# ── Related ── #}
+<section class="rem-sec rem-sec--soft" aria-labelledby="rem-related-title">
+    <div class="rem-wrap">
+        <h2 id="rem-related-title" class="rem-related-heading">ادامه مسیر</h2>
+        {% if platform_content.related_solution %}
+        <a href="{% url platform_content.related_solution.url_name slug=platform_content.related_solution.url_kwargs.slug %}" class="rem-solution-banner plat-reveal">
+            <span class="rem-solution-banner__label">راه‌حل مرتبط</span>
+            <strong>{{ platform_content.related_solution.title }}</strong>
+            <p>{{ platform_content.related_solution.desc }}</p>
+            <span class="rem-solution-banner__cta">مشاهده راه‌حل</span>
+        </a>
+        {% endif %}
+        <div class="rem-related-grid">
+            {% if related_posts %}
+            {% for post in related_posts %}
+            <a href="{{ post.get_absolute_url }}" class="rem-related-card plat-reveal">
+                <span class="rem-related-card__type">مقاله</span>
+                <strong>{{ post.title }}</strong>
+                <span class="rem-related-card__cta">مطالعه</span>
+            </a>
+            {% endfor %}
+            {% endif %}
+            {% for page in platform_content.related_pages %}
+            <a href="{% if page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug %}{% else %}{% url page.url_name %}{% endif %}" class="rem-related-card plat-reveal">
+                <span class="rem-related-card__type">صفحه</span>
+                <strong>{{ page.title }}</strong>
+                <p>{{ page.desc }}</p>
+                <span class="rem-related-card__cta">مشاهده</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── CTA ── #}
+<section class="rem-sec rem-final-cta">
+    <div class="rem-wrap rem-final-cta__inner plat-reveal">
+        <h2>{{ platform_content.final_cta.title }}</h2>
+        <p>{{ platform_content.final_cta.lead }}</p>
+        {% include 'platform/includes/cta_pair.html' %}
+    </div>
+</section>

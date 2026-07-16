@@ -12,9 +12,9 @@
     <a href="{% url 'seo_landing_real_estate_crm' %}" class="plat-btn plat-btn--ghost">
         <i class="fas fa-book-open" aria-hidden="true"></i> راهنمای CRM املاک
     </a>
-    {% elif platform_content.cta.secondary == 'crm_landing' %}
+    {% elif platform_content.cta.secondary == 'crm_landing' or platform_content.cta.secondary == 'crm_line' %}
     <a href="{% url 'platform_features_page' slug_path='crm' %}" class="plat-btn plat-btn--ghost">
-        <i class="fas fa-users" aria-hidden="true"></i> امکانات CRM
+        <i class="fas fa-users" aria-hidden="true"></i> خط محصول CRM
     </a>
     {% else %}
     <a href="{% url 'platform_solutions_hub' %}" class="plat-btn plat-btn--ghost">

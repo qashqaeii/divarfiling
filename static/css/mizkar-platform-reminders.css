@@ -1,0 +1,721 @@
+/* ═══ Reminders Feature — /features/crm/reminders/ ═══ */
+.plat-page--crm_reminders {
+    --rem-text: min(720px, 100%);
+    --rem-wrap: min(1200px, 100%);
+    --rem-sec-pad: clamp(4.5rem, 7vw, 7.5rem);
+    --rem-gap: clamp(1rem, 2vw, 1.5rem);
+    --rem-amber: #d97706;
+    --rem-amber-soft: rgba(217, 119, 6, 0.1);
+    --rem-border: rgba(15, 23, 42, 0.08);
+    --rem-muted: rgba(15, 23, 42, 0.04);
+}
+
+html.mk-public[data-theme="dark"] .plat-page--crm_reminders {
+    --rem-border: rgba(255, 255, 255, 0.08);
+    --rem-muted: rgba(255, 255, 255, 0.04);
+}
+
+.plat-page--crm_reminders .rem-wrap {
+    max-width: var(--rem-wrap);
+    margin-inline: auto;
+    padding-inline: clamp(1.125rem, 4vw, 1.5rem);
+}
+
+.plat-page--crm_reminders .rem-sec {
+    padding-block: var(--rem-sec-pad);
+}
+
+.plat-page--crm_reminders .rem-sec--soft {
+    background: var(--rem-muted);
+}
+
+.plat-page--crm_reminders .rem-eyebrow {
+    margin: 0 0 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--rem-amber);
+}
+
+.plat-page--crm_reminders .rem-prose {
+    max-width: var(--rem-text);
+}
+
+.plat-page--crm_reminders .rem-prose--center {
+    margin-inline: auto;
+    text-align: center;
+}
+
+.plat-page--crm_reminders .rem-prose h2 {
+    margin: 0 0 0.85rem;
+    font-size: clamp(1.25rem, 2.5vw, 1.65rem);
+    line-height: 1.4;
+    letter-spacing: -0.02em;
+}
+
+.plat-page--crm_reminders .rem-prose p {
+    margin: 0 0 0.85rem;
+    line-height: 1.85;
+    font-size: 1rem;
+    opacity: 0.88;
+}
+
+/* Hero — compact */
+.plat-page--crm_reminders .rem-hero {
+    padding: clamp(2rem, 4vw, 2.75rem) 0 clamp(2.5rem, 5vw, 3.5rem);
+    border-bottom: 1px solid var(--rem-border);
+}
+
+.plat-page--crm_reminders .rem-hero__grid {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2rem);
+    align-items: center;
+}
+
+@media (min-width: 900px) {
+    .plat-page--crm_reminders .rem-hero__grid {
+        grid-template-columns: 1fr 0.95fr;
+    }
+}
+
+.plat-page--crm_reminders .rem-hero__copy h1 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.45rem, 3vw, 2rem);
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+}
+
+.plat-page--crm_reminders .rem-hero__lead {
+    margin: 0 0 1rem;
+    line-height: 1.8;
+    font-size: 0.98rem;
+    opacity: 0.88;
+    max-width: var(--rem-text);
+}
+
+.plat-page--crm_reminders .rem-hero__bullets {
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.plat-page--crm_reminders .rem-hero__bullets li {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.plat-page--crm_reminders .rem-hero__bullets i {
+    color: var(--rem-amber);
+    font-size: 0.7rem;
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 767px) {
+    .plat-page--crm_reminders .rem-hero__cta .plat-cta-pair {
+        flex-direction: column;
+    }
+    .plat-page--crm_reminders .rem-hero__cta .plat-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Screenshot pins — amber */
+.plat-page--crm_reminders .plat-shot-story__frame {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--rem-border);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07);
+}
+
+.plat-page--crm_reminders .plat-shot-story__pin-num {
+    background: var(--rem-amber);
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
+}
+
+.plat-page--crm_reminders .plat-shot-story__caption {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    display: grid;
+    gap: 0.2rem;
+}
+
+/* Scenario timeline */
+.plat-page--crm_reminders .rem-scenario__intro {
+    font-size: 1.02rem;
+    opacity: 0.9;
+}
+
+.plat-page--crm_reminders .rem-timeline {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    max-width: var(--rem-text);
+    border-inline-start: 2px solid var(--rem-amber-soft);
+}
+
+.plat-page--crm_reminders .rem-timeline__item {
+    padding: 0 0 1.5rem 1.25rem;
+    position: relative;
+}
+
+.plat-page--crm_reminders .rem-timeline__item:last-child {
+    padding-bottom: 0;
+}
+
+.plat-page--crm_reminders .rem-timeline__time {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--rem-amber);
+    margin-bottom: 0.25rem;
+}
+
+.plat-page--crm_reminders .rem-timeline__item p {
+    margin: 0;
+    line-height: 1.75;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.plat-page--crm_reminders .rem-scenario__outcome {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rem-border);
+}
+
+/* Concepts */
+.plat-page--crm_reminders .rem-concepts {
+    list-style: none;
+    margin: 2.25rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--rem-gap);
+}
+
+@media (min-width: 640px) {
+    .plat-page--crm_reminders .rem-concepts {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .plat-page--crm_reminders .rem-concepts {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .plat-page--crm_reminders .rem-concept:last-child {
+        grid-column: span 1;
+    }
+}
+
+.plat-page--crm_reminders .rem-concept {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1.1rem 1.15rem;
+    border-radius: 10px;
+    border: 1px solid var(--rem-border);
+    background: rgba(255, 255, 255, 0.55);
+}
+
+html.mk-public[data-theme="dark"] .plat-page--crm_reminders .rem-concept {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--crm_reminders .rem-concept__icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: var(--rem-amber-soft);
+    color: var(--rem-amber);
+    flex-shrink: 0;
+}
+
+.plat-page--crm_reminders .rem-concept h3 {
+    margin: 0 0 0.25rem;
+    font-size: 0.88rem;
+}
+
+.plat-page--crm_reminders .rem-concept p {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    opacity: 0.82;
+}
+
+/* Type list */
+.plat-page--crm_reminders .rem-type-list {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    max-width: var(--rem-text);
+    display: grid;
+    gap: 0.65rem;
+}
+
+.plat-page--crm_reminders .rem-type-list__item {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rem-border);
+}
+
+.plat-page--crm_reminders .rem-type-list__item strong {
+    font-size: 0.92rem;
+}
+
+.plat-page--crm_reminders .rem-type-list__item span {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    opacity: 0.82;
+}
+
+/* Attachments */
+.plat-page--crm_reminders .rem-attach-grid {
+    margin-top: 2rem;
+    display: grid;
+    gap: clamp(2.5rem, 5vw, 3.5rem);
+}
+
+.plat-page--crm_reminders .rem-attach__copy h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+}
+
+.plat-page--crm_reminders .rem-attach__copy p {
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    opacity: 0.85;
+    max-width: 38rem;
+}
+
+/* States */
+.plat-page--crm_reminders .rem-states {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--rem-gap);
+    max-width: 820px;
+    margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+    .plat-page--crm_reminders .rem-states {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.plat-page--crm_reminders .rem-state {
+    padding: 1.1rem 1.15rem;
+    border-radius: 10px;
+    border: 1px solid var(--rem-border);
+}
+
+.plat-page--crm_reminders .rem-state--danger {
+    border-color: rgba(225, 29, 72, 0.25);
+    background: rgba(225, 29, 72, 0.04);
+}
+
+.plat-page--crm_reminders .rem-state--active {
+    border-color: rgba(217, 119, 6, 0.3);
+    background: var(--rem-amber-soft);
+}
+
+.plat-page--crm_reminders .rem-state h3 {
+    margin: 0 0 0.3rem;
+    font-size: 0.92rem;
+}
+
+.plat-page--crm_reminders .rem-state p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    opacity: 0.85;
+}
+
+/* Today tips */
+.plat-page--crm_reminders .rem-today__tips {
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.plat-page--crm_reminders .rem-today__tips li {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    opacity: 0.88;
+}
+
+.plat-page--crm_reminders .rem-today__tips i {
+    color: var(--rem-amber);
+    font-size: 0.65rem;
+    margin-top: 0.35rem;
+}
+
+/* Roles */
+.plat-page--crm_reminders .rem-roles {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--rem-gap);
+    max-width: var(--rem-text);
+    margin-inline: auto;
+}
+
+.plat-page--crm_reminders .rem-role h3 {
+    margin: 0 0 0.25rem;
+    font-size: 0.95rem;
+}
+
+.plat-page--crm_reminders .rem-role p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    opacity: 0.85;
+}
+
+.plat-page--crm_reminders .rem-privacy-box {
+    margin-top: 2rem;
+    padding: 1.25rem 1.3rem;
+    border-radius: 10px;
+    border: 1px solid var(--rem-border);
+    max-width: var(--rem-text);
+    margin-inline: auto;
+}
+
+.plat-page--crm_reminders .rem-privacy-box h3 {
+    margin: 0 0 0.4rem;
+    font-size: 0.95rem;
+}
+
+.plat-page--crm_reminders .rem-privacy-box p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.75;
+    opacity: 0.85;
+}
+
+/* Workflow */
+.plat-page--crm_reminders .rem-workflow {
+    list-style: none;
+    margin: 2rem auto 0;
+    padding: 0;
+    max-width: var(--rem-text);
+    display: grid;
+    gap: 0.85rem;
+}
+
+.plat-page--crm_reminders .rem-workflow__step {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+}
+
+.plat-page--crm_reminders .rem-workflow__num {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 6px;
+    background: var(--rem-amber);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.plat-page--crm_reminders .rem-workflow__step strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+}
+
+.plat-page--crm_reminders .rem-workflow__step p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    opacity: 0.82;
+}
+
+/* Gallery */
+.plat-page--crm_reminders .rem-gallery {
+    margin-top: 2rem;
+    display: grid;
+    gap: clamp(1.75rem, 3vw, 2.25rem);
+}
+
+@media (min-width: 768px) {
+    .plat-page--crm_reminders .rem-gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Use cases */
+.plat-page--crm_reminders .rem-use-grid {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--rem-gap);
+}
+
+@media (min-width: 640px) {
+    .plat-page--crm_reminders .rem-use-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.plat-page--crm_reminders .rem-use {
+    padding: 1rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid var(--rem-border);
+}
+
+.plat-page--crm_reminders .rem-use h3 {
+    margin: 0 0 0.25rem;
+    font-size: 0.9rem;
+}
+
+.plat-page--crm_reminders .rem-use p {
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.6;
+    opacity: 0.82;
+}
+
+/* Tips */
+.plat-page--crm_reminders .rem-tips {
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    max-width: var(--rem-text);
+    display: grid;
+    gap: 0.55rem;
+}
+
+.plat-page--crm_reminders .rem-tips__item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--rem-border);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    opacity: 0.9;
+}
+
+/* Limits */
+.plat-page--crm_reminders .rem-limits {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--rem-gap);
+    max-width: var(--rem-text);
+    margin-inline: auto;
+}
+
+.plat-page--crm_reminders .rem-limit {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--rem-border);
+}
+
+.plat-page--crm_reminders .rem-limit__badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.12rem 0.4rem;
+    border-radius: 999px;
+    background: var(--rem-amber-soft);
+    color: var(--rem-amber);
+    margin-bottom: 0.35rem;
+}
+
+.plat-page--crm_reminders .rem-limit h3 {
+    margin: 0 0 0.25rem;
+    font-size: 0.92rem;
+}
+
+.plat-page--crm_reminders .rem-limit p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    opacity: 0.82;
+}
+
+/* FAQ */
+.plat-page--crm_reminders .plat-faq__list {
+    max-width: var(--rem-text);
+    margin-inline: auto;
+}
+
+/* Related */
+.plat-page--crm_reminders .rem-related-heading {
+    text-align: center;
+    margin: 0 0 1.5rem;
+    font-size: 1.25rem;
+}
+
+.plat-page--crm_reminders .rem-solution-banner {
+    display: block;
+    padding: 1.25rem 1.35rem;
+    margin-bottom: 1.25rem;
+    border-radius: 12px;
+    border: 1px solid rgba(217, 119, 6, 0.28);
+    background: var(--rem-amber-soft);
+    text-decoration: none;
+    color: inherit;
+    max-width: 520px;
+    margin-inline: auto;
+    text-align: center;
+    transition: box-shadow 0.15s ease;
+}
+
+.plat-page--crm_reminders .rem-solution-banner:hover {
+    box-shadow: 0 8px 24px rgba(217, 119, 6, 0.12);
+}
+
+.plat-page--crm_reminders .rem-solution-banner__label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
+.plat-page--crm_reminders .rem-solution-banner strong {
+    display: block;
+    margin: 0.25rem 0;
+    font-size: 1.05rem;
+}
+
+.plat-page--crm_reminders .rem-solution-banner p {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.plat-page--crm_reminders .rem-solution-banner__cta {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--rem-amber);
+}
+
+.plat-page--crm_reminders .rem-related-grid {
+    display: grid;
+    gap: var(--rem-gap);
+}
+
+@media (min-width: 640px) {
+    .plat-page--crm_reminders .rem-related-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.plat-page--crm_reminders .rem-related-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.1rem 1.15rem;
+    border-radius: 10px;
+    border: 1px solid var(--rem-border);
+    text-decoration: none;
+    color: inherit;
+    min-height: 6.5rem;
+    background: rgba(255, 255, 255, 0.5);
+    transition: border-color 0.15s ease;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--crm_reminders .rem-related-card {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--crm_reminders .rem-related-card:hover {
+    border-color: rgba(217, 119, 6, 0.35);
+}
+
+.plat-page--crm_reminders .rem-related-card__type {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.55;
+}
+
+.plat-page--crm_reminders .rem-related-card strong {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    flex: 1;
+}
+
+.plat-page--crm_reminders .rem-related-card p {
+    margin: 0;
+    font-size: 0.8rem;
+    opacity: 0.75;
+}
+
+.plat-page--crm_reminders .rem-related-card__cta {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--rem-amber);
+    margin-top: auto;
+}
+
+/* Final CTA */
+.plat-page--crm_reminders .rem-final-cta {
+    border-top: 1px solid var(--rem-border);
+}
+
+.plat-page--crm_reminders .rem-final-cta__inner {
+    text-align: center;
+    max-width: 34rem;
+}
+
+.plat-page--crm_reminders .rem-final-cta__inner h2 {
+    margin: 0 0 0.5rem;
+    font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+}
+
+.plat-page--crm_reminders .rem-final-cta__inner p {
+    margin: 0 0 1.15rem;
+    opacity: 0.82;
+    line-height: 1.7;
+}
+
+@media (max-width: 767px) {
+    .plat-page--crm_reminders .rem-final-cta__inner .plat-cta-pair {
+        flex-direction: column;
+    }
+    .plat-page--crm_reminders .rem-final-cta__inner .plat-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.plat-page--crm_reminders .mk-platform-bc-wrap {
+    opacity: 0.72;
+}
+
+.plat-page--crm_reminders .plat-btn--primary {
+    background: var(--rem-amber);
+    box-shadow: 0 6px 20px rgba(217, 119, 6, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .plat-page--crm_reminders .rem-solution-banner,
+    .plat-page--crm_reminders .rem-related-card {
+        transition: none;
+    }
+}

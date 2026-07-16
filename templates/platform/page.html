@@ -22,6 +22,8 @@
         {% include 'platform/variants/crm_product_line.html' %}
     {% elif platform_page.variant == 'product_line' %}
         {% include 'platform/variants/product_line.html' %}
+    {% elif platform_page.content_key == 'crm_reminders' %}
+        {% include 'platform/variants/crm_reminders.html' %}
     {% elif platform_page.variant == 'feature' %}
         {% include 'platform/variants/feature_page.html' %}
     {% elif platform_page.variant == 'solution' %}
@@ -33,6 +35,8 @@
 {% block extra_css %}
 {% if platform_page.content_key == 'crm_product_line' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-crm.css' %}?v=1">
+{% elif platform_page.content_key == 'crm_reminders' %}
+<link rel="stylesheet" href="{% static 'css/mizkar-platform-reminders.css' %}?v=1">
 {% endif %}
 {% endblock %}
 

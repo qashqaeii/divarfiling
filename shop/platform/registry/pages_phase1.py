@@ -92,7 +92,7 @@ def _crm_reminders_feature() -> PageSpec:
         ),
         keywords='یادآور CRM املاک, پیگیری مشتری مشاور, تقویم مشاور املاک, صف کار امروز',
         og_title='یادآور و تقویم CRM',
-        h1='یادآور و تقویم: هیچ پیگیری از قلم نمی‌افتد',
+        h1='یادآور CRM: فردا صبح بدانید اول به کی زنگ بزنید',
     )
     return PageSpec(
         section='features',
@@ -111,7 +111,11 @@ def _crm_reminders_feature() -> PageSpec:
         primary_keyword='یادآور CRM املاک',
         content_key='crm_reminders',
         related_solutions=('customer-follow-up',),
-        related_articles=('peigiri-moshtari-moshaver-amlak', 'automation-crm-5-ghanon-pigiri-rahnama'),
+        related_articles=(
+            'peigiri-moshtari-moshaver-amlak',
+            'automation-crm-5-ghanon-pigiri-rahnama',
+            'crm-amlak-raygan-rahnama',
+        ),
         related_seo_landings=('real-estate-crm',),
         sitemap_priority=0.82,
     )

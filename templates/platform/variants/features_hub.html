@@ -4,7 +4,14 @@
 <section class="fhub-sec" aria-labelledby="fhub-story-title">
     <div class="fhub-wrap fhub-story">
         <div class="fhub-prose">
+            <p class="fhub-eyebrow">
+                <i class="fas fa-link" aria-hidden="true"></i>
+                چرا یکپارچه؟
+            </p>
             <h2 id="fhub-story-title">{{ platform_content.workspace_story.title }}</h2>
+            {% if platform_content.workspace_story.lead %}
+            <p class="fhub-prose__lead">{{ platform_content.workspace_story.lead }}</p>
+            {% endif %}
             {% for p in platform_content.workspace_story.paragraphs %}
             <p>{{ p }}</p>
             {% endfor %}
@@ -12,10 +19,65 @@
     </div>
 </section>
 
-{# ── ستون‌های پلتفرم ── #}
-<section class="fhub-sec fhub-sec--soft" aria-labelledby="fhub-pillars-title">
+{# ── Outcomes ── #}
+<section class="fhub-sec fhub-sec--soft fhub-outcomes" aria-labelledby="fhub-outcomes-title">
     <div class="fhub-wrap">
         <div class="fhub-prose fhub-prose--center">
+            <p class="fhub-eyebrow">
+                <i class="fas fa-bullseye" aria-hidden="true"></i>
+                نتیجه نقشه
+            </p>
+            <h2 id="fhub-outcomes-title">{{ platform_content.outcomes.title }}</h2>
+            <p>{{ platform_content.outcomes.lead }}</p>
+        </div>
+        <ul class="fhub-outcomes__grid">
+            {% for item in platform_content.outcomes.items %}
+            <li class="fhub-outcomes__item plat-reveal">
+                <span class="fhub-ico fhub-ico--lg fhub-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <span class="fhub-outcomes__before">{{ item.before }}</span>
+                <span class="fhub-outcomes__arrow" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
+                <strong class="fhub-outcomes__after">{{ item.after }}</strong>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── CTA نرم ── #}
+<aside class="fhub-soft-cta plat-reveal" aria-label="لینک‌های مرتبط">
+    <div class="fhub-wrap fhub-soft-cta__inner">
+        <div class="fhub-soft-cta__copy">
+            <span class="fhub-ico fhub-ico--solid" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_a.icon }}"></i>
+            </span>
+            <div>
+                <strong>{{ platform_content.mid_cta_a.title }}</strong>
+                <p>{{ platform_content.mid_cta_a.lead }}</p>
+            </div>
+        </div>
+        <div class="fhub-soft-cta__links">
+            <a href="{% url platform_content.mid_cta_a.primary_url_name slug_path=platform_content.mid_cta_a.primary_url_kwargs.slug_path %}" class="plat-btn plat-btn--primary fhub-soft-cta__btn">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.primary_label }}
+            </a>
+            <a href="{% url platform_content.mid_cta_a.secondary_url_name slug=platform_content.mid_cta_a.secondary_url_kwargs.slug %}" class="plat-btn plat-btn--ghost fhub-soft-cta__btn">
+                <i class="fas fa-phone-volume" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── ستون‌های پلتفرم ── #}
+<section class="fhub-sec" aria-labelledby="fhub-pillars-title">
+    <div class="fhub-wrap">
+        <div class="fhub-prose fhub-prose--center">
+            <p class="fhub-eyebrow">
+                <i class="fas fa-map" aria-hidden="true"></i>
+                نقشه بخش‌ها
+            </p>
             <h2 id="fhub-pillars-title">{{ platform_content.pillars.title }}</h2>
             <p>{{ platform_content.pillars.lead }}</p>
         </div>
@@ -24,7 +86,9 @@
             <li class="fhub-pillar fhub-pillar--{{ item.accent }}{% if item.size == 'featured' %} fhub-pillar--featured{% endif %} plat-reveal">
                 <article class="fhub-pillar__card">
                     <a href="{% if item.url_kwargs.slug_path %}{% url item.url_name slug_path=item.url_kwargs.slug_path %}{% elif item.url_kwargs.slug %}{% url item.url_name slug=item.url_kwargs.slug %}{% else %}{% url item.url_name %}{% endif %}" class="fhub-pillar__link">
-                        <span class="fhub-pillar__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
+                        <span class="fhub-ico fhub-ico--lg fhub-ico--float" aria-hidden="true">
+                            <i class="fas {{ item.icon }}"></i>
+                        </span>
                         <div class="fhub-pillar__body">
                             <span class="fhub-pillar__badge">{{ item.badge }}</span>
                             <h3>{{ item.title }}</h3>
@@ -52,14 +116,24 @@
 <section class="fhub-sec fhub-sec--spotlight" aria-labelledby="fhub-crm-title">
     <div class="fhub-wrap fhub-spotlight">
         <div class="fhub-prose">
+            <p class="fhub-eyebrow">
+                <i class="fas fa-heart" aria-hidden="true"></i>
+                نقطه شروع
+            </p>
             <h2 id="fhub-crm-title">{{ platform_content.crm_spotlight.title }}</h2>
             <p>{{ platform_content.crm_spotlight.lead }}</p>
             <ul class="fhub-spotlight__links">
                 {% for pt in platform_content.crm_spotlight.points %}
                 <li class="plat-reveal">
                     <a href="{% if pt.url_kwargs.slug_path %}{% url pt.url_name slug_path=pt.url_kwargs.slug_path %}{% elif pt.url_kwargs.slug %}{% url pt.url_name slug=pt.url_kwargs.slug %}{% else %}{% url pt.url_name %}{% endif %}">
-                        <strong>{{ pt.title }}</strong>
-                        <span>{{ pt.text }}</span>
+                        <span class="fhub-ico fhub-ico--sm" aria-hidden="true">
+                            <i class="fas {{ pt.icon }}"></i>
+                        </span>
+                        <span class="fhub-spotlight__text">
+                            <strong>{{ pt.title }}</strong>
+                            <span>{{ pt.text }}</span>
+                        </span>
+                        <i class="fas fa-arrow-left fhub-spotlight__arrow" aria-hidden="true"></i>
                     </a>
                 </li>
                 {% endfor %}
@@ -71,17 +145,56 @@
     </div>
 </section>
 
+{# ── CTA ثبت‌نام ── #}
+<aside class="fhub-soft-cta fhub-soft-cta--violet plat-reveal" aria-label="شروع کار">
+    <div class="fhub-wrap fhub-soft-cta__inner">
+        <div class="fhub-soft-cta__copy">
+            <span class="fhub-ico fhub-ico--solid fhub-ico--pulse" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_b.icon }}"></i>
+            </span>
+            <div>
+                <strong>{{ platform_content.mid_cta_b.title }}</strong>
+                <p>{{ platform_content.mid_cta_b.lead }}</p>
+            </div>
+        </div>
+        <div class="fhub-soft-cta__links">
+            {% if user.is_authenticated %}
+            <a href="{% url platform_content.mid_cta_b.auth_primary_url_name %}" class="plat-btn plat-btn--primary fhub-soft-cta__btn">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.auth_primary_label }}
+            </a>
+            {% else %}
+            <a href="{% url platform_content.mid_cta_b.primary_url_name %}" class="plat-btn plat-btn--primary fhub-soft-cta__btn">
+                <i class="fas fa-gift" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.primary_label }}
+            </a>
+            {% endif %}
+            <a href="{% url platform_content.mid_cta_b.secondary_url_name %}" class="plat-btn plat-btn--ghost fhub-soft-cta__btn">
+                <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
 {# ── چرخه عمر ── #}
 <section class="fhub-sec fhub-sec--soft" aria-labelledby="fhub-lifecycle-title">
     <div class="fhub-wrap">
         <div class="fhub-prose fhub-prose--center">
+            <p class="fhub-eyebrow">
+                <i class="fas fa-route" aria-hidden="true"></i>
+                مسیر کار
+            </p>
             <h2 id="fhub-lifecycle-title">{{ platform_content.lifecycle.title }}</h2>
             <p>{{ platform_content.lifecycle.lead }}</p>
         </div>
         <ol class="fhub-lifecycle">
             {% for step in platform_content.lifecycle.steps %}
             <li class="fhub-lifecycle__step fhub-lifecycle__step--{{ step.tone }} plat-reveal">
-                <span class="fhub-lifecycle__icon"><i class="fas {{ step.icon }}" aria-hidden="true"></i></span>
+                <span class="fhub-ico fhub-ico--lg fhub-ico--float" aria-hidden="true">
+                    <i class="fas {{ step.icon }}"></i>
+                </span>
+                <span class="fhub-lifecycle__num">{{ forloop.counter }}</span>
                 <div>
                     <h3>{{ step.title }}</h3>
                     <p>{{ step.text }}</p>
@@ -92,15 +205,46 @@
     </div>
 </section>
 
-{# ── مخاطب ── #}
-<section class="fhub-sec" aria-labelledby="fhub-audience-title">
+{# ── اسکرین‌شات‌ها ── #}
+<section class="fhub-sec" aria-labelledby="fhub-shots-title">
     <div class="fhub-wrap">
         <div class="fhub-prose fhub-prose--center">
+            <p class="fhub-eyebrow">
+                <i class="fas fa-desktop" aria-hidden="true"></i>
+                نمای محصول
+            </p>
+            <h2 id="fhub-shots-title">{{ platform_content.screenshots.title }}</h2>
+            <p>{{ platform_content.screenshots.lead }}</p>
+        </div>
+        <div class="fhub-shots">
+            {% for shot in platform_content.screenshots.items %}
+            <div class="fhub-shot plat-reveal">
+                {% include 'platform/includes/screenshot_story.html' with shot=shot %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── مخاطب ── #}
+<section class="fhub-sec fhub-sec--soft" aria-labelledby="fhub-audience-title">
+    <div class="fhub-wrap">
+        <div class="fhub-prose fhub-prose--center">
+            <p class="fhub-eyebrow">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                نقش‌ها
+            </p>
             <h2 id="fhub-audience-title">{{ platform_content.audience.title }}</h2>
+            {% if platform_content.audience.lead %}
+            <p>{{ platform_content.audience.lead }}</p>
+            {% endif %}
         </div>
         <ul class="fhub-audience">
             {% for a in platform_content.audience.items %}
             <li class="fhub-audience__card plat-reveal">
+                <span class="fhub-ico fhub-ico--lg fhub-ico--float" aria-hidden="true">
+                    <i class="fas {{ a.icon }}"></i>
+                </span>
                 <h3>{{ a.title }}</h3>
                 <p>{{ a.text }}</p>
                 <a href="{% if a.start_kwargs.slug_path %}{% url a.start slug_path=a.start_kwargs.slug_path %}{% elif a.start_kwargs.slug %}{% url a.start slug=a.start_kwargs.slug %}{% else %}{% url a.start %}{% endif %}" class="fhub-audience__cta">
@@ -113,15 +257,22 @@
 </section>
 
 {# ── سطوح دسترسی ── #}
-<section class="fhub-sec fhub-sec--soft" aria-labelledby="fhub-tiers-title">
+<section class="fhub-sec" aria-labelledby="fhub-tiers-title">
     <div class="fhub-wrap">
         <div class="fhub-prose fhub-prose--center">
+            <p class="fhub-eyebrow">
+                <i class="fas fa-scale-balanced" aria-hidden="true"></i>
+                شفافیت دسترسی
+            </p>
             <h2 id="fhub-tiers-title">{{ platform_content.access_tiers.title }}</h2>
             <p>{{ platform_content.access_tiers.lead }}</p>
         </div>
         <div class="fhub-tiers">
             <div class="fhub-tier fhub-tier--free plat-reveal">
-                <h3><i class="fas fa-gift" aria-hidden="true"></i> رایگان</h3>
+                <h3>
+                    <span class="fhub-ico fhub-ico--sm" aria-hidden="true"><i class="fas fa-gift"></i></span>
+                    رایگان
+                </h3>
                 <ul>
                     {% for item in platform_content.access_tiers.free %}
                     <li>{{ item }}</li>
@@ -129,7 +280,10 @@
                 </ul>
             </div>
             <div class="fhub-tier fhub-tier--licensed plat-reveal">
-                <h3><i class="fas fa-key" aria-hidden="true"></i> با لایسنس</h3>
+                <h3>
+                    <span class="fhub-ico fhub-ico--sm" aria-hidden="true"><i class="fas fa-key"></i></span>
+                    با لایسنس
+                </h3>
                 <ul>
                     {% for item in platform_content.access_tiers.licensed %}
                     <li>{{ item }}</li>
@@ -137,29 +291,10 @@
                 </ul>
             </div>
         </div>
-        <p class="fhub-tier-note plat-reveal">{{ platform_content.access_tiers.note }}</p>
-    </div>
-</section>
-
-{# ── کاوش عمیق‌تر ── #}
-<section class="fhub-sec" aria-labelledby="fhub-explore-title">
-    <div class="fhub-wrap">
-        <div class="fhub-prose fhub-prose--center">
-            <h2 id="fhub-explore-title">{{ platform_content.explore.title }}</h2>
-            <p>{{ platform_content.explore.lead }}</p>
-        </div>
-        <ul class="fhub-explore">
-            {% for pg in platform_content.explore.pages %}
-            <li class="plat-reveal">
-                <a href="{% if pg.url_kwargs.slug_path %}{% url pg.url_name slug_path=pg.url_kwargs.slug_path %}{% elif pg.url_kwargs.slug %}{% url pg.url_name slug=pg.url_kwargs.slug %}{% else %}{% url pg.url_name %}{% endif %}" class="fhub-explore__card">
-                    <span class="fhub-explore__type">{{ pg.type }}</span>
-                    <strong>{{ pg.title }}</strong>
-                    <p>{{ pg.desc }}</p>
-                    <span class="fhub-explore__cta">مشاهده</span>
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
+        <p class="fhub-tier-note plat-reveal">
+            <i class="fas fa-circle-info" aria-hidden="true"></i>
+            {{ platform_content.access_tiers.note }}
+        </p>
     </div>
 </section>
 
@@ -168,13 +303,26 @@
     <div class="fhub-wrap">
         <div class="fhub-bridge">
             <div class="fhub-prose">
+                <p class="fhub-eyebrow">
+                    <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                    از مشکل شروع کنید
+                </p>
                 <h2 id="fhub-bridge-title">{{ platform_content.solutions_bridge.title }}</h2>
                 <p>{{ platform_content.solutions_bridge.lead }}</p>
+                {% if platform_content.solutions_bridge.hub_url_name %}
+                <a href="{% url platform_content.solutions_bridge.hub_url_name %}" class="fhub-bridge__hub">
+                    {{ platform_content.solutions_bridge.hub_label }}
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                {% endif %}
             </div>
             <ul class="fhub-bridge__cards">
                 {% for item in platform_content.solutions_bridge.items %}
                 <li class="plat-reveal">
                     <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="fhub-bridge__card">
+                        <span class="fhub-ico fhub-ico--lg fhub-ico--float" aria-hidden="true">
+                            <i class="fas {{ item.icon }}"></i>
+                        </span>
                         <span class="fhub-bridge__outcome">{{ item.outcome }}</span>
                         <h3>{{ item.title }}</h3>
                         <p>{{ item.desc }}</p>
@@ -192,12 +340,19 @@
 <section class="fhub-sec plat-faq" aria-labelledby="fhub-faq-title">
     <div class="fhub-wrap">
         <div class="fhub-prose fhub-prose--center">
+            <p class="fhub-eyebrow">
+                <i class="fas fa-circle-question" aria-hidden="true"></i>
+                پاسخ سریع
+            </p>
             <h2 id="fhub-faq-title">سوالات متداول</h2>
         </div>
         <div class="plat-faq__list">
             {% for item in platform_content.faq %}
             <details class="plat-faq__item plat-reveal">
-                <summary>{{ item.q }}</summary>
+                <summary>
+                    <i class="fas fa-circle-question fhub-faq__q-ico" aria-hidden="true"></i>
+                    <span>{{ item.q }}</span>
+                </summary>
                 <div class="plat-faq__answer"><p>{{ item.a }}</p></div>
             </details>
             {% endfor %}
@@ -206,9 +361,39 @@
 </section>
 {% endif %}
 
+{# ── مسیر بعدی ── #}
+<section class="fhub-sec fhub-sec--soft fhub-next" aria-labelledby="fhub-next-title">
+    <div class="fhub-wrap">
+        <div class="fhub-prose fhub-prose--center">
+            <p class="fhub-eyebrow">
+                <i class="fas fa-compass" aria-hidden="true"></i>
+                مسیر بعد
+            </p>
+            <h2 id="fhub-next-title">{{ platform_content.next_path.title }}</h2>
+            <p>{{ platform_content.next_path.lead }}</p>
+        </div>
+        <div class="fhub-next__grid">
+            {% for page in platform_content.next_path.items %}
+            <a href="{% if page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug %}{% else %}{% url page.url_name %}{% endif %}" class="fhub-next__card plat-reveal">
+                <span class="fhub-ico fhub-ico--lg fhub-ico--float" aria-hidden="true">
+                    <i class="fas {{ page.icon }}"></i>
+                </span>
+                <span class="fhub-next__type">{{ page.type }}</span>
+                <strong>{{ page.title }}</strong>
+                <p>{{ page.desc }}</p>
+                <span class="fhub-next__cta">
+                    {{ page.cta }}
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
 {# ── Related posts ── #}
 {% if related_posts %}
-<section class="fhub-sec fhub-sec--soft" aria-labelledby="fhub-related-title">
+<section class="fhub-sec" aria-labelledby="fhub-related-title">
     <div class="fhub-wrap">
         <h2 id="fhub-related-title" class="fhub-related-heading">مقالات مرتبط</h2>
         <ul class="fhub-related">
@@ -226,9 +411,12 @@
 </section>
 {% endif %}
 
-{# ── CTA ── #}
+{# ── CTA نهایی ── #}
 <section class="fhub-sec fhub-final-cta">
     <div class="fhub-wrap fhub-final-cta__inner plat-reveal">
+        <span class="fhub-ico fhub-ico--xl fhub-ico--solid fhub-ico--pulse" aria-hidden="true">
+            <i class="fas {{ platform_content.final_cta.icon }}"></i>
+        </span>
         <h2>{{ platform_content.final_cta.title }}</h2>
         <p>{{ platform_content.final_cta.lead }}</p>
         {% include 'platform/includes/cta_pair.html' %}

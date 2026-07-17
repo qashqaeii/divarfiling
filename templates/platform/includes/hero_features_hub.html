@@ -1,26 +1,35 @@
-{% load static %}
 <header class="fhub-hero plat-reveal">
     <div class="fhub-wrap fhub-hero__grid">
         <div class="fhub-hero__copy">
-            <p class="fhub-eyebrow">{{ platform_content.hero.eyebrow }}</p>
+            <p class="fhub-eyebrow">
+                <span class="fhub-ico fhub-ico--sm fhub-ico--pulse" aria-hidden="true">
+                    <i class="fas {{ platform_content.hero.eyebrow_icon|default:'fa-map' }}"></i>
+                </span>
+                {{ platform_content.hero.eyebrow }}
+            </p>
             <h1>{{ platform_page.seo.h1 }}</h1>
             <p class="fhub-hero__lead">{{ platform_content.hero.lead }}</p>
             {% if platform_content.hero.promise %}
-            <p class="fhub-hero__promise">{{ platform_content.hero.promise }}</p>
+            <p class="fhub-hero__promise">
+                <i class="fas fa-compass" aria-hidden="true"></i>
+                {{ platform_content.hero.promise }}
+            </p>
             {% endif %}
-            <div class="fhub-hero__cta">
-                {% include 'platform/includes/cta_pair.html' %}
-            </div>
-            {% if platform_content.hero.highlights %}
-            <ul class="fhub-highlights">
-                {% for h in platform_content.hero.highlights %}
-                <li class="fhub-highlight">
-                    <strong>{{ h.label }}</strong>
-                    <span>{{ h.desc }}</span>
+            {% if platform_content.hero.bullets %}
+            <ul class="fhub-hero__bullets">
+                {% for item in platform_content.hero.bullets %}
+                <li>
+                    <span class="fhub-ico fhub-ico--sm" aria-hidden="true">
+                        <i class="fas {{ item.icon }}"></i>
+                    </span>
+                    <span>{{ item.text }}</span>
                 </li>
                 {% endfor %}
             </ul>
             {% endif %}
+            <div class="fhub-hero__cta">
+                {% include 'platform/includes/cta_pair.html' %}
+            </div>
         </div>
         {% if platform_content.hero.screenshot %}
         <div class="fhub-hero__visual plat-reveal plat-reveal--delay">

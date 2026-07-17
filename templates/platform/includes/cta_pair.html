@@ -20,6 +20,10 @@
     <a href="{% url 'platform_features_page' slug_path='crm/reminders' %}" class="plat-btn plat-btn--ghost">
         <i class="fas fa-bell" aria-hidden="true"></i> یادآور CRM
     </a>
+    {% elif platform_content.cta.secondary == 'customer_follow_up' %}
+    <a href="{% url 'platform_solutions_page' slug='customer-follow-up' %}" class="plat-btn plat-btn--ghost">
+        <i class="fas fa-phone-volume" aria-hidden="true"></i> راه‌حل پیگیری مشتری
+    </a>
     {% elif platform_content.cta.secondary == 'solutions_hub' %}
     <a href="{% url 'platform_solutions_hub' %}" class="plat-btn plat-btn--ghost">
         <i class="fas fa-lightbulb" aria-hidden="true"></i> راه‌حل‌ها

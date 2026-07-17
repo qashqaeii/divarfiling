@@ -101,13 +101,20 @@ class PlatformPageViewTests(TestCase):
     def test_solutions_hub(self):
         resp = self.client.get('/solutions/')
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'از مشکل شما شروع')
+        self.assertContains(resp, 'چالش دفتر املاک')
         self.assertContains(resp, 'shub-hero')
-        self.assertContains(resp, 'shub-showcase')
+        self.assertContains(resp, 'shub-brand')
+        self.assertContains(resp, 'shub-audience')
+        self.assertContains(resp, 'shub-feature')
         self.assertContains(resp, 'shub-map')
         self.assertContains(resp, '/solutions/customer-follow-up/')
+        self.assertContains(resp, 'من مشاورم')
+        self.assertContains(resp, 'من مدیر آژانسم')
+        self.assertContains(resp, 'help-crm-today.png')
         self.assertContains(resp, '/features/')
         self.assertContains(resp, 'plat-faq__item', count=6)
+        self.assertNotContains(resp, 'Feature-first')
+        self.assertNotContains(resp, 'Outcome-first')
 
     def test_customer_follow_up_solution(self):
         resp = self.client.get('/solutions/customer-follow-up/')

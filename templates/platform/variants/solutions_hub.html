@@ -1,80 +1,83 @@
+{% load static %}
 {% include 'platform/includes/hero_solutions_hub.html' %}
 
-{# ── فلسفه ── #}
-<section class="shub-sec" aria-labelledby="shub-philosophy-title">
-    <div class="shub-wrap shub-philosophy">
-        <div class="shub-prose">
-            <h2 id="shub-philosophy-title">{{ platform_content.philosophy.title }}</h2>
-            {% for p in platform_content.philosophy.paragraphs %}
-            <p>{{ p }}</p>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-{# ── چطور انتخاب کنیم ── #}
-<section class="shub-sec shub-sec--soft" aria-labelledby="shub-choose-title">
+{# ── مسیر مخاطب ── #}
+<section class="shub-sec shub-sec--soft" aria-labelledby="shub-audience-title">
     <div class="shub-wrap">
         <div class="shub-prose shub-prose--center">
-            <h2 id="shub-choose-title">{{ platform_content.how_to_choose.title }}</h2>
-            <p>{{ platform_content.how_to_choose.lead }}</p>
+            <h2 id="shub-audience-title">{{ platform_content.audiences.title }}</h2>
+            <p>{{ platform_content.audiences.lead }}</p>
         </div>
-        <ol class="shub-choose">
-            {% for item in platform_content.how_to_choose.items %}
-            <li class="shub-choose__step plat-reveal">
-                <span class="shub-choose__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
-                <span class="shub-choose__num">{{ forloop.counter }}</span>
-                <div>
-                    <h3>{{ item.title }}</h3>
-                    <p>{{ item.text }}</p>
+        <ul class="shub-audience">
+            {% for item in platform_content.audiences.items %}
+            <li class="shub-audience__card shub-audience__card--{{ item.accent }} plat-reveal">
+                <div class="shub-audience__icon" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
                 </div>
-            </li>
-            {% endfor %}
-        </ol>
-    </div>
-</section>
-
-{# ── راه‌حل‌های منتشرشده ── #}
-<section class="shub-sec shub-sec--showcase" aria-labelledby="shub-solutions-title">
-    <div class="shub-wrap">
-        <div class="shub-prose shub-prose--center">
-            <h2 id="shub-solutions-title">راه‌حل‌های منتشرشده</h2>
-        </div>
-        <ul class="shub-showcase">
-            {% for item in platform_content.solutions %}
-            <li class="plat-reveal">
-                <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="shub-showcase__card shub-showcase__card--{{ item.accent }}">
-                    <div class="shub-showcase__head">
-                        <span class="shub-showcase__outcome">{{ item.outcome }}</span>
-                        {% if item.free %}
-                        <span class="shub-showcase__badge">CRM رایگان</span>
-                        {% endif %}
-                        <h3>{{ item.title }}</h3>
-                        <p class="shub-showcase__problem"><strong>مشکل:</strong> {{ item.problem }}</p>
-                        <p>{{ item.desc }}</p>
-                        {% if item.scenario_snippet %}
-                        <blockquote class="shub-showcase__snippet">{{ item.scenario_snippet }}</blockquote>
-                        {% endif %}
-                    </div>
-                    {% if item.features %}
-                    <ul class="shub-showcase__tags">
-                        {% for f in item.features %}
-                        <li>{{ f }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                    {% if item.for_whom %}
-                    <ul class="shub-showcase__audience">
-                        {% for who in item.for_whom %}
-                        <li>{{ who }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                    <span class="shub-showcase__cta">مشاهده راه‌حل <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                <h3>{{ item.title }}</h3>
+                <p class="shub-audience__desc">{{ item.desc }}</p>
+                <ul class="shub-audience__points">
+                    {% for point in item.points %}
+                    <li>{{ point }}</li>
+                    {% endfor %}
+                </ul>
+                <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="shub-audience__cta">
+                    {{ item.cta_label }}
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 </a>
             </li>
             {% endfor %}
         </ul>
+    </div>
+</section>
+
+{# ── راه‌حل منتشرشده ── #}
+<section class="shub-sec shub-sec--showcase" aria-labelledby="shub-solutions-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <h2 id="shub-solutions-title">راه‌حل آماده</h2>
+            <p>از مشکل واقعی دفتر تا مسیر عملی در میزکار — الان یک راه‌حل کامل منتشر است.</p>
+        </div>
+        {% for item in platform_content.solutions %}
+        <article class="shub-feature plat-reveal">
+            <div class="shub-feature__copy">
+                <div class="shub-feature__meta">
+                    <span class="shub-feature__outcome">{{ item.outcome }}</span>
+                    {% if item.free %}
+                    <span class="shub-feature__badge">CRM رایگان</span>
+                    {% endif %}
+                </div>
+                <h3>{{ item.title }}</h3>
+                <p class="shub-feature__problem"><strong>مشکل:</strong> {{ item.problem }}</p>
+                <p class="shub-feature__desc">{{ item.desc }}</p>
+                {% if item.scenario_snippet %}
+                <blockquote class="shub-feature__snippet">{{ item.scenario_snippet }}</blockquote>
+                {% endif %}
+                {% if item.features %}
+                <ul class="shub-feature__tags">
+                    {% for f in item.features %}
+                    <li>{{ f }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if item.for_whom %}
+                <p class="shub-feature__for">
+                    مناسب برای:
+                    {% for who in item.for_whom %}{{ who }}{% if not forloop.last %} · {% endif %}{% endfor %}
+                </p>
+                {% endif %}
+                <a href="{% url item.url_name slug=item.url_kwargs.slug %}" class="shub-feature__cta">
+                    مشاهده راه‌حل کامل
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+            </div>
+            {% if item.screenshot %}
+            <div class="shub-feature__visual">
+                {% include 'platform/includes/screenshot_story.html' with shot=item.screenshot loading='lazy' %}
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
     </div>
 </section>
 
@@ -102,30 +105,11 @@
     </div>
 </section>
 
-{# ── مقایسه ── #}
-<section class="shub-sec shub-sec--soft" aria-labelledby="shub-compare-title">
-    <div class="shub-wrap">
-        <div class="shub-prose shub-prose--center">
-            <h2 id="shub-compare-title">{{ platform_content.compare.title }}</h2>
-        </div>
-        <div class="shub-compare">
-            <div class="shub-compare__col shub-compare__col--solution plat-reveal">
-                <h3><i class="fas fa-lightbulb" aria-hidden="true"></i> {{ platform_content.compare.solution_col.title }}</h3>
-                <ul>
-                    {% for item in platform_content.compare.solution_col.items %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="shub-compare__col shub-compare__col--feature plat-reveal">
-                <h3><i class="fas fa-puzzle-piece" aria-hidden="true"></i> {{ platform_content.compare.feature_col.title }}</h3>
-                <ul>
-                    {% for item in platform_content.compare.feature_col.items %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
+{# ── هزینه ── #}
+<section class="shub-sec shub-sec--soft" aria-labelledby="shub-access-title">
+    <div class="shub-wrap shub-access plat-reveal">
+        <h2 id="shub-access-title">{{ platform_content.access_note.title }}</h2>
+        <p>{{ platform_content.access_note.text }}</p>
     </div>
 </section>
 
@@ -147,14 +131,6 @@
             </li>
             {% endfor %}
         </ul>
-    </div>
-</section>
-
-{# ── هزینه ── #}
-<section class="shub-sec shub-sec--soft" aria-labelledby="shub-access-title">
-    <div class="shub-wrap shub-access plat-reveal">
-        <h2 id="shub-access-title">{{ platform_content.access_note.title }}</h2>
-        <p>{{ platform_content.access_note.text }}</p>
     </div>
 </section>
 

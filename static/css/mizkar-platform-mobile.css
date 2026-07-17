@@ -1,0 +1,162 @@
+/* ═══ Platform Mobile Polish — shared across /features/ & /solutions/ ═══ */
+
+/* Tighter vertical rhythm on small screens */
+@media (max-width: 767px) {
+    .plat-page {
+        --plat-mobile-sec-pad: clamp(2.75rem, 8vw, 3.75rem);
+    }
+
+    .plat-page [class$="-sec"],
+    .plat-page .crm-sec,
+    .plat-page .rem-sec,
+    .plat-page .sol-sec,
+    .plat-page .fhub-sec,
+    .plat-page .shub-sec {
+        padding-block: var(--plat-mobile-sec-pad);
+    }
+
+    /* Hero: less competing signal density */
+    .plat-page [class*="-hero__lead"],
+    .plat-page .plat-crm-hero__lead,
+    .plat-page .rem-hero__lead,
+    .plat-page .sol-hero__lead,
+    .plat-page .fhub-hero__lead,
+    .plat-page .shub-hero__lead {
+        font-size: 0.95rem;
+        line-height: 1.7;
+        margin-bottom: 0.85rem;
+    }
+
+    .plat-page [class*="-hero__bullets"] li,
+    .plat-page .plat-crm-hero__bullets li,
+    .plat-page .rem-hero__bullets li,
+    .plat-page .sol-hero__bullets li,
+    .plat-page .fhub-hero__bullets li,
+    .plat-page .shub-hero__bullets li {
+        font-size: 0.84rem;
+        gap: 0.55rem;
+    }
+
+    .plat-page [class*="-hero"] {
+        padding-block: clamp(1.5rem, 5vw, 2.25rem) clamp(1.75rem, 5vw, 2.5rem);
+    }
+
+    /* Soft CTAs stack cleanly */
+    .plat-page [class*="-soft-cta"] {
+        padding-block: 1.5rem;
+    }
+
+    /* Screenshots: number pins only — text lives in caption */
+    .plat-shot-story__pin-text {
+        display: none;
+    }
+
+    .plat-shot-story__pin {
+        transform: translate(-50%, -50%);
+    }
+
+    .plat-shot-story__pin-num {
+        width: 1.35rem;
+        height: 1.35rem;
+        font-size: 0.68rem;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25);
+    }
+
+    .plat-shot-story__caption {
+        font-size: 0.82rem;
+        line-height: 1.55;
+        margin-top: 0.65rem;
+    }
+
+    .plat-shot-story__caption span {
+        display: block;
+        margin-top: 0.25rem;
+        opacity: 0.8;
+    }
+
+    /* Device chrome quieter on mobile */
+    .plat-device__chrome {
+        padding: 0.4rem 0.65rem;
+    }
+
+    .plat-device__bar {
+        font-size: 0.68rem;
+    }
+
+    /* Final CTA breathing room above sticky bar */
+    .plat-page [class*="-final-cta"] {
+        padding-bottom: calc(var(--plat-mobile-sec-pad) + 4.5rem);
+    }
+
+    /* Next path cards: slightly denser */
+    .plat-page [class*="-next__card"] {
+        min-height: 0;
+        padding: 1.1rem 1rem;
+    }
+}
+
+/* Sticky conversion bar — mobile only */
+.plat-sticky-cta {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .plat-sticky-cta {
+        display: block;
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 60;
+        padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+        background: rgba(255, 255, 255, 0.92);
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transform: translateY(110%);
+        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    html.mk-public[data-theme="dark"] .plat-sticky-cta {
+        background: rgba(15, 23, 42, 0.92);
+        border-top-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    .plat-sticky-cta.is-visible {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .plat-sticky-cta__inner {
+        max-width: 28rem;
+        margin-inline: auto;
+        display: flex;
+        gap: 0.55rem;
+        align-items: center;
+    }
+
+    .plat-sticky-cta__btn {
+        flex: 1;
+        justify-content: center;
+        padding: 0.7rem 1rem;
+        font-size: 0.88rem;
+        min-height: 2.75rem;
+    }
+
+    .plat-sticky-cta__ghost {
+        flex: 0 0 auto;
+        padding: 0.7rem 0.85rem;
+        font-size: 0.78rem;
+        white-space: nowrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .plat-sticky-cta {
+        transition: none;
+    }
+}

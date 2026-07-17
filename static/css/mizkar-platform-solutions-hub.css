@@ -241,6 +241,53 @@ html.mk-public[data-theme="dark"] .plat-page--solutions_hub {
     text-align: center;
 }
 
+.plat-page--solutions_hub .shub-hero__layout {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.25rem);
+    align-items: center;
+}
+
+@media (min-width: 960px) {
+    .plat-page--solutions_hub .shub-hero__layout {
+        grid-template-columns: 1.05fr 0.95fr;
+        text-align: start;
+    }
+
+    .plat-page--solutions_hub .shub-hero__copy .shub-brand,
+    .plat-page--solutions_hub .shub-hero__copy .shub-eyebrow,
+    .plat-page--solutions_hub .shub-hero__copy .shub-hero__question {
+        justify-content: flex-start;
+        text-align: start;
+    }
+
+    .plat-page--solutions_hub .shub-hero__cta .plat-cta-pair {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 959px) {
+    .plat-page--solutions_hub .shub-hero__layout {
+        text-align: center;
+    }
+
+    .plat-page--solutions_hub .shub-hero__bullets {
+        margin-inline: auto;
+    }
+
+    .plat-page--solutions_hub .shub-hero__cta .plat-cta-pair {
+        justify-content: center;
+    }
+}
+
+.plat-page--solutions_hub .shub-hero__visual .plat-shot-story__frame {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--shub-border);
+    box-shadow: 0 18px 44px rgba(5, 150, 105, 0.12);
+}
+
 .plat-page--solutions_hub .shub-hero__question {
     margin: 0 0 0.55rem;
     font-size: clamp(1.05rem, 2.4vw, 1.28rem);

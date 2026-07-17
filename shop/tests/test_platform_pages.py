@@ -35,6 +35,7 @@ def _assert_platform_seo_health(test_case, url: str) -> None:
     test_case.assertIn('meta name="description"', body, url)
     test_case.assertIn('"@type": "WebPage"', body, url)
     test_case.assertIn('"@type": "FAQPage"', body, url)
+    test_case.assertIn('plat-sticky-cta', body, url)
     test_case.assertIn('"@type": "BreadcrumbList"', body, url)
 
     blocks = _extract_ld_json_blocks(body)
@@ -131,6 +132,7 @@ class PlatformPageViewTests(TestCase):
         self.assertContains(resp, 'shub-map')
         self.assertContains(resp, 'shub-next')
         self.assertContains(resp, 'shub-ico')
+        self.assertContains(resp, 'plat-sticky-cta')
         self.assertContains(resp, '/solutions/customer-follow-up/')
         self.assertContains(resp, 'من مشاورم')
         self.assertContains(resp, 'من مدیر آژانسم')

@@ -140,8 +140,58 @@
         }, { passive: true });
     }
 
+    function initStickyCta() {
+        var sticky = document.getElementById('platStickyCta');
+        if (!sticky) return;
+
+        var mobile = window.matchMedia('(max-width: 767px)');
+        var heroCta = root.querySelector(
+            '.plat-crm-hero__cta, .rem-hero__cta, .sol-hero__cta, .fhub-hero__cta, .shub-hero__cta, [class*="-hero__cta"]'
+        );
+
+        function setVisible(on) {
+            if (on) {
+                sticky.hidden = false;
+                // next frame so CSS transition runs
+                requestAnimationFrame(function () {
+                    sticky.classList.add('is-visible');
+                });
+            } else {
+                sticky.classList.remove('is-visible');
+                window.setTimeout(function () {
+                    if (!sticky.classList.contains('is-visible')) {
+                        sticky.hidden = true;
+                    }
+                }, 280);
+            }
+        }
+
+        function sync() {
+            if (!mobile.matches) {
+                setVisible(false);
+                return;
+            }
+            if (!heroCta) {
+                setVisible(true);
+                return;
+            }
+            var rect = heroCta.getBoundingClientRect();
+            setVisible(rect.bottom < 8);
+        }
+
+        sync();
+        window.addEventListener('scroll', sync, { passive: true });
+        window.addEventListener('resize', sync, { passive: true });
+        if (typeof mobile.addEventListener === 'function') {
+            mobile.addEventListener('change', sync);
+        } else if (typeof mobile.addListener === 'function') {
+            mobile.addListener(sync);
+        }
+    }
+
     applyStagger();
     initFlows();
     initReveals();
     initParallax();
+    initStickyCta();
 })();

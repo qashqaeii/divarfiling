@@ -1,4 +1,5 @@
 {% load static %}
+{% with webp_name=image|cut:'.png'|add:'.webp' %}
 <figure class="plat-device{% if compact %} plat-device--compact{% endif %}{% if class %} {{ class }}{% endif %}">
     <div class="plat-device__chrome" aria-hidden="true">
         <span class="plat-device__dot"></span>
@@ -7,15 +8,22 @@
         <span class="plat-device__bar">فایلینگ دیوار — میزکار</span>
     </div>
     <div class="plat-device__screen">
-        <img src="{% static image %}"
-             alt="{{ caption }}"
-             class="plat-device__img"
-             width="{{ width|default:1280 }}"
-             height="{{ height|default:760 }}"
-             loading="{{ loading|default:'lazy' }}"
-             decoding="async">
+        <picture>
+            <source srcset="{% static webp_name %}" type="image/webp"
+                    sizes="{{ sizes|default:'(min-width:960px) 560px, 100vw' }}">
+            <img src="{% static image %}"
+                 alt="{{ caption }}"
+                 class="plat-device__img"
+                 width="{{ width|default:1280 }}"
+                 height="{{ height|default:760 }}"
+                 loading="{{ loading|default:'lazy' }}"
+                 decoding="async"
+                 sizes="{{ sizes|default:'(min-width:960px) 560px, 100vw' }}"
+                 {% if loading == 'eager' %}fetchpriority="high"{% else %}fetchpriority="low"{% endif %}>
+        </picture>
     </div>
     {% if caption %}
     <figcaption class="plat-device__caption">{{ caption }}</figcaption>
     {% endif %}
 </figure>
+{% endwith %}

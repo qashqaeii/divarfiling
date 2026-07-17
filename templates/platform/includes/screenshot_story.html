@@ -1,4 +1,5 @@
 {% load static %}
+{% with webp_name=shot.image|cut:'.png'|add:'.webp' %}
 <figure class="plat-shot-story{% if hero %} plat-shot-story--hero{% endif %}">
     <div class="plat-shot-story__frame">
         <div class="plat-device__chrome" aria-hidden="true">
@@ -8,14 +9,19 @@
             <span class="plat-device__bar">میزکار CRM — فایلینگ دیوار</span>
         </div>
         <div class="plat-device__screen plat-shot-story__screen">
-            <img src="{% static shot.image %}"
-                 alt="{{ shot.alt|default:shot.caption }}"
-                 class="plat-device__img"
-                 width="{{ shot.width|default:1280 }}"
-                 height="{{ shot.height|default:800 }}"
-                 loading="{{ loading|default:'lazy' }}"
-                 decoding="async"
-                 {% if shot.srcset %}srcset="{{ shot.srcset }}" sizes="{{ shot.sizes|default:'(min-width:960px) 560px, 100vw' }}"{% endif %}>
+            <picture>
+                <source srcset="{% static webp_name %}" type="image/webp"
+                        sizes="{{ shot.sizes|default:'(min-width:960px) 560px, 100vw' }}">
+                <img src="{% static shot.image %}"
+                     alt="{{ shot.alt|default:shot.caption }}"
+                     class="plat-device__img"
+                     width="{{ shot.width|default:1280 }}"
+                     height="{{ shot.height|default:800 }}"
+                     loading="{{ loading|default:'lazy' }}"
+                     decoding="async"
+                     sizes="{{ shot.sizes|default:'(min-width:960px) 560px, 100vw' }}"
+                     {% if hero %}fetchpriority="high"{% else %}fetchpriority="low"{% endif %}>
+            </picture>
             {% if shot.callouts %}
             <ol class="plat-shot-story__pins" aria-label="نکات کلیدی تصویر">
                 {% for pin in shot.callouts %}
@@ -35,3 +41,4 @@
     </figcaption>
     {% endif %}
 </figure>
+{% endwith %}

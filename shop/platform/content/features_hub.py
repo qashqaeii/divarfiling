@@ -425,7 +425,7 @@ def features_hub_content() -> dict[str, Any]:
                     'outcome': 'فایل مناسب را هنگام تماس پیشنهاد دهید',
                     'desc': (
                         'فیلتر و جستجو روی Dataset فایلینگ '
-                        'به‌جای اکسل، پوشه و واتساپ.'
+                        'به‌جای دفترچه، چت و جستجوی دوباره روی دیوار.'
                     ),
                     'url_name': 'platform_solutions_page',
                     'url_kwargs': {'slug': 'fast-property-search'},

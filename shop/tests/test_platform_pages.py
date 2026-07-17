@@ -491,6 +491,8 @@ class PlatformFastSearchPhase2Tests(TestCase):
         self.assertContains(resp, 'plat-btn--convert')
         self.assertContains(resp, 'plat-btn--product')
         self.assertContains(resp, 'plat-faq__item', count=8)
+        self.assertContains(resp, 'دفتر')
+        self.assertContains(resp, 'یادداشت')
         self.assertContains(resp, 'اکسل')
         self.assertContains(resp, 'واتساپ')
         self.assertContains(resp, '<h1', count=1)

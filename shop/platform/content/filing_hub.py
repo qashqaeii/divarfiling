@@ -379,7 +379,7 @@ def filing_product_line_content() -> dict[str, Any]:
                     'title': 'پیدا کردن سریع فایل',
                     'desc': (
                         'دلیل ادامه: ببینید وقتی مشتری زنگ می‌زند چطور با فیلتر و Dataset '
-                        'به‌جای اکسل و واتساپ فایل پیشنهاد می‌دهید.'
+                        'به‌جای دفترچه و جستجوی دوباره روی دیوار فایل پیشنهاد می‌دهید.'
                     ),
                     'url_name': 'platform_solutions_page',
                     'url_kwargs': {'slug': 'fast-property-search'},

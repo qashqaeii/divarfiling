@@ -1,364 +1,80 @@
-"""آنالیز نرخ تبدیل پلن‌ها برای پنل مدیریت — اعداد دقیق + تاریخ شمسی."""
+"""آنالیز نرخ تبدیل پلن‌ها — Orchestrator BI داشبورد."""
 from __future__ import annotations
 
-from collections import defaultdict
-from datetime import date, datetime, timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import timedelta
 from typing import Any
 
 import jdatetime
-from django.db.models import Count, Min, Q, Sum
-from django.db.models.functions import Coalesce, TruncDate, TruncWeek
+from django.db.models import Count, Q, Sum
+from django.db.models.functions import TruncDate
 from django.utils import timezone
 
 from accounts.services.admin_dashboard import (
     PLAN_CHART_COLORS,
-    PLAN_TYPE_ACCENTS,
     PLAN_TYPE_SHORT_LABELS,
-    _plan_short_label,
     get_plan_sales_breakdown,
 )
-from shop.models import LicensePlan, Order, PlanFunnelEvent
-from workspace.services.jalali_input import PERSIAN_MONTHS, to_persian_digits
+from accounts.services.plan_bi import (
+    clamp_days,
+    count_daily_to_monthly_upgrades,
+    funnel_events_since,
+    jalali_day_label,
+    jalali_iso,
+    load_period_buyers,
+    paid_orders_qs,
+    pct,
+    period_bounds,
+)
+from accounts.services.plan_bi.activation_funnel import build_activation_funnel
+from accounts.services.plan_bi.behavior import build_behavior_analytics
+from accounts.services.plan_bi.cohorts import build_rich_cohorts
+from accounts.services.plan_bi.insights import (
+    build_decision_cards,
+    build_executive_insights,
+    build_predictive_scores,
+    build_recommendations,
+)
+from accounts.services.plan_bi.plan_matrix import build_plan_matrix
+from accounts.services.plan_bi.time_series import build_time_intelligence
+from shop.models import Order
+from workspace.services.jalali_input import to_persian_digits
 
-
+# Re-export for tests
 UPGRADE_WINDOW_DAYS = 7
 
 
-def _clamp_days(days: int) -> int:
-    return max(7, min(int(days), 365))
-
-
-def _pct(numerator: int | float, denominator: int | float, places: int = 2) -> float:
-    """درصد دقیق با گرد کردن HALF_UP."""
-    if not denominator:
-        return 0.0
-    q = Decimal('0.1') ** places
-    value = (Decimal(numerator) * Decimal(100) / Decimal(denominator)).quantize(q, rounding=ROUND_HALF_UP)
-    return float(value)
-
-
-def _to_local_date(value) -> date | None:
-    if value is None:
-        return None
-    if isinstance(value, datetime):
-        if timezone.is_aware(value):
-            value = timezone.localtime(value)
-        return value.date()
-    if isinstance(value, date):
-        return value
-    return None
-
-
-def _jalali_day_label(day: date, *, compact: bool = False) -> str:
-    j = jdatetime.date.fromgregorian(date=day)
-    if compact:
-        return to_persian_digits(f'{j.day:02d}/{j.month:02d}')
-    month = PERSIAN_MONTHS[j.month - 1]
-    return to_persian_digits(f'{j.day} {month}')
-
-
-def _jalali_week_label(week_start: date) -> str:
-    """برچسب هفته شمسی — مثال: هفته ۰۱ تیر ۱۴۰۵"""
-    j = jdatetime.date.fromgregorian(date=week_start)
-    month = PERSIAN_MONTHS[j.month - 1]
-    return to_persian_digits(f'هفته {j.day:02d} {month} {j.year}')
-
-
-def _jalali_iso(day: date) -> str:
-    j = jdatetime.date.fromgregorian(date=day)
-    return to_persian_digits(j.strftime('%Y/%m/%d'))
-
-
-def _week_start_monday(d: date) -> date:
-    return d - timedelta(days=d.weekday())
-
-
-def _paid_orders_qs(*, since=None):
-    """سفارش‌های پرداخت‌شده — paid_at در اولویت، وگرنه created_at."""
-    qs = (
-        Order.objects.filter(status='paid')
-        .annotate(effective_paid=Coalesce('paid_at', 'created_at'))
-        .select_related('plan', 'product', 'user')
-    )
-    if since is not None:
-        qs = qs.filter(effective_paid__gte=since)
-    return qs
-
-
-def _funnel_events_since(since, event_type: str):
-    return PlanFunnelEvent.objects.filter(event_type=event_type, created_at__gte=since)
-
-
-def count_daily_to_monthly_upgrades(*, since=None, window_days: int = UPGRADE_WINDOW_DAYS) -> dict[str, Any]:
-    """کاربران یکتای خریدار پلن روزانه که ظرف window_days به ماهانه ارتقا داده‌اند."""
-    daily_qs = (
-        Order.objects.filter(status='paid', plan__plan_type='daily')
-        .annotate(effective_paid=Coalesce('paid_at', 'created_at'))
-        .filter(effective_paid__isnull=False)
-        .select_related('user', 'plan')
-        .order_by('user_id', 'effective_paid')
-    )
-    if since is not None:
-        daily_qs = daily_qs.filter(effective_paid__gte=since)
-
-    first_daily_by_user: dict[int, datetime] = {}
-    for order in daily_qs.iterator():
-        uid = order.user_id
-        if uid not in first_daily_by_user:
-            first_daily_by_user[uid] = order.effective_paid
-
-    upgraded_users: set[int] = set()
-    window = timedelta(days=window_days)
-
-    for user_id, first_paid in first_daily_by_user.items():
-        upgraded = Order.objects.filter(
-            user_id=user_id,
-            status='paid',
-            plan__plan_type='monthly',
-        ).annotate(
-            effective_paid=Coalesce('paid_at', 'created_at'),
-        ).filter(
-            effective_paid__gt=first_paid,
-            effective_paid__lte=first_paid + window,
-        ).exists()
-        if upgraded:
-            upgraded_users.add(user_id)
-
-    daily_buyers = len(first_daily_by_user)
-    upgrade_count = len(upgraded_users)
-    return {
-        'daily_buyers': daily_buyers,
-        'upgrade_count': upgrade_count,
-        'upgrade_rate': _pct(upgrade_count, daily_buyers, 1),
-        'window_days': window_days,
-    }
-
-
-def get_plan_conversion_by_plan(*, since, pricing_views: int, checkout_views: int) -> list[dict[str, Any]]:
-    """فروش و تبدیل هر پلن فعال — تجمیع بر اساس product + plan_type."""
-    sales_by_key: dict[tuple, dict[str, int]] = {}
-    sales_rows = (
-        _paid_orders_qs(since=since)
-        .filter(plan_id__isnull=False)
-        .values('plan__product_id', 'plan__plan_type')
-        .annotate(count=Count('id'), total=Sum('amount'))
-    )
-    for row in sales_rows:
-        key = (row['plan__product_id'], row['plan__plan_type'] or '')
-        sales_by_key[key] = {
-            'count': int(row['count'] or 0),
-            'total': int(row['total'] or 0),
-        }
-
-    total_count = sum(item['count'] for item in sales_by_key.values())
-    total_revenue = sum(item['total'] for item in sales_by_key.values())
-
-    plans = (
-        LicensePlan.objects.filter(is_active=True)
-        .select_related('product')
-        .order_by('order', 'price', 'id')
-    )
-    seen: set[tuple] = set()
-    rows: list[dict[str, Any]] = []
-
-    for plan in plans:
-        key = (plan.product_id, plan.plan_type or '')
-        if key in seen:
-            continue
-        seen.add(key)
-
-        stats = sales_by_key.get(key, {'count': 0, 'total': 0})
-        count = stats['count']
-        total = stats['total']
-        rows.append({
-            'plan_id': plan.id,
-            'product_id': plan.product_id,
-            'product_title': plan.product.title,
-            'plan_type': plan.plan_type,
-            'label': plan.name,
-            'full_label': f'{plan.product.title} — {plan.name}',
-            'short_label': _plan_short_label(plan),
-            'accent': PLAN_TYPE_ACCENTS.get(plan.plan_type, 'violet'),
-            'price': int(plan.price or 0),
-            'purchases': count,
-            'revenue': total,
-            'order_share': _pct(count, total_count, 1),
-            'revenue_share': _pct(total, total_revenue, 1),
-            'funnel_conversion': _pct(count, pricing_views, 2),
-            'checkout_conversion': _pct(count, checkout_views, 2),
-            'aov': int(round(total / count)) if count else 0,
-        })
-
-    return rows
-
-
-def get_weekly_purchase_series(*, since, weeks: int = 16) -> list[dict[str, Any]]:
-    rows = (
-        _paid_orders_qs(since=since)
-        .annotate(week=TruncWeek('effective_paid'))
-        .values('week')
-        .annotate(
-            total=Count('id'),
-            daily=Count('id', filter=Q(plan__plan_type='daily')),
-            monthly=Count('id', filter=Q(plan__plan_type='monthly')),
-            quarterly=Count('id', filter=Q(plan__plan_type='quarterly')),
-            yearly=Count('id', filter=Q(plan__plan_type='yearly')),
-            revenue=Sum('amount'),
-        )
-        .order_by('week')
-    )
-    series = []
-    for row in rows:
-        if not row['week']:
-            continue
-        week_dt = row['week']
-        if timezone.is_aware(week_dt):
-            week_dt = timezone.localtime(week_dt)
-        week_date = week_dt.date() if isinstance(week_dt, datetime) else week_dt
-        series.append({
-            'week': week_date.isoformat(),
-            'week_jalali': _jalali_iso(week_date),
-            'week_label': _jalali_week_label(week_date),
-            'total': int(row['total'] or 0),
-            'daily': int(row['daily'] or 0),
-            'monthly': int(row['monthly'] or 0),
-            'quarterly': int(row['quarterly'] or 0),
-            'yearly': int(row['yearly'] or 0),
-            'revenue': int(row['revenue'] or 0),
-        })
-    return series[-weeks:]
-
-
-def get_purchase_cohorts(*, limit: int = 12) -> list[dict[str, Any]]:
-    """کوهورت بر اساس هفته اولین خرید پرداخت‌شده."""
-    first_paid_rows = (
-        Order.objects.filter(status='paid')
-        .annotate(effective_paid=Coalesce('paid_at', 'created_at'))
-        .filter(effective_paid__isnull=False)
-        .values('user_id')
-        .annotate(first_paid=Min('effective_paid'))
-        .order_by('-first_paid')[:8000]
-    )
-
-    cohorts: dict[str, dict[str, Any]] = defaultdict(lambda: {
-        'users': 0,
-        'repeat_7d': 0,
-        'repeat_30d': 0,
-        'upgraded_monthly_7d': 0,
-        'revenue': 0,
-        'daily_starters': 0,
-    })
-
-    window_7 = timedelta(days=7)
-    window_30 = timedelta(days=30)
-
-    for row in first_paid_rows:
-        user_id = row['user_id']
-        first_paid = row['first_paid']
-        first_date = _to_local_date(first_paid)
-        if not first_date:
-            continue
-        week_start = _week_start_monday(first_date)
-        key = week_start.isoformat()
-
-        bucket = cohorts[key]
-        bucket['users'] += 1
-
-        user_orders = (
-            Order.objects.filter(user_id=user_id, status='paid')
-            .annotate(effective_paid=Coalesce('paid_at', 'created_at'))
-            .filter(effective_paid__isnull=False)
-            .select_related('plan')
-        )
-        user_revenue = user_orders.aggregate(total=Sum('amount'))['total'] or 0
-        bucket['revenue'] += int(user_revenue)
-
-        if user_orders.filter(
-            effective_paid__gt=first_paid,
-            effective_paid__lte=first_paid + window_7,
-        ).exists():
-            bucket['repeat_7d'] += 1
-
-        if user_orders.filter(
-            effective_paid__gt=first_paid,
-            effective_paid__lte=first_paid + window_30,
-        ).exists():
-            bucket['repeat_30d'] += 1
-
-        first_order = user_orders.order_by('effective_paid').first()
-        if first_order and first_order.plan and first_order.plan.plan_type == 'daily':
-            bucket['daily_starters'] += 1
-            if user_orders.filter(
-                plan__plan_type='monthly',
-                effective_paid__gt=first_paid,
-                effective_paid__lte=first_paid + window_7,
-            ).exists():
-                bucket['upgraded_monthly_7d'] += 1
-
-    result = []
-    for week_key in sorted(cohorts.keys(), reverse=True)[:limit]:
-        data = cohorts[week_key]
-        users = data['users']
-        week_date = date.fromisoformat(week_key)
-        daily_starters = data['daily_starters']
-        result.append({
-            'week': week_key,
-            'week_jalali': _jalali_iso(week_date),
-            'week_label': _jalali_week_label(week_date),
-            'users': users,
-            'daily_starters': daily_starters,
-            'repeat_7d': data['repeat_7d'],
-            'repeat_30d': data['repeat_30d'],
-            'repeat_7d_rate': _pct(data['repeat_7d'], users, 1),
-            'repeat_30d_rate': _pct(data['repeat_30d'], users, 1),
-            'upgraded_monthly_7d': data['upgraded_monthly_7d'],
-            'upgrade_rate': _pct(data['upgraded_monthly_7d'], daily_starters or users, 1),
-            'upgrade_rate_of_all': _pct(data['upgraded_monthly_7d'], users, 1),
-            'avg_ltv': int(round(data['revenue'] / users)) if users else 0,
-            'revenue': int(data['revenue']),
-        })
-    return result
-
-
-def get_funnel_daily_series(*, since, days: int) -> dict[str, list]:
-    """سری روزانه کامل با صفر برای روزهای خالی + برچسب شمسی."""
+def _funnel_daily_series(*, since, days: int) -> dict[str, list]:
     end = timezone.localdate()
     start = end - timedelta(days=days - 1)
 
-    def _lookup(qs, date_field: str) -> dict[date, int]:
+    def lookup(qs, field: str) -> dict:
         rows = (
-            qs.annotate(day=TruncDate(date_field))
+            qs.annotate(day=TruncDate(field))
             .values('day')
             .annotate(count=Count('id'))
             .order_by('day')
         )
-        out: dict[date, int] = {}
-        for r in rows:
-            if r['day']:
-                d = r['day']
-                out[d if isinstance(d, date) else d] = int(r['count'] or 0)
-        return out
+        return {r['day']: int(r['count'] or 0) for r in rows if r['day']}
 
-    pricing_map = _lookup(_funnel_events_since(since, 'pricing_view'), 'created_at')
-    checkout_map = _lookup(_funnel_events_since(since, 'checkout_view'), 'created_at')
-    purchase_map = _lookup(_paid_orders_qs(since=since), 'effective_paid')
+    pricing_map = lookup(funnel_events_since(since, 'pricing_view'), 'created_at')
+    checkout_map = lookup(funnel_events_since(since, 'checkout_view'), 'created_at')
+    purchase_map = lookup(paid_orders_qs(since=since), 'effective_paid')
+    failed_map = lookup(
+        Order.objects.filter(status='failed', created_at__gte=since),
+        'created_at',
+    )
 
-    labels: list[str] = []
-    labels_full: list[str] = []
-    iso_days: list[str] = []
-    pricing_counts: list[int] = []
-    checkout_counts: list[int] = []
-    purchase_counts: list[int] = []
-
+    labels, labels_full, iso_days = [], [], []
+    pricing_counts, checkout_counts, purchase_counts, failed_counts = [], [], [], []
     current = start
     while current <= end:
-        labels.append(_jalali_day_label(current, compact=True))
-        labels_full.append(_jalali_iso(current))
+        labels.append(jalali_day_label(current, compact=True))
+        labels_full.append(jalali_iso(current))
         iso_days.append(current.isoformat())
         pricing_counts.append(pricing_map.get(current, 0))
         checkout_counts.append(checkout_map.get(current, 0))
         purchase_counts.append(purchase_map.get(current, 0))
+        failed_counts.append(failed_map.get(current, 0))
         current += timedelta(days=1)
 
     return {
@@ -368,10 +84,93 @@ def get_funnel_daily_series(*, since, days: int) -> dict[str, list]:
         'pricing_counts': pricing_counts,
         'checkout_counts': checkout_counts,
         'purchase_counts': purchase_counts,
-        # سازگاری با نسخه قبلی
+        'failed_counts': failed_counts,
         'pricing_labels': labels,
         'checkout_labels': labels,
         'purchase_labels': labels,
+    }
+
+
+def _period_summary(*, since, until=None, days: int) -> dict[str, Any]:
+    buyers = load_period_buyers(since=since, until=until)
+    pricing_views = funnel_events_since(since, 'pricing_view')
+    if until:
+        pricing_views = pricing_views.filter(created_at__lt=until)
+    pricing_count = pricing_views.count()
+    pricing_unique = (
+        pricing_views.exclude(session_key='')
+        .values('session_key')
+        .distinct()
+        .count()
+    )
+    checkout_qs = funnel_events_since(since, 'checkout_view')
+    if until:
+        checkout_qs = checkout_qs.filter(created_at__lt=until)
+    checkout_views = checkout_qs.count()
+
+    failed_qs = Order.objects.filter(status='failed', created_at__gte=since)
+    pending_qs = Order.objects.filter(
+        status__in=('pending', 'pending_verification'),
+        created_at__gte=since,
+    )
+    if until:
+        failed_qs = failed_qs.filter(created_at__lt=until)
+        pending_qs = pending_qs.filter(created_at__lt=until)
+
+    failed_payments = failed_qs.count()
+    pending_orders = pending_qs.count()
+    discount_orders = sum(1 for o in buyers['orders'] if o.discount_code_id)
+
+    paid_count = buyers['paid_count']
+    paid_revenue = buyers['paid_revenue']
+    daily_purchases = sum(1 for o in buyers['orders'] if o.plan and o.plan.plan_type == 'daily')
+    monthly_purchases = sum(1 for o in buyers['orders'] if o.plan and o.plan.plan_type == 'monthly')
+    quarterly_purchases = sum(1 for o in buyers['orders'] if o.plan and o.plan.plan_type == 'quarterly')
+    yearly_purchases = sum(1 for o in buyers['orders'] if o.plan and o.plan.plan_type == 'yearly')
+
+    upgrade_stats = count_daily_to_monthly_upgrades(since=since)
+
+    return {
+        'buyers': buyers,
+        'pricing_views': pricing_count,
+        'pricing_unique': pricing_unique,
+        'checkout_views': checkout_views,
+        'failed_payments': failed_payments,
+        'pending_orders': pending_orders,
+        'discount_orders': discount_orders,
+        'discount_rate': pct(discount_orders, paid_count, 1) if paid_count else 0.0,
+        'paid_count': paid_count,
+        'paid_revenue': paid_revenue,
+        'daily_purchases': daily_purchases,
+        'monthly_purchases': monthly_purchases,
+        'quarterly_purchases': quarterly_purchases,
+        'yearly_purchases': yearly_purchases,
+        'unique_buyers': buyers['unique_buyers'],
+        'aov': int(round(paid_revenue / paid_count)) if paid_count else 0,
+        'overall_conversion': pct(paid_count, pricing_count, 2) if pricing_count else 0.0,
+        'unique_conversion': pct(paid_count, pricing_unique, 2) if pricing_unique else 0.0,
+        'checkout_conversion': pct(paid_count, checkout_views, 2) if checkout_views else 0.0,
+        'upgrade_count': upgrade_stats['upgrade_count'],
+        'upgrade_rate': upgrade_stats['upgrade_rate'],
+        'daily_buyers_for_upgrade': upgrade_stats['daily_buyers'],
+        'upgrade_window_days': upgrade_stats['window_days'],
+        'upgrade_stats': upgrade_stats,
+        'funnel_stages': {
+            'pricing_to_checkout': pct(checkout_views, pricing_count, 1) if pricing_count else 0.0,
+            'checkout_to_paid': pct(paid_count, checkout_views, 1) if checkout_views else 0.0,
+            'pricing_to_paid': pct(paid_count, pricing_count, 2) if pricing_count else 0.0,
+        },
+        'dropoffs': {
+            'pricing_to_checkout': pct(max(pricing_count - checkout_views, 0), pricing_count, 1) if pricing_count else 0.0,
+            'checkout_to_paid': pct(max(checkout_views - paid_count, 0), checkout_views, 1) if checkout_views else 0.0,
+        },
+        'data_quality': {
+            'pricing_tracking': pricing_count > 0,
+            'has_paid_orders': paid_count > 0,
+            'renewal_reliable': False,
+            'market_analysis_events': False,
+            'user_sms_campaign_events': False,
+        },
     }
 
 
@@ -381,9 +180,9 @@ def build_plan_conversion_chart_payload(
     weekly_series: list[dict[str, Any]],
     funnel_series: dict[str, list],
     cohorts: list[dict[str, Any]],
+    time_intel: dict[str, Any],
 ) -> dict[str, Any]:
     colors = [PLAN_CHART_COLORS[i % len(PLAN_CHART_COLORS)] for i in range(len(plan_rows))]
-
     return {
         'funnel_daily': funnel_series,
         'plan_share': {
@@ -398,8 +197,8 @@ def build_plan_conversion_chart_payload(
         },
         'plan_conversion': {
             'labels': [row['short_label'] for row in plan_rows],
-            'funnel_rates': [row['funnel_conversion'] for row in plan_rows],
-            'checkout_rates': [row['checkout_conversion'] for row in plan_rows],
+            'funnel_rates': [row.get('funnel_conversion') or 0 for row in plan_rows],
+            'checkout_rates': [row.get('checkout_conversion') or 0 for row in plan_rows],
             'purchases': [row['purchases'] for row in plan_rows],
             'accents': [row['accent'] for row in plan_rows],
             'colors': colors,
@@ -411,9 +210,11 @@ def build_plan_conversion_chart_payload(
             'total': [row['total'] for row in weekly_series],
             'daily': [row['daily'] for row in weekly_series],
             'monthly': [row['monthly'] for row in weekly_series],
-            'quarterly': [row['quarterly'] for row in weekly_series],
-            'yearly': [row['yearly'] for row in weekly_series],
+            'quarterly': [row.get('quarterly', 0) for row in weekly_series],
+            'yearly': [row.get('yearly', 0) for row in weekly_series],
             'revenue': [row['revenue'] for row in weekly_series],
+            'moving_avg_orders': time_intel.get('moving_avg_orders') or [],
+            'moving_avg_revenue': time_intel.get('moving_avg_revenue') or [],
         },
         'cohort': {
             'labels': [c['week_label'] for c in cohorts],
@@ -423,101 +224,52 @@ def build_plan_conversion_chart_payload(
             'repeat_30d_rate': [c['repeat_30d_rate'] for c in cohorts],
             'upgrade_rate': [c['upgrade_rate'] for c in cohorts],
             'avg_ltv': [c['avg_ltv'] for c in cohorts],
+            'active_7d_rate': [c.get('active_7d_rate', 0) for c in cohorts],
+            'active_30d_rate': [c.get('active_30d_rate', 0) for c in cohorts],
+            'crm_7d_rate': [c.get('crm_7d_rate', 0) for c in cohorts],
+            'dataset_7d_rate': [c.get('dataset_7d_rate', 0) for c in cohorts],
         },
     }
 
 
 def get_plan_conversion_context(*, days: int = 30) -> dict[str, Any]:
-    days = _clamp_days(days)
-    now = timezone.now()
-    since = now - timedelta(days=days)
-    period_start = timezone.localdate() - timedelta(days=days - 1)
-    period_end = timezone.localdate()
+    bounds = period_bounds(days)
+    days = bounds['days']
+    since = bounds['since']
+    now = bounds['now']
 
-    pricing_views = _funnel_events_since(since, 'pricing_view').count()
-    pricing_unique = (
-        _funnel_events_since(since, 'pricing_view')
-        .exclude(session_key='')
-        .values('session_key')
-        .distinct()
-        .count()
-    )
-    checkout_views = _funnel_events_since(since, 'checkout_view').count()
-    upgrade_views = _funnel_events_since(since, 'upgrade_view').count()
+    current = _period_summary(since=since, days=days)
+    previous = _period_summary(since=bounds['prev_since'], until=bounds['prev_until'], days=days)
 
-    paid_qs = _paid_orders_qs(since=since)
-    paid_count = paid_qs.count()
-    paid_revenue = int(paid_qs.aggregate(total=Sum('amount'))['total'] or 0)
-    daily_purchases = paid_qs.filter(plan__plan_type='daily').count()
-    monthly_purchases = paid_qs.filter(plan__plan_type='monthly').count()
-    quarterly_purchases = paid_qs.filter(plan__plan_type='quarterly').count()
-    yearly_purchases = paid_qs.filter(plan__plan_type='yearly').count()
-    unique_buyers = paid_qs.values('user_id').distinct().count()
-    aov = int(round(paid_revenue / paid_count)) if paid_count else 0
+    buyers = current['buyers']
+    upgrade_stats = current['upgrade_stats']
 
-    upgrade_stats = count_daily_to_monthly_upgrades(since=since)
-
-    overall_conversion = _pct(paid_count, pricing_views, 2)
-    unique_conversion = _pct(paid_count, pricing_unique, 2)
-    checkout_conversion = _pct(paid_count, checkout_views, 2)
-    pricing_to_checkout = _pct(checkout_views, pricing_views, 1)
-    checkout_to_paid = _pct(paid_count, checkout_views, 1)
-
-    plan_rows = get_plan_conversion_by_plan(
+    plan_rows = build_plan_matrix(
         since=since,
-        pricing_views=pricing_views,
-        checkout_views=checkout_views,
+        pricing_views=current['pricing_views'],
+        checkout_views=current['checkout_views'],
+        upgrade_stats=upgrade_stats,
     )
-    weekly_series = get_weekly_purchase_series(since=since)
-    cohorts = get_purchase_cohorts(limit=12)
-    funnel_series = get_funnel_daily_series(since=since, days=days)
+    time_intel = build_time_intelligence(since=since)
+    weekly_series = time_intel.get('series') or []
+    cohorts = build_rich_cohorts(limit=12)
+    funnel_series = _funnel_daily_series(since=since, days=days)
 
-    charts = build_plan_conversion_chart_payload(
-        plan_rows=plan_rows,
-        weekly_series=weekly_series,
-        funnel_series=funnel_series,
-        cohorts=cohorts,
+    activation_funnel = build_activation_funnel(
+        buyers=buyers,
+        pricing_views=current['pricing_views'],
+        checkout_views=current['checkout_views'],
+        failed_payments=current['failed_payments'],
+        pending_orders=current['pending_orders'],
     )
-
-    plan_sales_all_time = get_plan_sales_breakdown()
+    behavior = build_behavior_analytics(buyers=buyers)
 
     summary = {
-        'pricing_views': pricing_views,
-        'pricing_unique': pricing_unique,
-        'checkout_views': checkout_views,
-        'upgrade_views': upgrade_views,
-        'paid_count': paid_count,
-        'paid_revenue': paid_revenue,
-        'daily_purchases': daily_purchases,
-        'monthly_purchases': monthly_purchases,
-        'quarterly_purchases': quarterly_purchases,
-        'yearly_purchases': yearly_purchases,
-        'unique_buyers': unique_buyers,
-        'aov': aov,
-        'overall_conversion': overall_conversion,
-        'unique_conversion': unique_conversion,
-        'checkout_conversion': checkout_conversion,
-        'upgrade_count': upgrade_stats['upgrade_count'],
-        'upgrade_rate': upgrade_stats['upgrade_rate'],
-        'daily_buyers_for_upgrade': upgrade_stats['daily_buyers'],
-        'upgrade_window_days': upgrade_stats['window_days'],
-        'funnel_stages': {
-            'pricing_to_checkout': pricing_to_checkout,
-            'checkout_to_paid': checkout_to_paid,
-            'pricing_to_paid': overall_conversion,
-        },
-        'dropoffs': {
-            'pricing_to_checkout': _pct(
-                max(pricing_views - checkout_views, 0), pricing_views, 1,
-            ) if pricing_views else 0.0,
-            'checkout_to_paid': _pct(
-                max(checkout_views - paid_count, 0), checkout_views, 1,
-            ) if checkout_views else 0.0,
-        },
-        'period_start': period_start.isoformat(),
-        'period_end': period_end.isoformat(),
-        'period_start_jalali': _jalali_iso(period_start),
-        'period_end_jalali': _jalali_iso(period_end),
+        **{k: v for k, v in current.items() if k not in ('buyers', 'upgrade_stats')},
+        'period_start': bounds['period_start'].isoformat(),
+        'period_end': bounds['period_end'].isoformat(),
+        'period_start_jalali': jalali_iso(bounds['period_start']),
+        'period_end_jalali': jalali_iso(bounds['period_end']),
         'generated_at': now.isoformat(),
         'generated_at_jalali': to_persian_digits(
             jdatetime.datetime.fromgregorian(
@@ -526,20 +278,70 @@ def get_plan_conversion_context(*, days: int = 30) -> dict[str, Any]:
         ),
     }
 
+    prev_summary = {
+        k: v for k, v in previous.items() if k not in ('buyers', 'upgrade_stats')
+    }
+
+    insights = build_executive_insights(
+        summary=summary,
+        prev_summary=prev_summary,
+        plan_rows=plan_rows,
+        activation_funnel=activation_funnel,
+        upgrade_stats=upgrade_stats,
+    )
+    decision_cards = build_decision_cards(
+        summary=summary,
+        prev_summary=prev_summary,
+        plan_rows=plan_rows,
+        activation_funnel=activation_funnel,
+        upgrade_stats=upgrade_stats,
+        buyers=buyers,
+    )
+    recommendations = build_recommendations(
+        summary=summary,
+        plan_rows=plan_rows,
+        activation_funnel=activation_funnel,
+        upgrade_stats=upgrade_stats,
+        behavior=behavior,
+        decision_cards=decision_cards,
+    )
+    predictive = build_predictive_scores(
+        summary=summary,
+        buyers=buyers,
+        behavior=behavior,
+        upgrade_stats=upgrade_stats,
+    )
+
+    charts = build_plan_conversion_chart_payload(
+        plan_rows=plan_rows,
+        weekly_series=weekly_series,
+        funnel_series=funnel_series,
+        cohorts=cohorts,
+        time_intel=time_intel,
+    )
+
     return {
         'days': days,
         'summary': summary,
+        'prev_summary': prev_summary,
         'plan_rows': plan_rows,
         'weekly_series': weekly_series,
         'cohorts': cohorts,
-        'plan_sales_all_time': plan_sales_all_time,
+        'plan_sales_all_time': get_plan_sales_breakdown(),
         'plan_type_labels': PLAN_TYPE_SHORT_LABELS,
         'charts': charts,
+        'insights': insights,
+        'decision_cards': decision_cards,
+        'activation_funnel': activation_funnel,
+        'time_intelligence': time_intel,
+        'behavior': behavior,
+        'recommendations': recommendations,
+        'predictive': predictive,
+        'upgrade_stats': upgrade_stats,
     }
 
 
 def build_plan_conversion_json(*, days: int = 30) -> dict[str, Any]:
-    """خروجی کامل JSON برای دانلود / API."""
     ctx = get_plan_conversion_context(days=days)
     return {
         'ok': True,
@@ -552,12 +354,20 @@ def build_plan_conversion_json(*, days: int = 30) -> dict[str, Any]:
             'generated_at': ctx['summary']['generated_at'],
             'generated_at_jalali': ctx['summary']['generated_at_jalali'],
             'source': 'admin_panel_plan_conversion',
-            'version': '1.1',
+            'version': '2.0-bi',
         },
         'summary': ctx['summary'],
+        'prev_summary': ctx['prev_summary'],
+        'insights': ctx['insights'],
+        'decision_cards': ctx['decision_cards'],
+        'activation_funnel': ctx['activation_funnel'],
         'plans': ctx['plan_rows'],
         'weekly': ctx['weekly_series'],
+        'time_intelligence': ctx['time_intelligence'],
         'cohorts': ctx['cohorts'],
+        'behavior': ctx['behavior'],
+        'recommendations': ctx['recommendations'],
+        'predictive': ctx['predictive'],
         'charts': ctx['charts'],
         'plan_sales_all_time': ctx['plan_sales_all_time'],
     }

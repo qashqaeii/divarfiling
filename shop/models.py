@@ -231,6 +231,9 @@ class PlanFunnelEvent(models.Model):
         ('pricing_view', 'بازدید صفحه قیمت‌گذاری'),
         ('checkout_view', 'شروع خرید'),
         ('upgrade_view', 'بازدید صفحه ارتقا'),
+        ('payment_success', 'پرداخت موفق'),
+        ('payment_failed', 'پرداخت ناموفق'),
+        ('checkout_abandon', 'رها کردن Checkout'),
     ]
 
     event_type = models.CharField(max_length=32, choices=EVENT_TYPES, verbose_name='نوع رویداد')

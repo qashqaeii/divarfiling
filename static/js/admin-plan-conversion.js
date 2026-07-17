@@ -687,6 +687,14 @@
         initReveal();
         initCountUp();
         initFunnelBars();
+        document.querySelectorAll('.apc-behavior-bar span').forEach(function (bar) {
+            var m = (bar.getAttribute('style') || '').match(/width:\s*([\d.]+)/);
+            var w = m ? parseFloat(m[1]) : 0;
+            bar.style.width = '0';
+            requestAnimationFrame(function () {
+                setTimeout(function () { bar.style.width = w + '%'; }, 160);
+            });
+        });
         initCharts();
         initToggles();
         initThemeObserver();

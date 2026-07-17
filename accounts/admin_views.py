@@ -449,7 +449,14 @@ class AdminPlanConversionView(StaffRequiredMixin, TemplateView):
         data = get_plan_conversion_context(days=days)
         ctx.update(data)
         ctx['summary'] = data['summary']
-        ctx['plan_conversion_json'] = json.dumps(data['charts'], ensure_ascii=False, default=str)
+        chart_payload = dict(data['charts'])
+        chart_payload['behavior'] = data.get('behavior') or {}
+        chart_payload['predictive'] = data.get('predictive') or {}
+        chart_payload['time_intelligence'] = {
+            k: v for k, v in (data.get('time_intelligence') or {}).items()
+            if k != 'series'
+        }
+        ctx['plan_conversion_json'] = json.dumps(chart_payload, ensure_ascii=False, default=str)
         return ctx
 
 

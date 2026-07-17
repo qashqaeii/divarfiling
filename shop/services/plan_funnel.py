@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from django.contrib.auth.models import AbstractBaseUser
 from django.utils import timezone
 
 from shop.models import LicensePlan, PlanFunnelEvent, Product
@@ -35,7 +36,7 @@ def record_plan_funnel_event(
     )
     if product is not None:
         qs = qs.filter(product=product)
-    if plan is not None and event_type == 'checkout_view':
+    if plan is not None and event_type in ('checkout_view', 'payment_success', 'payment_failed'):
         qs = qs.filter(plan=plan)
     if qs.exists():
         return None
@@ -47,4 +48,27 @@ def record_plan_funnel_event(
         product=product,
         plan=plan,
         metadata=metadata or {},
+    )
+
+
+def record_plan_funnel_for_order(
+    event_type: str,
+    *,
+    user: AbstractBaseUser | None = None,
+    product: Product | None = None,
+    plan: LicensePlan | None = None,
+    metadata: dict[str, Any] | None = None,
+    order_id: str | None = None,
+) -> PlanFunnelEvent:
+    """ثبت رویداد از سمت سرور (پرداخت موفق/ناموفق) بدون نیاز به request."""
+    meta = dict(metadata or {})
+    if order_id:
+        meta['order_id'] = str(order_id)
+    return PlanFunnelEvent.objects.create(
+        event_type=event_type,
+        user=user if user and getattr(user, 'is_authenticated', True) else None,
+        session_key=f'order:{order_id}' if order_id else '',
+        product=product,
+        plan=plan,
+        metadata=meta,
     )

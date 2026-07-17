@@ -110,6 +110,18 @@ def _finalize_successful_payment(order: Order, transaction: Transaction, verify_
     transaction.card_number_masked = verify_result.card_number
     transaction.verified_at = timezone.now()
     transaction.save()
+    try:
+        from shop.services.plan_funnel import record_plan_funnel_for_order
+        record_plan_funnel_for_order(
+            'payment_success',
+            user=order.user,
+            product=order.product,
+            plan=order.plan,
+            order_id=str(order.id),
+            metadata={'amount': int(order.amount or 0)},
+        )
+    except Exception:
+        logger.exception('plan funnel payment_success failed for order %s', order.id)
 
 
 class PaymentCheckoutView(LoginRequiredMixin, View):
@@ -380,6 +392,18 @@ class PaymentCallbackView(View):
             order.status = 'failed'
             order.save(update_fields=['status'])
             request.session['payment_error'] = error_message
+            try:
+                from shop.services.plan_funnel import record_plan_funnel_for_order
+                record_plan_funnel_for_order(
+                    'payment_failed',
+                    user=order.user,
+                    product=order.product,
+                    plan=order.plan,
+                    order_id=str(order.id),
+                    metadata={'reason': error_message},
+                )
+            except Exception:
+                logger.exception('plan funnel payment_failed failed for order %s', order.id)
             return redirect('payment:failed')
 
         expected_amount_rial = zibal_service.toman_to_rial(order.amount)
@@ -400,6 +424,18 @@ class PaymentCallbackView(View):
             order.status = 'failed'
             order.save(update_fields=['status'])
             request.session['payment_error'] = exc.message
+            try:
+                from shop.services.plan_funnel import record_plan_funnel_for_order
+                record_plan_funnel_for_order(
+                    'payment_failed',
+                    user=order.user,
+                    product=order.product,
+                    plan=order.plan,
+                    order_id=str(order.id),
+                    metadata={'reason': exc.message},
+                )
+            except Exception:
+                logger.exception('plan funnel payment_failed failed for order %s', order.id)
             return redirect('payment:failed')
         except Exception:
             logger.exception('Zibal verify failed for trackId %s', track_id)

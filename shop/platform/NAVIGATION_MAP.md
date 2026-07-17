@@ -111,11 +111,25 @@
 | نقش | مقصد |
 |---|---|
 | بالادستی | `/features/` |
-| مرتبط | `/features/crm/` ، `/features/filing/` ، `/solutions/customer-follow-up/` |
+| مرتبط | `/features/crm/` ، `/solutions/agency-management/` ، `/solutions/customer-follow-up/` |
 | CTA اصلی | مهمان: شروع رایگان — واردشده: صفحه تیم |
-| سه مسیر بعدی | ۱) CRM ۲) فایلینگ ۳) ثبت‌نام / صفحه تیم |
+| سه مسیر بعدی | ۱) CRM ۲) راه‌حل مدیریت آژانس ۳) ثبت‌نام / صفحه تیم |
 | مقصد تبدیل | ثبت‌نام / میزکار تیم (رایگان با CRM) |
-| Journey | CRM → آژانس → پیگیری → شروع |
+| Journey | CRM → آژانس → راه‌حل مدیریت دفتر → شروع |
+
+---
+
+## `/solutions/agency-management/` — راه‌حل مدیریت آژانس
+
+| نقش | مقصد |
+|---|---|
+| بالادستی | `/solutions/` |
+| مرتبط | `/features/agency/` ، `/features/crm/` ، `/solutions/customer-follow-up/` ، `/features/filing/` |
+| CTA اصلی | مهمان: ساخت میزکار — واردشده: `/workspace/crm/team/` |
+| سه مسیر بعدی | ۱) خط محصول Agency ۲) پیگیری مشتری ۳) ثبت‌نام / صفحه تیم |
+| مقصد تبدیل | ثبت‌نام / میزکار تیم (رایگان با CRM) |
+| Journey | CRM → آژانس → راه‌حل مدیریت دفتر → شروع |
+| Intent | مشکل مدیر / جریان تیمی — نه فهرست ماژول‌های Product Line |
 
 ---
 

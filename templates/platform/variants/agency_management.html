@@ -1,0 +1,542 @@
+{% include 'platform/includes/hero_solution.html' %}
+
+{# ── داستان یک روز مدیر ── #}
+<section class="sol-sec" aria-labelledby="sol-why-title">
+    <div class="sol-wrap">
+        <div class="sol-prose">
+            <p class="sol-eyebrow">
+                <i class="fas fa-sun" aria-hidden="true"></i>
+                داستان واقعی
+            </p>
+            <h2 id="sol-why-title">{{ platform_content.why_lost.title }}</h2>
+            <p>{{ platform_content.why_lost.lead }}</p>
+        </div>
+        <ul class="sol-reasons">
+            {% for item in platform_content.why_lost.reasons %}
+            <li class="sol-reason plat-reveal">
+                <span class="sol-ico sol-ico--lg sol-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <div>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.text }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── هزینه بی‌نظمی ── #}
+<section class="sol-sec sol-sec--soft" aria-labelledby="am-conseq-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-scale-unbalanced" aria-hidden="true"></i>
+                هزینه بی‌نظمی
+            </p>
+            <h2 id="am-conseq-title">{{ platform_content.consequences.title }}</h2>
+            <p>{{ platform_content.consequences.lead }}</p>
+        </div>
+        <div class="pp-conseq am-conseq">
+            {% for col in platform_content.consequences.columns %}
+            <article class="pp-conseq__col pp-conseq__col--{{ col.tone }} plat-reveal">
+                <span class="sol-ico sol-ico--lg" aria-hidden="true">
+                    <i class="fas {{ col.icon }}"></i>
+                </span>
+                <h3>{{ col.title }}</h3>
+                <ul>
+                    {% for item in col.items %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── نشانه‌های نیاز ── #}
+<section class="sol-sec" aria-labelledby="am-check-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-list-check" aria-hidden="true"></i>
+                خودتشخیصی
+            </p>
+            <h2 id="am-check-title">{{ platform_content.checklist.title }}</h2>
+            <p>{{ platform_content.checklist.lead }}</p>
+        </div>
+        <ul class="am-checklist">
+            {% for item in platform_content.checklist.items %}
+            <li class="am-checklist__item plat-reveal">
+                <span class="am-checklist__mark" aria-hidden="true">
+                    <i class="fas fa-square-check"></i>
+                </span>
+                <span>{{ item }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── Outcome / قبل‌بعد فشرده ── #}
+<section class="sol-sec sol-outcomes" aria-labelledby="sol-outcomes-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-bullseye" aria-hidden="true"></i>
+                نتیجه کار
+            </p>
+            <h2 id="sol-outcomes-title">{{ platform_content.outcomes.title }}</h2>
+            <p>{{ platform_content.outcomes.lead }}</p>
+        </div>
+        <ul class="sol-outcomes__grid">
+            {% for item in platform_content.outcomes.items %}
+            <li class="sol-outcomes__item plat-reveal">
+                <span class="sol-ico sol-ico--lg sol-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <span class="sol-outcomes__before">{{ item.before }}</span>
+                <span class="sol-outcomes__arrow" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
+                <strong class="sol-outcomes__after">{{ item.after }}</strong>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── Before / After کامل ── #}
+<section class="sol-sec sol-sec--soft" aria-labelledby="sol-compare-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-code-compare" aria-hidden="true"></i>
+                مقایسه
+            </p>
+            <h2 id="sol-compare-title">{{ platform_content.comparison.title }}</h2>
+        </div>
+        <div class="sol-compare">
+            <div class="sol-compare__col sol-compare__col--before plat-reveal">
+                <h3><i class="fas fa-circle-xmark" aria-hidden="true"></i> قبل</h3>
+                <ul>
+                    {% for item in platform_content.comparison.before %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="sol-compare__col sol-compare__col--after plat-reveal">
+                <h3><i class="fas fa-circle-check" aria-hidden="true"></i> بعد</h3>
+                <ul>
+                    {% for item in platform_content.comparison.after %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── Soft CTA به محصول ── #}
+<aside class="sol-soft-cta plat-reveal" aria-label="لینک خط محصول">
+    <div class="sol-wrap sol-soft-cta__inner">
+        <div class="sol-soft-cta__copy">
+            <span class="sol-ico sol-ico--solid" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_a.icon }}"></i>
+            </span>
+            <div>
+                <strong>{{ platform_content.mid_cta_a.title }}</strong>
+                <p>{{ platform_content.mid_cta_a.lead }}</p>
+            </div>
+        </div>
+        <div class="sol-soft-cta__links">
+            <a href="{% url platform_content.mid_cta_a.primary_url_name slug_path=platform_content.mid_cta_a.primary_url_kwargs.slug_path %}" class="plat-btn plat-btn--product sol-soft-cta__btn">
+                <i class="fas fa-people-group" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.primary_label }}
+            </a>
+            <a href="{% url platform_content.mid_cta_a.secondary_url_name slug_path=platform_content.mid_cta_a.secondary_url_kwargs.slug_path %}" class="plat-btn plat-btn--explore sol-soft-cta__btn">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── Framework ── #}
+<section class="sol-sec" aria-labelledby="sol-framework-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-route" aria-hidden="true"></i>
+                مسیر عملی
+            </p>
+            <h2 id="sol-framework-title">{{ platform_content.framework.title }}</h2>
+            <p>{{ platform_content.framework.lead }}</p>
+        </div>
+        <ol class="sol-framework">
+            {% for step in platform_content.framework.steps %}
+            <li class="sol-framework__step plat-reveal">
+                <span class="sol-ico sol-ico--solid" aria-hidden="true">
+                    <i class="fas {{ step.icon }}"></i>
+                </span>
+                <span class="sol-framework__num">{{ forloop.counter }}</span>
+                <div class="sol-framework__body">
+                    <h3>{{ step.title }}</h3>
+                    <p>{{ step.text }}</p>
+                    <span class="sol-framework__tool">
+                        <i class="fas fa-wrench" aria-hidden="true"></i>
+                        {{ step.tool }}
+                    </span>
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+{# ── Timeline فشرده ── #}
+<section class="sol-sec sol-sec--soft sol-sec--timeline" aria-labelledby="sol-timeline-title">
+    <div class="sol-wrap">
+        <div class="sol-prose">
+            <p class="sol-eyebrow">
+                <i class="fas fa-timeline" aria-hidden="true"></i>
+                جریان کار
+            </p>
+            <h2 id="sol-timeline-title">{{ platform_content.timeline.title }}</h2>
+            <p>{{ platform_content.timeline.lead }}</p>
+        </div>
+        <ol class="sol-timeline">
+            {% for step in platform_content.timeline.steps %}
+            <li class="sol-timeline__item plat-reveal">
+                <span class="sol-ico" aria-hidden="true">
+                    <i class="fas {{ step.icon }}"></i>
+                </span>
+                <div>
+                    <time class="sol-timeline__day">{{ step.day }}</time>
+                    <p>{{ step.event }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+{# ── اتصال به محصول ── #}
+<section class="sol-sec" aria-labelledby="am-conn-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-link" aria-hidden="true"></i>
+                اتصال به محصول
+            </p>
+            <h2 id="am-conn-title">{{ platform_content.connection.title }}</h2>
+            <p>{{ platform_content.connection.lead }}</p>
+        </div>
+        <div class="am-conn" role="table" aria-label="مسئله و ابزار">
+            <div class="am-conn__head" role="row">
+                <span role="columnheader">مسئله</span>
+                <span role="columnheader">ابزار واقعی</span>
+            </div>
+            {% for row in platform_content.connection.rows %}
+            <div class="am-conn__row plat-reveal" role="row">
+                <span role="cell">{{ row.problem }}</span>
+                <span role="cell">{{ row.tool }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── Product Proof ── #}
+<section class="sol-sec sol-sec--soft" aria-labelledby="sol-shot-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-desktop" aria-hidden="true"></i>
+                نمای محصول
+            </p>
+            <h2 id="sol-shot-title">{{ platform_content.screenshots.title }}</h2>
+            <p>{{ platform_content.screenshots.lead }}</p>
+        </div>
+        <div class="sol-shots">
+            {% for shot in platform_content.screenshots.items %}
+            <div class="sol-shot plat-reveal">
+                {% include 'platform/includes/screenshot_story.html' with shot=shot %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── مدیر در برابر سیستم ── #}
+<section class="sol-sec" aria-labelledby="am-mgr-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-handshake" aria-hidden="true"></i>
+                صداقت مدیریتی
+            </p>
+            <h2 id="am-mgr-title">{{ platform_content.manager_vs_system.title }}</h2>
+            <p>{{ platform_content.manager_vs_system.lead }}</p>
+        </div>
+        <div class="pp-limits am-mgr">
+            <div class="pp-limits__col pp-limits__col--helps plat-reveal">
+                <h3><i class="fas fa-laptop" aria-hidden="true"></i> سیستم می‌تواند</h3>
+                <ul>
+                    {% for item in platform_content.manager_vs_system.system %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="pp-limits__col pp-limits__col--not plat-reveal">
+                <h3><i class="fas fa-user-tie" aria-hidden="true"></i> مدیر همچنان باید</h3>
+                <ul>
+                    {% for item in platform_content.manager_vs_system.manager %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── Agency TV ── #}
+<section class="sol-sec sol-sec--soft" aria-labelledby="am-tv-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-tv" aria-hidden="true"></i>
+                Agency TV
+            </p>
+            <h2 id="am-tv-title">{{ platform_content.agency_tv.title }}</h2>
+            <p>{{ platform_content.agency_tv.lead }}</p>
+        </div>
+        <ul class="sol-reasons">
+            {% for item in platform_content.agency_tv.points %}
+            <li class="sol-reason plat-reveal">
+                <span class="sol-ico sol-ico--lg sol-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <div>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.text }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── حریم خصوصی ── #}
+<section class="sol-sec" aria-labelledby="am-privacy-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                اعتماد
+            </p>
+            <h2 id="am-privacy-title">{{ platform_content.privacy.title }}</h2>
+            <p>{{ platform_content.privacy.lead }}</p>
+        </div>
+        <ul class="sol-reasons">
+            {% for item in platform_content.privacy.items %}
+            <li class="sol-reason plat-reveal">
+                <span class="sol-ico sol-ico--lg sol-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <div>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.text }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── محدودیت‌ها ── #}
+<section class="sol-sec sol-sec--soft" aria-labelledby="am-limits-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-circle-info" aria-hidden="true"></i>
+                محدوده صادقانه
+            </p>
+            <h2 id="am-limits-title">{{ platform_content.limits.title }}</h2>
+            <p>{{ platform_content.limits.lead }}</p>
+        </div>
+        <div class="pp-limits">
+            <div class="pp-limits__col pp-limits__col--helps plat-reveal">
+                <h3><i class="fas fa-circle-check" aria-hidden="true"></i> مناسب است برای</h3>
+                <ul>
+                    {% for item in platform_content.limits.helps %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="pp-limits__col pp-limits__col--not plat-reveal">
+                <h3><i class="fas fa-circle-xmark" aria-hidden="true"></i> محدودیت فعلی</h3>
+                <ul>
+                    {% for item in platform_content.limits.not %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── Soft CTA تبدیل ── #}
+<aside class="sol-soft-cta sol-soft-cta--indigo plat-reveal" aria-label="شروع کار">
+    <div class="sol-wrap sol-soft-cta__inner">
+        <div class="sol-soft-cta__copy">
+            <span class="sol-ico sol-ico--solid sol-ico--pulse" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_b.icon }}"></i>
+            </span>
+            <div>
+                <strong>{{ platform_content.mid_cta_b.title }}</strong>
+                <p>{{ platform_content.mid_cta_b.lead }}</p>
+            </div>
+        </div>
+        <div class="sol-soft-cta__links">
+            {% if user.is_authenticated %}
+            <a href="{% url platform_content.mid_cta_b.auth_primary_url_name %}" class="plat-btn plat-btn--primary plat-btn--convert sol-soft-cta__btn">
+                <i class="fas fa-people-group" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.auth_primary_label }}
+            </a>
+            {% else %}
+            <a href="{% url platform_content.mid_cta_b.primary_url_name %}" class="plat-btn plat-btn--primary plat-btn--convert sol-soft-cta__btn">
+                <i class="fas fa-gift" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.primary_label }}
+            </a>
+            {% endif %}
+            <a href="{% url platform_content.mid_cta_b.secondary_url_name %}" class="plat-btn plat-btn--ghost plat-btn--explore sol-soft-cta__btn">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── ابزارها / لینک داخلی ── #}
+<section class="sol-sec" aria-labelledby="sol-tools-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-compass" aria-hidden="true"></i>
+                ارتباط پلتفرم
+            </p>
+            <h2 id="sol-tools-title">{{ platform_content.tools.title }}</h2>
+            <p>{{ platform_content.tools.lead }}</p>
+        </div>
+        <ul class="sol-tools">
+            {% for tool in platform_content.tools.items %}
+            <li class="sol-tool plat-reveal">
+                <a href="{% if tool.url_kwargs.slug_path %}{% url tool.url_name slug_path=tool.url_kwargs.slug_path %}{% elif tool.url_kwargs.slug %}{% url tool.url_name slug=tool.url_kwargs.slug %}{% else %}{% url tool.url_name %}{% endif %}" class="sol-tool__link">
+                    <span class="sol-ico sol-ico--float" aria-hidden="true">
+                        <i class="fas {{ tool.icon }}"></i>
+                    </span>
+                    <span class="sol-tool__body">
+                        <strong>{{ tool.title }}</strong>
+                        <span>{{ tool.role }}</span>
+                    </span>
+                    <i class="fas fa-arrow-left sol-tool__arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── نقش‌ها ── #}
+<section class="sol-sec sol-sec--soft" aria-labelledby="sol-personas-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                مخاطب
+            </p>
+            <h2 id="sol-personas-title">{{ platform_content.personas.title }}</h2>
+        </div>
+        <ul class="sol-personas">
+            {% for p in platform_content.personas.items %}
+            <li class="sol-persona plat-reveal">
+                <span class="sol-ico sol-ico--lg sol-ico--float" aria-hidden="true">
+                    <i class="fas {{ p.icon }}"></i>
+                </span>
+                <h3>{{ p.title }}</h3>
+                <p>{{ p.scenario }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── FAQ ── #}
+{% if platform_content.faq %}
+<section class="sol-sec plat-faq" aria-labelledby="sol-faq-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-circle-question" aria-hidden="true"></i>
+                پاسخ سریع
+            </p>
+            <h2 id="sol-faq-title">سوالات متداول</h2>
+        </div>
+        <div class="plat-faq__list">
+            {% for item in platform_content.faq %}
+            <details class="plat-faq__item plat-reveal">
+                <summary>
+                    <i class="fas fa-circle-question sol-faq__q-ico" aria-hidden="true"></i>
+                    <span>{{ item.q }}</span>
+                </summary>
+                <div class="plat-faq__answer"><p>{{ item.a }}</p></div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# ── مسیر بعدی ── #}
+<section class="sol-sec sol-sec--soft sol-next" aria-labelledby="sol-next-title">
+    <div class="sol-wrap">
+        <div class="sol-prose sol-prose--center">
+            <p class="sol-eyebrow">
+                <i class="fas fa-compass" aria-hidden="true"></i>
+                مسیر بعد
+            </p>
+            <h2 id="sol-next-title">{{ platform_content.next_path.title }}</h2>
+            <p>{{ platform_content.next_path.lead }}</p>
+        </div>
+        <div class="sol-next__grid">
+            {% for page in platform_content.next_path.items %}
+            {% if user.is_authenticated and page.auth_url_name %}{% url page.auth_url_name as next_href %}{% elif page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path as next_href %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug as next_href %}{% else %}{% url page.url_name as next_href %}{% endif %}
+            <a href="{{ next_href }}" class="sol-next__card plat-reveal{% if page.convert %} sol-next__card--convert{% endif %}">
+                <span class="sol-ico sol-ico--lg sol-ico--float" aria-hidden="true">
+                    <i class="fas {{ page.icon }}"></i>
+                </span>
+                <span class="sol-next__type">{{ page.type }}</span>
+                <strong>{% if user.is_authenticated and page.auth_title %}{{ page.auth_title }}{% else %}{{ page.title }}{% endif %}</strong>
+                <p>{% if user.is_authenticated and page.auth_desc %}{{ page.auth_desc }}{% else %}{{ page.desc }}{% endif %}</p>
+                <span class="sol-next__cta">
+                    {% if user.is_authenticated and page.auth_cta %}{{ page.auth_cta }}{% else %}{{ page.cta }}{% endif %}
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── CTA نهایی ── #}
+<section class="sol-sec sol-final-cta">
+    <div class="sol-wrap sol-final-cta__inner plat-reveal">
+        <span class="sol-ico sol-ico--xl sol-ico--solid sol-ico--pulse" aria-hidden="true">
+            <i class="fas {{ platform_content.final_cta.icon }}"></i>
+        </span>
+        <h2>{{ platform_content.final_cta.title }}</h2>
+        <p>{{ platform_content.final_cta.lead }}</p>
+        {% include 'platform/includes/cta_pair.html' %}
+    </div>
+</section>

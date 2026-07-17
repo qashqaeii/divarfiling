@@ -9,7 +9,7 @@ def agency_product_line_content() -> dict[str, Any]:
         'hero': {
             'eyebrow': 'خط محصول · مدیریت آژانس',
             'eyebrow_icon': 'fa-people-group',
-            'promise': 'مدیریت تیم آژانس؛ بدون گزارش‌های پراکنده و پیگیری‌های گمشده',
+            'promise': 'نقش‌ها، صندوق سرنخ و گزارش تیم — روی همان CRM رایگان',
             'lead': (
                 'فایلینگ دیوار فقط ابزار شخصی یک مشاور نیست. '
                 'با نقش‌های مالک، مدیر، منشی و مشاور، صندوق سرنخ، تخصیص مسئولیت، '
@@ -133,9 +133,9 @@ def agency_product_line_content() -> dict[str, Any]:
             'primary_label': 'خط محصول CRM',
             'primary_url_name': 'platform_features_page',
             'primary_url_kwargs': {'slug_path': 'crm'},
-            'secondary_label': 'راه‌حل پیگیری مشتری',
+            'secondary_label': 'راه‌حل مدیریت آژانس',
             'secondary_url_name': 'platform_solutions_page',
-            'secondary_url_kwargs': {'slug': 'customer-follow-up'},
+            'secondary_url_kwargs': {'slug': 'agency-management'},
         },
         'capabilities_intro': {
             'title': 'چه کارهایی داخل مدیریت آژانس انجام می‌شود؟',
@@ -487,7 +487,7 @@ def agency_product_line_content() -> dict[str, Any]:
         'next_path': {
             'title': 'اگر بخواهید ادامه دهید، این سه مسیر مفید است',
             'lead': (
-                'CRM را عمیق‌تر ببینید، فایلینگ را برای بانک مشترک اضافه کنید، '
+                'CRM را عمیق‌تر ببینید، راه‌حل مدیریت دفتر را از زاویه مشکل بخوانید، '
                 'سپس میزکار یا صفحه تیم را باز کنید.'
             ),
             'items': [
@@ -503,15 +503,15 @@ def agency_product_line_content() -> dict[str, Any]:
                     'cta': 'مشاهده CRM',
                 },
                 {
-                    'type': 'خط محصول',
-                    'icon': 'fa-folder-tree',
-                    'title': 'فایلینگ دیوار',
+                    'type': 'راه‌حل',
+                    'icon': 'fa-people-group',
+                    'title': 'راه‌حل مدیریت آژانس',
                     'desc': (
-                        'دلیل ادامه: تیم وقتی فایل‌ها در Dataset مشترک است بهتر همکاری می‌کند.'
+                        'دلیل ادامه: از زاویه مشکل مدیر ببینید سرنخ و مسئولیت چطور ثبت می‌شود.'
                     ),
-                    'url_name': 'platform_features_page',
-                    'url_kwargs': {'slug_path': 'filing'},
-                    'cta': 'مشاهده فایلینگ',
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'agency-management'},
+                    'cta': 'مشاهده راه‌حل',
                 },
                 {
                     'type': 'شروع',

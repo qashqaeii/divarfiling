@@ -254,10 +254,10 @@ def solutions_hub_content() -> dict[str, Any]:
                 {
                     'icon': 'fa-people-group',
                     'problem': 'مدیریت تیم آژانس را هماهنگ نمی‌کنم',
-                    'status': 'coming',
-                    'solution_title': 'به‌زودی',
-                    'url_name': '',
-                    'url_kwargs': {},
+                    'status': 'published',
+                    'solution_title': 'مدیریت آژانس',
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'agency-management'},
                 },
             ],
         },
@@ -423,8 +423,9 @@ def solutions_hub_content() -> dict[str, Any]:
             {
                 'q': 'چند راه‌حل الان آماده است؟',
                 'a': (
-                    'الان راه‌حل پیگیری مشتری، پیدا کردن سریع فایل و قیمت‌گذاری ملک منتشر است. '
-                    'مدیریت آژانس در نقشه مشکل هنوز «به‌زودی» است.'
+                    'الان راه‌حل پیگیری مشتری، پیدا کردن سریع فایل، قیمت‌گذاری ملک '
+                    'و مدیریت آژانس منتشر است. '
+                    'نقشه مشکل وضعیت هر ردیف را نشان می‌دهد.'
                 ),
             },
             {

@@ -384,6 +384,11 @@ def crm_product_line_content() -> dict[str, Any]:
                     'url_kwargs': {'slug_path': 'agency'},
                     'label': 'خط محصول مدیریت آژانس',
                 },
+                'link_secondary': {
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'agency-management'},
+                    'label': 'راه‌حل مدیریت آژانس',
+                },
             },
         ],
         'mid_cta_b': {

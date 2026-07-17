@@ -127,6 +127,12 @@ def platform_mega_menu() -> dict:
             'url_name': 'platform_solutions_page',
             'url_kwargs': {'slug': 'property-pricing'},
         },
+        {
+            'label': 'راه‌حل مدیریت آژانس',
+            'desc': 'سرنخ، مسئولیت و گزارش تیم',
+            'url_name': 'platform_solutions_page',
+            'url_kwargs': {'slug': 'agency-management'},
+        },
     ]
 
     quick_links = [

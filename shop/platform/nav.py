@@ -56,6 +56,7 @@ def _location_label(page: PageSpec) -> str:
         'filing_product_line': 'خط محصول فایلینگ',
         'market_intelligence_product_line': 'خط محصول تحلیل بازار',
         'agency_product_line': 'خط محصول مدیریت آژانس',
+        'agency_management': 'راه‌حل مدیریت آژانس',
         'property_pricing': 'راه‌حل قیمت‌گذاری ملک',
         'fast_property_search': 'راه‌حل پیدا کردن سریع فایل',
         'solutions_hub': 'نقشه راه‌حل‌ها',
@@ -173,6 +174,13 @@ def _trail_for_page(page: PageSpec) -> list[dict[str, Any]]:
             'kwargs': {'slug': 'property-pricing'},
             'current': True,
         })
+    elif page.content_key == 'agency_management':
+        items.append({
+            'label': 'مدیریت آژانس',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'agency-management'},
+            'current': True,
+        })
     return items
 
 
@@ -182,7 +190,7 @@ def _journey_for_page(page: PageSpec) -> list[dict[str, Any]]:
         return _filing_journey(page.content_key)
     if page.content_key in ('market_intelligence_product_line', 'property_pricing'):
         return _market_journey(page.content_key)
-    if page.content_key == 'agency_product_line':
+    if page.content_key in ('agency_product_line', 'agency_management'):
         return _agency_journey(page.content_key)
     return _crm_journey(page.content_key)
 
@@ -324,11 +332,11 @@ def _agency_journey(content_key: str) -> list[dict[str, Any]]:
             'kwargs': {'slug_path': 'agency'},
         },
         {
-            'id': 'follow_up',
-            'label': 'پیگیری',
+            'id': 'agency_mgmt',
+            'label': 'مدیریت دفتر',
             'hint': 'راه‌حل عملی',
             'url_name': 'platform_solutions_page',
-            'kwargs': {'slug': 'customer-follow-up'},
+            'kwargs': {'slug': 'agency-management'},
         },
         {
             'id': 'start',
@@ -341,6 +349,7 @@ def _agency_journey(content_key: str) -> list[dict[str, Any]]:
     ]
     current_id = {
         'agency_product_line': 'agency',
+        'agency_management': 'agency_mgmt',
     }.get(content_key)
     return _annotate_journey(steps, current_id)
 

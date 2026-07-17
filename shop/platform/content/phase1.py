@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from shop.platform.content.agency_hub import agency_product_line_content
+from shop.platform.content.agency_management import agency_management_content
 from shop.platform.content.crm_hub import crm_product_line_content
 from shop.platform.content.customer_follow_up import customer_follow_up_content
 from shop.platform.content.fast_property_search import fast_property_search_content
@@ -29,6 +30,7 @@ def build_page_content(content_key: str) -> dict[str, Any]:
         'market_intelligence_product_line': market_intelligence_product_line_content,
         'property_pricing': property_pricing_content,
         'agency_product_line': agency_product_line_content,
+        'agency_management': agency_management_content,
     }
     builder = builders.get(content_key)
     if not builder:

@@ -17,6 +17,7 @@ PLATFORM_URLS = [
     '/solutions/customer-follow-up/',
     '/solutions/fast-property-search/',
     '/solutions/property-pricing/',
+    '/solutions/agency-management/',
 ]
 
 SCHEMA_DOUBLE_WRAP = '<script type="application/ld+json"><script type="application/ld+json">'
@@ -355,11 +356,9 @@ class PlatformNavigationPhaseDTests(TestCase):
         hub = self.client.get('/solutions/')
         self.assertContains(hub, '/solutions/customer-follow-up/')
         self.assertContains(hub, '/solutions/property-pricing/')
-        self.assertContains(hub, 'shub-map__soon')
-        self.assertContains(hub, 'به‌زودی')
-        # coming rows are spans, not links to empty urls
+        self.assertContains(hub, '/solutions/agency-management/')
         body = hub.content.decode('utf-8')
-        self.assertIn('shub-map__row--coming', body)
+        self.assertIn('shub-map__row--published', body)
         self.assertNotIn('href=""', body)
 
         sol = self.client.get('/solutions/customer-follow-up/')
@@ -717,16 +716,39 @@ class PlatformAgencyPhase2Tests(TestCase):
                 resp = self.client.get(f'/features/{path}/')
                 self.assertEqual(resp.status_code, 404)
 
-    def test_agency_management_solution_not_published(self):
-        self.assertIsNone(get_page('solutions', 'agency-management'))
+    def test_agency_management_solution_published(self):
+        page = get_page('solutions', 'agency-management')
+        self.assertIsNotNone(page)
+        self.assertEqual(page.status, 'published')
         resp = self.client.get('/solutions/agency-management/')
-        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.status_code, 200)
+
+    def test_agency_hero_h1_not_duplicated(self):
+        resp = self.client.get('/features/agency/')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode('utf-8')
+        self.assertEqual(body.count('<h1'), 1)
+        h1 = 'مدیریت تیم آژانس؛ بدون گزارش‌های پراکنده و پیگیری‌های گمشده'
+        hero_start = body.find('ag-hero')
+        hero_end = body.find('</header>', hero_start)
+        self.assertGreater(hero_start, -1)
+        self.assertGreater(hero_end, hero_start)
+        hero_html = body[hero_start:hero_end]
+        self.assertEqual(hero_html.count('<h1'), 1)
+        self.assertEqual(hero_html.count(h1), 1)
+        self.assertIn('نقش‌ها، صندوق سرنخ و گزارش تیم', hero_html)
+        self.assertNotIn(h1, hero_html.replace(h1, '', 1))
 
     def test_features_hub_and_crm_link_agency(self):
         hub = self.client.get('/features/')
         self.assertContains(hub, '/features/agency/')
         crm = self.client.get('/features/crm/')
         self.assertContains(crm, '/features/agency/')
+        self.assertContains(crm, '/solutions/agency-management/')
+
+    def test_agency_links_solution(self):
+        resp = self.client.get('/features/agency/')
+        self.assertContains(resp, '/solutions/agency-management/')
 
     def test_agency_honesty_limits(self):
         resp = self.client.get('/features/agency/')
@@ -739,3 +761,124 @@ class PlatformAgencyPhase2Tests(TestCase):
 
     def test_agency_seo_health(self):
         _assert_platform_seo_health(self, '/features/agency/')
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformAgencyManagementPhase2Tests(TestCase):
+    """Phase 2 sprint 6: /solutions/agency-management/."""
+
+    def test_agency_management_page_renders(self):
+        resp = self.client.get('/solutions/agency-management/')
+        self.assertEqual(resp.status_code, 200)
+        page = get_page('solutions', 'agency-management')
+        self.assertEqual(page.status, 'published')
+        self.assertContains(resp, 'sol-hero')
+        self.assertContains(resp, 'am-conseq')
+        self.assertContains(resp, 'am-check-title')
+        self.assertContains(resp, 'sol-framework-title')
+        self.assertContains(resp, 'am-conn-title')
+        self.assertContains(resp, 'am-mgr-title')
+        self.assertContains(resp, 'am-limits-title')
+        self.assertContains(resp, 'am-tv-title')
+        self.assertContains(resp, 'help-crm-team')
+        self.assertContains(resp, 'help-crm-today')
+        self.assertContains(resp, 'help-crm-contacts')
+        self.assertContains(resp, 'help-crm-dashboard')
+        self.assertContains(resp, '/features/agency/')
+        self.assertContains(resp, '/features/crm/')
+        self.assertContains(resp, '/solutions/customer-follow-up/')
+        self.assertContains(resp, 'plat-nav-bar')
+        self.assertContains(resp, 'plat-affiliate')
+        self.assertContains(resp, 'plat-faq__item', count=14)
+        self.assertContains(resp, 'رایگان')
+        self.assertContains(resp, 'چند شعبه')
+        self.assertContains(resp, 'polling')
+        self.assertContains(resp, '<h1', count=1)
+        h1 = 'مدیریت آژانس املاک؛ بدانید کار دست چه کسی است'
+        body = resp.content.decode('utf-8')
+        hero_start = body.find('sol-hero')
+        hero_end = body.find('</header>', hero_start)
+        self.assertGreater(hero_start, -1)
+        self.assertGreater(hero_end, hero_start)
+        hero_html = body[hero_start:hero_end]
+        self.assertEqual(hero_html.count(h1), 1)
+        self.assertEqual(hero_html.count('<h1'), 1)
+        self.assertContains(resp, 'نرم‌افزار مدیر آژانس نیست')
+
+    def test_agency_management_schema_free(self):
+        resp = self.client.get('/solutions/agency-management/')
+        body = resp.content.decode('utf-8')
+        self.assertIn('"@type": "SoftwareApplication"', body)
+        self.assertIn('"@type": "Product"', body)
+        self.assertIn('"@type": "FAQPage"', body)
+        self.assertIn('"@type": "WebPage"', body)
+        self.assertIn('مدیریت آژانس', body)
+        self.assertIn('/features/agency/', body)
+        self.assertIn('/features/crm/', body)
+        self.assertIn('"price": "0"', body)
+        self.assertNotIn('AggregateRating', body)
+
+    def test_agency_management_next_path_three(self):
+        from shop.platform.content.agency_management import agency_management_content
+        items = agency_management_content()['next_path']['items']
+        self.assertEqual(len(items), 3)
+        self.assertTrue(items[-1].get('convert'))
+        self.assertEqual(items[0]['url_kwargs']['slug_path'], 'agency')
+        self.assertEqual(items[1]['url_kwargs']['slug'], 'customer-follow-up')
+        self.assertEqual(items[2].get('auth_url_name'), 'workspace:crm_team')
+
+    def test_agency_management_hub_and_menu(self):
+        hub = self.client.get('/solutions/')
+        self.assertContains(hub, '/solutions/agency-management/')
+        self.assertContains(hub, 'shub-map__row--published')
+        self.assertContains(hub, 'مدیریت آژانس')
+        agency = self.client.get('/features/agency/')
+        self.assertContains(agency, '/solutions/agency-management/')
+
+    def test_agency_management_guest_and_auth_cta(self):
+        guest = self.client.get('/solutions/agency-management/')
+        self.assertContains(guest, 'ساخت میزکار رایگان')
+        self.assertContains(guest, 'ثبت‌نام و ایجاد تیم')
+        from accounts.models import User
+        user = User.objects.create_user(
+            username='am_mgr', phone='09120009988', password='x',
+        )
+        self.client.force_login(user)
+        auth = self.client.get('/solutions/agency-management/')
+        self.assertContains(auth, 'ورود به صفحه تیم')
+        self.assertContains(auth, '/workspace/crm/team/')
+    def test_agency_management_draft_features_still_404(self):
+        drafts = (
+            'agency/team-management',
+            'agency/roles-permissions',
+            'agency/team-inbox',
+            'agency/activity-feed',
+            'agency/reports',
+            'agency/tv-dashboard',
+            'agency/announcements',
+        )
+        for path in drafts:
+            with self.subTest(path=path):
+                self.assertIsNone(get_page('features', path))
+                resp = self.client.get(f'/features/{path}/')
+                self.assertEqual(resp.status_code, 404)
+
+    def test_agency_management_unknown_slug_404(self):
+        resp = self.client.get('/solutions/agency-management-xyz/')
+        self.assertEqual(resp.status_code, 404)
+
+    def test_agency_management_seo_health(self):
+        _assert_platform_seo_health(self, '/solutions/agency-management/')
+
+    def test_agency_management_forbidden_claims(self):
+        resp = self.client.get('/solutions/agency-management/')
+        body = resp.content.decode('utf-8')
+        self.assertNotIn('کنترل کامل همه اعضا', body)
+        self.assertNotIn('نظارت صددرصدی', body)
+        self.assertNotIn('افزایش تضمینی فروش', body)
+        self.assertNotIn('امنیت مطلق', body)
+        self.assertNotIn('Real-time', body)
+        self.assertNotIn('real-time', body)
+        self.assertIn('جایگزین کامل واتساپ یا تماس', body)
+        self.assertIn('چند شعبه مستقل', body)
+        self.assertIn('polling', body)

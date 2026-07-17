@@ -26,6 +26,7 @@ def build_pages() -> list[PageSpec]:
         _agency_reports_feature_draft(),
         _agency_tv_feature_draft(),
         _agency_announcements_feature_draft(),
+        _agency_management_solution(),
     ]
 
 
@@ -387,7 +388,7 @@ def _agency_product_line() -> PageSpec:
         intent='commercial',
         primary_keyword='مدیریت آژانس املاک',
         content_key='agency_product_line',
-        related_solutions=(),
+        related_solutions=('agency-management',),
         related_articles=(
             'crm-team-modiriyat-ajans-rahnama',
             'agency-tv-dashboard-ajans-amlak',
@@ -516,4 +517,49 @@ def _agency_announcements_feature_draft() -> PageSpec:
         h1='اطلاعیه تیم: پیام مهم در یک محل مشخص',
         keyword='اطلاعیه آژانس املاک, announcement CRM',
         icon='fa-bullhorn',
+    )
+
+
+def _agency_management_solution() -> PageSpec:
+    seo = PageSEO(
+        title='مدیریت آژانس املاک؛ تیم، سرنخ و پیگیری در یک میزکار',
+        description=(
+            'نقش‌ها، صندوق سرنخ، تخصیص، پیگیری معوق و گزارش عملکرد تیم املاک را '
+            'در یک میزکار رایگان مدیریت کنید؛ بدون ادعای کنترل مطلق یا افشای پرونده‌ها.'
+        ),
+        keywords=(
+            'مدیریت آژانس املاک, نرم افزار مدیریت آژانس, مدیریت تیم مشاوران املاک, '
+            'CRM تیمی املاک, تخصیص سرنخ, گزارش عملکرد مشاور, پیگیری تیم فروش, '
+            'مدیریت دفتر املاک, داشبورد آژانس, Agency TV'
+        ),
+        og_title='مدیریت آژانس املاک — راه‌حل تیم و سرنخ فایلینگ دیوار',
+        h1='مدیریت آژانس املاک؛ بدانید کار دست چه کسی است',
+    )
+    return PageSpec(
+        section='solutions',
+        path='agency-management',
+        variant='solution',
+        status='published',
+        marketability='marketable',
+        seo=seo,
+        accent='violet',
+        icon='fa-people-group',
+        decor_icon='users',
+        funnel_role='conversion',
+        intent='problem-solution',
+        primary_keyword='مدیریت آژانس املاک',
+        content_key='agency_management',
+        related_features=(
+            'agency/team-management',
+            'agency/roles-permissions',
+            'agency/team-inbox',
+            'agency/reports',
+            'agency/tv-dashboard',
+        ),
+        related_articles=(
+            'crm-team-modiriyat-ajans-rahnama',
+            'agency-tv-dashboard-ajans-amlak',
+        ),
+        related_seo_landings=('real-estate-crm',),
+        sitemap_priority=0.84,
     )

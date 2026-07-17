@@ -1,0 +1,1351 @@
+/* Agency Management solution (violet) — same Experience rhythm; Phase 2 Sprint 2 */
+/* ═══ Customer Follow-up Solution Experience — /solutions/customer-follow-up/ ═══ */
+.plat-page--agency_management {
+    --sol-text: min(720px, 100%);
+    --sol-wrap: min(1200px, 100%);
+    --sol-sec-pad: clamp(4.5rem, 7vw, 7.5rem);
+    --sol-gap: clamp(1rem, 2vw, 1.5rem);
+    --sol-indigo: #7c3aed;
+    --sol-teal: #0d9488;
+    --sol-indigo-soft: rgba(124, 58, 237, 0.1);
+    --sol-indigo-muted: rgba(124, 58, 237, 0.045);
+    --sol-emerald: #059669;
+    --sol-emerald-soft: rgba(5, 150, 105, 0.1);
+    --sol-border: rgba(15, 23, 42, 0.08);
+    --sol-muted: rgba(15, 23, 42, 0.04);
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_management {
+    --sol-border: rgba(255, 255, 255, 0.08);
+    --sol-muted: rgba(255, 255, 255, 0.04);
+    --sol-indigo-soft: rgba(14, 165, 233, 0.14);
+    --sol-indigo-muted: rgba(14, 165, 233, 0.08);
+    --sol-emerald-soft: rgba(16, 185, 129, 0.14);
+}
+
+.plat-page--agency_management .sol-wrap {
+    max-width: var(--sol-wrap);
+    margin-inline: auto;
+    padding-inline: clamp(1.125rem, 4vw, 1.5rem);
+}
+
+.plat-page--agency_management .sol-sec {
+    padding-block: var(--sol-sec-pad);
+}
+
+.plat-page--agency_management .sol-sec--soft {
+    background: var(--sol-muted);
+}
+
+.plat-page--agency_management .sol-eyebrow {
+    margin: 0 0 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sol-indigo);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.plat-page--agency_management .sol-eyebrow > .fas {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.plat-page--agency_management .sol-prose {
+    max-width: var(--sol-text);
+}
+
+.plat-page--agency_management .sol-prose--center {
+    margin-inline: auto;
+    text-align: center;
+}
+
+.plat-page--agency_management .sol-prose h2 {
+    margin: 0 0 0.85rem;
+    font-size: clamp(1.25rem, 2.5vw, 1.65rem);
+    line-height: 1.4;
+    letter-spacing: -0.02em;
+}
+
+.plat-page--agency_management .sol-prose p,
+.plat-page--agency_management .sol-prose__lead {
+    margin: 0 0 0.85rem;
+    line-height: 1.85;
+    font-size: 1rem;
+    opacity: 0.88;
+}
+
+/* ═══ Icon system (rose / story personality) ═══ */
+.plat-page--agency_management .sol-ico {
+    --sol-ico-size: 2.35rem;
+    --sol-ico-fs: 0.95rem;
+    width: var(--sol-ico-size);
+    height: var(--sol-ico-size);
+    border-radius: 12px;
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    background: var(--sol-indigo-soft);
+    color: var(--sol-indigo);
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.28s ease,
+                background 0.28s ease;
+}
+
+.plat-page--agency_management .sol-ico .fas {
+    font-size: var(--sol-ico-fs);
+    line-height: 1;
+}
+
+.plat-page--agency_management .sol-ico--sm {
+    --sol-ico-size: 1.55rem;
+    --sol-ico-fs: 0.7rem;
+    border-radius: 8px;
+}
+
+.plat-page--agency_management .sol-ico--lg {
+    --sol-ico-size: 2.85rem;
+    --sol-ico-fs: 1.1rem;
+    border-radius: 14px;
+}
+
+.plat-page--agency_management .sol-ico--xl {
+    --sol-ico-size: 3.4rem;
+    --sol-ico-fs: 1.35rem;
+    border-radius: 16px;
+    margin-inline: auto;
+    margin-bottom: 1rem;
+}
+
+.plat-page--agency_management .sol-ico--solid {
+    background: var(--sol-indigo);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.28);
+}
+
+.plat-page--agency_management .sol-ico--danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
+.plat-page--agency_management .sol-ico--float {
+    animation: sol-ico-float 4.5s ease-in-out infinite;
+}
+
+.plat-page--agency_management .sol-ico--pulse {
+    animation: sol-ico-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes sol-ico-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+@keyframes sol-ico-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.3); }
+    55% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+}
+
+.plat-page--agency_management .sol-outcomes__item:hover .sol-ico,
+.plat-page--agency_management .sol-reason:hover .sol-ico,
+.plat-page--agency_management .sol-framework__step:hover .sol-ico,
+.plat-page--agency_management .sol-signal:hover .sol-ico,
+.plat-page--agency_management .sol-tool:hover .sol-ico,
+.plat-page--agency_management .sol-persona:hover .sol-ico,
+.plat-page--agency_management .sol-kpi:hover .sol-ico,
+.plat-page--agency_management .sol-next__card:hover .sol-ico {
+    transform: translateY(-2px) scale(1.06);
+    box-shadow: 0 10px 22px rgba(79, 70, 229, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .plat-page--agency_management .sol-ico--float,
+    .plat-page--agency_management .sol-ico--pulse {
+        animation: none;
+    }
+    .plat-page--agency_management .sol-outcomes__item:hover .sol-ico,
+    .plat-page--agency_management .sol-reason:hover .sol-ico,
+    .plat-page--agency_management .sol-framework__step:hover .sol-ico,
+    .plat-page--agency_management .sol-signal:hover .sol-ico,
+    .plat-page--agency_management .sol-tool:hover .sol-ico,
+    .plat-page--agency_management .sol-persona:hover .sol-ico,
+    .plat-page--agency_management .sol-kpi:hover .sol-ico,
+    .plat-page--agency_management .sol-next__card:hover .sol-ico {
+        transform: none;
+    }
+}
+
+/* ═══ Hero — story-first + visual ═══ */
+.plat-page--agency_management .sol-hero {
+    padding: clamp(2rem, 4vw, 2.75rem) 0 clamp(2.5rem, 5vw, 3.5rem);
+    border-bottom: 1px solid var(--sol-border);
+    background:
+        radial-gradient(ellipse 70% 55% at 85% 10%, var(--sol-indigo-soft) 0%, transparent 55%),
+        linear-gradient(180deg, var(--sol-indigo-muted) 0%, transparent 60%);
+}
+
+.plat-page--agency_management .sol-hero__grid {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.25rem);
+    align-items: center;
+}
+
+@media (min-width: 960px) {
+    .plat-page--agency_management .sol-hero__grid {
+        grid-template-columns: 1.05fr 0.95fr;
+    }
+}
+
+.plat-page--agency_management .sol-hero__story {
+    margin: 0 0 1.25rem;
+    padding: 0;
+    border: none;
+    border-inline-start: 3px solid var(--sol-indigo);
+    padding-inline-start: 1.15rem;
+}
+
+.plat-page--agency_management .sol-hero__story p {
+    margin: 0;
+    font-size: clamp(1.02rem, 2vw, 1.15rem);
+    line-height: 1.75;
+    font-style: italic;
+    opacity: 0.92;
+}
+
+.plat-page--agency_management .sol-hero h1 {
+    margin: 0 0 0.85rem;
+    font-size: clamp(1.45rem, 3.2vw, 2.1rem);
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+}
+
+.plat-page--agency_management .sol-hero__lead {
+    margin: 0 0 1rem;
+    font-size: 1.02rem;
+    line-height: 1.85;
+    opacity: 0.9;
+}
+
+.plat-page--agency_management .sol-hero__outcome {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    margin: 0 0 1.25rem;
+    padding: 0.9rem 1.05rem;
+    border-radius: 12px;
+    background: var(--sol-indigo-soft);
+    font-size: 0.92rem;
+    font-weight: 650;
+    line-height: 1.65;
+    color: var(--sol-indigo);
+}
+
+.plat-page--agency_management .sol-hero__outcome .fas {
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+}
+
+.plat-page--agency_management .sol-hero__bullets {
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.plat-page--agency_management .sol-hero__bullets li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.plat-page--agency_management .sol-hero__bullets li:hover .sol-ico {
+    transform: scale(1.08);
+}
+
+.plat-page--agency_management .sol-hero__visual .plat-shot-story__frame {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--sol-border);
+    box-shadow: 0 18px 44px rgba(79, 70, 229, 0.1);
+}
+
+.plat-page--agency_management .plat-shot-story__pin-num {
+    background: var(--sol-indigo);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+}
+
+@media (max-width: 767px) {
+    .plat-page--agency_management .sol-hero__cta .plat-cta-pair {
+        flex-direction: column;
+    }
+    .plat-page--agency_management .sol-hero__cta .plat-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Why lost */
+.plat-page--agency_management .sol-reasons {
+    display: grid;
+    gap: var(--sol-gap);
+    margin: 2.25rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+@media (min-width: 720px) {
+    .plat-page--agency_management .sol-reasons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.plat-page--agency_management .sol-reason {
+    display: flex;
+    gap: 0.95rem;
+    padding: 1.2rem 1.25rem;
+    border: 1px solid var(--sol-border);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.55);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_management .sol-reason {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_management .sol-reason:hover {
+    border-color: rgba(79, 70, 229, 0.28);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.plat-page--agency_management .sol-reason h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+}
+
+.plat-page--agency_management .sol-reason p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    opacity: 0.85;
+}
+
+/* Outcomes — before → after */
+.plat-page--agency_management .sol-outcomes__grid {
+    list-style: none;
+    margin: 2.25rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--sol-gap);
+}
+
+@media (min-width: 768px) {
+    .plat-page--agency_management .sol-outcomes__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1100px) {
+    .plat-page--agency_management .sol-outcomes__grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.plat-page--agency_management .sol-outcomes__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.25rem 1.15rem;
+    border-radius: 14px;
+    border: 1px solid var(--sol-border);
+    background: rgba(255, 255, 255, 0.55);
+    min-height: 10rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_management .sol-outcomes__item {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_management .sol-outcomes__item:hover {
+    border-color: rgba(79, 70, 229, 0.28);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.plat-page--agency_management .sol-outcomes__before {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    text-decoration: line-through;
+}
+
+.plat-page--agency_management .sol-outcomes__arrow {
+    color: var(--sol-indigo);
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+.plat-page--agency_management .sol-outcomes__after {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    font-weight: 700;
+    color: var(--sol-emerald);
+}
+
+/* Soft CTAs */
+.plat-page--agency_management .sol-soft-cta {
+    padding-block: clamp(2rem, 4vw, 2.75rem);
+    border-block: 1px solid var(--sol-border);
+}
+
+.plat-page--agency_management .sol-soft-cta--indigo {
+    background: rgba(79, 70, 229, 0.05);
+}
+
+.plat-page--agency_management .sol-soft-cta__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+}
+
+.plat-page--agency_management .sol-soft-cta__copy {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    min-width: min(100%, 22rem);
+}
+
+.plat-page--agency_management .sol-soft-cta__copy strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 1.05rem;
+}
+
+.plat-page--agency_management .sol-soft-cta__copy p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.78;
+    line-height: 1.6;
+}
+
+.plat-page--agency_management .sol-soft-cta__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.plat-page--agency_management .sol-soft-cta__btn .fas {
+    margin-inline-end: 0.35rem;
+    font-size: 0.85em;
+}
+
+@media (max-width: 767px) {
+    .plat-page--agency_management .sol-soft-cta__links {
+        width: 100%;
+        flex-direction: column;
+    }
+    .plat-page--agency_management .sol-soft-cta__btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Mistakes */
+.plat-page--agency_management .sol-mistakes {
+    display: grid;
+    gap: var(--sol-gap);
+    margin: 2.25rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+@media (min-width: 900px) {
+    .plat-page--agency_management .sol-mistakes {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .plat-page--agency_management .sol-mistakes {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.plat-page--agency_management .sol-mistake {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 1.15rem;
+    border: 1px solid var(--sol-border);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.55);
+    transition: border-color 0.2s ease;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_management .sol-mistake {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_management .sol-mistake:hover {
+    border-color: rgba(79, 70, 229, 0.22);
+}
+
+.plat-page--agency_management .sol-mistake__bad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.55rem;
+}
+
+.plat-page--agency_management .sol-mistake__bad .sol-ico {
+    margin-top: 0.1rem;
+}
+
+.plat-page--agency_management .sol-mistake__label {
+    display: block;
+    width: 100%;
+    margin-bottom: 0.2rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.55;
+}
+
+.plat-page--agency_management .sol-mistake__label--fix {
+    color: var(--sol-emerald);
+    opacity: 1;
+}
+
+.plat-page--agency_management .sol-mistake__bad p,
+.plat-page--agency_management .sol-mistake__good p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    flex: 1;
+    min-width: 0;
+}
+
+.plat-page--agency_management .sol-mistake__good {
+    padding: 0.75rem 0.85rem;
+    border-radius: 10px;
+    background: var(--sol-emerald-soft);
+}
+
+.plat-page--agency_management .sol-mistake__arrow {
+    text-align: center;
+    color: var(--sol-indigo);
+    opacity: 0.45;
+    font-size: 0.75rem;
+}
+
+/* Framework — numbered path */
+.plat-page--agency_management .sol-framework {
+    display: grid;
+    gap: 0.9rem;
+    margin: 2.25rem 0 0;
+    padding: 0;
+    counter-reset: none;
+    list-style: none;
+}
+
+@media (min-width: 768px) {
+    .plat-page--agency_management .sol-framework {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1100px) {
+    .plat-page--agency_management .sol-framework {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.plat-page--agency_management .sol-framework__step {
+    position: relative;
+    display: flex;
+    gap: 0.85rem;
+    padding: 1.15rem 1.2rem;
+    border: 1px solid var(--sol-border);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.55);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_management .sol-framework__step {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_management .sol-framework__step:hover {
+    border-color: rgba(79, 70, 229, 0.28);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.plat-page--agency_management .sol-framework__num {
+    position: absolute;
+    inset-inline-end: 0.85rem;
+    top: 0.85rem;
+    width: 1.45rem;
+    height: 1.45rem;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--sol-indigo-soft);
+    color: var(--sol-indigo);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.plat-page--agency_management .sol-framework__body {
+    flex: 1;
+    min-width: 0;
+    padding-inline-end: 1.5rem;
+}
+
+.plat-page--agency_management .sol-framework__body h3 {
+    margin: 0 0 0.35rem;
+    font-size: 0.98rem;
+}
+
+.plat-page--agency_management .sol-framework__body p {
+    margin: 0 0 0.65rem;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    opacity: 0.85;
+}
+
+.plat-page--agency_management .sol-framework__tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: var(--sol-indigo-soft);
+    color: var(--sol-indigo);
+    font-size: 0.72rem;
+    font-weight: 650;
+}
+
+.plat-page--agency_management .sol-framework__tool .fas {
+    font-size: 0.7em;
+}
+
+/* Timeline — weekly story */
+.plat-page--agency_management .sol-sec--timeline {
+    background:
+        linear-gradient(135deg, var(--sol-indigo-muted) 0%, transparent 55%),
+        var(--sol-muted);
+}
+
+.plat-page--agency_management .sol-timeline {
+    margin: 2.25rem 0 0;
+    padding: 0;
+    list-style: none;
+    max-width: min(720px, 100%);
+    border-inline-start: 2px solid rgba(79, 70, 229, 0.2);
+    padding-inline-start: 1.35rem;
+}
+
+.plat-page--agency_management .sol-timeline__item {
+    position: relative;
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    padding: 0 0 1.35rem;
+}
+
+.plat-page--agency_management .sol-timeline__item:last-child {
+    padding-bottom: 0;
+}
+
+.plat-page--agency_management .sol-timeline__item::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -1.55rem;
+    top: 0.85rem;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--sol-indigo);
+    box-shadow: 0 0 0 4px var(--sol-indigo-soft);
+}
+
+.plat-page--agency_management .sol-timeline__day {
+    display: inline-block;
+    margin-bottom: 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--sol-indigo);
+}
+
+.plat-page--agency_management .sol-timeline__item p {
+    margin: 0;
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+/* Signals */
+.plat-page--agency_management .sol-signals {
+    display: grid;
+    gap: var(--sol-gap);
+    margin: 2.25rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+@media (min-width: 768px) {
+    .plat-page--agency_management .sol-signals {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.plat-page--agency_management .sol-signal {
+    padding: 1.25rem;
+    border-radius: 14px;
+    border: 1px solid var(--sol-border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.plat-page--agency_management .sol-signal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.plat-page--agency_management .sol-signal--hot {
+    border-color: rgba(79, 70, 229, 0.28);
+    background: rgba(79, 70, 229, 0.05);
+}
+
+.plat-page--agency_management .sol-signal--hot .sol-ico {
+    background: rgba(79, 70, 229, 0.14);
+    color: var(--sol-indigo);
+}
+
+.plat-page--agency_management .sol-signal--cold {
+    border-color: rgba(59, 130, 246, 0.28);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.plat-page--agency_management .sol-signal--cold .sol-ico {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+}
+
+.plat-page--agency_management .sol-signal--serious {
+    border-color: rgba(5, 150, 105, 0.28);
+    background: rgba(5, 150, 105, 0.05);
+}
+
+.plat-page--agency_management .sol-signal--serious .sol-ico {
+    background: var(--sol-emerald-soft);
+    color: var(--sol-emerald);
+}
+
+.plat-page--agency_management .sol-signal h3 {
+    margin: 0.75rem 0 0.85rem;
+    font-size: 1.05rem;
+}
+
+.plat-page--agency_management .sol-signal__meta {
+    margin: 0;
+}
+
+.plat-page--agency_management .sol-signal__meta div {
+    margin-bottom: 0.7rem;
+}
+
+.plat-page--agency_management .sol-signal__meta div:last-child {
+    margin-bottom: 0;
+}
+
+.plat-page--agency_management .sol-signal__meta dt {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.55;
+    margin-bottom: 0.2rem;
+}
+
+.plat-page--agency_management .sol-signal__meta dd {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.65;
+}
+
+/* Etiquette */
+.plat-page--agency_management .sol-etiquette {
+    max-width: var(--sol-text);
+}
+
+/* Tools */
+.plat-page--agency_management .sol-tools {
+    margin: 2.25rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.7rem;
+}
+
+.plat-page--agency_management .sol-tool__link {
+    display: flex;
+    align-items: center;
+    gap: 0.95rem;
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--sol-border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.45);
+    transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_management .sol-tool__link {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_management .sol-tool__link:hover {
+    border-color: rgba(79, 70, 229, 0.35);
+    background: var(--sol-indigo-soft);
+    transform: translateX(-3px);
+}
+
+.plat-page--agency_management .sol-tool__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.plat-page--agency_management .sol-tool__body strong {
+    font-size: 0.98rem;
+}
+
+.plat-page--agency_management .sol-tool__body span {
+    font-size: 0.86rem;
+    opacity: 0.8;
+    line-height: 1.55;
+}
+
+.plat-page--agency_management .sol-tool__arrow {
+    opacity: 0.4;
+    font-size: 0.8rem;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.plat-page--agency_management .sol-tool__link:hover .sol-tool__arrow {
+    opacity: 0.85;
+    color: var(--sol-indigo);
+    transform: translateX(-3px);
+}
+
+/* Compare */
+.plat-page--agency_management .sol-compare {
+    display: grid;
+    gap: var(--sol-gap);
+    margin-top: 2.25rem;
+}
+
+@media (min-width: 768px) {
+    .plat-page--agency_management .sol-compare {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.plat-page--agency_management .sol-compare__col {
+    padding: 1.35rem 1.4rem;
+    border-radius: 14px;
+    border: 1px solid var(--sol-border);
+}
+
+.plat-page--agency_management .sol-compare__col--before {
+    background: rgba(239, 68, 68, 0.04);
+}
+
+.plat-page--agency_management .sol-compare__col--after {
+    background: var(--sol-emerald-soft);
+    border-color: rgba(5, 150, 105, 0.22);
+}
+
+.plat-page--agency_management .sol-compare__col h3 {
+    margin: 0 0 0.9rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.plat-page--agency_management .sol-compare__col--before h3 {
+    color: #dc2626;
+}
+
+.plat-page--agency_management .sol-compare__col--after h3 {
+    color: var(--sol-emerald);
+}
+
+.plat-page--agency_management .sol-compare__col ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.plat-page--agency_management .sol-compare__col li {
+    position: relative;
+    padding-inline-start: 1.15rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.92rem;
+    line-height: 1.65;
+}
+
+.plat-page--agency_management .sol-compare__col li:last-child {
+    margin-bottom: 0;
+}
+
+.plat-page--agency_management .sol-compare__col li::before {
+    content: "•";
+    position: absolute;
+    inset-inline-start: 0;
+    opacity: 0.45;
+}
+
+/* Personas */
+.plat-page--agency_management .sol-personas {
+    display: grid;
+    gap: var(--sol-gap);
+    margin: 2.25rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+@media (min-width: 768px) {
+    .plat-page--agency_management .sol-personas {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.plat-page--agency_management .sol-persona {
+    padding: 1.3rem 1.25rem;
+    border: 1px solid var(--sol-border);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.55);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_management .sol-persona {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_management .sol-persona:hover {
+    border-color: rgba(79, 70, 229, 0.28);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.plat-page--agency_management .sol-persona h3 {
+    margin: 0.75rem 0 0.5rem;
+    font-size: 1.02rem;
+    color: var(--sol-indigo);
+}
+
+.plat-page--agency_management .sol-persona p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    opacity: 0.88;
+}
+
+/* KPIs */
+.plat-page--agency_management .sol-kpis {
+    display: grid;
+    gap: var(--sol-gap);
+    margin: 2.25rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+@media (min-width: 640px) {
+    .plat-page--agency_management .sol-kpis {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.plat-page--agency_management .sol-kpi {
+    display: flex;
+    gap: 0.95rem;
+    padding: 1.1rem 1.2rem;
+    border: 1px solid var(--sol-border);
+    border-radius: 14px;
+    transition: border-color 0.2s ease;
+}
+
+.plat-page--agency_management .sol-kpi:hover {
+    border-color: rgba(79, 70, 229, 0.25);
+}
+
+.plat-page--agency_management .sol-kpi h3 {
+    margin: 0 0 0.3rem;
+    font-size: 0.98rem;
+}
+
+.plat-page--agency_management .sol-kpi p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    opacity: 0.85;
+}
+
+.plat-page--agency_management .sol-kpi-note {
+    max-width: var(--sol-text);
+    margin: 1.35rem auto 0;
+    padding: 0.9rem 1.1rem;
+    border-radius: 12px;
+    background: var(--sol-muted);
+    font-size: 0.88rem;
+    line-height: 1.65;
+    text-align: center;
+    opacity: 0.88;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.plat-page--agency_management .sol-kpi-note .fas {
+    color: var(--sol-indigo);
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+/* Screenshots */
+.plat-page--agency_management .sol-shots {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.25rem);
+    margin-top: 2.25rem;
+}
+
+@media (min-width: 900px) {
+    .plat-page--agency_management .sol-shots {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+    }
+}
+
+.plat-page--agency_management .sol-shot .plat-shot-story__frame {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--sol-border);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07);
+}
+
+/* FAQ */
+.plat-page--agency_management .sol-faq__q-ico {
+    color: var(--sol-indigo);
+    margin-inline-end: 0.45rem;
+    opacity: 0.85;
+}
+
+/* Next path */
+.plat-page--agency_management .sol-next__grid {
+    margin-top: 2.25rem;
+    display: grid;
+    gap: var(--sol-gap);
+}
+
+@media (min-width: 768px) {
+    .plat-page--agency_management .sol-next__grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.plat-page--agency_management .sol-next__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1.3rem 1.2rem;
+    border-radius: 14px;
+    border: 1px solid var(--sol-border);
+    text-decoration: none;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.5);
+    min-height: 10rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_management .sol-next__card {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_management .sol-next__card:hover {
+    border-color: rgba(79, 70, 229, 0.35);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.plat-page--agency_management .sol-next__type {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sol-indigo);
+}
+
+.plat-page--agency_management .sol-next__card strong {
+    font-size: 0.98rem;
+    line-height: 1.45;
+}
+
+.plat-page--agency_management .sol-next__card p {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.75;
+    line-height: 1.55;
+    flex: 1;
+}
+
+.plat-page--agency_management .sol-next__cta {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--sol-indigo);
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.plat-page--agency_management .sol-next__cta .fa-arrow-left {
+    transition: transform 0.2s ease;
+    font-size: 0.75em;
+}
+
+.plat-page--agency_management .sol-next__card:hover .sol-next__cta .fa-arrow-left {
+    transform: translateX(-3px);
+}
+
+/* Final CTA */
+.plat-page--agency_management .sol-final-cta {
+    padding-block: clamp(3rem, 6vw, 5rem);
+    background: linear-gradient(180deg, transparent 0%, var(--sol-indigo-muted) 100%);
+    border-top: 1px solid var(--sol-border);
+}
+
+.plat-page--agency_management .sol-final-cta__inner {
+    max-width: min(640px, 100%);
+    text-align: center;
+}
+
+.plat-page--agency_management .sol-final-cta h2 {
+    margin: 0 0 0.65rem;
+    font-size: clamp(1.25rem, 2.8vw, 1.7rem);
+}
+
+.plat-page--agency_management .sol-final-cta p {
+    margin: 0 0 1.25rem;
+    line-height: 1.75;
+    opacity: 0.88;
+}
+
+.plat-page--agency_management .sol-final-cta .plat-cta-pair {
+    justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .plat-page--agency_management .sol-signal,
+    .plat-page--agency_management .sol-tool__link,
+    .plat-page--agency_management .sol-next__card,
+    .plat-page--agency_management .sol-framework__step {
+        transition: none;
+    }
+}
+
+/* Property Pricing narrative extras */
+.plat-page--agency_management .pp-conseq {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sol-gap);
+    margin-top: 2rem;
+}
+.plat-page--agency_management .pp-conseq__col {
+    border: 1px solid var(--sol-border);
+    border-radius: var(--plat-radius, 16px);
+    padding: 1.35rem 1.25rem;
+    background: #fff;
+}
+.plat-page--agency_management .pp-conseq__col h3 {
+    margin: 0.75rem 0 0.85rem;
+    font-size: 1.05rem;
+}
+.plat-page--agency_management .pp-conseq__col ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.55rem;
+}
+.plat-page--agency_management .pp-conseq__col li {
+    padding-inline-start: 1rem;
+    position: relative;
+    line-height: 1.7;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+.plat-page--agency_management .pp-conseq__col li::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0.65rem;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--sol-indigo);
+}
+.plat-page--agency_management .pp-conseq__col--high .sol-ico { color: #b45309; background: rgba(180, 83, 9, 0.1); }
+.plat-page--agency_management .pp-conseq__col--low .sol-ico { color: var(--sol-teal); background: rgba(13, 148, 136, 0.12); }
+.plat-page--agency_management .pp-limits {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sol-gap);
+    margin-top: 2rem;
+}
+.plat-page--agency_management .pp-limits__col {
+    border: 1px solid var(--sol-border);
+    border-radius: var(--plat-radius, 16px);
+    padding: 1.35rem 1.25rem;
+}
+.plat-page--agency_management .pp-limits__col h3 {
+    margin: 0 0 0.9rem;
+    font-size: 1.02rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.plat-page--agency_management .pp-limits__col--helps h3 { color: var(--sol-emerald, #059669); }
+.plat-page--agency_management .pp-limits__col--not h3 { color: #b45309; }
+.plat-page--agency_management .pp-limits__col ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.5rem;
+}
+.plat-page--agency_management .pp-limits__col li {
+    line-height: 1.7;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+.plat-page--agency_management .sol-soft-cta--indigo {
+    background: rgba(79, 70, 229, 0.04);
+}
+@media (max-width: 720px) {
+    .plat-page--agency_management .pp-conseq,
+    .plat-page--agency_management .pp-limits {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Sprint 6 � agency-management extras (violet + limited amber) */
+.plat-page--agency_management {
+    --sol-amber: #d97706;
+    --sol-amber-soft: rgba(217, 119, 6, 0.12);
+}
+
+.plat-page--agency_management .am-conseq {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 900px) {
+    .plat-page--agency_management .am-conseq {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.plat-page--agency_management .am-checklist {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.65rem;
+    max-width: 720px;
+    margin-inline: auto;
+}
+
+.plat-page--agency_management .am-checklist__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--sol-border);
+    border-radius: 12px;
+    background: #fff;
+    line-height: 1.65;
+    font-size: 0.95rem;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_management .am-checklist__item {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_management .am-checklist__mark {
+    color: var(--sol-indigo);
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+}
+
+.plat-page--agency_management .am-conn {
+    margin-top: 1.5rem;
+    border: 1px solid var(--sol-border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.plat-page--agency_management .am-conn__head,
+.plat-page--agency_management .am-conn__row {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+}
+
+.plat-page--agency_management .am-conn__head {
+    background: var(--sol-indigo-soft);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--sol-indigo);
+}
+
+.plat-page--agency_management .am-conn__row:nth-child(even) {
+    background: var(--sol-muted);
+}
+
+.plat-page--agency_management .am-conn__row span:last-child {
+    color: var(--sol-amber);
+    font-weight: 600;
+}
+
+@media (max-width: 560px) {
+    .plat-page--agency_management .am-conn__head,
+    .plat-page--agency_management .am-conn__row {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+    }
+    .plat-page--agency_management .am-conseq {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .plat-page--agency_management .plat-reveal {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}

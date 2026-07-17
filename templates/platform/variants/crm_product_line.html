@@ -134,6 +134,11 @@
                         {{ cap.link.label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
                     </a>
                     {% endif %}
+                    {% if cap.link_secondary %}
+                    <a href="{% if cap.link_secondary.url_kwargs.slug_path %}{% url cap.link_secondary.url_name slug_path=cap.link_secondary.url_kwargs.slug_path %}{% elif cap.link_secondary.url_kwargs.slug %}{% url cap.link_secondary.url_name slug=cap.link_secondary.url_kwargs.slug %}{% else %}{% url cap.link_secondary.url_name %}{% endif %}" class="crm-text-link">
+                        {{ cap.link_secondary.label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
                 </div>
                 <div class="crm-cap__visual">
                     {% include 'platform/includes/screenshot_story.html' with shot=cap %}

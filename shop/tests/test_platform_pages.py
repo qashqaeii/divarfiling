@@ -83,10 +83,17 @@ class PlatformPageViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'CRM املاک')
         self.assertContains(resp, 'یک میزکار نگه دارید')
-        self.assertContains(resp, 'crm-chaos')
+        self.assertContains(resp, 'crm-story')
+        self.assertContains(resp, 'crm-outcomes')
+        self.assertContains(resp, 'crm-flow-h')
+        self.assertContains(resp, 'crm-next')
         self.assertContains(resp, 'حریم خصوصی')
         self.assertContains(resp, 'help-crm-contacts.png')
+        self.assertContains(resp, 'help-crm-today.png')
+        self.assertContains(resp, 'help-crm-deals.png')
         self.assertContains(resp, '/real-estate-crm/')
+        self.assertContains(resp, '/features/crm/reminders/')
+        self.assertContains(resp, '/solutions/customer-follow-up/')
         self.assertContains(resp, 'plat-faq__item', count=7)
 
     def test_crm_reminders_feature(self):

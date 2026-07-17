@@ -103,6 +103,15 @@ html.mk-public[data-theme="dark"] .plat-page--crm_product_line {
     max-width: 14ch;
 }
 
+.plat-page--crm_product_line .plat-crm-hero__promise {
+    margin: -0.35rem 0 1rem;
+    font-size: clamp(1.05rem, 2vw, 1.2rem);
+    font-weight: 650;
+    line-height: 1.55;
+    color: var(--crm-rose);
+    max-width: 28ch;
+}
+
 .plat-page--crm_product_line .plat-crm-hero__lead {
     margin: 0 0 1.25rem;
     max-width: var(--crm-text);
@@ -233,56 +242,167 @@ html.mk-public[data-theme="dark"] .plat-page--crm_product_line .plat-shot-story_
     color: #0284c7;
 }
 
-/* Problem chaos grid */
-.plat-page--crm_product_line .crm-chaos {
+/* Morning story — vertical time beats */
+.plat-page--crm_product_line .crm-story__beats {
     list-style: none;
-    margin: 2rem 0 0;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+    max-width: var(--crm-text);
+    border-inline-start: 2px solid rgba(225, 29, 72, 0.18);
+}
+
+.plat-page--crm_product_line .crm-story__beat {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 1rem;
+    padding: 0 0 1.75rem 1.35rem;
+    position: relative;
+}
+
+.plat-page--crm_product_line .crm-story__beat:last-child {
+    padding-bottom: 0;
+}
+
+.plat-page--crm_product_line .crm-story__time {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--crm-rose);
+    padding-top: 0.15rem;
+}
+
+.plat-page--crm_product_line .crm-story__body strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 1rem;
+}
+
+.plat-page--crm_product_line .crm-story__body p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    opacity: 0.86;
+}
+
+.plat-page--crm_product_line .crm-story__beat--hl {
+    margin-top: 0.5rem;
+    padding: 1.25rem 1.25rem 1.25rem 1.35rem;
+    border-radius: 14px;
+    background: rgba(225, 29, 72, 0.05);
+    border: 1px solid rgba(225, 29, 72, 0.15);
+    border-inline-start: none;
+}
+
+.plat-page--crm_product_line .crm-story__beat--hl .crm-story__time {
+    color: #be123c;
+}
+
+/* Outcomes — benefit over feature name */
+.plat-page--crm_product_line .crm-outcomes__grid {
+    list-style: none;
+    margin: 2.5rem 0 0;
     padding: 0;
     display: grid;
     gap: var(--crm-gap);
 }
 
-@media (min-width: 640px) {
-    .plat-page--crm_product_line .crm-chaos {
+@media (min-width: 768px) {
+    .plat-page--crm_product_line .crm-outcomes__grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-.plat-page--crm_product_line .crm-chaos__item {
-    display: flex;
-    gap: 0.85rem;
-    padding: 1.15rem 1.2rem;
-    border-radius: 12px;
-    border: 1px solid var(--crm-border);
-    background: rgba(255, 255, 255, 0.5);
+@media (min-width: 1100px) {
+    .plat-page--crm_product_line .crm-outcomes__grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
-html.mk-public[data-theme="dark"] .plat-page--crm_product_line .crm-chaos__item {
+.plat-page--crm_product_line .crm-outcomes__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 1.35rem 1.25rem;
+    border-radius: 14px;
+    border: 1px solid var(--crm-border);
+    background: rgba(255, 255, 255, 0.55);
+    min-height: 9rem;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--crm_product_line .crm-outcomes__item {
     background: rgba(255, 255, 255, 0.03);
 }
 
-.plat-page--crm_product_line .crm-chaos__icon {
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 10px;
-    display: grid;
-    place-items: center;
-    background: rgba(225, 29, 72, 0.08);
-    color: var(--crm-rose);
-    flex-shrink: 0;
+.plat-page--crm_product_line .crm-outcomes__before {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    text-decoration: line-through;
 }
 
-.plat-page--crm_product_line .crm-chaos__item strong {
+.plat-page--crm_product_line .crm-outcomes__arrow {
+    color: var(--crm-rose);
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+.plat-page--crm_product_line .crm-outcomes__after {
+    font-size: 0.98rem;
+    line-height: 1.55;
+    font-weight: 700;
+}
+
+/* Soft mid-page CTAs */
+.plat-page--crm_product_line .crm-soft-cta {
+    padding-block: clamp(2rem, 4vw, 2.75rem);
+    border-block: 1px solid var(--crm-border);
+}
+
+.plat-page--crm_product_line .crm-soft-cta--rose {
+    background: rgba(225, 29, 72, 0.04);
+}
+
+.plat-page--crm_product_line .crm-soft-cta__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+}
+
+.plat-page--crm_product_line .crm-soft-cta__inner strong {
     display: block;
     margin-bottom: 0.25rem;
-    font-size: 0.92rem;
+    font-size: 1.05rem;
 }
 
-.plat-page--crm_product_line .crm-chaos__item p {
+.plat-page--crm_product_line .crm-soft-cta__inner p {
     margin: 0;
-    font-size: 0.88rem;
-    line-height: 1.65;
-    opacity: 0.82;
+    font-size: 0.9rem;
+    opacity: 0.78;
+    line-height: 1.6;
+    max-width: 36rem;
+}
+
+.plat-page--crm_product_line .crm-soft-cta__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+@media (max-width: 767px) {
+    .plat-page--crm_product_line .crm-soft-cta__links {
+        width: 100%;
+        flex-direction: column;
+    }
+    .plat-page--crm_product_line .crm-soft-cta__btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 /* Capabilities — editorial layouts */
@@ -371,89 +491,81 @@ html.mk-public[data-theme="dark"] .plat-page--crm_product_line .crm-chaos__item 
     gap: 0.55rem;
 }
 
-/* Workflow */
-.plat-page--crm_product_line .crm-flow {
+/* Workflow — horizontal on desktop, stack on mobile */
+.plat-page--crm_product_line .crm-flow-h {
     list-style: none;
     margin: 2.5rem 0 0;
     padding: 0;
     display: grid;
-    gap: 0;
-    max-width: var(--crm-text);
-    margin-inline: auto;
-    border-inline-start: 2px solid rgba(225, 29, 72, 0.2);
+    gap: 0.85rem;
 }
 
-.plat-page--crm_product_line .crm-flow__step {
-    display: flex;
-    gap: 1rem;
-    padding: 0 0 1.75rem 1.25rem;
-    position: relative;
+@media (min-width: 900px) {
+    .plat-page--crm_product_line .crm-flow-h {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.65rem;
+    }
 }
 
-.plat-page--crm_product_line .crm-flow__step:last-child {
-    padding-bottom: 0;
+.plat-page--crm_product_line .crm-flow-h__step {
+    padding: 1.1rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--crm-border);
+    background: rgba(255, 255, 255, 0.55);
+    display: grid;
+    gap: 0.4rem;
+    align-content: start;
 }
 
-.plat-page--crm_product_line .crm-flow__num {
-    width: 1.65rem;
-    height: 1.65rem;
+html.mk-public[data-theme="dark"] .plat-page--crm_product_line .crm-flow-h__step {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--crm_product_line .crm-flow-h__num {
+    width: 1.5rem;
+    height: 1.5rem;
     border-radius: 50%;
     background: var(--crm-rose);
     color: #fff;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 800;
     display: grid;
     place-items: center;
-    flex-shrink: 0;
-    margin-inline-start: -1.95rem;
-    margin-top: 0.1rem;
 }
 
-.plat-page--crm_product_line .crm-flow__step strong {
-    display: block;
-    margin-bottom: 0.2rem;
-    font-size: 0.95rem;
-}
-
-.plat-page--crm_product_line .crm-flow__step p {
-    margin: 0;
+.plat-page--crm_product_line .crm-flow-h__step strong {
     font-size: 0.9rem;
-    line-height: 1.65;
-    opacity: 0.82;
 }
 
-/* Personas */
-.plat-page--crm_product_line .crm-personas {
+.plat-page--crm_product_line .crm-flow-h__step p {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    opacity: 0.8;
+}
+
+/* Trust facts */
+.plat-page--crm_product_line .crm-trust__grid {
     list-style: none;
-    margin: 2.5rem 0 0;
+    margin: 2rem 0 0;
     padding: 0;
     display: grid;
     gap: var(--crm-gap);
+    max-width: 900px;
 }
 
-@media (min-width: 768px) {
-    .plat-page--crm_product_line .crm-personas {
+@media (min-width: 720px) {
+    .plat-page--crm_product_line .crm-trust__grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-.plat-page--crm_product_line .crm-persona {
-    padding: 1.35rem 1.4rem;
-    border-radius: 12px;
-    border: 1px solid var(--crm-border);
-    background: rgba(255, 255, 255, 0.55);
+.plat-page--crm_product_line .crm-trust__item h3 {
+    margin: 0 0 0.35rem;
+    font-size: 0.95rem;
 }
 
-html.mk-public[data-theme="dark"] .plat-page--crm_product_line .crm-persona {
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.plat-page--crm_product_line .crm-persona h3 {
-    margin: 0 0 0.5rem;
-    font-size: 1rem;
-}
-
-.plat-page--crm_product_line .crm-persona p {
+.plat-page--crm_product_line .crm-trust__item p {
     margin: 0;
     font-size: 0.9rem;
     line-height: 1.75;
@@ -541,89 +653,66 @@ html.mk-public[data-theme="dark"] .plat-page--crm_product_line .crm-persona {
     opacity: 0.85;
 }
 
-/* Gallery */
-.plat-page--crm_product_line .crm-gallery {
-    margin-top: 2.5rem;
-    display: grid;
-    gap: clamp(2rem, 4vw, 2.75rem);
-}
-
-@media (min-width: 768px) {
-    .plat-page--crm_product_line .crm-gallery {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Related */
-.plat-page--crm_product_line .crm-related__heading {
-    margin: 0 0 1.75rem;
-    font-size: 1.35rem;
-    text-align: center;
-}
-
-.plat-page--crm_product_line .crm-related-grid {
+/* Next path — exactly 3 smart exits */
+.plat-page--crm_product_line .crm-next__grid {
+    margin-top: 2.25rem;
     display: grid;
     gap: var(--crm-gap);
 }
 
-@media (min-width: 640px) {
-    .plat-page--crm_product_line .crm-related-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1024px) {
-    .plat-page--crm_product_line .crm-related-grid {
+@media (min-width: 768px) {
+    .plat-page--crm_product_line .crm-next__grid {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
-.plat-page--crm_product_line .crm-related-card {
+.plat-page--crm_product_line .crm-next__card {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    padding: 1.25rem 1.2rem;
-    border-radius: 12px;
+    gap: 0.45rem;
+    padding: 1.35rem 1.25rem;
+    border-radius: 14px;
     border: 1px solid var(--crm-border);
     text-decoration: none;
     color: inherit;
     background: rgba(255, 255, 255, 0.5);
-    min-height: 8rem;
+    min-height: 9rem;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-html.mk-public[data-theme="dark"] .plat-page--crm_product_line .crm-related-card {
+html.mk-public[data-theme="dark"] .plat-page--crm_product_line .crm-next__card {
     background: rgba(255, 255, 255, 0.03);
 }
 
-.plat-page--crm_product_line .crm-related-card:hover {
+.plat-page--crm_product_line .crm-next__card:hover {
     border-color: rgba(225, 29, 72, 0.3);
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
-.plat-page--crm_product_line .crm-related-card__type {
+.plat-page--crm_product_line .crm-next__type {
     font-size: 0.68rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    opacity: 0.55;
+    color: var(--crm-rose);
+    opacity: 0.85;
 }
 
-.plat-page--crm_product_line .crm-related-card strong {
-    font-size: 0.92rem;
+.plat-page--crm_product_line .crm-next__card strong {
+    font-size: 0.98rem;
     line-height: 1.45;
+}
+
+.plat-page--crm_product_line .crm-next__card p {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.75;
+    line-height: 1.55;
     flex: 1;
 }
 
-.plat-page--crm_product_line .crm-related-card p {
-    margin: 0;
-    font-size: 0.82rem;
-    opacity: 0.75;
-    line-height: 1.5;
-}
-
-.plat-page--crm_product_line .crm-related-card__cta {
-    font-size: 0.78rem;
+.plat-page--crm_product_line .crm-next__cta {
+    font-size: 0.8rem;
     font-weight: 700;
     color: var(--crm-rose);
     margin-top: auto;
@@ -691,7 +780,7 @@ html.mk-public[data-theme="dark"] .plat-page--crm_product_line .crm-related-card
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .plat-page--crm_product_line .crm-related-card,
+    .plat-page--crm_product_line .crm-next__card,
     .plat-page--crm_product_line .crm-text-link {
         transition: none;
     }

@@ -4,6 +4,9 @@
         <div class="plat-crm-hero__copy">
             <p class="plat-crm-hero__eyebrow">{{ platform_content.hero.eyebrow }}</p>
             <h1>{{ platform_page.seo.h1 }}</h1>
+            {% if platform_content.hero.promise %}
+            <p class="plat-crm-hero__promise">{{ platform_content.hero.promise }}</p>
+            {% endif %}
             <p class="plat-crm-hero__lead">{{ platform_content.hero.lead }}</p>
             {% if platform_content.hero.bullets %}
             <ul class="plat-crm-hero__bullets">

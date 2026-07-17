@@ -1,30 +1,67 @@
 {% include 'platform/includes/hero_crm.html' %}
 
-{# ── 2. مشکل واقعی ── #}
-<section class="crm-sec crm-problem" aria-labelledby="crm-problem-title">
+{# ── ۱. سناریوی زمانی ── #}
+<section class="crm-sec crm-story" aria-labelledby="crm-story-title">
     <div class="crm-wrap">
         <div class="crm-prose">
-            <p class="crm-eyebrow">مشکل واقعی</p>
-            <h2 id="crm-problem-title">{{ platform_content.problem.title }}</h2>
-            <p class="crm-prose__lead">{{ platform_content.problem.scenario_title }}</p>
+            <p class="crm-eyebrow">سناریوی واقعی</p>
+            <h2 id="crm-story-title">{{ platform_content.morning_story.title }}</h2>
+            <p class="crm-prose__lead">{{ platform_content.morning_story.lead }}</p>
         </div>
-        <ul class="crm-chaos">
-            {% for frag in platform_content.problem.fragments %}
-            <li class="crm-chaos__item plat-reveal">
-                <span class="crm-chaos__icon"><i class="fas {{ frag.icon }}" aria-hidden="true"></i></span>
-                <div>
-                    <strong>{{ frag.label }}</strong>
-                    <p>{{ frag.text }}</p>
+        <ol class="crm-story__beats">
+            {% for beat in platform_content.morning_story.beats %}
+            <li class="crm-story__beat{% if beat.highlight %} crm-story__beat--hl{% endif %} plat-reveal">
+                <span class="crm-story__time">{{ beat.time }}</span>
+                <div class="crm-story__body">
+                    <strong>{{ beat.title }}</strong>
+                    <p>{{ beat.text }}</p>
                 </div>
             </li>
             {% endfor %}
-        </ul>
-        <p class="crm-prose crm-prose--resolution plat-reveal">{{ platform_content.problem.resolution }}</p>
+        </ol>
     </div>
 </section>
 
-{# ── 3. قابلیت‌ها ── #}
-<section class="crm-sec crm-sec--soft" aria-labelledby="crm-caps-title">
+{# ── ۲. Outcomeها ── #}
+<section class="crm-sec crm-sec--soft crm-outcomes" aria-labelledby="crm-outcomes-title">
+    <div class="crm-wrap">
+        <div class="crm-prose crm-prose--center">
+            <p class="crm-eyebrow">نتیجه کار</p>
+            <h2 id="crm-outcomes-title">{{ platform_content.outcomes.title }}</h2>
+            <p>{{ platform_content.outcomes.lead }}</p>
+        </div>
+        <ul class="crm-outcomes__grid">
+            {% for item in platform_content.outcomes.items %}
+            <li class="crm-outcomes__item plat-reveal">
+                <span class="crm-outcomes__before">{{ item.before }}</span>
+                <span class="crm-outcomes__arrow" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
+                <strong class="crm-outcomes__after">{{ item.after }}</strong>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── ۳. CTA نرم ── #}
+<aside class="crm-soft-cta plat-reveal" aria-label="لینک‌های مرتبط">
+    <div class="crm-wrap crm-soft-cta__inner">
+        <div>
+            <strong>{{ platform_content.mid_cta_a.title }}</strong>
+            <p>{{ platform_content.mid_cta_a.lead }}</p>
+        </div>
+        <div class="crm-soft-cta__links">
+            <a href="{% url platform_content.mid_cta_a.primary_url_name slug_path=platform_content.mid_cta_a.primary_url_kwargs.slug_path %}" class="plat-btn plat-btn--primary crm-soft-cta__btn">
+                {{ platform_content.mid_cta_a.primary_label }}
+            </a>
+            <a href="{% url platform_content.mid_cta_a.secondary_url_name slug=platform_content.mid_cta_a.secondary_url_kwargs.slug %}" class="plat-btn plat-btn--ghost crm-soft-cta__btn">
+                {{ platform_content.mid_cta_a.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── ۴. قابلیت‌ها با Screenshot ── #}
+<section class="crm-sec" aria-labelledby="crm-caps-title">
     <div class="crm-wrap">
         <div class="crm-prose crm-prose--center">
             <p class="crm-eyebrow">نمای محصول</p>
@@ -61,47 +98,71 @@
     </div>
 </section>
 
-{# ── 4. گردش کار ── #}
-<section class="crm-sec" aria-labelledby="crm-flow-title">
+{# ── ۵. CTA نرم ثبت‌نام ── #}
+<aside class="crm-soft-cta crm-soft-cta--rose plat-reveal" aria-label="شروع کار">
+    <div class="crm-wrap crm-soft-cta__inner">
+        <div>
+            <strong>{{ platform_content.mid_cta_b.title }}</strong>
+            <p>{{ platform_content.mid_cta_b.lead }}</p>
+        </div>
+        <div class="crm-soft-cta__links">
+            {% if user.is_authenticated %}
+            <a href="{% url platform_content.mid_cta_b.auth_primary_url_name %}" class="plat-btn plat-btn--primary crm-soft-cta__btn">
+                {{ platform_content.mid_cta_b.auth_primary_label }}
+            </a>
+            {% else %}
+            <a href="{% url platform_content.mid_cta_b.primary_url_name %}" class="plat-btn plat-btn--primary crm-soft-cta__btn">
+                {{ platform_content.mid_cta_b.primary_label }}
+            </a>
+            {% endif %}
+            <a href="{% url platform_content.mid_cta_b.secondary_url_name %}" class="plat-btn plat-btn--ghost crm-soft-cta__btn">
+                {{ platform_content.mid_cta_b.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── ۶. گردش کار افقی ── #}
+<section class="crm-sec crm-sec--soft crm-flow-sec" aria-labelledby="crm-flow-title">
     <div class="crm-wrap">
         <div class="crm-prose crm-prose--center">
             <p class="crm-eyebrow">گردش کار</p>
             <h2 id="crm-flow-title">{{ platform_content.workflow.title }}</h2>
             <p>{{ platform_content.workflow.lead }}</p>
         </div>
-        <ol class="crm-flow">
+        <ol class="crm-flow-h">
             {% for step in platform_content.workflow.steps %}
-            <li class="crm-flow__step plat-reveal">
-                <span class="crm-flow__num">{{ forloop.counter }}</span>
-                <div>
-                    <strong>{{ step.title }}</strong>
-                    <p>{{ step.text }}</p>
-                </div>
+            <li class="crm-flow-h__step plat-reveal">
+                <span class="crm-flow-h__num">{{ forloop.counter }}</span>
+                <strong>{{ step.title }}</strong>
+                <p>{{ step.text }}</p>
             </li>
             {% endfor %}
         </ol>
     </div>
 </section>
 
-{# ── 5. Personas ── #}
-<section class="crm-sec crm-sec--soft" aria-labelledby="crm-personas-title">
+{# ── ۷. اعتماد ── #}
+<section class="crm-sec crm-trust" aria-labelledby="crm-trust-title">
     <div class="crm-wrap">
-        <div class="crm-prose crm-prose--center">
-            <h2 id="crm-personas-title">{{ platform_content.personas.title }}</h2>
+        <div class="crm-prose">
+            <p class="crm-eyebrow">اعتماد</p>
+            <h2 id="crm-trust-title">{{ platform_content.trust.title }}</h2>
+            <p>{{ platform_content.trust.lead }}</p>
         </div>
-        <ul class="crm-personas">
-            {% for p in platform_content.personas.items %}
-            <li class="crm-persona plat-reveal">
-                <h3>{{ p.title }}</h3>
-                <p>{{ p.scenario }}</p>
+        <ul class="crm-trust__grid">
+            {% for item in platform_content.trust.items %}
+            <li class="crm-trust__item plat-reveal">
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.text }}</p>
             </li>
             {% endfor %}
         </ul>
     </div>
 </section>
 
-{# ── 6. رایگان / لایسنس ── #}
-<section class="crm-sec" aria-labelledby="crm-access-title">
+{# ── ۸. رایگان / لایسنس ── #}
+<section class="crm-sec crm-sec--soft" aria-labelledby="crm-access-title">
     <div class="crm-wrap">
         <div class="crm-prose crm-prose--center">
             <h2 id="crm-access-title">{{ platform_content.access_tiers.title }}</h2>
@@ -136,8 +197,8 @@
     </div>
 </section>
 
-{# ── 7. حریم خصوصی ── #}
-<section class="crm-sec crm-sec--soft" aria-labelledby="crm-privacy-title">
+{# ── ۹. حریم خصوصی ── #}
+<section class="crm-sec" aria-labelledby="crm-privacy-title">
     <div class="crm-wrap">
         <div class="crm-prose">
             <p class="crm-eyebrow">امنیت</p>
@@ -155,26 +216,9 @@
     </div>
 </section>
 
-{# ── 8. گالری Screenshot ── #}
-<section class="crm-sec" aria-labelledby="crm-gallery-title">
-    <div class="crm-wrap">
-        <div class="crm-prose crm-prose--center">
-            <h2 id="crm-gallery-title">{{ platform_content.screenshot_gallery.title }}</h2>
-            <p>{{ platform_content.screenshot_gallery.lead }}</p>
-        </div>
-        <div class="crm-gallery">
-            {% for shot in platform_content.screenshot_gallery.items %}
-            <div class="crm-gallery__item plat-reveal">
-                {% include 'platform/includes/screenshot_story.html' with shot=shot %}
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-{# ── 9. FAQ ── #}
+{# ── ۱۰. FAQ ── #}
 {% if platform_content.faq %}
-<section class="crm-sec plat-faq" aria-labelledby="crm-faq-title">
+<section class="crm-sec crm-sec--soft plat-faq" aria-labelledby="crm-faq-title">
     <div class="crm-wrap">
         <div class="crm-prose crm-prose--center">
             <p class="crm-eyebrow">پاسخ سریع</p>
@@ -194,33 +238,28 @@
 </section>
 {% endif %}
 
-{# ── 10. Related ── #}
-<section class="crm-sec crm-sec--soft" aria-labelledby="crm-related-title">
+{# ── ۱۱. مسیر بعدی (۳ پیشنهاد) ── #}
+<section class="crm-sec crm-next" aria-labelledby="crm-next-title">
     <div class="crm-wrap">
-        <h2 id="crm-related-title" class="crm-related__heading">ادامه مسیر</h2>
-        <div class="crm-related-grid">
-            {% if related_posts %}
-            {% for post in related_posts %}
-            <a href="{{ post.get_absolute_url }}" class="crm-related-card plat-reveal">
-                <span class="crm-related-card__type">مقاله</span>
-                <strong>{{ post.title }}</strong>
-                <span class="crm-related-card__cta">مطالعه راهنما</span>
-            </a>
-            {% endfor %}
-            {% endif %}
-            {% for page in platform_content.related_pages %}
-            <a href="{% if page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug %}{% else %}{% url page.url_name %}{% endif %}" class="crm-related-card plat-reveal">
-                <span class="crm-related-card__type">صفحه</span>
+        <div class="crm-prose crm-prose--center">
+            <p class="crm-eyebrow">مسیر بعد</p>
+            <h2 id="crm-next-title">{{ platform_content.next_path.title }}</h2>
+            <p>{{ platform_content.next_path.lead }}</p>
+        </div>
+        <div class="crm-next__grid">
+            {% for page in platform_content.next_path.items %}
+            <a href="{% if page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug %}{% else %}{% url page.url_name %}{% endif %}" class="crm-next__card plat-reveal">
+                <span class="crm-next__type">{{ page.type }}</span>
                 <strong>{{ page.title }}</strong>
                 <p>{{ page.desc }}</p>
-                <span class="crm-related-card__cta">مشاهده</span>
+                <span class="crm-next__cta">{{ page.cta }}</span>
             </a>
             {% endfor %}
         </div>
     </div>
 </section>
 
-{# ── 11. CTA نهایی ── #}
+{# ── ۱۲. CTA نهایی ── #}
 <section class="crm-sec crm-final-cta">
     <div class="crm-wrap crm-final-cta__inner plat-reveal">
         <h2>{{ platform_content.final_cta.title }}</h2>

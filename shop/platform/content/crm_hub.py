@@ -8,6 +8,7 @@ def crm_product_line_content() -> dict[str, Any]:
     return {
         'hero': {
             'eyebrow': 'خط محصول · CRM املاک',
+            'eyebrow_icon': 'fa-users',
             'promise': 'مشتری، پیگیری و معامله — در یک میزکار فارسی',
             'lead': (
                 'وقتی شماره در واتساپ است، فایل در اکسل و «فردا زنگ می‌زنم» فقط در ذهن، '
@@ -15,9 +16,9 @@ def crm_product_line_content() -> dict[str, Any]:
                 'مخاطب، یادآور، معامله، فایل شخصی و تیم — رایگان با ثبت‌نام.'
             ),
             'bullets': [
-                'هیچ پیگیری زمان‌دار گم نمی‌شود',
-                'وضعیت معامله و تیم در یک نگاه',
-                'مناسب مشاور مستقل، منشی و مدیر آژانس',
+                {'icon': 'fa-bell', 'text': 'هیچ پیگیری زمان‌دار گم نمی‌شود'},
+                {'icon': 'fa-chart-line', 'text': 'وضعیت معامله و تیم در یک نگاه'},
+                {'icon': 'fa-user-tie', 'text': 'مناسب مشاور مستقل، منشی و مدیر آژانس'},
             ],
             'screenshot': {
                 'image': 'images/help-crm-dashboard.png',
@@ -39,6 +40,7 @@ def crm_product_line_content() -> dict[str, Any]:
             'beats': [
                 {
                     'time': '۰۹:۰۰',
+                    'icon': 'fa-moon',
                     'title': 'سه تماس شب قبل',
                     'text': (
                         'دیروز سه بازدید رفتید. نام‌ها را بلد هستید؛ '
@@ -47,6 +49,7 @@ def crm_product_line_content() -> dict[str, Any]:
                 },
                 {
                     'time': '۱۰:۳۰',
+                    'icon': 'fa-phone',
                     'title': 'مشتری جدی تماس می‌گیرد',
                     'text': (
                         'خانم احمدی می‌پرسد «همان آپارتمان ونک چه شد؟» '
@@ -55,6 +58,7 @@ def crm_product_line_content() -> dict[str, Any]:
                 },
                 {
                     'time': '۱۴:۰۰',
+                    'icon': 'fa-clock',
                     'title': 'تماس دوم فراموش شد',
                     'text': (
                         'قرار بود به مالک زنگ بزنید. تا ظهر شلوغ شد؛ '
@@ -63,6 +67,7 @@ def crm_product_line_content() -> dict[str, Any]:
                 },
                 {
                     'time': 'با CRM',
+                    'icon': 'fa-circle-check',
                     'title': 'همان روز، مسیر دیگر',
                     'text': (
                         'هر بازدید = یادداشت + یادآور. صبح «صف امروز» می‌گوید '
@@ -77,24 +82,29 @@ def crm_product_line_content() -> dict[str, Any]:
             'lead': 'هر ماژول یک خروجی ملموس برای روز کاری مشاور دارد.',
             'items': [
                 {
+                    'icon': 'fa-bell',
                     'before': 'Reminder',
                     'after': 'هیچ تماس مهمی فراموش نمی‌شود',
                 },
                 {
+                    'icon': 'fa-list-check',
                     'before': 'Today queue',
                     'after': 'هر صبح می‌دانید اول به کی زنگ بزنید',
                 },
                 {
+                    'icon': 'fa-filter',
                     'before': 'Deal pipeline',
                     'after': 'می‌بینید کدام معامله جدی است و کدام راکد',
                 },
                 {
+                    'icon': 'fa-inbox',
                     'before': 'Team inbox',
                     'after': 'سرنخ مشترک بدون تداخل بین مشاوران',
                 },
             ],
         },
         'mid_cta_a': {
+            'icon': 'fa-bell',
             'title': 'عمیق‌تر روی پیگیری',
             'lead': 'یادآور، صف امروز و تقویم — جزئیات Feature.',
             'primary_label': 'مشاهده یادآور CRM',
@@ -114,6 +124,7 @@ def crm_product_line_content() -> dict[str, Any]:
         'capabilities': [
             {
                 'title': 'پرونده مخاطب — زمینه کامل قبل از تماس',
+                'icon': 'fa-address-book',
                 'badge': {'label': 'رایگان', 'tone': 'free'},
                 'layout': 'side',
                 'problem': 'شماره، بودجه، محله و یادداشت بازدید پراکنده است.',
@@ -135,6 +146,7 @@ def crm_product_line_content() -> dict[str, Any]:
             },
             {
                 'title': 'صف امروز — اولویت تماس‌های همین روز',
+                'icon': 'fa-sun',
                 'badge': {'label': 'رایگان', 'tone': 'free'},
                 'layout': 'wide',
                 'problem': 'تماس دوم بعد از بازدید بیشتر فراموش می‌شود.',
@@ -156,6 +168,7 @@ def crm_product_line_content() -> dict[str, Any]:
             },
             {
                 'title': 'قیف معامله — ببینید کار کجا گیر کرده',
+                'icon': 'fa-handshake',
                 'badge': {'label': 'رایگان', 'tone': 'free'},
                 'layout': 'side-flip',
                 'problem': 'نمی‌دانید کدام معامله جدی است و کدام هفته‌ها راکد مانده.',
@@ -177,6 +190,7 @@ def crm_product_line_content() -> dict[str, Any]:
             },
             {
                 'title': 'تقویم — بازدید و قرار در یک نما',
+                'icon': 'fa-calendar-days',
                 'badge': {'label': 'رایگان', 'tone': 'free'},
                 'layout': 'side',
                 'problem': 'بازدید دوم با قرار دیگر تداخل پیدا می‌کند.',
@@ -197,6 +211,7 @@ def crm_product_line_content() -> dict[str, Any]:
             },
             {
                 'title': 'فایل شخصی — ملک کنار همان مشتری',
+                'icon': 'fa-building',
                 'badge': {'label': 'رایگان', 'tone': 'free'},
                 'layout': 'side-flip',
                 'problem': 'فایل انحصاری آژانس جدا از پرونده مشتری است.',
@@ -218,6 +233,7 @@ def crm_product_line_content() -> dict[str, Any]:
             },
             {
                 'title': 'تطبیق هوشمند — پیشنهاد اولیه در چند ثانیه',
+                'icon': 'fa-wand-magic-sparkles',
                 'badge': {'label': 'نیازمند لایسنس ربات', 'tone': 'license'},
                 'layout': 'wide',
                 'problem': 'پیدا کردن ملک مناسب برای بودجه مشتری وقت‌گیر است.',
@@ -238,6 +254,7 @@ def crm_product_line_content() -> dict[str, Any]:
             },
             {
                 'title': 'تیم آژانس — هماهنگی بدون لو رفتن پرونده',
+                'icon': 'fa-users-gear',
                 'badge': {'label': 'رایگان', 'tone': 'free'},
                 'layout': 'side',
                 'problem': 'سرنخ مشترک بدون قانون باعث تداخل مشاوران می‌شود.',
@@ -259,6 +276,7 @@ def crm_product_line_content() -> dict[str, Any]:
             },
         ],
         'mid_cta_b': {
+            'icon': 'fa-rocket',
             'title': 'آماده‌اید پرونده‌ها را منظم کنید؟',
             'lead': 'ثبت‌نام رایگان است — بدون لایسنس ربات برای هسته CRM.',
             'primary_label': 'شروع رایگان میزکار',
@@ -274,12 +292,12 @@ def crm_product_line_content() -> dict[str, Any]:
             'title': 'گردش کار در کمتر از ۳۰ ثانیه',
             'lead': 'مسیر متداول از سرنخ تا معامله — قابل تطبیق با سبک کار شما.',
             'steps': [
-                {'title': 'سرنخ', 'text': 'تماس، دیوار یا معرف → ثبت مخاطب'},
-                {'title': 'نیاز', 'text': 'بودجه، محله، متراژ در پروفایل'},
-                {'title': 'فایل', 'text': 'پیشنهاد فایل شخصی یا تطبیق'},
-                {'title': 'بازدید', 'text': 'قرار در تقویم + یادداشت'},
-                {'title': 'پیگیری', 'text': 'یادآور → صف امروز'},
-                {'title': 'معامله', 'text': 'Deal و مراحل pipeline'},
+                {'icon': 'fa-user-plus', 'title': 'سرنخ', 'text': 'تماس، دیوار یا معرف → ثبت مخاطب'},
+                {'icon': 'fa-clipboard-list', 'title': 'نیاز', 'text': 'بودجه، محله، متراژ در پروفایل'},
+                {'icon': 'fa-house', 'title': 'فایل', 'text': 'پیشنهاد فایل شخصی یا تطبیق'},
+                {'icon': 'fa-location-dot', 'title': 'بازدید', 'text': 'قرار در تقویم + یادداشت'},
+                {'icon': 'fa-bell', 'title': 'پیگیری', 'text': 'یادآور → صف امروز'},
+                {'icon': 'fa-file-signature', 'title': 'معامله', 'text': 'Deal و مراحل pipeline'},
             ],
         },
         'trust': {
@@ -287,18 +305,22 @@ def crm_product_line_content() -> dict[str, Any]:
             'lead': 'فقط واقعیت محصول فعلی — بدون عدد ساختگی.',
             'items': [
                 {
+                    'icon': 'fa-gift',
                     'title': 'هسته CRM رایگان',
                     'text': 'مخاطب، معامله، یادآور، تقویم، فایل شخصی و تیم با ثبت‌نام.',
                 },
                 {
+                    'icon': 'fa-desktop',
                     'title': 'تصاویر واقعی میزکار',
                     'text': 'اسکرین‌شات‌های این صفحه از همان رابط کاربری محصول‌اند.',
                 },
                 {
+                    'icon': 'fa-user-shield',
                     'title': 'نقش و حریم خصوصی',
                     'text': 'مدیر آمار می‌بیند؛ یادداشت خصوصی مشاور بدون اشتراک دیده نمی‌شود.',
                 },
                 {
+                    'icon': 'fa-key',
                     'title': 'شفافیت لایسنس',
                     'text': 'تطبیق Dataset و بانک فایل دیوار لایسنس جدا می‌خواهند — صریح نوشته شده.',
                 },
@@ -330,18 +352,22 @@ def crm_product_line_content() -> dict[str, Any]:
             'lead': 'دسترسی بر اساس نقش آژانس — نه «همه به همه».',
             'points': [
                 {
+                    'icon': 'fa-user',
                     'title': 'مشاور',
                     'text': 'پرونده‌ها و معاملات خودش را می‌بیند؛ داده دیگران بدون اشتراک در دسترس نیست.',
                 },
                 {
+                    'icon': 'fa-headset',
                     'title': 'منشی',
                     'text': 'inbox تیم و مخاطبین تخصیص‌یافته؛ ثبت سرنخ و پیگیری اولیه.',
                 },
                 {
+                    'icon': 'fa-user-tie',
                     'title': 'مدیر و مالک',
                     'text': 'تیم، تخصیص و گزارش معوق — بدون دسترسی خودکار به متن تماس خصوصی.',
                 },
                 {
+                    'icon': 'fa-share-nodes',
                     'title': 'اشتراک صریح',
                     'text': 'فایل یا مخاطب فقط با اشتراک یا تخصیص بین اعضا دیده می‌شود.',
                 },
@@ -353,6 +379,7 @@ def crm_product_line_content() -> dict[str, Any]:
             'items': [
                 {
                     'type': 'Feature',
+                    'icon': 'fa-bell',
                     'title': 'یادآور و تقویم CRM',
                     'desc': 'صف امروز، تقویم و پیگیری زمان‌دار',
                     'url_name': 'platform_features_page',
@@ -361,6 +388,7 @@ def crm_product_line_content() -> dict[str, Any]:
                 },
                 {
                     'type': 'Solution',
+                    'icon': 'fa-phone-volume',
                     'title': 'پیگیری مشتری',
                     'desc': 'ترکیب ابزارها تا تماس دوم از قلم نیفتد',
                     'url_name': 'platform_solutions_page',
@@ -369,6 +397,7 @@ def crm_product_line_content() -> dict[str, Any]:
                 },
                 {
                     'type': 'مقاله',
+                    'icon': 'fa-newspaper',
                     'title': 'پیگیری مشتری مشاور املاک',
                     'desc': 'راهنمای عملی پیگیری در کار روزمره',
                     'url_name': 'blog:post_detail',
@@ -378,6 +407,7 @@ def crm_product_line_content() -> dict[str, Any]:
             ],
         },
         'final_cta': {
+            'icon': 'fa-rocket',
             'title': 'همین امروز پرونده مشتری‌هایتان را منظم کنید',
             'lead': 'ثبت‌نام رایگان — CRM، مخاطب، معامله و پیگیری بدون لایسنس ربات.',
         },

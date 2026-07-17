@@ -4,7 +4,10 @@
 <section class="crm-sec crm-story" aria-labelledby="crm-story-title">
     <div class="crm-wrap">
         <div class="crm-prose">
-            <p class="crm-eyebrow">سناریوی واقعی</p>
+            <p class="crm-eyebrow">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
+                سناریوی واقعی
+            </p>
             <h2 id="crm-story-title">{{ platform_content.morning_story.title }}</h2>
             <p class="crm-prose__lead">{{ platform_content.morning_story.lead }}</p>
         </div>
@@ -13,7 +16,14 @@
             <li class="crm-story__beat{% if beat.highlight %} crm-story__beat--hl{% endif %} plat-reveal">
                 <span class="crm-story__time">{{ beat.time }}</span>
                 <div class="crm-story__body">
-                    <strong>{{ beat.title }}</strong>
+                    <div class="crm-story__head">
+                        {% if beat.icon %}
+                        <span class="crm-ico{% if beat.highlight %} crm-ico--solid{% endif %}" aria-hidden="true">
+                            <i class="fas {{ beat.icon }}"></i>
+                        </span>
+                        {% endif %}
+                        <strong>{{ beat.title }}</strong>
+                    </div>
                     <p>{{ beat.text }}</p>
                 </div>
             </li>
@@ -26,13 +36,21 @@
 <section class="crm-sec crm-sec--soft crm-outcomes" aria-labelledby="crm-outcomes-title">
     <div class="crm-wrap">
         <div class="crm-prose crm-prose--center">
-            <p class="crm-eyebrow">نتیجه کار</p>
+            <p class="crm-eyebrow">
+                <i class="fas fa-bullseye" aria-hidden="true"></i>
+                نتیجه کار
+            </p>
             <h2 id="crm-outcomes-title">{{ platform_content.outcomes.title }}</h2>
             <p>{{ platform_content.outcomes.lead }}</p>
         </div>
         <ul class="crm-outcomes__grid">
             {% for item in platform_content.outcomes.items %}
             <li class="crm-outcomes__item plat-reveal">
+                {% if item.icon %}
+                <span class="crm-ico crm-ico--lg crm-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                {% endif %}
                 <span class="crm-outcomes__before">{{ item.before }}</span>
                 <span class="crm-outcomes__arrow" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
                 <strong class="crm-outcomes__after">{{ item.after }}</strong>
@@ -45,15 +63,24 @@
 {# ── ۳. CTA نرم ── #}
 <aside class="crm-soft-cta plat-reveal" aria-label="لینک‌های مرتبط">
     <div class="crm-wrap crm-soft-cta__inner">
-        <div>
-            <strong>{{ platform_content.mid_cta_a.title }}</strong>
-            <p>{{ platform_content.mid_cta_a.lead }}</p>
+        <div class="crm-soft-cta__copy">
+            {% if platform_content.mid_cta_a.icon %}
+            <span class="crm-ico crm-ico--solid" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_a.icon }}"></i>
+            </span>
+            {% endif %}
+            <div>
+                <strong>{{ platform_content.mid_cta_a.title }}</strong>
+                <p>{{ platform_content.mid_cta_a.lead }}</p>
+            </div>
         </div>
         <div class="crm-soft-cta__links">
             <a href="{% url platform_content.mid_cta_a.primary_url_name slug_path=platform_content.mid_cta_a.primary_url_kwargs.slug_path %}" class="plat-btn plat-btn--primary crm-soft-cta__btn">
+                <i class="fas fa-bell" aria-hidden="true"></i>
                 {{ platform_content.mid_cta_a.primary_label }}
             </a>
             <a href="{% url platform_content.mid_cta_a.secondary_url_name slug=platform_content.mid_cta_a.secondary_url_kwargs.slug %}" class="plat-btn plat-btn--ghost crm-soft-cta__btn">
+                <i class="fas fa-phone-volume" aria-hidden="true"></i>
                 {{ platform_content.mid_cta_a.secondary_label }}
             </a>
         </div>
@@ -64,7 +91,10 @@
 <section class="crm-sec" aria-labelledby="crm-caps-title">
     <div class="crm-wrap">
         <div class="crm-prose crm-prose--center">
-            <p class="crm-eyebrow">نمای محصول</p>
+            <p class="crm-eyebrow">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                نمای محصول
+            </p>
             <h2 id="crm-caps-title">{{ platform_content.capabilities_intro.title }}</h2>
             <p>{{ platform_content.capabilities_intro.lead }}</p>
         </div>
@@ -73,15 +103,31 @@
             <article class="crm-cap crm-cap--{{ cap.layout }} plat-reveal" id="crm-cap-{{ forloop.counter }}">
                 <div class="crm-cap__copy">
                     <div class="crm-cap__head">
-                        <h3>{{ cap.title }}</h3>
-                        {% if cap.badge %}
-                        {% include 'platform/includes/badge.html' with label=cap.badge.label tone=cap.badge.tone %}
+                        {% if cap.icon %}
+                        <span class="crm-ico crm-ico--lg crm-ico--float" aria-hidden="true">
+                            <i class="fas {{ cap.icon }}"></i>
+                        </span>
                         {% endif %}
+                        <div class="crm-cap__titles">
+                            <h3>{{ cap.title }}</h3>
+                            {% if cap.badge %}
+                            {% include 'platform/includes/badge.html' with label=cap.badge.label tone=cap.badge.tone %}
+                            {% endif %}
+                        </div>
                     </div>
                     <dl class="crm-cap__meta">
-                        <div><dt>مشکل</dt><dd>{{ cap.problem }}</dd></div>
-                        <div><dt>نحوه کار</dt><dd>{{ cap.how }}</dd></div>
-                        <div><dt>نتیجه</dt><dd>{{ cap.outcome }}</dd></div>
+                        <div>
+                            <dt><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> مشکل</dt>
+                            <dd>{{ cap.problem }}</dd>
+                        </div>
+                        <div>
+                            <dt><i class="fas fa-gears" aria-hidden="true"></i> نحوه کار</dt>
+                            <dd>{{ cap.how }}</dd>
+                        </div>
+                        <div>
+                            <dt><i class="fas fa-trophy" aria-hidden="true"></i> نتیجه</dt>
+                            <dd>{{ cap.outcome }}</dd>
+                        </div>
                     </dl>
                     {% if cap.link %}
                     <a href="{% if cap.link.url_kwargs.slug_path %}{% url cap.link.url_name slug_path=cap.link.url_kwargs.slug_path %}{% elif cap.link.url_kwargs.slug %}{% url cap.link.url_name slug=cap.link.url_kwargs.slug %}{% else %}{% url cap.link.url_name %}{% endif %}" class="crm-text-link">
@@ -101,21 +147,31 @@
 {# ── ۵. CTA نرم ثبت‌نام ── #}
 <aside class="crm-soft-cta crm-soft-cta--rose plat-reveal" aria-label="شروع کار">
     <div class="crm-wrap crm-soft-cta__inner">
-        <div>
-            <strong>{{ platform_content.mid_cta_b.title }}</strong>
-            <p>{{ platform_content.mid_cta_b.lead }}</p>
+        <div class="crm-soft-cta__copy">
+            {% if platform_content.mid_cta_b.icon %}
+            <span class="crm-ico crm-ico--solid crm-ico--pulse" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_b.icon }}"></i>
+            </span>
+            {% endif %}
+            <div>
+                <strong>{{ platform_content.mid_cta_b.title }}</strong>
+                <p>{{ platform_content.mid_cta_b.lead }}</p>
+            </div>
         </div>
         <div class="crm-soft-cta__links">
             {% if user.is_authenticated %}
             <a href="{% url platform_content.mid_cta_b.auth_primary_url_name %}" class="plat-btn plat-btn--primary crm-soft-cta__btn">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
                 {{ platform_content.mid_cta_b.auth_primary_label }}
             </a>
             {% else %}
             <a href="{% url platform_content.mid_cta_b.primary_url_name %}" class="plat-btn plat-btn--primary crm-soft-cta__btn">
+                <i class="fas fa-gift" aria-hidden="true"></i>
                 {{ platform_content.mid_cta_b.primary_label }}
             </a>
             {% endif %}
             <a href="{% url platform_content.mid_cta_b.secondary_url_name %}" class="plat-btn plat-btn--ghost crm-soft-cta__btn">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
                 {{ platform_content.mid_cta_b.secondary_label }}
             </a>
         </div>
@@ -126,13 +182,19 @@
 <section class="crm-sec crm-sec--soft crm-flow-sec" aria-labelledby="crm-flow-title">
     <div class="crm-wrap">
         <div class="crm-prose crm-prose--center">
-            <p class="crm-eyebrow">گردش کار</p>
+            <p class="crm-eyebrow">
+                <i class="fas fa-route" aria-hidden="true"></i>
+                گردش کار
+            </p>
             <h2 id="crm-flow-title">{{ platform_content.workflow.title }}</h2>
             <p>{{ platform_content.workflow.lead }}</p>
         </div>
         <ol class="crm-flow-h">
             {% for step in platform_content.workflow.steps %}
             <li class="crm-flow-h__step plat-reveal">
+                <span class="crm-flow-h__icon crm-ico crm-ico--solid" aria-hidden="true">
+                    <i class="fas {{ step.icon|default:'fa-circle' }}"></i>
+                </span>
                 <span class="crm-flow-h__num">{{ forloop.counter }}</span>
                 <strong>{{ step.title }}</strong>
                 <p>{{ step.text }}</p>
@@ -146,13 +208,21 @@
 <section class="crm-sec crm-trust" aria-labelledby="crm-trust-title">
     <div class="crm-wrap">
         <div class="crm-prose">
-            <p class="crm-eyebrow">اعتماد</p>
+            <p class="crm-eyebrow">
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                اعتماد
+            </p>
             <h2 id="crm-trust-title">{{ platform_content.trust.title }}</h2>
             <p>{{ platform_content.trust.lead }}</p>
         </div>
         <ul class="crm-trust__grid">
             {% for item in platform_content.trust.items %}
             <li class="crm-trust__item plat-reveal">
+                {% if item.icon %}
+                <span class="crm-ico crm-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                {% endif %}
                 <h3>{{ item.title }}</h3>
                 <p>{{ item.text }}</p>
             </li>
@@ -165,12 +235,19 @@
 <section class="crm-sec crm-sec--soft" aria-labelledby="crm-access-title">
     <div class="crm-wrap">
         <div class="crm-prose crm-prose--center">
+            <p class="crm-eyebrow">
+                <i class="fas fa-tags" aria-hidden="true"></i>
+                دسترسی
+            </p>
             <h2 id="crm-access-title">{{ platform_content.access_tiers.title }}</h2>
             <p>{{ platform_content.access_tiers.lead }}</p>
         </div>
         <div class="crm-tiers">
             <div class="crm-tier crm-tier--free plat-reveal">
-                <h3>رایگان با ثبت‌نام</h3>
+                <h3>
+                    <span class="crm-ico crm-ico--sm crm-ico--emerald" aria-hidden="true"><i class="fas fa-gift"></i></span>
+                    رایگان با ثبت‌نام
+                </h3>
                 <ul>
                     {% for item in platform_content.access_tiers.free %}
                     <li><i class="fas fa-check" aria-hidden="true"></i> {{ item }}</li>
@@ -178,7 +255,10 @@
                 </ul>
             </div>
             <div class="crm-tier crm-tier--license plat-reveal">
-                <h3>نیازمند لایسنس ربات</h3>
+                <h3>
+                    <span class="crm-ico crm-ico--sm crm-ico--sky" aria-hidden="true"><i class="fas fa-key"></i></span>
+                    نیازمند لایسنس ربات
+                </h3>
                 <ul>
                     {% for item in platform_content.access_tiers.license %}
                     <li><i class="fas fa-key" aria-hidden="true"></i> {{ item }}</li>
@@ -186,7 +266,10 @@
                 </ul>
             </div>
             <div class="crm-tier crm-tier--beta plat-reveal">
-                <h3>Beta</h3>
+                <h3>
+                    <span class="crm-ico crm-ico--sm crm-ico--amber" aria-hidden="true"><i class="fas fa-flask"></i></span>
+                    Beta
+                </h3>
                 <ul>
                     {% for item in platform_content.access_tiers.beta %}
                     <li><i class="fas fa-flask" aria-hidden="true"></i> {{ item }}</li>
@@ -201,15 +284,25 @@
 <section class="crm-sec" aria-labelledby="crm-privacy-title">
     <div class="crm-wrap">
         <div class="crm-prose">
-            <p class="crm-eyebrow">امنیت</p>
+            <p class="crm-eyebrow">
+                <i class="fas fa-lock" aria-hidden="true"></i>
+                امنیت
+            </p>
             <h2 id="crm-privacy-title">{{ platform_content.privacy.title }}</h2>
             <p>{{ platform_content.privacy.lead }}</p>
         </div>
         <ul class="crm-privacy">
             {% for point in platform_content.privacy.points %}
             <li class="crm-privacy__item plat-reveal">
-                <h3>{{ point.title }}</h3>
-                <p>{{ point.text }}</p>
+                {% if point.icon %}
+                <span class="crm-ico" aria-hidden="true">
+                    <i class="fas {{ point.icon }}"></i>
+                </span>
+                {% endif %}
+                <div>
+                    <h3>{{ point.title }}</h3>
+                    <p>{{ point.text }}</p>
+                </div>
             </li>
             {% endfor %}
         </ul>
@@ -221,13 +314,19 @@
 <section class="crm-sec crm-sec--soft plat-faq" aria-labelledby="crm-faq-title">
     <div class="crm-wrap">
         <div class="crm-prose crm-prose--center">
-            <p class="crm-eyebrow">پاسخ سریع</p>
+            <p class="crm-eyebrow">
+                <i class="fas fa-circle-question" aria-hidden="true"></i>
+                پاسخ سریع
+            </p>
             <h2 id="crm-faq-title">سوالات متداول</h2>
         </div>
         <div class="plat-faq__list">
             {% for item in platform_content.faq %}
             <details class="plat-faq__item plat-reveal">
-                <summary>{{ item.q }}</summary>
+                <summary>
+                    <i class="fas fa-circle-question crm-faq__q-ico" aria-hidden="true"></i>
+                    <span>{{ item.q }}</span>
+                </summary>
                 <div class="plat-faq__answer">
                     <p>{{ item.a }}</p>
                 </div>
@@ -242,17 +341,28 @@
 <section class="crm-sec crm-next" aria-labelledby="crm-next-title">
     <div class="crm-wrap">
         <div class="crm-prose crm-prose--center">
-            <p class="crm-eyebrow">مسیر بعد</p>
+            <p class="crm-eyebrow">
+                <i class="fas fa-compass" aria-hidden="true"></i>
+                مسیر بعد
+            </p>
             <h2 id="crm-next-title">{{ platform_content.next_path.title }}</h2>
             <p>{{ platform_content.next_path.lead }}</p>
         </div>
         <div class="crm-next__grid">
             {% for page in platform_content.next_path.items %}
             <a href="{% if page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug %}{% else %}{% url page.url_name %}{% endif %}" class="crm-next__card plat-reveal">
+                {% if page.icon %}
+                <span class="crm-ico crm-ico--lg crm-ico--float" aria-hidden="true">
+                    <i class="fas {{ page.icon }}"></i>
+                </span>
+                {% endif %}
                 <span class="crm-next__type">{{ page.type }}</span>
                 <strong>{{ page.title }}</strong>
                 <p>{{ page.desc }}</p>
-                <span class="crm-next__cta">{{ page.cta }}</span>
+                <span class="crm-next__cta">
+                    {{ page.cta }}
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </span>
             </a>
             {% endfor %}
         </div>
@@ -262,6 +372,11 @@
 {# ── ۱۲. CTA نهایی ── #}
 <section class="crm-sec crm-final-cta">
     <div class="crm-wrap crm-final-cta__inner plat-reveal">
+        {% if platform_content.final_cta.icon %}
+        <span class="crm-ico crm-ico--xl crm-ico--solid crm-ico--pulse" aria-hidden="true">
+            <i class="fas {{ platform_content.final_cta.icon }}"></i>
+        </span>
+        {% endif %}
         <h2>{{ platform_content.final_cta.title }}</h2>
         <p>{{ platform_content.final_cta.lead }}</p>
         {% include 'platform/includes/cta_pair.html' %}

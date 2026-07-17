@@ -2,7 +2,12 @@
 <header class="plat-crm-hero plat-reveal">
     <div class="plat-crm-hero__inner">
         <div class="plat-crm-hero__copy">
-            <p class="plat-crm-hero__eyebrow">{{ platform_content.hero.eyebrow }}</p>
+            <p class="plat-crm-hero__eyebrow">
+                <span class="crm-ico crm-ico--sm crm-ico--pulse" aria-hidden="true">
+                    <i class="fas {{ platform_content.hero.eyebrow_icon|default:'fa-users' }}"></i>
+                </span>
+                {{ platform_content.hero.eyebrow }}
+            </p>
             <h1>{{ platform_page.seo.h1 }}</h1>
             {% if platform_content.hero.promise %}
             <p class="plat-crm-hero__promise">{{ platform_content.hero.promise }}</p>
@@ -11,7 +16,12 @@
             {% if platform_content.hero.bullets %}
             <ul class="plat-crm-hero__bullets">
                 {% for item in platform_content.hero.bullets %}
-                <li><i class="fas fa-check" aria-hidden="true"></i> {{ item }}</li>
+                <li>
+                    <span class="crm-ico crm-ico--sm" aria-hidden="true">
+                        <i class="fas {% if item.icon %}{{ item.icon }}{% else %}fa-check{% endif %}"></i>
+                    </span>
+                    <span>{% if item.text %}{{ item.text }}{% else %}{{ item }}{% endif %}</span>
+                </li>
                 {% endfor %}
             </ul>
             {% endif %}

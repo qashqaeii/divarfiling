@@ -104,8 +104,14 @@ class PlatformPageViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'یادآور')
         self.assertContains(resp, 'rem-timeline')
+        self.assertContains(resp, 'rem-outcomes')
+        self.assertContains(resp, 'rem-flow-h')
+        self.assertContains(resp, 'rem-next')
+        self.assertContains(resp, 'rem-ico')
         self.assertContains(resp, 'help-crm-reminders.png')
+        self.assertContains(resp, 'help-crm-today.png')
         self.assertContains(resp, 'customer-follow-up')
+        self.assertContains(resp, '/features/crm/')
         self.assertContains(resp, 'plat-faq__item', count=8)
 
     def test_solutions_hub(self):

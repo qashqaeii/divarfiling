@@ -2,13 +2,26 @@
 <header class="rem-hero plat-reveal">
     <div class="rem-wrap rem-hero__grid">
         <div class="rem-hero__copy">
-            <p class="rem-eyebrow">{{ platform_content.hero.eyebrow }}</p>
+            <p class="rem-eyebrow rem-eyebrow--hero">
+                <span class="rem-ico rem-ico--sm rem-ico--pulse" aria-hidden="true">
+                    <i class="fas {{ platform_content.hero.eyebrow_icon|default:'fa-bell' }}"></i>
+                </span>
+                {{ platform_content.hero.eyebrow }}
+            </p>
             <h1>{{ platform_page.seo.h1 }}</h1>
+            {% if platform_content.hero.promise %}
+            <p class="rem-hero__promise">{{ platform_content.hero.promise }}</p>
+            {% endif %}
             <p class="rem-hero__lead">{{ platform_content.hero.lead }}</p>
             {% if platform_content.hero.bullets %}
             <ul class="rem-hero__bullets">
                 {% for item in platform_content.hero.bullets %}
-                <li><i class="fas fa-check" aria-hidden="true"></i> {{ item }}</li>
+                <li>
+                    <span class="rem-ico rem-ico--sm" aria-hidden="true">
+                        <i class="fas {% if item.icon %}{{ item.icon }}{% else %}fa-check{% endif %}"></i>
+                    </span>
+                    <span>{% if item.text %}{{ item.text }}{% else %}{{ item }}{% endif %}</span>
+                </li>
                 {% endfor %}
             </ul>
             {% endif %}

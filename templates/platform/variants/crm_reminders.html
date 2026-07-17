@@ -1,38 +1,113 @@
 {% include 'platform/includes/hero_reminders.html' %}
 
-{# ── سناریو ── #}
-<section class="rem-sec" aria-labelledby="rem-scenario-title">
+{# ── سناریوی زمانی ── #}
+<section class="rem-sec rem-scenario" aria-labelledby="rem-scenario-title">
     <div class="rem-wrap">
         <div class="rem-prose">
-            <p class="rem-eyebrow">سناریوی واقعی</p>
+            <p class="rem-eyebrow">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
+                سناریوی واقعی
+            </p>
             <h2 id="rem-scenario-title">{{ platform_content.scenario.title }}</h2>
+            <p class="rem-prose__lead">{{ platform_content.scenario.lead }}</p>
             <p class="rem-scenario__intro">{{ platform_content.scenario.intro }}</p>
         </div>
         <ol class="rem-timeline">
             {% for step in platform_content.scenario.steps %}
-            <li class="rem-timeline__item plat-reveal">
-                <time class="rem-timeline__time">{{ step.time }}</time>
-                <p>{{ step.action }}</p>
+            <li class="rem-timeline__item{% if step.highlight %} rem-timeline__item--hl{% endif %} plat-reveal">
+                <span class="rem-timeline__node rem-ico{% if step.highlight %} rem-ico--solid{% endif %}" aria-hidden="true">
+                    <i class="fas {{ step.icon|default:'fa-circle' }}"></i>
+                </span>
+                <div class="rem-timeline__body">
+                    <time class="rem-timeline__time">{{ step.time }}</time>
+                    {% if step.title %}<strong>{{ step.title }}</strong>{% endif %}
+                    <p>{{ step.action }}</p>
+                </div>
             </li>
             {% endfor %}
         </ol>
-        <p class="rem-prose rem-scenario__outcome plat-reveal">{{ platform_content.scenario.outcome }}</p>
+        <p class="rem-prose rem-scenario__outcome plat-reveal">
+            <i class="fas fa-circle-check" aria-hidden="true"></i>
+            {{ platform_content.scenario.outcome }}
+        </p>
     </div>
 </section>
 
-{# ── پنج مفهوم ── #}
-<section class="rem-sec rem-sec--soft" aria-labelledby="rem-concepts-title">
+{# ── Outcomeها ── #}
+<section class="rem-sec rem-sec--soft rem-outcomes" aria-labelledby="rem-outcomes-title">
     <div class="rem-wrap">
         <div class="rem-prose rem-prose--center">
+            <p class="rem-eyebrow">
+                <i class="fas fa-bullseye" aria-hidden="true"></i>
+                نتیجه کار
+            </p>
+            <h2 id="rem-outcomes-title">{{ platform_content.outcomes.title }}</h2>
+            <p>{{ platform_content.outcomes.lead }}</p>
+        </div>
+        <ul class="rem-outcomes__grid">
+            {% for item in platform_content.outcomes.items %}
+            <li class="rem-outcomes__item plat-reveal">
+                <span class="rem-ico rem-ico--lg rem-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <span class="rem-outcomes__before">{{ item.before }}</span>
+                <span class="rem-outcomes__arrow" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
+                <strong class="rem-outcomes__after">{{ item.after }}</strong>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── CTA نرم ── #}
+<aside class="rem-soft-cta plat-reveal" aria-label="لینک‌های مرتبط">
+    <div class="rem-wrap rem-soft-cta__inner">
+        <div class="rem-soft-cta__copy">
+            <span class="rem-ico rem-ico--solid" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_a.icon }}"></i>
+            </span>
+            <div>
+                <strong>{{ platform_content.mid_cta_a.title }}</strong>
+                <p>{{ platform_content.mid_cta_a.lead }}</p>
+            </div>
+        </div>
+        <div class="rem-soft-cta__links">
+            <a href="{% url platform_content.mid_cta_a.primary_url_name slug=platform_content.mid_cta_a.primary_url_kwargs.slug %}" class="plat-btn plat-btn--primary rem-soft-cta__btn">
+                <i class="fas fa-phone-volume" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.primary_label }}
+            </a>
+            <a href="{% url platform_content.mid_cta_a.secondary_url_name slug_path=platform_content.mid_cta_a.secondary_url_kwargs.slug_path %}" class="plat-btn plat-btn--ghost rem-soft-cta__btn">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── پنج مفهوم ── #}
+<section class="rem-sec" aria-labelledby="rem-concepts-title">
+    <div class="rem-wrap">
+        <div class="rem-prose rem-prose--center">
+            <p class="rem-eyebrow">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                اجزای سیستم
+            </p>
             <h2 id="rem-concepts-title">{{ platform_content.concepts.title }}</h2>
             <p>{{ platform_content.concepts.lead }}</p>
         </div>
         <ul class="rem-concepts">
             {% for item in platform_content.concepts.items %}
             <li class="rem-concept plat-reveal">
-                <span class="rem-concept__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
+                <span class="rem-ico rem-ico--lg rem-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
                 <div>
-                    <h3>{{ item.title }}</h3>
+                    <div class="rem-concept__head">
+                        <h3>{{ item.title }}</h3>
+                        {% if item.badge %}
+                        <span class="rem-chip rem-chip--beta">{{ item.badge }}</span>
+                        {% endif %}
+                    </div>
                     <p>{{ item.desc }}</p>
                 </div>
             </li>
@@ -42,14 +117,20 @@
 </section>
 
 {# ── انواع یادآور ── #}
-<section class="rem-sec" aria-labelledby="rem-types-title">
+<section class="rem-sec rem-sec--soft" aria-labelledby="rem-types-title">
     <div class="rem-wrap">
-        <div class="rem-prose">
+        <div class="rem-prose rem-prose--center">
+            <p class="rem-eyebrow">
+                <i class="fas fa-tags" aria-hidden="true"></i>
+                انواع
+            </p>
             <h2 id="rem-types-title">{{ platform_content.reminder_types.title }}</h2>
+            <p>{{ platform_content.reminder_types.lead }}</p>
         </div>
-        <ul class="rem-type-list">
+        <ul class="rem-type-grid">
             {% for t in platform_content.reminder_types.items %}
-            <li class="rem-type-list__item plat-reveal">
+            <li class="rem-type-card plat-reveal">
+                <span class="rem-ico" aria-hidden="true"><i class="fas {{ t.icon }}"></i></span>
                 <strong>{{ t.title }}</strong>
                 <span>{{ t.text }}</span>
             </li>
@@ -58,18 +139,27 @@
     </div>
 </section>
 
-{# ── اتصال به پرونده ── #}
-<section class="rem-sec rem-sec--soft" aria-labelledby="rem-attach-title">
+{# ── اتصال به پرونده + Screenshot ── #}
+<section class="rem-sec" aria-labelledby="rem-attach-title">
     <div class="rem-wrap">
         <div class="rem-prose rem-prose--center">
+            <p class="rem-eyebrow">
+                <i class="fas fa-link" aria-hidden="true"></i>
+                اتصال
+            </p>
             <h2 id="rem-attach-title">{{ platform_content.attachments.title }}</h2>
             <p>{{ platform_content.attachments.lead }}</p>
         </div>
         <div class="rem-attach-grid">
             {% for att in platform_content.attachments.items %}
-            <article class="rem-attach plat-reveal">
+            <article class="rem-attach rem-attach--{% cycle 'side' 'flip' 'side' %} plat-reveal">
                 <div class="rem-attach__copy">
-                    <h3>{{ att.title }}</h3>
+                    <div class="rem-attach__head">
+                        <span class="rem-ico rem-ico--lg rem-ico--float" aria-hidden="true">
+                            <i class="fas {{ att.icon }}"></i>
+                        </span>
+                        <h3>{{ att.title }}</h3>
+                    </div>
                     <p>{{ att.text }}</p>
                 </div>
                 <div class="rem-attach__shot">
@@ -82,15 +172,22 @@
 </section>
 
 {# ── وضعیت‌ها ── #}
-<section class="rem-sec" aria-labelledby="rem-states-title">
+<section class="rem-sec rem-sec--soft" aria-labelledby="rem-states-title">
     <div class="rem-wrap">
         <div class="rem-prose rem-prose--center">
+            <p class="rem-eyebrow">
+                <i class="fas fa-traffic-light" aria-hidden="true"></i>
+                وضعیت‌ها
+            </p>
             <h2 id="rem-states-title">{{ platform_content.states.title }}</h2>
             <p>{{ platform_content.states.lead }}</p>
         </div>
         <ul class="rem-states">
             {% for s in platform_content.states.items %}
             <li class="rem-state rem-state--{{ s.tone }} plat-reveal">
+                <span class="rem-ico rem-ico--state" aria-hidden="true">
+                    <i class="fas {{ s.icon }}"></i>
+                </span>
                 <h3>{{ s.title }}</h3>
                 <p>{{ s.text }}</p>
             </li>
@@ -99,77 +196,121 @@
     </div>
 </section>
 
-{# ── صف امروز ── #}
-<section class="rem-sec rem-sec--soft" aria-labelledby="rem-today-title">
+{# ── صف امروز + تصویر ── #}
+<section class="rem-sec" aria-labelledby="rem-today-title">
     <div class="rem-wrap rem-today">
-        <div class="rem-prose">
+        <div class="rem-today__copy">
+            <p class="rem-eyebrow">
+                <i class="fas fa-sun" aria-hidden="true"></i>
+                صف امروز
+            </p>
             <h2 id="rem-today-title">{{ platform_content.today_queue.title }}</h2>
+            <p class="rem-prose__lead">{{ platform_content.today_queue.lead }}</p>
             {% for p in platform_content.today_queue.paragraphs %}
             <p>{{ p }}</p>
             {% endfor %}
             <ul class="rem-today__tips">
                 {% for tip in platform_content.today_queue.tips %}
-                <li><i class="fas fa-arrow-left" aria-hidden="true"></i> {{ tip }}</li>
+                <li>
+                    <span class="rem-ico rem-ico--sm" aria-hidden="true"><i class="fas {{ tip.icon }}"></i></span>
+                    <span>{{ tip.text }}</span>
+                </li>
                 {% endfor %}
             </ul>
         </div>
+        {% if platform_content.today_queue.screenshot %}
+        <div class="rem-today__visual plat-reveal">
+            {% include 'platform/includes/screenshot_story.html' with shot=platform_content.today_queue.screenshot %}
+        </div>
+        {% endif %}
     </div>
 </section>
 
-{# ── نقش‌ها ── #}
-<section class="rem-sec" aria-labelledby="rem-roles-title">
-    <div class="rem-wrap">
-        <div class="rem-prose rem-prose--center">
-            <h2 id="rem-roles-title">{{ platform_content.roles_view.title }}</h2>
+{# ── CTA ثبت‌نام ── #}
+<aside class="rem-soft-cta rem-soft-cta--amber plat-reveal" aria-label="شروع کار">
+    <div class="rem-wrap rem-soft-cta__inner">
+        <div class="rem-soft-cta__copy">
+            <span class="rem-ico rem-ico--solid rem-ico--pulse" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_b.icon }}"></i>
+            </span>
+            <div>
+                <strong>{{ platform_content.mid_cta_b.title }}</strong>
+                <p>{{ platform_content.mid_cta_b.lead }}</p>
+            </div>
         </div>
-        <ul class="rem-roles">
-            {% for r in platform_content.roles_view.items %}
-            <li class="rem-role plat-reveal">
-                <h3>{{ r.title }}</h3>
-                <p>{{ r.text }}</p>
-            </li>
-            {% endfor %}
-        </ul>
-        <div class="rem-privacy-box plat-reveal">
-            <h3>{{ platform_content.privacy.title }}</h3>
-            <p>{{ platform_content.privacy.text }}</p>
+        <div class="rem-soft-cta__links">
+            {% if user.is_authenticated %}
+            <a href="{% url platform_content.mid_cta_b.auth_primary_url_name %}" class="plat-btn plat-btn--primary rem-soft-cta__btn">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.auth_primary_label }}
+            </a>
+            {% else %}
+            <a href="{% url platform_content.mid_cta_b.primary_url_name %}" class="plat-btn plat-btn--primary rem-soft-cta__btn">
+                <i class="fas fa-gift" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.primary_label }}
+            </a>
+            {% endif %}
+            <a href="{% url platform_content.mid_cta_b.secondary_url_name %}" class="plat-btn plat-btn--ghost rem-soft-cta__btn">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.secondary_label }}
+            </a>
         </div>
     </div>
-</section>
+</aside>
 
-{# ── Workflow ── #}
+{# ── Workflow افقی ── #}
 <section class="rem-sec rem-sec--soft" aria-labelledby="rem-workflow-title">
     <div class="rem-wrap">
         <div class="rem-prose rem-prose--center">
+            <p class="rem-eyebrow">
+                <i class="fas fa-route" aria-hidden="true"></i>
+                گردش کار
+            </p>
             <h2 id="rem-workflow-title">{{ platform_content.workflow.title }}</h2>
+            <p>{{ platform_content.workflow.lead }}</p>
         </div>
-        <ol class="rem-workflow">
+        <ol class="rem-flow-h">
             {% for step in platform_content.workflow.steps %}
-            <li class="rem-workflow__step plat-reveal">
-                <span class="rem-workflow__num">{{ forloop.counter }}</span>
-                <div>
-                    <strong>{{ step.title }}</strong>
-                    <p>{{ step.text }}</p>
-                </div>
+            <li class="rem-flow-h__step plat-reveal">
+                <span class="rem-ico rem-ico--solid" aria-hidden="true">
+                    <i class="fas {{ step.icon }}"></i>
+                </span>
+                <span class="rem-flow-h__num">{{ forloop.counter }}</span>
+                <strong>{{ step.title }}</strong>
+                <p>{{ step.text }}</p>
             </li>
             {% endfor %}
         </ol>
     </div>
 </section>
 
-{# ── گالری ── #}
-<section class="rem-sec" aria-labelledby="rem-gallery-title">
+{# ── نقش‌ها + حریم خصوصی ── #}
+<section class="rem-sec" aria-labelledby="rem-roles-title">
     <div class="rem-wrap">
         <div class="rem-prose rem-prose--center">
-            <h2 id="rem-gallery-title">{{ platform_content.screenshot_gallery.title }}</h2>
-            <p>{{ platform_content.screenshot_gallery.lead }}</p>
+            <p class="rem-eyebrow">
+                <i class="fas fa-user-shield" aria-hidden="true"></i>
+                نقش‌ها
+            </p>
+            <h2 id="rem-roles-title">{{ platform_content.roles_view.title }}</h2>
         </div>
-        <div class="rem-gallery">
-            {% for shot in platform_content.screenshot_gallery.items %}
-            <div class="rem-gallery__item plat-reveal">
-                {% include 'platform/includes/screenshot_story.html' with shot=shot %}
-            </div>
+        <ul class="rem-roles">
+            {% for r in platform_content.roles_view.items %}
+            <li class="rem-role plat-reveal">
+                <span class="rem-ico rem-ico--float" aria-hidden="true"><i class="fas {{ r.icon }}"></i></span>
+                <h3>{{ r.title }}</h3>
+                <p>{{ r.text }}</p>
+            </li>
             {% endfor %}
+        </ul>
+        <div class="rem-privacy-box plat-reveal">
+            <span class="rem-ico rem-ico--solid" aria-hidden="true">
+                <i class="fas {{ platform_content.privacy.icon }}"></i>
+            </span>
+            <div>
+                <h3>{{ platform_content.privacy.title }}</h3>
+                <p>{{ platform_content.privacy.text }}</p>
+            </div>
         </div>
     </div>
 </section>
@@ -178,11 +319,16 @@
 <section class="rem-sec rem-sec--soft" aria-labelledby="rem-use-title">
     <div class="rem-wrap">
         <div class="rem-prose rem-prose--center">
+            <p class="rem-eyebrow">
+                <i class="fas fa-briefcase" aria-hidden="true"></i>
+                کاربردها
+            </p>
             <h2 id="rem-use-title">{{ platform_content.use_cases.title }}</h2>
         </div>
         <ul class="rem-use-grid">
             {% for u in platform_content.use_cases.items %}
             <li class="rem-use plat-reveal">
+                <span class="rem-ico" aria-hidden="true"><i class="fas {{ u.icon }}"></i></span>
                 <h3>{{ u.title }}</h3>
                 <p>{{ u.text }}</p>
             </li>
@@ -195,11 +341,18 @@
 <section class="rem-sec" aria-labelledby="rem-tips-title">
     <div class="rem-wrap">
         <div class="rem-prose">
+            <p class="rem-eyebrow">
+                <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                نکات
+            </p>
             <h2 id="rem-tips-title">{{ platform_content.pro_tips.title }}</h2>
         </div>
         <ul class="rem-tips">
             {% for tip in platform_content.pro_tips.items %}
-            <li class="rem-tips__item plat-reveal">{{ tip }}</li>
+            <li class="rem-tips__item plat-reveal">
+                <span class="rem-ico rem-ico--sm" aria-hidden="true"><i class="fas {{ tip.icon }}"></i></span>
+                <span>{{ tip.text }}</span>
+            </li>
             {% endfor %}
         </ul>
     </div>
@@ -209,12 +362,19 @@
 <section class="rem-sec rem-sec--soft" aria-labelledby="rem-limits-title">
     <div class="rem-wrap">
         <div class="rem-prose rem-prose--center">
+            <p class="rem-eyebrow">
+                <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+                شفافیت
+            </p>
             <h2 id="rem-limits-title">{{ platform_content.limitations.title }}</h2>
         </div>
         <ul class="rem-limits">
             {% for lim in platform_content.limitations.items %}
             <li class="rem-limit plat-reveal">
-                <span class="rem-limit__badge">{{ lim.badge }}</span>
+                <div class="rem-limit__top">
+                    <span class="rem-ico rem-ico--sm" aria-hidden="true"><i class="fas {{ lim.icon }}"></i></span>
+                    <span class="rem-limit__badge">{{ lim.badge }}</span>
+                </div>
                 <h3>{{ lim.title }}</h3>
                 <p>{{ lim.text }}</p>
             </li>
@@ -228,12 +388,19 @@
 <section class="rem-sec plat-faq" aria-labelledby="rem-faq-title">
     <div class="rem-wrap">
         <div class="rem-prose rem-prose--center">
+            <p class="rem-eyebrow">
+                <i class="fas fa-circle-question" aria-hidden="true"></i>
+                پاسخ سریع
+            </p>
             <h2 id="rem-faq-title">سوالات متداول</h2>
         </div>
         <div class="plat-faq__list">
             {% for item in platform_content.faq %}
             <details class="plat-faq__item plat-reveal">
-                <summary>{{ item.q }}</summary>
+                <summary>
+                    <i class="fas fa-circle-question rem-faq__q-ico" aria-hidden="true"></i>
+                    <span>{{ item.q }}</span>
+                </summary>
                 <div class="plat-faq__answer"><p>{{ item.a }}</p></div>
             </details>
             {% endfor %}
@@ -242,43 +409,42 @@
 </section>
 {% endif %}
 
-{# ── Related ── #}
-<section class="rem-sec rem-sec--soft" aria-labelledby="rem-related-title">
+{# ── مسیر بعدی (۳ پیشنهاد) ── #}
+<section class="rem-sec rem-sec--soft rem-next" aria-labelledby="rem-next-title">
     <div class="rem-wrap">
-        <h2 id="rem-related-title" class="rem-related-heading">ادامه مسیر</h2>
-        {% if platform_content.related_solution %}
-        <a href="{% url platform_content.related_solution.url_name slug=platform_content.related_solution.url_kwargs.slug %}" class="rem-solution-banner plat-reveal">
-            <span class="rem-solution-banner__label">راه‌حل مرتبط</span>
-            <strong>{{ platform_content.related_solution.title }}</strong>
-            <p>{{ platform_content.related_solution.desc }}</p>
-            <span class="rem-solution-banner__cta">مشاهده راه‌حل</span>
-        </a>
-        {% endif %}
-        <div class="rem-related-grid">
-            {% if related_posts %}
-            {% for post in related_posts %}
-            <a href="{{ post.get_absolute_url }}" class="rem-related-card plat-reveal">
-                <span class="rem-related-card__type">مقاله</span>
-                <strong>{{ post.title }}</strong>
-                <span class="rem-related-card__cta">مطالعه</span>
-            </a>
-            {% endfor %}
-            {% endif %}
-            {% for page in platform_content.related_pages %}
-            <a href="{% if page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug %}{% else %}{% url page.url_name %}{% endif %}" class="rem-related-card plat-reveal">
-                <span class="rem-related-card__type">صفحه</span>
+        <div class="rem-prose rem-prose--center">
+            <p class="rem-eyebrow">
+                <i class="fas fa-compass" aria-hidden="true"></i>
+                مسیر بعد
+            </p>
+            <h2 id="rem-next-title">{{ platform_content.next_path.title }}</h2>
+            <p>{{ platform_content.next_path.lead }}</p>
+        </div>
+        <div class="rem-next__grid">
+            {% for page in platform_content.next_path.items %}
+            <a href="{% if page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug %}{% else %}{% url page.url_name %}{% endif %}" class="rem-next__card plat-reveal">
+                <span class="rem-ico rem-ico--lg rem-ico--float" aria-hidden="true">
+                    <i class="fas {{ page.icon }}"></i>
+                </span>
+                <span class="rem-next__type">{{ page.type }}</span>
                 <strong>{{ page.title }}</strong>
                 <p>{{ page.desc }}</p>
-                <span class="rem-related-card__cta">مشاهده</span>
+                <span class="rem-next__cta">
+                    {{ page.cta }}
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </span>
             </a>
             {% endfor %}
         </div>
     </div>
 </section>
 
-{# ── CTA ── #}
+{# ── CTA نهایی ── #}
 <section class="rem-sec rem-final-cta">
     <div class="rem-wrap rem-final-cta__inner plat-reveal">
+        <span class="rem-ico rem-ico--xl rem-ico--solid rem-ico--pulse" aria-hidden="true">
+            <i class="fas {{ platform_content.final_cta.icon }}"></i>
+        </span>
         <h2>{{ platform_content.final_cta.title }}</h2>
         <p>{{ platform_content.final_cta.lead }}</p>
         {% include 'platform/includes/cta_pair.html' %}

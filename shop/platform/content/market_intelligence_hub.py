@@ -372,6 +372,18 @@ def market_intelligence_product_line_content() -> dict[str, Any]:
             ),
             'items': [
                 {
+                    'type': 'راه‌حل',
+                    'icon': 'fa-tags',
+                    'title': 'قیمت‌گذاری ملک',
+                    'desc': (
+                        'دلیل ادامه: ببینید چطور با فایل مشابه و میانه، '
+                        'برای مذاکره با مالک بازه منطقی می‌سازید.'
+                    ),
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'property-pricing'},
+                    'cta': 'مشاهده راه‌حل',
+                },
+                {
                     'type': 'خط محصول',
                     'icon': 'fa-folder-tree',
                     'title': 'فایلینگ دیوار',
@@ -381,17 +393,6 @@ def market_intelligence_product_line_content() -> dict[str, Any]:
                     'url_name': 'platform_features_page',
                     'url_kwargs': {'slug_path': 'filing'},
                     'cta': 'مشاهده فایلینگ',
-                },
-                {
-                    'type': 'استخراج',
-                    'icon': 'fa-robot',
-                    'title': 'ربات استخراج دیوار',
-                    'desc': (
-                        'دلیل ادامه: کیفیت تحلیل به کیفیت و تازگی استخراج وابسته است.'
-                    ),
-                    'url_name': 'seo_landing_robot_divar',
-                    'url_kwargs': {},
-                    'cta': 'مشاهده ربات',
                 },
                 {
                     'type': 'شروع',
@@ -455,8 +456,8 @@ def market_intelligence_product_line_content() -> dict[str, Any]:
             {
                 'q': 'راه‌حل قیمت‌گذاری ملک کجاست؟',
                 'a': (
-                    'صفحه راه‌حل اختصاصی قیمت‌گذاری در نقشه راه‌حل‌ها به‌زودی می‌آید. '
-                    'تا آن زمان، همین خط محصول مسیر ابزارهای واقعی میزکار را نشان می‌دهد.'
+                    'صفحه راه‌حل قیمت‌گذاری ملک مسیر مذاکره مستند با فایل مشابه را نشان می‌دهد. '
+                    'این صفحه خط محصول ابزارها را معرفی می‌کند.'
                 ),
             },
             {

@@ -246,6 +246,14 @@ def solutions_hub_content() -> dict[str, Any]:
                 {
                     'icon': 'fa-tags',
                     'problem': 'قیمت‌گذاری ملک را حدس می‌زنم',
+                    'status': 'published',
+                    'solution_title': 'قیمت‌گذاری ملک',
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'property-pricing'},
+                },
+                {
+                    'icon': 'fa-people-group',
+                    'problem': 'مدیریت تیم آژانس را هماهنگ نمی‌کنم',
                     'status': 'coming',
                     'solution_title': 'به‌زودی',
                     'url_name': '',
@@ -415,8 +423,8 @@ def solutions_hub_content() -> dict[str, Any]:
             {
                 'q': 'چند راه‌حل الان آماده است؟',
                 'a': (
-                    'الان راه‌حل پیگیری مشتری و پیدا کردن سریع فایل منتشر است. '
-                    'قیمت‌گذاری ملک در نقشه مشکل هنوز «به‌زودی» است.'
+                    'الان راه‌حل پیگیری مشتری، پیدا کردن سریع فایل و قیمت‌گذاری ملک منتشر است. '
+                    'مدیریت آژانس در نقشه مشکل هنوز «به‌زودی» است.'
                 ),
             },
             {

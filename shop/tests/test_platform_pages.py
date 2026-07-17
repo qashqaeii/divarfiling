@@ -11,9 +11,11 @@ PLATFORM_URLS = [
     '/features/crm/',
     '/features/crm/reminders/',
     '/features/filing/',
+    '/features/market-intelligence/',
     '/solutions/',
     '/solutions/customer-follow-up/',
     '/solutions/fast-property-search/',
+    '/solutions/property-pricing/',
 ]
 
 SCHEMA_DOUBLE_WRAP = '<script type="application/ld+json"><script type="application/ld+json">'
@@ -351,6 +353,7 @@ class PlatformNavigationPhaseDTests(TestCase):
     def test_scenario_solutions_hub_to_tool_to_convert(self):
         hub = self.client.get('/solutions/')
         self.assertContains(hub, '/solutions/customer-follow-up/')
+        self.assertContains(hub, '/solutions/property-pricing/')
         self.assertContains(hub, 'shub-map__soon')
         self.assertContains(hub, 'به‌زودی')
         # coming rows are spans, not links to empty urls
@@ -579,3 +582,80 @@ class PlatformMarketIntelligencePhase2Tests(TestCase):
 
     def test_market_seo_health(self):
         _assert_platform_seo_health(self, '/features/market-intelligence/')
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformPropertyPricingPhase2Tests(TestCase):
+    """Phase 2 sprint 4: /solutions/property-pricing/ vertical slice."""
+
+    def test_pricing_page_renders(self):
+        resp = self.client.get('/solutions/property-pricing/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'sol-hero')
+        self.assertContains(resp, 'sol-outcomes')
+        self.assertContains(resp, 'sol-framework')
+        self.assertContains(resp, 'sol-next')
+        self.assertContains(resp, 'pp-conseq')
+        self.assertContains(resp, 'pp-limits')
+        self.assertContains(resp, 'help-analyze-dashboard')
+        self.assertContains(resp, 'help-dataset-table')
+        self.assertContains(resp, 'help-map-view')
+        self.assertContains(resp, 'help-tools-panel')
+        self.assertContains(resp, '/features/market-intelligence/')
+        self.assertContains(resp, '/features/filing/')
+        self.assertContains(resp, 'plat-btn--convert')
+        self.assertContains(resp, 'plat-btn--product')
+        self.assertContains(resp, 'plat-faq__item', count=10)
+        self.assertContains(resp, 'میانه')
+        self.assertContains(resp, 'Value Score')
+        self.assertContains(resp, 'قیمت قطعی')
+        self.assertContains(resp, '<h1', count=1)
+
+    def test_pricing_honesty_no_guaranteed_price_claim(self):
+        resp = self.client.get('/solutions/property-pricing/')
+        body = resp.content.decode('utf-8')
+        self.assertIn('قیمت قطعی', body)
+        self.assertIn('جای کارشناس', body)
+        self.assertNotIn('قیمت دقیق ملک را به شما می‌دهیم', body)
+
+    def test_pricing_draft_features_not_public(self):
+        drafts = (
+            'market-intelligence/price-analysis',
+            'market-intelligence/value-score',
+            'market-intelligence/map-analysis',
+            'market-intelligence/comparison',
+            'market-intelligence/pricing-tools',
+        )
+        for path in drafts:
+            with self.subTest(path=path):
+                self.assertIsNone(get_page('features', path))
+                resp = self.client.get(f'/features/{path}/')
+                self.assertEqual(resp.status_code, 404)
+
+    def test_pricing_schema_licensed(self):
+        resp = self.client.get('/solutions/property-pricing/')
+        body = resp.content.decode('utf-8')
+        self.assertIn('"@type": "SoftwareApplication"', body)
+        self.assertIn('"@type": "Product"', body)
+        self.assertIn('"@type": "FAQPage"', body)
+        self.assertIn('قیمت', body)
+        self.assertIn('market-intelligence', body)
+        self.assertNotIn('AggregateRating', body)
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+
+    def test_pricing_next_path_three(self):
+        from shop.platform.content.property_pricing import property_pricing_content
+        items = property_pricing_content()['next_path']['items']
+        self.assertEqual(len(items), 3)
+        self.assertTrue(items[-1].get('convert'))
+        self.assertEqual(items[0]['url_kwargs']['slug_path'], 'market-intelligence')
+
+    def test_pricing_hub_and_menu_links(self):
+        hub = self.client.get('/solutions/')
+        self.assertContains(hub, '/solutions/property-pricing/')
+        self.assertContains(hub, 'shub-map__row--published')
+        mi = self.client.get('/features/market-intelligence/')
+        self.assertContains(mi, '/solutions/property-pricing/')
+
+    def test_pricing_seo_health(self):
+        _assert_platform_seo_health(self, '/solutions/property-pricing/')

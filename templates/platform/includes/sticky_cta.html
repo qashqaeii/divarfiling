@@ -19,6 +19,8 @@
         <a href="{% url 'platform_features_page' slug_path='crm' %}" class="plat-btn plat-btn--ghost plat-btn--product plat-sticky-cta__ghost">CRM</a>
         {% elif platform_content.cta.secondary == 'filing_line' %}
         <a href="{% url 'platform_features_page' slug_path='filing' %}" class="plat-btn plat-btn--ghost plat-btn--product plat-sticky-cta__ghost">فایلینگ</a>
+        {% elif platform_content.cta.secondary == 'market_line' %}
+        <a href="{% url 'platform_features_page' slug_path='market-intelligence' %}" class="plat-btn plat-btn--ghost plat-btn--product plat-sticky-cta__ghost">تحلیل</a>
         {% elif platform_content.cta.secondary == 'reminders_feature' %}
         <a href="{% url 'platform_features_page' slug_path='crm/reminders' %}" class="plat-btn plat-btn--ghost plat-btn--product plat-sticky-cta__ghost">یادآور</a>
         {% elif platform_content.cta.secondary == 'customer_follow_up' %}

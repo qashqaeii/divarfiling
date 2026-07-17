@@ -12,6 +12,12 @@ def build_pages() -> list[PageSpec]:
         _filing_saved_search_feature_draft(),
         _fast_property_search_solution(),
         _market_intelligence_product_line(),
+        _mi_price_analysis_feature_draft(),
+        _mi_value_score_feature_draft(),
+        _mi_map_analysis_feature_draft(),
+        _mi_comparison_feature_draft(),
+        _mi_pricing_tools_feature_draft(),
+        _property_pricing_solution(),
     ]
 
 
@@ -198,7 +204,147 @@ def _market_intelligence_product_line() -> PageSpec:
         intent='commercial',
         primary_keyword='تحلیل بازار املاک',
         content_key='market_intelligence_product_line',
-        related_solutions=(),
+        related_solutions=('property-pricing',),
         related_seo_landings=('robot-divar', 'real-estate-software'),
         sitemap_priority=0.86,
+    )
+
+
+def _draft_mi_feature(
+    *,
+    path: str,
+    content_key: str,
+    title: str,
+    description: str,
+    h1: str,
+    keyword: str,
+    icon: str,
+) -> PageSpec:
+    seo = PageSEO(
+        title=title,
+        description=description,
+        keywords=keyword,
+        og_title=h1.split(':')[0].strip(),
+        h1=h1,
+    )
+    return PageSpec(
+        section='features',
+        path=path,
+        variant='feature',
+        status='draft',
+        marketability='section_only',
+        seo=seo,
+        accent='amber',
+        icon=icon,
+        decor_icon='sparkles',
+        product_line='market-intelligence',
+        parent_path='market-intelligence',
+        funnel_role='consideration',
+        intent='informational',
+        primary_keyword=keyword.split(',')[0].strip(),
+        content_key=content_key,
+        related_solutions=('property-pricing',),
+        related_seo_landings=('robot-divar',),
+        sitemap_priority=0.5,
+    )
+
+
+def _mi_price_analysis_feature_draft() -> PageSpec:
+    return _draft_mi_feature(
+        path='market-intelligence/price-analysis',
+        content_key='mi_price_analysis',
+        title='تحلیل قیمت Dataset | Price Analysis فایلینگ دیوار',
+        description='آمار میانه، میانگین و بازه قیمت روی Dataset برای قیمت‌گذاری مستندتر.',
+        h1='تحلیل قیمت: میانه و بازه را از Dataset بخوانید',
+        keyword='تحلیل قیمت ملک, میانه قیمت املاک',
+        icon='fa-chart-pie',
+    )
+
+
+def _mi_value_score_feature_draft() -> PageSpec:
+    return _draft_mi_feature(
+        path='market-intelligence/value-score',
+        content_key='mi_value_score',
+        title='Value Score املاک | امتیاز ارزش نسبی فایلینگ دیوار',
+        description='مقایسه نسبی قیمت آگهی با انتظار بازار همان Dataset — بدون ادعای فرصت قطعی.',
+        h1='Value Score: نسبت قیمت به انتظار Dataset',
+        keyword='Value Score املاک, فایل زیر بازار',
+        icon='fa-percent',
+    )
+
+
+def _mi_map_analysis_feature_draft() -> PageSpec:
+    return _draft_mi_feature(
+        path='market-intelligence/map-analysis',
+        content_key='mi_map_analysis',
+        title='تحلیل نقشه املاک | Map Analysis فایلینگ دیوار',
+        description='پراکندگی مکانی آگهی‌های Dataset برای قیمت‌گذاری آگاهانه‌تر از محدوده.',
+        h1='تحلیل نقشه: پراکندگی قیمت را روی زمین ببینید',
+        keyword='نقشه قیمت املاک, تحلیل نقشه آگهی',
+        icon='fa-map-location-dot',
+    )
+
+
+def _mi_comparison_feature_draft() -> PageSpec:
+    return _draft_mi_feature(
+        path='market-intelligence/comparison',
+        content_key='mi_comparison',
+        title='مقایسه دوره‌ای قیمت | Comparison فایلینگ دیوار',
+        description='مقایسه دو Dataset یا دوره استخراج برای دیدن تغییر قیمت مشاهده‌شده.',
+        h1='مقایسه دوره‌ای: تغییر قیمت را بین دو استخراج ببینید',
+        keyword='مقایسه قیمت املاک, مقایسه Dataset',
+        icon='fa-scale-balanced',
+    )
+
+
+def _mi_pricing_tools_feature_draft() -> PageSpec:
+    return _draft_mi_feature(
+        path='market-intelligence/pricing-tools',
+        content_key='mi_pricing_tools',
+        title='ابزارهای قیمت‌گذاری | Pricing Tools فایلینگ دیوار',
+        description='محاسبات کمکی قیمت متری، تبدیل رهن/اجاره و پیشنهاد بر پایه میانه بازار.',
+        h1='ابزارهای قیمت: محاسبه سریع کنار تحلیل Dataset',
+        keyword='ابزار قیمت گذاری ملک, محاسبه قیمت متری',
+        icon='fa-wand-magic-sparkles',
+    )
+
+
+def _property_pricing_solution() -> PageSpec:
+    seo = PageSEO(
+        title='قیمت‌گذاری ملک با تحلیل فایل‌های مشابه | فایلینگ دیوار',
+        description=(
+            'فایل‌های مشابه، میانه قیمت، نقشه و Value Score را بررسی کنید '
+            'و برای مذاکره ملک به یک بازه منطقی‌تر برسید؛ بدون ادعای قیمت قطعی.'
+        ),
+        keywords=(
+            'قیمت گذاری ملک, تخمین قیمت ملک, تحلیل قیمت املاک, '
+            'مقایسه قیمت املاک, فایل مشابه, Value Score'
+        ),
+        og_title='قیمت‌گذاری ملک — راه‌حل تحلیل بازار فایلینگ دیوار',
+        h1='قیمت ملک را با فایل‌های مشابه بررسی کنید، نه فقط با حدس',
+    )
+    return PageSpec(
+        section='solutions',
+        path='property-pricing',
+        variant='solution',
+        status='published',
+        marketability='marketable',
+        seo=seo,
+        accent='indigo',
+        icon='fa-tags',
+        decor_icon='sparkles',
+        funnel_role='conversion',
+        intent='problem-solution',
+        primary_keyword='قیمت گذاری ملک',
+        content_key='property_pricing',
+        related_features=(
+            'market-intelligence/price-analysis',
+            'market-intelligence/value-score',
+            'market-intelligence/map-analysis',
+            'market-intelligence/comparison',
+            'market-intelligence/pricing-tools',
+        ),
+        related_articles=('gozaresh-gheymat-malek-divar-dade-rahnama',),
+        related_seo_landings=('robot-divar', 'real-estate-software'),
+        sitemap_priority=0.84,
     )

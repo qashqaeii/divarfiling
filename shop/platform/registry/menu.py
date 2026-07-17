@@ -106,6 +106,12 @@ def platform_mega_menu() -> dict:
             'url_name': 'platform_solutions_page',
             'url_kwargs': {'slug': 'fast-property-search'},
         },
+        {
+            'label': 'قیمت‌گذاری ملک',
+            'desc': 'بازه منطقی از فایل مشابه',
+            'url_name': 'platform_solutions_page',
+            'url_kwargs': {'slug': 'property-pricing'},
+        },
     ]
 
     quick_links = [

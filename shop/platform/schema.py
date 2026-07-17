@@ -322,6 +322,37 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'مقایسه دوره‌ای فایل‌ها',
             ],
         }
+    elif page.content_key == 'property_pricing':
+        market_url = f'{site_url}/features/market-intelligence/'
+        schema = {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            'name': 'راه‌حل قیمت‌گذاری ملک',
+            'applicationCategory': 'BusinessApplication',
+            'applicationSubCategory': 'Property Pricing',
+            'operatingSystem': 'Web, Windows',
+            'description': page.seo.description,
+            'url': page_url,
+            'inLanguage': 'fa-IR',
+            'creator': creator,
+            'isRelatedTo': {
+                '@type': 'SoftwareApplication',
+                'name': 'تحلیل بازار فایلینگ دیوار',
+                'url': market_url,
+            },
+            'isPartOf': {
+                '@type': 'SoftwareApplication',
+                'name': 'میزکار فایلینگ دیوار',
+                'url': site_url,
+            },
+            'offers': _licensed_offer(page_url),
+            'featureList': [
+                'فیلتر فایل‌های مشابه',
+                'میانه و بازه قیمت',
+                'نقشه و پراکندگی',
+                'Value Score نسبی',
+            ],
+        }
     else:
         return ''
 
@@ -340,6 +371,7 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         'filing_product_line',
         'fast_property_search',
         'market_intelligence_product_line',
+        'property_pricing',
     ):
         return ''
 
@@ -374,6 +406,12 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         product_url = page_url
         offers = _licensed_offer(product_url)
         category = 'تحلیل بازار و قیمت‌گذاری املاک'
+    elif page.content_key == 'property_pricing':
+        name = 'راه‌حل قیمت‌گذاری ملک'
+        image = f'{site_url}/static/images/help-analyze-dashboard.webp'
+        product_url = page_url
+        offers = _licensed_offer(product_url)
+        category = 'قیمت‌گذاری و تحلیل فایل مشابه'
     else:
         name = 'راه‌حل پیگیری مشتری املاک'
         image = f'{site_url}/static/images/help-crm-today.webp'

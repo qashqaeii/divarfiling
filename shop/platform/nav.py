@@ -55,6 +55,7 @@ def _location_label(page: PageSpec) -> str:
         'crm_reminders': 'یادآور CRM',
         'filing_product_line': 'خط محصول فایلینگ',
         'market_intelligence_product_line': 'خط محصول تحلیل بازار',
+        'property_pricing': 'راه‌حل قیمت‌گذاری ملک',
         'fast_property_search': 'راه‌حل پیدا کردن سریع فایل',
         'solutions_hub': 'نقشه راه‌حل‌ها',
         'customer_follow_up': 'راه‌حل پیگیری مشتری',
@@ -150,6 +151,13 @@ def _trail_for_page(page: PageSpec) -> list[dict[str, Any]]:
             'kwargs': {'slug': 'fast-property-search'},
             'current': True,
         })
+    elif page.content_key == 'property_pricing':
+        items.append({
+            'label': 'قیمت‌گذاری ملک',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'property-pricing'},
+            'current': True,
+        })
     return items
 
 
@@ -157,7 +165,7 @@ def _journey_for_page(page: PageSpec) -> list[dict[str, Any]]:
     """Canonical funnel — CRM, Filing, or Market Intelligence path by page family."""
     if page.content_key in ('filing_product_line', 'fast_property_search'):
         return _filing_journey(page.content_key)
-    if page.content_key == 'market_intelligence_product_line':
+    if page.content_key in ('market_intelligence_product_line', 'property_pricing'):
         return _market_journey(page.content_key)
     return _crm_journey(page.content_key)
 
@@ -246,13 +254,6 @@ def _filing_journey(content_key: str) -> list[dict[str, Any]]:
 def _market_journey(content_key: str) -> list[dict[str, Any]]:
     steps = [
         {
-            'id': 'market',
-            'label': 'تحلیل بازار',
-            'hint': 'آمار و Value Score',
-            'url_name': 'platform_features_page',
-            'kwargs': {'slug_path': 'market-intelligence'},
-        },
-        {
             'id': 'filing',
             'label': 'فایلینگ',
             'hint': 'بانک Dataset',
@@ -260,11 +261,18 @@ def _market_journey(content_key: str) -> list[dict[str, Any]]:
             'kwargs': {'slug_path': 'filing'},
         },
         {
-            'id': 'robot',
-            'label': 'استخراج',
-            'hint': 'ربات دیوار',
-            'url_name': 'seo_landing_robot_divar',
-            'kwargs': {},
+            'id': 'market',
+            'label': 'تحلیل بازار',
+            'hint': 'آمار و Value Score',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'market-intelligence'},
+        },
+        {
+            'id': 'pricing',
+            'label': 'قیمت‌گذاری',
+            'hint': 'راه‌حل عملی',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'property-pricing'},
         },
         {
             'id': 'start',
@@ -277,6 +285,7 @@ def _market_journey(content_key: str) -> list[dict[str, Any]]:
     ]
     current_id = {
         'market_intelligence_product_line': 'market',
+        'property_pricing': 'pricing',
     }.get(content_key)
     return _annotate_journey(steps, current_id)
 

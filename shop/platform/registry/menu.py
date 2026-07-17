@@ -34,6 +34,15 @@ def platform_mega_menu() -> dict:
             'tag': 'لایسنس',
         },
         {
+            'title': 'تحلیل بازار',
+            'desc': 'آمار قیمت، نقشه و Value Score',
+            'url_name': 'platform_features_page',
+            'url_kwargs': {'slug_path': 'market-intelligence'},
+            'icon': 'fa-chart-line',
+            'accent': 'amber',
+            'tag': 'لایسنس',
+        },
+        {
             'title': 'ربات استخراج',
             'desc': 'آگهی دیوار با فیلتر شهر',
             'url_name': 'seo_landing_robot_divar',
@@ -69,6 +78,12 @@ def platform_mega_menu() -> dict:
             'desc': '/features/filing/',
             'url_name': 'platform_features_page',
             'url_kwargs': {'slug_path': 'filing'},
+        },
+        {
+            'label': 'تحلیل بازار',
+            'desc': '/features/market-intelligence/',
+            'url_name': 'platform_features_page',
+            'url_kwargs': {'slug_path': 'market-intelligence'},
         },
         {
             'label': 'لندینگ معرفی CRM',

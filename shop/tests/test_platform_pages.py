@@ -532,3 +532,50 @@ class PlatformFastSearchPhase2Tests(TestCase):
 
     def test_fast_search_seo_health(self):
         _assert_platform_seo_health(self, '/solutions/fast-property-search/')
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformMarketIntelligencePhase2Tests(TestCase):
+    """Phase 2 sprint 3: /features/market-intelligence/ product line."""
+
+    def test_market_page_renders(self):
+        resp = self.client.get('/features/market-intelligence/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'mi-hero')
+        self.assertContains(resp, 'mi-outcomes')
+        self.assertContains(resp, 'mi-next')
+        self.assertContains(resp, 'fil-ico')
+        self.assertContains(resp, 'help-analyze-dashboard')
+        self.assertContains(resp, 'help-map-view')
+        self.assertContains(resp, 'help-compare-files')
+        self.assertContains(resp, 'help-tools-panel')
+        self.assertContains(resp, '/features/filing/')
+        self.assertContains(resp, 'plat-faq__item', count=7)
+        self.assertContains(resp, 'Value Score')
+        self.assertContains(resp, 'لایسنس')
+        self.assertContains(resp, '<h1', count=1)
+
+    def test_market_schema_licensed_not_fake_free(self):
+        resp = self.client.get('/features/market-intelligence/')
+        body = resp.content.decode('utf-8')
+        self.assertIn('"@type": "SoftwareApplication"', body)
+        self.assertIn('"@type": "Product"', body)
+        self.assertIn('تحلیل بازار', body)
+        self.assertIn('لایسنس', body)
+        self.assertNotIn('AggregateRating', body)
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+
+    def test_market_next_path_exactly_three(self):
+        from shop.platform.content.market_intelligence_hub import (
+            market_intelligence_product_line_content,
+        )
+        items = market_intelligence_product_line_content()['next_path']['items']
+        self.assertEqual(len(items), 3)
+        self.assertTrue(items[-1].get('convert'))
+
+    def test_features_hub_links_to_market(self):
+        resp = self.client.get('/features/')
+        self.assertContains(resp, '/features/market-intelligence/')
+
+    def test_market_seo_health(self):
+        _assert_platform_seo_health(self, '/features/market-intelligence/')

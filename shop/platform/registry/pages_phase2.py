@@ -11,6 +11,7 @@ def build_pages() -> list[PageSpec]:
         _filing_filter_feature_draft(),
         _filing_saved_search_feature_draft(),
         _fast_property_search_solution(),
+        _market_intelligence_product_line(),
     ]
 
 
@@ -165,4 +166,39 @@ def _fast_property_search_solution() -> PageSpec:
         ),
         related_seo_landings=('robot-divar',),
         sitemap_priority=0.84,
+    )
+
+
+def _market_intelligence_product_line() -> PageSpec:
+    seo = PageSEO(
+        title='تحلیل بازار املاک | آمار قیمت، نقشه و Value Score — فایلینگ دیوار',
+        description=(
+            'خط محصول تحلیل بازار: از Dataset فایلینگ آمار قیمت، نمودار، نقشه و Value Score '
+            'بگیرید تا قیمت‌گذاری و پیشنهاد به مشتری حدسی نباشد.'
+        ),
+        keywords=(
+            'تحلیل بازار املاک, Value Score, قیمت گذاری ملک, نقشه آگهی, '
+            'آمار قیمت دیوار, فایلینگ دیوار'
+        ),
+        og_title='تحلیل بازار — خط محصول فایلینگ دیوار',
+        h1='تحلیل بازار: قیمت را از داده بخوانید، نه از حدس',
+    )
+    return PageSpec(
+        section='features',
+        path='market-intelligence',
+        variant='product_line',
+        status='published',
+        marketability='marketable',
+        seo=seo,
+        accent='amber',
+        icon='fa-chart-line',
+        decor_icon='sparkles',
+        product_line='market-intelligence',
+        funnel_role='consideration',
+        intent='commercial',
+        primary_keyword='تحلیل بازار املاک',
+        content_key='market_intelligence_product_line',
+        related_solutions=(),
+        related_seo_landings=('robot-divar', 'real-estate-software'),
+        sitemap_priority=0.86,
     )

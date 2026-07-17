@@ -170,12 +170,19 @@ def features_hub_content() -> dict[str, Any]:
                         'قیمت، نقشه محله و Value Score کمک می‌کنند پیشنهادتان دقیق‌تر باشد؛ '
                         'نه فقط بر اساس حس بازار.'
                     ),
-                    'url_name': 'seo_landing_real_estate_software',
-                    'url_kwargs': {},
+                    'url_name': 'platform_features_page',
+                    'url_kwargs': {'slug_path': 'market-intelligence'},
                     'icon': 'fa-chart-line',
                     'accent': 'amber',
                     'badge': 'لایسنس',
                     'size': 'normal',
+                    'sub_links': [
+                        {
+                            'label': 'فایلینگ Dataset',
+                            'url_name': 'platform_features_page',
+                            'url_kwargs': {'slug_path': 'filing'},
+                        },
+                    ],
                 },
                 {
                     'title': 'مدیریت آژانس',

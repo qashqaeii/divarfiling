@@ -33,6 +33,8 @@
         {% include 'platform/variants/crm_product_line.html' %}
     {% elif platform_page.content_key == 'filing_product_line' %}
         {% include 'platform/variants/filing_product_line.html' %}
+    {% elif platform_page.content_key == 'market_intelligence_product_line' %}
+        {% include 'platform/variants/market_intelligence_product_line.html' %}
     {% elif platform_page.variant == 'product_line' %}
         {% include 'platform/variants/product_line.html' %}
     {% elif platform_page.content_key == 'crm_reminders' %}
@@ -61,6 +63,8 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-crm.css' %}?v=5">
 {% elif platform_page.content_key == 'filing_product_line' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-filing.css' %}?v=1">
+{% elif platform_page.content_key == 'market_intelligence_product_line' %}
+<link rel="stylesheet" href="{% static 'css/mizkar-platform-market.css' %}?v=1">
 {% elif platform_page.content_key == 'crm_reminders' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-reminders.css' %}?v=4">
 {% elif platform_page.content_key == 'customer_follow_up' %}

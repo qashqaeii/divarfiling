@@ -41,6 +41,7 @@ def _product_line_title(code: str) -> str:
     return {
         'crm': 'CRM املاک',
         'filing': 'فایلینگ',
+        'market-intelligence': 'تحلیل بازار',
     }.get(code, code)
 
 
@@ -294,6 +295,33 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'مقایسه و کاهش تکراری',
             ],
         }
+    elif page.content_key == 'market_intelligence_product_line':
+        filing_url = f'{site_url}/features/filing/'
+        schema = {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            'name': 'تحلیل بازار فایلینگ دیوار',
+            'alternateName': 'Market Intelligence',
+            'applicationCategory': 'BusinessApplication',
+            'applicationSubCategory': 'Real Estate Market Analytics',
+            'operatingSystem': 'Web, Windows',
+            'description': page.seo.description,
+            'url': page_url,
+            'inLanguage': 'fa-IR',
+            'creator': creator,
+            'isRelatedTo': {
+                '@type': 'SoftwareApplication',
+                'name': 'فایلینگ دیوار',
+                'url': filing_url,
+            },
+            'offers': _licensed_offer(page_url),
+            'featureList': [
+                'گزارش تحلیل Dataset',
+                'نقشه آگهی‌ها',
+                'Value Score',
+                'مقایسه دوره‌ای فایل‌ها',
+            ],
+        }
     else:
         return ''
 
@@ -311,6 +339,7 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         'customer_follow_up',
         'filing_product_line',
         'fast_property_search',
+        'market_intelligence_product_line',
     ):
         return ''
 
@@ -339,6 +368,12 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         product_url = page_url
         offers = _licensed_offer(product_url)
         category = 'جستجوی فایل و Dataset املاک'
+    elif page.content_key == 'market_intelligence_product_line':
+        name = 'تحلیل بازار فایلینگ دیوار'
+        image = f'{site_url}/static/images/help-analyze-dashboard.webp'
+        product_url = page_url
+        offers = _licensed_offer(product_url)
+        category = 'تحلیل بازار و قیمت‌گذاری املاک'
     else:
         name = 'راه‌حل پیگیری مشتری املاک'
         image = f'{site_url}/static/images/help-crm-today.webp'

@@ -35,6 +35,7 @@ def build_pages() -> list[PageSpec]:
         _extraction_license_feature_draft(),
         _extraction_dataset_builder_feature_draft(),
         _extraction_advertiser_signals_feature_draft(),
+        _build_property_database_solution(),
     ]
 
 
@@ -64,7 +65,7 @@ def _filing_product_line() -> PageSpec:
         intent='commercial',
         primary_keyword='فایلینگ دیوار',
         content_key='filing_product_line',
-        related_solutions=('fast-property-search',),
+        related_solutions=('build-property-database', 'fast-property-search'),
         related_articles=(
             'tatbiq-hooshmand-melk-moshtari-dataset-60s-rahnama',
         ),
@@ -184,6 +185,7 @@ def _fast_property_search_solution() -> PageSpec:
         primary_keyword='پیدا کردن سریع فایل املاک',
         content_key='fast_property_search',
         related_features=('filing/search', 'filing/filter', 'filing/saved-search'),
+        related_solutions=('build-property-database',),
         related_articles=(
             'tatbiq-hooshmand-melk-moshtari-dataset-60s-rahnama',
         ),
@@ -603,9 +605,55 @@ def _extraction_product_line() -> PageSpec:
         intent='commercial',
         primary_keyword='ربات استخراج آگهی دیوار',
         content_key='extraction_product_line',
-        related_solutions=('fast-property-search',),
+        related_solutions=('build-property-database', 'fast-property-search'),
         related_seo_landings=('robot-divar',),
         sitemap_priority=0.88,
+    )
+
+
+def _build_property_database_solution() -> PageSpec:
+    seo = PageSEO(
+        title='ساخت بانک فایل املاک؛ از استخراج آگهی تا Dataset قابل جستجو',
+        description=(
+            'آگهی‌های منطقه را ساختاریافته استخراج کنید، تکراری‌ها را کنترل کنید '
+            'و در فایلینگ دیوار یک بانک فایل قابل جستجو، مقایسه و تحلیل بسازید.'
+        ),
+        keywords=(
+            'ساخت بانک فایل املاک, بانک فایل املاک, ساخت فایلینگ املاک, '
+            'جمع‌آوری فایل ملک, مدیریت فایل‌های املاک, بانک اطلاعات املاک, '
+            'Dataset املاک, استخراج آگهی املاک, فایل‌یابی املاک, حذف فایل تکراری, '
+            'به‌روزرسانی بانک فایل'
+        ),
+        og_title='ساخت بانک فایل املاک — راه‌حل فایلینگ دیوار',
+        h1='ساخت بانک فایل املاک؛ از آگهی پراکنده تا Dataset قابل جستجو',
+    )
+    return PageSpec(
+        section='solutions',
+        path='build-property-database',
+        variant='solution',
+        status='published',
+        marketability='marketable',
+        seo=seo,
+        accent='orange',
+        icon='fa-database',
+        decor_icon='layers',
+        funnel_role='conversion',
+        intent='problem-solution',
+        primary_keyword='ساخت بانک فایل املاک',
+        content_key='build_property_database',
+        related_features=(
+            'extraction/dataset-builder',
+            'extraction/deduplication',
+            'extraction/export',
+            'filing/search',
+            'filing/filter',
+        ),
+        related_articles=(
+            'hazf-agahi-tekrari-divar-bank-file-rahnama',
+            'bank-file-mantaghe-amlak',
+        ),
+        related_seo_landings=('robot-divar',),
+        sitemap_priority=0.85,
     )
 
 

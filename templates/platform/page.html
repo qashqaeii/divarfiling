@@ -51,6 +51,8 @@
         {% include 'platform/variants/property_pricing.html' %}
     {% elif platform_page.content_key == 'agency_management' %}
         {% include 'platform/variants/agency_management.html' %}
+    {% elif platform_page.content_key == 'build_property_database' %}
+        {% include 'platform/variants/build_property_database.html' %}
     {% elif platform_page.variant == 'feature' %}
         {% include 'platform/variants/feature_page.html' %}
     {% elif platform_page.variant == 'solution' %}
@@ -87,6 +89,8 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-property-pricing.css' %}?v=1">
 {% elif platform_page.content_key == 'agency_management' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-agency-management.css' %}?v=1">
+{% elif platform_page.content_key == 'build_property_database' %}
+<link rel="stylesheet" href="{% static 'css/mizkar-platform-build-database.css' %}?v=1">
 {% elif platform_page.content_key == 'solutions_hub' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-solutions-hub.css' %}?v=6">
 {% endif %}

@@ -17,6 +17,7 @@ PLATFORM_URLS = [
     '/solutions/',
     '/solutions/customer-follow-up/',
     '/solutions/fast-property-search/',
+    '/solutions/build-property-database/',
     '/solutions/property-pricing/',
     '/solutions/agency-management/',
 ]
@@ -266,7 +267,11 @@ class PlatformNavigationPhaseDTests(TestCase):
             content = build_page_content(page.content_key)
             items = content['next_path']['items']
             self.assertEqual(len(items), 3, page.content_key)
-            self.assertTrue(items[-1].get('convert'), page.content_key)
+            if page.content_key == 'build_property_database':
+                # Sprint 8: conversion stays in Final CTA; next_path is product→product→solution.
+                self.assertFalse(any(i.get('convert') for i in items), page.content_key)
+            else:
+                self.assertTrue(items[-1].get('convert'), page.content_key)
 
     def test_context_bar_and_journey_on_follow_up(self):
         resp = self.client.get('/solutions/customer-follow-up/')
@@ -940,8 +945,8 @@ class PlatformExtractionPhase2Tests(TestCase):
         items = extraction_product_line_content()['next_path']['items']
         self.assertEqual(len(items), 3)
         self.assertTrue(items[-1].get('convert'))
-        self.assertEqual(items[0]['url_kwargs']['slug_path'], 'filing')
-        self.assertEqual(items[1]['url_kwargs']['slug'], 'fast-property-search')
+        self.assertEqual(items[0]['url_kwargs']['slug'], 'build-property-database')
+        self.assertEqual(items[1]['url_kwargs']['slug_path'], 'filing')
 
     def test_extraction_guest_and_auth_cta(self):
         guest = self.client.get('/features/extraction/')
@@ -994,3 +999,161 @@ class PlatformExtractionPhase2Tests(TestCase):
         self.assertNotIn('تضمین استخراج همه', body)
         self.assertIn('محصول رسمی دیوار', body)
         self.assertIn('Worker', body)
+
+    def test_extraction_resume_not_marketed_as_feature(self):
+        resp = self.client.get('/features/extraction/')
+        body = resp.content.decode('utf-8')
+        self.assertNotIn('قابلیت Resume', body)
+        self.assertNotIn('ادامه خودکار کامل', body)
+        self.assertIn('ادامه خودکار پس از توقف', body)
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformBuildPropertyDatabasePhase2Tests(TestCase):
+    """Phase 2 sprint 8: /solutions/build-property-database/."""
+
+    def test_build_property_database_renders(self):
+        resp = self.client.get('/solutions/build-property-database/')
+        self.assertEqual(resp.status_code, 200)
+        page = get_page('solutions', 'build-property-database')
+        self.assertIsNotNone(page)
+        self.assertEqual(page.status, 'published')
+        self.assertEqual(page.accent, 'orange')
+        self.assertContains(resp, 'sol-hero')
+        self.assertContains(resp, 'bpd-conseq')
+        self.assertContains(resp, 'bpd-checklist')
+        self.assertContains(resp, 'sol-framework')
+        self.assertContains(resp, 'bpd-conn')
+        self.assertContains(resp, 'bpd-maint')
+        self.assertContains(resp, 'help-bot-extract-tab')
+        self.assertContains(resp, 'help-bot-output-folder')
+        self.assertContains(resp, 'help-upload-bulk')
+        self.assertContains(resp, 'help-dataset-table')
+        self.assertContains(resp, 'help-map-view')
+        self.assertContains(resp, '/features/extraction/')
+        self.assertContains(resp, '/features/filing/')
+        self.assertContains(resp, '/solutions/fast-property-search/')
+        self.assertContains(resp, 'plat-nav-bar')
+        self.assertContains(resp, 'plat-affiliate')
+        self.assertContains(resp, 'plat-faq__item', count=16)
+        self.assertContains(resp, 'شناسه')
+        self.assertContains(resp, '۵۰۰')
+        self.assertContains(resp, 'لایسنس')
+        self.assertContains(resp, '<h1', count=1)
+
+    def test_build_property_database_schema_licensed(self):
+        resp = self.client.get('/solutions/build-property-database/')
+        body = resp.content.decode('utf-8')
+        self.assertIn('"@type": "SoftwareApplication"', body)
+        self.assertIn('"@type": "Product"', body)
+        self.assertIn('"@type": "FAQPage"', body)
+        self.assertIn('extraction', body)
+        self.assertIn('filing', body)
+        self.assertIn('fast-property-search', body)
+        self.assertNotIn('AggregateRating', body)
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+
+    def test_build_property_database_next_path_three(self):
+        from shop.platform.content.build_property_database import (
+            build_property_database_content,
+        )
+        items = build_property_database_content()['next_path']['items']
+        self.assertEqual(len(items), 3)
+        self.assertFalse(any(i.get('convert') for i in items))
+        self.assertEqual(items[0]['url_kwargs']['slug_path'], 'extraction')
+        self.assertEqual(items[1]['url_kwargs']['slug_path'], 'filing')
+        self.assertEqual(items[2]['url_kwargs']['slug'], 'fast-property-search')
+
+    def test_build_property_database_guest_and_auth_cta(self):
+        guest = self.client.get('/solutions/build-property-database/')
+        self.assertContains(guest, 'مشاهده لایسنس ربات')
+        self.assertContains(guest, '/products/divar-extraction-bot/')
+        self.assertContains(guest, 'خط محصول استخراج')
+        from accounts.models import User
+        user = User.objects.create_user(
+            username='bpd_user', phone='09120008877', password='x',
+        )
+        self.client.force_login(user)
+        auth = self.client.get('/solutions/build-property-database/')
+        self.assertContains(auth, 'مدیریت حساب و لایسنس')
+        self.assertContains(auth, '/dashboard/')
+
+    def test_build_property_database_hub_menu_and_backlinks(self):
+        from shop.platform.registry.menu import platform_mega_menu
+        hub = self.client.get('/solutions/')
+        self.assertContains(hub, '/solutions/build-property-database/')
+        self.assertContains(hub, 'shub-map__row--published')
+        labels = [s['url_kwargs']['slug'] for s in platform_mega_menu()['solution_highlights']]
+        self.assertIn('build-property-database', labels)
+        extraction = self.client.get('/features/extraction/')
+        self.assertContains(extraction, '/solutions/build-property-database/')
+        filing = self.client.get('/features/filing/')
+        self.assertContains(filing, '/solutions/build-property-database/')
+        fast = self.client.get('/solutions/fast-property-search/')
+        self.assertContains(fast, '/solutions/build-property-database/')
+
+    def test_build_property_database_honesty(self):
+        resp = self.client.get('/solutions/build-property-database/')
+        body = resp.content.decode('utf-8')
+        forbidden = (
+            'کامل‌ترین بانک فایل ایران',
+            'همه فایل‌های منطقه',
+            'بانک فایل بدون تکراری',
+            'فایل‌های صددرصد معتبر',
+            'مالک واقعی تضمینی',
+            'اطلاعات همیشه به‌روز',
+            'استخراج نامحدود',
+            'افزایش تضمینی معامله',
+            'جایگزینی کامل فایل‌یاب',
+            'خودکارسازی کامل بدون بررسی انسان',
+            'تأیید یا همکاری رسمی دیوار',
+            'AggregateRating',
+        )
+        for phrase in forbidden:
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, body)
+        self.assertIn('بررسی انسانی', body)
+        self.assertIn('شناسه', body)
+
+    def test_build_property_database_unknown_slug_404(self):
+        resp = self.client.get('/solutions/build-property-database-xyz/')
+        self.assertEqual(resp.status_code, 404)
+
+    def test_build_property_database_seo_health(self):
+        _assert_platform_seo_health(self, '/solutions/build-property-database/')
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformExtractionHonestyDocsTests(TestCase):
+    """Sprint 8 pre-fix: INFO_BEFORE / Resume honesty."""
+
+    def test_info_before_has_no_overclaims(self):
+        from pathlib import Path
+        repo = Path(__file__).resolve().parents[3]
+        paths = [
+            repo / 'installer' / 'INFO_BEFORE.txt',
+            repo / 'extractor-app' / 'release' / 'docs' / 'INFO_BEFORE.txt',
+        ]
+        banned_legacy = (
+            'Interactive map display',
+            'Commission calculator',
+            'Comprehensive data analysis tools',
+            'No information is sent to external servers',
+            'Automatic extraction of real estate listing data',
+            'Parallel processing for higher speed',
+            'Beautiful and intuitive graphical user interface',
+        )
+        for path in paths:
+            with self.subTest(path=str(path)):
+                self.assertTrue(path.exists(), msg=f'missing {path}')
+                text = path.read_text(encoding='utf-8')
+                for phrase in banned_legacy:
+                    self.assertNotIn(phrase, text)
+                self.assertIn('چه چیزی تضمین یا ادعا نمی‌شود', text)
+                self.assertIn('۵۰۰', text)
+                self.assertIn('Resume', text)
+                self.assertIn('وعده داده نمی‌شود', text)
+                self.assertIn('لایسنس', text)
+                features = text.split('چه چیزی تضمین یا ادعا نمی‌شود')[0]
+                self.assertNotIn('استخراج نامحدود', features)
+                self.assertNotIn('ادامه خودکار کامل', features)

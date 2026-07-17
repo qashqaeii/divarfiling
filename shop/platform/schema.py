@@ -467,6 +467,51 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'آپلود Dataset به فایلینگ',
             ],
         }
+    elif page.content_key == 'build_property_database':
+        extraction_url = f'{site_url}/features/extraction/'
+        filing_url = f'{site_url}/features/filing/'
+        fast_url = f'{site_url}/solutions/fast-property-search/'
+        schema = {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            'name': 'راه‌حل ساخت بانک فایل املاک',
+            'applicationCategory': 'BusinessApplication',
+            'applicationSubCategory': 'Property Database',
+            'operatingSystem': 'Web, Windows',
+            'description': page.seo.description,
+            'url': page_url,
+            'inLanguage': 'fa-IR',
+            'creator': creator,
+            'isPartOf': {
+                '@type': 'SoftwareApplication',
+                'name': 'میزکار فایلینگ دیوار',
+                'url': site_url,
+            },
+            'isRelatedTo': [
+                {
+                    '@type': 'SoftwareApplication',
+                    'name': 'ربات استخراج آگهی فایلینگ دیوار',
+                    'url': extraction_url,
+                },
+                {
+                    '@type': 'SoftwareApplication',
+                    'name': 'فایلینگ دیوار',
+                    'url': filing_url,
+                },
+                {
+                    '@type': 'SoftwareApplication',
+                    'name': 'راه‌حل پیدا کردن سریع فایل املاک',
+                    'url': fast_url,
+                },
+            ],
+            'offers': _licensed_offer(f'{site_url}/products/divar-extraction-bot/'),
+            'featureList': [
+                'ساخت Dataset از آگهی‌های ساختاریافته',
+                'کنترل تکراری مبتنی بر شناسه',
+                'بانک فایل قابل جستجو در فایلینگ',
+                'فیلتر، جزئیات، نقشه و مقایسه',
+            ],
+        }
     else:
         return ''
 
@@ -484,6 +529,7 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         'customer_follow_up',
         'filing_product_line',
         'fast_property_search',
+        'build_property_database',
         'market_intelligence_product_line',
         'property_pricing',
         'agency_product_line',
@@ -535,6 +581,12 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         product_url = page_url
         offers = _licensed_offer(product_url)
         category = 'جستجوی فایل و Dataset املاک'
+    elif page.content_key == 'build_property_database':
+        name = 'راه‌حل ساخت بانک فایل املاک'
+        image = f'{site_url}/static/images/help-dataset-table.webp'
+        product_url = page_url
+        offers = _licensed_offer(f'{site_url}/products/divar-extraction-bot/')
+        category = 'ساخت بانک فایل و Dataset املاک'
     elif page.content_key == 'market_intelligence_product_line':
         name = 'تحلیل بازار فایلینگ دیوار'
         image = f'{site_url}/static/images/help-analyze-dashboard.webp'

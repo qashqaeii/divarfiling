@@ -375,6 +375,18 @@ def filing_product_line_content() -> dict[str, Any]:
             'items': [
                 {
                     'type': 'راه‌حل',
+                    'icon': 'fa-database',
+                    'title': 'ساخت بانک فایل',
+                    'desc': (
+                        'دلیل ادامه: ببینید چطور از استخراج و آپلود تا Dataset قابل جستجو '
+                        'بانک فایل دفتر شکل می‌گیرد.'
+                    ),
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'build-property-database'},
+                    'cta': 'مشاهده راه‌حل',
+                },
+                {
+                    'type': 'راه‌حل',
                     'icon': 'fa-magnifying-glass-location',
                     'title': 'پیدا کردن سریع فایل',
                     'desc': (
@@ -384,18 +396,6 @@ def filing_product_line_content() -> dict[str, Any]:
                     'url_name': 'platform_solutions_page',
                     'url_kwargs': {'slug': 'fast-property-search'},
                     'cta': 'مشاهده راه‌حل',
-                },
-                {
-                    'type': 'استخراج',
-                    'icon': 'fa-robot',
-                    'title': 'ربات استخراج',
-                    'desc': (
-                        'دلیل ادامه: بدون استخراج منظم، بانک فایل خالی می‌ماند. '
-                        'اینجا مسیر ربات ویندوز و خروجی را می‌بینید.'
-                    ),
-                    'url_name': 'platform_features_page',
-                    'url_kwargs': {'slug_path': 'extraction'},
-                    'cta': 'مشاهده ربات',
                 },
                 {
                     'type': 'شروع',

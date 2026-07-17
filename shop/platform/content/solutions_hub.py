@@ -244,6 +244,14 @@ def solutions_hub_content() -> dict[str, Any]:
                     'url_kwargs': {'slug': 'fast-property-search'},
                 },
                 {
+                    'icon': 'fa-database',
+                    'problem': 'فایل‌ها در واتساپ و اکسل پراکنده‌اند',
+                    'status': 'published',
+                    'solution_title': 'ساخت بانک فایل',
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'build-property-database'},
+                },
+                {
                     'icon': 'fa-tags',
                     'problem': 'قیمت‌گذاری ملک را حدس می‌زنم',
                     'status': 'published',

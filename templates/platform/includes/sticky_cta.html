@@ -27,6 +27,8 @@
         <a href="{% url 'platform_solutions_page' slug='customer-follow-up' %}" class="plat-btn plat-btn--ghost plat-btn--product plat-sticky-cta__ghost">راه‌حل</a>
         {% elif platform_content.cta.secondary == 'agency_line' %}
         <a href="{% url 'platform_features_page' slug_path='agency' %}" class="plat-btn plat-btn--ghost plat-btn--product plat-sticky-cta__ghost">آژانس</a>
+        {% elif platform_content.cta.secondary == 'extraction_line' %}
+        <a href="{% url 'platform_features_page' slug_path='extraction' %}" class="plat-btn plat-btn--ghost plat-btn--product plat-sticky-cta__ghost">استخراج</a>
         {% elif platform_content.cta.secondary == 'solutions_hub' %}
         <a href="{% url 'platform_solutions_hub' %}" class="plat-btn plat-btn--ghost plat-btn--explore plat-sticky-cta__ghost">راه‌حل‌ها</a>
         {% elif platform_content.cta.secondary == 'features_hub' %}

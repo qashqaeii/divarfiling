@@ -117,6 +117,12 @@ def platform_mega_menu() -> dict:
             'url_kwargs': {'slug': 'customer-follow-up'},
         },
         {
+            'label': 'ساخت بانک فایل',
+            'desc': 'از آگهی پراکنده تا Dataset',
+            'url_name': 'platform_solutions_page',
+            'url_kwargs': {'slug': 'build-property-database'},
+        },
+        {
             'label': 'پیدا کردن سریع فایل',
             'desc': 'جستجو روی Dataset',
             'url_name': 'platform_solutions_page',

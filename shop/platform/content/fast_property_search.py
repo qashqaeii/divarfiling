@@ -375,6 +375,13 @@ def fast_property_search_content() -> dict[str, Any]:
             ),
             'items': [
                 {
+                    'icon': 'fa-database',
+                    'title': 'ساخت بانک فایل',
+                    'role': 'اگر هنوز Dataset منظم ندارید، اول مسیر ساخت بانک فایل را ببینید.',
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'build-property-database'},
+                },
+                {
                     'icon': 'fa-magnifying-glass',
                     'title': 'Search',
                     'role': 'جستجو روی جدول Dataset برای رسیدن سریع به ردیف درست.',

@@ -59,6 +59,7 @@ def _location_label(page: PageSpec) -> str:
         'agency_management': 'راه‌حل مدیریت آژانس',
         'extraction_product_line': 'خط محصول ربات استخراج',
         'property_pricing': 'راه‌حل قیمت‌گذاری ملک',
+        'build_property_database': 'راه‌حل ساخت بانک فایل',
         'fast_property_search': 'راه‌حل پیدا کردن سریع فایل',
         'solutions_hub': 'نقشه راه‌حل‌ها',
         'customer_follow_up': 'راه‌حل پیگیری مشتری',
@@ -196,12 +197,19 @@ def _trail_for_page(page: PageSpec) -> list[dict[str, Any]]:
             'kwargs': {'slug': 'agency-management'},
             'current': True,
         })
+    elif page.content_key == 'build_property_database':
+        items.append({
+            'label': 'ساخت بانک فایل',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'build-property-database'},
+            'current': True,
+        })
     return items
 
 
 def _journey_for_page(page: PageSpec) -> list[dict[str, Any]]:
     """Canonical funnel — CRM, Filing, Market, Agency, or Extraction path by page family."""
-    if page.content_key in ('filing_product_line', 'fast_property_search'):
+    if page.content_key in ('filing_product_line', 'fast_property_search', 'build_property_database'):
         return _filing_journey(page.content_key)
     if page.content_key in ('market_intelligence_product_line', 'property_pricing'):
         return _market_journey(page.content_key)
@@ -257,9 +265,23 @@ def _crm_journey(content_key: str) -> list[dict[str, Any]]:
 def _filing_journey(content_key: str) -> list[dict[str, Any]]:
     steps = [
         {
+            'id': 'extraction',
+            'label': 'استخراج',
+            'hint': 'جمع‌آوری داده',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'extraction'},
+        },
+        {
+            'id': 'bank_db',
+            'label': 'بانک فایل',
+            'hint': 'ساخت Dataset',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'build-property-database'},
+        },
+        {
             'id': 'filing',
             'label': 'فایلینگ',
-            'hint': 'بانک Dataset',
+            'hint': 'جستجو و نقشه',
             'url_name': 'platform_features_page',
             'kwargs': {'slug_path': 'filing'},
         },
@@ -271,23 +293,17 @@ def _filing_journey(content_key: str) -> list[dict[str, Any]]:
             'kwargs': {'slug': 'fast-property-search'},
         },
         {
-            'id': 'robot',
-            'label': 'استخراج',
-            'hint': 'ربات دسکتاپ',
-            'url_name': 'platform_features_page',
-            'kwargs': {'slug_path': 'extraction'},
-        },
-        {
             'id': 'start',
             'label': 'شروع',
-            'hint': 'ثبت‌نام رایگان',
-            'url_name': 'register',
-            'auth_url_name': 'workspace:home',
-            'kwargs': {},
+            'hint': 'لایسنس / میزکار',
+            'url_name': 'product_detail',
+            'auth_url_name': 'dashboard',
+            'kwargs': {'slug': 'divar-extraction-bot'},
         },
     ]
     current_id = {
         'filing_product_line': 'filing',
+        'build_property_database': 'bank_db',
         'fast_property_search': 'fast_search',
     }.get(content_key)
     return _annotate_journey(steps, current_id)
@@ -303,6 +319,13 @@ def _extraction_journey(content_key: str) -> list[dict[str, Any]]:
             'kwargs': {'slug_path': 'extraction'},
         },
         {
+            'id': 'bank_db',
+            'label': 'بانک فایل',
+            'hint': 'ساخت Dataset',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'build-property-database'},
+        },
+        {
             'id': 'filing',
             'label': 'فایلینگ',
             'hint': 'بانک Dataset',
@@ -310,11 +333,11 @@ def _extraction_journey(content_key: str) -> list[dict[str, Any]]:
             'kwargs': {'slug_path': 'filing'},
         },
         {
-            'id': 'market',
-            'label': 'تحلیل',
-            'hint': 'بازار و قیمت',
-            'url_name': 'platform_features_page',
-            'kwargs': {'slug_path': 'market-intelligence'},
+            'id': 'fast_search',
+            'label': 'جستجوی سریع',
+            'hint': 'راه‌حل عملی',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'fast-property-search'},
         },
         {
             'id': 'start',
@@ -327,6 +350,7 @@ def _extraction_journey(content_key: str) -> list[dict[str, Any]]:
     ]
     current_id = {
         'extraction_product_line': 'extraction',
+        'build_property_database': 'bank_db',
     }.get(content_key)
     return _annotate_journey(steps, current_id)
 

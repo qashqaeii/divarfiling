@@ -176,9 +176,9 @@ def extraction_product_line_content() -> dict[str, Any]:
             'primary_label': 'خط محصول فایلینگ',
             'primary_url_name': 'platform_features_page',
             'primary_url_kwargs': {'slug_path': 'filing'},
-            'secondary_label': 'پیدا کردن سریع فایل',
+            'secondary_label': 'ساخت بانک فایل',
             'secondary_url_name': 'platform_solutions_page',
-            'secondary_url_kwargs': {'slug': 'fast-property-search'},
+            'secondary_url_kwargs': {'slug': 'build-property-database'},
         },
         'product_story': {
             'title': 'زنجیره داده از دیوار تا تصمیم',
@@ -601,10 +601,21 @@ def extraction_product_line_content() -> dict[str, Any]:
         'next_path': {
             'title': 'سه مسیر بعدی',
             'lead': (
-                'Dataset را وارد فایلینگ کنید، فایل مناسب را سریع پیدا کنید، '
+                'بانک فایل بسازید، Dataset را در فایلینگ نگه دارید، '
                 'سپس لایسنس را ببینید یا میزکار را باز کنید.'
             ),
             'items': [
+                {
+                    'type': 'راه‌حل',
+                    'icon': 'fa-database',
+                    'title': 'ساخت بانک فایل املاک',
+                    'desc': (
+                        'از آگهی پراکنده تا Dataset قابل جستجو — مسیر کامل ساخت بانک فایل.'
+                    ),
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'build-property-database'},
+                    'cta': 'مشاهده راه‌حل',
+                },
                 {
                     'type': 'محصول',
                     'icon': 'fa-folder-tree',
@@ -615,17 +626,6 @@ def extraction_product_line_content() -> dict[str, Any]:
                     'url_name': 'platform_features_page',
                     'url_kwargs': {'slug_path': 'filing'},
                     'cta': 'مشاهده فایلینگ',
-                },
-                {
-                    'type': 'راه‌حل',
-                    'icon': 'fa-magnifying-glass-location',
-                    'title': 'پیدا کردن سریع فایل',
-                    'desc': (
-                        'بعد از جمع‌آوری داده، فایل مناسب مشتری را سریع‌تر پیدا کنید.'
-                    ),
-                    'url_name': 'platform_solutions_page',
-                    'url_kwargs': {'slug': 'fast-property-search'},
-                    'cta': 'مشاهده راه‌حل',
                 },
                 {
                     'type': 'لایسنس',

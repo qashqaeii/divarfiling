@@ -5,6 +5,7 @@ from typing import Any
 
 from shop.platform.content.agency_hub import agency_product_line_content
 from shop.platform.content.agency_management import agency_management_content
+from shop.platform.content.build_property_database import build_property_database_content
 from shop.platform.content.crm_hub import crm_product_line_content
 from shop.platform.content.customer_follow_up import customer_follow_up_content
 from shop.platform.content.extraction_hub import extraction_product_line_content
@@ -28,6 +29,7 @@ def build_page_content(content_key: str) -> dict[str, Any]:
         'customer_follow_up': customer_follow_up_content,
         'filing_product_line': filing_product_line_content,
         'fast_property_search': fast_property_search_content,
+        'build_property_database': build_property_database_content,
         'market_intelligence_product_line': market_intelligence_product_line_content,
         'property_pricing': property_pricing_content,
         'agency_product_line': agency_product_line_content,

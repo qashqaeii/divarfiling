@@ -10,8 +10,10 @@ PLATFORM_URLS = [
     '/features/',
     '/features/crm/',
     '/features/crm/reminders/',
+    '/features/filing/',
     '/solutions/',
     '/solutions/customer-follow-up/',
+    '/solutions/fast-property-search/',
 ]
 
 SCHEMA_DOUBLE_WRAP = '<script type="application/ld+json"><script type="application/ld+json">'
@@ -52,7 +54,13 @@ def _assert_platform_seo_health(test_case, url: str) -> None:
 class PlatformRegistryTests(TestCase):
     def test_phase1_page_count(self):
         published = [p for p in all_pages() if p.is_published]
-        self.assertEqual(len(published), 5)
+        self.assertGreaterEqual(len(published), 7)
+        self.assertIsNotNone(get_page('features', 'filing'))
+        self.assertIsNotNone(get_page('solutions', 'fast-property-search'))
+        # Draft features exist but are not routable
+        self.assertIsNone(get_page('features', 'filing/search'))
+        drafts = [p for p in all_pages() if p.status == 'draft']
+        self.assertGreaterEqual(len(drafts), 3)
 
     def test_all_pages_have_seo(self):
         for page in all_pages():
@@ -395,8 +403,10 @@ class PlatformFeelingPhaseETests(TestCase):
             '/features/': 'fhub-hero',
             '/features/crm/': 'plat-crm-hero',
             '/features/crm/reminders/': 'rem-hero',
+            '/features/filing/': 'fil-hero',
             '/solutions/': 'shub-hero',
             '/solutions/customer-follow-up/': 'sol-hero',
+            '/solutions/fast-property-search/': 'sol-hero',
         }
         for url, marker in mapping.items():
             with self.subTest(url=url):
@@ -416,3 +426,107 @@ class PlatformFeelingPhaseETests(TestCase):
         # No extreme glow language
         self.assertNotIn('text-shadow', text)
         self.assertLess(text.count('box-shadow'), 12)
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformFilingPhase2Tests(TestCase):
+    """Phase 2 sprint 1: /features/filing/ product line."""
+
+    def test_filing_page_renders(self):
+        resp = self.client.get('/features/filing/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'fil-hero')
+        self.assertContains(resp, 'fil-outcomes')
+        self.assertContains(resp, 'fil-next')
+        self.assertContains(resp, 'fil-ico')
+        self.assertContains(resp, 'help-dataset-table')
+        self.assertContains(resp, 'help-upload-bulk')
+        self.assertContains(resp, 'help-map-view')
+        self.assertContains(resp, '/features/crm/')
+        self.assertContains(resp, 'plat-faq__item', count=7)
+        self.assertContains(resp, 'لایسنس')
+        self.assertContains(resp, 'بخشی از میزکار فایلینگ دیوار')
+        self.assertContains(resp, '<h1', count=1)
+
+    def test_filing_schema_licensed_not_fake_free(self):
+        resp = self.client.get('/features/filing/')
+        body = resp.content.decode('utf-8')
+        self.assertIn('"@type": "SoftwareApplication"', body)
+        self.assertIn('"@type": "Product"', body)
+        self.assertIn('فایلینگ دیوار', body)
+        self.assertIn('لایسنس ربات', body)
+        self.assertNotIn('AggregateRating', body)
+        # Must not claim price 0 like CRM free core
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+
+    def test_filing_next_path_exactly_three(self):
+        from shop.platform.content.filing_hub import filing_product_line_content
+        items = filing_product_line_content()['next_path']['items']
+        self.assertEqual(len(items), 3)
+        self.assertTrue(items[-1].get('convert'))
+
+    def test_features_hub_links_to_filing(self):
+        resp = self.client.get('/features/')
+        self.assertContains(resp, '/features/filing/')
+
+    def test_filing_seo_health(self):
+        _assert_platform_seo_health(self, '/features/filing/')
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformFastSearchPhase2Tests(TestCase):
+    """Phase 2 sprint 2: /solutions/fast-property-search/ vertical slice."""
+
+    def test_fast_search_page_renders(self):
+        resp = self.client.get('/solutions/fast-property-search/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'sol-hero')
+        self.assertContains(resp, 'sol-outcomes')
+        self.assertContains(resp, 'sol-framework')
+        self.assertContains(resp, 'sol-next')
+        self.assertContains(resp, 'help-dataset-table')
+        self.assertContains(resp, 'help-upload-bulk')
+        self.assertContains(resp, 'help-map-view')
+        self.assertContains(resp, '/features/filing/')
+        self.assertContains(resp, 'plat-btn--convert')
+        self.assertContains(resp, 'plat-btn--product')
+        self.assertContains(resp, 'plat-faq__item', count=8)
+        self.assertContains(resp, 'اکسل')
+        self.assertContains(resp, 'واتساپ')
+        self.assertContains(resp, '<h1', count=1)
+
+    def test_fast_search_draft_features_not_public(self):
+        for path in ('filing/search', 'filing/filter', 'filing/saved-search'):
+            with self.subTest(path=path):
+                self.assertIsNone(get_page('features', path))
+                resp = self.client.get(f'/features/{path}/')
+                self.assertEqual(resp.status_code, 404)
+
+    def test_fast_search_schema_licensed(self):
+        resp = self.client.get('/solutions/fast-property-search/')
+        body = resp.content.decode('utf-8')
+        self.assertIn('"@type": "SoftwareApplication"', body)
+        self.assertIn('"@type": "Product"', body)
+        self.assertIn('"@type": "FAQPage"', body)
+        self.assertIn('پیدا کردن سریع', body)
+        self.assertNotIn('AggregateRating', body)
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+
+    def test_fast_search_next_path_three(self):
+        from shop.platform.content.fast_property_search import fast_property_search_content
+        items = fast_property_search_content()['next_path']['items']
+        self.assertEqual(len(items), 3)
+        self.assertTrue(items[-1].get('convert'))
+
+    def test_vertical_slice_links(self):
+        sol = self.client.get('/solutions/fast-property-search/')
+        self.assertContains(sol, '/features/filing/')
+        self.assertContains(sol, '/products/')
+        filing = self.client.get('/features/filing/')
+        self.assertContains(filing, '/solutions/fast-property-search/')
+        hub = self.client.get('/solutions/')
+        self.assertContains(hub, '/solutions/fast-property-search/')
+        self.assertContains(hub, 'shub-map__row--published')
+
+    def test_fast_search_seo_health(self):
+        _assert_platform_seo_health(self, '/solutions/fast-property-search/')

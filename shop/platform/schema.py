@@ -38,7 +38,21 @@ def build_breadcrumbs(page: PageSpec) -> list[dict[str, str]]:
 
 
 def _product_line_title(code: str) -> str:
-    return {'crm': 'CRM املاک'}.get(code, code)
+    return {
+        'crm': 'CRM املاک',
+        'filing': 'فایلینگ',
+    }.get(code, code)
+
+
+def _licensed_offer(page_url: str) -> dict[str, Any]:
+    """Honest offer for license-gated product lines — no fake price."""
+    return {
+        '@type': 'Offer',
+        'availability': 'https://schema.org/InStock',
+        'url': page_url,
+        'description': 'نیاز به لایسنس ربات دیوار — جزئیات در صفحه محصولات',
+        'priceCurrency': 'IRR',
+    }
 
 
 def _organization_node() -> dict[str, Any]:
@@ -233,6 +247,53 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'قالب پیام پیگیری',
             ],
         }
+    elif page.content_key == 'filing_product_line':
+        schema = {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            'name': 'فایلینگ دیوار',
+            'alternateName': 'بانک فایل Dataset',
+            'applicationCategory': 'BusinessApplication',
+            'applicationSubCategory': 'Property Dataset',
+            'operatingSystem': 'Web, Windows',
+            'description': page.seo.description,
+            'url': page_url,
+            'inLanguage': 'fa-IR',
+            'creator': creator,
+            'offers': _licensed_offer(page_url),
+            'featureList': [
+                'آپلود خروجی استخراج',
+                'جدول بانک فایل و فیلتر',
+                'جزئیات آگهی',
+                'نقشه و مقایسه فایل',
+            ],
+        }
+    elif page.content_key == 'fast_property_search':
+        filing_url = f'{site_url}/features/filing/'
+        schema = {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            'name': 'راه‌حل پیدا کردن سریع فایل املاک',
+            'applicationCategory': 'BusinessApplication',
+            'applicationSubCategory': 'Property Search',
+            'operatingSystem': 'Web, Windows',
+            'description': page.seo.description,
+            'url': page_url,
+            'inLanguage': 'fa-IR',
+            'creator': creator,
+            'isRelatedTo': {
+                '@type': 'SoftwareApplication',
+                'name': 'فایلینگ دیوار',
+                'url': filing_url,
+            },
+            'offers': _licensed_offer(page_url),
+            'featureList': [
+                'فیلتر پیشرفته Dataset',
+                'جستجوی جدولی فایل',
+                'نقشه آگهی',
+                'مقایسه و کاهش تکراری',
+            ],
+        }
     else:
         return ''
 
@@ -241,10 +302,16 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
 
 def schema_product_for_page(page: PageSpec, page_url: str) -> str:
     """
-    Product entity for CRM commercial intent pages.
-    Free offer only — no AggregateRating / invented reviews.
+    Product entity for commercial intent pages.
+    CRM/solutions: free offer. Filing: license-gated (no fake price/rating).
     """
-    if page.content_key not in ('crm_product_line', 'crm_reminders', 'customer_follow_up'):
+    if page.content_key not in (
+        'crm_product_line',
+        'crm_reminders',
+        'customer_follow_up',
+        'filing_product_line',
+        'fast_property_search',
+    ):
         return ''
 
     site_url = get_site_url()
@@ -252,14 +319,32 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         name = 'CRM املاک فایلینگ دیوار'
         image = f'{site_url}/static/images/help-crm-dashboard.webp'
         product_url = page_url
+        offers = _free_offer(product_url)
+        category = 'نرم‌افزار CRM املاک'
     elif page.content_key == 'crm_reminders':
         name = 'یادآور و تقویم CRM املاک'
         image = f'{site_url}/static/images/help-crm-today.webp'
         product_url = page_url
+        offers = _free_offer(product_url)
+        category = 'نرم‌افزار CRM املاک'
+    elif page.content_key == 'filing_product_line':
+        name = 'فایلینگ دیوار'
+        image = f'{site_url}/static/images/help-dataset-table.webp'
+        product_url = page_url
+        offers = _licensed_offer(product_url)
+        category = 'بانک فایل و Dataset املاک'
+    elif page.content_key == 'fast_property_search':
+        name = 'راه‌حل پیدا کردن سریع فایل املاک'
+        image = f'{site_url}/static/images/help-dataset-table.webp'
+        product_url = page_url
+        offers = _licensed_offer(product_url)
+        category = 'جستجوی فایل و Dataset املاک'
     else:
         name = 'راه‌حل پیگیری مشتری املاک'
         image = f'{site_url}/static/images/help-crm-today.webp'
         product_url = page_url
+        offers = _free_offer(product_url)
+        category = 'نرم‌افزار CRM املاک'
 
     schema: dict[str, Any] = {
         '@context': 'https://schema.org',
@@ -272,8 +357,8 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
             '@type': 'Brand',
             'name': get_site_name(),
         },
-        'category': 'نرم‌افزار CRM املاک',
-        'offers': _free_offer(product_url),
+        'category': category,
+        'offers': offers,
     }
     return json.dumps(schema, ensure_ascii=False)
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from shop.platform.registry import pages_phase1 as pages_phase1_module
+from shop.platform.registry import pages_phase2 as pages_phase2_module
 from shop.platform.types import PageSpec, validate_page_list
 
 _ALL_PAGES: list[PageSpec] | None = None
@@ -10,7 +11,7 @@ _ALL_PAGES: list[PageSpec] | None = None
 def all_pages() -> list[PageSpec]:
     global _ALL_PAGES
     if _ALL_PAGES is None:
-        _ALL_PAGES = pages_phase1_module.build_pages()
+        _ALL_PAGES = pages_phase1_module.build_pages() + pages_phase2_module.build_pages()
         validate_page_list(_ALL_PAGES)
     return _ALL_PAGES
 

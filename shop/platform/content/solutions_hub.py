@@ -238,10 +238,10 @@ def solutions_hub_content() -> dict[str, Any]:
                 {
                     'icon': 'fa-folder-open',
                     'problem': 'فایل مناسب برای مشتری پیدا نمی‌کنم',
-                    'status': 'coming',
-                    'solution_title': 'به‌زودی',
-                    'url_name': '',
-                    'url_kwargs': {},
+                    'status': 'published',
+                    'solution_title': 'پیدا کردن سریع فایل',
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'fast-property-search'},
                 },
                 {
                     'icon': 'fa-tags',
@@ -350,23 +350,23 @@ def solutions_hub_content() -> dict[str, Any]:
                     'cta': 'مشاهده راه‌حل',
                 },
                 {
-                    'type': 'قابلیت',
-                    'icon': 'fa-bell',
-                    'title': 'یادآور و تقویم CRM',
+                    'type': 'راه‌حل',
+                    'icon': 'fa-magnifying-glass-location',
+                    'title': 'پیدا کردن سریع فایل',
                     'desc': (
-                        'ابزار مناسب همین راه‌حل: صف امروز و ثبت زمان پیگیری '
-                        'را با تصویر ببینید.'
+                        'دلیل ادامه: وقتی فایل هست اما پیدا کردنش طول می‌کشد، '
+                        'مسیر Dataset و فیلتر را ببینید.'
                     ),
-                    'url_name': 'platform_features_page',
-                    'url_kwargs': {'slug_path': 'crm/reminders'},
-                    'cta': 'مشاهده یادآور',
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'fast-property-search'},
+                    'cta': 'مشاهده راه‌حل',
                 },
                 {
                     'type': 'شروع',
                     'icon': 'fa-rocket',
                     'title': 'شروع رایگان میزکار',
                     'desc': (
-                        'اقدام نهایی: ثبت‌نام رایگان و اولین یادآور. '
+                        'اقدام نهایی: ثبت‌نام رایگان و ورود به میزکار. '
                         'منوی اکتشاف جدا از این CTA تبدیل است.'
                     ),
                     'url_name': 'register',
@@ -415,8 +415,8 @@ def solutions_hub_content() -> dict[str, Any]:
             {
                 'q': 'چند راه‌حل الان آماده است؟',
                 'a': (
-                    'الان راه‌حل پیگیری مشتری منتشر است. '
-                    'راه‌حل‌های فایلینگ و قیمت‌گذاری در نقشه مشکل به‌صورت «به‌زودی» مشخص شده‌اند.'
+                    'الان راه‌حل پیگیری مشتری و پیدا کردن سریع فایل منتشر است. '
+                    'قیمت‌گذاری ملک در نقشه مشکل هنوز «به‌زودی» است.'
                 ),
             },
             {

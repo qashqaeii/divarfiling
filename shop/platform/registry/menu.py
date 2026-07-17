@@ -25,6 +25,15 @@ def platform_mega_menu() -> dict:
             'accent': 'amber',
         },
         {
+            'title': 'فایلینگ دیوار',
+            'desc': 'بانک Dataset و جستجوی فایل',
+            'url_name': 'platform_features_page',
+            'url_kwargs': {'slug_path': 'filing'},
+            'icon': 'fa-folder-tree',
+            'accent': 'sky',
+            'tag': 'لایسنس',
+        },
+        {
             'title': 'ربات استخراج',
             'desc': 'آگهی دیوار با فیلتر شهر',
             'url_name': 'seo_landing_robot_divar',
@@ -56,6 +65,12 @@ def platform_mega_menu() -> dict:
             'url_kwargs': {'slug_path': 'crm/reminders'},
         },
         {
+            'label': 'فایلینگ دیوار',
+            'desc': '/features/filing/',
+            'url_name': 'platform_features_page',
+            'url_kwargs': {'slug_path': 'filing'},
+        },
+        {
             'label': 'لندینگ معرفی CRM',
             'desc': '/real-estate-crm/ — معرفی تجاری',
             'url_name': 'seo_landing_real_estate_crm',
@@ -69,6 +84,12 @@ def platform_mega_menu() -> dict:
             'desc': 'تماس دوم از قلم نیفتد',
             'url_name': 'platform_solutions_page',
             'url_kwargs': {'slug': 'customer-follow-up'},
+        },
+        {
+            'label': 'پیدا کردن سریع فایل',
+            'desc': 'جستجو روی Dataset',
+            'url_name': 'platform_solutions_page',
+            'url_kwargs': {'slug': 'fast-property-search'},
         },
     ]
 

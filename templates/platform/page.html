@@ -31,12 +31,16 @@
         {% include 'platform/variants/solutions_hub.html' %}
     {% elif platform_page.content_key == 'crm_product_line' %}
         {% include 'platform/variants/crm_product_line.html' %}
+    {% elif platform_page.content_key == 'filing_product_line' %}
+        {% include 'platform/variants/filing_product_line.html' %}
     {% elif platform_page.variant == 'product_line' %}
         {% include 'platform/variants/product_line.html' %}
     {% elif platform_page.content_key == 'crm_reminders' %}
         {% include 'platform/variants/crm_reminders.html' %}
     {% elif platform_page.content_key == 'customer_follow_up' %}
         {% include 'platform/variants/customer_follow_up.html' %}
+    {% elif platform_page.content_key == 'fast_property_search' %}
+        {% include 'platform/variants/fast_property_search.html' %}
     {% elif platform_page.variant == 'feature' %}
         {% include 'platform/variants/feature_page.html' %}
     {% elif platform_page.variant == 'solution' %}
@@ -55,10 +59,14 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-features-hub.css' %}?v=4">
 {% elif platform_page.content_key == 'crm_product_line' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-crm.css' %}?v=5">
+{% elif platform_page.content_key == 'filing_product_line' %}
+<link rel="stylesheet" href="{% static 'css/mizkar-platform-filing.css' %}?v=1">
 {% elif platform_page.content_key == 'crm_reminders' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-reminders.css' %}?v=4">
 {% elif platform_page.content_key == 'customer_follow_up' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-solution.css' %}?v=4">
+{% elif platform_page.content_key == 'fast_property_search' %}
+<link rel="stylesheet" href="{% static 'css/mizkar-platform-fast-search.css' %}?v=1">
 {% elif platform_page.content_key == 'solutions_hub' %}
 <link rel="stylesheet" href="{% static 'css/mizkar-platform-solutions-hub.css' %}?v=6">
 {% endif %}

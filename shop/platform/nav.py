@@ -53,6 +53,8 @@ def _location_label(page: PageSpec) -> str:
         'features_hub': 'نقشه امکانات',
         'crm_product_line': 'خط محصول CRM',
         'crm_reminders': 'یادآور CRM',
+        'filing_product_line': 'خط محصول فایلینگ',
+        'fast_property_search': 'راه‌حل پیدا کردن سریع فایل',
         'solutions_hub': 'نقشه راه‌حل‌ها',
         'customer_follow_up': 'راه‌حل پیگیری مشتری',
     }
@@ -98,6 +100,14 @@ def _trail_for_page(page: PageSpec) -> list[dict[str, Any]]:
         items = [
             {'label': 'امکانات', 'url_name': 'platform_features_hub', 'kwargs': {}, 'current': page.variant == 'hub'},
         ]
+        if page.content_key == 'filing_product_line':
+            items.append({
+                'label': 'فایلینگ',
+                'url_name': 'platform_features_page',
+                'kwargs': {'slug_path': 'filing'},
+                'current': True,
+            })
+            return items
         if page.path:
             items.append({
                 'label': 'CRM',
@@ -124,11 +134,24 @@ def _trail_for_page(page: PageSpec) -> list[dict[str, Any]]:
             'kwargs': {'slug': 'customer-follow-up'},
             'current': True,
         })
+    elif page.content_key == 'fast_property_search':
+        items.append({
+            'label': 'پیدا کردن سریع فایل',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'fast-property-search'},
+            'current': True,
+        })
     return items
 
 
 def _journey_for_page(page: PageSpec) -> list[dict[str, Any]]:
-    """Canonical funnel: CRM → Reminder → Solution → Start."""
+    """Canonical funnel — CRM path or Filing path by page family."""
+    if page.content_key in ('filing_product_line', 'fast_property_search'):
+        return _filing_journey(page.content_key)
+    return _crm_journey(page.content_key)
+
+
+def _crm_journey(content_key: str) -> list[dict[str, Any]]:
     steps = [
         {
             'id': 'crm',
@@ -166,8 +189,50 @@ def _journey_for_page(page: PageSpec) -> list[dict[str, Any]]:
         'customer_follow_up': 'follow_up',
         'features_hub': None,
         'solutions_hub': None,
-    }.get(page.content_key)
+    }.get(content_key)
+    return _annotate_journey(steps, current_id)
 
+
+def _filing_journey(content_key: str) -> list[dict[str, Any]]:
+    steps = [
+        {
+            'id': 'filing',
+            'label': 'فایلینگ',
+            'hint': 'بانک Dataset',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'filing'},
+        },
+        {
+            'id': 'fast_search',
+            'label': 'جستجوی سریع',
+            'hint': 'راه‌حل عملی',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'fast-property-search'},
+        },
+        {
+            'id': 'robot',
+            'label': 'استخراج',
+            'hint': 'ربات دیوار',
+            'url_name': 'seo_landing_robot_divar',
+            'kwargs': {},
+        },
+        {
+            'id': 'start',
+            'label': 'شروع',
+            'hint': 'ثبت‌نام رایگان',
+            'url_name': 'register',
+            'auth_url_name': 'workspace:home',
+            'kwargs': {},
+        },
+    ]
+    current_id = {
+        'filing_product_line': 'filing',
+        'fast_property_search': 'fast_search',
+    }.get(content_key)
+    return _annotate_journey(steps, current_id)
+
+
+def _annotate_journey(steps: list[dict[str, Any]], current_id: str | None) -> list[dict[str, Any]]:
     for i, step in enumerate(steps):
         step['state'] = 'upcoming'
         if current_id is None:

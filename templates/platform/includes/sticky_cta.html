@@ -17,6 +17,8 @@
         <a href="{% url 'seo_landing_real_estate_crm' %}" class="plat-btn plat-btn--ghost plat-btn--explore plat-sticky-cta__ghost">راهنما</a>
         {% elif platform_content.cta.secondary == 'crm_line' or platform_content.cta.secondary == 'crm_landing' %}
         <a href="{% url 'platform_features_page' slug_path='crm' %}" class="plat-btn plat-btn--ghost plat-btn--product plat-sticky-cta__ghost">CRM</a>
+        {% elif platform_content.cta.secondary == 'filing_line' %}
+        <a href="{% url 'platform_features_page' slug_path='filing' %}" class="plat-btn plat-btn--ghost plat-btn--product plat-sticky-cta__ghost">فایلینگ</a>
         {% elif platform_content.cta.secondary == 'reminders_feature' %}
         <a href="{% url 'platform_features_page' slug_path='crm/reminders' %}" class="plat-btn plat-btn--ghost plat-btn--product plat-sticky-cta__ghost">یادآور</a>
         {% elif platform_content.cta.secondary == 'customer_follow_up' %}

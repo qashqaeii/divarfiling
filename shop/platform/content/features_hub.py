@@ -147,15 +147,22 @@ def features_hub_content() -> dict[str, Any]:
                 {
                     'title': 'فایلینگ و استخراج',
                     'desc': (
-                        'ربات ویندوز آگهی‌های دیوار را می‌گیرد و در بانک فایل منظم نگه می‌دارد. '
-                        'جستجو، فیلتر و تطبیق با نیاز مشتری روی همین میزکار انجام می‌شود.'
+                        'بانک Dataset آگهی‌های دیوار: آپلود، جدول، نقشه و مقایسه. '
+                        'با لایسنس ربات روی همان میزکار فعال می‌شود.'
                     ),
-                    'url_name': 'seo_landing_robot_divar',
-                    'url_kwargs': {},
+                    'url_name': 'platform_features_page',
+                    'url_kwargs': {'slug_path': 'filing'},
                     'icon': 'fa-folder-tree',
                     'accent': 'sky',
                     'badge': 'لایسنس ربات',
                     'size': 'normal',
+                    'sub_links': [
+                        {
+                            'label': 'ربات استخراج',
+                            'url_name': 'seo_landing_robot_divar',
+                            'url_kwargs': {},
+                        },
+                    ],
                 },
                 {
                     'title': 'تحلیل بازار',
@@ -411,6 +418,17 @@ def features_hub_content() -> dict[str, Any]:
                     ),
                     'url_name': 'platform_solutions_page',
                     'url_kwargs': {'slug': 'customer-follow-up'},
+                },
+                {
+                    'icon': 'fa-magnifying-glass-location',
+                    'title': 'پیدا کردن سریع فایل',
+                    'outcome': 'فایل مناسب را هنگام تماس پیشنهاد دهید',
+                    'desc': (
+                        'فیلتر و جستجو روی Dataset فایلینگ '
+                        'به‌جای اکسل، پوشه و واتساپ.'
+                    ),
+                    'url_name': 'platform_solutions_page',
+                    'url_kwargs': {'slug': 'fast-property-search'},
                 },
             ],
             'hub_label': 'همه راه‌حل‌ها',

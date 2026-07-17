@@ -60,6 +60,31 @@
     </div>
 </section>
 
+{# ── ارزش برای مشاور ── #}
+<section class="ex-sec" aria-labelledby="ex-advisor-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-user-tie" aria-hidden="true"></i>
+                ارزش برای مشاور
+            </p>
+            <h2 id="ex-advisor-title">{{ platform_content.advisor_value.title }}</h2>
+            <p>{{ platform_content.advisor_value.lead }}</p>
+        </div>
+        <ul class="ex-trust__grid">
+            {% for item in platform_content.advisor_value.items %}
+            <li class="ex-trust__item plat-reveal">
+                <span class="ex-ico ex-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
 {# ── Soft CTA Filing ── #}
 <aside class="ex-soft-cta plat-reveal" aria-label="اتصال به فایلینگ">
     <div class="ex-wrap ex-soft-cta__inner">

@@ -460,7 +460,8 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
             ],
             'offers': _licensed_offer(f'{site_url}/products/divar-extraction-bot/'),
             'featureList': [
-                'استخراج ساختاریافته آگهی با محدوده جغرافیایی',
+                'استخراج ساختاریافته امکانات و مشخصات آگهی',
+                'فیلتر شخصی و سیگنال نوع آگهی‌دهنده',
                 'خروجی Excel، CSV و JSON',
                 'کنترل تکراری بر اساس شناسه آگهی',
                 'آپلود Dataset به فایلینگ',

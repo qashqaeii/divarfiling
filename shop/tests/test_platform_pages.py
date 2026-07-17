@@ -910,7 +910,7 @@ class PlatformExtractionPhase2Tests(TestCase):
         self.assertContains(resp, '/features/market-intelligence/')
         self.assertContains(resp, 'plat-nav-bar')
         self.assertContains(resp, 'plat-affiliate')
-        self.assertContains(resp, 'plat-faq__item', count=16)
+        self.assertContains(resp, 'plat-faq__item', count=17)
         self.assertContains(resp, 'ویندوز')
         self.assertContains(resp, 'لایسنس')
         self.assertContains(resp, 'یک‌روزه')
@@ -918,6 +918,9 @@ class PlatformExtractionPhase2Tests(TestCase):
         self.assertContains(resp, 'CSV')
         self.assertContains(resp, 'JSON')
         self.assertContains(resp, 'شناسه')
+        self.assertContains(resp, 'ex-advisor-title')
+        self.assertContains(resp, 'فقط شخصی')
+        self.assertContains(resp, 'پارکینگ')
         self.assertContains(resp, '<h1', count=1)
 
     def test_extraction_schema_licensed_windows(self):

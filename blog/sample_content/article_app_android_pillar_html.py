@@ -142,7 +142,7 @@ CONTENT = r'''<p>ساعت ۱۱ صبح، داخل واحد ۱۱۰ متری در �
 
 <h2>سناریو ۴: استخراج سبک در محله</h2>
 
-<p>علاوه بر CRM، یک اسلات <strong>اپ اندروید استخراج</strong> در لایسنس ربات دارید — برای جمع‌آوری سبک آگهی در محل (مثلاً هنگام قدم زدن در محله برای <a href="/blog/malke-vaghei-moshaver-penhan/">مالک واقعی</a>). حجم سنگین همچنان با <a href="/robot-divar/">ربات ویندوز</a> منطقی‌تر است؛ موبایل مکمل است، نه جایگزین کامل. مقایسه در <a href="/blog/gheymat-robot-estekhraj-divar-roi/">راهنمای ROI ربات</a>.</p>
+<p>علاوه بر CRM، یک اسلات <strong>اپ اندروید استخراج</strong> در لایسنس ربات دارید — برای جمع‌آوری سبک آگهی در محل (مثلاً هنگام قدم زدن در محله برای <a href="/blog/tashkhis-malek-vaghei-divar-rahnama/">مالک واقعی</a>). حجم سنگین همچنان با <a href="/robot-divar/">ربات ویندوز</a> منطقی‌تر است؛ موبایل مکمل است، نه جایگزین کامل. مقایسه در <a href="/blog/gheymat-robot-estekhraj-divar-roi-rahnama/">راهنمای ROI ربات</a>.</p>
 
 <h2>موبایل در برابر وب — کدام کار کجا؟</h2>
 
@@ -227,7 +227,7 @@ CONTENT = r'''<p>ساعت ۱۱ صبح، داخل واحد ۱۱۰ متری در �
     <a href="/accounts/register/">شروع رایگان</a>
 </div>
 
-<p>مطالب مرتبط: <a href="/blog/behtarin-crm-moshaver-amlak-iran-1405/">بهترین CRM</a> · <a href="/blog/tatbiq-hooshmand-melk-moshtari-dataset-60s-rahnama/">تطبیق هوشمند</a> · <a href="/blog/modiriyat-moamele-amlak-parvande-komision-rahnama/">مدیریت معاملات</a> · <a href="/blog/gheymat-robot-estekhraj-divar-roi/">قیمت و ROI ربات</a> · <a href="/blog/peigiri-moshtari-moshaver-amlak/">پیگیری مشتری</a></p>
+<p>مطالب مرتبط: <a href="/blog/behtarin-crm-moshaver-amlak-iran-1405/">بهترین CRM</a> · <a href="/blog/tatbiq-hooshmand-melk-moshtari-dataset-60s-rahnama/">تطبیق هوشمند</a> · <a href="/blog/modiriyat-moamele-amlak-parvande-komision-rahnama/">مدیریت معاملات</a> · <a href="/blog/gheymat-robot-estekhraj-divar-roi-rahnama/">قیمت و ROI ربات</a> · <a href="/blog/peigiri-moshtari-moshaver-amlak/">پیگیری مشتری</a></p>
 
 <p><em>نویسنده: <a href="/author/hossein-qashqaeii/">حسین قشقایی</a> — اپ اندروید را برای همان لحظه‌ای ساختم که مشاور جلوی ملک ایستاده و نباید بگوید «شب بهتون می‌گم».</em></p>
 

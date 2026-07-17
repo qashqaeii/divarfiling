@@ -1972,7 +1972,13 @@ class CRMPropertyImportView(LoginRequiredMixin, View):
         form = CRMPropertyImportForm(request.POST, request.FILES)
         nxt = request.POST.get('next') or reverse('workspace:crm_properties')
         if form.is_valid():
-            created, skipped, errors = import_properties_from_file(request.user, form.cleaned_data['file'])
+            try:
+                created, skipped, errors = import_properties_from_file(
+                    request.user, form.cleaned_data['file']
+                )
+            except Exception:
+                messages.error(request, 'خواندن یا پردازش فایل ناموفق بود. قالب نمونه را دانلود و دوباره امتحان کنید.')
+                return redirect(nxt)
             if errors:
                 for err in errors[:3]:
                     messages.error(request, err)

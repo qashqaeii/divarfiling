@@ -122,7 +122,7 @@ CONTENT = r'''<p>شنبه ۹ صبح، گروه واتساپ آژانس ۴۷ پی
     <li><strong>وضعیت خوانده‌شده</strong> — مدیر می‌فهمد کی اعلان را دیده</li>
 </ul>
 
-<p>اطلاعیه‌های مهم می‌توانند روی <strong>Agency TV</strong> هم نمایش داده شوند — بدون افشای نام مشتری. راهنما: <a href="/blog/agency-tv-dashboard-amlak/">داشبورد TV آژانس</a>.</p>
+<p>اطلاعیه‌های مهم می‌توانند روی <strong>Agency TV</strong> هم نمایش داده شوند — بدون افشای نام مشتری. راهنما: <a href="/blog/agency-tv-dashboard-ajans-amlak/">داشبورد TV آژانس</a>.</p>
 
 <h2>پیام داخلی — خصوصی و گروهی</h2>
 
@@ -257,7 +257,7 @@ CONTENT = r'''<p>شنبه ۹ صبح، گروه واتساپ آژانس ۴۷ پی
     <a href="/real-estate-crm/">CRM املاک</a>
 </div>
 
-<p>مطالب مرتبط: <a href="/blog/modiriyat-ajans-amlak-crm/">مدیریت آژانس</a> · <a href="/blog/eshterak-file-moshaveran-ajans-5-ghanoon-rahnama/">اشتراک فایل تیم</a> · <a href="/blog/agency-tv-dashboard-amlak/">Agency TV</a> · <a href="/blog/behtarin-crm-moshaver-amlak-iran-1405/">بهترین CRM</a> · <a href="/blog/automation-crm-5-ghanon-pigiri-rahnama/">اتوماسیون پیگیری</a></p>
+<p>مطالب مرتبط: <a href="/blog/modiriyat-ajans-amlak-crm/">مدیریت آژانس</a> · <a href="/blog/eshterak-file-moshaveran-ajans-5-ghanoon-rahnama/">اشتراک فایل تیم</a> · <a href="/blog/agency-tv-dashboard-ajans-amlak/">Agency TV</a> · <a href="/blog/behtarin-crm-moshaver-amlak-iran-1405/">بهترین CRM</a> · <a href="/blog/automation-crm-5-ghanon-pigiri-rahnama/">اتوماسیون پیگیری</a></p>
 
 <p><em>نویسنده: <a href="/author/hossein-qashqaeii/">حسین قشقایی</a> — Inbox و اطلاعیه را ساختم تا مدیر آژانس کمتر بگوید «احتمالاً تو گروه بود».</em></p>
 

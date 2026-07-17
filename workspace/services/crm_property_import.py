@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import io
 import math
+import re
 from typing import Any, Dict, List, Optional, Tuple
+
+from django.core.exceptions import ValidationError
+
 from workspace.constants import (
     CRM_PROPERTIES,
     IMPORT_PROPERTY_COLUMNS,
@@ -20,10 +24,26 @@ from workspace.services.crm_scope import properties_qs
 from workspace.services.features import parse_bool_feature, parse_rooms_value
 
 _FA_DIGITS = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
+_HEADER_TITLE_MARKERS = frozenset(
+    {
+        'عنوان',
+        'title',
+        'نام',
+        'name',
+        *IMPORT_PROPERTY_COLUMNS.keys(),
+    }
+)
 
 
 def _normalize_header(h: str) -> str:
     return str(h or '').strip().replace('\ufeff', '')
+
+
+def _compact_header(h: str) -> str:
+    return re.sub(r'\s+', '', _normalize_header(h))
+
+
+_COMPACT_HEADER_MARKERS = frozenset(_compact_header(h) for h in IMPORT_PROPERTY_COLUMNS)
 
 
 def _map_row(row: dict) -> Dict[str, Any]:
@@ -43,6 +63,18 @@ def _clean_str(val) -> str:
         return ''
     s = str(val).strip()
     return '' if s.lower() in ('nan', 'none', 'null') else s
+
+
+def _is_header_like_row(data: Dict[str, Any], title_val: str) -> bool:
+    """ردیف تکراری هدر (مثلاً عنوان در ستون عنوان) را به‌عنوان داده قبول نکن."""
+    if title_val in _HEADER_TITLE_MARKERS:
+        return True
+    if _compact_header(title_val) in _COMPACT_HEADER_MARKERS:
+        return True
+    sale = _clean_str(data.get('sale_price'))
+    if sale and _compact_header(sale) in _COMPACT_HEADER_MARKERS:
+        return True
+    return False
 
 
 def _parse_float(val) -> Optional[float]:
@@ -75,7 +107,11 @@ def _parse_money(val) -> Optional[int]:
         return None
     if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
         return None
-    return parse_money_input(val)
+    try:
+        return parse_money_input(val)
+    except ValidationError:
+        # در import به‌جای ۵۰۰، مبلغ نامعتبر را خالی می‌گذاریم
+        return None
 
 def _parse_bool(val) -> bool:
     parsed = parse_bool_feature(val)
@@ -140,11 +176,15 @@ def import_properties_from_file(user, uploaded_file) -> Tuple[int, int, List[str
         for p in active_props.only('title', 'city', 'district')
     }
 
-    for _, row in df.iterrows():
+    for idx, row in df.iterrows():
+        row_num = int(idx) + 2  # هدر = ردیف ۱ در اکسل
         row_dict = {str(k): row[k] for k in df.columns}
         data = _map_row(row_dict)
         title_val = _clean_str(data.get('title'))
         if not title_val:
+            skipped += 1
+            continue
+        if _is_header_like_row(data, title_val):
             skipped += 1
             continue
 
@@ -179,37 +219,48 @@ def import_properties_from_file(user, uploaded_file) -> Tuple[int, int, List[str
         business_type = _normalize_business_type(data.get('business_type'))
         phone = normalize_phone(_clean_str(data.get('phone')))
 
-        CRMProperty.objects.create(
-            user=user,
-            title=title_val,
-            property_type=property_type,
-            deal_mode=deal_mode,
-            transaction_status=transaction_status,
-            publish_status=publish_status,
-            business_type=business_type,
-            phone=phone,
-            city=city,
-            district=district,
-            neighborhood=_clean_str(data.get('neighborhood')),
-            address=_clean_str(data.get('address')),
-            area=_parse_float(data.get('area')),
-            rooms=parse_rooms_value(data.get('rooms')),
-            floor=_parse_int(data.get('floor')),
-            total_floors=_parse_int(data.get('total_floors')),
-            build_year=_parse_int(data.get('build_year')),
-            has_parking=_parse_bool(data.get('has_parking')),
-            has_storage=_parse_bool(data.get('has_storage')),
-            has_elevator=_parse_bool(data.get('has_elevator')),
-            sale_price=_parse_money(data.get('sale_price')),
-            deposit=_parse_money(data.get('deposit')),
-            monthly_rent=_parse_money(data.get('monthly_rent')),
-            amenities=_clean_str(data.get('amenities')),
-            token=token,
-            link=_clean_str(data.get('link')),
-            latitude=_parse_float(data.get('latitude')),
-            longitude=_parse_float(data.get('longitude')),
-            notes=_clean_str(data.get('notes')),
-        )
+        try:
+            CRMProperty.objects.create(
+                user=user,
+                title=title_val,
+                property_type=property_type,
+                deal_mode=deal_mode,
+                transaction_status=transaction_status,
+                publish_status=publish_status,
+                business_type=business_type,
+                phone=phone,
+                city=city,
+                district=district,
+                neighborhood=_clean_str(data.get('neighborhood')),
+                address=_clean_str(data.get('address')),
+                area=_parse_float(data.get('area')),
+                rooms=parse_rooms_value(data.get('rooms')),
+                floor=_parse_int(data.get('floor')),
+                total_floors=_parse_int(data.get('total_floors')),
+                build_year=_parse_int(data.get('build_year')),
+                has_parking=_parse_bool(data.get('has_parking')),
+                has_storage=_parse_bool(data.get('has_storage')),
+                has_elevator=_parse_bool(data.get('has_elevator')),
+                sale_price=_parse_money(data.get('sale_price')),
+                deposit=_parse_money(data.get('deposit')),
+                monthly_rent=_parse_money(data.get('monthly_rent')),
+                amenities=_clean_str(data.get('amenities')),
+                token=token,
+                link=_clean_str(data.get('link')),
+                latitude=_parse_float(data.get('latitude')),
+                longitude=_parse_float(data.get('longitude')),
+                notes=_clean_str(data.get('notes')),
+            )
+        except ValidationError as exc:
+            msg = '; '.join(getattr(exc, 'messages', [str(exc)]))
+            errors.append(f'ردیف {row_num}: {msg}')
+            skipped += 1
+            continue
+        except Exception as exc:
+            errors.append(f'ردیف {row_num}: {exc}')
+            skipped += 1
+            continue
+
         if token:
             existing_tokens.add(token)
         existing_keys.add(dedup)

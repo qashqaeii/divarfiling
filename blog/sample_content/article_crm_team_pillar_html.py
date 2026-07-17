@@ -105,7 +105,7 @@ CONTENT = r'''<p>دوشنبه ۸:۵۰. مدیر آژانس پنج‌نفره م�
 
 <h3>۵. اطلاعیه‌ها</h3>
 
-<p>تابلو رسمی: عنوان، متن، سطح اهمیت (عادی تا فوری)، سنجاق، نقش هدف، تاریخ انتشار و انقضا، ضمیمه. مدیر می‌فهمد چه کسی «خواندم» زده. اطلاعیه مهم روی <a href="/blog/agency-tv-dashboard-amlak/">Agency TV</a> هم می‌آید — بدون نام مشتری.</p>
+<p>تابلو رسمی: عنوان، متن، سطح اهمیت (عادی تا فوری)، سنجاق، نقش هدف، تاریخ انتشار و انقضا، ضمیمه. مدیر می‌فهمد چه کسی «خواندم» زده. اطلاعیه مهم روی <a href="/blog/agency-tv-dashboard-ajans-amlak/">Agency TV</a> هم می‌آید — بدون نام مشتری.</p>
 
 <h3>۶. اعضا (Members)</h3>
 
@@ -237,7 +237,7 @@ CONTENT = r'''<p>دوشنبه ۸:۵۰. مدیر آژانس پنج‌نفره م�
     <a href="/real-estate-crm/">شروع CRM املاک</a>
 </div>
 
-<p>مطالب مرتبط: <a href="/blog/modiriyat-ajans-amlak-crm/">مدیریت آژانس</a> · <a href="/blog/inbox-etelaie-ajans-whatsapp-rahnama/">Inbox آژانس</a> · <a href="/blog/eshterak-file-moshaveran-ajans-5-ghanoon-rahnama/">اشتراک فایل تیم</a> · <a href="/blog/agency-tv-dashboard-amlak/">Agency TV</a> · <a href="/blog/behtarin-crm-moshaver-amlak-iran-1405/">بهترین CRM</a></p>
+<p>مطالب مرتبط: <a href="/blog/modiriyat-ajans-amlak-crm/">مدیریت آژانس</a> · <a href="/blog/inbox-etelaie-ajans-whatsapp-rahnama/">Inbox آژانس</a> · <a href="/blog/eshterak-file-moshaveran-ajans-5-ghanoon-rahnama/">اشتراک فایل تیم</a> · <a href="/blog/agency-tv-dashboard-ajans-amlak/">Agency TV</a> · <a href="/blog/behtarin-crm-moshaver-amlak-iran-1405/">بهترین CRM</a></p>
 
 <p><em>نویسنده: <a href="/author/hossein-qashqaeii/">حسین قشقایی</a> — صفحه تیم را ساختم تا مدیر «کنترل» داشته باشد بدون اینکه مشاور «مراقب» باشد.</em></p>
 

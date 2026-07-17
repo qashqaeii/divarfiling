@@ -143,6 +143,10 @@ def _send_fcm_v1(token: str, title: str, body: str, data: Dict[str, str]) -> boo
             _invalidate_fcm_token(token)
             return False
         logger.warning('FCM v1 HTTP %s: %s', resp.status_code, resp.text[:300])
+    except requests.Timeout:
+        logger.warning('FCM v1 timeout talking to fcm.googleapis.com')
+    except requests.RequestException as exc:
+        logger.warning('FCM v1 network error: %s', exc)
     except Exception:
         logger.exception('FCM v1 send error')
     return False
@@ -179,6 +183,10 @@ def _send_fcm_legacy(token: str, title: str, body: str, data: Dict[str, str]) ->
             logger.warning('FCM legacy send failed: %s', result)
         else:
             logger.warning('FCM legacy HTTP %s: %s', resp.status_code, resp.text[:200])
+    except requests.Timeout:
+        logger.warning('FCM legacy timeout talking to fcm.googleapis.com')
+    except requests.RequestException as exc:
+        logger.warning('FCM legacy network error: %s', exc)
     except Exception:
         logger.exception('FCM legacy send error')
     return False

@@ -7,6 +7,7 @@ from django.http import HttpResponsePermanentRedirect
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 from divar_shop.robots import robots_txt
 from divar_shop.sitemaps import sitemaps
@@ -27,6 +28,12 @@ urlpatterns = [
         name='django.contrib.sitemaps.views.sitemap',
     ),
     path('admin/', admin.site.urls),
+    # Wave 4 هنوز منتشر نشده — لینک‌های قدیمی را به لندینگ نرم‌افزار هدایت کن
+    path(
+        'property-pricing/',
+        RedirectView.as_view(url='/real-estate-software/', permanent=False),
+        name='property_pricing_placeholder',
+    ),
     path('', include('shop.urls')),
     path('accounts/', include('accounts.urls')),
     path('api/', include('licenses.api_urls')),

@@ -1,7 +1,46 @@
 """Tests for platform marketing pages — phase 1."""
+import json
+import re
+
 from django.test import TestCase, override_settings
 
 from shop.platform.registry import all_pages, get_page
+
+PLATFORM_URLS = [
+    '/features/',
+    '/features/crm/',
+    '/features/crm/reminders/',
+    '/solutions/',
+    '/solutions/customer-follow-up/',
+]
+
+SCHEMA_DOUBLE_WRAP = '<script type="application/ld+json"><script type="application/ld+json">'
+
+
+def _extract_ld_json_blocks(html: str) -> list[str]:
+    return re.findall(
+        r'<script type="application/ld\+json">(.*?)</script>',
+        html,
+        re.DOTALL,
+    )
+
+
+def _assert_platform_seo_health(test_case, url: str) -> None:
+    resp = test_case.client.get(url)
+    test_case.assertEqual(resp.status_code, 200, url)
+    body = resp.content.decode('utf-8')
+    test_case.assertNotIn(SCHEMA_DOUBLE_WRAP, body, url)
+    test_case.assertEqual(body.count('<h1'), 1, url)
+    test_case.assertIn('rel="canonical"', body, url)
+    test_case.assertIn('meta name="description"', body, url)
+    test_case.assertIn('"@type": "WebPage"', body, url)
+    test_case.assertIn('"@type": "FAQPage"', body, url)
+    test_case.assertIn('"@type": "BreadcrumbList"', body, url)
+
+    blocks = _extract_ld_json_blocks(body)
+    test_case.assertGreaterEqual(len(blocks), 3, url)
+    for block in blocks:
+        json.loads(block.strip())
 
 
 @override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
@@ -123,3 +162,15 @@ class PlatformPageViewTests(TestCase):
         self.assertIn('"@type": "WebPage"', body)
         self.assertIn('"@type": "FAQPage"', body)
         self.assertIn('"@type": "BreadcrumbList"', body)
+
+    def test_all_platform_pages_schema_and_seo_health(self):
+        for url in PLATFORM_URLS:
+            with self.subTest(url=url):
+                _assert_platform_seo_health(self, url)
+
+    def test_sitemap_includes_all_platform_pages(self):
+        resp = self.client.get('/sitemap-platform.xml')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode('utf-8')
+        for url in PLATFORM_URLS:
+            self.assertIn(url, body)

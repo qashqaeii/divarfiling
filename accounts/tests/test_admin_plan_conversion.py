@@ -94,6 +94,8 @@ class PlanConversionServiceTests(TestCase):
         self.assertTrue(len(ctx['insights']) >= 1)
         self.assertTrue(len(ctx['decision_cards']) >= 5)
         self.assertIn('stages', ctx['activation_funnel'])
+        self.assertIn('purchase_funnel', ctx)
+        self.assertIn('data_quality', ctx)
         self.assertGreaterEqual(len(ctx['activation_funnel']['stages']), 5)
         self.assertIn('features', ctx['behavior'])
         self.assertIn('recommendations', ctx)
@@ -103,8 +105,8 @@ class PlanConversionServiceTests(TestCase):
 
         payload = build_plan_conversion_json(days=30)
         self.assertTrue(payload['ok'])
-        self.assertEqual(payload['meta']['version'], '2.0-bi')
-        for key in ('insights', 'decision_cards', 'activation_funnel', 'behavior', 'recommendations'):
+        self.assertEqual(payload['meta']['version'], '2.1-bi-audit')
+        for key in ('insights', 'decision_cards', 'activation_funnel', 'purchase_funnel', 'behavior', 'recommendations', 'data_quality'):
             self.assertIn(key, payload)
 
 
@@ -126,7 +128,8 @@ class AdminPlanConversionPanelTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'خلاصه مدیریتی')
         self.assertContains(resp, 'کارت‌های تصمیم‌گیری')
-        self.assertContains(resp, 'قیف واقعی')
+        self.assertContains(resp, 'قیف خرید')
+        self.assertContains(resp, 'کیفیت داده')
         self.assertContains(resp, 'موتور پیشنهاد')
         self.assertContains(resp, 'admPlanConversion')
 

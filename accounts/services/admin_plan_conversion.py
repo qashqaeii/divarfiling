@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 import jdatetime
-from django.db.models import Count, Q, Sum
+from django.db.models import Count
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 
@@ -15,6 +15,8 @@ from accounts.services.admin_dashboard import (
     get_plan_sales_breakdown,
 )
 from accounts.services.plan_bi import (
+    PENDING_STALE_HOURS,
+    SCHEMA_VERSION,
     clamp_days,
     count_daily_to_monthly_upgrades,
     funnel_events_since,
@@ -25,9 +27,16 @@ from accounts.services.plan_bi import (
     pct,
     period_bounds,
 )
-from accounts.services.plan_bi.activation_funnel import build_activation_funnel
+from accounts.services.plan_bi.activation_funnel import (
+    build_activation_funnel,
+    build_purchase_funnel,
+)
 from accounts.services.plan_bi.behavior import build_behavior_analytics
 from accounts.services.plan_bi.cohorts import build_rich_cohorts
+from accounts.services.plan_bi.data_quality import (
+    build_data_quality,
+    classify_order_statuses,
+)
 from accounts.services.plan_bi.insights import (
     build_decision_cards,
     build_executive_insights,
@@ -36,10 +45,10 @@ from accounts.services.plan_bi.insights import (
 )
 from accounts.services.plan_bi.plan_matrix import build_plan_matrix
 from accounts.services.plan_bi.time_series import build_time_intelligence
+from licenses.models import LicenseActivation
 from shop.models import Order
 from workspace.services.jalali_input import to_persian_digits
 
-# Re-export for tests
 UPGRADE_WINDOW_DAYS = 7
 
 
@@ -108,17 +117,9 @@ def _period_summary(*, since, until=None, days: int) -> dict[str, Any]:
         checkout_qs = checkout_qs.filter(created_at__lt=until)
     checkout_views = checkout_qs.count()
 
-    failed_qs = Order.objects.filter(status='failed', created_at__gte=since)
-    pending_qs = Order.objects.filter(
-        status__in=('pending', 'pending_verification'),
-        created_at__gte=since,
+    order_statuses = classify_order_statuses(
+        since=since, until=until, stale_hours=PENDING_STALE_HOURS,
     )
-    if until:
-        failed_qs = failed_qs.filter(created_at__lt=until)
-        pending_qs = pending_qs.filter(created_at__lt=until)
-
-    failed_payments = failed_qs.count()
-    pending_orders = pending_qs.count()
     discount_orders = sum(1 for o in buyers['orders'] if o.discount_code_id)
 
     paid_count = buyers['paid_count']
@@ -130,13 +131,31 @@ def _period_summary(*, since, until=None, days: int) -> dict[str, Any]:
 
     upgrade_stats = count_daily_to_monthly_upgrades(since=since)
 
+    data_quality = build_data_quality(
+        since=since,
+        until=until,
+        buyers=buyers,
+        pricing_views=pricing_count,
+        checkout_views=checkout_views,
+    )
+    conv = data_quality['conversions']
+
+    def conv_value(key):
+        item = conv.get(key) or {}
+        return item.get('value')
+
     return {
         'buyers': buyers,
         'pricing_views': pricing_count,
         'pricing_unique': pricing_unique,
         'checkout_views': checkout_views,
-        'failed_payments': failed_payments,
-        'pending_orders': pending_orders,
+        'failed_payments': order_statuses['failed'],
+        'pending_orders': order_statuses['pending_recent'] + order_statuses['pending_stale'],
+        'pending_recent': order_statuses['pending_recent'],
+        'pending_stale': order_statuses['pending_stale'],
+        'abandoned': order_statuses['abandoned'],
+        'abandoned_available': order_statuses['abandoned_available'],
+        'order_statuses': order_statuses,
         'discount_orders': discount_orders,
         'discount_rate': pct(discount_orders, paid_count, 1) if paid_count else 0.0,
         'paid_count': paid_count,
@@ -147,30 +166,29 @@ def _period_summary(*, since, until=None, days: int) -> dict[str, Any]:
         'yearly_purchases': yearly_purchases,
         'unique_buyers': buyers['unique_buyers'],
         'aov': int(round(paid_revenue / paid_count)) if paid_count else 0,
-        'overall_conversion': pct(paid_count, pricing_count, 2) if pricing_count else 0.0,
-        'unique_conversion': pct(paid_count, pricing_unique, 2) if pricing_unique else 0.0,
-        'checkout_conversion': pct(paid_count, checkout_views, 2) if checkout_views else 0.0,
+        'overall_conversion': conv_value('overall_conversion'),
+        'unique_conversion': None,
+        'checkout_conversion': conv_value('checkout_conversion'),
+        'funnel_conversion': conv_value('funnel_conversion'),
+        'overall_conversion_available': conv['overall_conversion']['available'],
+        'checkout_conversion_available': conv['checkout_conversion']['available'],
+        'funnel_conversions_available': data_quality['funnel_conversions_available'],
+        'conversion_display': conv['overall_conversion']['display'],
         'upgrade_count': upgrade_stats['upgrade_count'],
         'upgrade_rate': upgrade_stats['upgrade_rate'],
         'daily_buyers_for_upgrade': upgrade_stats['daily_buyers'],
         'upgrade_window_days': upgrade_stats['window_days'],
         'upgrade_stats': upgrade_stats,
         'funnel_stages': {
-            'pricing_to_checkout': pct(checkout_views, pricing_count, 1) if pricing_count else 0.0,
-            'checkout_to_paid': pct(paid_count, checkout_views, 1) if checkout_views else 0.0,
-            'pricing_to_paid': pct(paid_count, pricing_count, 2) if pricing_count else 0.0,
+            'pricing_to_checkout': conv_value('pricing_to_checkout'),
+            'checkout_to_paid': conv_value('checkout_to_paid'),
+            'pricing_to_paid': conv_value('pricing_to_paid'),
         },
         'dropoffs': {
-            'pricing_to_checkout': pct(max(pricing_count - checkout_views, 0), pricing_count, 1) if pricing_count else 0.0,
-            'checkout_to_paid': pct(max(checkout_views - paid_count, 0), checkout_views, 1) if checkout_views else 0.0,
+            'pricing_to_checkout': None,
+            'checkout_to_paid': None,
         },
-        'data_quality': {
-            'pricing_tracking': pricing_count > 0,
-            'has_paid_orders': paid_count > 0,
-            'renewal_reliable': False,
-            'market_analysis_events': False,
-            'user_sms_campaign_events': False,
-        },
+        'data_quality': data_quality,
     }
 
 
@@ -197,8 +215,11 @@ def build_plan_conversion_chart_payload(
         },
         'plan_conversion': {
             'labels': [row['short_label'] for row in plan_rows],
-            'funnel_rates': [row.get('funnel_conversion') or 0 for row in plan_rows],
-            'checkout_rates': [row.get('checkout_conversion') or 0 for row in plan_rows],
+            'funnel_rates': [
+                row['funnel_conversion'] if row.get('conversion_available') else None
+                for row in plan_rows
+            ],
+            'checkout_rates': [None for _ in plan_rows],
             'purchases': [row['purchases'] for row in plan_rows],
             'accents': [row['accent'] for row in plan_rows],
             'colors': colors,
@@ -223,11 +244,12 @@ def build_plan_conversion_chart_payload(
             'repeat_7d_rate': [c['repeat_7d_rate'] for c in cohorts],
             'repeat_30d_rate': [c['repeat_30d_rate'] for c in cohorts],
             'upgrade_rate': [c['upgrade_rate'] for c in cohorts],
-            'avg_ltv': [c['avg_ltv'] for c in cohorts],
-            'active_7d_rate': [c.get('active_7d_rate', 0) for c in cohorts],
-            'active_30d_rate': [c.get('active_30d_rate', 0) for c in cohorts],
-            'crm_7d_rate': [c.get('crm_7d_rate', 0) for c in cohorts],
-            'dataset_7d_rate': [c.get('dataset_7d_rate', 0) for c in cohorts],
+            'observed_value_per_buyer': [c['observed_value_per_buyer'] for c in cohorts],
+            'avg_ltv': [c['observed_value_per_buyer'] for c in cohorts],
+            'active_7d_rate': [c.get('active_7d_rate') for c in cohorts],
+            'active_30d_rate': [c.get('active_30d_rate') for c in cohorts],
+            'crm_7d_rate': [c.get('crm_7d_rate') for c in cohorts],
+            'dataset_7d_rate': [c.get('dataset_7d_rate') for c in cohorts],
         },
     }
 
@@ -243,26 +265,40 @@ def get_plan_conversion_context(*, days: int = 30) -> dict[str, Any]:
 
     buyers = current['buyers']
     upgrade_stats = current['upgrade_stats']
+    data_quality = current['data_quality']
 
-    plan_rows = build_plan_matrix(
-        since=since,
-        pricing_views=current['pricing_views'],
-        checkout_views=current['checkout_views'],
-        upgrade_stats=upgrade_stats,
-    )
+    plan_rows = build_plan_matrix(since=since, upgrade_stats=upgrade_stats)
     time_intel = build_time_intelligence(since=since)
     weekly_series = time_intel.get('series') or []
     cohorts = build_rich_cohorts(limit=12)
     funnel_series = _funnel_daily_series(since=since, days=days)
 
-    activation_funnel = build_activation_funnel(
-        buyers=buyers,
+    # activated unique buyers
+    user_ids = buyers['user_ids']
+    activated_count = 0
+    if user_ids:
+        activated_count = (
+            LicenseActivation.objects.filter(license__order__user_id__in=user_ids)
+            .values('license__order__user_id')
+            .distinct()
+            .count()
+        )
+
+    purchase_funnel = build_purchase_funnel(
         pricing_views=current['pricing_views'],
         checkout_views=current['checkout_views'],
-        failed_payments=current['failed_payments'],
-        pending_orders=current['pending_orders'],
+        paid_count=current['paid_count'],
+        unique_buyers=current['unique_buyers'],
+        activated_count=activated_count,
+        order_statuses=current['order_statuses'],
+        funnel_conversions_available=data_quality['funnel_conversions_available'],
+        linked_paid_count=data_quality['linked_paid_count'],
     )
-    behavior = build_behavior_analytics(buyers=buyers)
+    activation_funnel = build_activation_funnel(buyers=buyers)
+    behavior = build_behavior_analytics(
+        buyers=buyers,
+        first_launch_dq=data_quality.get('first_launch_coverage'),
+    )
 
     summary = {
         **{k: v for k, v in current.items() if k not in ('buyers', 'upgrade_stats')},
@@ -287,6 +323,7 @@ def get_plan_conversion_context(*, days: int = 30) -> dict[str, Any]:
         prev_summary=prev_summary,
         plan_rows=plan_rows,
         activation_funnel=activation_funnel,
+        purchase_funnel=purchase_funnel,
         upgrade_stats=upgrade_stats,
     )
     decision_cards = build_decision_cards(
@@ -294,6 +331,7 @@ def get_plan_conversion_context(*, days: int = 30) -> dict[str, Any]:
         prev_summary=prev_summary,
         plan_rows=plan_rows,
         activation_funnel=activation_funnel,
+        purchase_funnel=purchase_funnel,
         upgrade_stats=upgrade_stats,
         buyers=buyers,
     )
@@ -332,12 +370,14 @@ def get_plan_conversion_context(*, days: int = 30) -> dict[str, Any]:
         'charts': charts,
         'insights': insights,
         'decision_cards': decision_cards,
+        'purchase_funnel': purchase_funnel,
         'activation_funnel': activation_funnel,
         'time_intelligence': time_intel,
         'behavior': behavior,
         'recommendations': recommendations,
         'predictive': predictive,
         'upgrade_stats': upgrade_stats,
+        'data_quality': data_quality,
     }
 
 
@@ -354,12 +394,14 @@ def build_plan_conversion_json(*, days: int = 30) -> dict[str, Any]:
             'generated_at': ctx['summary']['generated_at'],
             'generated_at_jalali': ctx['summary']['generated_at_jalali'],
             'source': 'admin_panel_plan_conversion',
-            'version': '2.0-bi',
+            'version': SCHEMA_VERSION,
         },
         'summary': ctx['summary'],
         'prev_summary': ctx['prev_summary'],
+        'data_quality': ctx['data_quality'],
         'insights': ctx['insights'],
         'decision_cards': ctx['decision_cards'],
+        'purchase_funnel': ctx['purchase_funnel'],
         'activation_funnel': ctx['activation_funnel'],
         'plans': ctx['plan_rows'],
         'weekly': ctx['weekly_series'],

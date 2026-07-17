@@ -3,23 +3,22 @@ from __future__ import annotations
 
 from typing import Any
 
+from django.db.models import Count
+
 from accounts.services.admin_dashboard import (
     PLAN_TYPE_ACCENTS,
-    PLAN_TYPE_SHORT_LABELS,
     _plan_short_label,
 )
-from accounts.services.plan_bi import EMPTY_MSG, pct, safe_div
-from shop.models import LicensePlan, Order
+from accounts.services.plan_bi import EMPTY_MSG, conversion_rate, pct, safe_div
+from shop.models import LicensePlan, PlanFunnelEvent
 
 
 def build_plan_matrix(
     *,
     since,
-    pricing_views: int,
-    checkout_views: int,
     upgrade_stats: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    from django.db.models import Count, Sum
+    from django.db.models import Sum
 
     from accounts.services.plan_bi import paid_orders_qs
 
@@ -37,6 +36,22 @@ def build_plan_matrix(
             'total': int(row['total'] or 0),
             'buyers': int(row['buyers'] or 0),
         }
+
+    # بازدید یکتای هر پلن (session) — فقط اگر plan روی Event ست شده باشد
+    plan_view_rows = (
+        PlanFunnelEvent.objects.filter(
+            created_at__gte=since,
+            event_type__in=('pricing_view', 'checkout_view'),
+            plan_id__isnull=False,
+        )
+        .exclude(session_key='')
+        .values('plan__product_id', 'plan__plan_type')
+        .annotate(visitors=Count('session_key', distinct=True))
+    )
+    plan_visitors: dict[tuple, int] = {}
+    for row in plan_view_rows:
+        key = (row['plan__product_id'], row['plan__plan_type'] or '')
+        plan_visitors[key] = int(row['visitors'] or 0)
 
     total_count = sum(v['count'] for v in sales.values())
     total_revenue = sum(v['total'] for v in sales.values())
@@ -58,7 +73,19 @@ def build_plan_matrix(
         count, total, buyers = s['count'], s['total'], s['buyers']
         aov = safe_div(total, count)
         rpu = safe_div(total, buyers) if buyers else 0
-        rpv = safe_div(total, pricing_views) if pricing_views else None
+
+        visitors = plan_visitors.get(key, 0)
+        # RPV = Revenue / Unique Pricing Visitors برای همان پلن
+        if visitors > 0:
+            rpv = safe_div(total, visitors)
+            rpv_available = True
+        else:
+            rpv = None
+            rpv_available = False
+
+        # Conversion فقط با view همان پلن
+        funnel_conversion = conversion_rate(count, visitors, 2) if visitors else None
+        conversion_available = funnel_conversion is not None
 
         upgrade_rate = None
         upgrade_available = False
@@ -66,9 +93,10 @@ def build_plan_matrix(
             upgrade_rate = upgrade_stats.get('upgrade_rate')
             upgrade_available = bool(upgrade_stats.get('available'))
         elif plan.plan_type == 'monthly':
-            # share of upgrades landing here
             upgrade_rate = upgrade_stats.get('upgrade_rate')
-            upgrade_available = bool(upgrade_stats.get('available')) and upgrade_stats.get('upgrade_count', 0) >= 0
+            upgrade_available = bool(upgrade_stats.get('available'))
+
+        observed_value = rpu  # ارزش محقق‌شده در دوره — نه LTV
 
         rows.append({
             'plan_id': plan.id,
@@ -87,28 +115,32 @@ def build_plan_matrix(
             'revenue_share': pct(total, total_revenue, 1),
             'aov': aov,
             'rpu': rpu,
-            'rpv': rpv if rpv is not None else None,
-            'rpv_available': pricing_views > 0,
-            'funnel_conversion': pct(count, pricing_views, 2) if pricing_views else None,
-            'checkout_conversion': pct(count, checkout_views, 2) if checkout_views else None,
+            'rpv': rpv,
+            'rpv_available': rpv_available,
+            'rpv_display': f'{rpv:,}' if rpv_available and rpv is not None else EMPTY_MSG,
+            'plan_visitors': visitors,
+            'funnel_conversion': funnel_conversion,
+            'checkout_conversion': None,
+            'conversion_available': conversion_available,
+            'conversion_display': f'{funnel_conversion}٪' if conversion_available else EMPTY_MSG,
             'renewal_rate': None,
             'renewal_available': False,
             'renewal_display': EMPTY_MSG,
             'upgrade_rate': upgrade_rate if upgrade_available else None,
             'upgrade_available': upgrade_available,
             'avg_upgrade_hours': upgrade_stats.get('avg_upgrade_hours') if plan.plan_type in ('daily', 'monthly') else None,
-            'ltv': rpu,  # approximate period LTV = revenue per buyer of this plan type
+            'observed_customer_value': observed_value,
+            'ltv': observed_value,  # backward compat alias — معنا: ارزش محقق‌شده
             'tags': [],
         })
 
     if not rows:
         return rows
 
-    # Smart tags
     by_sales = max(rows, key=lambda r: r['purchases'])
     by_rev = max(rows, key=lambda r: r['revenue'])
-    by_ltv = max((r for r in rows if r['buyers'] > 0), key=lambda r: r['ltv'], default=None)
-    with_conv = [r for r in rows if r['funnel_conversion'] is not None]
+    by_value = max((r for r in rows if r['buyers'] > 0), key=lambda r: r['observed_customer_value'], default=None)
+    with_conv = [r for r in rows if r.get('conversion_available') and r['funnel_conversion'] is not None]
     by_low_conv = min(with_conv, key=lambda r: r['funnel_conversion']) if with_conv else None
 
     for r in rows:
@@ -117,13 +149,13 @@ def build_plan_matrix(
             tags.append({'key': 'top_seller', 'label': 'پرفروش‌ترین'})
         if r is by_rev and r['revenue'] > 0:
             tags.append({'key': 'top_revenue', 'label': 'بیشترین درآمد'})
-        if by_ltv and r is by_ltv and r['ltv'] > 0:
-            tags.append({'key': 'highest_ltv', 'label': 'بالاترین LTV'})
-        if by_low_conv and r is by_low_conv and r['purchases'] >= 0 and r['funnel_conversion'] is not None:
-            if r['purchases'] == 0 or (r['funnel_conversion'] or 0) < 1:
-                tags.append({'key': 'lowest_conversion', 'label': 'کمترین نرخ تبدیل'})
+        if by_value and r is by_value and r['observed_customer_value'] > 0:
+            tags.append({'key': 'highest_value', 'label': 'بیشترین ارزش محقق‌شده'})
+        # کمترین نرخ تبدیل فقط وقتی conversion واقعاً موجود است
+        if by_low_conv and r is by_low_conv and r['conversion_available']:
+            tags.append({'key': 'lowest_conversion', 'label': 'کمترین نرخ تبدیل'})
         if r['purchases'] == 0:
-            tags.append({'key': 'needs_improvement', 'label': 'نیازمند بهبود'})
+            tags.append({'key': 'no_sales', 'label': 'بدون فروش در دوره'})
         elif r['revenue_share'] >= 70:
             tags.append({'key': 'concentration', 'label': 'تمرکز درآمد'})
         r['tags'] = tags

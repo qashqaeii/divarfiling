@@ -6,7 +6,6 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
 
 import jdatetime
-from django.db.models import Count, Min, Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
@@ -15,7 +14,14 @@ from workspace.services.jalali_input import PERSIAN_MONTHS, to_persian_digits
 
 UPGRADE_WINDOW_DAYS = 7
 EMPTY_MSG = 'داده کافی وجود ندارد'
+IMMATURE_MSG = 'دوره مشاهده کامل نشده'
+# حداقل نمونه برای همبستگی معنادار
 MIN_SAMPLE = 3
+CORR_MIN_GROUP = 10
+CORR_MIN_TOTAL = 30
+# سفارش pending قدیمی‌تر از این threshold (ساعت) می‌تواند stale باشد
+PENDING_STALE_HOURS = 24
+SCHEMA_VERSION = '2.1-bi-audit'
 
 
 def clamp_days(days: int) -> int:
@@ -30,6 +36,21 @@ def pct(numerator: int | float, denominator: int | float, places: int = 2) -> fl
         q, rounding=ROUND_HALF_UP,
     )
     return float(value)
+
+
+def conversion_rate(
+    numerator: int | float,
+    denominator: int | float,
+    places: int = 2,
+) -> float | None:
+    """نرخ تبدیل معتبر؛ بالاتر از ۱۰۰٪ یا مخرج صفر → None."""
+    if not denominator or numerator is None:
+        return None
+    if numerator < 0 or denominator < 0:
+        return None
+    if numerator > denominator:
+        return None
+    return pct(numerator, denominator, places)
 
 
 def safe_div(numerator: int | float, denominator: int | float, places: int = 0) -> float | int:
@@ -94,6 +115,15 @@ def funnel_events_since(since, event_type: str | None = None):
     if event_type:
         qs = qs.filter(event_type=event_type)
     return qs
+
+
+def get_tracking_start() -> datetime | None:
+    """اولین Event واقعی قیف خرید."""
+    return (
+        PlanFunnelEvent.objects.order_by('created_at')
+        .values_list('created_at', flat=True)
+        .first()
+    )
 
 
 def empty_metric(label: str = EMPTY_MSG) -> dict[str, Any]:
@@ -183,7 +213,7 @@ def count_daily_to_monthly_upgrades(*, since=None, window_days: int = UPGRADE_WI
     return {
         'daily_buyers': buyers,
         'upgrade_count': count,
-        'upgrade_rate': pct(count, buyers, 1),
+        'upgrade_rate': pct(count, buyers, 1) if buyers else None,
         'window_days': window_days,
         'avg_upgrade_hours': avg_hours,
         'available': buyers >= MIN_SAMPLE or count > 0,
@@ -209,8 +239,38 @@ def period_bounds(days: int):
 
 
 def delta_pct(current: float | int, previous: float | int) -> float | None:
+    """درصد تغییر؛ اگر دوره قبل صفر باشد → None (نه ۱۰۰٪ جعلی)."""
     if previous in (0, None) and current in (0, None):
-        return 0.0
+        return None
     if previous in (0, None):
-        return None if current == 0 else 100.0
+        return None
     return pct(current - previous, previous, 1)
+
+
+def comparison_status(current: float | int, previous: float | int) -> str:
+    if previous in (0, None) and current not in (0, None) and current > 0:
+        return 'new_activity'
+    if previous in (0, None) and current in (0, None):
+        return 'no_activity'
+    d = delta_pct(current, previous)
+    if d is None:
+        return 'unknown'
+    if d > 0:
+        return 'up'
+    if d < 0:
+        return 'down'
+    return 'flat'
+
+
+def percentile(values: list[float], p: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    if len(ordered) == 1:
+        return round(ordered[0], 1)
+    k = (len(ordered) - 1) * (p / 100.0)
+    f = int(k)
+    c = min(f + 1, len(ordered) - 1)
+    if f == c:
+        return round(ordered[f], 1)
+    return round(ordered[f] + (ordered[c] - ordered[f]) * (k - f), 1)

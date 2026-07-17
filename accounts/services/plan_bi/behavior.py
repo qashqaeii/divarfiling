@@ -1,4 +1,4 @@
-"""رفتار پس از خرید + همبستگی Rule-based."""
+"""رفتار پس از خرید + همبستگی Rule-based (مشاهده‌ای، نه علّی)."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,13 +6,30 @@ from typing import Any
 
 from django.db.models import Min
 
-from accounts.services.plan_bi import EMPTY_MSG, MIN_SAMPLE, pct, safe_div
+from accounts.services.plan_bi import (
+    CORR_MIN_GROUP,
+    CORR_MIN_TOTAL,
+    EMPTY_MSG,
+    pct,
+    safe_div,
+)
 from licenses.models import ClientAppEvent, LicenseActivation
-from shop.models import DownloadLog, Order
+from shop.models import DownloadLog
 from workspace.models import CRMDeal, CRMProperty, Customer, Dataset, Reminder
 
+# Activityهای معتبر برای Return (خرید/صدور لایسنس/سیستم خودکار مستثنی‌اند)
+VALID_RETURN_ACTIVITIES = (
+    'dataset_created',
+    'crm_customer_created',
+    'reminder_created',
+    'crm_property_created',
+    'crm_deal_created',
+    'app_first_launch',
+    'app_client_event',
+)
 
-def build_behavior_analytics(*, buyers: dict[str, Any]) -> dict[str, Any]:
+
+def build_behavior_analytics(*, buyers: dict[str, Any], first_launch_dq: dict | None = None) -> dict[str, Any]:
     user_ids = buyers['user_ids']
     first_paid = buyers['first_paid']
     n = len(user_ids)
@@ -23,6 +40,7 @@ def build_behavior_analytics(*, buyers: dict[str, Any]) -> dict[str, Any]:
             'sample_size': 0,
             'features': [],
             'correlations': [],
+            'valid_return_activities': list(VALID_RETURN_ACTIVITIES),
         }
 
     downloads = set(
@@ -34,11 +52,22 @@ def build_behavior_analytics(*, buyers: dict[str, Any]) -> dict[str, Any]:
         .annotate(first_at=Min('activated_at'))
         .values_list('license__order__user_id', 'first_at')
     )
-    launches = set(
+    launch_times = dict(
         ClientAppEvent.objects.filter(
             user_id__in=user_ids,
             event_type=ClientAppEvent.EventType.FIRST_LAUNCH,
-        ).values_list('user_id', flat=True).distinct()
+        )
+        .values('user_id')
+        .annotate(first_at=Min('created_at'))
+        .values_list('user_id', 'first_at')
+    )
+    # سایر ClientAppEvent بعد از خرید (غیر از صدور خودکار)
+    other_app_events = dict(
+        ClientAppEvent.objects.filter(user_id__in=user_ids)
+        .exclude(event_type=ClientAppEvent.EventType.FIRST_LAUNCH)
+        .values('user_id')
+        .annotate(first_at=Min('created_at'))
+        .values_list('user_id', 'first_at')
     )
     datasets = dict(
         Dataset.objects.filter(user_id__in=user_ids)
@@ -46,39 +75,66 @@ def build_behavior_analytics(*, buyers: dict[str, Any]) -> dict[str, Any]:
         .annotate(first_at=Min('created_at'))
         .values_list('user_id', 'first_at')
     )
-    customers = set(
-        Customer.objects.filter(user_id__in=user_ids).values_list('user_id', flat=True).distinct()
+    customers = dict(
+        Customer.objects.filter(user_id__in=user_ids)
+        .values('user_id')
+        .annotate(first_at=Min('created_at'))
+        .values_list('user_id', 'first_at')
     )
-    reminders = set(
-        Reminder.objects.filter(user_id__in=user_ids).values_list('user_id', flat=True).distinct()
+    reminders = dict(
+        Reminder.objects.filter(user_id__in=user_ids)
+        .values('user_id')
+        .annotate(first_at=Min('created_at'))
+        .values_list('user_id', 'first_at')
     )
-    properties = set(
+    properties = dict(
         CRMProperty.objects.filter(user_id__in=user_ids, deleted_at__isnull=True)
-        .values_list('user_id', flat=True).distinct()
+        .values('user_id')
+        .annotate(first_at=Min('created_at'))
+        .values_list('user_id', 'first_at')
     )
-    deals = set(
-        CRMDeal.objects.filter(user_id__in=user_ids).values_list('user_id', flat=True).distinct()
+    deals = dict(
+        CRMDeal.objects.filter(user_id__in=user_ids)
+        .values('user_id')
+        .annotate(first_at=Min('created_at'))
+        .values_list('user_id', 'first_at')
     )
 
     return_7d = set()
     return_30d = set()
     upgraded = set()
     same_day_extract = set()
+
+    def activity_timestamps(uid):
+        """Activity معتبر بعد از خرید — بدون خرید مجدد و بدون فقط activation."""
+        items = []
+        for ts in (
+            datasets.get(uid),
+            customers.get(uid),
+            reminders.get(uid),
+            properties.get(uid),
+            deals.get(uid),
+            launch_times.get(uid),
+            other_app_events.get(uid),
+        ):
+            if ts:
+                items.append(ts)
+        return items
+
     for uid, fp in first_paid.items():
-        # return = any order after first OR any usage after day 1? use order repeat or dataset after
-        later_orders = [
-            o for o in buyers['orders']
-            if o.user_id == uid and o.effective_paid and o.effective_paid > fp
-        ]
-        if any((o.effective_paid - fp).days <= 7 for o in later_orders):
-            return_7d.add(uid)
-        if any((o.effective_paid - fp).days <= 30 for o in later_orders):
-            return_30d.add(uid)
-        # also count usage return
-        for ts in (activations.get(uid), datasets.get(uid)):
-            if ts and fp < ts <= fp + timedelta(days=7):
+        # Return 7d: activity در روز ۲ تا ۷ (نه روز ۰/۱ خرید)
+        start_7 = fp + timedelta(days=1)
+        end_7 = fp + timedelta(days=7)
+        # Return 30d: activity در روز ۸ تا ۳۰
+        start_30 = fp + timedelta(days=7)
+        end_30 = fp + timedelta(days=30)
+
+        for ts in activity_timestamps(uid):
+            if ts < fp:
+                continue
+            if start_7 < ts <= end_7:
                 return_7d.add(uid)
-            if ts and fp < ts <= fp + timedelta(days=30):
+            if start_30 < ts <= end_30:
                 return_30d.add(uid)
 
         plans = buyers['plan_types_by_user'].get(uid, [])
@@ -86,8 +142,15 @@ def build_behavior_analytics(*, buyers: dict[str, Any]) -> dict[str, Any]:
             upgraded.add(uid)
 
         ds = datasets.get(uid)
-        if ds and abs((ds - fp).total_seconds()) <= 86400 and ds >= fp:
+        if ds and ds >= fp and (ds - fp).total_seconds() <= 86400:
             same_day_extract.add(uid)
+
+    fl_available = True
+    fl_note = ''
+    if first_launch_dq and first_launch_dq.get('status') in ('insufficient', 'broken', 'partial'):
+        if first_launch_dq.get('status') == 'insufficient':
+            fl_available = False
+            fl_note = first_launch_dq.get('detail') or 'پوشش Event اولین اجرا ناکافی است.'
 
     def feat(key, label, users_set, available=True, note=''):
         if not available:
@@ -95,7 +158,7 @@ def build_behavior_analytics(*, buyers: dict[str, Any]) -> dict[str, Any]:
                 'key': key, 'label': label, 'available': False,
                 'count': None, 'rate': None, 'display': EMPTY_MSG, 'note': note or EMPTY_MSG,
             }
-        count = len(users_set & set(user_ids)) if isinstance(users_set, set) else len(users_set)
+        count = len(set(users_set) & set(user_ids))
         return {
             'key': key,
             'label': label,
@@ -106,38 +169,71 @@ def build_behavior_analytics(*, buyers: dict[str, Any]) -> dict[str, Any]:
             'note': note,
         }
 
+    activated_after = {
+        uid for uid, ts in activations.items()
+        if uid in first_paid and ts and ts >= first_paid[uid]
+    }
+    launches_after = {
+        uid for uid, ts in launch_times.items()
+        if uid in first_paid and ts and ts >= first_paid[uid]
+    }
+
     features = [
         feat('download', 'دانلود اپ ویندوز', downloads),
-        feat('activated', 'فعال‌سازی لایسنس', set(activations.keys())),
-        feat('first_launch', 'اولین اجرای اپ', launches),
+        feat('activated', 'فعال‌سازی لایسنس', activated_after),
+        feat('first_launch', 'اولین اجرای اپ', launches_after, available=fl_available, note=fl_note),
         feat('dataset', 'ساخت دیتاست', set(datasets.keys())),
         feat('same_day_extract', 'استخراج همان‌روز خرید', same_day_extract),
-        feat('crm', 'استفاده از CRM (مخاطب)', customers),
-        feat('property', 'فایل شخصی / ملک', properties),
-        feat('deal', 'ثبت معامله', deals),
-        feat('reminder', 'ثبت یادآور', reminders),
-        feat('return_7d', 'فعال/بازگشت ۷روز', return_7d),
-        feat('return_30d', 'فعال/بازگشت ۳۰روز', return_30d),
-        feat('upgraded', 'ارتقاء پلن', upgraded),
+        feat('crm', 'استفاده از CRM (مخاطب)', set(customers.keys())),
+        feat('property', 'فایل شخصی / ملک', set(properties.keys())),
+        feat('deal', 'ثبت معامله', set(deals.keys())),
+        feat('reminder', 'ثبت یادآور', set(reminders.keys())),
+        feat(
+            'return_7d',
+            'بازگشت ۷روز (روز۲–۷)',
+            return_7d,
+            note='Activity معتبر در بازه روز ۲ تا ۷ پس از خرید',
+        ),
+        feat(
+            'return_30d',
+            'بازگشت ۳۰روز (روز۸–۳۰)',
+            return_30d,
+            note='Activity معتبر در بازه روز ۸ تا ۳۰ پس از خرید',
+        ),
+        feat('upgraded', 'ارتقاء پلن (Outcome)', upgraded),
         feat('market_analysis', 'بازدید تحلیل بازار', set(), available=False),
         feat('sms_campaign', 'ساخت کمپین پیامکی', set(), available=False),
     ]
 
-    # Correlations
-    correlations = []
     revenue = buyers['revenue_by_user']
     order_counts = buyers['order_count_by_user']
 
-    def corr(title, with_set: set[int], without_set: set[int] | None = None):
+    def corr(title, with_set: set[int]):
         with_users = with_set & set(user_ids)
-        without_users = (set(user_ids) - with_set) if without_set is None else (without_set & set(user_ids))
-        if len(with_users) < MIN_SAMPLE or len(without_users) < MIN_SAMPLE:
+        without_users = set(user_ids) - with_set
+        sample_ok = (
+            n >= CORR_MIN_TOTAL
+            and len(with_users) >= CORR_MIN_GROUP
+            and len(without_users) >= CORR_MIN_GROUP
+        )
+        if not sample_ok:
+            conf = 'low'
+            if n >= CORR_MIN_TOTAL and (len(with_users) >= 5 or len(without_users) >= 5):
+                conf = 'medium'
             return {
                 'title': title,
                 'available': False,
-                'display': EMPTY_MSG,
-                'note': f'نمونه کافی نیست (حداقل {MIN_SAMPLE} در هر گروه)',
+                'display': 'نمونه برای نتیجه‌گیری کافی نیست',
+                'note': (
+                    f'حداقل {CORR_MIN_GROUP} در هر گروه و {CORR_MIN_TOTAL} کل نمونه لازم است '
+                    f'(with={len(with_users)}, without={len(without_users)}, total={n})'
+                ),
+                'with_n': len(with_users),
+                'without_n': len(without_users),
+                'sample_size': n,
+                'confidence': conf,
             }
+
         with_rev = safe_div(sum(revenue.get(u, 0) for u in with_users), len(with_users))
         without_rev = safe_div(sum(revenue.get(u, 0) for u in without_users), len(without_users))
         with_repeat = pct(
@@ -151,18 +247,22 @@ def build_behavior_analytics(*, buyers: dict[str, Any]) -> dict[str, Any]:
         with_up = pct(len(with_users & upgraded), len(with_users), 1)
         without_up = pct(len(without_users & upgraded), len(without_users), 1)
         ratio = safe_div(with_rev, without_rev, 2) if without_rev else None
+        # مشاهده‌ای — نه علّی
         body = (
-            f'LTV تقریبی گروه با سیگنال {with_rev:,} ت در برابر {without_rev:,} ت؛ '
-            f'خرید مجدد {with_repeat}٪ در برابر {without_repeat}٪.'
+            f'مشاهده: ارزش محقق‌شده گروه با سیگنال {with_rev:,} ت در برابر {without_rev:,} ت؛ '
+            f'خرید مجدد {with_repeat}٪ در برابر {without_repeat}٪. '
+            f'این همبستگی است، نه رابطه علّی.'
         )
-        if ratio and ratio >= 1.5:
-            body = f'کاربران این گروه حدوداً {ratio}× درآمد بیشتری دارند. ' + body
         return {
             'title': title,
             'available': True,
             'with_n': len(with_users),
             'without_n': len(without_users),
-            'with_ltv': with_rev,
+            'sample_size': n,
+            'confidence': 'sufficient',
+            'with_observed_value': with_rev,
+            'without_observed_value': without_rev,
+            'with_ltv': with_rev,  # alias
             'without_ltv': without_rev,
             'with_repeat_rate': with_repeat,
             'without_repeat_rate': without_repeat,
@@ -175,9 +275,9 @@ def build_behavior_analytics(*, buyers: dict[str, Any]) -> dict[str, Any]:
 
     correlations = [
         corr('کاربران دارای دیتاست vs بدون دیتاست', set(datasets.keys())),
-        corr('کاربران CRM vs بدون CRM', customers),
+        corr('کاربران CRM vs بدون CRM', set(customers.keys())),
         corr('استخراج همان‌روز خرید vs بقیه', same_day_extract),
-        corr('کاربران دارای یادآور vs بدون یادآور', reminders),
+        corr('کاربران دارای یادآور vs بدون یادآور', set(reminders.keys())),
     ]
 
     return {
@@ -185,4 +285,5 @@ def build_behavior_analytics(*, buyers: dict[str, Any]) -> dict[str, Any]:
         'sample_size': n,
         'features': features,
         'correlations': correlations,
+        'valid_return_activities': list(VALID_RETURN_ACTIVITIES),
     }

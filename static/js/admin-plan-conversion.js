@@ -88,13 +88,23 @@
         var fill = document.querySelector('.apc-gauge__fill');
         var valEl = document.querySelector('.apc-gauge__val');
         if (!fill) return;
-        var rate = parseFloat(fill.getAttribute('data-rate') || '0');
+        var raw = fill.getAttribute('data-rate');
+        if (raw === null || raw === undefined || String(raw).trim() === '') {
+            fill.style.strokeDashoffset = '326.7';
+            return;
+        }
+        var rate = parseFloat(raw);
+        if (isNaN(rate)) {
+            fill.style.strokeDashoffset = '326.7';
+            return;
+        }
+        rate = Math.min(Math.max(rate, 0), 100);
         var circumference = 326.7;
-        var offset = circumference - (circumference * Math.min(Math.max(rate, 0), 100) / 100);
+        var offset = circumference - (circumference * rate / 100);
         requestAnimationFrame(function () {
             fill.style.strokeDashoffset = String(offset);
         });
-        if (valEl) {
+        if (valEl && !valEl.classList.contains('apc-gauge__val--empty')) {
             valEl.textContent = formatPct(rate);
         }
     }
@@ -461,7 +471,9 @@
                 datasets: [
                     {
                         label: 'تبدیل قیف',
-                        data: pc.funnel_rates,
+                        data: (pc.funnel_rates || []).map(function (v) {
+                            return (v === null || v === undefined) ? null : Math.min(Number(v), 100);
+                        }),
                         backgroundColor: c.violet,
                         borderRadius: 10,
                         borderSkipped: false,

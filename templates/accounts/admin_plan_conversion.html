@@ -10,7 +10,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/admin-plan-conversion.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/admin-plan-conversion.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -67,11 +67,16 @@
             <div class="apc-gauge">
                 <svg class="apc-gauge__svg" viewBox="0 0 120 120">
                     <circle class="apc-gauge__track" cx="60" cy="60" r="52"></circle>
-                    <circle class="apc-gauge__fill" cx="60" cy="60" r="52" data-rate="{{ summary.overall_conversion }}"></circle>
+                    <circle class="apc-gauge__fill" cx="60" cy="60" r="52" data-rate="{% if summary.overall_conversion != None %}{{ summary.overall_conversion }}{% else %}{% endif %}"></circle>
                 </svg>
                 <div class="apc-gauge__center">
+                    {% if summary.overall_conversion != None %}
                     <strong class="apc-gauge__val">{{ summary.overall_conversion|to_persian_digits }}٪</strong>
                     <small>تبدیل کلی</small>
+                    {% else %}
+                    <strong class="apc-gauge__val apc-gauge__val--empty">—</strong>
+                    <small>داده کافی وجود ندارد</small>
+                    {% endif %}
                 </div>
             </div>
             <div class="apc-hero-metrics">
@@ -90,6 +95,27 @@
             </div>
         </div>
     </header>
+
+    {# Data Quality Panel #}
+    <section id="apc-dq" class="apc-section apc-dq-section" data-reveal>
+        <header class="apc-section-head">
+            <span class="apc-section-num">00</span>
+            <div>
+                <h2>کیفیت داده و پوشش Tracking</h2>
+                <p>{{ data_quality.coverage_message }}</p>
+            </div>
+        </header>
+        <div class="apc-dq-grid">
+            {% for item in data_quality.items %}
+            <article class="ab-glass apc-dq-card" data-status="{{ item.status }}">
+                <span class="apc-dq-card__status">{{ item.status }}</span>
+                <strong>{{ item.label }}</strong>
+                <p>{{ item.detail }}</p>
+                {% if item.coverage != None %}<small>پوشش: {{ item.coverage|to_persian_digits }}٪</small>{% endif %}
+            </article>
+            {% endfor %}
+        </div>
+    </section>
 
     <nav class="ab-nav apc-nav" id="apc-nav" aria-label="بخش‌های آنالیز">
         <div class="ab-nav__track">
@@ -146,6 +172,10 @@
                 <span class="apc-decision-card__delta {% if card.delta >= 0 %}is-up{% else %}is-down{% endif %}">
                     {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
                 </span>
+                {% elif card.delta_label %}
+                <span class="apc-decision-card__delta is-new">{{ card.delta_label }}</span>
+                {% elif card.comparison_status == 'new_activity' %}
+                <span class="apc-decision-card__delta is-new">شروع فروش در این دوره</span>
                 {% endif %}
                 <p class="apc-decision-card__hint">{{ card.hint }}</p>
             </article>
@@ -153,23 +183,59 @@
         </div>
     </section>
 
-    {# Activation funnel #}
+    {# Purchase + Activation funnels #}
     <section id="apc-funnel" class="apc-section" data-reveal>
         <header class="apc-section-head">
             <span class="apc-section-num">03</span>
             <div>
-                <h2>قیف واقعی فروش و فعال‌سازی</h2>
-                <p>از بازدید قیمت تا ارتقا — با ریزش و میانگین زمان</p>
+                <h2>قیف خرید و قیف فعال‌سازی</h2>
+                <p>دو قیف مستقل — Conversion خرید فقط با پوشش Tracking مشترک</p>
             </div>
         </header>
+
         <article class="ab-glass apc-funnel-card">
+            <header class="ab-glass__head"><div><h2>قیف خرید</h2><p>pricing → checkout → payment → license</p></div></header>
             <div class="apc-funnel-meta">
-                <span>پرداخت ناموفق: <strong>{{ activation_funnel.failed_payments|currency }}</strong></span>
-                <span>Checkout رهاشده (pending): <strong>{{ activation_funnel.pending_checkouts|currency }}</strong></span>
-                {% if not summary.data_quality.market_analysis_events %}
-                <span class="apc-muted">تحلیل بازار: داده کافی وجود ندارد</span>
-                {% endif %}
+                <span>پرداخت ناموفق: <strong>{{ purchase_funnel.failed_payments|currency }}</strong></span>
+                <span>سفارش معلق اخیر: <strong>{{ purchase_funnel.pending_recent|currency }}</strong></span>
+                <span>{{ purchase_funnel.pending_stale_label }}: <strong>{{ purchase_funnel.pending_stale|currency }}</strong></span>
+                <span>Abandoned:
+                    {% if purchase_funnel.abandoned_available %}
+                    <strong>{{ purchase_funnel.abandoned|currency }}</strong>
+                    {% else %}
+                    <strong class="apc-muted">{{ purchase_funnel.abandoned_display }}</strong>
+                    {% endif %}
+                </span>
             </div>
+            <div class="apc-act-funnel">
+                {% for stage in purchase_funnel.stages %}
+                <div class="apc-act-stage {% if not stage.available %}is-empty{% endif %}">
+                    <div class="apc-act-stage__head">
+                        <strong>{{ stage.label }}</strong>
+                        {% if stage.available %}
+                        <em>{{ stage.count|currency }}</em>
+                        {% else %}
+                        <em class="apc-muted">داده کافی وجود ندارد</em>
+                        {% endif %}
+                    </div>
+                    {% if stage.available %}
+                    <div class="apc-act-stage__stats">
+                        {% if stage.conversion_from_prev != None %}
+                        <span>تبدیل از قبل: {{ stage.conversion_from_prev|to_persian_digits }}٪</span>
+                        <span>ریزش: {{ stage.dropoff_from_prev|to_persian_digits }}٪</span>
+                        {% else %}
+                        <span class="apc-muted">نرخ تبدیل: داده کافی وجود ندارد</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% if stage.note %}<p class="apc-muted apc-stage-note">{{ stage.note }}</p>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="ab-glass apc-funnel-card" style="margin-top:1rem">
+            <header class="ab-glass__head"><div><h2>قیف فعال‌سازی</h2><p>بر اساس خریداران یکتا — Upgrade/Renewal Outcome جدا هستند</p></div></header>
             <div class="apc-act-funnel">
                 {% for stage in activation_funnel.stages %}
                 <div class="apc-act-stage {% if not stage.available %}is-empty{% endif %}">
@@ -183,26 +249,42 @@
                     </div>
                     {% if stage.available %}
                     <div class="apc-act-stage__stats">
+                        {% if stage.conversion_from_prev != None %}
                         <span>تبدیل از قبل: {{ stage.conversion_from_prev|to_persian_digits }}٪</span>
                         <span>ریزش: {{ stage.dropoff_from_prev|to_persian_digits }}٪</span>
+                        {% endif %}
+                        {% if stage.median_hours != None %}
+                        <span>میانه: {{ stage.median_hours|to_persian_digits }} ساعت</span>
+                        {% endif %}
                         {% if stage.avg_hours != None %}
-                        <span>میانگین زمان: {{ stage.avg_hours|to_persian_digits }} ساعت</span>
+                        <span>میانگین: {{ stage.avg_hours|to_persian_digits }} ساعت</span>
+                        {% endif %}
+                        {% if stage.p90_hours != None %}
+                        <span>P90: {{ stage.p90_hours|to_persian_digits }} ساعت</span>
+                        {% endif %}
+                        {% if stage.time_sample_size %}
+                        <span>n={{ stage.time_sample_size|to_persian_digits }}</span>
                         {% endif %}
                     </div>
                     <div class="apc-funnel-stage__bar-wrap">
                         <div class="apc-funnel-stage__bar" data-width="{{ stage.conversion_from_base|default:0 }}"></div>
                     </div>
                     {% endif %}
-                    {% if stage.note %}
-                    <p class="apc-muted apc-stage-note">{{ stage.note }}</p>
-                    {% endif %}
+                    {% if stage.note %}<p class="apc-muted apc-stage-note">{{ stage.note }}</p>{% endif %}
                 </div>
                 {% endfor %}
             </div>
+            {% if activation_funnel.outcomes %}
+            <div class="apc-funnel-meta" style="margin-top:1rem">
+                <span>Outcome ارتقا: {% if activation_funnel.outcomes.upgrade.available %}{{ activation_funnel.outcomes.upgrade.display }}{% else %}داده کافی وجود ندارد{% endif %}</span>
+                <span>Outcome تمدید: {{ activation_funnel.outcomes.renewal.display }}</span>
+            </div>
+            {% endif %}
         </article>
+
         <article class="ab-glass apc-chart-card" style="margin-top:1rem">
             <header class="ab-glass__head apc-chart-toolbar">
-                <div><h2>روند روزانه قیف</h2><p>تاریخ شمسی</p></div>
+                <div><h2>روند روزانه قیف خرید</h2><p>تاریخ شمسی — تعداد خام (نه Conversion)</p></div>
                 <div class="apc-chart-toggles" data-chart-toggle="funnel">
                     <button type="button" class="apc-toggle is-active" data-mode="all">همه</button>
                     <button type="button" class="apc-toggle" data-mode="pricing">بازدید</button>
@@ -258,7 +340,7 @@
                             <td>{{ row.rpu|currency }} ت</td>
                             <td>{% if row.rpv_available %}{{ row.rpv|currency }} ت{% else %}<span class="apc-muted">داده کافی وجود ندارد</span>{% endif %}</td>
                             <td>{{ row.revenue_share|to_persian_digits }}٪</td>
-                            <td>{% if row.funnel_conversion != None %}{{ row.funnel_conversion|to_persian_digits }}٪{% else %}<span class="apc-muted">—</span>{% endif %}</td>
+                            <td>{% if row.conversion_available %}{{ row.funnel_conversion|to_persian_digits }}٪{% else %}<span class="apc-muted">داده کافی وجود ندارد</span>{% endif %}</td>
                             <td>{% if row.upgrade_available %}{{ row.upgrade_rate|to_persian_digits }}٪{% else %}<span class="apc-muted">داده کافی وجود ندارد</span>{% endif %}</td>
                             <td><span class="apc-muted">{{ row.renewal_display }}</span></td>
                             <td>{% for t in row.tags %}<span class="apc-tag apc-tag--{{ t.key }}">{{ t.label }}</span>{% empty %}<span class="apc-muted">—</span>{% endfor %}</td>
@@ -307,22 +389,29 @@
                 <table class="adm-table adm-table--pro apc-table">
                     <thead>
                         <tr>
-                            <th>هفته</th><th>کاربران</th><th>LTV</th><th>تکرار ۷/۳۰</th>
-                            <th>ارتقا</th><th>فعال ۷روز</th><th>دیتاست</th><th>CRM</th><th>یادآور</th>
+                            <th>هفته</th><th>کاربران</th><th>ارزش محقق‌شده</th><th>تکرار ۷/۳۰</th>
+                            <th>ارتقا</th><th>فعال ۷روز</th><th>فعال ۳۰روز</th><th>دیتاست</th><th>CRM</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for row in cohorts %}
                         <tr>
-                            <td><strong>{{ row.week_label }}</strong><small class="apc-cohort-date">{{ row.week_jalali }}</small></td>
+                            <td>
+                                <strong>{{ row.week_label }}</strong>
+                                <small class="apc-cohort-date">{{ row.week_jalali }} · مشاهده {{ row.observation_days|to_persian_digits }}روز</small>
+                            </td>
                             <td>{{ row.users|currency }}</td>
-                            <td>{{ row.avg_ltv|currency }} ت</td>
-                            <td>{{ row.repeat_7d_rate|to_persian_digits }}٪ / {{ row.repeat_30d_rate|to_persian_digits }}٪</td>
-                            <td>{{ row.upgrade_rate|to_persian_digits }}٪</td>
-                            <td>{{ row.active_7d_rate|to_persian_digits }}٪</td>
-                            <td>{{ row.dataset_7d_rate|to_persian_digits }}٪</td>
-                            <td>{{ row.crm_7d_rate|to_persian_digits }}٪</td>
-                            <td>{{ row.reminder_7d_rate|to_persian_digits }}٪</td>
+                            <td>{{ row.observed_value_per_buyer|currency }} ت</td>
+                            <td>
+                                {% if row.repeat_7d_available %}{{ row.repeat_7d_rate|to_persian_digits }}٪{% else %}<span class="apc-muted">{{ row.repeat_7d_display }}</span>{% endif %}
+                                /
+                                {% if row.repeat_30d_available %}{{ row.repeat_30d_rate|to_persian_digits }}٪{% else %}<span class="apc-muted">{{ row.repeat_30d_display }}</span>{% endif %}
+                            </td>
+                            <td>{% if row.upgrade_available %}{{ row.upgrade_rate|to_persian_digits }}٪{% else %}<span class="apc-muted">{{ row.upgrade_display }}</span>{% endif %}</td>
+                            <td>{% if row.active_7d_available %}{{ row.active_7d_rate|to_persian_digits }}٪{% else %}<span class="apc-muted">{{ row.active_7d_display }}</span>{% endif %}</td>
+                            <td>{% if row.active_30d_available %}{{ row.active_30d_rate|to_persian_digits }}٪{% else %}<span class="apc-muted">{{ row.active_30d_display }}</span>{% endif %}</td>
+                            <td>{% if row.dataset_7d_rate != None %}{{ row.dataset_7d_rate|to_persian_digits }}٪{% else %}<span class="apc-muted">—</span>{% endif %}</td>
+                            <td>{% if row.crm_7d_rate != None %}{{ row.crm_7d_rate|to_persian_digits }}٪{% else %}<span class="apc-muted">—</span>{% endif %}</td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="9" class="apc-empty">داده کافی وجود ندارد</td></tr>
@@ -368,7 +457,7 @@
 
         <header class="apc-section-head" style="margin-top:1.5rem">
             <span class="apc-section-num">08</span>
-            <div><h2>شاخص‌های پیش‌بینی (Rule-based)</h2><p>{{ predictive.note }}</p></div>
+            <div><h2>شاخص‌های آمادگی (Rule-based)</h2><p>{{ predictive.note }} · اطمینان: {{ predictive.confidence|default:"—" }} · n={{ predictive.sample_size|default:0|currency }}</p></div>
         </header>
         {% if predictive.available %}
         <div class="apc-pred-grid">
@@ -376,6 +465,11 @@
             <article class="ab-glass apc-pred-card" data-status="{{ s.status }}">
                 <span>{{ s.label }}</span>
                 <strong>{{ s.score|to_persian_digits }}</strong>
+                <small>{{ s.definition }}</small>
+                {% if s.positive_factors %}
+                <ul class="apc-pred-factors">{% for f in s.positive_factors %}<li>+ {{ f }}</li>{% endfor %}</ul>
+                {% endif %}
+                <em>اطمینان: {{ s.confidence }}</em>
             </article>
             {% endfor %}
         </div>
@@ -415,5 +509,5 @@
 window.admPlanConversion = {{ plan_conversion_json|safe }};
 window.admPlanMeta = { days: {{ days }}, jsonUrl: '{% url "admin_panel_plan_conversion_json" %}?days={{ days }}' };
 </script>
-<script src="{% static 'js/admin-plan-conversion.js' %}?v=4"></script>
+<script src="{% static 'js/admin-plan-conversion.js' %}?v=5"></script>
 {% endblock %}

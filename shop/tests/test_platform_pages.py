@@ -366,3 +366,53 @@ class PlatformNavigationPhaseDTests(TestCase):
         self.assertContains(resp, '/features/crm/')
         self.assertContains(resp, '/real-estate-crm/')
         self.assertContains(resp, 'جزئیات محصول')
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformFeelingPhaseETests(TestCase):
+    """Phase E: shared chrome, product frame, CTA tiers, affiliation."""
+
+    def test_product_frame_and_affiliation_on_all_pages(self):
+        for url in PLATFORM_URLS:
+            with self.subTest(url=url):
+                resp = self.client.get(url)
+                self.assertEqual(resp.status_code, 200)
+                self.assertContains(resp, 'plat-page--feel')
+                self.assertContains(resp, 'plat-product-frame')
+                self.assertContains(resp, 'میزکار فایلینگ دیوار')
+                self.assertContains(resp, 'بخشی از میزکار فایلینگ دیوار')
+                self.assertContains(resp, 'plat-affiliate')
+                self.assertContains(resp, 'mizkar-platform-feel.css')
+
+    def test_cta_tiers_present(self):
+        resp = self.client.get('/features/crm/')
+        self.assertContains(resp, 'plat-btn--convert')
+        self.assertContains(resp, 'plat-btn--product')
+        self.assertContains(resp, 'plat-btn--explore')
+
+    def test_personalities_still_distinct(self):
+        mapping = {
+            '/features/': 'fhub-hero',
+            '/features/crm/': 'plat-crm-hero',
+            '/features/crm/reminders/': 'rem-hero',
+            '/solutions/': 'shub-hero',
+            '/solutions/customer-follow-up/': 'sol-hero',
+        }
+        for url, marker in mapping.items():
+            with self.subTest(url=url):
+                resp = self.client.get(url)
+                self.assertContains(resp, marker)
+
+    def test_feel_css_budget(self):
+        """Shared feel CSS must stay lean (no redesign dump)."""
+        from pathlib import Path
+        feel = Path(__file__).resolve().parents[2] / 'static' / 'css' / 'mizkar-platform-feel.css'
+        size = feel.stat().st_size
+        self.assertLess(size, 18_000, f'feel.css too large: {size} bytes')
+        text = feel.read_text(encoding='utf-8')
+        self.assertIn('--plat-radius', text)
+        self.assertIn('--plat-shadow-frame', text)
+        self.assertIn('plat-btn--convert', text)
+        # No extreme glow language
+        self.assertNotIn('text-shadow', text)
+        self.assertLess(text.count('box-shadow'), 12)

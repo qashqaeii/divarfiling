@@ -1,8 +1,42 @@
-/* Phase E — Platform Feeling: inside Filing Divar, not a blog article */
+/* ═══════════════════════════════════════════════════════════
+   Phase E — Platform Feeling
+   Shared tokens + chrome unification. Page accents stay local.
+   ═══════════════════════════════════════════════════════════ */
 
 .plat-page--feel {
-    --plat-feel-radius: 16px;
-    --plat-feel-mesh: color-mix(in srgb, var(--plat-accent, #8b5cf6) 9%, transparent);
+    /* Geometry */
+    --plat-radius: 16px;
+    --plat-radius-sm: 12px;
+    --plat-radius-xs: 10px;
+    --plat-border: color-mix(in srgb, var(--plat-accent, #8b5cf6) 22%, transparent);
+    --plat-border-soft: color-mix(in srgb, currentColor 10%, transparent);
+
+    /* Depth (subtle — no glow stack) */
+    --plat-shadow-sm: 0 4px 14px color-mix(in srgb, var(--plat-accent, #8b5cf6) 8%, transparent);
+    --plat-shadow-md: 0 12px 32px color-mix(in srgb, #0f172a 12%, transparent);
+    --plat-shadow-frame: 0 18px 44px color-mix(in srgb, #0f172a 14%, transparent);
+
+    /* Spacing rhythm */
+    --plat-gap-xs: 0.35rem;
+    --plat-gap-sm: 0.65rem;
+    --plat-gap-md: 1rem;
+    --plat-gap-lg: 1.5rem;
+    --plat-sec-pad: clamp(2.75rem, 7vw, 4.25rem);
+
+    /* Motion (shared with motion.css) */
+    --plat-ease: var(--plat-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+    --plat-dur-fast: var(--plat-dur-hover, 0.18s);
+    --plat-dur: var(--plat-dur-reveal, 0.52s);
+    --plat-pulse-dur: 2.4s;
+    --plat-icon-scale: 1.04;
+
+    /* Mesh — soft, accent-tinted */
+    --plat-feel-mesh: color-mix(in srgb, var(--plat-accent, #8b5cf6) 8%, transparent);
+}
+
+html.mk-public[data-theme="light"] .plat-page--feel {
+    --plat-shadow-md: 0 12px 32px color-mix(in srgb, #0f172a 8%, transparent);
+    --plat-shadow-frame: 0 18px 44px color-mix(in srgb, #0f172a 10%, transparent);
 }
 
 .plat-page--feel > .plat-nav-bar-wrap {
@@ -10,46 +44,324 @@
     padding-bottom: 0.15rem;
 }
 
-/* Soft product-shell mesh behind first screen — shared across variants */
-.plat-page--feel::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: min(52vh, 28rem);
-    pointer-events: none;
-    background:
-        radial-gradient(ellipse 70% 55% at 85% 0%, var(--plat-feel-mesh), transparent 70%),
-        radial-gradient(ellipse 50% 40% at 10% 20%, color-mix(in srgb, var(--plat-accent, #8b5cf6) 5%, transparent), transparent 65%);
-    z-index: 0;
+/* ── Platform affiliation chip (ecosystem signal) ── */
+.plat-affiliate {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.55rem 0 0;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: inherit;
+    text-decoration: none;
+    border: 1px solid var(--plat-border);
+    background: color-mix(in srgb, var(--plat-accent, #8b5cf6) 8%, transparent);
 }
 
-.plat-page--feel > * {
-    position: relative;
-    z-index: 1;
+.plat-affiliate:hover {
+    border-color: var(--plat-accent, #8b5cf6);
 }
 
-.plat-page--feel {
-    position: relative;
+.plat-affiliate i {
+    color: var(--plat-accent, #8b5cf6);
+    font-size: 0.7rem;
 }
 
-/* Device chrome already brands the product; reinforce sticky CTA as convert lane */
-.plat-page--feel .plat-sticky-cta {
-    border-top: 1px solid color-mix(in srgb, var(--plat-accent, #8b5cf6) 22%, transparent);
-    backdrop-filter: blur(10px);
+/* ── Hero family (shared structure, not identical copies) ── */
+.plat-page--feel .plat-crm-hero__inner,
+.plat-page--feel .rem-hero__grid,
+.plat-page--feel .sol-hero__grid,
+.plat-page--feel .fhub-hero__grid,
+.plat-page--feel .shub-hero__layout {
+    gap: clamp(1.5rem, 4vw, 2.75rem);
 }
 
-/* Explore CTAs stay quieter than convert CTAs */
-.plat-page--feel .plat-cta-pair .plat-btn--ghost {
+.plat-page--feel .plat-crm-hero h1,
+.plat-page--feel .rem-hero h1,
+.plat-page--feel .sol-hero h1,
+.plat-page--feel .fhub-hero h1,
+.plat-page--feel .shub-hero h1 {
+    letter-spacing: -0.02em;
+    line-height: 1.28;
+}
+
+.plat-page--feel .plat-crm-hero__cta,
+.plat-page--feel .rem-hero__cta,
+.plat-page--feel .sol-hero__cta,
+.plat-page--feel .fhub-hero__cta,
+.plat-page--feel .shub-hero__cta {
+    margin-top: var(--plat-gap-md);
+}
+
+/* Tone down solutions hub decorative glow — keep emerald personality */
+.plat-page--feel .shub-hero__glow {
+    opacity: 0.45;
+    filter: blur(40px);
+}
+
+/* ── Product Frame (shared screenshot chrome) ── */
+.plat-page--feel .plat-product-frame,
+.plat-page--feel .plat-shot-story__frame,
+.plat-page--feel .plat-device {
+    border-radius: var(--plat-radius);
+    border: 1px solid var(--plat-border);
+    box-shadow: var(--plat-shadow-frame);
+    overflow: hidden;
+    background: color-mix(in srgb, #0f172a 55%, transparent);
+}
+
+html.mk-public[data-theme="light"] .plat-page--feel .plat-product-frame,
+html.mk-public[data-theme="light"] .plat-page--feel .plat-shot-story__frame,
+html.mk-public[data-theme="light"] .plat-page--feel .plat-device {
+    background: #f8fafc;
+}
+
+.plat-page--feel .plat-device__chrome {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--plat-accent, #8b5cf6) 14%, transparent);
+    background: color-mix(in srgb, var(--plat-accent, #8b5cf6) 6%, transparent);
+}
+
+.plat-page--feel .plat-device__bar {
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.plat-page--feel .plat-device__dot:nth-child(1) {
+    background: color-mix(in srgb, var(--plat-accent, #8b5cf6) 55%, #94a3b8);
+}
+
+/* ── CTA tiers: explore / product / convert ── */
+.plat-page--feel .plat-btn {
+    border-radius: var(--plat-radius-xs);
+    transition:
+        transform var(--plat-dur-fast) var(--plat-ease),
+        box-shadow var(--plat-dur-fast) var(--plat-ease),
+        border-color var(--plat-dur-fast) var(--plat-ease),
+        background var(--plat-dur-fast) var(--plat-ease);
+}
+
+.plat-page--feel .plat-btn--explore {
+    font-weight: 600;
+    background: transparent;
+    border: 1px solid var(--plat-border-soft);
+    color: inherit;
+    box-shadow: none;
+    opacity: 0.92;
+}
+
+.plat-page--feel .plat-btn--explore:hover {
+    border-color: var(--plat-border);
+    opacity: 1;
+    transform: translateY(calc(var(--plat-lift) * -0.5));
+}
+
+.plat-page--feel .plat-btn--product {
+    font-weight: 700;
+    background: color-mix(in srgb, var(--plat-accent, #8b5cf6) 12%, transparent);
+    border: 1px solid var(--plat-border);
+    color: inherit;
+    box-shadow: none;
+}
+
+.plat-page--feel .plat-btn--product:hover {
+    background: color-mix(in srgb, var(--plat-accent, #8b5cf6) 18%, transparent);
+    transform: translateY(calc(var(--plat-lift) * -0.65));
+}
+
+.plat-page--feel .plat-btn--convert,
+.plat-page--feel .plat-cta-pair .plat-btn--primary,
+.plat-page--feel [class*="-soft-cta--"] .plat-btn--primary,
+.plat-page--feel [class*="-final-cta"] .plat-btn--primary {
+    font-weight: 700;
+    background: var(--plat-accent, #8b5cf6);
+    border: 1px solid transparent;
+    color: #fff;
+    box-shadow: var(--plat-shadow-sm);
+}
+
+.plat-page--feel .plat-btn--convert:hover,
+.plat-page--feel .plat-cta-pair .plat-btn--primary:hover,
+.plat-page--feel [class*="-final-cta"] .plat-btn--primary:hover {
+    transform: translateY(calc(var(--plat-lift) * -1));
+    box-shadow: 0 10px 26px color-mix(in srgb, var(--plat-accent, #8b5cf6) 22%, transparent);
+}
+
+/* Soft CTA A (explore lane): demote primary to product tier look */
+.plat-page--feel [class*="-soft-cta"]:not([class*="-soft-cta--"]) .plat-btn--primary {
+    font-weight: 700;
+    background: color-mix(in srgb, var(--plat-accent, #8b5cf6) 12%, transparent);
+    border: 1px solid var(--plat-border);
+    color: inherit;
+    box-shadow: none;
+}
+
+.plat-page--feel .plat-cta-pair .plat-btn--ghost,
+.plat-page--feel .plat-btn--ghost.plat-btn--explore {
     font-weight: 600;
 }
 
-.plat-page--feel .plat-cta-pair .plat-btn--primary {
-    font-weight: 700;
-    box-shadow: 0 8px 22px color-mix(in srgb, var(--plat-accent, #8b5cf6) 18%, transparent);
+/* Sticky = convert lane only */
+.plat-page--feel .plat-sticky-cta {
+    border-top: 1px solid var(--plat-border);
+    backdrop-filter: blur(10px);
 }
 
+.plat-page--feel .plat-sticky-cta__btn {
+    font-weight: 700;
+}
+
+/* ── Final CTA + Next Path chrome ── */
+.plat-page--feel [class*="-final-cta"]__inner {
+    border-radius: var(--plat-radius);
+    border: 1px solid var(--plat-border);
+    box-shadow: var(--plat-shadow-md);
+    background:
+        linear-gradient(
+            145deg,
+            color-mix(in srgb, var(--plat-accent, #8b5cf6) 10%, transparent),
+            transparent 55%
+        );
+}
+
+.plat-page--feel [class*="-next"]__card {
+    border-radius: var(--plat-radius-sm);
+    border: 1px solid var(--plat-border-soft);
+    transition:
+        border-color var(--plat-dur-fast) var(--plat-ease),
+        transform var(--plat-dur-fast) var(--plat-ease),
+        box-shadow var(--plat-dur-fast) var(--plat-ease);
+}
+
+.plat-page--feel [class*="-next"]__card:hover {
+    border-color: var(--plat-border);
+    transform: translateY(calc(var(--plat-lift) * -1));
+}
+
+.plat-page--feel [class*="-next"]__card--convert {
+    border-color: color-mix(in srgb, var(--plat-accent, #8b5cf6) 42%, transparent);
+    box-shadow: var(--plat-shadow-sm);
+    background: color-mix(in srgb, var(--plat-accent, #8b5cf6) 6%, transparent);
+}
+
+/* ── Context / breadcrumb token alignment ── */
+.plat-page--feel .plat-nav-bar {
+    border-radius: var(--plat-radius-sm);
+    border-color: var(--plat-border);
+    box-shadow: none;
+}
+
+/* ── Product proof > article prose ── */
+.plat-page--feel [class*="-outcomes"],
+.plat-page--feel [class*="-flow"],
+.plat-page--feel [class*="-framework"],
+.plat-page--feel [class*="-timeline"],
+.plat-page--feel [class*="-shots"],
+.plat-page--feel [class*="-workflow"] {
+    position: relative;
+}
+
+.plat-page--feel [class*="-prose"] p {
+    line-height: 1.7;
+}
+
+.plat-page--feel [class*="-sec"] [class*="-prose"]:not([class*="--center"]) {
+    max-width: 38rem;
+}
+
+/* Slightly quieter long FAQ / related vs proof blocks */
+.plat-page--feel .plat-faq,
+.plat-page--feel [class*="-related"] {
+    opacity: 0.97;
+}
+
+/* ── Shared icon pulse / hover scale ── */
+.plat-page--feel [class*="-ico--pulse"],
+.plat-page--feel .crm-ico--pulse,
+.plat-page--feel .rem-ico--pulse,
+.plat-page--feel .sol-ico--pulse,
+.plat-page--feel .fhub-ico--pulse,
+.plat-page--feel .shub-ico--pulse {
+    animation: plat-feel-pulse var(--plat-pulse-dur) var(--plat-ease) infinite;
+}
+
+@keyframes plat-feel-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(var(--plat-icon-scale)); opacity: 0.92; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .plat-page--feel [class*="-ico"]:hover {
+        transform: scale(var(--plat-icon-scale));
+        transition: transform var(--plat-dur-fast) var(--plat-ease);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .plat-page--feel [class*="-ico--pulse"],
+    .plat-page--feel .crm-ico--pulse,
+    .plat-page--feel .rem-ico--pulse,
+    .plat-page--feel .sol-ico--pulse,
+    .plat-page--feel .fhub-ico--pulse,
+    .plat-page--feel .shub-ico--pulse {
+        animation: none;
+    }
+
+    .plat-page--feel .plat-btn:hover,
+    .plat-page--feel [class*="-next"]__card:hover {
+        transform: none;
+    }
+}
+
+/* ── Mobile: quieter context bar ── */
 @media (max-width: 767px) {
-    .plat-page--feel::before {
-        height: min(42vh, 20rem);
+    .plat-page--feel .plat-nav-bar__trail {
+        display: none; /* breadcrumb already shows ancestry */
+    }
+
+    .plat-page--feel .plat-nav-bar__journey {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 0.35rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.15rem;
+    }
+
+    .plat-page--feel .plat-nav-bar__journey::-webkit-scrollbar {
+        display: none;
+    }
+
+    .plat-page--feel .plat-nav-bar__journey-sep {
+        display: none;
+    }
+
+    .plat-page--feel .plat-nav-bar__step {
+        flex: 0 0 auto;
+        min-width: 3.6rem;
+        min-height: 2.35rem;
+        padding: 0.3rem 0.5rem;
+    }
+
+    .plat-page--feel .plat-nav-bar__step-hint {
+        display: none;
+    }
+
+    .plat-page--feel .plat-nav-bar__note {
+        font-size: 0.72rem;
+        padding: 0.45rem 0.55rem;
+    }
+
+    .plat-page--feel .plat-nav-bar__back-link--muted {
+        display: none;
+    }
+
+    .plat-page--feel .plat-affiliate {
+        font-size: 0.68rem;
+        padding: 0.25rem 0.55rem;
     }
 }

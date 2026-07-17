@@ -35,13 +35,15 @@ def _assert_platform_seo_health(test_case, url: str) -> None:
     test_case.assertIn('meta name="description"', body, url)
     test_case.assertIn('"@type": "WebPage"', body, url)
     test_case.assertIn('"@type": "FAQPage"', body, url)
+    test_case.assertIn('"@type": "BreadcrumbList"', body, url)
+    test_case.assertIn('"@type": "Organization"', body, url)
+    test_case.assertIn('"@type": "SoftwareApplication"', body, url)
     test_case.assertIn('plat-sticky-cta', body, url)
     test_case.assertIn('image/webp', body, url)
     test_case.assertIn('fetchpriority', body, url)
-    test_case.assertIn('"@type": "BreadcrumbList"', body, url)
 
     blocks = _extract_ld_json_blocks(body)
-    test_case.assertGreaterEqual(len(blocks), 3, url)
+    test_case.assertGreaterEqual(len(blocks), 4, url)
     for block in blocks:
         json.loads(block.strip())
 
@@ -202,6 +204,27 @@ class PlatformPageViewTests(TestCase):
         self.assertIn('"@type": "WebPage"', body)
         self.assertIn('"@type": "FAQPage"', body)
         self.assertIn('"@type": "BreadcrumbList"', body)
+        self.assertIn('"@type": "SoftwareApplication"', body)
+        self.assertIn('"@type": "Organization"', body)
+
+    def test_crm_product_schema_entities(self):
+        resp = self.client.get('/features/crm/')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode('utf-8')
+        self.assertIn('"@type": "SoftwareApplication"', body)
+        self.assertIn('"@type": "Product"', body)
+        self.assertIn('CRM املاک', body)
+        self.assertIn('"price": "0"', body)
+        self.assertNotIn('AggregateRating', body)
+
+    def test_reminders_and_follow_up_have_product(self):
+        for url in ('/features/crm/reminders/', '/solutions/customer-follow-up/'):
+            with self.subTest(url=url):
+                resp = self.client.get(url)
+                self.assertEqual(resp.status_code, 200)
+                body = resp.content.decode('utf-8')
+                self.assertIn('"@type": "Product"', body)
+                self.assertIn('"@type": "SoftwareApplication"', body)
 
     def test_all_platform_pages_schema_and_seo_health(self):
         for url in PLATFORM_URLS:

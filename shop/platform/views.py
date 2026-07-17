@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from django.http import Http404
+from django.templatetags.static import static
 from django.views.generic import TemplateView
 
 from blog.models import Post
@@ -11,8 +12,11 @@ from shop.platform.schema import (
     build_breadcrumbs,
     combine_schemas,
     schema_faq_from_pairs,
+    schema_product_for_page,
+    schema_software_application_for_page,
     schema_webpage,
 )
+from shop.templatetags.seo_tags import get_site_url
 
 
 class PlatformFeaturesView(TemplateView):
@@ -47,15 +51,33 @@ class PlatformSolutionsView(TemplateView):
         return _build_platform_context(self.request, page, ctx)
 
 
+def _hero_image_abs(content: dict) -> str | None:
+    shot = (content.get('hero') or {}).get('screenshot') or {}
+    rel = shot.get('image')
+    if not rel:
+        return None
+    # Prefer WebP for primaryImageOfPage when available
+    if rel.endswith('.png'):
+        rel = rel[:-4] + '.webp'
+    path = static(rel)
+    site = get_site_url().rstrip('/')
+    if path.startswith('http'):
+        return path
+    return f'{site}{path}'
+
+
 def _build_platform_context(request, page, ctx: dict) -> dict:
     content = build_page_content(page.content_key)
     page_url = request.build_absolute_uri(page.url_path)
     breadcrumbs = build_breadcrumbs(page)
+    image_url = _hero_image_abs(content)
 
     faq = content.get('faq', [])
     schema_parts = [
-        schema_webpage(page, page_url),
+        schema_webpage(page, page_url, image_url=image_url),
         schema_faq_from_pairs(faq, page, page_url) if faq else '',
+        schema_software_application_for_page(page, page_url),
+        schema_product_for_page(page, page_url),
     ]
 
     ctx.update({

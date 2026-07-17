@@ -1,19 +1,73 @@
-{% load static %}
 {% include 'platform/includes/hero_solutions_hub.html' %}
 
-{# ── مسیر مخاطب ── #}
-<section class="shub-sec shub-sec--soft" aria-labelledby="shub-audience-title">
+{# ── Outcomes ── #}
+<section class="shub-sec shub-sec--soft shub-outcomes" aria-labelledby="shub-outcomes-title">
     <div class="shub-wrap">
         <div class="shub-prose shub-prose--center">
+            <p class="shub-eyebrow">
+                <i class="fas fa-bullseye" aria-hidden="true"></i>
+                نتیجه این صفحه
+            </p>
+            <h2 id="shub-outcomes-title">{{ platform_content.outcomes.title }}</h2>
+            <p>{{ platform_content.outcomes.lead }}</p>
+        </div>
+        <ul class="shub-outcomes__grid">
+            {% for item in platform_content.outcomes.items %}
+            <li class="shub-outcomes__item plat-reveal">
+                <span class="shub-ico shub-ico--lg shub-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <span class="shub-outcomes__before">{{ item.before }}</span>
+                <span class="shub-outcomes__arrow" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
+                <strong class="shub-outcomes__after">{{ item.after }}</strong>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── CTA نرم ── #}
+<aside class="shub-soft-cta plat-reveal" aria-label="لینک‌های مرتبط">
+    <div class="shub-wrap shub-soft-cta__inner">
+        <div class="shub-soft-cta__copy">
+            <span class="shub-ico shub-ico--solid" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_a.icon }}"></i>
+            </span>
+            <div>
+                <strong>{{ platform_content.mid_cta_a.title }}</strong>
+                <p>{{ platform_content.mid_cta_a.lead }}</p>
+            </div>
+        </div>
+        <div class="shub-soft-cta__links">
+            <a href="{% url platform_content.mid_cta_a.primary_url_name slug=platform_content.mid_cta_a.primary_url_kwargs.slug %}" class="plat-btn plat-btn--primary shub-soft-cta__btn">
+                <i class="fas fa-phone-volume" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.primary_label }}
+            </a>
+            <a href="{% url platform_content.mid_cta_a.secondary_url_name slug_path=platform_content.mid_cta_a.secondary_url_kwargs.slug_path %}" class="plat-btn plat-btn--ghost shub-soft-cta__btn">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── مسیر مخاطب ── #}
+<section class="shub-sec" aria-labelledby="shub-audience-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <p class="shub-eyebrow">
+                <i class="fas fa-door-open" aria-hidden="true"></i>
+                نقطه ورود
+            </p>
             <h2 id="shub-audience-title">{{ platform_content.audiences.title }}</h2>
             <p>{{ platform_content.audiences.lead }}</p>
         </div>
         <ul class="shub-audience">
             {% for item in platform_content.audiences.items %}
             <li class="shub-audience__card shub-audience__card--{{ item.accent }} plat-reveal">
-                <div class="shub-audience__icon" aria-hidden="true">
+                <span class="shub-ico shub-ico--lg shub-ico--float" aria-hidden="true">
                     <i class="fas {{ item.icon }}"></i>
-                </div>
+                </span>
                 <h3>{{ item.title }}</h3>
                 <p class="shub-audience__desc">{{ item.desc }}</p>
                 <ul class="shub-audience__points">
@@ -35,13 +89,20 @@
 <section class="shub-sec shub-sec--showcase" aria-labelledby="shub-solutions-title">
     <div class="shub-wrap">
         <div class="shub-prose shub-prose--center">
-            <h2 id="shub-solutions-title">راه‌حل آماده</h2>
-            <p>از مشکل واقعی دفتر تا مسیر عملی در میزکار — الان یک راه‌حل کامل منتشر است.</p>
+            <p class="shub-eyebrow">
+                <i class="fas fa-circle-check" aria-hidden="true"></i>
+                آماده استفاده
+            </p>
+            <h2 id="shub-solutions-title">{{ platform_content.solutions_intro.title }}</h2>
+            <p>{{ platform_content.solutions_intro.lead }}</p>
         </div>
         {% for item in platform_content.solutions %}
         <article class="shub-feature plat-reveal">
             <div class="shub-feature__copy">
                 <div class="shub-feature__meta">
+                    <span class="shub-ico shub-ico--sm" aria-hidden="true">
+                        <i class="fas {{ item.icon }}"></i>
+                    </span>
                     <span class="shub-feature__outcome">{{ item.outcome }}</span>
                     {% if item.free %}
                     <span class="shub-feature__badge">CRM رایگان</span>
@@ -81,16 +142,55 @@
     </div>
 </section>
 
+{# ── CTA ثبت‌نام ── #}
+<aside class="shub-soft-cta shub-soft-cta--emerald plat-reveal" aria-label="شروع کار">
+    <div class="shub-wrap shub-soft-cta__inner">
+        <div class="shub-soft-cta__copy">
+            <span class="shub-ico shub-ico--solid shub-ico--pulse" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_b.icon }}"></i>
+            </span>
+            <div>
+                <strong>{{ platform_content.mid_cta_b.title }}</strong>
+                <p>{{ platform_content.mid_cta_b.lead }}</p>
+            </div>
+        </div>
+        <div class="shub-soft-cta__links">
+            {% if user.is_authenticated %}
+            <a href="{% url platform_content.mid_cta_b.auth_primary_url_name %}" class="plat-btn plat-btn--primary shub-soft-cta__btn">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.auth_primary_label }}
+            </a>
+            {% else %}
+            <a href="{% url platform_content.mid_cta_b.primary_url_name %}" class="plat-btn plat-btn--primary shub-soft-cta__btn">
+                <i class="fas fa-gift" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.primary_label }}
+            </a>
+            {% endif %}
+            <a href="{% url platform_content.mid_cta_b.secondary_url_name %}" class="plat-btn plat-btn--ghost shub-soft-cta__btn">
+                <i class="fas fa-map" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
 {# ── نقشه مشکل ── #}
-<section class="shub-sec" aria-labelledby="shub-map-title">
+<section class="shub-sec shub-sec--soft" aria-labelledby="shub-map-title">
     <div class="shub-wrap">
         <div class="shub-prose shub-prose--center">
+            <p class="shub-eyebrow">
+                <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                نقشه چالش
+            </p>
             <h2 id="shub-map-title">{{ platform_content.problem_map.title }}</h2>
             <p>{{ platform_content.problem_map.lead }}</p>
         </div>
         <ul class="shub-map">
             {% for row in platform_content.problem_map.items %}
             <li class="shub-map__row shub-map__row--{{ row.status }} plat-reveal">
+                <span class="shub-ico shub-ico--sm" aria-hidden="true">
+                    <i class="fas {{ row.icon }}"></i>
+                </span>
                 <span class="shub-map__problem">{{ row.problem }}</span>
                 {% if row.status == 'published' %}
                 <a href="{% url row.url_name slug=row.url_kwargs.slug %}" class="shub-map__link">
@@ -105,46 +205,82 @@
     </div>
 </section>
 
+{# ── اسکرین‌شات‌ها ── #}
+<section class="shub-sec" aria-labelledby="shub-shots-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <p class="shub-eyebrow">
+                <i class="fas fa-desktop" aria-hidden="true"></i>
+                نمای محصول
+            </p>
+            <h2 id="shub-shots-title">{{ platform_content.screenshots.title }}</h2>
+            <p>{{ platform_content.screenshots.lead }}</p>
+        </div>
+        <div class="shub-shots">
+            {% for shot in platform_content.screenshots.items %}
+            <div class="shub-shot plat-reveal">
+                {% include 'platform/includes/screenshot_story.html' with shot=shot %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── چگونه کار می‌کند ── #}
+<section class="shub-sec shub-sec--soft" aria-labelledby="shub-how-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <p class="shub-eyebrow">
+                <i class="fas fa-stairs" aria-hidden="true"></i>
+                مسیر استفاده
+            </p>
+            <h2 id="shub-how-title">{{ platform_content.how_it_works.title }}</h2>
+            <p>{{ platform_content.how_it_works.lead }}</p>
+        </div>
+        <ol class="shub-how">
+            {% for step in platform_content.how_it_works.steps %}
+            <li class="shub-how__step plat-reveal">
+                <span class="shub-ico shub-ico--lg shub-ico--float" aria-hidden="true">
+                    <i class="fas {{ step.icon }}"></i>
+                </span>
+                <span class="shub-how__num">{{ forloop.counter }}</span>
+                <h3>{{ step.title }}</h3>
+                <p>{{ step.text }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
 {# ── هزینه ── #}
-<section class="shub-sec shub-sec--soft" aria-labelledby="shub-access-title">
+<section class="shub-sec" aria-labelledby="shub-access-title">
     <div class="shub-wrap shub-access plat-reveal">
+        <span class="shub-ico shub-ico--solid" aria-hidden="true">
+            <i class="fas {{ platform_content.access_note.icon }}"></i>
+        </span>
         <h2 id="shub-access-title">{{ platform_content.access_note.title }}</h2>
         <p>{{ platform_content.access_note.text }}</p>
     </div>
 </section>
 
-{# ── مسیر به Feature ── #}
-<section class="shub-sec" aria-labelledby="shub-path-title">
-    <div class="shub-wrap">
-        <div class="shub-prose shub-prose--center">
-            <h2 id="shub-path-title">{{ platform_content.path_to_features.title }}</h2>
-            <p>{{ platform_content.path_to_features.lead }}</p>
-        </div>
-        <ul class="shub-path">
-            {% for link in platform_content.path_to_features.links %}
-            <li class="plat-reveal">
-                <a href="{% if link.url_kwargs.slug_path %}{% url link.url_name slug_path=link.url_kwargs.slug_path %}{% elif link.url_kwargs.slug %}{% url link.url_name slug=link.url_kwargs.slug %}{% else %}{% url link.url_name %}{% endif %}" class="shub-path__link">
-                    <strong>{{ link.title }}</strong>
-                    <span>{{ link.desc }}</span>
-                    <i class="fas fa-arrow-left shub-path__arrow" aria-hidden="true"></i>
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-</section>
-
 {# ── FAQ ── #}
 {% if platform_content.faq %}
-<section class="shub-sec plat-faq" aria-labelledby="shub-faq-title">
+<section class="shub-sec shub-sec--soft plat-faq" aria-labelledby="shub-faq-title">
     <div class="shub-wrap">
         <div class="shub-prose shub-prose--center">
+            <p class="shub-eyebrow">
+                <i class="fas fa-circle-question" aria-hidden="true"></i>
+                پاسخ سریع
+            </p>
             <h2 id="shub-faq-title">سوالات متداول</h2>
         </div>
         <div class="plat-faq__list">
             {% for item in platform_content.faq %}
             <details class="plat-faq__item plat-reveal">
-                <summary>{{ item.q }}</summary>
+                <summary>
+                    <i class="fas fa-circle-question shub-faq__q-ico" aria-hidden="true"></i>
+                    <span>{{ item.q }}</span>
+                </summary>
                 <div class="plat-faq__answer"><p>{{ item.a }}</p></div>
             </details>
             {% endfor %}
@@ -153,9 +289,42 @@
 </section>
 {% endif %}
 
-{# ── CTA ── #}
+{# ── مسیر بعدی ── #}
+<section class="shub-sec shub-next" aria-labelledby="shub-next-title">
+    <div class="shub-wrap">
+        <div class="shub-prose shub-prose--center">
+            <p class="shub-eyebrow">
+                <i class="fas fa-compass" aria-hidden="true"></i>
+                مسیر بعد
+            </p>
+            <h2 id="shub-next-title">{{ platform_content.next_path.title }}</h2>
+            <p>{{ platform_content.next_path.lead }}</p>
+        </div>
+        <div class="shub-next__grid">
+            {% for page in platform_content.next_path.items %}
+            <a href="{% if page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug %}{% else %}{% url page.url_name %}{% endif %}" class="shub-next__card plat-reveal">
+                <span class="shub-ico shub-ico--lg shub-ico--float" aria-hidden="true">
+                    <i class="fas {{ page.icon }}"></i>
+                </span>
+                <span class="shub-next__type">{{ page.type }}</span>
+                <strong>{{ page.title }}</strong>
+                <p>{{ page.desc }}</p>
+                <span class="shub-next__cta">
+                    {{ page.cta }}
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── CTA نهایی ── #}
 <section class="shub-sec shub-final-cta">
     <div class="shub-wrap shub-final-cta__inner plat-reveal">
+        <span class="shub-ico shub-ico--xl shub-ico--solid shub-ico--pulse" aria-hidden="true">
+            <i class="fas {{ platform_content.final_cta.icon }}"></i>
+        </span>
         <h2>{{ platform_content.final_cta.title }}</h2>
         <p>{{ platform_content.final_cta.lead }}</p>
         {% include 'platform/includes/cta_pair.html' %}

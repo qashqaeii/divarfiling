@@ -18,6 +18,14 @@ def build_pages() -> list[PageSpec]:
         _mi_comparison_feature_draft(),
         _mi_pricing_tools_feature_draft(),
         _property_pricing_solution(),
+        _agency_product_line(),
+        _agency_team_management_feature_draft(),
+        _agency_roles_feature_draft(),
+        _agency_inbox_feature_draft(),
+        _agency_activity_feature_draft(),
+        _agency_reports_feature_draft(),
+        _agency_tv_feature_draft(),
+        _agency_announcements_feature_draft(),
     ]
 
 
@@ -347,4 +355,165 @@ def _property_pricing_solution() -> PageSpec:
         related_articles=('gozaresh-gheymat-malek-divar-dade-rahnama',),
         related_seo_landings=('robot-divar', 'real-estate-software'),
         sitemap_priority=0.84,
+    )
+
+
+def _agency_product_line() -> PageSpec:
+    seo = PageSEO(
+        title='مدیریت آژانس املاک | CRM تیمی، نقش‌ها و Agency TV — فایلینگ دیوار',
+        description=(
+            'خط محصول مدیریت آژانس: نقش‌ها، صندوق سرنخ، تخصیص، پیام و اطلاعیه، '
+            'گزارش عملکرد و Agency TV — رایگان با CRM، بدون افشای بی‌دلیل پرونده مشتری.'
+        ),
+        keywords=(
+            'مدیریت آژانس املاک, CRM تیمی املاک, مدیریت مشاوران املاک, '
+            'Agency TV, گزارش عملکرد مشاور, مدیریت دفتر املاک'
+        ),
+        og_title='مدیریت آژانس — خط محصول فایلینگ دیوار',
+        h1='مدیریت تیم آژانس؛ بدون گزارش‌های پراکنده و پیگیری‌های گمشده',
+    )
+    return PageSpec(
+        section='features',
+        path='agency',
+        variant='product_line',
+        status='published',
+        marketability='marketable',
+        seo=seo,
+        accent='violet',
+        icon='fa-people-group',
+        decor_icon='users',
+        product_line='agency',
+        funnel_role='consideration',
+        intent='commercial',
+        primary_keyword='مدیریت آژانس املاک',
+        content_key='agency_product_line',
+        related_solutions=(),
+        related_articles=(
+            'crm-team-modiriyat-ajans-rahnama',
+            'agency-tv-dashboard-ajans-amlak',
+        ),
+        related_seo_landings=('real-estate-crm',),
+        sitemap_priority=0.86,
+    )
+
+
+def _draft_agency_feature(
+    *,
+    path: str,
+    content_key: str,
+    title: str,
+    description: str,
+    h1: str,
+    keyword: str,
+    icon: str,
+) -> PageSpec:
+    seo = PageSEO(
+        title=title,
+        description=description,
+        keywords=keyword,
+        og_title=h1.split(':')[0].strip(),
+        h1=h1,
+    )
+    return PageSpec(
+        section='features',
+        path=path,
+        variant='feature',
+        status='draft',
+        marketability='section_only',
+        seo=seo,
+        accent='violet',
+        icon=icon,
+        decor_icon='users',
+        product_line='agency',
+        parent_path='agency',
+        funnel_role='consideration',
+        intent='informational',
+        primary_keyword=keyword.split(',')[0].strip(),
+        content_key=content_key,
+        related_seo_landings=('real-estate-crm',),
+        sitemap_priority=0.5,
+    )
+
+
+def _agency_team_management_feature_draft() -> PageSpec:
+    return _draft_agency_feature(
+        path='agency/team-management',
+        content_key='agency_team_management',
+        title='مدیریت اعضای تیم آژانس | Team Management فایلینگ دیوار',
+        description='دعوت اعضا، وضعیت عضویت و هماهنگی تیم آژانس در میزکار CRM.',
+        h1='مدیریت تیم: اعضا را به آژانس اضافه کنید',
+        keyword='مدیریت تیم آژانس, اعضای CRM تیمی',
+        icon='fa-people-group',
+    )
+
+
+def _agency_roles_feature_draft() -> PageSpec:
+    return _draft_agency_feature(
+        path='agency/roles-permissions',
+        content_key='agency_roles_permissions',
+        title='نقش‌ها و دسترسی آژانس | Roles فایلینگ دیوار',
+        description='نقش‌های مالک، مدیر، منشی و مشاور برای کنترل دسترسی در تیم آژانس.',
+        h1='نقش‌ها: دسترسی متناسب با مسئولیت',
+        keyword='نقش مشاور املاک, دسترسی مدیر آژانس',
+        icon='fa-user-tag',
+    )
+
+
+def _agency_inbox_feature_draft() -> PageSpec:
+    return _draft_agency_feature(
+        path='agency/team-inbox',
+        content_key='agency_team_inbox',
+        title='صندوق سرنخ تیم | Team Inbox فایلینگ دیوار',
+        description='سرنخ‌های تخصیص‌نیافته و تخصیص به مشاور در صندوق تیم آژانس.',
+        h1='صندوق تیم: سرنخ بدون مسئول نماند',
+        keyword='صندوق سرنخ آژانس, تخصیص سرنخ املاک',
+        icon='fa-inbox',
+    )
+
+
+def _agency_activity_feature_draft() -> PageSpec:
+    return _draft_agency_feature(
+        path='agency/activity-feed',
+        content_key='agency_activity_feed',
+        title='فعالیت و ممیزی تیم | Activity فایلینگ دیوار',
+        description='مرور رویدادهای ثبت‌شده تیمی و مسیر ممیزی برای مدیر آژانس.',
+        h1='فعالیت تیم: رویدادهای ثبت‌شده را مرور کنید',
+        keyword='فعالیت تیم آژانس, ممیزی CRM تیمی',
+        icon='fa-clock-rotate-left',
+    )
+
+
+def _agency_reports_feature_draft() -> PageSpec:
+    return _draft_agency_feature(
+        path='agency/reports',
+        content_key='agency_reports',
+        title='گزارش عملکرد تیم | Reports فایلینگ دیوار',
+        description='گزارش عملکرد مشاوران و خروجی CSV برای ارزیابی پیگیری و فعالیت.',
+        h1='گزارش تیم: عملکرد ثبت‌شده را ببینید',
+        keyword='گزارش عملکرد مشاور, KPI آژانس املاک',
+        icon='fa-chart-column',
+    )
+
+
+def _agency_tv_feature_draft() -> PageSpec:
+    return _draft_agency_feature(
+        path='agency/tv-dashboard',
+        content_key='agency_tv_dashboard',
+        title='Agency TV | داشبورد نمایشگر دفتر فایلینگ دیوار',
+        description='نمایش KPI و برنامه دفتر روی تلویزیون بدون شماره مشتری؛ به‌روزرسانی دوره‌ای.',
+        h1='Agency TV: وضعیت دفتر روی نمایشگر',
+        keyword='Agency TV, داشبورد آژانس املاک',
+        icon='fa-tv',
+    )
+
+
+def _agency_announcements_feature_draft() -> PageSpec:
+    return _draft_agency_feature(
+        path='agency/announcements',
+        content_key='agency_announcements',
+        title='اطلاعیه تیم آژانس | Announcements فایلینگ دیوار',
+        description='تابلوی اطلاعیه برای اعلامیه‌های مهم اعضای آژانس در میزکار.',
+        h1='اطلاعیه تیم: پیام مهم در یک محل مشخص',
+        keyword='اطلاعیه آژانس املاک, announcement CRM',
+        icon='fa-bullhorn',
     )

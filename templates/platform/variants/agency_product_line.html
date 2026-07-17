@@ -1,0 +1,413 @@
+{% include 'platform/includes/hero_agency.html' %}
+
+{# ── ۱. سناریوی زمانی ── #}
+<section class="fil-sec fil-story" aria-labelledby="mi-story-title">
+    <div class="fil-wrap">
+        <div class="fil-prose">
+            <p class="fil-eyebrow">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
+                سناریوی واقعی
+            </p>
+            <h2 id="mi-story-title">{{ platform_content.morning_story.title }}</h2>
+            <p class="fil-prose__lead">{{ platform_content.morning_story.lead }}</p>
+        </div>
+        <ol class="fil-story__beats">
+            {% for beat in platform_content.morning_story.beats %}
+            <li class="fil-story__beat{% if beat.highlight %} fil-story__beat--hl{% endif %} plat-reveal">
+                <span class="fil-story__time">{{ beat.time }}</span>
+                <div class="fil-story__body">
+                    <div class="fil-story__head">
+                        {% if beat.icon %}
+                        <span class="fil-ico{% if beat.highlight %} fil-ico--solid{% endif %}" aria-hidden="true">
+                            <i class="fas {{ beat.icon }}"></i>
+                        </span>
+                        {% endif %}
+                        <strong>{{ beat.title }}</strong>
+                    </div>
+                    <p>{{ beat.text }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+{# ── ۲. Outcomeها ── #}
+<section class="fil-sec fil-sec--soft fil-outcomes" id="ag-outcomes" aria-labelledby="mi-outcomes-title">
+    <div class="fil-wrap">
+        <div class="fil-prose fil-prose--center">
+            <p class="fil-eyebrow">
+                <i class="fas fa-bullseye" aria-hidden="true"></i>
+                نتیجه کار
+            </p>
+            <h2 id="mi-outcomes-title">{{ platform_content.outcomes.title }}</h2>
+            <p>{{ platform_content.outcomes.lead }}</p>
+        </div>
+        <ul class="fil-outcomes__grid">
+            {% for item in platform_content.outcomes.items %}
+            <li class="fil-outcomes__item plat-reveal">
+                {% if item.icon %}
+                <span class="fil-ico fil-ico--lg fil-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                {% endif %}
+                <span class="fil-outcomes__before">{{ item.before }}</span>
+                <span class="fil-outcomes__arrow" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
+                <strong class="fil-outcomes__after">{{ item.after }}</strong>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── ۳. CTA نرم ── #}
+<aside class="fil-soft-cta plat-reveal" aria-label="لینک‌های مرتبط">
+    <div class="fil-wrap fil-soft-cta__inner">
+        <div class="fil-soft-cta__copy">
+            {% if platform_content.mid_cta_a.icon %}
+            <span class="fil-ico fil-ico--solid" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_a.icon }}"></i>
+            </span>
+            {% endif %}
+            <div>
+                <strong>{{ platform_content.mid_cta_a.title }}</strong>
+                <p>{{ platform_content.mid_cta_a.lead }}</p>
+            </div>
+        </div>
+        <div class="fil-soft-cta__links">
+            <a href="{% url platform_content.mid_cta_a.primary_url_name slug_path=platform_content.mid_cta_a.primary_url_kwargs.slug_path %}" class="plat-btn plat-btn--product fil-soft-cta__btn">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.primary_label }}
+            </a>
+            <a href="{% url platform_content.mid_cta_a.secondary_url_name slug=platform_content.mid_cta_a.secondary_url_kwargs.slug %}" class="plat-btn plat-btn--explore fil-soft-cta__btn">
+                <i class="fas fa-phone-volume" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── ۴. قابلیت‌ها با Screenshot ── #}
+<section class="fil-sec" aria-labelledby="fil-caps-title">
+    <div class="fil-wrap">
+        <div class="fil-prose fil-prose--center">
+            <p class="fil-eyebrow">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                نمای محصول
+            </p>
+            <h2 id="fil-caps-title">{{ platform_content.capabilities_intro.title }}</h2>
+            <p>{{ platform_content.capabilities_intro.lead }}</p>
+        </div>
+        <div class="fil-caps">
+            {% for cap in platform_content.capabilities %}
+            <article class="fil-cap fil-cap--{{ cap.layout }} plat-reveal" id="fil-cap-{{ forloop.counter }}">
+                <div class="fil-cap__copy">
+                    <div class="fil-cap__head">
+                        {% if cap.icon %}
+                        <span class="fil-ico fil-ico--lg fil-ico--float" aria-hidden="true">
+                            <i class="fas {{ cap.icon }}"></i>
+                        </span>
+                        {% endif %}
+                        <div class="fil-cap__titles">
+                            <h3>{{ cap.title }}</h3>
+                            {% if cap.badge %}
+                            {% include 'platform/includes/badge.html' with label=cap.badge.label tone=cap.badge.tone %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <dl class="fil-cap__meta">
+                        <div>
+                            <dt><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> مشکل</dt>
+                            <dd>{{ cap.problem }}</dd>
+                        </div>
+                        <div>
+                            <dt><i class="fas fa-gears" aria-hidden="true"></i> نحوه کار</dt>
+                            <dd>{{ cap.how }}</dd>
+                        </div>
+                        <div>
+                            <dt><i class="fas fa-trophy" aria-hidden="true"></i> نتیجه</dt>
+                            <dd>{{ cap.outcome }}</dd>
+                        </div>
+                    </dl>
+                    {% if cap.link %}
+                    <a href="{% if cap.link.url_kwargs.slug_path %}{% url cap.link.url_name slug_path=cap.link.url_kwargs.slug_path %}{% elif cap.link.url_kwargs.slug %}{% url cap.link.url_name slug=cap.link.url_kwargs.slug %}{% else %}{% url cap.link.url_name %}{% endif %}" class="fil-text-link">
+                        {{ cap.link.label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="fil-cap__visual">
+                    {% include 'platform/includes/screenshot_story.html' with shot=cap %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── ۵. CTA نرم ثبت‌نام ── #}
+<aside class="fil-soft-cta fil-soft-cta--violet plat-reveal" aria-label="شروع کار">
+    <div class="fil-wrap fil-soft-cta__inner">
+        <div class="fil-soft-cta__copy">
+            {% if platform_content.mid_cta_b.icon %}
+            <span class="fil-ico fil-ico--solid fil-ico--pulse" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_b.icon }}"></i>
+            </span>
+            {% endif %}
+            <div>
+                <strong>{{ platform_content.mid_cta_b.title }}</strong>
+                <p>{{ platform_content.mid_cta_b.lead }}</p>
+            </div>
+        </div>
+        <div class="fil-soft-cta__links">
+            {% if user.is_authenticated %}
+            <a href="{% url platform_content.mid_cta_b.auth_primary_url_name %}" class="plat-btn plat-btn--primary plat-btn--convert fil-soft-cta__btn">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.auth_primary_label }}
+            </a>
+            {% else %}
+            <a href="{% url platform_content.mid_cta_b.primary_url_name %}" class="plat-btn plat-btn--primary plat-btn--convert fil-soft-cta__btn">
+                <i class="fas fa-gift" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.primary_label }}
+            </a>
+            {% endif %}
+            <a href="{% url platform_content.mid_cta_b.secondary_url_name %}" class="plat-btn plat-btn--ghost plat-btn--explore fil-soft-cta__btn">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── ۶. گردش کار افقی ── #}
+<section class="fil-sec fil-sec--soft fil-flow-sec" aria-labelledby="fil-flow-title">
+    <div class="fil-wrap">
+        <div class="fil-prose fil-prose--center">
+            <p class="fil-eyebrow">
+                <i class="fas fa-route" aria-hidden="true"></i>
+                گردش کار
+            </p>
+            <h2 id="fil-flow-title">{{ platform_content.workflow.title }}</h2>
+            <p>{{ platform_content.workflow.lead }}</p>
+        </div>
+        <ol class="fil-flow-h">
+            {% for step in platform_content.workflow.steps %}
+            <li class="fil-flow-h__step plat-reveal">
+                <span class="fil-flow-h__icon fil-ico fil-ico--solid" aria-hidden="true">
+                    <i class="fas {{ step.icon|default:'fa-circle' }}"></i>
+                </span>
+                <span class="fil-flow-h__num">{{ forloop.counter }}</span>
+                <strong>{{ step.title }}</strong>
+                <p>{{ step.text }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+{# ── نقش‌ها ── #}
+<section class="fil-sec" aria-labelledby="ag-roles-title">
+    <div class="fil-wrap">
+        <div class="fil-prose fil-prose--center">
+            <p class="fil-eyebrow">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                تجربه نقش‌ها
+            </p>
+            <h2 id="ag-roles-title">{{ platform_content.roles.title }}</h2>
+            <p>{{ platform_content.roles.lead }}</p>
+        </div>
+        <ul class="fil-trust__grid ag-roles">
+            {% for item in platform_content.roles.items %}
+            <li class="fil-trust__item plat-reveal">
+                <span class="fil-ico fil-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── پیام و اطلاعیه ── #}
+<section class="fil-sec fil-sec--soft" aria-labelledby="ag-msg-title">
+    <div class="fil-wrap">
+        <div class="fil-prose fil-prose--center">
+            <p class="fil-eyebrow">
+                <i class="fas fa-comments" aria-hidden="true"></i>
+                هماهنگی
+            </p>
+            <h2 id="ag-msg-title">{{ platform_content.messages_block.title }}</h2>
+            <p>{{ platform_content.messages_block.lead }}</p>
+        </div>
+        <ul class="fil-trust__grid">
+            {% for item in platform_content.messages_block.items %}
+            <li class="fil-trust__item plat-reveal">
+                <span class="fil-ico fil-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── ۷. اعتماد ── #}
+<section class="fil-sec fil-trust" id="ag-privacy" aria-labelledby="fil-trust-title">
+    <div class="fil-wrap">
+        <div class="fil-prose">
+            <p class="fil-eyebrow">
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                اعتماد
+            </p>
+            <h2 id="fil-trust-title">{{ platform_content.trust.title }}</h2>
+            <p>{{ platform_content.trust.lead }}</p>
+        </div>
+        <ul class="fil-trust__grid">
+            {% for item in platform_content.trust.items %}
+            <li class="fil-trust__item plat-reveal">
+                {% if item.icon %}
+                <span class="fil-ico fil-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                {% endif %}
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── ۸. رایگان / لایسنس ── #}
+<section class="fil-sec fil-sec--soft" aria-labelledby="mi-access-title">
+    <div class="fil-wrap">
+        <div class="fil-prose fil-prose--center">
+            <p class="fil-eyebrow">
+                <i class="fas fa-tags" aria-hidden="true"></i>
+                دسترسی
+            </p>
+            <h2 id="mi-access-title">{{ platform_content.access_tiers.title }}</h2>
+            <p>{{ platform_content.access_tiers.lead }}</p>
+        </div>
+        <ul class="fil-trust__grid">
+            {% for item in platform_content.access_tiers.items %}
+            <li class="fil-trust__item plat-reveal">
+                {% if item.icon %}
+                <span class="fil-ico fil-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                {% endif %}
+                <h3>{{ item.title }}{% if item.badge %} <span class="fil-eyebrow" style="text-transform:none;letter-spacing:0;">· {{ item.badge }}</span>{% endif %}</h3>
+                <p>{{ item.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── ۹. حریم خصوصی ── #}
+<section class="fil-sec" aria-labelledby="mi-privacy-title">
+    <div class="fil-wrap">
+        <div class="fil-prose">
+            <p class="fil-eyebrow">
+                <i class="fas fa-lock" aria-hidden="true"></i>
+                امنیت
+            </p>
+            <h2 id="mi-privacy-title">{{ platform_content.privacy.title }}</h2>
+            <p>{{ platform_content.privacy.lead }}</p>
+        </div>
+        <ul class="fil-privacy">
+            {% for point in platform_content.privacy.items %}
+            <li class="fil-privacy__item plat-reveal">
+                {% if point.icon %}
+                <span class="fil-ico" aria-hidden="true">
+                    <i class="fas {{ point.icon }}"></i>
+                </span>
+                {% endif %}
+                <div>
+                    <h3>{{ point.title }}</h3>
+                    <p>{{ point.text }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── ۱۰. FAQ ── #}
+{% if platform_content.faq %}
+<section class="fil-sec fil-sec--soft plat-faq" aria-labelledby="mi-faq-title">
+    <div class="fil-wrap">
+        <div class="fil-prose fil-prose--center">
+            <p class="fil-eyebrow">
+                <i class="fas fa-circle-question" aria-hidden="true"></i>
+                پاسخ سریع
+            </p>
+            <h2 id="mi-faq-title">سوالات متداول</h2>
+        </div>
+        <div class="plat-faq__list">
+            {% for item in platform_content.faq %}
+            <details class="plat-faq__item plat-reveal">
+                <summary>
+                    <i class="fas fa-circle-question fil-faq__q-ico" aria-hidden="true"></i>
+                    <span>{{ item.q }}</span>
+                </summary>
+                <div class="plat-faq__answer">
+                    <p>{{ item.a }}</p>
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# ── ۱۱. مسیر بعدی (۳ پیشنهاد) ── #}
+<section class="fil-sec fil-next" id="ag-next" aria-labelledby="ag-next-title">
+    <div class="fil-wrap">
+        <div class="fil-prose fil-prose--center">
+            <p class="fil-eyebrow">
+                <i class="fas fa-compass" aria-hidden="true"></i>
+                مسیر بعد
+            </p>
+            <h2 id="ag-next-title">{{ platform_content.next_path.title }}</h2>
+            <p>{{ platform_content.next_path.lead }}</p>
+        </div>
+        <div class="fil-next__grid">
+            {% for page in platform_content.next_path.items %}
+            {% if user.is_authenticated and page.auth_url_name %}{% url page.auth_url_name as next_href %}{% elif page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path as next_href %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug as next_href %}{% else %}{% url page.url_name as next_href %}{% endif %}
+            <a href="{{ next_href }}" class="fil-next__card plat-reveal{% if page.convert %} fil-next__card--convert{% endif %}">
+                {% if page.icon %}
+                <span class="fil-ico fil-ico--lg fil-ico--float" aria-hidden="true">
+                    <i class="fas {{ page.icon }}"></i>
+                </span>
+                {% endif %}
+                <span class="fil-next__type">{{ page.type }}</span>
+                <strong>{% if user.is_authenticated and page.auth_title %}{{ page.auth_title }}{% else %}{{ page.title }}{% endif %}</strong>
+                <p>{% if user.is_authenticated and page.auth_desc %}{{ page.auth_desc }}{% else %}{{ page.desc }}{% endif %}</p>
+                <span class="fil-next__cta">
+                    {% if user.is_authenticated and page.auth_cta %}{{ page.auth_cta }}{% else %}{{ page.cta }}{% endif %}
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── ۱۲. CTA نهایی ── #}
+<section class="fil-sec fil-final-cta">
+    <div class="fil-wrap fil-final-cta__inner plat-reveal">
+        {% if platform_content.final_cta.icon %}
+        <span class="fil-ico fil-ico--xl fil-ico--solid fil-ico--pulse" aria-hidden="true">
+            <i class="fas {{ platform_content.final_cta.icon }}"></i>
+        </span>
+        {% endif %}
+        <h2>{{ platform_content.final_cta.title }}</h2>
+        <p>{{ platform_content.final_cta.lead }}</p>
+        {% include 'platform/includes/cta_pair.html' %}
+    </div>
+</section>

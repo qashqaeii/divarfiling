@@ -380,9 +380,9 @@ def crm_product_line_content() -> dict[str, Any]:
                     {'text': 'اعضای تیم', 'x': '68', 'y': '28'},
                 ],
                 'link': {
-                    'url_name': 'blog:post_detail',
-                    'url_kwargs': {'slug': 'crm-team-modiriyat-ajans-rahnama'},
-                    'label': 'راهنمای مدیریت تیم CRM',
+                    'url_name': 'platform_features_page',
+                    'url_kwargs': {'slug_path': 'agency'},
+                    'label': 'خط محصول مدیریت آژانس',
                 },
             },
         ],

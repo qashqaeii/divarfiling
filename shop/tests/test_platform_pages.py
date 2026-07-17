@@ -12,6 +12,7 @@ PLATFORM_URLS = [
     '/features/crm/reminders/',
     '/features/filing/',
     '/features/market-intelligence/',
+    '/features/agency/',
     '/solutions/',
     '/solutions/customer-follow-up/',
     '/solutions/fast-property-search/',
@@ -659,3 +660,82 @@ class PlatformPropertyPricingPhase2Tests(TestCase):
 
     def test_pricing_seo_health(self):
         _assert_platform_seo_health(self, '/solutions/property-pricing/')
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformAgencyPhase2Tests(TestCase):
+    """Phase 2 sprint 5: /features/agency/ product line."""
+
+    def test_agency_page_renders(self):
+        resp = self.client.get('/features/agency/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'ag-hero')
+        self.assertContains(resp, 'ag-outcomes')
+        self.assertContains(resp, 'ag-roles-title')
+        self.assertContains(resp, 'ag-privacy')
+        self.assertContains(resp, 'ag-next')
+        self.assertContains(resp, 'Agency TV')
+        self.assertContains(resp, 'help-crm-team')
+        self.assertContains(resp, 'help-crm-today')
+        self.assertContains(resp, 'help-crm-dashboard')
+        self.assertContains(resp, '/features/crm/')
+        self.assertContains(resp, 'plat-faq__item', count=12)
+        self.assertContains(resp, 'رایگان')
+        self.assertContains(resp, 'مالک')
+        self.assertContains(resp, 'منشی')
+        self.assertContains(resp, '<h1', count=1)
+
+    def test_agency_schema_free_not_rating(self):
+        resp = self.client.get('/features/agency/')
+        body = resp.content.decode('utf-8')
+        self.assertIn('"@type": "SoftwareApplication"', body)
+        self.assertIn('"@type": "Product"', body)
+        self.assertIn('مدیریت آژانس', body)
+        self.assertIn('"price": "0"', body)
+        self.assertNotIn('AggregateRating', body)
+
+    def test_agency_next_path_three(self):
+        from shop.platform.content.agency_hub import agency_product_line_content
+        items = agency_product_line_content()['next_path']['items']
+        self.assertEqual(len(items), 3)
+        self.assertTrue(items[-1].get('convert'))
+        self.assertEqual(items[0]['url_kwargs']['slug_path'], 'crm')
+
+    def test_agency_draft_features_not_public(self):
+        drafts = (
+            'agency/team-management',
+            'agency/roles-permissions',
+            'agency/team-inbox',
+            'agency/activity-feed',
+            'agency/reports',
+            'agency/tv-dashboard',
+            'agency/announcements',
+        )
+        for path in drafts:
+            with self.subTest(path=path):
+                self.assertIsNone(get_page('features', path))
+                resp = self.client.get(f'/features/{path}/')
+                self.assertEqual(resp.status_code, 404)
+
+    def test_agency_management_solution_not_published(self):
+        self.assertIsNone(get_page('solutions', 'agency-management'))
+        resp = self.client.get('/solutions/agency-management/')
+        self.assertEqual(resp.status_code, 404)
+
+    def test_features_hub_and_crm_link_agency(self):
+        hub = self.client.get('/features/')
+        self.assertContains(hub, '/features/agency/')
+        crm = self.client.get('/features/crm/')
+        self.assertContains(crm, '/features/agency/')
+
+    def test_agency_honesty_limits(self):
+        resp = self.client.get('/features/agency/')
+        body = resp.content.decode('utf-8')
+        self.assertIn('جایگزین کامل', body)
+        self.assertIn('چندشعبه', body)
+        self.assertIn('وب‌سوکت', body)
+        self.assertIn('تضمین ایمنی بی‌نقص ادعا نمی‌شود', body)
+        self.assertNotIn('امنیت مطلق', body)
+
+    def test_agency_seo_health(self):
+        _assert_platform_seo_health(self, '/features/agency/')

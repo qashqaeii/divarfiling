@@ -55,6 +55,7 @@ def _location_label(page: PageSpec) -> str:
         'crm_reminders': 'یادآور CRM',
         'filing_product_line': 'خط محصول فایلینگ',
         'market_intelligence_product_line': 'خط محصول تحلیل بازار',
+        'agency_product_line': 'خط محصول مدیریت آژانس',
         'property_pricing': 'راه‌حل قیمت‌گذاری ملک',
         'fast_property_search': 'راه‌حل پیدا کردن سریع فایل',
         'solutions_hub': 'نقشه راه‌حل‌ها',
@@ -118,6 +119,20 @@ def _trail_for_page(page: PageSpec) -> list[dict[str, Any]]:
                 'current': True,
             })
             return items
+        if page.content_key == 'agency_product_line':
+            items.append({
+                'label': 'CRM',
+                'url_name': 'platform_features_page',
+                'kwargs': {'slug_path': 'crm'},
+                'current': False,
+            })
+            items.append({
+                'label': 'مدیریت آژانس',
+                'url_name': 'platform_features_page',
+                'kwargs': {'slug_path': 'agency'},
+                'current': True,
+            })
+            return items
         if page.path:
             items.append({
                 'label': 'CRM',
@@ -162,11 +177,13 @@ def _trail_for_page(page: PageSpec) -> list[dict[str, Any]]:
 
 
 def _journey_for_page(page: PageSpec) -> list[dict[str, Any]]:
-    """Canonical funnel — CRM, Filing, or Market Intelligence path by page family."""
+    """Canonical funnel — CRM, Filing, Market, or Agency path by page family."""
     if page.content_key in ('filing_product_line', 'fast_property_search'):
         return _filing_journey(page.content_key)
     if page.content_key in ('market_intelligence_product_line', 'property_pricing'):
         return _market_journey(page.content_key)
+    if page.content_key == 'agency_product_line':
+        return _agency_journey(page.content_key)
     return _crm_journey(page.content_key)
 
 
@@ -286,6 +303,44 @@ def _market_journey(content_key: str) -> list[dict[str, Any]]:
     current_id = {
         'market_intelligence_product_line': 'market',
         'property_pricing': 'pricing',
+    }.get(content_key)
+    return _annotate_journey(steps, current_id)
+
+
+def _agency_journey(content_key: str) -> list[dict[str, Any]]:
+    steps = [
+        {
+            'id': 'crm',
+            'label': 'CRM',
+            'hint': 'مشتری و معامله',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'crm'},
+        },
+        {
+            'id': 'agency',
+            'label': 'آژانس',
+            'hint': 'نقش و تیم',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'agency'},
+        },
+        {
+            'id': 'follow_up',
+            'label': 'پیگیری',
+            'hint': 'راه‌حل عملی',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'customer-follow-up'},
+        },
+        {
+            'id': 'start',
+            'label': 'شروع',
+            'hint': 'ثبت‌نام رایگان',
+            'url_name': 'register',
+            'auth_url_name': 'workspace:crm_team',
+            'kwargs': {},
+        },
+    ]
+    current_id = {
+        'agency_product_line': 'agency',
     }.get(content_key)
     return _annotate_journey(steps, current_id)
 

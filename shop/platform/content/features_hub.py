@@ -190,12 +190,24 @@ def features_hub_content() -> dict[str, Any]:
                         'تیم، صندوق مشترک، نقش‌ها و گزارش پیگیری معوق برای مدیر و منشی. '
                         'مدیر وضعیت کار را می‌بیند؛ متن تماس خصوصی مشاور را نه.'
                     ),
-                    'url_name': 'blog:post_detail',
-                    'url_kwargs': {'slug': 'crm-team-modiriyat-ajans-rahnama'},
+                    'url_name': 'platform_features_page',
+                    'url_kwargs': {'slug_path': 'agency'},
                     'icon': 'fa-people-group',
                     'accent': 'violet',
-                    'badge': 'راهنما',
+                    'badge': 'رایگان',
                     'size': 'normal',
+                    'sub_links': [
+                        {
+                            'label': 'خط محصول CRM',
+                            'url_name': 'platform_features_page',
+                            'url_kwargs': {'slug_path': 'crm'},
+                        },
+                        {
+                            'label': 'راهنمای تیم',
+                            'url_name': 'blog:post_detail',
+                            'url_kwargs': {'slug': 'crm-team-modiriyat-ajans-rahnama'},
+                        },
+                    ],
                 },
             ],
         },
@@ -369,9 +381,9 @@ def features_hub_content() -> dict[str, Any]:
                         'تیم، صندوق مشترک، نقش‌ها و گزارش پیگیری معوق را بدون خواندن متن خصوصی تماس می‌بینید. '
                         'CRM تیمی رایگان است.'
                     ),
-                    'start': 'blog:post_detail',
-                    'start_kwargs': {'slug': 'crm-team-modiriyat-ajans-rahnama'},
-                    'start_label': 'راهنمای مدیریت تیم',
+                    'start': 'platform_features_page',
+                    'start_kwargs': {'slug_path': 'agency'},
+                    'start_label': 'مدیریت آژانس',
                 },
                 {
                     'icon': 'fa-headset',

@@ -42,6 +42,7 @@ def _product_line_title(code: str) -> str:
         'crm': 'CRM املاک',
         'filing': 'فایلینگ',
         'market-intelligence': 'تحلیل بازار',
+        'agency': 'مدیریت آژانس',
     }.get(code, code)
 
 
@@ -353,6 +354,38 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'Value Score نسبی',
             ],
         }
+    elif page.content_key == 'agency_product_line':
+        crm_url = f'{site_url}/features/crm/'
+        schema = {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            'name': 'مدیریت آژانس فایلینگ دیوار',
+            'alternateName': 'CRM تیمی املاک',
+            'applicationCategory': 'BusinessApplication',
+            'applicationSubCategory': 'Agency Team CRM',
+            'operatingSystem': 'Web',
+            'description': page.seo.description,
+            'url': page_url,
+            'inLanguage': 'fa-IR',
+            'creator': creator,
+            'isPartOf': {
+                '@type': 'SoftwareApplication',
+                'name': 'میزکار فایلینگ دیوار',
+                'url': site_url,
+            },
+            'isRelatedTo': {
+                '@type': 'SoftwareApplication',
+                'name': 'CRM املاک فایلینگ دیوار',
+                'url': crm_url,
+            },
+            'offers': _free_offer(page_url),
+            'featureList': [
+                'نقش‌های مالک، مدیر، منشی و مشاور',
+                'صندوق سرنخ و تخصیص',
+                'پیام و اطلاعیه تیم',
+                'گزارش عملکرد و Agency TV',
+            ],
+        }
     else:
         return ''
 
@@ -372,6 +405,7 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         'fast_property_search',
         'market_intelligence_product_line',
         'property_pricing',
+        'agency_product_line',
     ):
         return ''
 
@@ -388,6 +422,12 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         product_url = page_url
         offers = _free_offer(product_url)
         category = 'نرم‌افزار CRM املاک'
+    elif page.content_key == 'agency_product_line':
+        name = 'مدیریت آژانس فایلینگ دیوار'
+        image = f'{site_url}/static/images/help-crm-team.webp'
+        product_url = page_url
+        offers = _free_offer(product_url)
+        category = 'CRM تیمی و مدیریت آژانس املاک'
     elif page.content_key == 'filing_product_line':
         name = 'فایلینگ دیوار'
         image = f'{site_url}/static/images/help-dataset-table.webp'

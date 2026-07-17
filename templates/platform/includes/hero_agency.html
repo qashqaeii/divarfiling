@@ -1,0 +1,38 @@
+{% load static %}
+<header class="fil-hero plat-reveal" id="ag-hero">
+    <div class="fil-hero__inner">
+        <div class="fil-hero__copy">
+            <p class="fil-hero__eyebrow">
+                <span class="fil-ico fil-ico--sm fil-ico--pulse" aria-hidden="true">
+                    <i class="fas {{ platform_content.hero.eyebrow_icon|default:'fa-people-group' }}"></i>
+                </span>
+                {{ platform_content.hero.eyebrow }}
+            </p>
+            <h1>{{ platform_page.seo.h1 }}</h1>
+            {% if platform_content.hero.promise %}
+            <p class="fil-hero__promise">{{ platform_content.hero.promise }}</p>
+            {% endif %}
+            <p class="fil-hero__lead">{{ platform_content.hero.lead }}</p>
+            {% if platform_content.hero.bullets %}
+            <ul class="fil-hero__bullets">
+                {% for item in platform_content.hero.bullets %}
+                <li>
+                    <span class="fil-ico fil-ico--sm" aria-hidden="true">
+                        <i class="fas {% if item.icon %}{{ item.icon }}{% else %}fa-check{% endif %}"></i>
+                    </span>
+                    <span>{% if item.text %}{{ item.text }}{% else %}{{ item }}{% endif %}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="fil-hero__cta">
+                {% include 'platform/includes/cta_pair.html' %}
+            </div>
+        </div>
+        {% if platform_content.hero.screenshot %}
+        <div class="fil-hero__visual plat-reveal plat-reveal--delay">
+            {% include 'platform/includes/screenshot_story.html' with shot=platform_content.hero.screenshot loading='eager' hero=True %}
+        </div>
+        {% endif %}
+    </div>
+</header>

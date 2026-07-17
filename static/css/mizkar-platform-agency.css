@@ -1,0 +1,1026 @@
+/* Agency Management product line (violet) — same Experience rhythm as CRM; Phase 2 */
+/* ═══ Filing Product Line — /features/agency/ ═══ */
+.plat-page--agency_product_line {
+    --fil-text: min(720px, 100%);
+    --fil-wrap: min(1200px, 100%);
+    --fil-sec-pad: clamp(5rem, 8vw, 9rem);
+    --fil-gap: clamp(1.25rem, 2.5vw, 2rem);
+    --fil-violet: #7c3aed;
+    --fil-amber-lean: #d97706;
+    --fil-muted: rgba(15, 23, 42, 0.06);
+    --fil-border: rgba(15, 23, 42, 0.08);
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_product_line {
+    --fil-muted: rgba(255, 255, 255, 0.04);
+    --fil-border: rgba(255, 255, 255, 0.08);
+}
+
+.plat-page--agency_product_line .fil-wrap {
+    width: 100%;
+    max-width: var(--fil-wrap);
+    margin-inline: auto;
+    padding-inline: clamp(1.125rem, 4vw, 1.5rem);
+}
+
+.plat-page--agency_product_line .fil-sec {
+    padding-block: var(--fil-sec-pad);
+}
+
+.plat-page--agency_product_line .fil-sec--soft {
+    background: var(--fil-muted);
+}
+
+.plat-page--agency_product_line .fil-eyebrow {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fil-violet);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.plat-page--agency_product_line .fil-eyebrow > .fas {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* ═══ Icon system — Font Awesome wells + soft motion ═══ */
+.plat-page--agency_product_line .fil-ico {
+    --fil-ico-size: 2.35rem;
+    --fil-ico-fs: 0.95rem;
+    width: var(--fil-ico-size);
+    height: var(--fil-ico-size);
+    border-radius: 12px;
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--fil-violet);
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.28s ease,
+                background 0.28s ease;
+}
+
+.plat-page--agency_product_line .fil-ico .fas {
+    font-size: var(--fil-ico-fs);
+    line-height: 1;
+}
+
+.plat-page--agency_product_line .fil-ico--sm {
+    --fil-ico-size: 1.55rem;
+    --fil-ico-fs: 0.7rem;
+    border-radius: 8px;
+}
+
+.plat-page--agency_product_line .fil-ico--lg {
+    --fil-ico-size: 2.85rem;
+    --fil-ico-fs: 1.1rem;
+    border-radius: 14px;
+}
+
+.plat-page--agency_product_line .fil-ico--xl {
+    --fil-ico-size: 3.4rem;
+    --fil-ico-fs: 1.35rem;
+    border-radius: 16px;
+    margin-inline: auto;
+    margin-bottom: 1rem;
+}
+
+.plat-page--agency_product_line .fil-ico--solid {
+    background: var(--fil-violet);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.28);
+}
+
+.plat-page--agency_product_line .fil-ico--emerald {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
+.plat-page--agency_product_line .fil-ico--sky {
+    background: rgba(14, 165, 233, 0.12);
+    color: #7c3aed;
+}
+
+.plat-page--agency_product_line .fil-ico--amber {
+    background: rgba(245, 158, 11, 0.14);
+    color: #7c3aed;
+}
+
+.plat-page--agency_product_line .fil-outcomes__item:hover .fil-ico,
+.plat-page--agency_product_line .fil-cap:hover .fil-ico--lg,
+.plat-page--agency_product_line .fil-trust__item:hover .fil-ico,
+.plat-page--agency_product_line .fil-next__card:hover .fil-ico,
+.plat-page--agency_product_line .fil-flow-h__step:hover .fil-ico,
+.plat-page--agency_product_line .fil-privacy__item:hover .fil-ico {
+    transform: translateY(-2px) scale(1.06);
+    box-shadow: 0 10px 22px rgba(124, 58, 237, 0.18);
+}
+
+.plat-page--agency_product_line .fil-ico--float {
+    animation: fil-ico-float 4.5s ease-in-out infinite;
+}
+
+.plat-page--agency_product_line .fil-ico--pulse {
+    animation: fil-ico-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes fil-ico-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+@keyframes fil-ico-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.28); }
+    55% { box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .plat-page--agency_product_line .fil-ico--float,
+    .plat-page--agency_product_line .fil-ico--pulse {
+        animation: none;
+    }
+    .plat-page--agency_product_line .fil-outcomes__item:hover .fil-ico,
+    .plat-page--agency_product_line .fil-cap:hover .fil-ico--lg,
+    .plat-page--agency_product_line .fil-trust__item:hover .fil-ico,
+    .plat-page--agency_product_line .fil-next__card:hover .fil-ico,
+    .plat-page--agency_product_line .fil-flow-h__step:hover .fil-ico,
+    .plat-page--agency_product_line .fil-privacy__item:hover .fil-ico {
+        transform: none;
+    }
+}
+
+.plat-page--agency_product_line .fil-prose {
+    max-width: var(--fil-text);
+}
+
+.plat-page--agency_product_line .fil-prose--center {
+    margin-inline: auto;
+    text-align: center;
+}
+
+.plat-page--agency_product_line .fil-prose h2 {
+    margin: 0 0 1rem;
+    font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+    line-height: 1.4;
+    letter-spacing: -0.02em;
+}
+
+.plat-page--agency_product_line .fil-prose p {
+    margin: 0 0 1rem;
+    line-height: 1.85;
+    font-size: 1.02rem;
+    opacity: 0.88;
+}
+
+.plat-page--agency_product_line .fil-prose__lead {
+    font-size: 1.05rem;
+    opacity: 0.78;
+}
+
+.plat-page--agency_product_line .fil-prose--resolution {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--fil-border);
+    font-size: 1.05rem;
+    line-height: 1.85;
+}
+
+/* Hero */
+.plat-page--agency_product_line .fil-hero {
+    padding: clamp(2.5rem, 5vw, 3.5rem) 0 clamp(3rem, 6vw, 4.5rem);
+    border-bottom: 1px solid var(--fil-border);
+}
+
+.plat-page--agency_product_line .fil-hero__inner {
+    max-width: var(--fil-wrap);
+    margin-inline: auto;
+    padding-inline: clamp(1.125rem, 4vw, 1.5rem);
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
+    align-items: center;
+}
+
+@media (min-width: 960px) {
+    .plat-page--agency_product_line .fil-hero__inner {
+        grid-template-columns: 0.95fr 1.05fr;
+    }
+}
+
+.plat-page--agency_product_line .fil-hero__copy h1 {
+    margin: 0 0 1rem;
+    font-size: clamp(1.65rem, 3.5vw, 2.35rem);
+    line-height: 1.35;
+    letter-spacing: -0.025em;
+    max-width: 14ch;
+}
+
+.plat-page--agency_product_line .fil-hero__promise {
+    margin: -0.35rem 0 1rem;
+    font-size: clamp(1.05rem, 2vw, 1.2rem);
+    font-weight: 650;
+    line-height: 1.55;
+    color: var(--fil-violet);
+    max-width: 28ch;
+}
+
+.plat-page--agency_product_line .fil-hero__lead {
+    margin: 0 0 1.25rem;
+    max-width: var(--fil-text);
+    line-height: 1.85;
+    font-size: 1.05rem;
+    opacity: 0.88;
+}
+
+.plat-page--agency_product_line .fil-hero__bullets {
+    list-style: none;
+    margin: 0 0 1.75rem;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+    max-width: var(--fil-text);
+}
+
+.plat-page--agency_product_line .fil-hero__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fil-violet);
+}
+
+.plat-page--agency_product_line .fil-hero__bullets li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    opacity: 0.9;
+}
+
+.plat-page--agency_product_line .fil-hero__bullets li:hover .fil-ico {
+    transform: scale(1.08);
+}
+
+@media (max-width: 767px) {
+    .plat-page--agency_product_line .fil-hero__cta .plat-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .plat-page--agency_product_line .fil-hero__cta .plat-cta-pair {
+        flex-direction: column;
+        width: 100%;
+    }
+}
+
+/* Screenshot story + callouts */
+.plat-page--agency_product_line .plat-shot-story {
+    margin: 0;
+}
+
+.plat-page--agency_product_line .plat-shot-story__frame {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--fil-border);
+    background: rgba(15, 23, 42, 0.04);
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+}
+
+.plat-page--agency_product_line .plat-shot-story__screen {
+    position: relative;
+}
+
+.plat-page--agency_product_line .plat-shot-story__pins {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.plat-page--agency_product_line .plat-shot-story__pin {
+    position: absolute;
+    left: var(--pin-x, 50%);
+    top: var(--pin-y, 50%);
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: 140px;
+}
+
+.plat-page--agency_product_line .plat-shot-story__pin-num {
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    background: var(--fil-violet);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+}
+
+.plat-page--agency_product_line .plat-shot-story__pin-text {
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1.3;
+    padding: 0.25rem 0.45rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.94);
+    color: #0f172a;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_product_line .plat-shot-story__pin-text {
+    background: rgba(15, 23, 42, 0.92);
+    color: #f8fafc;
+}
+
+.plat-page--agency_product_line .plat-shot-story__caption {
+    margin-top: 0.85rem;
+    display: grid;
+    gap: 0.25rem;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    opacity: 0.78;
+}
+
+.plat-page--agency_product_line .plat-shot-story__caption strong {
+    font-size: 0.88rem;
+    opacity: 1;
+    color: inherit;
+}
+
+.plat-page--agency_product_line .plat-badge--license {
+    background: rgba(14, 165, 233, 0.12);
+    color: #7c3aed;
+}
+
+/* Morning story — vertical time beats */
+.plat-page--agency_product_line .fil-story__beats {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+    max-width: var(--fil-text);
+    border-inline-start: 2px solid rgba(124, 58, 237, 0.18);
+}
+
+.plat-page--agency_product_line .fil-story__beat {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 1rem;
+    padding: 0 0 1.75rem 1.35rem;
+    position: relative;
+}
+
+.plat-page--agency_product_line .fil-story__beat:last-child {
+    padding-bottom: 0;
+}
+
+.plat-page--agency_product_line .fil-story__time {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--fil-violet);
+    padding-top: 0.15rem;
+}
+
+.plat-page--agency_product_line .fil-story__head {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.45rem;
+}
+
+.plat-page--agency_product_line .fil-story__body strong {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.plat-page--agency_product_line .fil-story__body p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    opacity: 0.86;
+}
+
+.plat-page--agency_product_line .fil-story__beat--hl {
+    margin-top: 0.5rem;
+    padding: 1.25rem 1.25rem 1.25rem 1.35rem;
+    border-radius: 14px;
+    background: rgba(124, 58, 237, 0.05);
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    border-inline-start: none;
+}
+
+.plat-page--agency_product_line .fil-story__beat--hl .fil-story__time {
+    color: #be123c;
+}
+
+/* Outcomes — benefit over feature name */
+.plat-page--agency_product_line .fil-outcomes__grid {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--fil-gap);
+}
+
+@media (min-width: 768px) {
+    .plat-page--agency_product_line .fil-outcomes__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1100px) {
+    .plat-page--agency_product_line .fil-outcomes__grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.plat-page--agency_product_line .fil-outcomes__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 1.35rem 1.25rem;
+    border-radius: 14px;
+    border: 1px solid var(--fil-border);
+    background: rgba(255, 255, 255, 0.55);
+    min-height: 9rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.plat-page--agency_product_line .fil-outcomes__item:hover {
+    border-color: rgba(124, 58, 237, 0.22);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_product_line .fil-outcomes__item {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_product_line .fil-outcomes__before {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    text-decoration: line-through;
+}
+
+.plat-page--agency_product_line .fil-outcomes__arrow {
+    color: var(--fil-violet);
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+.plat-page--agency_product_line .fil-outcomes__after {
+    font-size: 0.98rem;
+    line-height: 1.55;
+    font-weight: 700;
+}
+
+/* Soft mid-page CTAs */
+.plat-page--agency_product_line .fil-soft-cta {
+    padding-block: clamp(2rem, 4vw, 2.75rem);
+    border-block: 1px solid var(--fil-border);
+}
+
+.plat-page--agency_product_line .fil-soft-cta--violet {
+    background: rgba(124, 58, 237, 0.04);
+}
+
+.plat-page--agency_product_line .fil-soft-cta__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+}
+
+.plat-page--agency_product_line .fil-soft-cta__copy {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    min-width: min(100%, 22rem);
+}
+
+.plat-page--agency_product_line .fil-soft-cta__inner strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 1.05rem;
+}
+
+.plat-page--agency_product_line .fil-soft-cta__btn .fas {
+    margin-inline-end: 0.35rem;
+    font-size: 0.85em;
+}
+
+.plat-page--agency_product_line .fil-soft-cta__inner p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.78;
+    line-height: 1.6;
+    max-width: 36rem;
+}
+
+.plat-page--agency_product_line .fil-soft-cta__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+@media (max-width: 767px) {
+    .plat-page--agency_product_line .fil-soft-cta__links {
+        width: 100%;
+        flex-direction: column;
+    }
+    .plat-page--agency_product_line .fil-soft-cta__btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Capabilities — editorial layouts */
+.plat-page--agency_product_line .fil-caps {
+    margin-top: 3rem;
+    display: grid;
+    gap: clamp(3.5rem, 6vw, 5rem);
+}
+
+.plat-page--agency_product_line .fil-cap {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    align-items: center;
+}
+
+@media (min-width: 900px) {
+    .plat-page--agency_product_line .fil-cap--side {
+        grid-template-columns: 1fr 1.05fr;
+    }
+    .plat-page--agency_product_line .fil-cap--side-flip {
+        grid-template-columns: 1.05fr 1fr;
+    }
+    .plat-page--agency_product_line .fil-cap--side-flip .fil-cap__copy {
+        order: 2;
+    }
+    .plat-page--agency_product_line .fil-cap--side-flip .fil-cap__visual {
+        order: 1;
+    }
+    .plat-page--agency_product_line .fil-cap--wide {
+        grid-template-columns: 1fr 1fr;
+    }
+    .plat-page--agency_product_line .fil-cap--text {
+        grid-template-columns: 1fr;
+        max-width: 820px;
+        margin-inline: auto;
+    }
+}
+
+.plat-page--agency_product_line .fil-cap__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+}
+
+.plat-page--agency_product_line .fil-cap__titles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.plat-page--agency_product_line .fil-cap__head h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.4;
+}
+
+.plat-page--agency_product_line .fil-cap__meta {
+    margin: 0 0 1rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.plat-page--agency_product_line .fil-cap__meta dt {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+    margin-bottom: 0.2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--fil-violet);
+}
+
+.plat-page--agency_product_line .fil-cap__meta dt .fas {
+    font-size: 0.75rem;
+    opacity: 0.85;
+}
+
+.plat-page--agency_product_line .fil-cap__meta dd {
+    margin: 0;
+    line-height: 1.75;
+    font-size: 0.95rem;
+    max-width: 38rem;
+}
+
+.plat-page--agency_product_line .fil-text-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--fil-violet);
+    text-decoration: none;
+}
+
+.plat-page--agency_product_line .fil-text-link:hover {
+    gap: 0.55rem;
+}
+
+/* Workflow — horizontal on desktop, stack on mobile */
+.plat-page--agency_product_line .fil-flow-h {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+}
+
+@media (min-width: 900px) {
+    .plat-page--agency_product_line .fil-flow-h {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.65rem;
+    }
+}
+
+.plat-page--agency_product_line .fil-flow-h__step {
+    padding: 1.1rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--fil-border);
+    background: rgba(255, 255, 255, 0.55);
+    display: grid;
+    gap: 0.45rem;
+    align-content: start;
+    justify-items: start;
+    transition: border-color 0.2s ease, transform 0.22s ease;
+}
+
+.plat-page--agency_product_line .fil-flow-h__step:hover {
+    border-color: rgba(124, 58, 237, 0.25);
+    transform: translateY(-2px);
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_product_line .fil-flow-h__step {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_product_line .fil-flow-h__num {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: rgba(124, 58, 237, 0.12);
+    color: var(--fil-violet);
+    font-size: 0.7rem;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+}
+
+.plat-page--agency_product_line .fil-flow-h__step strong {
+    font-size: 0.9rem;
+}
+
+.plat-page--agency_product_line .fil-flow-h__step p {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    opacity: 0.8;
+}
+
+/* Trust facts */
+.plat-page--agency_product_line .fil-trust__grid {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--fil-gap);
+    max-width: 900px;
+}
+
+@media (min-width: 720px) {
+    .plat-page--agency_product_line .fil-trust__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.plat-page--agency_product_line .fil-trust__item {
+    display: grid;
+    gap: 0.55rem;
+    padding: 0.25rem 0;
+}
+
+.plat-page--agency_product_line .fil-trust__item h3 {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.plat-page--agency_product_line .fil-trust__item p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    opacity: 0.85;
+}
+
+/* Access tiers */
+.plat-page--agency_product_line .fil-tiers {
+    margin-top: 2.5rem;
+    display: grid;
+    gap: var(--fil-gap);
+}
+
+@media (min-width: 768px) {
+    .plat-page--agency_product_line .fil-tiers {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.plat-page--agency_product_line .fil-tier {
+    padding: 1.35rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid var(--fil-border);
+}
+
+.plat-page--agency_product_line .fil-tier h3 {
+    margin: 0 0 0.85rem;
+    font-size: 0.92rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.plat-page--agency_product_line .fil-tier ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.plat-page--agency_product_line .fil-tier li {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    opacity: 0.88;
+}
+
+.plat-page--agency_product_line .fil-tier li i {
+    margin-top: 0.15rem;
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+.plat-page--agency_product_line .fil-tier--free {
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+.plat-page--agency_product_line .fil-tier--license {
+    border-color: rgba(14, 165, 233, 0.25);
+}
+
+.plat-page--agency_product_line .fil-tier--beta {
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* Privacy */
+.plat-page--agency_product_line .fil-privacy {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--fil-gap);
+    max-width: 820px;
+}
+
+.plat-page--agency_product_line .fil-privacy__item {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+}
+
+.plat-page--agency_product_line .fil-privacy__item h3 {
+    margin: 0 0 0.35rem;
+    font-size: 0.95rem;
+}
+
+.plat-page--agency_product_line .fil-privacy__item p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    opacity: 0.85;
+}
+
+/* Next path — exactly 3 smart exits */
+.plat-page--agency_product_line .fil-next__grid {
+    margin-top: 2.25rem;
+    display: grid;
+    gap: var(--fil-gap);
+}
+
+@media (min-width: 768px) {
+    .plat-page--agency_product_line .fil-next__grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.plat-page--agency_product_line .fil-next__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1.35rem 1.25rem;
+    border-radius: 14px;
+    border: 1px solid var(--fil-border);
+    text-decoration: none;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.5);
+    min-height: 9rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+html.mk-public[data-theme="dark"] .plat-page--agency_product_line .fil-next__card {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.plat-page--agency_product_line .fil-next__card:hover {
+    border-color: rgba(124, 58, 237, 0.3);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.plat-page--agency_product_line .fil-next__type {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--fil-violet);
+    opacity: 0.85;
+}
+
+.plat-page--agency_product_line .fil-next__card strong {
+    font-size: 0.98rem;
+    line-height: 1.45;
+}
+
+.plat-page--agency_product_line .fil-next__card p {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.75;
+    line-height: 1.55;
+    flex: 1;
+}
+
+.plat-page--agency_product_line .fil-next__cta {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--fil-violet);
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.plat-page--agency_product_line .fil-next__card:hover .fil-next__cta .fa-arrow-left {
+    transform: translateX(-3px);
+}
+
+.plat-page--agency_product_line .fil-next__cta .fa-arrow-left {
+    transition: transform 0.2s ease;
+    font-size: 0.75em;
+}
+
+.plat-page--agency_product_line .fil-faq__q-ico {
+    color: var(--fil-violet);
+    margin-inline-end: 0.45rem;
+    opacity: 0.85;
+    font-size: 0.9em;
+}
+
+.plat-page--agency_product_line .plat-faq__item summary {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+}
+
+.plat-page--agency_product_line .plat-faq__item summary > span {
+    flex: 1;
+    text-align: start;
+}
+
+.plat-page--agency_product_line .fil-text-link .fa-arrow-left {
+    transition: transform 0.2s ease;
+}
+
+.plat-page--agency_product_line .fil-text-link:hover .fa-arrow-left {
+    transform: translateX(-3px);
+}
+
+/* Final CTA */
+.plat-page--agency_product_line .fil-final-cta {
+    border-top: 1px solid var(--fil-border);
+}
+
+.plat-page--agency_product_line .fil-final-cta__inner {
+    text-align: center;
+    max-width: 36rem;
+}
+
+.plat-page--agency_product_line .fil-final-cta__inner h2 {
+    margin: 0 0 0.65rem;
+    font-size: clamp(1.25rem, 2.5vw, 1.55rem);
+}
+
+.plat-page--agency_product_line .fil-final-cta__inner p {
+    margin: 0 0 1.35rem;
+    opacity: 0.82;
+    line-height: 1.7;
+}
+
+@media (max-width: 767px) {
+    .plat-page--agency_product_line .fil-final-cta__inner .plat-cta-pair {
+        flex-direction: column;
+    }
+    .plat-page--agency_product_line .fil-final-cta__inner .plat-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* FAQ override spacing on CRM page */
+.plat-page--agency_product_line .plat-faq .fil-wrap,
+.plat-page--agency_product_line .plat-faq .plat-section__inner {
+    max-width: var(--fil-wrap);
+}
+
+.plat-page--agency_product_line .plat-faq {
+    padding-block: var(--fil-sec-pad);
+}
+
+.plat-page--agency_product_line .plat-faq .plat-section-head {
+    max-width: var(--fil-text);
+    margin-inline: auto;
+}
+
+.plat-page--agency_product_line .plat-faq__list {
+    max-width: var(--fil-text);
+    margin-inline: auto;
+}
+
+/* Breadcrumb subtle */
+.plat-page--agency_product_line .mk-platform-bc-wrap {
+    opacity: 0.72;
+}
+
+.plat-page--agency_product_line .fil-cap__copy,
+.plat-page--agency_product_line .fil-cap__visual {
+    min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .plat-page--agency_product_line .fil-next__card,
+    .plat-page--agency_product_line .fil-text-link {
+        transition: none;
+    }
+}
+
+.plat-page--agency_product_line .fil-soft-cta--violet {
+    background: rgba(124, 58, 237, 0.045);
+}
+.plat-page--agency_product_line .ag-roles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 720px) {
+    .plat-page--agency_product_line .ag-roles {
+        grid-template-columns: 1fr;
+    }
+}

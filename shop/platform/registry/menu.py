@@ -43,6 +43,15 @@ def platform_mega_menu() -> dict:
             'tag': 'لایسنس',
         },
         {
+            'title': 'مدیریت آژانس',
+            'desc': 'نقش‌ها، صندوق سرنخ و Agency TV',
+            'url_name': 'platform_features_page',
+            'url_kwargs': {'slug_path': 'agency'},
+            'icon': 'fa-people-group',
+            'accent': 'violet',
+            'tag': 'رایگان',
+        },
+        {
             'title': 'ربات استخراج',
             'desc': 'آگهی دیوار با فیلتر شهر',
             'url_name': 'seo_landing_robot_divar',
@@ -84,6 +93,12 @@ def platform_mega_menu() -> dict:
             'desc': '/features/market-intelligence/',
             'url_name': 'platform_features_page',
             'url_kwargs': {'slug_path': 'market-intelligence'},
+        },
+        {
+            'label': 'مدیریت آژانس',
+            'desc': '/features/agency/',
+            'url_name': 'platform_features_page',
+            'url_kwargs': {'slug_path': 'agency'},
         },
         {
             'label': 'لندینگ معرفی CRM',

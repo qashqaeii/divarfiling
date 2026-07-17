@@ -120,7 +120,7 @@ def build_activation_funnel(
                 ('first_dataset', 'ساخت دیتاست / استخراج'),
                 ('first_crm', 'اولین استفاده CRM'),
                 ('first_reminder', 'ثبت اولین یادآور'),
-                ('upgraded', 'ارتقاء پلن'),
+                ('upgraded', 'ارتقا روزانه→ماهانه'),
             ]
         ]
         return {
@@ -159,20 +159,25 @@ def build_activation_funnel(
         .values_list('user_id', 'first_at')
     )
 
-    # Upgrades: daily then monthly after first paid
+    # ارتقا روزانه→ماهانه: فقط روی خریداران پلن روزانه؛ «۷ روز» = پنجره تشخیص، نه نوع پلن
+    daily_eligible: set[int] = {
+        uid for uid, plans in buyers['plan_types_by_user'].items()
+        if 'daily' in (plans or [])
+    }
     upgraded_users: set[int] = set()
     upgrade_times: list[float] = []
-    for uid, fp in first_paid.items():
-        plans = buyers['plan_types_by_user'].get(uid, [])
-        if 'daily' not in plans:
+    for uid in daily_eligible:
+        fp = first_paid.get(uid)
+        if not fp:
             continue
-        monthly = (
-            Order.objects.filter(user_id=uid, status='paid', plan__plan_type='monthly')
-            .annotate(effective_paid=Min('paid_at'))  # wrong - need Coalesce
-        )
-        # simpler: from orders list
         for o in buyers['orders']:
-            if o.user_id == uid and o.plan and o.plan.plan_type == 'monthly' and o.effective_paid and o.effective_paid > fp:
+            if (
+                o.user_id == uid
+                and o.plan
+                and o.plan.plan_type == 'monthly'
+                and o.effective_paid
+                and o.effective_paid > fp
+            ):
                 if (o.effective_paid - fp) <= timedelta(days=7):
                     upgraded_users.add(uid)
                     h = _hours_between(fp, o.effective_paid)
@@ -188,7 +193,6 @@ def build_activation_funnel(
             if not ts:
                 continue
             if after_purchase_only and ts < fp:
-                # still count if they had activity after? Prefer after purchase
                 continue
             count += 1
             h = _hours_between(fp, ts)
@@ -200,6 +204,9 @@ def build_activation_funnel(
     ds_count, ds_times = collect(datasets)
     crm_count, crm_times = collect(customers)
     rem_count, rem_times = collect(reminders)
+
+    daily_n = len(daily_eligible)
+    upgrade_available = daily_n >= MIN_SAMPLE or len(upgraded_users) > 0
 
     post_stages = [
         _stage(
@@ -240,18 +247,29 @@ def build_activation_funnel(
         ),
         _stage(
             key='upgraded',
-            label='ارتقاء پلن (۷روز)',
+            label='ارتقا روزانه→ماهانه',
             count=len(upgraded_users),
-            base=base,
-            prev_count=base,
+            base=daily_n,
+            prev_count=daily_n,
             times_hours=upgrade_times,
-            available=base >= MIN_SAMPLE or len(upgraded_users) > 0,
+            available=upgrade_available,
+            note=(
+                f'از میان {daily_n} خریدار پلن روزانه؛ پنجره تشخیص ارتقا ۷ روز پس از خرید است (پلن ۷روزه نیست).'
+                if upgrade_available
+                else 'در این دوره خریدار پلن روزانه نبود — این مرحله برای ماهانه/سالانه اعمال نمی‌شود.'
+            ),
         ),
     ]
+    # شاخه ارتقا جزء قیف اصلی همه خریداران نیست
+    for s in post_stages:
+        if s['key'] == 'upgraded':
+            s['main_funnel'] = False
+        else:
+            s['main_funnel'] = True
 
-    # Biggest dropoff among sequential post stages
+    # Biggest dropoff فقط روی مراحل قیف اصلی (نه شاخه ارتقا روزانه)
     biggest_drop = None
-    for s in top_stages[1:] + post_stages:
+    for s in top_stages[1:] + [x for x in post_stages if x.get('main_funnel', True)]:
         if not s['available'] or s['dropoff_from_prev'] is None:
             continue
         if biggest_drop is None or s['dropoff_from_prev'] > biggest_drop['dropoff_from_prev']:
@@ -270,4 +288,5 @@ def build_activation_funnel(
         'market_analysis': {'available': False, 'display': EMPTY_MSG},
         'sms_campaign': {'available': False, 'display': EMPTY_MSG},
         'base_buyers': base,
+        'daily_eligible': daily_n,
     }

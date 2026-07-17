@@ -58,28 +58,25 @@ def build_executive_insights(
                 'metric': 0,
             })
 
-    if upgrade_stats.get('available'):
+    # فقط وقتی خریدار پلن روزانه (یک‌روزه) در دوره هست — «۷ روز» پلن نیست، پنجره تشخیص است
+    if upgrade_stats.get('available') and upgrade_stats.get('daily_buyers', 0) > 0:
         rate = upgrade_stats.get('upgrade_rate', 0)
         insights.append({
             'severity': 'warn' if rate < 15 else 'ok',
-            'title': f"نرخ ارتقا آزمایشی→ماهانه {rate}٪",
+            'title': f"نرخ ارتقا روزانه→ماهانه {rate}٪",
             'body': (
-                'پایین‌تر از حد انتظار است؛ پیشنهاد nurture و یادآور تمدید.'
-                if rate < 15 else
-                'نرخ ارتقا در محدوده قابل قبول است.'
+                f"از {upgrade_stats.get('daily_buyers', 0)} خریدار پلن یک‌روزه؛ "
+                + (
+                    'پایین‌تر از حد انتظار است؛ یادآور پس از خرید روزانه پیشنهاد می‌شود.'
+                    if rate < 15 else
+                    'نرخ ارتقا در محدوده قابل قبول است.'
+                )
             ),
             'metric': rate,
         })
-    elif summary.get('daily_purchases', 0) == 0:
-        insights.append({
-            'severity': 'neutral',
-            'title': 'داده ارتقا کافی نیست',
-            'body': EMPTY_MSG,
-            'metric': None,
-        })
 
     drop = activation_funnel.get('biggest_dropoff')
-    if drop and drop.get('dropoff', 0) >= 40:
+    if drop and drop.get('key') != 'upgraded' and drop.get('dropoff', 0) >= 40:
         insights.append({
             'severity': 'critical',
             'title': f"بیشترین ریزش در «{drop['label']}» ({drop['dropoff']}٪)",
@@ -283,11 +280,15 @@ def build_recommendations(
             'action_hint': 'بررسی صفحه Checkout / فعال‌سازی',
         })
 
-    if upgrade_stats.get('available') and upgrade_stats.get('upgrade_rate', 0) < 12:
+    if (
+        upgrade_stats.get('available')
+        and upgrade_stats.get('daily_buyers', 0) > 0
+        and upgrade_stats.get('upgrade_rate', 0) < 12
+    ):
         recs.append({
             'severity': 'medium',
-            'title': 'نرخ ارتقا آزمایشی پایین است',
-            'body': 'یادآور روز ۲ و روز ۵ پس از خرید آزمایشی پیشنهاد می‌شود.',
+            'title': 'نرخ ارتقا روزانه→ماهانه پایین است',
+            'body': 'یادآور روز ۲ و روز ۵ پس از خرید پلن یک‌روزه پیشنهاد می‌شود.',
             'action_hint': 'اتوماسیون nurture ارتقا',
         })
 

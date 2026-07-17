@@ -7,6 +7,7 @@ from django.views.generic import TemplateView
 
 from blog.models import Post
 from shop.platform.content.phase1 import build_page_content
+from shop.platform.nav import build_platform_nav
 from shop.platform.registry import get_page
 from shop.platform.schema import (
     build_breadcrumbs,
@@ -83,6 +84,7 @@ def _build_platform_context(request, page, ctx: dict) -> dict:
     ctx.update({
         'platform_page': page,
         'platform_content': content,
+        'platform_nav': build_platform_nav(page),
         'breadcrumbs': breadcrumbs,
         'meta_title': page.seo.title,
         'meta_description': page.seo.description,

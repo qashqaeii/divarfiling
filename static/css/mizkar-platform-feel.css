@@ -1,0 +1,55 @@
+/* Phase E — Platform Feeling: inside Filing Divar, not a blog article */
+
+.plat-page--feel {
+    --plat-feel-radius: 16px;
+    --plat-feel-mesh: color-mix(in srgb, var(--plat-accent, #8b5cf6) 9%, transparent);
+}
+
+.plat-page--feel > .plat-nav-bar-wrap {
+    padding-top: 0.35rem;
+    padding-bottom: 0.15rem;
+}
+
+/* Soft product-shell mesh behind first screen — shared across variants */
+.plat-page--feel::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: min(52vh, 28rem);
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 70% 55% at 85% 0%, var(--plat-feel-mesh), transparent 70%),
+        radial-gradient(ellipse 50% 40% at 10% 20%, color-mix(in srgb, var(--plat-accent, #8b5cf6) 5%, transparent), transparent 65%);
+    z-index: 0;
+}
+
+.plat-page--feel > * {
+    position: relative;
+    z-index: 1;
+}
+
+.plat-page--feel {
+    position: relative;
+}
+
+/* Device chrome already brands the product; reinforce sticky CTA as convert lane */
+.plat-page--feel .plat-sticky-cta {
+    border-top: 1px solid color-mix(in srgb, var(--plat-accent, #8b5cf6) 22%, transparent);
+    backdrop-filter: blur(10px);
+}
+
+/* Explore CTAs stay quieter than convert CTAs */
+.plat-page--feel .plat-cta-pair .plat-btn--ghost {
+    font-weight: 600;
+}
+
+.plat-page--feel .plat-cta-pair .plat-btn--primary {
+    font-weight: 700;
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--plat-accent, #8b5cf6) 18%, transparent);
+}
+
+@media (max-width: 767px) {
+    .plat-page--feel::before {
+        height: min(42vh, 20rem);
+    }
+}

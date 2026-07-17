@@ -333,8 +333,8 @@ def solutions_hub_content() -> dict[str, Any]:
         'next_path': {
             'title': 'اگر بخواهید ادامه دهید، این سه مسیر مفید است',
             'lead': (
-                'می‌توانید راه‌حل کامل را بخوانید، جزئیات ابزار را ببینید، '
-                'یا به نقشه امکانات پلتفرم برگردید.'
+                'چالش را انتخاب کنید، ابزار را ببینید، '
+                'سپس اقدام نهایی شروع میزکار.'
             ),
             'items': [
                 {
@@ -342,7 +342,8 @@ def solutions_hub_content() -> dict[str, Any]:
                     'icon': 'fa-phone-volume',
                     'title': 'پیگیری مشتری',
                     'desc': (
-                        'از فراموشی تماس شروع می‌کند و مسیر عملی راه‌حل را مرحله‌به‌مرحله نشان می‌دهد.'
+                        'دلیل ادامه: مشکل فراموشی تماس را با چارچوب عملی '
+                        'و مثال دفتر حل می‌کند.'
                     ),
                     'url_name': 'platform_solutions_page',
                     'url_kwargs': {'slug': 'customer-follow-up'},
@@ -353,22 +354,29 @@ def solutions_hub_content() -> dict[str, Any]:
                     'icon': 'fa-bell',
                     'title': 'یادآور و تقویم CRM',
                     'desc': (
-                        'جزئیات ثبت پیگیری، صف امروز و تقویم را با تصویر و گردش کار توضیح می‌دهد.'
+                        'ابزار مناسب همین راه‌حل: صف امروز و ثبت زمان پیگیری '
+                        'را با تصویر ببینید.'
                     ),
                     'url_name': 'platform_features_page',
                     'url_kwargs': {'slug_path': 'crm/reminders'},
                     'cta': 'مشاهده یادآور',
                 },
                 {
-                    'type': 'نقشه',
-                    'icon': 'fa-layer-group',
-                    'title': 'نقشه امکانات',
+                    'type': 'شروع',
+                    'icon': 'fa-rocket',
+                    'title': 'شروع رایگان میزکار',
                     'desc': (
-                        'کل پلتفرم را یکجا می‌بینید: CRM، فایلینگ، تحلیل و مدیریت آژانس.'
+                        'اقدام نهایی: ثبت‌نام رایگان و اولین یادآور. '
+                        'منوی اکتشاف جدا از این CTA تبدیل است.'
                     ),
-                    'url_name': 'platform_features_hub',
+                    'url_name': 'register',
+                    'auth_url_name': 'workspace:home',
                     'url_kwargs': {},
-                    'cta': 'مشاهده امکانات',
+                    'cta': 'ثبت‌نام رایگان',
+                    'auth_title': 'ورود به میزکار',
+                    'auth_desc': 'حساب دارید — مستقیم پیگیری را در میزکار شروع کنید.',
+                    'auth_cta': 'ورود به میزکار',
+                    'convert': True,
                 },
             ],
         },

@@ -374,15 +374,16 @@
         </div>
         <div class="fhub-next__grid">
             {% for page in platform_content.next_path.items %}
-            <a href="{% if page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug %}{% else %}{% url page.url_name %}{% endif %}" class="fhub-next__card plat-reveal">
+            {% if user.is_authenticated and page.auth_url_name %}{% url page.auth_url_name as next_href %}{% elif page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path as next_href %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug as next_href %}{% else %}{% url page.url_name as next_href %}{% endif %}
+            <a href="{{ next_href }}" class="fhub-next__card plat-reveal{% if page.convert %} fhub-next__card--convert{% endif %}">
                 <span class="fhub-ico fhub-ico--lg fhub-ico--float" aria-hidden="true">
                     <i class="fas {{ page.icon }}"></i>
                 </span>
                 <span class="fhub-next__type">{{ page.type }}</span>
-                <strong>{{ page.title }}</strong>
-                <p>{{ page.desc }}</p>
+                <strong>{% if user.is_authenticated and page.auth_title %}{{ page.auth_title }}{% else %}{{ page.title }}{% endif %}</strong>
+                <p>{% if user.is_authenticated and page.auth_desc %}{{ page.auth_desc }}{% else %}{{ page.desc }}{% endif %}</p>
                 <span class="fhub-next__cta">
-                    {{ page.cta }}
+                    {% if user.is_authenticated and page.auth_cta %}{{ page.auth_cta }}{% else %}{{ page.cta }}{% endif %}
                     <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 </span>
             </a>

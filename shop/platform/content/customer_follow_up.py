@@ -574,8 +574,8 @@ def customer_follow_up_content() -> dict[str, Any]:
         'next_path': {
             'title': 'اگر بخواهید ادامه دهید، این سه مسیر مفید است',
             'lead': (
-                'می‌توانید جزئیات ابزار را ببینید، کل CRM را مرور کنید، '
-                'یا راهنمای نوشتاری مرتبط را بخوانید.'
+                'ابزار را عمیق‌تر ببینید، کل CRM را مرور کنید، '
+                'سپس ثبت‌نام کنید یا به میزکار بروید.'
             ),
             'items': [
                 {
@@ -583,7 +583,8 @@ def customer_follow_up_content() -> dict[str, Any]:
                     'icon': 'fa-bell',
                     'title': 'یادآور و تقویم CRM',
                     'desc': (
-                        'جزئیات ثبت پیگیری، صف امروز و تقویم را با تصویر و گردش کار توضیح می‌دهد.'
+                        'دلیل ادامه: جزئیات ثبت پیگیری و صف امروز را با تصویر ببینید '
+                        'تا راه‌حل از سطح داستان به ابزار برسد.'
                     ),
                     'url_name': 'platform_features_page',
                     'url_kwargs': {'slug_path': 'crm/reminders'},
@@ -594,22 +595,29 @@ def customer_follow_up_content() -> dict[str, Any]:
                     'icon': 'fa-users',
                     'title': 'CRM املاک',
                     'desc': (
-                        'همه بخش‌های مرتبط مثل مخاطب، معامله، تیم و فایل شخصی را یکجا معرفی می‌کند.'
+                        'مخاطب، معامله و تیم را کنار پیگیری ببینید — '
+                        'صفحه جزئیات محصول، نه لندینگ /real-estate-crm/.'
                     ),
                     'url_name': 'platform_features_page',
                     'url_kwargs': {'slug_path': 'crm'},
                     'cta': 'مشاهده CRM',
                 },
                 {
-                    'type': 'مقاله',
-                    'icon': 'fa-newspaper',
-                    'title': 'پیگیری مشتری مشاور املاک',
+                    'type': 'شروع',
+                    'icon': 'fa-rocket',
+                    'title': 'شروع رایگان میزکار',
                     'desc': (
-                        'راهنمای عملی برای ساختن عادت پیگیری در کار روزمره مشاور.'
+                        'مقصد تبدیل: ثبت‌نام رایگان و ساخت اولین یادآور. '
+                        'برای پلن لایسنس ربات بعداً صفحه محصولات کافی است.'
                     ),
-                    'url_name': 'blog:post_detail',
-                    'url_kwargs': {'slug': 'peigiri-moshtari-moshaver-amlak'},
-                    'cta': 'مطالعه مقاله',
+                    'url_name': 'register',
+                    'auth_url_name': 'workspace:home',
+                    'url_kwargs': {},
+                    'cta': 'ثبت‌نام رایگان',
+                    'auth_title': 'ورود به میزکار',
+                    'auth_desc': 'حساب دارید — مستقیم پیگیری را در میزکار شروع کنید.',
+                    'auth_cta': 'ورود به میزکار',
+                    'convert': True,
                 },
             ],
         },

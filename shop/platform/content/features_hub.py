@@ -419,8 +419,8 @@ def features_hub_content() -> dict[str, Any]:
         'next_path': {
             'title': 'اگر بخواهید ادامه دهید، این سه مسیر مفید است',
             'lead': (
-                'می‌توانید جزئیات CRM را ببینید، یک راه‌حل مسئله‌محور را دنبال کنید، '
-                'یا راهنمای نوشتاری مرتبط را بخوانید.'
+                'از نقشه امکانات به CRM، سپس راه‌حل پیگیری، '
+                'و در نهایت اقدام نهایی شروع میزکار.'
             ),
             'items': [
                 {
@@ -428,7 +428,8 @@ def features_hub_content() -> dict[str, Any]:
                     'icon': 'fa-users',
                     'title': 'CRM املاک',
                     'desc': (
-                        'همه بخش‌های مرتبط مثل مخاطب، معامله، یادآور و تیم را یکجا معرفی می‌کند.'
+                        'دلیل ادامه: هسته رایگان میزکار را یکجا ببینید — '
+                        'مخاطب، معامله، یادآور و تیم.'
                     ),
                     'url_name': 'platform_features_page',
                     'url_kwargs': {'slug_path': 'crm'},
@@ -439,22 +440,29 @@ def features_hub_content() -> dict[str, Any]:
                     'icon': 'fa-phone-volume',
                     'title': 'پیگیری مشتری',
                     'desc': (
-                        'از فراموشی تماس شروع می‌کند و مسیر عملی راه‌حل را مرحله‌به‌مرحله نشان می‌دهد.'
+                        'اگر مشکل مشخصی مثل فراموشی تماس دارید، '
+                        'از نتیجه شروع کنید نه از نام ماژول.'
                     ),
                     'url_name': 'platform_solutions_page',
                     'url_kwargs': {'slug': 'customer-follow-up'},
                     'cta': 'مشاهده راه‌حل',
                 },
                 {
-                    'type': 'مقاله',
-                    'icon': 'fa-newspaper',
-                    'title': 'راهنمای CRM رایگان املاک',
+                    'type': 'شروع',
+                    'icon': 'fa-rocket',
+                    'title': 'شروع رایگان میزکار',
                     'desc': (
-                        'شروع کار با CRM فایلینگ دیوار را با زبان ساده و مثال دفتر توضیح می‌دهد.'
+                        'نقشه را دیدید — وقت ساخت میزکار است. '
+                        'ثبت‌نام رایگان؛ اکتشاف منو جدا از این CTA است.'
                     ),
-                    'url_name': 'blog:post_detail',
-                    'url_kwargs': {'slug': 'crm-amlak-raygan-rahnama'},
-                    'cta': 'مطالعه مقاله',
+                    'url_name': 'register',
+                    'auth_url_name': 'workspace:home',
+                    'url_kwargs': {},
+                    'cta': 'ثبت‌نام رایگان',
+                    'auth_title': 'ورود به میزکار',
+                    'auth_desc': 'حساب دارید — مستقیم به میزکار برگردید.',
+                    'auth_cta': 'ورود به میزکار',
+                    'convert': True,
                 },
             ],
         },

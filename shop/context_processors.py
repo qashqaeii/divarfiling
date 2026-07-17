@@ -55,7 +55,11 @@ def shop_context(request):
         'app_download_hub': app_download_hub_content(),
     }
     if _is_public_site_request(request):
+        from shop.platform.nav import mark_menu_active
         from shop.platform.registry.menu import platform_mega_menu
-        ctx['platform_menu'] = platform_mega_menu()
+        ctx['platform_menu'] = mark_menu_active(
+            platform_mega_menu(),
+            getattr(request, 'path', '') or '',
+        )
     return ctx
 

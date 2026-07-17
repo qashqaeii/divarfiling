@@ -1,6 +1,6 @@
 <li class="mk-mobile-accordion">
-    <details class="mk-mobile-accordion__details" id="mkMobileFeaturesAccordion">
-        <summary class="mk-mobile-accordion__summary">
+    <details class="mk-mobile-accordion__details{% if menu.features_nav_active %} is-section-active{% endif %}" id="mkMobileFeaturesAccordion">
+        <summary class="mk-mobile-accordion__summary{% if menu.features_nav_active %} is-active{% endif %}">
             <span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-cubes"></i></span>
             <span>{{ menu.label }}</span>
             {% if menu.published_page_count %}
@@ -10,12 +10,12 @@
         </summary>
         <div class="mk-mobile-accordion__panel">
             <div class="mk-mobile-accordion__hubs">
-                <a href="{% url menu.hub_url_name %}" class="mk-mobile-sub-link mk-mobile-sub-link--hub">همه امکانات</a>
-                <a href="{% url menu.solutions_url_name %}" class="mk-mobile-sub-link mk-mobile-sub-link--hub mk-mobile-sub-link--alt">راه‌حل‌ها</a>
+                <a href="{% url menu.hub_url_name %}" class="mk-mobile-sub-link mk-mobile-sub-link--hub{% if menu.hub_is_active %} is-active{% endif %}">همه امکانات</a>
+                <a href="{% url menu.solutions_url_name %}" class="mk-mobile-sub-link mk-mobile-sub-link--hub mk-mobile-sub-link--alt{% if menu.solutions_hub_is_active %} is-active{% endif %}">راه‌حل‌ها</a>
             </div>
 
             {% if menu.featured_product %}
-            <a href="{% url menu.featured_product.url_name slug_path=menu.featured_product.url_kwargs.slug_path %}" class="mk-mobile-featured">
+            <a href="{% url menu.featured_product.url_name slug_path=menu.featured_product.url_kwargs.slug_path %}" class="mk-mobile-featured{% if menu.featured_product.is_active %} is-active{% endif %}">
                 <span class="mk-mobile-featured__badge">{{ menu.featured_product.badge }}</span>
                 <strong>{{ menu.featured_product.title }}</strong>
                 <span>{{ menu.featured_product.desc }}</span>
@@ -23,7 +23,7 @@
             {% endif %}
 
             {% if menu.solution_spotlight %}
-            <a href="{% url menu.solution_spotlight.url_name slug=menu.solution_spotlight.url_kwargs.slug %}" class="mk-mobile-solution">
+            <a href="{% url menu.solution_spotlight.url_name slug=menu.solution_spotlight.url_kwargs.slug %}" class="mk-mobile-solution{% if menu.solution_spotlight.is_active %} is-active{% endif %}">
                 <span class="mk-mobile-solution__label">راه‌حل</span>
                 <strong>{{ menu.solution_spotlight.title }}</strong>
                 <span>{{ menu.solution_spotlight.outcome }}</span>
@@ -32,7 +32,7 @@
 
             <span class="mk-mobile-sub-label">خطوط محصول</span>
             {% for item in menu.product_lines %}
-            <a href="{% if item.url_kwargs.slug_path %}{% url item.url_name slug_path=item.url_kwargs.slug_path %}{% else %}{% url item.url_name %}{% endif %}" class="mk-mobile-sub-link mk-mobile-sub-link--product mk-mobile-sub-link--{{ item.accent }}">
+            <a href="{% if item.url_kwargs.slug_path %}{% url item.url_name slug_path=item.url_kwargs.slug_path %}{% else %}{% url item.url_name %}{% endif %}" class="mk-mobile-sub-link mk-mobile-sub-link--product mk-mobile-sub-link--{{ item.accent }}{% if item.is_active %} is-active{% endif %}">
                 <span class="mk-mobile-sub-link__icon"><i class="fas {{ item.icon }}" aria-hidden="true"></i></span>
                 <span class="mk-mobile-sub-link__text">
                     <strong>{{ item.title }}</strong>
@@ -43,18 +43,18 @@
 
             <span class="mk-mobile-sub-label">CRM</span>
             {% for feat in menu.crm_highlights %}
-            <a href="{% if feat.url_kwargs.slug_path %}{% url feat.url_name slug_path=feat.url_kwargs.slug_path %}{% else %}{% url feat.url_name %}{% endif %}" class="mk-mobile-sub-link">{{ feat.label }}</a>
+            <a href="{% if feat.url_kwargs.slug_path %}{% url feat.url_name slug_path=feat.url_kwargs.slug_path %}{% else %}{% url feat.url_name %}{% endif %}" class="mk-mobile-sub-link{% if feat.is_active %} is-active{% endif %}">{% if feat.is_active %}<span class="visually-hidden">صفحه فعلی: </span>{% endif %}{{ feat.label }}</a>
             {% endfor %}
 
             <span class="mk-mobile-sub-label">راه‌حل‌ها</span>
             {% for sol in menu.solution_highlights %}
-            <a href="{% url sol.url_name slug=sol.url_kwargs.slug %}" class="mk-mobile-sub-link">{{ sol.label }}</a>
+            <a href="{% url sol.url_name slug=sol.url_kwargs.slug %}" class="mk-mobile-sub-link{% if sol.is_active %} is-active{% endif %}">{{ sol.label }}</a>
             {% endfor %}
 
             {% if menu.quick_links %}
             <span class="mk-mobile-sub-label">دسترسی سریع</span>
             {% for link in menu.quick_links %}
-            <a href="{% url link.url_name %}" class="mk-mobile-sub-link">{{ link.label }}</a>
+            <a href="{% url link.url_name %}" class="mk-mobile-sub-link{% if link.is_active %} is-active{% endif %}">{{ link.label }}</a>
             {% endfor %}
             {% endif %}
         </div>

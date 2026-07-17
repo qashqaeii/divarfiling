@@ -1,0 +1,254 @@
+"""Navigation context for platform pages — journey, hub back, location."""
+from __future__ import annotations
+
+from typing import Any
+
+from django.urls import reverse
+
+from shop.platform.types import PageSpec
+
+
+def build_platform_nav(page: PageSpec) -> dict[str, Any]:
+    """Where-am-I strip + canonical journey for Phase D."""
+    site_trail = _trail_for_page(page)
+    hub_back = _hub_back(page)
+    journey = _journey_for_page(page)
+    crm_vs_landing = None
+    if page.content_key in ('crm_product_line', 'crm_reminders'):
+        crm_vs_landing = {
+            'product_label': 'جزئیات محصول CRM',
+            'landing_label': 'معرفی تجاری CRM',
+            'landing_url_name': 'seo_landing_real_estate_crm',
+            'note': (
+                'این صفحه جزئیات محصول و گردش کار است. '
+                'برای معرفی کوتاه و جذب ثبت‌نام، لندینگ تجاری را ببینید.'
+            ),
+        }
+    elif page.content_key == 'customer_follow_up':
+        crm_vs_landing = {
+            'product_label': 'راه‌حل عملی پیگیری',
+            'landing_label': 'معرفی تجاری CRM',
+            'landing_url_name': 'seo_landing_real_estate_crm',
+            'note': (
+                'اینجا از مشکل فراموشی تماس شروع می‌کنیم. '
+                'اگر فقط معرفی کلی CRM می‌خواهید، لندینگ تجاری مناسب‌تر است.'
+            ),
+        }
+
+    section_label = 'امکانات' if page.section == 'features' else 'راه‌حل‌ها'
+    return {
+        'section': page.section,
+        'section_label': section_label,
+        'location_label': _location_label(page),
+        'trail': site_trail,
+        'hub_back': hub_back,
+        'journey': journey,
+        'crm_vs_landing': crm_vs_landing,
+        'content_key': page.content_key,
+    }
+
+
+def _location_label(page: PageSpec) -> str:
+    labels = {
+        'features_hub': 'نقشه امکانات',
+        'crm_product_line': 'خط محصول CRM',
+        'crm_reminders': 'یادآور CRM',
+        'solutions_hub': 'نقشه راه‌حل‌ها',
+        'customer_follow_up': 'راه‌حل پیگیری مشتری',
+    }
+    return labels.get(page.content_key, page.seo.h1.split(':')[0].strip())
+
+
+def _hub_back(page: PageSpec) -> dict[str, Any] | None:
+    if page.variant == 'hub':
+        return None
+    if page.content_key == 'crm_reminders':
+        return {
+            'primary': {
+                'label': 'بازگشت به CRM',
+                'url_name': 'platform_features_page',
+                'kwargs': {'slug_path': 'crm'},
+            },
+            'secondary': {
+                'label': 'همه امکانات',
+                'url_name': 'platform_features_hub',
+                'kwargs': {},
+            },
+        }
+    if page.section == 'features':
+        return {
+            'primary': {
+                'label': 'بازگشت به امکانات',
+                'url_name': 'platform_features_hub',
+                'kwargs': {},
+            },
+        }
+    return {
+        'primary': {
+            'label': 'بازگشت به راه‌حل‌ها',
+            'url_name': 'platform_solutions_hub',
+            'kwargs': {},
+        },
+    }
+
+
+def _trail_for_page(page: PageSpec) -> list[dict[str, Any]]:
+    """Short chips under breadcrumb — current marked."""
+    if page.section == 'features':
+        items = [
+            {'label': 'امکانات', 'url_name': 'platform_features_hub', 'kwargs': {}, 'current': page.variant == 'hub'},
+        ]
+        if page.path:
+            items.append({
+                'label': 'CRM',
+                'url_name': 'platform_features_page',
+                'kwargs': {'slug_path': 'crm'},
+                'current': page.content_key == 'crm_product_line',
+            })
+        if page.content_key == 'crm_reminders':
+            items.append({
+                'label': 'یادآور',
+                'url_name': 'platform_features_page',
+                'kwargs': {'slug_path': 'crm/reminders'},
+                'current': True,
+            })
+        return items
+
+    items = [
+        {'label': 'راه‌حل‌ها', 'url_name': 'platform_solutions_hub', 'kwargs': {}, 'current': page.variant == 'hub'},
+    ]
+    if page.content_key == 'customer_follow_up':
+        items.append({
+            'label': 'پیگیری مشتری',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'customer-follow-up'},
+            'current': True,
+        })
+    return items
+
+
+def _journey_for_page(page: PageSpec) -> list[dict[str, Any]]:
+    """Canonical funnel: CRM → Reminder → Solution → Start."""
+    steps = [
+        {
+            'id': 'crm',
+            'label': 'CRM',
+            'hint': 'میزکار مشتری',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'crm'},
+        },
+        {
+            'id': 'reminders',
+            'label': 'یادآور',
+            'hint': 'صف امروز',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'crm/reminders'},
+        },
+        {
+            'id': 'follow_up',
+            'label': 'پیگیری',
+            'hint': 'راه‌حل عملی',
+            'url_name': 'platform_solutions_page',
+            'kwargs': {'slug': 'customer-follow-up'},
+        },
+        {
+            'id': 'start',
+            'label': 'شروع',
+            'hint': 'ثبت‌نام رایگان',
+            'url_name': 'register',
+            'auth_url_name': 'workspace:home',
+            'kwargs': {},
+        },
+    ]
+    current_id = {
+        'crm_product_line': 'crm',
+        'crm_reminders': 'reminders',
+        'customer_follow_up': 'follow_up',
+        'features_hub': None,
+        'solutions_hub': None,
+    }.get(page.content_key)
+
+    for i, step in enumerate(steps):
+        step['state'] = 'upcoming'
+        if current_id is None:
+            continue
+        if step['id'] == current_id:
+            step['state'] = 'current'
+        elif _step_index(steps, current_id) is not None and i < _step_index(steps, current_id):
+            step['state'] = 'done'
+    return steps
+
+
+def _step_index(steps: list[dict], step_id: str | None) -> int | None:
+    if not step_id:
+        return None
+    for i, s in enumerate(steps):
+        if s['id'] == step_id:
+            return i
+    return None
+
+
+def mark_menu_active(menu: dict, request_path: str) -> dict:
+    """Annotate mega-menu entries with is_active from current path."""
+    path = (request_path or '').rstrip('/') or '/'
+
+    def match(url: str) -> bool:
+        u = (url or '').rstrip('/') or '/'
+        return path == u
+
+    def annotate(item: dict, url: str) -> dict:
+        out = dict(item)
+        out['resolved_url'] = url
+        out['is_active'] = match(url)
+        return out
+
+    def rev(name: str, kwargs: dict | None = None) -> str:
+        return reverse(name, kwargs=kwargs or None)
+
+    fp = menu.get('featured_product')
+    if fp:
+        url = rev(fp['url_name'], fp.get('url_kwargs') or None)
+        menu['featured_product'] = annotate(fp, url)
+
+    menu['product_lines'] = [
+        annotate(
+            item,
+            rev(item['url_name'], item.get('url_kwargs') or None),
+        )
+        for item in menu.get('product_lines', [])
+    ]
+    menu['crm_highlights'] = [
+        annotate(
+            item,
+            rev(item['url_name'], item.get('url_kwargs') or None),
+        )
+        for item in menu.get('crm_highlights', [])
+    ]
+    menu['solution_highlights'] = [
+        annotate(
+            item,
+            rev(item['url_name'], item.get('url_kwargs') or None),
+        )
+        for item in menu.get('solution_highlights', [])
+    ]
+    if menu.get('solution_spotlight'):
+        sp = menu['solution_spotlight']
+        url = rev(sp['url_name'], sp.get('url_kwargs') or None)
+        menu['solution_spotlight'] = annotate(sp, url)
+
+    menu['quick_links'] = [
+        annotate(item, rev(item['url_name']))
+        for item in menu.get('quick_links', [])
+    ]
+
+    hub = rev(menu['hub_url_name'])
+    sol_hub = rev(menu['solutions_url_name'])
+    menu['hub_is_active'] = match(hub)
+    menu['solutions_hub_is_active'] = match(sol_hub)
+    menu['features_nav_active'] = (
+        path.startswith('/features')
+        or path.startswith('/solutions')
+        or path.rstrip('/').endswith('real-estate-crm')
+        or 'robot' in path
+    )
+    return menu

@@ -237,3 +237,132 @@ class PlatformPageViewTests(TestCase):
         body = resp.content.decode('utf-8')
         for url in PLATFORM_URLS:
             self.assertIn(url, body)
+
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformNavigationPhaseDTests(TestCase):
+    """Phase D: path, breadcrumb, active menu, guest/auth, exactly 3 next paths."""
+
+    def test_exactly_three_next_paths_on_all_pages(self):
+        from shop.platform.content.phase1 import build_page_content
+        from shop.platform.registry import all_pages
+
+        for page in all_pages():
+            if not page.is_published:
+                continue
+            content = build_page_content(page.content_key)
+            items = content['next_path']['items']
+            self.assertEqual(len(items), 3, page.content_key)
+            self.assertTrue(items[-1].get('convert'), page.content_key)
+
+    def test_context_bar_and_journey_on_follow_up(self):
+        resp = self.client.get('/solutions/customer-follow-up/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'plat-nav-bar')
+        self.assertContains(resp, 'راه‌حل پیگیری مشتری')
+        self.assertContains(resp, 'plat-nav-bar__journey')
+        self.assertContains(resp, 'بازگشت به راه‌حل‌ها')
+        self.assertContains(resp, 'لندینگ معرفی CRM')
+        self.assertContains(resp, '/real-estate-crm/')
+
+    def test_breadcrumb_present_and_short(self):
+        resp = self.client.get('/features/crm/reminders/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'mk-platform-bc')
+        self.assertContains(resp, 'mk-platform-bc__link')
+        body = resp.content.decode('utf-8')
+        # Current crumb should not be a long colon-title dump
+        self.assertIn('aria-current="page"', body)
+
+    def test_active_menu_state_on_crm_page(self):
+        resp = self.client.get('/features/crm/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'mk-nav-link--mega is-active')
+        self.assertContains(resp, 'mk-mega-card--rose is-active')
+        self.assertContains(resp, 'جزئیات محصول CRM')
+        self.assertContains(resp, 'لندینگ معرفی CRM')
+
+    def test_guest_vs_authenticated_cta(self):
+        from django.urls import reverse
+
+        guest = self.client.get('/features/crm/')
+        guest_body = guest.content.decode('utf-8')
+        self.assertIn('شروع رایگان میزکار', guest_body)
+        self.assertIn(reverse('register'), guest_body)
+        # Primary convert lane for guests is register (cta_pair + sticky)
+        self.assertRegex(
+            guest_body,
+            r'plat-cta-pair[\s\S]{0,400}' + re.escape(reverse('register')),
+        )
+        self.assertNotRegex(
+            guest_body,
+            r'plat-cta-pair[\s\S]{0,400}' + re.escape(reverse('workspace:home')),
+        )
+
+        from accounts.models import User
+        user = User.objects.create_user(
+            username='platnav', phone='09120001122', password='x',
+        )
+        self.client.force_login(user)
+        auth = self.client.get('/features/crm/')
+        auth_body = auth.content.decode('utf-8')
+        self.assertIn('ورود به میزکار', auth_body)
+        self.assertRegex(
+            auth_body,
+            r'plat-cta-pair[\s\S]{0,400}' + re.escape(reverse('workspace:home')),
+        )
+        self.assertNotIn('شروع رایگان میزکار', auth_body)
+
+    def test_scenario_google_follow_up_to_convert(self):
+        """Google → follow-up → CRM → reminders → register path."""
+        follow = self.client.get('/solutions/customer-follow-up/')
+        self.assertEqual(follow.status_code, 200)
+        self.assertContains(follow, '/features/crm/')
+        self.assertContains(follow, '/features/crm/reminders/')
+        self.assertContains(follow, '/register/')
+        self.assertContains(follow, 'plat-nav-bar__loc')
+
+        crm = self.client.get('/features/crm/')
+        self.assertContains(crm, '/features/crm/reminders/')
+        self.assertContains(crm, '/solutions/customer-follow-up/')
+
+        rem = self.client.get('/features/crm/reminders/')
+        self.assertContains(rem, '/solutions/customer-follow-up/')
+        self.assertContains(rem, '/register/')
+        self.assertContains(rem, 'بازگشت به CRM')
+
+    def test_scenario_features_hub_to_feature_back(self):
+        hub = self.client.get('/features/')
+        self.assertContains(hub, '/features/crm/')
+        crm = self.client.get('/features/crm/')
+        self.assertContains(crm, 'بازگشت به امکانات')
+        rem = self.client.get('/features/crm/reminders/')
+        self.assertContains(rem, 'بازگشت به CRM')
+        self.assertContains(rem, 'همه امکانات')
+
+    def test_scenario_solutions_hub_to_tool_to_convert(self):
+        hub = self.client.get('/solutions/')
+        self.assertContains(hub, '/solutions/customer-follow-up/')
+        self.assertContains(hub, 'shub-map__soon')
+        self.assertContains(hub, 'به‌زودی')
+        # coming rows are spans, not links to empty urls
+        body = hub.content.decode('utf-8')
+        self.assertIn('shub-map__row--coming', body)
+        self.assertNotIn('href=""', body)
+
+        sol = self.client.get('/solutions/customer-follow-up/')
+        self.assertContains(sol, '/features/crm/reminders/')
+        self.assertContains(sol, '/register/')
+
+    def test_no_redirect_chains_on_platform_urls(self):
+        for url in PLATFORM_URLS:
+            with self.subTest(url=url):
+                resp = self.client.get(url, follow=False)
+                self.assertEqual(resp.status_code, 200, url)
+
+    def test_crm_vs_landing_labels_distinct(self):
+        resp = self.client.get('/features/crm/')
+        self.assertContains(resp, 'لندینگ معرفی CRM')
+        self.assertContains(resp, '/features/crm/')
+        self.assertContains(resp, '/real-estate-crm/')
+        self.assertContains(resp, 'جزئیات محصول')

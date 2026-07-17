@@ -44,8 +44,8 @@ def platform_mega_menu() -> dict:
 
     crm_features = [
         {
-            'label': 'خط محصول CRM',
-            'desc': 'همه ماژول‌ها',
+            'label': 'جزئیات محصول CRM',
+            'desc': '/features/crm/',
             'url_name': 'platform_features_page',
             'url_kwargs': {'slug_path': 'crm'},
         },
@@ -56,8 +56,8 @@ def platform_mega_menu() -> dict:
             'url_kwargs': {'slug_path': 'crm/reminders'},
         },
         {
-            'label': 'CRM رایگان',
-            'desc': 'لندینگ سئو',
+            'label': 'لندینگ معرفی CRM',
+            'desc': '/real-estate-crm/ — معرفی تجاری',
             'url_name': 'seo_landing_real_estate_crm',
             'url_kwargs': {},
         },

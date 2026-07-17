@@ -1,0 +1,75 @@
+{# Location + journey + hub-back — Phase D navigation path #}
+{% if platform_nav %}
+<aside class="plat-nav-bar" aria-label="موقعیت در پلتفرم">
+    <div class="plat-nav-bar__top">
+        <div class="plat-nav-bar__where">
+            <span class="plat-nav-bar__brand">فایلینگ دیوار</span>
+            <span class="plat-nav-bar__sep" aria-hidden="true">·</span>
+            <span class="plat-nav-bar__section">{{ platform_nav.section_label }}</span>
+            <span class="plat-nav-bar__sep" aria-hidden="true">›</span>
+            <strong class="plat-nav-bar__loc">{{ platform_nav.location_label }}</strong>
+        </div>
+        {% if platform_nav.hub_back %}
+        <div class="plat-nav-bar__back">
+            {% with back=platform_nav.hub_back.primary %}
+            <a href="{% if back.kwargs.slug_path %}{% url back.url_name slug_path=back.kwargs.slug_path %}{% elif back.kwargs.slug %}{% url back.url_name slug=back.kwargs.slug %}{% else %}{% url back.url_name %}{% endif %}" class="plat-nav-bar__back-link">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                {{ back.label }}
+            </a>
+            {% endwith %}
+            {% if platform_nav.hub_back.secondary %}
+            {% with back=platform_nav.hub_back.secondary %}
+            <a href="{% if back.kwargs.slug_path %}{% url back.url_name slug_path=back.kwargs.slug_path %}{% elif back.kwargs.slug %}{% url back.url_name slug=back.kwargs.slug %}{% else %}{% url back.url_name %}{% endif %}" class="plat-nav-bar__back-link plat-nav-bar__back-link--muted">
+                {{ back.label }}
+            </a>
+            {% endwith %}
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if platform_nav.trail %}
+    <nav class="plat-nav-bar__trail" aria-label="مسیر بخش">
+        {% for chip in platform_nav.trail %}
+        {% if chip.current %}
+        <span class="plat-nav-bar__chip is-current" aria-current="page">{{ chip.label }}</span>
+        {% else %}
+        <a href="{% if chip.kwargs.slug_path %}{% url chip.url_name slug_path=chip.kwargs.slug_path %}{% elif chip.kwargs.slug %}{% url chip.url_name slug=chip.kwargs.slug %}{% else %}{% url chip.url_name %}{% endif %}" class="plat-nav-bar__chip">{{ chip.label }}</a>
+        {% endif %}
+        {% if not forloop.last %}
+        <span class="plat-nav-bar__trail-sep" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+        {% endif %}
+        {% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if platform_nav.journey %}
+    <nav class="plat-nav-bar__journey" aria-label="مسیر اصلی پلتفرم">
+        {% for step in platform_nav.journey %}
+        {% if step.state == 'current' %}
+        <span class="plat-nav-bar__step is-current" aria-current="step">
+            <span class="plat-nav-bar__step-label">{{ step.label }}</span>
+            <span class="plat-nav-bar__step-hint">{{ step.hint }}</span>
+        </span>
+        {% else %}
+        <a href="{% if user.is_authenticated and step.auth_url_name %}{% url step.auth_url_name %}{% elif step.kwargs.slug_path %}{% url step.url_name slug_path=step.kwargs.slug_path %}{% elif step.kwargs.slug %}{% url step.url_name slug=step.kwargs.slug %}{% else %}{% url step.url_name %}{% endif %}" class="plat-nav-bar__step is-{{ step.state }}">
+            <span class="plat-nav-bar__step-label">{{ step.label }}</span>
+            <span class="plat-nav-bar__step-hint">{% if user.is_authenticated and step.id == 'start' %}میزکار{% else %}{{ step.hint }}{% endif %}</span>
+        </a>
+        {% endif %}
+        {% if not forloop.last %}
+        <span class="plat-nav-bar__journey-sep" aria-hidden="true"></span>
+        {% endif %}
+        {% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if platform_nav.crm_vs_landing %}
+    <p class="plat-nav-bar__note">
+        <i class="fas fa-circle-info" aria-hidden="true"></i>
+        <span>{{ platform_nav.crm_vs_landing.note }}</span>
+        <a href="{% url platform_nav.crm_vs_landing.landing_url_name %}">{{ platform_nav.crm_vs_landing.landing_label }}</a>
+    </p>
+    {% endif %}
+</aside>
+{% endif %}

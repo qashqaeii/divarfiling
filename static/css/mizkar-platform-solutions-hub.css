@@ -807,13 +807,18 @@ html.mk-public[data-theme="dark"] .plat-page--solutions_hub .shub-map {
 }
 
 .plat-page--solutions_hub .shub-map__row--coming {
-    opacity: 0.58;
+    opacity: 0.55;
     background: var(--shub-muted);
+    pointer-events: none;
+    cursor: default;
+    filter: grayscale(0.4);
+    user-select: none;
 }
 
 .plat-page--solutions_hub .shub-map__row--coming .shub-ico {
     background: rgba(100, 116, 139, 0.12);
     color: #64748b;
+    opacity: 0.7;
 }
 
 .plat-page--solutions_hub .shub-map__problem {
@@ -843,10 +848,18 @@ html.mk-public[data-theme="dark"] .plat-page--solutions_hub .shub-map {
 }
 
 .plat-page--solutions_hub .shub-map__soon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     margin-inline-start: auto;
-    font-size: 0.8rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 0.4rem;
+    font-size: 0.78rem;
     font-weight: 600;
-    opacity: 0.65;
+    opacity: 0.75;
+    color: #64748b;
+    background: rgba(100, 116, 139, 0.12);
+    border: 1px dashed rgba(100, 116, 139, 0.35);
 }
 
 /* Screenshots */

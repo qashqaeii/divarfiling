@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect
+from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, TemplateView
 
@@ -39,7 +40,10 @@ from accounts.services.admin_blog import (
     get_blog_dashboard_stats,
     get_blog_posts_table,
 )
-from accounts.services.admin_plan_conversion import get_plan_conversion_context
+from accounts.services.admin_plan_conversion import (
+    build_plan_conversion_json,
+    get_plan_conversion_context,
+)
 from accounts.services.admin_phonebook_sync import (
     PhonebookSyncError,
     get_phonebook_sync_status,
@@ -447,3 +451,19 @@ class AdminPlanConversionView(StaffRequiredMixin, TemplateView):
         ctx['summary'] = data['summary']
         ctx['plan_conversion_json'] = json.dumps(data['charts'], ensure_ascii=False, default=str)
         return ctx
+
+
+class AdminPlanConversionJsonView(StaffRequiredMixin, View):
+    """خروجی JSON کامل آنالیز تبدیل پلن‌ها."""
+
+    def get(self, request):
+        days = _parse_int(request.GET.get('days'), 30, minimum=7, maximum=365)
+        payload = build_plan_conversion_json(days=days)
+        download = request.GET.get('download', '0') not in ('0', 'false', 'no', '')
+        response = JsonResponse(payload, json_dumps_params={'ensure_ascii': False, 'indent': 2})
+        if download:
+            stamp = timezone.now().strftime('%Y%m%d_%H%M')
+            response['Content-Disposition'] = (
+                f'attachment; filename="plan-conversion-{days}d-{stamp}.json"'
+            )
+        return response

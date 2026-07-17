@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.services.admin_plan_conversion import (
+    build_plan_conversion_json,
     count_daily_to_monthly_upgrades,
     get_plan_conversion_context,
 )
@@ -74,31 +75,54 @@ class PlanConversionServiceTests(TestCase):
         stats = count_daily_to_monthly_upgrades()
         self.assertEqual(stats['upgrade_count'], 0)
 
-    def test_conversion_context_with_funnel_events(self):
+    def test_conversion_context_jalali_and_precision(self):
         since = timezone.now() - timedelta(days=5)
         for i in range(5):
             PlanFunnelEvent.objects.create(
                 event_type='pricing_view',
                 session_key=f'session-{i}',
                 product=self.product,
-                created_at=since + timedelta(days=1),
             )
+        # backdate created_at if needed — auto_now_add uses now which is fine within 30d
         PlanFunnelEvent.objects.create(
             event_type='checkout_view',
             session_key='checkout-1',
             product=self.product,
         )
         self._paid_order(self.user_daily, 'daily', days_ago=2)
+        self._paid_order(self.user_upgrade, 'monthly', days_ago=1)
 
         ctx = get_plan_conversion_context(days=30)
-        self.assertGreaterEqual(ctx['summary']['pricing_views'], 5)
-        self.assertGreaterEqual(ctx['summary']['daily_purchases'], 1)
-        self.assertIn('plan_rows', ctx)
-        self.assertIn('cohorts', ctx)
-        self.assertIn('charts', ctx)
+        summary = ctx['summary']
+        self.assertGreaterEqual(summary['pricing_views'], 5)
+        self.assertGreaterEqual(summary['daily_purchases'], 1)
+        self.assertGreaterEqual(summary['monthly_purchases'], 1)
+        self.assertEqual(summary['paid_count'], summary['daily_purchases'] + summary['monthly_purchases']
+                         + summary['quarterly_purchases'] + summary['yearly_purchases'])
+        self.assertIn('period_start_jalali', summary)
+        self.assertIn('/', summary['period_start_jalali'])
+        self.assertIn('funnel_stages', summary)
+        self.assertIn('aov', summary)
+
+        charts = ctx['charts']
+        self.assertIn('labels', charts['funnel_daily'])
+        self.assertEqual(len(charts['funnel_daily']['labels']), 30)
+        self.assertEqual(len(charts['funnel_daily']['pricing_counts']), 30)
 
         daily_row = next(r for r in ctx['plan_rows'] if r['plan_type'] == 'daily')
         self.assertGreaterEqual(daily_row['purchases'], 1)
+        self.assertIn('aov', daily_row)
+
+        if ctx['cohorts']:
+            self.assertIn('week_jalali', ctx['cohorts'][0])
+            self.assertIn('week_label', ctx['cohorts'][0])
+
+        payload = build_plan_conversion_json(days=30)
+        self.assertTrue(payload['ok'])
+        self.assertEqual(payload['meta']['version'], '1.1')
+        self.assertIn('summary', payload)
+        self.assertIn('plans', payload)
+        self.assertIn('charts', payload)
 
 
 class AdminPlanConversionPanelTests(TestCase):
@@ -120,3 +144,22 @@ class AdminPlanConversionPanelTests(TestCase):
         self.assertContains(resp, 'آنالیز')
         self.assertContains(resp, 'apc-chart-funnel')
         self.assertContains(resp, 'admPlanConversion')
+        self.assertContains(resp, 'apc-gauge')
+        self.assertContains(resp, 'دانلود JSON')
+        self.assertContains(resp, 'apc-funnel-viz')
+
+    def test_json_endpoint(self):
+        resp = self.client.get(reverse('admin_panel_plan_conversion_json'), {'days': 30})
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['ok'])
+        self.assertIn('summary', data)
+        self.assertIn('period_start_jalali', data['meta'])
+
+    def test_json_download(self):
+        resp = self.client.get(
+            reverse('admin_panel_plan_conversion_json'),
+            {'days': 7, 'download': '1'},
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('attachment', resp.get('Content-Disposition', ''))

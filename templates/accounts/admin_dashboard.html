@@ -215,15 +215,15 @@
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccPlanConvTitle"><i class="fas fa-filter-circle-dollar"></i> آنالیز تبدیل پلن‌ها</h2>
-                            <p>قیف قیمت‌گذاری، خرید روزانه، ارتقا به ماهانه و کوهورت خرید</p>
+                            <p>قیف قیمت‌گذاری، ارتقا، سهم فروش و کوهورت — نمای مینیمال و هوشمند</p>
                         </div>
                         <a href="{% url 'admin_panel_plan_conversion' %}?days={{ chart_days }}" class="ecc-btn ecc-btn--primary">
                             <i class="fas fa-chart-pie"></i> پنل آنالیز تبدیل
                         </a>
                     </div>
                     <ul class="ecc-stat-strip" style="margin-bottom:1rem">
-                        <li><span>فروش ۱روزه</span><strong>{% for plan in plan_sales %}{% if plan.plan_type == 'daily' %}{{ plan.count|currency }}{% endif %}{% endfor %}</strong></li>
-                        <li><span>فروش ۱ماهه</span><strong>{% for plan in plan_sales %}{% if plan.plan_type == 'monthly' %}{{ plan.count|currency }}{% endif %}{% endfor %}</strong></li>
+                        <li><span>فروش ۱روزه</span><strong>{% for plan in plan_sales %}{% if plan.plan_type == 'daily' %}{{ plan.count|currency }}{% endif %}{% empty %}۰{% endfor %}</strong></li>
+                        <li><span>فروش ۱ماهه</span><strong>{% for plan in plan_sales %}{% if plan.plan_type == 'monthly' %}{{ plan.count|currency }}{% endif %}{% empty %}۰{% endfor %}</strong></li>
                         <li><span>Conversion</span><strong>{{ stats.conversion_rate|to_persian_digits }}٪</strong></li>
                         <li><span>بازه</span><strong>{{ chart_days|to_persian_digits }} روز</strong></li>
                     </ul>
@@ -235,6 +235,10 @@
                                 <p>{{ plan.count|currency }} سفارش</p>
                             </div>
                             <strong class="ecc-kpi-val">{{ plan.total|currency }} ت</strong>
+                        </article>
+                        {% empty %}
+                        <article class="ecc-card ecc-card--wide">
+                            <p style="margin:0;opacity:.7">هنوز فروش پلنی ثبت نشده — جزئیات کامل در پنل آنالیز.</p>
                         </article>
                         {% endfor %}
                     </div>

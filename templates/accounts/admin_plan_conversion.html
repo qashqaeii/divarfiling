@@ -193,6 +193,9 @@
                         <div class="apc-funnel-stage__bar" data-width="{{ stage.conversion_from_base|default:0 }}"></div>
                     </div>
                     {% endif %}
+                    {% if stage.note %}
+                    <p class="apc-muted apc-stage-note">{{ stage.note }}</p>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

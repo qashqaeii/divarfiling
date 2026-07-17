@@ -42,8 +42,10 @@ Template برای Meta Tags SEO
 
 {# Schema.org JSON-LD #}
 {% if schema_data %}
-<script type="application/ld+json">
+{% if '<script' in schema_data %}
 {{ schema_data|safe }}
-</script>
+{% else %}
+<script type="application/ld+json">{{ schema_data|safe }}</script>
+{% endif %}
 {% endif %}
 

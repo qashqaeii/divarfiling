@@ -111,3 +111,15 @@ class PlatformPageViewTests(TestCase):
         resp = self.client.get('/features/crm/reminders/')
         self.assertContains(resp, 'rel="canonical"')
         self.assertContains(resp, 'meta name="description"')
+
+    def test_schema_json_ld_not_double_wrapped(self):
+        resp = self.client.get('/features/')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode('utf-8')
+        self.assertNotIn(
+            '<script type="application/ld+json"><script type="application/ld+json">',
+            body,
+        )
+        self.assertIn('"@type": "WebPage"', body)
+        self.assertIn('"@type": "FAQPage"', body)
+        self.assertIn('"@type": "BreadcrumbList"', body)

@@ -1,0 +1,479 @@
+{% include 'platform/includes/hero_extraction.html' %}
+
+{# ── سناریو ── #}
+<section class="ex-sec ex-story" aria-labelledby="ex-story-title">
+    <div class="ex-wrap">
+        <div class="ex-prose">
+            <p class="ex-eyebrow">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
+                سناریوی واقعی
+            </p>
+            <h2 id="ex-story-title">{{ platform_content.morning_story.title }}</h2>
+            <p class="ex-prose__lead">{{ platform_content.morning_story.lead }}</p>
+        </div>
+        <ol class="ex-story__beats">
+            {% for beat in platform_content.morning_story.beats %}
+            <li class="ex-story__beat{% if beat.highlight %} ex-story__beat--hl{% endif %} plat-reveal">
+                <span class="ex-story__time">{{ beat.time }}</span>
+                <div class="ex-story__body">
+                    <div class="ex-story__head">
+                        {% if beat.icon %}
+                        <span class="ex-ico{% if beat.highlight %} ex-ico--solid{% endif %}" aria-hidden="true">
+                            <i class="fas {{ beat.icon }}"></i>
+                        </span>
+                        {% endif %}
+                        <strong>{{ beat.title }}</strong>
+                    </div>
+                    <p>{{ beat.text }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+{# ── Outcomes ── #}
+<section class="ex-sec ex-sec--soft ex-outcomes" aria-labelledby="ex-outcomes-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-bullseye" aria-hidden="true"></i>
+                نتیجه کار
+            </p>
+            <h2 id="ex-outcomes-title">{{ platform_content.outcomes.title }}</h2>
+            <p>{{ platform_content.outcomes.lead }}</p>
+        </div>
+        <ul class="ex-outcomes__grid">
+            {% for item in platform_content.outcomes.items %}
+            <li class="ex-outcomes__item plat-reveal">
+                {% if item.icon %}
+                <span class="ex-ico ex-ico--lg ex-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                {% endif %}
+                <span class="ex-outcomes__before">{{ item.before }}</span>
+                <span class="ex-outcomes__arrow" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
+                <strong class="ex-outcomes__after">{{ item.after }}</strong>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── Soft CTA Filing ── #}
+<aside class="ex-soft-cta plat-reveal" aria-label="اتصال به فایلینگ">
+    <div class="ex-wrap ex-soft-cta__inner">
+        <div class="ex-soft-cta__copy">
+            {% if platform_content.mid_cta_a.icon %}
+            <span class="ex-ico ex-ico--solid" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_a.icon }}"></i>
+            </span>
+            {% endif %}
+            <div>
+                <strong>{{ platform_content.mid_cta_a.title }}</strong>
+                <p>{{ platform_content.mid_cta_a.lead }}</p>
+            </div>
+        </div>
+        <div class="ex-soft-cta__links">
+            <a href="{% url platform_content.mid_cta_a.primary_url_name slug_path=platform_content.mid_cta_a.primary_url_kwargs.slug_path %}" class="plat-btn plat-btn--product ex-soft-cta__btn">
+                <i class="fas fa-folder-tree" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.primary_label }}
+            </a>
+            <a href="{% url platform_content.mid_cta_a.secondary_url_name slug=platform_content.mid_cta_a.secondary_url_kwargs.slug %}" class="plat-btn plat-btn--explore ex-soft-cta__btn">
+                <i class="fas fa-magnifying-glass-location" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_a.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── Product Story chain ── #}
+<section class="ex-sec" aria-labelledby="ex-story-chain-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-link" aria-hidden="true"></i>
+                زنجیره داده
+            </p>
+            <h2 id="ex-story-chain-title">{{ platform_content.product_story.title }}</h2>
+            <p>{{ platform_content.product_story.lead }}</p>
+        </div>
+        <ol class="ex-flow-h">
+            {% for step in platform_content.product_story.steps %}
+            <li class="ex-flow-h__step plat-reveal">
+                <span class="ex-flow-h__icon ex-ico ex-ico--solid" aria-hidden="true">
+                    <i class="fas {{ step.icon }}"></i>
+                </span>
+                <span class="ex-flow-h__num">{{ forloop.counter }}</span>
+                <strong>{{ step.title }}</strong>
+                <p>{{ step.text }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+{# ── Workflow ── #}
+<section class="ex-sec ex-sec--soft ex-flow-sec" aria-labelledby="ex-flow-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-route" aria-hidden="true"></i>
+                گردش کار استخراج
+            </p>
+            <h2 id="ex-flow-title">{{ platform_content.workflow.title }}</h2>
+            <p>{{ platform_content.workflow.lead }}</p>
+        </div>
+        <ol class="ex-flow-h">
+            {% for step in platform_content.workflow.steps %}
+            <li class="ex-flow-h__step plat-reveal">
+                <span class="ex-flow-h__icon ex-ico ex-ico--solid" aria-hidden="true">
+                    <i class="fas {{ step.icon|default:'fa-circle' }}"></i>
+                </span>
+                <span class="ex-flow-h__num">{{ forloop.counter }}</span>
+                <strong>{{ step.title }}</strong>
+                <p>{{ step.text }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+{# ── Filters ── #}
+<section class="ex-sec" aria-labelledby="ex-filters-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-sliders" aria-hidden="true"></i>
+                فیلتر و کنترل
+            </p>
+            <h2 id="ex-filters-title">{{ platform_content.filters.title }}</h2>
+            <p>{{ platform_content.filters.lead }}</p>
+        </div>
+        <ul class="ex-trust__grid">
+            {% for item in platform_content.filters.items %}
+            <li class="ex-trust__item plat-reveal">
+                <span class="ex-ico ex-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── Dedup ── #}
+<section class="ex-sec ex-sec--soft" aria-labelledby="ex-dedup-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-clone" aria-hidden="true"></i>
+                حذف تکراری
+            </p>
+            <h2 id="ex-dedup-title">{{ platform_content.dedup.title }}</h2>
+            <p>{{ platform_content.dedup.lead }}</p>
+        </div>
+        <ul class="ex-trust__grid">
+            {% for item in platform_content.dedup.points %}
+            <li class="ex-trust__item plat-reveal">
+                <span class="ex-ico ex-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── Outputs ── #}
+<section class="ex-sec" aria-labelledby="ex-out-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-file-export" aria-hidden="true"></i>
+                خروجی
+            </p>
+            <h2 id="ex-out-title">{{ platform_content.outputs.title }}</h2>
+            <p>{{ platform_content.outputs.lead }}</p>
+        </div>
+        <ul class="ex-outcomes__grid">
+            {% for item in platform_content.outputs.items %}
+            <li class="ex-outcomes__item plat-reveal">
+                <span class="ex-ico ex-ico--lg ex-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <strong class="ex-outcomes__after">{{ item.title }}</strong>
+                <span class="ex-outcomes__before">{{ item.text }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── Product Proof ── #}
+<section class="ex-sec ex-sec--soft" aria-labelledby="ex-caps-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-desktop" aria-hidden="true"></i>
+                نمای محصول
+            </p>
+            <h2 id="ex-caps-title">{{ platform_content.capabilities_intro.title }}</h2>
+            <p>{{ platform_content.capabilities_intro.lead }}</p>
+        </div>
+        <div class="ex-caps">
+            {% for cap in platform_content.capabilities %}
+            <article class="ex-cap ex-cap--{{ cap.layout }} plat-reveal" id="ex-cap-{{ forloop.counter }}">
+                <div class="ex-cap__copy">
+                    <div class="ex-cap__head">
+                        {% if cap.icon %}
+                        <span class="ex-ico ex-ico--lg ex-ico--float" aria-hidden="true">
+                            <i class="fas {{ cap.icon }}"></i>
+                        </span>
+                        {% endif %}
+                        <div class="ex-cap__titles">
+                            <h3>{{ cap.title }}</h3>
+                            {% if cap.badge %}
+                            {% include 'platform/includes/badge.html' with label=cap.badge.label tone=cap.badge.tone %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <dl class="ex-cap__meta">
+                        <div>
+                            <dt><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> مشکل</dt>
+                            <dd>{{ cap.problem }}</dd>
+                        </div>
+                        <div>
+                            <dt><i class="fas fa-gears" aria-hidden="true"></i> نحوه کار</dt>
+                            <dd>{{ cap.how }}</dd>
+                        </div>
+                        <div>
+                            <dt><i class="fas fa-trophy" aria-hidden="true"></i> نتیجه</dt>
+                            <dd>{{ cap.outcome }}</dd>
+                        </div>
+                    </dl>
+                    {% if cap.link %}
+                    <a href="{% if cap.link.url_kwargs.slug_path %}{% url cap.link.url_name slug_path=cap.link.url_kwargs.slug_path %}{% elif cap.link.url_kwargs.slug %}{% url cap.link.url_name slug=cap.link.url_kwargs.slug %}{% else %}{% url cap.link.url_name %}{% endif %}" class="ex-text-link">
+                        {{ cap.link.label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="ex-cap__visual">
+                    {% include 'platform/includes/screenshot_story.html' with shot=cap %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── Connections ── #}
+<section class="ex-sec" aria-labelledby="ex-conn-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-diagram-project" aria-hidden="true"></i>
+                اتصال پلتفرم
+            </p>
+            <h2 id="ex-conn-title">{{ platform_content.connections.title }}</h2>
+            <p>{{ platform_content.connections.lead }}</p>
+        </div>
+        <ul class="ex-tools" style="list-style:none;margin:1.5rem 0 0;padding:0;display:grid;gap:1rem;">
+            {% for tool in platform_content.connections.items %}
+            <li class="plat-reveal">
+                <a href="{% url tool.url_name slug_path=tool.url_kwargs.slug_path %}" class="ex-text-link" style="display:flex;gap:1rem;align-items:flex-start;padding:1rem;border:1px solid var(--ex-border);border-radius:14px;text-decoration:none;color:inherit;">
+                    <span class="ex-ico ex-ico--lg ex-ico--float" aria-hidden="true">
+                        <i class="fas {{ tool.icon }}"></i>
+                    </span>
+                    <span>
+                        <strong style="display:block;margin-bottom:0.35rem;">{{ tool.title }}</strong>
+                        <span style="opacity:0.88;line-height:1.7;">{{ tool.text }}</span>
+                        <span style="display:inline-block;margin-top:0.5rem;font-weight:700;color:var(--ex-orange);">{{ tool.cta }} <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    </span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── License ── #}
+<section class="ex-sec ex-sec--soft" aria-labelledby="ex-license-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-key" aria-hidden="true"></i>
+                لایسنس و پیش‌نیاز
+            </p>
+            <h2 id="ex-license-title">{{ platform_content.license.title }}</h2>
+            <p>{{ platform_content.license.lead }}</p>
+        </div>
+        <ul class="ex-trust__grid">
+            {% for item in platform_content.license.items %}
+            <li class="ex-trust__item plat-reveal">
+                <span class="ex-ico ex-ico--float" aria-hidden="true">
+                    <i class="fas {{ item.icon }}"></i>
+                </span>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{# ── Soft CTA Convert ── #}
+<aside class="ex-soft-cta ex-soft-cta--sky plat-reveal" aria-label="لایسنس ربات">
+    <div class="ex-wrap ex-soft-cta__inner">
+        <div class="ex-soft-cta__copy">
+            {% if platform_content.mid_cta_b.icon %}
+            <span class="ex-ico ex-ico--solid ex-ico--pulse" aria-hidden="true">
+                <i class="fas {{ platform_content.mid_cta_b.icon }}"></i>
+            </span>
+            {% endif %}
+            <div>
+                <strong>{{ platform_content.mid_cta_b.title }}</strong>
+                <p>{{ platform_content.mid_cta_b.lead }}</p>
+            </div>
+        </div>
+        <div class="ex-soft-cta__links">
+            {% if user.is_authenticated %}
+            <a href="{% url platform_content.mid_cta_b.auth_primary_url_name %}" class="plat-btn plat-btn--primary plat-btn--convert ex-soft-cta__btn">
+                <i class="fas fa-key" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.auth_primary_label }}
+            </a>
+            {% else %}
+            <a href="{% url platform_content.mid_cta_b.primary_url_name slug=platform_content.mid_cta_b.primary_url_kwargs.slug %}" class="plat-btn plat-btn--primary plat-btn--convert ex-soft-cta__btn">
+                <i class="fas fa-key" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.primary_label }}
+            </a>
+            {% endif %}
+            <a href="{% url platform_content.mid_cta_b.secondary_url_name %}" class="plat-btn plat-btn--ghost plat-btn--explore ex-soft-cta__btn">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
+                {{ platform_content.mid_cta_b.secondary_label }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+{# ── Limits ── #}
+<section class="ex-sec" aria-labelledby="ex-limits-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                محدودیت صادقانه
+            </p>
+            <h2 id="ex-limits-title">{{ platform_content.limits.title }}</h2>
+            <p>{{ platform_content.limits.lead }}</p>
+        </div>
+        <div class="ex-tiers">
+            <div class="ex-tier ex-tier--license plat-reveal">
+                <h3>
+                    <span class="ex-ico ex-ico--sm ex-ico--sky" aria-hidden="true"><i class="fas fa-network-wired"></i></span>
+                    وابسته به
+                </h3>
+                <ul>
+                    {% for item in platform_content.limits.depends %}
+                    <li><i class="fas fa-circle-info" aria-hidden="true"></i> {{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="ex-tier ex-tier--beta plat-reveal">
+                <h3>
+                    <span class="ex-ico ex-ico--sm ex-ico--amber" aria-hidden="true"><i class="fas fa-circle-xmark"></i></span>
+                    تضمین نمی‌کند
+                </h3>
+                <ul>
+                    {% for item in platform_content.limits.not %}
+                    <li><i class="fas fa-xmark" aria-hidden="true"></i> {{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="ex-tier ex-tier--free plat-reveal">
+                <h3>
+                    <span class="ex-ico ex-ico--sm ex-ico--emerald" aria-hidden="true"><i class="fas fa-user-check"></i></span>
+                    مسئولیت کاربر
+                </h3>
+                <ul>
+                    {% for item in platform_content.limits.user %}
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── FAQ ── #}
+{% if platform_content.faq %}
+<section class="ex-sec ex-sec--soft plat-faq" aria-labelledby="ex-faq-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-circle-question" aria-hidden="true"></i>
+                پاسخ سریع
+            </p>
+            <h2 id="ex-faq-title">سوالات متداول</h2>
+        </div>
+        <div class="plat-faq__list">
+            {% for item in platform_content.faq %}
+            <details class="plat-faq__item plat-reveal">
+                <summary>
+                    <i class="fas fa-circle-question" aria-hidden="true"></i>
+                    <span>{{ item.q }}</span>
+                </summary>
+                <div class="plat-faq__answer"><p>{{ item.a }}</p></div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# ── Next path ── #}
+<section class="ex-sec ex-next" aria-labelledby="ex-next-title">
+    <div class="ex-wrap">
+        <div class="ex-prose ex-prose--center">
+            <p class="ex-eyebrow">
+                <i class="fas fa-compass" aria-hidden="true"></i>
+                مسیر بعد
+            </p>
+            <h2 id="ex-next-title">{{ platform_content.next_path.title }}</h2>
+            <p>{{ platform_content.next_path.lead }}</p>
+        </div>
+        <div class="ex-next__grid">
+            {% for page in platform_content.next_path.items %}
+            {% if user.is_authenticated and page.auth_url_name %}{% url page.auth_url_name as next_href %}{% elif page.url_kwargs.slug_path %}{% url page.url_name slug_path=page.url_kwargs.slug_path as next_href %}{% elif page.url_kwargs.slug %}{% url page.url_name slug=page.url_kwargs.slug as next_href %}{% else %}{% url page.url_name as next_href %}{% endif %}
+            <a href="{{ next_href }}" class="ex-next__card plat-reveal{% if page.convert %} ex-next__card--convert{% endif %}">
+                <span class="ex-ico ex-ico--lg ex-ico--float" aria-hidden="true">
+                    <i class="fas {{ page.icon }}"></i>
+                </span>
+                <span class="ex-next__type">{{ page.type }}</span>
+                <strong>{% if user.is_authenticated and page.auth_title %}{{ page.auth_title }}{% else %}{{ page.title }}{% endif %}</strong>
+                <p>{% if user.is_authenticated and page.auth_desc %}{{ page.auth_desc }}{% else %}{{ page.desc }}{% endif %}</p>
+                <span class="ex-next__cta">
+                    {% if user.is_authenticated and page.auth_cta %}{{ page.auth_cta }}{% else %}{{ page.cta }}{% endif %}
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ── Final CTA ── #}
+<section class="ex-sec ex-final-cta">
+    <div class="ex-wrap ex-final-cta__inner plat-reveal">
+        <span class="ex-ico ex-ico--xl ex-ico--solid ex-ico--pulse" aria-hidden="true">
+            <i class="fas {{ platform_content.final_cta.icon }}"></i>
+        </span>
+        <h2>{{ platform_content.final_cta.title }}</h2>
+        <p>{{ platform_content.final_cta.lead }}</p>
+        {% include 'platform/includes/cta_pair.html' %}
+    </div>
+</section>

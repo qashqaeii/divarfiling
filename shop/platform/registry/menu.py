@@ -53,11 +53,12 @@ def platform_mega_menu() -> dict:
         },
         {
             'title': 'ربات استخراج',
-            'desc': 'آگهی دیوار با فیلتر شهر',
-            'url_name': 'seo_landing_robot_divar',
-            'url_kwargs': {},
+            'desc': 'از آگهی دیوار تا Dataset',
+            'url_name': 'platform_features_page',
+            'url_kwargs': {'slug_path': 'extraction'},
             'icon': 'fa-robot',
-            'accent': 'cyan',
+            'accent': 'orange',
+            'tag': 'لایسنس',
         },
         {
             'title': 'نرم‌افزار مشاور',

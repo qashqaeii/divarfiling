@@ -27,6 +27,14 @@ def build_pages() -> list[PageSpec]:
         _agency_tv_feature_draft(),
         _agency_announcements_feature_draft(),
         _agency_management_solution(),
+        _extraction_product_line(),
+        _extraction_location_filter_feature_draft(),
+        _extraction_category_filter_feature_draft(),
+        _extraction_deduplication_feature_draft(),
+        _extraction_export_feature_draft(),
+        _extraction_license_feature_draft(),
+        _extraction_dataset_builder_feature_draft(),
+        _extraction_advertiser_signals_feature_draft(),
     ]
 
 
@@ -562,4 +570,162 @@ def _agency_management_solution() -> PageSpec:
         ),
         related_seo_landings=('real-estate-crm',),
         sitemap_priority=0.84,
+    )
+
+
+def _extraction_product_line() -> PageSpec:
+    seo = PageSEO(
+        title='ربات استخراج آگهی دیوار | ساخت Dataset برای فایلینگ املاک',
+        description=(
+            'آگهی‌های دیوار را با محدوده و نوع معامله ساختاریافته استخراج کنید، '
+            'خروجی Excel/CSV/JSON بسازید و به فایلینگ بسپارید؛ روی ویندوز و با لایسنس فعال.'
+        ),
+        keywords=(
+            'ربات استخراج آگهی دیوار, استخراج آگهی املاک, ربات دیوار املاک, '
+            'خروجی آگهی دیوار, ساخت بانک فایل املاک, Dataset املاک, '
+            'خروجی اکسل دیوار, حذف آگهی تکراری, استخراج فایل منطقه'
+        ),
+        og_title='ربات استخراج آگهی — خط محصول فایلینگ دیوار',
+        h1='استخراج آگهی‌های دیوار و ساخت Dataset برای فایلینگ املاک',
+    )
+    return PageSpec(
+        section='features',
+        path='extraction',
+        variant='product_line',
+        status='published',
+        marketability='marketable',
+        seo=seo,
+        accent='orange',
+        icon='fa-robot',
+        decor_icon='robot',
+        product_line='extraction',
+        funnel_role='consideration',
+        intent='commercial',
+        primary_keyword='ربات استخراج آگهی دیوار',
+        content_key='extraction_product_line',
+        related_solutions=('fast-property-search',),
+        related_seo_landings=('robot-divar',),
+        sitemap_priority=0.88,
+    )
+
+
+def _draft_extraction_feature(
+    *,
+    path: str,
+    content_key: str,
+    title: str,
+    description: str,
+    h1: str,
+    keyword: str,
+    icon: str,
+) -> PageSpec:
+    seo = PageSEO(
+        title=title,
+        description=description,
+        keywords=keyword,
+        og_title=h1.split(':')[0].strip(),
+        h1=h1,
+    )
+    return PageSpec(
+        section='features',
+        path=path,
+        variant='feature',
+        status='draft',
+        marketability='section_only',
+        seo=seo,
+        accent='orange',
+        icon=icon,
+        decor_icon='robot',
+        product_line='extraction',
+        parent_path='extraction',
+        funnel_role='consideration',
+        intent='informational',
+        primary_keyword=keyword.split(',')[0].strip(),
+        content_key=content_key,
+        related_seo_landings=('robot-divar',),
+        sitemap_priority=0.5,
+    )
+
+
+def _extraction_location_filter_feature_draft() -> PageSpec:
+    return _draft_extraction_feature(
+        path='extraction/location-filter',
+        content_key='extraction_location_filter',
+        title='فیلتر محدوده استخراج | استان شهر محله',
+        description='انتخاب استان، شهر و محله برای استخراج هدفمند آگهی‌های دیوار.',
+        h1='محدوده: فقط بازار هدف را استخراج کنید',
+        keyword='فیلتر شهر دیوار, استخراج محله املاک',
+        icon='fa-map-location-dot',
+    )
+
+
+def _extraction_category_filter_feature_draft() -> PageSpec:
+    return _draft_extraction_feature(
+        path='extraction/category-filter',
+        content_key='extraction_category_filter',
+        title='فیلتر نوع معامله و دسته ملک | ربات استخراج',
+        description='فروش، اجاره و دسته‌های ملکی واقعی در ربات استخراج فایلینگ دیوار.',
+        h1='نوع معامله: فروش و اجاره را جدا نگه دارید',
+        keyword='استخراج فروش اجاره, دسته ملک دیوار',
+        icon='fa-tags',
+    )
+
+
+def _extraction_deduplication_feature_draft() -> PageSpec:
+    return _draft_extraction_feature(
+        path='extraction/deduplication',
+        content_key='extraction_deduplication',
+        title='حذف آگهی تکراری | Deduplication',
+        description='کنترل تکراری بر اساس شناسه آگهی در خروجی Excel و واردات Filing.',
+        h1='تکراری‌ها: Dataset تمیزتر با شناسه آگهی',
+        keyword='حذف آگهی تکراری, deduplication املاک',
+        icon='fa-clone',
+    )
+
+
+def _extraction_export_feature_draft() -> PageSpec:
+    return _draft_extraction_feature(
+        path='extraction/export',
+        content_key='extraction_export',
+        title='خروجی Excel CSV JSON | Export ربات',
+        description='خروجی‌های واقعی ربات استخراج: Excel، CSV و JSON.',
+        h1='خروجی: Excel، CSV و JSON',
+        keyword='خروجی اکسل دیوار, CSV آگهی املاک',
+        icon='fa-file-export',
+    )
+
+
+def _extraction_license_feature_draft() -> PageSpec:
+    return _draft_extraction_feature(
+        path='extraction/license-management',
+        content_key='extraction_license_management',
+        title='مدیریت لایسنس ربات | License',
+        description='کلید لایسنس، اتصال به دستگاه ویندوز و وضعیت انقضا.',
+        h1='لایسنس: فعال‌سازی روی دستگاه ویندوز',
+        keyword='لایسنس ربات دیوار, فعال سازی لایسنس',
+        icon='fa-key',
+    )
+
+
+def _extraction_dataset_builder_feature_draft() -> PageSpec:
+    return _draft_extraction_feature(
+        path='extraction/dataset-builder',
+        content_key='extraction_dataset_builder',
+        title='ساخت Dataset | آپلود به فایلینگ',
+        description='آپلود مستقیم از ربات یا بارگذاری دستی خروجی به بانک فایل.',
+        h1='Dataset: از خروجی ربات تا فایلینگ',
+        keyword='ساخت Dataset املاک, آپلود فایلینگ',
+        icon='fa-database',
+    )
+
+
+def _extraction_advertiser_signals_feature_draft() -> PageSpec:
+    return _draft_extraction_feature(
+        path='extraction/advertiser-signals',
+        content_key='extraction_advertiser_signals',
+        title='سیگنال آگهی‌دهنده | شخصی یا بنگاه',
+        description='فیلتر شخصی و سیگنال نوع حساب — بدون ادعای هویت قطعی مالک.',
+        h1='سیگنال آگهی‌دهنده: احتمالی، نه قطعی',
+        keyword='آگهی شخصی دیوار, تشخیص مشاور مالک',
+        icon='fa-id-badge',
     )

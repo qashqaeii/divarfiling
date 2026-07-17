@@ -136,9 +136,9 @@ def market_intelligence_product_line_content() -> dict[str, Any]:
             'primary_label': 'خط محصول فایلینگ',
             'primary_url_name': 'platform_features_page',
             'primary_url_kwargs': {'slug_path': 'filing'},
-            'secondary_label': 'ربات استخراج دیوار',
-            'secondary_url_name': 'seo_landing_robot_divar',
-            'secondary_url_kwargs': {},
+            'secondary_label': 'ربات استخراج',
+            'secondary_url_name': 'platform_features_page',
+            'secondary_url_kwargs': {'slug_path': 'extraction'},
         },
         'capabilities_intro': {
             'title': 'چه کارهایی داخل تحلیل بازار انجام می‌شود؟',

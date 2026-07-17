@@ -43,6 +43,7 @@ def _product_line_title(code: str) -> str:
         'filing': 'فایلینگ',
         'market-intelligence': 'تحلیل بازار',
         'agency': 'مدیریت آژانس',
+        'extraction': 'ربات استخراج',
     }.get(code, code)
 
 
@@ -425,6 +426,46 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'Agency TV به‌عنوان نمایشگر مکمل',
             ],
         }
+    elif page.content_key == 'extraction_product_line':
+        filing_url = f'{site_url}/features/filing/'
+        market_url = f'{site_url}/features/market-intelligence/'
+        schema = {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            'name': 'ربات استخراج آگهی فایلینگ دیوار',
+            'alternateName': 'Divar Filing Extractor',
+            'applicationCategory': 'BusinessApplication',
+            'applicationSubCategory': 'Real Estate Data Extraction',
+            'operatingSystem': 'Windows',
+            'description': page.seo.description,
+            'url': page_url,
+            'inLanguage': 'fa-IR',
+            'creator': creator,
+            'isPartOf': {
+                '@type': 'SoftwareApplication',
+                'name': 'میزکار فایلینگ دیوار',
+                'url': site_url,
+            },
+            'isRelatedTo': [
+                {
+                    '@type': 'SoftwareApplication',
+                    'name': 'فایلینگ دیوار',
+                    'url': filing_url,
+                },
+                {
+                    '@type': 'SoftwareApplication',
+                    'name': 'تحلیل بازار فایلینگ دیوار',
+                    'url': market_url,
+                },
+            ],
+            'offers': _licensed_offer(f'{site_url}/products/divar-extraction-bot/'),
+            'featureList': [
+                'استخراج ساختاریافته آگهی با محدوده جغرافیایی',
+                'خروجی Excel، CSV و JSON',
+                'کنترل تکراری بر اساس شناسه آگهی',
+                'آپلود Dataset به فایلینگ',
+            ],
+        }
     else:
         return ''
 
@@ -446,6 +487,7 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         'property_pricing',
         'agency_product_line',
         'agency_management',
+        'extraction_product_line',
     ):
         return ''
 
@@ -474,6 +516,12 @@ def schema_product_for_page(page: PageSpec, page_url: str) -> str:
         product_url = page_url
         offers = _free_offer(product_url)
         category = 'مدیریت تیم و دفتر املاک'
+    elif page.content_key == 'extraction_product_line':
+        name = 'ربات استخراج آگهی فایلینگ دیوار'
+        image = f'{site_url}/static/images/help-bot-extract-tab.webp'
+        product_url = f'{site_url}/products/divar-extraction-bot/'
+        offers = _licensed_offer(product_url)
+        category = 'ربات استخراج آگهی املاک'
     elif page.content_key == 'filing_product_line':
         name = 'فایلینگ دیوار'
         image = f'{site_url}/static/images/help-dataset-table.webp'

@@ -7,6 +7,7 @@ from shop.platform.content.agency_hub import agency_product_line_content
 from shop.platform.content.agency_management import agency_management_content
 from shop.platform.content.crm_hub import crm_product_line_content
 from shop.platform.content.customer_follow_up import customer_follow_up_content
+from shop.platform.content.extraction_hub import extraction_product_line_content
 from shop.platform.content.fast_property_search import fast_property_search_content
 from shop.platform.content.features_hub import features_hub_content
 from shop.platform.content.filing_hub import filing_product_line_content
@@ -31,6 +32,7 @@ def build_page_content(content_key: str) -> dict[str, Any]:
         'property_pricing': property_pricing_content,
         'agency_product_line': agency_product_line_content,
         'agency_management': agency_management_content,
+        'extraction_product_line': extraction_product_line_content,
     }
     builder = builders.get(content_key)
     if not builder:

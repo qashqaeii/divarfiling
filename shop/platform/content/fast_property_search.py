@@ -138,9 +138,9 @@ def fast_property_search_content() -> dict[str, Any]:
             'primary_label': 'خط محصول فایلینگ',
             'primary_url_name': 'platform_features_page',
             'primary_url_kwargs': {'slug_path': 'filing'},
-            'secondary_label': 'ربات استخراج دیوار',
-            'secondary_url_name': 'seo_landing_robot_divar',
-            'secondary_url_kwargs': {},
+            'secondary_label': 'ربات استخراج',
+            'secondary_url_name': 'platform_features_page',
+            'secondary_url_kwargs': {'slug_path': 'extraction'},
         },
         'mistakes': {
             'title': 'اشتباهات رایج وقتی فایل «هست» اما پیدا نمی‌شود',
@@ -555,12 +555,12 @@ def fast_property_search_content() -> dict[str, Any]:
                 {
                     'type': 'استخراج',
                     'icon': 'fa-robot',
-                    'title': 'ربات استخراج دیوار',
+                    'title': 'ربات استخراج',
                     'desc': (
                         'دلیل ادامه: بدون استخراج منظم، چیزی برای جستجوی سریع نیست.'
                     ),
-                    'url_name': 'seo_landing_robot_divar',
-                    'url_kwargs': {},
+                    'url_name': 'platform_features_page',
+                    'url_kwargs': {'slug_path': 'extraction'},
                     'cta': 'مشاهده ربات',
                 },
                 {

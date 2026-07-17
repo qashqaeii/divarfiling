@@ -13,6 +13,7 @@ PLATFORM_URLS = [
     '/features/filing/',
     '/features/market-intelligence/',
     '/features/agency/',
+    '/features/extraction/',
     '/solutions/',
     '/solutions/customer-follow-up/',
     '/solutions/fast-property-search/',
@@ -882,3 +883,111 @@ class PlatformAgencyManagementPhase2Tests(TestCase):
         self.assertIn('جایگزین کامل واتساپ یا تماس', body)
         self.assertIn('چند شعبه مستقل', body)
         self.assertIn('polling', body)
+
+@override_settings(SITE_URL='https://divarfiling.ir', ALLOWED_HOSTS=['testserver'])
+class PlatformExtractionPhase2Tests(TestCase):
+    """Phase 2 sprint 7: /features/extraction/ product line."""
+
+    def test_extraction_page_renders(self):
+        resp = self.client.get('/features/extraction/')
+        self.assertEqual(resp.status_code, 200)
+        page = get_page('features', 'extraction')
+        self.assertIsNotNone(page)
+        self.assertEqual(page.status, 'published')
+        self.assertContains(resp, 'ex-hero')
+        self.assertContains(resp, 'ex-outcomes')
+        self.assertContains(resp, 'ex-flow-title')
+        self.assertContains(resp, 'ex-filters-title')
+        self.assertContains(resp, 'ex-dedup-title')
+        self.assertContains(resp, 'ex-out-title')
+        self.assertContains(resp, 'ex-license-title')
+        self.assertContains(resp, 'ex-limits-title')
+        self.assertContains(resp, 'help-bot-extract-tab')
+        self.assertContains(resp, 'help-bot-license')
+        self.assertContains(resp, 'help-bot-output-folder')
+        self.assertContains(resp, 'help-upload-bulk')
+        self.assertContains(resp, '/features/filing/')
+        self.assertContains(resp, '/features/market-intelligence/')
+        self.assertContains(resp, 'plat-nav-bar')
+        self.assertContains(resp, 'plat-affiliate')
+        self.assertContains(resp, 'plat-faq__item', count=16)
+        self.assertContains(resp, 'ویندوز')
+        self.assertContains(resp, 'لایسنس')
+        self.assertContains(resp, 'یک‌روزه')
+        self.assertContains(resp, 'Excel')
+        self.assertContains(resp, 'CSV')
+        self.assertContains(resp, 'JSON')
+        self.assertContains(resp, 'شناسه')
+        self.assertContains(resp, '<h1', count=1)
+
+    def test_extraction_schema_licensed_windows(self):
+        resp = self.client.get('/features/extraction/')
+        body = resp.content.decode('utf-8')
+        self.assertIn('"@type": "SoftwareApplication"', body)
+        self.assertIn('"@type": "Product"', body)
+        self.assertIn('"@type": "FAQPage"', body)
+        self.assertIn('"operatingSystem": "Windows"', body)
+        self.assertIn('filing', body)
+        self.assertIn('market-intelligence', body)
+        self.assertNotIn('AggregateRating', body)
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+
+    def test_extraction_next_path_three(self):
+        from shop.platform.content.extraction_hub import extraction_product_line_content
+        items = extraction_product_line_content()['next_path']['items']
+        self.assertEqual(len(items), 3)
+        self.assertTrue(items[-1].get('convert'))
+        self.assertEqual(items[0]['url_kwargs']['slug_path'], 'filing')
+        self.assertEqual(items[1]['url_kwargs']['slug'], 'fast-property-search')
+
+    def test_extraction_guest_and_auth_cta(self):
+        guest = self.client.get('/features/extraction/')
+        self.assertContains(guest, 'مشاهده لایسنس ربات')
+        self.assertContains(guest, '/products/divar-extraction-bot/')
+        from accounts.models import User
+        user = User.objects.create_user(
+            username='ex_user', phone='09120007766', password='x',
+        )
+        self.client.force_login(user)
+        auth = self.client.get('/features/extraction/')
+        self.assertContains(auth, 'مدیریت حساب و لایسنس')
+        self.assertContains(auth, '/dashboard/')
+
+    def test_extraction_hub_and_menu_links(self):
+        hub = self.client.get('/features/')
+        self.assertContains(hub, '/features/extraction/')
+        filing = self.client.get('/features/filing/')
+        self.assertContains(filing, '/features/extraction/')
+
+    def test_extraction_draft_features_404(self):
+        drafts = (
+            'extraction/location-filter',
+            'extraction/category-filter',
+            'extraction/deduplication',
+            'extraction/export',
+            'extraction/license-management',
+            'extraction/dataset-builder',
+            'extraction/advertiser-signals',
+        )
+        for path in drafts:
+            with self.subTest(path=path):
+                self.assertIsNone(get_page('features', path))
+                resp = self.client.get(f'/features/{path}/')
+                self.assertEqual(resp.status_code, 404)
+
+    def test_extraction_unknown_slug_404(self):
+        resp = self.client.get('/features/extraction-unknown/')
+        self.assertEqual(resp.status_code, 404)
+
+    def test_extraction_seo_health(self):
+        _assert_platform_seo_health(self, '/features/extraction/')
+
+    def test_extraction_forbidden_claims(self):
+        resp = self.client.get('/features/extraction/')
+        body = resp.content.decode('utf-8')
+        self.assertNotIn('استخراج نامحدود', body)
+        self.assertNotIn('بدون نیاز به لایسنس', body)
+        self.assertNotIn('مالک واقعی قطعی', body)
+        self.assertNotIn('تضمین استخراج همه', body)
+        self.assertIn('محصول رسمی دیوار', body)
+        self.assertIn('Worker', body)

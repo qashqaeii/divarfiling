@@ -145,7 +145,7 @@ def features_hub_content() -> dict[str, Any]:
                     ],
                 },
                 {
-                    'title': 'فایلینگ و استخراج',
+                    'title': 'فایلینگ دیوار',
                     'desc': (
                         'بانک Dataset آگهی‌های دیوار: آپلود، جدول، نقشه و مقایسه. '
                         'با لایسنس ربات روی همان میزکار فعال می‌شود.'
@@ -159,6 +159,31 @@ def features_hub_content() -> dict[str, Any]:
                     'sub_links': [
                         {
                             'label': 'ربات استخراج',
+                            'url_name': 'platform_features_page',
+                            'url_kwargs': {'slug_path': 'extraction'},
+                        },
+                    ],
+                },
+                {
+                    'title': 'ربات استخراج',
+                    'desc': (
+                        'آگهی‌های دیوار را ساختاریافته جمع کنید و Dataset بسازید؛ '
+                        'روی ویندوز و با لایسنس فعال.'
+                    ),
+                    'url_name': 'platform_features_page',
+                    'url_kwargs': {'slug_path': 'extraction'},
+                    'icon': 'fa-robot',
+                    'accent': 'orange',
+                    'badge': 'لایسنس',
+                    'size': 'normal',
+                    'sub_links': [
+                        {
+                            'label': 'فایلینگ Dataset',
+                            'url_name': 'platform_features_page',
+                            'url_kwargs': {'slug_path': 'filing'},
+                        },
+                        {
+                            'label': 'لندینگ ربات',
                             'url_name': 'seo_landing_robot_divar',
                             'url_kwargs': {},
                         },

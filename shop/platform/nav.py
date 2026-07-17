@@ -57,6 +57,7 @@ def _location_label(page: PageSpec) -> str:
         'market_intelligence_product_line': 'خط محصول تحلیل بازار',
         'agency_product_line': 'خط محصول مدیریت آژانس',
         'agency_management': 'راه‌حل مدیریت آژانس',
+        'extraction_product_line': 'خط محصول ربات استخراج',
         'property_pricing': 'راه‌حل قیمت‌گذاری ملک',
         'fast_property_search': 'راه‌حل پیدا کردن سریع فایل',
         'solutions_hub': 'نقشه راه‌حل‌ها',
@@ -134,6 +135,20 @@ def _trail_for_page(page: PageSpec) -> list[dict[str, Any]]:
                 'current': True,
             })
             return items
+        if page.content_key == 'extraction_product_line':
+            items.append({
+                'label': 'فایلینگ',
+                'url_name': 'platform_features_page',
+                'kwargs': {'slug_path': 'filing'},
+                'current': False,
+            })
+            items.append({
+                'label': 'ربات استخراج',
+                'url_name': 'platform_features_page',
+                'kwargs': {'slug_path': 'extraction'},
+                'current': True,
+            })
+            return items
         if page.path:
             items.append({
                 'label': 'CRM',
@@ -185,13 +200,15 @@ def _trail_for_page(page: PageSpec) -> list[dict[str, Any]]:
 
 
 def _journey_for_page(page: PageSpec) -> list[dict[str, Any]]:
-    """Canonical funnel — CRM, Filing, Market, or Agency path by page family."""
+    """Canonical funnel — CRM, Filing, Market, Agency, or Extraction path by page family."""
     if page.content_key in ('filing_product_line', 'fast_property_search'):
         return _filing_journey(page.content_key)
     if page.content_key in ('market_intelligence_product_line', 'property_pricing'):
         return _market_journey(page.content_key)
     if page.content_key in ('agency_product_line', 'agency_management'):
         return _agency_journey(page.content_key)
+    if page.content_key == 'extraction_product_line':
+        return _extraction_journey(page.content_key)
     return _crm_journey(page.content_key)
 
 
@@ -256,9 +273,9 @@ def _filing_journey(content_key: str) -> list[dict[str, Any]]:
         {
             'id': 'robot',
             'label': 'استخراج',
-            'hint': 'ربات دیوار',
-            'url_name': 'seo_landing_robot_divar',
-            'kwargs': {},
+            'hint': 'ربات دسکتاپ',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'extraction'},
         },
         {
             'id': 'start',
@@ -272,6 +289,44 @@ def _filing_journey(content_key: str) -> list[dict[str, Any]]:
     current_id = {
         'filing_product_line': 'filing',
         'fast_property_search': 'fast_search',
+    }.get(content_key)
+    return _annotate_journey(steps, current_id)
+
+
+def _extraction_journey(content_key: str) -> list[dict[str, Any]]:
+    steps = [
+        {
+            'id': 'extraction',
+            'label': 'استخراج',
+            'hint': 'ربات دسکتاپ',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'extraction'},
+        },
+        {
+            'id': 'filing',
+            'label': 'فایلینگ',
+            'hint': 'بانک Dataset',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'filing'},
+        },
+        {
+            'id': 'market',
+            'label': 'تحلیل',
+            'hint': 'بازار و قیمت',
+            'url_name': 'platform_features_page',
+            'kwargs': {'slug_path': 'market-intelligence'},
+        },
+        {
+            'id': 'start',
+            'label': 'شروع',
+            'hint': 'لایسنس / میزکار',
+            'url_name': 'product_detail',
+            'auth_url_name': 'dashboard',
+            'kwargs': {'slug': 'divar-extraction-bot'},
+        },
+    ]
+    current_id = {
+        'extraction_product_line': 'extraction',
     }.get(content_key)
     return _annotate_journey(steps, current_id)
 

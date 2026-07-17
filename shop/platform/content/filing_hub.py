@@ -136,9 +136,9 @@ def filing_product_line_content() -> dict[str, Any]:
             'primary_label': 'خط محصول CRM',
             'primary_url_name': 'platform_features_page',
             'primary_url_kwargs': {'slug_path': 'crm'},
-            'secondary_label': 'ربات استخراج دیوار',
-            'secondary_url_name': 'seo_landing_robot_divar',
-            'secondary_url_kwargs': {},
+            'secondary_label': 'ربات استخراج',
+            'secondary_url_name': 'platform_features_page',
+            'secondary_url_kwargs': {'slug_path': 'extraction'},
         },
         'capabilities_intro': {
             'title': 'چه کارهایی داخل فایلینگ انجام می‌شود؟',
@@ -235,9 +235,9 @@ def filing_product_line_content() -> dict[str, Any]:
                 'width': 1280,
                 'height': 800,
                 'link': {
-                    'label': 'ربات استخراج دیوار',
-                    'url_name': 'seo_landing_robot_divar',
-                    'url_kwargs': {},
+                    'label': 'ربات استخراج',
+                    'url_name': 'platform_features_page',
+                    'url_kwargs': {'slug_path': 'extraction'},
                 },
             },
         ],
@@ -388,13 +388,13 @@ def filing_product_line_content() -> dict[str, Any]:
                 {
                     'type': 'استخراج',
                     'icon': 'fa-robot',
-                    'title': 'ربات استخراج دیوار',
+                    'title': 'ربات استخراج',
                     'desc': (
                         'دلیل ادامه: بدون استخراج منظم، بانک فایل خالی می‌ماند. '
                         'اینجا مسیر ربات ویندوز و خروجی را می‌بینید.'
                     ),
-                    'url_name': 'seo_landing_robot_divar',
-                    'url_kwargs': {},
+                    'url_name': 'platform_features_page',
+                    'url_kwargs': {'slug_path': 'extraction'},
                     'cta': 'مشاهده ربات',
                 },
                 {

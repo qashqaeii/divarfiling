@@ -79,7 +79,7 @@
                 <i class="fas fa-users" aria-hidden="true"></i>
                 {{ platform_content.mid_cta_a.primary_label }}
             </a>
-            <a href="{% url platform_content.mid_cta_a.secondary_url_name %}" class="plat-btn plat-btn--explore fil-soft-cta__btn">
+            <a href="{% if platform_content.mid_cta_a.secondary_url_kwargs.slug_path %}{% url platform_content.mid_cta_a.secondary_url_name slug_path=platform_content.mid_cta_a.secondary_url_kwargs.slug_path %}{% elif platform_content.mid_cta_a.secondary_url_kwargs.slug %}{% url platform_content.mid_cta_a.secondary_url_name slug=platform_content.mid_cta_a.secondary_url_kwargs.slug %}{% else %}{% url platform_content.mid_cta_a.secondary_url_name %}{% endif %}" class="plat-btn plat-btn--explore fil-soft-cta__btn">
                 <i class="fas fa-robot" aria-hidden="true"></i>
                 {{ platform_content.mid_cta_a.secondary_label }}
             </a>

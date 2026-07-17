@@ -137,9 +137,13 @@ class PlatformPageViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'تماس دوم را از دست ندهید')
         self.assertContains(resp, 'sol-hero__story')
+        self.assertContains(resp, 'sol-outcomes')
         self.assertContains(resp, 'sol-framework')
         self.assertContains(resp, 'sol-timeline')
+        self.assertContains(resp, 'sol-next')
+        self.assertContains(resp, 'sol-ico')
         self.assertContains(resp, 'help-crm-today.png')
+        self.assertContains(resp, 'help-crm-reminders.png')
         self.assertContains(resp, '/features/crm/reminders/')
         self.assertContains(resp, 'plat-faq__item', count=8)
 

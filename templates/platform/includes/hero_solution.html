@@ -1,16 +1,43 @@
 <header class="sol-hero plat-reveal">
-    <div class="sol-wrap sol-hero__inner">
-        <p class="sol-eyebrow">{{ platform_content.hero.eyebrow }}</p>
-        <blockquote class="sol-hero__story">
-            <p>{{ platform_content.hero.story_open }}</p>
-        </blockquote>
-        <h1>{{ platform_page.seo.h1 }}</h1>
-        <p class="sol-hero__lead">{{ platform_content.hero.lead }}</p>
-        {% if platform_content.hero.outcome %}
-        <p class="sol-hero__outcome">{{ platform_content.hero.outcome }}</p>
-        {% endif %}
-        <div class="sol-hero__cta">
-            {% include 'platform/includes/cta_pair.html' %}
+    <div class="sol-wrap sol-hero__grid">
+        <div class="sol-hero__copy">
+            <p class="sol-eyebrow">
+                <span class="sol-ico sol-ico--sm sol-ico--pulse" aria-hidden="true">
+                    <i class="fas {{ platform_content.hero.eyebrow_icon|default:'fa-phone-volume' }}"></i>
+                </span>
+                {{ platform_content.hero.eyebrow }}
+            </p>
+            <blockquote class="sol-hero__story">
+                <p>{{ platform_content.hero.story_open }}</p>
+            </blockquote>
+            <h1>{{ platform_page.seo.h1 }}</h1>
+            <p class="sol-hero__lead">{{ platform_content.hero.lead }}</p>
+            {% if platform_content.hero.outcome %}
+            <p class="sol-hero__outcome">
+                <i class="fas fa-circle-check" aria-hidden="true"></i>
+                {{ platform_content.hero.outcome }}
+            </p>
+            {% endif %}
+            {% if platform_content.hero.bullets %}
+            <ul class="sol-hero__bullets">
+                {% for item in platform_content.hero.bullets %}
+                <li>
+                    <span class="sol-ico sol-ico--sm" aria-hidden="true">
+                        <i class="fas {{ item.icon }}"></i>
+                    </span>
+                    <span>{{ item.text }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="sol-hero__cta">
+                {% include 'platform/includes/cta_pair.html' %}
+            </div>
         </div>
+        {% if platform_content.hero.screenshot %}
+        <div class="sol-hero__visual plat-reveal plat-reveal--delay">
+            {% include 'platform/includes/screenshot_story.html' with shot=platform_content.hero.screenshot loading='eager' hero=True %}
+        </div>
+        {% endif %}
     </div>
 </header>

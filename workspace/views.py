@@ -1673,7 +1673,14 @@ class BotUpgradeView(WorkspaceLoginMixin, TemplateView):
             if next_url and next_url.startswith('/workspace'):
                 return redirect(next_url)
             return redirect('workspace:home')
-        return super().dispatch(request, *args, **kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        if request.method == 'GET':
+            from shop.bot_catalog import get_bot_product
+            from shop.services.plan_funnel import record_plan_funnel_event
+            product = get_bot_product()
+            if product:
+                record_plan_funnel_event(request, 'upgrade_view', product=product)
+        return response
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)

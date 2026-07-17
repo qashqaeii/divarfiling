@@ -16,6 +16,7 @@ from .admin_views import (
     AdminMarketingView,
     AdminPhonebookStatusView,
     AdminPhonebookSyncView,
+    AdminPlanConversionView,
     AdminSystemSummaryView,
 )
 
@@ -50,6 +51,7 @@ urlpatterns = [
     path('admin-panel/blog/', AdminBlogView.as_view(), name='admin_panel_blog'),
     path('admin-panel/blog/import/preview.json', AdminBlogImportPreviewView.as_view(), name='admin_panel_blog_import_preview'),
     path('admin-panel/blog/import/', AdminBlogImportView.as_view(), name='admin_panel_blog_import'),
+    path('admin-panel/plan-conversion/', AdminPlanConversionView.as_view(), name='admin_panel_plan_conversion'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path(
         'password-reset/',

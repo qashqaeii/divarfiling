@@ -80,6 +80,7 @@
             <nav class="ecc-sidebar" aria-label="ناوبری داشبورد">
                 <a href="#ecc-command" class="ecc-nav-item is-active"><i class="fas fa-gauge-high"></i> فرمان</a>
                 <a href="#ecc-revenue" class="ecc-nav-item"><i class="fas fa-chart-area"></i> درآمد</a>
+                <a href="#ecc-plan-conversion" class="ecc-nav-item"><i class="fas fa-filter-circle-dollar"></i> تبدیل پلن</a>
                 <a href="#ecc-users" class="ecc-nav-item"><i class="fas fa-users"></i> کاربران</a>
                 <a href="#ecc-sales" class="ecc-nav-item">
                     <i class="fas fa-cart-shopping"></i> فروش
@@ -206,6 +207,36 @@
                                 <canvas id="chart-plans"></canvas>
                             </div>
                         </article>
+                    </div>
+                </section>
+
+                {# ─── 4b. Plan Conversion Analytics ─── #}
+                <section class="ecc-section" id="ecc-plan-conversion" aria-labelledby="eccPlanConvTitle">
+                    <div class="ecc-section-head">
+                        <div>
+                            <h2 id="eccPlanConvTitle"><i class="fas fa-filter-circle-dollar"></i> آنالیز تبدیل پلن‌ها</h2>
+                            <p>قیف قیمت‌گذاری، خرید روزانه، ارتقا به ماهانه و کوهورت خرید</p>
+                        </div>
+                        <a href="{% url 'admin_panel_plan_conversion' %}?days={{ chart_days }}" class="ecc-btn ecc-btn--primary">
+                            <i class="fas fa-chart-pie"></i> پنل آنالیز تبدیل
+                        </a>
+                    </div>
+                    <ul class="ecc-stat-strip" style="margin-bottom:1rem">
+                        <li><span>فروش ۱روزه</span><strong>{% for plan in plan_sales %}{% if plan.plan_type == 'daily' %}{{ plan.count|currency }}{% endif %}{% endfor %}</strong></li>
+                        <li><span>فروش ۱ماهه</span><strong>{% for plan in plan_sales %}{% if plan.plan_type == 'monthly' %}{{ plan.count|currency }}{% endif %}{% endfor %}</strong></li>
+                        <li><span>Conversion</span><strong>{{ stats.conversion_rate|to_persian_digits }}٪</strong></li>
+                        <li><span>بازه</span><strong>{{ chart_days|to_persian_digits }} روز</strong></li>
+                    </ul>
+                    <div class="ecc-grid">
+                        {% for plan in plan_sales %}
+                        <article class="ecc-card">
+                            <div class="ecc-card-head">
+                                <h3>{{ plan.short_label }}</h3>
+                                <p>{{ plan.count|currency }} سفارش</p>
+                            </div>
+                            <strong class="ecc-kpi-val">{{ plan.total|currency }} ت</strong>
+                        </article>
+                        {% endfor %}
                     </div>
                 </section>
 

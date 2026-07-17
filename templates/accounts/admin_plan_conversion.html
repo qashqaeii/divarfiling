@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% block title %}آنالیز تبدیل پلن‌ها | پنل مدیریت{% endblock %}
+
+{% block body_class %}mk-admin-dashboard ab-luxe apc-luxe{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/admin-plan-conversion.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="ab-page apc-page">
+
+    <div class="ab-ambient" aria-hidden="true">
+        <span class="ab-orb ab-orb--1"></span>
+        <span class="ab-orb ab-orb--2"></span>
+        <span class="ab-orb ab-orb--3"></span>
+        <span class="ab-grain"></span>
+    </div>
+
+    <header class="ab-hero apc-hero">
+        <div class="ab-hero__main">
+            <div class="ab-hero__top">
+                <a href="{% url 'admin_panel' %}#ecc-plan-conversion" class="ab-back">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>بازگشت به داشبورد</span>
+                </a>
+                <div class="ab-hero__badges">
+                    <span class="ab-pill ab-pill--live"><span class="ab-pill__dot"></span> Revenue Intelligence</span>
+                    <span class="ab-pill">{{ days|to_persian_digits }} روز</span>
+                </div>
+            </div>
+
+            <div class="ab-hero__body">
+                <p class="ab-hero__eyebrow">Plan Conversion Analytics</p>
+                <h1 class="ab-hero__title">آنالیز <em>نرخ تبدیل پلن‌ها</em></h1>
+                <p class="ab-hero__lead">قیف قیمت‌گذاری تا خرید، ارتقای روزانه به ماهانه، سهم فروش هر پلن و کوهورت خرید بر اساس هفته.</p>
+            </div>
+
+            <div class="ab-hero__actions">
+                <div class="apc-range" role="group" aria-label="بازه زمانی">
+                    <a href="?days=7" class="apc-range-btn{% if days == 7 %} is-active{% endif %}">۷ روز</a>
+                    <a href="?days=30" class="apc-range-btn{% if days == 30 %} is-active{% endif %}">۳۰ روز</a>
+                    <a href="?days=90" class="apc-range-btn{% if days == 90 %} is-active{% endif %}">۹۰ روز</a>
+                    <a href="?days=365" class="apc-range-btn{% if days == 365 %} is-active{% endif %}">سالانه</a>
+                </div>
+                <a href="/shop/products/divar-extraction-bot/" target="_blank" rel="noopener" class="ab-btn ab-btn--ghost">
+                    <i class="fas fa-arrow-up-right-from-square"></i>
+                    <span>صفحه قیمت‌گذاری</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="ab-hero__visual" aria-hidden="true">
+            <div class="apc-hero-stack">
+                <article class="apc-stack-card apc-stack-card--1">
+                    <span class="apc-stack-metric">{{ summary.overall_conversion|to_persian_digits }}٪</span>
+                    <small>نرخ تبدیل کلی</small>
+                </article>
+                <article class="apc-stack-card apc-stack-card--2">
+                    <span class="apc-stack-metric">{{ summary.daily_purchases|currency }}</span>
+                    <small>خرید پلن ۱روزه</small>
+                </article>
+                <article class="apc-stack-card apc-stack-card--3">
+                    <span class="apc-stack-metric">{{ summary.upgrade_count|currency }}</span>
+                    <small>ارتقا به ماهانه (۷روز)</small>
+                </article>
+                <div class="ab-stack-glow"></div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="ab-nav apc-nav" id="apc-nav" aria-label="بخش‌های آنالیز پلن">
+        <div class="ab-nav__track">
+            <span class="ab-nav__indicator" id="apc-nav-indicator"></span>
+            <a href="#apc-overview" class="ab-nav__item is-active" data-tab="apc-overview">
+                <i class="fas fa-gauge-high"></i><span>نمای کلی</span>
+            </a>
+            <a href="#apc-funnel" class="ab-nav__item" data-tab="apc-funnel">
+                <i class="fas fa-filter"></i><span>قیف تبدیل</span>
+            </a>
+            <a href="#apc-plans" class="ab-nav__item" data-tab="apc-plans">
+                <i class="fas fa-layer-group"></i><span>پلن‌ها</span>
+            </a>
+            <a href="#apc-weekly" class="ab-nav__item" data-tab="apc-weekly">
+                <i class="fas fa-calendar-week"></i><span>روند هفتگی</span>
+            </a>
+            <a href="#apc-cohort" class="ab-nav__item" data-tab="apc-cohort">
+                <i class="fas fa-users-rays"></i><span>کوهورت</span>
+            </a>
+        </div>
+    </nav>
+    <div class="ab-nav-spacer" id="apc-nav-spacer"></div>
+
+    <section id="apc-overview" class="ab-panel is-visible">
+        <div class="ab-kpi-grid apc-kpi-grid">
+            <article class="ab-kpi" data-accent="violet">
+                <div class="ab-kpi__icon"><i class="fas fa-eye"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ summary.pricing_views }}">{{ summary.pricing_views|currency }}</span>
+                    <span class="ab-kpi__lbl">بازدید صفحه قیمت‌گذاری</span>
+                    <small class="apc-kpi-sub">{{ summary.pricing_unique|currency }} نشست یکتا</small>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="emerald">
+                <div class="ab-kpi__icon"><i class="fas fa-sun"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ summary.daily_purchases }}">{{ summary.daily_purchases|currency }}</span>
+                    <span class="ab-kpi__lbl">خرید پلن یک‌روزه</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="amber">
+                <div class="ab-kpi__icon"><i class="fas fa-arrow-trend-up"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ summary.upgrade_count }}">{{ summary.upgrade_count|currency }}</span>
+                    <span class="ab-kpi__lbl">ارتقا به ماهانه در {{ summary.upgrade_window_days|to_persian_digits }} روز</span>
+                    <small class="apc-kpi-sub">{{ summary.upgrade_rate|to_persian_digits }}٪ از خریداران روزانه</small>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="teal">
+                <div class="ab-kpi__icon"><i class="fas fa-percent"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val">{{ summary.overall_conversion|to_persian_digits }}٪</span>
+                    <span class="ab-kpi__lbl">نرخ تبدیل کلی</span>
+                    <small class="apc-kpi-sub">خرید ÷ بازدید قیمت</small>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="blue">
+                <div class="ab-kpi__icon"><i class="fas fa-cart-shopping"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ summary.paid_count }}">{{ summary.paid_count|currency }}</span>
+                    <span class="ab-kpi__lbl">خرید موفق</span>
+                    <small class="apc-kpi-sub">{{ summary.paid_revenue|currency }} تومان</small>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="rose">
+                <div class="ab-kpi__icon"><i class="fas fa-door-open"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ summary.checkout_views }}">{{ summary.checkout_views|currency }}</span>
+                    <span class="ab-kpi__lbl">شروع خرید (Checkout)</span>
+                    <small class="apc-kpi-sub">{{ summary.checkout_conversion|to_persian_digits }}٪ تبدیل</small>
+                </div>
+            </article>
+        </div>
+
+        <div class="apc-funnel-strip">
+            <div class="apc-funnel-step">
+                <span class="apc-funnel-step__label">بازدید قیمت</span>
+                <strong>{{ summary.pricing_views|currency }}</strong>
+            </div>
+            <div class="apc-funnel-arrow"><i class="fas fa-chevron-left"></i></div>
+            <div class="apc-funnel-step">
+                <span class="apc-funnel-step__label">شروع خرید</span>
+                <strong>{{ summary.checkout_views|currency }}</strong>
+            </div>
+            <div class="apc-funnel-arrow"><i class="fas fa-chevron-left"></i></div>
+            <div class="apc-funnel-step apc-funnel-step--success">
+                <span class="apc-funnel-step__label">پرداخت موفق</span>
+                <strong>{{ summary.paid_count|currency }}</strong>
+            </div>
+        </div>
+    </section>
+
+    <section id="apc-funnel" class="ab-panel">
+        <div class="ab-panel-head">
+            <div>
+                <h2><i class="fas fa-filter"></i> قیف تبدیل روزانه</h2>
+                <p>روند بازدید قیمت، شروع خرید و پرداخت در بازه {{ days|to_persian_digits }} روز</p>
+            </div>
+        </div>
+        <article class="ab-glass ab-card--chart">
+            <header class="ab-glass__head">
+                <div><h2>قیف تبدیل روزانه</h2><p>روند بازدید قیمت، شروع خرید و پرداخت</p></div>
+            </header>
+            <div class="ab-chart-wrap ab-chart-wrap--tall" style="padding:0 1rem 1rem">
+                <canvas id="apc-chart-funnel"></canvas>
+            </div>
+        </article>
+    </section>
+
+    <section id="apc-plans" class="ab-panel">
+        <div class="ab-panel-head">
+            <div>
+                <h2><i class="fas fa-layer-group"></i> نرخ تبدیل و سهم فروش هر پلن</h2>
+                <p>مقایسه پلن‌ها بر اساس تعداد خرید، درآمد و سهم از کل</p>
+            </div>
+        </div>
+
+        <div class="apc-plan-grid">
+            <article class="ab-glass">
+                <header class="ab-glass__head"><div><h2>سهم درآمد پلن‌ها</h2></div></header>
+                <div class="ab-chart-wrap" style="padding:0 1rem 1rem"><canvas id="apc-chart-share"></canvas></div>
+            </article>
+            <article class="ab-glass">
+                <header class="ab-glass__head"><div><h2>نرخ تبدیل به تفکیک پلن</h2></div></header>
+                <div class="ab-chart-wrap" style="padding:0 1rem 1rem"><canvas id="apc-chart-conversion"></canvas></div>
+            </article>
+        </div>
+
+        <article class="ab-glass apc-table-card">
+            <header class="ab-glass__head"><div><h2>جدول تفصیلی پلن‌ها</h2></div></header>
+            <div class="adm-table-wrap">
+                <table class="adm-table adm-table--pro apc-table">
+                    <thead>
+                        <tr>
+                            <th>پلن</th>
+                            <th>خرید</th>
+                            <th>درآمد</th>
+                            <th>سهم تعداد</th>
+                            <th>سهم درآمد</th>
+                            <th>تبدیل (قیف)</th>
+                            <th>تبدیل (Checkout)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in plan_rows %}
+                        <tr data-accent="{{ row.accent }}">
+                            <td><strong>{{ row.short_label }}</strong><small>{{ row.label }}</small></td>
+                            <td>{{ row.purchases|currency }}</td>
+                            <td>{{ row.revenue|currency }} ت</td>
+                            <td>{{ row.order_share|to_persian_digits }}٪</td>
+                            <td>{{ row.revenue_share|to_persian_digits }}٪</td>
+                            <td>{{ row.funnel_conversion|to_persian_digits }}٪</td>
+                            <td>{{ row.checkout_conversion|to_persian_digits }}٪</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7">داده‌ای در این بازه ثبت نشده.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+    </section>
+
+    <section id="apc-weekly" class="ab-panel">
+        <div class="ab-panel-head">
+            <div>
+                <h2><i class="fas fa-calendar-week"></i> آنالیز خرید بر اساس هفته</h2>
+                <p>تعداد خرید و درآمد به تفکیک هفته — شامل پلن روزانه و ماهانه</p>
+            </div>
+        </div>
+        <article class="ab-glass">
+            <header class="ab-glass__head">
+                <div><h2>آنالیز خرید بر اساس هفته</h2><p>تعداد خرید روزانه و ماهانه</p></div>
+            </header>
+            <div class="ab-chart-wrap ab-chart-wrap--tall" style="padding:0 1rem 1rem">
+                <canvas id="apc-chart-weekly"></canvas>
+            </div>
+        </article>
+    </section>
+
+    <section id="apc-cohort" class="ab-panel">
+        <div class="ab-panel-head">
+            <div>
+                <h2><i class="fas fa-users-rays"></i> آنالیز کوهورت (هفته اولین خرید)</h2>
+                <p>نگهداشت، تکرار خرید و ارتقا به پلن ماهانه در ۷ روز پس از اولین خرید</p>
+            </div>
+        </div>
+
+        <article class="ab-glass">
+            <header class="ab-glass__head">
+                <div><h2>نمودار کوهورت</h2><p>تکرار خرید و ارتقا به ماهانه</p></div>
+            </header>
+            <div class="ab-chart-wrap ab-chart-wrap--tall" style="padding:0 1rem 1rem">
+                <canvas id="apc-chart-cohort"></canvas>
+            </div>
+        </article>
+
+        <article class="ab-glass apc-table-card">
+            <header class="ab-glass__head"><div><h2>جدول کوهورت</h2></div></header>
+            <div class="adm-table-wrap">
+                <table class="adm-table adm-table--pro apc-table">
+                    <thead>
+                        <tr>
+                            <th>هفته شروع</th>
+                            <th>کاربران</th>
+                            <th>تکرار ۷روز</th>
+                            <th>تکرار ۳۰روز</th>
+                            <th>ارتقا ماهانه ۷روز</th>
+                            <th>میانگین LTV</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in cohorts %}
+                        <tr>
+                            <td><strong>{{ row.week }}</strong></td>
+                            <td>{{ row.users|currency }}</td>
+                            <td>{{ row.repeat_7d|currency }} <small>({{ row.repeat_7d_rate|to_persian_digits }}٪)</small></td>
+                            <td>{{ row.repeat_30d|currency }} <small>({{ row.repeat_30d_rate|to_persian_digits }}٪)</small></td>
+                            <td>{{ row.upgraded_monthly_7d|currency }} <small>({{ row.upgrade_rate|to_persian_digits }}٪)</small></td>
+                            <td>{{ row.avg_ltv|currency }} ت</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6">داده کوهورت کافی نیست.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+window.admPlanConversion = {{ plan_conversion_json|safe }};
+</script>
+<script src="{% static 'js/admin-plan-conversion.js' %}?v=1"></script>
+{% endblock %}

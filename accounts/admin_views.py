@@ -39,6 +39,7 @@ from accounts.services.admin_blog import (
     get_blog_dashboard_stats,
     get_blog_posts_table,
 )
+from accounts.services.admin_plan_conversion import get_plan_conversion_context
 from accounts.services.admin_phonebook_sync import (
     PhonebookSyncError,
     get_phonebook_sync_status,
@@ -431,3 +432,18 @@ class AdminBlogImportView(StaffRequiredMixin, View):
                 'admin_edit_url': f'/admin/blog/post/{post.id}/change/',
             },
         })
+
+
+class AdminPlanConversionView(StaffRequiredMixin, TemplateView):
+    """آنالیز نرخ تبدیل پلن‌ها — قیف خرید، کوهورت و سهم فروش."""
+
+    template_name = 'accounts/admin_plan_conversion.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        days = _parse_int(self.request.GET.get('days'), 30, minimum=7, maximum=365)
+        data = get_plan_conversion_context(days=days)
+        ctx.update(data)
+        ctx['summary'] = data['summary']
+        ctx['plan_conversion_json'] = json.dumps(data['charts'], ensure_ascii=False, default=str)
+        return ctx

@@ -1,0 +1,238 @@
+/* Plan Conversion Analytics — extends admin-blog design system */
+
+.apc-luxe {
+    --apc-violet: #7c3aed;
+    --apc-violet-glow: rgba(124, 58, 237, 0.22);
+}
+
+.apc-page .ab-orb--1 {
+    background: radial-gradient(circle, var(--apc-violet-glow), transparent 70%);
+}
+
+.apc-hero .ab-hero__title em {
+    color: var(--apc-violet);
+    font-style: normal;
+}
+
+.apc-range {
+    display: inline-flex;
+    gap: 0.35rem;
+    padding: 0.25rem;
+    border-radius: 999px;
+    background: var(--ab-glass);
+    border: 1px solid var(--ab-glass-border);
+    backdrop-filter: blur(12px);
+}
+
+.apc-range-btn {
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: inherit;
+    text-decoration: none;
+    opacity: 0.75;
+    transition: background 0.2s, opacity 0.2s;
+}
+
+.apc-range-btn.is-active,
+.apc-range-btn:hover {
+    opacity: 1;
+    background: rgba(124, 58, 237, 0.14);
+}
+
+.apc-hero-stack {
+    position: relative;
+    min-height: 220px;
+}
+
+.apc-stack-card {
+    position: absolute;
+    padding: 1rem 1.1rem;
+    border-radius: var(--ab-radius-sm);
+    background: var(--ab-glass);
+    border: 1px solid var(--ab-glass-border);
+    box-shadow: var(--ab-shadow);
+    backdrop-filter: blur(16px);
+}
+
+.apc-stack-card strong,
+.apc-stack-metric {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.apc-stack-card small {
+    display: block;
+    margin-top: 0.25rem;
+    opacity: 0.72;
+    font-size: 0.78rem;
+}
+
+.apc-stack-card--1 { top: 12%; right: 8%; }
+.apc-stack-card--2 { top: 42%; left: 4%; }
+.apc-stack-card--3 { bottom: 8%; right: 18%; }
+
+.apc-kpi-sub {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    opacity: 0.7;
+}
+
+.apc-funnel-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--ab-radius);
+    background: var(--ab-glass);
+    border: 1px solid var(--ab-glass-border);
+}
+
+.apc-funnel-step {
+    min-width: 120px;
+    text-align: center;
+    padding: 0.75rem 1rem;
+    border-radius: var(--ab-radius-sm);
+    background: rgba(148, 163, 184, 0.08);
+}
+
+.apc-funnel-step--success {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.apc-funnel-step__label {
+    display: block;
+    font-size: 0.75rem;
+    opacity: 0.75;
+    margin-bottom: 0.25rem;
+}
+
+.apc-funnel-step strong {
+    font-size: 1.25rem;
+}
+
+.apc-funnel-arrow {
+    opacity: 0.45;
+    font-size: 0.85rem;
+}
+
+.apc-plan-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.apc-table-card {
+    margin-top: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+.apc-table-card .adm-table-wrap {
+    padding: 0 1rem 1rem;
+}
+
+.ab-panel {
+    margin-bottom: 2rem;
+    scroll-margin-top: calc(var(--ab-nav-top, 56px) + var(--ab-nav-h, 52px) + 12px);
+}
+
+.ab-panel-head {
+    margin-bottom: 1rem;
+}
+
+.ab-panel-head h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ab-panel-head p {
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    opacity: 0.72;
+}
+
+.apc-table tbody tr[data-accent="emerald"] td:first-child strong { color: #10b981; }
+.apc-table tbody tr[data-accent="violet"] td:first-child strong { color: #7c3aed; }
+.apc-table tbody tr[data-accent="blue"] td:first-child strong { color: #3b82f6; }
+.apc-table tbody tr[data-accent="amber"] td:first-child strong { color: #f59e0b; }
+
+.apc-table small {
+    display: block;
+    opacity: 0.65;
+    font-size: 0.72rem;
+    margin-top: 0.15rem;
+}
+
+.ab-chart-wrap--tall {
+    min-height: 320px;
+}
+
+.ab-panel-head,
+.ab-card-head {
+    margin-bottom: 0.85rem;
+}
+
+.ab-panel-head h2,
+.ab-card-head h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ab-panel-head p,
+.ab-card-head p {
+    margin: 0.25rem 0 0;
+    font-size: 0.78rem;
+    opacity: 0.72;
+}
+
+.ab-card {
+    border-radius: var(--ab-radius);
+    background: var(--ab-glass);
+    border: 1px solid var(--ab-glass-border);
+    box-shadow: var(--ab-shadow);
+    padding: 1rem 1.15rem;
+    margin-bottom: 1rem;
+}
+
+.ab-card--chart .ab-chart-wrap {
+    height: 280px;
+}
+
+.ab-panel + .ab-panel {
+    margin-top: 2rem;
+}
+
+@media (max-width: 900px) {
+    .apc-plan-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .apc-stack-card {
+        position: relative;
+        inset: auto;
+        margin-bottom: 0.5rem;
+    }
+
+    .apc-hero-stack {
+        min-height: auto;
+        display: grid;
+        gap: 0.5rem;
+    }
+}

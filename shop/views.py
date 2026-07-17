@@ -92,6 +92,13 @@ class ProductDetailView(DetailView):
     def get_queryset(self):
         return Product.objects.filter(is_active=True)
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.method == 'GET' and getattr(self, 'object', None):
+            from shop.services.plan_funnel import record_plan_funnel_event
+            record_plan_funnel_event(request, 'pricing_view', product=self.object)
+        return response
+
     def get_template_names(self):
         if self.object and self.object.slug == BOT_PRODUCT_SLUG:
             return ['shop/product_bot.html']
@@ -274,6 +281,12 @@ class BuyView(LoginRequiredMixin, CreateView):
         if reason == BLOCK_PHONE_VERIFY:
             return redirect(verify_phone_redirect_url(self.request.get_full_path()))
         return redirect(reverse('buy', kwargs={'slug': self.product.slug}))
+
+    def get(self, request, *args, **kwargs):
+        from shop.services.plan_funnel import record_plan_funnel_event
+        plan = self._get_requested_plan() or self._get_selected_plan()
+        record_plan_funnel_event(request, 'checkout_view', product=self.product, plan=plan)
+        return super().get(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

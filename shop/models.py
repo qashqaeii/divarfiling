@@ -224,6 +224,57 @@ class Order(models.Model):
         return f'سفارش {self.id} - {self.user.username}'
 
 
+class PlanFunnelEvent(models.Model):
+    """رویداد قیف خرید پلن — بازدید قیمت‌گذاری، شروع خرید و ارتقا."""
+
+    EVENT_TYPES = [
+        ('pricing_view', 'بازدید صفحه قیمت‌گذاری'),
+        ('checkout_view', 'شروع خرید'),
+        ('upgrade_view', 'بازدید صفحه ارتقا'),
+    ]
+
+    event_type = models.CharField(max_length=32, choices=EVENT_TYPES, verbose_name='نوع رویداد')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='plan_funnel_events',
+        verbose_name='کاربر',
+    )
+    session_key = models.CharField(max_length=64, blank=True, db_index=True, verbose_name='نشست')
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='plan_funnel_events',
+        verbose_name='محصول',
+    )
+    plan = models.ForeignKey(
+        LicensePlan,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='plan_funnel_events',
+        verbose_name='پلن',
+    )
+    metadata = models.JSONField(default=dict, blank=True, verbose_name='متادیتا')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='تاریخ')
+
+    class Meta:
+        verbose_name = 'رویداد قیف پلن'
+        verbose_name_plural = 'رویدادهای قیف پلن'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['event_type', 'created_at']),
+            models.Index(fields=['product', 'event_type', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.get_event_type_display()} — {self.created_at:%Y-%m-%d %H:%M}'
+
+
 class Transaction(models.Model):
     """تراکنش پرداخت"""
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='transaction', verbose_name='سفارش')

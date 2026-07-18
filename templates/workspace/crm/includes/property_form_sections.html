@@ -135,40 +135,133 @@
         </div>
     </section>
 
-    <section class="crm-prop-form-block" data-form-section="pfeatures">
+    <section class="crm-prop-form-block crm-feat" data-form-section="pfeatures" data-crm-feat>
+        {% with fctx=form.feature_form_context %}
         <header class="crm-prop-form-block-head">
-            <i class="fas fa-list-check" aria-hidden="true"></i>
-            <h3>ویژگی‌ها و امکانات تفصیلی</h3>
-            <span class="crm-prop-form-block-hint">هم‌تراز با استخراج آگهی</span>
+            <i class="fas fa-sliders-h" aria-hidden="true"></i>
+            <h3 data-crm-feat-title>{{ fctx.title }}</h3>
+            <span class="crm-prop-form-block-hint" data-crm-feat-hint>{{ fctx.hint }}</span>
         </header>
-        <p class="crm-form-hint">جنس کف، کابینت، نما، گرمایش/سرمایش، تعداد واحد در طبقه و سایر جزئیات</p>
-        <div class="crm-prop-feature-groups">
-            {% for group in form.feature_form_groups %}
-            <div class="crm-prop-feature-group" data-feature-group="{{ group.id }}">
-                <span class="crm-prop-feature-group-title">
-                    <i class="fas {{ group.icon }}" aria-hidden="true"></i>
-                    {{ group.title }}
-                </span>
-                <div class="crm-fields crm-fields-2">
-                    {% for item in group.items %}
-                    <div class="crm-field">
-                        <label class="crm-label" for="id_feat_{{ group.id }}_{{ forloop.counter }}">{{ item.label }}</label>
-                        <input
-                            type="text"
-                            class="crm-input"
-                            id="id_feat_{{ group.id }}_{{ forloop.counter }}"
-                            name="{{ item.input_name }}"
-                            value="{{ item.value }}"
-                            autocomplete="off"
-                        >
+        <input type="hidden" name="feat_profile" value="{{ fctx.profile_id }}" data-crm-feat-profile>
+
+        <div class="crm-feat-profiles">
+            {% for profile in fctx.all_profiles %}
+            <div
+                class="crm-feat-profile{% if profile.id == fctx.profile_id %} is-active{% endif %}"
+                data-crm-feat-panel="{{ profile.id }}"
+                {% if profile.id != fctx.profile_id %}hidden{% endif %}
+            >
+                {% for group in profile.groups %}
+                <div class="crm-feat-group" data-feat-group="{{ group.id }}">
+                    <div class="crm-feat-group-head">
+                        <span class="crm-feat-group-ico" aria-hidden="true"><i class="fas {{ group.icon }}"></i></span>
+                        <strong>{{ group.title }}</strong>
                     </div>
-                    {% endfor %}
+                    <div class="crm-feat-fields">
+                        {% for item in group.items %}
+                        <div class="crm-feat-field crm-feat-field--{{ item.widget }}" data-feat-key="{{ item.key }}">
+                            <div class="crm-feat-field-label">
+                                <i class="fas {{ item.icon }}" aria-hidden="true"></i>
+                                <span>{{ item.label }}</span>
+                                {% if item.hint %}<em>{{ item.hint }}</em>{% endif %}
+                            </div>
+
+                            {% if item.widget == 'toggle' %}
+                            <label class="crm-feat-toggle">
+                                <input
+                                    type="checkbox"
+                                    name="{{ item.input_name }}"
+                                    value="دارد"
+                                    {% if item.checked %}checked{% endif %}
+                                    {% if profile.id != fctx.profile_id %}disabled{% endif %}
+                                    data-feat-input
+                                >
+                                <span class="crm-feat-toggle-ui" aria-hidden="true">
+                                    <span class="crm-feat-toggle-knob"></span>
+                                </span>
+                                <span class="crm-feat-toggle-txt" data-feat-toggle-txt>{% if item.checked %}دارد{% else %}ندارد{% endif %}</span>
+                            </label>
+
+                            {% elif item.widget == 'chips' %}
+                            <div class="crm-feat-chips" role="radiogroup" aria-label="{{ item.label }}">
+                                <label class="crm-feat-chip crm-feat-chip--clear{% if not item.value %} is-on{% endif %}">
+                                    <input
+                                        type="radio"
+                                        name="{{ item.input_name }}"
+                                        value=""
+                                        {% if not item.value %}checked{% endif %}
+                                        {% if profile.id != fctx.profile_id %}disabled{% endif %}
+                                        data-feat-input
+                                    >
+                                    <span>انتخاب نشده</span>
+                                </label>
+                                {% for choice in item.choices %}
+                                <label class="crm-feat-chip{% if item.value == choice %} is-on{% endif %}">
+                                    <input
+                                        type="radio"
+                                        name="{{ item.input_name }}"
+                                        value="{{ choice }}"
+                                        {% if item.value == choice %}checked{% endif %}
+                                        {% if profile.id != fctx.profile_id %}disabled{% endif %}
+                                        data-feat-input
+                                    >
+                                    <span>{{ choice }}</span>
+                                </label>
+                                {% endfor %}
+                                {% if item.value and item.value not in item.choices %}
+                                <label class="crm-feat-chip is-on is-custom">
+                                    <input type="radio" name="{{ item.input_name }}" value="{{ item.value }}" checked {% if profile.id != fctx.profile_id %}disabled{% endif %} data-feat-input>
+                                    <span>{{ item.value }}</span>
+                                </label>
+                                {% endif %}
+                            </div>
+
+                            {% elif item.widget == 'select' %}
+                            <select
+                                class="crm-select crm-feat-select"
+                                name="{{ item.input_name }}"
+                                {% if profile.id != fctx.profile_id %}disabled{% endif %}
+                                data-feat-input
+                            >
+                                <option value="">— انتخاب —</option>
+                                {% for choice in item.choices %}
+                                <option value="{{ choice }}" {% if item.value == choice %}selected{% endif %}>{{ choice }}</option>
+                                {% endfor %}
+                                {% if item.value and item.value not in item.choices %}
+                                <option value="{{ item.value }}" selected>{{ item.value }}</option>
+                                {% endif %}
+                            </select>
+
+                            {% elif item.widget == 'date' %}
+                            <input
+                                type="date"
+                                class="crm-input crm-feat-date"
+                                name="{{ item.input_name }}"
+                                value="{{ item.value }}"
+                                {% if profile.id != fctx.profile_id %}disabled{% endif %}
+                                data-feat-input
+                            >
+
+                            {% else %}
+                            <input
+                                type="text"
+                                class="crm-input"
+                                name="{{ item.input_name }}"
+                                value="{{ item.value }}"
+                                {% if profile.id != fctx.profile_id %}disabled{% endif %}
+                                data-feat-input
+                                autocomplete="off"
+                            >
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <p class="crm-form-hint">فیلد تفصیلی تعریف نشده است.</p>
             {% endfor %}
         </div>
+        {% endwith %}
     </section>
 
     <section class="crm-prop-form-block" data-form-section="pprice" data-crm-prop-price>

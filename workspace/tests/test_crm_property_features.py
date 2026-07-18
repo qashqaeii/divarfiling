@@ -8,9 +8,24 @@ from django.urls import reverse
 
 from workspace.forms import CRMPropertyForm
 from workspace.models import CRMProperty
-from workspace.services.property_features import CRM_FEATURE_FORM_KEYS
+from workspace.services.property_features import (
+    CRM_FEATURE_FORM_KEYS,
+    parse_feature_data_from_post,
+    resolve_feature_profile,
+    sync_total_floors_from_feature_data,
+)
 
 User = get_user_model()
+
+
+class FeatureProfileResolveTests(TestCase):
+    def test_resolve_by_deal_and_type(self):
+        self.assertEqual(resolve_feature_profile('رهن و اجاره', 'آپارتمان'), 'rent')
+        self.assertEqual(resolve_feature_profile('اجاره', 'ویلا'), 'rent')
+        self.assertEqual(resolve_feature_profile('فروش', 'آپارتمان'), 'sale')
+        self.assertEqual(resolve_feature_profile('پیش‌فروش', 'آپارتمان'), 'sale')
+        self.assertEqual(resolve_feature_profile('فروش', 'اداری'), 'commercial')
+        self.assertEqual(resolve_feature_profile('رهن و اجاره', 'مغازه'), 'commercial')
 
 
 class CRMPropertyFeatureDataTests(TestCase):
@@ -19,17 +34,20 @@ class CRMPropertyFeatureDataTests(TestCase):
         self.client = Client()
         self.client.login(username='featprop', password='x')
 
-    def test_form_saves_feature_data_from_feat_fields(self):
+    def test_form_saves_sale_feature_chips_and_floors(self):
         form = CRMPropertyForm(data={
             'title': 'آپارتمان تست',
             'property_type': 'آپارتمان',
             'deal_mode': 'فروش',
             'transaction_status': 'فعال',
             'publish_status': 'پیش‌نویس',
+            'feat_profile': 'sale',
             'feat__جنس کف': 'پارکت',
-            'feat__گرمایش': 'پکیج',
-            'feat__تعداد واحد در طبقه': '۴',
-            'feat__تعداد کل طبقات ساختمان': '۱۲',  # skip — should not persist
+            'feat__گرمایش': 'شوفاژ',
+            'feat__تعداد واحد در طبقه': '4',
+            'feat__تعداد کل طبقات ساختمان': '12',
+            'feat__نوع سند': 'تک‌برگ',
+            'feat__بالکن': 'دارد',
         })
         self.assertTrue(form.is_valid(), form.errors)
         prop = form.save(commit=False)
@@ -37,11 +55,82 @@ class CRMPropertyFeatureDataTests(TestCase):
         prop.save()
         prop.refresh_from_db()
         self.assertEqual(prop.feature_data.get('جنس کف'), 'پارکت')
-        self.assertEqual(prop.feature_data.get('گرمایش'), 'پکیج')
-        self.assertEqual(prop.feature_data.get('تعداد واحد در طبقه'), '۴')
-        self.assertNotIn('تعداد کل طبقات ساختمان', prop.feature_data)
-        for key in ('جنس کف', 'گرمایش', 'تعداد واحد در طبقه'):
+        self.assertEqual(prop.feature_data.get('گرمایش'), 'شوفاژ')
+        self.assertEqual(prop.feature_data.get('تعداد واحد در طبقه'), '4')
+        self.assertEqual(prop.feature_data.get('تعداد کل طبقات ساختمان'), '12')
+        self.assertEqual(prop.feature_data.get('نوع سند'), 'تک‌برگ')
+        self.assertEqual(prop.feature_data.get('بالکن'), 'دارد')
+        self.assertEqual(prop.total_floors, 12)
+        self.assertIn('بالکن', prop.amenities or '')
+        for key in ('جنس کف', 'گرمایش', 'تعداد واحد در طبقه', 'نوع سند'):
             self.assertIn(key, CRM_FEATURE_FORM_KEYS)
+
+    def test_rent_profile_toggles_default_off(self):
+        form = CRMPropertyForm(data={
+            'title': 'اجاره تست',
+            'property_type': 'آپارتمان',
+            'deal_mode': 'رهن و اجاره',
+            'transaction_status': 'فعال',
+            'publish_status': 'پیش‌نویس',
+            'feat_profile': 'rent',
+            'feat__مناسب برای': 'خانواده',
+            'feat__مبله': 'دارد',
+            # unchecked toggles omitted → ندارد
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        prop = form.save(commit=False)
+        prop.user = self.user
+        prop.save()
+        prop.refresh_from_db()
+        self.assertEqual(prop.feature_data.get('مناسب برای'), 'خانواده')
+        self.assertEqual(prop.feature_data.get('مبله'), 'دارد')
+        self.assertEqual(prop.feature_data.get('بالکن'), 'ندارد')
+        self.assertEqual(prop.feature_data.get('استخر'), 'ندارد')
+        self.assertNotIn('نوع سند', prop.feature_data)
+
+    def test_commercial_profile_fields(self):
+        form = CRMPropertyForm(data={
+            'title': 'دفتر تست',
+            'property_type': 'اداری',
+            'deal_mode': 'فروش',
+            'transaction_status': 'فعال',
+            'publish_status': 'پیش‌نویس',
+            'feat_profile': 'commercial',
+            'feat__نوع کاربری ملک': 'پزشکی',
+            'feat__وضعیت سند': 'آزاد',
+            'feat__اتاق مدیریت': 'دارد',
+            'feat__تعداد خط تلفن': '3',
+            'feat__جنس کف': 'سرامیک',  # outside commercial profile — ignored
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        prop = form.save(commit=False)
+        prop.user = self.user
+        prop.save()
+        prop.refresh_from_db()
+        self.assertEqual(prop.feature_data.get('نوع کاربری ملک'), 'پزشکی')
+        self.assertEqual(prop.feature_data.get('وضعیت سند'), 'آزاد')
+        self.assertEqual(prop.feature_data.get('اتاق مدیریت'), 'دارد')
+        self.assertEqual(prop.feature_data.get('تعداد خط تلفن'), '3')
+        self.assertNotIn('جنس کف', prop.feature_data)
+
+    def test_parse_keeps_other_profile_keys_on_switch(self):
+        existing = {'نوع سند': 'تک‌برگ', 'جنس کف': 'سرامیک'}
+        data = {
+            'feat_profile': 'rent',
+            'feat__مناسب برای': 'مجرد',
+            'feat__بالکن': 'دارد',
+        }
+        out = parse_feature_data_from_post(
+            data, deal_mode='اجاره', property_type='آپارتمان', existing=existing,
+        )
+        self.assertEqual(out.get('مناسب برای'), 'مجرد')
+        self.assertEqual(out.get('بالکن'), 'دارد')
+        # sale-only key preserved when switching to rent
+        self.assertEqual(out.get('نوع سند'), 'تک‌برگ')
+
+    def test_sync_total_floors(self):
+        self.assertEqual(sync_total_floors_from_feature_data({'تعداد کل طبقات ساختمان': '8'}), 8)
+        self.assertIsNone(sync_total_floors_from_feature_data({}))
 
     def test_create_view_with_feature_and_image_url(self):
         url = reverse('workspace:crm_property_create')
@@ -51,18 +140,18 @@ class CRMPropertyFeatureDataTests(TestCase):
             'deal_mode': 'فروش',
             'transaction_status': 'فعال',
             'publish_status': 'پیش‌نویس',
-            'feat__جنس کابینت': 'ام‌دی‌اف',
+            'feat_profile': 'sale',
+            'feat__جنس کابینت': 'MDF',
             'feat__نمای ساختمان': 'سنگ',
             'property_images_json': '["https://example.com/a.jpg"]',
         })
         self.assertEqual(resp.status_code, 302)
         prop = CRMProperty.objects.get(user=self.user, title='ملک با عکس')
-        self.assertEqual(prop.feature_data.get('جنس کابینت'), 'ام‌دی‌اف')
+        self.assertEqual(prop.feature_data.get('جنس کابینت'), 'MDF')
         self.assertEqual(prop.feature_data.get('نمای ساختمان'), 'سنگ')
         self.assertEqual(prop.images, ['https://example.com/a.jpg'])
 
     def test_create_view_with_uploaded_file(self):
-        # minimal valid jpeg header bytes
         jpeg = SimpleUploadedFile(
             't.jpg',
             b'\xff\xd8\xff\xe0' + b'\x00' * 200,
@@ -96,6 +185,6 @@ class CRMPropertyFeatureDataTests(TestCase):
             for group in profile.get('groups') or []
             for item in group.get('items') or []
         }
-        self.assertIn('سرمایش', labels)
+        self.assertIn('سیستم سرمایش', labels)
         self.assertIn('جنس کف', labels)
         self.assertTrue(profile.get('has_details'))

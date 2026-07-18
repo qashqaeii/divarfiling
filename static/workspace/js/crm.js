@@ -122,6 +122,7 @@ const CRMDrawer = {
         initCRMJalaliPickers(drawer);
         initCRMMoneyInputs(drawer);
         initPropertyDealMode(drawer);
+        initCRMFeatureProfile(drawer);
         initCRMTypeProfiles(drawer);
         initCRMContactChannels(drawer);
         initCRMAreasPicker(drawer);
@@ -467,6 +468,87 @@ function initPropertyDealMode(root) {
         });
         if (saleInput) saleInput.addEventListener('input', updatePerSqm);
         if (areaInput) areaInput.addEventListener('input', updatePerSqm);
+    });
+}
+
+function resolveCRMFeatProfile(dealMode, propertyType) {
+    const commercialTypes = new Set(['اداری', 'مغازه']);
+    if (commercialTypes.has(String(propertyType || '').trim())) return 'commercial';
+    const rentModes = new Set(['رهن و اجاره', 'اجاره']);
+    if (rentModes.has(String(dealMode || '').trim())) return 'rent';
+    return 'sale';
+}
+
+function initCRMFeatureProfile(root) {
+    const scope = root || document;
+    scope.querySelectorAll('[data-crm-feat]').forEach((section) => {
+        if (section.dataset.crmFeatBound === '1') return;
+        section.dataset.crmFeatBound = '1';
+        const form = section.closest('form') || scope;
+        const dealSelect = form.querySelector('[data-deal-mode], [name="deal_mode"]');
+        const typeSelect = form.querySelector('[name="property_type"]');
+        const profileInput = section.querySelector('[data-crm-feat-profile]');
+        const titleEl = section.querySelector('[data-crm-feat-title]');
+        const hintEl = section.querySelector('[data-crm-feat-hint]');
+        const panels = section.querySelectorAll('[data-crm-feat-panel]');
+        const META = {
+            rent: {
+                title: 'ویژگی‌های اجاره',
+                hint: 'انتخاب از گزینه‌ها — مناسب قرارداد و آگهی اجاره',
+            },
+            sale: {
+                title: 'سایر ویژگی‌ها و امکانات',
+                hint: 'انتخاب از گزینه‌ها — مناسب فایل فروش و پیش‌فروش',
+            },
+            commercial: {
+                title: 'ویژگی‌های اداری / تجاری',
+                hint: 'انتخاب از گزینه‌ها — متناسب با فضای اداری یا تجاری',
+            },
+        };
+
+        function setPanelEnabled(panel, on) {
+            panel.hidden = !on;
+            panel.querySelectorAll('input, select, textarea, button').forEach((el) => {
+                el.disabled = !on;
+            });
+        }
+
+        function apply() {
+            const profile = resolveCRMFeatProfile(
+                dealSelect ? dealSelect.value : '',
+                typeSelect ? typeSelect.value : '',
+            );
+            if (profileInput) profileInput.value = profile;
+            const meta = META[profile] || META.sale;
+            if (titleEl) titleEl.textContent = meta.title;
+            if (hintEl) hintEl.textContent = meta.hint;
+            panels.forEach((panel) => {
+                setPanelEnabled(panel, panel.getAttribute('data-crm-feat-panel') === profile);
+            });
+        }
+
+        section.querySelectorAll('.crm-feat-chip input').forEach((input) => {
+            input.addEventListener('change', () => {
+                const name = input.name;
+                section.querySelectorAll(`.crm-feat-chip input[name="${CSS.escape(name)}"]`).forEach((el) => {
+                    const chip = el.closest('.crm-feat-chip');
+                    if (chip) chip.classList.toggle('is-on', el.checked);
+                });
+            });
+        });
+
+        section.querySelectorAll('.crm-feat-toggle input[type="checkbox"]').forEach((input) => {
+            const label = input.closest('.crm-feat-toggle')?.querySelector('[data-feat-toggle-txt], .crm-feat-toggle-txt');
+            const sync = () => {
+                if (label) label.textContent = input.checked ? 'دارد' : 'ندارد';
+            };
+            input.addEventListener('change', sync);
+            sync();
+        });
+
+        apply();
+        if (dealSelect) dealSelect.addEventListener('change', apply);
+        if (typeSelect) typeSelect.addEventListener('change', apply);
     });
 }
 
@@ -3457,6 +3539,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initCRMTypeProfiles();
     initPropertyDealMode();
+    initCRMFeatureProfile();
     initCRMGlobalSearch();
     initCRMMultiSelect();
     initCRMTabs();

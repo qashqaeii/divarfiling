@@ -421,7 +421,7 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         from workspace.constants import PROPERTY_AMENITY_CHECKBOX_GROUPS
-        from workspace.services.property_features import feature_form_groups_with_values
+        from workspace.services.property_features import feature_form_context
         from workspace.services.property_public_share import (
             property_amenity_checkbox_choices,
             split_amenities_for_checkbox_form,
@@ -451,8 +451,23 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
 
         feature_data = {}
         if instance is not None and isinstance(getattr(instance, 'feature_data', None), dict):
-            feature_data = instance.feature_data or {}
-        self._feature_form_groups = feature_form_groups_with_values(feature_data)
+            feature_data = dict(instance.feature_data or {})
+        if instance is not None and instance.total_floors and not feature_data.get('تعداد کل طبقات ساختمان'):
+            feature_data['تعداد کل طبقات ساختمان'] = str(instance.total_floors)
+        deal = ''
+        ptype = ''
+        if self.is_bound and self.data is not None:
+            deal = self.data.get('deal_mode') or ''
+            ptype = self.data.get('property_type') or ''
+        elif instance is not None:
+            deal = instance.deal_mode or self.initial.get('deal_mode') or ''
+            ptype = instance.property_type or self.initial.get('property_type') or ''
+        else:
+            deal = self.initial.get('deal_mode') or 'فروش'
+            ptype = self.initial.get('property_type') or 'آپارتمان'
+        self._feature_ctx = feature_form_context(
+            feature_data, deal_mode=deal, property_type=ptype,
+        )
         self._parsed_feature_data = feature_data
 
     def amenity_checkbox_groups(self):
@@ -480,32 +495,57 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             })
         return groups
 
+    def feature_form_context(self):
+        """کانتکست پروفایل ویژگی برای قالب (پروفایل فعال + همه پروفایل‌ها)."""
+        from workspace.services.property_features import feature_form_context, parse_feature_data_from_post
+        if self.is_bound and self.data is not None:
+            deal = self.data.get('deal_mode') or ''
+            ptype = self.data.get('property_type') or ''
+            existing = getattr(self.instance, 'feature_data', None) or {}
+            data = parse_feature_data_from_post(
+                self.data, deal_mode=deal, property_type=ptype, existing=existing,
+            )
+            return feature_form_context(data, deal_mode=deal, property_type=ptype)
+        return self._feature_ctx
+
     def feature_form_groups(self):
-        """گروه‌های ویژگی تفصیلی برای رندر؛ در حالت bound از POST خوانده می‌شود."""
-        from workspace.services.property_features import (
-            feature_form_groups_with_values,
-            parse_feature_data_from_post,
-        )
-        if self.is_bound:
-            return feature_form_groups_with_values(parse_feature_data_from_post(self.data))
-        return self._feature_form_groups
+        return self.feature_form_context().get('groups') or []
 
     def clean(self):
-        from workspace.services.property_features import parse_feature_data_from_post
+        from workspace.services.property_features import (
+            amenity_labels_from_feature_data,
+            parse_feature_data_from_post,
+            sync_total_floors_from_feature_data,
+        )
         from workspace.services.property_public_share import serialize_amenity_checkboxes
 
         cleaned = super().clean()
         selected = list(cleaned.get('amenity_flags') or [])
         leftover = (cleaned.get('amenities_extra') or '').strip()
+
+        if self.is_bound and self.data is not None:
+            existing = getattr(self.instance, 'feature_data', None) or {}
+            self._parsed_feature_data = parse_feature_data_from_post(
+                self.data,
+                deal_mode=cleaned.get('deal_mode') or self.data.get('deal_mode') or '',
+                property_type=cleaned.get('property_type') or self.data.get('property_type') or '',
+                existing=existing,
+            )
+            for label in amenity_labels_from_feature_data(self._parsed_feature_data):
+                if label not in selected:
+                    selected.append(label)
+            floors = sync_total_floors_from_feature_data(self._parsed_feature_data)
+            if floors is not None:
+                cleaned['total_floors'] = floors
+
         cleaned['has_parking'] = 'پارکینگ' in selected
         cleaned['has_storage'] = 'انباری' in selected
         cleaned['has_elevator'] = 'آسانسور' in selected
         cleaned['amenities'] = serialize_amenity_checkboxes(selected, leftover)
+        cleaned['amenity_flags'] = selected
         if cleaned.get('is_vacant'):
             cleaned['tenant_phone'] = ''
             cleaned['tenant_name'] = ''
-        if self.is_bound and self.data is not None:
-            self._parsed_feature_data = parse_feature_data_from_post(self.data)
         return cleaned
 
     def save(self, commit=True):

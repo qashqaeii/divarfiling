@@ -1507,3 +1507,162 @@
         min-width: calc(50% - 0.2rem);
     }
 }
+
+/* ── Mobile HQ polish (theme tokens) ── */
+@media (max-width: 768px) {
+    .ws-content:has(.mk-map-pro.ws-map-mobile) {
+        padding: 0 0 calc(1rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mk-map-pro.ws-map-mobile {
+        --map-accent: var(--ws-primary);
+        --map-accent-soft: color-mix(in srgb, var(--ws-primary) 12%, transparent);
+        gap: 0.55rem;
+        background:
+            radial-gradient(120% 30% at 50% 0%, color-mix(in srgb, var(--ws-primary) 8%, transparent), transparent 55%),
+            color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-bg, #f8fafc));
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-head {
+        margin: 0;
+        border-radius: 0 0 22px 22px;
+        border-inline: none;
+        border-top: none;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-hero {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 0.85rem 0.9rem 0.75rem;
+        background:
+            linear-gradient(165deg, color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) 0%, var(--ws-surface) 55%);
+        position: relative;
+    }
+    .mk-map-pro.ws-map-mobile .mk-map-hero::before {
+        content: '';
+        position: absolute;
+        inset-inline: 0;
+        top: 0;
+        height: 3px;
+        background: linear-gradient(
+            90deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 45%, #0ea5e9) 55%,
+            transparent
+        );
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-back {
+        width: 2.45rem;
+        height: 2.45rem;
+        border-radius: 13px;
+        flex-shrink: 0;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-head-title {
+        font-size: 1.05rem;
+        font-weight: 850;
+        letter-spacing: -0.02em;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-head-kicker {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--ws-primary);
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-head-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem;
+        width: 100%;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-head-stat {
+        min-width: 0;
+        padding: 0.55rem 0.6rem;
+        border-radius: 13px;
+        background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-head-stat-val {
+        font-size: 0.95rem;
+        font-weight: 850;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-head-stat-lbl {
+        font-size: 0.62rem;
+        font-weight: 700;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-deck {
+        margin: 0 0.7rem;
+        border-radius: 16px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 94%, transparent);
+        backdrop-filter: blur(12px);
+        overflow: hidden;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-filter.is-active {
+        background: var(--ws-primary);
+        color: #fff;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-mode.is-active {
+        border-color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
+        color: var(--ws-primary);
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-mode.is-active .mk-map-mode-icon {
+        background: var(--ws-primary);
+        color: #fff;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-panel {
+        margin: 0 0.7rem 0.7rem;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-canvas,
+    .mk-map-pro.ws-map-mobile .ws-map {
+        min-height: min(62vh, 480px);
+        height: min(62vh, 480px);
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-vpn-tip {
+        margin: 0 0.7rem 0.7rem;
+        border-radius: 14px;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-hud-btn {
+        min-height: 2.5rem;
+        border-radius: 12px;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-advanced {
+        margin: 0 0.7rem 0.55rem;
+        border-radius: 14px;
+        padding: 0.75rem;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-advanced-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .mk-map-pro.ws-map-mobile .mk-map-advanced-input {
+        min-height: 2.45rem;
+        border-radius: 11px;
+    }
+}
+

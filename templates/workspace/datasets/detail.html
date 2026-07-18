@@ -4,10 +4,19 @@
 {% block page_title %}{{ dataset.name }}{% endblock %}
 {% block mobile_bar_title %}{{ dataset.name|truncatechars:26 }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/ws-ds-mobile.css' %}?v=1">
+{% endblock %}
+
 {% block content %}
-<div class="mk-page mk-filing-page mk-listing-page">
+<div class="mk-page mk-filing-page mk-listing-page ws-ds-mobile">
 
     <section class="mk-ds-command mk-ds-command--{{ tx.mode|default:'other' }}" aria-label="خلاصه فایل">
+        <div class="ws-ds-mob-stage" aria-hidden="true">
+            <span class="ws-ds-mob-stage__glow"></span>
+            <span class="ws-ds-mob-stage__grid"></span>
+            <span class="ws-ds-mob-stage__ribbon"></span>
+        </div>
 
         <div class="mk-ds-mobile-shell">
             <header class="mk-ds-mobile-bar">
@@ -53,6 +62,21 @@
                 <span class="mk-ds-mobile-meta-chip">{{ dataset.subcategory|truncatechars:12 }}</span>
                 {% endif %}
                 {% if filter_count %}<span class="mk-ds-mobile-meta-chip mk-ds-mobile-meta-chip--filter">{{ filter_count }} فیلتر</span>{% endif %}
+            </div>
+
+            <div class="ws-ds-mob-quick" aria-label="میانبرها">
+                <a href="{% url 'workspace:dataset_map' dataset.id %}" class="ws-ds-mob-quick__chip">
+                    <i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه
+                </a>
+                <button type="button" class="ws-ds-mob-quick__chip ws-ds-mob-quick__chip--primary" data-ds-filter-jump>
+                    <i class="fas fa-sliders" aria-hidden="true"></i> فیلتر{% if filter_count %} · {{ filter_count }}{% endif %}
+                </button>
+                <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="ws-ds-mob-quick__chip">
+                    <i class="fas fa-download" aria-hidden="true"></i> خروجی
+                </a>
+                <button type="button" class="ws-ds-mob-quick__chip" data-modal-open="modal-rename">
+                    <i class="fas fa-pen" aria-hidden="true"></i> نام
+                </button>
             </div>
 
             <details class="mk-ds-mobile-stats">
@@ -284,6 +308,27 @@
 
         {% mk_pagination page_obj page_query aria_label="صفحه‌بندی آگهی‌ها" %}
     </section>
+
+    <nav class="ws-ds-mob-dock" aria-label="عملیات سریع موبایل">
+        <div class="ws-ds-mob-dock__inner">
+            <button type="button" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--filter{% if filter_count %} has-active{% endif %}" data-ds-filter-jump title="فیلتر آگهی‌ها">
+                <i class="fas fa-sliders" aria-hidden="true"></i>
+                <span>فیلتر{% if filter_count %} · {{ filter_count }}{% endif %}</span>
+            </button>
+            <a href="{% url 'workspace:dataset_map' dataset.id %}" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--map" title="نقشه آگهی‌ها">
+                <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                <span>نقشه</span>
+            </a>
+            <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--primary" title="تحلیل بازار">
+                <i class="fas fa-chart-line" aria-hidden="true"></i>
+                <span>تحلیل</span>
+            </a>
+            <button type="button" class="ws-ds-mob-dock__btn" data-ds-more-open title="عملیات بیشتر">
+                <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                <span>بیشتر</span>
+            </button>
+        </div>
+    </nav>
 </div>
 {% endblock %}
 
@@ -418,6 +463,25 @@
         if (e.target.closest('.mk-ds-mobile-more')) return;
         document.querySelectorAll('.mk-ds-mobile-more[open]').forEach(function (m) {
             m.removeAttribute('open');
+        });
+    });
+
+    function jumpToFilters(openAdvanced) {
+        const shell = document.getElementById('wsFilterShell');
+        if (!shell) return;
+        shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const search = shell.querySelector('input[name="q"]');
+        if (openAdvanced && advPanel && advPanel.hidden) setFilterPanel(true);
+        setTimeout(function () { search?.focus({ preventScroll: true }); }, 280);
+    }
+    document.querySelectorAll('[data-ds-filter-jump]').forEach(function (btn) {
+        btn.addEventListener('click', function () { jumpToFilters(true); });
+    });
+    document.querySelectorAll('[data-ds-more-open]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (!dsMobileMore) return;
+            dsMobileMore.open = true;
+            dsMobileMore.querySelector('summary')?.focus();
         });
     });
 })();

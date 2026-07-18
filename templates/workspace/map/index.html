@@ -4,15 +4,14 @@
 
 
 
-{% block page_title %}{% endblock %}
-
-
+{% block page_title %}نقشه — {{ dataset.name|truncatechars:30 }}{% endblock %}
+{% block mobile_bar_title %}نقشه آگهی‌ها{% endblock %}
 
 {% block content %}
 
-<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=17">
 
-<div class="mk-page mk-map-pro">
+<div class="mk-page mk-map-pro ws-map-mobile">
 
 
 

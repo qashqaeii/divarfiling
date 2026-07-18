@@ -4,10 +4,19 @@
 {% block page_title %}آگهی‌های {{ dataset_count }} فایل{% endblock %}
 {% block mobile_bar_title %}آگهی‌های چند فایل{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/ws-ds-mobile.css' %}?v=1">
+{% endblock %}
+
 {% block content %}
-<div class="mk-page mk-filing-page mk-listing-page mk-multi-listings-page">
+<div class="mk-page mk-filing-page mk-listing-page mk-multi-listings-page ws-ds-mobile">
 
     <section class="mk-ds-command mk-ds-command--{{ tx.mode|default:'other' }}" aria-label="خلاصه انتخاب">
+        <div class="ws-ds-mob-stage" aria-hidden="true">
+            <span class="ws-ds-mob-stage__glow"></span>
+            <span class="ws-ds-mob-stage__grid"></span>
+            <span class="ws-ds-mob-stage__ribbon"></span>
+        </div>
 
         <div class="mk-ds-mobile-shell">
             <header class="mk-ds-mobile-bar">
@@ -15,11 +24,30 @@
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
                 <h1 class="mk-ds-mobile-title">{{ dataset_count }} فایل انتخاب‌شده</h1>
+                <button type="button" class="mk-ds-mobile-primary" data-ds-filter-jump title="فیلتر آگهی‌ها">
+                    <i class="fas fa-sliders" aria-hidden="true"></i>
+                    <span>فیلتر</span>
+                </button>
             </header>
             <div class="mk-ds-mobile-meta">
-                <span class="mk-ds-mobile-meta-count"><strong>{{ filtered_count|intcomma }}</strong> از {{ total_count|intcomma }} آگهی</span>
+                <span class="mk-ds-mobile-meta-count{% if filter_count %} is-filtered{% endif %}">
+                    <strong>{{ filtered_count|intcomma }}</strong>
+                    <span class="mk-ds-mobile-meta-sep">از</span>
+                    {{ total_count|intcomma }}
+                    <span class="mk-ds-mobile-meta-lbl">آگهی</span>
+                </span>
                 <span class="mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
                 {% if filter_count %}<span class="mk-ds-mobile-meta-chip mk-ds-mobile-meta-chip--filter">{{ filter_count }} فیلتر</span>{% endif %}
+            </div>
+
+            <div class="ws-ds-mob-quick mk-multi-ds-chips-mob" aria-label="فایل‌های انتخاب‌شده">
+                {% for ds in datasets %}
+                <a href="{% url 'workspace:dataset_detail' ds.id %}" class="ws-ds-mob-quick__chip" title="{{ ds.name }}">
+                    <i class="fas fa-file-lines" aria-hidden="true"></i>
+                    {{ ds.name|truncatechars:18 }}
+                    <em style="font-style:normal;opacity:.65;font-variant-numeric:tabular-nums">{{ ds.row_count|intcomma }}</em>
+                </a>
+                {% endfor %}
             </div>
         </div>
 
@@ -126,6 +154,23 @@
 
         {% mk_pagination page_obj page_query aria_label="صفحه‌بندی آگهی‌ها" %}
     </section>
+
+    <nav class="ws-ds-mob-dock" aria-label="عملیات سریع موبایل">
+        <div class="ws-ds-mob-dock__inner">
+            <button type="button" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--filter{% if filter_count %} has-active{% endif %}" data-ds-filter-jump title="فیلتر آگهی‌ها">
+                <i class="fas fa-sliders" aria-hidden="true"></i>
+                <span>فیلتر{% if filter_count %} · {{ filter_count }}{% endif %}</span>
+            </button>
+            <a href="{% url 'workspace:dataset_list' %}" class="ws-ds-mob-dock__btn" title="بازگشت به فایلینگ">
+                <i class="fas fa-folder-open" aria-hidden="true"></i>
+                <span>فایلینگ</span>
+            </a>
+            <button type="button" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--primary" data-ds-filter-jump title="جستجو و فیلتر">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <span>جستجو</span>
+            </button>
+        </div>
+    </nav>
 </div>
 {% endblock %}
 
@@ -171,6 +216,18 @@
             if (e.target.closest('a, button, input, select, textarea, summary, details, label, form, .mk-lcard-nav, .mk-lcard-cover--gallery')) return;
             window.location.href = row.dataset.href;
         });
+    });
+
+    function jumpToFilters(openAdvanced) {
+        const shell = document.getElementById('wsFilterShell');
+        if (!shell) return;
+        shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const search = shell.querySelector('input[name="q"]');
+        if (openAdvanced && advPanel && advPanel.hidden) setFilterPanel(true);
+        setTimeout(function () { search?.focus({ preventScroll: true }); }, 280);
+    }
+    document.querySelectorAll('[data-ds-filter-jump]').forEach(function (btn) {
+        btn.addEventListener('click', function () { jumpToFilters(true); });
     });
 })();
 </script>

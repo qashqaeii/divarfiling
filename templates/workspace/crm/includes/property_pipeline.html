@@ -35,12 +35,14 @@
                      data-tx-status="{{ p.transaction_status }}">
                 <span class="crm-prop-pipeline-grip" aria-hidden="true"><i class="fas fa-grip-vertical"></i></span>
 
-                {% if p.images %}
-                <div class="crm-prop-pipeline-thumb" aria-hidden="true">
-                    <img src="{{ p.images.0 }}" alt="" loading="lazy">
+                {% with cover=p.images.0|default:'' %}
+                {% if cover %}
+                <div class="crm-prop-pipeline-thumb" data-pipeline-thumb aria-hidden="true">
+                    <img src="{{ cover }}" alt="" loading="lazy" decoding="async" onerror="var t=this.closest('[data-pipeline-thumb]'); if(t){ t.classList.add('is-broken'); t.remove(); }">
                     <span class="crm-prop-pipeline-thumb-shade"></span>
                 </div>
                 {% endif %}
+                {% endwith %}
 
                 <div class="crm-prop-pipeline-body">
                     <div class="crm-prop-pipeline-top">

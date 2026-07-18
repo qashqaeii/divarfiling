@@ -3150,19 +3150,50 @@ function initCRMDealsPage() {
 function initCRMPropertyAdvFilters() {
     const toggle = document.getElementById('crmPropAdvToggle');
     const panel = document.getElementById('crmPropAdvPanel');
-    if (!toggle || !panel || toggle.dataset.bound === '1') return;
-    toggle.dataset.bound = '1';
+    if (toggle && panel && toggle.dataset.bound !== '1') {
+        toggle.dataset.bound = '1';
+        const setOpen = (open) => {
+            toggle.classList.toggle('is-open', open);
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            panel.classList.toggle('is-open', open);
+            if (open) panel.removeAttribute('hidden');
+            else panel.setAttribute('hidden', '');
+        };
+        toggle.addEventListener('click', () => {
+            setOpen(!panel.classList.contains('is-open'));
+        });
+    }
 
-    const setOpen = (open) => {
-        toggle.classList.toggle('is-open', open);
-        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        panel.classList.toggle('is-open', open);
-        if (open) panel.removeAttribute('hidden');
-        else panel.setAttribute('hidden', '');
-    };
+    const sheetToggle = document.getElementById('crmFilesFilterToggle');
+    const sheet = document.getElementById('crmFilesFilterSheet');
+    if (sheetToggle && sheet && sheetToggle.dataset.bound !== '1') {
+        sheetToggle.dataset.bound = '1';
+        const mq = window.matchMedia('(max-width: 768px)');
+        const setSheet = (open) => {
+            if (!mq.matches) {
+                sheet.classList.remove('is-open');
+                sheetToggle.setAttribute('aria-expanded', 'false');
+                sheetToggle.classList.remove('is-open');
+                return;
+            }
+            sheet.classList.toggle('is-open', open);
+            sheetToggle.classList.toggle('is-open', open);
+            sheetToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+        sheetToggle.addEventListener('click', () => {
+            setSheet(!sheet.classList.contains('is-open'));
+        });
+        mq.addEventListener?.('change', () => setSheet(false));
+    }
 
-    toggle.addEventListener('click', () => {
-        setOpen(!panel.classList.contains('is-open'));
+    document.querySelectorAll('.crm-files-mobile .crm-ft-row[data-href]').forEach((row) => {
+        if (row.dataset.hrefBound === '1') return;
+        row.dataset.hrefBound = '1';
+        row.addEventListener('click', (e) => {
+            if (e.target.closest('a, button, input, select, label')) return;
+            const href = row.getAttribute('data-href');
+            if (href) window.location.href = href;
+        });
     });
 }
 

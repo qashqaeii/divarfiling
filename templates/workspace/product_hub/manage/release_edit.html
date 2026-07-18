@@ -5,12 +5,38 @@
 {% block mobile_bar_title %}ویرایش نسخه{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-manage.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page ph-page">
-    <header class="mk-hub-head">
+<div class="mk-page ph-page ph-manage-page ph-page-mobile">
+
+    <header class="ph-mgmt-mob-header">
+        <div class="ph-mgmt-mob-mesh" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-accent" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-inner">
+            <div class="ph-mgmt-mob-main">
+                <span class="ph-mgmt-mob-kicker"><i class="fas fa-pen" aria-hidden="true"></i> Edit Release</span>
+                <h1 class="ph-mgmt-mob-title">نسخه <span dir="ltr">v{{ release.version }}</span></h1>
+                <p class="ph-mgmt-mob-sub">
+                    {% if release.is_published %}
+                    <span class="ph-badge ph-badge--green">منتشر</span>
+                    {% else %}
+                    <span class="ph-badge ph-badge--gray">پیش‌نویس</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="ph-mgmt-mob-actions">
+                <a href="{% url 'workspace:product_hub:manage_releases' %}" class="ph-mgmt-icon-btn" title="بازگشت" aria-label="بازگشت">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <header class="mk-hub-head ph-mgmt-desk-header">
         <div class="mk-hub-head-main">
             <h1 class="mk-hub-head-title">ویرایش نسخه {{ release.version }}</h1>
         </div>
@@ -21,8 +47,14 @@
 
     {% include 'workspace/product_hub/manage/_nav.html' with active='releases' %}
 
-    <section class="ph-panel">
-        <form method="post" class="ph-form-grid">
+    <section class="ph-panel ph-mgmt-panel">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>ویرایش نسخه</h2>
+                <p>جزئیات و آیتم‌های changelog</p>
+            </div>
+        </div>
+        <form method="post" class="ph-form ph-mgmt-form">
             {% csrf_token %}
             <div class="ph-form-row">
                 <div class="ph-field"><label>{{ release_form.version.label }}</label>{{ release_form.version }}</div>
@@ -30,20 +62,28 @@
             </div>
             <div class="ph-field"><label>{{ release_form.title.label }}</label>{{ release_form.title }}</div>
             <div class="ph-field"><label>{{ release_form.summary.label }}</label>{{ release_form.summary }}</div>
-            <div class="ph-field"><label>{{ release_form.is_published.label }}</label>{{ release_form.is_published }}</div>
-            <h3 style="margin:0.5rem 0;font-size:0.95rem">آیتم‌های تغییر</h3>
-            {{ change_formset.management_form }}
-            {% for f in change_formset %}
-            <div class="ph-form-row" style="align-items:end">
-                <div class="ph-field">{{ f.change_type }}</div>
-                <div class="ph-field">{{ f.text }}</div>
-                <div class="ph-field">{{ f.sort_order }}</div>
-                {% if f.DELETE %}<div class="ph-field"><label>حذف</label>{{ f.DELETE }}</div>{% endif %}
-                {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+            <div class="ph-field ph-field--check">
+                <label class="ph-check-label">{{ release_form.is_published }} <span>{{ release_form.is_published.label }}</span></label>
             </div>
-            {% endfor %}
+
+            <div class="ph-mgmt-formset">
+                <h3 class="ph-mgmt-formset-title">آیتم‌های تغییر</h3>
+                {{ change_formset.management_form }}
+                {% for f in change_formset %}
+                <div class="ph-mgmt-formset-row">
+                    <div class="ph-field">{{ f.change_type }}</div>
+                    <div class="ph-field ph-field--grow">{{ f.text }}</div>
+                    <div class="ph-field ph-field--sm">{{ f.sort_order }}</div>
+                    {% if f.DELETE %}<label class="ph-check-label ph-check-label--del">{{ f.DELETE }} <span>حذف</span></label>{% endif %}
+                    {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+
             <div class="ph-actions">
-                <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">ذخیره</button>
+                <button type="submit" class="ph-btn ph-btn--primary ph-btn--lg">
+                    <i class="fas fa-floppy-disk" aria-hidden="true"></i><span>ذخیره</span>
+                </button>
             </div>
         </form>
     </section>

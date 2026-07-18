@@ -5,12 +5,35 @@
 {% block mobile_bar_title %}مدیریت پیشنهاد{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-manage.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page ph-page">
-    <header class="mk-hub-head">
+<div class="mk-page ph-page ph-manage-page ph-page-mobile">
+
+    <header class="ph-mgmt-mob-header">
+        <div class="ph-mgmt-mob-mesh" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-accent" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-inner">
+            <div class="ph-mgmt-mob-main">
+                <span class="ph-mgmt-mob-kicker"><i class="fas fa-lightbulb" aria-hidden="true"></i> پیشنهاد #{{ req.id }}</span>
+                <h1 class="ph-mgmt-mob-title">{{ req.title|truncatechars:36 }}</h1>
+                <p class="ph-mgmt-mob-sub">
+                    <span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span>
+                    <span class="ph-mgmt-chip"><i class="fas fa-caret-up" aria-hidden="true"></i> {{ req.votes_count }} رای</span>
+                </p>
+            </div>
+            <div class="ph-mgmt-mob-actions">
+                <a href="{% url 'workspace:product_hub:manage' %}" class="ph-mgmt-icon-btn" title="بازگشت" aria-label="بازگشت">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <header class="mk-hub-head ph-mgmt-desk-header">
         <div class="mk-hub-head-main">
             <p class="mk-hub-head-eyebrow">پیشنهاد #{{ req.id }}</p>
             <h1 class="mk-hub-head-title">{{ req.title }}</h1>
@@ -23,19 +46,45 @@
 
     {% include 'workspace/product_hub/manage/_nav.html' with active='dashboard' %}
 
-    <section class="ph-panel">
-        <h2>جزئیات</h2>
-        <p><strong>دسته‌بندی:</strong> {{ req.category|ph_label:'category' }} · <strong>اولویت:</strong> {{ req.priority|ph_label:'priority' }}</p>
-        <p><strong>وضعیت فعلی:</strong> <span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span></p>
-        <p><strong>مشکل:</strong></p>
-        <p style="white-space:pre-wrap">{{ req.problem }}</p>
-        <p><strong>اهمیت:</strong></p>
-        <p style="white-space:pre-wrap">{{ req.why_important }}</p>
+    <section class="ph-panel ph-mgmt-panel">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>جزئیات پیشنهاد</h2>
+                <p>{{ req.user }} · {{ req.created_at|ws_jalali }}</p>
+            </div>
+        </div>
+        <dl class="ph-mgmt-dl">
+            <div>
+                <dt>دسته‌بندی</dt>
+                <dd>{{ req.category|ph_label:'category' }}</dd>
+            </div>
+            <div>
+                <dt>اولویت</dt>
+                <dd>{{ req.priority|ph_label:'priority' }}</dd>
+            </div>
+            <div>
+                <dt>وضعیت</dt>
+                <dd><span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span></dd>
+            </div>
+        </dl>
+        <div class="ph-mgmt-block">
+            <h3>مشکل</h3>
+            <p>{{ req.problem }}</p>
+        </div>
+        <div class="ph-mgmt-block">
+            <h3>اهمیت</h3>
+            <p>{{ req.why_important }}</p>
+        </div>
     </section>
 
-    <section class="ph-panel">
-        <h2>تغییر وضعیت / انتشار</h2>
-        <form method="post" class="ph-form-grid">
+    <section class="ph-panel ph-mgmt-panel">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>تغییر وضعیت / انتشار</h2>
+                <p>برای «تکمیل شده» نسخه و توضیح الزامی است</p>
+            </div>
+        </div>
+        <form method="post" class="ph-form ph-mgmt-form">
             {% csrf_token %}
             <div class="ph-form-row">
                 <div class="ph-field">
@@ -54,36 +103,62 @@
             <div class="ph-field">
                 <label>{{ status_form.release_note.label }}</label>
                 {{ status_form.release_note }}
-                <small style="color:var(--ws-muted)">برای وضعیت «تکمیل شده» نسخه و توضیح انتشار الزامی است.</small>
             </div>
             <div class="ph-field">
                 <label>{{ status_form.note.label }}</label>
                 {{ status_form.note }}
             </div>
             <div class="ph-actions">
-                <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">ذخیره وضعیت</button>
+                <button type="submit" class="ph-btn ph-btn--primary ph-btn--lg">
+                    <i class="fas fa-floppy-disk" aria-hidden="true"></i><span>ذخیره وضعیت</span>
+                </button>
             </div>
         </form>
     </section>
 
-    <section class="ph-panel">
-        <h2>تاریخچه وضعیت</h2>
-        <table class="ph-table">
-            <thead><tr><th>از</th><th>به</th><th>توسط</th><th>توضیح</th><th>زمان</th></tr></thead>
-            <tbody>
+    <section class="ph-panel ph-mgmt-panel">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>تاریخچه وضعیت</h2>
+            </div>
+        </div>
+
+        <div class="ph-mgmt-timeline">
             {% for log in status_logs %}
-            <tr>
-                <td>{{ log.from_status|ph_label:'request_status'|default:'—' }}</td>
-                <td>{{ log.to_status|ph_label:'request_status' }}</td>
-                <td>{{ log.actor|default:'—' }}</td>
-                <td>{{ log.note|default:'—' }}</td>
-                <td>{{ log.created_at|ws_jalali }}</td>
-            </tr>
+            <article class="ph-mgmt-tl-item">
+                <span class="ph-mgmt-tl-dot" aria-hidden="true"></span>
+                <div class="ph-mgmt-tl-body">
+                    <strong>{{ log.from_status|ph_label:'request_status'|default:'—' }} → {{ log.to_status|ph_label:'request_status' }}</strong>
+                    <p>{{ log.note|default:'بدون توضیح' }}</p>
+                    <small>{{ log.actor|default:'—' }} · {{ log.created_at|ws_jalali }}</small>
+                </div>
+            </article>
             {% empty %}
-            <tr><td colspan="5" class="ph-empty">هنوز تغییری ثبت نشده</td></tr>
+            <div class="ph-empty-state">
+                <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-clock"></i></span>
+                <strong>هنوز تغییری ثبت نشده</strong>
+            </div>
             {% endfor %}
-            </tbody>
-        </table>
+        </div>
+
+        <div class="ph-mgmt-table-wrap">
+            <table class="ph-table">
+                <thead><tr><th>از</th><th>به</th><th>توسط</th><th>توضیح</th><th>زمان</th></tr></thead>
+                <tbody>
+                {% for log in status_logs %}
+                <tr>
+                    <td>{{ log.from_status|ph_label:'request_status'|default:'—' }}</td>
+                    <td>{{ log.to_status|ph_label:'request_status' }}</td>
+                    <td>{{ log.actor|default:'—' }}</td>
+                    <td>{{ log.note|default:'—' }}</td>
+                    <td>{{ log.created_at|ws_jalali }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="ph-empty">هنوز تغییری ثبت نشده</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </section>
 </div>
 {% endblock %}

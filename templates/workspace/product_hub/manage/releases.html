@@ -5,12 +5,35 @@
 {% block mobile_bar_title %}نسخه‌ها{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-manage.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page ph-page">
-    <header class="mk-hub-head">
+<div class="mk-page ph-page ph-manage-page ph-page-mobile">
+
+    <header class="ph-mgmt-mob-header">
+        <div class="ph-mgmt-mob-mesh" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-accent" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-inner">
+            <div class="ph-mgmt-mob-main">
+                <span class="ph-mgmt-mob-kicker"><i class="fas fa-tags" aria-hidden="true"></i> Releases</span>
+                <h1 class="ph-mgmt-mob-title">نسخه‌ها</h1>
+                <p class="ph-mgmt-mob-sub"><span class="ph-mgmt-chip">changelog و انتشار</span></p>
+            </div>
+            <div class="ph-mgmt-mob-actions">
+                <a href="{% url 'workspace:product_hub:manage' %}" class="ph-mgmt-icon-btn" title="داشبورد" aria-label="داشبورد">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <a href="#ph-release-create" class="ph-mgmt-icon-btn ph-mgmt-icon-btn--primary" title="نسخه جدید" aria-label="ثبت نسخه جدید">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <header class="mk-hub-head ph-mgmt-desk-header">
         <div class="mk-hub-head-main">
             <h1 class="mk-hub-head-title">انتشار نسخه‌ها</h1>
             <p class="mk-hub-head-meta">ثبت changelog و اطلاع‌رسانی نسخه جدید</p>
@@ -19,9 +42,14 @@
 
     {% include 'workspace/product_hub/manage/_nav.html' with active='releases' %}
 
-    <section class="ph-panel">
-        <h2>نسخه جدید</h2>
-        <form method="post" class="ph-form-grid">
+    <section class="ph-panel ph-mgmt-panel" id="ph-release-create">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>نسخه جدید</h2>
+                <p>عنوان، خلاصه و آیتم‌های تغییر را وارد کنید</p>
+            </div>
+        </div>
+        <form method="post" class="ph-form ph-mgmt-form">
             {% csrf_token %}
             <div class="ph-form-row">
                 <div class="ph-field">
@@ -41,44 +69,84 @@
                 <label>{{ release_form.summary.label }}</label>
                 {{ release_form.summary }}
             </div>
-            <div class="ph-field">
-                <label>{{ release_form.is_published.label }}</label>
-                {{ release_form.is_published }}
+            <div class="ph-field ph-field--check">
+                <label class="ph-check-label">{{ release_form.is_published }} <span>{{ release_form.is_published.label }}</span></label>
             </div>
-            <h3 style="margin:0.5rem 0;font-size:0.95rem">آیتم‌های تغییر</h3>
-            {{ change_formset.management_form }}
-            {% for f in change_formset %}
-            <div class="ph-form-row" style="align-items:end">
-                <div class="ph-field">{{ f.change_type }}</div>
-                <div class="ph-field" style="grid-column: span 1; flex:2">{{ f.text }}</div>
-                {% if f.DELETE %}<div class="ph-field"><label>حذف</label>{{ f.DELETE }}</div>{% endif %}
-                {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+
+            <div class="ph-mgmt-formset">
+                <h3 class="ph-mgmt-formset-title">آیتم‌های تغییر</h3>
+                {{ change_formset.management_form }}
+                {% for f in change_formset %}
+                <div class="ph-mgmt-formset-row">
+                    <div class="ph-field">{{ f.change_type }}</div>
+                    <div class="ph-field ph-field--grow">{{ f.text }}</div>
+                    {% if f.DELETE %}<label class="ph-check-label ph-check-label--del">{{ f.DELETE }} <span>حذف</span></label>{% endif %}
+                    {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+
             <div class="ph-actions">
-                <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">ثبت نسخه</button>
+                <button type="submit" class="ph-btn ph-btn--primary ph-btn--lg">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i><span>ثبت نسخه</span>
+                </button>
             </div>
         </form>
     </section>
 
-    <section class="ph-panel">
-        <h2>نسخه‌های موجود</h2>
-        <table class="ph-table">
-            <thead><tr><th>نسخه</th><th>عنوان</th><th>تاریخ</th><th>منتشر</th><th></th></tr></thead>
-            <tbody>
+    <section class="ph-panel ph-mgmt-panel">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>نسخه‌های موجود</h2>
+                <p>ویرایش و وضعیت انتشار</p>
+            </div>
+            <span class="ph-pill ph-pill--soft">{{ releases|length }}</span>
+        </div>
+
+        <div class="ph-mgmt-cards">
             {% for r in releases %}
-            <tr>
-                <td dir="ltr">{{ r.version }}</td>
-                <td>{{ r.title }}</td>
-                <td>{{ r.released_at|ws_jalali }}</td>
-                <td>{% if r.is_published %}بله{% else %}خیر{% endif %}</td>
-                <td><a href="{% url 'workspace:product_hub:manage_release_edit' r.id %}">ویرایش</a></td>
-            </tr>
+            <a href="{% url 'workspace:product_hub:manage_release_edit' r.id %}" class="ph-mgmt-card">
+                <header class="ph-mgmt-card-head">
+                    <span class="ph-mgmt-ver" dir="ltr">v{{ r.version }}</span>
+                    {% if r.is_published %}
+                    <span class="ph-badge ph-badge--green">منتشر</span>
+                    {% else %}
+                    <span class="ph-badge ph-badge--gray">پیش‌نویس</span>
+                    {% endif %}
+                </header>
+                <h3 class="ph-mgmt-card-title">{{ r.title }}</h3>
+                <p class="ph-mgmt-card-meta">
+                    <span><i class="far fa-calendar" aria-hidden="true"></i> {{ r.released_at|ws_jalali }}</span>
+                </p>
+                <span class="ph-mgmt-card-go" aria-hidden="true"><i class="fas fa-pen"></i></span>
+            </a>
             {% empty %}
-            <tr><td colspan="5" class="ph-empty">نسخه‌ای نیست</td></tr>
+            <div class="ph-empty-state">
+                <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-book-open"></i></span>
+                <strong>نسخه‌ای ثبت نشده</strong>
+                <p>اولین نسخه را از فرم بالا اضافه کنید.</p>
+            </div>
             {% endfor %}
-            </tbody>
-        </table>
+        </div>
+
+        <div class="ph-mgmt-table-wrap">
+            <table class="ph-table">
+                <thead><tr><th>نسخه</th><th>عنوان</th><th>تاریخ</th><th>منتشر</th><th></th></tr></thead>
+                <tbody>
+                {% for r in releases %}
+                <tr>
+                    <td dir="ltr">{{ r.version }}</td>
+                    <td>{{ r.title }}</td>
+                    <td>{{ r.released_at|ws_jalali }}</td>
+                    <td>{% if r.is_published %}بله{% else %}خیر{% endif %}</td>
+                    <td><a class="ph-mgmt-link" href="{% url 'workspace:product_hub:manage_release_edit' r.id %}">ویرایش</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="ph-empty">نسخه‌ای نیست</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </section>
 </div>
 {% endblock %}

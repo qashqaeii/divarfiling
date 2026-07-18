@@ -5,12 +5,35 @@
 {% block mobile_bar_title %}مدیریت باگ{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-manage.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page ph-page">
-    <header class="mk-hub-head">
+<div class="mk-page ph-page ph-manage-page ph-page-mobile">
+
+    <header class="ph-mgmt-mob-header">
+        <div class="ph-mgmt-mob-mesh" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-accent" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-inner">
+            <div class="ph-mgmt-mob-main">
+                <span class="ph-mgmt-mob-kicker"><i class="fas fa-bug" aria-hidden="true"></i> باگ #{{ bug.id }}</span>
+                <h1 class="ph-mgmt-mob-title">{{ bug.title|truncatechars:36 }}</h1>
+                <p class="ph-mgmt-mob-sub">
+                    <span class="ph-badge {% ph_bug_severity_class bug.severity %}">{{ bug.severity|ph_label:'severity' }}</span>
+                    <span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span>
+                </p>
+            </div>
+            <div class="ph-mgmt-mob-actions">
+                <a href="{% url 'workspace:product_hub:manage' %}" class="ph-mgmt-icon-btn" title="بازگشت" aria-label="بازگشت">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <header class="mk-hub-head ph-mgmt-desk-header">
         <div class="mk-hub-head-main">
             <p class="mk-hub-head-eyebrow">باگ #{{ bug.id }}</p>
             <h1 class="mk-hub-head-title">{{ bug.title }}</h1>
@@ -23,17 +46,30 @@
 
     {% include 'workspace/product_hub/manage/_nav.html' with active='dashboard' %}
 
-    <section class="ph-panel">
-        <p>
+    <section class="ph-panel ph-mgmt-panel">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>شرح مشکل</h2>
+                <p>{{ bug.user }} · {{ bug.created_at|ws_jalali }}</p>
+            </div>
+        </div>
+        <div class="ph-mgmt-badges">
             <span class="ph-badge {% ph_bug_severity_class bug.severity %}">{{ bug.severity|ph_label:'severity' }}</span>
             <span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span>
-        </p>
-        <p style="white-space:pre-wrap">{{ bug.description }}</p>
+        </div>
+        <div class="ph-mgmt-block">
+            <p>{{ bug.description }}</p>
+        </div>
     </section>
 
-    <section class="ph-panel">
-        <h2>تغییر وضعیت</h2>
-        <form method="post" class="ph-form-grid">
+    <section class="ph-panel ph-mgmt-panel">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>تغییر وضعیت</h2>
+                <p>برای «رفع شده» توضیح رفع الزامی است</p>
+            </div>
+        </div>
+        <form method="post" class="ph-form ph-mgmt-form">
             {% csrf_token %}
             <div class="ph-field">
                 <label>{{ status_form.status.label }}</label>
@@ -42,14 +78,15 @@
             <div class="ph-field">
                 <label>{{ status_form.resolution_note.label }}</label>
                 {{ status_form.resolution_note }}
-                <small style="color:var(--ws-muted)">برای وضعیت «رفع شده» توضیح رفع الزامی است.</small>
             </div>
             <div class="ph-field">
                 <label>{{ status_form.note.label }}</label>
                 {{ status_form.note }}
             </div>
             <div class="ph-actions">
-                <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">ذخیره</button>
+                <button type="submit" class="ph-btn ph-btn--primary ph-btn--lg">
+                    <i class="fas fa-floppy-disk" aria-hidden="true"></i><span>ذخیره</span>
+                </button>
             </div>
         </form>
     </section>

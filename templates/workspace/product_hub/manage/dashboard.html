@@ -2,15 +2,42 @@
 {% load static workspace_tags product_hub_tags %}
 
 {% block title %}مدیریت مرکز توسعه{% endblock %}
-{% block mobile_bar_title %}مدیریت محصول{% endblock %}
+{% block mobile_bar_title %}مدیریت توسعه{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-manage.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page ph-page">
-    <header class="mk-hub-head">
+<div class="mk-page ph-page ph-manage-page ph-page-mobile">
+
+    <header class="ph-mgmt-mob-header">
+        <div class="ph-mgmt-mob-mesh" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-accent" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-inner">
+            <div class="ph-mgmt-mob-main">
+                <span class="ph-mgmt-mob-kicker"><i class="fas fa-shield-halved" aria-hidden="true"></i> Staff Console</span>
+                <h1 class="ph-mgmt-mob-title">مدیریت توسعه</h1>
+                <p class="ph-mgmt-mob-sub">
+                    {% if manage_stats.requests_pending %}<span class="ph-mgmt-chip is-amber">{{ manage_stats.requests_pending }} در انتظار</span>{% endif %}
+                    {% if manage_stats.bugs_open %}<span class="ph-mgmt-chip is-rose">{{ manage_stats.bugs_open }} باگ باز</span>{% endif %}
+                    {% if manage_stats.bugs_critical %}<span class="ph-mgmt-chip is-critical">{{ manage_stats.bugs_critical }} بحرانی</span>{% endif %}
+                </p>
+            </div>
+            <div class="ph-mgmt-mob-actions">
+                <a href="{% url 'workspace:product_hub:hub' %}" class="ph-mgmt-icon-btn" title="Hub" aria-label="بازگشت به Hub">
+                    <i class="fas fa-rocket" aria-hidden="true"></i>
+                </a>
+                <a href="{% url 'workspace:product_hub:manage_releases' %}" class="ph-mgmt-icon-btn ph-mgmt-icon-btn--primary" title="نسخه جدید" aria-label="مدیریت نسخه‌ها">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <header class="mk-hub-head ph-mgmt-desk-header">
         <div class="mk-hub-head-main">
             <p class="mk-hub-head-eyebrow">Staff</p>
             <h1 class="mk-hub-head-title">مدیریت مرکز توسعه</h1>
@@ -23,70 +50,138 @@
 
     {% include 'workspace/product_hub/manage/_nav.html' with active='dashboard' %}
 
-    <section class="mk-hub-metrics">
-        <div class="mk-hub-metric" data-tone="amber">
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ manage_stats.requests_pending }}</span>
-                <span class="mk-hub-metric-lbl">در انتظار بررسی</span>
-            </span>
-        </div>
-        <div class="mk-hub-metric" data-tone="blue">
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ manage_stats.requests_dev }}</span>
-                <span class="mk-hub-metric-lbl">در حال توسعه</span>
-            </span>
-        </div>
-        <div class="mk-hub-metric" data-tone="red">
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ manage_stats.bugs_open }}</span>
-                <span class="mk-hub-metric-lbl">باگ باز</span>
-            </span>
-        </div>
-        <div class="mk-hub-metric" data-tone="purple">
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ manage_stats.bugs_critical }}</span>
-                <span class="mk-hub-metric-lbl">بحرانی</span>
-            </span>
-        </div>
+    <section class="ph-mgmt-kpis" aria-label="آمار مدیریت">
+        <article class="ph-mgmt-kpi ph-mgmt-kpi--amber">
+            <span class="ph-mgmt-kpi-ico" aria-hidden="true"><i class="fas fa-inbox"></i></span>
+            <div>
+                <strong>{{ manage_stats.requests_pending }}</strong>
+                <span>در انتظار بررسی</span>
+            </div>
+        </article>
+        <article class="ph-mgmt-kpi ph-mgmt-kpi--blue">
+            <span class="ph-mgmt-kpi-ico" aria-hidden="true"><i class="fas fa-hammer"></i></span>
+            <div>
+                <strong>{{ manage_stats.requests_dev }}</strong>
+                <span>در حال توسعه</span>
+            </div>
+        </article>
+        <article class="ph-mgmt-kpi ph-mgmt-kpi--rose">
+            <span class="ph-mgmt-kpi-ico" aria-hidden="true"><i class="fas fa-bug"></i></span>
+            <div>
+                <strong>{{ manage_stats.bugs_open }}</strong>
+                <span>باگ باز</span>
+            </div>
+        </article>
+        <article class="ph-mgmt-kpi ph-mgmt-kpi--critical">
+            <span class="ph-mgmt-kpi-ico" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+            <div>
+                <strong>{{ manage_stats.bugs_critical }}</strong>
+                <span>بحرانی</span>
+            </div>
+        </article>
     </section>
 
-    <section class="ph-panel">
-        <h2>پیشنهادهای فعال</h2>
-        <table class="ph-table">
-            <thead><tr><th>عنوان</th><th>کاربر</th><th>وضعیت</th><th>رای</th><th></th></tr></thead>
-            <tbody>
+    <section class="ph-panel ph-mgmt-panel">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>پیشنهادهای فعال</h2>
+                <p>موارد نیازمند بررسی یا پیگیری</p>
+            </div>
+            <span class="ph-pill ph-pill--soft">{{ pending_requests|length }}</span>
+        </div>
+
+        <div class="ph-mgmt-cards">
             {% for req in pending_requests %}
-            <tr>
-                <td>{{ req.title }}</td>
-                <td>{{ req.user }}</td>
-                <td><span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span></td>
-                <td>{{ req.votes_count }}</td>
-                <td><a href="{% url 'workspace:product_hub:manage_request' req.id %}">مدیریت</a></td>
-            </tr>
+            <a href="{% url 'workspace:product_hub:manage_request' req.id %}" class="ph-mgmt-card">
+                <header class="ph-mgmt-card-head">
+                    <span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span>
+                    <span class="ph-mgmt-card-votes"><i class="fas fa-caret-up" aria-hidden="true"></i> {{ req.votes_count }}</span>
+                </header>
+                <h3 class="ph-mgmt-card-title">{{ req.title }}</h3>
+                <p class="ph-mgmt-card-meta">
+                    <span><i class="fas fa-user" aria-hidden="true"></i> {{ req.user }}</span>
+                    <span><i class="far fa-calendar" aria-hidden="true"></i> {{ req.created_at|ws_jalali_date }}</span>
+                </p>
+                <span class="ph-mgmt-card-go" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+            </a>
             {% empty %}
-            <tr><td colspan="5" class="ph-empty">موردی نیست</td></tr>
+            <div class="ph-empty-state">
+                <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-inbox"></i></span>
+                <strong>پیشنهاد فعالی نیست</strong>
+                <p>وقتی پیشنهادی ثبت شود، اینجا می‌آید.</p>
+            </div>
             {% endfor %}
-            </tbody>
-        </table>
+        </div>
+
+        <div class="ph-mgmt-table-wrap">
+            <table class="ph-table">
+                <thead><tr><th>عنوان</th><th>کاربر</th><th>وضعیت</th><th>رای</th><th></th></tr></thead>
+                <tbody>
+                {% for req in pending_requests %}
+                <tr>
+                    <td>{{ req.title }}</td>
+                    <td>{{ req.user }}</td>
+                    <td><span class="ph-badge {% ph_request_status_class req.status %}">{{ req.status|ph_label:'request_status' }}</span></td>
+                    <td>{{ req.votes_count }}</td>
+                    <td><a class="ph-mgmt-link" href="{% url 'workspace:product_hub:manage_request' req.id %}">مدیریت</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="ph-empty">موردی نیست</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </section>
 
-    <section class="ph-panel">
-        <h2>باگ‌های باز</h2>
-        <table class="ph-table">
-            <thead><tr><th>عنوان</th><th>شدت</th><th>وضعیت</th><th></th></tr></thead>
-            <tbody>
+    <section class="ph-panel ph-mgmt-panel">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>باگ‌های باز</h2>
+                <p>گزارش‌های نیازمند رسیدگی</p>
+            </div>
+            <span class="ph-pill ph-pill--soft">{{ open_bugs|length }}</span>
+        </div>
+
+        <div class="ph-mgmt-cards">
             {% for bug in open_bugs %}
-            <tr>
-                <td>{{ bug.title }}</td>
-                <td><span class="ph-badge {% ph_bug_severity_class bug.severity %}">{{ bug.severity|ph_label:'severity' }}</span></td>
-                <td><span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span></td>
-                <td><a href="{% url 'workspace:product_hub:manage_bug' bug.id %}">مدیریت</a></td>
-            </tr>
+            <a href="{% url 'workspace:product_hub:manage_bug' bug.id %}" class="ph-mgmt-card ph-mgmt-card--bug">
+                <header class="ph-mgmt-card-head">
+                    <span class="ph-badge {% ph_bug_severity_class bug.severity %}">{{ bug.severity|ph_label:'severity' }}</span>
+                    <span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span>
+                </header>
+                <h3 class="ph-mgmt-card-title">{{ bug.title }}</h3>
+                <p class="ph-mgmt-card-meta">
+                    <span><i class="fas fa-user" aria-hidden="true"></i> {{ bug.user }}</span>
+                    <span><i class="far fa-calendar" aria-hidden="true"></i> {{ bug.created_at|ws_jalali_date }}</span>
+                </p>
+                <span class="ph-mgmt-card-go" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+            </a>
             {% empty %}
-            <tr><td colspan="4" class="ph-empty">موردی نیست</td></tr>
+            <div class="ph-empty-state">
+                <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-bug-slash"></i></span>
+                <strong>باگ بازی نیست</strong>
+                <p>همه‌چیز تحت کنترل است.</p>
+            </div>
             {% endfor %}
-            </tbody>
-        </table>
+        </div>
+
+        <div class="ph-mgmt-table-wrap">
+            <table class="ph-table">
+                <thead><tr><th>عنوان</th><th>شدت</th><th>وضعیت</th><th></th></tr></thead>
+                <tbody>
+                {% for bug in open_bugs %}
+                <tr>
+                    <td>{{ bug.title }}</td>
+                    <td><span class="ph-badge {% ph_bug_severity_class bug.severity %}">{{ bug.severity|ph_label:'severity' }}</span></td>
+                    <td><span class="ph-badge {% ph_bug_status_class bug.status %}">{{ bug.status|ph_label:'bug_status' }}</span></td>
+                    <td><a class="ph-mgmt-link" href="{% url 'workspace:product_hub:manage_bug' bug.id %}">مدیریت</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="ph-empty">موردی نیست</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </section>
 </div>
 {% endblock %}

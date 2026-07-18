@@ -1,6 +1,18 @@
-﻿<nav class="ph-manage-nav" aria-label="مدیریت محصول">
-    <a href="{% url 'workspace:product_hub:manage' %}" class="{% if active == 'dashboard' %}is-active{% endif %}">داشبورد</a>
-    <a href="{% url 'workspace:product_hub:manage_releases' %}" class="{% if active == 'releases' %}is-active{% endif %}">نسخه‌ها</a>
-    <a href="{% url 'workspace:product_hub:manage_features' %}" class="{% if active == 'features' %}is-active{% endif %}">قابلیت‌ها</a>
-    <a href="{% url 'workspace:product_hub:hub' %}">مشاهده Hub</a>
+﻿<nav class="ph-manage-nav" aria-label="مدیریت محصول" data-ph-manage-nav>
+    <a href="{% url 'workspace:product_hub:manage' %}" class="ph-manage-nav-item{% if active == 'dashboard' %} is-active{% endif %}">
+        <i class="fas fa-gauge-high" aria-hidden="true"></i>
+        <span>داشبورد</span>
+    </a>
+    <a href="{% url 'workspace:product_hub:manage_releases' %}" class="ph-manage-nav-item{% if active == 'releases' %} is-active{% endif %}">
+        <i class="fas fa-tags" aria-hidden="true"></i>
+        <span>نسخه‌ها</span>
+    </a>
+    <a href="{% url 'workspace:product_hub:manage_features' %}" class="ph-manage-nav-item{% if active == 'features' %} is-active{% endif %}">
+        <i class="fas fa-puzzle-piece" aria-hidden="true"></i>
+        <span>قابلیت‌ها</span>
+    </a>
+    <a href="{% url 'workspace:product_hub:hub' %}" class="ph-manage-nav-item ph-manage-nav-item--hub">
+        <i class="fas fa-rocket" aria-hidden="true"></i>
+        <span>مشاهده Hub</span>
+    </a>
 </nav>

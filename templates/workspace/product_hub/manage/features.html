@@ -5,22 +5,51 @@
 {% block mobile_bar_title %}قابلیت‌ها{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-manage.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page ph-page">
-    <header class="mk-hub-head">
+<div class="mk-page ph-page ph-manage-page ph-page-mobile">
+
+    <header class="ph-mgmt-mob-header">
+        <div class="ph-mgmt-mob-mesh" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-accent" aria-hidden="true"></div>
+        <div class="ph-mgmt-mob-inner">
+            <div class="ph-mgmt-mob-main">
+                <span class="ph-mgmt-mob-kicker"><i class="fas fa-puzzle-piece" aria-hidden="true"></i> Features</span>
+                <h1 class="ph-mgmt-mob-title">قابلیت‌ها</h1>
+                <p class="ph-mgmt-mob-sub"><span class="ph-mgmt-chip">{{ features|length }} مورد در کاتالوگ</span></p>
+            </div>
+            <div class="ph-mgmt-mob-actions">
+                <a href="{% url 'workspace:product_hub:manage' %}" class="ph-mgmt-icon-btn" title="داشبورد" aria-label="داشبورد">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <a href="#ph-feature-create" class="ph-mgmt-icon-btn ph-mgmt-icon-btn--primary" title="افزودن" aria-label="افزودن قابلیت">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <header class="mk-hub-head ph-mgmt-desk-header">
         <div class="mk-hub-head-main">
             <h1 class="mk-hub-head-title">کاتالوگ قابلیت‌ها</h1>
+            <p class="mk-hub-head-meta">افزودن و مشاهده قابلیت‌های محصول</p>
         </div>
     </header>
 
     {% include 'workspace/product_hub/manage/_nav.html' with active='features' %}
 
-    <section class="ph-panel">
-        <h2>افزودن قابلیت</h2>
-        <form method="post" class="ph-form-grid">
+    <section class="ph-panel ph-mgmt-panel" id="ph-feature-create">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>افزودن قابلیت</h2>
+                <p>عنوان، دسته و وضعیت را مشخص کنید</p>
+            </div>
+        </div>
+        <form method="post" class="ph-form ph-mgmt-form">
             {% csrf_token %}
             <div class="ph-form-row">
                 <div class="ph-field"><label>عنوان</label>{{ feature_form.title }}</div>
@@ -37,30 +66,69 @@
             </div>
             <div class="ph-form-row">
                 <div class="ph-field"><label>ترتیب</label>{{ feature_form.sort_order }}</div>
-                <div class="ph-field"><label>منتشر</label>{{ feature_form.is_published }}</div>
+                <div class="ph-field ph-field--check">
+                    <label class="ph-check-label">{{ feature_form.is_published }} <span>منتشر</span></label>
+                </div>
             </div>
             <div class="ph-actions">
-                <button type="submit" class="mk-hub-head-btn mk-hub-head-btn--primary">ثبت</button>
+                <button type="submit" class="ph-btn ph-btn--primary ph-btn--lg">
+                    <i class="fas fa-plus" aria-hidden="true"></i><span>ثبت قابلیت</span>
+                </button>
             </div>
         </form>
     </section>
 
-    <section class="ph-panel">
-        <table class="ph-table">
-            <thead><tr><th>عنوان</th><th>دسته</th><th>وضعیت</th><th>منتشر</th></tr></thead>
-            <tbody>
+    <section class="ph-panel ph-mgmt-panel">
+        <div class="ph-mgmt-panel-head">
+            <div>
+                <h2>لیست قابلیت‌ها</h2>
+                <p>وضعیت انتشار در کاتالوگ Hub</p>
+            </div>
+            <span class="ph-pill ph-pill--soft">{{ features|length }}</span>
+        </div>
+
+        <div class="ph-mgmt-cards">
             {% for f in features %}
-            <tr>
-                <td>{{ f.title }}</td>
-                <td>{{ f.category|ph_label:'category' }}</td>
-                <td><span class="ph-badge {% ph_feature_status_class f.status %}">{{ f.status|ph_label:'feature_status' }}</span></td>
-                <td>{% if f.is_published %}بله{% else %}خیر{% endif %}</td>
-            </tr>
+            <article class="ph-mgmt-card ph-mgmt-card--static">
+                <header class="ph-mgmt-card-head">
+                    <span class="ph-badge {% ph_feature_status_class f.status %}">{{ f.status|ph_label:'feature_status' }}</span>
+                    {% if f.is_published %}
+                    <span class="ph-badge ph-badge--green">منتشر</span>
+                    {% else %}
+                    <span class="ph-badge ph-badge--gray">مخفی</span>
+                    {% endif %}
+                </header>
+                <h3 class="ph-mgmt-card-title">{{ f.title }}</h3>
+                <p class="ph-mgmt-card-meta">
+                    <span><i class="fas fa-folder" aria-hidden="true"></i> {{ f.category|ph_label:'category' }}</span>
+                </p>
+            </article>
             {% empty %}
-            <tr><td colspan="4" class="ph-empty">خالی</td></tr>
+            <div class="ph-empty-state">
+                <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-puzzle-piece"></i></span>
+                <strong>کاتالوگ خالی است</strong>
+                <p>اولین قابلیت را از فرم بالا اضافه کنید.</p>
+            </div>
             {% endfor %}
-            </tbody>
-        </table>
+        </div>
+
+        <div class="ph-mgmt-table-wrap">
+            <table class="ph-table">
+                <thead><tr><th>عنوان</th><th>دسته</th><th>وضعیت</th><th>منتشر</th></tr></thead>
+                <tbody>
+                {% for f in features %}
+                <tr>
+                    <td>{{ f.title }}</td>
+                    <td>{{ f.category|ph_label:'category' }}</td>
+                    <td><span class="ph-badge {% ph_feature_status_class f.status %}">{{ f.status|ph_label:'feature_status' }}</span></td>
+                    <td>{% if f.is_published %}بله{% else %}خیر{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="ph-empty">خالی</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </section>
 </div>
 {% endblock %}

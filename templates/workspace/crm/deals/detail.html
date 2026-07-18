@@ -9,17 +9,99 @@
 {% block crm_actions %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-detail-mobile.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-detail-mobile.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
 <div class="crm-deal-detail-pro crm-deal-detail-mobile crm-page-chrome{% if deal.stage == 'بسته‌شده' %} is-won{% elif deal.stage == 'از دست رفته' %} is-lost{% endif %}"
      style="--deal-accent: {{ deal.stage|crm_deal_stage_dot }}; --deal-prob: {{ deal.probability }};">
 
-    <section class="crm-deal-dossier" aria-label="پرونده معامله">
+    <section class="crm-deal-dossier crm-deal-hero" aria-label="پرونده معامله">
         <div class="crm-deal-dossier-mesh" aria-hidden="true"></div>
+        <span class="crm-deal-hero__orb crm-deal-hero__orb--1" aria-hidden="true"></span>
+        <span class="crm-deal-hero__orb crm-deal-hero__orb--2" aria-hidden="true"></span>
         <div class="crm-deal-dossier-accent" aria-hidden="true"></div>
-        <header class="crm-deal-dossier-top">
+
+        <header class="crm-deal-hero__toolbar">
+            <a href="{% url 'workspace:crm_deals' %}" class="crm-deal-back" title="بازگشت به معاملات" aria-label="بازگشت به معاملات">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+            <div class="crm-deal-hero__toolbar-main">
+                <span class="crm-deal-hero__kicker"><i class="fas fa-handshake" aria-hidden="true"></i> پرونده معامله</span>
+                <nav class="crm-deal-crumb" aria-label="مسیر">
+                    <a href="{% url 'workspace:crm_deals' %}">معاملات</a>
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    <span>{{ deal.stage }}</span>
+                </nav>
+            </div>
+            <div class="crm-deal-dossier-actions crm-deal-hero__actions" role="toolbar" aria-label="عملیات معامله">
+                <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="crm-deal-hero__icon-btn" title="مخاطب" aria-label="مخاطب">
+                    <i class="fas fa-user" aria-hidden="true"></i>
+                </a>
+                <button type="button" class="crm-deal-hero__icon-btn crm-deal-hero__icon-btn--primary" data-drawer-open="drawer-edit" title="ویرایش" aria-label="ویرایش">
+                    <i class="fas fa-pen" aria-hidden="true"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="crm-deal-hero__body">
+            <div class="crm-deal-hero__mark" style="{% crm_deal_stage_style deal.stage %}" aria-hidden="true">
+                <i class="fas {{ deal.stage|crm_deal_stage_icon }}"></i>
+                <em>{{ deal.probability }}%</em>
+            </div>
+            <div class="crm-deal-hero__copy">
+                <div class="crm-deal-badges">
+                    <span class="crm-deal-stage-badge" style="{% crm_deal_stage_style deal.stage %}">
+                        <i class="fas {{ deal.stage|crm_deal_stage_icon }}" aria-hidden="true"></i>
+                        {{ deal.stage }}
+                    </span>
+                    {% if deal.expected_close_date %}
+                    <span class="crm-deal-hero__date-badge">
+                        <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                        بستن {{ deal.expected_close_date|ws_jalali }}
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="crm-deal-title">{{ deal.title }}</h1>
+                <div class="crm-deal-hero__parties">
+                    <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="crm-deal-hero__party crm-deal-hero__party--contact">
+                        <span class="crm-deal-hero__party-avatar crm-deals-avatar crm-deals-avatar--hue-{{ deal.customer.name|crm_avatar_hue }}">{{ deal.customer.name|crm_initials }}</span>
+                        <span class="crm-deal-hero__party-txt">
+                            <em>مخاطب</em>
+                            <strong>{{ deal.customer.name }}</strong>
+                        </span>
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    </a>
+                    {% if deal.property %}
+                    <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="crm-deal-hero__party crm-deal-hero__party--prop">
+                        <span class="crm-deal-hero__party-ico" aria-hidden="true"><i class="fas fa-building"></i></span>
+                        <span class="crm-deal-hero__party-txt">
+                            <em>ملک</em>
+                            <strong>{{ deal.property.title|truncatechars:34 }}</strong>
+                        </span>
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="crm-deal-hero__valueband">
+            <div class="crm-deal-hero__value-main">
+                <em>ارزش معامله</em>
+                <strong>{% if deal.value %}{{ deal.value|ws_money }}{% else %}ثبت نشده{% endif %}</strong>
+                {% if weighted_value %}
+                <span class="crm-deal-hero__value-sub">پیش‌بینی وزنی {{ weighted_value|ws_money }}</span>
+                {% endif %}
+            </div>
+            <div class="crm-deal-prob-ring crm-deal-hero__ring" style="--prob: {{ deal.probability }}" title="احتمال بستن {{ deal.probability }}٪">
+                <span>{{ deal.probability }}%</span>
+                <small>احتمال</small>
+            </div>
+        </div>
+
+        {# Desktop identity (hidden on mobile — hero covers it) #}
+        <header class="crm-deal-dossier-top crm-deal-dossier-top--desk">
             <div class="crm-deal-dossier-identity">
                 <a href="{% url 'workspace:crm_deals' %}" class="crm-deal-back" title="بازگشت به معاملات">
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
@@ -92,7 +174,7 @@
                     </div>
                 </article>
             </div>
-            <div class="crm-deal-prob-ring" style="--prob: {{ deal.probability }}" aria-hidden="true">
+            <div class="crm-deal-prob-ring crm-deal-prob-ring--desk" style="--prob: {{ deal.probability }}" aria-hidden="true">
                 <span>{{ deal.probability }}%</span>
             </div>
         </div>

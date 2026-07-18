@@ -13,6 +13,7 @@
                     <img class="mk-ds-card-cover-img" src="{{ ds.cover_image }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
                     {% else %}
                     <div class="mk-ds-card-cover-empty" aria-hidden="true">
+                        <span class="mk-ds-card-cover-orb"></span>
                         <span class="mk-ds-card-cover-fmt mk-file-icon mk-file-icon-{{ ds.file_format }}">
                             {% if ds.file_format == 'xlsx' %}XLS{% elif ds.file_format == 'csv' %}CSV{% else %}JSON{% endif %}
                         </span>

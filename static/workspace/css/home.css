@@ -22,6 +22,43 @@
     opacity: 0.85;
 }
 
+/* Latest files — thumb / cover (desktop table + mobile cards) */
+.ws-home .mk-file-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+}
+.ws-home .mk-home-file-thumb {
+    position: relative;
+    flex-shrink: 0;
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 10px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface-2));
+}
+.ws-home .mk-home-file-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.ws-home .mk-home-file-thumb .mk-file-icon {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    display: grid;
+    place-items: center;
+    font-size: 0.62rem;
+    font-weight: 850;
+}
+.ws-home .mk-home-file-fmt {
+    display: none;
+}
+
 /* ─── Home action alerts (replaces flat mk-notice compact) ─── */
 .ws-home-alert {
     --ws-alert-accent: #f59e0b;
@@ -1052,18 +1089,34 @@
         white-space: normal;
     }
 
-    /* Filing panel + card rows */
+    /* ═══════════════════════════════════════════
+       Latest files — premium studio cards
+       ═══════════════════════════════════════════ */
     .ws-home .mk-hub-filing {
-        border-radius: var(--ws-mob-radius);
-        border-color: var(--ws-border);
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        border-radius: 20px;
+        border-color: color-mix(in srgb, var(--ws-border) 55%, transparent);
+        box-shadow:
+            0 10px 28px rgba(15, 23, 42, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        overflow: hidden;
+        background:
+            radial-gradient(90% 60% at 100% 0%, color-mix(in srgb, var(--ws-primary) 7%, transparent), transparent 55%),
+            var(--ws-surface);
     }
 
     .ws-home .mk-hub-filing .mk-panel-head-table {
         flex-direction: column;
         align-items: stretch;
         gap: 0.55rem;
-        padding-inline: 0.75rem;
+        padding: 0.85rem 0.85rem 0.65rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 88%, transparent);
+    }
+
+    .ws-home .mk-hub-filing .mk-panel-head-text h2 {
+        font-size: 1rem;
+        font-weight: 900;
+        letter-spacing: -0.025em;
     }
 
     .ws-home .mk-hub-filing .mk-table-toolbar {
@@ -1077,92 +1130,321 @@
     .ws-home .mk-hub-filing .mk-table-search {
         flex: 1 1 100%;
         width: 100%;
+        min-height: 2.55rem;
+        border-radius: 12px;
     }
 
     .ws-home .mk-hub-filing .mk-table-wrap {
         margin: 0;
         overflow-x: visible !important;
+        border-top: none;
     }
 
-    .ws-home .mk-hub-filing .mk-data-table tbody tr {
-        margin-inline: 0;
-        margin-block: 0.5rem;
-        border-radius: var(--ws-mob-radius);
-        border-color: var(--ws-border);
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    #homeFilesTable.mk-home-files-table {
+        display: block;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    #homeFilesTable.mk-home-files-table thead { display: none; }
+    #homeFilesTable.mk-home-files-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        width: 100%;
+        padding: 0.7rem 0.75rem 0.85rem;
+    }
+
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        row-gap: 0.45rem;
+        column-gap: 0.35rem;
+        width: 100% !important;
+        max-width: 100%;
+        margin: 0 !important;
+        padding: 0.8rem 0.8rem 0.75rem !important;
+        border-radius: 18px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent) !important;
+        background:
+            radial-gradient(80% 70% at 0% 0%, color-mix(in srgb, var(--ws-primary) 8%, transparent), transparent 55%),
+            var(--ws-surface) !important;
+        box-shadow:
+            0 8px 22px rgba(15, 23, 42, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
         overflow: hidden;
+        box-sizing: border-box;
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row::before {
+        content: '';
+        position: absolute;
+        inset-inline-start: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(
+            180deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 45%, #0ea5e9)
+        );
+        pointer-events: none;
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row--sale::before {
+        background: linear-gradient(180deg, var(--ws-primary), color-mix(in srgb, var(--ws-primary) 50%, #38bdf8));
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row--rent::before {
+        background: linear-gradient(180deg, #0f766e, #14b8a6);
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row--mixed::before {
+        background: linear-gradient(180deg, #d97706, #fbbf24);
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row:active {
+        transform: scale(0.985);
     }
 
-    .ws-home .mk-hub-filing td.mk-col-file {
-        padding: 0.8rem 0.85rem 0.65rem !important;
-        background: color-mix(in srgb, var(--ws-primary) 3%, var(--ws-surface));
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    #homeFilesTable.mk-home-files-table tbody td {
+        display: block;
+        width: auto !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-sizing: border-box;
+    }
+    #homeFilesTable.mk-home-files-table tbody td::before {
+        display: none !important;
+        content: none !important;
     }
 
-    .ws-home .mk-hub-filing .mk-file-icon {
-        width: 2.25rem;
-        height: 2.25rem;
-        font-size: 0.68rem;
-        border-radius: 9px;
+    #homeFilesTable.mk-home-files-table td.mk-col-file {
+        flex: 0 0 100%;
+        width: 100% !important;
+        margin-bottom: 0.15rem;
     }
-
-    .ws-home .mk-hub-filing .mk-file-name {
+    #homeFilesTable.mk-home-files-table .mk-file-cell {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.7rem;
+        width: 100%;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-thumb {
+        position: relative;
+        flex-shrink: 0;
+        width: 4.25rem;
+        height: 4.25rem;
+        border-radius: 14px;
+        overflow: hidden;
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface)),
+                color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface-2))
+            );
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, var(--ws-border));
+        box-shadow: 0 6px 16px color-mix(in srgb, var(--ws-primary) 14%, transparent);
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-thumb .mk-file-icon {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        display: grid;
+        place-items: center;
+        font-size: 0.78rem;
+        font-weight: 900;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        order: unset;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-fmt {
+        display: block;
+        position: absolute;
+        inset-inline-end: 0.25rem;
+        bottom: 0.25rem;
+        font-style: normal;
+        font-size: 0.48rem;
+        font-weight: 850;
+        letter-spacing: 0.02em;
+        padding: 0.1rem 0.28rem;
+        border-radius: 5px;
+        background: color-mix(in srgb, var(--ws-surface) 88%, transparent);
+        color: var(--ws-text-secondary);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        line-height: 1.2;
+        z-index: 1;
+    }
+    #homeFilesTable.mk-home-files-table .mk-file-text {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.18rem;
+        text-align: start;
+        order: unset;
+    }
+    #homeFilesTable.mk-home-files-table .mk-file-name {
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        font-size: 0.84rem;
-        font-weight: 700;
-        line-height: 1.4;
+        font-size: 0.92rem;
+        font-weight: 900;
+        letter-spacing: -0.025em;
+        line-height: 1.3;
+        color: var(--ws-text);
+        text-decoration: none;
     }
-
-    .ws-home .mk-hub-filing .mk-file-sub {
-        display: -webkit-box;
+    #homeFilesTable.mk-home-files-table .mk-file-sub {
+        display: -webkit-box !important;
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        font-size: 0.7rem;
+        font-size: 0.66rem;
+        font-weight: 650;
         color: var(--ws-text-muted);
-        margin-top: 0.12rem;
+        direction: ltr;
+        text-align: start;
     }
 
-    .ws-home .mk-hub-filing .mk-data-table tbody td:not(.mk-col-file):not(.mk-col-actions) {
-        padding: 0.4rem 0.85rem !important;
-        font-size: 0.76rem;
+    #homeFilesTable.mk-home-files-table td.mk-col-location,
+    #homeFilesTable.mk-home-files-table td.mk-col-subject,
+    #homeFilesTable.mk-home-files-table td.mk-col-tx,
+    #homeFilesTable.mk-home-files-table td.mk-col-num,
+    #homeFilesTable.mk-home-files-table td.mk-col-date {
+        display: inline-flex !important;
+        width: auto !important;
+        flex: 0 0 auto;
+        align-items: center;
     }
-
-    .ws-home .mk-hub-filing .mk-data-table tbody td::before {
-        flex: 0 0 3.5rem;
-        font-size: 0.7rem;
+    #homeFilesTable.mk-home-files-table .mk-location {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.28rem;
+    }
+    #homeFilesTable.mk-home-files-table .mk-location-city,
+    #homeFilesTable.mk-home-files-table .mk-location-district,
+    #homeFilesTable.mk-home-files-table .mk-subject,
+    #homeFilesTable.mk-home-files-table .mk-tx-badge,
+    #homeFilesTable.mk-home-files-table td.mk-col-num,
+    #homeFilesTable.mk-home-files-table td.mk-col-date,
+    #homeFilesTable.mk-home-files-table .mk-muted {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.22rem;
+        padding: 0.22rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.64rem;
+        font-weight: 750;
+        line-height: 1.2;
+        background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        color: var(--ws-text-secondary);
+    }
+    #homeFilesTable.mk-home-files-table .mk-location-city i {
+        font-size: 0.55rem;
+        color: var(--ws-primary);
+        margin: 0;
+    }
+    #homeFilesTable.mk-home-files-table .mk-tx-sale,
+    #homeFilesTable.mk-home-files-table .mk-tx-فروش {
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        color: var(--ws-primary);
+        border-color: color-mix(in srgb, var(--ws-primary) 20%, transparent);
+    }
+    #homeFilesTable.mk-home-files-table .mk-tx-rent,
+    #homeFilesTable.mk-home-files-table .mk-tx-اجاره {
+        background: color-mix(in srgb, #0f766e 10%, var(--ws-surface));
+        color: #0f766e;
+        border-color: color-mix(in srgb, #0f766e 20%, transparent);
+    }
+    #homeFilesTable.mk-home-files-table .mk-tx-mixed,
+    #homeFilesTable.mk-home-files-table .mk-tx-ترکیبی {
+        background: color-mix(in srgb, #d97706 10%, var(--ws-surface));
+        color: #b45309;
+        border-color: color-mix(in srgb, #d97706 20%, transparent);
+    }
+    #homeFilesTable.mk-home-files-table td.mk-col-num::after {
+        content: 'آگهی';
+        font-size: 0.54rem;
+        font-weight: 700;
         color: var(--ws-text-muted);
     }
-
-    .ws-home .mk-hub-filing td.mk-col-actions {
-        padding: 0.55rem 0.7rem 0.75rem !important;
-        background: color-mix(in srgb, var(--ws-surface-2) 65%, transparent);
+    #homeFilesTable.mk-home-files-table td.mk-col-num {
+        font-variant-numeric: tabular-nums;
+        font-weight: 850;
+        color: var(--ws-text);
+        background: var(--ws-primary-soft);
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, transparent);
     }
 
-    .ws-home .mk-hub-filing .mk-row-actions {
+    #homeFilesTable.mk-home-files-table td.mk-col-actions {
+        flex: 0 0 100%;
+        width: 100% !important;
+        margin-top: 0.2rem;
+        padding-top: 0.55rem !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent) !important;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-actions {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 0.4rem;
         width: 100%;
+        direction: rtl;
     }
-
-    .ws-home .mk-hub-filing .mk-row-btn {
-        width: 100%;
-        min-width: 0;
-        min-height: 2.75rem;
-        height: auto;
-        font-size: 0.8rem;
-        border-radius: 10px;
-        background: var(--ws-surface);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        min-height: 2.65rem;
+        padding: 0.4rem 0.25rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 90%, var(--ws-surface-2));
+        color: var(--ws-text-secondary);
+        font-size: 0.62rem;
+        font-weight: 800;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
-
-    .ws-home .mk-hub-filing .mk-row-btn:active {
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn i {
+        font-size: 0.88rem;
+        line-height: 1;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn span {
+        display: inline;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn--primary {
+        background: linear-gradient(
+            145deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 72%, #0ea5e9)
+        );
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 6px 16px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn:active {
         transform: scale(0.97);
-        background: var(--ws-primary-soft);
     }
 
     .ws-home-files-empty {
@@ -1409,6 +1691,31 @@
     .ws-home .mk-hub-filing .mk-row-btn {
         font-size: 0.74rem;
         padding-inline: 0.25rem;
+    }
+
+    #homeFilesTable.mk-home-files-table tbody {
+        padding-inline: 0.6rem;
+        gap: 0.55rem;
+    }
+    #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row {
+        padding: 0.7rem !important;
+        border-radius: 16px !important;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-thumb {
+        width: 3.85rem;
+        height: 3.85rem;
+        border-radius: 13px;
+    }
+    #homeFilesTable.mk-home-files-table .mk-file-name {
+        font-size: 0.86rem;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn {
+        min-height: 2.45rem;
+        font-size: 0.58rem;
+        border-radius: 11px;
+    }
+    #homeFilesTable.mk-home-files-table .mk-home-file-btn i {
+        font-size: 0.8rem;
     }
 }
 

@@ -103,7 +103,7 @@ class WorkspaceHomeView(WorkspaceLoginMixin, TemplateView):
         ctx['crm_stats'] = get_dashboard_stats(user)
         ctx['charts_json'] = json.dumps(build_dashboard_charts(user), ensure_ascii=False)
         ctx['active_dataset'] = datasets_qs.order_by('-last_opened_at', '-created_at').first()
-        ctx['recent_datasets'] = (
+        ctx['recent_datasets'] = _attach_dataset_covers(
             datasets_qs.annotate(listing_count=Count('listings'))
             .order_by('-last_opened_at', '-created_at')[:8]
         )

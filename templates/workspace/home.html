@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=97">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=12">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -311,12 +311,19 @@
                             {% for ds in recent_datasets %}
                             {% with tx=ds.transaction_type|ws_tx_profile %}
                             {% with loc=ds.city|default:"" %}
-                            <tr class="mk-home-file-row" data-search="{{ ds.name }} {{ ds.original_filename }} {{ ds.subcategory }} {{ ds.city }} {{ ds.district }} {{ ds.transaction_type }}">
+                            <tr class="mk-home-file-row mk-home-file-row--{{ tx.mode|default:'other' }}{% if ds.cover_image %} mk-home-file-row--cover{% endif %}" data-search="{{ ds.name }} {{ ds.original_filename }} {{ ds.subcategory }} {{ ds.city }} {{ ds.district }} {{ ds.transaction_type }}">
                                 <td class="mk-col-file" data-sort-value="{{ ds.name|lower }}">
                                     <div class="mk-file-cell">
-                                        <span class="mk-file-icon mk-file-icon-{{ ds.file_format }}" aria-hidden="true">
-                                            {% if ds.file_format == 'xlsx' %}XLS{% elif ds.file_format == 'csv' %}CSV{% else %}JSON{% endif %}
-                                        </span>
+                                        <div class="mk-home-file-thumb" aria-hidden="true">
+                                            {% if ds.cover_image %}
+                                            <img class="mk-home-file-cover" src="{{ ds.cover_image }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                                            {% else %}
+                                            <span class="mk-file-icon mk-file-icon-{{ ds.file_format }}">
+                                                {% if ds.file_format == 'xlsx' %}XLS{% elif ds.file_format == 'csv' %}CSV{% else %}JSON{% endif %}
+                                            </span>
+                                            {% endif %}
+                                            <em class="mk-home-file-fmt">{{ ds.file_format|upper }}</em>
+                                        </div>
                                         <div class="mk-file-text">
                                             <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-file-name">{{ ds.name }}</a>
                                             <span class="mk-file-sub">{{ ds.original_filename }}</span>

@@ -570,6 +570,22 @@
     grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
+@media (max-width: 900px) {
+    .ws-ds-mobile.mk-multi-listings-page .mk-multi-hero .mk-ds-mobile-meta {
+        padding-inline: 0.7rem;
+    }
+    .ws-ds-mobile.mk-multi-listings-page .mk-ds-mobile-primary.mk-multi-cta {
+        gap: 0.3rem;
+        padding-inline: 0.75rem;
+        background: linear-gradient(
+            135deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 72%, #0f172a)
+        );
+        box-shadow: 0 3px 12px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+    }
+}
+
 @media (max-width: 360px) {
     .ws-ds-mob-dock__btn span {
         font-size: 0.5rem;

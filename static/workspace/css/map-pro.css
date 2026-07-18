@@ -1666,3 +1666,147 @@
     }
 }
 
+/* ── Multi-dataset map header ── */
+.mk-map-pro--multi {
+    --mk-multi-a: #0d9488;
+    --mk-multi-b: #2563eb;
+    --mk-multi-c: #d97706;
+    --mk-multi-d: #db2777;
+    --mk-multi-e: #7c3aed;
+    --mk-multi-f: #059669;
+}
+
+.mk-map-pro--multi .mk-map-hero {
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--ws-primary, #0d9488) 7%, transparent) 0%,
+        transparent 52%
+    );
+}
+
+.mk-map-pro .mk-map-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-start: 0.35rem;
+    padding: 0.12rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    background: color-mix(in srgb, #d97706 16%, transparent);
+    color: #b45309;
+    border: 1px solid color-mix(in srgb, #d97706 28%, transparent);
+}
+
+.mk-map-pro .mk-map-multi-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.55rem;
+    max-width: 36rem;
+}
+
+.mk-map-pro .mk-map-multi-file {
+    --layer: var(--mk-multi-a);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 11rem;
+    padding: 0.28rem 0.55rem 0.28rem 0.35rem;
+    border-radius: 999px;
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: color-mix(in srgb, var(--ws-surface-2, #f1f5f9) 70%, var(--ws-surface, #fff));
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 65%, transparent);
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mk-map-pro .mk-map-multi-files .mk-map-multi-file:nth-child(6n+2) { --layer: var(--mk-multi-b); }
+.mk-map-pro .mk-map-multi-files .mk-map-multi-file:nth-child(6n+3) { --layer: var(--mk-multi-c); }
+.mk-map-pro .mk-map-multi-files .mk-map-multi-file:nth-child(6n+4) { --layer: var(--mk-multi-d); }
+.mk-map-pro .mk-map-multi-files .mk-map-multi-file:nth-child(6n+5) { --layer: var(--mk-multi-e); }
+.mk-map-pro .mk-map-multi-files .mk-map-multi-file:nth-child(6n) { --layer: var(--mk-multi-f); }
+
+.mk-map-pro .mk-map-multi-file:hover {
+    background: color-mix(in srgb, var(--layer) 10%, var(--ws-surface));
+    border-color: color-mix(in srgb, var(--layer) 30%, var(--ws-border));
+}
+
+.mk-map-pro .mk-map-multi-file__idx {
+    width: 1.2rem;
+    height: 1.2rem;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--layer) 16%, transparent);
+    color: var(--layer);
+    font-size: 0.62rem;
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+}
+
+.mk-map-pro .mk-map-multi-file__name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mk-map-pro .mk-map-head-stat--layers .mk-map-head-stat-val {
+    color: var(--ws-primary, #0d9488);
+}
+
+@media (max-width: 768px) {
+    .mk-map-pro.ws-map-mobile.mk-map-pro--multi .mk-map-head-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mk-map-pro.ws-map-mobile.mk-map-pro--multi .mk-map-head-stat--layers {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding-block: 0.45rem;
+    }
+
+    .mk-map-pro.ws-map-mobile.mk-map-pro--multi .mk-map-head-stat--layers .mk-map-head-stat-val {
+        font-size: 1rem;
+    }
+
+    .mk-map-pro.ws-map-mobile.mk-map-pro--multi .mk-map-head-stat--layers .mk-map-head-stat-lbl {
+        font-size: 0.7rem;
+    }
+
+    .mk-map-pro.ws-map-mobile.mk-map-pro--multi .mk-map-multi-files {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        max-width: 100%;
+        margin-top: 0.45rem;
+        padding-bottom: 0.15rem;
+    }
+
+    .mk-map-pro.ws-map-mobile.mk-map-pro--multi .mk-map-multi-files::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mk-map-pro.ws-map-mobile.mk-map-pro--multi .mk-map-multi-file {
+        flex: 0 0 auto;
+        max-width: 10.5rem;
+    }
+
+    .mk-map-pro.ws-map-mobile.mk-map-pro--multi .mk-map-filter-pill {
+        margin-inline-start: 0;
+        margin-top: 0.2rem;
+    }
+
+    .mk-map-pro.ws-map-mobile.mk-map-pro--multi .mk-map-head-kicker {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.2rem 0.35rem;
+    }
+}
+

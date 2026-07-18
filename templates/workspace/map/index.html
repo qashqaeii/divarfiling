@@ -5,13 +5,16 @@
 
 
 {% block page_title %}نقشه — {{ map_title|default:dataset.name|truncatechars:30 }}{% endblock %}
-{% block mobile_bar_title %}نقشه آگهی‌ها{% endblock %}
+{% block mobile_bar_title %}{% if is_multi_map %}نقشه چند فایل{% else %}نقشه آگهی‌ها{% endif %}{% endblock %}
 
 {% block content %}
 
-<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=18">
+{% if is_multi_map %}
+<link rel="stylesheet" href="{% static 'workspace/css/multi-listings.css' %}?v=1">
+{% endif %}
 
-<div class="mk-page mk-map-pro ws-map-mobile">
+<div class="mk-page mk-map-pro ws-map-mobile{% if is_multi_map %} mk-map-pro--multi{% endif %}">
 
 
 
@@ -33,21 +36,48 @@
 
                         <span class="mk-map-kicker-dot" aria-hidden="true"></span>
 
+                        {% if is_multi_map %}
+                        <span>نقشه چند فایل</span>
+                        <span class="mk-map-head-sep">·</span>
+                        <span>{{ dataset_count }} لایه</span>
+                        {% else %}
                         <span>نقشه آگهی‌ها</span>
+                        {% endif %}
 
-                        {% if map_config.datasetCity %}<span class="mk-map-head-sep">·</span><span>{{ map_config.datasetCity }}</span>{% elif dataset.city %}<span class="mk-map-head-sep">·</span><span>{{ dataset.city }}{% if dataset.district %} — {{ dataset.district }}{% endif %}</span>{% endif %}
+                        {% if map_config.datasetCity %}<span class="mk-map-head-sep">·</span><span>{{ map_config.datasetCity }}</span>{% elif not is_multi_map and dataset.city %}<span class="mk-map-head-sep">·</span><span>{{ dataset.city }}{% if dataset.district %} — {{ dataset.district }}{% endif %}</span>{% endif %}
 
-                        {% if is_map_filtered %}<span class="mk-map-head-sep">·</span><span>{{ filter_count }} فیلتر</span>{% endif %}
+                        {% if is_map_filtered %}<span class="mk-map-filter-pill">{{ filter_count }} فیلتر</span>{% endif %}
 
                     </div>
 
                     <h1 class="mk-map-head-title">{{ map_title|default:dataset.name }}</h1>
+
+                    {% if is_multi_map and datasets %}
+                    <div class="mk-map-multi-files" aria-label="فایل‌های روی نقشه">
+                        {% for ds in datasets %}
+                        <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-map-multi-file" title="{{ ds.name }}">
+                            <span class="mk-map-multi-file__idx" aria-hidden="true">{{ forloop.counter }}</span>
+                            <span class="mk-map-multi-file__name">{{ ds.name|truncatechars:18 }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
 
                 </div>
 
             </div>
 
             <div class="mk-map-head-stats" aria-label="آمار نقشه">
+
+                {% if is_multi_map %}
+                <div class="mk-map-head-stat mk-map-head-stat--layers">
+
+                    <span class="mk-map-head-stat-val">{{ dataset_count }}</span>
+
+                    <span class="mk-map-head-stat-lbl">فایل</span>
+
+                </div>
+                {% endif %}
 
                 <div class="mk-map-head-stat">
 

@@ -75,6 +75,9 @@ class MultiDatasetListingsViewTests(TestCase):
         self.assertTrue(res.context['show_dataset_column'])
         self.assertTrue(res.context['tx']['is_mixed'])
         self.assertContains(res, reverse('workspace:multi_map'))
+        self.assertContains(res, 'مقایسه')
+        self.assertContains(res, 'لایه‌های فایل')
+        self.assertContains(res, 'ترکیب آگهی‌دهنده')
 
     @patch('workspace.mixins.has_active_bot_license', return_value=True)
     def test_multi_map_combines_geo_listings(self, _mock_license):
@@ -87,6 +90,8 @@ class MultiDatasetListingsViewTests(TestCase):
         self.assertIn(self.geo_out.pk, marker_ids)
         self.assertTrue(res.context['is_multi_map'])
         self.assertEqual(res.context['geo_count'], 3)
+        self.assertContains(res, 'نقشه چند فایل')
+        self.assertContains(res, 'mk-map-multi-files')
 
     @patch('workspace.mixins.has_active_bot_license', return_value=True)
     def test_multi_map_respects_listing_filters(self, _mock_license):

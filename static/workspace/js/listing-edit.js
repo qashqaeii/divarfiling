@@ -133,8 +133,8 @@
     ListingEditController.prototype._syncOccupancyUI = function () {
         var f = this.fields;
         var vacantOn = !!(f.isVacant && f.isVacant.checked);
-        var showShell = !!(f.vacantRow && !f.vacantRow.classList.contains('hidden'));
         if (f.vacantRow) {
+            f.vacantRow.classList.remove('hidden');
             f.vacantRow.classList.toggle('is-vacant', vacantOn);
             f.vacantRow.classList.toggle('is-occupied', !vacantOn);
         }
@@ -147,11 +147,16 @@
         if (f.occPill) f.occPill.textContent = vacantOn ? 'تخلیه' : 'تخلیه نیست';
         if (f.occConfirm) f.occConfirm.hidden = !vacantOn;
         if (f.tenantPanel) {
-            f.tenantPanel.classList.toggle('hidden', !(showShell && !vacantOn));
+            f.tenantPanel.classList.remove('hidden');
+            f.tenantPanel.classList.toggle('is-disabled', vacantOn);
         }
-        if (vacantOn) {
-            if (f.tenantName) f.tenantName.value = '';
-            if (f.tenantPhone) f.tenantPhone.value = '';
+        if (f.tenantName) {
+            f.tenantName.disabled = vacantOn;
+            if (vacantOn) f.tenantName.value = '';
+        }
+        if (f.tenantPhone) {
+            f.tenantPhone.disabled = vacantOn;
+            if (vacantOn) f.tenantPhone.value = '';
         }
     };
 
@@ -490,19 +495,23 @@
         if (f.expired) f.expired.value = data.is_expired ? '1' : '0';
         setField(f.ownerPhone, data.owner_phone);
         setField(f.ownerName, data.owner_name);
-        setField(f.tenantName, data.tenant_name);
-        setField(f.tenantPhone, data.tenant_phone);
         setField(f.link, data.link);
         if (f.description) f.description.value = data.description || '';
 
-        var showVacant = !!data.is_rent;
-        if (f.vacantRow) f.vacantRow.classList.toggle('hidden', !showVacant);
+        if (f.vacantRow) f.vacantRow.classList.remove('hidden');
         if (f.isVacant) {
             f.isVacant.checked = !!data.is_vacant;
-            f.isVacant.disabled = !showVacant;
+            f.isVacant.disabled = false;
         }
-        if (f.vacantOff) f.vacantOff.disabled = !showVacant;
+        if (f.vacantOff) f.vacantOff.disabled = false;
         this._syncOccupancyUI();
+        if (!data.is_vacant) {
+            setField(f.tenantName, data.tenant_name);
+            setField(f.tenantPhone, data.tenant_phone);
+        } else {
+            setField(f.tenantName, '');
+            setField(f.tenantPhone, '');
+        }
 
         ['price', 'deposit', 'rent'].forEach(function (key) {
             var input = f[key];

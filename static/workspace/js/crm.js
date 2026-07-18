@@ -320,7 +320,6 @@ function initPropertyDealMode(root) {
                 showSale: true,
                 showDeposit: false,
                 showRent: false,
-                showVacant: false,
                 saleLabel: 'قیمت فروش (تومان)',
                 saleHeading: 'فروش',
                 saleHint: 'قیمت نهایی یا توافقی ملک',
@@ -331,7 +330,6 @@ function initPropertyDealMode(root) {
                 showSale: true,
                 showDeposit: false,
                 showRent: false,
-                showVacant: false,
                 saleLabel: 'قیمت پیش‌فروش (تومان)',
                 saleHeading: 'پیش‌فروش',
                 saleHint: 'مبلغ توافقی پیش‌فروش',
@@ -342,7 +340,6 @@ function initPropertyDealMode(root) {
                 showSale: false,
                 showDeposit: true,
                 showRent: true,
-                showVacant: true,
                 depositLabel: 'مبلغ رهن (تومان)',
                 rentLabel: 'اجاره ماهانه (تومان)',
                 depositHeading: 'رهن',
@@ -356,7 +353,6 @@ function initPropertyDealMode(root) {
                 showSale: false,
                 showDeposit: true,
                 showRent: true,
-                showVacant: true,
                 depositLabel: 'ودیعه (تومان)',
                 rentLabel: 'اجاره ماهانه (تومان)',
                 depositHeading: 'ودیعه',
@@ -402,7 +398,9 @@ function initPropertyDealMode(root) {
 
         function syncOccupancyUI() {
             const vacantOn = !!(vacantCheckbox && vacantCheckbox.checked);
+            vacantPanels.forEach((el) => el.classList.remove('hidden'));
             if (occShell) {
+                occShell.classList.remove('hidden');
                 occShell.classList.toggle('is-vacant', vacantOn);
                 occShell.classList.toggle('is-occupied', !vacantOn);
             }
@@ -413,11 +411,19 @@ function initPropertyDealMode(root) {
                 btn.setAttribute('aria-pressed', active ? 'true' : 'false');
             });
             if (occPill) {
-                occPill.textContent = vacantOn ? 'تخلیه' : 'دارای مستاجر';
+                occPill.textContent = vacantOn ? 'تخلیه' : 'تخلیه نیست';
             }
             if (occConfirm) {
                 occConfirm.hidden = !vacantOn;
             }
+            tenantPanels.forEach((el) => {
+                el.classList.remove('hidden');
+                el.classList.toggle('is-disabled', vacantOn);
+            });
+            tenantInputs.forEach((el) => {
+                el.disabled = vacantOn;
+                if (vacantOn && 'value' in el) el.value = '';
+            });
         }
 
         function apply(mode) {
@@ -426,18 +432,7 @@ function initPropertyDealMode(root) {
             show(sale, profile.showSale);
             show(deposit, profile.showDeposit);
             show(rent, profile.showRent);
-            vacantPanels.forEach(el => el.classList.toggle('hidden', !profile.showVacant));
-            const vacantOn = !!(vacantCheckbox && vacantCheckbox.checked);
-            const showTenant = !!(profile.showVacant && !vacantOn);
-            tenantPanels.forEach(el => el.classList.toggle('hidden', !showTenant));
-            // فقط با انتخاب تخلیه فیلدها پاک شوند (اختیاری بودن نام/شماره حفظ شود)
-            if (vacantOn) {
-                tenantInputs.forEach(el => {
-                    if (el.type === 'checkbox') el.checked = false;
-                    else if ('value' in el) el.value = '';
-                });
-            }
-            if (profile.showVacant) syncOccupancyUI();
+            syncOccupancyUI();
             if (priceSection) {
                 priceSection.dataset.dealMode = mode || '';
             }
@@ -458,7 +453,7 @@ function initPropertyDealMode(root) {
         apply(dealSelect.value);
         dealSelect.addEventListener('change', () => apply(dealSelect.value));
         if (vacantCheckbox) {
-            vacantCheckbox.addEventListener('change', () => apply(dealSelect.value));
+            vacantCheckbox.addEventListener('change', () => syncOccupancyUI());
         }
         occBtns.forEach((btn) => {
             btn.addEventListener('click', () => {

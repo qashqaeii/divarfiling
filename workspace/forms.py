@@ -471,11 +471,7 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         cleaned['has_storage'] = 'انباری' in selected
         cleaned['has_elevator'] = 'آسانسور' in selected
         cleaned['amenities'] = serialize_amenity_checkboxes(selected, leftover)
-        if cleaned.get('deal_mode') not in ('اجاره', 'رهن و اجاره'):
-            cleaned['is_vacant'] = False
-            cleaned['tenant_phone'] = ''
-            cleaned['tenant_name'] = ''
-        elif cleaned.get('is_vacant'):
+        if cleaned.get('is_vacant'):
             cleaned['tenant_phone'] = ''
             cleaned['tenant_name'] = ''
         return cleaned

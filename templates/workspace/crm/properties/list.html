@@ -346,7 +346,7 @@
                         </td>
                         <td class="crm-ft-td-muted" data-label="معامله">
                             {{ p.deal_mode }}
-                            {% if p.is_vacant and p.deal_mode != 'فروش' and p.deal_mode != 'پیش‌فروش' %}
+                            {% if p.is_vacant %}
                             <span class="crm-files-pill crm-files-pill--vacant" style="margin-inline-start:.35rem">تخلیه</span>
                             {% endif %}
                         </td>
@@ -419,7 +419,7 @@
                         <div class="crm-files-card-tags">
                             <span class="crm-files-pill crm-files-pill--deal">{{ p.deal_mode }}</span>
                             <span class="crm-files-pill crm-files-pill--status">{{ p.transaction_status }}</span>
-                            {% if p.is_vacant and p.deal_mode != 'فروش' and p.deal_mode != 'پیش‌فروش' %}
+                            {% if p.is_vacant %}
                             <span class="crm-files-pill crm-files-pill--vacant" title="ملک تخلیه است"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه</span>
                             {% endif %}
                             {% if p.property_type %}<span class="crm-files-pill crm-files-pill--type">{{ p.property_type }}</span>{% endif %}

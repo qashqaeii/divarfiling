@@ -159,7 +159,7 @@
                     <div class="crm-prop-hero-status-row">
                         <span class="crm-prop-badge crm-prop-badge--status">{{ property.transaction_status }}</span>
                         <span class="crm-prop-badge crm-prop-badge--type">{{ property.property_type }}</span>
-                        {% if property.is_vacant and property.deal_mode != 'فروش' and property.deal_mode != 'پیش‌فروش' %}
+                        {% if property.is_vacant %}
                         <span class="crm-prop-badge crm-prop-badge--vacant" title="ملک در حال حاضر تخلیه است">
                             <i class="fas fa-door-open" aria-hidden="true"></i> تخلیه
                         </span>

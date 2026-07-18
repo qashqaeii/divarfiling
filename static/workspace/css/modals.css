@@ -1311,6 +1311,15 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
 .mk-occ__tenant.hidden {
     display: none !important;
 }
+.mk-occ__tenant.is-disabled {
+    opacity: 0.55;
+    filter: grayscale(0.2);
+    pointer-events: none;
+}
+.mk-occ__tenant.is-disabled .ws-input {
+    cursor: not-allowed;
+    opacity: 0.85;
+}
 .mk-occ__tenant-head {
     display: flex;
     align-items: flex-start;

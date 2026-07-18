@@ -1182,14 +1182,13 @@ class CRMPropertyCreateView(LoginRequiredMixin, CreateView):
                 crm_property=self.object,
                 source='سایر',
             )
-        if self.object.deal_mode in ('اجاره', 'رهن و اجاره'):
-            upsert_property_tenant(
-                self.request.user,
-                phone=self.object.tenant_phone,
-                name=self.object.tenant_name,
-                crm_property=self.object,
-                source='سایر',
-            )
+        upsert_property_tenant(
+            self.request.user,
+            phone=self.object.tenant_phone,
+            name=self.object.tenant_name,
+            crm_property=self.object,
+            source='سایر',
+        )
         messages.success(self.request, 'ملک ثبت شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
 

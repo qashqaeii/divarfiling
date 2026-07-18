@@ -6815,6 +6815,15 @@ body.crm-side-open { overflow: hidden; }
 .crm-occ__tenant.hidden {
     display: none !important;
 }
+.crm-occ__tenant.is-disabled {
+    opacity: 0.55;
+    filter: grayscale(0.15);
+    pointer-events: none;
+}
+.crm-occ__tenant.is-disabled .crm-occ__field .crm-input {
+    background: color-mix(in srgb, var(--crm-surface-muted, #f8f7fa) 80%, #fff);
+    cursor: not-allowed;
+}
 .crm-occ__tenant-head {
     display: flex;
     align-items: flex-start;

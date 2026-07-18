@@ -363,7 +363,7 @@ def upsert_property_tenant(
         crm_property.tenant_name = name_raw
         crm_property.save(update_fields=['tenant_phone', 'tenant_name', 'updated_at'])
 
-        if crm_property.is_vacant or crm_property.deal_mode not in ('اجاره', 'رهن و اجاره'):
+        if crm_property.is_vacant:
             PropertyContact.objects.filter(
                 property=crm_property, role='مستاجر',
             ).delete()
@@ -379,7 +379,7 @@ def upsert_property_tenant(
             crm_property=crm_property,
             source=source,
         )
-        deal_type = crm_property.deal_mode or 'اجاره'
+        deal_type = crm_property.deal_mode or 'سایر'
 
         PropertyContact.objects.filter(
             property=crm_property, role='مستاجر',
@@ -901,7 +901,7 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
             crm_property=prop,
             source='دیوار',
         )
-    if prop.deal_mode in ('اجاره', 'رهن و اجاره') and not prop.is_vacant:
+    if not prop.is_vacant:
         from workspace.services.listing_edit import tenant_name_from_listing, tenant_phone_from_listing
         t_phone = tenant_phone_from_listing(listing) or prop.tenant_phone
         t_name = tenant_name_from_listing(listing) or prop.tenant_name
@@ -1807,9 +1807,9 @@ def properties_to_export_rows(properties) -> List[Dict[str, Any]]:
             'پارکینگ': _bool_fa(p.has_parking),
             'انباری': _bool_fa(p.has_storage),
             'آسانسور': _bool_fa(p.has_elevator),
-            'تخلیه': _bool_fa(p.is_vacant) if p.deal_mode in ('اجاره', 'رهن و اجاره') else '',
-            'نام مستاجر': p.tenant_name if p.deal_mode in ('اجاره', 'رهن و اجاره') and not p.is_vacant else '',
-            'شماره مستاجر': p.tenant_phone if p.deal_mode in ('اجاره', 'رهن و اجاره') and not p.is_vacant else '',
+            'تخلیه': _bool_fa(p.is_vacant),
+            'نام مستاجر': p.tenant_name if not p.is_vacant else '',
+            'شماره مستاجر': p.tenant_phone if not p.is_vacant else '',
             'قیمت فروش (تومان)': p.sale_price,
             'رهن (تومان)': p.deposit,
             'اجاره ماهانه (تومان)': p.monthly_rent,

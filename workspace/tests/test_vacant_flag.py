@@ -46,7 +46,7 @@ class CRMPropertyVacantFormTests(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         self.assertTrue(form.cleaned_data['is_vacant'])
 
-    def test_sale_clears_vacant(self):
+    def test_sale_keeps_vacant(self):
         form = CRMPropertyForm(data={
             'title': 'ملک فروش',
             'property_type': 'آپارتمان',
@@ -56,7 +56,23 @@ class CRMPropertyVacantFormTests(TestCase):
             'is_vacant': 'on',
         })
         self.assertTrue(form.is_valid(), form.errors)
+        self.assertTrue(form.cleaned_data['is_vacant'])
+        self.assertEqual(form.cleaned_data['tenant_name'], '')
+
+    def test_sale_keeps_tenant_when_not_vacant(self):
+        form = CRMPropertyForm(data={
+            'title': 'ملک فروش',
+            'property_type': 'آپارتمان',
+            'deal_mode': 'فروش',
+            'transaction_status': 'فعال',
+            'publish_status': 'پیش‌نویس',
+            'tenant_name': 'سارا',
+            'tenant_phone': '09121112233',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
         self.assertFalse(form.cleaned_data['is_vacant'])
+        self.assertEqual(form.cleaned_data['tenant_name'], 'سارا')
+        self.assertEqual(form.cleaned_data['tenant_phone'], '09121112233')
 
 
 class ListingVacantEditTests(TestCase):

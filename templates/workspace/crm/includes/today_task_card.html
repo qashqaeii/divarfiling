@@ -44,8 +44,11 @@
             </span>
         </div>
 
-        {% if item.customer_type or item.customer_phone or item.note %}
+        {% if item.customer_type or item.customer_phone or item.customer_status or item.note %}
         <div class="crm-queue-card-meta">
+            {% if item.customer_status %}
+            <span class="crm-queue-meta-pill crm-queue-meta-pill--status" style="{% crm_status_style item.customer_status %}">{{ item.customer_status }}</span>
+            {% endif %}
             {% if item.customer_type %}
             <span class="crm-queue-meta-pill">{{ item.customer_type }}</span>
             {% endif %}
@@ -60,7 +63,7 @@
 
         <div class="crm-queue-card-actions">
             {% if item.kind == 'followup' and item.customer_id %}
-            <form method="post" class="crm-inline-form">
+            <form method="post" class="crm-inline-form crm-queue-act-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="log_call">
                 <input type="hidden" name="customer_id" value="{{ item.customer_id }}">
@@ -72,7 +75,7 @@
                 <span>پروفایل</span><i class="fas fa-chevron-left" aria-hidden="true"></i>
             </a>
             {% elif item.kind == 'reminder' and item.customer_id %}
-            <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-queue-act crm-queue-act--ghost">
+            <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-queue-act crm-queue-act--ghost crm-queue-act--wide">
                 <span>پروفایل</span><i class="fas fa-chevron-left" aria-hidden="true"></i>
             </a>
             {% endif %}

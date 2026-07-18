@@ -577,43 +577,19 @@
         gap: 0.5rem;
     }
 
-    /* Tabs — never compress; allow horizontal swipe (contact detail restyles further) */
+    /* Contact detail tabs are a 3×2 grid in crm-contacts-mobile.css.
+       Keep a non-destructive fallback for any other .crm-contact-tabs. */
     .crm-contact-tabs {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-x;
-        scrollbar-width: none;
         gap: 0.3rem;
         padding: 0.35rem;
         border-radius: 12px;
         top: 0;
-    }
-    .crm-contact-tabs::-webkit-scrollbar { display: none; }
-    .crm-contact-tabs .crm-tab-pro {
-        flex: 0 0 auto !important;
-        min-width: auto !important;
-        padding: 0.45rem 0.7rem;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        white-space: nowrap;
-    }
-    .crm-contact-tabs .crm-tab-pro > span:not(.crm-contact-seg__ico):not(.crm-contact-seg__txt),
-    .crm-contact-tabs .crm-tab-pro .crm-contact-seg__short {
-        display: inline !important;
     }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro .crm-contact-seg__full {
         display: none !important;
     }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro .crm-contact-seg__short {
         display: block !important;
-    }
-    .crm-contact-tabs .crm-tab-pro.active {
-        background: var(--ws-primary-soft);
-        color: var(--ws-primary);
-        font-weight: 700;
-        box-shadow: 0 1px 3px rgba(124, 58, 237, 0.1);
     }
 
     .crm-contact-panel-head {

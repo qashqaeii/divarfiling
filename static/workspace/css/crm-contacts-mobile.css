@@ -1156,9 +1156,18 @@
     .crm-contact-mobile.crm-page-chrome {
         padding: 0 0 calc(8.25rem + env(safe-area-inset-bottom, 0px));
         gap: 0.55rem;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: clip;
+        box-sizing: border-box;
         background:
             radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--ws-primary) 7%, transparent), transparent 55%),
             color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-bg, #f8fafc));
+    }
+    .crm-contact-mobile *,
+    .crm-contact-mobile *::before,
+    .crm-contact-mobile *::after {
+        box-sizing: border-box;
     }
 
     /* ── Hero ── */
@@ -1171,6 +1180,8 @@
             0 10px 28px rgba(15, 23, 42, 0.06),
             0 1px 0 rgba(15, 23, 42, 0.03);
         overflow: hidden;
+        max-width: 100%;
+        min-width: 0;
     }
     .crm-contact-mobile .crm-contact-hero__accent {
         height: 3px;
@@ -1453,7 +1464,9 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.45rem;
         padding: 0 0.75rem;
-        overflow: visible;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
     }
     .crm-contact-glance-card {
         flex: none;
@@ -1552,6 +1565,8 @@
         gap: 0.35rem;
         padding: 0 0.75rem;
         margin: 0;
+        max-width: 100%;
+        min-width: 0;
     }
     .crm-contact-mob-action {
         display: flex;
@@ -1594,104 +1609,89 @@
         gap: 0.55rem;
         display: flex;
         flex-direction: column;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: clip;
     }
     .crm-contact-mobile .crm-contact-main {
         display: flex;
         flex-direction: column;
         gap: 0.55rem;
         min-width: 0;
+        max-width: 100%;
+        overflow-x: clip;
     }
 
-    /* ── Segment rail — icon tiles + guaranteed horizontal scroll ── */
+    /* ── Section switcher: 3×2 grid — ALL tabs always visible, no h-scroll ── */
     .crm-contact-mobile .crm-contact-segrail {
         display: block;
         position: sticky;
         top: 0;
         z-index: 24;
+        width: 100%;
+        max-width: 100%;
         margin: 0;
         padding: 0;
-        isolation: isolate;
-        /* Escape parent padding so swipe-scroll has full width */
-        width: calc(100% + 1.4rem);
-        margin-inline: -0.7rem;
-        max-width: none;
+        min-width: 0;
     }
     .crm-contact-mobile .crm-contact-segrail::before,
     .crm-contact-mobile .crm-contact-segrail::after {
-        content: '';
-        position: absolute;
-        top: 0.35rem;
-        bottom: 0.35rem;
-        width: 1.35rem;
-        z-index: 2;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity 0.18s ease;
-    }
-    .crm-contact-mobile .crm-contact-segrail.is-scrollable:not(.is-at-start)::before {
-        opacity: 1;
-        inset-inline-start: 0;
-        background: linear-gradient(to inline-end, transparent, color-mix(in srgb, var(--ws-bg, #f8fafc) 92%, var(--ws-surface)));
-    }
-    .crm-contact-mobile .crm-contact-segrail.is-scrollable:not(.is-at-end)::after {
-        opacity: 1;
-        inset-inline-end: 0;
-        background: linear-gradient(to inline-start, transparent, color-mix(in srgb, var(--ws-bg, #f8fafc) 92%, var(--ws-surface)));
+        display: none !important;
+        content: none !important;
     }
     .crm-contact-mobile .crm-contact-tabs {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-auto-flow: row !important;
+        flex-direction: unset !important;
+        flex-wrap: unset !important;
         align-items: stretch;
         gap: 0.4rem !important;
-        width: 100%;
-        max-width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
         margin: 0 !important;
-        padding: 0.45rem 0.85rem !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        overscroll-behavior-x: contain;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-x;
-        scrollbar-width: none;
-        border: none !important;
-        border-radius: 0 !important;
-        background: color-mix(in srgb, var(--ws-surface) 88%, transparent) !important;
-        backdrop-filter: blur(16px) saturate(1.15);
-        -webkit-backdrop-filter: blur(16px) saturate(1.15);
-        box-shadow:
-            0 1px 0 color-mix(in srgb, var(--ws-border) 70%, transparent),
-            0 8px 20px rgba(15, 23, 42, 0.04) !important;
-        position: relative !important;
-        top: auto !important;
-        z-index: 1;
+        padding: 0.5rem !important;
+        overflow: visible !important;
+        overflow-x: visible !important;
+        touch-action: manipulation;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent) !important;
+        border-radius: 18px !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05) !important;
+        position: sticky !important;
+        top: 0;
+        z-index: 24;
+        backdrop-filter: blur(14px) saturate(1.1);
+        -webkit-backdrop-filter: blur(14px) saturate(1.1);
     }
-    .crm-contact-mobile .crm-contact-tabs::-webkit-scrollbar { display: none !important; }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro {
-        flex: 0 0 auto !important;
+        display: flex !important;
+        flex: none !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 0.28rem !important;
-        width: 4.55rem;
-        min-width: 4.55rem !important;
-        max-width: 4.55rem;
-        min-height: 4.35rem !important;
-        padding: 0.45rem 0.2rem 0.4rem !important;
+        gap: 0.22rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        min-height: 3.85rem !important;
+        height: auto !important;
+        padding: 0.45rem 0.25rem 0.4rem !important;
         margin: 0 !important;
-        border-radius: 16px !important;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
-        background: var(--ws-surface) !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface)) !important;
         color: var(--ws-text-secondary) !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        box-shadow: none;
         white-space: normal !important;
         font-family: 'Vazirmatn', inherit;
         font-size: 0.62rem !important;
         font-weight: 700 !important;
-        line-height: 1.15;
+        line-height: 1.2;
         position: relative;
         -webkit-tap-highlight-color: transparent;
-        transition: transform 0.12s, background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
+        transition: transform 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
     }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro > i {
         display: none !important;
@@ -1700,12 +1700,12 @@
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        width: 1.85rem;
-        height: 1.85rem;
-        border-radius: 11px;
-        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface-2));
+        width: 1.7rem;
+        height: 1.7rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
         color: var(--ws-primary);
-        font-size: 0.78rem;
+        font-size: 0.72rem;
         line-height: 1;
         flex-shrink: 0;
     }
@@ -1717,8 +1717,10 @@
     .crm-contact-mobile .crm-contact-seg__txt {
         display: block;
         width: 100%;
+        max-width: 100%;
         text-align: center;
         min-width: 0;
+        overflow: hidden;
     }
     .crm-contact-mobile .crm-contact-seg__full {
         display: none !important;
@@ -1730,38 +1732,35 @@
         white-space: nowrap;
         max-width: 100%;
         font-size: 0.62rem;
-        font-weight: 700;
+        font-weight: 750;
         color: inherit;
     }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro em {
-        position: absolute;
-        top: 0.28rem;
-        inset-inline-end: 0.28rem;
+        position: static !important;
         font-style: normal !important;
-        font-size: 0.54rem !important;
+        font-size: 0.58rem !important;
         font-weight: 800 !important;
-        min-width: 1.05rem;
-        height: 1.05rem;
-        padding: 0 0.28rem !important;
+        min-width: 1.15rem;
+        height: 1.15rem;
+        padding: 0 0.32rem !important;
+        margin-top: 0.05rem;
         border-radius: 999px !important;
-        background: var(--ws-surface-2) !important;
+        background: var(--ws-surface) !important;
         color: var(--ws-text-muted) !important;
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
         line-height: 1;
-        box-shadow: 0 0 0 1.5px var(--ws-surface);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ws-border) 70%, transparent);
     }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro.active {
         background: linear-gradient(165deg, #7c3aed, #5b21b6) !important;
         color: #fff !important;
         border-color: transparent !important;
-        box-shadow:
-            0 6px 16px rgba(124, 58, 237, 0.28),
-            inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28) !important;
     }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro.active .crm-contact-seg__ico {
-        background: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.2);
         color: #fff;
     }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro.active em {
@@ -1770,14 +1769,23 @@
         box-shadow: none;
     }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro:active {
-        transform: scale(0.96);
+        transform: scale(0.97);
     }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro:focus-visible {
         outline: 2px solid var(--ws-primary);
         outline-offset: 2px;
     }
 
-    /* ── Panels ── */
+    /* ── Panels — contain horizontal overflow ── */
+    .crm-contact-mobile .crm-detail-grid,
+    .crm-contact-mobile .crm-contact-main,
+    .crm-contact-mobile .crm-contact-sidebar,
+    .crm-contact-mobile .crm-contact-panel,
+    .crm-contact-mobile .crm-contact-panel-body,
+    .crm-contact-mobile .crm-contact-panel-head {
+        max-width: 100%;
+        min-width: 0;
+    }
     .crm-contact-mobile .crm-contact-panel {
         border-radius: 18px;
         border: 1px solid color-mix(in srgb, var(--ws-border) 68%, transparent);
@@ -1785,6 +1793,7 @@
         min-height: 0;
         background: var(--ws-surface);
         overflow: hidden;
+        overflow-x: clip;
     }
     .crm-contact-mobile .crm-contact-panel--flush {
         background: transparent;
@@ -1840,9 +1849,12 @@
         align-items: flex-start;
         gap: 0.55rem;
         padding-bottom: 0;
+        max-width: 100%;
+        min-width: 0;
     }
     .crm-contact-mobile .crm-timeline-rail {
         width: auto;
+        flex-shrink: 0;
         justify-content: flex-start;
         padding-top: 0.15rem;
     }
@@ -1858,11 +1870,45 @@
     .crm-contact-mobile .crm-timeline-pro .crm-timeline-body {
         flex: 1;
         min-width: 0;
+        max-width: 100%;
         width: auto;
         padding: 0.65rem 0.75rem;
         border-radius: 14px;
         background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
         border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .crm-contact-mobile .crm-match-card,
+    .crm-contact-mobile .crm-matches-grid,
+    .crm-contact-mobile .crm-matches-col,
+    .crm-contact-mobile .crm-visit-card-pro,
+    .crm-contact-mobile .crm-doc-item,
+    .crm-contact-mobile .crm-contact-prefs,
+    .crm-contact-mobile table {
+        max-width: 100%;
+        min-width: 0;
+    }
+    .crm-contact-mobile .crm-matches-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .crm-contact-mobile .crm-match-card {
+        grid-template-columns: auto minmax(0, 1fr) !important;
+        gap: 0.5rem;
+    }
+    .crm-contact-mobile img {
+        max-width: 100%;
+        height: auto;
+    }
+    .crm-contact-mobile .crm-contact-panel-head {
+        flex-wrap: wrap;
+    }
+    .crm-contact-mobile .crm-contact-panel-head-text {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    .crm-contact-mobile .crm-contact-panel-head-text h2 {
+        overflow-wrap: anywhere;
     }
     .crm-contact-mobile .crm-timeline-top {
         display: flex;
@@ -2426,11 +2472,21 @@
         font-size: 0.56rem;
         border-radius: 13px;
     }
+    .crm-contact-mobile .crm-contact-tabs {
+        gap: 0.32rem !important;
+        padding: 0.4rem !important;
+        border-radius: 16px !important;
+    }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro {
-        width: 4.25rem;
-        min-width: 4.25rem !important;
-        max-width: 4.25rem;
-        min-height: 4.15rem !important;
+        min-height: 3.55rem !important;
+        padding: 0.38rem 0.15rem 0.32rem !important;
+        border-radius: 12px !important;
+    }
+    .crm-contact-mobile .crm-contact-seg__ico {
+        width: 1.55rem;
+        height: 1.55rem;
+        border-radius: 9px;
+        font-size: 0.68rem;
     }
     .crm-contact-mobile .crm-contact-seg__short {
         font-size: 0.58rem;

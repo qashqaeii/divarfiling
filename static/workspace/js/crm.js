@@ -3131,6 +3131,8 @@ function initCRMDealsPage() {
     if (!page) return;
 
     page.querySelectorAll('.crm-deals-row[data-href]').forEach(row => {
+        if (row.dataset.hrefBound === '1') return;
+        row.dataset.hrefBound = '1';
         row.addEventListener('click', e => {
             if (e.target.closest('a, button, input, select, textarea, label')) return;
             window.location.href = row.dataset.href;
@@ -3138,12 +3140,35 @@ function initCRMDealsPage() {
     });
 
     const search = page.querySelector('.crm-deals-search input[type="search"]');
-    if (search) {
+    if (search && search.dataset.debounceBound !== '1') {
+        search.dataset.debounceBound = '1';
         let timer;
         search.addEventListener('input', () => {
             clearTimeout(timer);
             timer = setTimeout(() => search.form?.submit(), 420);
         });
+    }
+
+    const sheetToggle = document.getElementById('crmDealsFilterToggle');
+    const sheet = document.getElementById('crmDealsFilterSheet');
+    if (sheetToggle && sheet && sheetToggle.dataset.bound !== '1') {
+        sheetToggle.dataset.bound = '1';
+        const mq = window.matchMedia('(max-width: 768px)');
+        const setSheet = (open) => {
+            if (!mq.matches) {
+                sheet.classList.remove('is-open');
+                sheetToggle.setAttribute('aria-expanded', 'false');
+                sheetToggle.classList.remove('is-open');
+                return;
+            }
+            sheet.classList.toggle('is-open', open);
+            sheetToggle.classList.toggle('is-open', open);
+            sheetToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+        sheetToggle.addEventListener('click', () => {
+            setSheet(!sheet.classList.contains('is-open'));
+        });
+        mq.addEventListener?.('change', () => setSheet(false));
     }
 }
 

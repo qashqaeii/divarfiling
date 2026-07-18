@@ -1,13 +1,72 @@
 {% extends 'workspace/base.html' %}
-{% load humanize l10n workspace_tags %}
+{% load static humanize l10n workspace_tags %}
 
 {% block page_title %}تحلیل — {{ dataset.name }}{% endblock %}
+{% block mobile_bar_title %}تحلیل بازار{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'workspace/css/ws-rpt-mobile.css' %}?v=1">
+{% endblock %}
 
 {% block content %}
-<div class="mk-page ws-rpt">
+<div class="mk-page ws-rpt ws-rpt-mobile">
 {% with r=report ctx=r.context lb=r.labels pa=r.price_analysis pps=pa.price_per_sqm rent=pa.rent dep=pa.deposit depth=r.market_depth conf=analysis_confidence liq=r.liquidity dq=r.data_quality %}
 
-<header class="ws-rpt-head">
+<header class="ws-rpt-mob-header">
+    <div class="ws-rpt-mob-header-stage" aria-hidden="true">
+        <div class="ws-rpt-mob-header-glow"></div>
+        <div class="ws-rpt-mob-header-grid"></div>
+        <div class="ws-rpt-mob-header-ribbon"></div>
+    </div>
+    <div class="ws-rpt-mob-header-inner">
+        {% with hdr=r.header %}
+        <span class="ws-rpt-mob-kicker"><i class="fas fa-chart-line" aria-hidden="true"></i> تحلیل بازار</span>
+        {% if hdr.headline %}
+        <p class="ws-rpt-mob-headline">{{ hdr.headline }}</p>
+        {% endif %}
+        <h1 class="ws-rpt-mob-title">{{ hdr.title|default:dataset.name }}</h1>
+        {% if hdr.subtitle %}
+        <p class="ws-rpt-mob-scope">{{ hdr.subtitle }}</p>
+        {% elif r.publication_scope.line %}
+        <p class="ws-rpt-mob-scope">{{ r.publication_scope.line }}</p>
+        {% else %}
+        <p class="ws-rpt-mob-scope">{{ dq.valid_count|intcomma }} فایل{% if dataset.city %} · {{ dataset.city }}{% endif %}</p>
+        {% endif %}
+        {% if hdr.tags %}
+        <div class="ws-rpt-mob-tags" aria-label="نوع تحلیل">
+            {% for tag in hdr.tags %}
+            <span class="ws-rpt-head-tag ws-rpt-head-tag--{{ tag.tone }}">{{ tag.text }}</span>
+            {% endfor %}
+        </div>
+        {% elif ctx.badge %}
+        <div class="ws-rpt-mob-tags"><span class="ws-rpt-badge">{{ ctx.badge }}</span></div>
+        {% endif %}
+        {% endwith %}
+        {% if conf %}
+        <div class="ws-rpt-mob-conf">
+            <span class="ws-rpt-mob-conf-score">{{ conf|ws_conf_score }}٪</span>
+            <div class="ws-rpt-mob-conf-copy">
+                <strong>{% firstof conf.level_plain conf.level "اعتماد تحلیل" %}</strong>
+                {% if conf.level_hint %}<span>{{ conf.level_hint|truncatechars:72 }}</span>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+        <div class="ws-rpt-mob-actions" role="toolbar" aria-label="میانبرهای تحلیل">
+            <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="ws-rpt-mob-act ws-rpt-mob-act--primary">
+                <i class="fas fa-table" aria-hidden="true"></i><span>آگهی‌ها</span>
+            </a>
+            <a href="{% url 'workspace:dataset_map' dataset.id %}" class="ws-rpt-mob-act">
+                <i class="fas fa-map-location-dot" aria-hidden="true"></i><span>نقشه</span>
+            </a>
+            <a href="{% url 'workspace:dataset_list' %}" class="ws-rpt-mob-act">
+                <i class="fas fa-folder-open" aria-hidden="true"></i><span>فایلینگ</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<header class="ws-rpt-head ws-rpt-desk-header">
     <div class="ws-rpt-head-row">
         <div class="ws-rpt-head-main">
             {% with hdr=r.header %}

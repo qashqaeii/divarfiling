@@ -216,14 +216,40 @@
 
     <div class="crm-detail-grid">
         <div class="crm-detail-main crm-contact-main">
-            <nav class="crm-tabs crm-tabs-pro crm-contact-tabs" role="tablist" aria-label="بخش‌های مخاطب">
-                <button type="button" class="crm-tab crm-tab-pro active" data-tab="timeline" role="tab" aria-selected="true"><i class="fas fa-stream" aria-hidden="true"></i><span>تایم‌لاین</span><em>{{ activities|length }}</em></button>
-                <button type="button" class="crm-tab crm-tab-pro" data-tab="matches" role="tab"><i class="fas fa-house" aria-hidden="true"></i><span>پیشنهاد ملک</span><em>{% crm_match_tab_count match_data %}</em></button>
-                <button type="button" class="crm-tab crm-tab-pro" data-tab="visits" role="tab"><i class="fas fa-door-open" aria-hidden="true"></i><span>بازدیدها</span><em>{{ visits|length }}</em></button>
-                <button type="button" class="crm-tab crm-tab-pro" data-tab="properties" role="tab"><i class="fas fa-link" aria-hidden="true"></i><span>املاک</span><em>{% with pl=property_links|length ll=linked_listings|length %}{{ pl|add:ll }}{% endwith %}</em></button>
-                <button type="button" class="crm-tab crm-tab-pro" data-tab="docs" role="tab"><i class="fas fa-file" aria-hidden="true"></i><span>مدارک</span><em>{{ documents|length }}</em></button>
-                <button type="button" class="crm-tab crm-tab-pro" data-tab="notes" role="tab"><i class="fas fa-note-sticky" aria-hidden="true"></i><span>یادداشت</span><em>{% if customer.notes or customer.tags %}1{% else %}0{% endif %}</em></button>
-            </nav>
+            <div class="crm-contact-segrail" data-contact-segrail>
+                <nav class="crm-tabs crm-tabs-pro crm-contact-tabs" role="tablist" aria-label="بخش‌های مخاطب">
+                    <button type="button" class="crm-tab crm-tab-pro active" data-tab="timeline" role="tab" aria-selected="true">
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-stream"></i></span>
+                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">تایم‌لاین</span><span class="crm-contact-seg__short">فعالیت</span></span>
+                        <em>{{ activities|length }}</em>
+                    </button>
+                    <button type="button" class="crm-tab crm-tab-pro" data-tab="matches" role="tab">
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-house"></i></span>
+                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">پیشنهاد ملک</span><span class="crm-contact-seg__short">پیشنهاد</span></span>
+                        <em>{% crm_match_tab_count match_data %}</em>
+                    </button>
+                    <button type="button" class="crm-tab crm-tab-pro" data-tab="visits" role="tab">
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-door-open"></i></span>
+                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">بازدیدها</span><span class="crm-contact-seg__short">بازدید</span></span>
+                        <em>{{ visits|length }}</em>
+                    </button>
+                    <button type="button" class="crm-tab crm-tab-pro" data-tab="properties" role="tab">
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-link"></i></span>
+                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">املاک</span><span class="crm-contact-seg__short">املاک</span></span>
+                        <em>{% with pl=property_links|length ll=linked_listings|length %}{{ pl|add:ll }}{% endwith %}</em>
+                    </button>
+                    <button type="button" class="crm-tab crm-tab-pro" data-tab="docs" role="tab">
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-file"></i></span>
+                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">مدارک</span><span class="crm-contact-seg__short">مدارک</span></span>
+                        <em>{{ documents|length }}</em>
+                    </button>
+                    <button type="button" class="crm-tab crm-tab-pro" data-tab="notes" role="tab">
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-note-sticky"></i></span>
+                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">یادداشت</span><span class="crm-contact-seg__short">یادداشت</span></span>
+                        <em>{% if customer.notes or customer.tags %}1{% else %}0{% endif %}</em>
+                    </button>
+                </nav>
+            </div>
 
             <div data-panel="timeline" class="crm-contact-panel" {% if active_tab and active_tab != 'timeline' %}hidden{% endif %}>
                 <header class="crm-contact-panel-head">

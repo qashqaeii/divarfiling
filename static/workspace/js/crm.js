@@ -1708,6 +1708,41 @@ function initCRMTabJump() {
     });
 }
 
+function scrollCRMTabIntoView(btn) {
+    if (!btn || typeof btn.scrollIntoView !== 'function') return;
+    try {
+        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    } catch (e) {
+        btn.scrollIntoView(false);
+    }
+}
+
+function syncContactSegrailFades(rail) {
+    if (!rail) return;
+    const track = rail.querySelector('.crm-contact-tabs');
+    if (!track) return;
+    const max = Math.max(0, track.scrollWidth - track.clientWidth);
+    const absX = Math.abs(track.scrollLeft || 0);
+    const atStart = absX < 3;
+    const atEnd = max <= 3 || absX >= max - 3;
+    rail.classList.toggle('is-at-start', atStart);
+    rail.classList.toggle('is-at-end', atEnd);
+    rail.classList.toggle('is-scrollable', max > 3);
+}
+
+function initContactSegrail() {
+    document.querySelectorAll('[data-contact-segrail]').forEach(rail => {
+        const track = rail.querySelector('.crm-contact-tabs');
+        if (!track) return;
+        const update = () => syncContactSegrailFades(rail);
+        track.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update, { passive: true });
+        update();
+        const active = track.querySelector('.crm-tab.active');
+        if (active) scrollCRMTabIntoView(active);
+    });
+}
+
 function initCRMTabs() {
     document.querySelectorAll('.crm-tab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1723,6 +1758,9 @@ function initCRMTabs() {
             btn.setAttribute('aria-selected', 'true');
             const panel = shell.querySelector(`[data-panel="${tab}"]`);
             if (panel) panel.hidden = false;
+            scrollCRMTabIntoView(btn);
+            const rail = btn.closest('[data-contact-segrail]');
+            if (rail) syncContactSegrailFades(rail);
         });
     });
 
@@ -3240,6 +3278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMGlobalSearch();
     initCRMMultiSelect();
     initCRMTabs();
+    initContactSegrail();
     initCRMJalaliPickers(document);
     initCRMMoneyInputs(document);
     initCRMFormErrors();

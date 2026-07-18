@@ -1,0 +1,512 @@
+/* ═══════════════════════════════════════════════════════════
+   Filing Listing Detail — Premium Mobile First
+   Scoped under .ws-ld-mobile (with .crm-prop-detail-mobile)
+   Theme: --ws-primary / --ws-primary-soft
+   ═══════════════════════════════════════════════════════════ */
+
+.ws-ld-mob-more,
+.ws-ld-hero-ribbon,
+.ws-ld-hero-mesh {
+    display: none;
+}
+
+@media (min-width: 769px) {
+    .ws-ld-mobile .ws-ld-mob-more,
+    .ws-ld-mobile .ws-ld-hero-ribbon,
+    .ws-ld-mobile .ws-ld-hero-mesh {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .ws-ld-mobile.crm-page-chrome {
+        padding-bottom: calc(6.35rem + env(safe-area-inset-bottom, 0px));
+        background:
+            radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--ws-primary) 9%, transparent), transparent 58%),
+            color-mix(in srgb, var(--ws-surface-2) 42%, var(--ws-bg, #f8fafc));
+    }
+
+    /* ── Creative hero stage ── */
+    .ws-ld-mobile .crm-prop-hero {
+        position: relative;
+        border-radius: 0 0 26px 26px;
+        box-shadow:
+            0 14px 36px rgba(15, 23, 42, 0.07),
+            0 1px 0 color-mix(in srgb, var(--ws-primary) 12%, transparent);
+    }
+    .ws-ld-hero-ribbon {
+        display: block;
+        position: absolute;
+        inset-inline: 0;
+        top: 0;
+        height: 3px;
+        z-index: 4;
+        background: linear-gradient(
+            90deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 40%, #0ea5e9) 55%,
+            transparent
+        );
+    }
+    .ws-ld-hero-mesh {
+        display: block;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.55;
+        background:
+            radial-gradient(90% 70% at 100% -5%, color-mix(in srgb, var(--ws-primary) 22%, transparent), transparent 55%),
+            radial-gradient(70% 55% at 0% 100%, color-mix(in srgb, var(--ws-primary) 8%, transparent), transparent 50%);
+    }
+    .ws-ld-mobile .crm-prop-hero-ambient,
+    .ws-ld-mobile .crm-prop-hero-inner {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Hide sprawling desk action grid — dock + more sheet instead */
+    .ws-ld-mobile .crm-prop-hero-actions {
+        display: none !important;
+    }
+
+    .ws-ld-mobile .crm-prop-hero-nav {
+        padding: 0.7rem 0.85rem 0.45rem;
+        gap: 0.5rem;
+    }
+    .ws-ld-mobile .crm-prop-hero-back {
+        width: 2.45rem;
+        height: 2.45rem;
+        border-radius: 13px;
+        background: color-mix(in srgb, var(--ws-surface) 88%, transparent);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    }
+    .ws-ld-mobile .crm-prop-hero-crumb {
+        font-size: 0.74rem;
+        font-weight: 650;
+    }
+    .ws-ld-mobile .crm-prop-hero-crumb a {
+        color: var(--ws-primary);
+    }
+
+    /* Cover: cinematic */
+    .ws-ld-mobile .crm-prop-hero-cover,
+    .ws-ld-mobile .crm-prop-hero-cover img {
+        min-height: 200px;
+        max-height: 240px;
+        border-radius: 0;
+    }
+    .ws-ld-mobile .crm-prop-hero-deal-pill {
+        font-size: 0.68rem;
+        font-weight: 800;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+    }
+    .ws-ld-mobile .crm-prop-hero-img-badge {
+        font-size: 0.68rem;
+        font-weight: 750;
+        border-radius: 999px;
+        padding: 0.28rem 0.55rem;
+    }
+
+    .ws-ld-mobile .crm-prop-hero-content {
+        padding: 0.85rem 0.9rem 0.95rem;
+        gap: 0.6rem;
+    }
+    .ws-ld-mobile .crm-prop-hero-status-row {
+        gap: 0.35rem;
+        flex-wrap: wrap;
+    }
+    .ws-ld-mobile .crm-prop-badge {
+        font-size: 0.62rem;
+        font-weight: 750;
+        padding: 0.22rem 0.5rem;
+        border-radius: 999px;
+    }
+    .ws-ld-mobile .crm-prop-hero-title {
+        font-size: 1.18rem;
+        font-weight: 850;
+        letter-spacing: -0.025em;
+        line-height: 1.32;
+    }
+
+    /* Price cards — theme-aware glow */
+    .ws-ld-mobile .crm-prop-hero-pricecard {
+        background:
+            linear-gradient(155deg,
+                color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)),
+                var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--ws-primary) 8%, transparent);
+    }
+    .ws-ld-mobile .crm-prop-hero-pricecard-lbl {
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+    }
+    .ws-ld-mobile .crm-prop-hero-pricecard strong {
+        font-size: 0.98rem;
+        font-weight: 850;
+        color: var(--ws-text);
+        letter-spacing: -0.02em;
+    }
+    .ws-ld-mobile .crm-prop-hero-pricecard--dep {
+        background: linear-gradient(155deg, rgba(14, 165, 233, 0.08), var(--ws-surface));
+        border-color: rgba(14, 165, 233, 0.22);
+    }
+    .ws-ld-mobile .crm-prop-hero-pricecard--rent {
+        background: linear-gradient(155deg, rgba(16, 185, 129, 0.08), var(--ws-surface));
+        border-color: rgba(16, 185, 129, 0.22);
+    }
+
+    .ws-ld-mobile .crm-prop-hero-kpi {
+        background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    }
+    .ws-ld-mobile .crm-prop-hero-kpi-ico {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
+        color: var(--ws-primary);
+        font-size: 0.78rem;
+        flex-shrink: 0;
+    }
+    .ws-ld-mobile .crm-prop-hero-kpi--accent .crm-prop-hero-kpi-ico {
+        background: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-surface));
+    }
+
+    /* Amenities + bench */
+    .ws-ld-mobile .crm-prop-hero-amenities {
+        padding: 0.7rem 0.9rem 0.9rem;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+    }
+    .ws-ld-mobile .ws-ld-hero-bench {
+        margin-inline-start: 0;
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+    .ws-ld-mobile .crm-prop-tag {
+        font-size: 0.65rem;
+        border-radius: 999px;
+        padding: 0.28rem 0.55rem;
+    }
+    .ws-ld-mobile .crm-prop-tag--hl {
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
+        color: var(--ws-primary);
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent);
+        font-weight: 800;
+    }
+
+    /* Gallery snap strip */
+    .ws-ld-mobile .crm-prop-hero-gallery-wrap {
+        padding: 0 0.9rem 0.9rem;
+        scroll-snap-type: x mandatory;
+    }
+    .ws-ld-mobile .crm-prop-hero-gallery {
+        display: flex;
+        gap: 0.45rem;
+        width: max-content;
+    }
+    .ws-ld-mobile .crm-prop-gallery-item {
+        flex: 0 0 auto;
+        width: 4.5rem;
+        height: 4.5rem;
+        border-radius: 14px;
+        overflow: hidden;
+        scroll-snap-align: start;
+        border: 2px solid transparent;
+        padding: 0;
+        background: var(--ws-surface-2);
+    }
+    .ws-ld-mobile .crm-prop-gallery-item.is-active {
+        border-color: var(--ws-primary);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary) 25%, transparent);
+    }
+    .ws-ld-mobile .crm-prop-gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    /* ── Tabs: theme tokens (override hardcoded purple) ── */
+    .ws-ld-mobile .crm-prop-tabs .crm-tab-pro.active {
+        background: linear-gradient(
+            165deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 72%, #0f172a)
+        ) !important;
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--ws-primary) 32%, transparent) !important;
+    }
+    .ws-ld-mobile .crm-prop-tabs .crm-tab-pro .crm-prop-seg__ico {
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
+        color: var(--ws-primary);
+    }
+
+    /* Dossier sections */
+    .ws-ld-mobile .ws-ld-dossier-section + .ws-ld-dossier-section {
+        margin-top: 0.95rem;
+        padding-top: 0.85rem;
+    }
+    .ws-ld-mobile .ws-ld-dossier-section-title {
+        font-size: 0.8rem;
+        margin-bottom: 0.55rem;
+        padding: 0.35rem 0.55rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+    }
+
+    /* Link CRM form */
+    .ws-ld-mobile .ws-ld-crm-form--pro {
+        margin-top: 0.85rem;
+        padding: 0.75rem;
+        border-radius: 14px;
+        border-style: solid;
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface));
+    }
+    .ws-ld-mobile .ws-ld-crm-form-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .ws-ld-mobile .ws-ld-crm-form-row .ws-select,
+    .ws-ld-mobile .ws-ld-crm-form-row .crm-dash-act {
+        width: 100%;
+        flex: none;
+        min-height: 42px;
+    }
+
+    /* History table */
+    .ws-ld-mobile .ws-ld-history-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -0.2rem;
+        padding-bottom: 0.25rem;
+        border-radius: 12px;
+    }
+    .ws-ld-mobile .ws-ld-history-table {
+        min-width: 320px;
+        font-size: 0.72rem;
+    }
+    .ws-ld-mobile .ws-ld-history-table th,
+    .ws-ld-mobile .ws-ld-history-table td {
+        padding: 0.55rem 0.6rem;
+        white-space: nowrap;
+    }
+
+    /* Owner / side cards */
+    .ws-ld-mobile .mk-owner-box {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .ws-ld-mobile .crm-prop-side-card h3 {
+        font-size: 0.82rem;
+        font-weight: 800;
+        margin: 0 0 0.55rem;
+    }
+
+    /* Map finale */
+    .ws-ld-mobile .crm-prop-map-finale {
+        margin: 0.15rem 0.7rem 0;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    }
+    .ws-ld-mobile .crm-prop-map-finale-title {
+        font-size: 1.05rem;
+        font-weight: 850;
+    }
+    .ws-ld-mobile .crm-prop-map-finale-actions {
+        grid-template-columns: 1fr;
+    }
+    .ws-ld-mobile .crm-prop-map-finale-btn--primary {
+        grid-column: 1 / -1;
+    }
+
+    /* AI card */
+    .ws-ld-mobile .ws-ai-card--listing {
+        margin: 0.35rem 0.7rem 0.5rem;
+        border-radius: 20px;
+    }
+
+    /* ── Bottom dock — theme primary ── */
+    .ws-ld-mobile .crm-prop-mobile-dock {
+        bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+    }
+    .ws-ld-mobile .crm-prop-mobile-dock__inner {
+        border-radius: 22px;
+        padding: 0.42rem 0.4rem;
+        border-color: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
+        box-shadow:
+            0 10px 32px rgba(15, 23, 42, 0.14),
+            0 0 0 1px color-mix(in srgb, var(--ws-primary) 6%, transparent);
+    }
+    .ws-ld-mobile .crm-prop-dock-btn--primary {
+        background: linear-gradient(
+            135deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 75%, #0f172a)
+        );
+        box-shadow: 0 3px 12px color-mix(in srgb, var(--ws-primary) 35%, transparent);
+    }
+    .ws-ld-mobile .crm-prop-dock-btn--primary:active {
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--ws-primary) 88%, #0f172a),
+            color-mix(in srgb, var(--ws-primary) 65%, #0f172a)
+        );
+    }
+    .ws-ld-mobile .crm-prop-dock-btn--fav.is-on {
+        color: #d97706;
+    }
+    .ws-ld-mobile .crm-prop-dock-btn--fav.is-on i {
+        color: #f59e0b;
+    }
+    .ws-ld-mobile .ws-ld-dock-form {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 0;
+        display: flex;
+    }
+    .ws-ld-mobile .ws-ld-dock-form .crm-prop-dock-btn {
+        width: 100%;
+    }
+
+    /* ── More sheet ── */
+    .ws-ld-mob-more {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 220;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0.75rem;
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    }
+    .ws-ld-mob-more.is-open {
+        display: flex;
+    }
+    .ws-ld-mob-more__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.42);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border: none;
+        cursor: pointer;
+    }
+    .ws-ld-mob-more__panel {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 420px);
+        max-height: min(72vh, 520px);
+        overflow: auto;
+        border-radius: 22px 22px 18px 18px;
+        background: var(--ws-surface);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+        box-shadow: 0 -8px 40px rgba(15, 23, 42, 0.18);
+        padding: 0.55rem 0.75rem 0.85rem;
+        animation: wsLdMoreIn 0.22s ease-out;
+    }
+    @keyframes wsLdMoreIn {
+        from { transform: translateY(18px); opacity: 0.6; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    .ws-ld-mob-more__handle {
+        width: 2.4rem;
+        height: 0.28rem;
+        margin: 0.15rem auto 0.65rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 80%, var(--ws-text-muted));
+    }
+    .ws-ld-mob-more__title {
+        margin: 0 0 0.65rem;
+        font-size: 0.88rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        text-align: center;
+    }
+    .ws-ld-mob-more__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
+    }
+    .ws-ld-mob-more__act {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-height: 4.6rem;
+        padding: 0.65rem 0.5rem;
+        border-radius: 16px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
+        color: var(--ws-text);
+        font-family: inherit;
+        font-size: 0.72rem;
+        font-weight: 750;
+        text-decoration: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.12s, background 0.12s;
+    }
+    .ws-ld-mob-more__act i,
+    .ws-ld-mob-more__act .icon-slot {
+        font-size: 1.05rem;
+        color: var(--ws-primary);
+        line-height: 1;
+    }
+    .ws-ld-mob-more__act:active {
+        transform: scale(0.96);
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+    }
+    .ws-ld-mob-more__act--danger {
+        color: #dc2626;
+        border-color: rgba(239, 68, 68, 0.25);
+        background: rgba(239, 68, 68, 0.06);
+    }
+    .ws-ld-mob-more__act--danger i {
+        color: #dc2626;
+    }
+    .ws-ld-mob-more__form {
+        margin: 0;
+        display: flex;
+        min-width: 0;
+    }
+    .ws-ld-mob-more__form .ws-ld-mob-more__act {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+}
+
+@media (max-width: 430px) {
+    .ws-ld-mobile .crm-prop-hero-cover,
+    .ws-ld-mobile .crm-prop-hero-cover img {
+        min-height: 178px;
+        max-height: 210px;
+    }
+    .ws-ld-mobile .crm-prop-hero-title {
+        font-size: 1.08rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .ws-ld-mobile .crm-prop-dock-btn span {
+        font-size: 0.5rem;
+    }
+    .ws-ld-mob-more__grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}

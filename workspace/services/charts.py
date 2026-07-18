@@ -570,10 +570,11 @@ def map_markers(
         is_consultant = signal == ADVERTISER_SIGNAL_CONSULTANT
         is_disguised = signal == ADVERTISER_SIGNAL_DISGUISED
         platform_url = ''
-        if dataset_id and lst.pk:
+        listing_dataset_id = getattr(lst, 'dataset_id', None) or dataset_id
+        if listing_dataset_id and lst.pk:
             platform_url = reverse(
                 'workspace:listing_detail',
-                kwargs={'dataset_id': dataset_id, 'listing_id': lst.pk},
+                kwargs={'dataset_id': listing_dataset_id, 'listing_id': lst.pk},
             )
 
         loc_acc = location_accuracy_for_map(lst.data or {})
@@ -587,6 +588,8 @@ def map_markers(
 
         if val_mode == 'rent':
             filter_value = full_dep or lst.deposit or lst.rent or 0
+        elif tx.get('is_mixed'):
+            filter_value = lst.price or full_dep or lst.deposit or lst.rent or 0
         else:
             filter_value = lst.price or 0
 

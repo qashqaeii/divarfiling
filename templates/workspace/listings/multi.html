@@ -41,6 +41,9 @@
             </div>
 
             <div class="ws-ds-mob-quick mk-multi-ds-chips-mob" aria-label="فایل‌های انتخاب‌شده">
+                <a href="{% url 'workspace:multi_map' %}?{% if filter_qs_noview %}{{ filter_qs_noview }}{% else %}dataset_ids={{ dataset_ids_param }}{% endif %}" class="ws-ds-mob-quick__chip">
+                    <i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه
+                </a>
                 {% for ds in datasets %}
                 <a href="{% url 'workspace:dataset_detail' ds.id %}" class="ws-ds-mob-quick__chip" title="{{ ds.name }}">
                     <i class="fas fa-file-lines" aria-hidden="true"></i>
@@ -79,6 +82,12 @@
                             {% if filter_count %}<span class="mk-ds-chip mk-ds-chip--filter">{{ filter_count }} فیلتر</span>{% endif %}
                         </div>
                     </div>
+                </div>
+                <div class="mk-ds-command-actions" role="toolbar" aria-label="عملیات">
+                    <a href="{% url 'workspace:multi_map' %}?{% if filter_qs_noview %}{{ filter_qs_noview }}{% else %}dataset_ids={{ dataset_ids_param }}{% endif %}" class="mk-ds-action" title="نقشه آگهی‌ها">
+                        <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                        <span>نقشه</span>
+                    </a>
                 </div>
             </div>
 
@@ -161,6 +170,10 @@
                 <i class="fas fa-sliders" aria-hidden="true"></i>
                 <span>فیلتر{% if filter_count %} · {{ filter_count }}{% endif %}</span>
             </button>
+            <a href="{% url 'workspace:multi_map' %}?{% if filter_qs_noview %}{{ filter_qs_noview }}{% else %}dataset_ids={{ dataset_ids_param }}{% endif %}" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--map" title="نقشه آگهی‌ها">
+                <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                <span>نقشه</span>
+            </a>
             <a href="{% url 'workspace:dataset_list' %}" class="ws-ds-mob-dock__btn" title="بازگشت به فایلینگ">
                 <i class="fas fa-folder-open" aria-hidden="true"></i>
                 <span>فایلینگ</span>

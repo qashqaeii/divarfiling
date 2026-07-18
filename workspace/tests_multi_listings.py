@@ -45,6 +45,18 @@ class MultiDatasetListingsViewTests(TestCase):
         )
         Listing.objects.create(dataset=self.ds1, token='t1', title='آگهی فروش', price=1_000_000_000)
         Listing.objects.create(dataset=self.ds2, token='t2', title='آگهی اجاره', deposit=500_000_000)
+        self.geo1 = Listing.objects.create(
+            dataset=self.ds1, token='g1', title='فروش با مختصات',
+            price=2_000_000_000, latitude=35.7, longitude=51.4,
+        )
+        self.geo2 = Listing.objects.create(
+            dataset=self.ds2, token='g2', title='اجاره با مختصات',
+            deposit=800_000_000, latitude=35.71, longitude=51.41,
+        )
+        self.geo_out = Listing.objects.create(
+            dataset=self.ds1, token='g3', title='خارج از فیلتر قیمت',
+            price=100_000_000, latitude=35.72, longitude=51.42,
+        )
 
     @patch('workspace.mixins.has_active_bot_license', return_value=True)
     def test_requires_ids(self, _mock_license):
@@ -62,3 +74,48 @@ class MultiDatasetListingsViewTests(TestCase):
         self.assertContains(res, 'فایل فروش')
         self.assertTrue(res.context['show_dataset_column'])
         self.assertTrue(res.context['tx']['is_mixed'])
+        self.assertContains(res, reverse('workspace:multi_map'))
+
+    @patch('workspace.mixins.has_active_bot_license', return_value=True)
+    def test_multi_map_combines_geo_listings(self, _mock_license):
+        url = reverse('workspace:multi_map')
+        res = self.client.get(url, {'dataset_ids': f'{self.ds1.id},{self.ds2.id}'})
+        self.assertEqual(res.status_code, 200)
+        marker_ids = {m['id'] for m in res.context['markers']}
+        self.assertIn(self.geo1.pk, marker_ids)
+        self.assertIn(self.geo2.pk, marker_ids)
+        self.assertIn(self.geo_out.pk, marker_ids)
+        self.assertTrue(res.context['is_multi_map'])
+        self.assertEqual(res.context['geo_count'], 3)
+
+    @patch('workspace.mixins.has_active_bot_license', return_value=True)
+    def test_multi_map_respects_listing_filters(self, _mock_license):
+        url = reverse('workspace:multi_map')
+        res = self.client.get(url, {
+            'dataset_ids': f'{self.ds1.id},{self.ds2.id}',
+            'price_min': '500000000',
+        })
+        self.assertEqual(res.status_code, 200)
+        marker_ids = {m['id'] for m in res.context['markers']}
+        self.assertIn(self.geo1.pk, marker_ids)
+        self.assertNotIn(self.geo_out.pk, marker_ids)
+        # اجاره بدون قیمت در فیلتر price_min حذف می‌شود
+        self.assertNotIn(self.geo2.pk, marker_ids)
+        self.assertTrue(res.context['is_map_filtered'])
+        self.assertGreaterEqual(res.context['filter_count'], 1)
+
+    @patch('workspace.mixins.has_active_bot_license', return_value=True)
+    def test_multi_map_requires_ids(self, _mock_license):
+        res = self.client.get(reverse('workspace:multi_map'))
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(res.url, reverse('workspace:dataset_list'))
+
+    @patch('workspace.mixins.has_active_bot_license', return_value=True)
+    def test_single_dataset_map_respects_filters(self, _mock_license):
+        url = reverse('workspace:dataset_map', kwargs={'dataset_id': self.ds1.id})
+        res = self.client.get(url, {'price_min': '500000000'})
+        self.assertEqual(res.status_code, 200)
+        marker_ids = {m['id'] for m in res.context['markers']}
+        self.assertIn(self.geo1.pk, marker_ids)
+        self.assertNotIn(self.geo_out.pk, marker_ids)
+        self.assertTrue(res.context['is_map_filtered'])

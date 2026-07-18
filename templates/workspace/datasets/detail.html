@@ -31,7 +31,7 @@
                 <details class="mk-ds-mobile-more" id="mkDsMobileMore">
                     <summary class="mk-ds-mobile-more-btn" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
                     <div class="mk-ds-mobile-more-panel" role="menu">
-                        <a href="{% url 'workspace:dataset_map' dataset.id %}" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه آگهی‌ها</a>
+                        <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه آگهی‌ها</a>
                         <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-download" aria-hidden="true"></i> خروجی CSV</a>
                         {% if filing_video.available %}
                         <a href="{% url 'workspace:dataset_list' %}?open=video#filing-video" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-circle-play" aria-hidden="true"></i> آموزش ویدیویی</a>
@@ -65,7 +65,7 @@
             </div>
 
             <div class="ws-ds-mob-quick" aria-label="میانبرها">
-                <a href="{% url 'workspace:dataset_map' dataset.id %}" class="ws-ds-mob-quick__chip">
+                <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="ws-ds-mob-quick__chip">
                     <i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه
                 </a>
                 <button type="button" class="ws-ds-mob-quick__chip ws-ds-mob-quick__chip--primary" data-ds-filter-jump>
@@ -124,7 +124,7 @@
                         <span>تحلیل</span>
                     </a>
                     <div class="mk-ds-action-group" role="group" aria-label="عملیات اصلی">
-                        <a href="{% url 'workspace:dataset_map' dataset.id %}" class="mk-ds-action" title="نقشه آگهی‌ها">
+                        <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="mk-ds-action" title="نقشه آگهی‌ها">
                             <i class="fas fa-map-location-dot" aria-hidden="true"></i>
                             <span>نقشه</span>
                         </a>
@@ -315,7 +315,7 @@
                 <i class="fas fa-sliders" aria-hidden="true"></i>
                 <span>فیلتر{% if filter_count %} · {{ filter_count }}{% endif %}</span>
             </button>
-            <a href="{% url 'workspace:dataset_map' dataset.id %}" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--map" title="نقشه آگهی‌ها">
+            <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--map" title="نقشه آگهی‌ها">
                 <i class="fas fa-map-location-dot" aria-hidden="true"></i>
                 <span>نقشه</span>
             </a>

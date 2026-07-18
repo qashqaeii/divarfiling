@@ -4,7 +4,7 @@
 
 
 
-{% block page_title %}نقشه — {{ dataset.name|truncatechars:30 }}{% endblock %}
+{% block page_title %}نقشه — {{ map_title|default:dataset.name|truncatechars:30 }}{% endblock %}
 {% block mobile_bar_title %}نقشه آگهی‌ها{% endblock %}
 
 {% block content %}
@@ -21,7 +21,7 @@
 
             <div class="mk-map-head-main">
 
-                <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="mk-map-back" title="بازگشت به فایل">
+                <a href="{% if map_back_url %}{{ map_back_url }}{% else %}{% url 'workspace:dataset_detail' dataset.id %}{% endif %}" class="mk-map-back" title="{% if is_multi_map %}بازگشت به آگهی‌ها{% else %}بازگشت به فایل{% endif %}">
 
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
 
@@ -35,11 +35,13 @@
 
                         <span>نقشه آگهی‌ها</span>
 
-                        {% if dataset.city %}<span class="mk-map-head-sep">·</span><span>{{ dataset.city }}{% if dataset.district %} — {{ dataset.district }}{% endif %}</span>{% endif %}
+                        {% if map_config.datasetCity %}<span class="mk-map-head-sep">·</span><span>{{ map_config.datasetCity }}</span>{% elif dataset.city %}<span class="mk-map-head-sep">·</span><span>{{ dataset.city }}{% if dataset.district %} — {{ dataset.district }}{% endif %}</span>{% endif %}
+
+                        {% if is_map_filtered %}<span class="mk-map-head-sep">·</span><span>{{ filter_count }} فیلتر</span>{% endif %}
 
                     </div>
 
-                    <h1 class="mk-map-head-title">{{ dataset.name }}</h1>
+                    <h1 class="mk-map-head-title">{{ map_title|default:dataset.name }}</h1>
 
                 </div>
 

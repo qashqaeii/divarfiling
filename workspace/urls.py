@@ -18,6 +18,7 @@ urlpatterns = [
     path('datasets/upload/bulk/', views.DatasetBulkUploadView.as_view(), name='dataset_bulk_upload'),
     path('datasets/<uuid:dataset_id>/', views.DatasetDetailView.as_view(), name='dataset_detail'),
     path('listings/', views.MultiDatasetListingsView.as_view(), name='multi_listings'),
+    path('listings/map/', views.MultiDatasetMapView.as_view(), name='multi_map'),
     path('datasets/bulk-delete/', views.DatasetBulkDeleteView.as_view(), name='dataset_bulk_delete'),
     path('datasets/<uuid:dataset_id>/delete/', views.DatasetDeleteView.as_view(), name='dataset_delete'),
     path('datasets/<uuid:dataset_id>/rename/', views.DatasetRenameView.as_view(), name='dataset_rename'),

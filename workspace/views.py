@@ -1364,51 +1364,205 @@ class DatasetAnalyzeView(DatasetOwnerMixin, TemplateView):
 
 # ─── Map ──────────────────────────────────────────────────────────────────────
 
+MAP_MARKER_LIMIT = 2500
+
+
+def _filter_listings_queryset_for_map(base_qs, datasets, request, *, value_map=None):
+    """اعمال همان فیلترهای جدول آگهی روی queryset نقشه."""
+    filters = parse_filter_params(request)
+    qs = apply_listing_filters(base_qs, filters, request.user)
+    if filters.get('duplicates') == '1':
+        dup_tokens = (
+            base_qs.values('token')
+            .annotate(c=Count('token'))
+            .filter(c__gt=1)
+            .values_list('token', flat=True)
+        )
+        qs = qs.filter(token__in=dup_tokens)
+
+    if value_map is None:
+        value_map = (
+            _value_map_for_datasets(datasets) if filters.get('value') else {}
+        )
+
+    needs_post = any(filters.get(k) for k in (
+        'rooms', 'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
+    )) or needs_advertiser_signal_filter(filters)
+    if needs_post:
+        filtered = list(qs)
+        if needs_advertiser_signal_filter(filters):
+            filtered = apply_advertiser_signal_filter(filtered, filters['consultant'])
+        filtered = apply_amenity_filters(filtered, filters)
+        filtered = apply_value_filter(filtered, value_map, filters.get('value', ''))
+        qs = base_qs.filter(pk__in=[x.pk for x in filtered])
+
+    filter_count = active_filter_count(filters)
+    return qs, filters, filter_count
+
+
+def _map_filter_querystring(filters, *, dataset_ids_param=''):
+    """ساخت querystring برای لینک بازگشت / اشتراک فیلترها (بدون sort/view/page)."""
+    pairs = []
+    if dataset_ids_param:
+        pairs.append(('dataset_ids', dataset_ids_param))
+    pairs.extend(
+        (k, str(v)) for k, v in filters.items()
+        if v not in ('', None) and k != 'sort'
+    )
+    return urlencode(pairs)
+
+
+def _build_map_context(
+    request,
+    datasets,
+    *,
+    map_title,
+    map_back_url,
+    transaction_type='',
+    dataset_ids_param='',
+    dataset_city='',
+):
+    """ساخت context مشترک نقشه تک‌فایل / چندفایل."""
+    settings = get_or_create_settings(request.user)
+    base_qs = Listing.objects.filter(dataset__in=datasets).select_related('dataset')
+    filtered_qs, filters, filter_count = _filter_listings_queryset_for_map(
+        base_qs, datasets, request,
+    )
+    geo_listings = filtered_qs.exclude(
+        latitude__isnull=True,
+    ).exclude(longitude__isnull=True)
+    geo_count = geo_listings.count()
+    sampled = list(geo_listings[:MAP_MARKER_LIMIT])
+    single_dataset_id = datasets[0].pk if len(datasets) == 1 else None
+    markers = map_markers(
+        sampled,
+        transaction_type=transaction_type,
+        dataset_id=single_dataset_id,
+    )
+    tx = transaction_profile(transaction_type)
+    is_rent_only = bool(tx['is_rent'] and not tx['is_sale'] and not tx['is_mixed'])
+    filter_value_label = 'رهن کامل' if is_rent_only else 'قیمت'
+    map_config = {
+        'map_cluster': settings.map_cluster,
+        'focusMaxZoom': 17,
+        'clusterDisableZoom': 15,
+        'mapModes': True,
+        'datasetName': map_title,
+        'datasetCity': dataset_city or '',
+        'is_rent': is_rent_only,
+        'filter_value_label': filter_value_label,
+        'filterValueLabel': filter_value_label,
+        'is_multi': len(datasets) > 1,
+        'filter_count': filter_count,
+    }
+    filter_qs = _map_filter_querystring(filters, dataset_ids_param=dataset_ids_param)
+    consultant_count = sum(1 for m in markers if m.get('is_consultant'))
+    disguised_count = sum(1 for m in markers if m.get('is_disguised'))
+    genuine_count = max(0, len(markers) - consultant_count - disguised_count)
+    return {
+        'dataset': datasets[0],
+        'datasets': datasets,
+        'dataset_count': len(datasets),
+        'dataset_ids_param': dataset_ids_param,
+        'map_title': map_title,
+        'map_back_url': map_back_url,
+        'map_filter_qs': filter_qs,
+        'filters': filters,
+        'filter_count': filter_count,
+        'is_map_filtered': filter_count > 0,
+        'is_multi_map': len(datasets) > 1,
+        'markers': markers,
+        'markers_json': json.dumps(markers, ensure_ascii=False),
+        'map_config': map_config,
+        'map_config_json': json.dumps(map_config, ensure_ascii=False),
+        'geo_count': geo_count,
+        'markers_shown': len(markers),
+        'markers_truncated': geo_count > MAP_MARKER_LIMIT,
+        'consultant_count': consultant_count,
+        'disguised_consultant_count': disguised_count,
+        'genuine_personal_count': genuine_count,
+        'personal_count': genuine_count + disguised_count,
+        'ws_settings': settings,
+    }
+
+
 class DatasetMapView(DatasetOwnerMixin, TemplateView):
     template_name = 'workspace/map/index.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         dataset = self.get_dataset()
-        settings = get_or_create_settings(self.request.user)
-        geo_listings = dataset.listings.exclude(
-            latitude__isnull=True,
-        ).exclude(longitude__isnull=True)
-        geo_count = geo_listings.count()
-        marker_limit = 2500
-        sampled = geo_listings[:marker_limit]
-        markers = map_markers(
-            sampled,
+        filters = parse_filter_params(self.request)
+        filter_qs = _map_filter_querystring(filters)
+        back_url = reverse('workspace:dataset_detail', kwargs={'dataset_id': dataset.pk})
+        if filter_qs:
+            back_url = f'{back_url}?{filter_qs}'
+        ctx.update(_build_map_context(
+            self.request,
+            [dataset],
+            map_title=dataset.name,
+            map_back_url=back_url,
             transaction_type=dataset.transaction_type,
-            dataset_id=dataset.pk,
+            dataset_city=dataset.city or '',
+        ))
+        return ctx
+
+
+class MultiDatasetMapView(LicenseRequiredMixin, TemplateView):
+    """نقشه یکپارچه آگهی‌های چند مجموعه‌داده (با همان فیلترهای جدول)."""
+
+    template_name = 'workspace/map/index.html'
+    max_datasets = 30
+
+    def get(self, request, *args, **kwargs):
+        ids = _parse_dataset_ids_param(request)
+        if not ids:
+            messages.warning(request, 'هیچ فایلی برای نمایش نقشه انتخاب نشده است.')
+            return redirect('workspace:dataset_list')
+        if len(ids) > self.max_datasets:
+            messages.warning(
+                request,
+                f'حداکثر {self.max_datasets} فایل را می‌توانید همزمان روی نقشه ببینید.',
+            )
+            ids = ids[: self.max_datasets]
+        datasets = list(
+            Dataset.objects.filter(user=request.user, is_active=True, pk__in=ids)
+            .order_by('-last_opened_at', '-created_at')
         )
-        ctx['markers'] = markers
-        ctx['markers_json'] = json.dumps(markers, ensure_ascii=False)
-        tx = transaction_profile(dataset.transaction_type)
-        ctx['map_config'] = {
-            'map_cluster': settings.map_cluster,
-            'focusMaxZoom': 17,
-            'clusterDisableZoom': 15,
-            'mapModes': True,
-            'datasetName': dataset.name,
-            'datasetCity': dataset.city or '',
-            'is_rent': bool(tx['is_rent'] and not tx['is_sale']),
-            'filter_value_label': 'رهن کامل' if (tx['is_rent'] and not tx['is_sale']) else 'قیمت',
-            'filterValueLabel': 'رهن کامل' if (tx['is_rent'] and not tx['is_sale']) else 'قیمت',
-        }
-        ctx['map_config_json'] = json.dumps(ctx['map_config'], ensure_ascii=False)
-        ctx['geo_count'] = geo_count
-        ctx['markers_shown'] = len(markers)
-        ctx['markers_truncated'] = geo_count > marker_limit
-        ctx['consultant_count'] = sum(1 for m in markers if m.get('is_consultant'))
-        ctx['disguised_consultant_count'] = sum(1 for m in markers if m.get('is_disguised'))
-        ctx['genuine_personal_count'] = max(
-            0,
-            len(markers) - ctx['consultant_count'] - ctx['disguised_consultant_count'],
+        if not datasets:
+            messages.error(request, 'فایل‌های انتخاب‌شده یافت نشد.')
+            return redirect('workspace:dataset_list')
+        by_id = {str(d.id): d for d in datasets}
+        ordered = [by_id[i] for i in ids if i in by_id]
+        self.datasets = ordered or datasets
+        self.dataset_ids_param = ','.join(str(d.id) for d in self.datasets)
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        datasets = self.datasets
+        filters = parse_filter_params(self.request)
+        filter_qs = _map_filter_querystring(
+            filters, dataset_ids_param=self.dataset_ids_param,
         )
-        # سازگاری عقب‌رو با قالب‌های قدیمی
-        ctx['personal_count'] = ctx['genuine_personal_count'] + ctx['disguised_consultant_count']
-        ctx['ws_settings'] = settings
+        back_url = reverse('workspace:multi_listings')
+        if filter_qs:
+            back_url = f'{back_url}?{filter_qs}'
+        else:
+            back_url = f'{back_url}?dataset_ids={self.dataset_ids_param}'
+        cities = sorted({(d.city or '').strip() for d in datasets if (d.city or '').strip()})
+        city_label = cities[0] if len(cities) == 1 else ''
+        title = f'نقشه {len(datasets)} فایل'
+        tx = _merged_transaction_profile(datasets)
+        ctx.update(_build_map_context(
+            self.request,
+            datasets,
+            map_title=title,
+            map_back_url=back_url,
+            transaction_type=tx['mode'],
+            dataset_ids_param=self.dataset_ids_param,
+            dataset_city=city_label,
+        ))
         return ctx
 
 

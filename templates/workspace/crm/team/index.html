@@ -2,6 +2,7 @@
 {% load static workspace_tags crm_tags %}
 
 {% block page_title %}آژانس{% endblock %}
+{% block mobile_bar_title %}آژانس{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_actions %}{% endblock %}
@@ -13,14 +14,103 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=14">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-announcements.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-audit.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-mobile.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-shell-page crm-team-pro crm-team-pro-v2 crm-page-chrome" data-crm-team data-tab="{{ tab }}"
+<div class="crm-shell-page crm-team-pro crm-team-pro-v2 crm-team-mobile crm-page-chrome" data-crm-team data-tab="{{ tab }}"
     data-hub-messages-unread="{{ messages_unread_count|default:0 }}"
     data-hub-announcements-unread="{{ announcements_unread_count|default:0 }}">
 
-    <header class="crm-dash-bar crm-team-hero">
+    {% if crm_agency %}
+    <header class="crm-team-mob-header">
+        <div class="crm-team-mob-header-mesh" aria-hidden="true"></div>
+        <div class="crm-team-mob-header-accent" aria-hidden="true"></div>
+        <div class="crm-team-mob-header-inner">
+            <div class="crm-team-mob-brand">
+                <span class="crm-team-mob-logo" style="--hue: {{ crm_agency.name|crm_avatar_hue }}">{{ crm_agency.name|crm_initials }}</span>
+                <div class="crm-team-mob-titles">
+                    <span class="crm-team-mob-kicker">
+                        <i class="fas fa-building" aria-hidden="true"></i> آژانس
+                        <em class="crm-team-mob-role" style="{% crm_agency_role_style crm_membership.role %}">{{ crm_membership.get_role_display }}</em>
+                    </span>
+                    <h1 class="crm-team-mob-title">{{ crm_agency.name }}</h1>
+                    {% if can_manage_team %}
+                    <p class="crm-team-mob-slug">شناسه: <code dir="ltr">{{ crm_agency.slug }}</code></p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="crm-team-mob-header-actions" role="toolbar" aria-label="عملیات آژانس">
+                {% if agency_feature_tv and can_manage_team %}
+                <a href="{{ crm_team_tv_url }}" class="crm-team-mob-icon-btn" target="_blank" rel="noopener" title="TV دفتر" aria-label="نمایش TV">
+                    <i class="fas fa-tv" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if can_manage_team %}
+                <button type="button" class="crm-team-mob-icon-btn crm-team-mob-icon-btn--primary" data-drawer-open="drawer-add-member" title="عضو جدید" aria-label="عضو جدید">
+                    <i class="fas fa-user-plus" aria-hidden="true"></i>
+                </button>
+                {% else %}
+                <a href="?tab=members" class="crm-team-mob-icon-btn" title="اعضا" aria-label="اعضا">
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="crm-team-mob-stats" aria-label="آمار آژانس">
+            <div class="crm-team-mob-stat">
+                <strong>{{ team_stats.members }}</strong>
+                <span>عضو</span>
+            </div>
+            <div class="crm-team-mob-stat">
+                <strong>{{ team_stats.contacts }}</strong>
+                <span>مخاطب</span>
+            </div>
+            <div class="crm-team-mob-stat">
+                <strong>{{ team_stats.properties }}</strong>
+                <span>فایل</span>
+            </div>
+            <div class="crm-team-mob-stat">
+                <strong>{{ team_stats.deals }}</strong>
+                <span>بسته</span>
+            </div>
+            {% if can_view_team_performance and team_stats.active_deals %}
+            <div class="crm-team-mob-stat crm-team-mob-stat--accent">
+                <strong>{{ team_stats.active_deals }}</strong>
+                <span>فعال</span>
+            </div>
+            {% endif %}
+        </div>
+        <details class="crm-team-mob-privacy">
+            <summary>
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                <span>حریم خصوصی و دسترسی</span>
+                <i class="fas fa-chevron-down crm-team-mob-privacy-chevron" aria-hidden="true"></i>
+            </summary>
+            <p>
+                {% if can_view_team_performance %}
+                به‌عنوان مدیر، آمار عملکرد، صندوق سرنخ و پرونده‌های تخصیص‌یافته را می‌بینید — بدون دسترسی خودکار به پرونده‌های شخصی اعضا.
+                {% else %}
+                مخاطبین، فایل‌ها و اطلاعات هر عضو فقط برای خودش قابل مشاهده است. دسترسی دیگران فقط با «ارسال» صریح ممکن است.
+                {% endif %}
+            </p>
+        </details>
+    </header>
+    {% else %}
+    <header class="crm-team-mob-header crm-team-mob-header--onboard">
+        <div class="crm-team-mob-header-mesh" aria-hidden="true"></div>
+        <div class="crm-team-mob-header-accent" aria-hidden="true"></div>
+        <div class="crm-team-mob-header-inner">
+            <div class="crm-team-mob-titles">
+                <span class="crm-team-mob-kicker"><i class="fas fa-people-group" aria-hidden="true"></i> فضای تیمی</span>
+                <h1 class="crm-team-mob-title">آژانس املاک</h1>
+                <p class="crm-team-mob-sub">ایجاد یا پیوستن به آژانس مشترک</p>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+
+    <header class="crm-dash-bar crm-team-hero crm-team-desk-header">
         <div class="crm-team-hero-inner">
             <div class="crm-team-hero-top">
                 {% if crm_agency %}
@@ -169,59 +259,61 @@
     </section>
     {% else %}
 
-    <nav class="crm-team-tabs-v2" aria-label="بخش‌های آژانس">
-        {% if can_manage_team %}
-        <a href="?tab=command" class="crm-team-tab-v2 {% if tab == 'command' %}active{% endif %}">
-            <i class="fas fa-gauge-high"></i><span>داشبورد</span>
-            {% if command_center and command_center.inbox_unassigned %}<em>{{ command_center.inbox_unassigned }}</em>{% endif %}
-        </a>
-        {% endif %}
-        <a href="?tab=overview" class="crm-team-tab-v2 {% if tab == 'overview' %}active{% endif %}">
-            <i class="fas fa-chart-line"></i><span>{% if can_view_team_performance %}گزارش عملکرد{% else %}عملکرد من{% endif %}</span>
-        </a>
-        {% if can_view_team_inbox %}
-        <a href="?tab=inbox" class="crm-team-tab-v2 {% if tab == 'inbox' %}active{% endif %}">
-            <i class="fas fa-inbox"></i><span>صندوق سرنخ</span>
-            {% if team_inbox %}<em>{{ team_inbox|length }}</em>{% endif %}
-        </a>
-        {% endif %}
-        {% if agency_feature_messages %}
-        <a href="?tab=messages" class="crm-team-tab-v2 {% if tab == 'messages' %}active{% endif %}" data-team-messages-tab>
-            <i class="fas fa-envelope"></i><span>پیام‌ها</span>
-            {% if messages_unread_count %}<em data-team-messages-badge>{{ messages_unread_count|nav_badge_count }}</em>{% else %}<em data-team-messages-badge hidden>0</em>{% endif %}
-        </a>
-        {% endif %}
-        {% if agency_feature_announcements %}
-        <a href="?tab=announcements" class="crm-team-tab-v2 {% if tab == 'announcements' %}active{% endif %}" data-team-announcements-tab>
-            <i class="fas fa-bullhorn"></i><span>اطلاعیه‌ها</span>
-            {% if announcements_unread_count %}<em data-team-announcements-badge>{{ announcements_unread_count|nav_badge_count }}</em>{% else %}<em data-team-announcements-badge hidden>0</em>{% endif %}
-        </a>
-        {% endif %}
-        <a href="?tab=members" class="crm-team-tab-v2 {% if tab == 'members' %}active{% endif %}">
-            <i class="fas fa-users"></i><span>اعضا</span>
-            <em>{{ team_stats.members }}</em>
-            {% if can_manage_team and team_roster_summary.pending_invites %}<span class="crm-team-tab-badge" title="دعوت در انتظار">{{ team_roster_summary.pending_invites }}</span>{% endif %}
-        </a>
-        {% if can_manage_team %}
-        <a href="?tab=sync" class="crm-team-tab-v2 {% if tab == 'sync' %}active{% endif %}">
-            <i class="fas fa-arrows-rotate"></i><span>همگام‌سازی</span>
-        </a>
-        <a href="?tab=webhooks" class="crm-team-tab-v2 {% if tab == 'webhooks' %}active{% endif %}">
-            <i class="fas fa-plug"></i><span>وب‌هوک</span>
-            {% if webhooks %}<em>{{ webhooks|length }}</em>{% endif %}
-        </a>
-        <a href="?tab=transfers" class="crm-team-tab-v2 {% if tab == 'transfers' %}active{% endif %}">
-            <i class="fas fa-right-left"></i><span>انتقال‌ها</span>
-            {% if transfer_count %}<em>{{ transfer_count }}</em>{% endif %}
-        </a>
-        <a href="?tab=settings" class="crm-team-tab-v2 {% if tab == 'settings' %}active{% endif %}">
-            <i class="fas fa-gear"></i><span>تنظیمات</span>
-        </a>
-        <a href="?tab=audit" class="crm-team-tab-v2 {% if tab == 'audit' %}active{% endif %}">
-            <i class="fas fa-clipboard-list"></i><span>ممیزی</span>
-        </a>
-        {% endif %}
-    </nav>
+    <div class="crm-team-tabs-sticky">
+        <nav class="crm-team-tabs-v2" aria-label="بخش‌های آژانس">
+            {% if can_manage_team %}
+            <a href="?tab=command" class="crm-team-tab-v2 {% if tab == 'command' %}active{% endif %}">
+                <i class="fas fa-gauge-high"></i><span>داشبورد</span>
+                {% if command_center and command_center.inbox_unassigned %}<em>{{ command_center.inbox_unassigned }}</em>{% endif %}
+            </a>
+            {% endif %}
+            <a href="?tab=overview" class="crm-team-tab-v2 {% if tab == 'overview' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i><span>{% if can_view_team_performance %}گزارش{% else %}عملکرد{% endif %}</span>
+            </a>
+            {% if can_view_team_inbox %}
+            <a href="?tab=inbox" class="crm-team-tab-v2 {% if tab == 'inbox' %}active{% endif %}">
+                <i class="fas fa-inbox"></i><span>صندوق</span>
+                {% if team_inbox %}<em>{{ team_inbox|length }}</em>{% endif %}
+            </a>
+            {% endif %}
+            {% if agency_feature_messages %}
+            <a href="?tab=messages" class="crm-team-tab-v2 {% if tab == 'messages' %}active{% endif %}" data-team-messages-tab>
+                <i class="fas fa-envelope"></i><span>پیام‌ها</span>
+                {% if messages_unread_count %}<em data-team-messages-badge>{{ messages_unread_count|nav_badge_count }}</em>{% else %}<em data-team-messages-badge hidden>0</em>{% endif %}
+            </a>
+            {% endif %}
+            {% if agency_feature_announcements %}
+            <a href="?tab=announcements" class="crm-team-tab-v2 {% if tab == 'announcements' %}active{% endif %}" data-team-announcements-tab>
+                <i class="fas fa-bullhorn"></i><span>اطلاعیه</span>
+                {% if announcements_unread_count %}<em data-team-announcements-badge>{{ announcements_unread_count|nav_badge_count }}</em>{% else %}<em data-team-announcements-badge hidden>0</em>{% endif %}
+            </a>
+            {% endif %}
+            <a href="?tab=members" class="crm-team-tab-v2 {% if tab == 'members' %}active{% endif %}">
+                <i class="fas fa-users"></i><span>اعضا</span>
+                <em>{{ team_stats.members }}</em>
+                {% if can_manage_team and team_roster_summary.pending_invites %}<span class="crm-team-tab-badge" title="دعوت در انتظار">{{ team_roster_summary.pending_invites }}</span>{% endif %}
+            </a>
+            {% if can_manage_team %}
+            <a href="?tab=sync" class="crm-team-tab-v2 {% if tab == 'sync' %}active{% endif %}">
+                <i class="fas fa-arrows-rotate"></i><span>همگام</span>
+            </a>
+            <a href="?tab=webhooks" class="crm-team-tab-v2 {% if tab == 'webhooks' %}active{% endif %}">
+                <i class="fas fa-plug"></i><span>وب‌هوک</span>
+                {% if webhooks %}<em>{{ webhooks|length }}</em>{% endif %}
+            </a>
+            <a href="?tab=transfers" class="crm-team-tab-v2 {% if tab == 'transfers' %}active{% endif %}">
+                <i class="fas fa-right-left"></i><span>انتقال</span>
+                {% if transfer_count %}<em>{{ transfer_count }}</em>{% endif %}
+            </a>
+            <a href="?tab=settings" class="crm-team-tab-v2 {% if tab == 'settings' %}active{% endif %}">
+                <i class="fas fa-gear"></i><span>تنظیمات</span>
+            </a>
+            <a href="?tab=audit" class="crm-team-tab-v2 {% if tab == 'audit' %}active{% endif %}">
+                <i class="fas fa-clipboard-list"></i><span>ممیزی</span>
+            </a>
+            {% endif %}
+        </nav>
+    </div>
 
     {# ── تب گزارش عملکرد ── #}
     {% if tab == 'overview' %}
@@ -747,6 +839,13 @@
     {% endif %}
 
     {% endif %}
+
+    {% if crm_agency and can_manage_team %}
+    <button type="button" class="crm-team-fab" data-drawer-open="drawer-add-member" aria-label="عضو جدید">
+        <i class="fas fa-user-plus" aria-hidden="true"></i>
+        <span>عضو</span>
+    </button>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -842,6 +941,13 @@ window.crmSyncExportUrl = '{% url "workspace:crm_sync_export" %}';
 window.crmSyncImportUrl = '{% url "workspace:crm_sync_import" %}';
 window.crmApiKeyRevealUrl = '{{ crm_api_key_reveal_url }}';
 window.crmApiKeyRegenerateUrl = '{{ crm_api_key_regenerate_url }}';
+document.addEventListener('DOMContentLoaded', function () {
+    var active = document.querySelector('.crm-team-mobile .crm-team-tab-v2.active');
+    if (active && typeof active.scrollIntoView === 'function') {
+        try { active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }
+        catch (e) { active.scrollIntoView(false); }
+    }
+});
 </script>
 {% if agency_feature_messages or agency_feature_announcements %}
 <script src="{% static 'workspace/js/crm-team-hub-badges.js' %}?v=1"></script>

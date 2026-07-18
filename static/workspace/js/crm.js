@@ -1759,8 +1759,8 @@ function initCRMTabs() {
             const panel = shell.querySelector(`[data-panel="${tab}"]`);
             if (panel) panel.hidden = false;
             scrollCRMTabIntoView(btn);
-            const rail = btn.closest('[data-contact-segrail]');
-            if (rail) syncContactSegrailFades(rail);
+            const rail = btn.closest('[data-contact-segrail], [data-prop-segrail]');
+            if (rail && rail.hasAttribute('data-contact-segrail')) syncContactSegrailFades(rail);
         });
     });
 

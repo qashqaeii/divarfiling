@@ -1084,6 +1084,50 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     margin-top: 0.55rem;
 }
 
+.mk-edit-vacant-row {
+    margin-top: 0.75rem;
+}
+.mk-edit-vacant-row.hidden {
+    display: none !important;
+}
+.mk-edit-vacant-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, #0f766e 26%, var(--ws-border, #e2e8f0));
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, #0f766e 9%, transparent),
+        color-mix(in srgb, #14b8a6 4%, transparent)
+    );
+    cursor: pointer;
+}
+.mk-edit-vacant-check input[type="checkbox"] {
+    margin-top: 0.15rem;
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: #0f766e;
+    flex-shrink: 0;
+}
+.mk-edit-vacant-check__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+.mk-edit-vacant-check__body strong {
+    font-size: 0.84rem;
+    font-weight: 800;
+}
+.mk-edit-vacant-check__body em {
+    font-style: normal;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--ws-text-muted, #64748b);
+}
+
 .mk-edit-amenities-label {
     display: block;
     font-size: 0.65rem;

@@ -241,6 +241,7 @@ def import_properties_from_file(user, uploaded_file) -> Tuple[int, int, List[str
                 has_parking=_parse_bool(data.get('has_parking')),
                 has_storage=_parse_bool(data.get('has_storage')),
                 has_elevator=_parse_bool(data.get('has_elevator')),
+                is_vacant=_parse_bool(data.get('is_vacant') or data.get('تخلیه')),
                 sale_price=_parse_money(data.get('sale_price')),
                 deposit=_parse_money(data.get('deposit')),
                 monthly_rent=_parse_money(data.get('monthly_rent')),

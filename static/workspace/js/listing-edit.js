@@ -103,6 +103,9 @@
             ownerName: qs('#editOwnerName'),
             link: qs('#editLink'),
             description: qs('#editDescription'),
+            isVacant: qs('#editIsVacant'),
+            vacantRow: qs('#editVacantRow'),
+            vacantOff: qs('#editIsVacantOff'),
         };
 
         this.moneyHints = {
@@ -440,6 +443,14 @@
         setField(f.ownerName, data.owner_name);
         setField(f.link, data.link);
         if (f.description) f.description.value = data.description || '';
+
+        var showVacant = !!data.is_rent;
+        if (f.vacantRow) f.vacantRow.classList.toggle('hidden', !showVacant);
+        if (f.isVacant) {
+            f.isVacant.checked = !!data.is_vacant;
+            f.isVacant.disabled = !showVacant;
+        }
+        if (f.vacantOff) f.vacantOff.disabled = !showVacant;
 
         ['price', 'deposit', 'rent'].forEach(function (key) {
             var input = f[key];

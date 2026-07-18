@@ -159,6 +159,15 @@
                     <div class="crm-prop-hero-status-row">
                         <span class="crm-prop-badge crm-prop-badge--status">{{ property.transaction_status }}</span>
                         <span class="crm-prop-badge crm-prop-badge--type">{{ property.property_type }}</span>
+                        {% if property.is_vacant and property.deal_mode != 'فروش' and property.deal_mode != 'پیش‌فروش' %}
+                        <span class="crm-prop-badge crm-prop-badge--vacant" title="ملک در حال حاضر تخلیه است">
+                            <i class="fas fa-door-open" aria-hidden="true"></i> تخلیه
+                        </span>
+                        {% elif property.tenant_name or property.tenant_phone %}
+                        <span class="crm-prop-badge crm-prop-badge--type" title="مستاجر فعلی ساکن">
+                            <i class="fas fa-house-user" aria-hidden="true"></i> مستاجر: {{ property.tenant_name|default:property.tenant_phone }}
+                        </span>
+                        {% endif %}
                         {% if property.publish_status %}
                         <span class="crm-prop-badge crm-prop-badge--pub crm-prop-badge--pub-{{ property.publish_status }}">{{ property.publish_status }}</span>
                         {% endif %}

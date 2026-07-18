@@ -304,6 +304,10 @@ function initPropertyDealMode(root) {
         const perSqmEl = form.querySelector('[data-crm-price-per-sqm]');
         const saleInput = form.querySelector('[name="sale_price"]');
         const areaInput = form.querySelector('[name="area"]');
+        const vacantPanels = form.querySelectorAll('[data-vacant-panel]');
+        const tenantPanels = form.querySelectorAll('[data-tenant-panel]');
+        const vacantCheckbox = form.querySelector('[data-vacant-checkbox], [name="is_vacant"]');
+        const tenantInputs = form.querySelectorAll('[data-tenant-field], [name="tenant_phone"], [name="tenant_name"]');
 
         const PROFILES = {
             'فروش': {
@@ -312,6 +316,7 @@ function initPropertyDealMode(root) {
                 showSale: true,
                 showDeposit: false,
                 showRent: false,
+                showVacant: false,
                 saleLabel: 'قیمت فروش (تومان)',
                 saleHeading: 'فروش',
                 saleHint: 'قیمت نهایی یا توافقی ملک',
@@ -322,6 +327,7 @@ function initPropertyDealMode(root) {
                 showSale: true,
                 showDeposit: false,
                 showRent: false,
+                showVacant: false,
                 saleLabel: 'قیمت پیش‌فروش (تومان)',
                 saleHeading: 'پیش‌فروش',
                 saleHint: 'مبلغ توافقی پیش‌فروش',
@@ -332,6 +338,7 @@ function initPropertyDealMode(root) {
                 showSale: false,
                 showDeposit: true,
                 showRent: true,
+                showVacant: true,
                 depositLabel: 'مبلغ رهن (تومان)',
                 rentLabel: 'اجاره ماهانه (تومان)',
                 depositHeading: 'رهن',
@@ -345,6 +352,7 @@ function initPropertyDealMode(root) {
                 showSale: false,
                 showDeposit: true,
                 showRent: true,
+                showVacant: true,
                 depositLabel: 'ودیعه (تومان)',
                 rentLabel: 'اجاره ماهانه (تومان)',
                 depositHeading: 'ودیعه',
@@ -394,6 +402,16 @@ function initPropertyDealMode(root) {
             show(sale, profile.showSale);
             show(deposit, profile.showDeposit);
             show(rent, profile.showRent);
+            vacantPanels.forEach(el => el.classList.toggle('hidden', !profile.showVacant));
+            const vacantOn = !!(vacantCheckbox && vacantCheckbox.checked);
+            const showTenant = !!(profile.showVacant && !vacantOn);
+            tenantPanels.forEach(el => el.classList.toggle('hidden', !showTenant));
+            if (!showTenant) {
+                tenantInputs.forEach(el => {
+                    if (el.type === 'checkbox') el.checked = false;
+                    else if ('value' in el) el.value = '';
+                });
+            }
             if (priceSection) {
                 priceSection.dataset.dealMode = mode || '';
             }
@@ -413,6 +431,9 @@ function initPropertyDealMode(root) {
 
         apply(dealSelect.value);
         dealSelect.addEventListener('change', () => apply(dealSelect.value));
+        if (vacantCheckbox) {
+            vacantCheckbox.addEventListener('change', () => apply(dealSelect.value));
+        }
         if (saleInput) saleInput.addEventListener('input', updatePerSqm);
         if (areaInput) areaInput.addEventListener('input', updatePerSqm);
     });

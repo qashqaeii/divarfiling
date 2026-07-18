@@ -33,6 +33,31 @@
                 <dd class="crm-prop-dl-price crm-prop-dl-price--rent">{{ property.monthly_rent|ws_money }}</dd>
             </div>
             {% endif %}
+            {% if property.deal_mode == 'اجاره' or property.deal_mode == 'رهن و اجاره' %}
+            <div>
+                <dt><i class="fas fa-door-open" aria-hidden="true"></i> وضعیت سکونت</dt>
+                <dd>
+                    {% if property.is_vacant %}
+                    <span class="crm-prop-dl-amenity is-yes"><i class="fas fa-check" aria-hidden="true"></i> تخلیه</span>
+                    {% else %}
+                    <span class="crm-prop-dl-amenity is-no">در اختیار ساکن</span>
+                    {% endif %}
+                </dd>
+            </div>
+            {% if not property.is_vacant %}
+            <div>
+                <dt><i class="fas fa-house-user" aria-hidden="true"></i> مستاجر فعلی</dt>
+                <dd>
+                    {% if property.tenant_name or property.tenant_phone %}
+                    <strong>{{ property.tenant_name|default:"—" }}</strong>
+                    {% if property.tenant_phone %}<span class="crm-prop-dl-phone" dir="ltr">{{ property.tenant_phone }}</span>{% endif %}
+                    {% else %}
+                    <span class="crm-prop-dl-amenity is-no">ثبت نشده</span>
+                    {% endif %}
+                </dd>
+            </div>
+            {% endif %}
+            {% endif %}
         </dl>
     </div>
     <div class="crm-prop-dossier-group">

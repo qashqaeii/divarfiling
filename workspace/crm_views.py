@@ -110,7 +110,7 @@ from workspace.services.crm import (
     property_follow_up_state, recent_activities,
     schedule_follow_up, schedule_property_follow_up, set_next_follow_up, sync_follow_up_from_reminder,
     update_customer_status, update_property_transaction_status, reorder_property_pipeline,
-    upsert_property_owner,
+    upsert_property_owner, upsert_property_tenant,
 )
 from workspace.services.crm_analytics import (
     get_conversion_funnel, get_stagnant_contacts, stagnant_count,
@@ -1182,6 +1182,14 @@ class CRMPropertyCreateView(LoginRequiredMixin, CreateView):
                 crm_property=self.object,
                 source='سایر',
             )
+        if self.object.deal_mode in ('اجاره', 'رهن و اجاره'):
+            upsert_property_tenant(
+                self.request.user,
+                phone=self.object.tenant_phone,
+                name=self.object.tenant_name,
+                crm_property=self.object,
+                source='سایر',
+            )
         messages.success(self.request, 'ملک ثبت شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
 
@@ -1520,6 +1528,19 @@ class CRMPropertyUpdateView(LoginRequiredMixin, UpdateView):
                 self.request.user,
                 phone=self.object.phone,
                 name=self.object.owner_name,
+                crm_property=self.object,
+                source='سایر',
+            )
+        if (
+            'tenant_phone' in form.changed_data
+            or 'tenant_name' in form.changed_data
+            or 'is_vacant' in form.changed_data
+            or 'deal_mode' in form.changed_data
+        ):
+            upsert_property_tenant(
+                self.request.user,
+                phone=self.object.tenant_phone,
+                name=self.object.tenant_name,
                 crm_property=self.object,
                 source='سایر',
             )

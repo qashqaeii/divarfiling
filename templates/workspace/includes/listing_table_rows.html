@@ -8,6 +8,7 @@
             <div class="mk-listing-meta">
                 <code class="mk-token" title="{{ listing.token }}">{{ listing.token|truncatechars:8 }}</code>
                 {% if lm.tag %}<span class="mk-tag">{{ lm.tag }}</span>{% endif %}
+                {% if feat.is_vacant %}<span class="mk-tag mk-tag-vacant" title="ملک تخلیه است"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه</span>{% endif %}
                 {% if lm.is_favorite %}<span class="mk-tag mk-tag-star" title="علاقه‌مند"><i class="fas fa-star" aria-hidden="true"></i></span>{% endif %}
                 {% if pf %}<span class="mk-tag mk-tag-folder" title="در فایل‌های شخصی"><i class="fas fa-folder" aria-hidden="true"></i></span>{% endif %}
             </div>

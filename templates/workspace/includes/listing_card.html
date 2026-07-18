@@ -52,9 +52,10 @@
             <h3 class="mk-lcard-title">
                 <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" title="{{ listing.title }}">{{ listing.title }}</a>
             </h3>
-            {% if lm.tag or lm.is_favorite or pf or show_dataset_column %}
+            {% if lm.tag or lm.is_favorite or pf or show_dataset_column or feat.is_vacant %}
             <div class="mk-lcard-tags">
                 {% if show_dataset_column %}<span class="mk-lcard-tag mk-lcard-tag--dataset" title="{{ listing.dataset.name }}">{{ listing.dataset.name|truncatechars:18 }}</span>{% endif %}
+                {% if feat.is_vacant %}<span class="mk-lcard-tag mk-lcard-tag--vacant" title="ملک تخلیه است"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه</span>{% endif %}
                 {% if lm.tag %}<span class="mk-lcard-tag">{{ lm.tag }}</span>{% endif %}
                 {% if lm.is_favorite %}<span class="mk-lcard-tag mk-lcard-tag--star" title="علاقه‌مند"><i class="fas fa-star" aria-hidden="true"></i></span>{% endif %}
                 {% if pf %}<span class="mk-lcard-tag mk-lcard-tag--folder" title="در فایل‌های شخصی"><i class="fas fa-folder" aria-hidden="true"></i></span>{% endif %}

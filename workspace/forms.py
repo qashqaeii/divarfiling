@@ -343,10 +343,10 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         model = CRMProperty
         fields = [
             'title', 'property_type', 'deal_mode', 'transaction_status', 'publish_status',
-            'business_type', 'phone', 'owner_name',
+            'business_type', 'phone', 'owner_name', 'tenant_phone', 'tenant_name',
             'address', 'city', 'district', 'neighborhood',
             'latitude', 'longitude', 'area', 'rooms', 'floor', 'total_floors',
-            'has_parking', 'has_storage', 'has_elevator', 'build_year',
+            'has_parking', 'has_storage', 'has_elevator', 'is_vacant', 'build_year',
             'sale_price', 'deposit', 'monthly_rent', 'amenities', 'notes', 'link',
         ]
         widgets = {
@@ -361,6 +361,18 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             ),
             'phone': forms.TextInput(attrs={'class': 'crm-input', 'dir': 'ltr', 'inputmode': 'tel', 'placeholder': '۰۹۱۲…'}),
             'owner_name': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'نام و نام خانوادگی مالک'}),
+            'tenant_phone': forms.TextInput(attrs={
+                'class': 'crm-input',
+                'dir': 'ltr',
+                'inputmode': 'tel',
+                'placeholder': '۰۹۱۲…',
+                'data-tenant-field': '1',
+            }),
+            'tenant_name': forms.TextInput(attrs={
+                'class': 'crm-input',
+                'placeholder': 'نام و نام خانوادگی مستاجر فعلی',
+                'data-tenant-field': '1',
+            }),
             'address': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
             'city': forms.TextInput(attrs={'class': 'crm-input'}),
             'district': forms.TextInput(attrs={
@@ -389,6 +401,10 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'has_parking': forms.HiddenInput(),
             'has_storage': forms.HiddenInput(),
             'has_elevator': forms.HiddenInput(),
+            'is_vacant': forms.CheckboxInput(attrs={
+                'class': 'crm-checkbox',
+                'data-vacant-checkbox': '1',
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -455,6 +471,13 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         cleaned['has_storage'] = 'انباری' in selected
         cleaned['has_elevator'] = 'آسانسور' in selected
         cleaned['amenities'] = serialize_amenity_checkboxes(selected, leftover)
+        if cleaned.get('deal_mode') not in ('اجاره', 'رهن و اجاره'):
+            cleaned['is_vacant'] = False
+            cleaned['tenant_phone'] = ''
+            cleaned['tenant_name'] = ''
+        elif cleaned.get('is_vacant'):
+            cleaned['tenant_phone'] = ''
+            cleaned['tenant_name'] = ''
         return cleaned
 
 

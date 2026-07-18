@@ -118,6 +118,11 @@
                         {% if meta.is_favorite %}<span class="crm-prop-badge crm-prop-badge--deal">علاقه‌مند</span>{% endif %}
                         {% if crm_property %}<span class="crm-prop-badge crm-prop-badge--status">فایل شخصی</span>{% endif %}
                         {% if listing.is_expired %}<span class="crm-prop-badge ws-ld-badge-expired">منقضی</span>{% endif %}
+                        {% if feat.is_vacant %}
+                        <span class="crm-prop-badge ws-ld-badge-vacant" title="ملک در حال حاضر تخلیه است">
+                            <i class="fas fa-door-open" aria-hidden="true"></i> تخلیه
+                        </span>
+                        {% endif %}
                     </div>
 
                     <h1 class="crm-prop-hero-title">{{ listing.title }}</h1>

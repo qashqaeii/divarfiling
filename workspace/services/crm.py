@@ -266,6 +266,150 @@ def upsert_property_owner(
     return customer
 
 
+def primary_tenant_contact(crm_property: CRMProperty) -> Optional[Customer]:
+    """مخاطب پیوندخورده با نقش مستاجر روی ملک."""
+    link = (
+        PropertyContact.objects
+        .filter(property=crm_property, role='مستاجر')
+        .select_related('customer')
+        .order_by('-is_primary', '-updated_at')
+        .first()
+    )
+    return link.customer if link else None
+
+
+def _resolve_tenant_customer(
+    user,
+    *,
+    phone_key: str,
+    name_raw: str,
+    crm_property: CRMProperty,
+    source: str,
+) -> Customer:
+    by_phone = find_customer_by_phone(user, phone_key)
+    current_tenant = primary_tenant_contact(crm_property)
+
+    if by_phone is not None:
+        customer = by_phone
+    elif current_tenant is not None:
+        customer = current_tenant
+    else:
+        customer = Customer.objects.create(
+            user=user,
+            agency=get_agency(user),
+            name=name_raw or f'مستاجر {phone_key[-4:]}',
+            phone=phone_key,
+            customer_type='مستاجر',
+            status='جدید',
+            priority='متوسط',
+            source=source if source in (
+                'دیوار', 'معرف', 'ورود به املاک', 'تماس ورودی',
+                'اینستاگرام', 'سایت', 'تلگرام', 'موبایل', 'سایر',
+            ) else 'سایر',
+        )
+        log_activity(
+            customer,
+            'یادداشت',
+            content='ثبت خودکار به‌عنوان مستاجر فعلی ملک',
+            title='ثبت مستاجر',
+            token=crm_property.token or '',
+            property_obj=crm_property,
+        )
+        return customer
+
+    update_fields = ['updated_at']
+    if name_raw and customer.name != name_raw:
+        customer.name = name_raw
+        update_fields.append('name')
+    current_phone = normalize_phone(customer.phone)
+    if current_phone != phone_key:
+        if by_phone is None or by_phone.pk == customer.pk:
+            customer.phone = phone_key
+            update_fields.append('phone')
+    elif not current_phone:
+        customer.phone = phone_key
+        update_fields.append('phone')
+    if customer.customer_type not in ('مستاجر', 'متقاضی اجاره'):
+        customer.customer_type = 'مستاجر'
+        update_fields.append('customer_type')
+    if len(update_fields) > 1:
+        customer.save(update_fields=update_fields)
+    return customer
+
+
+def upsert_property_tenant(
+    user,
+    *,
+    phone: str = '',
+    name: str = '',
+    crm_property: Optional[CRMProperty] = None,
+    source: str = 'سایر',
+) -> Optional[Customer]:
+    """
+    ذخیره شماره/نام مستاجر فعلی روی فایل شخصی،
+    ساخت یا یافتن مخاطب، و پیوند با نقش «مستاجر».
+    """
+    from django.db import transaction as db_transaction
+
+    if crm_property is None:
+        return None
+
+    phone_raw = (phone or '').strip()
+    name_raw = (name or '').strip()
+    phone_key = normalize_phone(phone_raw)
+
+    with db_transaction.atomic():
+        crm_property.tenant_phone = phone_key or phone_raw
+        crm_property.tenant_name = name_raw
+        crm_property.save(update_fields=['tenant_phone', 'tenant_name', 'updated_at'])
+
+        if crm_property.is_vacant or crm_property.deal_mode not in ('اجاره', 'رهن و اجاره'):
+            PropertyContact.objects.filter(
+                property=crm_property, role='مستاجر',
+            ).delete()
+            return None
+
+        if not phone_key:
+            return None
+
+        customer = _resolve_tenant_customer(
+            user,
+            phone_key=phone_key,
+            name_raw=name_raw,
+            crm_property=crm_property,
+            source=source,
+        )
+        deal_type = crm_property.deal_mode or 'اجاره'
+
+        PropertyContact.objects.filter(
+            property=crm_property, role='مستاجر',
+        ).exclude(customer=customer).delete()
+        existing_pc = PropertyContact.objects.filter(
+            customer=customer, property=crm_property, role='مستاجر',
+        ).first()
+        if existing_pc is None:
+            link_customer_property(
+                customer,
+                crm_property,
+                role='مستاجر',
+                deal_type=deal_type,
+                is_primary=True,
+                notes='مستاجر فعلی ساکن در ملک',
+            )
+        else:
+            pc_updates = []
+            if not existing_pc.is_primary:
+                existing_pc.is_primary = True
+                pc_updates.append('is_primary')
+            if deal_type and existing_pc.deal_type != deal_type:
+                existing_pc.deal_type = deal_type
+                pc_updates.append('deal_type')
+            if pc_updates:
+                existing_pc.save(update_fields=[*pc_updates, 'updated_at'])
+
+    return customer
+
+
 def log_activity(
     customer: Customer,
     activity_type: str,
@@ -628,6 +772,7 @@ def property_from_listing(user, listing) -> CRMProperty:
         has_parking=bool(feat.get('parking')) or bool(parking_count),
         has_storage=bool(feat.get('storage')),
         has_elevator=bool(feat.get('elevator')),
+        is_vacant=bool(feat.get('is_vacant')),
         sale_price=listing.price,
         deposit=listing.deposit,
         monthly_rent=listing.rent,
@@ -1646,6 +1791,9 @@ def properties_to_export_rows(properties) -> List[Dict[str, Any]]:
             'پارکینگ': _bool_fa(p.has_parking),
             'انباری': _bool_fa(p.has_storage),
             'آسانسور': _bool_fa(p.has_elevator),
+            'تخلیه': _bool_fa(p.is_vacant) if p.deal_mode in ('اجاره', 'رهن و اجاره') else '',
+            'نام مستاجر': p.tenant_name if p.deal_mode in ('اجاره', 'رهن و اجاره') and not p.is_vacant else '',
+            'شماره مستاجر': p.tenant_phone if p.deal_mode in ('اجاره', 'رهن و اجاره') and not p.is_vacant else '',
             'قیمت فروش (تومان)': p.sale_price,
             'رهن (تومان)': p.deposit,
             'اجاره ماهانه (تومان)': p.monthly_rent,

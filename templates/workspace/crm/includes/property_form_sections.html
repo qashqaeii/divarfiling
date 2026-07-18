@@ -152,6 +152,36 @@
             </div>
         </div>
 
+        <div class="crm-prop-vacant-row hidden" data-vacant-panel>
+            <label class="crm-prop-vacant-check">
+                {{ form.is_vacant }}
+                <span class="crm-prop-vacant-check__body">
+                    <strong>ملک در حال حاضر تخلیه است</strong>
+                    <em>با تیک زدن تأیید می‌کنید واحد خالی و آماده تحویل است</em>
+                </span>
+            </label>
+        </div>
+
+        <div class="crm-prop-tenant-panel hidden" data-tenant-panel>
+            <div class="crm-prop-tenant-panel__head">
+                <i class="fas fa-house-user" aria-hidden="true"></i>
+                <div>
+                    <strong>مستاجر فعلی (ساکن)</strong>
+                    <em>اگر ملک تخلیه نیست، مشخصات ساکن را وارد کنید — در مخاطبین ثبت و به ملک لینک می‌شود</em>
+                </div>
+            </div>
+            <div class="crm-fields crm-fields-2">
+                <div class="crm-field">
+                    <label class="crm-label" for="{{ form.tenant_name.id_for_label }}">نام و نام خانوادگی مستاجر</label>
+                    {{ form.tenant_name }}
+                </div>
+                <div class="crm-field">
+                    <label class="crm-label" for="{{ form.tenant_phone.id_for_label }}">شماره مستاجر</label>
+                    {{ form.tenant_phone }}
+                </div>
+            </div>
+        </div>
+
         <div class="crm-fields crm-fields-2 crm-prop-price-notes">
             <div class="crm-field crm-field-full"><label class="crm-label">یادداشت</label>{{ form.notes }}</div>
         </div>

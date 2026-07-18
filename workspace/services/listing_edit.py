@@ -43,7 +43,45 @@ DEDICATED_FEATURE_KEYS = frozenset({
     'تعداد کل طبقات ساختمان',
     'بالکن', 'جکوزی', 'لابی', 'استخر', 'روف گاردن', 'سالن ورزش',
     'آسانسور', 'پارکینگ', 'انباری',
+    'وضعیت سکونت',
 }) | CORE_AMENITY_LABELS
+
+OCCUPANCY_KEYS = ('وضعیت سکونت', 'وضعیت واحد', 'occupancy', 'unit_status')
+VACANT_MARKERS = ('تخلیه', 'تخليه', 'خالی', 'خالي', 'vacant', 'empty')
+
+
+def occupancy_status_from_listing(listing) -> str:
+    data = listing.data or {}
+    for key in OCCUPANCY_KEYS:
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ''
+
+
+def listing_is_vacant(listing) -> bool:
+    """آیا آگهی به‌عنوان تخلیه علامت خورده است."""
+    val = occupancy_status_from_listing(listing)
+    if not val:
+        return False
+    low = val.lower()
+    return any(marker in val or marker in low for marker in VACANT_MARKERS)
+
+
+def apply_vacant_flag_to_data(data: dict, is_vacant: bool) -> None:
+    """تنظیم/پاک‌کردن وضعیت سکونت بر اساس تیک تخلیه."""
+    if is_vacant:
+        data['وضعیت سکونت'] = 'تخلیه'
+        return
+    current = ''
+    for key in OCCUPANCY_KEYS:
+        raw = data.get(key)
+        if raw is not None and str(raw).strip():
+            current = str(raw).strip()
+            break
+    if current and any(m in current or m in current.lower() for m in VACANT_MARKERS):
+        for key in OCCUPANCY_KEYS:
+            data.pop(key, None)
 
 MAX_LISTING_IMAGES = 24
 
@@ -232,6 +270,12 @@ def listing_edit_payload(listing, feat: Optional[dict] = None) -> Dict[str, Any]
     for field, _label in EXTRA_AMENITY_FIELDS:
         amenity_extra[field] = feat.get(field)
 
+    dataset = getattr(listing, 'dataset', None)
+    tx_type = getattr(dataset, 'transaction_type', '') if dataset is not None else ''
+    from workspace.services.display import transaction_profile
+    tx = transaction_profile(tx_type)
+    is_rent = bool(tx.get('is_rent') or tx.get('is_mixed') or listing.deposit or listing.rent)
+
     return {
         'id': listing.id,
         'dataset_id': str(listing.dataset_id),
@@ -261,6 +305,8 @@ def listing_edit_payload(listing, feat: Optional[dict] = None) -> Dict[str, Any]
         'link': listing.link or '',
         'description': listing.description or '',
         'is_expired': bool(listing.is_expired),
+        'is_rent': is_rent,
+        'is_vacant': listing_is_vacant(listing),
         'images': images,
         'feature_fields': _feature_fields_for_edit(listing),
         # سازگاری با UI قدیمی
@@ -504,6 +550,15 @@ def apply_listing_edit_post(listing, post) -> None:
         else:
             for k in keys:
                 data.pop(k, None)
+
+    if 'is_vacant' in post:
+        if hasattr(post, 'getlist'):
+            raw_vals = post.getlist('is_vacant')
+        else:
+            raw = post.get('is_vacant', '')
+            raw_vals = raw if isinstance(raw, (list, tuple)) else [raw]
+        raw = str(raw_vals[-1] if raw_vals else '').strip().lower()
+        apply_vacant_flag_to_data(data, raw in ('1', 'true', 'on', 'yes'))
 
     _apply_feature_post(data, post)
 

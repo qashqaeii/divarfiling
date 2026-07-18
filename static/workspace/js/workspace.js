@@ -188,6 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!sidebar) return;
         sidebar.classList.toggle('open', open);
         document.body.classList.toggle('ws-sidebar-open', open);
+        const backdrop = document.getElementById('wsShellBackdrop');
+        if (backdrop) {
+            backdrop.hidden = !open;
+            backdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
+        }
         if (toggle) {
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             toggle.setAttribute('aria-label', open ? 'بستن منو' : 'باز کردن منو');
@@ -198,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const bottomMore = document.querySelector('[data-ws-bottom-more]');
     const bottomNav = document.getElementById('wsBottomNav');
+    const shellBackdrop = document.getElementById('wsShellBackdrop');
 
     if (sidebar) {
         if (toggle) {
@@ -212,6 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation();
             setSidebarOpen(!sidebar.classList.contains('open'));
         });
+
+        shellBackdrop?.addEventListener('click', () => setSidebarOpen(false));
 
         document.addEventListener('click', (e) => {
             if (!sidebar.classList.contains('open')) return;

@@ -7,10 +7,13 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/api-docs.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-utility-mobile.css' %}?v=1">
 {% endblock %}
 
+{% block mobile_bar_title %}مستندات API{% endblock %}
+
 {% block content %}
-<div class="apidoc" data-base-url="{{ api_docs.meta.base_url }}" data-crm-key-url="{% url 'workspace:docs_api_crm_key' %}">
+<div class="apidoc apidoc-mobile" data-base-url="{{ api_docs.meta.base_url }}" data-crm-key-url="{% url 'workspace:docs_api_crm_key' %}">
 
     <section class="apidoc-hero" aria-labelledby="apidoc-title">
         <div class="apidoc-hero-accent" aria-hidden="true"></div>

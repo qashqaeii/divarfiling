@@ -5,13 +5,16 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/help.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-utility-mobile.css' %}?v=1">
 {% if crm_video.available %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 {% endif %}
 {% endblock %}
 
+{% block mobile_bar_title %}راهنما{% endblock %}
+
 {% block content %}
-<div class="hlp">
+<div class="hlp hlp-mobile">
 
     {# ── Hero ── #}
     <section class="hlp-stage" aria-labelledby="hlp-title">

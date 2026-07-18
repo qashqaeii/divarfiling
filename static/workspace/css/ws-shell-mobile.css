@@ -1,0 +1,238 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace Shell — Premium Mobile Chrome
+   Topbar · Bottom dock · Sidebar drawer
+   Theme: --ws-primary
+   ═══════════════════════════════════════════════════════════ */
+
+.ws-mobile-topbar-brand,
+.ws-mobile-topbar-actions,
+.ws-mobile-topbar-logo,
+.ws-shell-backdrop {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    /* Soft app canvas */
+    body.ws-body .ws-main {
+        background:
+            radial-gradient(ellipse 100% 48% at 50% -12%, color-mix(in srgb, var(--ws-primary) 9%, transparent), transparent 60%),
+            color-mix(in srgb, var(--ws-surface-2) 28%, var(--ws-bg)) !important;
+    }
+
+    /* ── Topbar ── */
+    .ws-mobile-topbar {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.55rem;
+        min-height: 3.35rem;
+        padding: max(0.45rem, env(safe-area-inset-top, 0px)) 0.7rem 0.45rem;
+        background: color-mix(in srgb, var(--ws-surface) 88%, transparent) !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        box-shadow:
+            0 1px 0 color-mix(in srgb, var(--ws-primary) 6%, transparent),
+            0 8px 24px rgba(15, 23, 42, 0.04) !important;
+        backdrop-filter: blur(22px) saturate(1.2) !important;
+        -webkit-backdrop-filter: blur(22px) saturate(1.2) !important;
+        z-index: 170;
+    }
+
+    .ws-mobile-topbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-width: 0;
+        flex: 1;
+    }
+    .ws-mobile-topbar-logo {
+        display: block;
+        width: 1.85rem;
+        height: 1.85rem;
+        border-radius: 10px;
+        object-fit: cover;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--ws-primary) 18%, transparent);
+    }
+    .ws-mobile-topbar-title {
+        font-size: 0.98rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.025em !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-mobile-topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-shrink: 0;
+    }
+    .ws-mobile-topbar-act {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.45rem;
+        height: 2.45rem;
+        border-radius: 13px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 90%, transparent);
+        color: var(--ws-text-secondary);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+        cursor: pointer;
+        font-size: 0.92rem;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.12s, background 0.12s, color 0.12s;
+    }
+    .ws-mobile-topbar-act:active {
+        transform: scale(0.94);
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        color: var(--ws-primary);
+    }
+
+    .ws-mobile-menu {
+        display: inline-flex !important;
+        width: 2.45rem !important;
+        height: 2.45rem !important;
+        min-width: 2.45rem !important;
+        min-height: 2.45rem !important;
+        border-radius: 13px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent) !important;
+        background: linear-gradient(
+            135deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 72%, #0f172a)
+        ) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--ws-primary) 32%, transparent) !important;
+    }
+    .ws-mobile-menu:hover {
+        background: linear-gradient(
+            135deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 72%, #0f172a)
+        ) !important;
+        color: #fff !important;
+        border-color: transparent !important;
+    }
+    .ws-mobile-menu:active {
+        transform: scale(0.94);
+    }
+
+    /* Content breathing room for floating dock */
+    .ws-content {
+        padding-bottom: calc(5.35rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* ── Floating bottom dock ── */
+    .ws-bottom-nav {
+        display: flex !important;
+        inset-inline: 0.55rem !important;
+        bottom: calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
+        min-height: 3.85rem;
+        padding: 0.38rem 0.35rem !important;
+        border-radius: 22px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border)) !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border)) !important;
+        background: color-mix(in srgb, var(--ws-surface) 90%, transparent) !important;
+        box-shadow:
+            0 10px 36px rgba(15, 23, 42, 0.14),
+            0 0 0 1px color-mix(in srgb, var(--ws-primary) 6%, transparent) !important;
+        backdrop-filter: blur(24px) saturate(1.2) !important;
+        -webkit-backdrop-filter: blur(24px) saturate(1.2) !important;
+        z-index: 180;
+        gap: 0.15rem;
+    }
+    .ws-bottom-nav-item {
+        position: relative;
+        min-height: 3.1rem !important;
+        border-radius: 16px !important;
+        font-size: 0.58rem !important;
+        font-weight: 750 !important;
+        gap: 0.2rem !important;
+        color: var(--ws-text-muted) !important;
+    }
+    .ws-bottom-nav-item i {
+        font-size: 1.12rem !important;
+        width: 2rem;
+        height: 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        transition: background 0.15s, color 0.15s, transform 0.15s;
+    }
+    .ws-bottom-nav-item.is-active {
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, transparent) !important;
+    }
+    .ws-bottom-nav-item.is-active i {
+        background: linear-gradient(
+            135deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 75%, #0f172a)
+        );
+        color: #fff !important;
+        transform: none !important;
+        box-shadow: 0 3px 10px color-mix(in srgb, var(--ws-primary) 35%, transparent);
+    }
+    .ws-bottom-nav-item:active {
+        transform: scale(0.93) !important;
+    }
+
+    /* ── Sidebar drawer ── */
+    .ws-sidebar {
+        width: min(86vw, 320px) !important;
+        border-radius: 22px 0 0 22px;
+        border-inline-start: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        box-shadow: -16px 0 48px rgba(15, 23, 42, 0.22) !important;
+        z-index: 200;
+    }
+    .ws-sidebar.open {
+        box-shadow: -16px 0 48px rgba(15, 23, 42, 0.28) !important;
+    }
+    .ws-shell-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 190;
+        background: rgba(15, 23, 42, 0.38);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s ease;
+    }
+    body.ws-sidebar-open .ws-shell-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .ws-nav-item {
+        min-height: 2.55rem;
+        border-radius: 12px;
+        padding: 0.45rem 0.65rem;
+        font-size: 0.8rem;
+        font-weight: 650;
+    }
+    .ws-nav-item.active {
+        background: color-mix(in srgb, var(--ws-primary) 12%, transparent);
+        box-shadow: inset 3px 0 0 var(--ws-primary);
+    }
+}
+
+@media (max-width: 360px) {
+    .ws-bottom-nav-item span {
+        font-size: 0.52rem;
+    }
+    .ws-mobile-topbar-title {
+        font-size: 0.88rem !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ws-shell-backdrop,
+    .ws-bottom-nav-item,
+    .ws-mobile-topbar-act,
+    .ws-mobile-menu {
+        transition: none !important;
+    }
+}

@@ -5,10 +5,13 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-utility-mobile.css' %}?v=1">
 {% endblock %}
 
+{% block mobile_bar_title %}ارتقا{% endblock %}
+
 {% block content %}
-<div class="upg{% if feature %} upg--focused{% endif %}"
+<div class="upg upg-mobile{% if feature %} upg--focused{% endif %}"
      data-accent="{% if feature %}{{ feature.accent|default:'violet' }}{% else %}violet{% endif %}">
 
     <section class="upg-stage" aria-labelledby="upg-title">

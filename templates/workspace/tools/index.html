@@ -4,14 +4,20 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/tools-market.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-tools-mobile.css' %}?v=1">
 {% endblock %}
 
-{% block page_title %}{% endblock %}
+{% block page_title %}ابزارها{% endblock %}
+{% block mobile_bar_title %}ابزارهای هوشمند{% endblock %}
 
 {% block content %}
-<div class="mk-page ws-toolbox-pro" id="wsToolbox"{% if selected_dataset %} data-dataset-id="{{ selected_dataset.id }}"{% endif %}>
+<div class="mk-page ws-toolbox-pro ws-toolbox-mobile" id="wsToolbox"{% if selected_dataset %} data-dataset-id="{{ selected_dataset.id }}"{% endif %}>
 
     <header class="ws-tbx-hero">
+        <div class="ws-tbx-mob-stage" aria-hidden="true">
+            <span class="ws-tbx-mob-stage__glow"></span>
+            <span class="ws-tbx-mob-stage__ribbon"></span>
+        </div>
         <div class="ws-tbx-hero-main">
             <div class="ws-tbx-hero-kicker">
                 <span class="ws-tbx-hero-mark" aria-hidden="true"></span>

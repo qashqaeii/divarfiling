@@ -75,32 +75,69 @@
         </article>
     </section>
 
-    <section class="crm-team-panel-v2 crm-team-goals-panel">
-        <header class="crm-team-panel-head-v2">
-            <div>
-                <h2><i class="fas fa-bullseye"></i> اهداف عملکرد</h2>
-                <p>تعریف هدف برای کل تیم یا هر مشاور</p>
+    <section class="crm-team-panel-v2 crm-team-goals-panel crm-goals-studio" aria-label="اهداف عملکرد">
+        <header class="crm-goals-studio-head">
+            <div class="crm-goals-studio-brand">
+                <span class="crm-goals-studio-mark" aria-hidden="true"><i class="fas fa-bullseye"></i></span>
+                <div>
+                    <span class="crm-goals-studio-kicker">Performance Targets</span>
+                    <h2>اهداف عملکرد</h2>
+                    <p>هدف عددی برای کل تیم یا هر مشاور — با ردیابی زنده پیشرفت</p>
+                </div>
             </div>
         </header>
-        <div class="crm-team-goals-panel-body">
+        <div class="crm-team-goals-panel-body crm-goals-studio-body">
             {% if team_goals %}
-            <div class="crm-team-goals-current">
-                <h3>اهداف فعال</h3>
-                {% for g in team_goals %}
-                <article class="crm-team-goal-row">
-                    <div class="crm-team-goal-head">
-                        <strong>{{ g.member_name }}</strong>
-                        <span>{{ g.goal.get_metric_display }} · {{ g.actual }}/{{ g.target }}</span>
-                    </div>
-                    <div class="crm-team-goal-meta">
-                        <time><i class="fas fa-calendar-alt" aria-hidden="true"></i> {{ g.period_label }}</time>
-                    </div>
-                    <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
-                </article>
-                {% endfor %}
+            <div class="crm-goals-track">
+                <div class="crm-goals-track-head">
+                    <h3>اهداف فعال</h3>
+                    <span>{{ team_goals|length }} هدف</span>
+                </div>
+                <div class="crm-goals-track-list">
+                    {% for g in team_goals %}
+                    <article class="crm-goal-card {% if g.pct >= 100 %}is-done{% elif g.pct >= 60 %}is-warm{% else %}is-low{% endif %}" style="--pct: {{ g.pct }}">
+                        <div class="crm-goal-card-top">
+                            <span class="crm-goal-metric-ico" aria-hidden="true">
+                                {% if g.goal.metric == 'calls' %}<i class="fas fa-phone"></i>
+                                {% elif g.goal.metric == 'visits' %}<i class="fas fa-door-open"></i>
+                                {% else %}<i class="fas fa-handshake"></i>{% endif %}
+                            </span>
+                            <div class="crm-goal-card-copy">
+                                <strong>{{ g.member_name }}</strong>
+                                <span>{{ g.goal.get_metric_display }}</span>
+                            </div>
+                            <em class="crm-goal-pct">{{ g.pct }}٪</em>
+                        </div>
+                        <div class="crm-goal-progress">
+                            <div class="crm-team-goal-bar crm-goal-bar" role="progressbar" aria-valuenow="{{ g.pct }}" aria-valuemin="0" aria-valuemax="100">
+                                <i style="width:{{ g.pct }}%"></i>
+                            </div>
+                            <span class="crm-goal-ratio"><b>{{ g.actual }}</b> از {{ g.target }}</span>
+                        </div>
+                        <footer class="crm-goal-card-foot">
+                            <time><i class="fas fa-calendar-alt" aria-hidden="true"></i> {{ g.period_label }}</time>
+                            {% if g.pct >= 100 %}
+                            <span class="crm-goal-status crm-goal-status--done"><i class="fas fa-check" aria-hidden="true"></i> تکمیل</span>
+                            {% elif g.pct >= 60 %}
+                            <span class="crm-goal-status crm-goal-status--warm">در مسیر</span>
+                            {% else %}
+                            <span class="crm-goal-status">نیاز به تمرکز</span>
+                            {% endif %}
+                        </footer>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="crm-goals-empty">
+                <span class="crm-goals-empty-ico" aria-hidden="true"><i class="fas fa-flag-checkered"></i></span>
+                <div>
+                    <strong>هنوز هدفی تعریف نشده</strong>
+                    <p>اولین هدف تیم را برای تماس، بازدید یا معامله بسته ثبت کنید.</p>
+                </div>
             </div>
             {% endif %}
-            <form method="post" action="{{ crm_team_url }}" class="crm-team-goals-form"
+            <form method="post" action="{{ crm_team_url }}" class="crm-team-goals-form crm-goals-composer"
                   data-goal-month-start="{{ goal_period_start_default }}"
                   data-goal-month-end="{{ goal_period_end_default }}"
                   data-goal-quarter-start="{{ goal_period_quarter_start }}"
@@ -108,8 +145,11 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="set_team_goal">
                 <input type="hidden" name="tab" value="settings">
-                <h3>هدف جدید</h3>
-                <div class="crm-team-goals-grid">
+                <header class="crm-goals-composer-head">
+                    <h3><i class="fas fa-plus-circle" aria-hidden="true"></i> هدف جدید</h3>
+                    <p>عضو، شاخص، عدد هدف و بازه شمسی را مشخص کنید</p>
+                </header>
+                <div class="crm-team-goals-grid crm-goals-composer-grid">
                     <label class="crm-field">
                         <span>عضو</span>
                         <select name="member_id" class="crm-select">
@@ -167,9 +207,9 @@
                         </div>
                         <small class="crm-field-hint">تقویم شمسی — با کلیک روی فیلد، تاریخ را از تقویم انتخاب کنید.</small>
                     </div>
-                    <div class="crm-field crm-team-goals-submit">
-                        <button type="submit" class="crm-dash-act crm-dash-act--primary">
-                            <i class="fas fa-plus"></i><span>ثبت هدف</span>
+                    <div class="crm-field crm-team-goals-submit crm-goals-composer-submit">
+                        <button type="submit" class="crm-dash-act crm-dash-act--primary crm-goals-submit-btn">
+                            <i class="fas fa-flag"></i><span>ثبت هدف</span>
                         </button>
                     </div>
                 </div>

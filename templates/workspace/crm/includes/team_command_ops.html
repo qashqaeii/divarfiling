@@ -33,15 +33,20 @@
                     <a href="?tab=settings">مدیریت</a>
                 </header>
                 {% for g in team_goals %}
-                <article class="crm-team-goal-row">
-                    <div class="crm-team-goal-head">
-                        <strong>{{ g.member_name }}</strong>
-                        <span>{{ g.goal.get_metric_display }} · {{ g.actual }}/{{ g.target }}</span>
+                <article class="crm-goal-card crm-goal-card--compact {% if g.pct >= 100 %}is-done{% elif g.pct >= 60 %}is-warm{% else %}is-low{% endif %}" style="--pct: {{ g.pct }}">
+                    <div class="crm-goal-card-top">
+                        <span class="crm-goal-metric-ico" aria-hidden="true">
+                            {% if g.goal.metric == 'calls' %}<i class="fas fa-phone"></i>
+                            {% elif g.goal.metric == 'visits' %}<i class="fas fa-door-open"></i>
+                            {% else %}<i class="fas fa-handshake"></i>{% endif %}
+                        </span>
+                        <div class="crm-goal-card-copy">
+                            <strong>{{ g.member_name }}</strong>
+                            <span>{{ g.goal.get_metric_display }} · {{ g.actual }}/{{ g.target }}</span>
+                        </div>
+                        <em class="crm-goal-pct">{{ g.pct }}٪</em>
                     </div>
-                    <div class="crm-team-goal-meta">
-                        <time><i class="fas fa-calendar-alt" aria-hidden="true"></i> {{ g.period_label }}</time>
-                    </div>
-                    <div class="crm-team-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
+                    <div class="crm-team-goal-bar crm-goal-bar"><i style="width:{{ g.pct }}%"></i></div>
                 </article>
                 {% endfor %}
             </section>

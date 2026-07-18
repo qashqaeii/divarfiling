@@ -11,10 +11,10 @@
 {% block extra_css %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-performance.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=15">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-announcements.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-audit.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-mobile.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-mobile.css' %}?v=6">
 {% endblock %}
 
 {% block crm_content %}
@@ -566,30 +566,39 @@
             {% for row in member_rows %}
             {% with m=row.member p=row.perf %}
             <article class="crm-team-member-tile {% if m.role == 'owner' %}crm-team-member-tile--owner{% endif %}">
+                <div class="crm-team-member-tile-glow" aria-hidden="true"></div>
                 <header class="crm-team-member-tile-head">
-                    <span class="crm-team-avatar crm-team-avatar--lg" style="--hue: {{ m.user.username|crm_avatar_hue }}">{{ m.user.get_full_name|default:m.user.username|crm_initials }}</span>
-                    <div>
-                        <strong>{{ m.user.get_full_name|default:m.user.username }}</strong>
-                        <code class="crm-team-username" dir="ltr">@{{ m.user.username }}</code>
+                    <div class="crm-team-member-id">
+                        <span class="crm-team-avatar crm-team-avatar--lg" style="--hue: {{ m.user.username|crm_avatar_hue }}">{{ m.user.get_full_name|default:m.user.username|crm_initials }}</span>
+                        <div class="crm-team-member-id-text">
+                            <strong>{{ m.user.get_full_name|default:m.user.username }}</strong>
+                            <code class="crm-team-username" dir="ltr">@{{ m.user.username }}</code>
+                        </div>
                     </div>
-                    <span class="crm-team-role-pill" style="{% crm_agency_role_style m.role %}">{{ m.get_role_display }}</span>
-                    {% if license_dashboard and can_manage_team %}
-                    {% for tm in license_dashboard.team_members %}
-                    {% if tm.id == m.user_id and license_dashboard.assigned_seats %}
-                    <span class="crm-team-license-badge" title="لایسنس تخصیص‌یافته"><i class="fas fa-key"></i></span>
-                    {% endif %}
-                    {% endfor %}
-                    {% endif %}
+                    <div class="crm-team-member-badges">
+                        <span class="crm-team-role-pill" style="{% crm_agency_role_style m.role %}">{{ m.get_role_display }}</span>
+                        {% if license_dashboard and can_manage_team %}
+                        {% for tm in license_dashboard.team_members %}
+                        {% if tm.id == m.user_id and license_dashboard.assigned_seats %}
+                        <span class="crm-team-license-badge" title="لایسنس تخصیص‌یافته"><i class="fas fa-key"></i></span>
+                        {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                    </div>
                 </header>
                 {% if can_view_team_performance or m.user_id == request.user.id %}
-                <div class="crm-team-member-tile-stats">
-                    <span title="تعداد مخاطب" class="{% if not p.contacts %}is-zero{% endif %}"><i class="fas fa-users"></i>{{ p.contacts|default:0 }}</span>
-                    <span title="تعداد فایل" class="{% if not p.properties %}is-zero{% endif %}"><i class="fas fa-building"></i>{{ p.properties|default:0 }}</span>
-                    <span title="تماس · ۳۰ روز" class="{% if not p.calls %}is-zero{% endif %}"><i class="fas fa-phone"></i>{{ p.calls|default:0 }}</span>
-                    <span title="بازدید · ۳۰ روز" class="{% if not p.visits %}is-zero{% endif %}"><i class="fas fa-door-open"></i>{{ p.visits|default:0 }}</span>
-                    <span title="معامله بسته · ۳۰ روز" class="{% if not p.deals_closed %}is-zero{% endif %}"><i class="fas fa-handshake"></i>{{ p.deals_closed|default:0 }}</span>
+                <div class="crm-team-member-tile-stats" aria-label="آمار عضو">
+                    <span title="تعداد مخاطب" class="{% if not p.contacts %}is-zero{% endif %}"><i class="fas fa-users"></i><b>{{ p.contacts|default:0 }}</b><em>مخاطب</em></span>
+                    <span title="تعداد فایل" class="{% if not p.properties %}is-zero{% endif %}"><i class="fas fa-building"></i><b>{{ p.properties|default:0 }}</b><em>فایل</em></span>
+                    <span title="تماس · ۳۰ روز" class="{% if not p.calls %}is-zero{% endif %}"><i class="fas fa-phone"></i><b>{{ p.calls|default:0 }}</b><em>تماس</em></span>
+                    <span title="بازدید · ۳۰ روز" class="{% if not p.visits %}is-zero{% endif %}"><i class="fas fa-door-open"></i><b>{{ p.visits|default:0 }}</b><em>بازدید</em></span>
+                    <span title="معامله بسته · ۳۰ روز" class="{% if not p.deals_closed %}is-zero{% endif %}"><i class="fas fa-handshake"></i><b>{{ p.deals_closed|default:0 }}</b><em>بسته</em></span>
                     {% if p.score_pct %}
-                    <span class="crm-team-member-score" title="امتیاز عملکرد"><i class="fas fa-chart-line"></i>{{ p.score_pct }}%</span>
+                    <span class="crm-team-member-score" title="امتیاز عملکرد" style="--pct: {{ p.score_pct }}">
+                        <i class="fas fa-chart-line"></i>
+                        <b>{{ p.score_pct }}%</b>
+                        <em>امتیاز</em>
+                    </span>
                     {% endif %}
                 </div>
                 {% elif can_manage_team %}
@@ -815,9 +824,11 @@
                 <h2>مقصدهای فعال</h2>
                 <p>ارسال خودکار رویداد CRM به سیستم‌های شما</p>
             </div>
+            {% if webhooks %}
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-webhook">
                 <i class="fas fa-plus"></i><span>وب‌هوک جدید</span>
             </button>
+            {% endif %}
         </header>
         {% if webhooks %}
         <div class="crm-team-webhook-grid">

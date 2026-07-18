@@ -15067,36 +15067,155 @@ select.crm-files-adv-control {
     gap: 0.65rem; padding: 0.85rem;
 }
 .crm-team-member-tile {
-    border-radius: 12px; border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
-    background: color-mix(in srgb, var(--ws-surface) 95%, var(--ws-border));
-    overflow: hidden; transition: box-shadow 0.15s, border-color 0.15s;
+    position: relative;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+    background:
+        radial-gradient(90% 80% at 100% 0%, color-mix(in srgb, var(--ws-primary) 7%, transparent), transparent 55%),
+        var(--ws-surface);
+    overflow: hidden;
+    transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+}
+.crm-team-member-tile-glow {
+    position: absolute;
+    inset: -20% auto auto -15%;
+    width: 55%;
+    height: 70%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--ws-primary) 12%, transparent), transparent 70%);
+    pointer-events: none;
 }
 .crm-team-member-tile:hover {
-    border-color: color-mix(in srgb, var(--ws-primary) 25%, transparent);
-    box-shadow: 0 4px 16px color-mix(in srgb, var(--ws-text) 5%, transparent);
+    border-color: color-mix(in srgb, var(--ws-primary) 28%, transparent);
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--ws-text) 6%, transparent);
+    transform: translateY(-1px);
 }
 .crm-team-member-tile--owner {
-    border-color: color-mix(in srgb, #7c3aed 30%, var(--ws-border));
-    background: linear-gradient(160deg, color-mix(in srgb, #7c3aed 5%, var(--ws-surface)), var(--ws-surface));
+    border-color: color-mix(in srgb, #f59e0b 35%, var(--ws-border));
+    background:
+        radial-gradient(90% 80% at 100% 0%, color-mix(in srgb, #f59e0b 10%, transparent), transparent 55%),
+        var(--ws-surface);
+}
+.crm-team-member-tile--owner .crm-team-member-tile-glow {
+    background: radial-gradient(circle, color-mix(in srgb, #f59e0b 14%, transparent), transparent 70%);
 }
 .crm-team-member-tile-head {
-    display: grid; grid-template-columns: auto 1fr auto; gap: 0.5rem;
-    align-items: start; padding: 0.85rem 0.85rem 0.5rem;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.55rem;
+    padding: 0.9rem 0.9rem 0.55rem;
 }
-.crm-team-member-tile-head strong { font-size: 0.75rem; }
-.crm-team-username { display: block; font-size: 0.55rem; color: var(--ws-text-muted); margin-top: 0.1rem; }
+.crm-team-member-id {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+    flex: 1;
+}
+.crm-team-member-id-text { min-width: 0; }
+.crm-team-member-tile-head strong {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 850;
+    letter-spacing: -0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.crm-team-username {
+    display: block;
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+    margin-top: 0.15rem;
+}
+.crm-team-member-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+}
 .crm-team-member-tile-stats {
-    display: flex; justify-content: space-around; padding: 0.45rem 0.65rem;
-    font-size: 0.62rem; color: var(--ws-text-muted);
-    border-block: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.15rem 0.85rem 0.65rem;
 }
-.crm-team-member-tile-stats i { margin-inline-end: 0.2rem; color: var(--ws-primary); opacity: 0.7; }
+.crm-team-member-tile-stats > span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.08rem;
+    min-height: 3.1rem;
+    padding: 0.4rem 0.25rem;
+    border-radius: 12px;
+    font-size: 0.62rem;
+    color: var(--ws-text-muted);
+    background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+    text-align: center;
+}
+.crm-team-member-tile-stats > span i {
+    font-size: 0.68rem;
+    color: var(--ws-primary);
+    opacity: 0.85;
+    margin: 0;
+}
+.crm-team-member-tile-stats > span b {
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: var(--ws-text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+}
+.crm-team-member-tile-stats > span em {
+    font-style: normal;
+    font-size: 0.52rem;
+    font-weight: 750;
+    color: var(--ws-text-muted);
+    line-height: 1.2;
+}
+.crm-team-member-tile-stats > span.is-zero { opacity: 0.42; }
+.crm-team-member-score {
+    grid-column: 1 / -1;
+    flex-direction: row !important;
+    gap: 0.35rem !important;
+    min-height: 2.35rem !important;
+    background: var(--ws-primary-soft) !important;
+    border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent) !important;
+    color: var(--ws-primary) !important;
+}
+.crm-team-member-score b { color: var(--ws-primary) !important; }
+.crm-team-member-tile-privacy {
+    position: relative;
+    z-index: 1;
+    margin: 0 0.85rem 0.55rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    font-size: 0.62rem;
+    color: var(--ws-text-muted);
+    background: color-mix(in srgb, var(--ws-border) 25%, transparent);
+}
 .crm-team-member-tile-foot {
-    display: flex; align-items: center; justify-content: space-between; gap: 0.35rem;
-    padding: 0.55rem 0.85rem; font-size: 0.58rem; color: var(--ws-text-muted);
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0.55rem 0.85rem 0.75rem;
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+    border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
 }
 .crm-team-member-tile-actions { display: flex; align-items: center; gap: 0.25rem; }
-.crm-team-owner-badge { color: #7c3aed; font-weight: 600; }
+.crm-team-owner-badge { color: var(--ws-primary); font-weight: 700; }
 .crm-team-inline-form { margin: 0; }
 .crm-team-icon-btn-v2 {
     width: 1.65rem; height: 1.65rem; border: none; border-radius: 8px;
@@ -15748,7 +15867,7 @@ select.crm-files-adv-control {
 .crm-team-sync-export-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
 .crm-team-sync-history ul { list-style: none; padding: 0; margin: 0; font-size: 0.62rem; }
 .crm-team-goal-bar { height: 6px; background: var(--ws-border); border-radius: 99px; overflow: hidden; margin-top: 0.25rem; }
-.crm-team-goal-bar i { display: block; height: 100%; background: #2563eb; }
+.crm-team-goal-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--ws-primary), color-mix(in srgb, var(--ws-primary) 55%, #0ea5e9)); }
 .crm-team-goals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.45rem; align-items: end; }
 .crm-team-license-badge { color: #b45309; font-size: 0.75rem; }
 

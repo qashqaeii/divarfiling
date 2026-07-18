@@ -26,6 +26,7 @@
                 <span class="crm-msg-pill-badge" data-msg-notif-count hidden>0</span>
             </button>
             <button type="button" class="crm-msg-pill crm-msg-pill--accent" data-msg-compose>
+                <span class="crm-msg-pill-glow" aria-hidden="true"></span>
                 <i class="fas fa-pen-line"></i>
                 <span>پیام جدید</span>
             </button>
@@ -141,12 +142,18 @@
             <div class="crm-msg-empty-visual" aria-hidden="true">
                 <span class="crm-msg-empty-orbit"></span>
                 <span class="crm-msg-empty-orbit crm-msg-empty-orbit--2"></span>
-                <i class="fas fa-comments"></i>
+                <span class="crm-msg-empty-core"><i class="fas fa-comments"></i></span>
             </div>
-            <h3>یک گفتگو انتخاب کنید</h3>
-            <p>از لیست مکالمات انتخاب کنید یا پیام تازه‌ای بنویسید.</p>
-            <button type="button" class="crm-msg-pill crm-msg-pill--accent" data-msg-compose>
-                <i class="fas fa-pen-line"></i><span>شروع گفتگو</span>
+            <h3>گفتگویی انتخاب نشده</h3>
+            <p>از لیست مکالمات یکی را باز کنید، یا گفتگوی تازه‌ای با تیم شروع کنید.</p>
+            <button type="button" class="crm-msg-cta" data-msg-compose>
+                <span class="crm-msg-cta-glow" aria-hidden="true"></span>
+                <span class="crm-msg-cta-icon" aria-hidden="true"><i class="fas fa-comment-dots"></i></span>
+                <span class="crm-msg-cta-copy">
+                    <strong>شروع گفتگو</strong>
+                    <small>پیام مستقیم یا همگانی به تیم</small>
+                </span>
+                <i class="fas fa-arrow-left crm-msg-cta-arrow" aria-hidden="true"></i>
             </button>
         </div>
     </div>

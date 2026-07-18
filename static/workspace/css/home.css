@@ -1,10 +1,12 @@
 /* ═══════════════════════════════════════════════════════════
-   Workspace Home — sidebar & compact layout
+   Workspace Home — Mobile First polish (overview only)
    ═══════════════════════════════════════════════════════════ */
 
 .ws-home {
     --ws-home-gap: 0.5rem;
     gap: var(--ws-home-gap);
+    min-width: 0;
+    max-width: 100%;
 }
 
 .ws-home.mk-hub-pro {
@@ -20,12 +22,23 @@
     opacity: 0.85;
 }
 
-/* ─── Sidebar queue cards ─── */
+/* ─── Workspace grid: priority / filing / secondary ─── */
+.ws-home-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ws-home-gap);
+    min-width: 0;
+}
+
 .ws-home-queue {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     min-width: 0;
+}
+
+.ws-home-queue--secondary {
+    gap: 0.5rem;
 }
 
 .ws-home-queue-card {
@@ -62,15 +75,33 @@
 }
 
 .ws-home-queue-link {
-    font-size: 0.64rem;
-    font-weight: 500;
+    font-size: 0.72rem;
+    font-weight: 600;
     color: var(--ws-primary);
     text-decoration: none;
     white-space: nowrap;
+    min-height: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.4rem;
+    border-radius: 6px;
 }
 
 .ws-home-queue-link:hover {
     text-decoration: underline;
+}
+
+.ws-home-queue-link:focus-visible,
+.ws-home .mk-hub-head-btn:focus-visible,
+.ws-home .mk-hub-metric:focus-visible,
+.ws-home .mk-hub-quick-item:focus-visible,
+.ws-home .mk-hub-feed-main:focus-visible,
+.ws-home .ws-home-pipe-row:focus-visible,
+.ws-home .ws-home-prop-item:focus-visible,
+.ws-home .ws-home-insights-toggle:focus-visible,
+.ws-home .mk-row-btn:focus-visible {
+    outline: 2px solid var(--ws-primary);
+    outline-offset: 2px;
 }
 
 /* Split: today + reminders */
@@ -111,7 +142,7 @@
 
 .mk-hub-feed-empty--compact p {
     margin: 0;
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     color: var(--ws-text-muted);
     display: flex;
     align-items: center;
@@ -119,7 +150,7 @@
 }
 
 .mk-hub-feed-empty--compact p i {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     opacity: 0.45;
     color: var(--ws-text-muted);
 }
@@ -151,7 +182,8 @@
     grid-template-columns: auto minmax(0, 1fr) minmax(36px, 52px) auto;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.32rem 0.4rem;
+    padding: 0.4rem 0.45rem;
+    min-height: 2.5rem;
     border-radius: 7px;
     text-decoration: none;
     color: inherit;
@@ -170,7 +202,7 @@
 }
 
 .ws-home-pipe-name {
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     font-weight: 500;
     color: var(--ws-text-secondary);
     white-space: nowrap;
@@ -195,7 +227,7 @@
 }
 
 .ws-home-pipe-count {
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     font-weight: 700;
     color: var(--ws-text);
     font-variant-numeric: tabular-nums;
@@ -214,7 +246,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.4rem 0.35rem;
+    padding: 0.45rem 0.4rem;
+    min-height: 2.75rem;
     border-radius: 7px;
     text-decoration: none;
     color: inherit;
@@ -247,7 +280,7 @@
 
 .ws-home-prop-text strong {
     display: block;
-    font-size: 0.7rem;
+    font-size: 0.74rem;
     font-weight: 600;
     color: var(--ws-text);
     white-space: nowrap;
@@ -257,7 +290,7 @@
 
 .ws-home-prop-text em {
     display: block;
-    font-size: 0.58rem;
+    font-size: 0.68rem;
     font-style: normal;
     color: var(--ws-text-muted);
     white-space: nowrap;
@@ -265,7 +298,35 @@
     text-overflow: ellipsis;
 }
 
-/* ─── Compact density (ws-home--compact) ─── */
+/* File search empty */
+.ws-home-files-empty {
+    padding: 1.25rem 1rem;
+    text-align: center;
+}
+
+.ws-home-files-empty p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--ws-text-muted);
+}
+
+/* Insights toggle — hidden on desktop (body always visible via contents) */
+.ws-home-insights-toggle {
+    display: none;
+}
+
+.ws-home-insights-body {
+    display: contents;
+}
+
+/* Ensure desktop never stays "collapsed" visually */
+@media (min-width: 769px) {
+    .ws-home-insights.is-collapsed-mobile .ws-home-insights-body {
+        display: contents;
+    }
+}
+
+/* ─── Compact density (desktop baseline) ─── */
 .ws-home--compact .mk-hub-metrics {
     gap: 0.45rem;
 }
@@ -299,9 +360,29 @@
 }
 
 @media (min-width: 1024px) {
-    .ws-home--compact .mk-hub-main {
+    /* Beat .mk-hub-main 2-col from minimal.css — three regions */
+    .ws-home--compact .ws-home-workspace.mk-hub-main {
+        display: grid;
         grid-template-columns: minmax(0, 1.7fr) minmax(0, 0.95fr);
+        grid-template-rows: auto auto;
+        grid-template-areas:
+            "filing priority"
+            "filing secondary";
         align-items: start;
+        gap: 0.5rem;
+    }
+
+    .ws-home--compact .ws-home-workspace .mk-hub-primary {
+        grid-area: filing;
+        min-width: 0;
+    }
+
+    .ws-home--compact .ws-home-queue--priority {
+        grid-area: priority;
+    }
+
+    .ws-home--compact .ws-home-queue--secondary {
+        grid-area: secondary;
     }
 }
 
@@ -323,7 +404,6 @@
     font-size: 1.25rem;
 }
 
-/* Insights — shorter */
 .ws-home--compact .ws-home-insights {
     gap: 0.5rem;
 }
@@ -358,26 +438,37 @@
 }
 
 .ws-home--compact .mk-insight-status-list li {
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     padding: 0.2rem 0;
 }
 
-/* ─── Mobile & tablet — workspace home (app-style) ─── */
+/* ═══════════════════════════════════════════════════════════
+   Mobile — single consolidated system (≤768)
+   ═══════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
     .ws-home.mk-hub-pro {
-        gap: 0.6rem;
+        --ws-mob-gap: 0.75rem;
+        --ws-mob-radius: 14px;
+        --ws-mob-pad: 0.75rem;
+        width: 100%;
         max-width: 100%;
+        margin-inline: 0;
+        gap: var(--ws-mob-gap);
         overflow-x: clip;
     }
 
-    /* Welcome card */
+    /* Header */
     .ws-home .mk-hub-head {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.65rem;
-        padding: 0.75rem 0.85rem;
+        gap: 0.7rem;
+        padding: 0.85rem var(--ws-mob-pad);
         margin-top: 0;
-        border-radius: 12px;
+        border-radius: var(--ws-mob-radius);
+        border-inline-start-width: 3px;
+        border-color: var(--ws-border);
+        background: var(--ws-surface);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
 
     .ws-home .mk-hub-head-main {
@@ -386,7 +477,7 @@
     }
 
     .ws-home .mk-hub-head-title {
-        font-size: 1rem;
+        font-size: 1.05rem;
         line-height: 1.45;
         letter-spacing: -0.02em;
         word-break: normal;
@@ -397,17 +488,14 @@
         flex-wrap: wrap;
         gap: 0.35rem 0.5rem;
         margin-top: 0.35rem;
-        font-size: 0.72rem;
-        line-height: 1.55;
+        font-size: 0.75rem;
+        line-height: 1.5;
     }
 
-    .ws-home .mk-hub-head-pill--license {
-        gap: 0.25rem;
-    }
-
-    .ws-home .mk-hub-head-pill--license i {
-        font-size: 0.58rem;
-        opacity: 0.85;
+    .ws-home .mk-hub-head-pill {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.55rem;
+        min-height: 1.6rem;
     }
 
     .ws-home .mk-hub-head-actions {
@@ -418,35 +506,69 @@
         gap: 0.4rem;
         padding: 0.35rem;
         max-width: none;
+        border-radius: 12px;
+        background: var(--ws-surface-2);
+        border-color: var(--ws-border);
     }
 
     .ws-home .mk-hub-head-btn {
         min-height: 2.75rem;
         padding: 0.5rem 0.55rem;
-        font-size: 0.76rem;
-        border-radius: 9px;
+        font-size: 0.8rem;
+        border-radius: 10px;
+        transition: transform 0.12s, background 0.15s, border-color 0.15s;
     }
 
     .ws-home .mk-hub-head-btn span {
         display: inline !important;
     }
 
-    /* Compact metrics — 4 columns */
-    .ws-home .mk-hub-metrics {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.4rem;
+    .ws-home .mk-hub-head-btn:active {
+        transform: scale(0.97);
+    }
+
+    .ws-home .mk-hub-head-btn--primary {
+        box-shadow: 0 2px 8px -4px rgba(124, 58, 237, 0.35);
+    }
+
+    /* KPI — horizontal scroll strip */
+    .ws-home .mk-hub-metrics,
+    .ws-home .ws-home-metrics {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.45rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        padding-block: 0.1rem;
+        padding-inline: 0.05rem;
+        margin-inline: -0.1rem;
+        scrollbar-width: none;
+    }
+
+    .ws-home .mk-hub-metrics::-webkit-scrollbar {
+        display: none;
     }
 
     .ws-home .mk-hub-metric,
     .ws-home--compact .mk-hub-metric {
-        flex-direction: column;
+        flex: 0 0 auto;
+        flex-direction: row;
         align-items: center;
-        justify-content: center;
-        text-align: center;
-        gap: 0.3rem;
-        padding: 0.5rem 0.3rem;
-        border-radius: 10px;
-        min-height: 0;
+        justify-content: flex-start;
+        text-align: start;
+        gap: 0.5rem;
+        width: 8.25rem;
+        min-width: 8.25rem;
+        min-height: 3.5rem;
+        max-height: none;
+        padding: 0.55rem 0.65rem;
+        border-radius: var(--ws-mob-radius);
+        border-color: var(--ws-border);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        scroll-snap-align: start;
+        transition: transform 0.12s, background 0.12s;
     }
 
     .ws-home .mk-hub-metric:hover,
@@ -454,70 +576,214 @@
         transform: none;
     }
 
+    .ws-home .mk-hub-metric:active {
+        transform: scale(0.98);
+    }
+
+    .ws-home .ws-home-metric--focus {
+        border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface));
+    }
+
     .ws-home .mk-hub-metric-icon,
     .ws-home--compact .mk-hub-metric-icon {
         width: auto;
         height: auto;
-        font-size: 0.95rem;
+        font-size: 1rem;
         border-radius: 0;
+        flex-shrink: 0;
     }
 
     .ws-home .mk-hub-metric-body {
-        align-items: center;
-        gap: 0.02rem;
+        align-items: flex-start;
+        gap: 0.05rem;
+        min-width: 0;
     }
 
     .ws-home .mk-hub-metric-val,
     .ws-home--compact .mk-hub-metric-val {
-        font-size: 0.92rem;
+        font-size: 1.05rem;
+        font-weight: 800;
         line-height: 1.15;
+        font-variant-numeric: tabular-nums;
     }
 
     .ws-home .mk-hub-metric-lbl {
-        font-size: 0.58rem;
+        font-size: 0.72rem;
         font-weight: 600;
         line-height: 1.3;
-        white-space: normal;
+        color: var(--ws-text-muted);
+        white-space: nowrap;
     }
 
-    /* Quick shortcuts — 3-column grid */
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-list {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1px;
-        background: var(--ws-border);
-        border-radius: 12px;
-        overflow: hidden;
-        flex-direction: unset;
+    /* Quick bar — horizontal chips */
+    .ws-home .ws-home-quick.mk-hub-quick--bar {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
     }
 
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-list > li {
-        flex: none;
+    .ws-home .ws-home-quick .mk-hub-quick-list {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.4rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        padding: 0.15rem 0.05rem;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        scrollbar-width: none;
+    }
+
+    .ws-home .ws-home-quick .mk-hub-quick-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ws-home .ws-home-quick .mk-hub-quick-list > li {
+        flex: 0 0 auto;
         min-width: 0;
-        background: var(--ws-surface);
+        background: transparent;
         border: none !important;
+        border-radius: 0;
+        box-shadow: none;
+        overflow: visible;
     }
 
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-list > li + li {
+    .ws-home .ws-home-quick .mk-hub-quick-list > li + li {
         border-inline-start: none !important;
     }
 
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-item {
-        min-height: 4.25rem;
-        padding: 0.45rem 0.35rem;
-        gap: 0.32rem;
+    .ws-home .ws-home-quick .mk-hub-quick-item {
+        flex-direction: row;
+        min-height: 2.75rem;
+        min-width: max-content;
+        padding: 0.45rem 0.75rem;
+        gap: 0.4rem;
+        border: 1px solid var(--ws-border);
+        border-radius: 999px;
+        background: var(--ws-surface);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        scroll-snap-align: start;
+        transition: background 0.12s, transform 0.12s;
     }
 
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-item-icon {
+    .ws-home .ws-home-quick .mk-hub-quick-item:active {
+        transform: scale(0.97);
+        background: var(--ws-surface-2);
+    }
+
+    .ws-home .ws-home-quick .mk-hub-quick-item-icon {
         width: auto;
         height: auto;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         border-radius: 0;
     }
 
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-item-text {
-        font-size: 0.66rem;
-        line-height: 1.35;
+    .ws-home .ws-home-quick .mk-hub-quick-item-text {
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.2;
+        white-space: nowrap;
+        display: inline;
+        -webkit-line-clamp: unset;
+        overflow: visible;
+    }
+
+    /* Workspace order: priority → filing → secondary (HTML order) */
+    .ws-home-workspace {
+        display: flex;
+        flex-direction: column;
+        gap: var(--ws-mob-gap);
+    }
+
+    .ws-home-queue {
+        gap: 0.55rem;
+    }
+
+    .ws-home-queue-card {
+        padding: 0.7rem 0.8rem;
+        border-radius: var(--ws-mob-radius);
+        border-color: var(--ws-border);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+
+    .ws-home .ws-home-queue-head h3 {
+        font-size: 0.82rem;
+    }
+
+    .ws-home .ws-home-queue-link {
+        font-size: 0.74rem;
+        padding: 0.25rem 0.45rem;
+        min-height: 2rem;
+    }
+
+    .ws-home .ws-home-queue-card--split {
+        grid-template-columns: 1fr;
+    }
+
+    .ws-home .ws-home-split-col + .ws-home-split-col {
+        border-inline-start: none;
+        padding-inline-start: 0;
+        border-top: 1px solid var(--ws-border);
+        padding-top: 0.65rem;
+        margin-top: 0.15rem;
+    }
+
+    .ws-home .ws-home-split-col:first-child {
+        padding-inline-end: 0;
+    }
+
+    .ws-home .mk-hub-feed-item {
+        min-height: 3rem;
+        padding: 0.5rem 0.4rem;
+        margin-block: 0.1rem;
+        border-radius: 10px;
+        gap: 0.5rem;
+    }
+
+    .ws-home .mk-hub-feed-item:active {
+        background: var(--ws-surface-2);
+    }
+
+    .ws-home .mk-hub-feed-text strong {
+        font-size: 0.82rem;
+        line-height: 1.4;
+    }
+
+    .ws-home .mk-hub-feed-text em {
+        font-size: 0.72rem;
+        margin-top: 0.08rem;
+    }
+
+    .ws-home .ws-home-prop-item {
+        min-height: 3rem;
+        padding: 0.55rem 0.45rem;
+        margin-block: 0.1rem;
+        border-radius: 10px;
+        gap: 0.55rem;
+    }
+
+    .ws-home .ws-home-prop-item:active {
+        background: var(--ws-surface-2);
+    }
+
+    .ws-home .ws-home-prop-icon {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.72rem;
+        border-radius: 8px;
+    }
+
+    .ws-home .ws-home-prop-text strong {
+        font-size: 0.8rem;
+        line-height: 1.4;
         white-space: normal;
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -525,22 +791,20 @@
         overflow: hidden;
     }
 
-    /* Main layout */
-    .ws-home .mk-hub-main {
-        grid-template-columns: 1fr;
-        gap: 0.6rem;
+    .ws-home .ws-home-prop-text em {
+        font-size: 0.72rem;
+        line-height: 1.35;
+        margin-top: 0.1rem;
+        white-space: normal;
     }
 
-    .ws-home-queue {
-        gap: 0.45rem;
+    /* Filing panel + card rows */
+    .ws-home .mk-hub-filing {
+        border-radius: var(--ws-mob-radius);
+        border-color: var(--ws-border);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
     }
 
-    .ws-home-queue-card {
-        padding: 0.65rem 0.75rem;
-        border-radius: 12px;
-    }
-
-    /* Filing table → cards */
     .ws-home .mk-hub-filing .mk-panel-head-table {
         flex-direction: column;
         align-items: stretch;
@@ -567,8 +831,25 @@
     }
 
     .ws-home .mk-hub-filing .mk-data-table tbody tr {
-        margin-inline: 0.65rem;
-        border-radius: 11px;
+        margin-inline: 0;
+        margin-block: 0.5rem;
+        border-radius: var(--ws-mob-radius);
+        border-color: var(--ws-border);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        overflow: hidden;
+    }
+
+    .ws-home .mk-hub-filing td.mk-col-file {
+        padding: 0.8rem 0.85rem 0.65rem !important;
+        background: color-mix(in srgb, var(--ws-primary) 3%, var(--ws-surface));
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    }
+
+    .ws-home .mk-hub-filing .mk-file-icon {
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: 0.68rem;
+        border-radius: 9px;
     }
 
     .ws-home .mk-hub-filing .mk-file-name {
@@ -576,9 +857,9 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        font-size: 0.8rem;
-        font-weight: 600;
-        line-height: 1.45;
+        font-size: 0.84rem;
+        font-weight: 700;
+        line-height: 1.4;
     }
 
     .ws-home .mk-hub-filing .mk-file-sub {
@@ -586,8 +867,25 @@
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        font-size: 0.68rem;
+        font-size: 0.7rem;
+        color: var(--ws-text-muted);
         margin-top: 0.12rem;
+    }
+
+    .ws-home .mk-hub-filing .mk-data-table tbody td:not(.mk-col-file):not(.mk-col-actions) {
+        padding: 0.4rem 0.85rem !important;
+        font-size: 0.76rem;
+    }
+
+    .ws-home .mk-hub-filing .mk-data-table tbody td::before {
+        flex: 0 0 3.5rem;
+        font-size: 0.7rem;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-home .mk-hub-filing td.mk-col-actions {
+        padding: 0.55rem 0.7rem 0.75rem !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 65%, transparent);
     }
 
     .ws-home .mk-hub-filing .mk-row-actions {
@@ -602,69 +900,127 @@
         min-width: 0;
         min-height: 2.75rem;
         height: auto;
-        font-size: 0.82rem;
-        border-radius: 9px;
+        font-size: 0.8rem;
+        border-radius: 10px;
+        background: var(--ws-surface);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
     }
 
-    /* Sidebar queue — properties */
-    .ws-home .ws-home-prop-item {
-        padding: 0.55rem 0.45rem;
-        min-height: 2.85rem;
-        border-radius: 9px;
-        gap: 0.55rem;
+    .ws-home .mk-hub-filing .mk-row-btn:active {
+        transform: scale(0.97);
+        background: var(--ws-primary-soft);
     }
 
-    .ws-home .ws-home-prop-icon {
-        width: 2rem;
-        height: 2rem;
-        font-size: 0.72rem;
-        border-radius: 8px;
+    .ws-home-files-empty {
+        padding: 1.5rem 1rem;
     }
 
-    .ws-home .ws-home-prop-text strong {
-        font-size: 0.78rem;
-        line-height: 1.45;
-        white-space: normal;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+    /* Insights — collapsed by default on mobile */
+    .ws-home .ws-home-insights {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        border-radius: var(--ws-mob-radius);
+        border: 1px solid var(--ws-border);
+        background: var(--ws-surface);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         overflow: hidden;
     }
 
-    .ws-home .ws-home-prop-text em {
-        font-size: 0.68rem;
-        line-height: 1.4;
-        margin-top: 0.1rem;
-        white-space: normal;
+    .ws-home-insights-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.65rem;
+        width: 100%;
+        min-height: 3.25rem;
+        padding: 0.75rem 0.9rem;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        color: inherit;
+        cursor: pointer;
+        text-align: start;
     }
 
-    .ws-home .ws-home-queue-head h3 {
-        font-size: 0.78rem;
+    .ws-home-insights-toggle-main {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-width: 0;
     }
 
-    .ws-home .ws-home-queue-link {
-        font-size: 0.68rem;
-        padding: 0.2rem 0.35rem;
+    .ws-home-insights-toggle-icon {
+        width: 2.15rem;
+        height: 2.15rem;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface-2));
+        color: var(--ws-primary);
+        font-size: 0.85rem;
     }
 
-    /* Charts & insights */
-    .ws-home .mk-hub-insights,
-    .ws-home .ws-home-insights {
+    .ws-home-insights-toggle-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+        min-width: 0;
+    }
+
+    .ws-home-insights-toggle-text strong {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--ws-text);
+    }
+
+    .ws-home-insights-toggle-text em {
+        font-size: 0.72rem;
+        font-style: normal;
+        color: var(--ws-text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ws-home-insights-toggle-chevron {
+        flex-shrink: 0;
+        color: var(--ws-text-muted);
+        font-size: 0.75rem;
+        transition: transform 0.18s ease;
+    }
+
+    .ws-home-insights:not(.is-collapsed-mobile) .ws-home-insights-toggle-chevron {
+        transform: rotate(180deg);
+    }
+
+    .ws-home-insights-body {
+        display: none;
+        flex-direction: column;
         gap: 0.55rem;
+        padding: 0 0.65rem 0.7rem;
+    }
+
+    .ws-home-insights:not(.is-collapsed-mobile) .ws-home-insights-body {
+        display: flex;
     }
 
     .ws-home .mk-insight {
-        padding: 0.75rem 0.85rem;
+        padding: 0.8rem 0.85rem;
         border-radius: 12px;
         min-width: 0;
         overflow: hidden;
+        border-color: var(--ws-border);
+        box-shadow: none;
     }
 
     .ws-home .mk-insight-head {
         flex-direction: column;
         align-items: stretch;
         gap: 0.5rem;
-        margin-bottom: 0.65rem;
+        margin-bottom: 0.6rem;
     }
 
     .ws-home .mk-insight-head-tools {
@@ -679,28 +1035,38 @@
 
     .ws-home .mk-insight-legend {
         justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+
+    .ws-home .mk-insight-legend-item {
+        font-size: 0.68rem;
+        padding: 0.22rem 0.48rem;
+        border-radius: 999px;
     }
 
     .ws-home .mk-insight-title h2 {
         font-size: 0.88rem;
-        line-height: 1.4;
+        line-height: 1.35;
     }
 
     .ws-home--compact .mk-insight-title p,
     .ws-home .mk-insight-title p {
         display: block;
-        font-size: 0.68rem;
-        line-height: 1.5;
+        font-size: 0.72rem;
+        line-height: 1.45;
     }
 
     .ws-home .mk-insight--trend .mk-insight-chart-wrap,
     .ws-home--compact .mk-insight--trend .mk-insight-chart-wrap {
-        height: 200px;
-        min-height: 180px;
-        max-height: 220px;
+        height: 12.5rem;
+        min-height: 11rem;
+        max-height: 14rem;
         width: 100%;
-        padding: 0.35rem 0;
+        padding: 0.3rem 0;
         overflow: hidden;
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--ws-primary) 3%, var(--ws-surface));
     }
 
     .ws-home .mk-insight-chart-wrap canvas {
@@ -715,14 +1081,16 @@
     .ws-home .mk-insight-donut-chart,
     .ws-home--compact .mk-insight-donut-chart {
         width: 100%;
-        max-width: 11rem;
-        height: 9.5rem;
+        max-width: 11.5rem;
+        height: 10rem;
         margin-inline: auto;
     }
 
     .ws-home .mk-insight-status-list li {
-        font-size: 0.72rem;
-        padding: 0.35rem 0.4rem;
+        font-size: 0.76rem;
+        min-height: 2.15rem;
+        padding: 0.4rem 0.5rem;
+        border-radius: 9px;
     }
 
     .ws-home .mk-insight-channel {
@@ -731,13 +1099,14 @@
     }
 
     .ws-home .mk-insight-channel-name {
-        font-size: 0.74rem;
+        font-size: 0.78rem;
     }
 
     .ws-home .mk-hub-alert {
         flex-wrap: wrap;
         gap: 0.55rem;
-        padding: 0.65rem 0.75rem;
+        padding: 0.7rem 0.8rem;
+        border-radius: var(--ws-mob-radius);
     }
 
     .ws-home .mk-hub-alert-btn {
@@ -746,339 +1115,14 @@
         display: inline-flex;
         align-items: center;
     }
-
-    .ws-home .ws-home-queue-card--split {
-        grid-template-columns: 1fr;
-    }
-
-    .ws-home .ws-home-split-col + .ws-home-split-col {
-        border-inline-start: none;
-        padding-inline-start: 0;
-        border-top: 1px solid var(--ws-border);
-        padding-top: 0.6rem;
-        margin-top: 0.25rem;
-    }
-
-    .ws-home .ws-home-split-col:first-child {
-        padding-inline-end: 0;
-    }
 }
 
-/* ─── Mobile polish v2 — native SaaS dashboard feel ─── */
-@media (max-width: 768px) {
-    .ws-home.mk-hub-pro {
-        --ws-mob-gap: 0.85rem;
-        --ws-mob-radius: 18px;
-        --ws-mob-pad: 0.75rem;
-        width: 100%;
-        max-width: 100%;
-        margin-inline: 0;
-        gap: var(--ws-mob-gap);
-    }
-
-    .ws-home .mk-hub-head {
-        gap: 0.75rem;
-        padding: 0.9rem var(--ws-mob-pad);
-        border-radius: var(--ws-mob-radius);
-        border-inline-start-width: 4px;
-        border-color: color-mix(in srgb, var(--ws-border) 75%, transparent);
-        background:
-            linear-gradient(145deg, color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface)), var(--ws-surface));
-        box-shadow:
-            0 1px 2px rgba(15, 23, 42, 0.04),
-            0 10px 28px -14px rgba(124, 58, 237, 0.22);
-    }
-
-    .ws-home .mk-hub-head-title {
-        font-size: 1.05rem;
-        line-height: 1.5;
-    }
-
-    .ws-home .mk-hub-head-meta {
-        margin-top: 0.4rem;
-        font-size: 0.75rem;
-        gap: 0.4rem 0.55rem;
-    }
-
-    .ws-home .mk-hub-head-pill {
-        font-size: 0.66rem;
-        padding: 0.18rem 0.55rem;
-    }
-
-    .ws-home .mk-hub-head-actions {
-        gap: 0.45rem;
-        padding: 0.4rem;
-        border-radius: 14px;
-        background: color-mix(in srgb, var(--ws-surface-2) 80%, transparent);
-        border-color: color-mix(in srgb, var(--ws-border) 65%, transparent);
-    }
-
-    .ws-home .mk-hub-head-btn {
-        min-height: 2.65rem;
-        padding: 0.52rem 0.6rem;
-        font-size: 0.78rem;
-        border-radius: 11px;
-        transition: transform 0.12s, box-shadow 0.15s, background 0.15s, border-color 0.15s;
-    }
-
-    .ws-home .mk-hub-head-btn:active {
-        transform: scale(0.97);
-    }
-
-    .ws-home .mk-hub-head-btn--primary {
-        box-shadow: 0 4px 14px -6px rgba(124, 58, 237, 0.45);
-    }
-
-    .ws-home .mk-hub-metrics {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.5rem;
-    }
-
+/* Narrow phones */
+@media (max-width: 430px) {
     .ws-home .mk-hub-metric,
     .ws-home--compact .mk-hub-metric {
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-start;
-        text-align: right;
-        gap: 0.55rem;
-        min-height: 4.75rem;
-        max-height: 5.375rem;
-        padding: 0.62rem 0.7rem;
-        border-radius: var(--ws-mob-radius);
-        border-color: color-mix(in srgb, var(--ws-border) 72%, transparent);
-        box-shadow: 0 2px 10px -4px rgba(15, 23, 42, 0.08);
-        transition: transform 0.15s, box-shadow 0.15s;
-    }
-
-    .ws-home .mk-hub-metric:active {
-        transform: scale(0.98);
-    }
-
-    .ws-home .mk-hub-metric-icon,
-    .ws-home--compact .mk-hub-metric-icon {
-        width: auto;
-        height: auto;
-        font-size: 1rem;
-        border-radius: 0;
-        flex-shrink: 0;
-    }
-
-    .ws-home .mk-hub-metric-body {
-        align-items: flex-start;
-        gap: 0.08rem;
-    }
-
-    .ws-home .mk-hub-metric-val,
-    .ws-home--compact .mk-hub-metric-val {
-        font-size: 1.12rem;
-        font-weight: 800;
-    }
-
-    .ws-home .mk-hub-metric-lbl {
-        font-size: 0.64rem;
-        color: var(--ws-text-muted);
-    }
-
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-list {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.45rem;
-        padding: 0.45rem;
-        background: color-mix(in srgb, var(--ws-surface) 92%, var(--ws-primary) 8%);
-        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
-        border-radius: var(--ws-mob-radius);
-        box-shadow: 0 2px 12px -6px rgba(15, 23, 42, 0.07);
-    }
-
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-list > li {
-        background: var(--ws-surface);
-        border-radius: 14px;
-        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
-        overflow: hidden;
-    }
-
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-item {
-        min-height: 4.5rem;
-        padding: 0.5rem 0.35rem;
-        gap: 0.38rem;
-        border-radius: 14px;
-        transition: background 0.12s, transform 0.12s;
-    }
-
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-item:active {
-        transform: scale(0.96);
-        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface-2));
-    }
-
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-item-icon {
-        width: auto;
-        height: auto;
-        font-size: 1rem;
-        border-radius: 0;
-    }
-
-    .ws-home .mk-hub-quick--bar .mk-hub-quick-item-text {
-        font-size: 0.7rem;
-        font-weight: 600;
-        line-height: 1.35;
-    }
-
-    .ws-home .mk-hub-filing,
-    .ws-home .ws-home-queue-card,
-    .ws-home .mk-insight {
-        border-radius: var(--ws-mob-radius);
-        border-color: color-mix(in srgb, var(--ws-border) 72%, transparent);
-        box-shadow: 0 2px 14px -8px rgba(15, 23, 42, 0.1);
-    }
-
-    .ws-home .mk-hub-filing .mk-data-table tbody tr {
-        margin-inline: 0;
-        margin-block: 0.55rem;
-        border-radius: var(--ws-mob-radius);
-        border-color: color-mix(in srgb, var(--ws-border) 70%, transparent);
-        box-shadow: 0 2px 12px -6px rgba(15, 23, 42, 0.08);
-        overflow: hidden;
-    }
-
-    .ws-home .mk-hub-filing td.mk-col-file {
-        padding: 0.85rem 0.9rem 0.7rem !important;
-        background: linear-gradient(180deg, color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface)), var(--ws-surface));
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
-    }
-
-    .ws-home .mk-hub-filing .mk-file-icon {
-        width: 2.35rem;
-        height: 2.35rem;
-        font-size: 0.68rem;
-        border-radius: 10px;
-    }
-
-    .ws-home .mk-hub-filing .mk-file-name {
-        font-size: 0.84rem;
-        font-weight: 700;
-        -webkit-line-clamp: 2;
-    }
-
-    .ws-home .mk-hub-filing .mk-file-sub {
-        font-size: 0.64rem;
-        color: var(--ws-text-muted);
-        margin-top: 0.15rem;
-    }
-
-    .ws-home .mk-hub-filing .mk-data-table tbody td:not(.mk-col-file):not(.mk-col-actions) {
-        padding: 0.42rem 0.9rem !important;
-        font-size: 0.74rem;
-    }
-
-    .ws-home .mk-hub-filing .mk-data-table tbody td::before {
-        flex: 0 0 3.5rem;
-        font-size: 0.64rem;
-        color: var(--ws-text-muted);
-    }
-
-    .ws-home .mk-hub-filing td.mk-col-actions {
-        padding: 0.55rem 0.75rem 0.75rem !important;
-        background: color-mix(in srgb, var(--ws-surface-2) 70%, transparent);
-    }
-
-    .ws-home .mk-hub-filing .mk-row-actions {
-        gap: 0.45rem;
-    }
-
-    .ws-home .mk-hub-filing .mk-row-btn {
-        min-height: 2.65rem;
-        border-radius: 11px;
-        background: var(--ws-surface);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    }
-
-    .ws-home .mk-hub-filing .mk-row-btn:active {
-        transform: scale(0.96);
-        background: var(--ws-primary-soft);
-    }
-
-    .ws-home .mk-hub-feed-item {
-        min-height: 2.85rem;
-        padding: 0.55rem 0.45rem;
-        margin-block: 0.12rem;
-        border-radius: 12px;
-        gap: 0.55rem;
-    }
-
-    .ws-home .mk-hub-feed-item:active {
-        background: var(--ws-surface-2);
-    }
-
-    .ws-home .mk-hub-feed-text strong {
-        font-size: 0.8rem;
-        line-height: 1.45;
-    }
-
-    .ws-home .mk-hub-feed-text em {
-        font-size: 0.7rem;
-        margin-top: 0.1rem;
-    }
-
-    .ws-home .ws-home-prop-item {
-        min-height: 3rem;
-        padding: 0.62rem 0.5rem;
-        margin-block: 0.1rem;
-        border-radius: 12px;
-    }
-
-    .ws-home .ws-home-prop-item:active {
-        background: var(--ws-surface-2);
-    }
-
-    .ws-home .mk-insight {
-        padding: 0.85rem 0.9rem;
-    }
-
-    .ws-home .mk-insight-title h2 {
-        font-size: 0.92rem;
-    }
-
-    .ws-home .mk-insight--trend .mk-insight-chart-wrap,
-    .ws-home--compact .mk-insight--trend .mk-insight-chart-wrap {
-        height: 13.25rem;
-        min-height: 11.25rem;
-        max-height: 15rem;
-        border-radius: 14px;
-        background: color-mix(in srgb, var(--ws-primary) 3%, var(--ws-surface));
-    }
-
-    .ws-home .mk-insight-legend {
-        flex-wrap: wrap;
-        gap: 0.3rem;
-    }
-
-    .ws-home .mk-insight-legend-item {
-        font-size: 0.62rem;
-        padding: 0.22rem 0.48rem;
-        border-radius: 999px;
-    }
-
-    .ws-home .mk-insight-donut-chart,
-    .ws-home--compact .mk-insight-donut-chart {
-        height: 10.5rem;
-        max-width: 12rem;
-    }
-
-    .ws-home .mk-insight-status-list li {
-        min-height: 2rem;
-        padding: 0.45rem 0.5rem;
-        border-radius: 10px;
-    }
-
-    .ws-home .mk-hub-alert {
-        border-radius: var(--ws-mob-radius);
-        padding: 0.75rem 0.85rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .ws-home .mk-hub-head-title {
-        font-size: 0.98rem;
+        width: 7.75rem;
+        min-width: 7.75rem;
     }
 }
 
@@ -1087,7 +1131,68 @@
         grid-template-columns: 1fr;
     }
 
-    .ws-home .mk-hub-metric-val {
-        font-size: 1rem;
+    .ws-home .mk-hub-head-title {
+        font-size: 0.98rem;
+    }
+
+    .ws-home .mk-hub-metric,
+    .ws-home--compact .mk-hub-metric {
+        width: 7.25rem;
+        min-width: 7.25rem;
+        min-height: 3.35rem;
+        padding: 0.5rem 0.55rem;
+    }
+
+    .ws-home .mk-hub-metric-val,
+    .ws-home--compact .mk-hub-metric-val {
+        font-size: 0.98rem;
+    }
+
+    .ws-home .mk-hub-filing .mk-row-actions {
+        gap: 0.3rem;
+    }
+
+    .ws-home .mk-hub-filing .mk-row-btn {
+        font-size: 0.74rem;
+        padding-inline: 0.25rem;
+    }
+}
+
+@media (max-width: 320px) {
+    .ws-home.mk-hub-pro {
+        --ws-mob-pad: 0.65rem;
+        --ws-mob-gap: 0.65rem;
+    }
+
+    .ws-home .mk-hub-metric,
+    .ws-home--compact .mk-hub-metric {
+        width: 6.85rem;
+        min-width: 6.85rem;
+    }
+
+    .ws-home .ws-home-quick .mk-hub-quick-item {
+        padding: 0.4rem 0.65rem;
+    }
+
+    .ws-home .ws-home-quick .mk-hub-quick-item-text {
+        font-size: 0.74rem;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .ws-home .mk-hub-head-btn,
+    .ws-home .mk-hub-metric,
+    .ws-home .mk-hub-quick-item,
+    .ws-home .mk-row-btn,
+    .ws-home-insights-toggle-chevron {
+        transition: none !important;
+    }
+
+    .ws-home .mk-hub-head-btn:active,
+    .ws-home .mk-hub-metric:active,
+    .ws-home .mk-hub-quick-item:active,
+    .ws-home .mk-row-btn:active {
+        transform: none !important;
     }
 }

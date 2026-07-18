@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=97">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=10">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -87,9 +87,9 @@
     </div>
     {% endif %}
 
-    <section class="mk-hub-metrics" aria-label="شاخص‌های کلیدی" data-tour="metrics">
+    <section class="mk-hub-metrics ws-home-metrics" aria-label="شاخص‌های کلیدی" data-tour="metrics">
         {% if has_bot_license %}
-        <a href="{% url 'workspace:dataset_list' %}" class="mk-hub-metric" data-tone="purple">
+        <a href="{% url 'workspace:dataset_list' %}" class="mk-hub-metric ws-home-metric--focus" data-tone="purple">
             <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='folder' size='metric' only %}</span>
             <span class="mk-hub-metric-body">
                 <span class="mk-hub-metric-val">{{ data_stats.datasets }}</span>
@@ -118,7 +118,7 @@
             </span>
         </a>
         {% else %}
-        <div class="mk-hub-metric mk-hub-metric--locked" data-tone="purple">
+        <div class="mk-hub-metric mk-hub-metric--locked ws-home-metric--focus" data-tone="purple">
             <span class="mk-hub-metric-icon"><i class="fas fa-lock" aria-hidden="true"></i></span>
             <span class="mk-hub-metric-body">
                 <span class="mk-hub-metric-val">—</span>
@@ -147,21 +147,21 @@
             </span>
         </div>
         {% endif %}
-        <a href="{% url 'workspace:crm_contacts' %}" class="mk-hub-metric" data-tone="indigo">
+        <a href="{% url 'workspace:crm_contacts' %}" class="mk-hub-metric ws-home-metric--focus" data-tone="indigo">
             <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='users' size='metric' only %}</span>
             <span class="mk-hub-metric-body">
                 <span class="mk-hub-metric-val">{{ crm_stats.total_contacts }}</span>
                 <span class="mk-hub-metric-lbl">مخاطبین</span>
             </span>
         </a>
-        <a href="{% url 'workspace:crm_properties' %}" class="mk-hub-metric" data-tone="violet">
+        <a href="{% url 'workspace:crm_properties' %}" class="mk-hub-metric ws-home-metric--focus" data-tone="violet">
             <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='building' size='metric' only %}</span>
             <span class="mk-hub-metric-body">
                 <span class="mk-hub-metric-val">{{ crm_stats.total_properties }}</span>
                 <span class="mk-hub-metric-lbl">املاک</span>
             </span>
         </a>
-        <a href="{% url 'workspace:crm_today' %}" class="mk-hub-metric{% if crm_stats.overdue_followups %} mk-hub-metric--warn{% endif %}" data-tone="amber">
+        <a href="{% url 'workspace:crm_today' %}" class="mk-hub-metric ws-home-metric--focus{% if crm_stats.overdue_followups %} mk-hub-metric--warn{% endif %}" data-tone="amber">
             <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='list_todo' size='metric' only %}</span>
             <span class="mk-hub-metric-body">
                 <span class="mk-hub-metric-val">{{ crm_stats.due_today }}</span>
@@ -184,7 +184,7 @@
         </a>
     </section>
 
-    <nav class="mk-hub-quick mk-hub-quick--bar" aria-label="دسترسی سریع" data-tour="quick-bar">
+    <nav class="mk-hub-quick mk-hub-quick--bar ws-home-quick" aria-label="دسترسی سریع" data-tour="quick-bar">
         <ul class="mk-hub-quick-list">
             {% if has_bot_license %}
             <li><button type="button" class="mk-hub-quick-item" data-modal-open="modal-upload"><span class="mk-hub-quick-item-icon" data-tone="purple">{% include 'includes/icon_slot.html' with decor='upload' size='inline' only %}</span><span class="mk-hub-quick-item-text">آپلود</span></button></li>
@@ -206,8 +206,60 @@
         </ul>
     </nav>
 
-    {# ─── Main workspace ─── #}
+    {# ─── Main workspace: priority queue → filing → secondary ─── #}
     <div class="mk-hub-main ws-home-workspace" data-tour="workspace-panels">
+        <aside class="ws-home-queue ws-home-queue--priority" aria-label="صف کار امروز">
+            <section class="ws-home-queue-card mk-hub-card ws-home-queue-card--split">
+                <div class="ws-home-split-col">
+                    <header class="ws-home-queue-head">
+                        <h3><i class="fas fa-list-check" aria-hidden="true"></i> پیگیری امروز</h3>
+                        <a href="{% url 'workspace:crm_today' %}" class="ws-home-queue-link">صف کار</a>
+                    </header>
+                    <ul class="mk-hub-feed">
+                        {% for c in due_contacts %}
+                        <li class="mk-hub-feed-item">
+                            <a href="{% url 'workspace:crm_detail' c.id %}" class="mk-hub-feed-main">
+                                <span class="mk-hub-avatar" data-hue="{{ forloop.counter0 }}">{{ c.name|slice:":1" }}</span>
+                                <span class="mk-hub-feed-text">
+                                    <strong>{{ c.name }}</strong>
+                                    <em>{{ c.phone|default:"—" }}</em>
+                                </span>
+                            </a>
+                            <span class="crm-status-badge" data-status="{{ c.status }}">{{ c.status }}</span>
+                        </li>
+                        {% empty %}
+                        <li class="mk-hub-feed-empty mk-hub-feed-empty--compact">
+                            <p><i class="fas fa-check-circle" aria-hidden="true"></i> پیگیری امروز نیست</p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="ws-home-split-col">
+                    <header class="ws-home-queue-head">
+                        <h3><i class="fas fa-bell" aria-hidden="true"></i> یادآورها</h3>
+                        <a href="{% url 'workspace:crm_reminders' %}" class="ws-home-queue-link">همه</a>
+                    </header>
+                    <ul class="mk-hub-feed">
+                        {% for r in upcoming_reminders %}
+                        <li class="mk-hub-feed-item">
+                            <div class="mk-hub-feed-main">
+                                <span class="mk-hub-time">{{ r.due_at|ws_time }}</span>
+                                <span class="mk-hub-feed-text">
+                                    <strong>{{ r.title }}</strong>
+                                    {% if r.customer %}<em>{{ r.customer.name }}</em>{% endif %}
+                                </span>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="mk-hub-feed-empty mk-hub-feed-empty--compact">
+                            <p><i class="fas fa-bell-slash" aria-hidden="true"></i> یادآوری فعال نیست</p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+        </aside>
+
         <div class="mk-hub-primary">
             <section class="ws-glass-panel mk-panel mk-panel-flush mk-hub-filing{% if not has_bot_license %} ws-hub-locked{% endif %}">
                 {% if not has_bot_license %}<div class="ws-hub-locked-inner">{% endif %}
@@ -289,6 +341,9 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="ws-home-files-empty" id="homeFilesEmpty" hidden>
+                    <p>نتیجه‌ای برای جستجو پیدا نشد</p>
+                </div>
                 {% else %}
                 <div class="ws-empty mk-table-empty">
                     <div class="ws-empty-icon">{% include 'includes/icon_slot.html' with decor='folder' size='lg' only %}</div>
@@ -311,57 +366,7 @@
             </section>
         </div>
 
-        <aside class="ws-home-queue">
-            <section class="ws-home-queue-card mk-hub-card ws-home-queue-card--split">
-                <div class="ws-home-split-col">
-                    <header class="ws-home-queue-head">
-                        <h3><i class="fas fa-list-check" aria-hidden="true"></i> پیگیری امروز</h3>
-                        <a href="{% url 'workspace:crm_today' %}" class="ws-home-queue-link">صف کار</a>
-                    </header>
-                    <ul class="mk-hub-feed">
-                        {% for c in due_contacts %}
-                        <li class="mk-hub-feed-item">
-                            <a href="{% url 'workspace:crm_detail' c.id %}" class="mk-hub-feed-main">
-                                <span class="mk-hub-avatar" data-hue="{{ forloop.counter0 }}">{{ c.name|slice:":1" }}</span>
-                                <span class="mk-hub-feed-text">
-                                    <strong>{{ c.name }}</strong>
-                                    <em>{{ c.phone|default:"—" }}</em>
-                                </span>
-                            </a>
-                            <span class="crm-status-badge" data-status="{{ c.status }}">{{ c.status }}</span>
-                        </li>
-                        {% empty %}
-                        <li class="mk-hub-feed-empty mk-hub-feed-empty--compact">
-                            <p><i class="fas fa-check-circle" aria-hidden="true"></i> پیگیری امروز نیست</p>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                <div class="ws-home-split-col">
-                    <header class="ws-home-queue-head">
-                        <h3><i class="fas fa-bell" aria-hidden="true"></i> یادآورها</h3>
-                        <a href="{% url 'workspace:crm_reminders' %}" class="ws-home-queue-link">همه</a>
-                    </header>
-                    <ul class="mk-hub-feed">
-                        {% for r in upcoming_reminders %}
-                        <li class="mk-hub-feed-item">
-                            <div class="mk-hub-feed-main">
-                                <span class="mk-hub-time">{{ r.due_at|ws_time }}</span>
-                                <span class="mk-hub-feed-text">
-                                    <strong>{{ r.title }}</strong>
-                                    {% if r.customer %}<em>{{ r.customer.name }}</em>{% endif %}
-                                </span>
-                            </div>
-                        </li>
-                        {% empty %}
-                        <li class="mk-hub-feed-empty mk-hub-feed-empty--compact">
-                            <p><i class="fas fa-bell-slash" aria-hidden="true"></i> یادآوری فعال نیست</p>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </section>
-
+        <aside class="ws-home-queue ws-home-queue--secondary" aria-label="خلاصه CRM">
             <section class="ws-home-queue-card mk-hub-card ws-home-queue-card--pipe">
                 <header class="ws-home-queue-head">
                     <h3><i class="fas fa-filter" aria-hidden="true"></i> قیف وضعیت</h3>
@@ -403,91 +408,103 @@
         </aside>
     </div>
 
-    {# ─── Analytics insights ─── #}
-    <div class="mk-hub-insights ws-home-insights" data-tour="insights">
-        <article class="mk-insight mk-insight--trend">
-            <header class="mk-insight-head">
-                <div class="mk-insight-title">
-                    <span class="mk-insight-icon mk-insight-icon--chart" aria-hidden="true"><i class="fas fa-chart-area"></i></span>
-                    <div>
-                        <h2 id="hubTrendTitle">روند ۷ روز</h2>
-                        <p>فعالیت مخاطب، ملک و معامله</p>
+    {# ─── Analytics insights (collapsed on mobile by default) ─── #}
+    <section class="mk-hub-insights ws-home-insights is-collapsed-mobile" data-tour="insights" id="wsHomeInsights">
+        <button type="button" class="ws-home-insights-toggle" id="wsHomeInsightsToggle" aria-expanded="false" aria-controls="wsHomeInsightsBody">
+            <span class="ws-home-insights-toggle-main">
+                <span class="ws-home-insights-toggle-icon" aria-hidden="true"><i class="fas fa-chart-area"></i></span>
+                <span class="ws-home-insights-toggle-text">
+                    <strong>آمار و نمودارها</strong>
+                    <em>روند فعالیت، قیف و کانال ارتباط</em>
+                </span>
+            </span>
+            <span class="ws-home-insights-toggle-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+        </button>
+        <div class="ws-home-insights-body" id="wsHomeInsightsBody">
+            <article class="mk-insight mk-insight--trend">
+                <header class="mk-insight-head">
+                    <div class="mk-insight-title">
+                        <span class="mk-insight-icon mk-insight-icon--chart" aria-hidden="true"><i class="fas fa-chart-area"></i></span>
+                        <div>
+                            <h2 id="hubTrendTitle">روند ۷ روز</h2>
+                            <p>فعالیت مخاطب، ملک و معامله</p>
+                        </div>
                     </div>
-                </div>
-                <div class="mk-insight-head-tools">
-                    <div class="mk-insight-range" role="group" aria-label="بازه زمانی نمودار">
-                        <button type="button" class="mk-insight-range-btn is-active" data-trend-range="7">۷ روز</button>
-                        <button type="button" class="mk-insight-range-btn" data-trend-range="30">۳۰ روز</button>
+                    <div class="mk-insight-head-tools">
+                        <div class="mk-insight-range" role="group" aria-label="بازه زمانی نمودار">
+                            <button type="button" class="mk-insight-range-btn is-active" data-trend-range="7">۷ روز</button>
+                            <button type="button" class="mk-insight-range-btn" data-trend-range="30">۳۰ روز</button>
+                        </div>
+                        <div class="mk-insight-legend" id="hubTrendLegend" aria-hidden="true"></div>
                     </div>
-                    <div class="mk-insight-legend" id="hubTrendLegend" aria-hidden="true"></div>
+                </header>
+                <div class="mk-insight-chart-wrap">
+                    <canvas id="chart-activity" height="220"></canvas>
                 </div>
-            </header>
-            <div class="mk-insight-chart-wrap">
-                <canvas id="chart-activity" height="220"></canvas>
-            </div>
-        </article>
+            </article>
 
-        <article class="mk-insight mk-insight--donut">
-            <header class="mk-insight-head">
-                <div class="mk-insight-title">
-                    <span class="mk-insight-icon mk-insight-icon--pie" aria-hidden="true"><i class="fas fa-chart-pie"></i></span>
-                    <div>
-                        <h2>وضعیت مخاطبین</h2>
-                        <p>توزیع در قیف فروش</p>
+            <article class="mk-insight mk-insight--donut">
+                <header class="mk-insight-head">
+                    <div class="mk-insight-title">
+                        <span class="mk-insight-icon mk-insight-icon--pie" aria-hidden="true"><i class="fas fa-chart-pie"></i></span>
+                        <div>
+                            <h2>وضعیت مخاطبین</h2>
+                            <p>توزیع در قیف فروش</p>
+                        </div>
                     </div>
-                </div>
-            </header>
-            <div class="mk-insight-donut-layout">
-                <div class="mk-insight-donut-chart">
-                    <canvas id="chart-status" height="160"></canvas>
-                    <div class="mk-insight-donut-center">
-                        <strong>{{ crm_stats.total_contacts }}</strong>
-                        <span>مخاطب</span>
+                </header>
+                <div class="mk-insight-donut-layout">
+                    <div class="mk-insight-donut-chart">
+                        <canvas id="chart-status" height="160"></canvas>
+                        <div class="mk-insight-donut-center">
+                            <strong>{{ crm_stats.total_contacts }}</strong>
+                            <span>مخاطب</span>
+                        </div>
                     </div>
+                    <ul class="mk-insight-status-list">
+                        {% for status in crm_statuses %}
+                        {% with count=crm_stats.by_status|dict_get:status|default:0 %}
+                        <li>
+                            <span class="mk-insight-status-dot" style="background:{{ status|crm_status_dot }}"></span>
+                            <span class="mk-insight-status-name">{{ status }}</span>
+                            <span class="mk-insight-status-count">{{ count }}</span>
+                        </li>
+                        {% endwith %}
+                        {% endfor %}
+                    </ul>
                 </div>
-                <ul class="mk-insight-status-list">
-                    {% for status in crm_statuses %}
-                    {% with count=crm_stats.by_status|dict_get:status|default:0 %}
-                    <li>
-                        <span class="mk-insight-status-dot" style="background:{{ status|crm_status_dot }}"></span>
-                        <span class="mk-insight-status-name">{{ status }}</span>
-                        <span class="mk-insight-status-count">{{ count }}</span>
+            </article>
+
+            <article class="mk-insight mk-insight--channels">
+                <header class="mk-insight-head">
+                    <div class="mk-insight-title">
+                        <span class="mk-insight-icon mk-insight-icon--comm" aria-hidden="true"><i class="fas fa-comments"></i></span>
+                        <div>
+                            <h2>کانال ارتباط</h2>
+                            <p>ترجیح تماس مشتریان</p>
+                        </div>
+                    </div>
+                </header>
+                <ul class="mk-insight-channels">
+                    {% for ch in communication_stats %}
+                    <li class="mk-insight-channel" data-channel="{{ ch.key }}">
+                        <span class="mk-insight-channel-icon" aria-hidden="true"><i class="fas {{ ch.icon }}"></i></span>
+                        <div class="mk-insight-channel-body">
+                            <div class="mk-insight-channel-top">
+                                <span class="mk-insight-channel-name">{{ ch.label }}</span>
+                                <span class="mk-insight-channel-pct">{{ ch.pct }}٪</span>
+                            </div>
+                            <span class="mk-insight-channel-track"><i style="width:{{ ch.pct }}%"></i></span>
+                        </div>
+                        <span class="mk-insight-channel-val">{{ ch.count }}</span>
                     </li>
-                    {% endwith %}
+                    {% empty %}
+                    <li class="mk-hub-feed-empty"><p>داده‌ای ثبت نشده</p></li>
                     {% endfor %}
                 </ul>
-            </div>
-        </article>
-
-        <article class="mk-insight mk-insight--channels">
-            <header class="mk-insight-head">
-                <div class="mk-insight-title">
-                    <span class="mk-insight-icon mk-insight-icon--comm" aria-hidden="true"><i class="fas fa-comments"></i></span>
-                    <div>
-                        <h2>کانال ارتباط</h2>
-                        <p>ترجیح تماس مشتریان</p>
-                    </div>
-                </div>
-            </header>
-            <ul class="mk-insight-channels">
-                {% for ch in communication_stats %}
-                <li class="mk-insight-channel" data-channel="{{ ch.key }}">
-                    <span class="mk-insight-channel-icon" aria-hidden="true"><i class="fas {{ ch.icon }}"></i></span>
-                    <div class="mk-insight-channel-body">
-                        <div class="mk-insight-channel-top">
-                            <span class="mk-insight-channel-name">{{ ch.label }}</span>
-                            <span class="mk-insight-channel-pct">{{ ch.pct }}٪</span>
-                        </div>
-                        <span class="mk-insight-channel-track"><i style="width:{{ ch.pct }}%"></i></span>
-                    </div>
-                    <span class="mk-insight-channel-val">{{ ch.count }}</span>
-                </li>
-                {% empty %}
-                <li class="mk-hub-feed-empty"><p>داده‌ای ثبت نشده</p></li>
-                {% endfor %}
-            </ul>
-        </article>
-    </div>
+            </article>
+        </div>
+    </section>
 
 </div>
 {% endblock %}
@@ -495,5 +512,5 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>window.wsCharts = {{ charts_json|safe }}; window.wsChartsHub = true;</script>
-<script src="{% static 'workspace/js/home.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/home.js' %}?v=2"></script>
 {% endblock %}

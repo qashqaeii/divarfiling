@@ -35,9 +35,11 @@
                 </nav>
             </div>
             <div class="crm-deal-dossier-actions crm-deal-hero__actions" role="toolbar" aria-label="عملیات معامله">
+                {% if deal.customer_id %}
                 <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="crm-deal-hero__icon-btn" title="مخاطب" aria-label="مخاطب">
                     <i class="fas fa-user" aria-hidden="true"></i>
                 </a>
+                {% endif %}
                 <button type="button" class="crm-deal-hero__icon-btn crm-deal-hero__icon-btn--primary" data-drawer-open="drawer-edit" title="ویرایش" aria-label="ویرایش">
                     <i class="fas fa-pen" aria-hidden="true"></i>
                 </button>
@@ -64,6 +66,7 @@
                 </div>
                 <h1 class="crm-deal-title">{{ deal.title }}</h1>
                 <div class="crm-deal-hero__parties">
+                    {% if deal.customer_id %}
                     <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="crm-deal-hero__party crm-deal-hero__party--contact">
                         <span class="crm-deal-hero__party-avatar crm-deals-avatar crm-deals-avatar--hue-{{ deal.customer.name|crm_avatar_hue }}">{{ deal.customer.name|crm_initials }}</span>
                         <span class="crm-deal-hero__party-txt">
@@ -72,7 +75,8 @@
                         </span>
                         <i class="fas fa-chevron-left" aria-hidden="true"></i>
                     </a>
-                    {% if deal.property %}
+                    {% endif %}
+                    {% if deal.property_id %}
                     <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="crm-deal-hero__party crm-deal-hero__party--prop">
                         <span class="crm-deal-hero__party-ico" aria-hidden="true"><i class="fas fa-building"></i></span>
                         <span class="crm-deal-hero__party-txt">
@@ -121,10 +125,12 @@
                     </div>
                     <h1 class="crm-deal-title">{{ deal.title }}</h1>
                     <p class="crm-deal-links">
+                        {% if deal.customer_id %}
                         <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="crm-deal-link-chip">
                             <i class="fas fa-user" aria-hidden="true"></i>{{ deal.customer.name }}
                         </a>
-                        {% if deal.property %}
+                        {% endif %}
+                        {% if deal.property_id %}
                         <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="crm-deal-link-chip">
                             <i class="fas fa-building" aria-hidden="true"></i>{{ deal.property.title|truncatechars:28 }}
                         </a>
@@ -133,9 +139,11 @@
                 </div>
             </div>
             <div class="crm-deal-dossier-actions" role="toolbar" aria-label="عملیات معامله">
+                {% if deal.customer_id %}
                 <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="crm-dash-act" title="مخاطب">
                     <i class="fas fa-user" aria-hidden="true"></i><span>مخاطب</span>
                 </a>
+                {% endif %}
                 <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-edit">
                     <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
                 </button>
@@ -319,6 +327,7 @@
                     <span class="crm-deal-side-icon crm-deal-side-icon--contact" aria-hidden="true"><i class="fas fa-user"></i></span>
                     <h3>مخاطب</h3>
                 </header>
+                {% if deal.customer_id %}
                 <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="crm-deal-side-link">
                     <span class="crm-deal-side-avatar">{{ deal.customer.name|crm_initials }}</span>
                     <span class="crm-deal-side-link-text">
@@ -327,9 +336,12 @@
                     </span>
                     <i class="fas fa-chevron-left" aria-hidden="true"></i>
                 </a>
+                {% else %}
+                <p class="crm-deal-side-empty">مخاطب ثبت نشده</p>
+                {% endif %}
             </article>
 
-            {% if deal.property %}
+            {% if deal.property_id %}
             <article class="crm-deal-side-card">
                 <header class="crm-deal-side-head">
                     <span class="crm-deal-side-icon crm-deal-side-icon--property" aria-hidden="true"><i class="fas fa-building"></i></span>
@@ -420,16 +432,18 @@
 
     <nav class="crm-deal-mobile-dock" aria-label="عملیات سریع موبایل">
         <div class="crm-deal-mobile-dock__inner">
-            {% if deal.customer.phone %}
+            {% if deal.customer_id and deal.customer.phone %}
             <a href="{{ deal.customer.phone|phone_tel_href }}" class="crm-deal-dock-btn crm-deal-dock-btn--call" title="تماس">
                 <i class="fas fa-phone" aria-hidden="true"></i>
                 <span>تماس</span>
             </a>
             {% endif %}
+            {% if deal.customer_id %}
             <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="crm-deal-dock-btn crm-deal-dock-btn--contact" title="مخاطب">
                 <i class="fas fa-user" aria-hidden="true"></i>
                 <span>مخاطب</span>
             </a>
+            {% endif %}
             {% if deal.stage != 'بسته‌شده' and deal.stage != 'از دست رفته' %}
             <form method="post" class="crm-deal-dock-form">
                 {% csrf_token %}

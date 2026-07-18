@@ -1806,24 +1806,45 @@ class CRMDealUpdateView(LoginRequiredMixin, UpdateView):
     form_class = CRMDealForm
     template_name = 'workspace/crm/deals/detail.html'
     pk_url_kwarg = 'deal_id'
+    context_object_name = 'deal'
 
     def get_queryset(self):
-        return deals_qs(self.request.user)
+        return deals_qs(self.request.user).select_related('customer', 'property')
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
+    def _edit_redirect(self, deal_id):
+        return redirect(
+            f"{reverse('workspace:crm_deal_detail', kwargs={'deal_id': deal_id})}?drawer=edit"
+        )
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return redirect(f"{reverse('workspace:crm_deal_detail', kwargs={'deal_id': self.object.pk})}?drawer=edit")
+        return self._edit_redirect(self.object.pk)
 
     def form_valid(self, form):
         self.object = form.save()
         apply_deal_commission(self.object)
         messages.success(self.request, 'معامله به‌روز شد.')
         return redirect('workspace:crm_deal_detail', deal_id=self.object.pk)
+
+    def form_invalid(self, form):
+        # Never re-render detail.html here — UpdateView lacks DetailView context
+        # (deal_stages, deal_form, …) and used to 500 on {% url 'crm_detail' '' %}.
+        messages.error(self.request, 'ذخیره انجام نشد. لطفاً فیلدها را بررسی کنید.')
+        for field, errors in form.errors.items():
+            if field == '__all__':
+                for error in errors:
+                    messages.error(self.request, error)
+                continue
+            label = form.fields[field].label if field in form.fields else field
+            for error in errors:
+                messages.error(self.request, f'{label}: {error}')
+        deal_id = self.kwargs.get(self.pk_url_kwarg) or getattr(self.object, 'pk', None)
+        return self._edit_redirect(deal_id)
 
 
 class CRMDealStageUpdateView(LoginRequiredMixin, View):

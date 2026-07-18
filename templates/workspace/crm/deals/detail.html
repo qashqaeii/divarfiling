@@ -1,16 +1,24 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load workspace_tags crm_tags %}
+{% load static workspace_tags crm_tags %}
 
 {% block page_title %}{{ deal.title }}{% endblock %}
+{% block mobile_bar_title %}{{ deal.title|truncatechars:22 }}{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_search %}{% endblock %}
 {% block crm_actions %}{% endblock %}
 
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-detail-mobile.css' %}?v=1">
+{% endblock %}
+
 {% block crm_content %}
-<div class="crm-deal-detail-pro crm-page-chrome">
+<div class="crm-deal-detail-pro crm-deal-detail-mobile crm-page-chrome{% if deal.stage == 'بسته‌شده' %} is-won{% elif deal.stage == 'از دست رفته' %} is-lost{% endif %}"
+     style="--deal-accent: {{ deal.stage|crm_deal_stage_dot }}; --deal-prob: {{ deal.probability }};">
 
     <section class="crm-deal-dossier" aria-label="پرونده معامله">
+        <div class="crm-deal-dossier-mesh" aria-hidden="true"></div>
+        <div class="crm-deal-dossier-accent" aria-hidden="true"></div>
         <header class="crm-deal-dossier-top">
             <div class="crm-deal-dossier-identity">
                 <a href="{% url 'workspace:crm_deals' %}" class="crm-deal-back" title="بازگشت به معاملات">
@@ -23,7 +31,7 @@
                     <nav class="crm-deal-crumb" aria-label="مسیر">
                         <a href="{% url 'workspace:crm_deals' %}">معاملات</a>
                         <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                        <span>{{ deal.title }}</span>
+                        <span>{{ deal.title|truncatechars:28 }}</span>
                     </nav>
                     <div class="crm-deal-badges">
                         <span class="crm-deal-stage-badge" style="{% crm_deal_stage_style deal.stage %}">{{ deal.stage }}</span>
@@ -36,7 +44,7 @@
                         </a>
                         {% if deal.property %}
                         <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="crm-deal-link-chip">
-                            <i class="fas fa-building" aria-hidden="true"></i>{{ deal.property.title }}
+                            <i class="fas fa-building" aria-hidden="true"></i>{{ deal.property.title|truncatechars:28 }}
                         </a>
                         {% endif %}
                     </p>
@@ -327,6 +335,36 @@
             </article>
         </aside>
     </div>
+
+    <nav class="crm-deal-mobile-dock" aria-label="عملیات سریع موبایل">
+        <div class="crm-deal-mobile-dock__inner">
+            {% if deal.customer.phone %}
+            <a href="{{ deal.customer.phone|phone_tel_href }}" class="crm-deal-dock-btn crm-deal-dock-btn--call" title="تماس">
+                <i class="fas fa-phone" aria-hidden="true"></i>
+                <span>تماس</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="crm-deal-dock-btn crm-deal-dock-btn--contact" title="مخاطب">
+                <i class="fas fa-user" aria-hidden="true"></i>
+                <span>مخاطب</span>
+            </a>
+            {% if deal.stage != 'بسته‌شده' and deal.stage != 'از دست رفته' %}
+            <form method="post" class="crm-deal-dock-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_stage">
+                <input type="hidden" name="stage" value="بسته‌شده">
+                <button type="submit" class="crm-deal-dock-btn crm-deal-dock-btn--win" title="بستن معامله">
+                    <i class="fas fa-trophy" aria-hidden="true"></i>
+                    <span>بستن</span>
+                </button>
+            </form>
+            {% endif %}
+            <button type="button" class="crm-deal-dock-btn crm-deal-dock-btn--primary" data-drawer-open="drawer-edit" title="ویرایش">
+                <i class="fas fa-pen" aria-hidden="true"></i>
+                <span>ویرایش</span>
+            </button>
+        </div>
+    </nav>
 </div>
 {% endblock %}
 

@@ -3153,22 +3153,16 @@ function initCRMDealsPage() {
     const sheet = document.getElementById('crmDealsFilterSheet');
     if (sheetToggle && sheet && sheetToggle.dataset.bound !== '1') {
         sheetToggle.dataset.bound = '1';
-        const mq = window.matchMedia('(max-width: 768px)');
         const setSheet = (open) => {
-            if (!mq.matches) {
-                sheet.classList.remove('is-open');
-                sheetToggle.setAttribute('aria-expanded', 'false');
-                sheetToggle.classList.remove('is-open');
-                return;
-            }
             sheet.classList.toggle('is-open', open);
             sheetToggle.classList.toggle('is-open', open);
             sheetToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         };
-        sheetToggle.addEventListener('click', () => {
+        sheetToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             setSheet(!sheet.classList.contains('is-open'));
         });
-        mq.addEventListener?.('change', () => setSheet(false));
     }
 }
 

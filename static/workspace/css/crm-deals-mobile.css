@@ -13,8 +13,8 @@
 }
 
 @media (min-width: 769px) {
-    .crm-deals-filters-sheet {
-        display: contents;
+    .crm-deals-mobile .crm-deals-filters-sheet {
+        display: contents !important;
     }
     .crm-deals-view-toggle--mob,
     .crm-deals-mob-filter-bar {
@@ -402,9 +402,9 @@
         color: var(--ws-primary);
     }
 
-    /* Sheet collapsed by default */
+    /* Sheet collapsed by default — JS toggles .is-open */
     .crm-deals-mobile .crm-deals-filters-sheet {
-        display: none;
+        display: none !important;
         grid-template-columns: 1fr 1fr;
         gap: 0.4rem;
         width: 100%;
@@ -413,7 +413,7 @@
         margin-top: 0.1rem;
     }
     .crm-deals-mobile .crm-deals-filters-sheet.is-open {
-        display: grid;
+        display: grid !important;
     }
     .crm-deals-mobile .crm-deals-filters-sheet > .crm-deals-select {
         width: 100%;

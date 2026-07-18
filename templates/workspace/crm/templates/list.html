@@ -1,17 +1,43 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load workspace_tags crm_tags %}
+{% load static workspace_tags crm_tags %}
 
 {% block page_title %}قالب‌های پیام{% endblock %}
+{% block mobile_bar_title %}قالب پیام{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_actions %}{% endblock %}
 {% block crm_search %}{% endblock %}
 
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-templates-mobile.css' %}?v=1">
+{% endblock %}
+
 {% block crm_content %}
 {% crm_placeholder_meta as ph_meta %}
-<div class="crm-shell-page crm-tpl-pro crm-tpl-pro-v2 crm-page-chrome">
+<div class="crm-shell-page crm-tpl-pro crm-tpl-pro-v2 crm-tpl-mobile crm-page-chrome">
 
-    <header class="crm-dash-bar">
+    <header class="crm-tpl-mob-header">
+        <div class="crm-tpl-mob-header-mesh" aria-hidden="true"></div>
+        <div class="crm-tpl-mob-header-accent" aria-hidden="true"></div>
+        <div class="crm-tpl-mob-header-inner">
+            <div class="crm-tpl-mob-header-main">
+                <span class="crm-tpl-mob-kicker"><i class="fas fa-message" aria-hidden="true"></i> کتابخانه پیام</span>
+                <h1 class="crm-tpl-mob-title">قالب پیام</h1>
+                <p class="crm-tpl-mob-sub">
+                    <span>{{ stats.total }} قالب</span>
+                    {% if stats.whatsapp %}<span class="crm-tpl-mob-sub-chip is-wa">{{ stats.whatsapp }} واتساپ</span>{% endif %}
+                    {% if stats.sms %}<span class="crm-tpl-mob-sub-chip is-sms">{{ stats.sms }} پیامک</span>{% endif %}
+                </p>
+            </div>
+            <div class="crm-tpl-mob-header-actions" role="toolbar" aria-label="عملیات قالب‌ها">
+                <button type="button" class="crm-tpl-mob-icon-btn crm-tpl-mob-icon-btn--primary" data-drawer-open="drawer-template" title="قالب جدید" aria-label="قالب جدید">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <header class="crm-dash-bar crm-tpl-desk-header">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">قالب پیام</h1>
         </div>
@@ -63,15 +89,24 @@
                 <h2>متغیرهای هوشمند</h2>
                 <p>کلیک کنید تا کپی شود — هنگام ارسال با اطلاعات مخاطب جایگزین می‌شوند</p>
             </div>
-            <div class="crm-tpl-vars-pro-row">
-                {% for key, label, icon in ph_meta %}
-                <button type="button" class="crm-tpl-var-pro" data-copy="{{ key }}" title="کپی {{ key }}">
-                    <i class="fas {{ icon }}" aria-hidden="true"></i>
-                    <span class="crm-tpl-var-pro-key">{{ key }}</span>
-                    <span class="crm-tpl-var-pro-lbl">{{ label }}</span>
-                </button>
-                {% endfor %}
-            </div>
+            <details class="crm-tpl-vars-details">
+                <summary class="crm-tpl-vars-trigger">
+                    <i class="fas fa-code" aria-hidden="true"></i>
+                    <span>متغیرهای هوشمند</span>
+                    <i class="fas fa-chevron-down crm-tpl-vars-chevron" aria-hidden="true"></i>
+                </summary>
+                <div class="crm-tpl-vars-sheet">
+                    <div class="crm-tpl-vars-pro-row">
+                        {% for key, label, icon in ph_meta %}
+                        <button type="button" class="crm-tpl-var-pro" data-copy="{{ key }}" title="کپی {{ key }}">
+                            <i class="fas {{ icon }}" aria-hidden="true"></i>
+                            <span class="crm-tpl-var-pro-key">{{ key }}</span>
+                            <span class="crm-tpl-var-pro-lbl">{{ label }}</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </details>
         </section>
 
         <div class="crm-tpl-toolbar">
@@ -189,6 +224,11 @@
         </div>
         {% endif %}
     </div>
+
+    <button type="button" class="crm-tpl-fab" data-drawer-open="drawer-template" aria-label="قالب جدید">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+        <span>قالب</span>
+    </button>
 </div>
 {% endblock %}
 

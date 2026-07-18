@@ -1,16 +1,52 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load workspace_tags crm_tags %}
+{% load static workspace_tags crm_tags %}
 
 {% block page_title %}اتوماسیون CRM{% endblock %}
+{% block mobile_bar_title %}اتوماسیون{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_actions %}{% endblock %}
 {% block crm_search %}{% endblock %}
 
-{% block crm_content %}
-<div class="crm-shell-page crm-automation-pro crm-automation-pro-v2 crm-page-chrome">
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-automation-mobile.css' %}?v=1">
+{% endblock %}
 
-    <header class="crm-dash-bar">
+{% block crm_content %}
+<div class="crm-shell-page crm-automation-pro crm-automation-pro-v2 crm-auto-mobile crm-page-chrome">
+
+    <header class="crm-auto-mob-header">
+        <div class="crm-auto-mob-header-mesh" aria-hidden="true"></div>
+        <div class="crm-auto-mob-header-accent" aria-hidden="true"></div>
+        <div class="crm-auto-mob-header-inner">
+            <div class="crm-auto-mob-header-main">
+                <span class="crm-auto-mob-kicker">
+                    <i class="fas fa-robot" aria-hidden="true"></i> پیگیری خودکار
+                    <em class="crm-auto-mob-beta">BETA</em>
+                </span>
+                <h1 class="crm-auto-mob-title">اتوماسیون</h1>
+                <p class="crm-auto-mob-sub">
+                    <span>{{ stats.total }} قانون</span>
+                    {% if stats.active %}<span class="crm-auto-mob-sub-chip is-active">{{ stats.active }} فعال</span>{% endif %}
+                    {% if stats.queue %}<span class="crm-auto-mob-sub-chip is-queue">{{ stats.queue }} در صف</span>{% endif %}
+                </p>
+            </div>
+            <div class="crm-auto-mob-header-actions" role="toolbar" aria-label="عملیات اتوماسیون">
+                <form method="post" class="crm-auto-mob-run-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="run">
+                    <button type="submit" class="crm-auto-mob-icon-btn" title="اجرای الان" aria-label="اجرای الان همه قوانین">
+                        <i class="fas fa-play" aria-hidden="true"></i>
+                    </button>
+                </form>
+                <button type="button" class="crm-auto-mob-icon-btn crm-auto-mob-icon-btn--primary" data-drawer-open="drawer-rule" title="قانون جدید" aria-label="قانون جدید">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <header class="crm-dash-bar crm-auto-desk-header">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">اتوماسیون</h1>
         </div>
@@ -74,23 +110,32 @@
                 <h2>شروع سریع</h2>
                 <span>یک قالب آماده انتخاب کنید و در چند ثانیه فعال کنید</span>
             </div>
-            <div class="crm-auto-preset-grid">
-                {% for p in automation_presets %}
-                <button type="button" class="crm-auto-preset crm-auto-preset--{{ p.tone }}"
-                    data-drawer-open="drawer-rule"
-                    data-preset-name="{{ p.name }}"
-                    data-preset-days="{{ p.trigger_days }}"
-                    data-preset-statuses="{{ p.trigger_statuses }}"
-                    data-preset-action="{{ p.action }}"
-                    data-preset-action-status="{{ p.action_status|default:'' }}"
-                    data-preset-reminder-title="{{ p.action_reminder_title|default:'' }}"
-                    data-preset-reminder-days="{{ p.action_reminder_days|default:0 }}">
-                    <span class="crm-auto-preset-icon"><i class="fas {{ p.icon }}" aria-hidden="true"></i></span>
-                    <span class="crm-auto-preset-main">{{ p.name }}</span>
-                    <span class="crm-auto-preset-sub">{{ p.desc }}</span>
-                </button>
-                {% endfor %}
-            </div>
+            <details class="crm-auto-presets-details">
+                <summary class="crm-auto-presets-trigger">
+                    <i class="fas fa-bolt" aria-hidden="true"></i>
+                    <span>شروع سریع</span>
+                    <i class="fas fa-chevron-down crm-auto-presets-chevron" aria-hidden="true"></i>
+                </summary>
+                <div class="crm-auto-presets-sheet">
+                    <div class="crm-auto-preset-grid">
+                        {% for p in automation_presets %}
+                        <button type="button" class="crm-auto-preset crm-auto-preset--{{ p.tone }}"
+                            data-drawer-open="drawer-rule"
+                            data-preset-name="{{ p.name }}"
+                            data-preset-days="{{ p.trigger_days }}"
+                            data-preset-statuses="{{ p.trigger_statuses }}"
+                            data-preset-action="{{ p.action }}"
+                            data-preset-action-status="{{ p.action_status|default:'' }}"
+                            data-preset-reminder-title="{{ p.action_reminder_title|default:'' }}"
+                            data-preset-reminder-days="{{ p.action_reminder_days|default:0 }}">
+                            <span class="crm-auto-preset-icon"><i class="fas {{ p.icon }}" aria-hidden="true"></i></span>
+                            <span class="crm-auto-preset-main">{{ p.name }}</span>
+                            <span class="crm-auto-preset-sub">{{ p.desc }}</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </details>
         </section>
 
         <div class="crm-auto-result-bar">
@@ -224,6 +269,11 @@
             {% endfor %}
         </div>
     </div>
+
+    <button type="button" class="crm-auto-fab" data-drawer-open="drawer-rule" aria-label="قانون جدید">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+        <span>قانون</span>
+    </button>
 </div>
 {% endblock %}
 

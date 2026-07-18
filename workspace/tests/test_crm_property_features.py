@@ -132,6 +132,65 @@ class CRMPropertyFeatureDataTests(TestCase):
         self.assertEqual(sync_total_floors_from_feature_data({'تعداد کل طبقات ساختمان': '8'}), 8)
         self.assertIsNone(sync_total_floors_from_feature_data({}))
 
+    def test_amenity_groups_hide_feature_managed_duplicates(self):
+        from workspace.services.property_features import FEATURE_MANAGED_AMENITY_LABELS
+
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='بدون تکرار',
+            deal_mode='فروش',
+            property_type='آپارتمان',
+            amenities='استخر، پارکینگ، بالکن',
+            has_parking=True,
+        )
+        form = CRMPropertyForm(instance=prop)
+        labels = {
+            item['label']
+            for group in form.amenity_checkbox_groups()
+            for item in group['items']
+        }
+        self.assertIn('پارکینگ', labels)
+        self.assertIn('روف گاردن', labels)
+        for managed in FEATURE_MANAGED_AMENITY_LABELS:
+            self.assertNotIn(managed, labels)
+        # سوییچ ویژگی از امکانات قدیمی seed شده
+        ctx = form.feature_form_context()
+        rent_or_sale_items = {
+            item['key']: item
+            for group in ctx['groups']
+            for item in group['items']
+        }
+        self.assertTrue(rent_or_sale_items.get('استخر', {}).get('checked'))
+        self.assertTrue(rent_or_sale_items.get('بالکن', {}).get('checked'))
+
+    def test_vacancy_date_jalali_normalized(self):
+        from workspace.services.jalali_input import to_persian_digits
+        from workspace.services.property_features import normalize_feature_date_value
+
+        # ISO (legacy html date) → شمسی
+        self.assertEqual(
+            normalize_feature_date_value('2026-07-18'),
+            to_persian_digits('1405/04/27'),
+        )
+        form = CRMPropertyForm(data={
+            'title': 'اجاره تاریخ',
+            'property_type': 'آپارتمان',
+            'deal_mode': 'رهن و اجاره',
+            'transaction_status': 'فعال',
+            'publish_status': 'پیش‌نویس',
+            'feat_profile': 'rent',
+            'feat__تاریخ تخلیه': '1405/04/27',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        prop = form.save(commit=False)
+        prop.user = self.user
+        prop.save()
+        prop.refresh_from_db()
+        self.assertEqual(
+            prop.feature_data.get('تاریخ تخلیه'),
+            to_persian_digits('1405/04/27'),
+        )
+
     def test_create_view_with_feature_and_image_url(self):
         url = reverse('workspace:crm_property_create')
         resp = self.client.post(url, {

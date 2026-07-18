@@ -6648,6 +6648,48 @@ body.crm-side-open { overflow: hidden; }
     max-width: 100%;
     min-height: 42px;
 }
+.crm-feat-date-wrap {
+    position: relative;
+    display: block;
+    width: 100%;
+    max-width: 280px;
+}
+.crm-feat-date-ico {
+    position: absolute;
+    inset-inline-start: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--crm-feat-accent);
+    font-size: 0.85rem;
+    pointer-events: none;
+    z-index: 1;
+}
+.crm-feat-date-wrap .crm-feat-date {
+    padding-inline-start: 2.35rem;
+    padding-inline-end: 0.85rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    background:
+        linear-gradient(165deg, color-mix(in srgb, var(--crm-feat-accent) 6%, #fff) 0%, #fff 55%);
+    border-radius: 12px;
+}
+.crm-feat-date-wrap .crm-feat-date:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--crm-feat-accent) 45%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-feat-accent) 16%, transparent);
+}
+.crm-feat-date-hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.68rem;
+    color: var(--crm-muted, #8b8798);
+    line-height: 1.4;
+}
+@media (max-width: 640px) {
+    .crm-feat-date-wrap { max-width: none; }
+    .crm-feat-date-wrap .crm-feat-date { min-height: 46px; font-size: 0.95rem; }
+}
 .crm-feat-toggle {
     display: inline-flex;
     align-items: center;

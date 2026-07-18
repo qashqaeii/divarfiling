@@ -101,8 +101,8 @@
             <div class="crm-field"><label class="crm-label">تعداد طبقات</label>{{ form.total_floors }}</div>
             <div class="crm-field"><label class="crm-label">سال ساخت</label>{{ form.build_year }}</div>
             <div class="crm-field crm-field-full crm-prop-amenities-field">
-                <span class="crm-label">امکانات</span>
-                <p class="crm-form-hint crm-form-hint--tight">مواردی که ملک دارد را تیک بزنید</p>
+                <span class="crm-label">امکانات سریع</span>
+                <p class="crm-form-hint crm-form-hint--tight">پارکینگ، انباری، آسانسور و موارد ساختمانی — استخر، سونا، بالکن و … را در بخش ویژگی‌ها پایین‌تر تنظیم کنید</p>
                 <div class="crm-prop-amenity-groups" role="group" aria-label="امکانات ملک">
                     {% for group in form.amenity_checkbox_groups %}
                     <div class="crm-prop-amenity-group" data-amenity-group="{{ group.id }}">
@@ -233,14 +233,24 @@
                             </select>
 
                             {% elif item.widget == 'date' %}
-                            <input
-                                type="date"
-                                class="crm-input crm-feat-date"
-                                name="{{ item.input_name }}"
-                                value="{{ item.value }}"
-                                {% if profile.id != fctx.profile_id %}disabled{% endif %}
-                                data-feat-input
-                            >
+                            <div class="crm-feat-date-wrap">
+                                <span class="crm-feat-date-ico" aria-hidden="true"><i class="fas fa-calendar-alt"></i></span>
+                                <input
+                                    type="text"
+                                    class="crm-input crm-feat-date crm-jalali-date"
+                                    name="{{ item.input_name }}"
+                                    value="{{ item.value }}"
+                                    placeholder="۱۴۰۵/۰۴/۲۷"
+                                    autocomplete="off"
+                                    inputmode="numeric"
+                                    dir="ltr"
+                                    data-jdp
+                                    data-jdp-only-date
+                                    {% if profile.id != fctx.profile_id %}disabled{% endif %}
+                                    data-feat-input
+                                >
+                            </div>
+                            <p class="crm-feat-date-hint">تقویم شمسی — روی فیلد بزنید و تاریخ را انتخاب کنید</p>
 
                             {% else %}
                             <input

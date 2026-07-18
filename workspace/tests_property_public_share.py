@@ -274,10 +274,17 @@ class PropertyAmenityCheckboxFormTests(TestCase):
         groups = form.amenity_checkbox_groups()
         flat = {item['label']: item['checked'] for g in groups for item in g['items']}
         self.assertTrue(flat['پارکینگ'])
-        self.assertTrue(flat['بالکن'])
+        self.assertNotIn('بالکن', flat)  # در بخش ویژگی‌ها
+        self.assertNotIn('استخر', flat)
         self.assertFalse(flat['آسانسور'])
-        self.assertFalse(flat['استخر'])
         self.assertEqual(form.fields['amenities_extra'].initial, 'جنس کف: سرامیک')
+        # seed از امکانات قدیمی
+        feat_items = {
+            item['key']: item
+            for group in form.feature_form_context()['groups']
+            for item in group['items']
+        }
+        self.assertTrue(feat_items['بالکن']['checked'])
 
         data = {
             'title': self.prop.title,
@@ -285,8 +292,11 @@ class PropertyAmenityCheckboxFormTests(TestCase):
             'deal_mode': self.prop.deal_mode,
             'transaction_status': self.prop.transaction_status or 'فعال',
             'publish_status': self.prop.publish_status or 'خصوصی',
-            'amenity_flags': ['پارکینگ', 'آسانسور', 'استخر', 'روف گاردن'],
+            'amenity_flags': ['پارکینگ', 'آسانسور', 'روف گاردن'],
             'amenities_extra': 'جنس کف: پارکت',
+            'feat_profile': 'sale',
+            'feat__استخر': 'دارد',
+            'feat__بالکن': 'دارد',
         }
         form = CRMPropertyForm(data, instance=self.prop)
         self.assertTrue(form.is_valid(), form.errors)
@@ -295,9 +305,11 @@ class PropertyAmenityCheckboxFormTests(TestCase):
         self.assertTrue(saved.has_elevator)
         self.assertFalse(saved.has_storage)
         self.assertIn('استخر', saved.amenities)
+        self.assertIn('بالکن', saved.amenities)
         self.assertIn('روف گاردن', saved.amenities)
         self.assertIn('جنس کف: پارکت', saved.amenities)
         self.assertNotIn('پارکینگ', saved.amenities)
+        self.assertEqual(saved.feature_data.get('استخر'), 'دارد')
 
 
 class PropertyDistrictAndPriceFormTests(TestCase):

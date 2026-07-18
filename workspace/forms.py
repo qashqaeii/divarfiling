@@ -421,14 +421,23 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         from workspace.constants import PROPERTY_AMENITY_CHECKBOX_GROUPS
-        from workspace.services.property_features import feature_form_context
+        from workspace.services.property_features import (
+            FEATURE_MANAGED_AMENITY_LABELS,
+            feature_form_context,
+            seed_feature_toggles_from_amenities,
+        )
         from workspace.services.property_public_share import (
             property_amenity_checkbox_choices,
             split_amenities_for_checkbox_form,
         )
 
         super().__init__(*args, **kwargs)
-        self.fields['amenity_flags'].choices = property_amenity_checkbox_choices()
+        # چک‌باکس‌ها بدون موارد مدیریت‌شده در بخش ویژگی‌ها
+        self.fields['amenity_flags'].choices = [
+            (label, label)
+            for label, _ in property_amenity_checkbox_choices()
+            if label not in FEATURE_MANAGED_AMENITY_LABELS
+        ]
         self._amenity_groups_meta = PROPERTY_AMENITY_CHECKBOX_GROUPS
 
         instance = getattr(self, 'instance', None)
@@ -438,6 +447,7 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             if resolved_district:
                 self.initial['district'] = resolved_district
 
+        selected_amenities: list = []
         if instance is not None and (instance.pk or instance.amenities or instance.has_parking
                                      or instance.has_storage or instance.has_elevator):
             selected, leftover = split_amenities_for_checkbox_form(
@@ -446,12 +456,16 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 has_storage=bool(instance.has_storage),
                 has_elevator=bool(instance.has_elevator),
             )
-            self.fields['amenity_flags'].initial = selected
+            selected_amenities = list(selected)
+            self.fields['amenity_flags'].initial = [
+                label for label in selected if label not in FEATURE_MANAGED_AMENITY_LABELS
+            ]
             self.fields['amenities_extra'].initial = leftover
 
         feature_data = {}
         if instance is not None and isinstance(getattr(instance, 'feature_data', None), dict):
             feature_data = dict(instance.feature_data or {})
+        feature_data = seed_feature_toggles_from_amenities(feature_data, selected_amenities)
         if instance is not None and instance.total_floors and not feature_data.get('تعداد کل طبقات ساختمان'):
             feature_data['تعداد کل طبقات ساختمان'] = str(instance.total_floors)
         deal = ''
@@ -471,29 +485,17 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         self._parsed_feature_data = feature_data
 
     def amenity_checkbox_groups(self):
-        """گروه‌های امکانات با وضعیت تیک برای رندر در قالب."""
+        """گروه‌های امکانات با وضعیت تیک برای رندر در قالب (بدون موارد تکراری ویژگی‌ها)."""
+        from workspace.services.property_features import amenity_groups_excluding_feature_managed
+
         if self.is_bound:
             selected = set(self.data.getlist('amenity_flags'))
         else:
             initial = self.fields['amenity_flags'].initial or []
             selected = set(initial)
-        groups = []
-        for group in self._amenity_groups_meta:
-            items = [
-                {
-                    'label': label,
-                    'icon': icon,
-                    'checked': label in selected,
-                }
-                for label, icon in group['items']
-            ]
-            groups.append({
-                'id': group['id'],
-                'title': group['title'],
-                'icon': group['icon'],
-                'items': items,
-            })
-        return groups
+        return amenity_groups_excluding_feature_managed(
+            self._amenity_groups_meta, selected=selected,
+        )
 
     def feature_form_context(self):
         """کانتکست پروفایل ویژگی برای قالب (پروفایل فعال + همه پروفایل‌ها)."""
@@ -513,6 +515,7 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
 
     def clean(self):
         from workspace.services.property_features import (
+            FEATURE_MANAGED_AMENITY_LABELS,
             amenity_labels_from_feature_data,
             parse_feature_data_from_post,
             sync_total_floors_from_feature_data,
@@ -531,7 +534,13 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 property_type=cleaned.get('property_type') or self.data.get('property_type') or '',
                 existing=existing,
             )
-            for label in amenity_labels_from_feature_data(self._parsed_feature_data):
+            # امکانات مدیریت‌شده فقط از سوییچ ویژگی‌ها می‌آیند
+            feature_on = set(amenity_labels_from_feature_data(self._parsed_feature_data))
+            selected = [
+                label for label in selected
+                if label not in FEATURE_MANAGED_AMENITY_LABELS
+            ]
+            for label in feature_on:
                 if label not in selected:
                     selected.append(label)
             floors = sync_total_floors_from_feature_data(self._parsed_feature_data)

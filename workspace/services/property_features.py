@@ -46,8 +46,55 @@ FEATURE_BOOL_TO_AMENITY = {
     'حیوان خانگی مجاز': 'حیوان خانگی مجاز',
     'بازسازی شده': 'بازسازی شده',
     'قابل معاوضه': 'قابل معاوضه',
-    'سند': 'سند',
+    'نگهبانی': 'نگهبانی',
 }
+
+# این برچسب‌ها فقط از سوییچ‌های بخش ویژگی‌ها مدیریت می‌شوند (در چک‌باکس امکانات نشان داده نمی‌شوند)
+FEATURE_MANAGED_AMENITY_LABELS = frozenset(FEATURE_BOOL_TO_AMENITY.values())
+
+
+def seed_feature_toggles_from_amenities(
+    feature_data: Optional[dict],
+    amenity_labels: Sequence[str],
+) -> Dict[str, str]:
+    """اگر سوییچ ویژگی خالی باشد، از تیک‌های امکانات قدیمی مقداردهی می‌کند."""
+    out = dict(feature_data or {})
+    selected = {str(x).strip() for x in (amenity_labels or []) if str(x).strip()}
+    for feat_key, amenity_label in FEATURE_BOOL_TO_AMENITY.items():
+        current = _normalize_toggle(str(out.get(feat_key) or ''))
+        if current in ('دارد', 'ندارد'):
+            continue
+        if amenity_label in selected:
+            out[feat_key] = 'دارد'
+    return out
+
+
+def amenity_groups_excluding_feature_managed(
+    groups_meta: Sequence[Dict[str, Any]],
+    *,
+    selected: set,
+) -> List[Dict[str, Any]]:
+    """گروه‌های چک‌باکس امکانات بدون موارد تکراری بخش ویژگی‌ها."""
+    groups: List[Dict[str, Any]] = []
+    for group in groups_meta:
+        items = [
+            {
+                'label': label,
+                'icon': icon,
+                'checked': label in selected,
+            }
+            for label, icon in group['items']
+            if label not in FEATURE_MANAGED_AMENITY_LABELS
+        ]
+        if not items:
+            continue
+        groups.append({
+            'id': group['id'],
+            'title': group['title'],
+            'icon': group['icon'],
+            'items': items,
+        })
+    return groups
 
 
 def _int_choices(lo: int, hi: int) -> Tuple[str, ...]:
@@ -132,7 +179,7 @@ FIELDS: Dict[str, Dict[str, Any]] = {
     ),
     'تاریخ تخلیه': _field(
         'تاریخ تخلیه', widget='date', label='تاریخ تخلیه / آماده تحویل',
-        hint='تاریخ تقریبی آماده‌بودن واحد', icon='fa-calendar-check',
+        hint='تاریخ تقریبی آماده‌بودن واحد — تقویم شمسی', icon='fa-calendar-check',
     ),
     'نوع سند': _field(
         'نوع سند', widget='chips', choices=CHOICES_DEED, icon='fa-file-contract',
@@ -375,6 +422,27 @@ def _normalize_toggle(value: str) -> str:
     return (value or '').strip()
 
 
+def normalize_feature_date_value(value: str) -> str:
+    """نرمال‌سازی تاریخ ویژگی به شمسی با ارقام فارسی (مثلاً ۱۴۰۵/۰۴/۲۷)."""
+    raw = (value or '').strip()
+    if not raw or raw in ('-', '—'):
+        return ''
+    from workspace.services.jalali_input import (
+        format_jalali_date,
+        parse_jalali_date_string,
+        to_persian_digits,
+    )
+    parsed = parse_jalali_date_string(raw)
+    if parsed:
+        return to_persian_digits(format_jalali_date(parsed))
+    return raw
+
+
+def format_feature_date_display(value: str) -> str:
+    """نمایش تاریخ ذخیره‌شده در فیلد فرم (شمسی)."""
+    return normalize_feature_date_value(value)
+
+
 def parse_feature_data_from_post(
     post,
     *,
@@ -417,6 +485,9 @@ def parse_feature_data_from_post(
                 # unchecked toggles don't appear — handled below
                 if text:
                     posted[feat_key] = _normalize_toggle(text)
+            elif meta.get('widget') == 'date':
+                if text:
+                    posted[feat_key] = normalize_feature_date_value(text)
             elif text:
                 posted[feat_key] = text
         # toggles in active profile: missing = ندارد when form submitted with profile marker
@@ -487,6 +558,9 @@ def feature_form_groups_with_values(
             if meta['widget'] == 'toggle':
                 meta['checked'] = _normalize_toggle(raw_val) == 'دارد'
                 meta['value'] = 'دارد' if meta['checked'] else 'ندارد'
+            elif meta['widget'] == 'date':
+                meta['value'] = format_feature_date_display(raw_val)
+                meta['checked'] = False
             else:
                 meta['value'] = raw_val
                 meta['checked'] = False
@@ -539,10 +613,13 @@ def feature_profile_groups_from_data(feature_data: Optional[dict]) -> List[Dict[
             if val is None or not str(val).strip():
                 continue
             used.add(key)
+            display_val = str(val).strip()
+            if (FIELDS.get(key) or {}).get('widget') == 'date':
+                display_val = format_feature_date_display(display_val) or display_val
             items.append({
                 'key': key,
                 'label': (FIELDS.get(key) or {}).get('label') or key,
-                'value': str(val).strip(),
+                'value': display_val,
                 'state': 'neutral',
                 'known': True,
             })

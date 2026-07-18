@@ -2668,10 +2668,34 @@ function initCRMTeamPage() {
         else importInput?.click();
     });
 
-    document.getElementById('crm-inbox-select-all')?.addEventListener('change', e => {
-        document.querySelectorAll('.crm-team-inbox-table input[name="customer_ids"]').forEach(cb => {
-            cb.checked = e.target.checked;
+    function syncTeamInboxCheckMode() {
+        const mobile = window.matchMedia('(max-width: 768px)').matches;
+        document.querySelectorAll('.crm-team-inbox-cards input[name="customer_ids"]').forEach((cb) => {
+            cb.disabled = !mobile;
+            if (!mobile) cb.checked = false;
         });
+        document.querySelectorAll('.crm-team-inbox-desk-check, .crm-team-inbox-table input[name="customer_ids"]').forEach((cb) => {
+            cb.disabled = mobile;
+            if (mobile) cb.checked = false;
+        });
+    }
+    syncTeamInboxCheckMode();
+    window.addEventListener('resize', syncTeamInboxCheckMode);
+
+    function setTeamInboxAllChecked(checked) {
+        const mobile = window.matchMedia('(max-width: 768px)').matches;
+        const sel = mobile
+            ? '.crm-team-inbox-cards input[name="customer_ids"]:not(:disabled)'
+            : '.crm-team-inbox-table input[name="customer_ids"]:not(:disabled)';
+        document.querySelectorAll(sel).forEach((cb) => {
+            cb.checked = checked;
+        });
+    }
+    document.getElementById('crm-inbox-select-all')?.addEventListener('change', (e) => {
+        setTeamInboxAllChecked(e.target.checked);
+    });
+    document.getElementById('crm-inbox-select-all-mob')?.addEventListener('change', (e) => {
+        setTeamInboxAllChecked(e.target.checked);
     });
 
     document.querySelectorAll('.crm-inbox-quick-assign').forEach(btn => {
@@ -2683,8 +2707,11 @@ function initCRMTeamPage() {
             if (!form || !quickCustomer) return;
             quickCustomer.value = btn.dataset.customerId || '';
             if (memberSelect && quickMember) quickMember.value = memberSelect.value;
-            const picked = window.prompt('شناسه عضو را تأیید کنید — Enter برای تخصیص');
-            if (picked === null) return;
+            if (!quickMember?.value) {
+                window.alert('ابتدا مشاور را از لیست بالا انتخاب کنید.');
+                return;
+            }
+            if (!window.confirm('این سرنخ به مشاور انتخاب‌شده تخصیص داده شود؟')) return;
             form.submit();
         });
     });

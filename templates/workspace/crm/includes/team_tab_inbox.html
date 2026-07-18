@@ -1,7 +1,7 @@
 {% load workspace_tags %}
 {# تب صندوق سرنخ #}
 {% if tab == 'inbox' and can_view_team_inbox %}
-<section class="crm-team-panel-v2" aria-label="صندوق سرنخ تیم">
+<section class="crm-team-panel-v2 crm-team-inbox-panel" aria-label="صندوق سرنخ تیم">
     <header class="crm-team-panel-head-v2">
         <div>
             <h2>صندوق سرنخ</h2>
@@ -14,6 +14,10 @@
         <input type="hidden" name="action" value="bulk_assign_inbox">
         <input type="hidden" name="tab" value="inbox">
         <div class="crm-team-inbox-toolbar">
+            <label class="crm-team-inbox-select-all-mob">
+                <input type="checkbox" id="crm-inbox-select-all-mob" aria-label="انتخاب همه">
+                <span>انتخاب همه</span>
+            </label>
             <label>تخصیص گروهی به:
                 <select name="member_id" class="crm-select" required>
                     {% for m in agency_members %}
@@ -25,7 +29,34 @@
             </label>
             <button type="submit" class="crm-dash-act crm-dash-act--primary">تخصیص انتخاب‌شده‌ها</button>
         </div>
-        <div class="crm-team-inbox-table-wrap">
+
+        {# Mobile-first cards #}
+        <div class="crm-team-inbox-cards" aria-label="لیست سرنخ‌ها">
+            {% for lead in team_inbox %}
+            <article class="crm-team-inbox-card">
+                <label class="crm-team-inbox-card-check">
+                    <input type="checkbox" name="customer_ids" value="{{ lead.pk }}" form="crm-team-inbox-bulk-form" aria-label="انتخاب {{ lead.name }}">
+                </label>
+                <div class="crm-team-inbox-card-body">
+                    <strong class="crm-team-inbox-card-name">{{ lead.name }}</strong>
+                    {% if lead.phone %}
+                    <a class="crm-team-inbox-card-phone" href="tel:{{ lead.phone }}" dir="ltr">{{ lead.phone }}</a>
+                    {% endif %}
+                    <div class="crm-team-inbox-card-meta">
+                        <span><i class="fas fa-tag" aria-hidden="true"></i> {{ lead.source|default:"—" }}</span>
+                        <time><i class="fas fa-clock" aria-hidden="true"></i> {{ lead.created_at|ws_jalali_date }}</time>
+                    </div>
+                </div>
+                <button type="button" class="crm-team-inbox-card-assign crm-inbox-quick-assign" data-customer-id="{{ lead.pk }}">
+                    <i class="fas fa-user-check" aria-hidden="true"></i>
+                    <span>تخصیص</span>
+                </button>
+            </article>
+            {% endfor %}
+        </div>
+
+        {# Desktop table #}
+        <div class="crm-team-inbox-table-wrap crm-team-inbox-table-wrap--desk">
             <table class="crm-team-inbox-table">
                 <thead>
                     <tr><th><input type="checkbox" id="crm-inbox-select-all"></th><th>نام</th><th>تلفن</th><th>منبع</th><th>تاریخ</th><th>تخصیص سریع</th></tr>
@@ -33,7 +64,7 @@
                 <tbody>
                     {% for lead in team_inbox %}
                     <tr>
-                        <td><input type="checkbox" name="customer_ids" value="{{ lead.pk }}" form="crm-team-inbox-bulk-form"></td>
+                        <td><input type="checkbox" name="customer_ids" value="{{ lead.pk }}" form="crm-team-inbox-bulk-form" class="crm-team-inbox-desk-check"></td>
                         <td>{{ lead.name }}</td>
                         <td dir="ltr">{{ lead.phone }}</td>
                         <td>{{ lead.source|default:"—" }}</td>
@@ -61,17 +92,21 @@
         </select>
     </form>
     {% else %}
-    <p class="crm-team-empty-v2">صندوق سرنخ خالی است.</p>
+    <div class="crm-team-empty-v2 crm-team-empty-v2--illustrated">
+        <span class="crm-team-empty-icon"><i class="fas fa-inbox"></i></span>
+        <strong>صندوق سرنخ خالی است</strong>
+        <p>سرنخ‌های جدید از API یا وب‌هوک اینجا ظاهر می‌شوند.</p>
+    </div>
     {% endif %}
 </section>
 {% if assigned_leads %}
-<section class="crm-team-panel-v2" aria-label="پرونده‌های تخصیص‌یافته">
+<section class="crm-team-panel-v2 crm-team-assigned-panel" aria-label="پرونده‌های تخصیص‌یافته">
     <header class="crm-team-panel-head-v2"><h2>اخیراً تخصیص‌یافته</h2></header>
     <ul class="crm-team-assigned-list">
         {% for c in assigned_leads %}
-        <li>
+        <li class="crm-team-assigned-item">
             <a href="{% url 'workspace:crm_detail' c.pk %}">{{ c.name }}</a>
-            → {{ c.assigned_to.get_full_name|default:c.assigned_to.username }}
+            <span class="crm-team-assigned-to">→ {{ c.assigned_to.get_full_name|default:c.assigned_to.username }}</span>
             <time>{{ c.assigned_at|ws_jalali }}</time>
         </li>
         {% endfor %}

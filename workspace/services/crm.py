@@ -720,6 +720,8 @@ def property_from_listing(user, listing) -> CRMProperty:
         district_from_listing,
         owner_name_from_listing,
         owner_phone_from_listing,
+        tenant_name_from_listing,
+        tenant_phone_from_listing,
     )
     from workspace.services.listing_features import build_listing_feature_profile
 
@@ -773,6 +775,8 @@ def property_from_listing(user, listing) -> CRMProperty:
         has_storage=bool(feat.get('storage')),
         has_elevator=bool(feat.get('elevator')),
         is_vacant=bool(feat.get('is_vacant')),
+        tenant_phone=tenant_phone_from_listing(listing) if not feat.get('is_vacant') else '',
+        tenant_name=tenant_name_from_listing(listing) if not feat.get('is_vacant') else '',
         sale_price=listing.price,
         deposit=listing.deposit,
         monthly_rent=listing.rent,
@@ -897,6 +901,18 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
             crm_property=prop,
             source='دیوار',
         )
+    if prop.deal_mode in ('اجاره', 'رهن و اجاره') and not prop.is_vacant:
+        from workspace.services.listing_edit import tenant_name_from_listing, tenant_phone_from_listing
+        t_phone = tenant_phone_from_listing(listing) or prop.tenant_phone
+        t_name = tenant_name_from_listing(listing) or prop.tenant_name
+        if normalize_phone(t_phone) or (t_name or '').strip():
+            upsert_property_tenant(
+                user,
+                phone=t_phone,
+                name=t_name,
+                crm_property=prop,
+                source='دیوار',
+            )
     finalize_listing_moved_to_personal(user, listing, prop)
     return prop, True
 

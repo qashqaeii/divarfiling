@@ -87,3 +87,28 @@ class ListingVacantEditTests(TestCase):
         self.listing.save()
         self.listing.refresh_from_db()
         self.assertFalse(listing_is_vacant(self.listing))
+
+    def test_tenant_fields_optional_when_not_vacant(self):
+        apply_listing_edit_post(self.listing, {
+            'is_vacant': ['0'],
+            'tenant_name': 'علی رضایی',
+            'tenant_phone': '09121234567',
+        })
+        self.listing.save()
+        self.listing.refresh_from_db()
+        payload = listing_edit_payload(self.listing)
+        self.assertFalse(payload['is_vacant'])
+        self.assertEqual(payload['tenant_name'], 'علی رضایی')
+        self.assertEqual(payload['tenant_phone'], '09121234567')
+
+        apply_listing_edit_post(self.listing, {
+            'is_vacant': ['0', '1'],
+            'tenant_name': 'باید پاک شود',
+            'tenant_phone': '09120000000',
+        })
+        self.listing.save()
+        self.listing.refresh_from_db()
+        payload = listing_edit_payload(self.listing)
+        self.assertTrue(payload['is_vacant'])
+        self.assertEqual(payload['tenant_name'], '')
+        self.assertEqual(payload['tenant_phone'], '')

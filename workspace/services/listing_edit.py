@@ -18,6 +18,8 @@ from workspace.services.listing_features import (
 
 OWNER_PHONE_KEYS = ('شماره تماس', 'owner_phone', 'phone', 'موبایل', 'تلفن', 'تماس')
 OWNER_NAME_KEYS = ('نام مالک', 'owner_name', 'نام و نام خانوادگی مالک', 'نام صاحب')
+TENANT_PHONE_KEYS = ('شماره مستاجر', 'tenant_phone', 'شماره مستأجر', 'تلفن مستاجر')
+TENANT_NAME_KEYS = ('نام مستاجر', 'tenant_name', 'نام مستأجر', 'نام و نام خانوادگی مستاجر')
 ADDRESS_KEYS = ('آدرس', 'address', 'مکان_آدرس')
 DISTRICT_KEYS = ('منطقه', 'district', 'district_persian', 'مکان_منطقه')
 
@@ -72,6 +74,7 @@ def apply_vacant_flag_to_data(data: dict, is_vacant: bool) -> None:
     """تنظیم/پاک‌کردن وضعیت سکونت بر اساس تیک تخلیه."""
     if is_vacant:
         data['وضعیت سکونت'] = 'تخلیه'
+        _clear_tenant_from_data(data)
         return
     current = ''
     for key in OCCUPANCY_KEYS:
@@ -82,6 +85,53 @@ def apply_vacant_flag_to_data(data: dict, is_vacant: bool) -> None:
     if current and any(m in current or m in current.lower() for m in VACANT_MARKERS):
         for key in OCCUPANCY_KEYS:
             data.pop(key, None)
+
+
+def tenant_phone_from_listing(listing) -> str:
+    data = listing.data or {}
+    for key in TENANT_PHONE_KEYS:
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ''
+
+
+def tenant_name_from_listing(listing) -> str:
+    data = listing.data or {}
+    for key in TENANT_NAME_KEYS:
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ''
+
+
+def _clear_tenant_from_data(data: dict) -> None:
+    for key in TENANT_PHONE_KEYS + TENANT_NAME_KEYS:
+        data.pop(key, None)
+
+
+def _apply_tenant_fields(listing, *, phone: str = '', name: str = '', is_vacant: bool = False) -> None:
+    data = dict(listing.data or {})
+    if is_vacant:
+        _clear_tenant_from_data(data)
+        listing.data = data
+        return
+    phone = (phone or '').strip()
+    name = (name or '').strip()
+    if phone:
+        data['شماره مستاجر'] = phone
+        data['tenant_phone'] = phone
+    else:
+        for key in TENANT_PHONE_KEYS:
+            data.pop(key, None)
+    if name:
+        data['نام مستاجر'] = name
+        data['tenant_name'] = name
+    else:
+        for key in TENANT_NAME_KEYS:
+            data.pop(key, None)
+    listing.data = data
+
 
 MAX_LISTING_IMAGES = 24
 
@@ -302,6 +352,8 @@ def listing_edit_payload(listing, feat: Optional[dict] = None) -> Dict[str, Any]
         'business_type': biz or 'شخصی',
         'owner_phone': owner_phone_from_listing(listing),
         'owner_name': owner_name_from_listing(listing),
+        'tenant_phone': tenant_phone_from_listing(listing),
+        'tenant_name': tenant_name_from_listing(listing),
         'link': listing.link or '',
         'description': listing.description or '',
         'is_expired': bool(listing.is_expired),
@@ -558,7 +610,25 @@ def apply_listing_edit_post(listing, post) -> None:
             raw = post.get('is_vacant', '')
             raw_vals = raw if isinstance(raw, (list, tuple)) else [raw]
         raw = str(raw_vals[-1] if raw_vals else '').strip().lower()
-        apply_vacant_flag_to_data(data, raw in ('1', 'true', 'on', 'yes'))
+        is_vacant = raw in ('1', 'true', 'on', 'yes')
+        apply_vacant_flag_to_data(data, is_vacant)
+        listing.data = data
+        if 'tenant_phone' in post or 'tenant_name' in post:
+            _apply_tenant_fields(
+                listing,
+                phone=post.get('tenant_phone', '') if 'tenant_phone' in post else tenant_phone_from_listing(listing),
+                name=post.get('tenant_name', '') if 'tenant_name' in post else tenant_name_from_listing(listing),
+                is_vacant=is_vacant,
+            )
+            data = dict(listing.data or {})
+    elif 'tenant_phone' in post or 'tenant_name' in post:
+        _apply_tenant_fields(
+            listing,
+            phone=post.get('tenant_phone', '') if 'tenant_phone' in post else tenant_phone_from_listing(listing),
+            name=post.get('tenant_name', '') if 'tenant_name' in post else tenant_name_from_listing(listing),
+            is_vacant=listing_is_vacant(listing),
+        )
+        data = dict(listing.data or {})
 
     _apply_feature_post(data, post)
 

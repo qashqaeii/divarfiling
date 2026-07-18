@@ -1301,8 +1301,78 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     font-weight: 600;
     color: color-mix(in srgb, #5eead4 65%, #94a3b8);
 }
+.mk-occ__tenant {
+    margin-top: 0.7rem;
+    padding: 0.8rem 0.85rem;
+    border-radius: 13px;
+    border: 1px solid color-mix(in srgb, var(--mk-occ-tenant) 28%, transparent);
+    background: color-mix(in srgb, var(--mk-occ-tenant) 10%, transparent);
+}
+.mk-occ__tenant.hidden {
+    display: none !important;
+}
+.mk-occ__tenant-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 0.7rem;
+}
+.mk-occ__tenant-ico {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--mk-occ-tenant) 18%, transparent);
+    color: #fbbf24;
+    flex-shrink: 0;
+}
+.mk-occ__tenant-head strong {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+.mk-occ__tenant-head em {
+    display: block;
+    margin-top: 0.12rem;
+    font-style: normal;
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: var(--ws-text-muted, #94a3b8);
+    line-height: 1.45;
+}
+.mk-occ__tenant-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem 0.65rem;
+}
+.mk-occ__field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.mk-occ__field-ico {
+    position: absolute;
+    inset-inline-start: 0.7rem;
+    z-index: 1;
+    color: var(--ws-text-muted, #94a3b8);
+    font-size: 0.75rem;
+    pointer-events: none;
+}
+.mk-occ__field .ws-input {
+    width: 100%;
+    padding-inline-start: 2.15rem !important;
+    min-height: 2.45rem;
+    border-radius: 11px;
+}
+.mk-occ__field:focus-within .mk-occ__field-ico {
+    color: #fbbf24;
+}
 @media (max-width: 560px) {
     .mk-occ__switch {
+        grid-template-columns: 1fr;
+    }
+    .mk-occ__tenant-grid {
         grid-template-columns: 1fr;
     }
     .mk-occ__pill {

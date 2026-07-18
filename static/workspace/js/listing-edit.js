@@ -106,6 +106,9 @@
             isVacant: qs('#editIsVacant'),
             vacantRow: qs('#editVacantRow'),
             vacantOff: qs('#editIsVacantOff'),
+            tenantPanel: qs('#editTenantPanel'),
+            tenantName: qs('#editTenantName'),
+            tenantPhone: qs('#editTenantPhone'),
             occPill: qs('#editVacantRow [data-occ-pill]'),
             occConfirm: qs('#editVacantRow [data-occ-confirm]'),
             occBtns: qsa('#editVacantRow [data-occ-set]'),
@@ -130,6 +133,7 @@
     ListingEditController.prototype._syncOccupancyUI = function () {
         var f = this.fields;
         var vacantOn = !!(f.isVacant && f.isVacant.checked);
+        var showShell = !!(f.vacantRow && !f.vacantRow.classList.contains('hidden'));
         if (f.vacantRow) {
             f.vacantRow.classList.toggle('is-vacant', vacantOn);
             f.vacantRow.classList.toggle('is-occupied', !vacantOn);
@@ -142,6 +146,13 @@
         });
         if (f.occPill) f.occPill.textContent = vacantOn ? 'تخلیه' : 'تخلیه نیست';
         if (f.occConfirm) f.occConfirm.hidden = !vacantOn;
+        if (f.tenantPanel) {
+            f.tenantPanel.classList.toggle('hidden', !(showShell && !vacantOn));
+        }
+        if (vacantOn) {
+            if (f.tenantName) f.tenantName.value = '';
+            if (f.tenantPhone) f.tenantPhone.value = '';
+        }
     };
 
     ListingEditController.prototype._bindOccupancySwitch = function () {
@@ -479,6 +490,8 @@
         if (f.expired) f.expired.value = data.is_expired ? '1' : '0';
         setField(f.ownerPhone, data.owner_phone);
         setField(f.ownerName, data.owner_name);
+        setField(f.tenantName, data.tenant_name);
+        setField(f.tenantPhone, data.tenant_phone);
         setField(f.link, data.link);
         if (f.description) f.description.value = data.description || '';
 

@@ -430,7 +430,8 @@ function initPropertyDealMode(root) {
             const vacantOn = !!(vacantCheckbox && vacantCheckbox.checked);
             const showTenant = !!(profile.showVacant && !vacantOn);
             tenantPanels.forEach(el => el.classList.toggle('hidden', !showTenant));
-            if (!showTenant) {
+            // فقط با انتخاب تخلیه فیلدها پاک شوند (اختیاری بودن نام/شماره حفظ شود)
+            if (vacantOn) {
                 tenantInputs.forEach(el => {
                     if (el.type === 'checkbox') el.checked = false;
                     else if ('value' in el) el.value = '';

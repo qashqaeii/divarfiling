@@ -197,20 +197,20 @@
                 <div class="crm-occ__tenant-head">
                     <span class="crm-occ__tenant-ico" aria-hidden="true"><i class="fas fa-address-card"></i></span>
                     <div>
-                        <strong>مستاجر فعلی (ساکن)</strong>
-                        <em>در مخاطبین ثبت و به‌عنوان مستاجر به ملک لینک می‌شود</em>
+                        <strong>مستاجر فعلی (اختیاری)</strong>
+                        <em>اگر ساکن دارد، نام و شماره را وارد کنید — در مخاطبین ثبت و لینک می‌شود</em>
                     </div>
                 </div>
                 <div class="crm-occ__tenant-grid">
                     <div class="crm-field">
-                        <label class="crm-label" for="{{ form.tenant_name.id_for_label }}">نام و نام خانوادگی</label>
+                        <label class="crm-label" for="{{ form.tenant_name.id_for_label }}">نام و نام خانوادگی <span class="crm-label-optional">(اختیاری)</span></label>
                         <div class="crm-occ__field">
                             <span class="crm-occ__field-ico" aria-hidden="true"><i class="fas fa-user"></i></span>
                             {{ form.tenant_name }}
                         </div>
                     </div>
                     <div class="crm-field">
-                        <label class="crm-label" for="{{ form.tenant_phone.id_for_label }}">شماره تماس</label>
+                        <label class="crm-label" for="{{ form.tenant_phone.id_for_label }}">شماره تماس <span class="crm-label-optional">(اختیاری)</span></label>
                         <div class="crm-occ__field">
                             <span class="crm-occ__field-ico" aria-hidden="true"><i class="fas fa-phone"></i></span>
                             {{ form.tenant_phone }}

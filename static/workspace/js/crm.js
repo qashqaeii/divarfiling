@@ -1769,9 +1769,13 @@ function initCRMTabs() {
             const tab = btn.dataset.tab;
             const parent = btn.closest('.crm-form-sections');
             if (!parent) return;
-            parent.querySelectorAll('.crm-form-tab').forEach(b => b.classList.remove('active'));
+            parent.querySelectorAll('.crm-form-tab').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
             parent.querySelectorAll('[data-panel]').forEach(p => p.hidden = true);
             btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
             const panel = parent.querySelector(`[data-panel="${tab}"]`);
             if (panel) panel.hidden = false;
         });
@@ -1779,11 +1783,17 @@ function initCRMTabs() {
 }
 
 function crmActivateFormTab(section, tabName) {
-    section.querySelectorAll('.crm-form-tab').forEach(b => b.classList.remove('active'));
+    section.querySelectorAll('.crm-form-tab').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+    });
     section.querySelectorAll('[data-panel]').forEach(p => { p.hidden = true; });
     const tabBtn = section.querySelector(`.crm-form-tab[data-tab="${tabName}"]`);
     const panel = section.querySelector(`[data-panel="${tabName}"]`);
-    if (tabBtn) tabBtn.classList.add('active');
+    if (tabBtn) {
+        tabBtn.classList.add('active');
+        tabBtn.setAttribute('aria-selected', 'true');
+    }
     if (panel) panel.hidden = false;
 }
 

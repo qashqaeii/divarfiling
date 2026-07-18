@@ -1,187 +1,75 @@
 {% load crm_tags %}
 
-
-
-<div class="crm-form-sections" data-type-profiles="{{ type_profiles_json|default:'{}'|escape }}">
-
-
+<div class="crm-form-sections crm-contact-form" data-type-profiles="{{ type_profiles_json|default:'{}'|escape }}">
 
     {% if form.errors %}
-
     <div class="crm-form-errors" role="alert">
-
         <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
-
         <div>
-
             <strong>خطا در ثبت اطلاعات</strong>
-
             <p>فیلدهای مشخص‌شده را تکمیل یا اصلاح کنید.</p>
-
         </div>
-
     </div>
-
     {% endif %}
 
-
-
-    <div class="crm-form-tabs" role="tablist">
-
-
-
-        <button type="button" class="crm-form-tab active" data-tab="basic"><i class="fas fa-user" aria-hidden="true"></i> پایه</button>
-
-
-
-        <button type="button" class="crm-form-tab" data-tab="financial"><i class="fas fa-coins" aria-hidden="true"></i> مالی</button>
-
-
-
-        <button type="button" class="crm-form-tab" data-tab="prefs"><i class="fas fa-sliders-h" aria-hidden="true"></i> ترجیحات</button>
-
-
-
-        <button type="button" class="crm-form-tab" data-tab="extra"><i class="fas fa-ellipsis-h" aria-hidden="true"></i> سایر</button>
-
-
-
-    </div>
-
-
+    <nav class="crm-form-tabs" role="tablist" aria-label="بخش‌های فرم مخاطب">
+        <button type="button" class="crm-form-tab active" data-tab="basic" role="tab" aria-selected="true">
+            <i class="fas fa-user" aria-hidden="true"></i><span>پایه</span>
+        </button>
+        <button type="button" class="crm-form-tab" data-tab="financial" role="tab" aria-selected="false">
+            <i class="fas fa-coins" aria-hidden="true"></i><span>مالی</span>
+        </button>
+        <button type="button" class="crm-form-tab" data-tab="prefs" role="tab" aria-selected="false">
+            <i class="fas fa-sliders-h" aria-hidden="true"></i><span>ترجیحات</span>
+        </button>
+        <button type="button" class="crm-form-tab" data-tab="extra" role="tab" aria-selected="false">
+            <i class="fas fa-ellipsis-h" aria-hidden="true"></i><span>سایر</span>
+        </button>
+    </nav>
 
     {% crm_contact_channels_form form %}
 
-
-
     <div data-panel="basic" class="crm-form-panel">
-
-
-
         <div class="crm-fields crm-fields-2">
-
-
-
             {% crm_field form.name 'نام و نام خانوادگی *' %}
-
-
-
             {% crm_field form.customer_type 'نوع مخاطب' %}
-
-
-
             {% crm_field form.phone 'موبایل' %}
-
-
-
             {% crm_field form.phone_alt 'تلفن دوم' %}
-
-
-
             {% crm_field form.email 'ایمیل' %}
-
-
-
             {% crm_field form.city 'شهر' %}
-
-
-
             {% crm_field form.district 'منطقه' %}
-
-
-
             {% crm_field form.job 'شغل' %}
-
-
-
             <div class="crm-field crm-field-check{% if form.is_legal_entity.errors %} crm-field-has-error{% endif %}" data-field="is_legal_entity">
-
                 {{ form.is_legal_entity }}
-
                 <label class="crm-label crm-label-check" for="{{ form.is_legal_entity.id_for_label }}">شخص حقوقی</label>
-
                 {% for error in form.is_legal_entity.errors %}
-
                 <p class="crm-field-error" role="alert">{{ error }}</p>
-
                 {% endfor %}
-
             </div>
-
-
-
             {% crm_field form.company_name 'نام شرکت' 'crm-legal-field' %}
-
-
-
             {% crm_field form.national_id 'کد ملی' %}
-
-
-
         </div>
-
         <button type="button" class="crm-contact-channels-open" data-crm-channels-open>
             <i class="fas fa-pen-to-square" aria-hidden="true"></i>
             ویرایش شناسه شبکه‌های اجتماعی
         </button>
-
-
-
     </div>
 
-
-
-
-
-
-
     <div data-panel="financial" class="crm-form-panel" hidden>
-
-
-
         <p class="crm-panel-channels-note" data-crm-panel-channels-note aria-live="polite"></p>
-
         <p class="crm-form-hint" id="crmMoneyHint">محدوده مالی بر اساس نوع مخاطب</p>
-
         <div class="crm-builder-sell-head crm-builder-section hidden">
             <h4 class="crm-builder-section-title" id="crmBuilderSellTitle">خط فروش — آپارتمان</h4>
             <p class="crm-builder-section-hint" id="crmBuilderSellHint">محدوده قیمت و محله واحدهای فروش</p>
         </div>
-
-
-
         <div class="crm-fields crm-fields-2">
-
-
-
             {% crm_field form.budget_min 'بودجه از' 'crm-money-budget' %}
-
-
-
             {% crm_field form.budget_max 'بودجه تا' 'crm-money-budget' %}
-
-
-
             {% crm_field form.deposit_min 'ودیعه از' 'crm-money-deposit' %}
-
-
-
             {% crm_field form.deposit_max 'ودیعه تا' 'crm-money-deposit' %}
-
-
-
             {% crm_field form.rent_min 'اجاره از' 'crm-money-rent' %}
-
-
-
             {% crm_field form.rent_max 'اجاره تا' 'crm-money-rent' %}
-
-
-
         </div>
-
-
-
         <div class="crm-builder-buy crm-builder-section hidden">
             <h4 class="crm-builder-section-title" id="crmBuilderBuyTitle">تأمین پروژه — خرید زمین و کلنگی</h4>
             <p class="crm-builder-section-hint" id="crmBuilderBuyHint">بودجه و منطقه خرید ویلا، کلنگی و زمین</p>
@@ -197,31 +85,17 @@
                 <div class="crm-check-list">{{ form.builder_buy_types }}</div>
             </div>
         </div>
-
-
-
     </div>
 
-
-
-
-
-
-
     <div data-panel="prefs" class="crm-form-panel" hidden>
-
         <p class="crm-panel-channels-note" data-crm-panel-channels-note aria-live="polite"></p>
-
         <p class="crm-form-hint" id="crmPrefsHint">نوع ملک، متراژ و محله‌های مورد نظر</p>
-
         <div class="crm-builder-sell-prefs crm-builder-section hidden">
             <h4 class="crm-builder-section-title" id="crmPrefsBuilderTitle">مشخصات واحد فروش (آپارتمان)</h4>
         </div>
-
         <div class="crm-prefs-standard hidden">
             <h4 class="crm-prefs-section-title" id="crmPrefsTitle">ترجیحات ملک</h4>
         </div>
-
         <div class="crm-fields crm-fields-2">
             {% crm_field form.property_type 'نوع ملک' 'crm-prefs-core' %}
             {% crm_field form.rooms_min 'اتاق از' 'crm-prefs-rooms' %}
@@ -234,7 +108,6 @@
             {% crm_field form.floor_max 'طبقه تا' 'crm-prefs-floor' %}
             {% crm_contact_areas_picker form 'areas' 'محله‌های مورد نظر' 'crm-field-full crm-prefs-location' dataset_neighborhoods %}
         </div>
-
         <div class="crm-prefs-amenities crm-prefs-amenities-block">
             <span class="crm-label">امکانات ضروری</span>
             <p class="crm-form-hint crm-form-hint--tight">فقط مواردی که حتماً باید داشته باشد را تیک بزنید</p>
@@ -253,91 +126,32 @@
                 </label>
             </div>
         </div>
-
     </div>
-
-
-
-
-
-
 
     <div data-panel="extra" class="crm-form-panel" hidden>
-
-
-
         <p class="crm-panel-channels-note" data-crm-panel-channels-note aria-live="polite"></p>
-
         <div class="crm-fields crm-fields-2">
-
-
-
             {% crm_field form.status 'وضعیت' %}
-
-
-
             {% crm_field form.priority 'اولویت' %}
-
-
-
             {% crm_field form.source 'منبع جذب' %}
-
-
-
             <div class="crm-field{% if form.next_follow_up.errors %} crm-field-has-error{% endif %}" data-field="next_follow_up">
-
                 <label class="crm-label" for="{{ form.next_follow_up.id_for_label }}">پیگیری بعدی</label>
-
                 {{ form.next_follow_up }}
-
                 {% for error in form.next_follow_up.errors %}
-
                 <p class="crm-field-error" role="alert">{{ error }}</p>
-
                 {% endfor %}
-
             </div>
-
-
-
             {% crm_field form.tags 'برچسب‌ها' 'crm-field-full' %}
-
-
-
         </div>
-
-
-
         <details class="crm-notes-expand">
-
-
-
             <summary><i class="fas fa-sticky-note" aria-hidden="true"></i> یادداشت</summary>
-
-
-
             <div class="crm-field crm-field-full{% if form.notes.errors %} crm-field-has-error{% endif %}" data-field="notes">
-
                 {{ form.notes }}
-
                 {% for error in form.notes.errors %}
-
                 <p class="crm-field-error" role="alert">{{ error }}</p>
-
                 {% endfor %}
-
             </div>
-
-
-
         </details>
-
-
-
     </div>
 
-
-
 </div>
-
-

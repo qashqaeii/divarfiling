@@ -235,7 +235,7 @@
         justify-content: center;
     }
 
-    /* Forms in drawers */
+    /* Forms in drawers — contact form overrides via .crm-contact-form */
     .crm-fields-2,
     .crm-fields-3,
     .crm-form-panel .crm-fields {
@@ -243,11 +243,6 @@
         gap: 0.65rem;
     }
     .crm-form-tabs {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
         gap: 0.3rem;
         padding: 0.25rem;
         margin-bottom: 0.65rem;
@@ -255,9 +250,7 @@
         border-radius: 10px;
         background: var(--ws-surface-2);
     }
-    .crm-form-tabs::-webkit-scrollbar { display: none; }
     .crm-form-tab {
-        flex-shrink: 0;
         min-height: 40px;
         padding: 0.45rem 0.75rem;
         border-radius: 999px;

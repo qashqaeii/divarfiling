@@ -2,6 +2,7 @@
 {% load workspace_tags crm_tags %}
 
 {% block page_title %}CRM — مخاطبین{% endblock %}
+{% block mobile_bar_title %}مخاطبین{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_actions %}{% endblock %}
@@ -14,16 +15,21 @@
     <header class="crm-contacts-mob-header">
         <div class="crm-contacts-mob-header-main">
             <h1 class="crm-contacts-mob-title">مخاطبین</h1>
-            <p class="crm-contacts-mob-sub">{{ stats.total }} مخاطب{% if stats.due_today %} · <strong>{{ stats.due_today }}</strong> پیگیری امروز{% endif %}</p>
+            <p class="crm-contacts-mob-sub">
+                <span>{{ stats.total }} مخاطب</span>
+                {% if stats.due_today %}
+                <span class="crm-contacts-mob-sub-chip is-warn">{{ stats.due_today }} امروز</span>
+                {% endif %}
+            </p>
         </div>
         <div class="crm-contacts-mob-header-actions" role="toolbar" aria-label="عملیات مخاطبین">
-            <button type="button" class="crm-contacts-mob-icon-btn" data-drawer-open="drawer-quick-lead" title="سرنخ سریع">
+            <button type="button" class="crm-contacts-mob-icon-btn" data-drawer-open="drawer-quick-lead" title="سرنخ سریع" aria-label="سرنخ سریع">
                 <i class="fas fa-bolt" aria-hidden="true"></i>
             </button>
-            <button type="button" class="crm-contacts-mob-icon-btn" data-drawer-open="drawer-import" title="ورود فایل">
+            <button type="button" class="crm-contacts-mob-icon-btn" data-drawer-open="drawer-import" title="ورود فایل" aria-label="ورود فایل">
                 <i class="fas fa-file-import" aria-hidden="true"></i>
             </button>
-            <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-contacts-mob-icon-btn" title="خروجی Excel">
+            <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-contacts-mob-icon-btn" title="خروجی Excel" aria-label="خروجی Excel">
                 <i class="fas fa-file-excel" aria-hidden="true"></i>
             </a>
         </div>
@@ -50,23 +56,38 @@
     </header>
 
     <section class="crm-contacts-mob-kpis" aria-label="آمار مخاطبین">
-        <article class="crm-contacts-mob-kpi">
+        <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}" class="crm-contacts-mob-kpi{% if not request.GET.status and not request.GET.due and not request.GET.customer_type and not request.GET.priority and not request.GET.q %} is-active{% endif %}">
             <span class="crm-contacts-mob-kpi-val">{{ stats.total }}</span>
             <span class="crm-contacts-mob-kpi-lbl">کل</span>
-        </article>
-        <article class="crm-contacts-mob-kpi">
+        </a>
+        <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&status={{ 'جدید'|urlencode }}" class="crm-contacts-mob-kpi{% if request.GET.status == 'جدید' %} is-active{% endif %}">
             <span class="crm-contacts-mob-kpi-val">{{ stats.new }}</span>
             <span class="crm-contacts-mob-kpi-lbl">جدید</span>
-        </article>
-        <article class="crm-contacts-mob-kpi crm-contacts-mob-kpi--accent">
+        </a>
+        <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&status={{ 'در حال پیگیری'|urlencode }}" class="crm-contacts-mob-kpi crm-contacts-mob-kpi--accent{% if request.GET.status == 'در حال پیگیری' %} is-active{% endif %}">
             <span class="crm-contacts-mob-kpi-val">{{ stats.in_progress }}</span>
             <span class="crm-contacts-mob-kpi-lbl">پیگیری</span>
-        </article>
-        <article class="crm-contacts-mob-kpi{% if stats.due_today %} crm-contacts-mob-kpi--warn{% endif %}">
+        </a>
+        <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&due=today" class="crm-contacts-mob-kpi{% if stats.due_today %} crm-contacts-mob-kpi--warn{% endif %}{% if request.GET.due == 'today' %} is-active{% endif %}">
             <span class="crm-contacts-mob-kpi-val">{{ stats.due_today }}</span>
             <span class="crm-contacts-mob-kpi-lbl">امروز</span>
-        </article>
+        </a>
     </section>
+
+    <nav class="crm-contacts-mob-quick" aria-label="فیلتر سریع">
+        <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&due=today" class="crm-contacts-mob-quick-chip{% if request.GET.due == 'today' %} is-active{% endif %}">
+            <i class="fas fa-sun" aria-hidden="true"></i> امروز
+        </a>
+        <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&due=overdue" class="crm-contacts-mob-quick-chip{% if request.GET.due == 'overdue' %} is-active is-warn{% endif %}">
+            <i class="fas fa-clock" aria-hidden="true"></i> معوق
+        </a>
+        <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&status={{ 'جدید'|urlencode }}" class="crm-contacts-mob-quick-chip{% if request.GET.status == 'جدید' %} is-active{% endif %}">
+            <i class="fas fa-star" aria-hidden="true"></i> جدید
+        </a>
+        <a href="{% url 'workspace:crm_contacts' %}?view=pipeline" class="crm-contacts-mob-quick-chip{% if view_mode == 'pipeline' %} is-active{% endif %}">
+            <i class="fas fa-table-columns" aria-hidden="true"></i> کانبان
+        </a>
+    </nav>
 
     <section class="crm-dash-kpis" aria-label="آمار مخاطبین">
         <article class="crm-dash-kpi">
@@ -88,19 +109,18 @@
     </section>
 
     {% if duplicate_groups %}
-    <section class="crm-action-rail" aria-label="اقدامات فوری">
-        <button type="button" class="crm-action-card crm-action-card--warning" data-drawer-open="drawer-merge">
-            <span class="crm-action-card-glow" aria-hidden="true"></span>
-            <span class="crm-action-card-icon" aria-hidden="true"><i class="fas fa-clone"></i></span>
-            <span class="crm-action-card-body">
-                <strong class="crm-action-card-title">گروه تکراری</strong>
-                <em class="crm-action-card-text">تلفن یکسان — نیاز به ادغام</em>
+    <section class="crm-contacts-alert-rail" aria-label="اقدامات فوری">
+        <button type="button" class="crm-contacts-alert-card" data-drawer-open="drawer-merge">
+            <span class="crm-contacts-alert-card__icon" aria-hidden="true"><i class="fas fa-clone"></i></span>
+            <span class="crm-contacts-alert-card__body">
+                <span class="crm-contacts-alert-card__kicker">نیاز به توجه</span>
+                <strong class="crm-contacts-alert-card__title">
+                    <em class="crm-contacts-alert-card__count">{{ duplicate_groups|length }}</em>
+                    گروه تکراری
+                </strong>
+                <span class="crm-contacts-alert-card__desc">تلفن یکسان — برای تمیزی دیتابیس ادغام کنید</span>
             </span>
-            <span class="crm-action-card-count" aria-label="{{ duplicate_groups|length }} مورد">{{ duplicate_groups|length }}</span>
-            <span class="crm-action-card-cta">
-                <span>ادغام</span>
-                <i class="fas fa-arrow-left" aria-hidden="true"></i>
-            </span>
+            <span class="crm-contacts-alert-card__cta">ادغام <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
         </button>
     </section>
     {% endif %}
@@ -273,6 +293,7 @@
                             <td class="crm-contacts-col-check"><input type="checkbox" class="crm-checkbox crm-row-check" value="{{ c.id }}"></td>
                             <td>
                                 <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-person crm-contacts-person-link">
+                                    <span class="crm-contacts-avatar" aria-hidden="true" style="--crm-avatar-hue: {{ forloop.counter0|add:1 }}">{{ c.name|slice:":1" }}</span>
                                     <div class="crm-contacts-person-text">
                                         <span class="crm-contacts-name">{{ c.name }}</span>
                                         {% if c.company_name %}<span class="crm-contacts-sub">{{ c.company_name }}</span>{% endif %}

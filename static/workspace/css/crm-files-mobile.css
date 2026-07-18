@@ -7,8 +7,77 @@
 .crm-files-mob-header,
 .crm-files-mob-kpis,
 .crm-files-fab,
-.crm-files-mob-filter-bar {
+.crm-files-mob-filter-bar,
+.crm-files-card-mesh,
+.crm-files-mcard__go {
     display: none;
+}
+
+/* Shared structure for redesigned cards (desktop + mobile) */
+.crm-files-mcard__head {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.crm-files-mcard .crm-files-card-head {
+    align-items: flex-start;
+}
+.crm-files-pill--type {
+    background: color-mix(in srgb, var(--ws-surface-2) 70%, var(--ws-surface));
+    color: var(--ws-text-secondary);
+    border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+}
+.crm-files-mcard__owner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+.crm-files-mcard__owner-ico {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, #2563eb 10%, var(--ws-surface));
+    color: #2563eb;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+}
+.crm-files-mcard__owner-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+}
+.crm-files-mcard__owner-txt em {
+    font-style: normal;
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+}
+.crm-files-mcard__owner-txt strong {
+    font-size: 0.8rem;
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.crm-files-mcard .crm-files-card-price {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+.crm-files-mcard .crm-files-card-price em {
+    order: -1;
+    font-style: normal;
+    font-size: 0.6rem;
+    font-weight: 750;
+    color: var(--ws-text-muted);
 }
 
 /* Desktop: sheet children flow in filter row */
@@ -436,108 +505,327 @@
         padding: 0.1rem 0.15rem;
     }
 
-    /* ── Cards ── */
+    /* ── Premium property cards (mini dossier) ── */
     .crm-files-mobile .crm-files-grid,
     .crm-files-mobile .crm-files-grid-v2 {
         display: grid !important;
         grid-template-columns: 1fr !important;
-        gap: 0.55rem !important;
+        gap: 0.65rem !important;
         width: 100%;
         max-width: 100%;
         min-width: 0;
     }
-    .crm-files-mobile .crm-files-card {
+    .crm-files-mobile .crm-files-card.crm-files-mcard {
         width: 100%;
         max-width: 100%;
         min-width: 0;
-        border-radius: 18px !important;
-        padding: 0.85rem 0.9rem 0.8rem !important;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 68%, transparent);
-        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
-        background: var(--ws-surface);
+        gap: 0.6rem;
+        border-radius: 22px !important;
+        padding: 0.9rem 0.9rem 0.8rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent);
+        box-shadow:
+            0 12px 28px rgba(15, 23, 42, 0.07),
+            0 1px 0 rgba(255, 255, 255, 0.55) inset;
+        background:
+            linear-gradient(165deg, color-mix(in srgb, var(--deal-mode-accent, var(--tx-accent, #0f766e)) 8%, var(--ws-surface)) 0%, var(--ws-surface) 48%);
+        overflow: hidden;
+        transition: transform 0.14s, box-shadow 0.14s, border-color 0.14s;
+    }
+    .crm-files-mobile .crm-files-card.crm-files-mcard:active {
+        transform: scale(0.985);
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    }
+    .crm-files-mobile .crm-files-card-mesh {
+        display: block;
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background:
+            radial-gradient(90% 75% at 100% -8%, color-mix(in srgb, var(--deal-mode-accent, var(--tx-accent, #0f766e)) 20%, transparent), transparent 55%),
+            radial-gradient(70% 55% at 0% 100%, rgba(37, 99, 235, 0.06), transparent 50%);
+    }
+    .crm-files-mobile .crm-files-card-accent {
+        height: 2.5px;
+        background: linear-gradient(90deg, var(--deal-mode-accent, #0f766e), var(--tx-accent, #2563eb) 55%, #10b981);
+        opacity: 1;
+        z-index: 2;
+    }
+    .crm-files-mobile .crm-files-card--sale .crm-files-card-accent {
+        background: linear-gradient(90deg, #2563eb, #38bdf8 55%, #0ea5e9);
+    }
+    .crm-files-mobile .crm-files-card--rent .crm-files-card-accent {
+        background: linear-gradient(90deg, #0f766e, #14b8a6 55%, #34d399);
+    }
+    .crm-files-mobile .crm-files-card-bg i {
+        font-size: 5.2rem;
+        opacity: 0.08;
+    }
+
+    .crm-files-mobile .crm-files-mcard__top {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        padding-top: 0.1rem;
+        justify-content: flex-start;
+    }
+    .crm-files-mobile .crm-files-mcard__mark,
+    .crm-files-mobile .crm-files-card-type {
+        width: 3.15rem !important;
+        height: 3.15rem !important;
+        border-radius: 15px !important;
+        font-size: 1.05rem !important;
+        flex-shrink: 0;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow:
+            0 6px 16px color-mix(in srgb, var(--deal-mode-accent, #0f766e) 22%, transparent),
+            inset 0 1px 0 rgba(255, 255, 255, 0.28);
+        position: relative;
         overflow: hidden;
     }
-    .crm-files-mobile .crm-files-card:active {
-        transform: scale(0.99);
+    .crm-files-mobile .crm-files-card--sale .crm-files-mcard__mark {
+        background: linear-gradient(145deg, #2563eb, #1d4ed8) !important;
+        color: #fff !important;
+        border-color: rgba(255, 255, 255, 0.2);
     }
-    .crm-files-mobile .crm-files-card-title {
-        font-size: 0.95rem !important;
-        font-weight: 800 !important;
-        letter-spacing: -0.02em;
-        line-height: 1.35;
-        margin: 0.35rem 0 0.2rem;
-        overflow-wrap: anywhere;
+    .crm-files-mobile .crm-files-card--rent .crm-files-mcard__mark {
+        background: linear-gradient(145deg, #0f766e, #134e4a) !important;
+        color: #fff !important;
+        border-color: rgba(255, 255, 255, 0.2);
     }
-    .crm-files-mobile .crm-files-card-loc {
-        font-size: 0.74rem;
-        color: var(--ws-text-muted);
+    .crm-files-mobile .crm-files-mcard__mark::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), transparent 55%);
+        pointer-events: none;
     }
-    .crm-files-mobile .crm-files-card-owner {
-        font-size: 0.72rem;
-        margin-top: 0.2rem;
+    .crm-files-mobile .crm-files-mcard__go {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 12px;
+        flex-shrink: 0;
+        margin-inline-start: auto;
+        color: #fff;
+        font-size: 0.78rem;
+        background: linear-gradient(145deg, var(--deal-mode-accent, #0f766e), color-mix(in srgb, var(--deal-mode-accent, #0f766e) 65%, #0f172a));
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--deal-mode-accent, #0f766e) 28%, transparent);
     }
-    .crm-files-mobile .crm-files-card-type {
-        width: 36px;
-        height: 36px;
-        border-radius: 11px;
-        font-size: 0.85rem;
+    .crm-files-mobile .crm-files-card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.28rem;
+        align-items: center;
     }
     .crm-files-mobile .crm-files-pill {
         font-size: 0.62rem;
-        font-weight: 700;
+        font-weight: 800;
         padding: 0.18rem 0.48rem;
         border-radius: 999px;
+        line-height: 1.2;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
     }
-    .crm-files-mobile .crm-files-card-metrics {
-        gap: 0.3rem;
-        margin-top: 0.45rem;
+    .crm-files-mobile .crm-files-pill--type {
+        display: none; /* keep mobile badges compact; type shown in mark */
     }
-    .crm-files-mobile .crm-files-metric-chip {
-        border-radius: 10px;
-        padding: 0.35rem 0.5rem;
+    .crm-files-mobile .crm-files-card-title {
+        font-family: 'Vazirmatn', inherit;
+        font-size: 1.05rem !important;
+        font-weight: 900 !important;
+        letter-spacing: -0.03em;
+        line-height: 1.3;
+        margin: 0 !important;
+        overflow-wrap: anywhere;
+        color: var(--ws-text);
+    }
+    .crm-files-mobile .crm-files-card-loc {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 650;
+        color: var(--ws-text-muted);
         min-width: 0;
     }
+    .crm-files-mobile .crm-files-card-loc i {
+        font-size: 0.62rem;
+        color: var(--deal-mode-accent, var(--tx-accent, var(--ws-primary)));
+        flex-shrink: 0;
+    }
+    .crm-files-mobile .crm-files-card-loc-sep {
+        opacity: 0.55;
+        margin-inline: 0.1rem;
+    }
+
+    .crm-files-mobile .crm-files-mcard__owner {
+        padding: 0.5rem 0.6rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 90%, transparent);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+    .crm-files-mobile .crm-files-mcard__owner-ico {
+        width: 2.15rem;
+        height: 2.15rem;
+        border-radius: 11px;
+        font-size: 0.8rem;
+        background: color-mix(in srgb, #2563eb 12%, var(--ws-surface));
+    }
+    .crm-files-mobile .crm-files-mcard__owner-txt strong {
+        font-size: 0.84rem;
+        font-weight: 850;
+    }
+
+    .crm-files-mobile .crm-files-mcard__metrics,
+    .crm-files-mobile .crm-files-card-metrics {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(4.8rem, 1fr));
+        gap: 0.35rem !important;
+        margin-top: 0 !important;
+    }
+    .crm-files-mobile .crm-files-metric-chip {
+        display: flex;
+        flex-direction: column;
+        gap: 0.12rem;
+        min-width: 0;
+        border-radius: 13px;
+        padding: 0.5rem 0.55rem;
+        background: color-mix(in srgb, var(--ws-surface) 90%, transparent);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    }
     .crm-files-mobile .crm-files-metric-chip em {
-        font-size: 0.58rem;
+        font-style: normal;
+        font-size: 0.56rem;
+        font-weight: 750;
+        color: var(--ws-text-muted);
     }
     .crm-files-mobile .crm-files-metric-chip strong {
-        font-size: 0.78rem;
+        font-size: 0.82rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+        overflow-wrap: anywhere;
+        line-height: 1.2;
     }
+
     .crm-files-mobile .crm-files-card-amenities {
-        gap: 0.28rem;
-        margin-top: 0.45rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.32rem;
+        margin-top: 0;
+        padding: 0.35rem;
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--ws-surface-2) 28%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
     }
     .crm-files-mobile .crm-files-amenity {
-        width: 32px;
-        height: 32px;
-        border-radius: 9px;
-        font-size: 0.72rem;
+        width: 2.15rem;
+        height: 2.15rem;
+        border-radius: 11px;
+        font-size: 0.78rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
+    .crm-files-mobile .crm-files-amenity.is-on {
+        background: color-mix(in srgb, #0f766e 12%, var(--ws-surface));
+        color: #0f766e;
+        border: 1px solid color-mix(in srgb, #0f766e 22%, transparent);
+        box-shadow: 0 2px 6px rgba(15, 118, 110, 0.1);
+    }
+    .crm-files-mobile .crm-files-amenity.is-off {
+        opacity: 0.38;
+        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+    }
+
+    .crm-files-mobile .crm-files-mcard__valueband,
     .crm-files-mobile .crm-files-card-foot {
-        margin-top: 0.65rem;
-        padding-top: 0.55rem;
-        gap: 0.4rem;
-        align-items: flex-end;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 0.5rem !important;
+        margin-top: 0.1rem;
+        padding: 0.7rem 0.75rem !important;
+        border-radius: 16px;
+        border-top: none !important;
+        background:
+            linear-gradient(135deg, color-mix(in srgb, var(--deal-mode-accent, #0f766e) 12%, var(--ws-surface)), var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--deal-mode-accent, #0f766e) 20%, var(--ws-border));
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--deal-mode-accent, #0f766e) 10%, transparent);
+    }
+    .crm-files-mobile .crm-files-card--sale .crm-files-mcard__valueband {
+        background: linear-gradient(135deg, color-mix(in srgb, #2563eb 12%, var(--ws-surface)), var(--ws-surface));
+        border-color: color-mix(in srgb, #2563eb 22%, var(--ws-border));
     }
     .crm-files-mobile .crm-files-card-price strong {
-        font-size: 0.95rem !important;
-        font-weight: 800;
+        font-size: 1.08rem !important;
+        font-weight: 900 !important;
+        letter-spacing: -0.03em;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+    .crm-files-mobile .crm-files-card--sale .crm-files-card-price strong { color: #2563eb; }
+    .crm-files-mobile .crm-files-card--rent .crm-files-card-price strong { color: #0f766e; }
+    .crm-files-mobile .crm-files-card-price small {
+        font-size: 0.72rem;
+        font-weight: 750;
+        color: var(--ws-text-secondary);
     }
     .crm-files-mobile .crm-files-card-meta {
+        display: flex;
         flex-wrap: wrap;
-        gap: 0.25rem;
-        justify-content: flex-end;
+        align-items: center;
+        gap: 0.3rem;
+        justify-content: flex-start !important;
     }
     .crm-files-mobile .crm-files-meta-chip {
-        min-height: 28px;
-        border-radius: 8px;
-        font-size: 0.64rem;
-        padding: 0.2rem 0.4rem;
+        min-height: 1.7rem;
+        border-radius: 999px;
+        font-size: 0.66rem;
+        font-weight: 750;
+        padding: 0.22rem 0.5rem;
+        background: color-mix(in srgb, var(--ws-surface) 88%, transparent);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        color: var(--ws-text-secondary);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
     }
     .crm-files-mobile .crm-files-meta-chip--phone {
-        max-width: 7.5rem;
+        max-width: 100%;
+        color: #0284c7;
+        border-color: color-mix(in srgb, #0284c7 22%, var(--ws-border));
+        background: color-mix(in srgb, #0284c7 8%, var(--ws-surface));
+    }
+    .crm-files-mobile .crm-files-meta-chip--phone span {
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 8.5rem;
+    }
+    .crm-files-mobile .crm-files-card-meta time {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        margin-inline-start: auto;
+        font-size: 0.64rem;
+        font-weight: 650;
+        color: var(--ws-text-muted);
+        white-space: nowrap;
+    }
+    .crm-files-mobile .crm-files-card-meta time i {
+        font-size: 0.56rem;
+        opacity: 0.8;
     }
 
     /* ── Table → rich mobile cards ── */
@@ -561,16 +849,33 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 0.45rem 0.55rem;
-        padding: 0.85rem 0.9rem;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 68%, transparent);
-        border-radius: 18px;
-        background: var(--ws-surface);
-        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+        padding: 0.9rem 0.9rem;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent);
+        border-radius: 20px;
+        background:
+            linear-gradient(165deg, color-mix(in srgb, var(--tx-accent, var(--ws-primary)) 8%, var(--ws-surface)) 0%, var(--ws-surface) 48%);
+        box-shadow:
+            0 10px 24px rgba(15, 23, 42, 0.06),
+            0 1px 0 rgba(255, 255, 255, 0.5) inset;
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
         cursor: pointer;
-        border-inline-start: 3px solid var(--tx-accent, var(--ws-primary));
+        position: relative;
+        overflow: hidden;
+        border-inline-start: none;
+    }
+    .crm-files-mobile .crm-ft tbody tr.crm-ft-row::before {
+        content: '';
+        position: absolute;
+        inset-inline: 0;
+        top: 0;
+        height: 2.5px;
+        background: linear-gradient(90deg, var(--tx-accent, var(--ws-primary)), color-mix(in srgb, var(--tx-accent, var(--ws-primary)) 40%, #10b981));
+        pointer-events: none;
+    }
+    .crm-files-mobile .crm-ft tbody tr.crm-ft-row:active {
+        transform: scale(0.985);
     }
     .crm-files-mobile .crm-ft-td-prop {
         grid-column: 1 / -1;
@@ -764,6 +1069,31 @@
     .crm-files-mobile .crm-files-pagination {
         padding: 0.35rem 0 0.75rem;
         gap: 0.45rem;
+    }
+}
+
+@media (max-width: 430px) {
+    .crm-files-mobile .crm-files-card.crm-files-mcard {
+        padding: 0.8rem 0.8rem 0.7rem !important;
+        border-radius: 20px !important;
+        gap: 0.55rem;
+    }
+    .crm-files-mobile .crm-files-mcard__mark,
+    .crm-files-mobile .crm-files-card-type {
+        width: 2.85rem !important;
+        height: 2.85rem !important;
+        border-radius: 13px !important;
+        font-size: 0.95rem !important;
+    }
+    .crm-files-mobile .crm-files-card-title {
+        font-size: 0.98rem !important;
+    }
+    .crm-files-mobile .crm-files-card-price strong {
+        font-size: 1rem !important;
+    }
+    .crm-files-mobile .crm-files-mcard__go {
+        width: 2.1rem;
+        height: 2.1rem;
     }
 }
 

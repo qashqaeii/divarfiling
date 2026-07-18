@@ -9,7 +9,7 @@
 {% block crm_actions %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-detail-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-detail-mobile.css' %}?v=3">
 {% endblock %}
 
 {% block crm_content %}
@@ -217,15 +217,18 @@
         </nav>
     </section>
 
-    <section class="crm-deal-checklist" id="crmDealChecklist"
+    <section class="crm-deal-checklist crm-deal-block" id="crmDealChecklist"
              data-checklist-url="{% url 'workspace:crm_deal_checklist' deal.id %}"
              aria-label="چک‌لیست مدارک">
+        <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+        <span class="crm-deal-block__accent" aria-hidden="true"></span>
         <header class="crm-deal-checklist-head">
             <div class="crm-deal-checklist-title">
                 <span class="crm-deal-checklist-icon" aria-hidden="true"><i class="fas fa-clipboard-check"></i></span>
                 <div>
-                    <h2>چک‌لیست قبل از قرارداد</h2>
-                    <p>{{ checklist_progress.required_done }}/{{ checklist_progress.required_total }} مورد الزامی · {{ checklist_progress.pct }}% تکمیل</p>
+                    <span class="crm-deal-block__kicker">پیش از قرارداد</span>
+                    <h2>چک‌لیست مدارک</h2>
+                    <p>{{ checklist_progress.required_done }}/{{ checklist_progress.required_total }} الزامی · {{ checklist_progress.pct }}٪ تکمیل</p>
                 </div>
             </div>
             <div class="crm-deal-checklist-ring" style="--pct: {{ checklist_progress.pct }}" aria-hidden="true">
@@ -252,23 +255,27 @@
     </section>
 
     <div class="crm-deal-layout">
-        <section class="crm-deal-panel">
+        <section class="crm-deal-panel crm-deal-block">
+            <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+            <span class="crm-deal-block__accent" aria-hidden="true"></span>
             <header class="crm-deal-panel-head">
+                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-file-contract"></i></span>
                 <div class="crm-deal-panel-head-text">
+                    <span class="crm-deal-block__kicker">پرونده مالی</span>
                     <h2>جزئیات معامله</h2>
-                    <p>اطلاعات قرارداد، کمیسیون و یادداشت‌ها</p>
+                    <p>قرارداد، کمیسیون و یادداشت‌ها</p>
                 </div>
             </header>
             <div class="crm-deal-panel-body">
                 <dl class="crm-deal-dl-pro">
                     {% if deal.expected_close_date %}
-                    <div class="crm-deal-dl-item">
+                    <div class="crm-deal-dl-item crm-deal-dl-item--date">
                         <dt><i class="fas fa-calendar-check" aria-hidden="true"></i>تخمین بستن</dt>
                         <dd>{{ deal.expected_close_date|ws_jalali }}</dd>
                     </div>
                     {% endif %}
                     {% if deal.commission_rate %}
-                    <div class="crm-deal-dl-item">
+                    <div class="crm-deal-dl-item crm-deal-dl-item--rate">
                         <dt><i class="fas fa-percent" aria-hidden="true"></i>نرخ کمیسیون</dt>
                         <dd>{{ deal.commission_rate }}%</dd>
                     </div>
@@ -280,13 +287,13 @@
                     </div>
                     {% endif %}
                     {% if deal.contract_amount %}
-                    <div class="crm-deal-dl-item">
+                    <div class="crm-deal-dl-item crm-deal-dl-item--money">
                         <dt><i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>مبلغ قرارداد</dt>
                         <dd>{{ deal.contract_amount|ws_money }}</dd>
                     </div>
                     {% endif %}
                     {% if deal.contract_date %}
-                    <div class="crm-deal-dl-item">
+                    <div class="crm-deal-dl-item crm-deal-dl-item--date">
                         <dt><i class="fas fa-calendar" aria-hidden="true"></i>تاریخ قرارداد</dt>
                         <dd>{{ deal.contract_date|ws_jalali }}</dd>
                     </div>
@@ -322,17 +329,22 @@
         </section>
 
         <aside class="crm-deal-sidebar">
-            <article class="crm-deal-side-card">
+            <article class="crm-deal-side-card crm-deal-block crm-deal-side-card--contact">
+                <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+                <span class="crm-deal-block__accent" aria-hidden="true"></span>
                 <header class="crm-deal-side-head">
                     <span class="crm-deal-side-icon crm-deal-side-icon--contact" aria-hidden="true"><i class="fas fa-user"></i></span>
-                    <h3>مخاطب</h3>
+                    <div class="crm-deal-side-head-text">
+                        <span class="crm-deal-block__kicker">طرف معامله</span>
+                        <h3>مخاطب</h3>
+                    </div>
                 </header>
                 {% if deal.customer_id %}
                 <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="crm-deal-side-link">
-                    <span class="crm-deal-side-avatar">{{ deal.customer.name|crm_initials }}</span>
+                    <span class="crm-deal-side-avatar crm-deals-avatar crm-deals-avatar--hue-{{ deal.customer.name|crm_avatar_hue }}">{{ deal.customer.name|crm_initials }}</span>
                     <span class="crm-deal-side-link-text">
                         <strong>{{ deal.customer.name }}</strong>
-                        <em>{{ deal.customer.status }}</em>
+                        <em>{{ deal.customer.status }}{% if deal.customer.phone %} · {{ deal.customer.phone }}{% endif %}</em>
                     </span>
                     <i class="fas fa-chevron-left" aria-hidden="true"></i>
                 </a>
@@ -342,10 +354,15 @@
             </article>
 
             {% if deal.property_id %}
-            <article class="crm-deal-side-card">
+            <article class="crm-deal-side-card crm-deal-block crm-deal-side-card--property">
+                <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+                <span class="crm-deal-block__accent" aria-hidden="true"></span>
                 <header class="crm-deal-side-head">
                     <span class="crm-deal-side-icon crm-deal-side-icon--property" aria-hidden="true"><i class="fas fa-building"></i></span>
-                    <h3>ملک مرتبط</h3>
+                    <div class="crm-deal-side-head-text">
+                        <span class="crm-deal-block__kicker">دارایی مرتبط</span>
+                        <h3>ملک</h3>
+                    </div>
                 </header>
                 <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="crm-deal-side-link">
                     <span class="crm-deal-side-icon crm-deal-side-icon--property crm-deal-side-icon--sm" aria-hidden="true">
@@ -353,7 +370,7 @@
                     </span>
                     <span class="crm-deal-side-link-text">
                         <strong>{{ deal.property.title }}</strong>
-                        <em>{{ deal.property.deal_mode }}</em>
+                        <em>{{ deal.property.deal_mode }}{% if deal.property.area %} · {{ deal.property.area }} متر{% endif %}</em>
                     </span>
                     <i class="fas fa-chevron-left" aria-hidden="true"></i>
                 </a>
@@ -361,47 +378,59 @@
             {% endif %}
 
             {% if crm_agency and can_manage_team %}
-            <article class="crm-deal-side-card crm-deal-commission-card" data-crm-commission data-deal-id="{{ deal.pk }}">
+            <article class="crm-deal-side-card crm-deal-block crm-deal-commission-card" data-crm-commission data-deal-id="{{ deal.pk }}">
+                <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+                <span class="crm-deal-block__accent" aria-hidden="true"></span>
                 <header class="crm-deal-side-head">
                     <span class="crm-deal-side-icon crm-deal-side-icon--comm" aria-hidden="true"><i class="fas fa-chart-pie"></i></span>
-                    <h3>تقسیم کمیسیون</h3>
+                    <div class="crm-deal-side-head-text">
+                        <span class="crm-deal-block__kicker">تیم فروش</span>
+                        <h3>تقسیم کمیسیون</h3>
+                    </div>
                 </header>
-                {% if deal.commission_amount %}
-                <p class="crm-deal-commission-base">پایه: <strong>{{ deal.commission_amount|ws_money }}</strong></p>
-                {% endif %}
-                <ul class="crm-deal-commission-list" id="crm-commission-list">
-                    {% for s in commission_splits %}
-                    <li data-member-id="{{ s.member_id }}" data-percent="{{ s.percent }}">
-                        <span>{{ s.member.user.get_full_name|default:s.member.user.username }}</span>
-                        <em>{{ s.percent }}%{% if s.amount %} · {{ s.amount|ws_money }}{% endif %}</em>
-                    </li>
-                    {% empty %}
-                    <li class="crm-muted">تقسیم ثبت نشده</li>
-                    {% endfor %}
-                </ul>
-                <div class="crm-deal-commission-editor" id="crm-commission-editor">
-                    {% for m in agency_members %}
-                    {% if m.role == 'advisor' or m.role == 'manager' or m.role == 'owner' %}
-                    <label class="crm-deal-commission-row">
-                        <span>{{ m.user.get_full_name|default:m.user.username }}</span>
-                        <input type="number" class="crm-input crm-input-sm" min="0" max="100" step="0.5"
-                               data-member-id="{{ m.pk }}"
-                               value="{% for s in commission_splits %}{% if s.member_id == m.pk %}{{ s.percent }}{% endif %}{% endfor %}">
-                        <em>%</em>
-                    </label>
+                <div class="crm-deal-side-card__body">
+                    {% if deal.commission_amount %}
+                    <p class="crm-deal-commission-base">پایه: <strong>{{ deal.commission_amount|ws_money }}</strong></p>
                     {% endif %}
-                    {% endfor %}
+                    <ul class="crm-deal-commission-list" id="crm-commission-list">
+                        {% for s in commission_splits %}
+                        <li data-member-id="{{ s.member_id }}" data-percent="{{ s.percent }}">
+                            <span>{{ s.member.user.get_full_name|default:s.member.user.username }}</span>
+                            <em>{{ s.percent }}%{% if s.amount %} · {{ s.amount|ws_money }}{% endif %}</em>
+                        </li>
+                        {% empty %}
+                        <li class="crm-muted">تقسیم ثبت نشده</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="crm-deal-commission-editor" id="crm-commission-editor">
+                        {% for m in agency_members %}
+                        {% if m.role == 'advisor' or m.role == 'manager' or m.role == 'owner' %}
+                        <label class="crm-deal-commission-row">
+                            <span>{{ m.user.get_full_name|default:m.user.username }}</span>
+                            <input type="number" class="crm-input crm-input-sm" min="0" max="100" step="0.5"
+                                   data-member-id="{{ m.pk }}"
+                                   value="{% for s in commission_splits %}{% if s.member_id == m.pk %}{{ s.percent }}{% endif %}{% endfor %}">
+                            <em>%</em>
+                        </label>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="crm-dash-act crm-dash-act--block" id="crm-commission-save">
+                        <i class="fas fa-save" aria-hidden="true"></i><span>ذخیره تقسیم</span>
+                    </button>
                 </div>
-                <button type="button" class="crm-dash-act crm-dash-act--block" id="crm-commission-save">
-                    <i class="fas fa-save" aria-hidden="true"></i><span>ذخیره تقسیم</span>
-                </button>
             </article>
             {% endif %}
 
-            <article class="crm-deal-side-card crm-deal-side-card--actions">
+            <article class="crm-deal-side-card crm-deal-block crm-deal-side-card--actions">
+                <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+                <span class="crm-deal-block__accent" aria-hidden="true"></span>
                 <header class="crm-deal-side-head">
                     <span class="crm-deal-side-icon crm-deal-side-icon--action" aria-hidden="true"><i class="fas fa-bolt"></i></span>
-                    <h3>اقدامات</h3>
+                    <div class="crm-deal-side-head-text">
+                        <span class="crm-deal-block__kicker">عملیات سریع</span>
+                        <h3>اقدامات</h3>
+                    </div>
                 </header>
                 <div class="crm-deal-side-actions">
                     {% if deal.stage == 'از دست رفته' %}
@@ -411,7 +440,7 @@
                         {% csrf_token %}
                         <input type="hidden" name="action" value="update_stage">
                         <input type="hidden" name="stage" value="بسته‌شده">
-                        <button type="submit" class="crm-dash-act crm-dash-act--primary crm-dash-act--block">
+                        <button type="submit" class="crm-deal-cta-win">
                             <i class="fas fa-trophy" aria-hidden="true"></i><span>علامت بسته‌شده</span>
                         </button>
                     </form>
@@ -421,7 +450,7 @@
                     <form method="post" onsubmit="return confirm('حذف معامله؟')" class="crm-deal-side-form">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="delete">
-                        <button type="submit" class="crm-dash-act crm-dash-act--danger crm-dash-act--block">
+                        <button type="submit" class="crm-deal-cta-danger">
                             <i class="fas fa-trash" aria-hidden="true"></i><span>حذف معامله</span>
                         </button>
                     </form>

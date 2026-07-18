@@ -47,10 +47,94 @@
     document.documentElement.style.setProperty('--ph-tabs-h', h + 'px');
   }
 
+  function openModal(id) {
+    if (window.WSModal && typeof window.WSModal.open === 'function') {
+      window.WSModal.open(id);
+      return;
+    }
+    var modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.add('is-open');
+    document.body.classList.add('ws-modal-open');
+  }
+
+  function composeModalForTab(tab) {
+    if (tab === 'bugs') return 'modal-ph-bug';
+    if (tab === 'features') return 'modal-ph-feat-filter';
+    return 'modal-ph-request';
+  }
+
+  function fabLabelForTab(tab) {
+    if (tab === 'bugs') return 'گزارش مشکل';
+    if (tab === 'features') return 'فیلتر';
+    if (tab === 'requests' || tab === 'my' || tab === 'overview' || tab === 'roadmap') return 'پیشنهاد جدید';
+    return 'ثبت جدید';
+  }
+
+  function syncFab() {
+    var hub = document.querySelector('[data-ph-hub]');
+    var fab = document.getElementById('phFab');
+    if (!hub || !fab) return;
+    var tab = hub.getAttribute('data-ph-tab') || 'overview';
+    var licensed = !!document.getElementById('modal-ph-request');
+    var show = false;
+    var label = fabLabelForTab(tab);
+    var modalId = composeModalForTab(tab);
+
+    if (tab === 'features') {
+      show = true;
+      fab.setAttribute('data-modal-target', 'modal-ph-feat-filter');
+    } else if (licensed && (tab === 'requests' || tab === 'bugs' || tab === 'my' || tab === 'overview' || tab === 'roadmap')) {
+      show = true;
+      fab.setAttribute('data-modal-target', modalId);
+    } else if (licensed && tab === 'changelog') {
+      show = false;
+    }
+
+    fab.classList.toggle('is-visible', show);
+    var labelEl = fab.querySelector('[data-ph-fab-label]');
+    if (labelEl) labelEl.textContent = label;
+    fab.setAttribute('aria-label', label);
+
+    if (tab === 'bugs') {
+      fab.querySelector('i') && (fab.querySelector('i').className = 'fas fa-bug');
+    } else if (tab === 'features') {
+      fab.querySelector('i') && (fab.querySelector('i').className = 'fas fa-sliders');
+    } else {
+      fab.querySelector('i') && (fab.querySelector('i').className = 'fas fa-plus');
+    }
+  }
+
+  function bindComposeOpeners() {
+    document.querySelectorAll('[data-ph-compose-open]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var hub = document.querySelector('[data-ph-hub]');
+        var tab = hub ? hub.getAttribute('data-ph-tab') : 'requests';
+        openModal(composeModalForTab(tab === 'features' ? 'requests' : tab));
+      });
+    });
+
+    var fab = document.getElementById('phFab');
+    if (fab) {
+      fab.addEventListener('click', function () {
+        var target = fab.getAttribute('data-modal-target') || 'modal-ph-request';
+        openModal(target);
+      });
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     scrollActiveTabIntoView();
     initStickyTabsOffset();
+    syncFab();
+    bindComposeOpeners();
     window.addEventListener('resize', initStickyTabsOffset);
+
+    var params = new URLSearchParams(window.location.search);
+    var openId = params.get('open') || document.body.dataset.openModal;
+    if (openId && (openId === 'modal-ph-request' || openId === 'modal-ph-bug' || openId === 'modal-ph-feat-filter')) {
+      openModal(openId);
+    }
   });
 
   document.addEventListener('click', function (ev) {

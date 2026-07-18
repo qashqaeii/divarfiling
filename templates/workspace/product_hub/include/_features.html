@@ -14,7 +14,15 @@
         </div>
     </div>
 
-    <form method="get" class="ph-filters" role="search">
+    <div class="ph-feat-mob-bar">
+        <button type="button" class="ph-btn ph-btn--ghost ph-feat-filter-btn" data-modal-open="modal-ph-feat-filter">
+            <i class="fas fa-sliders" aria-hidden="true"></i>
+            <span>فیلتر{% if feature_q or feature_cat or feature_status %} فعال{% endif %}</span>
+        </button>
+        {% if features_count %}<span class="ph-pill ph-pill--soft">{{ features_count }} مورد</span>{% endif %}
+    </div>
+
+    <form method="get" class="ph-filters ph-filters--desk" role="search">
         <input type="hidden" name="tab" value="features">
         <div class="ph-field ph-field--grow">
             <label for="ph-fq">جستجو</label>

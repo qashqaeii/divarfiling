@@ -103,6 +103,7 @@ class ProductHubView(WorkspaceLoginMixin, TemplateView):
             ),
             'unread_count': notif_svc.unread_count(user),
             'is_product_staff': user.is_staff,
+            'open_modal': self.request.GET.get('open', ctx.get('open_modal', '')),
         })
 
         # Changelog
@@ -202,7 +203,7 @@ class FeatureRequestCreateView(WorkspaceLoginMixin, LicenseActionMixin, View):
             messages.success(request, 'پیشنهاد شما ثبت شد.')
             return redirect(reverse('workspace:product_hub:hub') + '?tab=requests')
         messages.error(request, 'لطفاً فرم پیشنهاد را کامل کنید.')
-        return redirect(reverse('workspace:product_hub:hub') + '?tab=requests')
+        return redirect(reverse('workspace:product_hub:hub') + '?tab=requests&open=modal-ph-request')
 
 
 class BugReportCreateView(WorkspaceLoginMixin, LicenseActionMixin, View):
@@ -218,7 +219,7 @@ class BugReportCreateView(WorkspaceLoginMixin, LicenseActionMixin, View):
             messages.success(request, 'گزارش مشکل ثبت شد.')
             return redirect(reverse('workspace:product_hub:hub') + '?tab=bugs')
         messages.error(request, 'لطفاً فرم گزارش باگ را کامل کنید.')
-        return redirect(reverse('workspace:product_hub:hub') + '?tab=bugs')
+        return redirect(reverse('workspace:product_hub:hub') + '?tab=bugs&open=modal-ph-bug')
 
 
 class FeatureVoteToggleView(WorkspaceLoginMixin, LicenseActionMixin, View):

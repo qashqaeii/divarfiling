@@ -5,13 +5,137 @@
 {% block mobile_bar_title %}مرکز توسعه{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page mk-hub ph-page ph-page-mobile" data-ph-hub>
+<div class="mk-page mk-hub ph-page ph-page-mobile" data-ph-hub data-ph-tab="{{ active_tab }}">
 
-    <header class="ph-hero" aria-label="مرکز توسعه محصول">
+    {# ── Mobile HQ header ── #}
+    <header class="ph-mob-header{% if active_tab == 'overview' %} ph-mob-header--hero{% endif %}" aria-label="مرکز توسعه">
+        <div class="ph-mob-header-mesh" aria-hidden="true"></div>
+        <div class="ph-mob-header-accent" aria-hidden="true"></div>
+        {% if active_tab == 'overview' %}
+        <div class="ph-mob-hero-orbs" aria-hidden="true">
+            <span class="ph-mob-orb ph-mob-orb--1"></span>
+            <span class="ph-mob-orb ph-mob-orb--2"></span>
+            <span class="ph-mob-orb ph-mob-orb--3"></span>
+        </div>
+        {% endif %}
+
+        <div class="ph-mob-header-inner">
+            <div class="ph-mob-header-main">
+                {% if active_tab == 'overview' %}
+                <div class="ph-mob-brand-row">
+                    <span class="ph-mob-mark" aria-hidden="true"><i class="fas fa-rocket"></i></span>
+                    <div class="ph-mob-brand-copy">
+                        <span class="ph-mob-kicker">Product Hub</span>
+                        <span class="ph-mob-live">
+                            <span class="ph-mob-live-dot" aria-hidden="true"></span>
+                            محصول فعال
+                        </span>
+                    </div>
+                </div>
+                <h1 class="ph-mob-title">مرکز توسعه</h1>
+                <p class="ph-mob-lead">نسخه‌ها، قابلیت‌ها و پیشنهادهای شما — شفاف و به‌روز</p>
+                {% else %}
+                <span class="ph-mob-kicker"><i class="fas fa-rocket" aria-hidden="true"></i> Product Hub</span>
+                <h1 class="ph-mob-title">مرکز توسعه</h1>
+                <p class="ph-mob-sub">
+                    <span class="ph-mob-sub-chip" dir="ltr">v{{ hub_stats.latest_version }}</span>
+                    {% if hub_stats.features_in_progress %}<span class="ph-mob-sub-chip is-build">{{ hub_stats.features_in_progress }} در ساخت</span>{% endif %}
+                    {% if unread_count %}<span class="ph-mob-sub-chip is-unread">{{ unread_count }} اعلان</span>{% endif %}
+                </p>
+                {% endif %}
+            </div>
+            <div class="ph-mob-header-actions" role="toolbar" aria-label="عملیات مرکز توسعه">
+                <a href="{% url 'workspace:product_hub:notifications' %}" class="ph-mob-icon-btn" title="اعلان‌ها" aria-label="اعلان‌ها">
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                    {% if unread_count %}<span class="ph-mob-icon-dot" aria-hidden="true"></span>{% endif %}
+                </a>
+                {% if active_tab == 'features' %}
+                <button type="button" class="ph-mob-icon-btn" data-modal-open="modal-ph-feat-filter" title="فیلتر" aria-label="فیلتر قابلیت‌ها">
+                    <i class="fas fa-sliders" aria-hidden="true"></i>
+                    {% if feature_q or feature_cat or feature_status %}<span class="ph-mob-icon-dot" aria-hidden="true"></span>{% endif %}
+                </button>
+                {% endif %}
+                {% if is_product_staff %}
+                <a href="{% url 'workspace:product_hub:manage' %}" class="ph-mob-icon-btn" title="مدیریت" aria-label="مدیریت">
+                    <i class="fas fa-wrench" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if has_product_action_access %}
+                <button type="button" class="ph-mob-icon-btn ph-mob-icon-btn--primary" data-ph-compose-open title="ثبت جدید" aria-label="ثبت جدید">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if active_tab == 'overview' %}
+        <div class="ph-mob-hero-spotlight">
+            <a href="?tab=changelog" class="ph-mob-version-card">
+                <span class="ph-mob-version-glow" aria-hidden="true"></span>
+                <span class="ph-mob-version-badge">
+                    <i class="fas fa-tag" aria-hidden="true"></i>
+                    آخرین نسخه
+                </span>
+                <strong class="ph-mob-version-num" dir="ltr">v{{ hub_stats.latest_version }}</strong>
+                <span class="ph-mob-version-meta">
+                    {% if hub_stats.latest_released_at %}
+                    <i class="far fa-calendar-check" aria-hidden="true"></i>
+                    {{ hub_stats.latest_released_at|ws_jalali_date }}
+                    {% else %}
+                    <i class="far fa-clock" aria-hidden="true"></i>
+                    به‌زودی
+                    {% endif %}
+                </span>
+                {% if hub_stats.latest_title %}
+                <span class="ph-mob-version-title">{{ hub_stats.latest_title|truncatechars:42 }}</span>
+                {% endif %}
+                <span class="ph-mob-version-go" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
+            </a>
+
+            <div class="ph-mob-hero-stats" aria-label="وضعیت محصول">
+                <a href="?tab=features" class="ph-mob-hero-stat">
+                    <em>{{ hub_stats.features_active }}</em>
+                    <span>فعال</span>
+                </a>
+                <a href="?tab=roadmap" class="ph-mob-hero-stat ph-mob-hero-stat--amber">
+                    <em>{{ hub_stats.features_in_progress }}</em>
+                    <span>در ساخت</span>
+                </a>
+                <a href="?tab=requests" class="ph-mob-hero-stat ph-mob-hero-stat--purple">
+                    <em>{{ hub_stats.requests_total }}</em>
+                    <span>پیشنهاد</span>
+                </a>
+            </div>
+        </div>
+
+        <nav class="ph-mob-hero-shortcuts" aria-label="میانبرهای سریع">
+            <a href="?tab=changelog" class="ph-mob-shortcut">
+                <i class="fas fa-timeline" aria-hidden="true"></i>
+                <span>تغییرات</span>
+            </a>
+            <a href="?tab=roadmap" class="ph-mob-shortcut">
+                <i class="fas fa-map" aria-hidden="true"></i>
+                <span>نقشه راه</span>
+            </a>
+            <a href="?tab=requests" class="ph-mob-shortcut">
+                <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                <span>پیشنهاد</span>
+            </a>
+            <a href="?tab=my" class="ph-mob-shortcut">
+                <i class="fas fa-user-check" aria-hidden="true"></i>
+                <span>مال من</span>
+            </a>
+        </nav>
+        {% endif %}
+    </header>
+
+    {# ── Desktop hero ── #}
+    <header class="ph-hero ph-desk-hero" aria-label="مرکز توسعه محصول">
         <div class="ph-hero-glow" aria-hidden="true"></div>
         <div class="ph-hero-inner">
             <div class="ph-hero-main">
@@ -144,7 +268,7 @@
         </nav>
     </div>
 
-    <div class="ph-content">
+    <div class="ph-content" data-ph-content="{{ active_tab }}">
         {% if active_tab == 'overview' %}
             {% include 'workspace/product_hub/include/_overview.html' %}
         {% elif active_tab == 'changelog' %}
@@ -162,10 +286,161 @@
         {% endif %}
     </div>
 
+    {% if has_product_action_access %}
+    <button type="button" class="ph-fab" id="phFab" data-ph-fab aria-label="ثبت جدید">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+        <span data-ph-fab-label>ثبت جدید</span>
+    </button>
+    {% endif %}
 </div>
+
+{# ── Modal: پیشنهاد قابلیت ── #}
+{% if has_product_action_access %}
+<div class="ws-modal ph-modal" id="modal-ph-request" role="dialog" aria-modal="true" aria-labelledby="ph-req-modal-title">
+    <div class="ws-modal-overlay" data-modal-close tabindex="-1" aria-hidden="true"></div>
+    <div class="ws-modal-panel ws-modal-panel-lg ph-modal-panel">
+        <header class="ws-modal-head">
+            <div class="ph-modal-head-copy">
+                <span class="ph-modal-ico ph-modal-ico--amber" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
+                <div>
+                    <h2 id="ph-req-modal-title" class="ws-modal-title">پیشنهاد قابلیت</h2>
+                    <p class="ws-modal-sub">ایده خود را بنویسید تا در اولویت تیم دیده شود</p>
+                </div>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </header>
+        <form method="post" action="{% url 'workspace:product_hub:request_create' %}" class="ws-modal-body ph-modal-form">
+            {% csrf_token %}
+            <div class="ws-field">
+                <label class="ws-label" for="ph-modal-req-title">عنوان پیشنهاد</label>
+                <input type="text" name="title" id="ph-modal-req-title" class="ws-input" placeholder="عنوان پیشنهاد…" required maxlength="200">
+            </div>
+            <div class="ph-form-row">
+                <div class="ws-field">
+                    <label class="ws-label" for="ph-modal-req-category">دسته‌بندی</label>
+                    <select name="category" id="ph-modal-req-category" class="ws-select" required>
+                        {% for val, label in request_form.fields.category.choices %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="ws-field">
+                    <label class="ws-label" for="ph-modal-req-priority">اولویت</label>
+                    <select name="priority" id="ph-modal-req-priority" class="ws-select" required>
+                        {% for val, label in request_form.fields.priority.choices %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="ws-field">
+                <label class="ws-label" for="ph-modal-req-problem">این قابلیت چه مشکلی را حل می‌کند؟</label>
+                <textarea name="problem" id="ph-modal-req-problem" class="ws-input ws-textarea" rows="4" placeholder="این قابلیت چه مشکلی را حل می‌کند؟" required></textarea>
+            </div>
+            <div class="ws-field">
+                <label class="ws-label" for="ph-modal-req-why">چرا برای شما مهم است؟</label>
+                <textarea name="why_important" id="ph-modal-req-why" class="ws-input ws-textarea" rows="3" placeholder="چرا برای شما مهم است؟" required></textarea>
+            </div>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary"><i class="fas fa-plus" aria-hidden="true"></i> ثبت پیشنهاد</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ws-modal ph-modal" id="modal-ph-bug" role="dialog" aria-modal="true" aria-labelledby="ph-bug-modal-title">
+    <div class="ws-modal-overlay" data-modal-close tabindex="-1" aria-hidden="true"></div>
+    <div class="ws-modal-panel ws-modal-panel-lg ph-modal-panel">
+        <header class="ws-modal-head">
+            <div class="ph-modal-head-copy">
+                <span class="ph-modal-ico ph-modal-ico--rose" aria-hidden="true"><i class="fas fa-bug"></i></span>
+                <div>
+                    <h2 id="ph-bug-modal-title" class="ws-modal-title">گزارش مشکل</h2>
+                    <p class="ws-modal-sub">مشکل را ساده و شفاف بنویسید</p>
+                </div>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </header>
+        <form method="post" action="{% url 'workspace:product_hub:bug_create' %}" class="ws-modal-body ph-modal-form">
+            {% csrf_token %}
+            <div class="ph-form-row">
+                <div class="ws-field">
+                    <label class="ws-label" for="modal-{{ bug_form.title.id_for_label }}">{{ bug_form.title.label }}</label>
+                    <input type="text" name="title" class="ws-input" id="modal-{{ bug_form.title.id_for_label }}" placeholder="عنوان مشکل…" required maxlength="200">
+                </div>
+                <div class="ws-field">
+                    <label class="ws-label" for="modal-{{ bug_form.severity.id_for_label }}">{{ bug_form.severity.label }}</label>
+                    <select name="severity" class="ws-select" id="modal-{{ bug_form.severity.id_for_label }}" required>
+                        {% for val, label in bug_form.fields.severity.choices %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="ws-field">
+                <label class="ws-label" for="modal-{{ bug_form.description.id_for_label }}">{{ bug_form.description.label }}</label>
+                <textarea name="description" class="ws-input ws-textarea" id="modal-{{ bug_form.description.id_for_label }}" rows="5" placeholder="توضیح کامل مشکل، مراحل بازتولید…" required></textarea>
+            </div>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary"><i class="fas fa-paper-plane" aria-hidden="true"></i> ثبت گزارش</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{# ── Modal: فیلتر قابلیت‌ها ── #}
+<div class="ws-modal ph-modal" id="modal-ph-feat-filter" role="dialog" aria-modal="true" aria-labelledby="ph-feat-filter-title">
+    <div class="ws-modal-overlay" data-modal-close tabindex="-1" aria-hidden="true"></div>
+    <div class="ws-modal-panel ws-modal-panel-sm ph-modal-panel">
+        <header class="ws-modal-head">
+            <div>
+                <h2 id="ph-feat-filter-title" class="ws-modal-title">فیلتر قابلیت‌ها</h2>
+                <p class="ws-modal-sub">جستجو، دسته و وضعیت</p>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </header>
+        <form method="get" class="ws-modal-body">
+            <input type="hidden" name="tab" value="features">
+            <div class="ws-field">
+                <label class="ws-label" for="ph-fq-m">جستجو</label>
+                <input id="ph-fq-m" type="search" name="fq" value="{{ feature_q }}" class="ws-input" placeholder="نقشه، مشتری، کمیسیون…">
+            </div>
+            <div class="ws-field">
+                <label class="ws-label" for="ph-fcat-m">دسته کار</label>
+                <select id="ph-fcat-m" name="fcat" class="ws-select">
+                    <option value="">همه دسته‌ها</option>
+                    {% for val, label in category_choices %}
+                    <option value="{{ val }}" {% if feature_cat == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="ws-field">
+                <label class="ws-label" for="ph-fstatus-m">وضعیت</label>
+                <select id="ph-fstatus-m" name="fstatus" class="ws-select">
+                    <option value="">همه وضعیت‌ها</option>
+                    {% for val, label in feature_status_choices %}
+                    <option value="{{ val }}" {% if feature_status == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="ws-modal-foot">
+                {% if feature_q or feature_cat or feature_status %}
+                <a href="?tab=features" class="ws-btn ws-btn-ghost">پاک کردن</a>
+                {% else %}
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                {% endif %}
+                <button type="submit" class="ws-btn ws-btn-primary">اعمال فیلتر</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% csrf_token %}
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/product-hub.js' %}?v=5"></script>
+<script src="{% static 'workspace/js/product-hub.js' %}?v=6"></script>
 {% endblock %}

@@ -5,13 +5,38 @@
 {% block mobile_bar_title %}اعلان‌ها{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-utility-mobile.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
 <div class="mk-page ph-page ph-page-mobile ph-notif-page">
-    <header class="mk-hub-head">
+
+    <header class="ph-mob-header">
+        <div class="ph-mob-header-mesh" aria-hidden="true"></div>
+        <div class="ph-mob-header-accent" aria-hidden="true"></div>
+        <div class="ph-mob-header-inner">
+            <div class="ph-mob-header-main">
+                <span class="ph-mob-kicker"><i class="fas fa-bell" aria-hidden="true"></i> مرکز توسعه</span>
+                <h1 class="ph-mob-title">اعلان‌ها</h1>
+                <p class="ph-mob-sub"><span>انتشار قابلیت‌ها و تغییر وضعیت درخواست‌ها</span></p>
+            </div>
+            <div class="ph-mob-header-actions">
+                <a href="{% url 'workspace:product_hub:hub' %}" class="ph-mob-icon-btn" title="بازگشت" aria-label="بازگشت">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <form method="post" action="{% url 'workspace:product_hub:notifications_mark_all' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="ph-mob-icon-btn ph-mob-icon-btn--primary" title="همه خوانده" aria-label="همه را خوانده علامت بزن">
+                        <i class="fas fa-check-double" aria-hidden="true"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <header class="mk-hub-head ph-desk-hero">
         <div class="mk-hub-head-main">
             <p class="mk-hub-head-eyebrow" style="color:var(--ws-primary);font-weight:750;font-size:0.72rem;margin:0 0 0.2rem">مرکز توسعه</p>
             <h1 class="mk-hub-head-title">اعلان‌های محصول</h1>
@@ -29,12 +54,23 @@
     <div class="ph-notif-list">
         {% for n in notifications %}
         <a class="ph-notif {% if not n.is_read %}is-unread{% endif %}" href="{{ n.link_path|default:'#' }}">
-            <strong>{{ n.title }}</strong>
-            <p>{{ n.body }}</p>
-            <small>{{ n.created_at|ws_jalali }}</small>
+            <span class="ph-notif-ico" aria-hidden="true">
+                <i class="fas {% if not n.is_read %}fa-envelope{% else %}fa-envelope-open{% endif %}"></i>
+            </span>
+            <span class="ph-notif-body">
+                <strong>{{ n.title }}</strong>
+                <p>{{ n.body }}</p>
+                <small>{{ n.created_at|ws_jalali }}</small>
+            </span>
+            <i class="fas fa-chevron-left ph-notif-go" aria-hidden="true"></i>
         </a>
         {% empty %}
-        <p class="ph-empty">اعلانی ندارید.</p>
+        <div class="ph-empty-state">
+            <span class="ph-empty-ico" aria-hidden="true"><i class="fas fa-bell-slash"></i></span>
+            <strong>اعلانی ندارید</strong>
+            <p>وقتی نسخه‌ای منتشر شود یا وضعیت پیشنهادتان عوض شود، اینجا خبر می‌دهیم.</p>
+            <a href="{% url 'workspace:product_hub:hub' %}" class="ph-btn ph-btn--primary">بازگشت به مرکز توسعه</a>
+        </div>
         {% endfor %}
     </div>
 </div>

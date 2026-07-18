@@ -1,6 +1,22 @@
 {% load workspace_tags product_hub_tags %}
 <div class="ph-stack">
-<section class="ph-panel ph-panel--form" id="ph-bug-form">
+
+{% if has_product_action_access %}
+<div class="ph-compose-cta">
+    <div class="ph-compose-cta-copy">
+        <span class="ph-compose-cta-ico ph-compose-cta-ico--rose" aria-hidden="true"><i class="fas fa-bug"></i></span>
+        <div>
+            <strong>مشکلی دیدید؟</strong>
+            <p>گزارش دهید تا سریع‌تر بررسی و رفع شود</p>
+        </div>
+    </div>
+    <button type="button" class="ph-btn ph-btn--primary" data-modal-open="modal-ph-bug">
+        <i class="fas fa-plus" aria-hidden="true"></i><span>گزارش مشکل</span>
+    </button>
+</div>
+{% endif %}
+
+<section class="ph-panel ph-panel--form ph-form-desk" id="ph-bug-form">
     <div class="ph-panel-head">
         <div class="ph-panel-head-main">
             <span class="ph-panel-ico ph-panel-ico--rose" aria-hidden="true"><i class="fas fa-bug"></i></span>
@@ -47,6 +63,19 @@
     </div>
     {% endif %}
 </section>
+
+{% if not has_product_action_access %}
+<section class="ph-panel ph-lock-mob">
+    <div class="ph-lock">
+        <span class="ph-lock-ico" aria-hidden="true"><i class="fas fa-lock"></i></span>
+        <div>
+            <strong>گزارش مشکل نیاز به لایسنس فعال دارد</strong>
+            <p>وضعیت مشکلات رفع‌شده را می‌توانید همین پایین ببینید.</p>
+            <a href="{% url 'workspace:upgrade' %}?feature=product_hub" class="ph-btn ph-btn--primary ph-btn--lg">ارتقا لایسنس</a>
+        </div>
+    </div>
+</section>
+{% endif %}
 
 <section class="ph-panel">
     <div class="ph-panel-head">

@@ -3130,12 +3130,14 @@ function initCRMDealsPage() {
     const page = document.querySelector('.crm-deals-pro');
     if (!page) return;
 
+    // Desktop/table fallback — mobile cards use real <a> hit targets
     page.querySelectorAll('.crm-deals-row[data-href]').forEach(row => {
         if (row.dataset.hrefBound === '1') return;
         row.dataset.hrefBound = '1';
         row.addEventListener('click', e => {
-            if (e.target.closest('a, button, input, select, textarea, label')) return;
-            window.location.href = row.dataset.href;
+            if (e.target.closest('a, button, input, select, textarea, label, summary')) return;
+            const href = row.getAttribute('data-href');
+            if (href) window.location.href = href;
         });
     });
 
@@ -3148,21 +3150,16 @@ function initCRMDealsPage() {
             timer = setTimeout(() => search.form?.submit(), 420);
         });
     }
-
-    const sheetToggle = document.getElementById('crmDealsFilterToggle');
-    const sheet = document.getElementById('crmDealsFilterSheet');
-    if (sheetToggle && sheet && sheetToggle.dataset.bound !== '1') {
-        sheetToggle.dataset.bound = '1';
-        const setSheet = (open) => {
-            sheet.classList.toggle('is-open', open);
-            sheetToggle.classList.toggle('is-open', open);
-            sheetToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    // Filter sheet uses native <details> on mobile.
+    // Keep it open on desktop so selects stay in the form row.
+    const details = document.getElementById('crmDealsFilterDetails');
+    if (details) {
+        const deskMq = window.matchMedia('(min-width: 769px)');
+        const syncDetails = () => {
+            if (deskMq.matches) details.setAttribute('open', '');
         };
-        sheetToggle.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setSheet(!sheet.classList.contains('is-open'));
-        });
+        syncDetails();
+        deskMq.addEventListener?.('change', syncDetails);
     }
 }
 
@@ -3356,11 +3353,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMCommissionSplit();
     initCRMContactTeam();
     initCRMContactStatusPicker();
-    initCRMPropGalleryLightbox();
-        initCRMPropertyTeam();
-        initCRMPropertyImages();
-        initCRMTeamPage();
-    initCRMDealsPage();
+    try { initCRMDealsPage(); } catch (err) { console.error('initCRMDealsPage', err); }
+    try { initCRMPropGalleryLightbox(); } catch (err) { console.error(err); }
+    try { initCRMPropertyTeam(); } catch (err) { console.error(err); }
+    try { initCRMPropertyImages(); } catch (err) { console.error(err); }
+    try { initCRMTeamPage(); } catch (err) { console.error(err); }
     initCRMSidePanel();
     initCRMQuickLead();
     initCRMImportDrawer();

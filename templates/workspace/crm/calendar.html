@@ -1,15 +1,44 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load workspace_tags crm_tags %}
+{% load static workspace_tags crm_tags %}
 
 {% block page_title %}تقویم CRM{% endblock %}
+{% block mobile_bar_title %}تقویم{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_search %}{% endblock %}
 {% block crm_actions %}{% endblock %}
 
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=1">
+{% endblock %}
+
 {% block crm_content %}
-<div class="crm-shell-page crm-cal-page crm-page-chrome">
-    <header class="crm-dash-bar">
+<div class="crm-shell-page crm-cal-page crm-cal-mobile crm-page-chrome">
+
+    <header class="crm-cal-mob-header">
+        <div class="crm-cal-mob-header-mesh" aria-hidden="true"></div>
+        <div class="crm-cal-mob-header-accent" aria-hidden="true"></div>
+        <div class="crm-cal-mob-header-inner">
+            <div class="crm-cal-mob-header-main">
+                <span class="crm-cal-mob-kicker"><i class="fas fa-calendar-days" aria-hidden="true"></i> برنامه ماهانه</span>
+                <h1 class="crm-cal-mob-title">تقویم</h1>
+                <p class="crm-cal-mob-sub">
+                    <span>{{ calendar.month_label }} {{ calendar.year_label }}</span>
+                    <span class="crm-cal-mob-sub-chip">{{ calendar.event_total_label }} رویداد</span>
+                </p>
+            </div>
+            <div class="crm-cal-mob-header-actions" role="toolbar" aria-label="عملیات تقویم">
+                <a href="{% url 'workspace:crm_reminders' %}" class="crm-cal-mob-icon-btn" title="یادآورها" aria-label="یادآورها">
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                </a>
+                <a href="{% url 'workspace:crm_today' %}" class="crm-cal-mob-icon-btn crm-cal-mob-icon-btn--primary" title="صف کار" aria-label="صف کار امروز">
+                    <i class="fas fa-list-check" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <header class="crm-dash-bar crm-cal-desk-header">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">تقویم</h1>
         </div>
@@ -22,9 +51,12 @@
             </a>
         </div>
     </header>
+
     <div class="crm-shell-body crm-shell-body--flush">
     <div class="crm-cal-layout">
         <section class="crm-cal-board" aria-label="تقویم {{ calendar.title }}">
+            <div class="crm-cal-board-mesh" aria-hidden="true"></div>
+            <span class="crm-cal-board-accent" aria-hidden="true"></span>
 
             <header class="crm-cal-head">
                 <div class="crm-cal-head-row">
@@ -51,7 +83,7 @@
                             <i class="fas fa-calendar-day" aria-hidden="true"></i><span>امروز</span>
                         </a>
                         <a href="{% url 'workspace:crm_today' %}" class="crm-cal-head-btn crm-cal-head-btn--primary" title="صف کار">
-                            <i class="fas fa-list-check" aria-hidden="true"></i><span>صف</span>
+                            <i class="fas fa-list-check" aria-hidden="true"></i><span>صف کار</span>
                         </a>
                     </div>
                 </div>
@@ -90,6 +122,14 @@
                             <span class="crm-cal-chip-more" title="{{ day.event_count }} رویداد">+{{ day.event_count|add:"-3" }}</span>
                             {% endif %}
                         </div>
+                        <div class="crm-cal-dots" aria-hidden="true">
+                            {% for ev in day.events|slice:":3" %}
+                            <i class="crm-cal-dot crm-cal-dot--{{ ev.type }}"></i>
+                            {% endfor %}
+                            {% if day.event_count > 3 %}
+                            <span class="crm-cal-dot crm-cal-dot--more">+{{ day.event_count|add:"-3" }}</span>
+                            {% endif %}
+                        </div>
                         {% endif %}
                     </div>
                     {% endfor %}
@@ -118,13 +158,14 @@
                     </div>
                     <a href="{{ ev.href }}" class="crm-cal-agenda-body">
                         <span class="crm-cal-agenda-type">
-                            {% if ev.type == 'followup' %}پیگیری
-                            {% elif ev.type == 'reminder' %}یادآور
-                            {% else %}بازدید{% endif %}
+                            {% if ev.type == 'followup' %}<i class="fas fa-phone" aria-hidden="true"></i> پیگیری
+                            {% elif ev.type == 'reminder' %}<i class="fas fa-bell" aria-hidden="true"></i> یادآور
+                            {% else %}<i class="fas fa-door-open" aria-hidden="true"></i> بازدید{% endif %}
                         </span>
                         <strong>{{ ev.label|truncatechars:42 }}</strong>
                         {% if ev.time %}<time>{{ ev.time }}</time>{% endif %}
                     </a>
+                    <span class="crm-cal-agenda-go" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </li>
                 {% endfor %}
             </ol>

@@ -1,0 +1,623 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM Calendar — Premium Mobile UX
+   Scoped under .crm-cal-mobile
+   ═══════════════════════════════════════════════════════════ */
+
+.crm-cal-mob-header,
+.crm-cal-board-mesh,
+.crm-cal-board-accent,
+.crm-cal-dots {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .crm-cal-mobile.crm-page-chrome,
+    .crm-cal-mobile.crm-cal-page {
+        padding: 0 0 calc(1.25rem + env(safe-area-inset-bottom, 0px));
+        gap: 0;
+        max-width: 100%;
+        min-width: 0;
+        min-height: 0 !important;
+        flex: none !important;
+        overflow: visible !important;
+        overflow-x: clip;
+        height: auto !important;
+        background:
+            radial-gradient(120% 36% at 50% 0%, rgba(37, 99, 235, 0.08), transparent 55%),
+            color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-bg, #f8fafc));
+    }
+    .crm-cal-mobile .crm-shell-body--flush {
+        flex: none !important;
+        min-height: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 0.7rem 0.75rem !important;
+        gap: 0.65rem !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .crm-cal-mobile .crm-cal-desk-header {
+        display: none !important;
+    }
+
+    /* ── Mobile header ── */
+    .crm-cal-mob-header {
+        display: block;
+        position: relative;
+        overflow: hidden;
+        background: var(--ws-surface);
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        border-radius: 0 0 22px 22px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        margin-bottom: 0.55rem;
+    }
+    .crm-cal-mob-header-mesh {
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(90% 120% at 100% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
+            radial-gradient(70% 90% at 0% 100%, rgba(16, 185, 129, 0.08), transparent 50%);
+        pointer-events: none;
+    }
+    .crm-cal-mob-header-accent {
+        position: absolute;
+        inset-inline: 0;
+        top: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #2563eb, #0ea5e9 45%, #10b981);
+    }
+    .crm-cal-mob-header-inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.65rem;
+        padding: 0.95rem 0.9rem 0.85rem;
+    }
+    .crm-cal-mob-header-main { min-width: 0; flex: 1; }
+    .crm-cal-mob-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.66rem;
+        font-weight: 800;
+        color: #2563eb;
+        letter-spacing: -0.01em;
+    }
+    .crm-cal-mob-kicker i { font-size: 0.62rem; }
+    .crm-cal-mob-title {
+        margin: 0.2rem 0 0;
+        font-family: 'Vazirmatn', inherit;
+        font-size: 1.28rem;
+        font-weight: 900;
+        letter-spacing: -0.035em;
+        line-height: 1.25;
+        color: var(--ws-text);
+    }
+    .crm-cal-mob-sub {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin: 0.4rem 0 0;
+        font-size: 0.7rem;
+        font-weight: 650;
+        color: var(--ws-text-muted);
+    }
+    .crm-cal-mob-sub-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.45rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 750;
+        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        color: var(--ws-text-secondary);
+    }
+    .crm-cal-mob-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.15rem;
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--ws-surface) 75%, transparent);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    .crm-cal-mob-icon-btn {
+        width: 2.35rem;
+        height: 2.35rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 11px;
+        background: transparent;
+        color: var(--ws-text-secondary);
+        text-decoration: none;
+        cursor: pointer;
+        font-size: 0.88rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .crm-cal-mob-icon-btn--primary {
+        background: linear-gradient(145deg, #2563eb, #1d4ed8);
+        color: #fff;
+        box-shadow: 0 3px 10px rgba(37, 99, 235, 0.32);
+    }
+    .crm-cal-mob-icon-btn:active { transform: scale(0.95); }
+
+    /* ── Layout ── */
+    .crm-cal-mobile .crm-cal-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: none !important;
+        grid-template-rows: none !important;
+        gap: 0.65rem;
+        overflow: visible !important;
+        height: auto !important;
+        min-height: 0 !important;
+        flex: none !important;
+    }
+
+    /* ── Calendar board card ── */
+    .crm-cal-mobile .crm-cal-board {
+        position: relative;
+        overflow: hidden;
+        height: auto !important;
+        min-height: 0 !important;
+        border-radius: 22px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent);
+        background:
+            linear-gradient(165deg, color-mix(in srgb, #2563eb 6%, var(--ws-surface)) 0%, var(--ws-surface) 42%);
+        box-shadow:
+            0 12px 28px rgba(15, 23, 42, 0.07),
+            0 1px 0 rgba(255, 255, 255, 0.55) inset;
+    }
+    .crm-cal-mobile .crm-cal-board-mesh {
+        display: block;
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background:
+            radial-gradient(90% 70% at 100% 0%, rgba(37, 99, 235, 0.12), transparent 55%),
+            radial-gradient(70% 55% at 0% 100%, rgba(16, 185, 129, 0.06), transparent 50%);
+    }
+    .crm-cal-mobile .crm-cal-board-accent {
+        display: block;
+        position: absolute;
+        inset-inline: 0;
+        top: 0;
+        height: 2.5px;
+        z-index: 2;
+        background: linear-gradient(90deg, #2563eb, #0ea5e9 50%, #10b981);
+        pointer-events: none;
+    }
+    .crm-cal-mobile .crm-cal-head,
+    .crm-cal-mobile .crm-cal-grid-wrap {
+        position: relative;
+        z-index: 1;
+    }
+
+    .crm-cal-mobile .crm-cal-head {
+        padding: 0.8rem 0.85rem 0.65rem;
+        background: transparent;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+    }
+    .crm-cal-mobile .crm-cal-head-row {
+        margin-bottom: 0.55rem;
+        gap: 0.55rem;
+    }
+    .crm-cal-mobile .crm-cal-nav-btn {
+        width: 2.45rem;
+        height: 2.45rem;
+        border-radius: 13px;
+        background: color-mix(in srgb, var(--ws-surface) 88%, transparent);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .crm-cal-mobile .crm-cal-nav-btn:active {
+        transform: scale(0.95);
+        background: color-mix(in srgb, #2563eb 8%, var(--ws-surface));
+        color: #2563eb;
+        border-color: color-mix(in srgb, #2563eb 25%, var(--ws-border));
+    }
+    .crm-cal-mobile .crm-cal-head-title strong {
+        font-family: 'Vazirmatn', inherit;
+        font-size: 1.12rem;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+    }
+    .crm-cal-mobile .crm-cal-head-title span {
+        font-size: 0.68rem;
+        font-weight: 700;
+        margin-top: 0.15rem;
+    }
+
+    .crm-cal-mobile .crm-cal-head-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .crm-cal-mobile .crm-cal-months {
+        display: flex;
+        gap: 0.3rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin: 0;
+        padding: 0.1rem 0.05rem;
+        width: 100%;
+    }
+    .crm-cal-mobile .crm-cal-months::-webkit-scrollbar { display: none; }
+    .crm-cal-mobile .crm-cal-month-btn {
+        flex-shrink: 0;
+        min-height: 2rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 90%, transparent);
+        color: var(--ws-text-secondary);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .crm-cal-mobile .crm-cal-month-btn.is-active {
+        background: linear-gradient(145deg, #2563eb, #1d4ed8);
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 3px 10px rgba(37, 99, 235, 0.28);
+    }
+    .crm-cal-mobile .crm-cal-head-btns {
+        width: 100%;
+        justify-content: stretch;
+        gap: 0.4rem;
+    }
+    .crm-cal-mobile .crm-cal-head-btn {
+        flex: 1;
+        height: 2.4rem;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 0.74rem;
+        font-weight: 800;
+        gap: 0.35rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .crm-cal-mobile .crm-cal-head-btn span { display: inline !important; }
+    .crm-cal-mobile .crm-cal-head-btn--primary {
+        background: linear-gradient(145deg, #0f766e, #134e4a);
+        border-color: transparent;
+        box-shadow: 0 3px 10px rgba(15, 118, 110, 0.28);
+    }
+
+    .crm-cal-mobile .crm-cal-head-meta {
+        gap: 0.45rem;
+    }
+    .crm-cal-mobile .crm-cal-legend {
+        gap: 0.45rem;
+        font-size: 0.64rem;
+        font-weight: 700;
+    }
+    .crm-cal-mobile .crm-cal-legend-ic {
+        width: 1.35rem;
+        height: 1.35rem;
+        border-radius: 7px;
+        font-size: 0.62rem;
+    }
+    .crm-cal-mobile .crm-cal-days-count {
+        font-size: 0.64rem;
+        font-weight: 750;
+        padding: 0.2rem 0.45rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+    }
+
+    /* ── Grid ── */
+    .crm-cal-mobile .crm-cal-grid-wrap {
+        flex: none;
+        overflow: visible;
+    }
+    .crm-cal-mobile .crm-cal-weekdays {
+        padding: 0.45rem 0.4rem;
+        font-size: 0.68rem;
+        font-weight: 800;
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+    }
+    .crm-cal-mobile .crm-cal-grid {
+        gap: 0;
+        background: transparent;
+        min-height: 0 !important;
+        grid-auto-rows: minmax(3.15rem, auto);
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 35%, transparent);
+    }
+    .crm-cal-mobile .crm-cal-cell {
+        min-height: 3.15rem;
+        padding: 0.35rem 0.2rem 0.4rem;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.25rem;
+        border-inline-end: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent);
+        background: transparent;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .crm-cal-mobile .crm-cal-cell:nth-child(7n) {
+        border-inline-end: none;
+    }
+    .crm-cal-mobile .crm-cal-cell:hover { background: transparent; }
+    .crm-cal-mobile .crm-cal-cell.is-out {
+        opacity: 0.35;
+        background: color-mix(in srgb, var(--ws-surface-2) 25%, transparent);
+    }
+    .crm-cal-mobile .crm-cal-cell.is-today {
+        background: color-mix(in srgb, #2563eb 8%, var(--ws-surface));
+        box-shadow: inset 0 0 0 2px #2563eb;
+        border-radius: 12px;
+        z-index: 1;
+    }
+    .crm-cal-mobile .crm-cal-cell.has-events:not(.is-out) {
+        background: color-mix(in srgb, var(--ws-surface-2) 22%, var(--ws-surface));
+    }
+    .crm-cal-mobile .crm-cal-cell.is-today.has-events {
+        background: color-mix(in srgb, #2563eb 10%, var(--ws-surface));
+    }
+    .crm-cal-mobile .crm-cal-day-num {
+        font-size: 0.82rem;
+        font-weight: 850;
+        width: 100%;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+    }
+    .crm-cal-mobile .crm-cal-cell.is-today .crm-cal-day-num {
+        width: 1.7rem;
+        height: 1.7rem;
+        min-width: 1.7rem;
+        margin-inline: auto;
+        border-radius: 10px;
+        background: linear-gradient(145deg, #2563eb, #1d4ed8);
+        color: #fff;
+        font-size: 0.78rem;
+        box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
+    }
+    .crm-cal-mobile .crm-cal-events {
+        display: none !important; /* dots instead on mobile */
+    }
+    .crm-cal-mobile .crm-cal-dots {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        width: 100%;
+        min-height: 0.45rem;
+        margin-top: auto;
+    }
+    .crm-cal-mobile .crm-cal-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .crm-cal-mobile .crm-cal-dot--more {
+        width: auto;
+        height: auto;
+        border-radius: 0;
+        font-size: 0.5rem;
+        font-weight: 800;
+        color: var(--ws-text-muted);
+        background: transparent;
+        line-height: 1;
+    }
+
+    /* ── Agenda ── */
+    .crm-cal-mobile .crm-cal-agenda {
+        height: auto !important;
+        max-height: none !important;
+        padding: 0.85rem 0.9rem 0.9rem;
+        border-radius: 22px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent);
+        background:
+            linear-gradient(165deg, color-mix(in srgb, #0f766e 5%, var(--ws-surface)) 0%, var(--ws-surface) 45%);
+        box-shadow:
+            0 10px 26px rgba(15, 23, 42, 0.06),
+            0 1px 0 rgba(255, 255, 255, 0.55) inset;
+        position: relative;
+        overflow: hidden;
+    }
+    .crm-cal-mobile .crm-cal-agenda::before {
+        content: '';
+        position: absolute;
+        inset-inline: 0;
+        top: 0;
+        height: 2.5px;
+        background: linear-gradient(90deg, #0f766e, #14b8a6 50%, #2563eb);
+        pointer-events: none;
+    }
+    .crm-cal-mobile .crm-cal-agenda-scroll {
+        overflow: visible !important;
+        flex: none;
+    }
+    .crm-cal-mobile .crm-cal-agenda-head {
+        margin-bottom: 0.7rem;
+        padding-bottom: 0.65rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+        align-items: center;
+    }
+    .crm-cal-mobile .crm-cal-agenda-head h2 {
+        font-family: 'Vazirmatn', inherit;
+        font-size: 1rem;
+        font-weight: 900;
+        letter-spacing: -0.025em;
+        margin: 0;
+    }
+    .crm-cal-mobile .crm-cal-agenda-head p {
+        font-size: 0.68rem;
+        font-weight: 650;
+        margin: 0.15rem 0 0;
+    }
+    .crm-cal-mobile .crm-cal-agenda-head .crm-pro-link {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: #0f766e;
+        text-decoration: none;
+        padding: 0.35rem 0.55rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, #0f766e 8%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, #0f766e 18%, transparent);
+    }
+
+    .crm-cal-mobile .crm-cal-agenda-list {
+        gap: 0.45rem;
+    }
+    .crm-cal-mobile .crm-cal-agenda-item {
+        display: flex;
+        align-items: stretch;
+        gap: 0.65rem;
+        grid-template-columns: none;
+        padding: 0.7rem 0.75rem;
+        border-radius: 16px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 92%, transparent);
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+        border-inline-start-width: 3.5px;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.12s;
+    }
+    .crm-cal-mobile .crm-cal-agenda-item:active {
+        transform: scale(0.985);
+    }
+    .crm-cal-mobile .crm-cal-agenda-date {
+        flex-shrink: 0;
+        width: 3.1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.12rem;
+        padding: 0.35rem 0.25rem;
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+        text-align: center;
+    }
+    .crm-cal-mobile .crm-cal-agenda-date strong {
+        font-size: 0.88rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+    }
+    .crm-cal-mobile .crm-cal-agenda-date em {
+        font-size: 0.56rem;
+        font-weight: 750;
+        color: var(--ws-text-muted);
+    }
+    .crm-cal-mobile .crm-cal-agenda-body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        justify-content: center;
+    }
+    .crm-cal-mobile .crm-cal-agenda-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        width: fit-content;
+        margin: 0;
+        padding: 0.12rem 0.4rem;
+        border-radius: 999px;
+        font-size: 0.58rem;
+        font-weight: 800;
+        background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-surface));
+    }
+    .crm-cal-mobile .crm-cal-agenda-item--followup .crm-cal-agenda-type {
+        color: #2563eb;
+        background: rgba(37, 99, 235, 0.1);
+    }
+    .crm-cal-mobile .crm-cal-agenda-item--reminder .crm-cal-agenda-type {
+        color: #b45309;
+        background: rgba(245, 158, 11, 0.12);
+    }
+    .crm-cal-mobile .crm-cal-agenda-item--visit .crm-cal-agenda-type {
+        color: #15803d;
+        background: rgba(34, 197, 94, 0.12);
+    }
+    .crm-cal-mobile .crm-cal-agenda-body strong {
+        font-size: 0.86rem;
+        font-weight: 850;
+        letter-spacing: -0.015em;
+        line-height: 1.35;
+        display: block;
+        -webkit-line-clamp: 2;
+        overflow-wrap: anywhere;
+    }
+    .crm-cal-mobile .crm-cal-agenda-body time {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+    }
+    .crm-cal-mobile .crm-cal-agenda-go {
+        flex-shrink: 0;
+        align-self: center;
+        width: 2rem;
+        height: 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        color: var(--ws-text-muted);
+        font-size: 0.7rem;
+        background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
+        pointer-events: none;
+    }
+
+    .crm-cal-mobile .crm-cal-agenda-empty {
+        padding: 1.5rem 0.75rem;
+        text-align: center;
+    }
+    .crm-cal-mobile .crm-cal-agenda-empty .crm-pro-empty-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 15px;
+        margin: 0 auto 0.65rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(145deg, #0f766e, #134e4a);
+        color: #fff;
+        font-size: 1.1rem;
+        box-shadow: 0 6px 16px rgba(15, 118, 110, 0.25);
+    }
+}
+
+@media (max-width: 430px) {
+    .crm-cal-mob-title { font-size: 1.12rem; }
+    .crm-cal-mobile .crm-cal-cell {
+        min-height: 2.85rem;
+        padding: 0.28rem 0.12rem 0.32rem;
+    }
+    .crm-cal-mobile .crm-cal-day-num { font-size: 0.76rem; }
+    .crm-cal-mobile .crm-cal-grid {
+        grid-auto-rows: minmax(2.85rem, auto);
+    }
+    .crm-cal-mobile .crm-cal-agenda-date {
+        width: 2.85rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crm-cal-mob-icon-btn:active,
+    .crm-cal-mobile .crm-cal-nav-btn:active,
+    .crm-cal-mobile .crm-cal-agenda-item:active {
+        transform: none;
+    }
+}

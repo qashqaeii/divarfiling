@@ -9,7 +9,7 @@
 {% block crm_actions %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
@@ -233,9 +233,78 @@
                     </thead>
                     <tbody>
                         {% for d in deals %}
-                        <tr class="crm-deals-row" style="--deal-accent: {{ d.stage|crm_deal_stage_dot }};" data-href="{% url 'workspace:crm_deal_detail' d.id %}">
+                        <tr class="crm-deals-row{% if d.stage == 'بسته‌شده' %} is-won{% elif d.stage == 'از دست رفته' %} is-lost{% endif %}{% if d.expected_close_date and d.expected_close_date < today and d.stage != 'بسته‌شده' and d.stage != 'از دست رفته' %} is-overdue{% endif %}"
+                            style="--deal-accent: {{ d.stage|crm_deal_stage_dot }}; --deal-prob: {{ d.probability }};"
+                            data-href="{% url 'workspace:crm_deal_detail' d.id %}">
                             <td class="crm-deals-col-deal" data-label="معامله">
-                                <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deals-cell-deal">
+                                {# Mobile premium card #}
+                                <article class="crm-deal-mcard" aria-label="{{ d.title }}">
+                                    <header class="crm-deal-mcard__top">
+                                        <span class="crm-deal-mcard__stage" style="{% crm_deal_stage_style d.stage %}">
+                                            <i class="fas {{ d.stage|crm_deal_stage_icon }}" aria-hidden="true"></i>
+                                            {{ d.stage }}
+                                        </span>
+                                        <span class="crm-deal-mcard__prob" title="احتمال بستن {{ d.probability }}٪">
+                                            <em>{{ d.probability }}%</em>
+                                            <span>احتمال</span>
+                                        </span>
+                                        <span class="crm-deal-mcard__go" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                                    </header>
+
+                                    <h3 class="crm-deal-mcard__title">{{ d.title }}</h3>
+
+                                    <div class="crm-deal-mcard__links">
+                                        <a href="{% url 'workspace:crm_detail' d.customer_id %}" class="crm-deal-mcard__person" onclick="event.stopPropagation()">
+                                            <span class="crm-deals-avatar crm-deals-avatar--hue-{{ d.customer.name|crm_avatar_hue }}">{{ d.customer.name|crm_initials }}</span>
+                                            <span class="crm-deal-mcard__person-txt">
+                                                <em>مخاطب</em>
+                                                <strong>{{ d.customer.name }}</strong>
+                                            </span>
+                                        </a>
+                                        {% if d.property %}
+                                        <a href="{% url 'workspace:crm_property_detail' d.property_id %}" class="crm-deal-mcard__prop" onclick="event.stopPropagation()">
+                                            <i class="fas fa-building" aria-hidden="true"></i>
+                                            <span>{{ d.property.title|truncatechars:36 }}</span>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="crm-deal-mcard__metrics">
+                                        <div class="crm-deal-mcard__metric crm-deal-mcard__metric--value">
+                                            <em>ارزش معامله</em>
+                                            <strong>{% if d.value %}{{ d.value|ws_money }}{% else %}—{% endif %}</strong>
+                                        </div>
+                                        <div class="crm-deal-mcard__metric crm-deal-mcard__metric--comm">
+                                            <em>کمیسیون</em>
+                                            <strong>{% if d.commission_amount %}{{ d.commission_amount|ws_money }}{% else %}—{% endif %}</strong>
+                                        </div>
+                                    </div>
+
+                                    <footer class="crm-deal-mcard__foot">
+                                        {% if d.expected_close_date %}
+                                        <span class="crm-deal-mcard__chip{% if d.expected_close_date < today and d.stage != 'بسته‌شده' and d.stage != 'از دست رفته' %} is-warn{% endif %}">
+                                            <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                                            بستن {{ d.expected_close_date|ws_jalali }}
+                                        </span>
+                                        {% else %}
+                                        <span class="crm-deal-mcard__chip is-muted">
+                                            <i class="fas fa-calendar" aria-hidden="true"></i>
+                                            بدون تاریخ بستن
+                                        </span>
+                                        {% endif %}
+                                        <time class="crm-deal-mcard__updated" datetime="{{ d.updated_at|date:'c' }}">
+                                            <i class="fas fa-clock" aria-hidden="true"></i>
+                                            {{ d.updated_at|ws_jalali }}
+                                        </time>
+                                    </footer>
+
+                                    <div class="crm-deal-mcard__bar" aria-hidden="true" title="احتمال {{ d.probability }}٪">
+                                        <i style="width: {{ d.probability }}%"></i>
+                                    </div>
+                                </article>
+
+                                {# Desktop table cell #}
+                                <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deals-cell-deal crm-deals-cell-deal--desk">
                                     <span class="crm-deals-deal-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='inline' only %}</span>
                                     <span class="crm-deals-deal-text">
                                         <strong>{{ d.title }}</strong>
@@ -250,14 +319,14 @@
                                     </span>
                                 </a>
                             </td>
-                            <td class="crm-deals-col-contact" data-label="مخاطب">
+                            <td class="crm-deals-col-contact crm-deals-col--desk" data-label="مخاطب">
                                 <a href="{% url 'workspace:crm_detail' d.customer_id %}" class="crm-deals-cell-contact" onclick="event.stopPropagation()">
                                     <span class="crm-deals-avatar crm-deals-avatar--hue-{{ d.customer.name|crm_avatar_hue }}">{{ d.customer.name|crm_initials }}</span>
                                     <span class="crm-deals-contact-name">{{ d.customer.name }}</span>
                                 </a>
                             </td>
-                            <td class="crm-deals-col-stage" data-label="مرحله"><span class="crm-pill crm-pill-sm crm-deals-stage" style="{% crm_deal_stage_style d.stage %}">{{ d.stage }}</span></td>
-                            <td class="crm-deals-money crm-deals-col-value" data-label="ارزش">
+                            <td class="crm-deals-col-stage crm-deals-col--desk" data-label="مرحله"><span class="crm-pill crm-pill-sm crm-deals-stage" style="{% crm_deal_stage_style d.stage %}">{{ d.stage }}</span></td>
+                            <td class="crm-deals-money crm-deals-col-value crm-deals-col--desk" data-label="ارزش">
                                 <div class="crm-deals-value-cell">
                                     {% if d.value %}
                                     <span class="crm-deals-value-amount">{{ d.value|ws_money }}</span>
@@ -267,21 +336,21 @@
                                     {% endif %}
                                 </div>
                             </td>
-                            <td class="crm-deals-col-prob" data-label="احتمال">
+                            <td class="crm-deals-col-prob crm-deals-col--desk" data-label="احتمال">
                                 <div class="crm-deals-prob" title="احتمال بستن معامله">
                                     <span class="crm-deals-prob-val">{{ d.probability }}%</span>
                                     <span class="crm-deals-prob-track" aria-hidden="true"><i style="width: {{ d.probability }}%"></i></span>
                                 </div>
                             </td>
-                            <td class="crm-deals-money crm-deals-col-commission" data-label="کمیسیون">
+                            <td class="crm-deals-money crm-deals-col-commission crm-deals-col--desk" data-label="کمیسیون">
                                 {% if d.commission_amount %}
                                 <span class="crm-deals-commission-amount">{{ d.commission_amount|ws_money }}</span>
                                 {% else %}
                                 <span class="crm-muted">—</span>
                                 {% endif %}
                             </td>
-                            <td class="crm-deals-col-updated" data-label="بروزرسانی"><time datetime="{{ d.updated_at|date:'c' }}">{{ d.updated_at|ws_jalali }}</time></td>
-                            <td class="crm-deals-col-action">
+                            <td class="crm-deals-col-updated crm-deals-col--desk" data-label="بروزرسانی"><time datetime="{{ d.updated_at|date:'c' }}">{{ d.updated_at|ws_jalali }}</time></td>
+                            <td class="crm-deals-col-action crm-deals-col--desk">
                                 <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deals-row-action" title="مشاهده جزئیات" onclick="event.stopPropagation()"><i class="fas fa-arrow-left" aria-hidden="true"></i></a>
                             </td>
                         </tr>

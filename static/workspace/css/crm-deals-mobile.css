@@ -7,7 +7,8 @@
 .crm-deals-mob-header,
 .crm-deals-mob-kpis,
 .crm-deals-fab,
-.crm-deals-mob-filter-bar {
+.crm-deals-mob-filter-bar,
+.crm-deal-mcard {
     display: none;
 }
 
@@ -436,7 +437,7 @@
         display: none;
     }
 
-    /* ── Table → cards ── */
+    /* ── Table → premium deal cards ── */
     .crm-deals-mobile .crm-deals-table-card {
         border: none;
         background: transparent;
@@ -460,138 +461,363 @@
     .crm-deals-mobile .crm-deals-table tbody {
         display: flex;
         flex-direction: column;
-        gap: 0.55rem;
+        gap: 0.65rem;
     }
     .crm-deals-mobile .crm-deals-table tbody tr.crm-deals-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.45rem 0.55rem;
-        padding: 0.85rem 0.9rem;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 68%, transparent);
-        border-radius: 18px;
-        background: var(--ws-surface);
-        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+        display: block;
+        position: relative;
+        padding: 0;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 62%, transparent);
+        border-radius: 20px;
+        background:
+            linear-gradient(145deg, color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 7%, var(--ws-surface)) 0%, var(--ws-surface) 42%),
+            var(--ws-surface);
+        box-shadow:
+            0 4px 18px rgba(15, 23, 42, 0.06),
+            0 1px 0 rgba(255, 255, 255, 0.55) inset;
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
         cursor: pointer;
-        border-inline-start: 3px solid var(--deal-accent, var(--ws-primary));
+        overflow: hidden;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.14s, box-shadow 0.14s, border-color 0.14s;
+    }
+    .crm-deals-mobile .crm-deals-table tbody tr.crm-deals-row::before {
+        content: '';
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        width: 3.5px;
+        background: linear-gradient(180deg, var(--deal-accent, var(--ws-primary)), color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 40%, #64748b));
+        border-radius: 20px 0 0 20px;
     }
     .crm-deals-mobile .crm-deals-table tbody tr.crm-deals-row:active {
-        transform: scale(0.99);
-        border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
+        transform: scale(0.985);
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    }
+    .crm-deals-mobile .crm-deals-table tbody tr.crm-deals-row.is-won {
+        border-color: color-mix(in srgb, #10b981 28%, var(--ws-border));
+    }
+    .crm-deals-mobile .crm-deals-table tbody tr.crm-deals-row.is-lost {
+        opacity: 0.88;
+        border-color: color-mix(in srgb, #94a3b8 35%, var(--ws-border));
+    }
+    .crm-deals-mobile .crm-deals-table tbody tr.crm-deals-row.is-overdue {
+        border-color: color-mix(in srgb, #ef4444 32%, var(--ws-border));
+        background:
+            linear-gradient(145deg, rgba(239, 68, 68, 0.06) 0%, var(--ws-surface) 48%),
+            var(--ws-surface);
+    }
+
+    .crm-deals-mobile .crm-deals-col--desk,
+    .crm-deals-mobile .crm-deals-cell-deal--desk {
+        display: none !important;
     }
     .crm-deals-mobile .crm-deals-col-deal {
-        grid-column: 1 / -1;
-        order: 0;
-    }
-    .crm-deals-mobile .crm-deals-table td {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-        min-width: 0;
-        width: auto !important;
-        padding: 0.35rem 0.45rem !important;
-        border: none !important;
-        font-size: 0.78rem;
-        border-radius: 10px;
-        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
-    }
-    .crm-deals-mobile .crm-deals-col-deal {
+        display: block !important;
+        width: 100% !important;
         padding: 0 !important;
+        border: none !important;
         background: transparent !important;
-        border-radius: 0;
     }
-    .crm-deals-mobile .crm-deals-table tbody tr.crm-deals-row > td:not(.crm-deals-col-deal)::before {
-        content: attr(data-label);
-        font-size: 0.58rem;
+    .crm-deals-mobile .crm-deal-mcard {
+        display: flex !important;
+        flex-direction: column;
+        gap: 0.7rem;
+        padding: 0.85rem 0.9rem 0.8rem 1rem;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .crm-deals-mobile .crm-deal-mcard__top {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-width: 0;
+    }
+    .crm-deals-mobile .crm-deal-mcard__stage {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.32rem;
+        max-width: 58%;
+        min-width: 0;
+        min-height: 1.7rem;
+        padding: 0.22rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        line-height: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+    .crm-deals-mobile .crm-deal-mcard__stage i {
+        font-size: 0.62rem;
+        opacity: 0.9;
+        flex-shrink: 0;
+    }
+    .crm-deals-mobile .crm-deal-mcard__prob {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.02rem;
+        min-width: 2.85rem;
+        padding: 0.28rem 0.45rem;
+        margin-inline-start: auto;
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 12%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 22%, var(--ws-border));
+        line-height: 1.05;
+    }
+    .crm-deals-mobile .crm-deal-mcard__prob em {
+        font-style: normal;
+        font-size: 0.86rem;
+        font-weight: 850;
+        font-variant-numeric: tabular-nums;
+        color: var(--deal-accent, var(--ws-primary));
+    }
+    .crm-deals-mobile .crm-deal-mcard__prob span {
+        font-size: 0.52rem;
         font-weight: 700;
         color: var(--ws-text-muted);
         letter-spacing: -0.01em;
     }
-    .crm-deals-mobile .crm-deals-cell-deal {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.55rem;
-        text-decoration: none;
-        color: inherit;
-        min-width: 0;
-    }
-    .crm-deals-mobile .crm-deals-deal-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 11px;
-        flex-shrink: 0;
+    .crm-deals-mobile .crm-deal-mcard__go {
+        width: 1.7rem;
+        height: 1.7rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
-        color: var(--ws-primary);
-    }
-    .crm-deals-mobile .crm-deals-cell-deal strong {
-        font-size: 0.92rem;
-        font-weight: 800;
-        overflow-wrap: anywhere;
-        display: block;
-        line-height: 1.35;
-    }
-    .crm-deals-mobile .crm-deals-deal-meta {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        margin-top: 0.2rem;
-        font-size: 0.7rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface));
         color: var(--ws-text-muted);
-    }
-    .crm-deals-mobile .crm-deals-deal-meta--overdue {
-        color: #dc2626;
-        font-weight: 700;
-    }
-    .crm-deals-mobile .crm-deals-col-stage { order: 1; }
-    .crm-deals-mobile .crm-deals-col-contact { order: 2; }
-    .crm-deals-mobile .crm-deals-col-value { order: 3; }
-    .crm-deals-mobile .crm-deals-col-prob { order: 4; }
-    .crm-deals-mobile .crm-deals-col-commission { order: 5; }
-    .crm-deals-mobile .crm-deals-col-updated { order: 6; }
-    .crm-deals-mobile .crm-deals-col-value {
-        grid-column: 1 / -1;
-    }
-    .crm-deals-mobile .crm-deals-value-amount {
-        font-size: 0.95rem;
-        font-weight: 800;
-        color: var(--ws-primary);
-    }
-    .crm-deals-mobile .crm-deals-col-action {
-        display: none !important;
-    }
-    .crm-deals-mobile .crm-deals-cell-contact {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        text-decoration: none;
-        color: inherit;
-        min-width: 0;
-    }
-    .crm-deals-mobile .crm-deals-avatar {
-        width: 1.55rem;
-        height: 1.55rem;
-        font-size: 0.58rem;
+        font-size: 0.7rem;
         flex-shrink: 0;
     }
-    .crm-deals-mobile .crm-deals-contact-name {
+
+    .crm-deals-mobile .crm-deal-mcard__title {
+        margin: 0;
+        font-family: 'Vazirmatn', inherit;
+        font-size: 1.02rem;
+        font-weight: 850;
+        letter-spacing: -0.025em;
+        line-height: 1.35;
+        color: var(--ws-text);
+        overflow-wrap: anywhere;
+    }
+
+    .crm-deals-mobile .crm-deal-mcard__links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        min-width: 0;
+    }
+    .crm-deals-mobile .crm-deal-mcard__person {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-width: 0;
+        padding: 0.45rem 0.55rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
+        text-decoration: none;
+        color: inherit;
+        transition: background 0.12s, border-color 0.12s;
+    }
+    .crm-deals-mobile .crm-deal-mcard__person:active {
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+        border-color: color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
+    }
+    .crm-deals-mobile .crm-deal-mcard__person .crm-deals-avatar {
+        width: 2.15rem;
+        height: 2.15rem;
+        font-size: 0.72rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+    .crm-deals-mobile .crm-deal-mcard__person-txt {
+        display: flex;
+        flex-direction: column;
+        gap: 0.08rem;
+        min-width: 0;
+        flex: 1;
+    }
+    .crm-deals-mobile .crm-deal-mcard__person-txt em {
+        font-style: normal;
+        font-size: 0.58rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+    }
+    .crm-deals-mobile .crm-deal-mcard__person-txt strong {
+        font-size: 0.84rem;
+        font-weight: 800;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-weight: 700;
-        font-size: 0.76rem;
     }
-    .crm-deals-mobile .crm-empty-state-row td {
-        grid-column: 1 / -1;
+    .crm-deals-mobile .crm-deal-mcard__prop {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-width: 0;
+        padding: 0.35rem 0.55rem;
+        border-radius: 11px;
+        background: color-mix(in srgb, #2563eb 6%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, #2563eb 14%, var(--ws-border));
+        color: #1d4ed8;
+        text-decoration: none;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+    .crm-deals-mobile .crm-deal-mcard__prop i {
+        font-size: 0.68rem;
+        flex-shrink: 0;
+        opacity: 0.85;
+    }
+    .crm-deals-mobile .crm-deal-mcard__prop span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+    }
+
+    .crm-deals-mobile .crm-deal-mcard__metrics {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 0.4rem;
+    }
+    .crm-deals-mobile .crm-deal-mcard__metric {
+        display: flex;
+        flex-direction: column;
+        gap: 0.18rem;
+        min-width: 0;
+        padding: 0.55rem 0.65rem;
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--ws-surface-2) 42%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    }
+    .crm-deals-mobile .crm-deal-mcard__metric em {
+        font-style: normal;
+        font-size: 0.58rem;
+        font-weight: 750;
+        color: var(--ws-text-muted);
+        letter-spacing: -0.01em;
+    }
+    .crm-deals-mobile .crm-deal-mcard__metric strong {
+        font-size: 0.9rem;
+        font-weight: 850;
+        font-variant-numeric: tabular-nums;
+        overflow-wrap: anywhere;
+        line-height: 1.2;
+        color: var(--ws-text);
+    }
+    .crm-deals-mobile .crm-deal-mcard__metric--value {
+        background:
+            linear-gradient(160deg, color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)), var(--ws-surface));
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+    }
+    .crm-deals-mobile .crm-deal-mcard__metric--value strong {
+        color: var(--ws-primary);
+        font-size: 0.98rem;
+    }
+    .crm-deals-mobile .crm-deal-mcard__metric--comm strong {
+        color: #059669;
+        font-size: 0.84rem;
+    }
+
+    .crm-deals-mobile .crm-deal-mcard__foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+    .crm-deals-mobile .crm-deal-mcard__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.32rem;
+        min-height: 1.65rem;
+        padding: 0.22rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 750;
+        color: var(--ws-text-secondary);
+        background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        max-width: 100%;
+    }
+    .crm-deals-mobile .crm-deal-mcard__chip i {
+        font-size: 0.62rem;
+        color: var(--ws-primary);
+    }
+    .crm-deals-mobile .crm-deal-mcard__chip.is-warn {
+        color: #b91c1c;
+        background: rgba(239, 68, 68, 0.08);
+        border-color: rgba(239, 68, 68, 0.22);
+    }
+    .crm-deals-mobile .crm-deal-mcard__chip.is-warn i { color: #dc2626; }
+    .crm-deals-mobile .crm-deal-mcard__chip.is-muted {
+        color: var(--ws-text-muted);
+        font-weight: 650;
+    }
+    .crm-deals-mobile .crm-deal-mcard__chip.is-muted i { color: var(--ws-text-muted); }
+    .crm-deals-mobile .crm-deal-mcard__updated {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        font-size: 0.66rem;
+        font-weight: 650;
+        color: var(--ws-text-muted);
+        margin-inline-start: auto;
+        white-space: nowrap;
+    }
+    .crm-deals-mobile .crm-deal-mcard__updated i {
+        font-size: 0.58rem;
+        opacity: 0.8;
+    }
+
+    .crm-deals-mobile .crm-deal-mcard__bar {
+        height: 4px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-surface-2) 70%, var(--ws-border));
+        overflow: hidden;
+        margin-top: 0.05rem;
+    }
+    .crm-deals-mobile .crm-deal-mcard__bar i {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--deal-accent, var(--ws-primary)), color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 55%, #38bdf8));
+        max-width: 100%;
+    }
+    .crm-deals-mobile .crm-deals-row.is-won .crm-deal-mcard__bar i {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+    .crm-deals-mobile .crm-deals-row.is-lost .crm-deal-mcard__bar i {
+        background: linear-gradient(90deg, #94a3b8, #cbd5e1);
+    }
+
+    .crm-deals-mobile .crm-empty-state-row {
+        display: block !important;
+        border: none !important;
         background: transparent !important;
+        box-shadow: none !important;
         padding: 0 !important;
     }
-    .crm-deals-mobile .crm-empty-state-row td::before {
-        display: none !important;
+    .crm-deals-mobile .crm-empty-state-row::before { display: none !important; }
+    .crm-deals-mobile .crm-empty-state-row td {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
     }
 
     /* ── Pipeline ── */
@@ -673,7 +899,19 @@
 @media (max-width: 430px) {
     .crm-deals-mob-title { font-size: 1.08rem; }
     .crm-deals-mob-kpi-val { font-size: 0.88rem; }
-    .crm-deals-mobile .crm-deals-cell-deal strong { font-size: 0.88rem; }
+    .crm-deals-mobile .crm-deal-mcard {
+        padding: 0.75rem 0.8rem 0.7rem 0.9rem;
+        gap: 0.6rem;
+    }
+    .crm-deals-mobile .crm-deal-mcard__title {
+        font-size: 0.96rem;
+    }
+    .crm-deals-mobile .crm-deal-mcard__metric--value strong {
+        font-size: 0.9rem;
+    }
+    .crm-deals-mobile .crm-deal-mcard__metrics {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 @media (max-width: 360px) {

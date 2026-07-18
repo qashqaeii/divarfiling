@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
    CRM Automation — Premium Mobile UX
    Scoped under .crm-auto-mobile
-   Accent: teal / emerald / blue (overrides purple bias on mobile)
+   Chrome uses theme tokens (--ws-primary / --ws-primary-soft).
    ═══════════════════════════════════════════════════════════ */
 
 .crm-auto-mob-header,
@@ -11,14 +11,13 @@
 
 @media (max-width: 768px) {
     .crm-auto-mobile.crm-page-chrome {
-        --auto-purple: #0f766e;
         padding: 0 0 calc(5.5rem + env(safe-area-inset-bottom, 0px));
         gap: 0;
         max-width: 100%;
         min-width: 0;
         overflow-x: clip;
         background:
-            radial-gradient(120% 40% at 50% 0%, rgba(15, 118, 110, 0.08), transparent 55%),
+            radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--ws-primary) 6%, transparent), transparent 55%),
             color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-bg, #f8fafc));
     }
     .crm-auto-mobile .crm-shell-body {
@@ -49,8 +48,8 @@
         position: absolute;
         inset: 0;
         background:
-            radial-gradient(90% 120% at 100% 0%, rgba(15, 118, 110, 0.16), transparent 55%),
-            radial-gradient(70% 90% at 0% 100%, rgba(37, 99, 235, 0.08), transparent 50%);
+            radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--ws-primary) 16%, transparent), transparent 55%),
+            radial-gradient(70% 90% at 0% 100%, color-mix(in srgb, var(--ws-primary) 6%, transparent), transparent 50%);
         pointer-events: none;
     }
     .crm-auto-mob-header-accent {
@@ -58,7 +57,11 @@
         inset-inline: 0;
         top: 0;
         height: 3px;
-        background: linear-gradient(90deg, #0f766e, #14b8a6 45%, #2563eb);
+        background: linear-gradient(
+            90deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 55%, #38bdf8)
+        );
     }
     .crm-auto-mob-header-inner {
         position: relative;
@@ -76,7 +79,7 @@
         gap: 0.3rem;
         font-size: 0.66rem;
         font-weight: 800;
-        color: #0f766e;
+        color: var(--ws-primary);
         letter-spacing: -0.01em;
     }
     .crm-auto-mob-kicker i { font-size: 0.62rem; }
@@ -119,9 +122,9 @@
         border-radius: 999px;
         font-size: 0.62rem;
         font-weight: 750;
-        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface));
-        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
-        color: var(--ws-text-secondary);
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, transparent);
     }
     .crm-auto-mob-sub-chip.is-active {
         color: #047857;
@@ -163,11 +166,20 @@
     }
     .crm-auto-mob-run-form { margin: 0; }
     .crm-auto-mob-icon-btn--primary {
-        background: linear-gradient(145deg, #0f766e, #0d9488);
+        background: var(--ws-primary);
         color: #fff;
-        box-shadow: 0 3px 10px rgba(15, 118, 110, 0.32);
+        box-shadow: 0 3px 10px color-mix(in srgb, var(--ws-primary) 32%, transparent);
     }
-    .crm-auto-mob-icon-btn:active { transform: scale(0.95); }
+    .crm-auto-mob-icon-btn:active {
+        transform: scale(0.95);
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
+    }
+    .crm-auto-mob-icon-btn--primary:active {
+        background: var(--ws-primary);
+        color: #fff;
+        opacity: 0.92;
+    }
 
     /* ── KPIs ── */
     .crm-auto-mobile .crm-auto-kpis {
@@ -187,12 +199,12 @@
         box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
     }
     .crm-auto-mobile .crm-auto-kpi--all .crm-auto-kpi-glow {
-        background: radial-gradient(circle, rgba(15, 118, 110, 0.22), transparent 70%);
+        background: radial-gradient(circle, color-mix(in srgb, var(--ws-primary) 22%, transparent), transparent 70%);
     }
     .crm-auto-mobile .crm-auto-kpi--all .crm-auto-kpi-icon {
-        background: rgba(15, 118, 110, 0.1);
-        color: #0f766e;
-        border-color: rgba(15, 118, 110, 0.14);
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
+        border-color: color-mix(in srgb, var(--ws-primary) 16%, transparent);
     }
     .crm-auto-mobile .crm-auto-kpi-glow { opacity: 0.55; }
     .crm-auto-mobile .crm-auto-kpi-icon {
@@ -223,12 +235,12 @@
         margin: 0.15rem 0 0.2rem;
         padding: 0.7rem 0.75rem;
         border-radius: 16px;
-        border-color: color-mix(in srgb, #0f766e 14%, var(--ws-border));
-        background: color-mix(in srgb, #0f766e 5%, var(--ws-surface));
-        box-shadow: 0 2px 10px rgba(15, 118, 110, 0.06);
+        border-color: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+        box-shadow: 0 2px 10px color-mix(in srgb, var(--ws-primary) 6%, transparent);
     }
     .crm-auto-mobile .crm-auto-tip > i {
-        color: #0f766e;
+        color: var(--ws-primary);
         font-size: 0.85rem;
     }
     .crm-auto-mobile .crm-auto-tip p {
@@ -264,7 +276,7 @@
     }
     .crm-auto-mobile .crm-auto-presets-trigger::-webkit-details-marker { display: none; }
     .crm-auto-mobile .crm-auto-presets-trigger i.fa-bolt {
-        color: #0f766e;
+        color: var(--ws-primary);
         font-size: 0.72rem;
     }
     .crm-auto-mobile .crm-auto-presets-chevron {
@@ -334,7 +346,7 @@
         border-radius: 20px !important;
         border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent);
         background:
-            linear-gradient(165deg, color-mix(in srgb, #0f766e 7%, var(--ws-surface)) 0%, var(--ws-surface) 48%);
+            linear-gradient(165deg, color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface)) 0%, var(--ws-surface) 48%);
         box-shadow:
             0 10px 26px rgba(15, 23, 42, 0.06),
             0 1px 0 rgba(255, 255, 255, 0.55) inset;
@@ -348,7 +360,11 @@
         top: 0;
         height: 2.5px;
         z-index: 2;
-        background: linear-gradient(90deg, #0f766e, #14b8a6 50%, #2563eb);
+        background: linear-gradient(
+            90deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 45%, #38bdf8)
+        );
         pointer-events: none;
     }
     .crm-auto-mobile .crm-auto-card-v2.is-off {
@@ -370,6 +386,9 @@
         padding: 0.15rem 0.5rem;
         font-size: 0.62rem;
         font-weight: 800;
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
+        border-color: color-mix(in srgb, var(--ws-primary) 16%, transparent);
     }
     .crm-auto-mobile .crm-auto-switch {
         width: 2.6rem;
@@ -381,7 +400,7 @@
         top: 0.175rem;
     }
     .crm-auto-mobile .crm-auto-switch.is-on .crm-auto-switch-track {
-        background: linear-gradient(90deg, #0f766e, #14b8a6);
+        background: var(--ws-primary);
     }
     .crm-auto-mobile .crm-auto-switch.is-on .crm-auto-switch-thumb {
         transform: translateX(-1.1rem);
@@ -428,11 +447,11 @@
     .crm-auto-mobile .crm-auto-pipeline-line {
         width: 1.25rem;
         height: 2px;
-        background: color-mix(in srgb, #0f766e 35%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
     }
     .crm-auto-mobile .crm-auto-pipeline-connector i {
         transform: rotate(-90deg);
-        color: #0f766e;
+        color: var(--ws-primary);
         font-size: 0.55rem;
     }
 
@@ -464,10 +483,10 @@
         -webkit-tap-highlight-color: transparent;
     }
     .crm-auto-mobile .crm-auto-card-v2-actions > .crm-auto-inline-form:first-child .crm-auto-act:not(:disabled) {
-        background: linear-gradient(145deg, #0f766e, #0d9488);
+        background: var(--ws-primary);
         color: #fff;
         border: none;
-        box-shadow: 0 3px 10px rgba(15, 118, 110, 0.25);
+        box-shadow: 0 3px 10px color-mix(in srgb, var(--ws-primary) 25%, transparent);
     }
     .crm-auto-mobile .crm-auto-inline-form {
         margin: 0;
@@ -482,10 +501,10 @@
     .crm-auto-mobile .crm-auto-empty {
         padding: 2rem 1.25rem;
         border-radius: 20px;
-        border-color: color-mix(in srgb, #0f766e 18%, var(--ws-border));
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
     }
     .crm-auto-mobile .crm-auto-empty-ring {
-        border-color: rgba(15, 118, 110, 0.2);
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent);
     }
     .crm-auto-mobile .crm-auto-empty h2 {
         font-size: 1rem;
@@ -495,18 +514,18 @@
     /* Drawer accents on mobile */
     .crm-auto-drawer-v2 .crm-auto-drawer-kicker,
     .crm-auto-drawer-v2 .crm-auto-preview-label {
-        color: #0f766e !important;
+        color: var(--ws-primary) !important;
     }
     .crm-auto-drawer-v2 .crm-auto-preview {
-        border-color: color-mix(in srgb, #0f766e 14%, var(--ws-border));
-        background: color-mix(in srgb, #0f766e 5%, var(--ws-surface));
+        border-color: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
     }
     .crm-auto-drawer-v2 .crm-auto-form-block h3 span {
-        background: rgba(15, 118, 110, 0.1);
-        color: #0f766e;
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
     }
     .crm-auto-drawer-v2 .crm-auto-switch-v2 input:checked + .crm-auto-switch-v2-ui {
-        background: linear-gradient(90deg, #0f766e, #14b8a6);
+        background: var(--ws-primary);
     }
 
     /* FAB */
@@ -522,13 +541,13 @@
         padding: 0 1.1rem 0 0.95rem;
         border: none;
         border-radius: 999px;
-        background: linear-gradient(135deg, #0f766e, #0d9488);
+        background: var(--ws-primary);
         color: #fff;
         font-family: inherit;
         font-size: 0.85rem;
         font-weight: 800;
         box-shadow:
-            0 8px 24px rgba(15, 118, 110, 0.35),
+            0 8px 24px color-mix(in srgb, var(--ws-primary) 35%, transparent),
             0 2px 8px rgba(15, 23, 42, 0.12);
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;

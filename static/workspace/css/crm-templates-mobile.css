@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════
    CRM Message Templates — Premium Mobile UX
    Scoped under .crm-tpl-mobile
-   Accent: WhatsApp green + SMS blue (no purple bias)
+   Chrome uses theme tokens (--ws-primary). Channel tints
+   (WA/SMS) only on channel badges/icons.
    ═══════════════════════════════════════════════════════════ */
 
 .crm-tpl-mob-header,
@@ -17,7 +18,7 @@
         min-width: 0;
         overflow-x: clip;
         background:
-            radial-gradient(120% 40% at 50% 0%, rgba(37, 211, 102, 0.07), transparent 55%),
+            radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--ws-primary) 6%, transparent), transparent 55%),
             color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-bg, #f8fafc));
     }
     .crm-tpl-mobile .crm-shell-body {
@@ -48,8 +49,8 @@
         position: absolute;
         inset: 0;
         background:
-            radial-gradient(90% 120% at 100% 0%, rgba(37, 211, 102, 0.16), transparent 55%),
-            radial-gradient(70% 90% at 0% 100%, rgba(59, 130, 246, 0.1), transparent 50%);
+            radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--ws-primary) 16%, transparent), transparent 55%),
+            radial-gradient(70% 90% at 0% 100%, color-mix(in srgb, var(--ws-primary) 6%, transparent), transparent 50%);
         pointer-events: none;
     }
     .crm-tpl-mob-header-accent {
@@ -57,7 +58,11 @@
         inset-inline: 0;
         top: 0;
         height: 3px;
-        background: linear-gradient(90deg, #25d366, #16a34a 45%, #3b82f6);
+        background: linear-gradient(
+            90deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 55%, #38bdf8)
+        );
     }
     .crm-tpl-mob-header-inner {
         position: relative;
@@ -75,7 +80,7 @@
         gap: 0.3rem;
         font-size: 0.66rem;
         font-weight: 800;
-        color: #16a34a;
+        color: var(--ws-primary);
         letter-spacing: -0.01em;
     }
     .crm-tpl-mob-kicker i { font-size: 0.62rem; }
@@ -105,10 +110,11 @@
         border-radius: 999px;
         font-size: 0.62rem;
         font-weight: 750;
-        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface));
-        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
-        color: var(--ws-text-secondary);
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, transparent);
     }
+    /* Channel semantics only */
     .crm-tpl-mob-sub-chip.is-wa {
         color: #15803d;
         background: rgba(37, 211, 102, 0.1);
@@ -147,11 +153,20 @@
         -webkit-tap-highlight-color: transparent;
     }
     .crm-tpl-mob-icon-btn--primary {
-        background: linear-gradient(145deg, #25d366, #16a34a);
+        background: var(--ws-primary);
         color: #fff;
-        box-shadow: 0 3px 10px rgba(37, 211, 102, 0.32);
+        box-shadow: 0 3px 10px color-mix(in srgb, var(--ws-primary) 32%, transparent);
     }
-    .crm-tpl-mob-icon-btn:active { transform: scale(0.95); }
+    .crm-tpl-mob-icon-btn:active {
+        transform: scale(0.95);
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
+    }
+    .crm-tpl-mob-icon-btn--primary:active {
+        background: var(--ws-primary);
+        color: #fff;
+        opacity: 0.92;
+    }
 
     /* ── KPIs ── */
     .crm-tpl-mobile .crm-tpl-kpis {
@@ -219,7 +234,7 @@
     }
     .crm-tpl-mobile .crm-tpl-vars-trigger::-webkit-details-marker { display: none; }
     .crm-tpl-mobile .crm-tpl-vars-trigger i.fa-code {
-        color: #16a34a;
+        color: var(--ws-primary);
         font-size: 0.72rem;
     }
     .crm-tpl-mobile .crm-tpl-vars-chevron {
@@ -249,12 +264,17 @@
         flex-direction: column;
         align-items: flex-start;
         justify-content: center;
+        border-color: color-mix(in srgb, var(--ws-primary) 16%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface));
         -webkit-tap-highlight-color: transparent;
+    }
+    .crm-tpl-mobile .crm-tpl-var-pro:active {
+        background: var(--ws-primary-soft);
     }
     .crm-tpl-mobile .crm-tpl-var-pro-key {
         font-size: 0.68rem;
         font-weight: 800;
-        color: #15803d;
+        color: var(--ws-primary);
     }
     .crm-tpl-mobile .crm-tpl-var-pro-lbl {
         font-size: 0.56rem;
@@ -298,9 +318,9 @@
         -webkit-tap-highlight-color: transparent;
     }
     .crm-tpl-mobile .crm-tpl-seg-btn.is-active {
-        background: linear-gradient(145deg, #25d366, #16a34a);
+        background: var(--ws-primary);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(37, 211, 102, 0.28);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--ws-primary) 28%, transparent);
     }
     .crm-tpl-mobile .crm-tpl-search {
         width: 100%;
@@ -335,16 +355,17 @@
         font-style: normal;
         padding: 0.15rem 0.45rem;
         border-radius: 999px;
-        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface));
-        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, transparent);
     }
     .crm-tpl-mobile .crm-tpl-section-v2-icon {
         width: 1.85rem;
         height: 1.85rem;
         border-radius: 10px;
         font-size: 0.7rem;
-        background: rgba(37, 211, 102, 0.12);
-        color: #16a34a;
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
     }
 
     /* ── Premium cards ── */
@@ -355,6 +376,7 @@
         grid-template-columns: unset !important;
     }
     .crm-tpl-mobile .crm-tpl-card-v2 {
+        --tpl-tone: var(--ws-primary);
         position: relative;
         overflow: hidden;
         border-radius: 20px !important;
@@ -363,11 +385,9 @@
             0 10px 26px rgba(15, 23, 42, 0.06),
             0 1px 0 rgba(255, 255, 255, 0.55) inset;
         background:
-            linear-gradient(165deg, color-mix(in srgb, var(--tpl-tone, #25d366) 8%, var(--ws-surface)) 0%, var(--ws-surface) 48%);
+            linear-gradient(165deg, color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) 0%, var(--ws-surface) 48%);
         transition: transform 0.14s, box-shadow 0.14s;
     }
-    .crm-tpl-mobile .crm-tpl-card-v2.is-wa { --tpl-tone: #25d366; }
-    .crm-tpl-mobile .crm-tpl-card-v2.is-sms { --tpl-tone: #3b82f6; }
     .crm-tpl-mobile .crm-tpl-card-v2:active { transform: scale(0.985); }
     .crm-tpl-mobile .crm-tpl-card-v2::before {
         content: '';
@@ -376,7 +396,11 @@
         top: 0;
         height: 2.5px;
         z-index: 2;
-        background: linear-gradient(90deg, var(--tpl-tone, #25d366), color-mix(in srgb, var(--tpl-tone) 40%, #3b82f6));
+        background: linear-gradient(
+            90deg,
+            var(--ws-primary),
+            color-mix(in srgb, var(--ws-primary) 45%, #38bdf8)
+        );
         pointer-events: none;
     }
     .crm-tpl-mobile .crm-tpl-card-v2-head {
@@ -388,8 +412,12 @@
         height: 2.35rem;
         border-radius: 12px;
         font-size: 1rem;
-        box-shadow: 0 3px 10px color-mix(in srgb, var(--tpl-tone) 22%, transparent);
+        box-shadow: 0 3px 10px color-mix(in srgb, var(--tpl-tone) 18%, transparent);
     }
+    /* Keep channel brand only on the channel mark */
+    .crm-tpl-mobile .crm-tpl-card-v2.is-wa { --tpl-tone: #25d366; }
+    .crm-tpl-mobile .crm-tpl-card-v2.is-sms { --tpl-tone: #3b82f6; }
+
     .crm-tpl-mobile .crm-tpl-card-v2-meta h3 {
         font-family: 'Vazirmatn', inherit;
         font-size: 0.98rem;
@@ -407,6 +435,8 @@
         font-weight: 800;
         padding: 0.18rem 0.45rem;
         border-radius: 999px;
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
     }
 
     .crm-tpl-mobile .crm-tpl-phone {
@@ -452,14 +482,10 @@
     .crm-tpl-mobile .crm-tpl-act--primary {
         flex: 1;
         min-width: 4.5rem;
-        background: linear-gradient(145deg, #25d366, #16a34a);
+        background: var(--ws-primary);
         color: #fff;
         border: none;
-        box-shadow: 0 3px 10px rgba(37, 211, 102, 0.28);
-    }
-    .crm-tpl-mobile .crm-tpl-card-v2.is-sms .crm-tpl-act--primary {
-        background: linear-gradient(145deg, #3b82f6, #1d4ed8);
-        box-shadow: 0 3px 10px rgba(59, 130, 246, 0.28);
+        box-shadow: 0 3px 10px color-mix(in srgb, var(--ws-primary) 28%, transparent);
     }
     .crm-tpl-mobile .crm-tpl-inline-form { margin: 0; }
 
@@ -467,13 +493,14 @@
     .crm-tpl-mobile .crm-tpl-empty {
         padding: 2rem 1.25rem;
         border-radius: 20px;
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
     }
     .crm-tpl-mobile .crm-tpl-empty-visual {
         width: 3.5rem;
         height: 3.5rem;
     }
     .crm-tpl-mobile .crm-tpl-empty-ring {
-        border-color: rgba(37, 211, 102, 0.2);
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent);
     }
     .crm-tpl-mobile .crm-tpl-empty h2 {
         font-size: 1rem;
@@ -493,13 +520,13 @@
         padding: 0 1.1rem 0 0.95rem;
         border: none;
         border-radius: 999px;
-        background: linear-gradient(135deg, #25d366, #16a34a);
+        background: var(--ws-primary);
         color: #fff;
         font-family: inherit;
         font-size: 0.85rem;
         font-weight: 800;
         box-shadow:
-            0 8px 24px rgba(37, 211, 102, 0.35),
+            0 8px 24px color-mix(in srgb, var(--ws-primary) 35%, transparent),
             0 2px 8px rgba(15, 23, 42, 0.12);
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;

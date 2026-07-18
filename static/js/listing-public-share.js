@@ -1,6 +1,6 @@
 /**
  * Public listing/property share page interactions.
- * Gallery (Swiper), tabs/accordion, lightbox, copy, prose, map, reveal.
+ * Gallery (Swiper), tabs/accordion (single DOM), lightbox, copy, prose, map, reveal.
  */
 (function () {
     'use strict';
@@ -14,10 +14,10 @@
     function initReveal() {
         var nodes = document.querySelectorAll('[data-reveal]');
         if (!nodes.length) return;
-        var identity = document.querySelector('.ps-identity[data-reveal]');
-        if (identity) {
+        var overview = document.querySelector('.ps-overview[data-reveal]');
+        if (overview) {
             requestAnimationFrame(function () {
-                identity.classList.add('is-in');
+                overview.classList.add('is-in');
             });
         }
         if (!('IntersectionObserver' in window)) {
@@ -33,7 +33,7 @@
             });
         }, { threshold: 0.12, rootMargin: '0px 0px -24px 0px' });
         nodes.forEach(function (el) {
-            if (el === identity) return;
+            if (el === overview) return;
             io.observe(el);
         });
     }
@@ -215,28 +215,30 @@
         return { show: show, close: close };
     }
 
-    function activateTab(tabs, panels, name) {
+    function activateDetailsPanel(root, name) {
+        var tabs = Array.prototype.slice.call(root.querySelectorAll('.ps-tab'));
+        var items = Array.prototype.slice.call(root.querySelectorAll('.ps-acc-item'));
         tabs.forEach(function (t) {
             var on = t.getAttribute('data-tab') === name;
             t.classList.toggle('is-active', on);
             t.setAttribute('aria-selected', on ? 'true' : 'false');
             t.setAttribute('tabindex', on ? '0' : '-1');
         });
-        panels.forEach(function (p) {
-            p.hidden = p.getAttribute('data-panel') !== name;
+        items.forEach(function (item) {
+            item.open = item.getAttribute('data-panel') === name;
         });
     }
 
-    function initTabs() {
+    function initDetails() {
         var root = document.querySelector('[data-ps-details]');
         if (!root) return;
         var tabs = Array.prototype.slice.call(root.querySelectorAll('.ps-tab'));
-        var panels = Array.prototype.slice.call(root.querySelectorAll('.ps-panel'));
-        if (!tabs.length) return;
+        var items = Array.prototype.slice.call(root.querySelectorAll('.ps-acc-item'));
+        if (!tabs.length && !items.length) return;
 
         tabs.forEach(function (tab, idx) {
             tab.addEventListener('click', function () {
-                activateTab(tabs, panels, tab.getAttribute('data-tab'));
+                activateDetailsPanel(root, tab.getAttribute('data-tab'));
             });
             tab.addEventListener('keydown', function (e) {
                 var nextIdx = idx;
@@ -247,20 +249,22 @@
                 else return;
                 e.preventDefault();
                 tabs[nextIdx].focus();
-                activateTab(tabs, panels, tabs[nextIdx].getAttribute('data-tab'));
+                activateDetailsPanel(root, tabs[nextIdx].getAttribute('data-tab'));
             });
         });
-    }
 
-    function initAccordion() {
-        var accordion = document.querySelector('[data-ps-accordion]');
-        if (!accordion) return;
-        var items = Array.prototype.slice.call(accordion.querySelectorAll('.ps-acc-item'));
         items.forEach(function (item) {
             item.addEventListener('toggle', function () {
                 if (!item.open) return;
+                var name = item.getAttribute('data-panel');
                 items.forEach(function (other) {
                     if (other !== item) other.open = false;
+                });
+                tabs.forEach(function (t) {
+                    var on = t.getAttribute('data-tab') === name;
+                    t.classList.toggle('is-active', on);
+                    t.setAttribute('aria-selected', on ? 'true' : 'false');
+                    t.setAttribute('tabindex', on ? '0' : '-1');
                 });
             });
         });
@@ -361,10 +365,34 @@
         initLazyListingMap('office-map-marker', 'pubOfficeMap', 'pubOffice', 'pubOfficeMapStage');
     }
 
-    function initDockPadding() {
+    function syncDockPadding() {
         var dock = document.querySelector('.ps-dock');
         var page = document.querySelector('.ps-page');
-        if (dock && page) page.classList.add('has-dock');
+        if (!page) return;
+        var showDock = dock && window.matchMedia('(max-width: 960px)').matches;
+        page.classList.toggle('has-dock', !!showDock);
+    }
+
+    function initDockPadding() {
+        syncDockPadding();
+        window.addEventListener('resize', syncDockPadding);
+    }
+
+    function syncAgentMore() {
+        var more = document.querySelector('.ps-agent-more');
+        if (!more) return;
+        if (window.matchMedia('(min-width: 961px)').matches) {
+            more.open = true;
+            more.setAttribute('data-force-open', '1');
+        } else if (more.getAttribute('data-force-open') === '1') {
+            more.open = false;
+            more.removeAttribute('data-force-open');
+        }
+    }
+
+    function initAgentMore() {
+        syncAgentMore();
+        window.addEventListener('resize', syncAgentMore);
     }
 
     function initBusinessCardLightbox() {
@@ -394,11 +422,11 @@
         var galleryApi = initGallery();
         initLightbox(galleryApi);
         initBusinessCardLightbox();
-        initTabs();
-        initAccordion();
+        initDetails();
         initProse();
         initCopy();
         initMap();
         initDockPadding();
+        initAgentMore();
     });
 })();

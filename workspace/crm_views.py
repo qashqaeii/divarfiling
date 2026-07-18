@@ -71,7 +71,7 @@ from workspace.services.crm_sync import export_crm_payload, import_crm_payload, 
 from workspace.services.crm_webhooks import create_lead_from_api, dispatch_webhook, test_webhook, verify_api_key
 from workspace.services.crm_audit import log_agency_audit, build_audit_timeline
 from workspace.services.crm_agency_features import is_agency_feature_enabled
-from workspace.services.crm_agency_tv import get_tv_dashboard_payload, TV_WIDGETS
+from workspace.services.crm_agency_tv import get_tv_dashboard_payload, TV_WIDGETS, _agency_logo_url
 from workspace.services.crm_agency_messages import unread_message_count
 from workspace.services.crm_agency_announcements import unread_announcement_count
 from workspace.services.display import to_jalali_display
@@ -2456,6 +2456,7 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['goal_period_quarter_end'] = to_persian_digits(quarter_end_jalali)
         if agency:
             sync_agency_member_records(agency)
+            ctx['agency_logo_url'] = _agency_logo_url(agency)
             full_performance = get_team_performance(agency, days=perf_days)
             can_view_perf = can_view_team_performance(user)
             ctx['can_view_team_performance'] = can_view_perf
@@ -2531,6 +2532,7 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             ctx['api_crm_team_notifications_url'] = reverse('workspace:api_crm_team_notifications')
             ctx['api_crm_team_announcements_url'] = reverse('workspace:api_crm_team_announcements')
         else:
+            ctx['agency_logo_url'] = None
             ctx['performance'] = None
             ctx['my_performance'] = None
             ctx['can_view_team_performance'] = False

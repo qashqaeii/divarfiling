@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=14">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-announcements.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-audit.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-mobile.css' %}?v=4">
 {% endblock %}
 
 {% block crm_content %}
@@ -23,22 +23,19 @@
     data-hub-announcements-unread="{{ announcements_unread_count|default:0 }}">
 
     {% if crm_agency %}
-    <header class="crm-team-mob-header">
-        <div class="crm-team-mob-header-mesh" aria-hidden="true"></div>
-        <div class="crm-team-mob-header-accent" aria-hidden="true"></div>
-        <div class="crm-team-mob-header-inner">
-            <div class="crm-team-mob-brand">
-                <span class="crm-team-mob-logo" style="--hue: {{ crm_agency.name|crm_avatar_hue }}">{{ crm_agency.name|crm_initials }}</span>
-                <div class="crm-team-mob-titles">
-                    <span class="crm-team-mob-kicker">
-                        <i class="fas fa-building" aria-hidden="true"></i> آژانس
-                        <em class="crm-team-mob-role" style="{% crm_agency_role_style crm_membership.role %}">{{ crm_membership.get_role_display }}</em>
-                    </span>
-                    <h1 class="crm-team-mob-title">{{ crm_agency.name }}</h1>
-                    {% if can_manage_team %}
-                    <p class="crm-team-mob-slug">شناسه: <code dir="ltr">{{ crm_agency.slug }}</code></p>
-                    {% endif %}
-                </div>
+    <header class="crm-team-mob-header{% if agency_logo_url %} crm-team-mob-header--branded{% endif %}">
+        <div class="crm-team-mob-header-stage" aria-hidden="true">
+            <div class="crm-team-mob-header-glow"></div>
+            <div class="crm-team-mob-header-grid"></div>
+            <div class="crm-team-mob-header-ribbon"></div>
+        </div>
+        <div class="crm-team-mob-header-bar">
+            <div class="crm-team-mob-mark" style="--hue: {{ crm_agency.name|crm_avatar_hue }}">
+                {% if agency_logo_url %}
+                <img class="crm-team-mob-logo crm-team-mob-logo--img" src="{{ agency_logo_url }}" alt="لوگوی {{ crm_agency.name }}" width="72" height="72" loading="eager" decoding="async">
+                {% else %}
+                <span class="crm-team-mob-logo" aria-hidden="true">{{ crm_agency.name|crm_initials }}</span>
+                {% endif %}
             </div>
             <div class="crm-team-mob-header-actions" role="toolbar" aria-label="عملیات آژانس">
                 {% if agency_feature_tv and can_manage_team %}
@@ -54,6 +51,22 @@
                 <a href="?tab=members" class="crm-team-mob-icon-btn" title="اعضا" aria-label="اعضا">
                     <i class="fas fa-users" aria-hidden="true"></i>
                 </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="crm-team-mob-identity">
+            <span class="crm-team-mob-eyebrow">
+                <i class="fas fa-building-columns" aria-hidden="true"></i>
+                مرکز فرمان آژانس
+            </span>
+            <h1 class="crm-team-mob-title">{{ crm_agency.name }}</h1>
+            <div class="crm-team-mob-chips">
+                <em class="crm-team-mob-role" style="{% crm_agency_role_style crm_membership.role %}">{{ crm_membership.get_role_display }}</em>
+                {% if can_manage_team %}
+                <span class="crm-team-mob-slug-chip" title="شناسه آژانس برای درخواست عضویت">
+                    <i class="fas fa-fingerprint" aria-hidden="true"></i>
+                    <code dir="ltr">{{ crm_agency.slug }}</code>
+                </span>
                 {% endif %}
             </div>
         </div>
@@ -98,25 +111,37 @@
     </header>
     {% else %}
     <header class="crm-team-mob-header crm-team-mob-header--onboard">
-        <div class="crm-team-mob-header-mesh" aria-hidden="true"></div>
-        <div class="crm-team-mob-header-accent" aria-hidden="true"></div>
-        <div class="crm-team-mob-header-inner">
-            <div class="crm-team-mob-titles">
-                <span class="crm-team-mob-kicker"><i class="fas fa-people-group" aria-hidden="true"></i> فضای تیمی</span>
-                <h1 class="crm-team-mob-title">آژانس املاک</h1>
-                <p class="crm-team-mob-sub">ایجاد یا پیوستن به آژانس مشترک</p>
-            </div>
+        <div class="crm-team-mob-header-stage" aria-hidden="true">
+            <div class="crm-team-mob-header-glow"></div>
+            <div class="crm-team-mob-header-grid"></div>
+            <div class="crm-team-mob-header-ribbon"></div>
+        </div>
+        <div class="crm-team-mob-identity">
+            <span class="crm-team-mob-eyebrow"><i class="fas fa-people-group" aria-hidden="true"></i> فضای تیمی</span>
+            <h1 class="crm-team-mob-title">آژانس املاک</h1>
+            <p class="crm-team-mob-sub">ایجاد یا پیوستن به آژانس مشترک</p>
         </div>
     </header>
     {% endif %}
 
-    <header class="crm-dash-bar crm-team-hero crm-team-desk-header">
+    <header class="crm-dash-bar crm-team-hero crm-team-desk-header{% if agency_logo_url %} crm-team-hero--branded{% endif %}">
+        <div class="crm-team-hero-stage" aria-hidden="true">
+            <div class="crm-team-hero-glow"></div>
+            <div class="crm-team-hero-grid"></div>
+        </div>
         <div class="crm-team-hero-inner">
             <div class="crm-team-hero-top">
                 {% if crm_agency %}
                 <div class="crm-team-hero-brand">
-                    <span class="crm-team-hero-logo" style="--hue: {{ crm_agency.name|crm_avatar_hue }}">{{ crm_agency.name|crm_initials }}</span>
+                    <div class="crm-team-hero-mark" style="--hue: {{ crm_agency.name|crm_avatar_hue }}">
+                        {% if agency_logo_url %}
+                        <img class="crm-team-hero-logo crm-team-hero-logo--img" src="{{ agency_logo_url }}" alt="لوگوی {{ crm_agency.name }}" width="64" height="64" loading="eager" decoding="async">
+                        {% else %}
+                        <span class="crm-team-hero-logo" aria-hidden="true">{{ crm_agency.name|crm_initials }}</span>
+                        {% endif %}
+                    </div>
                     <div class="crm-team-hero-titles">
+                        <span class="crm-team-hero-eyebrow"><i class="fas fa-building-columns" aria-hidden="true"></i> مرکز فرمان آژانس</span>
                         <h1 class="crm-dash-bar-title">{{ crm_agency.name }}</h1>
                         <p class="crm-dash-bar-sub">
                             <span class="crm-team-hero-role" style="{% crm_agency_role_style crm_membership.role %}">{{ crm_membership.get_role_display }}</span>
@@ -129,6 +154,7 @@
                 </div>
                 {% else %}
                 <div class="crm-team-hero-titles">
+                    <span class="crm-team-hero-eyebrow"><i class="fas fa-people-group" aria-hidden="true"></i> فضای تیمی</span>
                     <h1 class="crm-dash-bar-title">آژانس املاک</h1>
                     <p class="crm-dash-bar-sub">ایجاد یا پیوستن به آژانس مشترک</p>
                 </div>
@@ -607,57 +633,112 @@
 
     {# ── تب همگام‌سازی ── #}
     {% if tab == 'sync' and can_manage_team %}
-    <div class="crm-team-sync-v2">
-        <section class="crm-team-sync-stats" aria-label="حجم داده">
+    <div class="crm-team-sync-v2 crm-sync-studio">
+        <header class="crm-sync-intro">
+            <span class="crm-sync-intro-kicker"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> پشتیبان و اتصال</span>
+            <h2 class="crm-sync-intro-title">همگام‌سازی داده</h2>
+            <p class="crm-sync-intro-text">خروجی امن، ورود هوشمند و API سرنخ — بدون از دست رفتن رکوردهای تکراری.</p>
+        </header>
+
+        <section class="crm-sync-volume" aria-label="حجم داده آژانس">
+            <article class="crm-sync-volume-card">
+                <span class="crm-sync-volume-icon" aria-hidden="true"><i class="fas fa-users"></i></span>
+                <strong>{{ team_stats.contacts }}</strong>
+                <em>مخاطب</em>
+            </article>
+            <article class="crm-sync-volume-card">
+                <span class="crm-sync-volume-icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+                <strong>{{ team_stats.properties }}</strong>
+                <em>ملک</em>
+            </article>
+            <article class="crm-sync-volume-card">
+                <span class="crm-sync-volume-icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                <strong>{{ team_stats.deals }}</strong>
+                <em>معامله</em>
+            </article>
+        </section>
+        {# legacy stats for desktop styles that still target them #}
+        <section class="crm-team-sync-stats" aria-hidden="true" hidden>
             <article><span>{{ team_stats.contacts }}</span><em>مخاطب</em></article>
             <article><span>{{ team_stats.properties }}</span><em>ملک</em></article>
             <article><span>{{ team_stats.deals }}</span><em>معامله</em></article>
         </section>
 
-        <div class="crm-team-sync-flow">
-            <article class="crm-team-sync-step">
-                <span class="crm-team-sync-step-num">۱</span>
-                <div class="crm-team-sync-step-icon crm-team-sync-step-icon--export"><i class="fas fa-file-export"></i></div>
-                <h3>خروجی JSON</h3>
-                <p>دانلود کامل داده‌های آژانس برای پشتیبان یا اپ دسکتاپ</p>
-                <div class="crm-team-sync-export-actions">
-                    <button type="button" class="crm-dash-act crm-dash-act--primary" id="crm-sync-export-btn" data-scope="user">
-                        <i class="fas fa-download"></i><span>دانلود داده من</span>
+        <div class="crm-sync-lanes crm-team-sync-flow">
+            <article class="crm-sync-lane crm-sync-lane--export crm-team-sync-step">
+                <header class="crm-sync-lane-head">
+                    <span class="crm-sync-lane-badge">۱ · خروجی</span>
+                    <span class="crm-team-sync-step-icon crm-team-sync-step-icon--export crm-sync-lane-mark" aria-hidden="true"><i class="fas fa-cloud-arrow-down"></i></span>
+                </header>
+                <h3>دانلود JSON</h3>
+                <p>پشتیبان‌گیری یا انتقال به اپ دسکتاپ — دادهٔ شما یا کل آژانس.</p>
+                <div class="crm-sync-lane-actions crm-team-sync-export-actions">
+                    <button type="button" class="crm-sync-cta crm-sync-cta--primary" id="crm-sync-export-btn" data-scope="user">
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                        <span class="crm-sync-cta-copy">
+                            <strong>داده من</strong>
+                            <small>فقط پرونده‌های شما</small>
+                        </span>
                     </button>
-                    <button type="button" class="crm-dash-act" id="crm-sync-export-agency-btn" data-scope="agency">
-                        <i class="fas fa-building"></i><span>خروجی کل آژانس</span>
-                    </button>
-                    <button type="button" class="crm-dash-act crm-dash-act--ghost" id="crm-sync-dryrun-btn">
-                        <i class="fas fa-eye"></i><span>پیش‌نمایش ورودی</span>
+                    <button type="button" class="crm-sync-cta" id="crm-sync-export-agency-btn" data-scope="agency">
+                        <i class="fas fa-building" aria-hidden="true"></i>
+                        <span class="crm-sync-cta-copy">
+                            <strong>کل آژانس</strong>
+                            <small>خروجی مدیریتی</small>
+                        </span>
                     </button>
                 </div>
             </article>
+
+            <div class="crm-sync-bridge" aria-hidden="true">
+                <span class="crm-sync-bridge-dot"></span>
+                <span class="crm-sync-bridge-line"></span>
+                <i class="fas fa-arrows-up-down"></i>
+                <span class="crm-sync-bridge-line"></span>
+                <span class="crm-sync-bridge-dot"></span>
+            </div>
             <div class="crm-team-sync-arrow" aria-hidden="true"><i class="fas fa-arrow-left-long"></i></div>
-            <article class="crm-team-sync-step">
-                <span class="crm-team-sync-step-num">۲</span>
-                <div class="crm-team-sync-step-icon crm-team-sync-step-icon--import"><i class="fas fa-file-import"></i></div>
-                <h3>ورودی JSON</h3>
-                <p>ادغام مخاطبین و املاک جدید بدون بازنویسی تکراری</p>
-                <div class="crm-team-dropzone" id="crm-sync-dropzone">
+
+            <article class="crm-sync-lane crm-sync-lane--import crm-team-sync-step">
+                <header class="crm-sync-lane-head">
+                    <span class="crm-sync-lane-badge">۲ · ورودی</span>
+                    <span class="crm-team-sync-step-icon crm-team-sync-step-icon--import crm-sync-lane-mark" aria-hidden="true"><i class="fas fa-cloud-arrow-up"></i></span>
+                </header>
+                <h3>بارگذاری JSON</h3>
+                <p>ادغام هوشمند — رکوردهای تکراری بازنویسی نمی‌شوند.</p>
+                <div class="crm-team-dropzone crm-sync-dropzone" id="crm-sync-dropzone">
                     <input type="file" id="crm-sync-import-file" accept=".json,application/json" hidden>
-                    <i class="fas fa-cloud-arrow-up"></i>
-                    <strong>فایل را اینجا رها کنید</strong>
-                    <span>یا کلیک برای انتخاب</span>
+                    <span class="crm-sync-dropzone-orb" aria-hidden="true"><i class="fas fa-file-arrow-up"></i></span>
+                    <strong>انتخاب یا رها کردن فایل</strong>
+                    <span>فرمت JSON · حداکثر حجم توصیه‌شده برای موبایل</span>
+                    <em class="crm-sync-dropzone-hint">لمس کنید تا فایل انتخاب شود</em>
                 </div>
-                <p id="crm-sync-import-status" class="crm-team-sync-status-v2" hidden></p>
+                <button type="button" class="crm-sync-cta crm-sync-cta--ghost" id="crm-sync-dryrun-btn">
+                    <i class="fas fa-eye" aria-hidden="true"></i>
+                    <span class="crm-sync-cta-copy">
+                        <strong>پیش‌نمایش ورودی</strong>
+                        <small>بدون ذخیره واقعی</small>
+                    </span>
+                </button>
+                <p id="crm-sync-import-status" class="crm-team-sync-status-v2 crm-sync-status" hidden></p>
             </article>
         </div>
 
         {% if sync_logs %}
-        <section class="crm-team-sync-history" aria-label="تاریخچه همگام‌سازی">
-            <h3>تاریخچه اخیر</h3>
-            <ul>
+        <section class="crm-sync-history crm-team-sync-history" aria-label="تاریخچه همگام‌سازی">
+            <header class="crm-sync-history-head">
+                <h3><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> تاریخچه اخیر</h3>
+            </header>
+            <ul class="crm-sync-history-list">
                 {% for log in sync_logs %}
-                <li>
-                    <strong>{{ log.get_sync_type_display }}</strong>
-                    {{ log.user.get_full_name|default:log.user.username|default:"—" }}
-                    · {{ log.created_at|ws_jalali }}
-                    {% if log.stats %}<code>{{ log.stats }}</code>{% endif %}
+                <li class="crm-sync-history-item">
+                    <span class="crm-sync-history-icon" aria-hidden="true"><i class="fas fa-circle-nodes"></i></span>
+                    <div class="crm-sync-history-body">
+                        <strong>{{ log.get_sync_type_display }}</strong>
+                        <span>{{ log.user.get_full_name|default:log.user.username|default:"—" }}</span>
+                        <time>{{ log.created_at|ws_jalali }}</time>
+                        {% if log.stats %}<code>{{ log.stats }}</code>{% endif %}
+                    </div>
                 </li>
                 {% endfor %}
             </ul>
@@ -665,40 +746,48 @@
         {% endif %}
 
         {% if can_manage_team %}
-        <section class="crm-team-api-panel">
-            <header class="crm-team-panel-head-v2">
-                <div>
-                    <h2><i class="fas fa-key"></i> API ورودی سرنخ</h2>
-                    <p>اتصال فرم سایت، تلگرام یا ابزارهای خارجی</p>
-                </div>
-            </header>
-            <div class="crm-team-api-body">
-                <div class="crm-team-api-field">
-                    <label>کلید API</label>
-                    <div class="crm-team-api-copy-row">
-                        <code class="crm-team-api-key-v2 crm-team-api-key-v2--masked" id="crm-api-key" dir="ltr" spellcheck="false">••••••••••••••••</code>
-                        <button type="button" class="crm-dash-act" id="crm-api-key-toggle" title="نمایش کلید" aria-pressed="false"><i class="fas fa-eye"></i></button>
-                        <button type="button" class="crm-dash-act" id="crm-api-key-copy" title="کپی" disabled><i class="fas fa-copy"></i></button>
+        <section class="crm-sync-api crm-team-api-panel">
+            <details class="crm-sync-api-details" open>
+                <summary class="crm-sync-api-summary">
+                    <span class="crm-sync-api-mark" aria-hidden="true"><i class="fas fa-key"></i></span>
+                    <span class="crm-sync-api-summary-text">
+                        <strong>API ورودی سرنخ</strong>
+                        <em>فرم سایت، تلگرام و ابزارهای خارجی</em>
+                    </span>
+                    <i class="fas fa-chevron-down crm-sync-api-chevron" aria-hidden="true"></i>
+                </summary>
+                <div class="crm-team-api-body crm-sync-api-body">
+                    <div class="crm-team-api-field crm-sync-api-field">
+                        <label>کلید API</label>
+                        <div class="crm-team-api-copy-row crm-sync-copy-row">
+                            <code class="crm-team-api-key-v2 crm-team-api-key-v2--masked crm-sync-code" id="crm-api-key" dir="ltr" spellcheck="false">••••••••••••••••</code>
+                            <button type="button" class="crm-sync-icon-btn" id="crm-api-key-toggle" title="نمایش کلید" aria-pressed="false"><i class="fas fa-eye"></i></button>
+                            <button type="button" class="crm-sync-icon-btn" id="crm-api-key-copy" title="کپی" disabled><i class="fas fa-copy"></i></button>
+                        </div>
                     </div>
-                </div>
-                <div class="crm-team-api-field">
-                    <label>Endpoint</label>
-                    <div class="crm-team-api-copy-row">
-                        <code class="crm-team-api-key-v2" id="crm-api-url" dir="ltr">{{ request.scheme }}://{{ request.get_host }}{{ api_leads_path }}</code>
-                        <button type="button" class="crm-dash-act" id="crm-api-url-copy" title="کپی"><i class="fas fa-copy"></i></button>
+                    <div class="crm-team-api-field crm-sync-api-field">
+                        <label>Endpoint</label>
+                        <div class="crm-team-api-copy-row crm-sync-copy-row">
+                            <code class="crm-team-api-key-v2 crm-sync-code" id="crm-api-url" dir="ltr">{{ request.scheme }}://{{ request.get_host }}{{ api_leads_path }}</code>
+                            <button type="button" class="crm-sync-icon-btn" id="crm-api-url-copy" title="کپی"><i class="fas fa-copy"></i></button>
+                        </div>
                     </div>
-                </div>
-                <details class="crm-team-api-sample">
-                    <summary>نمونه درخواست cURL</summary>
-                    <pre dir="ltr" id="crm-api-curl">curl -X POST "{{ request.scheme }}://{{ request.get_host }}{{ api_leads_path }}" \
+                    <details class="crm-team-api-sample crm-sync-curl">
+                        <summary>نمونه درخواست cURL</summary>
+                        <pre dir="ltr" id="crm-api-curl">curl -X POST "{{ request.scheme }}://{{ request.get_host }}{{ api_leads_path }}" \
   -H "Content-Type: application/json" \
   -H "X-CRM-API-Key: YOUR_API_KEY" \
   -d '{"name":"علی رضایی","phone":"09121234567","source":"وب‌سایت"}'</pre>
-                </details>
-                <button type="button" class="crm-dash-act crm-dash-act--ghost" id="crm-api-key-regen" data-confirm="کلید قبلی باطل می‌شود. ادامه؟">
-                    <i class="fas fa-rotate"></i><span>بازتولید کلید</span>
-                </button>
-            </div>
+                    </details>
+                    <button type="button" class="crm-sync-cta crm-sync-cta--danger-ghost" id="crm-api-key-regen" data-confirm="کلید قبلی باطل می‌شود. ادامه؟">
+                        <i class="fas fa-rotate" aria-hidden="true"></i>
+                        <span class="crm-sync-cta-copy">
+                            <strong>بازتولید کلید</strong>
+                            <small>کلید فعلی باطل می‌شود</small>
+                        </span>
+                    </button>
+                </div>
+            </details>
         </section>
         {% else %}
         <p class="crm-team-sync-note"><i class="fas fa-lock"></i> تنظیم API فقط برای مدیران آژانس در دسترس است.</p>
@@ -709,16 +798,21 @@
     {# ── تب وب‌هوک ── #}
     {% if tab == 'webhooks' and can_manage_team %}
     {% if can_manage_team %}
-    <section class="crm-team-webhook-events" aria-label="رویدادهای پشتیبانی‌شده">
+    <header class="crm-hook-intro">
+        <span class="crm-hook-intro-kicker"><i class="fas fa-plug" aria-hidden="true"></i> اتصال بیرونی</span>
+        <h2 class="crm-hook-intro-title">وب‌هوک‌های خروجی</h2>
+        <p class="crm-hook-intro-text">رویدادهای CRM را به‌صورت خودکار به Zapier، n8n یا سرور خودتان بفرستید.</p>
+    </header>
+    <section class="crm-team-webhook-events crm-hook-events" aria-label="رویدادهای پشتیبانی‌شده">
         {% for ev in webhook_events %}
         <span class="crm-team-event-chip">{{ webhook_event_labels|dict_get:ev|default:ev }}</span>
         {% endfor %}
     </section>
 
-    <section class="crm-team-panel-v2">
+    <section class="crm-team-panel-v2 crm-hook-panel">
         <header class="crm-team-panel-head-v2">
             <div>
-                <h2>وب‌هوک‌های خروجی</h2>
+                <h2>مقصدهای فعال</h2>
                 <p>ارسال خودکار رویداد CRM به سیستم‌های شما</p>
             </div>
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-webhook">
@@ -791,36 +885,41 @@
 
     {# ── تب انتقال‌ها ── #}
     {% if tab == 'transfers' and can_manage_team %}
-    <section class="crm-team-panel-v2">
-        <header class="crm-team-panel-head-v2">
+    <header class="crm-xfer-intro">
+        <span class="crm-xfer-intro-kicker"><i class="fas fa-right-left" aria-hidden="true"></i> جابه‌جایی پرونده</span>
+        <h2 class="crm-xfer-intro-title">تاریخچه انتقال</h2>
+        <p class="crm-xfer-intro-text">{{ transfer_count }} انتقال ثبت‌شده — شفافیت کامل برای مدیر آژانس.</p>
+    </header>
+    <section class="crm-team-panel-v2 crm-xfer-panel">
+        <header class="crm-team-panel-head-v2 crm-xfer-panel-head">
             <div>
-                <h2>تاریخچه انتقال پرونده</h2>
-                <p>{{ transfer_count }} انتقال ثبت‌شده · E6</p>
+                <h2>رویدادهای انتقال</h2>
+                <p>از مشاور به مشاور</p>
             </div>
         </header>
         {% if recent_transfers %}
-        <div class="crm-team-timeline">
+        <div class="crm-team-timeline crm-xfer-timeline">
             {% for t in recent_transfers %}
-            <article class="crm-team-timeline-item">
+            <article class="crm-team-timeline-item crm-xfer-card">
                 <div class="crm-team-timeline-rail" aria-hidden="true"><span></span></div>
                 <div class="crm-team-timeline-body">
-                    <header>
+                    <header class="crm-xfer-card-head">
                         <a href="{% url 'workspace:crm_detail' t.customer_id %}" class="crm-team-timeline-customer">{{ t.customer.name }}</a>
                         <time>{{ t.created_at|ws_jalali }}</time>
                     </header>
-                    <div class="crm-team-timeline-transfer">
-                        <span class="crm-team-timeline-user">
+                    <div class="crm-team-timeline-transfer crm-xfer-flow">
+                        <span class="crm-team-timeline-user crm-xfer-user">
                             <i class="crm-team-avatar crm-team-avatar--xs" style="--hue: {{ t.from_user.username|default:'x'|crm_avatar_hue }}">{{ t.from_user.get_full_name|default:t.from_user.username|default:"—"|crm_initials }}</i>
-                            {{ t.from_user.get_full_name|default:t.from_user.username|default:"سیستم" }}
+                            <span>{{ t.from_user.get_full_name|default:t.from_user.username|default:"سیستم" }}</span>
                         </span>
-                        <i class="fas fa-arrow-left crm-team-timeline-arrow"></i>
-                        <span class="crm-team-timeline-user">
+                        <span class="crm-xfer-arrow" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
+                        <span class="crm-team-timeline-user crm-xfer-user">
                             <i class="crm-team-avatar crm-team-avatar--xs" style="--hue: {{ t.to_user.username|crm_avatar_hue }}">{{ t.to_user.get_full_name|default:t.to_user.username|crm_initials }}</i>
-                            {{ t.to_user.get_full_name|default:t.to_user.username }}
+                            <span>{{ t.to_user.get_full_name|default:t.to_user.username }}</span>
                         </span>
                     </div>
-                    {% if t.note %}<p class="crm-team-timeline-note">{{ t.note }}</p>{% endif %}
-                    <footer>
+                    {% if t.note %}<p class="crm-team-timeline-note crm-xfer-note">{{ t.note }}</p>{% endif %}
+                    <footer class="crm-xfer-foot">
                         <span><i class="fas fa-user-check"></i> توسط {{ t.transferred_by.get_full_name|default:t.transferred_by.username }}</span>
                     </footer>
                 </div>

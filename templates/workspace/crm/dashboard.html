@@ -1,5 +1,5 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load workspace_tags crm_tags %}
+{% load static workspace_tags crm_tags %}
 
 {% block page_title %}{% endblock %}
 {% block crm_title %}{% endblock %}
@@ -7,15 +7,28 @@
 {% block crm_search %}{% endblock %}
 {% block crm_header %}{% endblock %}
 
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-dashboard.css' %}?v=1">
+{% endblock %}
+
 {% block crm_content %}
-<div class="crm-dash crm-page-chrome">
+<div class="crm-dash crm-page-chrome crm-dash--pro" id="crmDash">
 
     <header class="crm-dash-bar">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">داشبورد CRM</h1>
+            <p class="crm-dash-bar-sub is-visible">
+                {% if today_jalali %}<span>{{ today_jalali }}</span>{% endif %}
+                {% if stats.due_today %}
+                <span class="crm-dash-bar-chip{% if stats.overdue_followups %} is-warn{% endif %}">{{ stats.due_today }} پیگیری امروز</span>
+                {% endif %}
+                {% if stats.overdue_followups %}
+                <span class="crm-dash-bar-chip is-warn">{{ stats.overdue_followups }} معوق</span>
+                {% endif %}
+            </p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات سریع">
-            <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act" title="صف کار امروز">
+            <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act{% if today_count %} crm-dash-act--pulse{% endif %}" title="صف کار امروز">
                 <i class="fas fa-list-check" aria-hidden="true"></i><span>امروز{% if today_count %} ({{ today_count }}){% endif %}</span>
             </a>
             <button type="button" class="crm-dash-act" data-drawer-open="drawer-quick-lead">
@@ -41,117 +54,74 @@
     {% include 'workspace/crm/includes/crm_video_band.html' %}
 
     {% if stagnant_count or overdue_contacts %}
-    <section class="crm-action-rail" aria-label="اقدامات فوری">
+    <section class="crm-action-rail crm-dash-alerts" aria-label="اقدامات فوری">
         {% if stagnant_count %}
-        <a href="{% url 'workspace:crm_automation' %}" class="crm-action-card crm-action-card--error">
-            <span class="crm-action-card-glow" aria-hidden="true"></span>
-            <span class="crm-action-card-icon" aria-hidden="true"><i class="fas fa-user-clock"></i></span>
-            <span class="crm-action-card-body">
-                <strong class="crm-action-card-title">مخاطب راکد</strong>
-                <em class="crm-action-card-text">بیش از ۷ روز بدون فعالیت</em>
+        <a href="{% url 'workspace:crm_automation' %}" class="crm-dash-alert-card crm-dash-alert-card--error">
+            <span class="crm-dash-alert-card__icon" aria-hidden="true"><i class="fas fa-user-clock"></i></span>
+            <span class="crm-dash-alert-card__body">
+                <span class="crm-dash-alert-card__kicker">نیاز به توجه</span>
+                <strong class="crm-dash-alert-card__title">
+                    <em class="crm-dash-alert-card__count">{{ stagnant_count }}</em>
+                    مخاطب راکد
+                </strong>
+                <span class="crm-dash-alert-card__desc">بیش از ۷ روز بدون فعالیت</span>
             </span>
-            <span class="crm-action-card-count" aria-label="{{ stagnant_count }} مورد">{{ stagnant_count }}</span>
-            <span class="crm-action-card-cta">
-                <span>اتوماسیون</span>
-                <i class="fas fa-arrow-left" aria-hidden="true"></i>
-            </span>
+            <span class="crm-dash-alert-card__cta">اتوماسیون <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
         </a>
         {% endif %}
         {% if overdue_contacts %}
-        <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="crm-action-card crm-action-card--warning">
-            <span class="crm-action-card-glow" aria-hidden="true"></span>
-            <span class="crm-action-card-icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></span>
-            <span class="crm-action-card-body">
-                <strong class="crm-action-card-title">پیگیری معوق</strong>
-                <em class="crm-action-card-text">نیاز به اقدام فوری</em>
+        <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="crm-dash-alert-card crm-dash-alert-card--warn">
+            <span class="crm-dash-alert-card__pulse" aria-hidden="true"></span>
+            <span class="crm-dash-alert-card__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+            <span class="crm-dash-alert-card__body">
+                <span class="crm-dash-alert-card__kicker">اقدام فوری</span>
+                <strong class="crm-dash-alert-card__title">
+                    <em class="crm-dash-alert-card__count">{{ overdue_contacts|length }}</em>
+                    پیگیری معوق
+                </strong>
+                <span class="crm-dash-alert-card__desc">همین حالا صف پیگیری را باز کنید</span>
             </span>
-            <span class="crm-action-card-count" aria-label="{{ overdue_contacts|length }} مورد">{{ overdue_contacts|length }}</span>
-            <span class="crm-action-card-cta">
-                <span>مشاهده</span>
-                <i class="fas fa-arrow-left" aria-hidden="true"></i>
-            </span>
+            <span class="crm-dash-alert-card__cta">مشاهده <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
         </a>
         {% endif %}
     </section>
     {% endif %}
 
     <section class="crm-dash-kpis" aria-label="شاخص‌ها">
-        <article class="crm-dash-kpi">
+        <a href="{% url 'workspace:crm_contacts' %}" class="crm-dash-kpi">
             <span class="crm-dash-kpi-val">{{ stats.total_contacts }}</span>
             <span class="crm-dash-kpi-meta">
                 <span class="crm-dash-kpi-lbl">مخاطبین</span>
                 <span class="crm-dash-kpi-sub">+{{ stats.new_contacts }} جدید</span>
             </span>
-        </article>
-        <article class="crm-dash-kpi">
+        </a>
+        <a href="{% url 'workspace:crm_properties' %}" class="crm-dash-kpi">
             <span class="crm-dash-kpi-val">{{ stats.total_properties }}</span>
             <span class="crm-dash-kpi-meta">
                 <span class="crm-dash-kpi-lbl">املاک</span>
                 <span class="crm-dash-kpi-sub">{{ stats.sale_files }} فروش · {{ stats.rent_files }} اجاره</span>
             </span>
-        </article>
-        <article class="crm-dash-kpi{% if stats.due_today %} crm-dash-kpi--warn{% endif %}">
+        </a>
+        <a href="{% url 'workspace:crm_today' %}" class="crm-dash-kpi{% if stats.due_today %} crm-dash-kpi--warn{% endif %}">
             <span class="crm-dash-kpi-val">{{ stats.due_today }}</span>
             <span class="crm-dash-kpi-meta">
                 <span class="crm-dash-kpi-lbl">پیگیری امروز</span>
                 <span class="crm-dash-kpi-sub">{{ stats.overdue_followups }} معوق</span>
             </span>
-        </article>
-        <article class="crm-dash-kpi">
+        </a>
+        <a href="{% url 'workspace:crm_reminders' %}" class="crm-dash-kpi">
             <span class="crm-dash-kpi-val">{{ stats.active_reminders }}</span>
             <span class="crm-dash-kpi-meta">
                 <span class="crm-dash-kpi-lbl">یادآور</span>
                 <span class="crm-dash-kpi-sub">{{ stats.contracts }} قرارداد</span>
             </span>
-        </article>
+        </a>
     </section>
 
-    <div class="crm-dash-bento">
-        <section class="crm-cell crm-cell--chart crm-cell--trend" data-trend-chart>
-            <header class="crm-cell-head crm-cell-head--trend">
-                <div class="crm-cell-trend-title">
-                    <h2 id="crmDashTrendTitle" data-trend-title>روند ۷ روز</h2>
-                    <p class="crm-cell-trend-sub">فعالیت مخاطب، ملک و معامله</p>
-                </div>
-                <div class="crm-cell-trend-tools">
-                    <div class="crm-trend-range" role="group" aria-label="بازه زمانی نمودار">
-                        <button type="button" class="crm-trend-range-btn is-active" data-trend-range="7" aria-pressed="true">۷ روز</button>
-                        <button type="button" class="crm-trend-range-btn" data-trend-range="30" aria-pressed="false">۳۰ روز</button>
-                    </div>
-                    <span class="crm-cell-legend" aria-hidden="true">
-                        <i class="crm-leg crm-leg-contacts"></i>مخاطب
-                        <i class="crm-leg crm-leg-props"></i>ملک
-                        <i class="crm-leg crm-leg-deals"></i>معامله
-                    </span>
-                </div>
-            </header>
-            <div class="crm-cell-chart crm-cell-chart--trend">
-                <canvas id="chart-activity" height="168"></canvas>
-            </div>
-        </section>
-
-        <section class="crm-cell crm-cell--pipe">
+    <div class="crm-dash-bento" id="crmDashBento">
+        <section class="crm-cell crm-cell--today crm-cell--priority">
             <header class="crm-cell-head">
-                <h2>قیف وضعیت</h2>
-                <a href="{% url 'workspace:crm_contacts' %}?view=pipeline" class="crm-cell-link">کانبان</a>
-            </header>
-            <ul class="crm-pipe-v2">
-                {% for col in pipeline %}
-                <li>
-                    <a href="{% url 'workspace:crm_contacts' %}?status={{ col.status|urlencode }}" class="crm-pipe-v2-row">
-                        <span class="crm-pipe-v2-dot" style="background:{{ col.status|crm_status_dot }}"></span>
-                        <span class="crm-pipe-v2-name">{{ col.status }}</span>
-                        <span class="crm-pipe-v2-bar"><i style="width:{% widthratio col.count pipeline_max 100 %}%"></i></span>
-                        <span class="crm-pipe-v2-count">{{ col.count }}</span>
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
-        </section>
-
-        <section class="crm-cell crm-cell--today">
-            <header class="crm-cell-head">
-                <h2>پیگیری امروز</h2>
+                <h2><i class="fas fa-list-check" aria-hidden="true"></i> پیگیری امروز</h2>
                 <a href="{% url 'workspace:crm_today' %}" class="crm-cell-link">صف کار</a>
             </header>
             <ul class="crm-feed-v2">
@@ -167,14 +137,17 @@
                     <span class="crm-pill-v2" style="{% crm_status_style c.status %}">{{ c.status }}</span>
                 </li>
                 {% empty %}
-                <li class="crm-feed-v2-empty">پیگیریی برای امروز نیست</li>
+                <li class="crm-feed-v2-empty">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    پیگیریی برای امروز نیست
+                </li>
                 {% endfor %}
             </ul>
         </section>
 
-        <section class="crm-cell crm-cell--remind">
+        <section class="crm-cell crm-cell--remind crm-cell--priority">
             <header class="crm-cell-head">
-                <h2>یادآورها</h2>
+                <h2><i class="fas fa-bell" aria-hidden="true"></i> یادآورها</h2>
                 <a href="{% url 'workspace:crm_reminders' %}" class="crm-cell-link">همه</a>
             </header>
             <ul class="crm-feed-v2">
@@ -189,14 +162,17 @@
                     </div>
                 </li>
                 {% empty %}
-                <li class="crm-feed-v2-empty">یادآور فعالی نیست</li>
+                <li class="crm-feed-v2-empty">
+                    <i class="fas fa-bell-slash" aria-hidden="true"></i>
+                    یادآور فعالی نیست
+                </li>
                 {% endfor %}
             </ul>
         </section>
 
-        <section class="crm-cell crm-cell--contacts">
+        <section class="crm-cell crm-cell--contacts crm-cell--priority">
             <header class="crm-cell-head">
-                <h2>مخاطبین اخیر</h2>
+                <h2><i class="fas fa-users" aria-hidden="true"></i> مخاطبین اخیر</h2>
                 <a href="{% url 'workspace:crm_contacts' %}" class="crm-cell-link">همه</a>
             </header>
             <ul class="crm-feed-v2">
@@ -217,80 +193,135 @@
             </ul>
         </section>
 
-        <section class="crm-cell crm-cell--funnel">
+        <section class="crm-cell crm-cell--pipe crm-cell--priority">
             <header class="crm-cell-head">
-                <h2>قیف تبدیل</h2>
-                <a href="{% url 'workspace:crm_deals' %}" class="crm-cell-link">معاملات</a>
+                <h2><i class="fas fa-filter" aria-hidden="true"></i> قیف وضعیت</h2>
+                <a href="{% url 'workspace:crm_contacts' %}?view=pipeline" class="crm-cell-link">کانبان</a>
             </header>
-            <ul class="crm-funnel-v2">
-                {% for s in conversion_funnel.stages %}
+            <ul class="crm-pipe-v2">
+                {% for col in pipeline %}
                 <li>
-                    <span class="crm-funnel-stage">{{ s.stage }}</span>
-                    <span class="crm-funnel-bar"><i style="width:{{ s.pct_of_total }}%"></i></span>
-                    <span class="crm-funnel-count">{{ s.count }}</span>
-                </li>
-                {% endfor %}
-            </ul>
-        </section>
-
-        <section class="crm-cell crm-cell--stagnant">
-            <header class="crm-cell-head">
-                <h2>رکود (F6)</h2>
-                <a href="{% url 'workspace:crm_contacts' %}" class="crm-cell-link">مخاطبین</a>
-            </header>
-            <ul class="crm-feed-v2">
-                {% for row in stagnant_contacts %}
-                <li class="crm-feed-v2-item">
-                    <a href="{% url 'workspace:crm_detail' row.customer.id %}" class="crm-feed-v2-main">
-                        <span class="crm-feed-v2-text">
-                            <strong>{{ row.customer.name }}</strong>
-                            <em>{{ row.idle_days }} روز بدون فعالیت</em>
-                        </span>
+                    <a href="{% url 'workspace:crm_contacts' %}?status={{ col.status|urlencode }}" class="crm-pipe-v2-row">
+                        <span class="crm-pipe-v2-dot" style="background:{{ col.status|crm_status_dot }}"></span>
+                        <span class="crm-pipe-v2-name">{{ col.status }}</span>
+                        <span class="crm-pipe-v2-bar"><i style="width:{% widthratio col.count pipeline_max 100 %}%"></i></span>
+                        <span class="crm-pipe-v2-count">{{ col.count }}</span>
                     </a>
                 </li>
-                {% empty %}
-                <li class="crm-feed-v2-empty">مخاطب راکدی نیست</li>
                 {% endfor %}
             </ul>
         </section>
 
-        <section class="crm-cell crm-cell--comm">
-            <header class="crm-cell-head"><h2>کانال ارتباط</h2></header>
-            <ul class="crm-ch-v2">
-                {% for ch in communication_stats %}
-                <li>
-                    <span class="crm-ch-v2-label"><i class="fas {{ ch.icon }}" aria-hidden="true"></i>{{ ch.label }}</span>
-                    <span class="crm-ch-v2-track"><i style="width:{{ ch.pct }}%"></i></span>
-                    <span class="crm-ch-v2-val">{{ ch.count }}</span>
-                </li>
-                {% endfor %}
-            </ul>
-        </section>
+        <button type="button" class="crm-dash-insights-toggle" id="crmDashInsightsToggle" aria-expanded="false" aria-controls="crmDashInsights">
+            <span class="crm-dash-insights-toggle__main">
+                <span class="crm-dash-insights-toggle__icon" aria-hidden="true"><i class="fas fa-chart-area"></i></span>
+                <span class="crm-dash-insights-toggle__text">
+                    <strong>آمار و تحلیل</strong>
+                    <em>روند، قیف تبدیل، کانال و فعالیت</em>
+                </span>
+            </span>
+            <span class="crm-dash-insights-toggle__chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+        </button>
 
-        <section class="crm-cell crm-cell--feed">
-            <header class="crm-cell-head">
-                <h2>فعالیت‌های اخیر</h2>
-                <a href="{% url 'workspace:crm_contacts' %}" class="crm-cell-link">مخاطبین</a>
-            </header>
-            <ul class="crm-feed-v2 crm-feed-v2-timeline">
-                {% for a in recent_activities %}
-                <li class="crm-feed-v2-item">
-                    <div class="crm-feed-v2-main">
-                        <span class="crm-feed-v2-icon"><i class="{{ a.activity_type|crm_activity_icon }}" aria-hidden="true"></i></span>
-                        <span class="crm-feed-v2-text">
-                            <strong>{{ a.activity_type }}</strong>
-                            <em>
-                                <a href="{% url 'workspace:crm_detail' a.customer_id %}">{{ a.customer.name }}</a>
-                                · {{ a.created_at|ws_jalali }}
-                            </em>
+        <div class="crm-dash-insights" id="crmDashInsights">
+            <section class="crm-cell crm-cell--chart crm-cell--trend crm-cell--secondary" data-trend-chart>
+                <header class="crm-cell-head crm-cell-head--trend">
+                    <div class="crm-cell-trend-title">
+                        <h2 id="crmDashTrendTitle" data-trend-title>روند ۷ روز</h2>
+                        <p class="crm-cell-trend-sub">فعالیت مخاطب، ملک و معامله</p>
+                    </div>
+                    <div class="crm-cell-trend-tools">
+                        <div class="crm-trend-range" role="group" aria-label="بازه زمانی نمودار">
+                            <button type="button" class="crm-trend-range-btn is-active" data-trend-range="7" aria-pressed="true">۷ روز</button>
+                            <button type="button" class="crm-trend-range-btn" data-trend-range="30" aria-pressed="false">۳۰ روز</button>
+                        </div>
+                        <span class="crm-cell-legend" aria-hidden="true">
+                            <i class="crm-leg crm-leg-contacts"></i>مخاطب
+                            <i class="crm-leg crm-leg-props"></i>ملک
+                            <i class="crm-leg crm-leg-deals"></i>معامله
                         </span>
                     </div>
-                </li>
-                {% empty %}
-                <li class="crm-feed-v2-empty">فعالیتی ثبت نشده</li>
-                {% endfor %}
-            </ul>
-        </section>
+                </header>
+                <div class="crm-cell-chart crm-cell-chart--trend">
+                    <canvas id="chart-activity" height="168"></canvas>
+                </div>
+            </section>
+
+            <section class="crm-cell crm-cell--funnel crm-cell--secondary">
+                <header class="crm-cell-head">
+                    <h2>قیف تبدیل</h2>
+                    <a href="{% url 'workspace:crm_deals' %}" class="crm-cell-link">معاملات</a>
+                </header>
+                <ul class="crm-funnel-v2">
+                    {% for s in conversion_funnel.stages %}
+                    <li>
+                        <span class="crm-funnel-stage">{{ s.stage }}</span>
+                        <span class="crm-funnel-bar"><i style="width:{{ s.pct_of_total }}%"></i></span>
+                        <span class="crm-funnel-count">{{ s.count }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+
+            <section class="crm-cell crm-cell--stagnant crm-cell--secondary">
+                <header class="crm-cell-head">
+                    <h2>رکود (F6)</h2>
+                    <a href="{% url 'workspace:crm_contacts' %}" class="crm-cell-link">مخاطبین</a>
+                </header>
+                <ul class="crm-feed-v2">
+                    {% for row in stagnant_contacts %}
+                    <li class="crm-feed-v2-item">
+                        <a href="{% url 'workspace:crm_detail' row.customer.id %}" class="crm-feed-v2-main">
+                            <span class="crm-feed-v2-text">
+                                <strong>{{ row.customer.name }}</strong>
+                                <em>{{ row.idle_days }} روز بدون فعالیت</em>
+                            </span>
+                        </a>
+                    </li>
+                    {% empty %}
+                    <li class="crm-feed-v2-empty">مخاطب راکدی نیست</li>
+                    {% endfor %}
+                </ul>
+            </section>
+
+            <section class="crm-cell crm-cell--comm crm-cell--secondary">
+                <header class="crm-cell-head"><h2>کانال ارتباط</h2></header>
+                <ul class="crm-ch-v2">
+                    {% for ch in communication_stats %}
+                    <li>
+                        <span class="crm-ch-v2-label"><i class="fas {{ ch.icon }}" aria-hidden="true"></i>{{ ch.label }}</span>
+                        <span class="crm-ch-v2-track"><i style="width:{{ ch.pct }}%"></i></span>
+                        <span class="crm-ch-v2-val">{{ ch.count }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+
+            <section class="crm-cell crm-cell--feed crm-cell--secondary">
+                <header class="crm-cell-head">
+                    <h2>فعالیت‌های اخیر</h2>
+                    <a href="{% url 'workspace:crm_contacts' %}" class="crm-cell-link">مخاطبین</a>
+                </header>
+                <ul class="crm-feed-v2 crm-feed-v2-timeline">
+                    {% for a in recent_activities %}
+                    <li class="crm-feed-v2-item">
+                        <div class="crm-feed-v2-main">
+                            <span class="crm-feed-v2-icon"><i class="{{ a.activity_type|crm_activity_icon }}" aria-hidden="true"></i></span>
+                            <span class="crm-feed-v2-text">
+                                <strong>{{ a.activity_type }}</strong>
+                                <em>
+                                    <a href="{% url 'workspace:crm_detail' a.customer_id %}">{{ a.customer.name }}</a>
+                                    · {{ a.created_at|ws_jalali }}
+                                </em>
+                            </span>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="crm-feed-v2-empty">فعالیتی ثبت نشده</li>
+                    {% endfor %}
+                </ul>
+            </section>
+        </div>
     </div>
 
 </div>
@@ -306,4 +337,5 @@
 window.wsCharts = {{ charts_json|safe }};
 window.crmQuickLeadUrl = "{% url 'workspace:crm_quick_lead' %}";
 </script>
+<script src="{% static 'workspace/js/crm-dashboard.js' %}?v=1"></script>
 {% endblock %}

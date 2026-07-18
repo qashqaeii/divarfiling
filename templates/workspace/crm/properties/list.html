@@ -1,16 +1,42 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load workspace_tags crm_tags %}
+{% load static workspace_tags crm_tags %}
 
 {% block page_title %}CRM — فایل‌های شخصی{% endblock %}
+{% block mobile_bar_title %}فایل‌های شخصی{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_search %}{% endblock %}
 {% block crm_actions %}{% endblock %}
 
-{% block crm_content %}
-<div class="crm-shell-page crm-files-pro crm-files-pro-v2 crm-page-chrome{% if view_mode == 'pipeline' %} crm-files-pro--pipeline{% elif view_mode == 'table' %} crm-files-pro--table{% endif %}">
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=1">
+{% endblock %}
 
-    <header class="crm-dash-bar">
+{% block crm_content %}
+<div class="crm-shell-page crm-files-pro crm-files-pro-v2 crm-page-chrome crm-files-mobile{% if view_mode == 'pipeline' %} crm-files-pro--pipeline{% elif view_mode == 'table' %} crm-files-pro--table{% endif %}">
+
+    <header class="crm-files-mob-header">
+        <div class="crm-files-mob-header-main">
+            <h1 class="crm-files-mob-title">فایل‌های شخصی</h1>
+            <p class="crm-files-mob-sub">
+                <span>{% if has_filters %}{{ filtered_count }} از {{ stats.total }}{% else %}{{ stats.total }}{% endif %} فایل</span>
+                {% if stats.active %}<span class="crm-files-mob-sub-chip">{{ stats.active }} فعال</span>{% endif %}
+            </p>
+        </div>
+        <div class="crm-files-mob-header-actions" role="toolbar" aria-label="عملیات فایل‌ها">
+            <button type="button" class="crm-files-mob-icon-btn" data-drawer-open="drawer-property-import" title="ورود فایل" aria-label="ورود فایل">
+                <i class="fas fa-file-import" aria-hidden="true"></i>
+            </button>
+            <a href="{% url 'workspace:crm_properties_export' %}?{{ filter_qs }}" class="crm-files-mob-icon-btn" title="خروجی Excel" aria-label="خروجی Excel">
+                <i class="fas fa-file-excel" aria-hidden="true"></i>
+            </a>
+            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-files-mob-icon-btn{% if view_mode == 'pipeline' %} is-active{% endif %}" title="کانبان" aria-label="نمای کانبان">
+                <i class="fas fa-table-columns" aria-hidden="true"></i>
+            </a>
+        </div>
+    </header>
+
+    <header class="crm-dash-bar crm-files-desk-header">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">فایل‌های شخصی</h1>
         </div>
@@ -42,7 +68,30 @@
         </div>
     </header>
 
-    <section class="crm-files-kpis" aria-label="آمار فایل‌ها">
+    <section class="crm-files-mob-kpis" aria-label="آمار فایل‌ها">
+        <a href="{% url 'workspace:crm_properties' %}?view={{ view_mode }}" class="crm-files-mob-kpi{% if not request.GET.deal_mode and not request.GET.transaction_status and not request.GET.publish_status and not request.GET.q %} is-active{% endif %}">
+            <span class="crm-files-mob-kpi-val">{{ stats.total }}</span>
+            <span class="crm-files-mob-kpi-lbl">کل</span>
+        </a>
+        <a href="?deal_mode={{ 'فروش'|urlencode }}&view={{ view_mode }}" class="crm-files-mob-kpi crm-files-mob-kpi--sale{% if request.GET.deal_mode == 'فروش' %} is-active{% endif %}">
+            <span class="crm-files-mob-kpi-val">{{ stats.sale }}</span>
+            <span class="crm-files-mob-kpi-lbl">فروش</span>
+        </a>
+        <a href="?deal_mode={{ 'رهن و اجاره'|urlencode }}&view={{ view_mode }}" class="crm-files-mob-kpi crm-files-mob-kpi--rent{% if request.GET.deal_mode == 'رهن و اجاره' %} is-active{% endif %}">
+            <span class="crm-files-mob-kpi-val">{{ stats.rent }}</span>
+            <span class="crm-files-mob-kpi-lbl">اجاره</span>
+        </a>
+        <a href="?transaction_status={{ 'فعال'|urlencode }}&view={{ view_mode }}" class="crm-files-mob-kpi crm-files-mob-kpi--active{% if request.GET.transaction_status == 'فعال' %} is-active{% endif %}">
+            <span class="crm-files-mob-kpi-val">{{ stats.active }}</span>
+            <span class="crm-files-mob-kpi-lbl">فعال</span>
+        </a>
+        <a href="?publish_status={{ 'منتشرشده'|urlencode }}&view={{ view_mode }}" class="crm-files-mob-kpi crm-files-mob-kpi--pub{% if request.GET.publish_status == 'منتشرشده' %} is-active{% endif %}">
+            <span class="crm-files-mob-kpi-val">{{ stats.published }}</span>
+            <span class="crm-files-mob-kpi-lbl">منتشر</span>
+        </a>
+    </section>
+
+    <section class="crm-files-kpis crm-files-desk-kpis" aria-label="آمار فایل‌ها">
         <article class="crm-files-kpi">
             <span class="crm-files-kpi-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
             <div class="crm-files-kpi-body">
@@ -83,10 +132,12 @@
     <div class="crm-shell-body">
         <nav class="crm-files-quick" aria-label="فیلتر سریع">
             <a href="{% url 'workspace:crm_properties' %}?view={{ view_mode }}" class="crm-files-quick-btn {% if not request.GET.deal_mode and not request.GET.transaction_status and not request.GET.publish_status %}is-active{% endif %}">همه</a>
-            <a href="?deal_mode=فروش&view={{ view_mode }}" class="crm-files-quick-btn {% if request.GET.deal_mode == 'فروش' %}is-active{% endif %}">فروش</a>
-            <a href="?deal_mode=رهن و اجاره&view={{ view_mode }}" class="crm-files-quick-btn {% if request.GET.deal_mode == 'رهن و اجاره' %}is-active{% endif %}">رهن و اجاره</a>
-            <a href="?transaction_status=فعال&view={{ view_mode }}" class="crm-files-quick-btn {% if request.GET.transaction_status == 'فعال' %}is-active{% endif %}">فعال</a>
-            <a href="?publish_status=منتشرشده&view={{ view_mode }}" class="crm-files-quick-btn {% if request.GET.publish_status == 'منتشرشده' %}is-active{% endif %}">منتشرشده</a>
+            <a href="?deal_mode={{ 'فروش'|urlencode }}&view={{ view_mode }}" class="crm-files-quick-btn {% if request.GET.deal_mode == 'فروش' %}is-active{% endif %}">فروش</a>
+            <a href="?deal_mode={{ 'رهن و اجاره'|urlencode }}&view={{ view_mode }}" class="crm-files-quick-btn {% if request.GET.deal_mode == 'رهن و اجاره' %}is-active{% endif %}">رهن و اجاره</a>
+            <a href="?transaction_status={{ 'فعال'|urlencode }}&view={{ view_mode }}" class="crm-files-quick-btn {% if request.GET.transaction_status == 'فعال' %}is-active{% endif %}">فعال</a>
+            <a href="?publish_status={{ 'منتشرشده'|urlencode }}&view={{ view_mode }}" class="crm-files-quick-btn {% if request.GET.publish_status == 'منتشرشده' %}is-active{% endif %}">منتشرشده</a>
+            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="crm-files-quick-btn crm-files-quick-btn--view {% if view_mode == 'grid' %}is-active{% endif %}"><i class="fas fa-grip" aria-hidden="true"></i> کارت</a>
+            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-files-quick-btn crm-files-quick-btn--view {% if view_mode == 'pipeline' %}is-active{% endif %}"><i class="fas fa-table-columns" aria-hidden="true"></i> کانبان</a>
         </nav>
 
         <form method="get" class="crm-files-filters crm-page-filters" id="crmPropertyFilters">
@@ -422,6 +473,11 @@
         </nav>
         {% endif %}
     </div>
+
+    <button type="button" class="crm-files-fab" data-drawer-open="drawer-property" aria-label="ملک جدید">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+        <span>ملک</span>
+    </button>
 </div>
 {% endblock %}
 

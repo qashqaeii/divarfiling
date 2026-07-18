@@ -6821,7 +6821,6 @@ body.crm-side-open { overflow: hidden; }
     pointer-events: none;
 }
 .crm-occ__tenant.is-disabled .crm-occ__field .crm-input {
-    background: color-mix(in srgb, var(--crm-surface-muted, #f8f7fa) 80%, #fff);
     cursor: not-allowed;
 }
 .crm-occ__tenant-head {
@@ -6864,23 +6863,45 @@ body.crm-side-open { overflow: hidden; }
     position: relative;
     display: flex;
     align-items: center;
+    gap: 0.55rem;
+    min-height: 2.55rem;
+    padding: 0 0.7rem;
+    border: 1px solid var(--crm-border-light, #e8e6ef);
+    border-radius: 11px;
+    background: var(--crm-surface, #fff);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.crm-occ__field:focus-within {
+    border-color: var(--crm-accent, var(--ws-primary));
+    box-shadow: 0 0 0 3px var(--crm-accent-ring, color-mix(in srgb, var(--ws-primary) 18%, transparent));
 }
 .crm-occ__field-ico {
-    position: absolute;
-    inset-inline-start: 0.75rem;
-    z-index: 1;
+    position: static;
+    flex-shrink: 0;
+    width: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--ws-text-muted);
     font-size: 0.78rem;
     pointer-events: none;
 }
 .crm-occ__field .crm-input {
     width: 100%;
-    padding-inline-start: 2.25rem !important;
-    border-radius: 11px;
-    min-height: 2.55rem;
+    min-width: 0;
+    flex: 1;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0.55rem 0 !important;
+    min-height: 0;
+    border-radius: 0;
 }
 .crm-occ__field:focus-within .crm-occ__field-ico {
     color: var(--crm-occ-tenant);
+}
+.crm-occ__tenant.is-disabled .crm-occ__field {
+    background: color-mix(in srgb, var(--crm-surface-muted, #f8f7fa) 80%, #fff);
 }
 
 @media (max-width: 640px) {

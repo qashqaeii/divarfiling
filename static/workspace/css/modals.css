@@ -1359,20 +1359,38 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     position: relative;
     display: flex;
     align-items: center;
+    gap: 0.5rem;
+    min-height: 2.45rem;
+    padding: 0 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #334155) 85%, transparent);
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--ws-surface, #0f172a) 55%, transparent);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.mk-occ__field:focus-within {
+    border-color: color-mix(in srgb, #fbbf24 45%, transparent);
 }
 .mk-occ__field-ico {
-    position: absolute;
-    inset-inline-start: 0.7rem;
-    z-index: 1;
+    position: static;
+    flex-shrink: 0;
+    width: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--ws-text-muted, #94a3b8);
     font-size: 0.75rem;
     pointer-events: none;
 }
 .mk-occ__field .ws-input {
     width: 100%;
-    padding-inline-start: 2.15rem !important;
-    min-height: 2.45rem;
-    border-radius: 11px;
+    min-width: 0;
+    flex: 1;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0.5rem 0 !important;
+    min-height: 0;
+    border-radius: 0;
 }
 .mk-occ__field:focus-within .mk-occ__field-ico {
     color: #fbbf24;

@@ -412,6 +412,8 @@ def _resolve_core_amenity_state(prop: CRMProperty, key: str, parsed_core: Dict[s
 
 
 def _property_feature_profile(user, prop: CRMProperty, feat: Dict[str, Any]) -> Dict[str, Any]:
+    from workspace.services.property_features import feature_profile_groups_from_data
+
     source = resolve_listing_for_property(user, prop)
     if source:
         profile = build_listing_feature_profile(source, extract_listing_features(source))
@@ -431,7 +433,7 @@ def _property_feature_profile(user, prop: CRMProperty, feat: Dict[str, Any]) -> 
             'icon': spec['icon'],
             'known': True,
         })
-    groups = []
+    groups = feature_profile_groups_from_data(getattr(prop, 'feature_data', None) or {})
     if extra_items:
         groups.append({
             'id': 'amenities',
@@ -440,14 +442,14 @@ def _property_feature_profile(user, prop: CRMProperty, feat: Dict[str, Any]) -> 
             'accent': 'emerald',
             'items': extra_items,
         })
-    detail_count = sum(1 for c in core if c['known']) + len(extra_items)
+    detail_count = sum(1 for c in core if c['known']) + sum(len(g.get('items') or []) for g in groups)
     return {
         'core': core,
         'groups': groups,
         'chip_items': [],
         'has_details': detail_count > 0,
         'detail_count': detail_count,
-        'raw': {},
+        'raw': dict(getattr(prop, 'feature_data', None) or {}),
         'source_label': 'ثبت‌شده در فایل شخصی',
     }
 
@@ -466,6 +468,13 @@ def _property_highlights(prop: CRMProperty) -> List[str]:
         items.append('آسانسور')
     if prop.property_type:
         items.append(prop.property_type)
+    for key, val in (getattr(prop, 'feature_data', None) or {}).items():
+        text = str(val or '').strip()
+        if not text:
+            continue
+        chip = f'{key}: {text}'
+        if chip not in items:
+            items.append(chip)
     for item in extras:
         if item.get('state') == 'no':
             continue

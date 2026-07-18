@@ -1174,6 +1174,20 @@ class CRMPropertyCreateView(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         form.instance.agency = get_agency(self.request.user)
         self.object = form.save()
+        images = list(self.object.images or [])
+        raw_images = self.request.POST.get('property_images_json')
+        if raw_images is not None:
+            images = parse_images_payload(raw_images)
+        for uploaded in self.request.FILES.getlist('property_image_files'):
+            if len(images) >= MAX_PROPERTY_IMAGES:
+                break
+            try:
+                images.append(store_property_image(self.request.user, self.object, uploaded))
+            except ValueError as exc:
+                messages.warning(self.request, str(exc))
+        if images != (self.object.images or []):
+            self.object.images = images[:MAX_PROPERTY_IMAGES]
+            self.object.save(update_fields=['images', 'updated_at'])
         if self.object.phone or self.object.owner_name:
             upsert_property_owner(
                 self.request.user,

@@ -335,7 +335,7 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         widget=forms.Textarea(attrs={
             'class': 'crm-textarea',
             'rows': 2,
-            'placeholder': 'مثلاً جنس کف: سرامیک، تعداد پارکینگ: ۲، …',
+            'placeholder': 'مثلاً توضیح آزاد که در فیلدهای بالا نیست…',
         }),
     )
 
@@ -421,6 +421,7 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         from workspace.constants import PROPERTY_AMENITY_CHECKBOX_GROUPS
+        from workspace.services.property_features import feature_form_groups_with_values
         from workspace.services.property_public_share import (
             property_amenity_checkbox_choices,
             split_amenities_for_checkbox_form,
@@ -448,6 +449,12 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             self.fields['amenity_flags'].initial = selected
             self.fields['amenities_extra'].initial = leftover
 
+        feature_data = {}
+        if instance is not None and isinstance(getattr(instance, 'feature_data', None), dict):
+            feature_data = instance.feature_data or {}
+        self._feature_form_groups = feature_form_groups_with_values(feature_data)
+        self._parsed_feature_data = feature_data
+
     def amenity_checkbox_groups(self):
         """گروه‌های امکانات با وضعیت تیک برای رندر در قالب."""
         if self.is_bound:
@@ -473,7 +480,18 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             })
         return groups
 
+    def feature_form_groups(self):
+        """گروه‌های ویژگی تفصیلی برای رندر؛ در حالت bound از POST خوانده می‌شود."""
+        from workspace.services.property_features import (
+            feature_form_groups_with_values,
+            parse_feature_data_from_post,
+        )
+        if self.is_bound:
+            return feature_form_groups_with_values(parse_feature_data_from_post(self.data))
+        return self._feature_form_groups
+
     def clean(self):
+        from workspace.services.property_features import parse_feature_data_from_post
         from workspace.services.property_public_share import serialize_amenity_checkboxes
 
         cleaned = super().clean()
@@ -486,7 +504,17 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         if cleaned.get('is_vacant'):
             cleaned['tenant_phone'] = ''
             cleaned['tenant_name'] = ''
+        if self.is_bound and self.data is not None:
+            self._parsed_feature_data = parse_feature_data_from_post(self.data)
         return cleaned
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.feature_data = getattr(self, '_parsed_feature_data', None) or {}
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
 
 class ActivityForm(forms.Form):

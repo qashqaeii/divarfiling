@@ -431,6 +431,12 @@ class CRMProperty(models.Model):
     deposit = models.BigIntegerField(null=True, blank=True, verbose_name='مبلغ رهن')
     monthly_rent = models.BigIntegerField(null=True, blank=True, verbose_name='اجاره ماهانه')
     amenities = models.TextField(blank=True, verbose_name='امکانات')
+    feature_data = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='ویژگی‌های تفصیلی',
+        help_text='کلیدهای فارسی هم‌تراز با دادهٔ آگهی (جنس کف، گرمایش، …)',
+    )
     images = models.JSONField(default=list, blank=True, verbose_name='تصاویر')
     videos = models.JSONField(default=list, blank=True, verbose_name='ویدئوها')
     token = models.CharField(max_length=100, blank=True, db_index=True, verbose_name='شناسه آگهی')

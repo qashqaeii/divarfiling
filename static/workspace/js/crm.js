@@ -2922,6 +2922,7 @@ function initCRMPropertyImages(scope) {
     root.dataset.ready = '1';
 
     const uploadUrl = root.dataset.uploadUrl;
+    const createMode = root.dataset.createMode === '1' || !uploadUrl;
     const maxImages = parseInt(root.dataset.maxImages || '12', 10);
     const hidden = root.querySelector('[data-crm-prop-images-json]');
     const grid = root.querySelector('[data-crm-prop-img-grid]');
@@ -2932,6 +2933,7 @@ function initCRMPropertyImages(scope) {
     const dataEl = document.getElementById('crm-prop-images-data');
 
     let images = [];
+    let pendingPreviews = [];
     try {
         images = dataEl ? JSON.parse(dataEl.textContent) : [];
         if (!Array.isArray(images)) images = [];
@@ -2939,10 +2941,15 @@ function initCRMPropertyImages(scope) {
         images = [];
     }
 
+    function totalCount() {
+        return images.length + pendingPreviews.length;
+    }
+
     function syncHidden() {
         if (hidden) hidden.value = JSON.stringify(images);
         if (countEl) {
-            countEl.textContent = images.length ? `${images.length} تصویر` : 'بدون تصویر';
+            const n = totalCount();
+            countEl.textContent = n ? `${n} تصویر` : 'بدون تصویر';
         }
         syncHeroCover();
     }
@@ -2951,11 +2958,12 @@ function initCRMPropertyImages(scope) {
         const coverLink = document.querySelector('[data-crm-prop-hero-cover]');
         const coverImg = coverLink?.querySelector('img');
         const emptyCover = document.querySelector('.crm-prop-hero-cover--empty');
-        if (images.length && coverImg) {
-            coverImg.src = images[0];
+        const coverSrc = images[0] || pendingPreviews[0] || '';
+        if (coverSrc && coverImg) {
+            coverImg.src = coverSrc;
             coverLink.style.display = '';
             emptyCover?.closest('.crm-prop-hero-visual')?.querySelector('.crm-prop-hero-cover--empty')?.remove();
-        } else if (!images.length && coverImg) {
+        } else if (!coverSrc && coverImg) {
             coverImg.removeAttribute('src');
         }
     }
@@ -2963,21 +2971,21 @@ function initCRMPropertyImages(scope) {
     function render() {
         if (!grid) return;
         grid.innerHTML = '';
-        if (!images.length) {
+        if (!totalCount()) {
             grid.innerHTML = '<div class="crm-prop-img-empty"><i class="fas fa-image"></i><span>هنوز تصویری اضافه نشده</span></div>';
             syncHidden();
             return;
         }
         images.forEach((url, idx) => {
             const item = document.createElement('div');
-            item.className = `crm-prop-img-item${idx === 0 ? ' is-cover' : ''}`;
+            item.className = `crm-prop-img-item${idx === 0 && !pendingPreviews.length ? ' is-cover' : ''}`;
             const img = document.createElement('img');
             img.src = url;
             img.alt = '';
             img.loading = 'lazy';
             const actions = document.createElement('div');
             actions.className = 'crm-prop-img-item-actions';
-            if (idx === 0) {
+            if (idx === 0 && !pendingPreviews.length) {
                 const badge = document.createElement('span');
                 badge.className = 'crm-prop-img-cover-badge';
                 badge.textContent = 'کاور';
@@ -3007,7 +3015,24 @@ function initCRMPropertyImages(scope) {
             item.appendChild(actions);
             grid.appendChild(item);
         });
+        pendingPreviews.forEach((url) => {
+            const item = document.createElement('div');
+            item.className = 'crm-prop-img-item';
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = '';
+            item.appendChild(img);
+            grid.appendChild(item);
+        });
         syncHidden();
+    }
+
+    function refreshPendingFromInput() {
+        pendingPreviews.forEach((u) => {
+            try { URL.revokeObjectURL(u); } catch (_) { /* ignore */ }
+        });
+        pendingPreviews = Array.from(fileInput?.files || []).map((f) => URL.createObjectURL(f));
+        render();
     }
 
     async function uploadFile(file) {
@@ -3040,7 +3065,7 @@ function initCRMPropertyImages(scope) {
             window.alert('این تصویر قبلاً اضافه شده است.');
             return;
         }
-        if (images.length >= maxImages) {
+        if (totalCount() >= maxImages) {
             window.alert(`حداکثر ${maxImages} تصویر مجاز است.`);
             return;
         }
@@ -3050,6 +3075,16 @@ function initCRMPropertyImages(scope) {
 
     if (fileInput) {
         fileInput.addEventListener('change', async () => {
+            if (createMode) {
+                if (images.length + (fileInput.files?.length || 0) > maxImages) {
+                    window.alert(`حداکثر ${maxImages} تصویر مجاز است.`);
+                    fileInput.value = '';
+                    refreshPendingFromInput();
+                    return;
+                }
+                refreshPendingFromInput();
+                return;
+            }
             const files = Array.from(fileInput.files || []);
             fileInput.value = '';
             for (const file of files) {
@@ -3079,6 +3114,17 @@ function initCRMPropertyImages(scope) {
         });
         uploadLabel.addEventListener('drop', async e => {
             const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+            if (createMode && fileInput) {
+                const dt = new DataTransfer();
+                Array.from(fileInput.files || []).forEach((f) => dt.items.add(f));
+                for (const file of files) {
+                    if (dt.files.length + images.length >= maxImages) break;
+                    dt.items.add(file);
+                }
+                fileInput.files = dt.files;
+                refreshPendingFromInput();
+                return;
+            }
             for (const file of files) {
                 try {
                     await uploadFile(file);

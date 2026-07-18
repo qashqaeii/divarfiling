@@ -6478,6 +6478,33 @@ body.crm-side-open { overflow: hidden; }
 .crm-prop-amenity:hover {
     border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
 }
+
+.crm-prop-feature-groups {
+    display: flex;
+    flex-direction: column;
+    gap: .85rem;
+    margin-top: .35rem;
+}
+.crm-prop-feature-group {
+    padding: .7rem .8rem .85rem;
+    border-radius: 10px;
+    border: 1px solid var(--crm-border-light, #f0eef5);
+    background: var(--crm-surface-muted, #f8f7fa);
+}
+.crm-prop-feature-group-title {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-bottom: .55rem;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+}
+.crm-prop-feature-group-title i {
+    font-size: .7rem;
+    opacity: .85;
+    color: var(--ws-primary);
+}
 .crm-prop-amenity.is-checked,
 .crm-prop-amenity:has(input:checked) {
     border-color: color-mix(in srgb, var(--ws-primary) 55%, var(--ws-border));

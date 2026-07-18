@@ -547,7 +547,7 @@
             <div><h2>ملک جدید</h2><p>ثبت اطلاعات ملک در فایل شخصی</p></div>
             <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
-        <form method="post" action="{% url 'workspace:crm_property_create' %}" class="crm-drawer-form">
+        <form method="post" action="{% url 'workspace:crm_property_create' %}" class="crm-drawer-form" enctype="multipart/form-data">
             <div class="crm-drawer-body">
                 {% csrf_token %}
                 {% include 'workspace/crm/includes/property_form_sections.html' with form=property_form %}

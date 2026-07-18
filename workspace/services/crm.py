@@ -724,6 +724,7 @@ def property_from_listing(user, listing) -> CRMProperty:
         tenant_phone_from_listing,
     )
     from workspace.services.listing_features import build_listing_feature_profile
+    from workspace.services.property_features import extract_feature_data_from_listing_data
 
     deal_mode = 'فروش'
     if listing.rent or listing.deposit:
@@ -781,6 +782,7 @@ def property_from_listing(user, listing) -> CRMProperty:
         deposit=listing.deposit,
         monthly_rent=listing.rent,
         amenities='\n'.join(amenity_lines[:40]),
+        feature_data=extract_feature_data_from_listing_data(merged_data),
         images=listing.images or [],
         token=listing.token,
         link=listing.link or '',

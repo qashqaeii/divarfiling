@@ -330,15 +330,10 @@
         -webkit-tap-highlight-color: transparent;
         transition: transform 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
     }
-    /* Defeat crm.css ≤700px rule that hides all spans */
-    .crm-prop-detail-mobile .crm-prop-tabs .crm-tab-pro > span,
-    .crm-prop-detail-mobile .crm-prop-tabs .crm-tab-pro span {
-        display: revert !important;
-    }
     .crm-prop-detail-mobile .crm-prop-tabs .crm-tab-pro > i {
         display: none !important;
     }
-    .crm-prop-detail-mobile .crm-prop-seg__ico {
+    .crm-prop-detail-mobile .crm-prop-tabs .crm-tab-pro .crm-prop-seg__ico {
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
@@ -351,12 +346,12 @@
         line-height: 1;
         flex-shrink: 0;
     }
-    .crm-prop-detail-mobile .crm-prop-seg__ico i {
+    .crm-prop-detail-mobile .crm-prop-tabs .crm-tab-pro .crm-prop-seg__ico i {
         display: inline-block !important;
         font-size: inherit;
         opacity: 1;
     }
-    .crm-prop-detail-mobile .crm-prop-seg__txt {
+    .crm-prop-detail-mobile .crm-prop-tabs .crm-tab-pro .crm-prop-seg__txt {
         display: block !important;
         width: 100%;
         max-width: 100%;
@@ -364,10 +359,11 @@
         min-width: 0;
         overflow: hidden;
     }
-    .crm-prop-detail-mobile .crm-prop-seg__full {
+    /* full must stay hidden — never blanket-force all spans visible */
+    .crm-prop-detail-mobile .crm-prop-tabs .crm-tab-pro .crm-prop-seg__full {
         display: none !important;
     }
-    .crm-prop-detail-mobile .crm-prop-seg__short {
+    .crm-prop-detail-mobile .crm-prop-tabs .crm-tab-pro .crm-prop-seg__short {
         display: block !important;
         overflow: hidden;
         text-overflow: ellipsis;

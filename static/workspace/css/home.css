@@ -22,6 +22,260 @@
     opacity: 0.85;
 }
 
+/* ─── Home action alerts (replaces flat mk-notice compact) ─── */
+.ws-home-alert {
+    --ws-alert-accent: #f59e0b;
+    --ws-alert-accent-soft: rgba(245, 158, 11, 0.12);
+    --ws-alert-accent-border: rgba(245, 158, 11, 0.28);
+    --ws-alert-accent-text: #b45309;
+    --ws-alert-cta-bg: #b45309;
+    --ws-alert-cta-text: #fff;
+
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem 0.85rem;
+    padding: 0.85rem 0.95rem;
+    border-radius: 14px;
+    border: 1px solid var(--ws-alert-accent-border);
+    background:
+        linear-gradient(135deg, var(--ws-alert-accent-soft), transparent 55%),
+        var(--ws-surface);
+    color: var(--ws-text);
+    text-decoration: none;
+    overflow: hidden;
+    isolation: isolate;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.ws-home-alert::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 3px;
+    background: var(--ws-alert-accent);
+    border-radius: 0 2px 2px 0;
+    z-index: 1;
+}
+
+.ws-home-alert:hover {
+    border-color: color-mix(in srgb, var(--ws-alert-accent) 45%, var(--ws-border));
+    box-shadow: 0 4px 18px -10px color-mix(in srgb, var(--ws-alert-accent) 55%, transparent);
+    color: var(--ws-text);
+}
+
+.ws-home-alert:active {
+    transform: scale(0.99);
+}
+
+.ws-home-alert:focus-visible {
+    outline: 2px solid var(--ws-alert-accent);
+    outline-offset: 2px;
+}
+
+.ws-home-alert--info {
+    --ws-alert-accent: #2563eb;
+    --ws-alert-accent-soft: rgba(37, 99, 235, 0.1);
+    --ws-alert-accent-border: rgba(37, 99, 235, 0.24);
+    --ws-alert-accent-text: #1d4ed8;
+    --ws-alert-cta-bg: #2563eb;
+    --ws-alert-cta-text: #fff;
+}
+
+.ws-home-alert__pulse {
+    position: absolute;
+    inset-inline-start: 0.55rem;
+    top: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-top: -1.25rem;
+    border-radius: 50%;
+    background: var(--ws-alert-accent);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+    animation: wsHomeAlertPulse 2.4s ease-out infinite;
+}
+
+.ws-home-alert__icon {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--ws-alert-accent) 14%, var(--ws-surface));
+    color: var(--ws-alert-accent);
+    font-size: 1rem;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ws-alert-accent) 18%, transparent);
+}
+
+.ws-home-alert__body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.ws-home-alert__kicker {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    color: var(--ws-alert-accent-text);
+    line-height: 1.3;
+}
+
+.ws-home-alert__title {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.4rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--ws-text);
+}
+
+.ws-home-alert__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.45rem;
+    height: 1.45rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    font-style: normal;
+    font-size: 0.78rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--ws-alert-cta-text);
+    background: var(--ws-alert-accent);
+    line-height: 1;
+}
+
+.ws-home-alert__desc {
+    font-size: 0.74rem;
+    line-height: 1.4;
+    color: var(--ws-text-muted);
+}
+
+.ws-home-alert__cta {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 2.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--ws-alert-cta-text);
+    background: var(--ws-alert-cta-bg);
+    box-shadow: 0 2px 8px -3px color-mix(in srgb, var(--ws-alert-accent) 55%, transparent);
+    transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.ws-home-alert__cta i {
+    font-size: 0.68rem;
+    opacity: 0.9;
+}
+
+.ws-home-alert:hover .ws-home-alert__cta {
+    filter: brightness(1.05);
+}
+
+@keyframes wsHomeAlertPulse {
+    0% { transform: scale(0.7); opacity: 0.18; }
+    70% { transform: scale(1.55); opacity: 0; }
+    100% { transform: scale(1.55); opacity: 0; }
+}
+
+[data-theme="dark"] .ws-home-alert--warn {
+    --ws-alert-accent-text: #fcd34d;
+    --ws-alert-cta-bg: #d97706;
+}
+
+[data-theme="dark"] .ws-home-alert--info {
+    --ws-alert-accent-text: #93c5fd;
+    --ws-alert-cta-bg: #3b82f6;
+}
+
+@media (max-width: 768px) {
+    .ws-home-alert {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+            "icon body"
+            "cta cta";
+        gap: 0.65rem 0.75rem;
+        padding: 0.85rem 0.9rem;
+        border-radius: var(--ws-mob-radius, 14px);
+        min-height: 0;
+    }
+
+    .ws-home-alert__icon { grid-area: icon; }
+    .ws-home-alert__body { grid-area: body; }
+    .ws-home-alert__cta {
+        grid-area: cta;
+        width: 100%;
+        min-height: 2.65rem;
+        font-size: 0.82rem;
+    }
+
+    .ws-home-alert__title {
+        font-size: 0.9rem;
+    }
+
+    .ws-home-alert__desc {
+        font-size: 0.72rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .ws-home-alert {
+        padding: 0.75rem 0.8rem;
+        gap: 0.55rem 0.65rem;
+    }
+
+    .ws-home-alert__icon {
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: 0.9rem;
+        border-radius: 10px;
+    }
+
+    .ws-home-alert__title {
+        font-size: 0.86rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ws-home-alert,
+    .ws-home-alert__cta {
+        transition: none;
+    }
+
+    .ws-home-alert__pulse {
+        animation: none;
+        opacity: 0.1;
+    }
+
+    .ws-home-alert:active {
+        transform: none;
+    }
+}
+
 /* ─── Workspace grid: priority / filing / secondary ─── */
 .ws-home-workspace {
     display: flex;

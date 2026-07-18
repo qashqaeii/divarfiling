@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=97">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=11">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -63,28 +63,40 @@
     </header>
 
     {% if crm_stats.overdue_followups %}
-    <div class="mk-notice mk-notice--warning mk-notice--inline mk-notice--compact">
-        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span>
-        <div class="mk-notice__body">
-            <strong class="mk-notice__title">{{ crm_stats.overdue_followups }} پیگیری معوق</strong>
-            <span class="mk-notice__text">نیاز به اقدام فوری</span>
-        </div>
-        <div class="mk-notice__actions">
-            <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="mk-notice__cta">پیگیری</a>
-        </div>
-    </div>
+    <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="ws-home-alert ws-home-alert--warn" role="alert">
+        <span class="ws-home-alert__pulse" aria-hidden="true"></span>
+        <span class="ws-home-alert__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+        <span class="ws-home-alert__body">
+            <span class="ws-home-alert__kicker">اقدام فوری</span>
+            <span class="ws-home-alert__title">
+                <em class="ws-home-alert__count">{{ crm_stats.overdue_followups }}</em>
+                پیگیری معوق
+            </span>
+            <span class="ws-home-alert__desc">برای حفظ روند فروش، همین حالا پیگیری کنید</span>
+        </span>
+        <span class="ws-home-alert__cta">
+            پیگیری
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        </span>
+    </a>
     {% endif %}
 
     {% if support_nav_counts.unread_replies %}
-    <div class="mk-notice mk-notice--info mk-notice--inline mk-notice--compact">
-        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-headset"></i></span>
-        <div class="mk-notice__body">
-            <strong class="mk-notice__title">{{ support_nav_counts.unread_replies }} پاسخ جدید از پشتیبانی دارید</strong>
-        </div>
-        <div class="mk-notice__actions">
-            <a href="{% url 'workspace:support_list' %}" class="mk-notice__cta">مشاهده تیکت‌ها</a>
-        </div>
-    </div>
+    <a href="{% url 'workspace:support_list' %}" class="ws-home-alert ws-home-alert--info" role="status">
+        <span class="ws-home-alert__icon" aria-hidden="true"><i class="fas fa-headset"></i></span>
+        <span class="ws-home-alert__body">
+            <span class="ws-home-alert__kicker">پشتیبانی</span>
+            <span class="ws-home-alert__title">
+                <em class="ws-home-alert__count">{{ support_nav_counts.unread_replies }}</em>
+                پاسخ جدید دارید
+            </span>
+            <span class="ws-home-alert__desc">تیکت‌های پشتیبانی منتظر مشاهده‌اند</span>
+        </span>
+        <span class="ws-home-alert__cta">
+            مشاهده
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        </span>
+    </a>
     {% endif %}
 
     <section class="mk-hub-metrics ws-home-metrics" aria-label="شاخص‌های کلیدی" data-tour="metrics">

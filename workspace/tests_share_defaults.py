@@ -239,11 +239,30 @@ class ShareDefaultsAndSocialTests(TestCase):
         ctx = build_public_listing_context(share)
         self.assertEqual(ctx['location_accuracy']['kind'], 'approx')
         self.assertEqual(ctx['listing_map_marker']['location_kind'], 'approx')
+        # مرکز نمایش نباید مختصات دقیق باشد
+        self.assertNotAlmostEqual(ctx['listing_map_marker']['lat'], 35.7, places=5)
+        self.assertNotAlmostEqual(ctx['listing_map_marker']['lng'], 51.4, places=5)
+        self.assertNotAlmostEqual(ctx['map_navigation']['latitude'], 35.7, places=5)
+        self.assertTrue(ctx['listing_map_marker'].get('approx_privacy'))
         url = reverse('listing_public:view', kwargs={'share_token': share.share_token})
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'موقعیت تقریبی')
 
+    def test_fuzzy_public_map_point_stable_and_inside_radius(self):
+        from workspace.services.public_share_common import fuzzy_public_map_point
+        import math
+        lat, lng = 35.7, 51.4
+        a = fuzzy_public_map_point(lat, lng, radius_m=500, seed='tok-a')
+        b = fuzzy_public_map_point(lat, lng, radius_m=500, seed='tok-a')
+        c = fuzzy_public_map_point(lat, lng, radius_m=500, seed='tok-b')
+        self.assertEqual(a, b)
+        self.assertNotEqual(a, c)
+        dlat_m = abs(a[0] - lat) * 111320
+        dlng_m = abs(a[1] - lng) * 111320 * abs(math.cos(math.radians(lat)))
+        dist = math.hypot(dlat_m, dlng_m)
+        self.assertGreater(dist, 100)
+        self.assertLess(dist, 500)
     def test_office_map_on_public_page_when_coords_set(self):
         ws = get_or_create_settings(self.user)
         ws.agency_name = 'آژانس تست'

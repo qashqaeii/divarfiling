@@ -564,6 +564,7 @@
         function placeReadonlyMarker(atLat, atLng) {
             clearLocationLayers();
             if (isApprox && radiusM > 0) {
+                // فقط دایره تقریبی — بدون نقطه مرکز تا مختصات دقیق لو نرود
                 locationCircle = L.circle([atLat, atLng], {
                     radius: radiusM,
                     color: '#7c3aed',
@@ -572,13 +573,8 @@
                     weight: 2.5,
                     opacity: 0.85,
                 }).addTo(map);
-                locationLayer = L.circleMarker([atLat, atLng], {
-                    radius: 6,
-                    color: '#ffffff',
-                    weight: 2,
-                    fillColor: '#7c3aed',
-                    fillOpacity: 1,
-                }).addTo(map);
+                locationLayer = locationCircle;
+                bindPopupAt(locationCircle, atLat, atLng);
             } else {
                 locationLayer = L.circleMarker([atLat, atLng], {
                     radius: 10,
@@ -587,8 +583,8 @@
                     fillColor: '#dc2626',
                     fillOpacity: 1,
                 }).addTo(map);
+                bindPopupAt(locationLayer, atLat, atLng);
             }
-            bindPopupAt(locationLayer, atLat, atLng);
         }
 
         function notifyDraft() {

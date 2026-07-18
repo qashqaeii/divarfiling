@@ -25,6 +25,7 @@ from workspace.services.listing_features import (
     feature_highlights_for_listing,
 )
 from workspace.services.public_share_common import (
+    apply_public_approx_privacy,
     build_consultant_block,
     build_finance_summary,
     build_map_navigation,
@@ -287,6 +288,24 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
     )
     show_feature_details = public_feature_details_flag(feature_profile)
 
+    listing_map_marker = build_listing_map_marker(
+        listing,
+        tx,
+        feat,
+        data=data,
+        location_accuracy=location_accuracy,
+        thumb=gallery_images[0] if gallery_images else '',
+        show_divar_link=share.show_divar_link,
+        public=True,
+    )
+    listing_map_marker, map_navigation = apply_public_approx_privacy(
+        latitude=listing.latitude,
+        longitude=listing.longitude,
+        location_accuracy=location_accuracy,
+        marker=listing_map_marker,
+        seed=str(getattr(share, 'share_token', '') or listing.pk),
+    )
+
     # اگر پیام مشاور همان متن توضیحات آگهی است، پیام را مخفی کن تا تکرار نشود
     welcome_plain = consultant.get('welcome_message') or ''
     if description_text and texts_are_equivalent(description_text, welcome_plain):
@@ -318,23 +337,14 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
         'finance': finance,
         'primary_price_label': primary_price,
         'location_accuracy': location_accuracy,
-        'listing_map_marker': build_listing_map_marker(
-            listing,
-            tx,
-            feat,
-            data=data,
-            location_accuracy=location_accuracy,
-            thumb=gallery_images[0] if gallery_images else '',
-            show_divar_link=share.show_divar_link,
-            public=True,
-        ),
+        'listing_map_marker': listing_map_marker,
         'office_map_marker': office_map_marker,
         'office_map_navigation': (consultant.get('agency') or {}).get('map_navigation'),
         'consultant': consultant,
         'category_breadcrumb': category_parts,
         'show_divar_link': share.show_divar_link,
         'meta_description': _meta_description(listing, tx, category_parts),
-        'map_navigation': build_map_navigation(listing.latitude, listing.longitude),
+        'map_navigation': map_navigation,
     }
 
 

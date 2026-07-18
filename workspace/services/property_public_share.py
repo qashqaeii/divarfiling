@@ -25,6 +25,7 @@ from workspace.services.listing_map import build_listing_map_marker
 from workspace.services.listing_public_share import format_sections_public
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 from workspace.services.public_share_common import (
+    apply_public_approx_privacy,
     build_consultant_block,
     build_finance_summary,
     build_map_navigation,
@@ -613,6 +614,13 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         show_divar_link=share.show_divar_link,
         public=True,
     )
+    listing_map_marker, map_navigation = apply_public_approx_privacy(
+        latitude=prop.latitude,
+        longitude=prop.longitude,
+        location_accuracy=location_accuracy,
+        marker=listing_map_marker,
+        seed=str(getattr(share, 'share_token', '') or prop.pk),
+    )
 
     consultant = build_consultant_block(user, share, title=prop.title or 'ملک')
     welcome_plain = consultant.get('welcome_message') or ''
@@ -654,7 +662,7 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         'listing_map_marker': listing_map_marker,
         'office_map_marker': office_map_marker,
         'office_map_navigation': (consultant.get('agency') or {}).get('map_navigation'),
-        'map_navigation': build_map_navigation(prop.latitude, prop.longitude),
+        'map_navigation': map_navigation,
     }
 
 

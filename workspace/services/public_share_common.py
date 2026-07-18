@@ -912,6 +912,39 @@ def public_share_to_dict(share, request, *, url_name: str) -> Dict[str, Any]:
 DEFAULT_PUBLIC_APPROX_RADIUS_M = 500
 
 
+def fuzzy_public_map_point(
+    latitude,
+    longitude,
+    *,
+    radius_m: int = DEFAULT_PUBLIC_APPROX_RADIUS_M,
+    seed: str = '',
+) -> tuple[float, float] | None:
+    """
+    جابه‌جایی قطعی مرکز نمایش تقریبی نسبت به مختصات واقعی.
+    تا مرکز دایره و لینک مسیریابی، موقعیت دقیق ملک را لو ندهد.
+    """
+    import hashlib
+    import math
+
+    try:
+        lat = float(latitude)
+        lng = float(longitude)
+    except (TypeError, ValueError):
+        return None
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180) or (lat == 0 and lng == 0):
+        return None
+    r = int(radius_m) if radius_m and int(radius_m) > 0 else DEFAULT_PUBLIC_APPROX_RADIUS_M
+    digest = hashlib.sha256(f'{seed}|{lat:.6f}|{lng:.6f}|{r}'.encode('utf-8')).digest()
+    angle = (int.from_bytes(digest[:4], 'big') / 0xFFFFFFFF) * (2 * math.pi)
+    # فاصله مرکز نمایش: ۲۵٪ تا ۶۵٪ شعاع — همیشه داخل دایره و دور از نقطه دقیق
+    dist_frac = 0.25 + (int.from_bytes(digest[4:8], 'big') / 0xFFFFFFFF) * 0.40
+    dist_m = r * dist_frac
+    d_lat = (dist_m * math.cos(angle)) / 111_320.0
+    cos_lat = max(abs(math.cos(math.radians(lat))), 0.01)
+    d_lng = (dist_m * math.sin(angle)) / (111_320.0 * cos_lat)
+    return lat + d_lat, lng + d_lng
+
+
 def approximate_location_accuracy(*, radius_m: int = DEFAULT_PUBLIC_APPROX_RADIUS_M) -> Dict[str, Any]:
     """دقت موقعیت اجباری برای صفحه عمومی وقتی مشاور «تقریبی» را انتخاب کرده."""
     from workspace.services.jalali_input import to_persian_digits
@@ -943,6 +976,44 @@ def resolve_public_location_accuracy(share, base: Optional[dict] = None) -> Dict
         'radius_m': int(base.get('radius_m') or 0),
         'forced': False,
     }
+
+
+def apply_public_approx_privacy(
+    *,
+    latitude,
+    longitude,
+    location_accuracy: Optional[dict],
+    marker: Optional[dict] = None,
+    seed: str = '',
+) -> tuple[Optional[dict], Optional[Dict[str, Any]]]:
+    """
+    برای نمایش عمومی تقریبی:
+    - مرکز دایره و لینک مسیریابی را از مختصات دقیق جابه‌جا می‌کند
+    - مارکر را با مختصات فازی به‌روز می‌کند
+    خروجی: (marker, map_navigation)
+    """
+    acc = dict(location_accuracy or {})
+    nav = build_map_navigation(latitude, longitude)
+    out_marker = dict(marker) if marker else None
+    if acc.get('kind') != 'approx':
+        return out_marker, nav
+    radius_m = int(acc.get('radius_m') or DEFAULT_PUBLIC_APPROX_RADIUS_M)
+    fuzzy = fuzzy_public_map_point(
+        latitude,
+        longitude,
+        radius_m=radius_m,
+        seed=seed or 'public-approx',
+    )
+    if not fuzzy:
+        return out_marker, nav
+    fuzzy_lat, fuzzy_lng = fuzzy
+    if out_marker is not None:
+        out_marker['lat'] = fuzzy_lat
+        out_marker['lng'] = fuzzy_lng
+        out_marker['location_kind'] = 'approx'
+        out_marker['location_radius_m'] = radius_m
+        out_marker['approx_privacy'] = True
+    return out_marker, build_map_navigation(fuzzy_lat, fuzzy_lng)
 
 
 def build_office_map_marker(ws: WorkspaceSettings) -> Optional[Dict[str, Any]]:

@@ -2,29 +2,11 @@
 
 {% block err_title %}درخواست نامعتبر{% endblock %}
 {% block err_code %}400{% endblock %}
-{% block err_http %}400{% endblock %}
 {% block err_eyebrow %}۴۰۰ · درخواست نامعتبر{% endblock %}
-{% block err_heading %}این درخواست قابل پردازش نیست{% endblock %}
-{% block err_lead %}
-مرورگر یا فرمی که ارسال کردید داده‌های نامعتبر فرستاده. لطفاً دوباره تلاش کنید یا از مسیر دیگری وارد شوید.
-{% endblock %}
+{% block err_heading %}درخواست قابل پردازش نیست{% endblock %}
+{% block err_lead %}اطلاعات ارسالی نامعتبر است. دوباره تلاش کنید.{% endblock %}
 
-{% block err_visual %}
-<div class="err-scene err-scene--400">
-    <div class="err-code-display">400</div>
-    <div class="err-form-ghost">
-        <span class="err-form-line err-form-line--bad"></span>
-        <span class="err-form-line"></span>
-        <span class="err-form-line err-form-line--short"></span>
-        <span class="err-form-warn"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i></span>
-    </div>
-</div>
-{% endblock %}
-
-{% block err_tips %}
-<ul class="err-tips" aria-label="پیشنهادها">
-    <li><i class="fas fa-rotate-left" aria-hidden="true"></i><span>فرم را از اول پر کنید و دوباره ارسال کنید</span></li>
-    <li><i class="fas fa-clock" aria-hidden="true"></i><span>اگر صفحه خیلی باز مانده بود، یک‌بار رفرش کنید</span></li>
-    <li><i class="fas fa-house" aria-hidden="true"></i><span>از صفحه اصلی مسیر درست را دوباره باز کنید</span></li>
-</ul>
+{% block err_actions %}
+<button type="button" class="err-btn err-btn--ghost" onclick="history.back()">بازگشت</button>
+<a href="{% url 'home' %}" class="err-btn err-btn--primary">صفحه اصلی</a>
 {% endblock %}

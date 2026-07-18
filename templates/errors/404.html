@@ -2,61 +2,20 @@
 
 {% block err_title %}صفحه پیدا نشد{% endblock %}
 {% block err_code %}404{% endblock %}
-{% block err_http %}404{% endblock %}
-{% block err_eyebrow %}۴۰۴ · مسیر پیدا نشد{% endblock %}
-{% block err_heading %}این آدرس به جایی نمی‌رسد{% endblock %}
-{% block err_lead %}
-آدرسی که باز کردید وجود ندارد، جابجا شده، یا فایل/آگهی‌ای که دنبالش بودید دیگر در دسترس نیست.
-{% endblock %}
-
-{% block err_visual %}
-<div class="err-scene err-scene--404">
-    <div class="err-code-display">404</div>
-    <div class="err-map-card">
-        <span class="err-map-road err-map-road--h"></span>
-        <span class="err-map-road err-map-road--v"></span>
-        <span class="err-map-pin"><i class="fas fa-location-dot" aria-hidden="true"></i></span>
-        <span class="err-map-ring"></span>
-        <span class="err-map-ring err-map-ring--2"></span>
-    </div>
-    <div class="err-search-bubble"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> جستجو…</div>
-    <span class="err-mini-card err-mini-card--1"></span>
-    <span class="err-mini-card err-mini-card--2"></span>
-    <span class="err-mini-card err-mini-card--ghost"></span>
-</div>
-{% endblock %}
+{% block err_eyebrow %}۴۰۴ · صفحه یافت نشد{% endblock %}
+{% block err_heading %}این مسیر وجود ندارد{% endblock %}
+{% block err_lead %}آدرس اشتباه است یا صفحه جابه‌جا شده است.{% endblock %}
 
 {% block err_extra %}
 {% if path %}
-<p class="err-path-note">
-    <i class="fas fa-link" aria-hidden="true"></i>
-    <span>آدرس درخواستی:</span>
-    <code dir="ltr">{{ path }}</code>
-</p>
+<p class="err-path-note"><code dir="ltr">{{ path }}</code></p>
 {% endif %}
 {% endblock %}
 
-{% block err_tips %}
-<ul class="err-tips" aria-label="پیشنهادها">
-    <li><i class="fas fa-spell-check" aria-hidden="true"></i><span>املای لینک را یک‌بار دیگر بررسی کنید</span></li>
-    <li><i class="fas fa-clock-rotate-left" aria-hidden="true"></i><span>اگر از بوکمارک آمده‌اید، ممکن است صفحه منتقل شده باشد</span></li>
-    <li><i class="fas fa-compass" aria-hidden="true"></i><span>از صفحه اصلی یا میزکار مسیر درست را پیدا کنید</span></li>
-</ul>
-{% endblock %}
-
-{% block err_links %}
-<div class="err-links">
-    <span class="err-links-label">مسیرهای پرکاربرد</span>
-    <div class="err-links-row">
-        {% if user.is_authenticated %}
-        <a href="{% url 'workspace:home' %}"><i class="fas fa-gauge-high" aria-hidden="true"></i> داشبورد میزکار</a>
-        <a href="{% url 'workspace:crm_dashboard' %}"><i class="fas fa-users" aria-hidden="true"></i> CRM</a>
-        <a href="{% url 'workspace:dataset_list' %}"><i class="fas fa-folder-open" aria-hidden="true"></i> فایلینگ</a>
-        {% else %}
-        <a href="{% url 'home' %}"><i class="fas fa-house" aria-hidden="true"></i> صفحه اصلی</a>
-        <a href="{% url 'product_list' %}"><i class="fas fa-robot" aria-hidden="true"></i> ربات استخراج</a>
-        <a href="{% url 'register' %}"><i class="fas fa-rocket" aria-hidden="true"></i> شروع رایگان</a>
-        {% endif %}
-    </div>
-</div>
+{% block err_actions %}
+<button type="button" class="err-btn err-btn--ghost" onclick="history.back()">بازگشت</button>
+<a href="{% url 'home' %}" class="err-btn err-btn--primary">صفحه اصلی</a>
+{% if user.is_authenticated %}
+<a href="{% url 'workspace:home' %}" class="err-btn err-btn--soft">میزکار</a>
+{% endif %}
 {% endblock %}

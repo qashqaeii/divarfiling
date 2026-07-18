@@ -3,92 +3,22 @@
 {% block err_body_class %} err-body--403{% endblock %}
 {% block err_title %}دسترسی مجاز نیست{% endblock %}
 {% block err_code %}403{% endblock %}
-{% block err_http %}403{% endblock %}
 {% block err_eyebrow %}۴۰۳ · دسترسی محدود{% endblock %}
-{% block err_heading %}ورود به این بخش مجاز نیست{% endblock %}
+{% block err_heading %}اجازه ورود ندارید{% endblock %}
 {% block err_lead %}
 {% if user.is_authenticated %}
-حساب شما اجازه مشاهده یا انجام این عملیات را ندارد. اگر فکر می‌کنید اشتباه است، با مدیر workspace یا پشتیبانی هماهنگ کنید.
+حساب شما به این بخش دسترسی ندارد.
 {% else %}
-برای دیدن این صفحه باید وارد حساب کاربری خود شوید.
+برای ادامه باید وارد حساب کاربری شوید.
 {% endif %}
-{% endblock %}
-
-{% block err_visual %}
-<div class="err-scene err-scene--403">
-    <div class="err-code-display">403</div>
-    <div class="err-shield">
-        <div class="err-shield-core">
-            <i class="fas fa-shield-halved" aria-hidden="true"></i>
-            <span class="err-shield-lock"><i class="fas fa-lock" aria-hidden="true"></i></span>
-        </div>
-        <span class="err-key err-key--1"><i class="fas fa-key" aria-hidden="true"></i></span>
-        <span class="err-key err-key--2"><i class="fas fa-user-lock" aria-hidden="true"></i></span>
-    </div>
-</div>
-{% endblock %}
-
-{% block err_tips %}
-<ul class="err-tips" aria-label="پیشنهادها">
-    {% if user.is_authenticated %}
-    <li><i class="fas fa-user-check" aria-hidden="true"></i><span>نقش یا سطح دسترسی حساب را با مدیر تیم چک کنید</span></li>
-    <li><i class="fas fa-layer-group" aria-hidden="true"></i><span>به میزکار برگردید و از مسیرهای مجاز استفاده کنید</span></li>
-    {% else %}
-    <li><i class="fas fa-right-to-bracket" aria-hidden="true"></i><span>با همان حسابی که دسترسی دارید وارد شوید</span></li>
-    <li><i class="fas fa-shield" aria-hidden="true"></i><span>لینک خصوصی را فقط از منبع معتبر باز کنید</span></li>
-    {% endif %}
-    <li><i class="fas fa-headset" aria-hidden="true"></i><span>در صورت نیاز، موضوع را به پشتیبانی گزارش دهید</span></li>
-</ul>
 {% endblock %}
 
 {% block err_actions %}
-<button type="button" class="err-btn err-btn--ghost" onclick="history.back()">
-    <i class="fas fa-arrow-right" aria-hidden="true"></i>
-    <span>بازگشت</span>
-</button>
+<button type="button" class="err-btn err-btn--ghost" onclick="history.back()">بازگشت</button>
 {% if user.is_authenticated %}
-<a href="{% url 'workspace:home' %}" class="err-btn err-btn--primary">
-    <i class="fas fa-layer-group" aria-hidden="true"></i>
-    <span>میزکار من</span>
-</a>
-<a href="{% url 'dashboard' %}" class="err-btn err-btn--soft">
-    <i class="fas fa-user" aria-hidden="true"></i>
-    <span>پروفایل</span>
-</a>
+<a href="{% url 'workspace:home' %}" class="err-btn err-btn--primary">میزکار</a>
 {% else %}
-<a href="{% url 'login' %}?next={{ path|urlencode }}" class="err-btn err-btn--primary">
-    <i class="fas fa-right-to-bracket" aria-hidden="true"></i>
-    <span>ورود به حساب</span>
-</a>
-<a href="{% url 'home' %}" class="err-btn err-btn--soft">
-    <i class="fas fa-house" aria-hidden="true"></i>
-    <span>صفحه اصلی</span>
-</a>
-{% endif %}
-{% endblock %}
-
-{% block err_dock %}
-<button type="button" class="err-dock-btn err-dock-btn--ghost" onclick="history.back()">
-    <i class="fas fa-arrow-right" aria-hidden="true"></i>
-    <span>بازگشت</span>
-</button>
-{% if user.is_authenticated %}
-<a href="{% url 'workspace:home' %}" class="err-dock-btn err-dock-btn--primary">
-    <i class="fas fa-layer-group" aria-hidden="true"></i>
-    <span>میزکار</span>
-</a>
-<a href="{% url 'dashboard' %}" class="err-dock-btn err-dock-btn--soft">
-    <i class="fas fa-user" aria-hidden="true"></i>
-    <span>پروفایل</span>
-</a>
-{% else %}
-<a href="{% url 'login' %}?next={{ path|urlencode }}" class="err-dock-btn err-dock-btn--primary">
-    <i class="fas fa-right-to-bracket" aria-hidden="true"></i>
-    <span>ورود</span>
-</a>
-<a href="{% url 'home' %}" class="err-dock-btn err-dock-btn--soft">
-    <i class="fas fa-house" aria-hidden="true"></i>
-    <span>خانه</span>
-</a>
+<a href="{% url 'login' %}?next={{ path|urlencode }}" class="err-btn err-btn--primary">ورود</a>
+<a href="{% url 'home' %}" class="err-btn err-btn--soft">صفحه اصلی</a>
 {% endif %}
 {% endblock %}

@@ -1,6 +1,7 @@
 """Viewهای تیکت پشتیبانی workspace."""
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
+from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
 from django.views.generic import FormView, ListView, TemplateView, View
 
@@ -37,6 +38,7 @@ class SupportTicketListView(WorkspaceLoginMixin, ListView):
         )
 
     def get_context_data(self, **kwargs):
+        ticket_form = kwargs.pop('ticket_form', None)
         ctx = super().get_context_data(**kwargs)
         ctx['stats'] = get_user_ticket_stats(self.request.user)
         ctx['status_filter'] = self.request.GET.get('status', '').strip()
@@ -44,6 +46,8 @@ class SupportTicketListView(WorkspaceLoginMixin, ListView):
         ctx['search_q'] = self.request.GET.get('q', '').strip()
         ctx['status_choices'] = TICKET_STATUS_CHOICES
         ctx['priority_choices'] = TICKET_PRIORITY_CHOICES
+        ctx['ticket_form'] = ticket_form or TicketCreateForm()
+        ctx['open_modal'] = self.request.GET.get('open', ctx.get('open_modal', ''))
         return ctx
 
 
@@ -67,6 +71,18 @@ class SupportTicketCreateView(WorkspaceLoginMixin, FormView):
         )
         self.success_url = reverse('workspace:support_detail', kwargs={'ticket_id': ticket.pk})
         return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if self.request.POST.get('source') == 'modal':
+            list_view = SupportTicketListView()
+            list_view.request = self.request
+            list_view.args = self.args
+            list_view.kwargs = {}
+            list_view.object_list = list_view.get_queryset()
+            ctx = list_view.get_context_data(ticket_form=form)
+            ctx['open_modal'] = 'modal-ticket-create'
+            return TemplateResponse(self.request, list_view.template_name, ctx)
+        return super().form_invalid(form)
 
 
 class SupportTicketDetailView(WorkspaceLoginMixin, TemplateView):

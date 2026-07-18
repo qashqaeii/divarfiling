@@ -5,13 +5,31 @@
 {% block mobile_bar_title %}تیکت جدید{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
 <div class="mk-page sup-page sup-page-mobile">
 
-    <header class="mk-page-hero sup-create-hero">
+    <header class="sup-mob-header">
+        <div class="sup-mob-header-mesh" aria-hidden="true"></div>
+        <div class="sup-mob-header-accent" aria-hidden="true"></div>
+        <div class="sup-mob-header-inner">
+            <div class="sup-mob-header-main">
+                <span class="sup-mob-kicker"><i class="fas fa-headset" aria-hidden="true"></i> مرکز پشتیبانی</span>
+                <h1 class="sup-mob-title">تیکت جدید</h1>
+                <p class="sup-mob-sub"><span>مشکل یا سوال خود را ارسال کنید</span></p>
+            </div>
+            <div class="sup-mob-header-actions">
+                <a href="{% url 'workspace:support_list' %}" class="sup-mob-icon-btn" title="بازگشت" aria-label="بازگشت به لیست">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <header class="mk-page-hero sup-create-hero sup-desk-header">
         <div class="mk-page-hero-main">
             <div class="mk-page-hero-kicker">
                 <span class="mk-page-hero-mark" aria-hidden="true"></span>
@@ -29,7 +47,7 @@
 
     <div class="sup-create-layout">
         <section class="ws-glass-panel sup-create-form-panel">
-            <form method="post" enctype="multipart/form-data" class="sup-form" novalidate>
+            <form method="post" enctype="multipart/form-data" class="sup-form" id="supCreatePageForm" novalidate>
                 {% csrf_token %}
 
                 {% if form.non_field_errors %}
@@ -63,10 +81,17 @@
                     {% if form.body.errors %}<span class="ws-field-error">{{ form.body.errors.0 }}</span>{% endif %}
                 </div>
 
-                <div class="ws-field">
-                    <label class="ws-label" for="{{ form.attachment.id_for_label }}">{{ form.attachment.label }}</label>
-                    {{ form.attachment }}
-                    <p class="ws-field-hint">فرمت‌های مجاز: jpg, png, pdf, doc, xls, txt, zip — حداکثر ۱۰ مگابایت</p>
+                <div class="ws-field sup-attach-field">
+                    <label class="ws-label" for="{{ form.attachment.id_for_label }}">{{ form.attachment.label }} <span class="sup-optional">(اختیاری)</span></label>
+                    <label class="sup-attach-drop" for="{{ form.attachment.id_for_label }}">
+                        <span class="sup-attach-drop__icon" aria-hidden="true"><i class="fas fa-cloud-arrow-up"></i></span>
+                        <span class="sup-attach-drop__copy">
+                            <strong>انتخاب فایل پیوست</strong>
+                            <em>jpg, png, pdf, doc, xls, zip — تا ۱۰ مگابایت</em>
+                        </span>
+                        {{ form.attachment }}
+                    </label>
+                    <span class="sup-attach-name" id="supPageFileName" aria-live="polite"></span>
                     {% if form.attachment.errors %}<span class="ws-field-error">{{ form.attachment.errors.0 }}</span>{% endif %}
                 </div>
 
@@ -74,6 +99,7 @@
                     <button type="submit" class="ws-btn ws-btn-primary">
                         <i class="fas fa-paper-plane" aria-hidden="true"></i> ارسال تیکت
                     </button>
+                    <a href="{% url 'workspace:support_list' %}" class="ws-btn ws-btn-ghost">انصراف</a>
                 </div>
             </form>
         </section>
@@ -92,4 +118,8 @@
         </aside>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'workspace/js/support-list.js' %}?v=1"></script>
 {% endblock %}

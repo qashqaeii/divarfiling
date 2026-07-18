@@ -5,7 +5,8 @@
 {% block mobile_bar_title %}جزئیات تیکت{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -61,26 +62,19 @@
 
             <div class="sup-detail-hero__actions">
                 {% if ticket.is_closed %}
-                <form method="post" action="{% url 'workspace:support_reopen' ticket.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="sup-detail-act sup-detail-act--primary">
-                        <i class="fas fa-rotate-left" aria-hidden="true"></i>
-                        <span>باز کردن مجدد</span>
-                    </button>
-                </form>
+                <button type="button" class="sup-detail-act sup-detail-act--primary" data-modal-open="modal-ticket-reopen">
+                    <i class="fas fa-rotate-left" aria-hidden="true"></i>
+                    <span>باز کردن مجدد</span>
+                </button>
                 {% else %}
-                <form method="post" action="{% url 'workspace:support_close' ticket.id %}" onsubmit="return confirm('آیا از بستن این تیکت مطمئن هستید؟');">
-                    {% csrf_token %}
-                    <button type="submit" class="sup-detail-act sup-detail-act--ghost">
-                        <i class="fas fa-check-circle" aria-hidden="true"></i>
-                        <span>بستن تیکت</span>
-                    </button>
-                </form>
+                <button type="button" class="sup-detail-act sup-detail-act--ghost" data-modal-open="modal-ticket-close">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    <span>بستن تیکت</span>
+                </button>
                 {% endif %}
             </div>
         </div>
 
-        {# ── Status timeline ── #}
         <ol class="sup-detail-timeline" aria-label="پیشرفت تیکت" data-step="{{ ticket.status|sup_status_step }}">
             <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 1 %} is-done{% endif %}{% if ticket.status == 'open' %} is-current{% endif %}">
                 <span class="sup-detail-timeline__dot"><i class="fas fa-paper-plane" aria-hidden="true"></i></span>
@@ -116,7 +110,6 @@
     {% endif %}
 
     <div class="sup-detail-layout">
-        {# ── Sidebar ── #}
         <aside class="sup-detail-sidebar" aria-label="جزئیات تیکت">
             <article class="sup-detail-card">
                 <h2 class="sup-detail-card__title"><i class="fas fa-circle-info" aria-hidden="true"></i> اطلاعات تیکت</h2>
@@ -167,7 +160,6 @@
             </article>
         </aside>
 
-        {# ── Chat ── #}
         <section class="sup-detail-chat" aria-label="گفتگو با پشتیبانی">
             <header class="sup-detail-chat__head">
                 <div>
@@ -253,14 +245,88 @@
                 <div class="sup-detail-compose-closed">
                     <i class="fas fa-lock" aria-hidden="true"></i>
                     <p>این تیکت بسته شده است. برای ادامه، دکمه «باز کردن مجدد» را بزنید.</p>
+                    <button type="button" class="ws-btn ws-btn-primary ws-btn-sm" data-modal-open="modal-ticket-reopen">باز کردن مجدد</button>
                 </div>
             </footer>
             {% endif %}
         </section>
     </div>
+
+    {# ── Mobile dock ── #}
+    <nav class="sup-detail-dock" aria-label="عملیات تیکت">
+        <a href="{% url 'workspace:support_list' %}" class="sup-detail-dock-btn">
+            <i class="fas fa-list" aria-hidden="true"></i>
+            <span>لیست</span>
+        </a>
+        {% if ticket.is_closed %}
+        <button type="button" class="sup-detail-dock-btn sup-detail-dock-btn--primary" data-modal-open="modal-ticket-reopen">
+            <i class="fas fa-rotate-left" aria-hidden="true"></i>
+            <span>باز کردن</span>
+        </button>
+        {% else %}
+        <button type="button" class="sup-detail-dock-btn" data-sup-scroll-compose>
+            <i class="fas fa-pen" aria-hidden="true"></i>
+            <span>پاسخ</span>
+        </button>
+        <button type="button" class="sup-detail-dock-btn sup-detail-dock-btn--danger" data-modal-open="modal-ticket-close">
+            <i class="fas fa-lock" aria-hidden="true"></i>
+            <span>بستن</span>
+        </button>
+        {% endif %}
+    </nav>
+</div>
+
+{# ── Close confirm modal ── #}
+<div class="ws-modal sup-modal" id="modal-ticket-close" role="dialog" aria-modal="true" aria-labelledby="sup-close-title">
+    <div class="ws-modal-overlay" data-modal-close tabindex="-1" aria-hidden="true"></div>
+    <div class="ws-modal-panel ws-modal-panel-sm sup-confirm-modal-panel">
+        <header class="ws-modal-head">
+            <div class="sup-confirm-modal-head">
+                <span class="sup-confirm-modal-icon is-warn" aria-hidden="true"><i class="fas fa-lock"></i></span>
+                <div>
+                    <h2 id="sup-close-title" class="ws-modal-title">بستن تیکت</h2>
+                    <p class="ws-modal-sub">{{ ticket.ticket_number }} — {{ ticket.subject|truncatechars:48 }}</p>
+                </div>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </header>
+        <form method="post" action="{% url 'workspace:support_close' ticket.id %}" class="ws-modal-body">
+            {% csrf_token %}
+            <p class="ws-modal-text">آیا از بستن این تیکت مطمئن هستید؟ پس از بستن، ارسال پیام جدید ممکن نیست مگر اینکه تیکت را دوباره باز کنید.</p>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary">بله، ببند</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ── Reopen confirm modal ── #}
+<div class="ws-modal sup-modal" id="modal-ticket-reopen" role="dialog" aria-modal="true" aria-labelledby="sup-reopen-title">
+    <div class="ws-modal-overlay" data-modal-close tabindex="-1" aria-hidden="true"></div>
+    <div class="ws-modal-panel ws-modal-panel-sm sup-confirm-modal-panel">
+        <header class="ws-modal-head">
+            <div class="sup-confirm-modal-head">
+                <span class="sup-confirm-modal-icon is-ok" aria-hidden="true"><i class="fas fa-rotate-left"></i></span>
+                <div>
+                    <h2 id="sup-reopen-title" class="ws-modal-title">باز کردن مجدد</h2>
+                    <p class="ws-modal-sub">{{ ticket.ticket_number }}</p>
+                </div>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </header>
+        <form method="post" action="{% url 'workspace:support_reopen' ticket.id %}" class="ws-modal-body">
+            {% csrf_token %}
+            <p class="ws-modal-text">تیکت دوباره باز می‌شود و می‌توانید پیام جدید برای پشتیبانی ارسال کنید.</p>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary">باز کردن تیکت</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/support-detail.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/support-detail.js' %}?v=2"></script>
 {% endblock %}

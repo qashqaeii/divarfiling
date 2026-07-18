@@ -5,22 +5,51 @@
 {% block mobile_bar_title %}پشتیبانی{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
 <div class="mk-page sup-page sup-page-mobile">
 
-    <header class="mk-hub-head">
+    {# ── Mobile HQ header ── #}
+    <header class="sup-mob-header">
+        <div class="sup-mob-header-mesh" aria-hidden="true"></div>
+        <div class="sup-mob-header-accent" aria-hidden="true"></div>
+        <div class="sup-mob-header-inner">
+            <div class="sup-mob-header-main">
+                <span class="sup-mob-kicker"><i class="fas fa-headset" aria-hidden="true"></i> مرکز پشتیبانی</span>
+                <h1 class="sup-mob-title">تیکت‌ها</h1>
+                <p class="sup-mob-sub">
+                    <span>{{ stats.total }} تیکت</span>
+                    {% if stats.open %}<span class="sup-mob-sub-chip is-open">{{ stats.open }} باز</span>{% endif %}
+                    {% if stats.waiting_user %}<span class="sup-mob-sub-chip is-wait">{{ stats.waiting_user }} منتظر شما</span>{% endif %}
+                    {% if stats.unread_replies %}<span class="sup-mob-sub-chip is-unread">{{ stats.unread_replies }} پاسخ جدید</span>{% endif %}
+                </p>
+            </div>
+            <div class="sup-mob-header-actions" role="toolbar" aria-label="عملیات پشتیبانی">
+                <button type="button" class="sup-mob-icon-btn" data-modal-open="modal-ticket-filters" title="فیلتر" aria-label="فیلتر تیکت‌ها">
+                    <i class="fas fa-sliders" aria-hidden="true"></i>
+                    {% if search_q or status_filter or priority_filter %}<span class="sup-mob-icon-dot" aria-hidden="true"></span>{% endif %}
+                </button>
+                <button type="button" class="sup-mob-icon-btn sup-mob-icon-btn--primary" data-modal-open="modal-ticket-create" title="تیکت جدید" aria-label="تیکت جدید">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    {# ── Desktop header ── #}
+    <header class="mk-hub-head sup-desk-header">
         <div class="mk-hub-head-main">
             <p class="mk-hub-head-eyebrow">درخواست پشتیبانی</p>
             <h1 class="mk-hub-head-title">تیکت‌های پشتیبانی</h1>
             <p class="mk-hub-head-meta">مدیریت درخواست‌ها و پیگیری پاسخ تیم پشتیبانی</p>
         </div>
         <div class="mk-hub-head-actions">
-            <a href="{% url 'workspace:support_create' %}" class="mk-hub-head-btn mk-hub-head-btn--primary">
+            <button type="button" class="mk-hub-head-btn mk-hub-head-btn--primary" data-modal-open="modal-ticket-create">
                 <i class="fas fa-plus" aria-hidden="true"></i><span>تیکت جدید</span>
-            </a>
+            </button>
         </div>
     </header>
 
@@ -64,7 +93,7 @@
         </a>
     </section>
 
-    <section class="ws-glass-panel sup-filters">
+    <section class="ws-glass-panel sup-filters sup-filters--desk">
         <form method="get" class="sup-filter-form" role="search">
             <div class="sup-filter-field sup-filter-field--grow">
                 <label class="ws-label" for="sup-q">جستجو</label>
@@ -135,18 +164,19 @@
 
         <div class="sup-cards">
             {% for t in tickets %}
-            <article class="sup-card{% if t.user_has_unread %} sup-card--unread{% endif %}">
+            <a href="{% url 'workspace:support_detail' t.id %}" class="sup-card{% if t.user_has_unread %} sup-card--unread{% endif %}">
                 <header class="sup-card-head">
                     <code class="sup-ticket-num">{{ t.ticket_number }}</code>
+                    {% if t.user_has_unread %}<span class="sup-card-pulse">جدید</span>{% endif %}
                     {% sup_ticket_badges t %}
                 </header>
                 <h2 class="sup-card-title">{{ t.subject }}</h2>
                 <p class="sup-card-meta">
-                    <span>{{ t.get_category_display }}</span>
-                    <span>{{ t.updated_at|ws_jalali }}</span>
+                    <span><i class="fas fa-tag" aria-hidden="true"></i> {{ t.get_category_display }}</span>
+                    <span><i class="fas fa-clock" aria-hidden="true"></i> {{ t.updated_at|ws_jalali }}</span>
                 </p>
-                <a href="{% url 'workspace:support_detail' t.id %}" class="ws-btn ws-btn-sm ws-btn-primary sup-card-btn">مشاهده</a>
-            </article>
+                <span class="sup-card-go" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+            </a>
             {% endfor %}
         </div>
 
@@ -157,11 +187,72 @@
         {% else %}
         <div class="ws-empty sup-empty">
             <div class="ws-empty-icon"><i class="fas fa-headset" aria-hidden="true"></i></div>
-            <p class="ws-empty-title">هنوز تیکتی ثبت نکرده‌اید</p>
-            <p class="ws-empty-desc">اگر سوالی دارید یا مشکلی در استفاده از فایلینگ دیوار پیش آمده، اولین درخواست پشتیبانی خود را ثبت کنید.</p>
-            <a href="{% url 'workspace:support_create' %}" class="ws-btn ws-btn-primary">ثبت تیکت جدید</a>
+            <p class="ws-empty-title">{% if search_q or status_filter or priority_filter %}نتیجه‌ای یافت نشد{% else %}هنوز تیکتی ثبت نکرده‌اید{% endif %}</p>
+            <p class="ws-empty-desc">{% if search_q or status_filter or priority_filter %}فیلترها را تغییر دهید یا پاک کنید.{% else %}اگر سوالی دارید یا مشکلی پیش آمده، اولین درخواست پشتیبانی خود را ثبت کنید.{% endif %}</p>
+            {% if search_q or status_filter or priority_filter %}
+            <a href="{% url 'workspace:support_list' %}" class="ws-btn ws-btn-ghost">پاک کردن فیلتر</a>
+            {% else %}
+            <button type="button" class="ws-btn ws-btn-primary" data-modal-open="modal-ticket-create">ثبت تیکت جدید</button>
+            {% endif %}
         </div>
         {% endif %}
     </section>
+
+    <button type="button" class="sup-fab" data-modal-open="modal-ticket-create" aria-label="تیکت جدید">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+        <span>تیکت جدید</span>
+    </button>
 </div>
+
+{# ── Filter modal (mobile) ── #}
+<div class="ws-modal sup-modal" id="modal-ticket-filters" role="dialog" aria-modal="true" aria-labelledby="sup-filter-modal-title">
+    <div class="ws-modal-overlay" data-modal-close tabindex="-1" aria-hidden="true"></div>
+    <div class="ws-modal-panel ws-modal-panel-sm sup-filter-modal-panel">
+        <header class="ws-modal-head">
+            <div>
+                <h2 id="sup-filter-modal-title" class="ws-modal-title">فیلتر تیکت‌ها</h2>
+                <p class="ws-modal-sub">جستجو بر اساس عنوان، وضعیت و اولویت</p>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </header>
+        <form method="get" class="ws-modal-body" role="search">
+            <div class="ws-field">
+                <label class="ws-label" for="sup-q-m">جستجو</label>
+                <input type="search" id="sup-q-m" name="q" value="{{ search_q }}" class="ws-input" placeholder="عنوان یا شماره تیکت…">
+            </div>
+            <div class="ws-field">
+                <label class="ws-label" for="sup-status-m">وضعیت</label>
+                <select id="sup-status-m" name="status" class="ws-select">
+                    <option value="">همه</option>
+                    {% for val, label in status_choices %}
+                    <option value="{{ val }}"{% if status_filter == val %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="ws-field">
+                <label class="ws-label" for="sup-priority-m">اولویت</label>
+                <select id="sup-priority-m" name="priority" class="ws-select">
+                    <option value="">همه</option>
+                    {% for val, label in priority_choices %}
+                    <option value="{{ val }}"{% if priority_filter == val %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="ws-modal-foot">
+                {% if search_q or status_filter or priority_filter %}
+                <a href="{% url 'workspace:support_list' %}" class="ws-btn ws-btn-ghost">پاک کردن</a>
+                {% else %}
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                {% endif %}
+                <button type="submit" class="ws-btn ws-btn-primary">اعمال فیلتر</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% include 'workspace/support/includes/ticket_create_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'workspace/js/support-list.js' %}?v=1"></script>
 {% endblock %}

@@ -14,7 +14,9 @@
         }
         textarea.addEventListener('input', autoGrow);
         autoGrow();
-        textarea.focus({ preventScroll: true });
+        if (window.matchMedia('(min-width: 769px)').matches) {
+            textarea.focus({ preventScroll: true });
+        }
     }
 
     var fileInput = document.querySelector('.sup-compose-attach input[type="file"]');
@@ -37,4 +39,17 @@
             }
         });
     }
+
+    document.querySelectorAll('[data-sup-scroll-compose]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var compose = document.querySelector('.sup-detail-compose');
+            if (!compose) return;
+            compose.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            if (textarea) {
+                setTimeout(function () {
+                    textarea.focus({ preventScroll: true });
+                }, 280);
+            }
+        });
+    });
 })();

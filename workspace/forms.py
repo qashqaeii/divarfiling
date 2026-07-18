@@ -1052,7 +1052,7 @@ class TicketCreateForm(forms.Form):
     attachment = forms.FileField(
         label='فایل پیوست',
         required=False,
-        widget=forms.ClearableFileInput(attrs={
+        widget=forms.FileInput(attrs={
             'class': 'ws-input ws-file-input',
             'accept': '.jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip',
         }),

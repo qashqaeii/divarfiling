@@ -1,0 +1,82 @@
+{% load workspace_tags %}
+{# مودال ثبت تیکت — نیاز به ticket_form در context #}
+<div class="ws-modal sup-modal" id="modal-ticket-create" role="dialog" aria-modal="true" aria-labelledby="sup-create-modal-title">
+    <div class="ws-modal-overlay" data-modal-close tabindex="-1" aria-hidden="true"></div>
+    <div class="ws-modal-panel ws-modal-panel-lg sup-create-modal-panel">
+        <header class="ws-modal-head sup-create-modal-head">
+            <div class="sup-create-modal-head-copy">
+                <span class="sup-create-modal-kicker" aria-hidden="true"><i class="fas fa-headset"></i></span>
+                <div>
+                    <h2 id="sup-create-modal-title" class="ws-modal-title">تیکت جدید</h2>
+                    <p class="ws-modal-sub">مشکل یا سوال خود را برای تیم پشتیبانی ارسال کنید</p>
+                </div>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+
+        <form method="post" action="{% url 'workspace:support_create' %}" enctype="multipart/form-data" class="ws-modal-body sup-create-modal-body" id="supCreateModalForm" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="source" value="modal">
+
+            {% if ticket_form.non_field_errors %}
+            <div class="mk-notice mk-notice--error mk-notice--inline mk-notice--compact">
+                {% for err in ticket_form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="ws-field">
+                <label class="ws-label" for="{{ ticket_form.subject.id_for_label }}">{{ ticket_form.subject.label }}</label>
+                {{ ticket_form.subject }}
+                {% if ticket_form.subject.errors %}<span class="ws-field-error">{{ ticket_form.subject.errors.0 }}</span>{% endif %}
+            </div>
+
+            <div class="sup-form-row">
+                <div class="ws-field">
+                    <label class="ws-label" for="{{ ticket_form.category.id_for_label }}">{{ ticket_form.category.label }}</label>
+                    {{ ticket_form.category }}
+                    {% if ticket_form.category.errors %}<span class="ws-field-error">{{ ticket_form.category.errors.0 }}</span>{% endif %}
+                </div>
+                <div class="ws-field">
+                    <label class="ws-label" for="{{ ticket_form.priority.id_for_label }}">{{ ticket_form.priority.label }}</label>
+                    {{ ticket_form.priority }}
+                    {% if ticket_form.priority.errors %}<span class="ws-field-error">{{ ticket_form.priority.errors.0 }}</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="ws-field">
+                <label class="ws-label" for="{{ ticket_form.body.id_for_label }}">{{ ticket_form.body.label }}</label>
+                {{ ticket_form.body }}
+                {% if ticket_form.body.errors %}<span class="ws-field-error">{{ ticket_form.body.errors.0 }}</span>{% endif %}
+            </div>
+
+            <div class="ws-field sup-attach-field">
+                <label class="ws-label" for="{{ ticket_form.attachment.id_for_label }}">{{ ticket_form.attachment.label }} <span class="sup-optional">(اختیاری)</span></label>
+                <label class="sup-attach-drop" for="{{ ticket_form.attachment.id_for_label }}">
+                    <span class="sup-attach-drop__icon" aria-hidden="true"><i class="fas fa-cloud-arrow-up"></i></span>
+                    <span class="sup-attach-drop__copy">
+                        <strong>انتخاب فایل پیوست</strong>
+                        <em>jpg, png, pdf, doc, xls, zip — تا ۱۰ مگابایت</em>
+                    </span>
+                    {{ ticket_form.attachment }}
+                </label>
+                <span class="sup-attach-name" id="supCreateFileName" aria-live="polite"></span>
+                {% if ticket_form.attachment.errors %}<span class="ws-field-error">{{ ticket_form.attachment.errors.0 }}</span>{% endif %}
+            </div>
+
+            <div class="sup-create-modal-tips" role="note">
+                <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                <span>برای پاسخ سریع‌تر، جزئیات خطا و در صورت امکان اسکرین‌شات را ضمیمه کنید.</span>
+            </div>
+
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary" id="supCreateSubmitBtn">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    <span>ارسال تیکت</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

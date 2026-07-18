@@ -4,7 +4,7 @@
 {% block err_title %}خطای سرور{% endblock %}
 {% block err_code %}500{% endblock %}
 {% block err_http %}500{% endblock %}
-{% block err_eyebrow %}خطای ۵۰۰ — مشکل فنی{% endblock %}
+{% block err_eyebrow %}۵۰۰ · مشکل فنی{% endblock %}
 {% block err_heading %}سرور لحظه‌ای قاطی کرد{% endblock %}
 {% block err_lead %}
 مشکلی در سمت ما پیش آمد — نگران نباشید، داده‌های شما امن است. چند لحظه بعد دوباره تلاش کنید یا به صفحه اصلی برگردید.
@@ -22,6 +22,14 @@
         <span class="err-spark err-spark--2"><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i></span>
     </div>
 </div>
+{% endblock %}
+
+{% block err_tips %}
+<ul class="err-tips" aria-label="پیشنهادها">
+    <li><i class="fas fa-rotate-right" aria-hidden="true"></i><span>صفحه را بعد از چند ثانیه دوباره بارگذاری کنید</span></li>
+    <li><i class="fas fa-wifi" aria-hidden="true"></i><span>اتصال اینترنت خود را یک‌بار بررسی کنید</span></li>
+    <li><i class="fas fa-headset" aria-hidden="true"></i><span>اگر ادامه داشت، مشکل را به پشتیبانی گزارش دهید</span></li>
+</ul>
 {% endblock %}
 
 {% block err_actions %}
@@ -42,6 +50,21 @@
 <a href="{% url 'contact' %}" class="err-btn err-btn--ghost">
     <i class="fas fa-headset" aria-hidden="true"></i>
     <span>گزارش مشکل</span>
+</a>
+{% endblock %}
+
+{% block err_dock %}
+<button type="button" class="err-dock-btn err-dock-btn--ghost" onclick="location.reload()">
+    <i class="fas fa-rotate-right" aria-hidden="true"></i>
+    <span>تلاش</span>
+</button>
+<a href="{% url 'home' %}" class="err-dock-btn err-dock-btn--primary">
+    <i class="fas fa-house" aria-hidden="true"></i>
+    <span>خانه</span>
+</a>
+<a href="{% url 'contact' %}" class="err-dock-btn err-dock-btn--soft">
+    <i class="fas fa-headset" aria-hidden="true"></i>
+    <span>پشتیبانی</span>
 </a>
 {% endblock %}
 

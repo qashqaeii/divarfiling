@@ -13,7 +13,6 @@
 {% endblock %}
 
 {% block crm_content %}
-{% with has_deal_filters=request.GET.q|default:request.GET.stage|default:request.GET.bucket|default:'' %}
 <div class="crm-shell-page crm-deals-page crm-deals-pro crm-deals-mobile crm-page-chrome{% if view_mode == 'pipeline' %} crm-deals-pro--pipeline{% endif %}">
 
     <header class="crm-deals-mob-header">
@@ -170,13 +169,13 @@
 
             <div class="crm-deals-mob-filter-bar">
                 <button type="button"
-                        class="crm-deals-mob-filter-trigger{% if has_deal_filters %} is-active{% endif %}"
+                        class="crm-deals-mob-filter-trigger{% if request.GET.q or request.GET.stage or request.GET.bucket %} is-active{% endif %}"
                         id="crmDealsFilterToggle"
                         aria-expanded="false"
                         aria-controls="crmDealsFilterSheet">
                     <i class="fas fa-sliders" aria-hidden="true"></i>
                     <span>فیلتر و مرتب‌سازی</span>
-                    {% if has_deal_filters %}<em class="crm-deals-mob-filter-badge">فعال</em>{% endif %}
+                    {% if request.GET.q or request.GET.stage or request.GET.bucket %}<em class="crm-deals-mob-filter-badge">فعال</em>{% endif %}
                     <i class="fas fa-chevron-down crm-deals-mob-filter-chevron" aria-hidden="true"></i>
                 </button>
                 <div class="crm-deals-view-toggle crm-deals-view-toggle--mob" role="tablist" aria-label="نمای نمایش">
@@ -317,7 +316,6 @@
         <span>معامله</span>
     </button>
 </div>
-{% endwith %}
 {% endblock %}
 
 {% block crm_drawers %}

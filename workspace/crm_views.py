@@ -1657,6 +1657,7 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
             'show_full_address': share.show_full_address,
             'show_internal_notes': share.show_internal_notes,
             'approximate_location': share.approximate_location,
+            'approximate_location_radius_m': share.approximate_location_radius_m,
             'is_active': share.is_active,
         })
 
@@ -1671,6 +1672,7 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
         )
         from workspace.services.public_share_common import (
             apply_share_form_extras,
+            clamp_approx_radius_m,
             normalize_consultant_fields_for_save,
         )
         share = get_or_create_property_share(request.user, prop)
@@ -1686,6 +1688,10 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
         share.show_full_address = request.POST.get('show_full_address') in ('1', 'true', 'on')
         share.show_internal_notes = request.POST.get('show_internal_notes') in ('1', 'true', 'on')
         share.approximate_location = request.POST.get('approximate_location') in ('1', 'true', 'on')
+        if 'approximate_location_radius_m' in request.POST:
+            share.approximate_location_radius_m = clamp_approx_radius_m(
+                request.POST.get('approximate_location_radius_m'),
+            )
         share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')
         share.save()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':

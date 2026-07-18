@@ -174,6 +174,11 @@ class ListingPublicShare(models.Model):
         verbose_name='نمایش موقعیت تقریبی',
         help_text='حتی اگر مختصات دقیق باشد، در صفحه عمومی به‌صورت تقریبی نمایش داده شود.',
     )
+    approximate_location_radius_m = models.PositiveIntegerField(
+        default=500,
+        verbose_name='شعاع موقعیت تقریبی (متر)',
+        help_text='شعاع دایره تقریبی در صفحه عمومی؛ بین ۱۰ تا ۵۰۰ متر.',
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
     last_viewed_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین بازدید')
 
@@ -214,6 +219,11 @@ class CRMPropertyPublicShare(models.Model):
         default=False,
         verbose_name='نمایش موقعیت تقریبی',
         help_text='حتی اگر مختصات دقیق باشد، در صفحه عمومی به‌صورت تقریبی نمایش داده شود.',
+    )
+    approximate_location_radius_m = models.PositiveIntegerField(
+        default=500,
+        verbose_name='شعاع موقعیت تقریبی (متر)',
+        help_text='شعاع دایره تقریبی در صفحه عمومی؛ بین ۱۰ تا ۵۰۰ متر.',
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
     last_viewed_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین بازدید')

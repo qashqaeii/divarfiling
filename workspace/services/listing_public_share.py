@@ -168,6 +168,11 @@ def update_listing_public_share(share: ListingPublicShare, payload: dict) -> Lis
         share.show_divar_link = bool(payload.get('show_divar_link'))
     if 'approximate_location' in payload:
         share.approximate_location = bool(payload.get('approximate_location'))
+    if 'approximate_location_radius_m' in payload:
+        from workspace.services.public_share_common import clamp_approx_radius_m
+        share.approximate_location_radius_m = clamp_approx_radius_m(
+            payload.get('approximate_location_radius_m'),
+        )
     if 'is_active' in payload:
         share.is_active = bool(payload.get('is_active'))
     if payload.get('save_as_default_welcome'):

@@ -90,6 +90,11 @@ def update_property_public_share(share: CRMPropertyPublicShare, payload: dict) -
         share.show_internal_notes = bool(payload.get('show_internal_notes'))
     if 'approximate_location' in payload:
         share.approximate_location = bool(payload.get('approximate_location'))
+    if 'approximate_location_radius_m' in payload:
+        from workspace.services.public_share_common import clamp_approx_radius_m
+        share.approximate_location_radius_m = clamp_approx_radius_m(
+            payload.get('approximate_location_radius_m'),
+        )
     if 'is_active' in payload:
         share.is_active = bool(payload.get('is_active'))
     if payload.get('save_as_default_welcome'):

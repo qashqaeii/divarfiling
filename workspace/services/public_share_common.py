@@ -906,10 +906,26 @@ def public_share_to_dict(share, request, *, url_name: str) -> Dict[str, Any]:
         'show_full_address': getattr(share, 'show_full_address', False),
         'show_internal_notes': getattr(share, 'show_internal_notes', False),
         'approximate_location': bool(getattr(share, 'approximate_location', False)),
+        'approximate_location_radius_m': clamp_approx_radius_m(
+            getattr(share, 'approximate_location_radius_m', None),
+        ),
     }
 
 
-DEFAULT_PUBLIC_APPROX_RADIUS_M = 500
+MIN_PUBLIC_APPROX_RADIUS_M = 10
+MAX_PUBLIC_APPROX_RADIUS_M = 500
+DEFAULT_PUBLIC_APPROX_RADIUS_M = MAX_PUBLIC_APPROX_RADIUS_M
+
+
+def clamp_approx_radius_m(value) -> int:
+    """شعاع موقعیت تقریبی را به بازه ۱۰–۵۰۰ متر محدود می‌کند."""
+    try:
+        r = int(value)
+    except (TypeError, ValueError):
+        return DEFAULT_PUBLIC_APPROX_RADIUS_M
+    if r <= 0:
+        return DEFAULT_PUBLIC_APPROX_RADIUS_M
+    return max(MIN_PUBLIC_APPROX_RADIUS_M, min(MAX_PUBLIC_APPROX_RADIUS_M, r))
 
 
 def fuzzy_public_map_point(
@@ -933,7 +949,7 @@ def fuzzy_public_map_point(
         return None
     if not (-90 <= lat <= 90 and -180 <= lng <= 180) or (lat == 0 and lng == 0):
         return None
-    r = int(radius_m) if radius_m and int(radius_m) > 0 else DEFAULT_PUBLIC_APPROX_RADIUS_M
+    r = clamp_approx_radius_m(radius_m)
     digest = hashlib.sha256(f'{seed}|{lat:.6f}|{lng:.6f}|{r}'.encode('utf-8')).digest()
     angle = (int.from_bytes(digest[:4], 'big') / 0xFFFFFFFF) * (2 * math.pi)
     # فاصله مرکز نمایش: ۲۵٪ تا ۶۵٪ شعاع — همیشه داخل دایره و دور از نقطه دقیق
@@ -948,7 +964,7 @@ def fuzzy_public_map_point(
 def approximate_location_accuracy(*, radius_m: int = DEFAULT_PUBLIC_APPROX_RADIUS_M) -> Dict[str, Any]:
     """دقت موقعیت اجباری برای صفحه عمومی وقتی مشاور «تقریبی» را انتخاب کرده."""
     from workspace.services.jalali_input import to_persian_digits
-    r = int(radius_m) if radius_m and int(radius_m) > 0 else DEFAULT_PUBLIC_APPROX_RADIUS_M
+    r = clamp_approx_radius_m(radius_m)
     return {
         'label': f'موقعیت تقریبی — در شعاع حدود {to_persian_digits(r)} متر',
         'kind': 'approx',
@@ -964,9 +980,8 @@ def resolve_public_location_accuracy(share, base: Optional[dict] = None) -> Dict
     """
     base = dict(base or {})
     if getattr(share, 'approximate_location', False):
-        existing_r = int(base.get('radius_m') or 0)
         return approximate_location_accuracy(
-            radius_m=existing_r if existing_r > 0 else DEFAULT_PUBLIC_APPROX_RADIUS_M,
+            radius_m=getattr(share, 'approximate_location_radius_m', None),
         )
     if not base.get('kind') and not base.get('label'):
         return {'label': '', 'kind': '', 'radius_m': 0}
@@ -997,7 +1012,7 @@ def apply_public_approx_privacy(
     out_marker = dict(marker) if marker else None
     if acc.get('kind') != 'approx':
         return out_marker, nav
-    radius_m = int(acc.get('radius_m') or DEFAULT_PUBLIC_APPROX_RADIUS_M)
+    radius_m = clamp_approx_radius_m(acc.get('radius_m'))
     fuzzy = fuzzy_public_map_point(
         latitude,
         longitude,

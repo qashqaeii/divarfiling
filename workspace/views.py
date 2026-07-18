@@ -1163,6 +1163,7 @@ class ListingShareManageView(DatasetOwnerMixin, View):
             'social_links': profile['social_links'],
             'show_divar_link': share.show_divar_link,
             'approximate_location': share.approximate_location,
+            'approximate_location_radius_m': share.approximate_location_radius_m,
             'is_active': share.is_active,
         })
 
@@ -1172,6 +1173,7 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         share = get_or_create_listing_share(request.user, listing)
         from workspace.services.public_share_common import (
             apply_share_form_extras,
+            clamp_approx_radius_m,
             normalize_consultant_fields_for_save,
         )
         name, phone = normalize_consultant_fields_for_save(
@@ -1184,6 +1186,10 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         apply_share_form_extras(request.user, request.POST, share, files=request.FILES)
         share.show_divar_link = request.POST.get('show_divar_link') in ('1', 'true', 'on')
         share.approximate_location = request.POST.get('approximate_location') in ('1', 'true', 'on')
+        if 'approximate_location_radius_m' in request.POST:
+            share.approximate_location_radius_m = clamp_approx_radius_m(
+                request.POST.get('approximate_location_radius_m'),
+            )
         share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')
         share.save()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':

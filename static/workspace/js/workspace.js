@@ -642,6 +642,19 @@ function prepareShareFormSubmit(form) {
     }
 }
 
+function initApproxRadiusToggle(form) {
+    const toggle = form.querySelector('[data-approx-toggle]');
+    const radiusWrap = form.querySelector('[data-approx-radius]');
+    if (!toggle || !radiusWrap) return;
+    const sync = () => {
+        radiusWrap.hidden = !toggle.checked;
+        const input = radiusWrap.querySelector('input[name="approximate_location_radius_m"]');
+        if (input) input.disabled = !toggle.checked;
+    };
+    toggle.addEventListener('change', sync);
+    sync();
+}
+
 function initPublicShareForms() {
     initPublicShareMessageEditors();
     document.querySelectorAll('.mk-share-form').forEach((form) => {
@@ -650,6 +663,7 @@ function initPublicShareForms() {
         initShareModalTabs(form);
         initWelcomeRichEditors(form);
         initShareProfileImagePreviews(form);
+        initApproxRadiusToggle(form);
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             prepareShareFormSubmit(form);

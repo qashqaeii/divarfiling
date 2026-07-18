@@ -230,16 +230,35 @@
                                     <span class="mk-share-switch-track" aria-hidden="true"></span>
                                 </span>
                             </label>
-                            <label class="mk-share-toggle-row">
-                                <span class="mk-share-toggle-info">
-                                    <span class="mk-share-toggle-title">موقعیت تقریبی روی نقشه</span>
-                                    <span class="mk-share-toggle-desc">حتی اگر مختصات دقیق باشد، برای مشتری تقریبی (شعاع حدود ۵۰۰ متر) نمایش داده می‌شود</span>
-                                </span>
-                                <span class="mk-share-switch">
-                                    <input type="checkbox" name="approximate_location" value="1"{% if share.approximate_location %} checked{% endif %}>
-                                    <span class="mk-share-switch-track" aria-hidden="true"></span>
-                                </span>
-                            </label>
+                            <div class="mk-share-approx-block">
+                                <label class="mk-share-toggle-row">
+                                    <span class="mk-share-toggle-info">
+                                        <span class="mk-share-toggle-title">موقعیت تقریبی روی نقشه</span>
+                                        <span class="mk-share-toggle-desc">حتی اگر مختصات دقیق باشد، برای مشتری تقریبی نمایش داده می‌شود</span>
+                                    </span>
+                                    <span class="mk-share-switch">
+                                        <input type="checkbox" name="approximate_location" value="1"{% if share.approximate_location %} checked{% endif %} data-approx-toggle>
+                                        <span class="mk-share-switch-track" aria-hidden="true"></span>
+                                    </span>
+                                </label>
+                                <div class="mk-share-approx-radius" data-approx-radius hidden>
+                                    <label class="mk-share-approx-radius-label" for="{{ id_prefix }}-approx-radius">
+                                        <span>شعاع تقریبی (متر)</span>
+                                        <small>۱۰ تا ۵۰۰</small>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="{{ id_prefix }}-approx-radius"
+                                        name="approximate_location_radius_m"
+                                        class="mk-share-approx-radius-input"
+                                        min="10"
+                                        max="500"
+                                        step="10"
+                                        value="{{ share.approximate_location_radius_m|default:500 }}"
+                                        inputmode="numeric"
+                                    >
+                                </div>
+                            </div>
                             {% if is_personal_file %}
                             <label class="mk-share-toggle-row">
                                 <span class="mk-share-toggle-info">

@@ -249,6 +249,42 @@ class ShareDefaultsAndSocialTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'موقعیت تقریبی')
 
+    def test_clamp_approx_radius_m(self):
+        from workspace.services.public_share_common import clamp_approx_radius_m
+        self.assertEqual(clamp_approx_radius_m(5), 10)
+        self.assertEqual(clamp_approx_radius_m(900), 500)
+        self.assertEqual(clamp_approx_radius_m(100), 100)
+        self.assertEqual(clamp_approx_radius_m(None), 500)
+        self.assertEqual(clamp_approx_radius_m('abc'), 500)
+
+    def test_custom_approx_radius_on_public_page(self):
+        import math
+        from workspace.services.public_share_common import resolve_public_location_accuracy
+        share = get_or_create_listing_share(self.user, self.listing)
+        share.approximate_location = True
+        share.approximate_location_radius_m = 100
+        share.save(update_fields=['approximate_location', 'approximate_location_radius_m'])
+        exact = {'label': 'موقعیت دقیق روی نقشه', 'kind': 'exact', 'radius_m': 0}
+        resolved = resolve_public_location_accuracy(share, exact)
+        self.assertEqual(resolved['kind'], 'approx')
+        self.assertEqual(resolved['radius_m'], 100)
+        self.listing.latitude = 35.7
+        self.listing.longitude = 51.4
+        self.listing.data = {'نوع مختصات': 'دقیق'}
+        self.listing.save()
+        ctx = build_public_listing_context(share)
+        self.assertEqual(ctx['location_accuracy']['radius_m'], 100)
+        self.assertEqual(ctx['listing_map_marker']['location_radius_m'], 100)
+        lat0, lng0 = 35.7, 51.4
+        dlat_m = abs(ctx['listing_map_marker']['lat'] - lat0) * 111320
+        dlng_m = abs(ctx['listing_map_marker']['lng'] - lng0) * 111320 * abs(math.cos(math.radians(lat0)))
+        dist = math.hypot(dlat_m, dlng_m)
+        self.assertLess(dist, 100)
+        self.assertContains(
+            self.client.get(reverse('listing_public:view', kwargs={'share_token': share.share_token})),
+            '۱۰۰',
+        )
+
     def test_fuzzy_public_map_point_stable_and_inside_radius(self):
         from workspace.services.public_share_common import fuzzy_public_map_point
         import math
@@ -263,6 +299,7 @@ class ShareDefaultsAndSocialTests(TestCase):
         dist = math.hypot(dlat_m, dlng_m)
         self.assertGreater(dist, 100)
         self.assertLess(dist, 500)
+
     def test_office_map_on_public_page_when_coords_set(self):
         ws = get_or_create_settings(self.user)
         ws.agency_name = 'آژانس تست'

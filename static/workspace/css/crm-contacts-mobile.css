@@ -15,6 +15,8 @@
 .crm-contact-mobile-glance,
 .crm-contact-mobile-dock,
 .crm-contact-mob-quick,
+.crm-contact-mob-actions,
+.crm-contact-hero__avatar,
 .crm-contacts-mob-meta,
 .crm-contacts-mob-chevron,
 .crm-contacts-mob-phone,
@@ -1188,6 +1190,26 @@
         text-align: center;
         gap: 0.35rem;
     }
+    .crm-contact-mobile .crm-contact-hero__avatar {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 3.35rem;
+        height: 3.35rem;
+        margin: 0.1rem 0 0.15rem;
+        border-radius: 16px;
+        font-family: 'Vazirmatn', inherit;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--ws-primary);
+        background:
+            linear-gradient(160deg, color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface)), var(--ws-primary-soft));
+        box-shadow:
+            inset 0 0 0 1px color-mix(in srgb, var(--ws-primary) 16%, transparent),
+            0 6px 16px color-mix(in srgb, var(--ws-primary) 12%, transparent);
+        text-transform: none;
+        user-select: none;
+    }
     .crm-contact-mobile .crm-contact-hero__headline {
         align-items: center;
         width: 100%;
@@ -1214,10 +1236,11 @@
         padding-inline-start: 1.55rem;
     }
     .crm-contact-mobile .crm-contact-hero__title {
+        font-family: 'Vazirmatn', inherit;
         font-size: 1.28rem;
         font-weight: 800;
         letter-spacing: -0.03em;
-        margin-top: 0.25rem;
+        margin-top: 0.1rem;
         line-height: 1.25;
         max-width: 92%;
     }
@@ -1398,7 +1421,7 @@
         font-size: 0.75rem;
     }
 
-    /* ── Glance KPIs — responsive grid ── */
+    /* ── Glance KPIs — actionable cards ── */
     .crm-contact-mobile-glance {
         display: grid !important;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1409,6 +1432,7 @@
     .crm-contact-glance-card {
         flex: none;
         min-width: 0;
+        width: 100%;
         display: flex;
         align-items: flex-start;
         gap: 0.5rem;
@@ -1417,6 +1441,23 @@
         border: 1px solid color-mix(in srgb, var(--ws-border) 68%, transparent);
         background: var(--ws-surface);
         box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        font-family: inherit;
+        color: inherit;
+        text-align: start;
+        cursor: default;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+    }
+    button.crm-contact-glance-card {
+        cursor: pointer;
+    }
+    button.crm-contact-glance-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+    }
+    button.crm-contact-glance-card:focus-visible {
+        outline: 2px solid var(--ws-primary);
+        outline-offset: 2px;
     }
     .crm-contact-glance-card:nth-child(3) {
         grid-column: 1 / -1;
@@ -1476,6 +1517,49 @@
     .crm-contact-glance-badge.is-accent {
         background: var(--ws-primary-soft);
         color: var(--ws-primary);
+    }
+
+    /* ── Secondary action chips ── */
+    .crm-contact-mob-actions {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.35rem;
+        padding: 0 0.75rem;
+        margin: 0;
+    }
+    .crm-contact-mob-action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.28rem;
+        min-height: 56px;
+        padding: 0.45rem 0.2rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: var(--ws-surface);
+        color: var(--ws-text-secondary);
+        font-family: inherit;
+        font-size: 0.6rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.12s, background 0.12s, border-color 0.12s;
+    }
+    .crm-contact-mob-action i {
+        font-size: 0.95rem;
+        color: var(--ws-primary);
+        line-height: 1;
+    }
+    .crm-contact-mob-action:active {
+        transform: scale(0.96);
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
+    }
+    .crm-contact-mob-action:focus-visible {
+        outline: 2px solid var(--ws-primary);
+        outline-offset: 2px;
     }
 
     /* ── Main layout ── */
@@ -2185,6 +2269,12 @@
 @media (max-width: 430px) {
     .crm-contacts-mob-title { font-size: 0.98rem; }
     .crm-contact-mobile .crm-contact-hero__title { font-size: 1.15rem; }
+    .crm-contact-mobile .crm-contact-hero__avatar {
+        width: 3.05rem;
+        height: 3.05rem;
+        border-radius: 14px;
+        font-size: 1.1rem;
+    }
     .crm-contact-mob-quick__btn {
         min-height: 58px;
         font-size: 0.58rem;
@@ -2194,6 +2284,11 @@
         height: 30px;
         border-radius: 10px;
         font-size: 0.88rem;
+    }
+    .crm-contact-mob-action {
+        min-height: 52px;
+        font-size: 0.56rem;
+        border-radius: 13px;
     }
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro span {
         max-width: 5rem;
@@ -2239,6 +2334,21 @@
         border-radius: 13px;
         gap: 0.2rem;
     }
+    .crm-contact-mob-actions {
+        gap: 0.28rem;
+    }
+    .crm-contact-mob-action {
+        min-height: 48px;
+        font-size: 0.52rem;
+        gap: 0.2rem;
+    }
+    .crm-contact-mob-action i {
+        font-size: 0.88rem;
+    }
+    .crm-contact-glance-card {
+        padding: 0.6rem 0.6rem;
+        border-radius: 14px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2246,6 +2356,8 @@
     .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable:active,
     .crm-contacts-mob-act:active,
     .crm-contact-mob-quick__btn:active,
+    .crm-contact-mob-action:active,
+    button.crm-contact-glance-card:active,
     .crm-contact-dock-btn:active,
     .crm-contact-mobile .crm-contact-hero__back:active,
     .crm-contact-mobile .crm-contact-tabs .crm-tab-pro:active {

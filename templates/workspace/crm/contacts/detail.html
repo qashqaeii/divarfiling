@@ -2,6 +2,7 @@
 {% load humanize static workspace_tags crm_tags %}
 
 {% block page_title %}{{ customer.name }}{% endblock %}
+{% block mobile_bar_title %}{{ customer.name|truncatechars:22 }}{% endblock %}
 {% block crm_title %}{{ customer.name }}{% endblock %}
 {% block crm_desc %}{{ customer.customer_type }} · {{ customer.status }}{% endblock %}
 {% block crm_search %}{% endblock %}
@@ -15,7 +16,7 @@
         <div class="crm-contact-hero__accent" aria-hidden="true"></div>
         <div class="crm-contact-hero__top">
             <header class="crm-contact-hero__toolbar">
-                <a href="{% url 'workspace:crm_contacts' %}" class="crm-contact-hero__back" title="بازگشت به مخاطبین">
+                <a href="{% url 'workspace:crm_contacts' %}" class="crm-contact-hero__back" title="بازگشت به مخاطبین" aria-label="بازگشت به مخاطبین">
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
                 {% include 'workspace/crm/includes/contact_detail_actions.html' %}
@@ -26,6 +27,7 @@
                     <i class="fas fa-chevron-left" aria-hidden="true"></i>
                     <span>{{ customer.name|truncatechars:36 }}</span>
                 </nav>
+                <span class="crm-contact-hero__avatar" aria-hidden="true">{{ customer.name|slice:":1" }}</span>
                 <div class="crm-contact-hero__headline">
                     <h1 class="crm-contact-hero__title">{{ customer.name }}</h1>
                     <div class="crm-contact-hero__badges">
@@ -146,6 +148,17 @@
     </section>
 
     <section class="crm-contact-mobile-glance" aria-label="خلاصه سریع">
+        {% if not customer_is_shared %}
+        <button type="button" class="crm-contact-glance-card crm-contact-glance-card--followup{% if follow_up_state == 'overdue' %} is-overdue{% elif follow_up_state == 'today' %} is-today{% endif %}" data-drawer-open="drawer-followup">
+            <span class="crm-contact-glance-icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+            <div class="crm-contact-glance-copy">
+                <span class="crm-contact-glance-label">پیگیری بعدی</span>
+                <strong>{% if customer.next_follow_up %}{{ customer.next_follow_up|ws_jalali }}{% else %}ثبت نشده{% endif %}</strong>
+            </div>
+            {% if follow_up_state == 'overdue' %}<span class="crm-contact-glance-badge is-warn">معوق</span>
+            {% elif follow_up_state == 'today' %}<span class="crm-contact-glance-badge is-accent">امروز</span>{% endif %}
+        </button>
+        {% else %}
         <article class="crm-contact-glance-card crm-contact-glance-card--followup{% if follow_up_state == 'overdue' %} is-overdue{% elif follow_up_state == 'today' %} is-today{% endif %}">
             <span class="crm-contact-glance-icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
             <div class="crm-contact-glance-copy">
@@ -155,14 +168,24 @@
             {% if follow_up_state == 'overdue' %}<span class="crm-contact-glance-badge is-warn">معوق</span>
             {% elif follow_up_state == 'today' %}<span class="crm-contact-glance-badge is-accent">امروز</span>{% endif %}
         </article>
-        <article class="crm-contact-glance-card">
+        {% endif %}
+        <button type="button" class="crm-contact-glance-card" data-tab-jump="timeline">
             <span class="crm-contact-glance-icon" aria-hidden="true"><i class="fas fa-stream"></i></span>
             <div class="crm-contact-glance-copy">
                 <span class="crm-contact-glance-label">آخرین فعالیت</span>
                 <strong>{% if activities %}{{ activities.0.created_at|ws_jalali }}{% else %}—{% endif %}</strong>
             </div>
-        </article>
+        </button>
         {% if deals %}
+        {% if not customer_is_shared %}
+        <button type="button" class="crm-contact-glance-card" data-drawer-open="drawer-deal">
+            <span class="crm-contact-glance-icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+            <div class="crm-contact-glance-copy">
+                <span class="crm-contact-glance-label">معاملات</span>
+                <strong>{{ deals|length }} فعال</strong>
+            </div>
+        </button>
+        {% else %}
         <article class="crm-contact-glance-card">
             <span class="crm-contact-glance-icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
             <div class="crm-contact-glance-copy">
@@ -171,7 +194,25 @@
             </div>
         </article>
         {% endif %}
+        {% endif %}
     </section>
+
+    {% if not customer_is_shared %}
+    <nav class="crm-contact-mob-actions" aria-label="اقدامات سریع">
+        <button type="button" class="crm-contact-mob-action" data-drawer-open="drawer-followup">
+            <i class="fas fa-calendar-plus" aria-hidden="true"></i><span>پیگیری</span>
+        </button>
+        <button type="button" class="crm-contact-mob-action" data-drawer-open="drawer-reminder">
+            <i class="fas fa-bell" aria-hidden="true"></i><span>یادآور</span>
+        </button>
+        <button type="button" class="crm-contact-mob-action" data-drawer-open="drawer-visit">
+            <i class="fas fa-door-open" aria-hidden="true"></i><span>بازدید</span>
+        </button>
+        <button type="button" class="crm-contact-mob-action" data-drawer-open="drawer-deal">
+            <i class="fas fa-handshake" aria-hidden="true"></i><span>معامله</span>
+        </button>
+    </nav>
+    {% endif %}
 
     <div class="crm-detail-grid">
         <div class="crm-detail-main crm-contact-main">

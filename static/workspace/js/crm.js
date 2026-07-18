@@ -130,6 +130,9 @@ const CRMDrawer = {
         else if (id === 'drawer-activity') initCRMActivityDrawer(drawer);
         else initCRMVisitOutcome(drawer);
         initCRMPropertyImages(drawer);
+        if (typeof window.initCRMFormMaps === 'function') {
+            window.initCRMFormMaps(drawer);
+        }
     },
     close(drawer) {
         const el = typeof drawer === 'string' ? document.getElementById(drawer) : drawer;
@@ -3433,6 +3436,9 @@ document.addEventListener('DOMContentLoaded', () => {
     try { initCRMPropGalleryLightbox(); } catch (err) { console.error(err); }
     try { initCRMPropertyTeam(); } catch (err) { console.error(err); }
     try { initCRMPropertyImages(); } catch (err) { console.error(err); }
+    try {
+        if (typeof window.initCRMFormMaps === 'function') window.initCRMFormMaps();
+    } catch (err) { console.error(err); }
     try { initCRMTeamPage(); } catch (err) { console.error(err); }
     initCRMSidePanel();
     initCRMQuickLead();

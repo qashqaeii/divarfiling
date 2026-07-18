@@ -43,8 +43,49 @@
                 <label class="crm-label" for="{{ form.neighborhood.id_for_label }}">محله</label>
                 {{ form.neighborhood }}
             </div>
-            <div class="crm-field"><label class="crm-label">عرض جغرافیایی</label>{{ form.latitude }}</div>
-            <div class="crm-field"><label class="crm-label">طول جغرافیایی</label>{{ form.longitude }}</div>
+        </div>
+
+        <div class="crm-form-map" data-crm-form-map>
+            <button type="button" class="crm-form-map__toggle" data-crm-form-map-toggle aria-expanded="false" aria-controls="crmFormMapPanel-{{ form.prefix|default:'main' }}">
+                <span class="crm-form-map__toggle-ico" aria-hidden="true"><i class="fas fa-map-location-dot"></i></span>
+                <span class="crm-form-map__toggle-txt">
+                    <strong>انتخاب موقعیت روی نقشه</strong>
+                    <em data-crm-form-map-summary>{% if form.latitude.value and form.longitude.value %}موقعیت انتخاب شده{% else %}برای ثبت مختصات، نقشه را باز کنید{% endif %}</em>
+                </span>
+                <span class="crm-form-map__toggle-meta" data-crm-form-map-chip dir="ltr" {% if not form.latitude.value or not form.longitude.value %}hidden{% endif %}>
+                    {% if form.latitude.value and form.longitude.value %}{{ form.latitude.value }} ، {{ form.longitude.value }}{% endif %}
+                </span>
+                <i class="fas fa-chevron-down crm-form-map__chevron" aria-hidden="true"></i>
+            </button>
+
+            <div class="crm-form-map__panel" id="crmFormMapPanel-{{ form.prefix|default:'main' }}" data-crm-form-map-panel hidden>
+                <div class="crm-form-map__hint">
+                    <i class="fas fa-hand-pointer" aria-hidden="true"></i>
+                    روی نقشه کلیک کنید یا پین را بکشید
+                </div>
+                <div class="crm-form-map__canvas-wrap">
+                    <div class="crm-form-map__canvas" data-crm-form-map-canvas role="application" aria-label="نقشه انتخاب موقعیت ملک"></div>
+                </div>
+                <div class="crm-form-map__bar">
+                    <div class="crm-form-map__coords" dir="ltr">
+                        <span data-crm-form-map-coords>{% if form.latitude.value and form.longitude.value %}{{ form.latitude.value }} ، {{ form.longitude.value }}{% else %}—{% endif %}</span>
+                    </div>
+                    <div class="crm-form-map__acts">
+                        <button type="button" class="crm-form-map__btn" data-crm-form-map-locate title="موقعیت تقریبی من">
+                            <i class="fas fa-location-crosshairs" aria-hidden="true"></i>
+                            موقعیت من
+                        </button>
+                        <button type="button" class="crm-form-map__btn crm-form-map__btn--ghost" data-crm-form-map-clear>
+                            پاک کردن
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="crm-form-map__fields" aria-hidden="true">
+                {{ form.latitude }}
+                {{ form.longitude }}
+            </div>
         </div>
     </section>
 

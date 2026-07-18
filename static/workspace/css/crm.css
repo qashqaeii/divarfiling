@@ -6608,6 +6608,35 @@ body.crm-side-open { overflow: hidden; }
     height: 220px;
     z-index: 0;
 }
+.crm-form-map-pin {
+    background: transparent !important;
+    border: none !important;
+}
+.crm-form-map-pin__dot {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 22px;
+    height: 22px;
+    margin-left: -11px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    background: linear-gradient(145deg, #7c3aed 0%, #5b21b6 100%);
+    border: 2px solid #fff;
+    box-shadow: 0 4px 12px rgba(91, 33, 182, 0.35);
+}
+.crm-form-map-pin__dot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: #fff;
+    transform: rotate(45deg);
+}
 .crm-form-map__bar {
     display: flex;
     flex-wrap: wrap;

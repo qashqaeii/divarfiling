@@ -53,16 +53,14 @@
         return Number(n).toFixed(6);
     }
 
-    function ensureMapIcon(L) {
-        if (L.Icon && L.Icon.Default && L.Icon.Default.prototype) {
-            // مسیر پیش‌فرض آیکون Leaflet از CDN
-            var base = 'https://unpkg.com/leaflet@1.9.4/dist/images/';
-            L.Icon.Default.mergeOptions({
-                iconUrl: base + 'marker-icon.png',
-                iconRetinaUrl: base + 'marker-icon-2x.png',
-                shadowUrl: base + 'marker-shadow.png',
-            });
-        }
+    function createPinIcon(L) {
+        return L.divIcon({
+            className: 'crm-form-map-pin',
+            html: '<span class="crm-form-map-pin__dot" aria-hidden="true"></span>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 28],
+            popupAnchor: [0, -24],
+        });
     }
 
     function setupFormMap(wrap) {
@@ -127,7 +125,13 @@
             syncUi(lat, lng);
             if (!map) return;
             if (!marker) {
-                marker = global.L.marker([lat, lng], { draggable: true }).addTo(map);
+                marker = global.L.marker([lat, lng], {
+                    draggable: true,
+                    icon: createPinIcon(global.L),
+                    keyboard: false,
+                    title: 'موقعیت ملک',
+                    alt: '',
+                }).addTo(map);
                 marker.on('dragend', function () {
                     var p = marker.getLatLng();
                     setCoords(p.lat, p.lng);
@@ -142,7 +146,6 @@
 
         function initMap() {
             var L = global.L;
-            ensureMapIcon(L);
             var lat = parseCoord(latInput.value);
             var lng = parseCoord(lngInput.value);
             var has = lat != null && lng != null;

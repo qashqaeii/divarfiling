@@ -152,32 +152,70 @@
             </div>
         </div>
 
-        <div class="crm-prop-vacant-row hidden" data-vacant-panel>
-            <label class="crm-prop-vacant-check">
-                {{ form.is_vacant }}
-                <span class="crm-prop-vacant-check__body">
-                    <strong>ملک در حال حاضر تخلیه است</strong>
-                    <em>با تیک زدن تأیید می‌کنید واحد خالی و آماده تحویل است</em>
-                </span>
-            </label>
-        </div>
+        <div class="crm-occ hidden" data-vacant-panel data-occ-shell>
+            <header class="crm-occ__head">
+                <span class="crm-occ__mark" aria-hidden="true"><i class="fas fa-house-chimney-user"></i></span>
+                <div class="crm-occ__head-txt">
+                    <strong>وضعیت سکونت</strong>
+                    <em>تخلیه بودن یا مشخصات مستاجر فعلی را مشخص کنید</em>
+                </div>
+                <span class="crm-occ__pill" data-occ-pill>انتخاب کنید</span>
+            </header>
 
-        <div class="crm-prop-tenant-panel hidden" data-tenant-panel>
-            <div class="crm-prop-tenant-panel__head">
-                <i class="fas fa-house-user" aria-hidden="true"></i>
+            <div class="crm-occ__switch" role="group" aria-label="وضعیت سکونت ملک">
+                <button type="button" class="crm-occ__opt crm-occ__opt--vacant" data-occ-set="1" aria-pressed="false">
+                    <span class="crm-occ__opt-ico" aria-hidden="true"><i class="fas fa-door-open"></i></span>
+                    <span class="crm-occ__opt-body">
+                        <strong>تخلیه است</strong>
+                        <em>خالی و آماده تحویل</em>
+                    </span>
+                    <span class="crm-occ__opt-tick" aria-hidden="true"><i class="fas fa-check"></i></span>
+                </button>
+                <button type="button" class="crm-occ__opt crm-occ__opt--tenant" data-occ-set="0" aria-pressed="false">
+                    <span class="crm-occ__opt-ico" aria-hidden="true"><i class="fas fa-house-user"></i></span>
+                    <span class="crm-occ__opt-body">
+                        <strong>دارای مستاجر</strong>
+                        <em>ساکن فعلی در ملک است</em>
+                    </span>
+                    <span class="crm-occ__opt-tick" aria-hidden="true"><i class="fas fa-check"></i></span>
+                </button>
+            </div>
+
+            <div class="crm-occ__native" aria-hidden="true">
+                {{ form.is_vacant }}
+            </div>
+
+            <div class="crm-occ__confirm" data-occ-confirm hidden>
+                <span class="crm-occ__confirm-ico" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
                 <div>
-                    <strong>مستاجر فعلی (ساکن)</strong>
-                    <em>اگر ملک تخلیه نیست، مشخصات ساکن را وارد کنید — در مخاطبین ثبت و به ملک لینک می‌شود</em>
+                    <strong>تأیید تخلیه</strong>
+                    <em>واحد خالی و آماده تحویل است</em>
                 </div>
             </div>
-            <div class="crm-fields crm-fields-2">
-                <div class="crm-field">
-                    <label class="crm-label" for="{{ form.tenant_name.id_for_label }}">نام و نام خانوادگی مستاجر</label>
-                    {{ form.tenant_name }}
+
+            <div class="crm-occ__tenant hidden" data-tenant-panel>
+                <div class="crm-occ__tenant-head">
+                    <span class="crm-occ__tenant-ico" aria-hidden="true"><i class="fas fa-address-card"></i></span>
+                    <div>
+                        <strong>مستاجر فعلی (ساکن)</strong>
+                        <em>در مخاطبین ثبت و به‌عنوان مستاجر به ملک لینک می‌شود</em>
+                    </div>
                 </div>
-                <div class="crm-field">
-                    <label class="crm-label" for="{{ form.tenant_phone.id_for_label }}">شماره مستاجر</label>
-                    {{ form.tenant_phone }}
+                <div class="crm-occ__tenant-grid">
+                    <div class="crm-field">
+                        <label class="crm-label" for="{{ form.tenant_name.id_for_label }}">نام و نام خانوادگی</label>
+                        <div class="crm-occ__field">
+                            <span class="crm-occ__field-ico" aria-hidden="true"><i class="fas fa-user"></i></span>
+                            {{ form.tenant_name }}
+                        </div>
+                    </div>
+                    <div class="crm-field">
+                        <label class="crm-label" for="{{ form.tenant_phone.id_for_label }}">شماره تماس</label>
+                        <div class="crm-occ__field">
+                            <span class="crm-occ__field-ico" aria-hidden="true"><i class="fas fa-phone"></i></span>
+                            {{ form.tenant_phone }}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

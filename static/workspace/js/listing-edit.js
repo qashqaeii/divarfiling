@@ -106,6 +106,9 @@
             isVacant: qs('#editIsVacant'),
             vacantRow: qs('#editVacantRow'),
             vacantOff: qs('#editIsVacantOff'),
+            occPill: qs('#editVacantRow [data-occ-pill]'),
+            occConfirm: qs('#editVacantRow [data-occ-confirm]'),
+            occBtns: qsa('#editVacantRow [data-occ-set]'),
         };
 
         this.moneyHints = {
@@ -115,6 +118,7 @@
         };
 
         this._bindMoneyHints();
+        this._bindOccupancySwitch();
         this._bindNav();
         this._bindImages();
         this._bindEditButtons();
@@ -122,6 +126,40 @@
         this._bindFormSubmit();
         this._bindActionMenus();
     }
+
+    ListingEditController.prototype._syncOccupancyUI = function () {
+        var f = this.fields;
+        var vacantOn = !!(f.isVacant && f.isVacant.checked);
+        if (f.vacantRow) {
+            f.vacantRow.classList.toggle('is-vacant', vacantOn);
+            f.vacantRow.classList.toggle('is-occupied', !vacantOn);
+        }
+        (f.occBtns || []).forEach(function (btn) {
+            var wantVacant = btn.getAttribute('data-occ-set') === '1';
+            var active = wantVacant === vacantOn;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        if (f.occPill) f.occPill.textContent = vacantOn ? 'تخلیه' : 'تخلیه نیست';
+        if (f.occConfirm) f.occConfirm.hidden = !vacantOn;
+    };
+
+    ListingEditController.prototype._bindOccupancySwitch = function () {
+        var self = this;
+        var f = this.fields;
+        (f.occBtns || []).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                if (!f.isVacant || f.isVacant.disabled) return;
+                f.isVacant.checked = btn.getAttribute('data-occ-set') === '1';
+                self._syncOccupancyUI();
+            });
+        });
+        if (f.isVacant) {
+            f.isVacant.addEventListener('change', function () {
+                self._syncOccupancyUI();
+            });
+        }
+    };
 
     ListingEditController.prototype._bindMoneyHints = function () {
         var self = this;
@@ -451,6 +489,7 @@
             f.isVacant.disabled = !showVacant;
         }
         if (f.vacantOff) f.vacantOff.disabled = !showVacant;
+        this._syncOccupancyUI();
 
         ['price', 'deposit', 'rent'].forEach(function (key) {
             var input = f[key];

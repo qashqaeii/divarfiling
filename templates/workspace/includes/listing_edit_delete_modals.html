@@ -99,15 +99,44 @@
                         <span class="mk-edit-hint" id="editRentHint" aria-live="polite"></span>
                     </div>
                 </div>
-                <div class="mk-edit-vacant-row hidden" id="editVacantRow" data-vacant-panel>
-                    <label class="mk-edit-vacant-check">
+                <div class="mk-occ hidden" id="editVacantRow" data-vacant-panel data-occ-shell>
+                    <header class="mk-occ__head">
+                        <span class="mk-occ__mark" aria-hidden="true"><i class="fas fa-house-chimney-user"></i></span>
+                        <div class="mk-occ__head-txt">
+                            <strong>وضعیت سکونت</strong>
+                            <em>آیا واحد الان خالی و آماده تحویل است؟</em>
+                        </div>
+                        <span class="mk-occ__pill" data-occ-pill>انتخاب کنید</span>
+                    </header>
+                    <div class="mk-occ__switch" role="group" aria-label="وضعیت سکونت ملک">
+                        <button type="button" class="mk-occ__opt mk-occ__opt--vacant" data-occ-set="1" aria-pressed="false">
+                            <span class="mk-occ__opt-ico" aria-hidden="true"><i class="fas fa-door-open"></i></span>
+                            <span class="mk-occ__opt-body">
+                                <strong>تخلیه است</strong>
+                                <em>خالی و آماده تحویل</em>
+                            </span>
+                            <span class="mk-occ__opt-tick" aria-hidden="true"><i class="fas fa-check"></i></span>
+                        </button>
+                        <button type="button" class="mk-occ__opt mk-occ__opt--tenant" data-occ-set="0" aria-pressed="false">
+                            <span class="mk-occ__opt-ico" aria-hidden="true"><i class="fas fa-house-user"></i></span>
+                            <span class="mk-occ__opt-body">
+                                <strong>تخلیه نیست</strong>
+                                <em>ساکن فعلی دارد</em>
+                            </span>
+                            <span class="mk-occ__opt-tick" aria-hidden="true"><i class="fas fa-check"></i></span>
+                        </button>
+                    </div>
+                    <div class="mk-occ__native" aria-hidden="true">
                         <input type="hidden" name="is_vacant" value="0" id="editIsVacantOff">
-                        <input type="checkbox" name="is_vacant" value="1" id="editIsVacant" class="ws-checkbox">
-                        <span class="mk-edit-vacant-check__body">
-                            <strong>ملک در حال حاضر تخلیه است</strong>
-                            <em>با تیک زدن تأیید می‌کنید واحد خالی و آماده تحویل است</em>
-                        </span>
-                    </label>
+                        <input type="checkbox" name="is_vacant" value="1" id="editIsVacant" class="ws-checkbox" data-vacant-checkbox>
+                    </div>
+                    <div class="mk-occ__confirm" data-occ-confirm hidden>
+                        <span class="mk-occ__confirm-ico" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+                        <div>
+                            <strong>تأیید تخلیه</strong>
+                            <em>واحد خالی و آماده تحویل است</em>
+                        </div>
+                    </div>
                 </div>
             </section>
 

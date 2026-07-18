@@ -35,93 +35,198 @@
         </div>
     </div>
 
-    <div class="mk-filter-advanced{% if filters_open %} is-open{% endif %}" id="wsAdvPanel"{% if not filters_open %} hidden{% endif %}>
-        <div class="mk-filter-adv-section">
-            <span class="mk-filter-adv-label">جستجوی دقیق</span>
-            <div class="mk-filter-adv-grid mk-filter-adv-grid-4">
-                <input type="text" name="token" value="{{ filters.token }}" class="mk-filter-inp" placeholder="شناسه">
-                <input type="text" name="desc" value="{{ filters.desc }}" class="mk-filter-inp" placeholder="توضیحات">
-                <input type="text" name="rooms" value="{{ filters.rooms }}" class="mk-filter-inp" placeholder="اتاق">
-                <select name="tag" class="mk-filter-select">
-                    <option value="">برچسب</option>
-                    <option value="تماس" {% if filters.tag == 'تماس' %}selected{% endif %}>تماس</option>
-                    <option value="بازدید" {% if filters.tag == 'بازدید' %}selected{% endif %}>بازدید</option>
-                    <option value="علاقه‌مند" {% if filters.tag == 'علاقه‌مند' %}selected{% endif %}>علاقه‌مند</option>
-                    <option value="رد" {% if filters.tag == 'رد' %}selected{% endif %}>رد</option>
-                </select>
-            </div>
+    <div class="mk-filter-advanced mk-filter-advanced--pro{% if filters_open %} is-open{% endif %}" id="wsAdvPanel"{% if not filters_open %} hidden{% endif %}>
+        <div class="mk-filter-adv-deck">
+            <section class="mk-filter-card" aria-labelledby="fltSearchLbl">
+                <header class="mk-filter-card__head">
+                    <span class="mk-filter-card__ico" aria-hidden="true"><i class="fas fa-magnifying-glass"></i></span>
+                    <div>
+                        <h3 class="mk-filter-card__title" id="fltSearchLbl">جستجوی دقیق</h3>
+                        <p class="mk-filter-card__hint">شناسه، توضیح و برچسب</p>
+                    </div>
+                </header>
+                <div class="mk-filter-adv-grid mk-filter-adv-grid-3">
+                    <label class="mk-filter-field">
+                        <span class="mk-filter-field__lbl">شناسه</span>
+                        <input type="text" name="token" value="{{ filters.token }}" class="mk-filter-inp" placeholder="مثلاً A123…" autocomplete="off">
+                    </label>
+                    <label class="mk-filter-field">
+                        <span class="mk-filter-field__lbl">توضیحات</span>
+                        <input type="text" name="desc" value="{{ filters.desc }}" class="mk-filter-inp" placeholder="کلمه در توضیحات" autocomplete="off">
+                    </label>
+                    <label class="mk-filter-field">
+                        <span class="mk-filter-field__lbl">برچسب</span>
+                        <select name="tag" class="mk-filter-select">
+                            <option value="">همه</option>
+                            <option value="تماس" {% if filters.tag == 'تماس' %}selected{% endif %}>تماس</option>
+                            <option value="بازدید" {% if filters.tag == 'بازدید' %}selected{% endif %}>بازدید</option>
+                            <option value="علاقه‌مند" {% if filters.tag == 'علاقه‌مند' %}selected{% endif %}>علاقه‌مند</option>
+                            <option value="رد" {% if filters.tag == 'رد' %}selected{% endif %}>رد</option>
+                        </select>
+                    </label>
+                </div>
+            </section>
+
+            <section class="mk-filter-card" aria-labelledby="fltRoomsLbl">
+                <header class="mk-filter-card__head">
+                    <span class="mk-filter-card__ico" aria-hidden="true"><i class="fas fa-bed"></i></span>
+                    <div>
+                        <h3 class="mk-filter-card__title" id="fltRoomsLbl">اتاق</h3>
+                        <p class="mk-filter-card__hint">انتخاب سریع یا ورود دستی</p>
+                    </div>
+                </header>
+                <div class="mk-filter-room-row">
+                    <div class="mk-filter-seg" data-room-chips role="group" aria-label="تعداد اتاق">
+                        <button type="button" class="mk-filter-seg__btn{% if not filters.rooms %} is-active{% endif %}" data-room="">همه</button>
+                        <button type="button" class="mk-filter-seg__btn{% if filters.rooms == '1' %} is-active{% endif %}" data-room="1">۱</button>
+                        <button type="button" class="mk-filter-seg__btn{% if filters.rooms == '2' %} is-active{% endif %}" data-room="2">۲</button>
+                        <button type="button" class="mk-filter-seg__btn{% if filters.rooms == '3' %} is-active{% endif %}" data-room="3">۳</button>
+                        <button type="button" class="mk-filter-seg__btn{% if filters.rooms == '4' or filters.rooms == '۴' %} is-active{% endif %}" data-room="4">۴+</button>
+                    </div>
+                    <label class="mk-filter-field mk-filter-field--compact">
+                        <span class="mk-filter-field__lbl">دستی</span>
+                        <input type="text" name="rooms" id="wsFilterRooms" value="{{ filters.rooms }}" class="mk-filter-inp" placeholder="مثلاً ۳" autocomplete="off" inputmode="numeric">
+                    </label>
+                </div>
+            </section>
+
+            <section class="mk-filter-card" aria-labelledby="fltRangeLbl">
+                <header class="mk-filter-card__head">
+                    <span class="mk-filter-card__ico" aria-hidden="true"><i class="fas fa-sliders"></i></span>
+                    <div>
+                        <h3 class="mk-filter-card__title" id="fltRangeLbl">محدوده‌ها</h3>
+                        <p class="mk-filter-card__hint">متراژ، قیمت و سال ساخت</p>
+                    </div>
+                </header>
+                <div class="mk-filter-ranges mk-filter-ranges--pro">
+                    <div class="mk-range">
+                        <span>متراژ</span>
+                        <input type="text" name="area_min" value="{{ filters.area_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                        <i>—</i>
+                        <input type="text" name="area_max" value="{{ filters.area_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                    </div>
+                    {% if tx.show_price %}
+                    <div class="mk-range">
+                        <span>قیمت</span>
+                        <input type="text" name="price_min" value="{{ filters.price_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                        <i>—</i>
+                        <input type="text" name="price_max" value="{{ filters.price_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                    </div>
+                    {% endif %}
+                    {% if tx.show_deposit %}
+                    <div class="mk-range">
+                        <span>ودیعه</span>
+                        <input type="text" name="deposit_min" value="{{ filters.deposit_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                        <i>—</i>
+                        <input type="text" name="deposit_max" value="{{ filters.deposit_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                    </div>
+                    {% endif %}
+                    {% if tx.show_rent %}
+                    <div class="mk-range">
+                        <span>اجاره</span>
+                        <input type="text" name="rent_min" value="{{ filters.rent_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                        <i>—</i>
+                        <input type="text" name="rent_max" value="{{ filters.rent_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                    </div>
+                    {% endif %}
+                    <div class="mk-range">
+                        <span>ساخت</span>
+                        <input type="text" name="year_min" value="{{ filters.year_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                        <i>—</i>
+                        <input type="text" name="year_max" value="{{ filters.year_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                    </div>
+                </div>
+                <div class="mk-filter-value-block">
+                    <span class="mk-filter-field__lbl">ارزش نسبت به بازار</span>
+                    <div class="mk-filter-seg mk-filter-seg--wrap" role="radiogroup" aria-label="ارزش بازار">
+                        <label class="mk-filter-seg__btn{% if not filters.value %} is-active{% endif %}">
+                            <input type="radio" name="value" value="" {% if not filters.value %}checked{% endif %}>
+                            <span>همه</span>
+                        </label>
+                        <label class="mk-filter-seg__btn{% if filters.value == 'below' %} is-active{% endif %}">
+                            <input type="radio" name="value" value="below" {% if filters.value == 'below' %}checked{% endif %}>
+                            <span>زیر بازار</span>
+                        </label>
+                        <label class="mk-filter-seg__btn{% if filters.value == 'fair' %} is-active{% endif %}">
+                            <input type="radio" name="value" value="fair" {% if filters.value == 'fair' %}checked{% endif %}>
+                            <span>متعارف</span>
+                        </label>
+                        <label class="mk-filter-seg__btn{% if filters.value == 'above' %} is-active{% endif %}">
+                            <input type="radio" name="value" value="above" {% if filters.value == 'above' %}checked{% endif %}>
+                            <span>بالای بازار</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mk-filter-card" aria-labelledby="fltAmenLbl">
+                <header class="mk-filter-card__head">
+                    <span class="mk-filter-card__ico" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
+                    <div>
+                        <h3 class="mk-filter-card__title" id="fltAmenLbl">امکانات</h3>
+                        <p class="mk-filter-card__hint">فقط آگهی‌هایی که این امکانات را دارند</p>
+                    </div>
+                </header>
+                <div class="mk-filter-amenity-checks" role="group" aria-label="امکانات ملک">
+                    <label class="mk-filter-check{% if filters.elevator == '1' %} is-on{% endif %}">
+                        <input type="checkbox" name="elevator" value="1" {% if filters.elevator == '1' %}checked{% endif %}>
+                        <span class="mk-filter-check__box" aria-hidden="true"><i class="fas fa-check"></i></span>
+                        <span class="mk-filter-check__ico" aria-hidden="true"><i class="fas fa-elevator"></i></span>
+                        <span class="mk-filter-check__txt">آسانسور</span>
+                    </label>
+                    <label class="mk-filter-check{% if filters.parking == '1' %} is-on{% endif %}">
+                        <input type="checkbox" name="parking" value="1" {% if filters.parking == '1' %}checked{% endif %}>
+                        <span class="mk-filter-check__box" aria-hidden="true"><i class="fas fa-check"></i></span>
+                        <span class="mk-filter-check__ico" aria-hidden="true"><i class="fas fa-square-parking"></i></span>
+                        <span class="mk-filter-check__txt">پارکینگ</span>
+                    </label>
+                    <label class="mk-filter-check{% if filters.storage == '1' %} is-on{% endif %}">
+                        <input type="checkbox" name="storage" value="1" {% if filters.storage == '1' %}checked{% endif %}>
+                        <span class="mk-filter-check__box" aria-hidden="true"><i class="fas fa-check"></i></span>
+                        <span class="mk-filter-check__ico" aria-hidden="true"><i class="fas fa-box-archive"></i></span>
+                        <span class="mk-filter-check__txt">انباری</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="mk-filter-card" aria-labelledby="fltExtraLbl">
+                <header class="mk-filter-card__head">
+                    <span class="mk-filter-card__ico" aria-hidden="true"><i class="fas fa-bookmark"></i></span>
+                    <div>
+                        <h3 class="mk-filter-card__title" id="fltExtraLbl">سایر</h3>
+                        <p class="mk-filter-card__hint">علاقه‌مندی، تکراری، موقعیت</p>
+                    </div>
+                </header>
+                <div class="mk-filter-amenity-checks mk-filter-amenity-checks--soft" role="group" aria-label="فیلترهای دیگر">
+                    <label class="mk-filter-check{% if filters.favorites == '1' %} is-on{% endif %}">
+                        <input type="checkbox" name="favorites" value="1" {% if filters.favorites == '1' %}checked{% endif %}>
+                        <span class="mk-filter-check__box" aria-hidden="true"><i class="fas fa-check"></i></span>
+                        <span class="mk-filter-check__ico" aria-hidden="true"><i class="fas fa-star"></i></span>
+                        <span class="mk-filter-check__txt">علاقه‌مند</span>
+                    </label>
+                    <label class="mk-filter-check{% if filters.duplicates == '1' %} is-on{% endif %}">
+                        <input type="checkbox" name="duplicates" value="1" {% if filters.duplicates == '1' %}checked{% endif %}>
+                        <span class="mk-filter-check__box" aria-hidden="true"><i class="fas fa-check"></i></span>
+                        <span class="mk-filter-check__ico" aria-hidden="true"><i class="fas fa-clone"></i></span>
+                        <span class="mk-filter-check__txt">تکراری</span>
+                    </label>
+                    <label class="mk-filter-check{% if filters.has_geo == '1' %} is-on{% endif %}">
+                        <input type="checkbox" name="has_geo" value="1" {% if filters.has_geo == '1' %}checked{% endif %}>
+                        <span class="mk-filter-check__box" aria-hidden="true"><i class="fas fa-check"></i></span>
+                        <span class="mk-filter-check__ico" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
+                        <span class="mk-filter-check__txt">با موقعیت</span>
+                    </label>
+                </div>
+            </section>
         </div>
-        <div class="mk-filter-adv-section">
-            <span class="mk-filter-adv-label">محدوده‌ها</span>
-            <div class="mk-filter-ranges">
-                <div class="mk-range">
-                    <span>متراژ</span>
-                    <input type="text" name="area_min" value="{{ filters.area_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
-                    <i>—</i>
-                    <input type="text" name="area_max" value="{{ filters.area_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
-                </div>
-                {% if tx.show_price %}
-                <div class="mk-range">
-                    <span>قیمت</span>
-                    <input type="text" name="price_min" value="{{ filters.price_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
-                    <i>—</i>
-                    <input type="text" name="price_max" value="{{ filters.price_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
-                </div>
-                {% endif %}
-                {% if tx.show_deposit %}
-                <div class="mk-range">
-                    <span>ودیعه</span>
-                    <input type="text" name="deposit_min" value="{{ filters.deposit_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
-                    <i>—</i>
-                    <input type="text" name="deposit_max" value="{{ filters.deposit_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
-                </div>
-                {% endif %}
-                {% if tx.show_rent %}
-                <div class="mk-range">
-                    <span>اجاره</span>
-                    <input type="text" name="rent_min" value="{{ filters.rent_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
-                    <i>—</i>
-                    <input type="text" name="rent_max" value="{{ filters.rent_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
-                </div>
-                {% endif %}
-                <div class="mk-range">
-                    <span>ساخت</span>
-                    <input type="text" name="year_min" value="{{ filters.year_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
-                    <i>—</i>
-                    <input type="text" name="year_max" value="{{ filters.year_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
-                </div>
-                <select name="value" class="mk-filter-select mk-filter-select-narrow" aria-label="ارزش">
-                    <option value="">ارزش</option>
-                    <option value="below" {% if filters.value == 'below' %}selected{% endif %}>زیر بازار</option>
-                    <option value="fair" {% if filters.value == 'fair' %}selected{% endif %}>متعارف</option>
-                    <option value="above" {% if filters.value == 'above' %}selected{% endif %}>بالای بازار</option>
-                </select>
-            </div>
-        </div>
-        <div class="mk-filter-adv-section mk-filter-adv-section-row">
-            <span class="mk-filter-adv-label">امکانات</span>
-            <div class="mk-filter-amenities">
-                <select name="elevator" class="mk-filter-select" title="آسانسور">
-                    <option value="">آسانسور</option>
-                    <option value="1" {% if filters.elevator == '1' %}selected{% endif %}>دارد</option>
-                    <option value="0" {% if filters.elevator == '0' %}selected{% endif %}>ندارد</option>
-                </select>
-                <select name="parking" class="mk-filter-select" title="پارکینگ">
-                    <option value="">پارکینگ</option>
-                    <option value="1" {% if filters.parking == '1' %}selected{% endif %}>دارد</option>
-                    <option value="0" {% if filters.parking == '0' %}selected{% endif %}>ندارد</option>
-                </select>
-                <select name="storage" class="mk-filter-select" title="انباری">
-                    <option value="">انباری</option>
-                    <option value="1" {% if filters.storage == '1' %}selected{% endif %}>دارد</option>
-                    <option value="0" {% if filters.storage == '0' %}selected{% endif %}>ندارد</option>
-                </select>
-            </div>
-            <div class="mk-filter-pills">
-                <label class="mk-pill"><input type="checkbox" name="favorites" value="1" {% if filters.favorites == '1' %}checked{% endif %}><span>⭐ علاقه‌مند</span></label>
-                <label class="mk-pill"><input type="checkbox" name="duplicates" value="1" {% if filters.duplicates == '1' %}checked{% endif %}><span>تکراری</span></label>
-                <label class="mk-pill"><input type="checkbox" name="has_geo" value="1" {% if filters.has_geo == '1' %}checked{% endif %}><span>📍 موقعیت</span></label>
-            </div>
+
+        <div class="mk-filter-adv-foot">
+            {% if filter_count and filter_reset_url %}
+            <a href="{{ filter_reset_url }}" class="mk-filter-adv-clear">پاک کردن فیلترها</a>
+            {% else %}
+            <span></span>
+            {% endif %}
+            <button type="submit" class="mk-filter-apply mk-filter-apply--foot">اعمال فیلترها</button>
         </div>
     </div>
 
@@ -130,6 +235,9 @@
         {% if filters.q %}<span class="mk-filter-chip">جستجو: {{ filters.q|truncatechars:20 }}</span>{% endif %}
         {% if filters.neighborhood %}<span class="mk-filter-chip">محله: {{ filters.neighborhood }}</span>{% endif %}
         {% if filters.consultant == '1' %}<span class="mk-filter-chip">مشاور</span>{% elif filters.consultant == 'genuine_personal' %}<span class="mk-filter-chip">مالک واقعی</span>{% elif filters.consultant == 'disguised_consultant' %}<span class="mk-filter-chip">مشاور پنهان</span>{% elif filters.consultant == '0' %}<span class="mk-filter-chip">شخصی</span>{% endif %}
+        {% if filters.elevator == '1' %}<span class="mk-filter-chip">آسانسور</span>{% endif %}
+        {% if filters.parking == '1' %}<span class="mk-filter-chip">پارکینگ</span>{% endif %}
+        {% if filters.storage == '1' %}<span class="mk-filter-chip">انباری</span>{% endif %}
         {% if filters.value == 'below' %}<span class="mk-filter-chip">زیر بازار</span>{% elif filters.value == 'fair' %}<span class="mk-filter-chip">متعارف</span>{% elif filters.value == 'above' %}<span class="mk-filter-chip">بالای بازار</span>{% endif %}
         {% if advanced_filter_count %}<span class="mk-filter-chip mk-filter-chip-muted">+{{ advanced_filter_count }} فیلتر دیگر</span>{% endif %}
     </div>
@@ -138,3 +246,46 @@
     <input type="hidden" name="sort" value="{{ filters.sort }}">
     <input type="hidden" name="filters_open" id="filtersOpenField" value="{% if filters_open %}1{% else %}0{% endif %}">
 </form>
+<script>
+(function () {
+    var form = document.getElementById('wsFilterForm');
+    if (!form) return;
+    var roomsInput = document.getElementById('wsFilterRooms');
+    var chips = form.querySelector('[data-room-chips]');
+    if (chips && roomsInput) {
+        chips.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-room]');
+            if (!btn) return;
+            e.preventDefault();
+            roomsInput.value = btn.getAttribute('data-room') || '';
+            chips.querySelectorAll('.mk-filter-seg__btn').forEach(function (b) {
+                b.classList.toggle('is-active', b === btn);
+            });
+        });
+        roomsInput.addEventListener('input', function () {
+            var v = (roomsInput.value || '').trim();
+            chips.querySelectorAll('.mk-filter-seg__btn').forEach(function (b) {
+                var rv = b.getAttribute('data-room') || '';
+                b.classList.toggle('is-active', rv === v || (rv === '4' && (v === '4' || v === '۴' || v.indexOf('4') === 0)));
+            });
+        });
+    }
+    form.querySelectorAll('.mk-filter-check input[type="checkbox"]').forEach(function (inp) {
+        var sync = function () {
+            var lab = inp.closest('.mk-filter-check');
+            if (lab) lab.classList.toggle('is-on', inp.checked);
+        };
+        inp.addEventListener('change', sync);
+        sync();
+    });
+    form.querySelectorAll('.mk-filter-seg--wrap input[type="radio"]').forEach(function (inp) {
+        var sync = function () {
+            form.querySelectorAll('.mk-filter-seg--wrap .mk-filter-seg__btn').forEach(function (lab) {
+                var r = lab.querySelector('input[type="radio"]');
+                lab.classList.toggle('is-active', !!(r && r.checked));
+            });
+        };
+        inp.addEventListener('change', sync);
+    });
+})();
+</script>

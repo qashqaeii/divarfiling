@@ -308,6 +308,10 @@ function initPropertyDealMode(root) {
         const tenantPanels = form.querySelectorAll('[data-tenant-panel]');
         const vacantCheckbox = form.querySelector('[data-vacant-checkbox], [name="is_vacant"]');
         const tenantInputs = form.querySelectorAll('[data-tenant-field], [name="tenant_phone"], [name="tenant_name"]');
+        const occShell = form.querySelector('[data-occ-shell]');
+        const occBtns = form.querySelectorAll('[data-occ-set]');
+        const occPill = form.querySelector('[data-occ-pill]');
+        const occConfirm = form.querySelector('[data-occ-confirm]');
 
         const PROFILES = {
             'فروش': {
@@ -396,6 +400,26 @@ function initPropertyDealMode(root) {
             perSqmEl.innerHTML = `<i class="fas fa-calculator" aria-hidden="true"></i> حدود <strong>${formatToman(price / area)}</strong> تومان در هر متر`;
         }
 
+        function syncOccupancyUI() {
+            const vacantOn = !!(vacantCheckbox && vacantCheckbox.checked);
+            if (occShell) {
+                occShell.classList.toggle('is-vacant', vacantOn);
+                occShell.classList.toggle('is-occupied', !vacantOn);
+            }
+            occBtns.forEach((btn) => {
+                const wantVacant = btn.getAttribute('data-occ-set') === '1';
+                const active = wantVacant === vacantOn;
+                btn.classList.toggle('is-active', active);
+                btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+            if (occPill) {
+                occPill.textContent = vacantOn ? 'تخلیه' : 'دارای مستاجر';
+            }
+            if (occConfirm) {
+                occConfirm.hidden = !vacantOn;
+            }
+        }
+
         function apply(mode) {
             const profile = PROFILES[mode] || PROFILES['فروش'];
             const show = (els, on) => els.forEach(el => el.classList.toggle('hidden', !on));
@@ -412,6 +436,7 @@ function initPropertyDealMode(root) {
                     else if ('value' in el) el.value = '';
                 });
             }
+            if (profile.showVacant) syncOccupancyUI();
             if (priceSection) {
                 priceSection.dataset.dealMode = mode || '';
             }
@@ -434,6 +459,13 @@ function initPropertyDealMode(root) {
         if (vacantCheckbox) {
             vacantCheckbox.addEventListener('change', () => apply(dealSelect.value));
         }
+        occBtns.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                if (!vacantCheckbox) return;
+                vacantCheckbox.checked = btn.getAttribute('data-occ-set') === '1';
+                vacantCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        });
         if (saleInput) saleInput.addEventListener('input', updatePerSqm);
         if (areaInput) areaInput.addEventListener('input', updatePerSqm);
     });

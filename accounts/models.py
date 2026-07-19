@@ -543,9 +543,9 @@ class RecoveryAttribution(models.Model):
         verbose_name_plural = 'نسبت‌دهی‌های بازیابی'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['status', 'attribution_model']),
-            models.Index(fields=['user', 'status']),
-            models.Index(fields=['abandon_order', 'status']),
+            models.Index(fields=['status', 'attribution_model'], name='accounts_re_status_8d4f2a_idx'),
+            models.Index(fields=['user', 'status'], name='accounts_re_user_id_5c91bb_idx'),
+            models.Index(fields=['abandon_order', 'status'], name='accounts_re_abandon_2e8c11_idx'),
         ]
 
     def __str__(self):

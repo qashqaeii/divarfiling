@@ -46,6 +46,10 @@ from accounts.services.admin_plan_conversion import (
     build_plan_conversion_json,
     get_plan_conversion_context,
 )
+from accounts.services.admin_recovery_center import (
+    build_recovery_center_json,
+    get_recovery_center_context,
+)
 from accounts.services.admin_phonebook_sync import (
     PhonebookSyncError,
     get_phonebook_sync_status,
@@ -484,5 +488,42 @@ class AdminPlanConversionJsonView(StaffRequiredMixin, View):
             stamp = timezone.now().strftime('%Y%m%d_%H%M')
             response['Content-Disposition'] = (
                 f'attachment; filename="plan-conversion-{days}d-{stamp}.json"'
+            )
+        return response
+
+
+class AdminRecoveryCenterView(StaffRequiredMixin, TemplateView):
+    """Recovery Center — قیف بازیابی، Journey، Health و Explorer."""
+
+    template_name = 'accounts/admin_recovery_center.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        days = _parse_int(self.request.GET.get('days'), 30, minimum=7, maximum=365)
+        page = _parse_int(self.request.GET.get('page'), 1, minimum=1, maximum=9999)
+        data = get_recovery_center_context(days=days, page=page)
+        ctx.update(data)
+        ctx['recovery_center_json'] = json.dumps(
+            build_recovery_center_json(days=days, page=page),
+            ensure_ascii=False,
+            default=str,
+        )
+        ctx['page'] = page
+        return ctx
+
+
+class AdminRecoveryCenterJsonView(StaffRequiredMixin, View):
+    """JSON data product — Recovery Center."""
+
+    def get(self, request):
+        days = _parse_int(request.GET.get('days'), 30, minimum=7, maximum=365)
+        page = _parse_int(request.GET.get('page'), 1, minimum=1, maximum=9999)
+        payload = build_recovery_center_json(days=days, page=page)
+        download = request.GET.get('download', '0') not in ('0', 'false', 'no', '')
+        response = JsonResponse(payload, json_dumps_params={'ensure_ascii': False, 'indent': 2})
+        if download:
+            stamp = timezone.now().strftime('%Y%m%d_%H%M')
+            response['Content-Disposition'] = (
+                f'attachment; filename="recovery-center-{days}d-{stamp}.json"'
             )
         return response

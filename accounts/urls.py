@@ -18,6 +18,8 @@ from .admin_views import (
     AdminPhonebookSyncView,
     AdminPlanConversionJsonView,
     AdminPlanConversionView,
+    AdminRecoveryCenterJsonView,
+    AdminRecoveryCenterView,
     AdminSystemSummaryView,
 )
 
@@ -57,6 +59,12 @@ urlpatterns = [
         'admin-panel/plan-conversion.json',
         AdminPlanConversionJsonView.as_view(),
         name='admin_panel_plan_conversion_json',
+    ),
+    path('admin-panel/recovery-center/', AdminRecoveryCenterView.as_view(), name='admin_panel_recovery_center'),
+    path(
+        'admin-panel/recovery-center.json',
+        AdminRecoveryCenterJsonView.as_view(),
+        name='admin_panel_recovery_center_json',
     ),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path(

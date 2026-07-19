@@ -81,6 +81,7 @@
                 <a href="#ecc-command" class="ecc-nav-item is-active"><i class="fas fa-gauge-high"></i> فرمان</a>
                 <a href="#ecc-revenue" class="ecc-nav-item"><i class="fas fa-chart-area"></i> درآمد</a>
                 <a href="#ecc-plan-conversion" class="ecc-nav-item"><i class="fas fa-filter-circle-dollar"></i> تبدیل پلن</a>
+                <a href="#ecc-recovery" class="ecc-nav-item"><i class="fas fa-rotate-left"></i> Recovery</a>
                 <a href="#ecc-users" class="ecc-nav-item"><i class="fas fa-users"></i> کاربران</a>
                 <a href="#ecc-sales" class="ecc-nav-item">
                     <i class="fas fa-cart-shopping"></i> فروش
@@ -242,6 +243,22 @@
                         </article>
                         {% endfor %}
                     </div>
+                </section>
+
+                {# ─── 4c. Recovery Center ─── #}
+                <section class="ecc-section" id="ecc-recovery" aria-labelledby="eccRecoveryTitle">
+                    <div class="ecc-section-head">
+                        <div>
+                            <h2 id="eccRecoveryTitle"><i class="fas fa-rotate-left"></i> Recovery Center</h2>
+                            <p>قیف بازیابی Checkout، Journey SMS، سلامت موتور و Explorer — Revenue Intelligence</p>
+                        </div>
+                        <a href="{% url 'admin_panel_recovery_center' %}?days={{ chart_days }}" class="ecc-btn ecc-btn--primary">
+                            <i class="fas fa-chart-line"></i> پنل Recovery
+                        </a>
+                    </div>
+                    <p style="margin:0;opacity:.75;font-size:0.92rem">
+                        Recovered Revenue پس از فاز Attribution (Strict + Assisted) — MVP با placeholder شفاف.
+                    </p>
                 </section>
 
                 {# ─── 5. Users Analytics ─── #}

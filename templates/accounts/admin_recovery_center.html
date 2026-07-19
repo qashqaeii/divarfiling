@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% block title %}Recovery Center | پنل مدیریت{% endblock %}
+
+{% block body_class %}mk-admin-dashboard ab-luxe arc-luxe{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/admin-recovery-center.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="ab-page arc-page">
+
+    <div class="ab-ambient arc-ambient" aria-hidden="true">
+        <span class="ab-orb ab-orb--1 arc-orb--amber"></span>
+        <span class="ab-orb ab-orb--2"></span>
+        <span class="ab-orb ab-orb--3 arc-orb--teal"></span>
+        <span class="arc-grid-lines"></span>
+        <span class="ab-grain"></span>
+    </div>
+
+    <header class="ab-hero arc-hero">
+        <div class="ab-hero__main">
+            <div class="ab-hero__top">
+                <a href="{% url 'admin_panel' %}#ecc-recovery" class="ab-back">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>بازگشت به داشبورد</span>
+                </a>
+                <div class="ab-hero__badges">
+                    <span class="ab-pill ab-pill--live"><span class="ab-pill__dot"></span> Recovery Intelligence</span>
+                    <span class="ab-pill arc-pill--amber">Decision Layer v1</span>
+                </div>
+            </div>
+            <div class="ab-hero__body">
+                <p class="ab-hero__eyebrow arc-eyebrow">Revenue Intelligence</p>
+                <h1 class="ab-hero__title">Recovery <em>Center</em></h1>
+                <p class="ab-hero__lead">قیف بازیابی Checkout، عملکرد Journey، سلامت موتور و Explorer — بدون ارسال دستی.</p>
+                <p class="arc-period">
+                    <i class="fas fa-calendar-day"></i>
+                    بازه: <strong>{{ summary.period_start_jalali }}</strong>
+                    تا <strong>{{ summary.period_end_jalali }}</strong>
+                    <span class="arc-period__sep">·</span>
+                    به‌روزرسانی: {{ summary.generated_at_jalali }}
+                </p>
+            </div>
+            <div class="ab-hero__actions arc-hero-actions">
+                <div class="arc-range" role="group" aria-label="بازه زمانی">
+                    <a href="?days=7" class="arc-range-btn{% if days == 7 %} is-active{% endif %}">۷ روز</a>
+                    <a href="?days=30" class="arc-range-btn{% if days == 30 %} is-active{% endif %}">۳۰ روز</a>
+                    <a href="?days=90" class="arc-range-btn{% if days == 90 %} is-active{% endif %}">۹۰ روز</a>
+                </div>
+                <a href="{% url 'admin_panel_recovery_center_json' %}?days={{ days }}&page={{ page }}&download=1" class="ab-btn ab-btn--gold arc-btn-minimal">
+                    <i class="fas fa-file-code"></i><span>دانلود JSON</span>
+                </a>
+                <a href="{% url 'admin_panel_plan_conversion' %}?days={{ days }}" class="ab-btn ab-btn--ghost arc-btn-minimal">
+                    <i class="fas fa-filter-circle-dollar"></i><span>Plan Conversion</span>
+                </a>
+            </div>
+        </div>
+        <div class="ab-hero__visual arc-hero-visual" aria-hidden="true">
+            <div class="arc-freshness">
+                <span class="arc-freshness__label">تازگی داده</span>
+                <ul>
+                    <li><small>آخرین abandon</small><strong>{% if data_freshness.last_event_at %}✓{% else %}—{% endif %}</strong></li>
+                    <li><small>آخرین run</small><strong>{% if data_freshness.last_recovery_run_at %}✓{% else %}—{% endif %}</strong></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <nav class="arc-tabs" id="arc-tabs" aria-label="بخش‌های Recovery Center">
+        <button type="button" class="arc-tab is-active" data-tab="funnel">Funnel</button>
+        <button type="button" class="arc-tab" data-tab="journey">Journey</button>
+        <button type="button" class="arc-tab" data-tab="health">Health</button>
+        <button type="button" class="arc-tab" data-tab="explorer">Explorer</button>
+    </nav>
+
+    {# ─── Tab: Funnel ─── #}
+    <section class="arc-panel is-active" id="arc-panel-funnel" data-panel="funnel">
+        <div class="arc-kpi-grid" aria-label="شاخص‌های Executive">
+            <article class="arc-kpi">
+                <span class="arc-kpi__val">{{ summary.abandoned|currency }}</span>
+                <span class="arc-kpi__lbl">Abandoned</span>
+            </article>
+            <article class="arc-kpi">
+                <span class="arc-kpi__val">{{ summary.eligible_now|currency }}</span>
+                <span class="arc-kpi__lbl">Eligible (now)</span>
+            </article>
+            <article class="arc-kpi">
+                <span class="arc-kpi__val">{{ summary.sms_accepted|currency }}</span>
+                <span class="arc-kpi__lbl">SMS Accepted</span>
+            </article>
+            <article class="arc-kpi">
+                <span class="arc-kpi__val">{{ summary.sms_delivered|currency }}</span>
+                <span class="arc-kpi__lbl">SMS Delivered</span>
+            </article>
+            <article class="arc-kpi arc-kpi--pending" title="فاز ۲ — Strict Attribution">
+                <span class="arc-kpi__val">—</span>
+                <span class="arc-kpi__lbl">Recovered <i class="fas fa-circle-info" aria-hidden="true"></i></span>
+            </article>
+            <article class="arc-kpi arc-kpi--pending" title="فاز ۲ — Strict Attribution">
+                <span class="arc-kpi__val">—</span>
+                <span class="arc-kpi__lbl">Revenue <i class="fas fa-circle-info" aria-hidden="true"></i></span>
+            </article>
+        </div>
+
+        <div class="arc-alert arc-alert--info">
+            <i class="fas fa-chart-line"></i>
+            <span>Recovered Revenue پس از فاز Attribution (Strict: همان order abandon · Assisted: fallback journey) نمایش داده می‌شود.</span>
+        </div>
+
+        <div class="arc-funnel-list">
+            {% for stage in funnel.stages %}
+            <div class="arc-funnel-row{% if not stage.available %} arc-funnel-row--muted{% endif %}">
+                <div class="arc-funnel-row__label">{{ stage.label }}</div>
+                <div class="arc-funnel-row__count">
+                    {% if stage.count != None %}{{ stage.count|currency }}{% else %}—{% endif %}
+                </div>
+                <div class="arc-funnel-row__conv">
+                    {% if stage.conversion_from_prev != None %}
+                    {{ stage.conversion_from_prev|to_persian_digits }}٪ از مرحله قبل
+                    {% elif stage.note %}
+                    <span class="arc-muted">{{ stage.note }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {# ─── Tab: Journey ─── #}
+    <section class="arc-panel" id="arc-panel-journey" data-panel="journey" hidden>
+        <div class="arc-table-wrap">
+            <table class="arc-table">
+                <thead>
+                    <tr>
+                        <th>Journey</th>
+                        <th>Sent</th>
+                        <th>Failed</th>
+                        <th>Suppressed</th>
+                        <th>Eligible now</th>
+                        <th>Paid</th>
+                        <th>Conv.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in journey %}
+                    <tr>
+                        <td><strong>{{ row.label }}</strong></td>
+                        <td>{{ row.sent|currency }}</td>
+                        <td>{{ row.failed|currency }}</td>
+                        <td>{{ row.suppressed|currency }}</td>
+                        <td>{{ row.eligible_snapshot|currency }}</td>
+                        <td class="arc-muted">—</td>
+                        <td class="arc-muted">—</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {# ─── Tab: Health ─── #}
+    <section class="arc-panel" id="arc-panel-health" data-panel="health" hidden>
+        <div class="arc-health-grid">
+            <article class="arc-health-card">
+                <h3><i class="fas fa-power-off"></i> Recovery Engine</h3>
+                <p class="arc-health-status arc-health-status--{% if health.recovery_engine.flow_enabled %}ok{% else %}warn{% endif %}">
+                    {% if health.recovery_engine.flow_enabled %}ON{% else %}OFF{% endif %}
+                </p>
+                <ul class="arc-health-meta">
+                    <li>Live send: {% if health.recovery_engine.live_send_enabled %}فعال{% else %}غیرفعال{% endif %}</li>
+                    <li>Test only: {% if health.recovery_engine.test_only %}بله{% else %}خیر{% endif %}</li>
+                </ul>
+            </article>
+
+            <article class="arc-health-card">
+                <h3><i class="fas fa-clock"></i> record_checkout_abandons</h3>
+                <p>{{ health.record_checkout_abandons.last_signal_label }}</p>
+                <small class="arc-muted">{{ health.record_checkout_abandons.note }}</small>
+            </article>
+
+            <article class="arc-health-card">
+                <h3><i class="fas fa-rotate"></i> run_pending_recovery</h3>
+                <p>{{ health.run_pending_recovery.last_run_label }}</p>
+                {% if health.run_pending_recovery.last_mode %}
+                <small>{{ health.run_pending_recovery.last_mode }} · {{ health.run_pending_recovery.last_status }}</small>
+                {% endif %}
+            </article>
+
+            <article class="arc-health-card">
+                <h3><i class="fas fa-comment-sms"></i> SMS Provider</h3>
+                {% if health.sms_provider.ok %}
+                <p class="arc-health-status arc-health-status--ok">Connected</p>
+                <small>
+                    {% if health.sms_provider.sms_count is not None %}
+                    {{ health.sms_provider.sms_count|currency }} پیامک
+                    {% else %}
+                    {{ health.sms_provider.credit|floatformat:0|currency }} ت
+                    {% endif %}
+                </small>
+                {% else %}
+                <p class="arc-health-status arc-health-status--warn">خطا / نامشخص</p>
+                {% endif %}
+            </article>
+
+            <article class="arc-health-card">
+                <h3><i class="fas fa-list-ol"></i> Queue</h3>
+                <p class="arc-health-queue">{{ health.queue|currency }}</p>
+                <small>would_send الان</small>
+            </article>
+
+            <article class="arc-health-card">
+                <h3><i class="fas fa-triangle-exclamation"></i> Errors (24h)</h3>
+                <p class="arc-health-status arc-health-status--{% if health.errors_24h %}warn{% else %}ok{% endif %}">
+                    {{ health.errors_24h|currency }}
+                </p>
+            </article>
+        </div>
+
+        <div class="arc-dq">
+            <h3><i class="fas fa-database"></i> Recovery Data Quality</h3>
+            <ul class="arc-dq-list">
+                <li>
+                    <span>checkout_abandon بدون user</span>
+                    <strong>{{ data_quality.checkout_abandon_without_user_pct|to_persian_digits }}٪</strong>
+                </li>
+                <li>
+                    <span>SMS بدون order</span>
+                    <strong>{{ data_quality.sms_without_order|currency }}</strong>
+                </li>
+                <li>
+                    <span>ActionLog بدون step</span>
+                    <strong>{{ data_quality.action_log_missing_step|currency }}</strong>
+                </li>
+                <li>
+                    <span>Duplicate attribution</span>
+                    <strong>{{ data_quality.duplicate_attribution|currency }}</strong>
+                    <small class="arc-muted">{{ data_quality.duplicate_attribution_note }}</small>
+                </li>
+            </ul>
+            {% for w in data_quality.warnings %}
+            <div class="arc-alert arc-alert--warn">{{ w.message }}</div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {# ─── Tab: Explorer ─── #}
+    <section class="arc-panel" id="arc-panel-explorer" data-panel="explorer" hidden>
+        <p class="arc-muted arc-explorer-note">فقط مشاهده — بدون ارسال. Attribution status: pending تا فاز ۲.</p>
+        <div class="arc-table-wrap">
+            <table class="arc-table arc-table--compact">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Order</th>
+                        <th>Step</th>
+                        <th>Action</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in explorer.rows %}
+                    <tr>
+                        <td>{% if row.user_id %}{{ row.user_id|to_persian_digits }}{% else %}—{% endif %}</td>
+                        <td>{% if row.order_id %}#{{ row.order_id|to_persian_digits }}{% else %}—{% endif %}</td>
+                        <td>{{ row.step_label }}</td>
+                        <td>{{ row.action_label }}</td>
+                        <td>{{ row.created_at|slice:":16"|to_persian_digits }}</td>
+                        <td>{{ row.status_label }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="arc-muted">رکوردی در این بازه نیست.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if explorer.pages > 1 %}
+        <nav class="arc-pagination" aria-label="صفحه Explorer">
+            {% if page > 1 %}
+            <a href="?days={{ days }}&page={{ page|add:'-1' }}#arc-panel-explorer">قبلی</a>
+            {% endif %}
+            <span>{{ page|to_persian_digits }} / {{ explorer.pages|to_persian_digits }}</span>
+            {% if page < explorer.pages %}
+            <a href="?days={{ days }}&page={{ page|add:'1' }}#arc-panel-explorer">بعدی</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </section>
+
+</div>
+
+{{ recovery_center_json|json_script:"adm-recovery-center-json" }}
+<script src="{% static 'js/admin-recovery-center.js' %}?v=1"></script>
+{% endblock %}

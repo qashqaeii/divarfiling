@@ -79,6 +79,16 @@ ACTION_LABELS_FA = {
 }
 
 
+def _format_jalali_datetime(value) -> str:
+    if not value:
+        return ''
+    dt = value
+    if timezone.is_aware(dt):
+        dt = timezone.localtime(dt)
+    jdt = jdatetime.datetime.fromgregorian(datetime=dt)
+    return to_persian_digits(jdt.strftime('%Y/%m/%d %H:%M'))
+
+
 def _production_sends_qs(*, since=None, until=None):
     qs = MarketingAutomationActionLog.objects.filter(flow_key=FLOW_KEY).select_related(
         'sms_log', 'order', 'user', 'product', 'run',
@@ -428,6 +438,7 @@ def build_explorer_rows(
             'action_label': ACTION_LABELS_FA.get(log.action, log.action),
             'reason': log.reason,
             'created_at': log.created_at.isoformat(),
+            'created_at_jalali': _format_jalali_datetime(log.created_at),
             'product_title': log.product.title if log.product_id else '',
             'is_production_send': is_production_recovery_send(log),
             'status_label': status_label,

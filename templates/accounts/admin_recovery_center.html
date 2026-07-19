@@ -261,7 +261,7 @@
 
     {# ─── Tab: Explorer ─── #}
     <section class="arc-panel" id="arc-panel-explorer" data-panel="explorer" hidden>
-        <p class="arc-muted arc-explorer-note">فقط مشاهده — بدون ارسال. وضعیت نسبت‌دهی: در انتظار (فاز ۲).</p>
+        <p class="arc-muted arc-explorer-note">فقط مشاهده — بدون ارسال. وضعیت نسبت‌دهی از موتور Strict/Assisted.</p>
         <div class="arc-table-wrap">
             <table class="arc-table arc-table--compact">
                 <thead>
@@ -281,7 +281,7 @@
                         <td>{% if row.order_id %}#{{ row.order_id|to_persian_digits }}{% else %}—{% endif %}</td>
                         <td>{{ row.step_label }}</td>
                         <td>{{ row.action_label }}</td>
-                        <td>{{ row.created_at|slice:":16"|to_persian_digits }}</td>
+                        <td>{{ row.created_at_jalali }}</td>
                         <td>{{ row.status_label }}</td>
                     </tr>
                     {% empty %}

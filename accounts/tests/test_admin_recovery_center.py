@@ -189,6 +189,24 @@ class AdminRecoveryCenterViewTests(TestCase):
         self.assertEqual(data['schema_version'], SCHEMA_VERSION)
         self.assertIn('data_freshness', data)
 
+    def test_explorer_created_at_jalali(self):
+        run = MarketingAutomationRun.objects.create(flow_key=FLOW_KEY)
+        sms_time = timezone.now()
+        MarketingAutomationActionLog.objects.create(
+            run=run,
+            flow_key=FLOW_KEY,
+            step_key=STEP_RECOVERY_1,
+            phone_hash='jalali1',
+            masked_phone='0912***22',
+            action=MarketingAutomationActionLog.Action.WOULD_SEND,
+            decision_key='decision:jalali-1',
+        )
+        ctx = get_recovery_center_context(days=30)
+        row = ctx['explorer']['rows'][0]
+        self.assertIn('created_at_jalali', row)
+        self.assertNotIn('T', row['created_at_jalali'])
+        self.assertRegex(row['created_at_jalali'], r'[۰-۹]{4}/[۰-۹]{2}/[۰-۹]{2} [۰-۹]{2}:[۰-۹]{2}')
+
     def test_explorer_lists_action_log(self):
         run = MarketingAutomationRun.objects.create(flow_key=FLOW_KEY)
         MarketingAutomationActionLog.objects.create(

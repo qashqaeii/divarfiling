@@ -28,6 +28,20 @@ class User(AbstractUser):
         related_name='referred_users',
         verbose_name='معرف',
     )
+    marketing_sms_opt_out = models.BooleanField(
+        default=False,
+        verbose_name='عدم دریافت پیامک بازاریابی',
+    )
+    marketing_sms_opt_out_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='زمان Opt-out',
+    )
+    marketing_sms_opt_out_source = models.CharField(
+        max_length=64,
+        blank=True,
+        verbose_name='منبع Opt-out',
+    )
 
     class Meta:
         verbose_name = 'کاربر'
@@ -316,3 +330,127 @@ class MarketingCampaignRecipient(models.Model):
 
     def __str__(self):
         return f'{self.phone} @ {self.campaign_id}'
+
+
+class MarketingAutomationRun(models.Model):
+    """اجرای Automation بازاریابی — فاز ۲.۱ فقط dry_run."""
+
+    class Mode(models.TextChoices):
+        DRY_RUN = 'dry_run', 'Dry Run'
+        LIVE = 'live', 'Live'
+
+    class Status(models.TextChoices):
+        RUNNING = 'running', 'در حال اجرا'
+        COMPLETED = 'completed', 'تکمیل‌شده'
+        FAILED = 'failed', 'ناموفق'
+
+    flow_key = models.CharField(max_length=64, db_index=True, verbose_name='کلید Flow')
+    mode = models.CharField(
+        max_length=16,
+        choices=Mode.choices,
+        default=Mode.DRY_RUN,
+        verbose_name='حالت',
+    )
+    started_at = models.DateTimeField(auto_now_add=True, verbose_name='شروع')
+    finished_at = models.DateTimeField(null=True, blank=True, verbose_name='پایان')
+    examined_count = models.PositiveIntegerField(default=0, verbose_name='بررسی‌شده')
+    eligible_count = models.PositiveIntegerField(default=0, verbose_name='واجد شرایط')
+    suppressed_count = models.PositiveIntegerField(default=0, verbose_name='حذف‌شده')
+    would_send_count = models.PositiveIntegerField(default=0, verbose_name='would_send')
+    error_count = models.PositiveIntegerField(default=0, verbose_name='خطا')
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.RUNNING,
+        db_index=True,
+        verbose_name='وضعیت',
+    )
+    config_snapshot = models.JSONField(default=dict, blank=True, verbose_name='تنظیمات')
+
+    class Meta:
+        verbose_name = 'اجرای Automation بازاریابی'
+        verbose_name_plural = 'اجراهای Automation بازاریابی'
+        ordering = ['-started_at']
+
+    def __str__(self):
+        return f'{self.flow_key} [{self.get_mode_display()}] @ {self.started_at:%Y-%m-%d %H:%M}'
+
+
+class MarketingAutomationActionLog(models.Model):
+    """لاگ اقدام Automation — would_send شبیه‌سازی؛ sent برای Send Guard."""
+
+    class Action(models.TextChoices):
+        WOULD_SEND = 'would_send', 'Would Send'
+        SENT = 'sent', 'Sent'
+        PROVIDER_ACCEPTED = 'provider_accepted', 'Provider Accepted'
+        FAILED = 'failed', 'Failed'
+        SUPPRESSED = 'suppressed', 'Suppressed'
+        CANCELLED = 'cancelled', 'Cancelled'
+
+    run = models.ForeignKey(
+        MarketingAutomationRun,
+        on_delete=models.CASCADE,
+        related_name='actions',
+        verbose_name='اجرای Run',
+    )
+    flow_key = models.CharField(max_length=64, db_index=True, verbose_name='کلید Flow')
+    step_key = models.CharField(max_length=32, db_index=True, verbose_name='مرحله')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketing_automation_actions',
+        verbose_name='کاربر',
+    )
+    phone_hash = models.CharField(max_length=64, db_index=True, verbose_name='هش شماره')
+    masked_phone = models.CharField(max_length=20, blank=True, verbose_name='شماره Mask')
+    order = models.ForeignKey(
+        'shop.Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketing_automation_actions',
+        verbose_name='سفارش',
+    )
+    product = models.ForeignKey(
+        'shop.Product',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketing_automation_actions',
+        verbose_name='محصول',
+    )
+    action = models.CharField(
+        max_length=20,
+        choices=Action.choices,
+        default=Action.WOULD_SEND,
+        db_index=True,
+        verbose_name='اقدام',
+    )
+    reason = models.CharField(max_length=200, blank=True, verbose_name='دلیل')
+    metadata = models.JSONField(default=dict, blank=True, verbose_name='متادیتا')
+    decision_key = models.CharField(
+        max_length=220,
+        unique=True,
+        verbose_name='کلید تصمیم (شبیه‌سازی)',
+    )
+    send_idempotency_key = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name='کلید Idempotency ارسال واقعی',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='ایجاد')
+
+    class Meta:
+        verbose_name = 'لاگ اقدام Automation'
+        verbose_name_plural = 'لاگ‌های اقدام Automation'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['flow_key', 'step_key', 'phone_hash']),
+        ]
+
+    def __str__(self):
+        return f'{self.action} {self.step_key} @ {self.masked_phone}'

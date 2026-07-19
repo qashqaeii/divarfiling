@@ -298,11 +298,10 @@ def preview_segment(
         raise ValueError(f'سگمنت ناشناخته: {segment_key}')
 
     if segment_key == 'abandoned_checkout':
-        from shop.services.checkout_abandon import build_abandoned_checkout_preview
+        from accounts.services.pending_recovery import build_pending_recovery_preview
 
-        data = build_abandoned_checkout_preview(
-            hours=stale_hours,
-            product_id=product_id,
+        data = build_pending_recovery_preview(
+            lookback_days=days_lookback if days_lookback else None,
         )
         data['default_template'] = SEGMENT_DEFAULT_TEMPLATES.get(segment_key, '')
         return data
@@ -593,22 +592,21 @@ def get_segment_insights(segment_key: str) -> Dict[str, Any]:
 
     try:
         if segment_key == 'abandoned_checkout':
-            from shop.services.checkout_abandon import build_abandoned_checkout_preview
+            from accounts.services.pending_recovery import build_pending_recovery_preview
 
-            preview = build_abandoned_checkout_preview()
+            preview = build_pending_recovery_preview()
             count = preview.get('count', 0)
+            rs = preview.get('recovery_stats') or {}
             amounts = []
-            for r in preview.get('eligible') or []:
-                raw = (r or {}).get('amount', '')
-                if raw:
-                    try:
-                        amounts.append(int(str(raw).replace(',', '')))
-                    except (TypeError, ValueError):
-                        pass
+            for r in preview.get('recovery_recipients') or []:
+                try:
+                    amounts.append(int(r.get('amount') or 0))
+                except (TypeError, ValueError):
+                    pass
             if amounts:
                 avg_value = int(sum(amounts) / len(amounts))
-            if preview.get('eligible'):
-                last_activity = preview['eligible'][0].get('order_created_at')
+            if preview.get('recovery_recipients'):
+                last_activity = preview['recovery_recipients'][0].get('eligible_action_at')
         else:
             recipients = build_segment_recipients(segment_key)
             count = len(recipients)
@@ -900,8 +898,8 @@ def get_marketing_dashboard_stats(*, sms_credit: Optional[int] = None) -> Dict[s
     for key in SEGMENT_REGISTRY:
         try:
             if key == 'abandoned_checkout':
-                from shop.services.checkout_abandon import build_abandoned_checkout_preview
-                segment_sizes[key] = build_abandoned_checkout_preview().get('count', 0)
+                from accounts.services.pending_recovery import build_pending_recovery_preview
+                segment_sizes[key] = build_pending_recovery_preview().get('count', 0)
             else:
                 segment_sizes[key] = len(build_segment_recipients(key))
         except Exception:

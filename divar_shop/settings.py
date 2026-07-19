@@ -213,6 +213,15 @@ ZIBAL_START_PAY_URL = 'https://gateway.zibal.ir/start/'
 CHECKOUT_ABANDON_HOURS = config('CHECKOUT_ABANDON_HOURS', default=2, cast=int)
 CHECKOUT_ABANDON_BATCH_LIMIT = config('CHECKOUT_ABANDON_BATCH_LIMIT', default=500, cast=int)
 
+# Recovery Audience — فاز ۲.۱ (Dry Run؛ بدون SMS)
+RECOVERY_STEP_1_MIN_HOURS = config('RECOVERY_STEP_1_MIN_HOURS', default=2, cast=int)
+RECOVERY_STEP_2_MIN_HOURS = config('RECOVERY_STEP_2_MIN_HOURS', default=24, cast=int)
+RECOVERY_MAX_AGE_HOURS = config('RECOVERY_MAX_AGE_HOURS', default=72, cast=int)
+RECOVERY_LOOKBACK_DAYS = config('RECOVERY_LOOKBACK_DAYS', default=7, cast=int)
+RECOVERY_FREQUENCY_CAP_HOURS = config('RECOVERY_FREQUENCY_CAP_HOURS', default=24, cast=int)
+RECOVERY_BATCH_LIMIT = config('RECOVERY_BATCH_LIMIT', default=100, cast=int)
+PENDING_RECOVERY_FLOW_ENABLED = config('PENDING_RECOVERY_FLOW_ENABLED', default=False, cast=bool)
+
 # License Settings
 LICENSE_SECRET_KEY = config('LICENSE_SECRET_KEY', default='change-this-secret-key-in-production')
 LICENSE_ACTIVATION_LIMIT = 1  # تعداد فعال‌سازی مجاز (legacy)

@@ -5,6 +5,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .models import (
+    MarketingAutomationActionLog,
+    MarketingAutomationRun,
     MarketingCampaign,
     MarketingCampaignRecipient,
     OtpRequest,
@@ -145,3 +147,31 @@ class MarketingCampaignRecipientAdmin(admin.ModelAdmin):
     list_filter = ['status']
     search_fields = ['phone']
     raw_id_fields = ['campaign', 'user', 'discount_code', 'sms_log']
+
+
+@admin.register(MarketingAutomationRun)
+class MarketingAutomationRunAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'flow_key', 'mode', 'status', 'would_send_count',
+        'examined_count', 'started_at',
+    ]
+    list_filter = ['flow_key', 'mode', 'status']
+    readonly_fields = [
+        'flow_key', 'mode', 'started_at', 'finished_at', 'examined_count',
+        'eligible_count', 'suppressed_count', 'would_send_count', 'error_count',
+        'status', 'config_snapshot',
+    ]
+
+
+@admin.register(MarketingAutomationActionLog)
+class MarketingAutomationActionLogAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'flow_key', 'step_key', 'masked_phone', 'action', 'created_at',
+    ]
+    list_filter = ['flow_key', 'step_key', 'action']
+    search_fields = ['masked_phone', 'decision_key', 'send_idempotency_key', 'reason']
+    readonly_fields = [
+        'run', 'flow_key', 'step_key', 'user', 'phone_hash', 'masked_phone',
+        'order', 'product', 'action', 'reason', 'metadata', 'decision_key',
+        'send_idempotency_key', 'created_at',
+    ]

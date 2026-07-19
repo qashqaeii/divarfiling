@@ -299,6 +299,44 @@
                                     <span>سگمنت رها کردن Checkout — فقط پیش‌نمایش. ارسال پیامک و Automation غیرفعال است.</span>
                                 </div>
                                 <div class="adm-mkt-preview-stats">
+                                    {% if preview.recovery_stats %}
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.recovery_stats.raw_abandon_events|default:0|currency }}</strong>
+                                        <span>Event خام</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.recovery_stats.would_send|default:0|currency }}</strong>
+                                        <span>would_send</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.recovery_stats.unique_recipients|default:0|currency }}</strong>
+                                        <span>مخاطب یکتا</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.recovery_stats.step_1_recipients|default:0|currency }}</strong>
+                                        <span>Step 1</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.recovery_stats.step_1_late_recipients|default:0|currency }}</strong>
+                                        <span>Step 1 Late</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.recovery_stats.step_2_recipients|default:0|currency }}</strong>
+                                        <span>Step 2</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.recovery_stats.expired_recipients|default:0|currency }}</strong>
+                                        <span>Expired</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.recovery_stats.suppressed_duplicates|default:0|currency }}</strong>
+                                        <span>Suppress تکراری</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.recovery_stats.suppressed_paid|default:0|currency }}</strong>
+                                        <span>Suppress paid</span>
+                                    </div>
+                                    {% else %}
                                     <div class="adm-mkt-preview-stat">
                                         <strong>{{ preview.count|currency }}</strong>
                                         <span>واجد شرایط فعلی</span>
@@ -311,10 +349,48 @@
                                         <strong>{{ preview.hours|default:2|to_persian_digits }}</strong>
                                         <span>آستانه (ساعت)</span>
                                     </div>
+                                    {% endif %}
                                 </div>
 
-                                <h3 class="adm-mkt-abandon-heading">۱) واجدان شرایط فعلی</h3>
-                                {% if preview.eligible %}
+                                <h3 class="adm-mkt-abandon-heading">۱) مخاطبان would_send</h3>
+                                {% if preview.recovery_recipients %}
+                                <div class="adm-mkt-abandon-table-wrap">
+                                    <table class="adm-mkt-abandon-table">
+                                        <thead>
+                                            <tr>
+                                                <th>شماره</th>
+                                                <th>کاربر</th>
+                                                <th>سفارش انتخاب‌شده</th>
+                                                <th>Event خام</th>
+                                                <th>Suppress شده</th>
+                                                <th>محصول / پلن</th>
+                                                <th>مبلغ</th>
+                                                <th>عمر (س)</th>
+                                                <th>Step</th>
+                                                <th>منبع</th>
+                                                <th>زمان مجاز</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in preview.recovery_recipients %}
+                                            <tr>
+                                                <td dir="ltr">{{ row.masked_phone }}</td>
+                                                <td>{{ row.user_id }}</td>
+                                                <td dir="ltr"><small>{{ row.selected_order_id }}</small></td>
+                                                <td>{{ row.raw_event_count|to_persian_digits }}</td>
+                                                <td dir="ltr"><small>{{ row.suppressed_order_ids|join:", " }}</small></td>
+                                                <td>{{ row.product }}{% if row.plan %} · {{ row.plan }}{% endif %}</td>
+                                                <td>{{ row.amount|currency }}</td>
+                                                <td>{{ row.age_hours|to_persian_digits }}</td>
+                                                <td>{{ row.step_label }}</td>
+                                                <td><code>{{ row.entry_reason }}</code></td>
+                                                <td>{% if row.eligible_action_at %}{{ row.eligible_action_at|timesince }} پیش{% else %}—{% endif %}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% elif preview.eligible %}
                                 <div class="adm-mkt-abandon-table-wrap">
                                     <table class="adm-mkt-abandon-table">
                                         <thead>
@@ -361,8 +437,37 @@
                                 <p class="adm-mkt-empty">واجد شرایطی یافت نشد.</p>
                                 {% endif %}
 
-                                <h3 class="adm-mkt-abandon-heading">۲) حذف‌شده‌ها</h3>
-                                {% if preview.excluded %}
+                                <h3 class="adm-mkt-abandon-heading">۲) حذف‌شده‌ها / Suppressed</h3>
+                                {% if preview.recovery_suppressed %}
+                                <div class="adm-mkt-abandon-table-wrap">
+                                    <table class="adm-mkt-abandon-table">
+                                        <thead>
+                                            <tr>
+                                                <th>شماره</th>
+                                                <th>کاربر</th>
+                                                <th>سفارش</th>
+                                                <th>Step</th>
+                                                <th>عمر (س)</th>
+                                                <th>دلیل Suppress</th>
+                                                <th>سفارش انتخاب‌شده</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in preview.recovery_suppressed %}
+                                            <tr>
+                                                <td dir="ltr">{{ row.masked_phone }}</td>
+                                                <td>{{ row.user_id }}</td>
+                                                <td dir="ltr"><small>{{ row.order_id }}</small></td>
+                                                <td>{{ row.step_label }}</td>
+                                                <td>{{ row.age_hours|to_persian_digits }}</td>
+                                                <td>{{ row.suppress_reason_label }}</td>
+                                                <td dir="ltr"><small>{{ row.selected_order_id|default:"—" }}</small></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% elif preview.excluded %}
                                 <div class="adm-mkt-abandon-table-wrap">
                                     <table class="adm-mkt-abandon-table">
                                         <thead>

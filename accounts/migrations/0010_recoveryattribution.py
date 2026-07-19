@@ -1,4 +1,5 @@
 # Week 2 Recovery Attribution — پس از 0009 index rename
+# نام فایل هم‌نام migration خودکار Django روی production (0010_recoveryattribution)
 
 import django.db.models.deletion
 from django.conf import settings
@@ -37,8 +38,8 @@ class Migration(migrations.Migration):
                         ],
                         db_index=True,
                         default='pending',
-                        max_length=16,
                         verbose_name='وضعیت',
+                        max_length=16,
                     ),
                 ),
                 ('paid_at', models.DateTimeField(blank=True, null=True, verbose_name='زمان پرداخت')),

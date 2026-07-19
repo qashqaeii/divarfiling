@@ -8,6 +8,7 @@ from typing import Any
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
@@ -192,9 +193,17 @@ def _iso(dt) -> str:
 
 
 def _real_delivery_qs():
-    return MarketingAutomationActionLog.objects.filter(
-        flow_key=FLOW_KEY,
-        action__in=REAL_DELIVERY_ACTIONS,
+    """Send Guard — فقط تحویل واقعی؛ test: prefix و redirect از شمارش خارج."""
+    return (
+        MarketingAutomationActionLog.objects.filter(
+            flow_key=FLOW_KEY,
+            action__in=REAL_DELIVERY_ACTIONS,
+        )
+        .exclude(send_idempotency_key__startswith='test:')
+        .filter(
+            Q(metadata__send_target_redirected__isnull=True)
+            | Q(metadata__send_target_redirected=False)
+        )
     )
 
 

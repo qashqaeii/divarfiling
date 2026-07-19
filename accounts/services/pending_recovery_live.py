@@ -24,9 +24,32 @@ from accounts.services.sms import SmsError
 
 logger = logging.getLogger(__name__)
 
+TEST_SEND_KEY_PREFIX = 'test:'
+
 
 def live_decision_key(send_idempotency_key: str) -> str:
     return f'live:decision:{send_idempotency_key}'
+
+
+def reserve_send_idempotency_key(base_key: str, *, test_only: bool) -> str:
+    if test_only:
+        return f'{TEST_SEND_KEY_PREFIX}{base_key}'
+    return base_key
+
+
+def _is_real_delivery_log(log: MarketingAutomationActionLog) -> bool:
+    if log.action not in (
+        MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED,
+        MarketingAutomationActionLog.Action.DELIVERED,
+        MarketingAutomationActionLog.Action.SENT,
+    ):
+        return False
+    send_key = log.send_idempotency_key or ''
+    if send_key.startswith(TEST_SEND_KEY_PREFIX):
+        return False
+    if (log.metadata or {}).get('send_target_redirected'):
+        return False
+    return True
 
 
 def get_live_config(*, test_only: bool | None = None) -> dict[str, Any]:
@@ -123,20 +146,37 @@ def reserve_live_send(
     اگر رزرو قبلی in-flight یا موفق باشد، ارسال تکراری ممنوع است.
     """
     order = res.order
-    send_key = live_send_idempotency_key(
+    test_only = bool(cfg.get('test_only'))
+    base_key = live_send_idempotency_key(
         step_key=res.step_key,
         phone_hash=res.phone_hash,
         product_id=order.product_id,
         order_id=order.pk,
     )
+    send_key = reserve_send_idempotency_key(base_key, test_only=test_only)
+
+    real_existing = get_existing_live_send(base_key)
+    if real_existing:
+        if real_existing.action == MarketingAutomationActionLog.Action.SEND_REQUESTED:
+            return None, f'in_flight_or_done:{real_existing.action}'
+        if _is_real_delivery_log(real_existing):
+            return None, f'in_flight_or_done:{real_existing.action}'
+        if (real_existing.metadata or {}).get('send_target_redirected'):
+            pass
+        elif real_existing.action == MarketingAutomationActionLog.Action.FAILED:
+            if not allow_retry_failed:
+                return None, 'failed_previous'
+        elif not test_only:
+            return None, f'blocked:{real_existing.action}'
+
     existing = get_existing_live_send(send_key)
     if existing:
         if existing.action in (
             MarketingAutomationActionLog.Action.SEND_REQUESTED,
-            MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED,
-            MarketingAutomationActionLog.Action.DELIVERED,
-            MarketingAutomationActionLog.Action.SENT,
+            MarketingAutomationActionLog.Action.TEST_PROVIDER_ACCEPTED,
         ):
+            return None, f'in_flight_or_done:{existing.action}'
+        if existing.action == MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED:
             return None, f'in_flight_or_done:{existing.action}'
         if existing.action == MarketingAutomationActionLog.Action.FAILED:
             if not allow_retry_failed:
@@ -153,6 +193,8 @@ def reserve_live_send(
         'amount': int(order.amount or 0),
         'intended_masked_phone': masked,
         'send_target_redirected': redirected,
+        'test_only_send': test_only,
+        'live_send_key': base_key,
         'intended_user_id': order.user_id,
         'step_key': res.step_key,
     }
@@ -232,10 +274,14 @@ def execute_reserved_send(
     meta['send_target_redirected'] = redirected
 
     if ok:
-        log.action = MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED
+        if redirected:
+            log.action = MarketingAutomationActionLog.Action.TEST_PROVIDER_ACCEPTED
+            log.reason = 'test_provider_accepted'
+        else:
+            log.action = MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED
+            log.reason = 'provider_accepted'
         log.sms_log = sms_log
         log.provider_message_id = sms_log.provider_message_id or ''
-        log.reason = 'provider_accepted'
         meta['provider'] = sms_log.provider
     else:
         log.action = MarketingAutomationActionLog.Action.FAILED
@@ -287,6 +333,7 @@ def run_pending_recovery_live(
         'would_send': 0,
         'send_requested': 0,
         'provider_accepted': 0,
+        'test_provider_accepted': 0,
         'failed': 0,
         'skipped': 0,
         'errors': 0,
@@ -339,6 +386,9 @@ def run_pending_recovery_live(
 
             if final_action == MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED:
                 result_stats['provider_accepted'] += 1
+                sent_count += 1
+            elif final_action == MarketingAutomationActionLog.Action.TEST_PROVIDER_ACCEPTED:
+                result_stats['test_provider_accepted'] += 1
                 sent_count += 1
             elif final_action == MarketingAutomationActionLog.Action.FAILED:
                 result_stats['failed'] += 1

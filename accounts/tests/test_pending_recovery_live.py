@@ -51,7 +51,7 @@ def _product_plan(slug='live-recovery-bot'):
     PENDING_RECOVERY_FLOW_ENABLED=True,
     RECOVERY_LIVE_SEND_ENABLED=True,
     RECOVERY_LIVE_TEST_ONLY=True,
-    RECOVERY_LIVE_TEST_PHONE='09129998877',
+    RECOVERY_LIVE_TEST_PHONE='09357930033',
     RECOVERY_LIVE_MAX_SENDS_PER_RUN=1,
     SMS_PROVIDER='console',
     SMS_ENABLED=True,
@@ -136,7 +136,7 @@ class PendingRecoveryLiveTests(TestCase):
         self.assertIsNone(log2)
         self.assertTrue(err2.startswith('in_flight_or_done'))
 
-    def test_execute_marks_provider_accepted(self):
+    def test_execute_marks_test_provider_accepted_in_test_only(self):
         order = self._order(hours_ago=5)
         res = self._dry_run_resolution(order)
         cfg = get_live_config()
@@ -146,12 +146,36 @@ class PendingRecoveryLiveTests(TestCase):
         )
         log, _ = reserve_live_send(run=run, res=res, cfg=cfg)
         action, sms_log = execute_reserved_send(log, cfg=cfg)
-        self.assertEqual(action, MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED)
+        self.assertEqual(action, MarketingAutomationActionLog.Action.TEST_PROVIDER_ACCEPTED)
         self.assertIsNotNone(sms_log)
         log.refresh_from_db()
-        self.assertEqual(log.sms_log_id, sms_log.pk)
+        self.assertTrue(log.send_idempotency_key.startswith('test:'))
         self.assertEqual(log.metadata.get('send_target_redirected'), True)
-        self.assertEqual(sms_log.phone, '09129998877')
+        self.assertEqual(sms_log.phone, cfg['test_phone'])
+
+    def test_test_only_does_not_activate_send_guard(self):
+        self._order(hours_ago=5)
+        user2 = User.objects.create_user(username='live2b', password='x', phone='09121110003')
+        order2 = Order.objects.create(
+            user=user2,
+            product=self.product,
+            plan=self.plan,
+            amount=self.plan.price,
+            status='pending',
+            payment_method='zibal',
+        )
+        self._backdate(order2, hours_ago=30)
+        ensure_checkout_abandon_event(order2)
+
+        stats = run_pending_recovery_live(confirm_live=True, test_only=True, max_sends_per_run=2)
+        self.assertEqual(stats['test_provider_accepted'], 2)
+        self.assertEqual(stats['provider_accepted'], 0)
+
+        from accounts.services.pending_recovery import resolve_pending_recovery_audience
+
+        data = resolve_pending_recovery_audience(simulate_enabled=False)
+        would = sum(1 for r in data['resolutions'] if r.would_send)
+        self.assertEqual(would, 2)
 
     def test_run_live_max_one_send(self):
         self._order(hours_ago=5)
@@ -168,12 +192,13 @@ class PendingRecoveryLiveTests(TestCase):
         ensure_checkout_abandon_event(order2)
 
         stats = run_pending_recovery_live(confirm_live=True, test_only=True)
-        self.assertEqual(stats['provider_accepted'], 1)
+        self.assertEqual(stats['test_provider_accepted'], 1)
+        self.assertEqual(stats['provider_accepted'], 0)
         self.assertGreaterEqual(stats['would_send'], 2)
         self.assertGreaterEqual(stats['skipped'], 1)
 
         accepted = MarketingAutomationActionLog.objects.filter(
-            action=MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED,
+            action=MarketingAutomationActionLog.Action.TEST_PROVIDER_ACCEPTED,
         ).count()
         self.assertEqual(accepted, 1)
 
@@ -191,7 +216,7 @@ class PendingRecoveryLiveTests(TestCase):
         )
         self.assertEqual(
             MarketingAutomationActionLog.objects.filter(
-                action=MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED,
+                action=MarketingAutomationActionLog.Action.TEST_PROVIDER_ACCEPTED,
             ).count(),
             1,
         )
@@ -257,7 +282,7 @@ class PendingRecoveryLiveTests(TestCase):
             send_idempotency_key=send_key,
         )
         res = self._dry_run_resolution(order)
-        cfg = get_live_config()
+        cfg = get_live_config(test_only=False)
         log, err = reserve_live_send(run=run, res=res, cfg=cfg)
         self.assertIsNone(log)
         self.assertEqual(err, 'failed_previous')

@@ -146,6 +146,7 @@ class Command(BaseCommand):
         self.stdout.write(
             f'examined={stats["examined"]} would_send={stats["would_send"]} '
             f'send_requested={stats["send_requested"]} provider_accepted={stats["provider_accepted"]} '
+            f'test_provider_accepted={stats.get("test_provider_accepted", 0)} '
             f'failed={stats["failed"]} skipped={stats["skipped"]} '
             f'test_only={stats["test_only"]} live_enabled={stats["live_send_enabled"]}'
         )

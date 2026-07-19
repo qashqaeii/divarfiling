@@ -383,6 +383,7 @@ class MarketingAutomationActionLog(models.Model):
         WOULD_SEND = 'would_send', 'Would Send'
         SEND_REQUESTED = 'send_requested', 'Send Requested'
         PROVIDER_ACCEPTED = 'provider_accepted', 'Provider Accepted'
+        TEST_PROVIDER_ACCEPTED = 'test_provider_accepted', 'Test Provider Accepted'
         DELIVERED = 'delivered', 'Delivered'
         SENT = 'sent', 'Sent (legacy)'
         FAILED = 'failed', 'Failed'
@@ -424,7 +425,7 @@ class MarketingAutomationActionLog(models.Model):
         verbose_name='محصول',
     )
     action = models.CharField(
-        max_length=20,
+        max_length=24,
         choices=Action.choices,
         default=Action.WOULD_SEND,
         db_index=True,

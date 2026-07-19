@@ -39,6 +39,7 @@ from accounts.services.admin_marketing_send import (
     run_campaign_send,
 )
 from accounts.services.admin_blog import (
+    build_blog_stats_json,
     get_blog_analytics_chart,
     get_blog_dashboard_stats,
     get_blog_posts_table,
@@ -394,6 +395,27 @@ class AdminBlogView(StaffRequiredMixin, TemplateView):
             'sample_json_url': '/static/samples/article-import-sample.json',
         })
         return ctx
+
+
+class AdminBlogJsonView(StaffRequiredMixin, View):
+    """خروجی JSON آمار مقالات."""
+
+    def get(self, request):
+        days = _parse_int(request.GET.get('days'), 30, minimum=7, maximum=90)
+        status = request.GET.get('status', 'all')
+        if status not in ('all', 'published', 'draft'):
+            status = 'all'
+        posts_limit = _parse_int(request.GET.get('posts_limit'), 1000, minimum=1, maximum=5000)
+
+        payload = build_blog_stats_json(days=days, status=status, posts_limit=posts_limit)
+        download = request.GET.get('download', '0') not in ('0', 'false', 'no', '')
+        response = JsonResponse(payload, json_dumps_params={'ensure_ascii': False, 'indent': 2})
+        if download:
+            stamp = timezone.now().strftime('%Y%m%d_%H%M')
+            response['Content-Disposition'] = (
+                f'attachment; filename="blog-stats-{days}d-{stamp}.json"'
+            )
+        return response
 
 
 class AdminBlogImportPreviewView(StaffRequiredMixin, View):

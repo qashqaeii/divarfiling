@@ -10,6 +10,8 @@ from django.utils import timezone
 
 from blog.models import Category, Post, Tag
 
+SCHEMA_VERSION = '1.0'
+
 
 def get_blog_dashboard_stats() -> dict[str, Any]:
     now = timezone.now()
@@ -116,4 +118,36 @@ def get_blog_analytics_chart(days: int = 30) -> dict[str, Any]:
         'days': days,
         'published_daily': {'labels': daily_labels, 'counts': daily_counts},
         'top_views': top_views,
+    }
+
+
+def build_blog_stats_json(
+    *,
+    days: int = 30,
+    status: str = 'all',
+    posts_limit: int = 1000,
+) -> dict[str, Any]:
+    """خروجی JSON کامل آمار مقالات برای پنل مدیریت."""
+    if status not in ('all', 'published', 'draft'):
+        status = 'all'
+
+    now = timezone.now()
+    stats = get_blog_dashboard_stats()
+    analytics = get_blog_analytics_chart(days=days)
+    posts = get_blog_posts_table(limit=posts_limit, status=status)
+
+    return {
+        'ok': True,
+        'meta': {
+            'generated_at': now.isoformat(),
+            'source': 'admin_panel_blog',
+            'version': SCHEMA_VERSION,
+            'analytics_days': analytics['days'],
+            'posts_status_filter': status,
+            'posts_limit': posts_limit,
+            'posts_exported': len(posts),
+        },
+        'summary': stats,
+        'analytics': analytics,
+        'posts': posts,
     }

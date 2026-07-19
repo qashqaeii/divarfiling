@@ -8,6 +8,7 @@ from . import otp_views, views
 from .admin_views import (
     AdminBlogImportPreviewView,
     AdminBlogImportView,
+    AdminBlogJsonView,
     AdminBlogView,
     AdminDashboardView,
     AdminExportView,
@@ -52,6 +53,7 @@ urlpatterns = [
     path('admin-panel/marketing/phonebook/sync/', AdminPhonebookSyncView.as_view(), name='admin_panel_phonebook_sync'),
     path('admin-panel/marketing/<int:pk>/', AdminMarketingDetailView.as_view(), name='admin_panel_marketing_detail'),
     path('admin-panel/blog/', AdminBlogView.as_view(), name='admin_panel_blog'),
+    path('admin-panel/blog/stats.json', AdminBlogJsonView.as_view(), name='admin_panel_blog_stats_json'),
     path('admin-panel/blog/import/preview.json', AdminBlogImportPreviewView.as_view(), name='admin_panel_blog_import_preview'),
     path('admin-panel/blog/import/', AdminBlogImportView.as_view(), name='admin_panel_blog_import'),
     path('admin-panel/plan-conversion/', AdminPlanConversionView.as_view(), name='admin_panel_plan_conversion'),

@@ -48,6 +48,14 @@
                     <i class="fas fa-cloud-arrow-up"></i>
                     <span>درون‌ریزی مقاله</span>
                 </a>
+                <a href="{% url 'admin_panel_blog_stats_json' %}?days=30&status={{ status_filter }}&download=1" class="ab-btn ab-btn--gold">
+                    <i class="fas fa-file-code"></i>
+                    <span>دانلود آمار JSON</span>
+                </a>
+                <a href="{% url 'admin_panel_blog_stats_json' %}?days=30&status={{ status_filter }}" target="_blank" rel="noopener" class="ab-btn ab-btn--ghost">
+                    <i class="fas fa-eye"></i>
+                    <span>مشاهده JSON</span>
+                </a>
                 <a href="{% static 'samples/article-import-sample.json' %}" download="article-import-sample.json" class="ab-btn ab-btn--ghost">
                     <i class="fas fa-download"></i>
                     <span>نمونه JSON</span>

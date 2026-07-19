@@ -5,9 +5,10 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from blog.models import Category, Post
+from blog.models import Category, Post, PostViewDaily
 from blog.services.article_import import import_article_from_payload, validate_article_payload
-from accounts.services.admin_blog import build_blog_stats_json
+from blog.services.view_tracking import record_post_view
+from accounts.services.admin_blog import build_blog_stats_json, get_blog_analytics_chart, get_blog_traffic_pulse
 
 User = get_user_model()
 
@@ -153,6 +154,45 @@ class BlogStatsJsonServiceTests(TestCase):
         self.assertEqual(payload['meta']['posts_status_filter'], 'published')
         self.assertIn('published_daily', payload['analytics'])
         self.assertEqual(len(payload['posts']), 1)
+
+
+class BlogAnalyticsTests(TestCase):
+    def setUp(self):
+        self.author = User.objects.create_user(username='analyticsauth', password='pass1234')
+        self.staff = User.objects.create_user(
+            username='analyticsstaff', password='pass1234', phone='09124444444', is_staff=True,
+        )
+        self.post = Post.objects.create(
+            title='آنالیز تست',
+            slug='analytics-test-post',
+            author=self.author,
+            content='<p>تست</p>',
+            excerpt='خلاصه',
+            is_published=True,
+        )
+        self.client = Client()
+        self.client.force_login(self.staff)
+
+    def test_traffic_pulse_after_view(self):
+        record_post_view(self.post)
+        pulse = get_blog_traffic_pulse()
+        self.assertGreaterEqual(pulse['today'], 1)
+        self.assertTrue(pulse['has_tracking_data'])
+
+    def test_analytics_chart_includes_traffic(self):
+        record_post_view(self.post)
+        data = get_blog_analytics_chart(days=7)
+        self.assertIn('traffic', data)
+        self.assertIn('pulse', data)
+        self.assertGreaterEqual(data['traffic']['period_total'], 1)
+
+    def test_analytics_json_endpoint(self):
+        record_post_view(self.post)
+        resp = self.client.get(reverse('admin_panel_blog_analytics_json'), {'days': 7})
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertIn('traffic', payload)
+        self.assertEqual(payload['days'], 7)
 
 
 class DraftPostPreviewTests(TestCase):

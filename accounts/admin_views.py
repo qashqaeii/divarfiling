@@ -385,16 +385,28 @@ class AdminBlogView(StaffRequiredMixin, TemplateView):
         if status not in ('all', 'published', 'draft'):
             status = 'all'
 
+        days = _parse_int(self.request.GET.get('days'), 30, minimum=7, maximum=90)
         stats = get_blog_dashboard_stats()
-        analytics = get_blog_analytics_chart(days=30)
+        analytics = get_blog_analytics_chart(days=days)
         ctx.update({
             'blog_stats': stats,
             'blog_posts': get_blog_posts_table(limit=80, status=status),
             'status_filter': status,
+            'analytics_days': days,
+            'blog_pulse': analytics.get('pulse') or {},
             'blog_analytics_json': json.dumps(analytics, ensure_ascii=False, default=str),
             'sample_json_url': '/static/samples/article-import-sample.json',
         })
         return ctx
+
+
+class AdminBlogAnalyticsJsonView(StaffRequiredMixin, View):
+    """داده JSON نمودارهای Analytics — برای تغییر بازه بدون reload."""
+
+    def get(self, request):
+        days = _parse_int(request.GET.get('days'), 30, minimum=7, maximum=90)
+        payload = get_blog_analytics_chart(days=days)
+        return JsonResponse(payload, json_dumps_params={'ensure_ascii': False})
 
 
 class AdminBlogJsonView(StaffRequiredMixin, View):

@@ -9,7 +9,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -297,12 +297,97 @@
 
     {# ─── Analytics ─── #}
     <section id="blog-analytics" class="ab-panel" hidden>
-        <div class="ab-analytics-grid">
-            <article class="ab-glass ab-chart-card ab-chart-card--wide">
+        <header class="ab-analytics-head">
+            <div>
+                <p class="ab-analytics-head__eyebrow">Traffic Intelligence</p>
+                <h2 class="ab-analytics-head__title">آنالیز بازدید و روند محتوا</h2>
+                <p class="ab-analytics-head__sub" id="ab-tracking-note">
+                    {% if blog_pulse.has_tracking_data %}
+                    ردیابی روزانه از {{ blog_pulse.tracking_since }} فعال است.
+                    {% else %}
+                    ردیابی روزانه از همین لحظه شروع می‌شود — بازدیدهای جدید در نمودار ثبت می‌شوند.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="ab-analytics-head__tools">
+                <div class="ab-range" id="ab-analytics-range" role="group" aria-label="بازه نمودار">
+                    <button type="button" class="ab-range-btn{% if analytics_days == 7 %} is-active{% endif %}" data-days="7">۷ روز</button>
+                    <button type="button" class="ab-range-btn{% if analytics_days == 30 %} is-active{% endif %}" data-days="30">۳۰ روز</button>
+                    <button type="button" class="ab-range-btn{% if analytics_days == 90 %} is-active{% endif %}" data-days="90">۹۰ روز</button>
+                </div>
+                <span class="ab-analytics-loading" id="ab-analytics-loading" hidden>
+                    <i class="fas fa-spinner fa-spin"></i> به‌روزرسانی…
+                </span>
+            </div>
+        </header>
+
+        <div class="ab-pulse-grid" id="ab-pulse-grid">
+            <article class="ab-pulse" data-accent="teal">
+                <div class="ab-pulse__top">
+                    <span class="ab-pulse__icon"><i class="fas fa-bolt"></i></span>
+                    <span class="ab-pulse__badge" id="ab-pulse-today-badge" data-trend="{% if blog_pulse.today_vs_yesterday_pct != None %}{% if blog_pulse.today_vs_yesterday_pct >= 0 %}up{% else %}down{% endif %}{% else %}flat{% endif %}">
+                        {% if blog_pulse.today_vs_yesterday_pct != None %}
+                        {% if blog_pulse.today_vs_yesterday_pct >= 0 %}+{% endif %}{{ blog_pulse.today_vs_yesterday_pct|to_persian_digits }}٪
+                        {% else %}—{% endif %}
+                    </span>
+                </div>
+                <strong class="ab-pulse__val" id="ab-pulse-today">{{ blog_pulse.today|default:0|currency }}</strong>
+                <span class="ab-pulse__lbl">بازدید امروز</span>
+                <small class="ab-pulse__hint">نسبت به دیروز</small>
+            </article>
+            <article class="ab-pulse" data-accent="violet">
+                <div class="ab-pulse__top">
+                    <span class="ab-pulse__icon"><i class="fas fa-calendar-day"></i></span>
+                </div>
+                <strong class="ab-pulse__val" id="ab-pulse-yesterday">{{ blog_pulse.yesterday|default:0|currency }}</strong>
+                <span class="ab-pulse__lbl">بازدید دیروز</span>
+                <small class="ab-pulse__hint">روز گذشته</small>
+            </article>
+            <article class="ab-pulse" data-accent="gold">
+                <div class="ab-pulse__top">
+                    <span class="ab-pulse__icon"><i class="fas fa-chart-line"></i></span>
+                    <span class="ab-pulse__badge" id="ab-pulse-week-badge" data-trend="{% if blog_pulse.week_vs_prev_pct != None %}{% if blog_pulse.week_vs_prev_pct >= 0 %}up{% else %}down{% endif %}{% else %}flat{% endif %}">
+                        {% if blog_pulse.week_vs_prev_pct != None %}
+                        {% if blog_pulse.week_vs_prev_pct >= 0 %}+{% endif %}{{ blog_pulse.week_vs_prev_pct|to_persian_digits }}٪
+                        {% else %}—{% endif %}
+                    </span>
+                </div>
+                <strong class="ab-pulse__val" id="ab-pulse-week">{{ blog_pulse.week|default:0|currency }}</strong>
+                <span class="ab-pulse__lbl">۷ روز اخیر</span>
+                <small class="ab-pulse__hint">نسبت به هفته قبل</small>
+            </article>
+            <article class="ab-pulse" data-accent="emerald">
+                <div class="ab-pulse__top">
+                    <span class="ab-pulse__icon"><i class="fas fa-gauge-high"></i></span>
+                </div>
+                <strong class="ab-pulse__val" id="ab-pulse-period-total">۰</strong>
+                <span class="ab-pulse__lbl">بازه انتخاب‌شده</span>
+                <small class="ab-pulse__hint" id="ab-pulse-period-hint">میانگین روزانه —</small>
+            </article>
+        </div>
+
+        <div class="ab-analytics-grid ab-analytics-grid--traffic">
+            <article class="ab-glass ab-chart-card ab-chart-card--hero">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-wave-square"></i> روند بازدید روزانه</h2>
+                        <p id="ab-traffic-chart-sub">مقایسه با دوره قبلی (خط نقطه‌چین)</p>
+                    </div>
+                    <div class="ab-chart-legend">
+                        <span><i class="ab-legend-dot ab-legend-dot--current"></i> دوره جاری</span>
+                        <span><i class="ab-legend-dot ab-legend-dot--prev"></i> دوره قبل</span>
+                    </div>
+                </header>
+                <div class="ab-chart-wrap ab-chart-wrap--hero"><canvas id="adm-blog-chart-traffic"></canvas></div>
+            </article>
+        </div>
+
+        <div class="ab-analytics-grid ab-analytics-grid--triple">
+            <article class="ab-glass ab-chart-card">
                 <header class="ab-glass__head">
                     <div>
                         <h2><i class="fas fa-calendar-days"></i> روند انتشار</h2>
-                        <p>۳۰ روز اخیر</p>
+                        <p>تعداد مقالات منتشرشده</p>
                     </div>
                 </header>
                 <div class="ab-chart-wrap"><canvas id="adm-blog-chart-publish"></canvas></div>
@@ -310,8 +395,29 @@
             <article class="ab-glass ab-chart-card">
                 <header class="ab-glass__head">
                     <div>
-                        <h2><i class="fas fa-trophy"></i> Top Views</h2>
-                        <p>برترین مقالات</p>
+                        <h2><i class="fas fa-chart-pie"></i> بازدید بر اساس دسته</h2>
+                        <p>در بازه انتخاب‌شده</p>
+                    </div>
+                </header>
+                <div class="ab-chart-wrap ab-chart-wrap--donut"><canvas id="adm-blog-chart-category"></canvas></div>
+            </article>
+            <article class="ab-glass ab-chart-card">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-fire"></i> داغ‌ترین‌ها در بازه</h2>
+                        <p>بازدید دوره‌ای (نه کل)</p>
+                    </div>
+                </header>
+                <div class="ab-chart-wrap ab-chart-wrap--tall"><canvas id="adm-blog-chart-period-views"></canvas></div>
+            </article>
+        </div>
+
+        <div class="ab-analytics-grid">
+            <article class="ab-glass ab-chart-card ab-chart-card--wide">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-trophy"></i> پربازدیدترین‌ها (کل‌زمان)</h2>
+                        <p>مجموع بازدید از ابتدا</p>
                     </div>
                 </header>
                 <div class="ab-chart-wrap ab-chart-wrap--tall"><canvas id="adm-blog-chart-views"></canvas></div>
@@ -417,9 +523,11 @@ window.admBlogAnalytics = {{ blog_analytics_json|safe }};
 window.admBlogMeta = {
     previewUrl: '{% url "admin_panel_blog_import_preview" %}',
     importUrl: '{% url "admin_panel_blog_import" %}',
+    analyticsUrl: '{% url "admin_panel_blog_analytics_json" %}',
     csrfToken: '{{ csrf_token }}',
     sampleUrl: '{% static "samples/article-import-sample.json" %}',
+    analyticsDays: {{ analytics_days }},
 };
 </script>
-<script src="{% static 'js/admin-blog.js' %}?v=3"></script>
+<script src="{% static 'js/admin-blog.js' %}?v=4"></script>
 {% endblock %}

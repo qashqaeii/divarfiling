@@ -8,7 +8,7 @@ from django.db.models import Count, Sum
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 
-from blog.models import Category, Post, Tag
+from blog.models import Category, Post, PostViewDaily, Tag
 
 SCHEMA_VERSION = '1.0'
 
@@ -89,8 +89,134 @@ def get_blog_posts_table(*, limit: int = 50, status: str = 'all') -> list[dict[s
     return rows
 
 
+def _pct_change(current: int, previous: int) -> float | None:
+    if previous > 0:
+        return round((current - previous) / previous * 100, 1)
+    if current > 0:
+        return 100.0
+    return None
+
+
+def _daily_views_map(*, start, end) -> dict:
+    rows = (
+        PostViewDaily.objects.filter(date__gte=start, date__lte=end)
+        .values('date')
+        .annotate(total=Sum('views'))
+    )
+    return {row['date']: row['total'] for row in rows}
+
+
+def get_blog_traffic_pulse() -> dict[str, Any]:
+    """شاخص‌های لحظه‌ای: امروز، دیروز، هفته جاری."""
+    today = timezone.localdate()
+    yesterday = today - timedelta(days=1)
+    week_start = today - timedelta(days=6)
+    prev_week_start = today - timedelta(days=13)
+    prev_week_end = today - timedelta(days=7)
+
+    today_views = _daily_views_map(start=today, end=today).get(today, 0)
+    yesterday_views = _daily_views_map(start=yesterday, end=yesterday).get(yesterday, 0)
+
+    week_map = _daily_views_map(start=week_start, end=today)
+    prev_week_map = _daily_views_map(start=prev_week_start, end=prev_week_end)
+
+    week_views = sum(week_map.values())
+    prev_week_views = sum(prev_week_map.values())
+
+    month_start = today - timedelta(days=29)
+    month_views = sum(_daily_views_map(start=month_start, end=today).values())
+
+    first_tracked = PostViewDaily.objects.order_by('date').values_list('date', flat=True).first()
+
+    return {
+        'today': today_views,
+        'yesterday': yesterday_views,
+        'today_vs_yesterday_pct': _pct_change(today_views, yesterday_views),
+        'week': week_views,
+        'prev_week': prev_week_views,
+        'week_vs_prev_pct': _pct_change(week_views, prev_week_views),
+        'month': month_views,
+        'avg_daily_month': round(month_views / 30, 1),
+        'tracking_since': first_tracked.isoformat() if first_tracked else None,
+        'has_tracking_data': PostViewDaily.objects.exists(),
+    }
+
+
+def get_blog_traffic_analytics(*, days: int = 30) -> dict[str, Any]:
+    """نمودار بازدید روزانه، مقایسه دوره‌ای و توزیع دسته."""
+    days = max(7, min(days, 90))
+    today = timezone.localdate()
+    since = today - timedelta(days=days - 1)
+    prev_since = since - timedelta(days=days)
+    prev_until = since - timedelta(days=1)
+
+    current_map = _daily_views_map(start=since, end=today)
+    prev_map = _daily_views_map(start=prev_since, end=prev_until)
+
+    labels: list[str] = []
+    counts: list[int] = []
+    prev_counts: list[int] = []
+    for offset in range(days):
+        day = since + timedelta(days=offset)
+        prev_day = prev_since + timedelta(days=offset)
+        labels.append(day.isoformat())
+        counts.append(current_map.get(day, 0))
+        prev_counts.append(prev_map.get(prev_day, 0))
+
+    period_total = sum(counts)
+    prev_period_total = sum(prev_counts)
+
+    categories = list(
+        PostViewDaily.objects.filter(date__gte=since, date__lte=today)
+        .values('post__category__name', 'post__category__slug')
+        .annotate(views=Sum('views'))
+        .order_by('-views')[:10]
+    )
+    for row in categories:
+        if not row['post__category__name']:
+            row['post__category__name'] = 'بدون دسته'
+            row['post__category__slug'] = ''
+
+    top_posts_period = list(
+        PostViewDaily.objects.filter(date__gte=since, date__lte=today)
+        .values('post__id', 'post__title', 'post__slug')
+        .annotate(views=Sum('views'))
+        .order_by('-views')[:10]
+    )
+
+    return {
+        'days': days,
+        'period_total': period_total,
+        'prev_period_total': prev_period_total,
+        'period_delta_pct': _pct_change(period_total, prev_period_total),
+        'avg_daily': round(period_total / days, 1) if days else 0,
+        'views_daily': {
+            'labels': labels,
+            'counts': counts,
+            'prev_counts': prev_counts,
+        },
+        'views_by_category': [
+            {
+                'name': row['post__category__name'],
+                'slug': row['post__category__slug'],
+                'views': row['views'],
+            }
+            for row in categories
+        ],
+        'top_posts_period': [
+            {
+                'id': row['post__id'],
+                'title': row['post__title'],
+                'slug': row['post__slug'],
+                'views': row['views'],
+            }
+            for row in top_posts_period
+        ],
+    }
+
+
 def get_blog_analytics_chart(days: int = 30) -> dict[str, Any]:
-    """داده نمودار — انتشار و بازدید برتر."""
+    """داده نمودار — انتشار، بازدید برتر و ترافیک روزانه."""
     days = max(7, min(days, 90))
     since = timezone.now() - timedelta(days=days)
 
@@ -114,10 +240,15 @@ def get_blog_analytics_chart(days: int = 30) -> dict[str, Any]:
         .values('title', 'slug', 'views_count')
     )
 
+    traffic = get_blog_traffic_analytics(days=days)
+    pulse = get_blog_traffic_pulse()
+
     return {
         'days': days,
         'published_daily': {'labels': daily_labels, 'counts': daily_counts},
         'top_views': top_views,
+        'traffic': traffic,
+        'pulse': pulse,
     }
 
 
@@ -149,5 +280,7 @@ def build_blog_stats_json(
         },
         'summary': stats,
         'analytics': analytics,
+        'traffic': analytics.get('traffic'),
+        'pulse': analytics.get('pulse'),
         'posts': posts,
     }

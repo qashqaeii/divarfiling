@@ -65,3 +65,30 @@ class Post(models.Model):
     def get_absolute_url(self):
         return reverse('blog:post_detail', kwargs={'slug': self.slug})
 
+
+class PostViewDaily(models.Model):
+    """بازدید روزانه هر مقاله — پایه Analytics پنل مدیریت."""
+
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name='daily_views',
+        verbose_name='مقاله',
+    )
+    date = models.DateField(verbose_name='تاریخ', db_index=True)
+    views = models.PositiveIntegerField(default=0, verbose_name='بازدید')
+
+    class Meta:
+        verbose_name = 'بازدید روزانه'
+        verbose_name_plural = 'بازدیدهای روزانه'
+        ordering = ['-date', '-views']
+        constraints = [
+            models.UniqueConstraint(fields=['post', 'date'], name='blog_postviewdaily_post_date_uniq'),
+        ]
+        indexes = [
+            models.Index(fields=['date', 'views']),
+        ]
+
+    def __str__(self):
+        return f'{self.post_id} · {self.date} · {self.views}'
+

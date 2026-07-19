@@ -30,6 +30,7 @@
         return {
             teal: isDark() ? 'rgba(20, 184, 166, 0.7)' : 'rgba(13, 148, 136, 0.65)',
             tealBorder: isDark() ? '#14b8a6' : '#0d9488',
+            violet: isDark() ? 'rgba(167, 139, 250, 0.75)' : 'rgba(124, 58, 237, 0.7)',
             gold: isDark() ? 'rgba(232, 197, 71, 0.65)' : 'rgba(201, 162, 39, 0.7)',
             grid: isDark() ? 'rgba(148, 163, 184, 0.08)' : 'rgba(148, 163, 184, 0.15)',
             text: isDark() ? '#94a3b8' : '#64748b',
@@ -189,16 +190,151 @@
         });
     }
 
-    /* ─── Charts ─── */
-    function initCharts() {
+    function formatPct(n) {
+        if (n === null || n === undefined || Number.isNaN(n)) return '—';
+        var sign = n >= 0 ? '+' : '';
+        return sign + toFa(n) + '٪';
+    }
+
+    function trendFromPct(n) {
+        if (n === null || n === undefined || Number.isNaN(n)) return 'flat';
+        if (n > 0) return 'up';
+        if (n < 0) return 'down';
+        return 'flat';
+    }
+
+    function shortLabel(iso, index, total) {
+        if (!iso) return '';
+        var parts = iso.split('-');
+        if (total <= 14) return toFa(parseInt(parts[2], 10)) + '/' + toFa(parseInt(parts[1], 10));
+        if (index % Math.ceil(total / 8) === 0 || index === total - 1) {
+            return toFa(parseInt(parts[2], 10)) + '/' + toFa(parseInt(parts[1], 10));
+        }
+        return '';
+    }
+
+    var chartInstances = {};
+
+    function destroyCharts() {
+        Object.keys(chartInstances).forEach(function (key) {
+            if (chartInstances[key]) {
+                chartInstances[key].destroy();
+                chartInstances[key] = null;
+            }
+        });
+    }
+
+    function setBadge(id, pct) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = formatPct(pct);
+        el.setAttribute('data-trend', trendFromPct(pct));
+    }
+
+    function updatePulseUI(data) {
+        var pulse = (data && data.pulse) || {};
+        var traffic = (data && data.traffic) || {};
+        var todayEl = document.getElementById('ab-pulse-today');
+        var yesterdayEl = document.getElementById('ab-pulse-yesterday');
+        var weekEl = document.getElementById('ab-pulse-week');
+        var periodTotalEl = document.getElementById('ab-pulse-period-total');
+        var periodHintEl = document.getElementById('ab-pulse-period-hint');
+        var noteEl = document.getElementById('ab-tracking-note');
+
+        if (todayEl) todayEl.textContent = formatNum(pulse.today);
+        if (yesterdayEl) yesterdayEl.textContent = formatNum(pulse.yesterday);
+        if (weekEl) weekEl.textContent = formatNum(pulse.week);
+        if (periodTotalEl) periodTotalEl.textContent = formatNum(traffic.period_total);
+        if (periodHintEl) {
+            periodHintEl.textContent = 'میانگین روزانه ' + formatNum(traffic.avg_daily);
+        }
+
+        setBadge('ab-pulse-today-badge', pulse.today_vs_yesterday_pct);
+        setBadge('ab-pulse-week-badge', pulse.week_vs_prev_pct);
+
+        if (noteEl) {
+            if (pulse.tracking_since) {
+                noteEl.textContent = 'ردیابی روزانه از ' + pulse.tracking_since + ' فعال است.';
+            } else {
+                noteEl.textContent = 'ردیابی روزانه از همین لحظه شروع می‌شود — بازدیدهای جدید در نمودار ثبت می‌شوند.';
+            }
+        }
+    }
+
+    function renderCharts(data) {
         if (typeof Chart === 'undefined') return;
+        destroyCharts();
+
         var colors = chartColors();
-        var data = getAnalytics();
         var publish = data.published_daily || { labels: [], counts: [] };
         var topViews = data.top_views || [];
+        var traffic = data.traffic || {};
+        var viewsDaily = traffic.views_daily || { labels: [], counts: [], prev_counts: [] };
+        var categories = traffic.views_by_category || [];
+        var periodTop = traffic.top_posts_period || [];
 
         Chart.defaults.font.family = 'inherit';
         Chart.defaults.color = colors.text;
+
+        var trafficCanvas = document.getElementById('adm-blog-chart-traffic');
+        if (trafficCanvas && viewsDaily.labels.length) {
+            var labels = viewsDaily.labels.map(function (iso, i) {
+                return shortLabel(iso, i, viewsDaily.labels.length);
+            });
+            chartInstances.traffic = new Chart(trafficCanvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'دوره جاری',
+                            data: viewsDaily.counts,
+                            borderColor: colors.tealBorder,
+                            backgroundColor: isDark() ? 'rgba(20, 184, 166, 0.12)' : 'rgba(13, 148, 136, 0.1)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2.5,
+                            pointRadius: viewsDaily.labels.length > 20 ? 0 : 3,
+                            pointHoverRadius: 5,
+                        },
+                        {
+                            label: 'دوره قبل',
+                            data: viewsDaily.prev_counts,
+                            borderColor: isDark() ? 'rgba(148, 163, 184, 0.55)' : 'rgba(100, 116, 139, 0.55)',
+                            borderDash: [6, 4],
+                            fill: false,
+                            tension: 0.35,
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function (items) {
+                                    var idx = items[0] && items[0].dataIndex;
+                                    return viewsDaily.labels[idx] || '';
+                                },
+                            },
+                        },
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 },
+                            grid: { color: colors.grid },
+                        },
+                    },
+                },
+            });
+        }
 
         var pubCanvas = document.getElementById('adm-blog-chart-publish');
         if (pubCanvas) {
@@ -206,7 +342,7 @@
             grad.addColorStop(0, colors.teal);
             grad.addColorStop(1, 'rgba(13, 148, 136, 0.05)');
 
-            new Chart(pubCanvas, {
+            chartInstances.publish = new Chart(pubCanvas, {
                 type: 'bar',
                 data: {
                     labels: publish.labels,
@@ -236,16 +372,75 @@
             });
         }
 
+        var catCanvas = document.getElementById('adm-blog-chart-category');
+        if (catCanvas && categories.length) {
+            var catColors = [
+                colors.tealBorder, '#7c3aed', '#c9a227', '#10b981', '#f59e0b',
+                '#f43f5e', '#3b82f6', '#ec4899', '#84cc16', '#64748b',
+            ];
+            chartInstances.category = new Chart(catCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: categories.map(function (c) { return c.name; }),
+                    datasets: [{
+                        data: categories.map(function (c) { return c.views; }),
+                        backgroundColor: catColors.slice(0, categories.length),
+                        borderWidth: 2,
+                        borderColor: isDark() ? '#0f172a' : '#fff',
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '62%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 10, padding: 10, font: { size: 10 } },
+                        },
+                    },
+                },
+            });
+        }
+
+        var periodCanvas = document.getElementById('adm-blog-chart-period-views');
+        if (periodCanvas && periodTop.length) {
+            chartInstances.period = new Chart(periodCanvas, {
+                type: 'bar',
+                data: {
+                    labels: periodTop.map(function (p) {
+                        return p.title.length > 22 ? p.title.slice(0, 22) + '…' : p.title;
+                    }),
+                    datasets: [{
+                        label: 'بازدید دوره',
+                        data: periodTop.map(function (p) { return p.views; }),
+                        backgroundColor: colors.violet || 'rgba(124, 58, 237, 0.65)',
+                        borderRadius: 6,
+                    }],
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: colors.grid } },
+                        y: { grid: { display: false } },
+                    },
+                },
+            });
+        }
+
         var viewsCanvas = document.getElementById('adm-blog-chart-views');
         if (viewsCanvas && topViews.length) {
-            new Chart(viewsCanvas, {
+            chartInstances.views = new Chart(viewsCanvas, {
                 type: 'bar',
                 data: {
                     labels: topViews.map(function (p) {
                         return p.title.length > 24 ? p.title.slice(0, 24) + '…' : p.title;
                     }),
                     datasets: [{
-                        label: 'بازدید',
+                        label: 'بازدید کل',
                         data: topViews.map(function (p) { return p.views_count; }),
                         backgroundColor: colors.gold,
                         borderRadius: 6,
@@ -263,6 +458,44 @@
                 },
             });
         }
+    }
+
+    function initCharts() {
+        var data = getAnalytics();
+        updatePulseUI(data);
+        renderCharts(data);
+    }
+
+    function initAnalyticsRange() {
+        var range = document.getElementById('ab-analytics-range');
+        var loading = document.getElementById('ab-analytics-loading');
+        var meta = getMeta();
+        if (!range || !meta.analyticsUrl) return;
+
+        range.addEventListener('click', function (e) {
+            var btn = e.target.closest('.ab-range-btn');
+            if (!btn) return;
+            var days = parseInt(btn.getAttribute('data-days'), 10) || 30;
+
+            range.querySelectorAll('.ab-range-btn').forEach(function (b) {
+                b.classList.toggle('is-active', b === btn);
+            });
+
+            if (loading) loading.hidden = false;
+
+            fetch(meta.analyticsUrl + '?days=' + days, { credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    window.admBlogAnalytics = data;
+                    updatePulseUI(data);
+                    renderCharts(data);
+                    meta.analyticsDays = days;
+                })
+                .catch(function () { /* silent */ })
+                .finally(function () {
+                    if (loading) loading.hidden = true;
+                });
+        });
     }
 
     /* ─── JSON editor ─── */
@@ -471,6 +704,7 @@
         initCounters();
         initSearch();
         initCharts();
+        initAnalyticsRange();
         initEditor();
         initImport();
     });

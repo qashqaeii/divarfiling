@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.html import strip_tags
 from django.views.generic import ListView, DetailView
 from .models import Post, Category
+from .services.view_tracking import record_post_view
 from .post_seo_extras import get_post_seo_extras
 from .seo_helpers import (
     format_iso_datetime,
@@ -97,6 +98,7 @@ class PostDetailView(DetailView):
         if obj.is_published:
             obj.views_count += 1
             obj.save(update_fields=['views_count'])
+            record_post_view(obj)
         return obj
 
     def get_context_data(self, **kwargs):

@@ -39,16 +39,33 @@ JOURNEY_STEP_KEYS = (
     'recovery_step_2',
 )
 
+JOURNEY_STEP_LABELS_FA = {
+    'recovery_step_1': 'مرحله ۱ (۲–۲۴ ساعت)',
+    'recovery_step_1_late': 'مرحله ۱ دیررس (۲۴–۷۲ ساعت)',
+    'recovery_step_2': 'مرحله ۲ (پس از مرحله ۱ + ۲۴ ساعت)',
+}
+
+RUN_MODE_LABELS_FA = {
+    MarketingAutomationRun.Mode.DRY_RUN: 'آزمایشی',
+    MarketingAutomationRun.Mode.LIVE: 'واقعی',
+}
+
+RUN_STATUS_LABELS_FA = {
+    MarketingAutomationRun.Status.RUNNING: 'در حال اجرا',
+    MarketingAutomationRun.Status.COMPLETED: 'تکمیل‌شده',
+    MarketingAutomationRun.Status.FAILED: 'ناموفق',
+}
+
 ACTION_LABELS_FA = {
-    MarketingAutomationActionLog.Action.WOULD_SEND: 'Would Send',
-    MarketingAutomationActionLog.Action.SEND_REQUESTED: 'Send Requested',
-    MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED: 'SMS Accepted',
-    MarketingAutomationActionLog.Action.TEST_PROVIDER_ACCEPTED: 'Test Accepted',
-    MarketingAutomationActionLog.Action.DELIVERED: 'Delivered',
-    MarketingAutomationActionLog.Action.SENT: 'Sent',
-    MarketingAutomationActionLog.Action.FAILED: 'Failed',
-    MarketingAutomationActionLog.Action.SUPPRESSED: 'Suppressed',
-    MarketingAutomationActionLog.Action.CANCELLED: 'Cancelled',
+    MarketingAutomationActionLog.Action.WOULD_SEND: 'ارسال شبیه‌سازی',
+    MarketingAutomationActionLog.Action.SEND_REQUESTED: 'درخواست ارسال',
+    MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED: 'پیامک پذیرفته',
+    MarketingAutomationActionLog.Action.TEST_PROVIDER_ACCEPTED: 'تست — پذیرفته',
+    MarketingAutomationActionLog.Action.DELIVERED: 'تحویل‌شده',
+    MarketingAutomationActionLog.Action.SENT: 'ارسال‌شده',
+    MarketingAutomationActionLog.Action.FAILED: 'ناموفق',
+    MarketingAutomationActionLog.Action.SUPPRESSED: 'حذف‌شده',
+    MarketingAutomationActionLog.Action.CANCELLED: 'لغوشده',
 }
 
 
@@ -151,44 +168,44 @@ def build_recovery_funnel(*, since, now=None) -> dict[str, Any]:
             count=pricing,
             prev_count=None,
             available=pricing > 0,
-            note='' if pricing else 'ردیابی pricing_view',
+            note='' if pricing else 'ردیابی بازدید قیمت‌گذاری',
         ),
         _funnel_stage(
             key='checkout_started',
-            label='شروع Checkout',
+            label='شروع تسویه',
             count=checkout,
             prev_count=pricing or None,
             available=checkout > 0,
         ),
         _funnel_stage(
             key='checkout_abandoned',
-            label='رها کردن Checkout',
+            label='رها کردن تسویه',
             count=abandoned,
             prev_count=checkout or None,
             available=abandoned > 0,
         ),
         _funnel_stage(
             key='recovery_eligible',
-            label='واجد Recovery (الان)',
+            label='واجد بازیابی (الان)',
             count=eligible_now,
             prev_count=abandoned or None,
             available=True,
-            note='Snapshot لحظه‌ای — would_send',
+            note='نمای لحظه‌ای — آماده ارسال',
         ),
         _funnel_stage(
             key='sms_accepted',
-            label='SMS پذیرفته',
+            label='پیامک پذیرفته',
             count=accepted,
             prev_count=eligible_now or None,
             available=True,
         ),
         _funnel_stage(
             key='sms_delivered',
-            label='SMS تحویل',
+            label='پیامک تحویل',
             count=delivered,
             prev_count=accepted or None,
             available=True,
-            note='delivered یا accepted + sms_log.sent',
+            note='تحویل یا پذیرش + ارسال موفق',
         ),
         _funnel_stage(
             key='recovered_paid',
@@ -196,7 +213,7 @@ def build_recovery_funnel(*, since, now=None) -> dict[str, Any]:
             count=None,
             prev_count=None,
             available=False,
-            note='فاز ۲ — Strict Attribution',
+            note='فاز ۲ — نسبت‌دهی Strict',
         ),
     ]
 
@@ -210,7 +227,7 @@ def build_recovery_funnel(*, since, now=None) -> dict[str, Any]:
         'conversion_rate': None,
         'revenue_per_sms': None,
         'attribution_phase': ATTRIBUTION_PHASE,
-        'attribution_note': 'Recovered Revenue پس از فاز Attribution (Strict + Assisted)',
+        'attribution_note': 'درآمد بازیابی‌شده پس از فاز نسبت‌دهی (Strict + Assisted)',
     }
 
     return {'stages': stages, 'executive': executive}
@@ -238,7 +255,7 @@ def build_journey_performance(*, since, now=None) -> list[dict[str, Any]]:
         }[step_key]
         rows.append({
             'step_key': step_key,
-            'label': STEP_LABELS_FA.get(step_key, step_key),
+            'label': JOURNEY_STEP_LABELS_FA.get(step_key, STEP_LABELS_FA.get(step_key, step_key)),
             'sent': sent,
             'failed': failed,
             'suppressed': suppressed,
@@ -274,17 +291,17 @@ def build_recovery_data_quality(*, since) -> dict[str, Any]:
     if abandon_total and abandon_no_user_pct >= 10:
         warnings.append({
             'severity': 'warn',
-            'message': f'{abandon_no_user_pct}٪ checkout_abandon بدون user',
+            'message': f'{to_persian_digits(str(abandon_no_user_pct))}٪ رویداد رها کردن بدون کاربر',
         })
     if sms_without_order:
         warnings.append({
             'severity': 'warn',
-            'message': f'{sms_without_order} SMS بدون order',
+            'message': f'{to_persian_digits(str(sms_without_order))} پیامک بدون سفارش',
         })
     if missing_step:
         warnings.append({
             'severity': 'medium',
-            'message': f'{missing_step} ActionLog بدون step_key',
+            'message': f'{to_persian_digits(str(missing_step))} لاگ بدون مرحله',
         })
 
     return {
@@ -346,21 +363,27 @@ def build_recovery_health(*, now=None) -> dict[str, Any]:
             'status': 'on' if cfg['flow_enabled'] else 'off',
         },
         'record_checkout_abandons': {
-            'label': 'record_checkout_abandons',
+            'label': 'ثبت رها کردن checkout',
             'last_signal_at': (
                 last_abandon_event.created_at.isoformat() if last_abandon_event else None
             ),
             'last_signal_label': _age_label(
                 last_abandon_event.created_at if last_abandon_event else None,
             ),
-            'note': 'آخرین checkout_abandon event — cron جداگانه در Run ثبت نمی‌شود',
+            'note': 'بر اساس آخرین رویداد رها کردن — زمان cron جداگانه ثبت نمی‌شود',
         },
         'run_pending_recovery': {
-            'label': 'run_pending_recovery',
+            'label': 'اجرای بازیابی',
             'last_run_at': last_run.started_at.isoformat() if last_run else None,
             'last_run_label': _age_label(last_run.started_at if last_run else None),
             'last_mode': last_run.mode if last_run else None,
+            'last_mode_label': (
+                RUN_MODE_LABELS_FA.get(last_run.mode, last_run.mode) if last_run else None
+            ),
             'last_status': last_run.status if last_run else None,
+            'last_status_label': (
+                RUN_STATUS_LABELS_FA.get(last_run.status, last_run.status) if last_run else None
+            ),
             'last_would_send': last_run.would_send_count if last_run else None,
             'last_examined': last_run.examined_count if last_run else None,
         },
@@ -399,7 +422,10 @@ def build_explorer_rows(
             'order_id': str(log.order_id) if log.order_id else None,
             'masked_phone': log.masked_phone,
             'step_key': log.step_key,
-            'step_label': STEP_LABELS_FA.get(log.step_key, log.step_key),
+            'step_label': JOURNEY_STEP_LABELS_FA.get(
+                log.step_key,
+                STEP_LABELS_FA.get(log.step_key, log.step_key),
+            ),
             'action': log.action,
             'action_label': ACTION_LABELS_FA.get(log.action, log.action),
             'reason': log.reason,
@@ -421,16 +447,16 @@ def build_explorer_rows(
 
 def _explorer_status_label(log: MarketingAutomationActionLog) -> str:
     if log.action == MarketingAutomationActionLog.Action.SUPPRESSED:
-        return log.reason or 'Suppressed'
+        return log.reason or 'حذف‌شده'
     if log.action == MarketingAutomationActionLog.Action.FAILED:
-        return 'Failed'
+        return 'ناموفق'
     if is_production_recovery_send(log):
         if log.order and log.order.status == 'paid':
-            return 'Paid (attribution pending)'
-        return 'Waiting payment'
+            return 'پرداخت شده (نسبت‌دهی در انتظار)'
+        return 'در انتظار پرداخت'
     if log.action == MarketingAutomationActionLog.Action.WOULD_SEND:
-        return 'Dry run'
-    return log.get_action_display()
+        return 'اجرای آزمایشی'
+    return ACTION_LABELS_FA.get(log.action, log.get_action_display())
 
 
 def get_recovery_center_context(*, days: int = 30, page: int = 1) -> dict[str, Any]:

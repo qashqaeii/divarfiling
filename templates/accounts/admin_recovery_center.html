@@ -3,14 +3,14 @@
 {% load persian_tags %}
 {% load currency_tags %}
 
-{% block title %}Recovery Center | پنل مدیریت{% endblock %}
+{% block title %}مرکز بازیابی | پنل مدیریت{% endblock %}
 
 {% block body_class %}mk-admin-dashboard ab-luxe arc-luxe{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/admin-recovery-center.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/admin-recovery-center.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -32,14 +32,14 @@
                     <span>بازگشت به داشبورد</span>
                 </a>
                 <div class="ab-hero__badges">
-                    <span class="ab-pill ab-pill--live"><span class="ab-pill__dot"></span> Recovery Intelligence</span>
-                    <span class="ab-pill arc-pill--amber">Decision Layer v1</span>
+                    <span class="ab-pill ab-pill--live"><span class="ab-pill__dot"></span> هوش بازیابی</span>
+                    <span class="ab-pill arc-pill--amber">لایه تصمیم v1</span>
                 </div>
             </div>
             <div class="ab-hero__body">
-                <p class="ab-hero__eyebrow arc-eyebrow">Revenue Intelligence</p>
-                <h1 class="ab-hero__title">Recovery <em>Center</em></h1>
-                <p class="ab-hero__lead">قیف بازیابی Checkout، عملکرد Journey، سلامت موتور و Explorer — بدون ارسال دستی.</p>
+                <p class="ab-hero__eyebrow arc-eyebrow">هوش درآمد</p>
+                <h1 class="ab-hero__title">مرکز <em>بازیابی</em></h1>
+                <p class="ab-hero__lead">قیف بازیابی تسویه، عملکرد مسیر پیامک، سلامت موتور و کاوشگر — بدون ارسال دستی.</p>
                 <p class="arc-period">
                     <i class="fas fa-calendar-day"></i>
                     بازه: <strong>{{ summary.period_start_jalali }}</strong>
@@ -58,7 +58,7 @@
                     <i class="fas fa-file-code"></i><span>دانلود JSON</span>
                 </a>
                 <a href="{% url 'admin_panel_plan_conversion' %}?days={{ days }}" class="ab-btn ab-btn--ghost arc-btn-minimal">
-                    <i class="fas fa-filter-circle-dollar"></i><span>Plan Conversion</span>
+                    <i class="fas fa-filter-circle-dollar"></i><span>تبدیل پلن</span>
                 </a>
             </div>
         </div>
@@ -66,52 +66,52 @@
             <div class="arc-freshness">
                 <span class="arc-freshness__label">تازگی داده</span>
                 <ul>
-                    <li><small>آخرین abandon</small><strong>{% if data_freshness.last_event_at %}✓{% else %}—{% endif %}</strong></li>
-                    <li><small>آخرین run</small><strong>{% if data_freshness.last_recovery_run_at %}✓{% else %}—{% endif %}</strong></li>
+                    <li><small>آخرین رها کردن</small><strong>{% if data_freshness.last_event_at %}✓{% else %}—{% endif %}</strong></li>
+                    <li><small>آخرین اجرا</small><strong>{% if data_freshness.last_recovery_run_at %}✓{% else %}—{% endif %}</strong></li>
                 </ul>
             </div>
         </div>
     </header>
 
-    <nav class="arc-tabs" id="arc-tabs" aria-label="بخش‌های Recovery Center">
-        <button type="button" class="arc-tab is-active" data-tab="funnel">Funnel</button>
-        <button type="button" class="arc-tab" data-tab="journey">Journey</button>
-        <button type="button" class="arc-tab" data-tab="health">Health</button>
-        <button type="button" class="arc-tab" data-tab="explorer">Explorer</button>
+    <nav class="arc-tabs" id="arc-tabs" aria-label="بخش‌های مرکز بازیابی">
+        <button type="button" class="arc-tab is-active" data-tab="funnel">قیف</button>
+        <button type="button" class="arc-tab" data-tab="journey">مسیر پیامک</button>
+        <button type="button" class="arc-tab" data-tab="health">سلامت</button>
+        <button type="button" class="arc-tab" data-tab="explorer">کاوشگر</button>
     </nav>
 
     {# ─── Tab: Funnel ─── #}
     <section class="arc-panel is-active" id="arc-panel-funnel" data-panel="funnel">
-        <div class="arc-kpi-grid" aria-label="شاخص‌های Executive">
+        <div class="arc-kpi-grid" aria-label="شاخص‌های کلیدی">
             <article class="arc-kpi">
                 <span class="arc-kpi__val">{{ summary.abandoned|currency }}</span>
-                <span class="arc-kpi__lbl">Abandoned</span>
+                <span class="arc-kpi__lbl">رها شده</span>
             </article>
             <article class="arc-kpi">
                 <span class="arc-kpi__val">{{ summary.eligible_now|currency }}</span>
-                <span class="arc-kpi__lbl">Eligible (now)</span>
+                <span class="arc-kpi__lbl">واجد شرایط (الان)</span>
             </article>
             <article class="arc-kpi">
                 <span class="arc-kpi__val">{{ summary.sms_accepted|currency }}</span>
-                <span class="arc-kpi__lbl">SMS Accepted</span>
+                <span class="arc-kpi__lbl">پیامک پذیرفته</span>
             </article>
             <article class="arc-kpi">
                 <span class="arc-kpi__val">{{ summary.sms_delivered|currency }}</span>
-                <span class="arc-kpi__lbl">SMS Delivered</span>
+                <span class="arc-kpi__lbl">پیامک تحویل</span>
             </article>
-            <article class="arc-kpi arc-kpi--pending" title="فاز ۲ — Strict Attribution">
+            <article class="arc-kpi arc-kpi--pending" title="فاز ۲ — نسبت‌دهی Strict">
                 <span class="arc-kpi__val">—</span>
-                <span class="arc-kpi__lbl">Recovered <i class="fas fa-circle-info" aria-hidden="true"></i></span>
+                <span class="arc-kpi__lbl">بازیابی‌شده <i class="fas fa-circle-info" aria-hidden="true"></i></span>
             </article>
-            <article class="arc-kpi arc-kpi--pending" title="فاز ۲ — Strict Attribution">
+            <article class="arc-kpi arc-kpi--pending" title="فاز ۲ — نسبت‌دهی Strict">
                 <span class="arc-kpi__val">—</span>
-                <span class="arc-kpi__lbl">Revenue <i class="fas fa-circle-info" aria-hidden="true"></i></span>
+                <span class="arc-kpi__lbl">درآمد <i class="fas fa-circle-info" aria-hidden="true"></i></span>
             </article>
         </div>
 
         <div class="arc-alert arc-alert--info">
             <i class="fas fa-chart-line"></i>
-            <span>Recovered Revenue پس از فاز Attribution (Strict: همان order abandon · Assisted: fallback journey) نمایش داده می‌شود.</span>
+            <span>درآمد بازیابی‌شده پس از فاز نسبت‌دهی نمایش داده می‌شود (Strict: همان سفارش رها شده · Assisted: سفر checkout مرتبط).</span>
         </div>
 
         <div class="arc-funnel-list">
@@ -139,13 +139,13 @@
             <table class="arc-table">
                 <thead>
                     <tr>
-                        <th>Journey</th>
-                        <th>Sent</th>
-                        <th>Failed</th>
-                        <th>Suppressed</th>
-                        <th>Eligible now</th>
-                        <th>Paid</th>
-                        <th>Conv.</th>
+                        <th>مرحله</th>
+                        <th>ارسال</th>
+                        <th>ناموفق</th>
+                        <th>حذف‌شده</th>
+                        <th>واجد شرایط (الان)</th>
+                        <th>پرداخت</th>
+                        <th>تبدیل</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -169,34 +169,34 @@
     <section class="arc-panel" id="arc-panel-health" data-panel="health" hidden>
         <div class="arc-health-grid">
             <article class="arc-health-card">
-                <h3><i class="fas fa-power-off"></i> Recovery Engine</h3>
+                <h3><i class="fas fa-power-off"></i> موتور بازیابی</h3>
                 <p class="arc-health-status arc-health-status--{% if health.recovery_engine.flow_enabled %}ok{% else %}warn{% endif %}">
-                    {% if health.recovery_engine.flow_enabled %}ON{% else %}OFF{% endif %}
+                    {% if health.recovery_engine.flow_enabled %}روشن{% else %}خاموش{% endif %}
                 </p>
                 <ul class="arc-health-meta">
-                    <li>Live send: {% if health.recovery_engine.live_send_enabled %}فعال{% else %}غیرفعال{% endif %}</li>
-                    <li>Test only: {% if health.recovery_engine.test_only %}بله{% else %}خیر{% endif %}</li>
+                    <li>ارسال واقعی: {% if health.recovery_engine.live_send_enabled %}فعال{% else %}غیرفعال{% endif %}</li>
+                    <li>فقط تست: {% if health.recovery_engine.test_only %}بله{% else %}خیر{% endif %}</li>
                 </ul>
             </article>
 
             <article class="arc-health-card">
-                <h3><i class="fas fa-clock"></i> record_checkout_abandons</h3>
+                <h3><i class="fas fa-clock"></i> ثبت رها کردن checkout</h3>
                 <p>{{ health.record_checkout_abandons.last_signal_label }}</p>
                 <small class="arc-muted">{{ health.record_checkout_abandons.note }}</small>
             </article>
 
             <article class="arc-health-card">
-                <h3><i class="fas fa-rotate"></i> run_pending_recovery</h3>
+                <h3><i class="fas fa-rotate"></i> اجرای بازیابی</h3>
                 <p>{{ health.run_pending_recovery.last_run_label }}</p>
-                {% if health.run_pending_recovery.last_mode %}
-                <small>{{ health.run_pending_recovery.last_mode }} · {{ health.run_pending_recovery.last_status }}</small>
+                {% if health.run_pending_recovery.last_mode_label %}
+                <small>{{ health.run_pending_recovery.last_mode_label }} · {{ health.run_pending_recovery.last_status_label }}</small>
                 {% endif %}
             </article>
 
             <article class="arc-health-card">
-                <h3><i class="fas fa-comment-sms"></i> SMS Provider</h3>
+                <h3><i class="fas fa-comment-sms"></i> سرویس پیامک</h3>
                 {% if health.sms_provider.ok %}
-                <p class="arc-health-status arc-health-status--ok">Connected</p>
+                <p class="arc-health-status arc-health-status--ok">متصل</p>
                 <small>
                     {% if health.sms_provider.sms_count is not None %}
                     {{ health.sms_provider.sms_count|currency }} پیامک
@@ -210,13 +210,13 @@
             </article>
 
             <article class="arc-health-card">
-                <h3><i class="fas fa-list-ol"></i> Queue</h3>
+                <h3><i class="fas fa-list-ol"></i> صف انتظار</h3>
                 <p class="arc-health-queue">{{ health.queue|currency }}</p>
-                <small>would_send الان</small>
+                <small>آماده ارسال در این لحظه</small>
             </article>
 
             <article class="arc-health-card">
-                <h3><i class="fas fa-triangle-exclamation"></i> Errors (24h)</h3>
+                <h3><i class="fas fa-triangle-exclamation"></i> خطا (۲۴ ساعت)</h3>
                 <p class="arc-health-status arc-health-status--{% if health.errors_24h %}warn{% else %}ok{% endif %}">
                     {{ health.errors_24h|currency }}
                 </p>
@@ -224,22 +224,22 @@
         </div>
 
         <div class="arc-dq">
-            <h3><i class="fas fa-database"></i> Recovery Data Quality</h3>
+            <h3><i class="fas fa-database"></i> کیفیت داده بازیابی</h3>
             <ul class="arc-dq-list">
                 <li>
-                    <span>checkout_abandon بدون user</span>
+                    <span>رها کردن checkout بدون کاربر</span>
                     <strong>{{ data_quality.checkout_abandon_without_user_pct|to_persian_digits }}٪</strong>
                 </li>
                 <li>
-                    <span>SMS بدون order</span>
+                    <span>پیامک بدون سفارش</span>
                     <strong>{{ data_quality.sms_without_order|currency }}</strong>
                 </li>
                 <li>
-                    <span>ActionLog بدون step</span>
+                    <span>لاگ بدون مرحله</span>
                     <strong>{{ data_quality.action_log_missing_step|currency }}</strong>
                 </li>
                 <li>
-                    <span>Duplicate attribution</span>
+                    <span>نسبت‌دهی تکراری</span>
                     <strong>{{ data_quality.duplicate_attribution|currency }}</strong>
                     <small class="arc-muted">{{ data_quality.duplicate_attribution_note }}</small>
                 </li>
@@ -252,17 +252,17 @@
 
     {# ─── Tab: Explorer ─── #}
     <section class="arc-panel" id="arc-panel-explorer" data-panel="explorer" hidden>
-        <p class="arc-muted arc-explorer-note">فقط مشاهده — بدون ارسال. Attribution status: pending تا فاز ۲.</p>
+        <p class="arc-muted arc-explorer-note">فقط مشاهده — بدون ارسال. وضعیت نسبت‌دهی: در انتظار (فاز ۲).</p>
         <div class="arc-table-wrap">
             <table class="arc-table arc-table--compact">
                 <thead>
                     <tr>
-                        <th>User</th>
-                        <th>Order</th>
-                        <th>Step</th>
-                        <th>Action</th>
-                        <th>Time</th>
-                        <th>Status</th>
+                        <th>کاربر</th>
+                        <th>سفارش</th>
+                        <th>مرحله</th>
+                        <th>اقدام</th>
+                        <th>زمان</th>
+                        <th>وضعیت</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -282,7 +282,7 @@
             </table>
         </div>
         {% if explorer.pages > 1 %}
-        <nav class="arc-pagination" aria-label="صفحه Explorer">
+        <nav class="arc-pagination" aria-label="صفحه‌بندی کاوشگر">
             {% if page > 1 %}
             <a href="?days={{ days }}&page={{ page|add:'-1' }}#arc-panel-explorer">قبلی</a>
             {% endif %}

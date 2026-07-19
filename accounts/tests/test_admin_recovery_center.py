@@ -178,8 +178,8 @@ class AdminRecoveryCenterViewTests(TestCase):
         self.client.force_login(self.staff)
         resp = self.client.get(reverse('admin_panel_recovery_center'))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'Recovery Center')
-        self.assertContains(resp, 'Recovered Revenue')
+        self.assertContains(resp, 'مرکز بازیابی')
+        self.assertContains(resp, 'درآمد بازیابی‌شده')
 
     def test_json_endpoint(self):
         self.client.force_login(self.staff)
@@ -202,4 +202,4 @@ class AdminRecoveryCenterViewTests(TestCase):
         )
         self.client.force_login(self.staff)
         resp = self.client.get(reverse('admin_panel_recovery_center'))
-        self.assertContains(resp, 'Would Send')
+        self.assertContains(resp, 'ارسال شبیه‌سازی')

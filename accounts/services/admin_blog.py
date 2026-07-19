@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 
@@ -97,13 +97,75 @@ def _pct_change(current: int, previous: int) -> float | None:
     return None
 
 
+def _build_date_series(*, start, end, day_map: dict) -> tuple[list[str], list[int]]:
+    """سری پیوسته روزانه — روزهای بدون داده صفر می‌شوند."""
+    labels: list[str] = []
+    counts: list[int] = []
+    day = start
+    while day <= end:
+        labels.append(day.isoformat())
+        counts.append(int(day_map.get(day, 0)))
+        day += timedelta(days=1)
+    return labels, counts
+
+
 def _daily_views_map(*, start, end) -> dict:
     rows = (
         PostViewDaily.objects.filter(date__gte=start, date__lte=end)
         .values('date')
         .annotate(total=Sum('views'))
     )
-    return {row['date']: row['total'] for row in rows}
+    return {row['date']: int(row['total'] or 0) for row in rows}
+
+
+def _published_daily_series(*, days: int) -> dict[str, Any]:
+    today = timezone.localdate()
+    since = today - timedelta(days=days - 1)
+    pub_map: dict = {}
+    rows = (
+        Post.objects.filter(
+            is_published=True,
+            published_at__isnull=False,
+            published_at__date__gte=since,
+            published_at__date__lte=today,
+        )
+        .annotate(day=TruncDate('published_at'))
+        .values('day')
+        .annotate(count=Count('id'))
+    )
+    for row in rows:
+        if row['day']:
+            pub_map[row['day']] = int(row['count'] or 0)
+
+    labels, counts = _build_date_series(start=since, end=today, day_map=pub_map)
+    return {'labels': labels, 'counts': counts}
+
+
+def _cumulative_views_by_category(*, limit: int = 10) -> list[dict[str, Any]]:
+    rows = list(
+        Category.objects.annotate(views=Sum('post__views_count', filter=Q(post__is_published=True)))
+        .filter(views__gt=0)
+        .order_by('-views', 'name')
+        .values('name', 'slug', 'views')[:limit]
+    )
+    return [
+        {'name': row['name'], 'slug': row['slug'] or '', 'views': int(row['views'] or 0)}
+        for row in rows
+    ]
+
+
+def _cumulative_top_posts(*, limit: int = 10) -> list[dict[str, Any]]:
+    return [
+        {
+            'id': row['id'],
+            'title': row['title'],
+            'slug': row['slug'],
+            'views': int(row['views_count'] or 0),
+        }
+        for row in Post.objects.filter(is_published=True)
+        .order_by('-views_count')
+        .values('id', 'title', 'slug', 'views_count')[:limit]
+    ]
 
 
 def get_blog_traffic_pulse() -> dict[str, Any]:
@@ -153,18 +215,14 @@ def get_blog_traffic_analytics(*, days: int = 30) -> dict[str, Any]:
     current_map = _daily_views_map(start=since, end=today)
     prev_map = _daily_views_map(start=prev_since, end=prev_until)
 
-    labels: list[str] = []
-    counts: list[int] = []
-    prev_counts: list[int] = []
-    for offset in range(days):
-        day = since + timedelta(days=offset)
-        prev_day = prev_since + timedelta(days=offset)
-        labels.append(day.isoformat())
-        counts.append(current_map.get(day, 0))
-        prev_counts.append(prev_map.get(prev_day, 0))
+    labels, counts = _build_date_series(start=since, end=today, day_map=current_map)
+    _, prev_counts = _build_date_series(start=prev_since, end=prev_until, day_map=prev_map)
 
     period_total = sum(counts)
     prev_period_total = sum(prev_counts)
+    has_daily_in_period = any(counts) or PostViewDaily.objects.filter(
+        date__gte=since, date__lte=today,
+    ).exists()
 
     categories = list(
         PostViewDaily.objects.filter(date__gte=since, date__lte=today)
@@ -172,8 +230,16 @@ def get_blog_traffic_analytics(*, days: int = 30) -> dict[str, Any]:
         .annotate(views=Sum('views'))
         .order_by('-views')[:10]
     )
+    category_mode = 'daily'
+    if not categories or not has_daily_in_period:
+        categories = [
+            {'post__category__name': row['name'], 'post__category__slug': row['slug'], 'views': row['views']}
+            for row in _cumulative_views_by_category(limit=10)
+        ]
+        category_mode = 'cumulative'
+
     for row in categories:
-        if not row['post__category__name']:
+        if not row.get('post__category__name'):
             row['post__category__name'] = 'بدون دسته'
             row['post__category__slug'] = ''
 
@@ -183,6 +249,18 @@ def get_blog_traffic_analytics(*, days: int = 30) -> dict[str, Any]:
         .annotate(views=Sum('views'))
         .order_by('-views')[:10]
     )
+    period_mode = 'daily'
+    if not top_posts_period or not has_daily_in_period:
+        top_posts_period = [
+            {
+                'post__id': row['id'],
+                'post__title': row['title'],
+                'post__slug': row['slug'],
+                'views': row['views'],
+            }
+            for row in _cumulative_top_posts(limit=10)
+        ]
+        period_mode = 'cumulative'
 
     return {
         'days': days,
@@ -190,6 +268,9 @@ def get_blog_traffic_analytics(*, days: int = 30) -> dict[str, Any]:
         'prev_period_total': prev_period_total,
         'period_delta_pct': _pct_change(period_total, prev_period_total),
         'avg_daily': round(period_total / days, 1) if days else 0,
+        'has_daily_in_period': has_daily_in_period,
+        'views_by_category_mode': category_mode,
+        'top_posts_period_mode': period_mode,
         'views_daily': {
             'labels': labels,
             'counts': counts,
@@ -218,21 +299,8 @@ def get_blog_traffic_analytics(*, days: int = 30) -> dict[str, Any]:
 def get_blog_analytics_chart(days: int = 30) -> dict[str, Any]:
     """داده نمودار — انتشار، بازدید برتر و ترافیک روزانه."""
     days = max(7, min(days, 90))
-    since = timezone.now() - timedelta(days=days)
 
-    published_by_day = (
-        Post.objects.filter(is_published=True, published_at__gte=since)
-        .annotate(day=TruncDate('published_at'))
-        .values('day')
-        .annotate(count=Count('id'))
-        .order_by('day')
-    )
-    daily_labels = []
-    daily_counts = []
-    for row in published_by_day:
-        if row['day']:
-            daily_labels.append(row['day'].isoformat())
-            daily_counts.append(row['count'])
+    published_daily = _published_daily_series(days=days)
 
     top_views = list(
         Post.objects.filter(is_published=True)
@@ -242,13 +310,18 @@ def get_blog_analytics_chart(days: int = 30) -> dict[str, Any]:
 
     traffic = get_blog_traffic_analytics(days=days)
     pulse = get_blog_traffic_pulse()
+    stats = get_blog_dashboard_stats()
 
     return {
         'days': days,
-        'published_daily': {'labels': daily_labels, 'counts': daily_counts},
+        'published_daily': published_daily,
         'top_views': top_views,
         'traffic': traffic,
         'pulse': pulse,
+        'summary': {
+            'views_total': stats['views_total'],
+            'posts_published': stats['posts_published'],
+        },
     }
 
 

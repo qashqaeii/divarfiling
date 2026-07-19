@@ -9,7 +9,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -360,9 +360,9 @@
                 <div class="ab-pulse__top">
                     <span class="ab-pulse__icon"><i class="fas fa-gauge-high"></i></span>
                 </div>
-                <strong class="ab-pulse__val" id="ab-pulse-period-total">۰</strong>
-                <span class="ab-pulse__lbl">بازه انتخاب‌شده</span>
-                <small class="ab-pulse__hint" id="ab-pulse-period-hint">میانگین روزانه —</small>
+                <strong class="ab-pulse__val" id="ab-pulse-period-total">{{ blog_traffic.period_total|default:0|currency }}</strong>
+                <span class="ab-pulse__lbl">بازه انتخاب‌شده {% if not blog_traffic.has_daily_in_period %}(ردیابی روزانه){% endif %}</span>
+                <small class="ab-pulse__hint" id="ab-pulse-period-hint">میانگین روزانه {{ blog_traffic.avg_daily|default:0|currency }}</small>
             </article>
         </div>
 
@@ -378,7 +378,14 @@
                         <span><i class="ab-legend-dot ab-legend-dot--prev"></i> دوره قبل</span>
                     </div>
                 </header>
-                <div class="ab-chart-wrap ab-chart-wrap--hero"><canvas id="adm-blog-chart-traffic"></canvas></div>
+                <div class="ab-chart-wrap ab-chart-wrap--hero">
+                    <canvas id="adm-blog-chart-traffic"></canvas>
+                    <div class="ab-chart-empty" id="ab-empty-traffic" hidden>
+                        <i class="fas fa-chart-area"></i>
+                        <p>هنوز بازدید روزانه ثبت نشده</p>
+                        <small>با بازدید واقعی مقالات، روند روزانه اینجا ظاهر می‌شود</small>
+                    </div>
+                </div>
             </article>
         </div>
 
@@ -390,25 +397,43 @@
                         <p>تعداد مقالات منتشرشده</p>
                     </div>
                 </header>
-                <div class="ab-chart-wrap"><canvas id="adm-blog-chart-publish"></canvas></div>
+                <div class="ab-chart-wrap">
+                    <canvas id="adm-blog-chart-publish"></canvas>
+                    <div class="ab-chart-empty" id="ab-empty-publish" hidden>
+                        <i class="fas fa-calendar-xmark"></i>
+                        <p>انتشاری در این بازه نیست</p>
+                    </div>
+                </div>
             </article>
             <article class="ab-glass ab-chart-card">
                 <header class="ab-glass__head">
                     <div>
                         <h2><i class="fas fa-chart-pie"></i> بازدید بر اساس دسته</h2>
-                        <p>در بازه انتخاب‌شده</p>
+                        <p id="ab-category-chart-sub">در بازه انتخاب‌شده</p>
                     </div>
                 </header>
-                <div class="ab-chart-wrap ab-chart-wrap--donut"><canvas id="adm-blog-chart-category"></canvas></div>
+                <div class="ab-chart-wrap ab-chart-wrap--donut">
+                    <canvas id="adm-blog-chart-category"></canvas>
+                    <div class="ab-chart-empty" id="ab-empty-category" hidden>
+                        <i class="fas fa-folder-open"></i>
+                        <p>داده‌ای برای نمایش نیست</p>
+                    </div>
+                </div>
             </article>
             <article class="ab-glass ab-chart-card">
                 <header class="ab-glass__head">
                     <div>
                         <h2><i class="fas fa-fire"></i> داغ‌ترین‌ها در بازه</h2>
-                        <p>بازدید دوره‌ای (نه کل)</p>
+                        <p id="ab-period-chart-sub">بازدید دوره‌ای</p>
                     </div>
                 </header>
-                <div class="ab-chart-wrap ab-chart-wrap--tall"><canvas id="adm-blog-chart-period-views"></canvas></div>
+                <div class="ab-chart-wrap ab-chart-wrap--tall">
+                    <canvas id="adm-blog-chart-period-views"></canvas>
+                    <div class="ab-chart-empty" id="ab-empty-period" hidden>
+                        <i class="fas fa-fire-flame-curved"></i>
+                        <p>هنوز بازدید دوره‌ای ثبت نشده</p>
+                    </div>
+                </div>
             </article>
         </div>
 
@@ -420,7 +445,13 @@
                         <p>مجموع بازدید از ابتدا</p>
                     </div>
                 </header>
-                <div class="ab-chart-wrap ab-chart-wrap--tall"><canvas id="adm-blog-chart-views"></canvas></div>
+                <div class="ab-chart-wrap ab-chart-wrap--tall">
+                    <canvas id="adm-blog-chart-views"></canvas>
+                    <div class="ab-chart-empty" id="ab-empty-alltime" hidden>
+                        <i class="fas fa-trophy"></i>
+                        <p>مقاله منتشر‌شده‌ای وجود ندارد</p>
+                    </div>
+                </div>
             </article>
         </div>
     </section>
@@ -529,5 +560,5 @@ window.admBlogMeta = {
     analyticsDays: {{ analytics_days }},
 };
 </script>
-<script src="{% static 'js/admin-blog.js' %}?v=4"></script>
+<script src="{% static 'js/admin-blog.js' %}?v=6"></script>
 {% endblock %}

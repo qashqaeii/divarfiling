@@ -1166,6 +1166,44 @@ html.mk-public:not([data-theme="light"]) .ab-luxe {
     padding: 0 1.25rem 1.25rem;
 }
 
+.ab-chart-wrap canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.ab-chart-empty {
+    position: absolute;
+    inset: 0.5rem 1.25rem 1.25rem;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.35rem;
+    text-align: center;
+    color: var(--mk-text-muted);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.ab-chart-empty[hidden] { display: none !important; }
+
+.ab-chart-empty i {
+    font-size: 1.75rem;
+    opacity: 0.35;
+}
+
+.ab-chart-empty p {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.ab-chart-empty small {
+    font-size: 0.72rem;
+    max-width: 28ch;
+    line-height: 1.55;
+}
+
 .ab-chart-wrap--tall { height: 320px; }
 
 .ab-chart-card--wide { grid-column: 1 / -1; }

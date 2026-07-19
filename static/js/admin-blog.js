@@ -108,6 +108,17 @@
     }
 
     /* ─── Section panels ─── */
+    var chartsReady = false;
+    var pendingAnalyticsData = null;
+
+    function onAnalyticsTabVisible() {
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                ensureAnalyticsCharts(pendingAnalyticsData || getAnalytics());
+            });
+        });
+    }
+
     function initPanels() {
         var sections = ['blog-overview', 'blog-posts', 'blog-analytics', 'blog-import'];
         var els = sections.map(function (id) { return document.getElementById(id); });
@@ -129,6 +140,9 @@
                 var href = (tab.getAttribute('href') || '').replace('#', '');
                 tab.classList.toggle('is-active', href === hash);
             });
+            if (hash === 'blog-analytics') {
+                onAnalyticsTabVisible();
+            }
         }
 
         navItems.forEach(function (tab) {
@@ -206,11 +220,63 @@
     function shortLabel(iso, index, total) {
         if (!iso) return '';
         var parts = iso.split('-');
-        if (total <= 14) return toFa(parseInt(parts[2], 10)) + '/' + toFa(parseInt(parts[1], 10));
-        if (index % Math.ceil(total / 8) === 0 || index === total - 1) {
-            return toFa(parseInt(parts[2], 10)) + '/' + toFa(parseInt(parts[1], 10));
+        var day = parseInt(parts[2], 10);
+        var month = parseInt(parts[1], 10);
+        if (total <= 14) return toFa(day) + '/' + toFa(month);
+        var step = Math.max(1, Math.ceil(total / 7));
+        if (index % step === 0 || index === total - 1) {
+            return toFa(day) + '/' + toFa(month);
         }
         return '';
+    }
+
+    function chartLabels(isoList) {
+        return (isoList || []).map(function (iso, i) {
+            return shortLabel(iso, i, isoList.length);
+        });
+    }
+
+    function toggleChartEmpty(canvasId, emptyId, isEmpty) {
+        var canvas = document.getElementById(canvasId);
+        var empty = document.getElementById(emptyId);
+        if (canvas) canvas.style.opacity = isEmpty ? '0.15' : '1';
+        if (empty) empty.hidden = !isEmpty;
+    }
+
+    function baseChartOptions(colors) {
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 450 },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    rtl: true,
+                    textDirection: 'rtl',
+                    callbacks: {
+                        label: function (ctx) {
+                            var label = ctx.dataset.label || '';
+                            var val = ctx.parsed.y != null ? ctx.parsed.y : ctx.parsed.x;
+                            return (label ? label + ': ' : '') + formatNum(val);
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        callback: function (v) { return formatNum(v); },
+                    },
+                    grid: { color: colors.grid },
+                },
+            },
+        };
     }
 
     var chartInstances = {};
@@ -249,6 +315,29 @@
             periodHintEl.textContent = 'میانگین روزانه ' + formatNum(traffic.avg_daily);
         }
 
+        var catSub = document.getElementById('ab-category-chart-sub');
+        if (catSub) {
+            catSub.textContent = traffic.views_by_category_mode === 'daily'
+                ? 'بر اساس بازدید روزانه در بازه'
+                : 'بر اساس بازدید کل‌زمان (تا ردیابی روزانه پر شود)';
+        }
+        var periodSub = document.getElementById('ab-period-chart-sub');
+        if (periodSub) {
+            periodSub.textContent = traffic.top_posts_period_mode === 'daily'
+                ? 'بازدید دوره‌ای در بازه انتخاب‌شده'
+                : 'پربازدیدترین‌ها — داده کل‌زمان';
+        }
+        var trafficSub = document.getElementById('ab-traffic-chart-sub');
+        if (trafficSub) {
+            if (traffic.has_daily_in_period) {
+                trafficSub.textContent = 'مقایسه دوره جاری با دوره قبلی';
+            } else if ((data.summary && data.summary.views_total) > 0) {
+                trafficSub.textContent = 'ردیابی روزانه تازه فعال شده — بازدیدهای قبلی در نمودار کل‌زمان است';
+            } else {
+                trafficSub.textContent = 'پس از اولین بازدید، روند روزانه اینجا نمایش داده می‌شود';
+            }
+        }
+
         setBadge('ab-pulse-today-badge', pulse.today_vs_yesterday_pct);
         setBadge('ab-pulse-week-badge', pulse.week_vs_prev_pct);
 
@@ -272,25 +361,25 @@
         var viewsDaily = traffic.views_daily || { labels: [], counts: [], prev_counts: [] };
         var categories = traffic.views_by_category || [];
         var periodTop = traffic.top_posts_period || [];
+        var trafficHasData = traffic.has_daily_in_period && viewsDaily.counts.some(function (v) { return v > 0; });
+        var publishHasData = publish.counts.some(function (v) { return v > 0; });
 
         Chart.defaults.font.family = 'inherit';
         Chart.defaults.color = colors.text;
 
+        toggleChartEmpty('adm-blog-chart-traffic', 'ab-empty-traffic', !trafficHasData);
         var trafficCanvas = document.getElementById('adm-blog-chart-traffic');
         if (trafficCanvas && viewsDaily.labels.length) {
-            var labels = viewsDaily.labels.map(function (iso, i) {
-                return shortLabel(iso, i, viewsDaily.labels.length);
-            });
             chartInstances.traffic = new Chart(trafficCanvas, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: chartLabels(viewsDaily.labels),
                     datasets: [
                         {
                             label: 'دوره جاری',
                             data: viewsDaily.counts,
                             borderColor: colors.tealBorder,
-                            backgroundColor: isDark() ? 'rgba(20, 184, 166, 0.12)' : 'rgba(13, 148, 136, 0.1)',
+                            backgroundColor: isDark() ? 'rgba(20, 184, 166, 0.16)' : 'rgba(13, 148, 136, 0.12)',
                             fill: true,
                             tension: 0.35,
                             borderWidth: 2.5,
@@ -316,28 +405,27 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
+                            rtl: true,
+                            textDirection: 'rtl',
                             callbacks: {
                                 title: function (items) {
                                     var idx = items[0] && items[0].dataIndex;
                                     return viewsDaily.labels[idx] || '';
                                 },
+                                label: function (ctx) {
+                                    return ctx.dataset.label + ': ' + formatNum(ctx.parsed.y);
+                                },
                             },
                         },
                     },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { precision: 0 },
-                            grid: { color: colors.grid },
-                        },
-                    },
+                    scales: baseChartOptions(colors).scales,
                 },
             });
         }
 
+        toggleChartEmpty('adm-blog-chart-publish', 'ab-empty-publish', !publishHasData);
         var pubCanvas = document.getElementById('adm-blog-chart-publish');
-        if (pubCanvas) {
+        if (pubCanvas && publish.labels.length) {
             var grad = pubCanvas.getContext('2d').createLinearGradient(0, 0, 0, 280);
             grad.addColorStop(0, colors.teal);
             grad.addColorStop(1, 'rgba(13, 148, 136, 0.05)');
@@ -345,33 +433,36 @@
             chartInstances.publish = new Chart(pubCanvas, {
                 type: 'bar',
                 data: {
-                    labels: publish.labels,
+                    labels: chartLabels(publish.labels),
                     datasets: [{
                         label: 'انتشار',
                         data: publish.counts,
                         backgroundColor: grad,
                         borderColor: colors.tealBorder,
                         borderWidth: 1,
-                        borderRadius: 8,
+                        borderRadius: 6,
                         borderSkipped: false,
                     }],
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { display: false } },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { precision: 0 },
-                            grid: { color: colors.grid },
+                options: Object.assign({}, baseChartOptions(colors), {
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            rtl: true,
+                            textDirection: 'rtl',
+                            callbacks: {
+                                title: function (items) {
+                                    var idx = items[0] && items[0].dataIndex;
+                                    return publish.labels[idx] || '';
+                                },
+                            },
                         },
                     },
-                },
+                }),
             });
         }
 
+        toggleChartEmpty('adm-blog-chart-category', 'ab-empty-category', !categories.length);
         var catCanvas = document.getElementById('adm-blog-chart-category');
         if (catCanvas && categories.length) {
             var catColors = [
@@ -392,29 +483,42 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '62%',
+                    cutout: '58%',
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { boxWidth: 10, padding: 10, font: { size: 10 } },
+                            rtl: true,
+                            labels: { boxWidth: 10, padding: 8, font: { size: 10 } },
+                        },
+                        tooltip: {
+                            rtl: true,
+                            textDirection: 'rtl',
+                            callbacks: {
+                                label: function (ctx) {
+                                    var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                                    var pct = total ? Math.round((ctx.parsed / total) * 100) : 0;
+                                    return ctx.label + ': ' + formatNum(ctx.parsed) + ' (' + toFa(pct) + '٪)';
+                                },
+                            },
                         },
                     },
                 },
             });
         }
 
+        toggleChartEmpty('adm-blog-chart-period-views', 'ab-empty-period', !periodTop.length);
         var periodCanvas = document.getElementById('adm-blog-chart-period-views');
         if (periodCanvas && periodTop.length) {
             chartInstances.period = new Chart(periodCanvas, {
                 type: 'bar',
                 data: {
                     labels: periodTop.map(function (p) {
-                        return p.title.length > 22 ? p.title.slice(0, 22) + '…' : p.title;
+                        return p.title.length > 28 ? p.title.slice(0, 28) + '…' : p.title;
                     }),
                     datasets: [{
-                        label: 'بازدید دوره',
+                        label: 'بازدید',
                         data: periodTop.map(function (p) { return p.views; }),
-                        backgroundColor: colors.violet || 'rgba(124, 58, 237, 0.65)',
+                        backgroundColor: colors.violet,
                         borderRadius: 6,
                     }],
                 },
@@ -422,22 +526,30 @@
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { rtl: true, textDirection: 'rtl' },
+                    },
                     scales: {
-                        x: { beginAtZero: true, grid: { color: colors.grid } },
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: colors.grid },
+                            ticks: { callback: function (v) { return formatNum(v); } },
+                        },
                         y: { grid: { display: false } },
                     },
                 },
             });
         }
 
+        toggleChartEmpty('adm-blog-chart-views', 'ab-empty-alltime', !topViews.length);
         var viewsCanvas = document.getElementById('adm-blog-chart-views');
         if (viewsCanvas && topViews.length) {
             chartInstances.views = new Chart(viewsCanvas, {
                 type: 'bar',
                 data: {
                     labels: topViews.map(function (p) {
-                        return p.title.length > 24 ? p.title.slice(0, 24) + '…' : p.title;
+                        return p.title.length > 32 ? p.title.slice(0, 32) + '…' : p.title;
                     }),
                     datasets: [{
                         label: 'بازدید کل',
@@ -450,20 +562,42 @@
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { rtl: true, textDirection: 'rtl' },
+                    },
                     scales: {
-                        x: { beginAtZero: true, grid: { color: colors.grid } },
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: colors.grid },
+                            ticks: { callback: function (v) { return formatNum(v); } },
+                        },
                         y: { grid: { display: false } },
                     },
                 },
             });
         }
+
+        Object.keys(chartInstances).forEach(function (key) {
+            if (chartInstances[key]) chartInstances[key].resize();
+        });
+    }
+
+    function ensureAnalyticsCharts(data) {
+        pendingAnalyticsData = data;
+        updatePulseUI(data);
+        renderCharts(data);
+        chartsReady = true;
     }
 
     function initCharts() {
         var data = getAnalytics();
+        pendingAnalyticsData = data;
         updatePulseUI(data);
-        renderCharts(data);
+        var hash = (location.hash || '').replace('#', '');
+        if (hash === 'blog-analytics') {
+            ensureAnalyticsCharts(data);
+        }
     }
 
     function initAnalyticsRange() {
@@ -487,14 +621,22 @@
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     window.admBlogAnalytics = data;
+                    pendingAnalyticsData = data;
                     updatePulseUI(data);
-                    renderCharts(data);
+                    ensureAnalyticsCharts(data);
                     meta.analyticsDays = days;
                 })
                 .catch(function () { /* silent */ })
                 .finally(function () {
                     if (loading) loading.hidden = true;
                 });
+        });
+
+        window.addEventListener('resize', function () {
+            if ((location.hash || '').replace('#', '') !== 'blog-analytics') return;
+            Object.keys(chartInstances).forEach(function (key) {
+                if (chartInstances[key]) chartInstances[key].resize();
+            });
         });
     }
 

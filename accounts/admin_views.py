@@ -394,6 +394,7 @@ class AdminBlogView(StaffRequiredMixin, TemplateView):
             'status_filter': status,
             'analytics_days': days,
             'blog_pulse': analytics.get('pulse') or {},
+            'blog_traffic': analytics.get('traffic') or {},
             'blog_analytics_json': json.dumps(analytics, ensure_ascii=False, default=str),
             'sample_json_url': '/static/samples/article-import-sample.json',
         })

@@ -58,14 +58,14 @@ class RecoveryCenterServiceTests(TestCase):
 
     def test_json_schema_and_freshness(self):
         payload = build_recovery_center_json(days=30)
-        self.assertEqual(payload['schema_version'], SCHEMA_VERSION)
+        self.assertEqual(payload['schema_version'], 'recovery_center_v1.1')
         self.assertIn('generated_at', payload)
         self.assertIn('data_freshness', payload)
         self.assertIn('last_event_at', payload['data_freshness'])
         self.assertIn('last_recovery_run_at', payload['data_freshness'])
         self.assertIn('funnel', payload)
         self.assertIn('data_quality', payload)
-        self.assertIsNone(payload['funnel']['executive']['recovered'])
+        self.assertIsNotNone(payload['funnel']['executive']['recovered'])
 
     def test_funnel_counts_abandon_event(self):
         order = Order.objects.create(
@@ -179,7 +179,7 @@ class AdminRecoveryCenterViewTests(TestCase):
         resp = self.client.get(reverse('admin_panel_recovery_center'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'مرکز بازیابی')
-        self.assertContains(resp, 'درآمد بازیابی‌شده')
+        self.assertContains(resp, 'KPI اجرایی')
 
     def test_json_endpoint(self):
         self.client.force_login(self.staff)

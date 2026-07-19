@@ -99,19 +99,28 @@
                 <span class="arc-kpi__val">{{ summary.sms_delivered|currency }}</span>
                 <span class="arc-kpi__lbl">پیامک تحویل</span>
             </article>
-            <article class="arc-kpi arc-kpi--pending" title="فاز ۲ — نسبت‌دهی Strict">
-                <span class="arc-kpi__val">—</span>
-                <span class="arc-kpi__lbl">بازیابی‌شده <i class="fas fa-circle-info" aria-hidden="true"></i></span>
+            <article class="arc-kpi{% if summary.recovered == None %} arc-kpi--pending{% endif %}" title="Strict matched — rule_version strict_v1">
+                <span class="arc-kpi__val">{% if summary.recovered != None %}{{ summary.recovered|currency }}{% else %}—{% endif %}</span>
+                <span class="arc-kpi__lbl">بازیابی‌شده</span>
             </article>
-            <article class="arc-kpi arc-kpi--pending" title="فاز ۲ — نسبت‌دهی Strict">
-                <span class="arc-kpi__val">—</span>
-                <span class="arc-kpi__lbl">درآمد <i class="fas fa-circle-info" aria-hidden="true"></i></span>
+            <article class="arc-kpi{% if summary.recovery_revenue == None %} arc-kpi--pending{% endif %}" title="Strict matched revenue">
+                <span class="arc-kpi__val">{% if summary.recovery_revenue != None %}{{ summary.recovery_revenue|currency }}{% else %}—{% endif %}</span>
+                <span class="arc-kpi__lbl">درآمد (تومان)</span>
             </article>
         </div>
 
+        {% if summary.conversion_rate != None %}
+        <ul class="arc-kpi-meta">
+            <li>نرخ تبدیل Strict: <strong>{{ summary.conversion_rate|to_persian_digits }}٪</strong></li>
+            {% if summary.revenue_per_sms != None %}
+            <li>درآمد به ازای هر پیامک: <strong>{{ summary.revenue_per_sms|currency }} ت</strong></li>
+            {% endif %}
+        </ul>
+        {% endif %}
+
         <div class="arc-alert arc-alert--info">
             <i class="fas fa-chart-line"></i>
-            <span>درآمد بازیابی‌شده پس از فاز نسبت‌دهی نمایش داده می‌شود (Strict: همان سفارش رها شده · Assisted: سفر checkout مرتبط).</span>
+            <span>KPI اجرایی فقط Strict matched است. Assisted در کاوشگر برای تحلیل نمایش داده می‌شود.</span>
         </div>
 
         <div class="arc-funnel-list">
@@ -156,8 +165,8 @@
                         <td>{{ row.failed|currency }}</td>
                         <td>{{ row.suppressed|currency }}</td>
                         <td>{{ row.eligible_snapshot|currency }}</td>
-                        <td class="arc-muted">—</td>
-                        <td class="arc-muted">—</td>
+                        <td>{% if row.paid != None %}{{ row.paid|currency }}{% else %}—{% endif %}</td>
+                        <td>{% if row.conversion != None %}{{ row.conversion|to_persian_digits }}٪{% else %}—{% endif %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

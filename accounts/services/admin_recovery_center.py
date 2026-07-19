@@ -9,7 +9,7 @@ from django.conf import settings
 from django.db.models import Count, Max, Q
 from django.utils import timezone
 
-from accounts.models import MarketingAutomationActionLog, MarketingAutomationRun
+from accounts.models import MarketingAutomationActionLog, MarketingAutomationRun, RecoveryAttribution
 from accounts.services.pending_recovery import (
     FLOW_KEY,
     REAL_DELIVERY_ACTIONS,
@@ -17,7 +17,17 @@ from accounts.services.pending_recovery import (
     get_recovery_config,
     resolve_pending_recovery_audience,
 )
-from accounts.services.pending_recovery_live import TEST_SEND_KEY_PREFIX
+from accounts.services.recovery_attribution import (
+    ATTRIBUTION_WINDOW_HOURS,
+    backfill_attributions,
+    attribution_map_for_logs,
+    count_duplicate_strict_attributions,
+    executive_attribution_summary,
+    is_delivered_recovery_send,
+    is_production_recovery_send,
+    serialize_attribution_for_explorer,
+    strict_matched_qs,
+)
 from accounts.services.plan_bi import (
     EMPTY_MSG,
     conversion_rate,
@@ -29,7 +39,7 @@ from accounts.services.sms import get_sms_balance_snapshot
 from shop.models import PlanFunnelEvent
 from workspace.services.jalali_input import to_persian_digits
 
-SCHEMA_VERSION = 'recovery_center_v1'
+SCHEMA_VERSION = 'recovery_center_v1.1'
 ATTRIBUTION_PHASE = 2
 EXPLORER_PAGE_SIZE = 50
 
@@ -67,32 +77,6 @@ ACTION_LABELS_FA = {
     MarketingAutomationActionLog.Action.SUPPRESSED: 'حذف‌شده',
     MarketingAutomationActionLog.Action.CANCELLED: 'لغوشده',
 }
-
-
-def is_production_recovery_send(log: MarketingAutomationActionLog) -> bool:
-    if log.action not in REAL_DELIVERY_ACTIONS:
-        return False
-    if log.action == MarketingAutomationActionLog.Action.TEST_PROVIDER_ACCEPTED:
-        return False
-    send_key = log.send_idempotency_key or ''
-    if send_key.startswith(TEST_SEND_KEY_PREFIX):
-        return False
-    if (log.metadata or {}).get('send_target_redirected'):
-        return False
-    return True
-
-
-def is_delivered_recovery_send(log: MarketingAutomationActionLog) -> bool:
-    if not is_production_recovery_send(log):
-        return False
-    if log.action == MarketingAutomationActionLog.Action.DELIVERED:
-        return True
-    if log.sms_log_id and log.sms_log.status == log.sms_log.Status.SENT:
-        return True
-    return log.action in (
-        MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED,
-        MarketingAutomationActionLog.Action.SENT,
-    )
 
 
 def _production_sends_qs(*, since=None, until=None):
@@ -148,7 +132,7 @@ def build_data_freshness(*, now=None) -> dict[str, Any]:
     }
 
 
-def build_recovery_funnel(*, since, now=None) -> dict[str, Any]:
+def build_recovery_funnel(*, since, now=None, attribution_summary: dict | None = None) -> dict[str, Any]:
     now = now or timezone.now()
     pricing = funnel_events_since(since, 'pricing_view').count()
     checkout = funnel_events_since(since, 'checkout_view').count()
@@ -160,6 +144,14 @@ def build_recovery_funnel(*, since, now=None) -> dict[str, Any]:
     sends = _production_sends_qs(since=since)
     accepted = len(sends)
     delivered = sum(1 for log in sends if is_delivered_recovery_send(log))
+
+    attribution_summary = attribution_summary or executive_attribution_summary(since=since)
+    recovered = attribution_summary['recovered']
+    recovery_revenue = attribution_summary['recovery_revenue']
+    conversion_rate_val = conversion_rate(recovered, accepted, 1) if accepted else None
+    revenue_per_sms = (
+        int(recovery_revenue / accepted) if accepted and recovery_revenue else None
+    )
 
     stages = [
         _funnel_stage(
@@ -210,10 +202,10 @@ def build_recovery_funnel(*, since, now=None) -> dict[str, Any]:
         _funnel_stage(
             key='recovered_paid',
             label='پرداخت بازیابی',
-            count=None,
-            prev_count=None,
-            available=False,
-            note='فاز ۲ — نسبت‌دهی Strict',
+            count=recovered,
+            prev_count=delivered or None,
+            available=True,
+            note='Strict — rule_version strict_v1',
         ),
     ]
 
@@ -222,12 +214,12 @@ def build_recovery_funnel(*, since, now=None) -> dict[str, Any]:
         'eligible_now': eligible_now,
         'sms_accepted': accepted,
         'sms_delivered': delivered,
-        'recovered': None,
-        'recovery_revenue': None,
-        'conversion_rate': None,
-        'revenue_per_sms': None,
+        'recovered': recovered,
+        'recovery_revenue': recovery_revenue,
+        'conversion_rate': conversion_rate_val,
+        'revenue_per_sms': revenue_per_sms,
         'attribution_phase': ATTRIBUTION_PHASE,
-        'attribution_note': 'درآمد بازیابی‌شده پس از فاز نسبت‌دهی (Strict + Assisted)',
+        'attribution_note': 'KPI اجرایی: Strict matched · Assisted فقط Explorer',
     }
 
     return {'stages': stages, 'executive': executive}
@@ -248,6 +240,8 @@ def build_journey_performance(*, since, now=None) -> list[dict[str, Any]]:
         sent = sum(1 for log in step_logs if is_production_recovery_send(log))
         failed = step_logs.filter(action=MarketingAutomationActionLog.Action.FAILED).count()
         suppressed = step_logs.filter(action=MarketingAutomationActionLog.Action.SUPPRESSED).count()
+        paid = strict_matched_qs(since=since).filter(action_log__step_key=step_key).count()
+        conv = conversion_rate(paid, sent, 1) if sent else None
         eligible_key = {
             'recovery_step_1': 'step_1_recipients',
             'recovery_step_1_late': 'step_1_late_recipients',
@@ -260,8 +254,8 @@ def build_journey_performance(*, since, now=None) -> list[dict[str, Any]]:
             'failed': failed,
             'suppressed': suppressed,
             'eligible_snapshot': stats.get(eligible_key, 0),
-            'paid': None,
-            'conversion': None,
+            'paid': paid,
+            'conversion': conv,
             'attribution_phase': ATTRIBUTION_PHASE,
         })
     return rows
@@ -310,8 +304,8 @@ def build_recovery_data_quality(*, since) -> dict[str, Any]:
         'checkout_abandon_total': abandon_total,
         'sms_without_order': sms_without_order,
         'action_log_missing_step': missing_step,
-        'duplicate_attribution': 0,
-        'duplicate_attribution_note': 'فاز ۲ — پس از Attribution Engine',
+        'duplicate_attribution': count_duplicate_strict_attributions(since=since),
+        'duplicate_attribution_note': 'تعداد پرداخت‌های Strict تکراری (باید ۰ باشد)',
         'warnings': warnings,
     }
 
@@ -413,9 +407,13 @@ def build_explorer_rows(
     total = qs.count()
     offset = (page - 1) * page_size
     logs = list(qs[offset : offset + page_size])
+    attr_map = attribution_map_for_logs([log.pk for log in logs])
 
     rows = []
     for log in logs:
+        attr = attr_map.get(log.pk)
+        attr_payload = serialize_attribution_for_explorer(attr)
+        status_label = _explorer_status_label(log, attr)
         rows.append({
             'id': log.pk,
             'user_id': log.user_id,
@@ -432,8 +430,8 @@ def build_explorer_rows(
             'created_at': log.created_at.isoformat(),
             'product_title': log.product.title if log.product_id else '',
             'is_production_send': is_production_recovery_send(log),
-            'attribution_status': 'pending',
-            'status_label': _explorer_status_label(log),
+            'status_label': status_label,
+            **attr_payload,
         })
 
     return {
@@ -445,14 +443,22 @@ def build_explorer_rows(
     }
 
 
-def _explorer_status_label(log: MarketingAutomationActionLog) -> str:
+def _explorer_status_label(
+    log: MarketingAutomationActionLog,
+    attr=None,
+) -> str:
+    if attr and attr.status == RecoveryAttribution.Status.MATCHED:
+        model_label = 'Strict' if attr.attribution_model == RecoveryAttribution.AttributionModel.STRICT else 'Assisted'
+        return f'بازیابی {model_label}'
+    if attr and attr.status == RecoveryAttribution.Status.NO_MATCH:
+        return 'بدون انطباق'
     if log.action == MarketingAutomationActionLog.Action.SUPPRESSED:
         return log.reason or 'حذف‌شده'
     if log.action == MarketingAutomationActionLog.Action.FAILED:
         return 'ناموفق'
     if is_production_recovery_send(log):
         if log.order and log.order.status == 'paid':
-            return 'پرداخت شده (نسبت‌دهی در انتظار)'
+            return 'پرداخت شده — نسبت‌دهی در انتظار'
         return 'در انتظار پرداخت'
     if log.action == MarketingAutomationActionLog.Action.WOULD_SEND:
         return 'اجرای آزمایشی'
@@ -465,7 +471,10 @@ def get_recovery_center_context(*, days: int = 30, page: int = 1) -> dict[str, A
     since = bounds['since']
     now = bounds['now']
 
-    funnel = build_recovery_funnel(since=since, now=now)
+    backfill_attributions(since=since)
+
+    attribution_summary = executive_attribution_summary(since=since)
+    funnel = build_recovery_funnel(since=since, now=now, attribution_summary=attribution_summary)
     journey = build_journey_performance(since=since, now=now)
     health = build_recovery_health(now=now)
     data_quality = build_recovery_data_quality(since=since)
@@ -501,6 +510,9 @@ def get_recovery_center_context(*, days: int = 30, page: int = 1) -> dict[str, A
             'assisted_fallback': 'same user + product + 72h + linked checkout journey',
             'executive_kpi': 'strict_only',
             'phase': ATTRIBUTION_PHASE,
+            'window_hours': ATTRIBUTION_WINDOW_HOURS,
+            'strict_rule_version': 'strict_v1',
+            'assisted_rule_version': 'assisted_v1',
         },
     }
 

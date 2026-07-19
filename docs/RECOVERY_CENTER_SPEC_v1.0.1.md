@@ -94,3 +94,14 @@ Research model only — not in v1 dashboards.
 ## 7. Out of Scope
 
 Manual send UI, Marketing campaign link, template builder, AI, engine refactor.
+
+---
+
+## 8. Week 2 — Attribution (Implemented)
+
+- Model: `RecoveryAttribution` (immutable after matched/no_match)
+- Service: `accounts/services/recovery_attribution.py`
+- Rules: `strict_v1`, `assisted_v1` with `rule_version` on each row
+- Executive KPI: Strict + matched only
+- Backfill: last 30 days on dashboard load + `backfill_attributions()`
+- JSON schema: `recovery_center_v1.1`

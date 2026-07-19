@@ -467,3 +467,86 @@ class MarketingAutomationActionLog(models.Model):
 
     def __str__(self):
         return f'{self.action} {self.step_key} @ {self.masked_phone}'
+
+
+class RecoveryAttribution(models.Model):
+    """سابقه نسبت‌دهی بازیابی — immutable پس از matched/no_match."""
+
+    class AttributionModel(models.TextChoices):
+        STRICT = 'strict', 'Strict'
+        ASSISTED = 'assisted', 'Assisted'
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'در انتظار'
+        MATCHED = 'matched', 'منطبق'
+        NO_MATCH = 'no_match', 'بدون انطباق'
+
+    action_log = models.OneToOneField(
+        MarketingAutomationActionLog,
+        on_delete=models.CASCADE,
+        related_name='recovery_attribution',
+        verbose_name='لاگ اقدام',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recovery_attributions',
+        verbose_name='کاربر',
+    )
+    abandon_order = models.ForeignKey(
+        'shop.Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recovery_attributions_as_abandon',
+        verbose_name='سفارش رها شده',
+    )
+    attribution_model = models.CharField(
+        max_length=16,
+        choices=AttributionModel.choices,
+        blank=True,
+        verbose_name='مدل نسبت‌دهی',
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+        verbose_name='وضعیت',
+    )
+    paid_order = models.ForeignKey(
+        'shop.Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recovery_attributions_as_paid',
+        verbose_name='سفارش پرداخت‌شده',
+    )
+    paid_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان پرداخت')
+    lag_hours = models.DecimalField(
+        max_digits=8,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name='فاصله تا پرداخت (ساعت)',
+    )
+    revenue_amount = models.PositiveIntegerField(null=True, blank=True, verbose_name='درآمد (تومان)')
+    matched_at = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name='زمان انطباق')
+    rule_version = models.CharField(max_length=32, default='strict_v1', verbose_name='نسخه قانون')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='ایجاد')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='به‌روزرسانی')
+
+    class Meta:
+        verbose_name = 'نسبت‌دهی بازیابی'
+        verbose_name_plural = 'نسبت‌دهی‌های بازیابی'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'attribution_model']),
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['abandon_order', 'status']),
+        ]
+
+    def __str__(self):
+        return f'{self.get_status_display()} — log#{self.action_log_id}'

@@ -226,6 +226,7 @@ RECOVERY_LIVE_SEND_ENABLED = config('RECOVERY_LIVE_SEND_ENABLED', default=False,
 RECOVERY_LIVE_TEST_ONLY = config('RECOVERY_LIVE_TEST_ONLY', default=True, cast=bool)
 RECOVERY_LIVE_TEST_PHONE = config('RECOVERY_LIVE_TEST_PHONE', default='')
 RECOVERY_LIVE_MAX_SENDS_PER_RUN = config('RECOVERY_LIVE_MAX_SENDS_PER_RUN', default=1, cast=int)
+RECOVERY_MAX_SMS_PER_DAY = config('RECOVERY_MAX_SMS_PER_DAY', default=5, cast=int)
 RECOVERY_SMS_TEMPLATE = config(
     'RECOVERY_SMS_TEMPLATE',
     default='{name_part}سفارش «{product}» ({amount} ت) منتظر پرداخت است. {link}',

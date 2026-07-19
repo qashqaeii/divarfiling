@@ -156,6 +156,14 @@ class Command(BaseCommand):
             ))
         if stats.get('skip_breakdown'):
             self.stdout.write(f'skip_breakdown={stats["skip_breakdown"]}')
+        daily = stats.get('daily_sms_guard') or {}
+        if daily.get('enabled'):
+            self.stdout.write(
+                f'daily_sms={daily.get("sent_today")}/{daily.get("max_per_day")} '
+                f'remaining={daily.get("remaining")} cap_reached={daily.get("cap_reached")}'
+            )
+        if stats.get('effective_max_sends') is not None:
+            self.stdout.write(f'effective_max_sends={stats["effective_max_sends"]}')
         if stats['failed'] or stats['errors']:
             self.stdout.write(self.style.WARNING('completed with failures'))
         else:

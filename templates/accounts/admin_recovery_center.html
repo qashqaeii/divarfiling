@@ -185,21 +185,63 @@
                 <ul class="arc-health-meta">
                     <li>ارسال واقعی: {% if health.recovery_engine.live_send_enabled %}فعال{% else %}غیرفعال{% endif %}</li>
                     <li>فقط تست: {% if health.recovery_engine.test_only %}بله{% else %}خیر{% endif %}</li>
+                    <li>سقف هر Run: {{ health.recovery_engine.max_sends_per_run|currency }}</li>
                 </ul>
+            </article>
+
+            <article class="arc-health-card">
+                <h3><i class="fas fa-flask"></i> آخرین Dry Run</h3>
+                <p>{{ health.last_dry_run.last_run_label }}</p>
+                {% if health.last_dry_run.last_mode_label %}
+                <small>{{ health.last_dry_run.last_status_label }} · would_send={{ health.last_dry_run.last_would_send|currency }}</small>
+                {% else %}
+                <small class="arc-muted">هنوز اجرا نشده</small>
+                {% endif %}
+            </article>
+
+            <article class="arc-health-card">
+                <h3><i class="fas fa-paper-plane"></i> آخرین Live Run</h3>
+                <p>{{ health.last_live_run.last_run_label }}</p>
+                {% if health.last_live_run.last_mode_label %}
+                <small>{{ health.last_live_run.last_status_label }} · would_send={{ health.last_live_run.last_would_send|currency }}</small>
+                {% else %}
+                <small class="arc-muted">هنوز اجرا نشده</small>
+                {% endif %}
+            </article>
+
+            <article class="arc-health-card">
+                <h3><i class="fas fa-shield-halved"></i> سقف روزانه SMS</h3>
+                {% if health.daily_sms_guard.enabled %}
+                <p class="arc-health-status arc-health-status--{% if health.daily_sms_guard.cap_reached %}warn{% else %}ok{% endif %}">
+                    {{ health.daily_sms_guard.sent_today|currency }} / {{ health.daily_sms_guard.max_per_day|currency }}
+                </p>
+                <div class="arc-cap-bar" aria-hidden="true">
+                    <span style="width: {% widthratio health.daily_sms_guard.sent_today health.daily_sms_guard.max_per_day 100 %}%;"></span>
+                </div>
+                <small class="arc-muted">
+                    باقی‌مانده: {{ health.daily_sms_guard.remaining|currency }} ·
+                    ریست: {{ health.daily_sms_guard.resets_at_label }}
+                </small>
+                {% else %}
+                <p class="arc-health-status arc-health-status--warn">غیرفعال</p>
+                <small class="arc-muted">RECOVERY_MAX_SMS_PER_DAY=0</small>
+                {% endif %}
+            </article>
+
+            <article class="arc-health-card">
+                <h3><i class="fas fa-link"></i> نسبت‌دهی (۳۰ روز)</h3>
+                <ul class="arc-health-meta">
+                    <li>در انتظار: {{ health.attribution_health.pending_30d|currency }}</li>
+                    <li>Strict matched: {{ health.attribution_health.strict_matched_30d|currency }}</li>
+                    <li>تکراری: {{ health.attribution_health.duplicate_strict_30d|currency }}</li>
+                </ul>
+                <small class="arc-muted">پنجره {{ health.attribution_health.window_hours|to_persian_digits }} ساعته</small>
             </article>
 
             <article class="arc-health-card">
                 <h3><i class="fas fa-clock"></i> ثبت رها کردن checkout</h3>
                 <p>{{ health.record_checkout_abandons.last_signal_label }}</p>
                 <small class="arc-muted">{{ health.record_checkout_abandons.note }}</small>
-            </article>
-
-            <article class="arc-health-card">
-                <h3><i class="fas fa-rotate"></i> اجرای بازیابی</h3>
-                <p>{{ health.run_pending_recovery.last_run_label }}</p>
-                {% if health.run_pending_recovery.last_mode_label %}
-                <small>{{ health.run_pending_recovery.last_mode_label }} · {{ health.run_pending_recovery.last_status_label }}</small>
-                {% endif %}
             </article>
 
             <article class="arc-health-card">

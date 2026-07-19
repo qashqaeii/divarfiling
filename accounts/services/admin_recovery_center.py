@@ -17,6 +17,7 @@ from accounts.services.pending_recovery import (
     get_recovery_config,
     resolve_pending_recovery_audience,
 )
+from accounts.services.pending_recovery_live import get_daily_sms_guard_status, local_day_bounds
 from accounts.services.recovery_attribution import (
     ATTRIBUTION_WINDOW_HOURS,
     backfill_attributions,
@@ -39,7 +40,7 @@ from accounts.services.sms import get_sms_balance_snapshot
 from shop.models import PlanFunnelEvent
 from workspace.services.jalali_input import to_persian_digits
 
-SCHEMA_VERSION = 'recovery_center_v1.1'
+SCHEMA_VERSION = 'recovery_center_v1.2'
 ATTRIBUTION_PHASE = 2
 EXPLORER_PAGE_SIZE = 50
 
@@ -320,12 +321,61 @@ def build_recovery_data_quality(*, since) -> dict[str, Any]:
     }
 
 
+def _health_age_label(ts, *, now) -> str:
+    if not ts:
+        return EMPTY_MSG
+    delta = now - ts
+    minutes = int(delta.total_seconds() // 60)
+    if minutes < 60:
+        return f'{minutes} دقیقه پیش'
+    hours = minutes // 60
+    if hours < 48:
+        return f'{hours} ساعت پیش'
+    return f'{hours // 24} روز پیش'
+
+
+def _run_health_snapshot(run: MarketingAutomationRun | None, *, now) -> dict[str, Any]:
+    if not run:
+        return {
+            'last_run_at': None,
+            'last_run_label': EMPTY_MSG,
+            'last_mode': None,
+            'last_mode_label': None,
+            'last_status': None,
+            'last_status_label': None,
+            'last_would_send': None,
+            'last_examined': None,
+        }
+    return {
+        'last_run_at': run.started_at.isoformat(),
+        'last_run_label': _health_age_label(run.started_at, now=now),
+        'last_mode': run.mode,
+        'last_mode_label': RUN_MODE_LABELS_FA.get(run.mode, run.mode),
+        'last_status': run.status,
+        'last_status_label': RUN_STATUS_LABELS_FA.get(run.status, run.status),
+        'last_would_send': run.would_send_count,
+        'last_examined': run.examined_count,
+    }
+
+
 def build_recovery_health(*, now=None) -> dict[str, Any]:
     now = now or timezone.now()
     since_24h = now - timedelta(hours=24)
+    since_30d = now - timedelta(days=30)
 
-    last_run = (
-        MarketingAutomationRun.objects.filter(flow_key=FLOW_KEY)
+    last_dry_run = (
+        MarketingAutomationRun.objects.filter(
+            flow_key=FLOW_KEY,
+            mode=MarketingAutomationRun.Mode.DRY_RUN,
+        )
+        .order_by('-started_at')
+        .first()
+    )
+    last_live_run = (
+        MarketingAutomationRun.objects.filter(
+            flow_key=FLOW_KEY,
+            mode=MarketingAutomationRun.Mode.LIVE,
+        )
         .order_by('-started_at')
         .first()
     )
@@ -346,24 +396,24 @@ def build_recovery_health(*, now=None) -> dict[str, Any]:
 
     cfg = get_recovery_config()
     sms_balance = get_sms_balance_snapshot()
+    daily_guard = get_daily_sms_guard_status(now=now)
+    _, day_end = local_day_bounds(now=now)
+    pending_attributions = RecoveryAttribution.objects.filter(
+        status=RecoveryAttribution.Status.PENDING,
+        action_log__flow_key=FLOW_KEY,
+        action_log__created_at__gte=since_30d,
+    ).count()
+    strict_matched_30d = strict_matched_qs(since=since_30d).count()
+    duplicate_strict = count_duplicate_strict_attributions(since=since_30d)
 
-    def _age_label(ts):
-        if not ts:
-            return EMPTY_MSG
-        delta = now - ts
-        minutes = int(delta.total_seconds() // 60)
-        if minutes < 60:
-            return f'{minutes} دقیقه پیش'
-        hours = minutes // 60
-        if hours < 48:
-            return f'{hours} ساعت پیش'
-        return f'{hours // 24} روز پیش'
+    max_per_run = int(getattr(settings, 'RECOVERY_LIVE_MAX_SENDS_PER_RUN', 1) or 1)
 
     return {
         'recovery_engine': {
             'flow_enabled': cfg['flow_enabled'],
             'live_send_enabled': bool(getattr(settings, 'RECOVERY_LIVE_SEND_ENABLED', False)),
             'test_only': bool(getattr(settings, 'RECOVERY_LIVE_TEST_ONLY', True)),
+            'max_sends_per_run': max_per_run,
             'status': 'on' if cfg['flow_enabled'] else 'off',
         },
         'record_checkout_abandons': {
@@ -371,25 +421,28 @@ def build_recovery_health(*, now=None) -> dict[str, Any]:
             'last_signal_at': (
                 last_abandon_event.created_at.isoformat() if last_abandon_event else None
             ),
-            'last_signal_label': _age_label(
+            'last_signal_label': _health_age_label(
                 last_abandon_event.created_at if last_abandon_event else None,
+                now=now,
             ),
-            'note': 'بر اساس آخرین رویداد رها کردن — زمان cron جداگانه ثبت نمی‌شود',
+            'note': 'آخرین سیگنال رها کردن — مستقل از cron بازیابی',
         },
-        'run_pending_recovery': {
-            'label': 'اجرای بازیابی',
-            'last_run_at': last_run.started_at.isoformat() if last_run else None,
-            'last_run_label': _age_label(last_run.started_at if last_run else None),
-            'last_mode': last_run.mode if last_run else None,
-            'last_mode_label': (
-                RUN_MODE_LABELS_FA.get(last_run.mode, last_run.mode) if last_run else None
-            ),
-            'last_status': last_run.status if last_run else None,
-            'last_status_label': (
-                RUN_STATUS_LABELS_FA.get(last_run.status, last_run.status) if last_run else None
-            ),
-            'last_would_send': last_run.would_send_count if last_run else None,
-            'last_examined': last_run.examined_count if last_run else None,
+        'last_dry_run': _run_health_snapshot(last_dry_run, now=now),
+        'last_live_run': _run_health_snapshot(last_live_run, now=now),
+        'run_pending_recovery': _run_health_snapshot(
+            last_live_run or last_dry_run,
+            now=now,
+        ),
+        'daily_sms_guard': {
+            **daily_guard,
+            'resets_at_label': _format_jalali_datetime(day_end),
+        },
+        'attribution_health': {
+            'pending_30d': pending_attributions,
+            'strict_matched_30d': strict_matched_30d,
+            'duplicate_strict_30d': duplicate_strict,
+            'window_hours': ATTRIBUTION_WINDOW_HOURS,
+            'duplicate_ok': duplicate_strict == 0,
         },
         'sms_provider': sms_balance,
         'queue': queue,

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from typing import Any
 
 from django.conf import settings
@@ -37,6 +38,58 @@ def reserve_send_idempotency_key(base_key: str, *, test_only: bool) -> str:
     return base_key
 
 
+def get_max_sms_per_day() -> int:
+    return int(getattr(settings, 'RECOVERY_MAX_SMS_PER_DAY', 5) or 0)
+
+
+def is_daily_sms_cap_enabled() -> bool:
+    return get_max_sms_per_day() > 0
+
+
+def local_day_bounds(*, now=None) -> tuple[Any, Any]:
+    now = now or timezone.now()
+    local = timezone.localtime(now)
+    start = local.replace(hour=0, minute=0, second=0, microsecond=0)
+    return start, start + timedelta(days=1)
+
+
+def count_production_sends_between(since, until=None) -> int:
+    qs = MarketingAutomationActionLog.objects.filter(
+        flow_key=FLOW_KEY,
+        created_at__gte=since,
+    )
+    if until:
+        qs = qs.filter(created_at__lt=until)
+    return sum(1 for log in qs if _is_real_delivery_log(log))
+
+
+def get_daily_sms_guard_status(*, now=None) -> dict[str, Any]:
+    now = now or timezone.now()
+    max_per_day = get_max_sms_per_day()
+    day_start, day_end = local_day_bounds(now=now)
+    sent_today = count_production_sends_between(day_start, day_end)
+    if max_per_day <= 0:
+        return {
+            'enabled': False,
+            'max_per_day': 0,
+            'sent_today': sent_today,
+            'remaining': None,
+            'cap_reached': False,
+            'day_start': day_start.isoformat(),
+            'resets_at': day_end.isoformat(),
+        }
+    remaining = max(0, max_per_day - sent_today)
+    return {
+        'enabled': True,
+        'max_per_day': max_per_day,
+        'sent_today': sent_today,
+        'remaining': remaining,
+        'cap_reached': remaining <= 0,
+        'day_start': day_start.isoformat(),
+        'resets_at': day_end.isoformat(),
+    }
+
+
 def _is_real_delivery_log(log: MarketingAutomationActionLog) -> bool:
     if log.action not in (
         MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED,
@@ -65,6 +118,7 @@ def get_live_config(*, test_only: bool | None = None) -> dict[str, Any]:
         'test_only': test_only_mode,
         'test_phone': test_phone,
         'max_sends_per_run': int(getattr(settings, 'RECOVERY_LIVE_MAX_SENDS_PER_RUN', 1) or 1),
+        'max_sms_per_day': get_max_sms_per_day(),
         'provider_timeout_seconds': int(
             getattr(settings, 'RECOVERY_PROVIDER_TIMEOUT_SECONDS', 15) or 15
         ),
@@ -340,6 +394,9 @@ def run_pending_recovery_live(
         'config': cfg,
     }
 
+    daily_guard = get_daily_sms_guard_status(now=now)
+    result_stats['daily_sms_guard'] = daily_guard
+
     try:
         data = resolve_pending_recovery_audience(
             batch_limit=batch_limit,
@@ -356,14 +413,26 @@ def run_pending_recovery_live(
             'recovery_stats': stats,
         })
 
-        max_sends = max(1, int(max_sends_per_run if max_sends_per_run is not None else cfg.get('max_sends_per_run') or 1))
+        run_cap = max(1, int(max_sends_per_run if max_sends_per_run is not None else cfg.get('max_sends_per_run') or 1))
+        if daily_guard.get('enabled') and daily_guard.get('cap_reached'):
+            effective_max = 0
+        elif daily_guard.get('enabled'):
+            effective_max = min(run_cap, int(daily_guard.get('remaining') or 0))
+        else:
+            effective_max = run_cap
+        result_stats['effective_max_sends'] = effective_max
         sent_count = 0
 
         for res in data['resolutions']:
             if not res.would_send:
                 continue
-            if sent_count >= max_sends:
+            if sent_count >= effective_max:
+                skip_reason = 'daily_cap_reached' if effective_max == 0 else 'max_sends_per_run'
                 result_stats['skipped'] += 1
+                result_stats.setdefault('skip_breakdown', {})
+                result_stats['skip_breakdown'][skip_reason] = (
+                    result_stats['skip_breakdown'].get(skip_reason, 0) + 1
+                )
                 continue
 
             log, skip_reason = reserve_live_send(

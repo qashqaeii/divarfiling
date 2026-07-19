@@ -286,3 +286,69 @@ class PendingRecoveryLiveTests(TestCase):
         log, err = reserve_live_send(run=run, res=res, cfg=cfg)
         self.assertIsNone(log)
         self.assertEqual(err, 'failed_previous')
+
+    def test_daily_guard_counts_production_send_only(self):
+        from accounts.services.pending_recovery_live import (
+            count_production_sends_between,
+            get_daily_sms_guard_status,
+            local_day_bounds,
+        )
+
+        run = MarketingAutomationRun.objects.create(
+            flow_key='pending_recovery',
+            mode=MarketingAutomationRun.Mode.LIVE,
+        )
+        MarketingAutomationActionLog.objects.create(
+            run=run,
+            flow_key='pending_recovery',
+            step_key=STEP_RECOVERY_1,
+            phone_hash='prod1',
+            action=MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED,
+            decision_key='live:decision:prod1',
+            send_idempotency_key='live:prod:1',
+        )
+        MarketingAutomationActionLog.objects.create(
+            run=run,
+            flow_key='pending_recovery',
+            step_key=STEP_RECOVERY_1,
+            phone_hash='test1',
+            action=MarketingAutomationActionLog.Action.TEST_PROVIDER_ACCEPTED,
+            decision_key='live:decision:test1',
+            send_idempotency_key='test:live:1',
+        )
+        day_start, day_end = local_day_bounds()
+        self.assertEqual(count_production_sends_between(day_start, day_end), 1)
+
+        with override_settings(RECOVERY_MAX_SMS_PER_DAY=1):
+            status = get_daily_sms_guard_status()
+            self.assertTrue(status['cap_reached'])
+            self.assertEqual(status['sent_today'], 1)
+
+    def test_run_live_respects_daily_cap(self):
+        from accounts.services.pending_recovery_live import get_daily_sms_guard_status
+
+        run = MarketingAutomationRun.objects.create(
+            flow_key='pending_recovery',
+            mode=MarketingAutomationRun.Mode.LIVE,
+        )
+        MarketingAutomationActionLog.objects.create(
+            run=run,
+            flow_key='pending_recovery',
+            step_key=STEP_RECOVERY_1,
+            phone_hash='cap1',
+            action=MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED,
+            decision_key='live:decision:cap1',
+            send_idempotency_key='live:cap:1',
+        )
+        self._order(hours_ago=5)
+
+        with override_settings(RECOVERY_MAX_SMS_PER_DAY=1):
+            self.assertTrue(get_daily_sms_guard_status()['cap_reached'])
+            stats = run_pending_recovery_live(
+                confirm_live=True,
+                test_only=True,
+                max_sends_per_run=1,
+            )
+            self.assertEqual(stats['effective_max_sends'], 0)
+            self.assertEqual(stats['test_provider_accepted'], 0)
+            self.assertEqual(stats['skip_breakdown'].get('daily_cap_reached', 0), 1)

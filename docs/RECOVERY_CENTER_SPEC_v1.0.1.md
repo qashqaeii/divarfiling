@@ -1,6 +1,6 @@
 # Recovery Center Spec v1.0.1
 
-**Status:** Locked — Week 1 implementation baseline  
+**Status:** Locked — Week 3 production controls baseline  
 **Product:** DivarFiling SaaS  
 **Layer:** Decision Intelligence → Recovery Intelligence
 
@@ -88,7 +88,7 @@ Research model only — not in v1 dashboards.
 | 0 | This spec v1.0.1 |
 | 1 | Recovery Center MVP |
 | 2 | `recovery_attribution.py` (strict + assisted) |
-| 3 | Production cron + daily cap |
+| 3 | Production cron + daily cap + Health v2 |
 | 4 | Plan Conversion integration |
 
 ## 7. Out of Scope
@@ -105,3 +105,48 @@ Manual send UI, Marketing campaign link, template builder, AI, engine refactor.
 - Executive KPI: Strict + matched only
 - Backfill: last 30 days on dashboard load + `backfill_attributions()`
 - JSON schema: `recovery_center_v1.1`
+
+---
+
+## 9. Week 3 — Production Controls (Implemented)
+
+### 9.1 Daily SMS Guard
+
+- Setting: `RECOVERY_MAX_SMS_PER_DAY` (default `5`; `0` = unlimited / guard off)
+- Counts **production** sends only (`provider_accepted`, not test redirect / `test:` keys)
+- Day boundary: local timezone (Asia/Tehran)
+- Enforced in `run_pending_recovery_live()` before provider call
+- Skip reason: `daily_cap_reached` in `skip_breakdown`
+- Works with per-run cap: `effective_max = min(RECOVERY_LIVE_MAX_SENDS_PER_RUN, daily_remaining)`
+
+### 9.2 Health Panel v2
+
+JSON + UI fields:
+
+| Block | Contents |
+|-------|----------|
+| `last_dry_run` | Last `MarketingAutomationRun` mode=dry_run |
+| `last_live_run` | Last mode=live |
+| `daily_sms_guard` | sent_today, max_per_day, remaining, cap_reached, resets_at_label (Jalali) |
+| `attribution_health` | pending_30d, strict_matched_30d, duplicate_strict_30d |
+| `recovery_engine` | + `max_sends_per_run` |
+
+JSON schema: `recovery_center_v1.2`
+
+### 9.3 Production Cron
+
+See `django/docs/RECOVERY_CRON.md`.
+
+Recommended conservative start:
+
+```bash
+0 */4 * * * cd /path/to/django && python manage.py run_pending_recovery --live --confirm-live --max-sends 1
+```
+
+Required env (production):
+
+- `PENDING_RECOVERY_FLOW_ENABLED=True`
+- `RECOVERY_LIVE_SEND_ENABLED=True`
+- `RECOVERY_LIVE_TEST_ONLY=False` (only after admin test)
+- `RECOVERY_LIVE_MAX_SENDS_PER_RUN=1`
+- `RECOVERY_MAX_SMS_PER_DAY=3` (or 5)

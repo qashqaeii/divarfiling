@@ -195,6 +195,22 @@
 .arc-health-meta { list-style: none; padding: 0; margin: 0.5rem 0 0; font-size: 0.85rem; opacity: 0.8; }
 .arc-health-queue { font-size: 1.75rem; font-weight: 700; margin: 0; }
 
+.arc-cap-bar {
+    height: 6px;
+    margin: 0.5rem 0;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.2);
+    overflow: hidden;
+}
+
+.arc-cap-bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #059669, var(--arc-amber));
+    max-width: 100%;
+}
+
 .arc-dq {
     padding: 1rem 1.25rem;
     border-radius: 14px;

@@ -58,7 +58,7 @@ class RecoveryCenterServiceTests(TestCase):
 
     def test_json_schema_and_freshness(self):
         payload = build_recovery_center_json(days=30)
-        self.assertEqual(payload['schema_version'], 'recovery_center_v1.1')
+        self.assertEqual(payload['schema_version'], 'recovery_center_v1.2')
         self.assertIn('generated_at', payload)
         self.assertIn('data_freshness', payload)
         self.assertIn('last_event_at', payload['data_freshness'])
@@ -163,6 +163,28 @@ class RecoveryCenterServiceTests(TestCase):
         rules = ctx['attribution_rules']
         self.assertEqual(rules['executive_kpi'], 'strict_only')
         self.assertIn('strict_primary', rules)
+
+    def test_health_panel_week3_fields(self):
+        MarketingAutomationRun.objects.create(
+            flow_key=FLOW_KEY,
+            mode=MarketingAutomationRun.Mode.DRY_RUN,
+            status=MarketingAutomationRun.Status.COMPLETED,
+        )
+        MarketingAutomationRun.objects.create(
+            flow_key=FLOW_KEY,
+            mode=MarketingAutomationRun.Mode.LIVE,
+            status=MarketingAutomationRun.Status.COMPLETED,
+        )
+        ctx = get_recovery_center_context(days=30)
+        health = ctx['health']
+        self.assertIn('last_dry_run', health)
+        self.assertIn('last_live_run', health)
+        self.assertIn('daily_sms_guard', health)
+        self.assertIn('attribution_health', health)
+        self.assertEqual(health['last_dry_run']['last_mode'], MarketingAutomationRun.Mode.DRY_RUN)
+        self.assertEqual(health['last_live_run']['last_mode'], MarketingAutomationRun.Mode.LIVE)
+        self.assertTrue(health['daily_sms_guard']['enabled'])
+        self.assertIn('resets_at_label', health['daily_sms_guard'])
 
 
 class AdminRecoveryCenterViewTests(TestCase):

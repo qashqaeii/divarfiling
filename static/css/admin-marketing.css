@@ -883,6 +883,44 @@ html.mk-public:not([data-theme="light"]) .adm-map-automation-flow {
     color: #d97706;
 }
 
+.adm-map-automation-badge--live {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.adm-map-automation-bridge {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+}
+
+.adm-map-automation-bridge-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 12px;
+    background: rgba(148, 163, 184, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.adm-map-automation-bridge-stat strong {
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.adm-map-automation-bridge-stat span {
+    font-size: 0.62rem;
+    opacity: 0.75;
+}
+
+@media (max-width: 720px) {
+    .adm-map-automation-bridge {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .adm-map-flow-steps {
     display: flex;
     flex-direction: column;

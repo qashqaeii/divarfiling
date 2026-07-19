@@ -9,7 +9,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -116,7 +116,15 @@
             </article>
             <article class="adm-map-kpi" data-accent="violet">
                 <span class="adm-map-kpi-val">{{ marketing_stats.revenue|currency }}</span>
-                <span class="adm-map-kpi-lbl">درآمد ایجاد‌شده (ت)</span>
+                <span class="adm-map-kpi-lbl">درآمد کمپین (ت)</span>
+            </article>
+            <article class="adm-map-kpi" data-accent="emerald">
+                <span class="adm-map-kpi-val">{{ marketing_stats.recovery_revenue|currency }}</span>
+                <span class="adm-map-kpi-lbl">درآمد Recovery (ت)</span>
+            </article>
+            <article class="adm-map-kpi" data-accent="cyan">
+                <span class="adm-map-kpi-val">{{ marketing_stats.total_assisted_revenue|currency }}</span>
+                <span class="adm-map-kpi-lbl">Total Assisted Revenue</span>
             </article>
             <article class="adm-map-kpi" data-accent="rose">
                 <span class="adm-map-kpi-val">{{ marketing_stats.pending_send|currency }}</span>
@@ -745,8 +753,34 @@
                 <article class="adm-map-automation-flow">
                     <div class="adm-map-automation-head">
                         <h3>{{ flow.title }}</h3>
+                        {% if flow.key == 'pending_recovery' %}
+                        <span class="adm-map-automation-badge adm-map-automation-badge--live">
+                            {% if recovery_flow_bridge.status == 'live' %}🟢 {{ recovery_flow_bridge.status_label }}{% else %}⚪ {{ recovery_flow_bridge.status_label }}{% endif %}
+                        </span>
+                        {% else %}
                         <span class="adm-map-automation-badge">{% if flow.status == 'draft' %}پیش‌نویس{% else %}فعال{% endif %}</span>
+                        {% endif %}
                     </div>
+                    {% if flow.key == 'pending_recovery' %}
+                    <div class="adm-map-automation-bridge">
+                        <div class="adm-map-automation-bridge-stat">
+                            <strong>{{ recovery_flow_bridge.sent_today|currency }}</strong>
+                            <span>ارسال امروز</span>
+                        </div>
+                        <div class="adm-map-automation-bridge-stat">
+                            <strong>{{ recovery_flow_bridge.pending_queue|currency }}</strong>
+                            <span>در انتظار</span>
+                        </div>
+                        <div class="adm-map-automation-bridge-stat">
+                            <strong>{{ recovery_flow_bridge.recovered|currency }}</strong>
+                            <span>بازیابی موفق</span>
+                        </div>
+                        <div class="adm-map-automation-bridge-stat">
+                            <strong>{{ recovery_flow_bridge.revenue|currency }}</strong>
+                            <span>درآمد (ت)</span>
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="adm-map-flow-steps">
                         {% for step in flow.steps %}
                         {% if not forloop.first %}<div class="adm-map-flow-arrow">↓</div>{% endif %}
@@ -756,10 +790,16 @@
                         </div>
                         {% endfor %}
                     </div>
-                    <div style="margin-top:0.75rem">
+                    <div style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem">
+                        {% if flow.key == 'pending_recovery' %}
+                        <a href="{{ recovery_flow_bridge.recovery_center_url }}" class="adm-dl-btn adm-dl-btn--primary">
+                            <i class="fas fa-chart-line"></i> مشاهده Recovery Center
+                        </a>
+                        {% else %}
                         <a href="?segment={{ flow.segment_key }}#map-compose" class="adm-dl-btn adm-dl-btn--primary">
                             <i class="fas fa-play"></i> شروع دستی این جریان
                         </a>
+                        {% endif %}
                     </div>
                 </article>
                 {% endfor %}

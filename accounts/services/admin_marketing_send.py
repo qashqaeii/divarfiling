@@ -11,11 +11,13 @@ from django.utils import timezone
 from accounts.models import MarketingCampaign, MarketingCampaignRecipient
 from accounts.services.admin_marketing import (
     MARKETING_BATCH_LIMIT,
+    RECOVERY_SUPPRESS_SKIP_REASON,
     SEGMENT_DEFAULT_TEMPLATES,
     SEGMENT_REGISTRY,
     build_segment_recipients,
     create_shared_discount,
     create_unique_discount,
+    get_recovery_suppressed_phones,
     recently_marketed_phones,
     render_message,
 )
@@ -156,6 +158,7 @@ def run_campaign_send(
 
     phones = [r.phone for r in recipients]
     recently = recently_marketed_phones(phones, days=campaign.dedupe_days)
+    recovery_suppressed = get_recovery_suppressed_phones()
 
     campaign.status = MarketingCampaign.Status.SENDING
     campaign.recipients_total = len(recipients)
@@ -192,6 +195,14 @@ def run_campaign_send(
             if item.phone in recently:
                 recipient.status = MarketingCampaignRecipient.Status.SKIPPED
                 recipient.skip_reason = f'پیام بازاریابی در {campaign.dedupe_days} روز اخیر'
+                recipient.context_json = ctx
+                recipient.save(update_fields=['status', 'skip_reason', 'context_json', 'updated_at'])
+                campaign.skipped_count += 1
+                continue
+
+            if item.phone in recovery_suppressed:
+                recipient.status = MarketingCampaignRecipient.Status.SKIPPED
+                recipient.skip_reason = RECOVERY_SUPPRESS_SKIP_REASON
                 recipient.context_json = ctx
                 recipient.save(update_fields=['status', 'skip_reason', 'context_json', 'updated_at'])
                 campaign.skipped_count += 1

@@ -22,6 +22,7 @@ User = get_user_model()
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES, pending_orders_queryset
 MARKETING_BATCH_LIMIT = 200
 DEFAULT_DEDUPE_DAYS = 7
+RECOVERY_SUPPRESS_SKIP_REASON = 'active_recovery_flow'
 
 SEGMENT_DEFAULT_TEMPLATES = {
     'pending_orders': (
@@ -170,6 +171,12 @@ def build_segment_recipients(
         out.append(item)
         if limit and len(out) >= limit:
             break
+
+    if segment_key == 'pending_orders' and out:
+        suppressed = get_recovery_suppressed_phones()
+        if suppressed:
+            out = [item for item in out if item.phone not in suppressed]
+
     return out
 
 
@@ -360,6 +367,88 @@ def render_message(template: str, context: Dict[str, str]) -> str:
         return text.format_map(_Safe({k: str(v or '') for k, v in (context or {}).items()}))
     except Exception:
         return text
+
+
+def _phones_from_recent_recovery_sends(*, since) -> set[str]:
+    """شماره‌هایی که اخیراً SMS Recovery واقعی گرفته‌اند."""
+    from accounts.models import MarketingAutomationActionLog
+    from accounts.services.pending_recovery import FLOW_KEY
+    from accounts.services.recovery_attribution import is_production_recovery_send
+
+    phones: set[str] = set()
+    qs = (
+        MarketingAutomationActionLog.objects.filter(
+            flow_key=FLOW_KEY,
+            created_at__gte=since,
+        )
+        .select_related('user', 'order__user', 'sms_log')
+    )
+    for log in qs.iterator(chunk_size=200):
+        if not is_production_recovery_send(log):
+            continue
+        raw = ''
+        if log.user_id:
+            raw = log.user.phone or ''
+        elif log.order_id and log.order.user_id:
+            raw = log.order.user.phone or ''
+        elif log.sms_log_id:
+            raw = log.sms_log.phone or ''
+        phone = _phone_ok(raw)
+        if phone:
+            phones.add(phone)
+    return phones
+
+
+def get_recovery_suppressed_phones(*, now=None) -> frozenset[str]:
+    """
+    شماره‌هایی که Marketing دستی نباید SMS بدهد:
+    - would_send در Recovery الان
+    - SMS Recovery واقعی در پنجره attribution (۷۲h)
+    """
+    from accounts.services.pending_recovery import resolve_pending_recovery_audience
+    from accounts.services.recovery_attribution import ATTRIBUTION_WINDOW_HOURS
+
+    now = now or timezone.now()
+    phones: set[str] = set()
+
+    audience = resolve_pending_recovery_audience(simulate_enabled=False, now=now)
+    for res in audience.get('resolutions') or []:
+        if res.would_send and res.phone_norm:
+            phones.add(res.phone_norm)
+
+    since = now - timedelta(hours=ATTRIBUTION_WINDOW_HOURS)
+    phones.update(_phones_from_recent_recovery_sends(since=since))
+    return frozenset(phones)
+
+
+def get_recovery_flow_bridge_stats(*, days: int = 30) -> Dict[str, Any]:
+    """KPI زنده Recovery برای Bridge UI در Marketing Automation."""
+    from django.urls import reverse
+
+    from accounts.services.pending_recovery import FLOW_KEY, get_recovery_config, resolve_pending_recovery_audience
+    from accounts.services.pending_recovery_live import get_daily_sms_guard_status
+    from accounts.services.recovery_attribution import executive_attribution_summary
+
+    days = max(1, min(int(days or 30), 365))
+    now = timezone.now()
+    since = now - timedelta(days=days)
+    cfg = get_recovery_config(simulate_enabled=False)
+    audience = resolve_pending_recovery_audience(simulate_enabled=False, now=now)
+    guard = get_daily_sms_guard_status(now=now)
+    attr = executive_attribution_summary(since=since)
+    flow_live = bool(cfg.get('flow_enabled'))
+
+    return {
+        'flow_key': FLOW_KEY,
+        'status': 'live' if flow_live else 'disabled',
+        'status_label': 'فعال' if flow_live else 'غیرفعال',
+        'eligible_now': int(audience['stats'].get('would_send') or 0),
+        'sent_today': int(guard.get('sent_today') or 0),
+        'pending_queue': int(audience['stats'].get('would_send') or 0),
+        'recovered': int(attr.get('recovered') or 0),
+        'revenue': int(attr.get('recovery_revenue') or 0),
+        'recovery_center_url': reverse('admin_panel_recovery_center'),
+    }
 
 
 def recently_marketed_phones(phones: List[str], *, days: int = DEFAULT_DEDUPE_DAYS) -> set[str]:
@@ -913,6 +1002,12 @@ def get_marketing_dashboard_stats(*, sms_credit: Optional[int] = None) -> Dict[s
         round(100 * attribution['purchases'] / sent_total) if sent_total else None
     )
 
+    from accounts.services.recovery_attribution import executive_attribution_summary
+
+    recovery_attr = executive_attribution_summary(since=since_30)
+    campaign_revenue = int(attribution['revenue'] or 0)
+    recovery_revenue = int(recovery_attr.get('recovery_revenue') or 0)
+
     return {
         'campaigns_total': int(agg['campaigns'] or 0),
         'sent_total': sent_total,
@@ -924,7 +1019,11 @@ def get_marketing_dashboard_stats(*, sms_credit: Optional[int] = None) -> Dict[s
         'click_rate': click_rate,
         'conversion_rate': conversion_rate,
         'purchases': attribution['purchases'],
-        'revenue': attribution['revenue'],
+        'revenue': campaign_revenue,
+        'campaign_revenue': campaign_revenue,
+        'recovery_revenue': recovery_revenue,
+        'recovery_purchases': int(recovery_attr.get('recovered') or 0),
+        'total_assisted_revenue': campaign_revenue + recovery_revenue,
         'pending_send': pending_send,
         'sms_credit': sms_credit,
         'sms_marketing_30d': sms_30d,

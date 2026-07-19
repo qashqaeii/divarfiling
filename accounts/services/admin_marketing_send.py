@@ -50,6 +50,12 @@ def create_campaign_draft(
 ) -> MarketingCampaign:
     if segment_key not in SEGMENT_REGISTRY:
         raise MarketingSendError('سگمنت نامعتبر است.', code='bad_segment')
+    meta = SEGMENT_REGISTRY[segment_key]
+    if meta.get('preview_only') or not meta.get('send_enabled', True):
+        raise MarketingSendError(
+            'این سگمنت فقط پیش‌نمایش است؛ ارسال کمپین فعال نیست.',
+            code='preview_only_segment',
+        )
 
     mode = discount_mode if discount_mode in (
         MarketingCampaign.DiscountMode.NONE,

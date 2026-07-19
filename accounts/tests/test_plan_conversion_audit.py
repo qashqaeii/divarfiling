@@ -336,4 +336,4 @@ class PredictiveAndRecsAuditTests(TestCase):
         self.assertIn('purchase_funnel', payload)
         self.assertIn('activation_funnel', payload)
         self.assertIn('data_quality', payload)
-        self.assertEqual(payload['meta']['version'], '2.1-bi-audit')
+        self.assertEqual(payload['meta']['version'], '2.3-abandon-preview')

@@ -105,7 +105,7 @@ class PlanConversionServiceTests(TestCase):
 
         payload = build_plan_conversion_json(days=30)
         self.assertTrue(payload['ok'])
-        self.assertEqual(payload['meta']['version'], '2.1-bi-audit')
+        self.assertEqual(payload['meta']['version'], '2.3-abandon-preview')
         for key in ('insights', 'decision_cards', 'activation_funnel', 'purchase_funnel', 'behavior', 'recommendations', 'data_quality'):
             self.assertIn(key, payload)
 

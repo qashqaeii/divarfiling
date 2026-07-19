@@ -76,7 +76,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'پلن "{plan.name}" انتخاب شد.'))
         self.stdout.write(self.style.SUCCESS(f'قیمت: {plan.price:,} تومان\n'))
         
-        # ایجاد سفارش
+        # پیشوند FAKE- → از BI Production و payment_success حذف می‌شود
+        # (is_bi_production_order). این مسیر عمداً fulfill مرکزی را صدا نمی‌زند.
         order = Order.objects.create(
             user=user,
             product=product,

@@ -36,6 +36,10 @@ SEGMENT_DEFAULT_TEMPLATES = {
         'سلام{name_part}، هنوز لایسنس فعالی ندارید. '
         'با کد {code} از میزکار شروع کنید: {link}'
     ),
+    'abandoned_checkout': (
+        'سلام{name_part}، سفارش «{product}» هنوز تکمیل نشده. '
+        'ادامه خرید: {link}'
+    ),
 }
 
 
@@ -73,6 +77,17 @@ SEGMENT_REGISTRY: Dict[str, Dict[str, Any]] = {
         'supports_stale_hours': False,
         'supports_days_lookback': False,
         'supports_product': False,
+    },
+    'abandoned_checkout': {
+        'title': 'رها کردن Checkout',
+        'description': 'سفارش pending قدیمی — فقط پیش‌نمایش (ارسال غیرفعال)',
+        'icon': 'fa-cart-arrow-down',
+        'accent': 'amber',
+        'supports_stale_hours': True,
+        'supports_days_lookback': False,
+        'supports_product': True,
+        'preview_only': True,
+        'send_enabled': False,
     },
 }
 
@@ -125,6 +140,12 @@ def build_segment_recipients(
     """ساخت لیست گیرندگان یکتا بر اساس سگمنت (یک شماره = یک ردیف)."""
     if segment_key not in SEGMENT_REGISTRY:
         raise ValueError(f'سگمنت ناشناخته: {segment_key}')
+
+    # سگمنت پیش‌نمایش‌فقط: گیرنده برای ارسال ساخته نمی‌شود
+    if SEGMENT_REGISTRY[segment_key].get('preview_only') or not SEGMENT_REGISTRY[segment_key].get(
+        'send_enabled', True,
+    ):
+        return []
 
     if segment_key == 'pending_orders':
         items = _segment_pending_orders(
@@ -273,6 +294,19 @@ def preview_segment(
     product_id: Optional[int] = None,
     sample_size: int = 10,
 ) -> Dict[str, Any]:
+    if segment_key not in SEGMENT_REGISTRY:
+        raise ValueError(f'سگمنت ناشناخته: {segment_key}')
+
+    if segment_key == 'abandoned_checkout':
+        from shop.services.checkout_abandon import build_abandoned_checkout_preview
+
+        data = build_abandoned_checkout_preview(
+            hours=stale_hours,
+            product_id=product_id,
+        )
+        data['default_template'] = SEGMENT_DEFAULT_TEMPLATES.get(segment_key, '')
+        return data
+
     recipients = build_segment_recipients(
         segment_key,
         stale_hours=stale_hours,
@@ -307,6 +341,10 @@ def preview_segment(
         'sample': [_row(r) for r in sample],
         'recipients': [_row(r) for r in capped],
         'default_template': SEGMENT_DEFAULT_TEMPLATES.get(segment_key, ''),
+        'preview_only': bool(meta.get('preview_only')),
+        'send_enabled': bool(meta.get('send_enabled', True)),
+        'eligible': [],
+        'excluded': [],
     }
 
 
@@ -411,6 +449,7 @@ SEGMENT_SUGGESTIONS = {
     'pending_orders': 'ارسال کد تخفیف ۱۵٪ — پیامک احساسی در ساعت ۲۰',
     'failed_orders': 'یادآوری پرداخت با کد ۱۰٪ — ارسال بعد از ۲۴ ساعت',
     'users_without_license': 'معرفی میزکار + تخفیف خوش‌آمد — ارسال عصر',
+    'abandoned_checkout': 'فقط پیش‌نمایش — ارسال و Automation هنوز فعال نیست',
 }
 
 MESSAGE_TEMPLATE_CATALOG = [
@@ -553,18 +592,36 @@ def get_segment_insights(segment_key: str) -> Dict[str, Any]:
     last_activity = None
 
     try:
-        recipients = build_segment_recipients(segment_key)
-        count = len(recipients)
-        amounts = []
-        for r in recipients:
-            raw = (r.context or {}).get('amount', '')
-            if raw:
-                try:
-                    amounts.append(int(str(raw).replace(',', '')))
-                except (TypeError, ValueError):
-                    pass
-        if amounts:
-            avg_value = int(sum(amounts) / len(amounts))
+        if segment_key == 'abandoned_checkout':
+            from shop.services.checkout_abandon import build_abandoned_checkout_preview
+
+            preview = build_abandoned_checkout_preview()
+            count = preview.get('count', 0)
+            amounts = []
+            for r in preview.get('eligible') or []:
+                raw = (r or {}).get('amount', '')
+                if raw:
+                    try:
+                        amounts.append(int(str(raw).replace(',', '')))
+                    except (TypeError, ValueError):
+                        pass
+            if amounts:
+                avg_value = int(sum(amounts) / len(amounts))
+            if preview.get('eligible'):
+                last_activity = preview['eligible'][0].get('order_created_at')
+        else:
+            recipients = build_segment_recipients(segment_key)
+            count = len(recipients)
+            amounts = []
+            for r in recipients:
+                raw = (r.context or {}).get('amount', '')
+                if raw:
+                    try:
+                        amounts.append(int(str(raw).replace(',', '')))
+                    except (TypeError, ValueError):
+                        pass
+            if amounts:
+                avg_value = int(sum(amounts) / len(amounts))
     except Exception:
         pass
 
@@ -592,6 +649,15 @@ def get_segment_insights(segment_key: str) -> Dict[str, Any]:
             .first()
         )
         last_activity = latest
+    elif segment_key == 'abandoned_checkout' and last_activity is None:
+        from shop.models import PlanFunnelEvent
+
+        last_activity = (
+            PlanFunnelEvent.objects.filter(event_type='checkout_abandon')
+            .order_by('-created_at')
+            .values_list('created_at', flat=True)
+            .first()
+        )
 
     return {
         'key': segment_key,
@@ -603,6 +669,8 @@ def get_segment_insights(segment_key: str) -> Dict[str, Any]:
         'avg_value': avg_value,
         'last_activity': last_activity,
         'suggestion': SEGMENT_SUGGESTIONS.get(segment_key, 'ارسال پیام شخصی‌سازی‌شده با کد تخفیف'),
+        'preview_only': bool(meta.get('preview_only')),
+        'send_enabled': bool(meta.get('send_enabled', True)),
     }
 
 
@@ -831,7 +899,11 @@ def get_marketing_dashboard_stats(*, sms_credit: Optional[int] = None) -> Dict[s
     segment_sizes: Dict[str, int] = {}
     for key in SEGMENT_REGISTRY:
         try:
-            segment_sizes[key] = len(build_segment_recipients(key))
+            if key == 'abandoned_checkout':
+                from shop.services.checkout_abandon import build_abandoned_checkout_preview
+                segment_sizes[key] = build_abandoned_checkout_preview().get('count', 0)
+            else:
+                segment_sizes[key] = len(build_segment_recipients(key))
         except Exception:
             segment_sizes[key] = 0
 

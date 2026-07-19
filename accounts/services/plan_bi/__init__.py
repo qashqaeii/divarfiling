@@ -21,7 +21,19 @@ CORR_MIN_GROUP = 10
 CORR_MIN_TOTAL = 30
 # سفارش pending قدیمی‌تر از این threshold (ساعت) می‌تواند stale باشد
 PENDING_STALE_HOURS = 24
-SCHEMA_VERSION = '2.1-bi-audit'
+SCHEMA_VERSION = '2.3-abandon-preview'
+# حداقل نمونه پس از tracking
+POST_TRACKING_MIN_SAMPLE = 5
+# زیر از این: Conversion قفل (insufficient)
+POST_TRACKING_COVERAGE_LOCK_PCT = 50.0
+# از این به بالا با نمونه کافی: Good / قابل اتکا
+POST_TRACKING_COVERAGE_GOOD_PCT = 70.0
+# سازگاری با importهای قدیمی
+POST_TRACKING_COVERAGE_MIN_PCT = POST_TRACKING_COVERAGE_LOCK_PCT
+# پیش‌فرض Job رها کردن Checkout (ساعت)
+CHECKOUT_ABANDON_HOURS_DEFAULT = 2
+CHECKOUT_ABANDON_BATCH_DEFAULT = 500
+
 
 
 def clamp_days(days: int) -> int:

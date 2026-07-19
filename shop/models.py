@@ -262,6 +262,22 @@ class PlanFunnelEvent(models.Model):
         related_name='plan_funnel_events',
         verbose_name='پلن',
     )
+    order = models.ForeignKey(
+        'shop.Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='plan_funnel_events',
+        verbose_name='سفارش',
+    )
+    idempotency_key = models.CharField(
+        max_length=120,
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name='کلید یکتایی',
+        help_text='مثلاً payment_success:{order_id} — برای Eventهای قدیمی می‌تواند خالی باشد',
+    )
     metadata = models.JSONField(default=dict, blank=True, verbose_name='متادیتا')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='تاریخ')
 
@@ -272,6 +288,7 @@ class PlanFunnelEvent(models.Model):
         indexes = [
             models.Index(fields=['event_type', 'created_at']),
             models.Index(fields=['product', 'event_type', 'created_at']),
+            models.Index(fields=['order', 'event_type']),
         ]
 
     def __str__(self):

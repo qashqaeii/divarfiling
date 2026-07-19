@@ -111,7 +111,22 @@
                 <span class="apc-dq-card__status">{{ item.status }}</span>
                 <strong>{{ item.label }}</strong>
                 <p>{{ item.detail }}</p>
-                {% if item.coverage != None %}<small>پوشش: {{ item.coverage|to_persian_digits }}٪</small>{% endif %}
+                {% if item.coverage != None %}
+                <small>
+                    پوشش: {{ item.coverage|to_persian_digits }}٪
+                    {% if item.value.linked != None and item.value.total != None %}
+                    · {{ item.value.linked|to_persian_digits }} از {{ item.value.total|to_persian_digits }}
+                    {% endif %}
+                </small>
+                {% endif %}
+                {% if item.key == 'historical_coverage' %}
+                <small class="apc-dq-card__hint" title="شامل سفارش‌های قبل از شروع Tracking — فقط توضیح گذشته؛ Conversion را قفل نمی‌کند.">تاریخی · قفل‌کننده نیست</small>
+                {% elif item.key == 'post_tracking_coverage' %}
+                <small class="apc-dq-card__hint" title="فقط سفارش‌های پس از شروع Tracking — مبنای قفل/باز شدن Conversion.">پس از Tracking · مبنای Conversion</small>
+                {% if data_quality.conversion_provisional %}
+                <small class="apc-dq-card__hint">موقت و کم‌اطمینان — هدف عملیاتی ≥۷۰٪</small>
+                {% endif %}
+                {% endif %}
             </article>
             {% endfor %}
         </div>

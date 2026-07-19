@@ -160,7 +160,11 @@
                     </div>
                     <div class="adm-map-segment-pro-actions">
                         <a href="?segment={{ seg.key }}#map-overview" class="adm-dl-btn" data-map-segment="{{ seg.key }}" data-map-action="view">مشاهده</a>
+                        {% if seg.preview_only or seg.send_enabled == False %}
+                        <button type="button" class="adm-dl-btn adm-dl-btn--primary" disabled title="فقط پیش‌نمایش">فقط پیش‌نمایش</button>
+                        {% else %}
                         <a href="?segment={{ seg.key }}#map-compose" class="adm-dl-btn adm-dl-btn--primary" data-map-segment="{{ seg.key }}" data-map-action="campaign">شروع کمپین</a>
+                        {% endif %}
                         <a href="?segment={{ seg.key }}#map-compose" class="adm-dl-btn">ویرایش شرط</a>
                     </div>
                 </article>
@@ -221,6 +225,10 @@
                                 <label class="adm-map-audience-opt{% if selected_segment == 'failed_orders' %} is-selected{% endif %}">
                                     <input type="radio" name="wizard_segment" value="failed_orders" {% if selected_segment == 'failed_orders' %}checked{% endif %}>
                                     <span class="adm-map-audience-opt-body"><strong>مشتری غیرفعال / پرداخت ناموفق</strong><em>{{ marketing_stats.segment_sizes.failed_orders|default:0|currency }} مخاطب</em></span>
+                                </label>
+                                <label class="adm-map-audience-opt{% if selected_segment == 'abandoned_checkout' %} is-selected{% endif %}">
+                                    <input type="radio" name="wizard_segment" value="abandoned_checkout" {% if selected_segment == 'abandoned_checkout' %}checked{% endif %}>
+                                    <span class="adm-map-audience-opt-body"><strong>رها کردن Checkout</strong><em>{{ marketing_stats.segment_sizes.abandoned_checkout|default:0|currency }} · فقط پیش‌نمایش</em></span>
                                 </label>
                                 <label class="adm-map-audience-opt is-disabled">
                                     <input type="radio" name="wizard_segment" value="new_users" disabled>
@@ -284,6 +292,116 @@
                         <input type="hidden" name="dedupe_days" value="{{ dedupe_days }}">
 
                         <div class="adm-map-wizard-panel is-active" data-panel="0">
+                            {% if selected_segment == 'abandoned_checkout' or preview.preview_only %}
+                            <div class="adm-mkt-preview-box adm-mkt-abandon-preview">
+                                <div class="adm-alert adm-alert--info" style="margin-bottom:1rem">
+                                    <i class="fas fa-eye"></i>
+                                    <span>سگمنت رها کردن Checkout — فقط پیش‌نمایش. ارسال پیامک و Automation غیرفعال است.</span>
+                                </div>
+                                <div class="adm-mkt-preview-stats">
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.count|currency }}</strong>
+                                        <span>واجد شرایط فعلی</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.excluded_count|default:0|currency }}</strong>
+                                        <span>حذف‌شده</span>
+                                    </div>
+                                    <div class="adm-mkt-preview-stat">
+                                        <strong>{{ preview.hours|default:2|to_persian_digits }}</strong>
+                                        <span>آستانه (ساعت)</span>
+                                    </div>
+                                </div>
+
+                                <h3 class="adm-mkt-abandon-heading">۱) واجدان شرایط فعلی</h3>
+                                {% if preview.eligible %}
+                                <div class="adm-mkt-abandon-table-wrap">
+                                    <table class="adm-mkt-abandon-table">
+                                        <thead>
+                                            <tr>
+                                                <th>شماره</th>
+                                                <th>کاربر</th>
+                                                <th>سفارش</th>
+                                                <th>محصول / پلن</th>
+                                                <th>مبلغ</th>
+                                                <th>روش</th>
+                                                <th>وضعیت</th>
+                                                <th>ایجاد</th>
+                                                <th>عمر (س)</th>
+                                                <th>واجد از</th>
+                                                <th>منبع</th>
+                                                <th>Event</th>
+                                                <th>آخرین SMS</th>
+                                                <th>دلیل ورود</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in preview.eligible %}
+                                            <tr>
+                                                <td dir="ltr">{{ row.masked_phone }}</td>
+                                                <td>{{ row.user_id }}</td>
+                                                <td dir="ltr"><small>{{ row.order_id }}</small></td>
+                                                <td>{{ row.product }}{% if row.plan %} · {{ row.plan }}{% endif %}</td>
+                                                <td>{{ row.amount }}</td>
+                                                <td>{{ row.payment_method }}</td>
+                                                <td>{{ row.status_label }}</td>
+                                                <td>{{ row.order_created_at|timesince }} پیش</td>
+                                                <td>{{ row.age_hours|to_persian_digits }}</td>
+                                                <td>{% if row.eligible_since %}{{ row.eligible_since|timesince }} پیش{% else %}—{% endif %}</td>
+                                                <td><code>{{ row.checkout_source }}</code></td>
+                                                <td>{% if row.has_abandon_event %}بله{% else %}خیر{% endif %}</td>
+                                                <td>{% if row.last_marketing_sms_at %}{{ row.last_marketing_sms_at|timesince }} پیش{% else %}—{% endif %}</td>
+                                                <td>{{ row.include_reason_label }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <p class="adm-mkt-empty">واجد شرایطی یافت نشد.</p>
+                                {% endif %}
+
+                                <h3 class="adm-mkt-abandon-heading">۲) حذف‌شده‌ها</h3>
+                                {% if preview.excluded %}
+                                <div class="adm-mkt-abandon-table-wrap">
+                                    <table class="adm-mkt-abandon-table">
+                                        <thead>
+                                            <tr>
+                                                <th>شماره</th>
+                                                <th>کاربر</th>
+                                                <th>سفارش</th>
+                                                <th>وضعیت</th>
+                                                <th>منبع</th>
+                                                <th>Event تاریخی</th>
+                                                <th>دلیل حذف</th>
+                                                <th>یادداشت</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in preview.excluded %}
+                                            <tr>
+                                                <td dir="ltr">{{ row.masked_phone }}</td>
+                                                <td>{{ row.user_id }}</td>
+                                                <td dir="ltr"><small>{{ row.order_id }}</small></td>
+                                                <td>{{ row.status_label }}</td>
+                                                <td><code>{{ row.checkout_source }}</code></td>
+                                                <td>{% if row.has_abandon_event %}بله{% else %}خیر{% endif %}</td>
+                                                <td>{{ row.exclude_reason_label }}</td>
+                                                <td>{{ row.note }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <p class="adm-mkt-empty">مورد حذف‌شده‌ای در بازه نیست.</p>
+                                {% endif %}
+
+                                <div class="adm-map-wizard-nav" style="margin-top:1rem">
+                                    <button type="button" class="adm-dl-btn adm-dl-btn--primary" disabled>فقط پیش‌نمایش</button>
+                                </div>
+                            </div>
+                            {% else %}
                             <div class="adm-mkt-preview-box">
                                 <div class="adm-mkt-preview-stats">
                                     <div class="adm-mkt-preview-stat">
@@ -330,6 +448,7 @@
                                 <p class="adm-mkt-empty">گیرنده‌ای با این فیلتر پیدا نشد.</p>
                                 {% endif %}
                             </div>
+                            {% endif %}
                         </div>
 
                         <div class="adm-map-wizard-panel" data-panel="1">
@@ -423,9 +542,15 @@
                             <button type="button" class="adm-dl-btn adm-dl-btn--primary" id="adm-map-wizard-next">مرحله بعد</button>
                         </div>
                         <div id="adm-map-wizard-submit" hidden>
+                            {% if selected_segment == 'abandoned_checkout' or preview.preview_only %}
+                            <button type="button" class="adm-dl-btn adm-dl-btn--primary adm-mkt-submit" disabled>
+                                <i class="fas fa-eye"></i> فقط پیش‌نمایش
+                            </button>
+                            {% else %}
                             <button type="submit" class="adm-dl-btn adm-dl-btn--primary adm-mkt-submit" id="adm-mkt-submit" {% if preview.capped_count == 0 %}disabled{% endif %}>
                                 <i class="fas fa-paper-plane"></i> ارسال نهایی کمپین
                             </button>
+                            {% endif %}
                         </div>
                     </form>
                 </div>

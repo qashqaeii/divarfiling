@@ -4,8 +4,10 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, TemplateView
@@ -157,6 +159,8 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
             segment = 'pending_orders'
 
         stale_hours = _parse_int(self.request.GET.get('stale_hours'), None, minimum=1, maximum=720)
+        if segment == 'abandoned_checkout' and not stale_hours:
+            stale_hours = 2
         days_lookback = _parse_int(self.request.GET.get('days_lookback'), 14, minimum=1, maximum=90)
         product_id = _parse_int(self.request.GET.get('product_id'), None, minimum=1)
         dedupe_days = _parse_int(self.request.GET.get('dedupe_days'), 7, minimum=0, maximum=90)
@@ -242,14 +246,18 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
             messages.error(request, 'برای ارسال، تأیید قطعی را فعال کنید.')
             return redirect('admin_panel_marketing')
 
+        segment = request.POST.get('segment_key') or 'pending_orders'
+        seg_meta = SEGMENT_REGISTRY.get(segment) or {}
+        if seg_meta.get('preview_only') or not seg_meta.get('send_enabled', True):
+            messages.error(request, 'این سگمنت فقط پیش‌نمایش است؛ ارسال فعال نیست.')
+            return redirect(f'{reverse("admin_panel_marketing")}?segment={segment}')
+
         selected_phones = [
             p.strip() for p in request.POST.getlist('selected_phones') if (p or '').strip()
         ]
         if not selected_phones:
             messages.error(request, 'حداقل یک گیرنده را برای ارسال انتخاب کنید.')
             return redirect('admin_panel_marketing')
-
-        segment = request.POST.get('segment_key') or 'pending_orders'
         discount_mode = request.POST.get('discount_mode') or 'none'
         discount_type = request.POST.get('discount_type') or 'percentage'
         discount_value = None
@@ -309,7 +317,11 @@ class AdminMarketingPreviewView(StaffRequiredMixin, View):
             )
         except ValueError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
-        return JsonResponse({'ok': True, **data})
+        return JsonResponse(
+            {'ok': True, **data},
+            encoder=DjangoJSONEncoder,
+            json_dumps_params={'ensure_ascii': False},
+        )
 
 
 class AdminMarketingDetailView(StaffRequiredMixin, DetailView):

@@ -209,6 +209,10 @@ ZIBAL_REQUEST_URL = 'https://gateway.zibal.ir/v1/request'
 ZIBAL_VERIFY_URL = 'https://gateway.zibal.ir/v1/verify'
 ZIBAL_START_PAY_URL = 'https://gateway.zibal.ir/start/'
 
+# Job رها کردن Checkout (مرحله 1.4 — فقط Event + Preview؛ بدون SMS)
+CHECKOUT_ABANDON_HOURS = config('CHECKOUT_ABANDON_HOURS', default=2, cast=int)
+CHECKOUT_ABANDON_BATCH_LIMIT = config('CHECKOUT_ABANDON_BATCH_LIMIT', default=500, cast=int)
+
 # License Settings
 LICENSE_SECRET_KEY = config('LICENSE_SECRET_KEY', default='change-this-secret-key-in-production')
 LICENSE_ACTIVATION_LIMIT = 1  # تعداد فعال‌سازی مجاز (legacy)

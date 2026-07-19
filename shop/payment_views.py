@@ -100,6 +100,7 @@ def _create_or_update_pending_transaction(order: Order, track_id: str, request_r
 
 
 def _finalize_successful_payment(order: Order, transaction: Transaction, verify_result) -> None:
+    # payment_success فقط از مسیر مرکزی fulfill (idempotent) ثبت می‌شود
     fulfill_order_after_payment(order)
     transaction.status = 'paid'
     transaction.zibal_ref_number = verify_result.ref_number
@@ -110,18 +111,13 @@ def _finalize_successful_payment(order: Order, transaction: Transaction, verify_
     transaction.card_number_masked = verify_result.card_number
     transaction.verified_at = timezone.now()
     transaction.save()
+    # پس از ذخیره Transaction، metadata را با transaction_id به‌روز کن (بدون Event دوم)
     try:
-        from shop.services.plan_funnel import record_plan_funnel_for_order
-        record_plan_funnel_for_order(
-            'payment_success',
-            user=order.user,
-            product=order.product,
-            plan=order.plan,
-            order_id=str(order.id),
-            metadata={'amount': int(order.amount or 0)},
-        )
+        from shop.services.plan_funnel import ensure_payment_success_event
+        order.refresh_from_db()
+        ensure_payment_success_event(order)
     except Exception:
-        logger.exception('plan funnel payment_success failed for order %s', order.id)
+        logger.exception('plan funnel payment_success ensure failed for order %s', order.id)
 
 
 class PaymentCheckoutView(LoginRequiredMixin, View):
@@ -393,14 +389,11 @@ class PaymentCallbackView(View):
             order.save(update_fields=['status'])
             request.session['payment_error'] = error_message
             try:
-                from shop.services.plan_funnel import record_plan_funnel_for_order
-                record_plan_funnel_for_order(
-                    'payment_failed',
-                    user=order.user,
-                    product=order.product,
-                    plan=order.plan,
-                    order_id=str(order.id),
-                    metadata={'reason': error_message},
+                from shop.services.plan_funnel import record_payment_failed_event
+                record_payment_failed_event(
+                    order,
+                    reason=error_message,
+                    attempt_id=str(track_id or ''),
                 )
             except Exception:
                 logger.exception('plan funnel payment_failed failed for order %s', order.id)
@@ -425,14 +418,11 @@ class PaymentCallbackView(View):
             order.save(update_fields=['status'])
             request.session['payment_error'] = exc.message
             try:
-                from shop.services.plan_funnel import record_plan_funnel_for_order
-                record_plan_funnel_for_order(
-                    'payment_failed',
-                    user=order.user,
-                    product=order.product,
-                    plan=order.plan,
-                    order_id=str(order.id),
-                    metadata={'reason': exc.message},
+                from shop.services.plan_funnel import record_payment_failed_event
+                record_payment_failed_event(
+                    order,
+                    reason=exc.message,
+                    attempt_id=str(track_id or ''),
                 )
             except Exception:
                 logger.exception('plan funnel payment_failed failed for order %s', order.id)

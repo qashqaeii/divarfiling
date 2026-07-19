@@ -7,33 +7,47 @@ from django.utils import timezone
 from licenses.models import License
 
 
-def fulfill_order_after_payment(order) -> License | None:
-    """لایسنس، افیلیت و سایر اقدامات پس از پرداخت موفق — idempotent."""
-    from licenses.services.claim import issue_license_for_paid_order
+def fulfill_order_after_payment(
+    order,
+    *,
+    record_funnel: bool = True,
+) -> License | None:
+    """
+    لایسنس، افیلیت و سایر اقدامات پس از پرداخت موفق — idempotent.
 
-    if order.status == 'paid':
-        return issue_license_for_paid_order(order)
+    payment_success فقط بعد از موفقیت atomic وضعیت paid ثبت می‌شود
+    (یک‌بار به ازای order_id). اگر کل تراکنش بیرونی Rollback شود، Event هم Rollback می‌شود.
+    """
+    from licenses.services.claim import issue_license_for_paid_order
 
     with transaction.atomic():
         from shop.models import Order
 
-        order = Order.objects.select_for_update().get(pk=order.pk)
-        if order.status == 'paid':
-            return issue_license_for_paid_order(order)
+        locked = Order.objects.select_for_update().get(pk=order.pk)
+        already_paid = locked.status == 'paid'
 
-        order.status = 'paid'
-        order.paid_at = timezone.now()
-        order.save(update_fields=['status', 'paid_at'])
+        if not already_paid:
+            locked.status = 'paid'
+            locked.paid_at = timezone.now()
+            locked.save(update_fields=['status', 'paid_at'])
 
-        from affiliates.services.commission import (
-            ensure_buyer_affiliate_account,
-            record_affiliate_commission,
-        )
+            from affiliates.services.commission import (
+                ensure_buyer_affiliate_account,
+                record_affiliate_commission,
+            )
 
-        record_affiliate_commission(order)
-        ensure_buyer_affiliate_account(order.user)
+            record_affiliate_commission(locked)
+            ensure_buyer_affiliate_account(locked.user)
 
-    return issue_license_for_paid_order(order)
+        # داخل همان atomic: اگر fulfill شکست بخورد قبل از اینجا، Event نیست.
+        # اگر بعداً کل تراکنش Rollback شود، Event هم Rollback می‌شود.
+        if record_funnel:
+            from shop.services.plan_funnel import ensure_payment_success_event
+            ensure_payment_success_event(locked)
+
+        order_ref = locked
+
+    return issue_license_for_paid_order(order_ref)
 
 
 def approve_card_transfer(submission, reviewer) -> License | None:
@@ -66,6 +80,10 @@ def approve_card_transfer(submission, reviewer) -> License | None:
             'verified_at': timezone.now(),
         },
     )
+    # تکمیل metadata با transaction_id (Event جدید ساخته نمی‌شود)
+    from shop.services.plan_funnel import ensure_payment_success_event
+    order.refresh_from_db()
+    ensure_payment_success_event(order)
     return license_obj
 
 

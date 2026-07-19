@@ -1,4 +1,4 @@
-# Generated manually for Week 2 Recovery Attribution
+# Week 2 Recovery Attribution — پس از 0009 index rename
 
 import django.db.models.deletion
 from django.conf import settings
@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('shop', '0013_planfunnelevent_idempotency'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('accounts', '0008_test_provider_accepted_action'),
+        ('accounts', '0009_rename_accounts_ma_flow_ke_8a1f2d_idx_accounts_ma_flow_ke_e1e62e_idx'),
     ]
 
     operations = [

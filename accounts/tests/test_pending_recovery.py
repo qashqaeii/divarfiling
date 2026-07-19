@@ -121,7 +121,7 @@ class PendingRecoveryTests(TestCase):
         order,
         *,
         step_key=STEP_RECOVERY_1,
-        action=MarketingAutomationActionLog.Action.SENT,
+        action=MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED,
         hours_ago=1,
     ):
         from accounts.services.pending_recovery import hash_normalized_phone

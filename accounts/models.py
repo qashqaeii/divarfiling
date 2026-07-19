@@ -377,12 +377,14 @@ class MarketingAutomationRun(models.Model):
 
 
 class MarketingAutomationActionLog(models.Model):
-    """لاگ اقدام Automation — would_send شبیه‌سازی؛ sent برای Send Guard."""
+    """لاگ اقدام Automation — would_send شبیه‌سازی؛ ارسال Live با state machine."""
 
     class Action(models.TextChoices):
         WOULD_SEND = 'would_send', 'Would Send'
-        SENT = 'sent', 'Sent'
+        SEND_REQUESTED = 'send_requested', 'Send Requested'
         PROVIDER_ACCEPTED = 'provider_accepted', 'Provider Accepted'
+        DELIVERED = 'delivered', 'Delivered'
+        SENT = 'sent', 'Sent (legacy)'
         FAILED = 'failed', 'Failed'
         SUPPRESSED = 'suppressed', 'Suppressed'
         CANCELLED = 'cancelled', 'Cancelled'
@@ -442,7 +444,17 @@ class MarketingAutomationActionLog(models.Model):
         unique=True,
         verbose_name='کلید Idempotency ارسال واقعی',
     )
+    sms_log = models.ForeignKey(
+        'SmsMessageLog',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recovery_actions',
+        verbose_name='لاگ پیامک',
+    )
+    provider_message_id = models.CharField(max_length=128, blank=True, verbose_name='شناسه Provider')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='ایجاد')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='به‌روزرسانی')
 
     class Meta:
         verbose_name = 'لاگ اقدام Automation'

@@ -221,6 +221,16 @@ RECOVERY_LOOKBACK_DAYS = config('RECOVERY_LOOKBACK_DAYS', default=7, cast=int)
 RECOVERY_FREQUENCY_CAP_HOURS = config('RECOVERY_FREQUENCY_CAP_HOURS', default=24, cast=int)
 RECOVERY_BATCH_LIMIT = config('RECOVERY_BATCH_LIMIT', default=100, cast=int)
 PENDING_RECOVERY_FLOW_ENABLED = config('PENDING_RECOVERY_FLOW_ENABLED', default=False, cast=bool)
+# فاز ۲.۲ — ارسال Live (Kill Switch جدا؛ پیش‌فرض خاموش)
+RECOVERY_LIVE_SEND_ENABLED = config('RECOVERY_LIVE_SEND_ENABLED', default=False, cast=bool)
+RECOVERY_LIVE_TEST_ONLY = config('RECOVERY_LIVE_TEST_ONLY', default=True, cast=bool)
+RECOVERY_LIVE_TEST_PHONE = config('RECOVERY_LIVE_TEST_PHONE', default='')
+RECOVERY_LIVE_MAX_SENDS_PER_RUN = config('RECOVERY_LIVE_MAX_SENDS_PER_RUN', default=1, cast=int)
+RECOVERY_SMS_TEMPLATE = config(
+    'RECOVERY_SMS_TEMPLATE',
+    default='{name_part}سفارش «{product}» ({amount} ت) منتظر پرداخت است. {link}',
+)
+RECOVERY_PROVIDER_TIMEOUT_SECONDS = config('RECOVERY_PROVIDER_TIMEOUT_SECONDS', default=15, cast=int)
 
 # License Settings
 LICENSE_SECRET_KEY = config('LICENSE_SECRET_KEY', default='change-this-secret-key-in-production')

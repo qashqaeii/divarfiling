@@ -83,8 +83,9 @@ STEP_LABELS_FA = {
 }
 
 REAL_DELIVERY_ACTIONS = (
-    MarketingAutomationActionLog.Action.SENT,
     MarketingAutomationActionLog.Action.PROVIDER_ACCEPTED,
+    MarketingAutomationActionLog.Action.DELIVERED,
+    MarketingAutomationActionLog.Action.SENT,  # legacy — قبل از فاز ۲.۲
 )
 
 

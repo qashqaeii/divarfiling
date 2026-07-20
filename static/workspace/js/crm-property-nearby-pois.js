@@ -12,46 +12,96 @@
         return String(value).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
     }
 
-    function renderCard(item) {
-        const card = document.createElement('article');
-        card.className = 'crm-nearby-pois__card' + (item.found ? '' : ' is-empty');
-        card.setAttribute('role', 'listitem');
-        card.style.setProperty('--card-accent', item.color || 'var(--ws-primary)');
+    function renderRow(item, { empty = false } = {}) {
+        const row = document.createElement('div');
+        row.className = 'crm-nearby-pois__row' + (item.found && !empty ? '' : ' is-empty');
+        row.style.setProperty('--row-accent', item.color || 'var(--ws-primary)');
 
-        const top = document.createElement('div');
-        top.className = 'crm-nearby-pois__card-top';
+        const icon = document.createElement('span');
+        icon.className = 'crm-nearby-pois__row-icon';
+        icon.innerHTML = `<i class="fas ${item.icon || 'fa-location-dot'}" aria-hidden="true"></i>`;
 
-        const iconWrap = document.createElement('span');
-        iconWrap.className = 'crm-nearby-pois__card-icon';
-        iconWrap.innerHTML = `<i class="fas ${item.icon || 'fa-location-dot'}" aria-hidden="true"></i>`;
+        const main = document.createElement('div');
+        main.className = 'crm-nearby-pois__row-main';
 
         const label = document.createElement('span');
-        label.className = 'crm-nearby-pois__card-label';
+        label.className = 'crm-nearby-pois__row-label';
         label.textContent = item.label || '';
 
-        top.appendChild(iconWrap);
-        top.appendChild(label);
+        main.appendChild(label);
 
-        card.appendChild(top);
-
-        if (item.found) {
-            const dist = document.createElement('div');
-            dist.className = 'crm-nearby-pois__card-distance';
-            dist.textContent = item.distance_label || '';
-            card.appendChild(dist);
-
-            const name = document.createElement('p');
-            name.className = 'crm-nearby-pois__card-name';
-            name.textContent = item.name || '';
-            card.appendChild(name);
-        } else {
-            const empty = document.createElement('p');
-            empty.className = 'crm-nearby-pois__card-empty';
-            empty.textContent = item.empty_label || 'یافت نشد';
-            card.appendChild(empty);
+        if (item.found && item.name) {
+            const name = document.createElement('span');
+            name.className = 'crm-nearby-pois__row-name';
+            name.textContent = item.name;
+            main.appendChild(name);
+        } else if (!item.found) {
+            const name = document.createElement('span');
+            name.className = 'crm-nearby-pois__row-name';
+            name.textContent = item.empty_label || 'یافت نشد';
+            main.appendChild(name);
         }
 
-        return card;
+        const side = document.createElement('div');
+        side.className = 'crm-nearby-pois__row-side';
+
+        if (item.found) {
+            const dist = document.createElement('span');
+            dist.className = 'crm-nearby-pois__row-dist';
+            dist.textContent = item.distance_label || '';
+            side.appendChild(dist);
+            if (item.walk_label) {
+                const walk = document.createElement('span');
+                walk.className = 'crm-nearby-pois__row-walk';
+                walk.textContent = item.walk_label;
+                side.appendChild(walk);
+            }
+        }
+
+        row.appendChild(icon);
+        row.appendChild(main);
+        row.appendChild(side);
+        return row;
+    }
+
+    function renderRows(items) {
+        const wrap = document.createElement('div');
+        wrap.className = 'crm-nearby-pois__rows';
+        items.forEach((item) => wrap.appendChild(renderRow(item)));
+        return wrap;
+    }
+
+    function renderGroup(group) {
+        const found = (group.items || []).filter((i) => i.found);
+        if (!found.length) return null;
+
+        const section = document.createElement('section');
+        section.className = 'crm-nearby-pois__group';
+        section.setAttribute('role', 'listitem');
+
+        const title = document.createElement('h3');
+        title.className = 'crm-nearby-pois__group-title';
+        title.textContent = group.label || '';
+        section.appendChild(title);
+        section.appendChild(renderRows(found));
+        return section;
+    }
+
+    function renderHighlights(items) {
+        const wrap = document.createElement('div');
+        wrap.className = 'crm-nearby-pois__highlights';
+        items.forEach((item) => {
+            const pill = document.createElement('span');
+            pill.className = 'crm-nearby-pois__pill';
+            pill.style.setProperty('--pill-accent', item.color || 'var(--ws-primary)');
+            pill.innerHTML = `
+                <i class="fas ${item.icon || 'fa-location-dot'}" aria-hidden="true"></i>
+                <span>${item.label}</span>
+                <span class="crm-nearby-pois__pill-dist">${item.distance_label || ''}</span>
+            `;
+            wrap.appendChild(pill);
+        });
+        return wrap;
     }
 
     function initNearbyPoisPanel(root) {
@@ -61,16 +111,19 @@
         let hasCoords = root.dataset.hasCoords === '1';
         const fetchBtn = root.querySelector('[data-nearby-fetch]');
         const btnLabel = root.querySelector('[data-nearby-btn-label]');
-        const panel = root.querySelector('[data-nearby-panel]');
+        const body = root.querySelector('[data-nearby-body]');
         const placeholder = root.querySelector('[data-nearby-placeholder]');
         const loading = root.querySelector('[data-nearby-loading]');
-        const grid = root.querySelector('[data-nearby-grid]');
-        const summary = root.querySelector('[data-nearby-summary]');
+        const stats = root.querySelector('[data-nearby-stats]');
+        const highlightsHost = root.querySelector('[data-nearby-highlights]');
+        const groupsHost = root.querySelector('[data-nearby-groups]');
+        const missingHost = root.querySelector('[data-nearby-missing]');
+        const toggleMissing = root.querySelector('[data-nearby-toggle-missing]');
+        const missingLabel = root.querySelector('[data-nearby-missing-label]');
         const foundCountEl = root.querySelector('[data-nearby-found-count]');
         const radiusEl = root.querySelector('[data-nearby-radius]');
         const updatedEl = root.querySelector('[data-nearby-updated]');
         const errorEl = root.querySelector('[data-nearby-error]');
-        const metaEl = root.querySelector('[data-nearby-meta]');
 
         let hasStored = root.dataset.hasStored === '1';
         let busy = false;
@@ -97,43 +150,84 @@
         }
 
         function updateButtonLabel() {
-            if (btnLabel) {
-                btnLabel.textContent = hasStored ? 'بروزرسانی' : 'نمایش امکانات';
-            }
+            if (btnLabel) btnLabel.textContent = hasStored ? 'بروزرسانی' : 'محاسبه';
         }
 
         function renderPayload(data) {
-            if (!grid) return;
-            grid.innerHTML = '';
-            const items = Array.isArray(data?.items) ? data.items : [];
-            items.forEach((item) => grid.appendChild(renderCard(item)));
+            const groups = Array.isArray(data?.groups) ? data.groups : [];
+            const highlights = Array.isArray(data?.highlights) ? data.highlights : [];
+            const allItems = Array.isArray(data?.items) ? data.items : [];
+            const missing = allItems.filter((i) => !i.found);
 
-            if (summary) summary.hidden = false;
+            if (groupsHost) {
+                groupsHost.innerHTML = '';
+                groups.forEach((group) => {
+                    const el = renderGroup(group);
+                    if (el) groupsHost.appendChild(el);
+                });
+            }
+
+            if (highlightsHost) {
+                highlightsHost.innerHTML = '';
+                if (highlights.length) {
+                    highlightsHost.appendChild(renderHighlights(highlights));
+                    highlightsHost.hidden = false;
+                } else {
+                    highlightsHost.hidden = true;
+                }
+            }
+
+            if (missingHost) {
+                missingHost.innerHTML = '';
+                if (missing.length) {
+                    missingHost.appendChild(renderRows(missing));
+                }
+            }
+
+            if (toggleMissing) {
+                if (missing.length) {
+                    toggleMissing.hidden = false;
+                    if (missingLabel) {
+                        missingLabel.textContent = `${faDigits(missing.length)} مورد یافت‌نشده`;
+                    }
+                    toggleMissing.classList.remove('is-open');
+                    if (missingHost) missingHost.hidden = true;
+                } else {
+                    toggleMissing.hidden = true;
+                }
+            }
+
+            if (stats) stats.hidden = false;
             if (foundCountEl) {
-                const count = data.found_count != null ? data.found_count : items.filter((i) => i.found).length;
-                foundCountEl.textContent = `${faDigits(count)} مورد یافت شد`;
+                const found = data.found_count != null
+                    ? data.found_count
+                    : allItems.filter((i) => i.found).length;
+                const total = data.total_count != null ? data.total_count : allItems.length;
+                foundCountEl.textContent = `${faDigits(found)} از ${faDigits(total)} مورد`;
             }
             if (radiusEl) {
                 const radius = data.radius_m || 3000;
-                const label = radius >= 1000
+                radiusEl.textContent = radius >= 1000
                     ? `شعاع ${faDigits(Math.round(radius / 1000))} کیلومتر`
                     : `شعاع ${faDigits(radius)} متر`;
-                radiusEl.textContent = label;
             }
             if (updatedEl && data.fetched_at_label) {
-                updatedEl.textContent = `آخرین بروزرسانی: ${data.fetched_at_label}`;
-            }
-            if (metaEl) {
-                metaEl.hidden = false;
-                metaEl.textContent = data.cached ? 'از حافظه ذخیره‌شده' : 'تازه دریافت شد';
+                updatedEl.textContent = data.fetched_at_label;
             }
 
-            if (panel) panel.hidden = false;
+            if (body) body.hidden = false;
             if (placeholder) placeholder.hidden = true;
             hasStored = true;
             root.dataset.hasStored = '1';
             updateButtonLabel();
         }
+
+        toggleMissing?.addEventListener('click', () => {
+            if (!missingHost) return;
+            const open = missingHost.hidden;
+            missingHost.hidden = !open;
+            toggleMissing.classList.toggle('is-open', open);
+        });
 
         async function fetchNearby(refresh) {
             if (!fetchUrl || !hasCoords || busy) return;
@@ -155,11 +249,8 @@
                     throw new Error(data.error || 'دریافت امکانات اطراف ناموفق بود.');
                 }
                 renderPayload(data);
-                if (typeof global.showToast === 'function') {
-                    const msg = data.cached
-                        ? 'امکانات ذخیره‌شده نمایش داده شد.'
-                        : 'امکانات اطراف با موفقیت دریافت و ذخیره شد.';
-                    global.showToast(msg, 'success');
+                if (typeof global.showToast === 'function' && !data.cached) {
+                    global.showToast('امکانات اطراف ذخیره شد.', 'success');
                 }
             } catch (err) {
                 setError(err.message || 'خطا در دریافت امکانات اطراف');
@@ -183,11 +274,16 @@
             hasStored = false;
             root.dataset.hasStored = '0';
             if (fetchBtn) fetchBtn.disabled = false;
-            if (panel) panel.hidden = true;
+            if (body) body.hidden = true;
             if (placeholder) placeholder.hidden = false;
-            if (grid) grid.innerHTML = '';
-            if (summary) summary.hidden = true;
-            if (metaEl) metaEl.hidden = true;
+            if (stats) stats.hidden = true;
+            if (groupsHost) groupsHost.innerHTML = '';
+            if (highlightsHost) {
+                highlightsHost.innerHTML = '';
+                highlightsHost.hidden = true;
+            }
+            if (missingHost) missingHost.innerHTML = '';
+            if (toggleMissing) toggleMissing.hidden = true;
             updateButtonLabel();
             setError('');
         });
@@ -195,22 +291,18 @@
         const initialEl = document.getElementById('crm-nearby-pois-initial');
         if (initialEl) {
             try {
-                const initial = JSON.parse(initialEl.textContent);
-                renderPayload(initial);
+                renderPayload(JSON.parse(initialEl.textContent));
             } catch (_) {
-                /* ignore invalid bootstrap payload */
+                /* ignore */
             }
         }
 
         updateButtonLabel();
-
         return { refresh: () => fetchNearby(true) };
     }
 
     function bootNearbyPois() {
-        document.querySelectorAll('[data-nearby-pois-root]').forEach((root) => {
-            initNearbyPoisPanel(root);
-        });
+        document.querySelectorAll('[data-nearby-pois-root]').forEach(initNearbyPoisPanel);
     }
 
     if (document.readyState === 'loading') {

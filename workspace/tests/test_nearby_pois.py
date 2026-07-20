@@ -11,10 +11,13 @@ from django.urls import reverse
 
 from workspace.models import CRMAgency, CRMAgencyMember, CRMProperty
 from workspace.services.nearby_pois import (
+    PAYLOAD_VERSION,
     NearbyPoiError,
     build_overpass_query,
+    estimate_walk_label,
     fetch_and_save_nearby_pois,
     format_distance_label,
+    group_nearby_items,
     haversine_m,
     resolve_nearby_items,
     stored_nearby_pois_valid,
@@ -26,45 +29,35 @@ User = get_user_model()
 def _sample_elements():
     return [
         {
-            'type': 'node',
-            'lat': 35.7580,
-            'lon': 51.4105,
+            'type': 'node', 'lat': 35.7580, 'lon': 51.4105,
             'tags': {'railway': 'station', 'station': 'subway', 'name': 'ونک'},
         },
         {
-            'type': 'node',
-            'lat': 35.7590,
-            'lon': 51.4110,
+            'type': 'node', 'lat': 35.7590, 'lon': 51.4110,
             'tags': {'highway': 'bus_stop', 'name': 'ایستگاه اتوبوس ونک'},
         },
         {
-            'type': 'node',
-            'lat': 35.7600,
-            'lon': 51.4120,
+            'type': 'node', 'lat': 35.7595, 'lon': 51.4115,
+            'tags': {'amenity': 'place_of_worship', 'religion': 'muslim', 'name': 'مسجد ونک'},
+        },
+        {
+            'type': 'node', 'lat': 35.7600, 'lon': 51.4120,
             'tags': {'leisure': 'park', 'name': 'پارک ملت'},
         },
         {
-            'type': 'node',
-            'lat': 35.7610,
-            'lon': 51.4130,
+            'type': 'node', 'lat': 35.7610, 'lon': 51.4130,
             'tags': {'amenity': 'hospital', 'name': 'بیمارستان پارس'},
         },
         {
-            'type': 'node',
-            'lat': 35.7620,
-            'lon': 51.4140,
+            'type': 'node', 'lat': 35.7620, 'lon': 51.4140,
             'tags': {'amenity': 'school', 'name': 'دبستان سلام'},
         },
         {
-            'type': 'node',
-            'lat': 35.7630,
-            'lon': 51.4150,
+            'type': 'node', 'lat': 35.7630, 'lon': 51.4150,
             'tags': {'shop': 'supermarket', 'name': 'هایپرمی'},
         },
         {
-            'type': 'node',
-            'lat': 35.7640,
-            'lon': 51.4160,
+            'type': 'node', 'lat': 35.7640, 'lon': 51.4160,
             'tags': {'amenity': 'pharmacy', 'name': 'داروخانه دکتر رضایی'},
         },
     ]
@@ -77,11 +70,14 @@ class NearbyPoisServiceTests(TestCase):
         self.assertLess(dist, 200)
         self.assertIn('متر', format_distance_label(420))
         self.assertIn('کیلومتر', format_distance_label(1250))
+        self.assertIn('پیاده', estimate_walk_label(400))
 
     def test_build_overpass_query_contains_categories(self):
         q = build_overpass_query(35.7, 51.4, radius_m=3000)
         self.assertIn('amenity"="hospital"', q)
         self.assertIn('highway"="bus_stop"', q)
+        self.assertIn('place_of_worship"', q)
+        self.assertIn('building"="mosque"', q)
         self.assertIn('around:3000,35.7,51.4', q)
 
     def test_resolve_nearby_items_picks_nearest(self):
@@ -89,13 +85,23 @@ class NearbyPoisServiceTests(TestCase):
         by_key = {item.key: item for item in items}
         self.assertTrue(by_key['metro'].found)
         self.assertEqual(by_key['metro'].name, 'ونک')
+        self.assertTrue(by_key['mosque'].found)
+        self.assertEqual(by_key['mosque'].name, 'مسجد ونک')
         self.assertTrue(by_key['pharmacy'].found)
+        self.assertTrue(by_key['metro'].walk_label)
+
+    def test_group_nearby_items_structure(self):
+        items = resolve_nearby_items(35.7575, 51.4100, _sample_elements(), radius_m=5000)
+        groups = group_nearby_items([i.as_dict() for i in items])
+        self.assertTrue(any(g['key'] == 'religion' for g in groups))
+        self.assertTrue(any(g['key'] == 'transport' for g in groups))
 
     def test_stored_cache_invalid_when_coords_change(self):
         prop = CRMProperty(
             latitude=35.7575,
             longitude=51.4100,
             nearby_pois={
+                'version': PAYLOAD_VERSION,
                 'coords': {'lat': 35.7575, 'lng': 51.4100},
                 'radius_m': 3000,
                 'items': [{'key': 'metro', 'found': True}],
@@ -103,6 +109,19 @@ class NearbyPoisServiceTests(TestCase):
         )
         self.assertTrue(stored_nearby_pois_valid(prop))
         prop.longitude = 51.4200
+        self.assertFalse(stored_nearby_pois_valid(prop))
+
+    def test_old_payload_version_invalid(self):
+        prop = CRMProperty(
+            latitude=35.7575,
+            longitude=51.4100,
+            nearby_pois={
+                'version': 1,
+                'coords': {'lat': 35.7575, 'lng': 51.4100},
+                'radius_m': 3000,
+                'items': [{'key': 'metro', 'found': True}],
+            },
+        )
         self.assertFalse(stored_nearby_pois_valid(prop))
 
     @patch('workspace.services.nearby_pois.fetch_overpass_elements')
@@ -121,8 +140,10 @@ class NearbyPoisServiceTests(TestCase):
         self.assertTrue(result['ok'])
         self.assertFalse(result['cached'])
         self.assertGreater(result['found_count'], 0)
+        self.assertTrue(result['groups'])
+        self.assertTrue(result['highlights'])
         self.assertTrue(stored_nearby_pois_valid(prop))
-        self.assertEqual(prop.nearby_pois.get('coords', {}).get('lat'), 35.7575)
+        self.assertEqual(prop.nearby_pois.get('version'), PAYLOAD_VERSION)
 
     @patch('workspace.services.nearby_pois.fetch_overpass_elements')
     def test_fetch_uses_cache_without_api(self, mock_fetch):
@@ -133,13 +154,15 @@ class NearbyPoisServiceTests(TestCase):
             latitude=35.7575,
             longitude=51.4100,
             nearby_pois={
-                'version': 1,
+                'version': PAYLOAD_VERSION,
                 'coords': {'lat': 35.7575, 'lng': 51.4100},
                 'radius_m': 3000,
                 'fetched_at': '2026-07-20T09:00:00+00:00',
                 'fetched_at_label': '۱۴۰۴/۰۴/۲۹ ۰۹:۰۰',
-                'items': [{'key': 'metro', 'label': 'مترو', 'found': True, 'distance_label': '۱۰۰ متر'}],
+                'items': [{'key': 'metro', 'label': 'مترو', 'group': 'transport', 'found': True, 'distance_label': '۱۰۰ متر'}],
                 'found_count': 1,
+                'groups': [],
+                'highlights': [],
             },
         )
         result = fetch_and_save_nearby_pois(prop, user)
@@ -211,7 +234,8 @@ class CRMPropertyNearbyPoisViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertTrue(data['ok'])
-        self.assertGreater(len(data['items']), 0)
+        self.assertGreater(len(data['items']), 10)
+        self.assertTrue(data['groups'])
         self.prop.refresh_from_db()
         self.assertTrue(self.prop.nearby_pois.get('items'))
 
@@ -251,11 +275,12 @@ class CRMPropertyNearbyPoisViewTests(TestCase):
         resp = self.client.get(self.detail_url)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'crm-nearby-pois')
-        self.assertContains(resp, 'امکانات اطراف ملک')
+        self.assertContains(resp, 'امکانات اطراف')
         self.assertContains(resp, 'crm-property-nearby-pois.js')
 
     def test_location_update_clears_nearby_pois(self):
         self.prop.nearby_pois = {
+            'version': PAYLOAD_VERSION,
             'coords': {'lat': 35.7575, 'lng': 51.4100},
             'items': [{'key': 'metro', 'found': True}],
         }

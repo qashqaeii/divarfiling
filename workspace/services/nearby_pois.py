@@ -17,18 +17,27 @@ from workspace.services.listing_map import parse_map_coordinates
 
 logger = logging.getLogger(__name__)
 
+PAYLOAD_VERSION = 2
+
 DEFAULT_OVERPASS_URLS = (
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
 )
 
+POI_GROUPS: Tuple[Dict[str, str], ...] = (
+    {'key': 'transport', 'label': 'دسترسی و حمل‌ونقل'},
+    {'key': 'daily', 'label': 'زندگی روزمره'},
+    {'key': 'health', 'label': 'درمان و سلامت'},
+    {'key': 'education', 'label': 'آموزش'},
+    {'key': 'religion', 'label': 'مذهبی'},
+    {'key': 'leisure', 'label': 'تفریح و ورزش'},
+    {'key': 'safety', 'label': 'امنیت و خدمات'},
+)
+
 POI_CATEGORIES: Tuple[Dict[str, Any], ...] = (
     {
-        'key': 'metro',
-        'label': 'مترو',
-        'icon': 'fa-train-subway',
-        'color': '#7c3aed',
-        'fallback_name': 'ایستگاه مترو',
+        'key': 'metro', 'group': 'transport', 'label': 'مترو', 'icon': 'fa-train-subway',
+        'color': '#7c3aed', 'fallback_name': 'ایستگاه مترو',
         'match': (
             {'railway': 'station', 'station': 'subway'},
             {'public_transport': 'station', 'subway': 'yes'},
@@ -37,64 +46,130 @@ POI_CATEGORIES: Tuple[Dict[str, Any], ...] = (
         'overpass': (
             'nwr["railway"="station"]["station"="subway"]',
             'nwr["public_transport"="station"]["subway"="yes"]',
-            'nwr["railway"="station"]["subway"="yes"]',
         ),
     },
     {
-        'key': 'bus',
-        'label': 'اتوبوس',
-        'icon': 'fa-bus',
-        'color': '#2563eb',
-        'fallback_name': 'ایستگاه اتوبوس',
+        'key': 'bus', 'group': 'transport', 'label': 'اتوبوس', 'icon': 'fa-bus',
+        'color': '#2563eb', 'fallback_name': 'ایستگاه اتوبوس',
         'match': ({'highway': 'bus_stop'},),
         'overpass': ('nwr["highway"="bus_stop"]',),
     },
     {
-        'key': 'park',
-        'label': 'پارک',
-        'icon': 'fa-tree',
-        'color': '#059669',
-        'fallback_name': 'پارک',
+        'key': 'supermarket', 'group': 'daily', 'label': 'سوپرمارکت', 'icon': 'fa-cart-shopping',
+        'color': '#0891b2', 'fallback_name': 'فروشگاه',
+        'match': ({'shop': 'supermarket'}, {'shop': 'convenience'}, {'shop': 'general'}),
+        'overpass': (
+            'nwr["shop"="supermarket"]',
+            'nwr["shop"="convenience"]',
+        ),
+    },
+    {
+        'key': 'bakery', 'group': 'daily', 'label': 'نانوایی', 'icon': 'fa-bread-slice',
+        'color': '#ca8a04', 'fallback_name': 'نانوایی',
+        'match': ({'shop': 'bakery'},),
+        'overpass': ('nwr["shop"="bakery"]',),
+    },
+    {
+        'key': 'bank', 'group': 'daily', 'label': 'بانک', 'icon': 'fa-building-columns',
+        'color': '#0369a1', 'fallback_name': 'بانک',
+        'match': ({'amenity': 'bank'},),
+        'overpass': ('nwr["amenity"="bank"]',),
+    },
+    {
+        'key': 'atm', 'group': 'daily', 'label': 'عابر بانک', 'icon': 'fa-money-bill-wave',
+        'color': '#0284c7', 'fallback_name': 'عابر بانک',
+        'match': ({'amenity': 'atm'},),
+        'overpass': ('nwr["amenity"="atm"]',),
+    },
+    {
+        'key': 'pharmacy', 'group': 'health', 'label': 'داروخانه', 'icon': 'fa-prescription-bottle-medical',
+        'color': '#db2777', 'fallback_name': 'داروخانه',
+        'match': ({'amenity': 'pharmacy'},),
+        'overpass': ('nwr["amenity"="pharmacy"]',),
+    },
+    {
+        'key': 'hospital', 'group': 'health', 'label': 'بیمارستان', 'icon': 'fa-hospital',
+        'color': '#dc2626', 'fallback_name': 'مرکز درمانی',
+        'match': ({'amenity': 'hospital'}, {'amenity': 'clinic'}, {'healthcare': 'hospital'}),
+        'overpass': (
+            'nwr["amenity"="hospital"]',
+            'nwr["amenity"="clinic"]',
+        ),
+    },
+    {
+        'key': 'school', 'group': 'education', 'label': 'مدرسه', 'icon': 'fa-school',
+        'color': '#d97706', 'fallback_name': 'مدرسه',
+        'match': ({'amenity': 'school'}, {'amenity': 'kindergarten'}),
+        'overpass': (
+            'nwr["amenity"="school"]',
+            'nwr["amenity"="kindergarten"]',
+        ),
+    },
+    {
+        'key': 'university', 'group': 'education', 'label': 'دانشگاه', 'icon': 'fa-graduation-cap',
+        'color': '#9333ea', 'fallback_name': 'دانشگاه',
+        'match': ({'amenity': 'university'}, {'amenity': 'college'}),
+        'overpass': (
+            'nwr["amenity"="university"]',
+            'nwr["amenity"="college"]',
+        ),
+    },
+    {
+        'key': 'mosque', 'group': 'religion', 'label': 'مسجد', 'icon': 'fa-mosque',
+        'color': '#0d9488', 'fallback_name': 'مسجد',
+        'match': (
+            {'amenity': 'place_of_worship', 'religion': 'muslim'},
+            {'building': 'mosque'},
+            {'amenity': 'mosque'},
+        ),
+        'overpass': (
+            'nwr["amenity"="place_of_worship"]["religion"="muslim"]',
+            'nwr["building"="mosque"]',
+        ),
+    },
+    {
+        'key': 'park', 'group': 'leisure', 'label': 'پارک', 'icon': 'fa-tree',
+        'color': '#059669', 'fallback_name': 'پارک',
         'match': ({'leisure': 'park'}, {'leisure': 'garden'}),
         'overpass': ('nwr["leisure"="park"]', 'nwr["leisure"="garden"]'),
     },
     {
-        'key': 'hospital',
-        'label': 'بیمارستان',
-        'icon': 'fa-hospital',
-        'color': '#dc2626',
-        'fallback_name': 'مرکز درمانی',
-        'match': ({'amenity': 'hospital'}, {'amenity': 'clinic'}),
-        'overpass': ('nwr["amenity"="hospital"]', 'nwr["amenity"="clinic"]'),
+        'key': 'gym', 'group': 'leisure', 'label': 'باشگاه ورزشی', 'icon': 'fa-dumbbell',
+        'color': '#ea580c', 'fallback_name': 'باشگاه',
+        'match': (
+            {'leisure': 'fitness_centre'},
+            {'leisure': 'sports_centre'},
+            {'sport': 'multi'},
+        ),
+        'overpass': (
+            'nwr["leisure"="fitness_centre"]',
+            'nwr["leisure"="sports_centre"]',
+        ),
     },
     {
-        'key': 'school',
-        'label': 'مدرسه',
-        'icon': 'fa-school',
-        'color': '#d97706',
-        'fallback_name': 'مدرسه',
-        'match': ({'amenity': 'school'}, {'amenity': 'kindergarten'}),
-        'overpass': ('nwr["amenity"="school"]', 'nwr["amenity"="kindergarten"]'),
+        'key': 'mall', 'group': 'leisure', 'label': 'مرکز خرید', 'icon': 'fa-bag-shopping',
+        'color': '#be185d', 'fallback_name': 'مرکز خرید',
+        'match': ({'shop': 'mall'}, {'amenity': 'marketplace'}),
+        'overpass': (
+            'nwr["shop"="mall"]',
+            'nwr["amenity"="marketplace"]',
+        ),
     },
     {
-        'key': 'supermarket',
-        'label': 'سوپرمارکت',
-        'icon': 'fa-cart-shopping',
-        'color': '#0891b2',
-        'fallback_name': 'سوپرمارکت',
-        'match': ({'shop': 'supermarket'}, {'shop': 'convenience'}),
-        'overpass': ('nwr["shop"="supermarket"]', 'nwr["shop"="convenience"]'),
+        'key': 'police', 'group': 'safety', 'label': 'کلانتری', 'icon': 'fa-shield-halved',
+        'color': '#1d4ed8', 'fallback_name': 'کلانتری',
+        'match': ({'amenity': 'police'},),
+        'overpass': ('nwr["amenity"="police"]',),
     },
     {
-        'key': 'pharmacy',
-        'label': 'داروخانه',
-        'icon': 'fa-prescription-bottle-medical',
-        'color': '#db2777',
-        'fallback_name': 'داروخانه',
-        'match': ({'amenity': 'pharmacy'},),
-        'overpass': ('nwr["amenity"="pharmacy"]',),
+        'key': 'fire_station', 'group': 'safety', 'label': 'آتش‌نشانی', 'icon': 'fa-fire-extinguisher',
+        'color': '#b45309', 'fallback_name': 'آتش‌نشانی',
+        'match': ({'amenity': 'fire_station'},),
+        'overpass': ('nwr["amenity"="fire_station"]',),
     },
 )
+
+_GROUP_LABELS = {g['key']: g['label'] for g in POI_GROUPS}
 
 
 class NearbyPoiError(Exception):
@@ -110,6 +185,8 @@ class NearbyPoiError(Exception):
 @dataclass(frozen=True)
 class NearbyPoiItem:
     key: str
+    group: str
+    group_label: str
     label: str
     icon: str
     color: str
@@ -117,11 +194,14 @@ class NearbyPoiItem:
     name: str = ''
     distance_m: Optional[int] = None
     distance_label: str = ''
+    walk_label: str = ''
     empty_label: str = ''
 
     def as_dict(self) -> Dict[str, Any]:
         return {
             'key': self.key,
+            'group': self.group,
+            'group_label': self.group_label,
             'label': self.label,
             'icon': self.icon,
             'color': self.color,
@@ -129,6 +209,7 @@ class NearbyPoiItem:
             'name': self.name,
             'distance_m': self.distance_m,
             'distance_label': self.distance_label,
+            'walk_label': self.walk_label,
             'empty_label': self.empty_label,
         }
 
@@ -138,7 +219,7 @@ def _search_radius_m() -> int:
 
 
 def _overpass_timeout() -> int:
-    return int(getattr(settings, 'NEARBY_POI_OVERPASS_TIMEOUT', 25))
+    return int(getattr(settings, 'NEARBY_POI_OVERPASS_TIMEOUT', 30))
 
 
 def _overpass_urls() -> Sequence[str]:
@@ -153,7 +234,6 @@ def _coords_key(lat: float, lng: float) -> Tuple[float, float]:
 
 
 def haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-    """فاصله خط مستقیم بین دو نقطه بر حسب متر."""
     r = 6371000.0
     phi1, phi2 = math.radians(lat1), math.radians(lat2)
     d_phi = math.radians(lat2 - lat1)
@@ -177,6 +257,24 @@ def format_distance_label(distance_m: float) -> str:
     return f'{to_persian_digits(label)} کیلومتر'
 
 
+def estimate_walk_label(distance_m: Optional[float]) -> str:
+    if distance_m is None or distance_m <= 0:
+        return ''
+    minutes = max(1, int(round(float(distance_m) / 80.0)))
+    if minutes > 45:
+        return ''
+    return f'حدود {to_persian_digits(minutes)} دقیقه پیاده'
+
+
+def _radius_empty_label(radius_m: int) -> str:
+    if radius_m >= 1000:
+        km = radius_m / 1000.0
+        if km == int(km):
+            return f'در شعاع {to_persian_digits(int(km))} کیلومتر یافت نشد'
+        return f'در شعاع {to_persian_digits(km)} کیلومتر یافت نشد'
+    return f'در شعاع {to_persian_digits(radius_m)} متر یافت نشد'
+
+
 def _element_coords(element: Dict[str, Any]) -> Optional[Tuple[float, float]]:
     if element.get('lat') is not None and element.get('lon') is not None:
         return float(element['lat']), float(element['lon'])
@@ -198,7 +296,7 @@ def _element_matches_category(tags: Dict[str, str], category: Dict[str, Any]) ->
 
 
 def _element_name(tags: Dict[str, str], fallback: str) -> str:
-    for key in ('name:fa', 'name', 'brand:fa', 'brand'):
+    for key in ('name:fa', 'name', 'brand:fa', 'brand', 'operator'):
         val = (tags.get(key) or '').strip()
         if val:
             return val
@@ -287,10 +385,11 @@ def resolve_nearby_items(
     radius_m: Optional[int] = None,
 ) -> List[NearbyPoiItem]:
     radius = radius_m or _search_radius_m()
-    empty_label = f'در شعاع {to_persian_digits(radius // 1000 if radius >= 1000 else radius)}{" کیلومتر" if radius >= 1000 else " متر"} یافت نشد'
+    empty_label = _radius_empty_label(radius)
     items: List[NearbyPoiItem] = []
 
     for category in POI_CATEGORIES:
+        group_key = category['group']
         best_dist = float('inf')
         best_name = ''
         for element in elements:
@@ -310,6 +409,8 @@ def resolve_nearby_items(
         if best_dist == float('inf'):
             items.append(NearbyPoiItem(
                 key=category['key'],
+                group=group_key,
+                group_label=_GROUP_LABELS.get(group_key, group_key),
                 label=category['label'],
                 icon=category['icon'],
                 color=category['color'],
@@ -317,17 +418,51 @@ def resolve_nearby_items(
                 empty_label=empty_label,
             ))
         else:
+            dist_m = int(round(best_dist))
             items.append(NearbyPoiItem(
                 key=category['key'],
+                group=group_key,
+                group_label=_GROUP_LABELS.get(group_key, group_key),
                 label=category['label'],
                 icon=category['icon'],
                 color=category['color'],
                 found=True,
                 name=best_name,
-                distance_m=int(round(best_dist)),
+                distance_m=dist_m,
                 distance_label=format_distance_label(best_dist),
+                walk_label=estimate_walk_label(best_dist),
             ))
     return items
+
+
+def group_nearby_items(items: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """گروه‌بندی آیتم‌ها برای UI — فقط گروه‌های دارای آیتم."""
+    by_group: Dict[str, List[Dict[str, Any]]] = {g['key']: [] for g in POI_GROUPS}
+    for item in items:
+        group_key = item.get('group') or 'daily'
+        by_group.setdefault(group_key, []).append(item)
+
+    groups: List[Dict[str, Any]] = []
+    for group in POI_GROUPS:
+        group_items = by_group.get(group['key']) or []
+        if not group_items:
+            continue
+        found = [i for i in group_items if i.get('found')]
+        missing = [i for i in group_items if not i.get('found')]
+        found.sort(key=lambda x: x.get('distance_m') or 999999)
+        groups.append({
+            'key': group['key'],
+            'label': group['label'],
+            'found_count': len(found),
+            'items': found + missing,
+        })
+    return groups
+
+
+def nearest_highlights(items: Sequence[Dict[str, Any]], *, limit: int = 3) -> List[Dict[str, Any]]:
+    found = [i for i in items if i.get('found')]
+    found.sort(key=lambda x: x.get('distance_m') or 999999)
+    return found[:limit]
 
 
 def resolve_nearby_pois(lat: float, lng: float, *, radius_m: Optional[int] = None) -> Dict[str, Any]:
@@ -346,20 +481,28 @@ def _build_payload(
     radius_m: int,
 ) -> Dict[str, Any]:
     lat_key, lng_key = _coords_key(lat, lng)
+    item_dicts = [item.as_dict() for item in items]
+    found_count = sum(1 for item in items if item.found)
     return {
-        'version': 1,
+        'version': PAYLOAD_VERSION,
         'fetched_at': fetched_at.isoformat(),
         'fetched_at_label': format_jalali_datetime(fetched_at),
         'coords': {'lat': lat_key, 'lng': lng_key},
         'radius_m': radius_m,
-        'items': [item.as_dict() for item in items],
-        'found_count': sum(1 for item in items if item.found),
+        'items': item_dicts,
+        'groups': group_nearby_items(item_dicts),
+        'highlights': nearest_highlights(item_dicts),
+        'found_count': found_count,
+        'total_count': len(item_dicts),
+        'missing_count': len(item_dicts) - found_count,
     }
 
 
 def stored_nearby_pois_valid(prop, *, radius_m: Optional[int] = None) -> bool:
     data = getattr(prop, 'nearby_pois', None) or {}
     if not isinstance(data, dict) or not data.get('items'):
+        return False
+    if int(data.get('version') or 1) < PAYLOAD_VERSION:
         return False
     coords = data.get('coords') or {}
     lat = getattr(prop, 'latitude', None)
@@ -380,6 +523,10 @@ def get_stored_nearby_pois_payload(prop) -> Optional[Dict[str, Any]]:
     if not stored_nearby_pois_valid(prop):
         return None
     data = dict(prop.nearby_pois or {})
+    if not data.get('groups'):
+        data['groups'] = group_nearby_items(data.get('items') or [])
+    if not data.get('highlights'):
+        data['highlights'] = nearest_highlights(data.get('items') or [])
     data['cached'] = True
     return data
 
@@ -418,7 +565,7 @@ def check_rate_limits(user) -> None:
 
 
 def increment_rate_limits(user) -> None:
-    ttl = 60 * 60 * 30  # تا پایان روز کافی است
+    ttl = 60 * 60 * 30
     user_key = _cache_day_key(f'nearby_poi:user:{user.pk}')
     global_key = _cache_day_key('nearby_poi:global')
     try:
@@ -432,6 +579,7 @@ def increment_rate_limits(user) -> None:
 
 
 def api_response_payload(data: Dict[str, Any], *, cached: bool) -> Dict[str, Any]:
+    items = data.get('items') or []
     return {
         'ok': True,
         'cached': cached,
@@ -439,7 +587,11 @@ def api_response_payload(data: Dict[str, Any], *, cached: bool) -> Dict[str, Any
         'fetched_at_label': data.get('fetched_at_label'),
         'radius_m': data.get('radius_m'),
         'found_count': data.get('found_count', 0),
-        'items': data.get('items') or [],
+        'total_count': data.get('total_count', len(items)),
+        'missing_count': data.get('missing_count', 0),
+        'items': items,
+        'groups': data.get('groups') or group_nearby_items(items),
+        'highlights': data.get('highlights') or nearest_highlights(items),
     }
 
 
@@ -478,4 +630,5 @@ def nearby_pois_page_context(prop) -> Dict[str, Any]:
         'has_coords': has_coords,
         'has_stored': bool(stored),
         'initial_payload': stored,
+        'category_count': len(POI_CATEGORIES),
     }

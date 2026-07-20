@@ -1,53 +1,27 @@
-/* امکانات اطراف فایل شخصی CRM */
-.crm-nearby-pois {
-    position: relative;
-    margin: 1.25rem 0 0;
-    padding: 1.35rem 1.25rem 1.25rem;
-    border-radius: 16px;
-    border: 1px solid var(--ws-border-light);
-    background:
-        radial-gradient(ellipse 70% 55% at 0% 0%, color-mix(in srgb, #0891b2 10%, transparent), transparent 58%),
-        radial-gradient(ellipse 60% 50% at 100% 100%, color-mix(in srgb, var(--ws-primary) 8%, transparent), transparent 60%),
-        var(--ws-surface);
-    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
-    overflow: hidden;
+/* امکانات اطراف — مینیمال و کاربردی */
+.crm-nearby-pois [hidden] {
+    display: none !important;
 }
 
-.crm-nearby-pois__glow {
-    position: absolute;
-    inset: -40% auto auto 50%;
-    width: 320px;
-    height: 320px;
-    transform: translateX(-50%);
-    background: radial-gradient(circle, color-mix(in srgb, var(--ws-primary) 12%, transparent), transparent 70%);
-    pointer-events: none;
-    opacity: 0.65;
+.crm-nearby-pois {
+    margin: 1rem 0 0;
+    padding: 1rem 1.1rem;
+    border-radius: 14px;
+    border: 1px solid var(--ws-border-light);
+    background: var(--ws-surface);
 }
 
 .crm-nearby-pois__head {
-    position: relative;
     display: flex;
-    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 1rem 1.25rem;
-    margin-bottom: 1rem;
-}
-
-.crm-nearby-pois__kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.68rem;
-    font-weight: 800;
-    color: #0891b2;
-    letter-spacing: 0.02em;
-    margin-bottom: 0.45rem;
+    gap: 0.75rem 1rem;
+    margin-bottom: 0.65rem;
 }
 
 .crm-nearby-pois__title {
-    margin: 0 0 0.35rem;
-    font-size: 1.25rem;
+    margin: 0 0 0.2rem;
+    font-size: 1rem;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: var(--ws-text);
@@ -55,269 +29,288 @@
 
 .crm-nearby-pois__desc {
     margin: 0;
-    max-width: 560px;
-    font-size: 0.78rem;
-    line-height: 1.65;
+    font-size: 0.72rem;
+    line-height: 1.55;
     color: var(--ws-text-muted);
-}
-
-.crm-nearby-pois__head-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.45rem;
-    min-width: 180px;
-}
-
-.crm-nearby-pois__meta {
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--ws-text-muted);
+    max-width: 520px;
 }
 
 .crm-nearby-pois__btn {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    min-height: 40px;
-    padding: 0.55rem 1rem;
-    border-radius: 12px;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    min-height: 34px;
+    padding: 0.4rem 0.75rem;
+    border-radius: 10px;
     border: 1px solid var(--ws-border-light);
     background: var(--ws-surface-2);
     color: var(--ws-text-secondary);
-    font-size: 0.78rem;
-    font-weight: 800;
+    font-size: 0.72rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+    transition: border-color 0.15s, color 0.15s, opacity 0.15s;
 }
 
 .crm-nearby-pois__btn:hover:not(:disabled) {
-    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+    border-color: var(--ws-primary);
     color: var(--ws-primary);
-    transform: translateY(-1px);
 }
 
 .crm-nearby-pois__btn:disabled {
-    opacity: 0.55;
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
-.crm-nearby-pois__btn--primary {
-    background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--ws-primary) 92%, #000),
-        color-mix(in srgb, var(--ws-primary) 78%, #0891b2)
-    );
-    border-color: transparent;
-    color: #fff;
-    box-shadow: 0 8px 22px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+.crm-nearby-pois__btn.is-loading i {
+    animation: crmNearbySpin 0.75s linear infinite;
 }
 
-.crm-nearby-pois__btn--primary:hover:not(:disabled) {
-    color: #fff;
-    box-shadow: 0 10px 26px color-mix(in srgb, var(--ws-primary) 34%, transparent);
+.crm-nearby-pois__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
 }
 
-.crm-nearby-pois__btn.is-loading {
-    pointer-events: none;
-    opacity: 0.85;
+.crm-nearby-pois__stat {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: color-mix(in srgb, #059669 10%, var(--ws-surface));
+    color: #047857;
+    border: 1px solid color-mix(in srgb, #059669 16%, transparent);
+}
+
+.crm-nearby-pois__stat--muted {
+    background: var(--ws-surface-2);
+    color: var(--ws-text-muted);
+    border-color: var(--ws-border-light);
 }
 
 .crm-nearby-pois__alert {
-    position: relative;
     display: flex;
     align-items: flex-start;
-    gap: 0.55rem;
-    margin: 0 0 1rem;
-    padding: 0.75rem 0.9rem;
-    border-radius: 12px;
-    font-size: 0.76rem;
-    line-height: 1.6;
+    gap: 0.45rem;
+    margin-bottom: 0.65rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    line-height: 1.55;
     font-weight: 600;
-}
-
-.crm-nearby-pois__alert--error {
-    background: rgba(220, 38, 38, 0.08);
-    border: 1px solid rgba(220, 38, 38, 0.18);
+    background: rgba(220, 38, 38, 0.07);
+    border: 1px solid rgba(220, 38, 38, 0.15);
     color: #b91c1c;
 }
 
-.crm-nearby-pois__empty,
-.crm-nearby-pois__placeholder {
-    position: relative;
-    text-align: center;
-    padding: 1.5rem 1rem 1.25rem;
-    border-radius: 14px;
-    border: 1px dashed color-mix(in srgb, var(--ws-border) 85%, transparent);
-    background: color-mix(in srgb, var(--ws-surface-2) 70%, transparent);
+.crm-nearby-pois__alert[hidden] {
+    display: none !important;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
 }
 
-.crm-nearby-pois__empty-icon,
-.crm-nearby-pois__placeholder-icon {
-    width: 52px;
-    height: 52px;
-    margin: 0 auto 0.75rem;
-    display: grid;
-    place-items: center;
-    border-radius: 16px;
-    background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
-    color: var(--ws-primary);
-    font-size: 1.2rem;
-}
-
-.crm-nearby-pois__empty h3,
-.crm-nearby-pois__placeholder h3 {
-    margin: 0 0 0.35rem;
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: var(--ws-text);
-}
-
-.crm-nearby-pois__empty p,
-.crm-nearby-pois__placeholder p {
-    margin: 0 auto;
-    max-width: 420px;
-    font-size: 0.76rem;
-    line-height: 1.65;
+.crm-nearby-pois__hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    line-height: 1.55;
     color: var(--ws-text-muted);
+    background: var(--ws-surface-2);
+    border: 1px dashed var(--ws-border-light);
 }
 
-.crm-nearby-pois__summary {
+.crm-nearby-pois__hint i {
+    color: var(--ws-primary);
+    margin-top: 0.1rem;
+}
+
+.crm-nearby-pois__highlights {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
     margin-bottom: 0.85rem;
 }
 
-.crm-nearby-pois__summary-chip {
+.crm-nearby-pois__pill {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.28rem 0.62rem;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
     border-radius: 999px;
     font-size: 0.68rem;
     font-weight: 700;
-    background: color-mix(in srgb, #059669 12%, var(--ws-surface));
-    color: #047857;
-    border: 1px solid color-mix(in srgb, #059669 18%, transparent);
+    background: color-mix(in srgb, var(--pill-accent, var(--ws-primary)) 10%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, var(--pill-accent, var(--ws-primary)) 18%, transparent);
+    color: var(--ws-text);
 }
 
-.crm-nearby-pois__summary-chip--muted {
-    background: var(--ws-surface-2);
-    color: var(--ws-text-muted);
-    border-color: var(--ws-border-light);
-}
-
-.crm-nearby-pois__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: 0.65rem;
-}
-
-.crm-nearby-pois__card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-    min-height: 118px;
-    padding: 0.85rem 0.9rem;
-    border-radius: 14px;
-    border: 1px solid var(--ws-border-light);
-    background: var(--ws-surface);
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
-    overflow: hidden;
-}
-
-.crm-nearby-pois__card:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--card-accent, var(--ws-primary)) 28%, var(--ws-border));
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
-}
-
-.crm-nearby-pois__card.is-empty {
-    background: color-mix(in srgb, var(--ws-surface-2) 80%, var(--ws-surface));
-    opacity: 0.92;
-}
-
-.crm-nearby-pois__card-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-}
-
-.crm-nearby-pois__card-icon {
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--card-accent, var(--ws-primary)) 12%, var(--ws-surface));
-    color: var(--card-accent, var(--ws-primary));
-    font-size: 0.9rem;
-    flex-shrink: 0;
-}
-
-.crm-nearby-pois__card-label {
+.crm-nearby-pois__pill i {
+    color: var(--pill-accent, var(--ws-primary));
     font-size: 0.72rem;
-    font-weight: 800;
+}
+
+.crm-nearby-pois__pill-dist {
+    font-variant-numeric: tabular-nums;
     color: var(--ws-text-secondary);
 }
 
-.crm-nearby-pois__card-distance {
-    font-size: 0.95rem;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    color: var(--ws-text);
-    font-variant-numeric: tabular-nums;
+.crm-nearby-pois__group {
+    margin-bottom: 0.75rem;
 }
 
-.crm-nearby-pois__card-name {
-    margin: 0;
-    font-size: 0.76rem;
-    font-weight: 700;
-    line-height: 1.55;
-    color: var(--ws-text);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+.crm-nearby-pois__group:last-child {
+    margin-bottom: 0;
 }
 
-.crm-nearby-pois__card-empty {
-    margin: 0;
-    font-size: 0.72rem;
-    line-height: 1.55;
+.crm-nearby-pois__group-title {
+    margin: 0 0 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 800;
     color: var(--ws-text-muted);
+    letter-spacing: 0.01em;
+}
+
+.crm-nearby-pois__rows {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--ws-border-light);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--ws-surface);
+}
+
+.crm-nearby-pois__row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.55rem 0.65rem;
+    border-bottom: 1px solid var(--ws-border-light);
+    font-size: 0.74rem;
+}
+
+.crm-nearby-pois__row:last-child {
+    border-bottom: none;
+}
+
+.crm-nearby-pois__row.is-empty {
+    opacity: 0.72;
+}
+
+.crm-nearby-pois__row-icon {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--row-accent, var(--ws-primary)) 10%, var(--ws-surface));
+    color: var(--row-accent, var(--ws-primary));
+    font-size: 0.75rem;
+}
+
+.crm-nearby-pois__row-main {
+    min-width: 0;
+}
+
+.crm-nearby-pois__row-label {
+    display: block;
+    font-weight: 700;
+    color: var(--ws-text);
+    line-height: 1.3;
+}
+
+.crm-nearby-pois__row-name {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--ws-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.35;
+}
+
+.crm-nearby-pois__row-side {
+    text-align: left;
+    direction: ltr;
+}
+
+.crm-nearby-pois__row-dist {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--ws-text);
+    white-space: nowrap;
+}
+
+.crm-nearby-pois__row-walk {
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    white-space: nowrap;
+}
+
+.crm-nearby-pois__toggle-missing {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+    margin-top: 0.65rem;
+    padding: 0.45rem;
+    border: 1px dashed var(--ws-border-light);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ws-text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.crm-nearby-pois__toggle-missing:hover {
+    border-color: var(--ws-primary);
+    color: var(--ws-primary);
+}
+
+.crm-nearby-pois__toggle-missing.is-open i {
+    transform: rotate(180deg);
+}
+
+.crm-nearby-pois__toggle-missing i {
+    transition: transform 0.15s;
+    font-size: 0.62rem;
+}
+
+.crm-nearby-pois__missing .crm-nearby-pois__rows {
+    margin-top: 0.45rem;
+    opacity: 0.85;
 }
 
 .crm-nearby-pois__loading {
-    position: relative;
-    padding: 0.25rem 0 0.15rem;
-}
-
-.crm-nearby-pois__loading-head {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 0.35rem 0.65rem;
-    margin-bottom: 0.85rem;
-    font-size: 0.74rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    font-size: 0.72rem;
     color: var(--ws-text-muted);
 }
 
-.crm-nearby-pois__loading-head strong {
-    color: var(--ws-text);
-    font-size: 0.82rem;
-}
-
 .crm-nearby-pois__spinner {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    border: 2px solid color-mix(in srgb, var(--ws-primary) 18%, transparent);
+    border: 2px solid color-mix(in srgb, var(--ws-primary) 16%, transparent);
     border-top-color: var(--ws-primary);
     animation: crmNearbySpin 0.75s linear infinite;
 }
@@ -326,50 +319,16 @@
     to { transform: rotate(360deg); }
 }
 
-.crm-nearby-pois__skeleton-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: 0.65rem;
-}
-
-.crm-nearby-pois__skeleton-card {
-    height: 118px;
-    border-radius: 14px;
-    background: linear-gradient(
-        90deg,
-        color-mix(in srgb, var(--ws-surface-2) 90%, transparent) 0%,
-        color-mix(in srgb, var(--ws-border-light) 70%, transparent) 50%,
-        color-mix(in srgb, var(--ws-surface-2) 90%, transparent) 100%
-    );
-    background-size: 200% 100%;
-    animation: crmNearbyShimmer 1.2s ease-in-out infinite;
-}
-
-@keyframes crmNearbyShimmer {
-    0% { background-position: 100% 0; }
-    100% { background-position: -100% 0; }
-}
-
-@media (max-width: 768px) {
-    .crm-nearby-pois {
-        padding: 1.1rem 0.95rem 1rem;
-    }
-    .crm-nearby-pois__head-actions {
-        width: 100%;
-        align-items: stretch;
+@media (max-width: 640px) {
+    .crm-nearby-pois__head {
+        flex-direction: column;
     }
     .crm-nearby-pois__btn {
         width: 100%;
+        justify-content: center;
     }
-    .crm-nearby-pois__grid,
-    .crm-nearby-pois__skeleton-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-@media (max-width: 480px) {
-    .crm-nearby-pois__grid,
-    .crm-nearby-pois__skeleton-grid {
-        grid-template-columns: 1fr;
+    .crm-nearby-pois__row {
+        grid-template-columns: 26px 1fr auto;
+        padding: 0.5rem 0.55rem;
     }
 }

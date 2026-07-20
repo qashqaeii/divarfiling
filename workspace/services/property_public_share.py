@@ -95,6 +95,8 @@ def update_property_public_share(share: CRMPropertyPublicShare, payload: dict) -
         share.approximate_location_radius_m = clamp_approx_radius_m(
             payload.get('approximate_location_radius_m'),
         )
+    if 'show_nearby_pois' in payload:
+        share.show_nearby_pois = bool(payload.get('show_nearby_pois'))
     if 'is_active' in payload:
         share.is_active = bool(payload.get('is_active'))
     if payload.get('save_as_default_welcome'):
@@ -646,6 +648,9 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
     from workspace.mixins import get_or_create_settings
     office_map_marker = build_office_map_marker(get_or_create_settings(user))
 
+    from workspace.services.nearby_pois import build_public_nearby_pois_context
+    public_nearby_pois = build_public_nearby_pois_context(prop, share)
+
     return {
         'share': share,
         'listing': listing,
@@ -677,6 +682,7 @@ def build_public_property_context(share: CRMPropertyPublicShare, request=None) -
         'office_map_marker': office_map_marker,
         'office_map_navigation': (consultant.get('agency') or {}).get('map_navigation'),
         'map_navigation': map_navigation,
+        'public_nearby_pois': public_nearby_pois,
     }
 
 

@@ -655,6 +655,53 @@ function initApproxRadiusToggle(form) {
     sync();
 }
 
+function initNearbyPoisShareToggle(form) {
+    const wrap = form.querySelector('[data-nearby-pois-toggle-wrap]');
+    const toggle = form.querySelector('[data-nearby-pois-toggle]');
+    if (!wrap || !toggle) return;
+
+    const hasCoords = wrap.dataset.hasCoords === '1';
+    const hasData = wrap.dataset.hasData === '1';
+
+    const notify = (msg) => {
+        if (typeof window.showWsToast === 'function') {
+            window.showWsToast(msg, 'warning');
+        } else if (typeof window.showToast === 'function') {
+            window.showToast(msg, 'error');
+        } else {
+            window.alert(msg);
+        }
+    };
+
+    toggle.addEventListener('change', () => {
+        if (!toggle.checked) return;
+        if (!hasCoords) {
+            toggle.checked = false;
+            notify('برای نمایش دسترسی‌های اطراف، ابتدا موقعیت ملک را روی نقشه ثبت کنید.');
+            return;
+        }
+        if (!hasData) {
+            toggle.checked = false;
+            notify('ابتدا در جزئیات فایل، دکمه «محاسبه» امکانات اطراف را بزنید.');
+        }
+    });
+
+    form.addEventListener('submit', (e) => {
+        if (!toggle.checked) return;
+        if (!hasCoords) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            notify('برای نمایش دسترسی‌های اطراف، ابتدا موقعیت ملک را روی نقشه ثبت کنید.');
+            return;
+        }
+        if (!hasData) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            notify('ابتدا در جزئیات فایل، دکمه «محاسبه» امکانات اطراف را بزنید.');
+        }
+    }, true);
+}
+
 function initPublicShareForms() {
     initPublicShareMessageEditors();
     document.querySelectorAll('.mk-share-form').forEach((form) => {
@@ -664,6 +711,7 @@ function initPublicShareForms() {
         initWelcomeRichEditors(form);
         initShareProfileImagePreviews(form);
         initApproxRadiusToggle(form);
+        initNearbyPoisShareToggle(form);
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             prepareShareFormSubmit(form);

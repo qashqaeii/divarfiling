@@ -1339,6 +1339,8 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['consultant_name'] = profile['consultant_name']
             ctx['consultant_phone'] = profile['consultant_phone']
             ctx['share_profile'] = profile
+            from workspace.services.nearby_pois import property_share_nearby_meta
+            ctx['public_share_nearby_meta'] = property_share_nearby_meta(p)
 
         # نقشه موقعیت — انتهای صفحه جزئیات
         mask = bool(ctx.get('mask_sensitive'))
@@ -1703,6 +1705,8 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
         profile = share_profile_context(
             request.user, share, title=prop.title or '', share_url=url,
         )
+        from workspace.services.nearby_pois import property_share_nearby_meta
+        nearby_meta = property_share_nearby_meta(prop)
         return JsonResponse({
             'ok': True,
             'share_url': url,
@@ -1720,6 +1724,8 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
             'show_internal_notes': share.show_internal_notes,
             'approximate_location': share.approximate_location,
             'approximate_location_radius_m': share.approximate_location_radius_m,
+            'show_nearby_pois': share.show_nearby_pois,
+            'nearby_pois_meta': nearby_meta,
             'is_active': share.is_active,
         })
 
@@ -1754,6 +1760,15 @@ class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
             share.approximate_location_radius_m = clamp_approx_radius_m(
                 request.POST.get('approximate_location_radius_m'),
             )
+        from workspace.services.nearby_pois import validate_share_show_nearby_pois
+        want_nearby = request.POST.get('show_nearby_pois') in ('1', 'true', 'on')
+        nearby_err = validate_share_show_nearby_pois(prop, enable=want_nearby)
+        if nearby_err:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': nearby_err}, status=400)
+            messages.error(request, nearby_err)
+            return redirect('workspace:crm_property_detail', property_id=property_id)
+        share.show_nearby_pois = want_nearby
         share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')
         share.save()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':

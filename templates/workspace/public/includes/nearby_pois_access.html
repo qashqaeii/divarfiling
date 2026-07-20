@@ -1,0 +1,76 @@
+{% if public_nearby_pois %}
+<section class="ps-access" data-reveal aria-label="دسترسی‌های اطراف ملک">
+    <div class="ps-access__shell">
+        <header class="ps-access__head">
+            <div class="ps-access__head-main">
+                <span class="ps-access__kicker">
+                    <i class="fas fa-route" aria-hidden="true"></i>
+                    دسترسی‌های اطراف
+                </span>
+                <h2 class="ps-access__title">چه چیزهایی نزدیک این ملک است؟</h2>
+                <p class="ps-access__sub">
+                    {{ public_nearby_pois.found_count }} مورد در شعاع {{ public_nearby_pois.radius_label }}
+                    {% if public_nearby_pois.fetched_at_label %}
+                    · بروز {{ public_nearby_pois.fetched_at_label }}
+                    {% endif %}
+                </p>
+            </div>
+        </header>
+
+        {% if public_nearby_pois.highlights %}
+        <div class="ps-access__highlights" aria-label="نزدیک‌ترین موارد">
+            {% for item in public_nearby_pois.highlights %}
+            <article class="ps-access__chip" style="--acc-color: {{ item.color|default:'#0891b2' }}">
+                <span class="ps-access__chip-icon" aria-hidden="true">
+                    <i class="fas {{ item.icon|default:'fa-location-dot' }}"></i>
+                </span>
+                <span class="ps-access__chip-body">
+                    <em>{{ item.label }}</em>
+                    <strong>{{ item.distance_label }}</strong>
+                    {% if item.name %}<span>{{ item.name }}</span>{% endif %}
+                </span>
+            </article>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="ps-access__groups">
+            {% for group in public_nearby_pois.groups %}
+            <section class="ps-access__group">
+                <h3 class="ps-access__group-title">{{ group.label }}</h3>
+                <ul class="ps-access__list">
+                    {% for item in group.items %}
+                    <li class="ps-access__item" style="--acc-color: {{ item.color|default:'#0891b2' }}">
+                        <span class="ps-access__item-icon" aria-hidden="true">
+                            <i class="fas {{ item.icon|default:'fa-location-dot' }}"></i>
+                        </span>
+                        <div class="ps-access__item-main">
+                            <span class="ps-access__item-label">{{ item.label }}</span>
+                            {% if item.name %}<span class="ps-access__item-name">{{ item.name }}</span>{% endif %}
+                        </div>
+                        <div class="ps-access__item-side">
+                            <strong>{{ item.distance_label }}</strong>
+                            {% if item.walk_label %}<small>{{ item.walk_label }}</small>{% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endfor %}
+        </div>
+
+        <footer class="ps-access__foot">
+            {% if public_nearby_pois.approx_note %}
+            <p class="ps-access__note ps-access__note--approx">
+                <i class="fas fa-circle-notch" aria-hidden="true"></i>
+                {{ public_nearby_pois.approx_note }}
+            </p>
+            {% endif %}
+            <p class="ps-access__note">
+                <i class="fas fa-ruler" aria-hidden="true"></i>
+                {{ public_nearby_pois.disclaimer }}
+            </p>
+        </footer>
+    </div>
+</section>
+{% endif %}

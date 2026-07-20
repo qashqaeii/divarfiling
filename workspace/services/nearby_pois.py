@@ -632,3 +632,74 @@ def nearby_pois_page_context(prop) -> Dict[str, Any]:
         'initial_payload': stored,
         'category_count': len(POI_CATEGORIES),
     }
+
+
+def property_has_nearby_pois_data(prop) -> bool:
+    stored = get_stored_nearby_pois_payload(prop)
+    return bool(stored and int(stored.get('found_count') or 0) > 0)
+
+
+def property_share_nearby_meta(prop) -> Dict[str, Any]:
+    has_coords = prop.latitude is not None and prop.longitude is not None
+    has_data = property_has_nearby_pois_data(prop)
+    return {
+        'has_coords': has_coords,
+        'has_data': has_data,
+        'can_enable': has_coords and has_data,
+    }
+
+
+def validate_share_show_nearby_pois(prop, *, enable: bool) -> Optional[str]:
+    """خطای فارسی در صورت عدم امکان فعال‌سازی؛ در غیر این صورت None."""
+    if not enable:
+        return None
+    if prop.latitude is None or prop.longitude is None:
+        return 'برای نمایش دسترسی‌های اطراف، ابتدا موقعیت ملک را روی نقشه ثبت کنید.'
+    if not property_has_nearby_pois_data(prop):
+        return 'ابتدا در جزئیات فایل، دکمه «محاسبه» امکانات اطراف را بزنید تا داده ذخیره شود.'
+    return None
+
+
+def build_public_nearby_pois_context(prop, share) -> Optional[Dict[str, Any]]:
+    """داده نمایش دسترسی‌های اطراف در صفحه عمومی — فقط موارد یافت‌شده."""
+    if not getattr(share, 'show_nearby_pois', False):
+        return None
+    stored = get_stored_nearby_pois_payload(prop)
+    if not stored or not int(stored.get('found_count') or 0):
+        return None
+
+    items = [i for i in (stored.get('items') or []) if i.get('found')]
+    if not items:
+        return None
+
+    groups: List[Dict[str, Any]] = []
+    for group in group_nearby_items(stored.get('items') or []):
+        found_items = [i for i in (group.get('items') or []) if i.get('found')]
+        if not found_items:
+            continue
+        groups.append({
+            'key': group['key'],
+            'label': group['label'],
+            'items': found_items,
+        })
+
+    approx = bool(getattr(share, 'approximate_location', False))
+    radius_m = int(stored.get('radius_m') or _search_radius_m())
+    radius_label = (
+        f'{to_persian_digits(radius_m // 1000)} کیلومتر'
+        if radius_m >= 1000
+        else f'{to_persian_digits(radius_m)} متر'
+    )
+
+    return {
+        'groups': groups,
+        'highlights': nearest_highlights(items, limit=4),
+        'found_count': len(items),
+        'fetched_at_label': stored.get('fetched_at_label') or '',
+        'radius_label': radius_label,
+        'approx_note': (
+            'فاصله‌ها بر اساس موقعیت ملک محاسبه شده‌اند. '
+            'نمایش روی نقشه ممکن است به‌صورت تقریبی باشد.'
+        ) if approx else '',
+        'disclaimer': 'فاصله خط مستقیم — OpenStreetMap',
+    }

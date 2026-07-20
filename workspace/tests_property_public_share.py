@@ -510,3 +510,111 @@ class AmenityCategoryCoverageTests(TestCase):
         self.assertEqual(raw.get('لابی'), 'دارد')
         self.assertEqual(raw.get('استخر'), 'دارد')
         self.assertEqual(raw.get('روف گاردن'), 'دارد')
+
+
+class PropertyPublicNearbyPoisTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='09121112222', phone='09121112222', password='testpass123',
+        )
+        self.prop = CRMProperty.objects.create(
+            user=self.user,
+            title='دفتر کار',
+            deal_mode='اجاره',
+            property_type='اداری',
+            city='اصفهان',
+            neighborhood='تیران',
+            latitude=32.654,
+            longitude=51.668,
+        )
+        self.client = Client()
+        self.client.login(username='09121112222', password='testpass123')
+        self.share_url = reverse(
+            'workspace:crm_property_public_share',
+            kwargs={'property_id': self.prop.pk},
+        )
+
+    def _sample_nearby_payload(self):
+        return {
+            'version': 2,
+            'coords': {'lat': 32.654, 'lng': 51.668},
+            'radius_m': 3000,
+            'fetched_at_label': '۱۴۰۴/۰۴/۲۹',
+            'found_count': 2,
+            'items': [
+                {
+                    'key': 'mosque', 'group': 'religion', 'label': 'مسجد',
+                    'icon': 'fa-mosque', 'color': '#0d9488', 'found': True,
+                    'name': 'مسجد تست', 'distance_m': 200, 'distance_label': '۲۰۰ متر',
+                    'walk_label': 'حدود ۳ دقیقه پیاده',
+                },
+                {
+                    'key': 'metro', 'group': 'transport', 'label': 'مترو',
+                    'icon': 'fa-train-subway', 'color': '#7c3aed', 'found': False,
+                    'empty_label': 'یافت نشد',
+                },
+            ],
+            'groups': [],
+            'highlights': [],
+        }
+
+    def test_public_context_shows_nearby_when_enabled(self):
+        self.prop.nearby_pois = self._sample_nearby_payload()
+        self.prop.save(update_fields=['nearby_pois'])
+        share = CRMPropertyPublicShare.objects.create(
+            share_token='nearbytok1',
+            property=self.prop,
+            created_by=self.user,
+            show_nearby_pois=True,
+        )
+        ctx = build_public_property_context(share)
+        self.assertIsNotNone(ctx['public_nearby_pois'])
+        self.assertEqual(ctx['public_nearby_pois']['found_count'], 1)
+        self.assertEqual(len(ctx['public_nearby_pois']['groups']), 1)
+
+    def test_public_page_renders_access_section(self):
+        self.prop.nearby_pois = self._sample_nearby_payload()
+        self.prop.save(update_fields=['nearby_pois'])
+        share = CRMPropertyPublicShare.objects.create(
+            share_token='nearbytok2',
+            property=self.prop,
+            created_by=self.user,
+            show_nearby_pois=True,
+            approximate_location=True,
+        )
+        url = reverse('listing_public:property_view', kwargs={'share_token': share.share_token})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'ps-access')
+        self.assertContains(resp, 'دسترسی‌های اطراف')
+        self.assertContains(resp, 'مسجد تست')
+
+    def test_share_save_rejects_without_coords(self):
+        self.prop.latitude = None
+        self.prop.longitude = None
+        self.prop.save(update_fields=['latitude', 'longitude'])
+        resp = self.client.post(self.share_url, {
+            'show_nearby_pois': '1',
+            'is_active': '1',
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('موقعیت', resp.json()['error'])
+
+    def test_share_save_rejects_without_data(self):
+        resp = self.client.post(self.share_url, {
+            'show_nearby_pois': '1',
+            'is_active': '1',
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('محاسبه', resp.json()['error'])
+
+    def test_share_save_accepts_when_ready(self):
+        self.prop.nearby_pois = self._sample_nearby_payload()
+        self.prop.save(update_fields=['nearby_pois'])
+        resp = self.client.post(self.share_url, {
+            'show_nearby_pois': '1',
+            'is_active': '1',
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(resp.status_code, 200)
+        share = CRMPropertyPublicShare.objects.get(property=self.prop, created_by=self.user)
+        self.assertTrue(share.show_nearby_pois)

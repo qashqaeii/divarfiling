@@ -280,6 +280,32 @@
                                     <span class="mk-share-switch-track" aria-hidden="true"></span>
                                 </span>
                             </label>
+                            <label class="mk-share-toggle-row"
+                                   data-nearby-pois-toggle-wrap
+                                   data-has-coords="{% if nearby_pois_meta.has_coords %}1{% else %}0{% endif %}"
+                                   data-has-data="{% if nearby_pois_meta.has_data %}1{% else %}0{% endif %}">
+                                <span class="mk-share-toggle-info">
+                                    <span class="mk-share-toggle-title">دسترسی‌های اطراف</span>
+                                    <span class="mk-share-toggle-desc" data-nearby-pois-desc>
+                                        {% if nearby_pois_meta.has_data %}
+                                        نمایش فاصله تا مترو، مسجد، بیمارستان و … (شعاع ۳ کیلومتر)
+                                        {% elif nearby_pois_meta.has_coords %}
+                                        ابتدا در جزئیات فایل، امکانات اطراف را محاسبه کنید
+                                        {% else %}
+                                        ابتدا موقعیت ملک را روی نقشه ثبت کنید
+                                        {% endif %}
+                                    </span>
+                                </span>
+                                <span class="mk-share-switch">
+                                    <input type="checkbox"
+                                           name="show_nearby_pois"
+                                           value="1"
+                                           data-nearby-pois-toggle
+                                           {% if share.show_nearby_pois %} checked{% endif %}
+                                           {% if not nearby_pois_meta.can_enable and not share.show_nearby_pois %}disabled{% endif %}>
+                                    <span class="mk-share-switch-track" aria-hidden="true"></span>
+                                </span>
+                            </label>
                             {% endif %}
                         </div>
                     </section>

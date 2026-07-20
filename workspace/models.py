@@ -225,6 +225,11 @@ class CRMPropertyPublicShare(models.Model):
         verbose_name='شعاع موقعیت تقریبی (متر)',
         help_text='شعاع دایره تقریبی در صفحه عمومی؛ بین ۱۰ تا ۵۰۰ متر.',
     )
+    show_nearby_pois = models.BooleanField(
+        default=False,
+        verbose_name='نمایش دسترسی‌های اطراف',
+        help_text='نمایش فاصله تا مترو، مسجد، بیمارستان و … در صفحه عمومی (نیاز به محاسبه قبلی)',
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
     last_viewed_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین بازدید')
 

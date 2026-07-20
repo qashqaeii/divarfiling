@@ -147,6 +147,8 @@
                 fetchBtn.disabled = active || !hasCoords;
             }
             if (active && placeholder) placeholder.hidden = true;
+            if (active && body) body.hidden = true;
+            if (active && stats) stats.hidden = true;
         }
 
         function updateButtonLabel() {
@@ -217,6 +219,7 @@
 
             if (body) body.hidden = false;
             if (placeholder) placeholder.hidden = true;
+            if (loading) loading.hidden = true;
             hasStored = true;
             root.dataset.hasStored = '1';
             updateButtonLabel();

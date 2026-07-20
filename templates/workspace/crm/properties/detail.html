@@ -17,6 +17,9 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile.css' %}?v=2">
+{% if show_nearby_pois %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-nearby-pois.css' %}?v=1">
+{% endif %}
 {% endblock %}
 
 {% block crm_content %}
@@ -763,6 +766,10 @@
     </section>
     {% endif %}
 
+    {% if show_nearby_pois %}
+    {% include 'workspace/crm/includes/nearby_pois_panel.html' %}
+    {% endif %}
+
     {% if ai_enabled and has_bot_license %}
     <section class="ws-ai-card ws-ai-card--listing" id="wsAiListingSummary" data-ai-card aria-label="خلاصه هوشمند فایل">
         <div class="ws-ai-card__glow" aria-hidden="true"></div>
@@ -941,6 +948,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+{% endif %}
+{% if show_nearby_pois %}
+<script src="{% static 'workspace/js/crm-property-nearby-pois.js' %}?v=1"></script>
 {% endif %}
 {% if ai_enabled and has_bot_license %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>

@@ -437,6 +437,12 @@ class CRMProperty(models.Model):
         verbose_name='ویژگی‌های تفصیلی',
         help_text='کلیدهای فارسی هم‌تراز با دادهٔ آگهی (جنس کف، گرمایش، …)',
     )
+    nearby_pois = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='امکانات اطراف',
+        help_text='نزدیک‌ترین POIها بر اساس مختصات — با درخواست کاربر پر می‌شود',
+    )
     images = models.JSONField(default=list, blank=True, verbose_name='تصاویر')
     videos = models.JSONField(default=list, blank=True, verbose_name='ویدئوها')
     token = models.CharField(max_length=100, blank=True, db_index=True, verbose_name='شناسه آگهی')

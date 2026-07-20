@@ -1,0 +1,69 @@
+<section class="crm-nearby-pois" id="crmNearbyPois" aria-label="امکانات اطراف ملک"
+         data-nearby-pois-root
+         data-fetch-url="{{ nearby_pois_url }}"
+         data-has-coords="{% if nearby_pois_ctx.has_coords %}1{% else %}0{% endif %}"
+         data-has-stored="{% if nearby_pois_ctx.has_stored %}1{% else %}0{% endif %}">
+    <div class="crm-nearby-pois__glow" aria-hidden="true"></div>
+    <header class="crm-nearby-pois__head">
+        <div class="crm-nearby-pois__head-main">
+            <span class="crm-nearby-pois__kicker">
+                <i class="fas fa-location-crosshairs" aria-hidden="true"></i>
+                محیط اطراف
+            </span>
+            <h2 class="crm-nearby-pois__title">امکانات اطراف ملک</h2>
+            <p class="crm-nearby-pois__desc">
+                نزدیک‌ترین مترو، پارک، بیمارستان و سایر امکانات — بر اساس موقعیت ثبت‌شده روی نقشه
+            </p>
+        </div>
+        <div class="crm-nearby-pois__head-actions">
+            <span class="crm-nearby-pois__meta" data-nearby-meta hidden></span>
+            <button type="button" class="crm-nearby-pois__btn crm-nearby-pois__btn--primary"
+                    data-nearby-fetch {% if not nearby_pois_ctx.has_coords %}disabled{% endif %}>
+                <i class="fas fa-compass" aria-hidden="true"></i>
+                <span data-nearby-btn-label>{% if nearby_pois_ctx.has_stored %}بروزرسانی{% else %}نمایش امکانات{% endif %}</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="crm-nearby-pois__alert crm-nearby-pois__alert--error" data-nearby-error hidden role="alert"></div>
+
+    {% if not nearby_pois_ctx.has_coords %}
+    <div class="crm-nearby-pois__empty" data-nearby-empty-coords>
+        <div class="crm-nearby-pois__empty-icon"><i class="fas fa-map-pin" aria-hidden="true"></i></div>
+        <h3>موقعیت ملک ثبت نشده</h3>
+        <p>برای مشاهده امکانات اطراف، ابتدا موقعیت ملک را روی نقشه بالا مشخص کنید.</p>
+    </div>
+    {% else %}
+    <div class="crm-nearby-pois__panel" data-nearby-panel {% if not nearby_pois_ctx.has_stored %}hidden{% endif %}>
+        <div class="crm-nearby-pois__summary" data-nearby-summary hidden>
+            <span class="crm-nearby-pois__summary-chip" data-nearby-found-count></span>
+            <span class="crm-nearby-pois__summary-chip crm-nearby-pois__summary-chip--muted" data-nearby-radius></span>
+            <span class="crm-nearby-pois__summary-chip crm-nearby-pois__summary-chip--muted" data-nearby-updated></span>
+        </div>
+        <div class="crm-nearby-pois__grid" data-nearby-grid role="list"></div>
+    </div>
+
+    <div class="crm-nearby-pois__placeholder" data-nearby-placeholder {% if nearby_pois_ctx.has_stored %}hidden{% endif %}>
+        <div class="crm-nearby-pois__placeholder-icon"><i class="fas fa-street-view" aria-hidden="true"></i></div>
+        <h3>آماده جستجو</h3>
+        <p>با زدن دکمه «نمایش امکانات»، نزدیک‌ترین مکان‌های مفید در شعاع ۳ کیلومتر محاسبه و ذخیره می‌شود.</p>
+    </div>
+
+    <div class="crm-nearby-pois__loading" data-nearby-loading hidden aria-live="polite" aria-busy="true">
+        <div class="crm-nearby-pois__loading-head">
+            <span class="crm-nearby-pois__spinner" aria-hidden="true"></span>
+            <strong>در حال جستجو در نقشه...</strong>
+            <span>این کار ممکن است چند ثانیه طول بکشد</span>
+        </div>
+        <div class="crm-nearby-pois__skeleton-grid" aria-hidden="true">
+            {% for i in "1234567" %}
+            <div class="crm-nearby-pois__skeleton-card"></div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if nearby_pois_ctx.initial_payload %}
+    {{ nearby_pois_ctx.initial_payload|json_script:"crm-nearby-pois-initial" }}
+    {% endif %}
+</section>

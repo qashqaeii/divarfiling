@@ -125,6 +125,10 @@
                 if (typeof global.showToast === 'function') {
                     global.showToast('موقعیت ملک ذخیره شد.', 'success');
                 }
+                root.dispatchEvent(new CustomEvent('crm-property-location-saved', {
+                    bubbles: true,
+                    detail: { latitude: data.latitude, longitude: data.longitude },
+                }));
             } catch (err) {
                 if (typeof global.showToast === 'function') {
                     global.showToast(err.message || 'خطا در ذخیره موقعیت', 'error');

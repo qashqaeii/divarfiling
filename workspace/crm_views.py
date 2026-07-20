@@ -1369,6 +1369,17 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 ctx['property_location_url'] = reverse(
                     'workspace:crm_property_location', kwargs={'property_id': p.pk},
                 )
+        if not mask and not ctx.get('property_is_deleted'):
+            from workspace.services.nearby_pois import nearby_pois_page_context
+            ctx['show_nearby_pois'] = True
+            ctx['nearby_pois_ctx'] = nearby_pois_page_context(p)
+            ctx['nearby_pois_url'] = reverse(
+                'workspace:crm_property_nearby_pois', kwargs={'property_id': p.pk},
+            )
+        else:
+            ctx['show_nearby_pois'] = False
+            ctx['nearby_pois_ctx'] = {}
+            ctx['nearby_pois_url'] = ''
         return ctx
 
     def _detail_redirect(self, property_id, *, tab='contacts', drawer=''):
@@ -1615,13 +1626,50 @@ class CRMPropertyLocationUpdateView(LoginRequiredMixin, View):
 
         prop.latitude = lat
         prop.longitude = lng
-        prop.save(update_fields=['latitude', 'longitude', 'updated_at'])
+        update_fields = ['latitude', 'longitude', 'updated_at']
+        if prop.nearby_pois:
+            prop.nearby_pois = {}
+            update_fields.append('nearby_pois')
+        prop.save(update_fields=update_fields)
         return JsonResponse({
             'ok': True,
             'latitude': lat,
             'longitude': lng,
             'map_navigation': build_map_navigation(lat, lng),
         })
+
+
+class CRMPropertyNearbyPoisView(LoginRequiredMixin, View):
+    """دریافت و ذخیره امکانات اطراف فایل شخصی — on-demand."""
+
+    def post(self, request, property_id):
+        from workspace.services.nearby_pois import NearbyPoiError, fetch_and_save_nearby_pois
+
+        prop = property_for_user(request.user, property_id)
+        if not prop:
+            return JsonResponse({'ok': False, 'error': 'ملک یافت نشد.'}, status=404)
+
+        share_ctx = build_property_share_context(request.user, prop)
+        if share_ctx.mask_sensitive:
+            return JsonResponse({'ok': False, 'error': 'دسترسی ندارید.'}, status=403)
+
+        force_refresh = False
+        if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+            try:
+                payload = json.loads(request.body.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+            force_refresh = bool(payload.get('refresh'))
+
+        try:
+            data = fetch_and_save_nearby_pois(prop, request.user, force_refresh=force_refresh)
+        except NearbyPoiError as exc:
+            return JsonResponse({
+                'ok': False,
+                'code': exc.code,
+                'error': exc.message,
+            }, status=exc.status)
+        return JsonResponse(data)
 
 
 class CRMPropertyDeleteView(LoginRequiredMixin, View):

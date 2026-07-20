@@ -970,37 +970,56 @@
     cursor: not-allowed;
 }
 
-/* ── Mission page ── */
+/* ── Mission page — full-width desktop ── */
 .acd-mission-progress-head { display: none; }
+
+.acd-page--mission {
+    max-width: none;
+    width: 100%;
+}
+
+@media (min-width: 960px) {
+    .acd-page--mission {
+        padding: 1.25rem 1.5rem 4rem;
+    }
+
+    .acd-page--mission .acd-head {
+        margin-bottom: 1rem;
+    }
+}
+
+.acd-mission-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+}
 
 /* ── Stepper ── */
 .acd-stepper {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding-bottom: 0.25rem;
 }
 
 .acd-stepper::-webkit-scrollbar { display: none; }
 
-@media (min-width: 640px) {
-    .acd-stepper {
-        flex-wrap: wrap;
-        overflow-x: visible;
-    }
+.acd-stepper-track {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    min-width: min-content;
 }
 
 .acd-stepper-item {
     display: inline-flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 0.35rem;
     padding: 0.65rem 0.75rem;
-    min-width: 72px;
+    min-width: 88px;
     border-radius: var(--acd-radius-sm);
     border: 1px solid var(--acd-border);
     background: var(--acd-card);
@@ -1043,7 +1062,7 @@
 }
 
 .acd-stepper-label {
-    max-width: 80px;
+    max-width: 96px;
     text-align: center;
     line-height: 1.3;
     color: var(--acd-muted);
@@ -1052,17 +1071,120 @@
     white-space: nowrap;
 }
 
-.acd-stepper-item.is-current .acd-stepper-label { color: inherit; font-weight: 600; }
-
-.acd-stepper-line {
-    align-self: center;
-    width: 16px;
-    height: 2px;
-    background: var(--acd-border);
-    flex-shrink: 0;
+.acd-stepper-item.is-current .acd-stepper-label {
+    color: inherit;
+    font-weight: 600;
 }
 
-.acd-stepper-item.is-done + .acd-stepper-line { background: var(--acd-success); }
+/* Desktop: full-width stepper rail */
+@media (min-width: 960px) {
+    .acd-page--mission .acd-stepper {
+        width: 100%;
+        overflow: visible;
+        border: 1px solid var(--acd-border);
+        border-radius: var(--acd-radius);
+        background: var(--acd-card);
+        box-shadow: var(--acd-shadow);
+    }
+
+    .acd-page--mission .acd-stepper-track {
+        display: grid;
+        grid-template-columns: repeat(var(--acd-steps, 4), minmax(0, 1fr));
+        width: 100%;
+        min-width: 0;
+    }
+
+    .acd-page--mission .acd-stepper-item {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 0.65rem;
+        min-width: 0;
+        width: 100%;
+        padding: 1rem 1.15rem;
+        border: none;
+        border-radius: 0;
+        border-inline-start: 1px solid var(--acd-border);
+        background: transparent;
+    }
+
+    .acd-page--mission .acd-stepper-item:first-child {
+        border-inline-start: none;
+    }
+
+    .acd-page--mission .acd-stepper-item.is-current {
+        background: var(--acd-primary-soft);
+    }
+
+    .acd-page--mission .acd-stepper-item.is-done {
+        background: var(--acd-success-soft);
+    }
+
+    .acd-page--mission .acd-stepper-label {
+        max-width: none;
+        flex: 1;
+        min-width: 0;
+        text-align: start;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .acd-page--mission .acd-mission-shell {
+        gap: 0;
+        border: 1px solid var(--acd-border);
+        border-top: none;
+        border-radius: 0 0 var(--acd-radius) var(--acd-radius);
+        background: var(--acd-card);
+        box-shadow: var(--acd-shadow);
+        overflow: hidden;
+    }
+
+    .acd-page--mission .acd-stepper {
+        border-radius: var(--acd-radius) var(--acd-radius) 0 0;
+        margin-bottom: 0;
+    }
+
+    .acd-page--mission .acd-mission-step.is-active {
+        padding: 1.35rem 1.5rem 1.5rem;
+    }
+
+    .acd-page--mission .acd-mission-checklist {
+        gap: 1rem;
+    }
+
+    .acd-page--mission .acd-mission-check {
+        width: 100%;
+        padding: 1.15rem 1.25rem;
+    }
+
+    .acd-page--mission .acd-mission-player,
+    .acd-page--mission .acd-mission-player .mk-vid--academy {
+        width: 100%;
+    }
+
+    .acd-page--mission .acd-mission-nav {
+        margin: 0;
+        padding: 1rem 1.5rem 1.25rem;
+        border-top: 1px solid var(--acd-border);
+        background: var(--acd-surface);
+    }
+}
+
+@media (max-width: 959px) {
+    .acd-page--mission .acd-stepper {
+        margin-bottom: 1rem;
+        padding-bottom: 0.25rem;
+    }
+
+    .acd-page--mission .acd-stepper-track {
+        gap: 0.5rem;
+        padding: 0 0.1rem;
+    }
+
+    .acd-page--mission .acd-mission-step.is-active {
+        padding: 0.25rem 0 0;
+    }
+}
 
 /* ── Mission step (Watch → Do → Confirm) ── */
 .acd-mission-step.is-hidden { display: none; }

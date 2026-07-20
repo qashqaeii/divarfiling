@@ -2,14 +2,14 @@
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 {% endblock %}
 
 {% block mobile_bar_title %}آکادمی{% endblock %}
 
 {% block content %}
-<div class="acd-page" id="acdPage">
+<div class="acd-page{% if academy_section == 'mission' %} acd-page--mission{% endif %}" id="acdPage">
     {% block academy_content %}{% endblock %}
 </div>
 {% endblock %}

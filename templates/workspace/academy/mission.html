@@ -11,6 +11,7 @@
     <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--primary">بازگشت به آکادمی</a>
 </section>
 {% else %}
+<div class="acd-mission-shell">
 {% include 'workspace/academy/includes/mission_stepper.html' %}
 {% include 'workspace/academy/includes/mission_step.html' %}
 
@@ -27,6 +28,7 @@
     </button>
     {% endif %}
 </nav>
+</div>
 {% endif %}
 
 {% include 'workspace/academy/includes/badge_modal.html' %}

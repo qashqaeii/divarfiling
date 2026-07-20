@@ -450,10 +450,18 @@
                             <div class="ps-agent-office-nav" aria-label="مسیریابی به دفتر">
                                 <p class="ps-agent-office-nav-label"><i class="fas fa-route" aria-hidden="true"></i> مسیریابی به دفتر</p>
                                 <div class="ps-agent-office-nav-links">
-                                    <a href="{{ consultant.agency.map_navigation.neshan_url }}" target="_blank" rel="noopener noreferrer">نشان</a>
-                                    <a href="{{ consultant.agency.map_navigation.google_url }}" target="_blank" rel="noopener noreferrer">گوگل</a>
-                                    <a href="{{ consultant.agency.map_navigation.waze_url }}" target="_blank" rel="noopener noreferrer">ویز</a>
-                                    <a href="{{ consultant.agency.map_navigation.balad_url }}" target="_blank" rel="noopener noreferrer">بلد</a>
+                                    <a href="{{ consultant.agency.map_navigation.neshan_url }}" class="ps-agent-office-nav-link" target="_blank" rel="noopener noreferrer">
+                                        <i class="fas fa-map" aria-hidden="true"></i><span>نشان</span>
+                                    </a>
+                                    <a href="{{ consultant.agency.map_navigation.google_url }}" class="ps-agent-office-nav-link ps-agent-office-nav-link--google" target="_blank" rel="noopener noreferrer">
+                                        <i class="fas fa-diamond-turn-right" aria-hidden="true"></i><span>گوگل</span>
+                                    </a>
+                                    <a href="{{ consultant.agency.map_navigation.waze_url }}" class="ps-agent-office-nav-link ps-agent-office-nav-link--waze" target="_blank" rel="noopener noreferrer">
+                                        <i class="fas fa-car" aria-hidden="true"></i><span>ویز</span>
+                                    </a>
+                                    <a href="{{ consultant.agency.map_navigation.balad_url }}" class="ps-agent-office-nav-link ps-agent-office-nav-link--balad" target="_blank" rel="noopener noreferrer">
+                                        <i class="fas fa-location-arrow" aria-hidden="true"></i><span>بلد</span>
+                                    </a>
                                 </div>
                             </div>
                             {% endif %}

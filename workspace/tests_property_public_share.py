@@ -87,6 +87,23 @@ class PropertyPublicShareTests(TestCase):
         self.assertEqual(extra_labels, ['لابی'])
         self.assertEqual(ctx['feature_profile']['source_label'], 'ثبت‌شده در فایل شخصی')
 
+    def test_feature_data_items_include_icons(self):
+        self.prop.feature_data = {
+            'جنس کف': 'سرامیک',
+            'تعداد واحد در طبقه': '۲',
+        }
+        self.prop.save(update_fields=['feature_data'])
+        share = get_or_create_property_share(self.user, self.prop)
+        ctx = build_public_property_context(share)
+        items = [
+            item
+            for group in ctx['feature_profile']['groups']
+            for item in (group.get('items') or [])
+        ]
+        by_label = {item['label']: item for item in items}
+        self.assertEqual(by_label['جنس کف']['icon'], 'fa-border-all')
+        self.assertEqual(by_label['تعداد واحد در طبقه']['icon'], 'fa-door-closed')
+
     def test_amenities_show_real_values_not_just_bool(self):
         self.prop.amenities = (
             'آسانسور، پارکینگ، '
@@ -587,7 +604,7 @@ class PropertyPublicNearbyPoisTests(TestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'ps-access')
-        self.assertContains(resp, 'دسترسی‌های اطراف')
+        self.assertContains(resp, 'امکانات و دسترسی‌ها')
         self.assertContains(resp, 'مسجد تست')
 
     def test_share_save_rejects_without_coords(self):

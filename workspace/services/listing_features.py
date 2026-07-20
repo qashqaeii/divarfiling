@@ -678,7 +678,7 @@ def build_listing_feature_profile(listing, base_feat: Optional[Dict[str, Any]] =
         groups.append({
             'id': 'extra',
             'title': 'سایر جزئیات',
-            'icon': 'fa-ellipsis-h',
+            'icon': 'fa-ellipsis',
             'accent': 'amber',
             'items': extra_items,
         })

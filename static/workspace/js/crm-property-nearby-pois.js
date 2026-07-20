@@ -249,16 +249,16 @@
                 });
                 const data = await resp.json().catch(() => ({}));
                 if (!resp.ok || !data.ok) {
-                    throw new Error(data.error || 'دریافت امکانات اطراف ناموفق بود.');
+                    throw new Error(data.error || 'دریافت امکانات و دسترسی‌ها ناموفق بود.');
                 }
                 renderPayload(data);
                 if (typeof global.showToast === 'function' && !data.cached) {
-                    global.showToast('امکانات اطراف ذخیره شد.', 'success');
+                    global.showToast('امکانات و دسترسی‌ها ذخیره شد.', 'success');
                 }
             } catch (err) {
-                setError(err.message || 'خطا در دریافت امکانات اطراف');
+                setError(err.message || 'خطا در دریافت امکانات و دسترسی‌ها');
                 if (typeof global.showToast === 'function') {
-                    global.showToast(err.message || 'خطا در دریافت امکانات اطراف', 'error');
+                    global.showToast(err.message || 'خطا در دریافت امکانات و دسترسی‌ها', 'error');
                 }
                 if (!hasStored && placeholder) placeholder.hidden = false;
             } finally {

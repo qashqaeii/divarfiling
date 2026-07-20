@@ -677,12 +677,12 @@ function initNearbyPoisShareToggle(form) {
         if (!toggle.checked) return;
         if (!hasCoords) {
             toggle.checked = false;
-            notify('برای نمایش دسترسی‌های اطراف، ابتدا موقعیت ملک را روی نقشه ثبت کنید.');
+            notify('برای نمایش امکانات و دسترسی‌ها، ابتدا موقعیت ملک را روی نقشه ثبت کنید.');
             return;
         }
         if (!hasData) {
             toggle.checked = false;
-            notify('ابتدا در جزئیات فایل، دکمه «محاسبه» امکانات اطراف را بزنید.');
+            notify('ابتدا در جزئیات فایل، دکمه «محاسبه» امکانات و دسترسی‌ها را بزنید.');
         }
     });
 
@@ -691,13 +691,13 @@ function initNearbyPoisShareToggle(form) {
         if (!hasCoords) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            notify('برای نمایش دسترسی‌های اطراف، ابتدا موقعیت ملک را روی نقشه ثبت کنید.');
+            notify('برای نمایش امکانات و دسترسی‌ها، ابتدا موقعیت ملک را روی نقشه ثبت کنید.');
             return;
         }
         if (!hasData) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            notify('ابتدا در جزئیات فایل، دکمه «محاسبه» امکانات اطراف را بزنید.');
+            notify('ابتدا در جزئیات فایل، دکمه «محاسبه» امکانات و دسترسی‌ها را بزنید.');
         }
     }, true);
 }

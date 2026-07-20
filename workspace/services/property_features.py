@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from workspace.constants import LISTING_FEATURE_GROUPS, PROPERTY_BOOL_AMENITY_LABELS
+from workspace.services.listing_features import _icon_for_key
 
 # ── Choices ──────────────────────────────────────────────────────────────
 
@@ -600,6 +601,11 @@ def feature_form_context(
     }
 
 
+def _display_icon_for_key(key: str) -> str:
+    field = FIELDS.get(key) or {}
+    return field.get('icon') or _icon_for_key(key)
+
+
 def feature_profile_groups_from_data(feature_data: Optional[dict]) -> List[Dict[str, Any]]:
     """گروه‌های نمایش پرونده از feature_data."""
     data = feature_data or {}
@@ -622,6 +628,7 @@ def feature_profile_groups_from_data(feature_data: Optional[dict]) -> List[Dict[
                 'value': display_val,
                 'state': 'neutral',
                 'known': True,
+                'icon': _display_icon_for_key(key),
             })
         if items:
             groups.append({
@@ -641,6 +648,7 @@ def feature_profile_groups_from_data(feature_data: Optional[dict]) -> List[Dict[
             'value': str(val).strip(),
             'state': 'neutral',
             'known': True,
+            'icon': _display_icon_for_key(key),
         })
     if extra_items:
         groups.append({

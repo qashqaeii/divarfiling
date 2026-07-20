@@ -751,7 +751,7 @@ def check_rate_limits(user) -> None:
     if user_count >= _user_daily_limit():
         raise NearbyPoiError(
             'user_limit',
-            'امروز سقف درخواست امکانات اطراف برای حساب شما پر شده است. فردا دوباره امتحان کنید.',
+            'امروز سقف درخواست امکانات و دسترسی‌ها برای حساب شما پر شده است. فردا دوباره امتحان کنید.',
             status=429,
         )
     if global_count >= _global_daily_limit():
@@ -852,9 +852,9 @@ def validate_share_show_nearby_pois(prop, *, enable: bool) -> Optional[str]:
     if not enable:
         return None
     if prop.latitude is None or prop.longitude is None:
-        return 'برای نمایش دسترسی‌های اطراف، ابتدا موقعیت ملک را روی نقشه ثبت کنید.'
+        return 'برای نمایش امکانات و دسترسی‌ها، ابتدا موقعیت ملک را روی نقشه ثبت کنید.'
     if not property_has_nearby_pois_data(prop):
-        return 'ابتدا در جزئیات فایل، دکمه «محاسبه» امکانات اطراف را بزنید تا داده ذخیره شود.'
+        return 'ابتدا در جزئیات فایل، دکمه «محاسبه» امکانات و دسترسی‌ها را بزنید تا داده ذخیره شود.'
     return None
 
 

@@ -347,7 +347,7 @@ class CRMPropertyNearbyPoisViewTests(TestCase):
         resp = self.client.get(self.detail_url)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'crm-nearby-pois')
-        self.assertContains(resp, 'امکانات اطراف')
+        self.assertContains(resp, 'امکانات و دسترسی‌ها')
         self.assertContains(resp, 'crm-property-nearby-pois.js')
 
     def test_location_update_clears_nearby_pois(self):

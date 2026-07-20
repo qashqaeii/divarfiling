@@ -23,7 +23,7 @@
                    controls
                    playsinline
                    preload="metadata"
-                   {% if video.poster %}poster="{% static video.poster %}"{% endif %}
+                   {% if video.poster %}{% if video.poster_kind == 'static' %}poster="{% static video.poster %}"{% else %}poster="{{ video.poster }}"{% endif %}{% endif %}
                    title="{{ video.title }}">
                 <source src="{{ video.src }}" type="video/mp4">
                 مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.

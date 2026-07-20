@@ -7,6 +7,11 @@ from django.conf import settings
 from django.db import models
 
 
+def academy_poster_upload_to(instance, filename: str) -> str:
+    ext = Path(filename).suffix.lower() or '.jpg'
+    return f'academy/posters/{instance.slug}{ext}'
+
+
 class LearningPath(models.Model):
     slug = models.SlugField(unique=True, verbose_name='شناسه')
     title = models.CharField(max_length=200, verbose_name='عنوان')
@@ -37,7 +42,17 @@ class AcademyVideo(models.Model):
     subtitle = models.TextField(blank=True, verbose_name='زیرعنوان')
     file_name = models.CharField(max_length=255, verbose_name='نام فایل')
     file_path = models.CharField(max_length=512, verbose_name='مسیر فایل')
-    poster_path = models.CharField(max_length=512, blank=True, verbose_name='پوستر')
+    poster_path = models.CharField(
+        max_length=512, blank=True,
+        verbose_name='مسیر پوستر (قدیمی)',
+        help_text='فقط برای مسیر static قدیمی — ترجیحاً از «تصویر پوستر» استفاده کنید.',
+    )
+    poster_image = models.ImageField(
+        upload_to=academy_poster_upload_to,
+        blank=True,
+        null=True,
+        verbose_name='تصویر پوستر',
+    )
     video_url = models.URLField(blank=True, verbose_name='URL CDN')
     duration_seconds = models.PositiveIntegerField(verbose_name='مدت (ثانیه)')
     order = models.PositiveSmallIntegerField(default=0, verbose_name='ترتیب')
@@ -79,8 +94,22 @@ class AcademyVideo(models.Model):
         rel = f'{self.file_path.strip("/")}/{self.file_name}'.replace('\\', '/')
         return f'{settings.MEDIA_URL.rstrip("/")}/{rel}'
 
+    def get_poster_context(self) -> tuple[str, str]:
+        if self.poster_image:
+            return self.poster_image.url, 'media'
+        if not self.poster_path:
+            return '', ''
+        if self.poster_path.startswith(('http://', 'https://', '/')):
+            return self.poster_path, 'media'
+        media_file = Path(settings.MEDIA_ROOT) / self.poster_path.lstrip('/')
+        if media_file.is_file():
+            rel = self.poster_path.lstrip('/').replace('\\', '/')
+            return f'{settings.MEDIA_URL.rstrip("/")}/{rel}', 'media'
+        return self.poster_path, 'static'
+
     def to_player_context(self) -> dict:
         url = self.get_stream_url()
+        poster, poster_kind = self.get_poster_context()
         return {
             'available': bool(url),
             'mode': 'file' if url and not self.video_url else ('cdn' if url else 'none'),
@@ -88,7 +117,8 @@ class AcademyVideo(models.Model):
             'title': self.title,
             'subtitle': self.subtitle,
             'duration': self.duration_display,
-            'poster': self.poster_path,
+            'poster': poster,
+            'poster_kind': poster_kind,
             'slug': self.slug,
         }
 

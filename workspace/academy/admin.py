@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from workspace.academy.models import (
     AcademyBadge,
@@ -32,10 +33,58 @@ class LearningPathAdmin(admin.ModelAdmin):
 
 @admin.register(AcademyVideo)
 class AcademyVideoAdmin(admin.ModelAdmin):
-    list_display = ('title', 'slug', 'path', 'order', 'duration_seconds', 'is_launch', 'is_public', 'is_active')
+    list_display = (
+        'title', 'slug', 'path', 'order', 'duration_seconds',
+        'has_poster', 'is_launch', 'is_public', 'is_active',
+    )
     list_filter = ('path', 'is_launch', 'is_public', 'is_active')
     search_fields = ('title', 'slug', 'file_name')
     raw_id_fields = ('path',)
+    readonly_fields = ('poster_preview',)
+    fieldsets = (
+        (None, {
+            'fields': ('path', 'slug', 'title', 'subtitle', 'order', 'duration_seconds'),
+        }),
+        ('فایل ویدیو', {
+            'fields': ('file_name', 'file_path', 'video_url'),
+        }),
+        ('پوستر', {
+            'fields': ('poster_image', 'poster_preview', 'poster_path'),
+            'description': 'تصویر JPG یا PNG — قبل از پخش ویدیو نمایش داده می‌شود.',
+        }),
+        ('CTA و ماموریت', {
+            'fields': (
+                'action_url', 'action_label', 'auto_confirm_event', 'mission_step',
+            ),
+        }),
+        ('وضعیت', {
+            'fields': ('is_public', 'is_launch', 'is_active'),
+        }),
+    )
+
+    @admin.display(boolean=True, description='پوستر')
+    def has_poster(self, obj):
+        return bool(obj.poster_image or obj.poster_path)
+
+    @admin.display(description='پیش‌نمایش پوستر')
+    def poster_preview(self, obj):
+        if obj.poster_image:
+            return format_html(
+                '<img src="{}" alt="" style="max-height:140px;max-width:100%;border-radius:10px;border:1px solid #ddd;">',
+                obj.poster_image.url,
+            )
+        poster, kind = obj.get_poster_context()
+        if not poster:
+            return '—'
+        if kind == 'static':
+            return format_html(
+                '<span style="color:#666;">مسیر static قدیمی:</span> <code>{}</code>',
+                obj.poster_path,
+            )
+        return format_html(
+            '<img src="{}" alt="" style="max-height:140px;max-width:100%;border-radius:10px;border:1px solid #ddd;">',
+            poster,
+        )
 
 
 class AcademyMissionStepInline(admin.TabularInline):

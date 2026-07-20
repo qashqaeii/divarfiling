@@ -101,6 +101,34 @@ class AcademyProgressTests(TestCase):
         self.assertIsNotNone(progress)
 
 
+class AcademyPosterTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from django.core.management import call_command
+        call_command('seed_academy')
+
+    def test_poster_image_in_player_context(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        video = AcademyVideo.objects.get(slug='quick-start-first-value')
+        video.poster_image = SimpleUploadedFile(
+            'poster.jpg',
+            b'\xff\xd8\xff\xd9',
+            content_type='image/jpeg',
+        )
+        video.save()
+        ctx = video.to_player_context()
+        self.assertEqual(ctx['poster_kind'], 'media')
+        self.assertIn('/media/academy/posters/', ctx['poster'])
+
+    def test_legacy_static_poster_path(self):
+        video = AcademyVideo.objects.get(slug='quick-start-first-value')
+        video.poster_path = 'images/test-poster.jpg'
+        video.save()
+        ctx = video.to_player_context()
+        self.assertEqual(ctx['poster_kind'], 'static')
+        self.assertEqual(ctx['poster'], 'images/test-poster.jpg')
+
+
 class PublicAcademyTests(TestCase):
     @classmethod
     def setUpTestData(cls):

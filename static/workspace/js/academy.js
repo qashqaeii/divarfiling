@@ -50,13 +50,15 @@
             }
         });
 
-        function sendProgress(force) {
+        function sendProgress(force, markComplete) {
             const pos = Math.floor(video.currentTime || 0);
-            if (!force && pos - lastSent < 5) return;
+            if (!force && !markComplete && pos - lastSent < 5) return;
             lastSent = pos;
-            const dur = video.duration || 0;
-            const completed = dur > 0 && pos >= dur * 0.9;
-            postJson(url, { watched_seconds: pos, completed: completed }).then(function (data) {
+            const payload = { watched_seconds: pos };
+            if (markComplete) {
+                payload.completed = true;
+            }
+            postJson(url, payload).then(function (data) {
                 if (data && data.completed) {
                     document.dispatchEvent(new CustomEvent('acd:video-completed', {
                         detail: { slug: slug },
@@ -65,9 +67,9 @@
             }).catch(function () {});
         }
 
-        video.addEventListener('timeupdate', function () { sendProgress(false); });
-        video.addEventListener('pause', function () { sendProgress(true); });
-        video.addEventListener('ended', function () { sendProgress(true); });
+        video.addEventListener('timeupdate', function () { sendProgress(false, false); });
+        video.addEventListener('pause', function () { sendProgress(true, false); });
+        video.addEventListener('ended', function () { sendProgress(true, true); });
     }
 
     function initPlayers() {
@@ -131,6 +133,9 @@
         document.querySelectorAll('[data-acd-step-panel]').forEach(function (panel) {
             const step = parseInt(panel.getAttribute('data-acd-step-panel'), 10);
             const active = step === n;
+            if (!active) {
+                panel.querySelectorAll('video').forEach(function (v) { v.pause(); });
+            }
             panel.classList.toggle('is-active', active);
             panel.hidden = !active;
         });
@@ -147,7 +152,10 @@
 
         document.querySelectorAll('[data-acd-step]').forEach(function (btn) {
             btn.addEventListener('click', function () {
-                showStep(parseInt(btn.getAttribute('data-acd-step'), 10));
+                const step = parseInt(btn.getAttribute('data-acd-step'), 10);
+                showStep(step);
+                cfg.currentStep = step;
+                pollMission();
             });
         });
 
@@ -170,32 +178,32 @@
             });
         });
 
+        function refreshMissionUI(data) {
+            if (!data || !data.ok) return;
+            if (data.completed) {
+                window.location.href = '/workspace/academy/mission/?badge=1';
+                return;
+            }
+
+            const nextBtn = document.querySelector('[data-acd-step-next]');
+            let activeStepData = null;
+
+            (data.steps || []).forEach(function (step) {
+                updateMissionStepUI(step, cfg.currentStep);
+                if (step.order === cfg.currentStep) {
+                    activeStepData = step;
+                }
+            });
+
+            if (nextBtn && activeStepData) {
+                nextBtn.disabled = !canAdvanceStep(activeStepData);
+            }
+        }
+
         function pollMission() {
             fetch(cfg.missionPollUrl, { credentials: 'same-origin' })
                 .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (!data.ok) return;
-                    if (data.completed) {
-                        window.location.href = '/workspace/academy/mission/?badge=1';
-                        return;
-                    }
-                    (data.steps || []).forEach(function (step) {
-                        if (step.is_done) {
-                            const panel = document.querySelector('[data-acd-step-panel="' + step.order + '"]');
-                            if (panel) {
-                                panel.querySelectorAll('.acd-mission-check').forEach(function (c) {
-                                    c.classList.add('is-done');
-                                });
-                            }
-                        }
-                        if (step.is_current) {
-                            showStep(step.order);
-                            cfg.currentStep = step.order;
-                            const nextBtn = document.querySelector('[data-acd-step-next]');
-                            if (nextBtn && step.is_done) nextBtn.disabled = false;
-                        }
-                    });
-                });
+                .then(refreshMissionUI);
         }
 
         document.addEventListener('acd:video-completed', function () {
@@ -206,21 +214,72 @@
         const prevBtn = document.querySelector('[data-acd-step-prev]');
         if (nextBtn) {
             nextBtn.addEventListener('click', function () {
-                showStep(cfg.currentStep + 1);
-                cfg.currentStep += 1;
+                const target = cfg.currentStep + 1;
+                if (target > cfg.totalSteps) return;
+                showStep(target);
+                cfg.currentStep = target;
                 nextBtn.disabled = true;
+                document.querySelectorAll('[data-acd-step]').forEach(function (btn) {
+                    const step = parseInt(btn.getAttribute('data-acd-step'), 10);
+                    btn.classList.toggle('is-current', step === cfg.currentStep);
+                    btn.setAttribute('aria-current', step === cfg.currentStep ? 'step' : 'false');
+                });
             });
         }
         if (prevBtn) {
             prevBtn.addEventListener('click', function () {
-                showStep(Math.max(1, cfg.currentStep - 1));
-                cfg.currentStep = Math.max(1, cfg.currentStep - 1);
+                const target = Math.max(1, cfg.currentStep - 1);
+                showStep(target);
+                cfg.currentStep = target;
+                pollMission();
             });
         }
 
-        setInterval(pollMission, 8000);
+        setInterval(pollMission, 15000);
 
+        pollMission();
         initBadgeModal();
+    }
+
+    function updateMissionStepUI(step, visibleStep) {
+        const panel = document.querySelector('[data-acd-step-panel="' + step.order + '"]');
+        if (!panel) return;
+
+        const videoDone = step.state === 'video_done' || step.state === 'done';
+        const videoCheck = panel.querySelector('[data-check="video"]');
+        if (videoCheck) {
+            videoCheck.classList.toggle('is-done', videoDone);
+        }
+
+        if (step.is_done) {
+            panel.querySelectorAll('.acd-mission-check').forEach(function (c) {
+                c.classList.add('is-done');
+            });
+        }
+
+        const statusEl = panel.querySelector('[data-acd-step-status="' + step.order + '"]');
+        if (statusEl && !step.is_done) {
+            if (step.state === 'video_done') {
+                statusEl.textContent = 'عمل را انجام دهید یا دکمه تأیید را بزنید';
+            }
+        }
+
+        const confirmBtn = panel.querySelector('[data-acd-confirm-step="' + step.order + '"]');
+        if (confirmBtn && step.state === 'video_done') {
+            confirmBtn.disabled = false;
+        }
+
+        const stepperBtn = document.querySelector('[data-acd-step="' + step.order + '"]');
+        if (stepperBtn) {
+            stepperBtn.classList.toggle('is-done', step.is_done);
+            stepperBtn.classList.toggle('is-current', step.order === visibleStep);
+        }
+    }
+
+    function canAdvanceStep(step) {
+        if (step.is_done) return true;
+        if (step.state === 'video_done' && step.confirm_type === 'video') return true;
+        return false;
     }
 
     function initBadgeModal() {

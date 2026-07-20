@@ -91,6 +91,14 @@ class AcademyProgressTests(TestCase):
         url = reverse('workspace:api_academy_video_progress', kwargs={'slug': video.slug})
         resp = self.client.post(
             url,
+            json.dumps({'watched_seconds': 10, 'completed': True}),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse(resp.json().get('completed'))
+
+        resp = self.client.post(
+            url,
             json.dumps({'watched_seconds': 55, 'completed': True}),
             content_type='application/json',
         )

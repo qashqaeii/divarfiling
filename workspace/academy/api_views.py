@@ -71,6 +71,7 @@ class AcademyMissionAPIView(WorkspaceLoginMixin, View):
                 'action_url': step.action_url,
                 'action_label': step.action_label,
                 'video_slug': step.video.slug,
+                'confirm_type': step.confirm_type,
             })
         return JsonResponse({
             'ok': True,

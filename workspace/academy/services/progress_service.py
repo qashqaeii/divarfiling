@@ -206,9 +206,13 @@ def update_video_progress(user, video: AcademyVideo, watched_seconds: int, compl
     progress, _ = UserVideoProgress.objects.get_or_create(user=user, video=video)
     progress.watched_seconds = max(progress.watched_seconds, watched_seconds)
     progress.last_position = watched_seconds
-    threshold = max(int(video.duration_seconds * 0.9), video.duration_seconds - 10)
-    mark_complete = completed or watched_seconds >= threshold
-    if mark_complete and not progress.completed:
+    min_watch = max(int(video.duration_seconds * 0.85), 5) if video.duration_seconds else 5
+    mark_complete = (
+        not progress.completed
+        and completed
+        and watched_seconds >= min_watch
+    )
+    if mark_complete:
         progress.completed = True
         progress.completed_at = timezone.now()
         AcademyEvent.objects.create(

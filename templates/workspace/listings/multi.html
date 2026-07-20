@@ -7,9 +7,11 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/ws-ds-mobile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/multi-listings.css' %}?v=1">
+{% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
 {% block content %}
+{% include 'workspace/academy/includes/contextual_banner.html' %}
 <div class="mk-page mk-filing-page mk-listing-page mk-multi-listings-page ws-ds-mobile">
 
     <section class="mk-ds-command mk-ds-command--{{ tx.mode|default:'other' }} mk-multi-hero" aria-label="خلاصه انتخاب">
@@ -379,4 +381,5 @@
     });
 })();
 </script>
+{% include 'workspace/academy/includes/academy_assets_js.html' %}
 {% endblock %}

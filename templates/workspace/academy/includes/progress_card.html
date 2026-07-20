@@ -1,0 +1,23 @@
+<section class="acd-progress" aria-labelledby="acd-progress-title">
+    <div class="acd-progress-main">
+        <span class="acd-kicker"><i class="fas fa-signal" aria-hidden="true"></i> وضعیت یادگیری</span>
+        <h2 id="acd-progress-title" class="acd-progress-title">سطح شما: {{ summary.level_label }}</h2>
+        <div class="acd-level-dots" aria-label="سطح {{ summary.level }} از {{ summary.max_level }}">
+            {% for i in "12345" %}
+            <span class="acd-dot{% if forloop.counter <= summary.level %} is-on{% endif %}" aria-hidden="true"></span>
+            {% endfor %}
+        </div>
+        {% if summary.level < summary.max_level %}
+        <p class="acd-progress-eta">حدود {{ summary.eta_minutes }} دقیقه تا سطح بعدی</p>
+        {% else %}
+        <p class="acd-progress-eta">همه مسیرهای MVP را تکمیل کرده‌اید</p>
+        {% endif %}
+    </div>
+    <div class="acd-badges" aria-label="نشان‌ها">
+        {% for badge in summary.badges_all %}
+        <span class="acd-badge-chip{% if badge.slug in summary.earned_slugs %} is-earned{% else %} is-locked{% endif %}" title="{{ badge.description }}">
+            <i class="fas {{ badge.icon }}" aria-hidden="true"></i> {{ badge.title }}
+        </span>
+        {% endfor %}
+    </div>
+</section>

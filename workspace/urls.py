@@ -2,6 +2,8 @@
 from django.urls import include, path
 
 from workspace import crm_views, support_views, team_api_views, team_messages_api_views, views
+from workspace.academy import api_views as academy_api_views
+from workspace.academy import views as academy_views
 
 app_name = 'workspace'
 
@@ -139,6 +141,19 @@ urlpatterns = [
     # Settings & Help
     path('settings/', views.WorkspaceSettingsView.as_view(), name='settings'),
     path('help/', views.HelpView.as_view(), name='help'),
+    path('academy/', academy_views.AcademyHomeView.as_view(), name='academy_home'),
+    path('academy/mission/', academy_views.AcademyMissionView.as_view(), name='academy_mission'),
+    path('academy/traditional/', academy_views.AcademyTraditionalPathView.as_view(), name='academy_traditional'),
+    path('academy/path/<slug:slug>/', academy_views.AcademyPathView.as_view(), name='academy_path'),
+    path('academy/video/<slug:slug>/', academy_views.AcademyVideoView.as_view(), name='academy_video'),
+    path('api/academy/progress/', academy_api_views.AcademyProgressAPIView.as_view(), name='api_academy_progress'),
+    path('api/academy/mission/', academy_api_views.AcademyMissionAPIView.as_view(), name='api_academy_mission'),
+    path('api/academy/mission/step/<int:step_order>/complete/', academy_api_views.AcademyMissionStepCompleteAPIView.as_view(), name='api_academy_mission_step_complete'),
+    path('api/academy/video/<slug:slug>/progress/', academy_api_views.AcademyVideoProgressAPIView.as_view(), name='api_academy_video_progress'),
+    path('api/academy/video/<slug:slug>/', academy_api_views.AcademyVideoMetaAPIView.as_view(), name='api_academy_video_meta'),
+    path('api/academy/contextual/', academy_api_views.AcademyContextualAPIView.as_view(), name='api_academy_contextual'),
+    path('api/academy/contextual/dismiss/', academy_api_views.AcademyContextualDismissAPIView.as_view(), name='api_academy_contextual_dismiss'),
+    path('api/academy/events/', academy_api_views.AcademyEventsAPIView.as_view(), name='api_academy_events'),
     path('docs/api/', views.ApiDocsView.as_view(), name='docs_api'),
     path('docs/api/crm-key/', views.CrmApiKeyRevealView.as_view(), name='docs_api_crm_key'),
     path('upgrade/', views.BotUpgradeView.as_view(), name='upgrade'),

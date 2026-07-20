@@ -5,12 +5,14 @@
 <link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/tools-market.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-tools-mobile.css' %}?v=1">
+{% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
 {% block page_title %}ابزارها{% endblock %}
 {% block mobile_bar_title %}ابزارهای هوشمند{% endblock %}
 
 {% block content %}
+{% include 'workspace/academy/includes/contextual_banner.html' %}
 <div class="mk-page ws-toolbox-pro ws-toolbox-mobile" id="wsToolbox"{% if selected_dataset %} data-dataset-id="{{ selected_dataset.id }}"{% endif %}>
 
     <header class="ws-tbx-hero">
@@ -728,4 +730,5 @@
 {% block extra_js %}
 <script src="{% static 'workspace/js/tools.js' %}?v=7"></script>
 <script src="{% static 'workspace/js/tools-market.js' %}?v=5"></script>
+{% include 'workspace/academy/includes/academy_assets_js.html' %}
 {% endblock %}

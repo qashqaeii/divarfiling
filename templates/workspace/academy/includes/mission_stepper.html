@@ -1,0 +1,12 @@
+<nav class="acd-stepper" aria-label="قدم‌های ماموریت">
+    {% for item in steps %}
+    <button type="button"
+            class="acd-stepper-item{% if item.is_done %} is-done{% elif item.is_current %} is-current{% endif %}"
+            data-acd-step="{{ item.step.order }}"
+            aria-current="{% if item.is_current %}step{% else %}false{% endif %}">
+        <span class="acd-stepper-num">{{ item.step.order }}</span>
+        <span class="acd-stepper-label">{{ item.video.title|truncatechars:24 }}</span>
+    </button>
+    {% if not forloop.last %}<span class="acd-stepper-line" aria-hidden="true"></span>{% endif %}
+    {% endfor %}
+</nav>

@@ -1,0 +1,12 @@
+{% if summary.continue_watching %}
+<section class="acd-continue">
+    <a href="{% url 'workspace:academy_video' slug=summary.continue_watching.video.slug %}" class="acd-continue-link">
+        <span class="acd-continue-icon" aria-hidden="true"><i class="fas fa-play"></i></span>
+        <span class="acd-continue-body">
+            <strong>ادامه تماشا</strong>
+            <span>{{ summary.continue_watching.video.title }}</span>
+        </span>
+        <span class="acd-continue-arrow" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
+    </a>
+</section>
+{% endif %}

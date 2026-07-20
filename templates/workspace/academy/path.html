@@ -1,0 +1,35 @@
+{% extends 'workspace/academy/base_academy.html' %}
+
+{% block academy_content %}
+<div class="acd-path-layout">
+    <main class="acd-path-main">
+        {% if active_video %}
+        <header class="acd-video-head">
+            <h1 class="acd-video-title">{{ active_video.title }}</h1>
+            <p class="acd-video-sub">{{ active_video.subtitle }}</p>
+        </header>
+        {% if active_player.available %}
+        <div data-acd-video-slug="{{ active_video.slug }}">
+            {% include 'includes/mk_video_player.html' with video=active_player variant='academy' show_heading=False show_meta=True %}
+        </div>
+        {% else %}
+        <p class="acd-mission-unavailable">این ویدیو به‌زودی اضافه می‌شود.</p>
+        {% endif %}
+        {% if active_video.action_url and active_video.action_label %}
+        <a href="{{ active_video.action_url }}" class="acd-btn acd-btn--primary acd-video-cta" data-acd-cta="1">
+            {{ active_video.action_label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        </a>
+        {% endif %}
+        {% endif %}
+    </main>
+    {% include 'workspace/academy/includes/playlist_sidebar.html' %}
+</div>
+{% endblock %}
+
+{% block academy_js %}
+<script>
+window.acdPathConfig = {
+    progressUrl: "{% url 'workspace:api_academy_video_progress' slug='__SLUG__' %}",
+};
+</script>
+{% endblock %}

@@ -390,7 +390,24 @@
         clearTarget();
         document.getElementById('wsSidebar')?.classList.remove('open');
         document.removeEventListener('keydown', onKey);
-        setTimeout(() => root?.remove(), 500);
+        setTimeout(function () {
+            root?.remove();
+            fetch(config.completeUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data && data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    }
+                })
+                .catch(function () {});
+        }, 500);
     }
 
     function start() {

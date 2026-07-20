@@ -27,6 +27,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=30">
 
 {% block crm_extra_css %}{% endblock %}
+{% include 'workspace/academy/includes/academy_assets_css.html' %}
 
 {% endblock %}
 
@@ -122,6 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
 {% endif %}
 
 {% block crm_js %}{% endblock %}
+{% include 'workspace/academy/includes/academy_assets_js.html' %}
 
 
 

@@ -1,0 +1,10 @@
+<div class="acd-badge-modal" id="acdBadgeModal" role="dialog" aria-modal="true" aria-labelledby="acdBadgeTitle"{% if not show_badge_modal %} hidden{% endif %}>
+    <div class="acd-badge-modal-backdrop" data-acd-close-badge></div>
+    <div class="acd-badge-modal-card">
+        <span class="acd-badge-modal-icon" aria-hidden="true"><i class="fas fa-trophy"></i></span>
+        <h2 id="acdBadgeTitle" class="acd-badge-modal-title">نشان دریافت شد</h2>
+        <p class="acd-badge-modal-name">مشاور آماده فایلینگ</p>
+        <p class="acd-badge-modal-desc">شما اولین قدم برای ساخت سیستم فروش حرفه‌ای را برداشته‌اید.</p>
+        <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--primary">ادامه آموزش</a>
+    </div>
+</div>

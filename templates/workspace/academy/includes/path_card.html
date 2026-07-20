@@ -1,0 +1,16 @@
+<article class="acd-path-card{% if item.locked %} is-locked{% endif %}">
+    <div class="acd-path-card-icon" aria-hidden="true"><i class="fas {{ item.path.icon }}"></i></div>
+    <div class="acd-path-card-body">
+        <h3 class="acd-path-card-title">{{ item.path.title }}</h3>
+        <p class="acd-path-card-desc">{{ item.path.description|truncatechars:80 }}</p>
+        <p class="acd-path-card-meta">{{ item.done_count }}/{{ item.video_count }} ویدیو</p>
+        {% if item.percent %}
+        <div class="acd-path-mini-bar"><span style="width: {{ item.percent }}%"></span></div>
+        {% endif %}
+    </div>
+    {% if item.locked %}
+    <span class="acd-path-lock"><i class="fas fa-lock" aria-hidden="true"></i> به‌زودی</span>
+    {% else %}
+    <a href="{% url 'workspace:academy_path' slug=item.path.slug %}" class="acd-path-card-link">مشاهده مسیر</a>
+    {% endif %}
+</article>

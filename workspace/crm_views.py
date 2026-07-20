@@ -259,6 +259,9 @@ class CRMTodayView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['crm_section'] = 'today'
         ctx['quick_lead_form'] = QuickLeadForm()
         ctx['crm_sources'] = CRM_SOURCES
+        if not items and stats.get('total', 0) == 0:
+            from workspace.academy.context_helpers import inject_academy_context
+            inject_academy_context(ctx, self.request.user, 'today_empty')
         return ctx
 
     def post(self, request):
@@ -359,6 +362,9 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['match_eligible_types'] = MATCH_TYPES | LEAD_TYPES
         ctx['today'] = today
         ctx.update(_contact_areas_context(user))
+        if ctx['stats']['total'] == 0:
+            from workspace.academy.context_helpers import inject_academy_context
+            inject_academy_context(ctx, user, 'contacts_empty')
         return ctx
 
 
@@ -1107,6 +1113,9 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         from workspace.services.property_public_share import build_property_amenity_dossier_items
         for prop in ctx.get('properties') or []:
             prop.card_amenities = build_property_amenity_dossier_items(prop)
+        if ctx['stats']['total'] == 0 and not ctx.get('has_filters'):
+            from workspace.academy.context_helpers import inject_academy_context
+            inject_academy_context(ctx, user, 'properties_empty')
         return ctx
 
 

@@ -176,6 +176,8 @@
 
                     <button type="button" class="ws-sidebar-util-btn" data-modal-open="modal-settings" title="تنظیمات" aria-label="تنظیمات"><span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='settings' size='nav' only %}</span></button>
 
+                    <a href="{% url 'workspace:academy_home' %}" class="ws-sidebar-util-btn {% if 'academy' in request.path %}active{% endif %}" title="آکادمی" aria-label="آکادمی"><span class="ws-nav-icon" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span></a>
+
                     <a href="{% url 'workspace:help' %}" class="ws-sidebar-util-btn {% if request.resolver_match.url_name == 'help' %}active{% endif %}" title="راهنما" aria-label="راهنما"><span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='help_center' size='nav' only %}</span></a>
 
                     <a href="{% url 'workspace:docs_api' %}" class="ws-sidebar-util-btn {% if request.resolver_match.url_name == 'docs_api' %}active{% endif %}" title="مستندات API" aria-label="مستندات API"><span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='api_docs' size='nav' only %}</span></a>

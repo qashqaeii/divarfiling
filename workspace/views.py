@@ -295,6 +295,9 @@ class DatasetListView(LicenseRequiredMixin, ListView):
             'page_query': _dataset_page_query(self.request),
             'filing_video': get_filing_video_context(),
         })
+        if ctx['stats'].get('files', 0) == 0:
+            from workspace.academy.context_helpers import inject_academy_context
+            inject_academy_context(ctx, self.request.user, 'datasets_empty')
         return ctx
 
 
@@ -892,6 +895,9 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
         ctx['show_dataset_column'] = True
         # سازگاری با includeهایی که هنوز dataset می‌خواهند (مثلاً لینک خالی)
         ctx['dataset'] = datasets[0]
+        if not ListingMeta.objects.filter(user=self.request.user, is_favorite=True).exists():
+            from workspace.academy.context_helpers import inject_academy_context
+            inject_academy_context(ctx, self.request.user, 'listings_empty')
         return ctx
 
 
@@ -1600,6 +1606,13 @@ class ToolsView(LicenseRequiredMixin, TemplateView):
         ctx['market_snapshot'] = snapshots.get(str(selected.pk)) if selected else None
         ctx['market_snapshots_json'] = json.dumps(snapshots, ensure_ascii=False)
         ctx['market_snapshot_json'] = json.dumps(ctx['market_snapshot'], ensure_ascii=False)
+        from workspace.academy.context_helpers import inject_academy_context
+        from workspace.academy.services.contextual_service import mark_tools_visited
+        from workspace.academy.services.progress_service import get_or_create_academy_settings
+        settings_ac = get_or_create_academy_settings(self.request.user)
+        if settings_ac.tools_first_visit:
+            inject_academy_context(ctx, self.request.user, 'tools_first_visit')
+        mark_tools_visited(self.request.user)
         return ctx
 
 
@@ -1868,8 +1881,12 @@ class OnboardingCompleteView(WorkspaceLoginMixin, View):
     """ثبت اتمام یا رد تور آموزشی میزکار."""
 
     def post(self, request):
+        from django.urls import reverse
         settings_obj = get_or_create_settings(request.user)
         if not settings_obj.onboarding_completed:
             settings_obj.onboarding_completed = True
             settings_obj.save(update_fields=['onboarding_completed', 'updated_at'])
-        return JsonResponse({'ok': True})
+        return JsonResponse({
+            'ok': True,
+            'redirect_url': reverse('workspace:academy_mission'),
+        })

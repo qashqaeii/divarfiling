@@ -1,0 +1,45 @@
+{% extends 'workspace/academy/base_academy.html' %}
+{% load static %}
+
+{% block academy_content %}
+<header class="acd-hero">
+    <span class="acd-hero-kicker"><i class="fas fa-bullseye" aria-hidden="true"></i> ماموریت</span>
+    <h1 class="acd-hero-title">{{ mission.title }}</h1>
+    <p class="acd-hero-lead">{{ mission.description }}</p>
+</header>
+
+{% if completed %}
+<section class="acd-mission-done">
+    <p><i class="fas fa-check-circle" aria-hidden="true"></i> ماموریت روز اول تکمیل شد.</p>
+    <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--primary">بازگشت به آکادمی</a>
+</section>
+{% else %}
+{% include 'workspace/academy/includes/mission_stepper.html' %}
+{% include 'workspace/academy/includes/mission_step.html' %}
+
+<nav class="acd-mission-nav" aria-label="ناوبری ماموریت">
+    {% if current_step > 1 %}
+    <button type="button" class="acd-btn acd-btn--ghost" data-acd-step-prev>قدم قبل</button>
+    {% endif %}
+    <span class="acd-mission-nav-spacer"></span>
+    {% if current_step < steps|length %}
+    <button type="button" class="acd-btn acd-btn--primary" data-acd-step-next disabled>قدم بعد</button>
+    {% endif %}
+</nav>
+{% endif %}
+
+{% include 'workspace/academy/includes/badge_modal.html' %}
+{% endblock %}
+
+{% block academy_js %}
+<script>
+window.acdMissionConfig = {
+    currentStep: {{ current_step }},
+    totalSteps: {{ steps|length }},
+    completed: {{ completed|yesno:"true,false" }},
+    stepCompleteUrl: "{% url 'workspace:api_academy_mission_step_complete' step_order=0 %}".replace('/0/', '/'),
+    progressUrl: "{% url 'workspace:api_academy_video_progress' slug='__SLUG__' %}",
+    missionPollUrl: "{% url 'workspace:api_academy_mission' %}",
+};
+</script>
+{% endblock %}

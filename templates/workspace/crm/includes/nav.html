@@ -37,10 +37,8 @@
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='bell' size='nav' only %}</span><span>یادآورها</span>
         {% if crm_nav_counts.reminders %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.reminders }}</em>{% endif %}
     </a>
-    {% if crm_video.available %}
-    <a href="{% url 'workspace:crm_dashboard' %}?open=video#crm-video" class="crm-nav-item crm-nav-item--video" title="آموزش ویدیویی CRM">
-        <span class="ws-nav-icon" aria-hidden="true"><i class="fas fa-circle-play"></i></span><span>آموزش</span>
+    <a href="{% url 'workspace:academy_home' %}" class="crm-nav-item {% if crm_section == 'academy' %}active{% endif %}" title="آکادمی فایلینگ دیوار">
+        <span class="ws-nav-icon" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span><span>آکادمی</span>
     </a>
-    {% endif %}
 </nav>
 </div>

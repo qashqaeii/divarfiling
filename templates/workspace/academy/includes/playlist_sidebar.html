@@ -1,0 +1,25 @@
+<aside class="acd-playlist" aria-label="فهرست ویدیوها">
+    <header class="acd-playlist-head">
+        <h2 class="acd-playlist-title"><i class="fas {{ path.icon }}" aria-hidden="true"></i> {{ path.title }}</h2>
+        <p class="acd-playlist-desc">{{ path.description|truncatechars:100 }}</p>
+    </header>
+    <ol class="acd-playlist-list">
+        {% for item in items %}
+        <li class="acd-playlist-item{% if item.active %} is-active{% endif %}{% if item.completed %} is-done{% endif %}">
+            <a href="{% url 'workspace:academy_path' slug=path.slug %}?v={{ item.video.slug }}"
+               class="acd-playlist-link">
+                <span class="acd-playlist-index">{{ forloop.counter }}</span>
+                <span class="acd-playlist-body">
+                    <strong>{{ item.video.title }}</strong>
+                    <span>{{ item.video.duration_display }}</span>
+                </span>
+                {% if item.completed %}
+                <span class="acd-playlist-check" aria-label="تماشا شده"><i class="fas fa-check"></i></span>
+                {% elif item.active %}
+                <span class="acd-playlist-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                {% endif %}
+            </a>
+        </li>
+        {% endfor %}
+    </ol>
+</aside>

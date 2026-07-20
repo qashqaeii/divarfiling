@@ -654,6 +654,29 @@ class EducationView(TemplateView):
         return ctx
 
 
+class PublicAcademyView(TemplateView):
+    """صفحه عمومی آکادمی — مسیر آشنایی."""
+    template_name = 'shop/academy.html'
+
+    def get_context_data(self, **kwargs):
+        from workspace.academy.models import LearningPath, AcademyVideo
+        ctx = super().get_context_data(**kwargs)
+        path = LearningPath.objects.filter(slug='intro', is_active=True).first()
+        videos = []
+        if path:
+            videos = list(path.videos.filter(is_public=True, is_active=True).order_by('order'))
+        ctx['intro_path'] = path
+        ctx['intro_videos'] = [
+            {'video': v, 'player': v.to_player_context()} for v in videos
+        ]
+        ctx['meta_title'] = 'آکادمی فایلینگ دیوار — از اولین فایل تا اولین معامله'
+        ctx['meta_description'] = (
+            'آکادمی فایلینگ دیوار برای مشاوران املاک — ویدیوهای آشنایی، '
+            'شروع سریع و مسیر یادگیری حرفه‌ای.'
+        )
+        return ctx
+
+
 class AndroidTutorialView(TemplateView):
     template_name = 'shop/android_tutorial.html'
 

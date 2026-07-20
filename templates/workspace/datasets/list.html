@@ -9,9 +9,11 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 {% endif %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=3">
+{% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
 {% block content %}
+{% include 'workspace/academy/includes/contextual_banner.html' %}
 <div class="mk-page mk-filing-pro mk-filing-mobile" data-view-mode="{{ view_mode }}">
 
     <header class="mk-filing-mob-header">
@@ -383,4 +385,5 @@ document.addEventListener('DOMContentLoaded', function () {
 {% if ai_enabled and has_bot_license %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>
 {% endif %}
+{% include 'workspace/academy/includes/academy_assets_js.html' %}
 {% endblock %}

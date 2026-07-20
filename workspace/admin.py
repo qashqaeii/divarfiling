@@ -9,6 +9,8 @@ from workspace.models import (
 )
 from workspace.services.support_tickets import close_ticket, reopen_ticket
 
+from workspace.academy import admin as academy_admin  # noqa: F401
+
 
 @admin.register(PropertyMatchAlert)
 class PropertyMatchAlertAdmin(admin.ModelAdmin):

@@ -1,0 +1,23 @@
+{% extends 'workspace/academy/base_academy.html' %}
+
+{% block academy_content %}
+<header class="acd-hero">
+    <span class="acd-hero-kicker"><i class="fas fa-graduation-cap" aria-hidden="true"></i> آکادمی فایلینگ دیوار</span>
+    <h1 class="acd-hero-title">از اولین فایل تا اولین معامله</h1>
+    <p class="acd-hero-lead">سلام {{ request.user.get_full_name|default:request.user.username }} — برای شروع فقط ۱۵ دقیقه زمان لازم داری.</p>
+</header>
+
+{% include 'workspace/academy/includes/progress_card.html' %}
+{% include 'workspace/academy/includes/mission_card.html' %}
+{% include 'workspace/academy/includes/traditional_card.html' %}
+{% include 'workspace/academy/includes/continue_card.html' %}
+
+<section class="acd-paths" aria-labelledby="acd-paths-title">
+    <h2 id="acd-paths-title" class="acd-section-title"><i class="fas fa-route" aria-hidden="true"></i> مسیرهای یادگیری</h2>
+    <div class="acd-paths-grid">
+        {% for item in paths %}
+        {% include 'workspace/academy/includes/path_card.html' %}
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% for item in steps %}
+<section class="acd-mission-step{% if item.is_current %} is-active{% else %} is-hidden{% endif %}"
+         data-acd-step-panel="{{ item.step.order }}"
+         {% if not item.is_current %}hidden{% endif %}>
+    <header class="acd-mission-step-head">
+        <span class="acd-mission-step-kicker">قدم {{ item.step.order }}/{{ steps|length }}</span>
+        <h2 class="acd-mission-step-title">{{ item.video.title }}</h2>
+        <p class="acd-mission-step-desc">{{ item.video.subtitle }}</p>
+    </header>
+
+    <div class="acd-mission-checklist">
+        <div class="acd-mission-check{% if item.state == 'video_done' or item.state == 'done' %} is-done{% endif %}" data-check="video">
+            <span class="acd-mission-check-icon" aria-hidden="true"><i class="fas fa-circle-play"></i></span>
+            <div class="acd-mission-check-body">
+                <strong>۱. ویدیو را ببین</strong>
+                {% if item.player.available %}
+                <div class="acd-mission-player" data-acd-video-slug="{{ item.video.slug }}">
+                    {% include 'includes/mk_video_player.html' with video=item.player variant='academy' show_heading=False show_meta=True %}
+                </div>
+                {% else %}
+                <p class="acd-mission-unavailable">ویدیو به‌زودی اضافه می‌شود.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if item.step.confirm_type != 'video' %}
+        <div class="acd-mission-check{% if item.state == 'done' %} is-done{% endif %}" data-check="action">
+            <span class="acd-mission-check-icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+            <div class="acd-mission-check-body">
+                <strong>۲. همین الان انجام بده</strong>
+                {% if item.step.action_url and item.step.action_url != '/workspace/academy/mission/' %}
+                <a href="{{ item.step.action_url }}" class="acd-btn acd-btn--primary acd-mission-action" data-acd-cta="1">
+                    {{ item.step.action_label }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="acd-mission-check{% if item.state == 'done' %} is-done{% endif %}" data-check="confirm">
+            <span class="acd-mission-check-icon" aria-hidden="true"><i class="fas fa-check"></i></span>
+            <div class="acd-mission-check-body">
+                <strong>۳. تأیید کن</strong>
+                {% if item.is_done %}
+                <p class="acd-mission-status is-success"><i class="fas fa-check-circle" aria-hidden="true"></i> مرحله کامل شد</p>
+                {% else %}
+                <p class="acd-mission-status" data-acd-step-status="{{ item.step.order }}">
+                    {% if item.state == 'video_done' %}عمل را انجام دهید یا دکمه تأیید را بزنید{% else %}ابتدا ویدیو را تماشا کنید{% endif %}
+                </p>
+                <button type="button"
+                        class="acd-btn acd-btn--ghost"
+                        data-acd-confirm-step="{{ item.step.order }}"
+                        {% if item.state != 'video_done' and item.step.confirm_type == 'both' %}disabled{% endif %}>
+                    تأیید دستی
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endfor %}

@@ -1,0 +1,36 @@
+{% extends 'workspace/academy/base_academy.html' %}
+
+{% block academy_content %}
+<div class="acd-path-layout acd-path-layout--single">
+    <main class="acd-path-main">
+        <header class="acd-video-head">
+            <a href="{% url 'workspace:academy_path' slug=video.path.slug %}" class="acd-back-link"><i class="fas fa-arrow-right" aria-hidden="true"></i> {{ video.path.title }}</a>
+            <h1 class="acd-video-title">{{ video.title }}</h1>
+            <p class="acd-video-sub">{{ video.subtitle }}</p>
+        </header>
+        {% if player.available %}
+        <div data-acd-video-slug="{{ video.slug }}"{% if context_key %} data-acd-context="{{ context_key }}"{% endif %}>
+            {% include 'includes/mk_video_player.html' with video=player variant='academy' show_heading=False show_meta=True %}
+        </div>
+        {% else %}
+        <p class="acd-mission-unavailable">این ویدیو به‌زودی اضافه می‌شود.</p>
+        {% endif %}
+        {% if video.action_url and video.action_label %}
+        <a href="{{ video.action_url }}" class="acd-btn acd-btn--primary acd-video-cta" data-acd-cta="1">
+            {{ video.action_label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        </a>
+        {% endif %}
+    </main>
+    {% if path_ctx %}
+    {% include 'workspace/academy/includes/playlist_sidebar.html' with path=path_ctx.path items=path_ctx.items %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block academy_js %}
+<script>
+window.acdPathConfig = {
+    progressUrl: "{% url 'workspace:api_academy_video_progress' slug='__SLUG__' %}",
+};
+</script>
+{% endblock %}

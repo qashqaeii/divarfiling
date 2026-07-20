@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/help.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-utility-mobile.css' %}?v=1">
 {% if crm_video.available %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
@@ -32,6 +33,10 @@
             </span>
             <h1 id="hlp-title">{{ help.hero.title }}</h1>
             <p class="hlp-lead">{{ help.hero.lead }}</p>
+            <p class="hlp-lead" style="margin-top: .75rem;">
+                <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--primary" style="display:inline-flex;">ورود به آکادمی فایلینگ دیوار</a>
+                <a href="{% url 'workspace:academy_mission' %}" class="acd-btn acd-btn--ghost" style="display:inline-flex;margin-right:.5rem;">شروع ماموریت ۱۵ دقیقه‌ای</a>
+            </p>
         </header>
 
         <nav class="hlp-pipeline" aria-label="شروع سریع">

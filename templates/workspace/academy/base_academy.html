@@ -1,0 +1,20 @@
+{% extends 'workspace/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
+{% endblock %}
+
+{% block mobile_bar_title %}آکادمی{% endblock %}
+
+{% block content %}
+<div class="acd-page" id="acdPage">
+    {% block academy_content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'workspace/js/academy.js' %}?v=1"></script>
+{% block academy_js %}{% endblock %}
+{% endblock %}

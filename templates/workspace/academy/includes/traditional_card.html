@@ -1,0 +1,11 @@
+{% if traditional_path %}
+<section class="acd-traditional-card">
+    <div class="acd-traditional-body">
+        <span class="acd-traditional-kicker"><i class="fas fa-compass" aria-hidden="true"></i> اولین بار از نرم‌افزار املاک استفاده می‌کنی؟</span>
+        <h2 class="acd-traditional-title">{{ traditional_path.title }}</h2>
+        <p class="acd-traditional-desc">{{ traditional_path.description }}</p>
+        <p class="acd-traditional-meta">۵ ویدیو | ~۲۰ دقیقه</p>
+    </div>
+    <a href="{% url 'workspace:academy_traditional' %}" class="acd-btn acd-btn--ghost">شروع از اینجا</a>
+</section>
+{% endif %}

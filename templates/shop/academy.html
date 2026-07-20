@@ -6,28 +6,37 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
 <div class="mk-pub-wrap acd-page">
-    <header class="acd-hero">
-        <span class="acd-hero-kicker"><i class="fas fa-graduation-cap" aria-hidden="true"></i> آکادمی فایلینگ دیوار</span>
-        <h1 class="acd-hero-title">از اولین فایل تا اولین معامله</h1>
-        <p class="acd-hero-lead">ویدیوهای آشنایی برای مشاوران املاک — قبل از ورود به میزکار.</p>
-        <p style="margin-top: 1rem;">
+    <header class="acd-head acd-head--page">
+        <div class="acd-head-row">
+            <div class="acd-head-main">
+                <div class="acd-head-copy">
+                    <div class="acd-head-kicker">
+                        <span class="acd-head-mark" aria-hidden="true"></span>
+                        <span>آکادمی فایلینگ دیوار</span>
+                    </div>
+                    <h1 class="acd-head-title">از اولین فایل تا اولین معامله</h1>
+                    <p class="acd-head-desc">ویدیوهای آشنایی برای مشاوران املاک — قبل از ورود به میزکار.</p>
+                </div>
+            </div>
+        </div>
+        <div class="acd-head-actions">
             {% if user.is_authenticated %}
             <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--primary">ورود به آکادمی میزکار</a>
             <a href="{% url 'workspace:academy_mission' %}" class="acd-btn acd-btn--ghost">شروع ماموریت ۱۵ دقیقه‌ای</a>
             {% else %}
             <a href="{% url 'login' %}?next={% url 'workspace:academy_mission' %}" class="acd-btn acd-btn--primary">ثبت‌نام و شروع</a>
             {% endif %}
-        </p>
+        </div>
     </header>
 
     {% if intro_videos %}
     <section class="acd-paths" aria-labelledby="acd-intro-title">
-        <h2 id="acd-intro-title" class="acd-section-title">مسیر آشنایی</h2>
+        {% include 'workspace/academy/includes/section_header.html' with section_id='acd-intro-title' title='مسیر آشنایی' icon='fa-compass' %}
         <div class="acd-traditional-list">
             {% for item in intro_videos %}
             <article class="acd-traditional-item">
@@ -36,7 +45,7 @@
                     <strong>{{ item.video.title }}</strong>
                     <span>{{ item.video.duration_display }}</span>
                     {% if item.player.available %}
-                    <div style="margin-top: .75rem;" data-acd-video-slug="{{ item.video.slug }}">
+                    <div class="acd-mission-player" data-acd-video-slug="{{ item.video.slug }}">
                         {% include 'includes/mk_video_player.html' with video=item.player variant='academy' show_heading=False show_meta=False %}
                     </div>
                     {% endif %}

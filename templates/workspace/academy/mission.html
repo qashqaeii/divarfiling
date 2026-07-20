@@ -2,14 +2,7 @@
 {% load static %}
 
 {% block academy_content %}
-<header class="acd-hero">
-    <div class="acd-hero-glow" aria-hidden="true"></div>
-    <div class="acd-hero-inner">
-        <span class="acd-hero-kicker"><i class="fas fa-bullseye" aria-hidden="true"></i> ماموریت روز اول</span>
-        <h1 class="acd-hero-title">{{ mission.title }}</h1>
-        <p class="acd-hero-lead">{{ mission.description }}</p>
-    </div>
-</header>
+{% include 'workspace/academy/includes/page_header.html' with variant='mission' kicker='ماموریت روز اول' title=mission.title desc=mission.description %}
 
 {% if completed %}
 <section class="acd-mission-done">
@@ -18,22 +11,6 @@
     <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--primary">بازگشت به آکادمی</a>
 </section>
 {% else %}
-<div class="acd-mission-progress-head">
-    <div class="acd-mission-progress-ring" aria-hidden="true">
-        <svg viewBox="0 0 36 36">
-            <circle class="acd-level-ring-bg" cx="18" cy="18" r="15.5"></circle>
-            <circle class="acd-level-ring-fill" cx="18" cy="18" r="15.5"
-                    stroke-dasharray="97.4"
-                    style="stroke-dashoffset: calc(97.4 - (97.4 * {{ current_step }} / {{ steps|length }}));"></circle>
-        </svg>
-        <span class="acd-mission-progress-ring-label">{{ current_step }}/{{ steps|length }}</span>
-    </div>
-    <div class="acd-mission-progress-text">
-        <strong>قدم {{ current_step }} از {{ steps|length }}</strong>
-        <span>تماشا کن · انجام بده · تأیید کن</span>
-    </div>
-</div>
-
 {% include 'workspace/academy/includes/mission_stepper.html' %}
 {% include 'workspace/academy/includes/mission_step.html' %}
 

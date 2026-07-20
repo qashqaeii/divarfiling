@@ -1,0 +1,72 @@
+{# هدر یکپارچه آکادمی — aligned با ws-tbx-hero / crm-dash-bar
+   params: variant, kicker, title, desc, icon, back_url, back_label #}
+<header class="acd-head acd-head--{{ variant|default:'page' }}"{% if header_id %} id="{{ header_id }}"{% endif %}>
+    {% if back_url %}
+    <a href="{{ back_url }}" class="acd-head-back">
+        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+        <span>{{ back_label|default:"بازگشت" }}</span>
+    </a>
+    {% elif variant != 'home' %}
+    <a href="{% url 'workspace:academy_home' %}" class="acd-head-back">
+        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+        <span>آکادمی</span>
+    </a>
+    {% endif %}
+
+    <div class="acd-head-row">
+        <div class="acd-head-main">
+            {% if icon %}
+            <span class="acd-head-icon" aria-hidden="true"><i class="fas {{ icon }}"></i></span>
+            {% endif %}
+            <div class="acd-head-copy">
+                {% if kicker %}
+                <div class="acd-head-kicker">
+                    <span class="acd-head-mark" aria-hidden="true"></span>
+                    <span>{{ kicker }}</span>
+                </div>
+                {% endif %}
+                <h1 class="acd-head-title">{{ title }}</h1>
+                {% if variant == 'home' %}
+                <p class="acd-head-desc">سلام {{ request.user.get_full_name|default:request.user.username }} — مربی هوشمند شماست تا سریع‌تر و حرفه‌ای‌تر کار کنید.</p>
+                {% elif desc %}
+                <p class="acd-head-desc">{{ desc }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if variant == 'home' %}
+        <div class="acd-head-aside" role="list" aria-label="وضعیت یادگیری">
+            <span class="acd-head-chip" role="listitem"><i class="fas fa-signal" aria-hidden="true"></i> {{ summary.level_label }}</span>
+            {% if summary.mission and not summary.mission_completed %}
+            <span class="acd-head-chip acd-head-chip--accent" role="listitem"><i class="fas fa-bullseye" aria-hidden="true"></i> ماموریت فعال</span>
+            {% endif %}
+            {% if summary.continue_watching %}
+            <span class="acd-head-chip" role="listitem"><i class="fas fa-play" aria-hidden="true"></i> ادامه یادگیری</span>
+            {% endif %}
+        </div>
+
+        {% elif variant == 'mission' and not completed %}
+        <div class="acd-head-aside acd-head-aside--progress" aria-label="پیشرفت ماموریت">
+            <div class="acd-head-progress-ring" aria-hidden="true">
+                <svg viewBox="0 0 36 36">
+                    <circle class="acd-level-ring-bg" cx="18" cy="18" r="15.5"></circle>
+                    <circle class="acd-level-ring-fill" cx="18" cy="18" r="15.5"
+                            stroke-dasharray="97.4"
+                            style="stroke-dashoffset: calc(97.4 - (97.4 * {{ current_step }} / {{ steps|length }}));"></circle>
+                </svg>
+                <span class="acd-head-progress-val">{{ current_step }}/{{ steps|length }}</span>
+            </div>
+            <div class="acd-head-progress-copy">
+                <strong>قدم {{ current_step }}</strong>
+                <span>تماشا · انجام · تأیید</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if meta_count %}
+    <div class="acd-head-meta"><i class="fas fa-film" aria-hidden="true"></i> {{ meta_count }} ویدیو{% if meta_minutes %} · ~{{ meta_minutes }} دقیقه{% endif %}</div>
+    {% elif meta_note %}
+    <div class="acd-head-meta">{{ meta_note }}</div>
+    {% endif %}
+</header>

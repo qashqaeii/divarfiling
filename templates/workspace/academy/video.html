@@ -1,15 +1,18 @@
 {% extends 'workspace/academy/base_academy.html' %}
 
 {% block academy_content %}
+{% if path_ctx %}
+{% include 'workspace/academy/includes/page_header.html' with variant='page' kicker='در حال یادگیری' title=path_ctx.path.title desc=path_ctx.path.description icon=path_ctx.path.icon %}
+{% else %}
+{% include 'workspace/academy/includes/page_header.html' with variant='page' kicker='آموزش' title=video.title desc=video.subtitle icon='fa-circle-play' %}
+{% endif %}
+
 <div class="acd-path-layout{% if not path_ctx %} acd-path-layout--single{% endif %}">
     <main class="acd-path-main">
-        <header class="acd-video-head">
-            <a href="{% url 'workspace:academy_path' slug=video.path.slug %}" class="acd-back-link"><i class="fas fa-arrow-right" aria-hidden="true"></i> {{ video.path.title }}</a>
-            <h1 class="acd-video-title">{{ video.title }}</h1>
-            {% if video.subtitle %}
-            <p class="acd-video-sub">{{ video.subtitle }}</p>
-            {% endif %}
-        </header>
+        {% if path_ctx %}
+        {% url 'workspace:academy_path' slug=video.path.slug as video_path_url %}
+        {% include 'workspace/academy/includes/lesson_header.html' with title=video.title desc='' back_url=video_path_url back_label=video.path.title %}
+        {% endif %}
         {% if player.available %}
         <div class="acd-video-player-wrap" data-acd-video-slug="{{ video.slug }}"{% if context_key %} data-acd-context="{{ context_key }}"{% endif %}>
             {% include 'includes/mk_video_player.html' with video=player variant='academy' show_heading=False show_meta=True %}

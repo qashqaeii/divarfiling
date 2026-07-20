@@ -1,15 +1,7 @@
 {% extends 'workspace/academy/base_academy.html' %}
 
 {% block academy_content %}
-<header class="acd-hero">
-    <div class="acd-hero-glow" aria-hidden="true"></div>
-    <div class="acd-hero-inner">
-        <span class="acd-hero-kicker"><i class="fas fa-compass" aria-hidden="true"></i> مسیر رشد</span>
-        <h1 class="acd-hero-title">{{ path.title }}</h1>
-        <p class="acd-hero-lead">{{ path.description }}</p>
-        <p class="acd-hero-meta"><i class="fas fa-film" aria-hidden="true"></i> {{ items|length }} ویدیو · ~{{ total_minutes }} دقیقه</p>
-    </div>
-</header>
+{% include 'workspace/academy/includes/page_header.html' with variant='page' kicker='مسیر رشد' title=path.title desc=path.description icon='fa-compass' meta_count=items|length meta_minutes=total_minutes %}
 
 <ol class="acd-traditional-list">
     {% for item in items %}

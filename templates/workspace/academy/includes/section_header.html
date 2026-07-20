@@ -1,0 +1,14 @@
+{# هدر بخش — مینیمال با خط accent
+   params: title, desc (optional), icon (optional) #}
+<div class="acd-section-head">
+    <div class="acd-section-label">
+        <span class="acd-section-mark" aria-hidden="true"></span>
+        <h2 class="acd-section-title"{% if section_id %} id="{{ section_id }}"{% endif %}>
+            {% if icon %}<i class="fas {{ icon }}" aria-hidden="true"></i>{% endif %}
+            {{ title }}
+        </h2>
+    </div>
+    {% if desc %}
+    <p class="acd-section-desc">{{ desc }}</p>
+    {% endif %}
+</div>

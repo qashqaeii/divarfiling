@@ -655,25 +655,97 @@ class EducationView(TemplateView):
 
 
 class PublicAcademyView(TemplateView):
-    """صفحه عمومی آکادمی — مسیر آشنایی."""
+    """صفحه عمومی آکادمی — معرفی و لینک به پلی‌لیست."""
     template_name = 'shop/academy.html'
 
     def get_context_data(self, **kwargs):
-        from workspace.academy.models import LearningPath, AcademyVideo
+        from workspace.academy.services.public_playlist_service import (
+            get_public_playlist_sections,
+            playlist_stats,
+        )
         ctx = super().get_context_data(**kwargs)
-        path = LearningPath.objects.filter(slug='intro', is_active=True).first()
-        videos = []
-        if path:
-            videos = list(path.videos.filter(is_public=True, is_active=True).order_by('order'))
-        ctx['intro_path'] = path
-        ctx['intro_videos'] = [
-            {'video': v, 'player': v.to_player_context()} for v in videos
-        ]
+        sections = get_public_playlist_sections()
+        stats = playlist_stats(sections)
+        ctx['playlist_sections'] = sections
+        ctx['playlist_stats'] = stats
         ctx['meta_title'] = 'آکادمی فایلینگ دیوار — از اولین فایل تا اولین معامله'
         ctx['meta_description'] = (
-            'آکادمی فایلینگ دیوار برای مشاوران املاک — ویدیوهای آشنایی، '
-            'شروع سریع و مسیر یادگیری حرفه‌ای.'
+            'آکادمی فایلینگ دیوار برای مشاوران املاک — '
+            f'{stats["video_count"]} ویدیوی آموزشی رایگان، شروع سریع و مسیر یادگیری حرفه‌ای.'
         )
+        ctx['meta_keywords'] = (
+            'آکادمی فایلینگ دیوار, آموزش مشاور املاک, ویدیو آموزشی CRM, '
+            'نرم افزار مشاور املاک, میزکار مشاور'
+        )
+        return ctx
+
+
+class PublicAcademyPlaylistView(TemplateView):
+    """پلی‌لیست عمومی ویدیوهای آکادمی — UI شبیه یوتوب/آپارات."""
+    template_name = 'shop/academy_playlist.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        from workspace.academy.services.public_playlist_service import (
+            get_public_playlist_sections,
+            resolve_public_video,
+        )
+        sections = get_public_playlist_sections()
+        if not sections:
+            from django.http import Http404
+            raise Http404('ویدیوی عمومی یافت نشد.')
+        slug = kwargs.get('slug')
+        active, flat = resolve_public_video(sections, slug)
+        if slug and not active:
+            from django.http import Http404
+            raise Http404('ویدیو یافت نشد.')
+        self._playlist_sections = sections
+        self._playlist_active = active
+        self._playlist_flat = flat
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        if not kwargs.get('slug') and self._playlist_active:
+            from django.shortcuts import redirect
+            return redirect('public_academy_video', slug=self._playlist_active['video'].slug)
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        from shop.academy_playlist_seo import academy_playlist_meta, academy_playlist_schema_json
+        from shop.templatetags.seo_tags import get_site_url
+        from workspace.academy.services.public_playlist_service import playlist_stats, video_item_seo
+
+        ctx = super().get_context_data(**kwargs)
+        sections = self._playlist_sections
+        active = self._playlist_active
+        flat = self._playlist_flat
+        stats = playlist_stats(sections)
+        meta = academy_playlist_meta(active_item=active, sections=sections, stats=stats)
+
+        ctx.update(meta)
+        ctx['playlist_sections'] = sections
+        ctx['playlist_flat'] = flat
+        ctx['active_item'] = active
+        ctx['playlist_stats'] = stats
+        ctx['schema_data'] = academy_playlist_schema_json(
+            self.request, active_item=active, sections=sections, flat_items=flat,
+        )
+        if active:
+            seo = video_item_seo(active, site_url=get_site_url())
+            player = active['player']
+            if seo['poster_url']:
+                ctx['meta_image'] = seo['poster_url']
+            ctx['active_player'] = player
+            ctx['active_video'] = active['video']
+            prev_item = next_item = None
+            for i, item in enumerate(flat):
+                if item['video'].id == active['video'].id:
+                    if i > 0:
+                        prev_item = flat[i - 1]
+                    if i < len(flat) - 1:
+                        next_item = flat[i + 1]
+                    break
+            ctx['prev_item'] = prev_item
+            ctx['next_item'] = next_item
         return ctx
 
 

@@ -38,6 +38,8 @@ class StaticViewSitemap(SiteAwareSitemap):
         'terms': {'changefreq': 'yearly', 'priority': 0.4},
         'license_guide': {'changefreq': 'monthly', 'priority': 0.7},
         'education': {'changefreq': 'monthly', 'priority': 0.7},
+        'public_academy': {'changefreq': 'weekly', 'priority': 0.78},
+        'public_academy_playlist': {'changefreq': 'weekly', 'priority': 0.8},
         'android_tutorial': {'changefreq': 'monthly', 'priority': 0.75},
         'blog:post_list': {'changefreq': 'daily', 'priority': 0.8},
         'author_hossein_qashqaeii': {'changefreq': 'monthly', 'priority': 0.65},
@@ -121,10 +123,28 @@ class PlatformPagesSitemap(SiteAwareSitemap):
         return item.sitemap_priority
 
 
+class AcademyVideoSitemap(SiteAwareSitemap):
+    """ویدیوهای عمومی آکادمی — URL جدا برای SEO."""
+
+    changefreq = 'monthly'
+    priority = 0.72
+
+    def items(self):
+        from workspace.academy.models import AcademyVideo
+        return list(
+            AcademyVideo.objects.filter(is_public=True, is_active=True)
+            .order_by('path__order', 'order', 'id')
+        )
+
+    def location(self, obj):
+        return reverse('public_academy_video', kwargs={'slug': obj.slug})
+
+
 sitemaps = {
     'static': StaticViewSitemap,
     'products': ProductSitemap,
     'blog': BlogPostSitemap,
     'landings': SeoLandingSitemap,
     'platform': PlatformPagesSitemap,
+    'academy_videos': AcademyVideoSitemap,
 }

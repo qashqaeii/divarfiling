@@ -594,6 +594,15 @@ def education_hub_content():
         ],
         'featured': [
             {
+                'icon': 'fa-play-circle',
+                'accent': 'sky',
+                'title': 'پلی‌لیست آکادمی ویدیویی',
+                'desc': 'تمام ویدیوهای آشنایی مشاور املاک در یک پلی‌لیست — مثل یوتوب و آپارات، با URL جدا برای هر درس.',
+                'duration': '۱۵+ دقیقه',
+                'url_name': 'public_academy_playlist',
+                'cta': 'مشاهده پلی‌لیست',
+            },
+            {
                 'icon': 'fa-book-open',
                 'accent': 'emerald',
                 'title': 'راهنمای فعال‌سازی ربات',

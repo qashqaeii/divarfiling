@@ -3,27 +3,51 @@
 
 {% block academy_content %}
 <header class="acd-hero">
-    <span class="acd-hero-kicker"><i class="fas fa-bullseye" aria-hidden="true"></i> ماموریت</span>
-    <h1 class="acd-hero-title">{{ mission.title }}</h1>
-    <p class="acd-hero-lead">{{ mission.description }}</p>
+    <div class="acd-hero-glow" aria-hidden="true"></div>
+    <div class="acd-hero-inner">
+        <span class="acd-hero-kicker"><i class="fas fa-bullseye" aria-hidden="true"></i> ماموریت روز اول</span>
+        <h1 class="acd-hero-title">{{ mission.title }}</h1>
+        <p class="acd-hero-lead">{{ mission.description }}</p>
+    </div>
 </header>
 
 {% if completed %}
 <section class="acd-mission-done">
-    <p><i class="fas fa-check-circle" aria-hidden="true"></i> ماموریت روز اول تکمیل شد.</p>
+    <div class="acd-mission-done-icon" aria-hidden="true"><i class="fas fa-check"></i></div>
+    <p>تبریک! ماموریت روز اول را با موفقیت تکمیل کردید.</p>
     <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--primary">بازگشت به آکادمی</a>
 </section>
 {% else %}
+<div class="acd-mission-progress-head">
+    <div class="acd-mission-progress-ring" aria-hidden="true">
+        <svg viewBox="0 0 36 36">
+            <circle class="acd-level-ring-bg" cx="18" cy="18" r="15.5"></circle>
+            <circle class="acd-level-ring-fill" cx="18" cy="18" r="15.5"
+                    stroke-dasharray="97.4"
+                    style="stroke-dashoffset: calc(97.4 - (97.4 * {{ current_step }} / {{ steps|length }}));"></circle>
+        </svg>
+        <span class="acd-mission-progress-ring-label">{{ current_step }}/{{ steps|length }}</span>
+    </div>
+    <div class="acd-mission-progress-text">
+        <strong>قدم {{ current_step }} از {{ steps|length }}</strong>
+        <span>تماشا کن · انجام بده · تأیید کن</span>
+    </div>
+</div>
+
 {% include 'workspace/academy/includes/mission_stepper.html' %}
 {% include 'workspace/academy/includes/mission_step.html' %}
 
 <nav class="acd-mission-nav" aria-label="ناوبری ماموریت">
     {% if current_step > 1 %}
-    <button type="button" class="acd-btn acd-btn--ghost" data-acd-step-prev>قدم قبل</button>
+    <button type="button" class="acd-btn acd-btn--ghost" data-acd-step-prev>
+        <i class="fas fa-arrow-right" aria-hidden="true"></i> قدم قبل
+    </button>
     {% endif %}
     <span class="acd-mission-nav-spacer"></span>
     {% if current_step < steps|length %}
-    <button type="button" class="acd-btn acd-btn--primary" data-acd-step-next disabled>قدم بعد</button>
+    <button type="button" class="acd-btn acd-btn--primary" data-acd-step-next disabled>
+        قدم بعد <i class="fas fa-arrow-left" aria-hidden="true"></i>
+    </button>
     {% endif %}
 </nav>
 {% endif %}

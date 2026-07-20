@@ -1,12 +1,20 @@
 {% if summary.continue_watching %}
-<section class="acd-continue">
+<section class="acd-continue acd-card">
     <a href="{% url 'workspace:academy_video' slug=summary.continue_watching.video.slug %}" class="acd-continue-link">
         <span class="acd-continue-icon" aria-hidden="true"><i class="fas fa-play"></i></span>
         <span class="acd-continue-body">
-            <strong>ادامه تماشا</strong>
+            <strong>ادامه یادگیری</strong>
             <span>{{ summary.continue_watching.video.title }}</span>
         </span>
         <span class="acd-continue-arrow" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
     </a>
+    {% if summary.continue_watching.video.duration_seconds %}
+    {% widthratio summary.continue_watching.last_position summary.continue_watching.video.duration_seconds 100 as watch_pct %}
+    {% if watch_pct %}
+    <div class="acd-continue-progress" aria-hidden="true">
+        <span style="width: {{ watch_pct }}%"></span>
+    </div>
+    {% endif %}
+    {% endif %}
 </section>
 {% endif %}

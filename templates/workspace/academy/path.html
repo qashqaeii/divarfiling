@@ -6,23 +6,43 @@
         {% if active_video %}
         <header class="acd-video-head">
             <h1 class="acd-video-title">{{ active_video.title }}</h1>
+            {% if active_video.subtitle %}
             <p class="acd-video-sub">{{ active_video.subtitle }}</p>
+            {% endif %}
         </header>
         {% if active_player.available %}
-        <div data-acd-video-slug="{{ active_video.slug }}">
+        <div class="acd-video-player-wrap" data-acd-video-slug="{{ active_video.slug }}">
             {% include 'includes/mk_video_player.html' with video=active_player variant='academy' show_heading=False show_meta=True %}
         </div>
         {% else %}
         <p class="acd-mission-unavailable">این ویدیو به‌زودی اضافه می‌شود.</p>
         {% endif %}
+
+        <div class="acd-video-info">
+            {% if active_video.subtitle %}
+            <div class="acd-video-objective">
+                <span class="acd-video-objective-label"><i class="fas fa-lightbulb" aria-hidden="true"></i> هدف این درس</span>
+                <p>{{ active_video.subtitle }}</p>
+            </div>
+            {% endif %}
+            {% if active_video.action_label %}
+            <div class="acd-video-outcome">
+                <span class="acd-video-outcome-label"><i class="fas fa-flag-checkered" aria-hidden="true"></i> بعد از این درس</span>
+                <p>می‌توانید {{ active_video.action_label|lower }} — همین الان در نرم‌افزار امتحان کنید.</p>
+            </div>
+            {% endif %}
+        </div>
+
         {% if active_video.action_url and active_video.action_label %}
-        <a href="{{ active_video.action_url }}" class="acd-btn acd-btn--primary acd-video-cta" data-acd-cta="1">
+        <a href="{{ active_video.action_url }}" class="acd-btn acd-btn--primary acd-video-cta acd-btn--block" data-acd-cta="1">
             {{ active_video.action_label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
         </a>
         {% endif %}
         {% endif %}
     </main>
+    <div class="acd-path-sidebar">
     {% include 'workspace/academy/includes/playlist_sidebar.html' %}
+    </div>
 </div>
 {% endblock %}
 

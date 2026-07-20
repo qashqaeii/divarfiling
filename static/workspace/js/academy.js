@@ -1,5 +1,5 @@
 /**
- * Academy — video progress, mission steps, contextual dismiss
+ * Academy — video progress, mission steps, contextual dismiss, playlist drawer
  */
 (function () {
     'use strict';
@@ -72,6 +72,39 @@
 
     function initPlayers() {
         document.querySelectorAll('[data-acd-video-slug]').forEach(bindVideoProgress);
+    }
+
+    function initPlaylist() {
+        const toggle = document.querySelector('[data-acd-playlist-toggle]');
+        const playlist = document.getElementById('acdPlaylist');
+        if (!toggle || !playlist) return;
+
+        const isDesktop = function () { return window.matchMedia('(min-width: 960px)').matches; };
+
+        function setOpen(open) {
+            playlist.classList.toggle('is-open', open);
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        toggle.addEventListener('click', function () {
+            setOpen(!playlist.classList.contains('is-open'));
+        });
+
+        if (playlist.querySelector('.acd-playlist-item.is-active')) {
+            setOpen(true);
+        }
+
+        window.addEventListener('resize', function () {
+            if (isDesktop()) {
+                playlist.classList.add('is-open');
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+        });
+
+        if (isDesktop()) {
+            playlist.classList.add('is-open');
+            toggle.setAttribute('aria-expanded', 'true');
+        }
     }
 
     function initContextual() {
@@ -187,17 +220,37 @@
 
         setInterval(pollMission, 8000);
 
+        initBadgeModal();
+    }
+
+    function initBadgeModal() {
+        const modal = document.getElementById('acdBadgeModal');
+        if (!modal || modal.hidden) return;
+
+        document.body.style.overflow = 'hidden';
+
         document.querySelectorAll('[data-acd-close-badge]').forEach(function (el) {
             el.addEventListener('click', function () {
-                const modal = document.getElementById('acdBadgeModal');
-                if (modal) modal.hidden = true;
+                modal.hidden = true;
+                document.body.style.overflow = '';
             });
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.hidden) {
+                modal.hidden = true;
+                document.body.style.overflow = '';
+            }
         });
     }
 
     document.addEventListener('DOMContentLoaded', function () {
         initPlayers();
+        initPlaylist();
         initContextual();
         initMission();
+        if (!window.acdMissionConfig) {
+            initBadgeModal();
+        }
     });
 })();

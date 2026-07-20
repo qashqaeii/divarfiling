@@ -2,18 +2,33 @@
 
 {% block academy_content %}
 <header class="acd-hero">
-    <span class="acd-hero-kicker"><i class="fas fa-graduation-cap" aria-hidden="true"></i> آکادمی فایلینگ دیوار</span>
-    <h1 class="acd-hero-title">از اولین فایل تا اولین معامله</h1>
-    <p class="acd-hero-lead">سلام {{ request.user.get_full_name|default:request.user.username }} — برای شروع فقط ۱۵ دقیقه زمان لازم داری.</p>
+    <div class="acd-hero-glow" aria-hidden="true"></div>
+    <div class="acd-hero-inner">
+        <span class="acd-hero-kicker"><i class="fas fa-graduation-cap" aria-hidden="true"></i> آکادمی فایلینگ دیوار</span>
+        <h1 class="acd-hero-title">از اولین فایل تا اولین معامله</h1>
+        <p class="acd-hero-lead">سلام {{ request.user.get_full_name|default:request.user.username }} — مربی هوشمند شماست تا سریع‌تر و حرفه‌ای‌تر کار کنید.</p>
+        <div class="acd-hero-stats">
+            <span class="acd-hero-stat"><i class="fas fa-signal" aria-hidden="true"></i> {{ summary.level_label }}</span>
+            {% if summary.mission and not summary.mission_completed %}
+            <span class="acd-hero-stat"><i class="fas fa-bullseye" aria-hidden="true"></i> ماموریت فعال</span>
+            {% endif %}
+            {% if summary.continue_watching %}
+            <span class="acd-hero-stat"><i class="fas fa-play" aria-hidden="true"></i> ادامه یادگیری</span>
+            {% endif %}
+        </div>
+    </div>
 </header>
 
 {% include 'workspace/academy/includes/progress_card.html' %}
 {% include 'workspace/academy/includes/mission_card.html' %}
-{% include 'workspace/academy/includes/traditional_card.html' %}
 {% include 'workspace/academy/includes/continue_card.html' %}
+{% include 'workspace/academy/includes/traditional_card.html' %}
 
 <section class="acd-paths" aria-labelledby="acd-paths-title">
-    <h2 id="acd-paths-title" class="acd-section-title"><i class="fas fa-route" aria-hidden="true"></i> مسیرهای یادگیری</h2>
+    <div class="acd-section-head">
+        <h2 id="acd-paths-title" class="acd-section-title"><i class="fas fa-route" aria-hidden="true"></i> مسیرهای رشد</h2>
+    </div>
+    <p class="acd-section-sub">هر مسیر، یک مهارت جدید برای مشاور حرفه‌ای — قدم‌به‌قدم پیش بروید.</p>
     <div class="acd-paths-grid">
         {% for item in paths %}
         {% include 'workspace/academy/includes/path_card.html' %}

@@ -4,8 +4,10 @@
             class="acd-stepper-item{% if item.is_done %} is-done{% elif item.is_current %} is-current{% endif %}"
             data-acd-step="{{ item.step.order }}"
             aria-current="{% if item.is_current %}step{% else %}false{% endif %}">
-        <span class="acd-stepper-num">{{ item.step.order }}</span>
-        <span class="acd-stepper-label">{{ item.video.title|truncatechars:24 }}</span>
+        <span class="acd-stepper-num">
+            {% if item.is_done %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}{{ item.step.order }}{% endif %}
+        </span>
+        <span class="acd-stepper-label">{{ item.video.title|truncatechars:20 }}</span>
     </button>
     {% if not forloop.last %}<span class="acd-stepper-line" aria-hidden="true"></span>{% endif %}
     {% endfor %}

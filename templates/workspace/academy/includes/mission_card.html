@@ -1,15 +1,23 @@
 {% if summary.mission and not summary.mission_completed %}
-<section class="acd-mission-card">
+<section class="acd-mission-card acd-card">
     <div class="acd-mission-card-head">
         <span class="acd-mission-icon" aria-hidden="true"><i class="fas fa-bullseye"></i></span>
         <div>
             <h2 class="acd-mission-card-title">ماموریت روز اول</h2>
-            <p class="acd-mission-card-meta">{{ summary.mission.done_steps }} از {{ summary.mission.total_steps }} قدم — ~۱۵ دقیقه</p>
+            <p class="acd-mission-card-meta">قدم {{ summary.mission.current_step }} از {{ summary.mission.total_steps }} — حدود ۱۵ دقیقه تا آماده‌شدن کامل</p>
         </div>
     </div>
-    <div class="acd-mission-bar" role="progressbar" aria-valuenow="{{ summary.mission.percent }}" aria-valuemin="0" aria-valuemax="100">
-        <span style="width: {{ summary.mission.percent }}%"></span>
+    <div class="acd-mission-bar-wrap">
+        <div class="acd-mission-bar" role="progressbar" aria-valuenow="{{ summary.mission.percent }}" aria-valuemin="0" aria-valuemax="100">
+            <span style="width: {{ summary.mission.percent }}%"></span>
+        </div>
+        <div class="acd-mission-bar-label">
+            <span>{{ summary.mission.done_steps }} قدم انجام شده</span>
+            <span>{{ summary.mission.percent }}٪</span>
+        </div>
     </div>
-    <a href="{% url 'workspace:academy_mission' %}" class="acd-btn acd-btn--primary">ادامه ماموریت</a>
+    <a href="{% url 'workspace:academy_mission' %}" class="acd-btn acd-btn--primary acd-btn--block">
+        <i class="fas fa-play" aria-hidden="true"></i> ادامه ماموریت
+    </a>
 </section>
 {% endif %}

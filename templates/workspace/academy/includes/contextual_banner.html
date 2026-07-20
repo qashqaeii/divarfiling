@@ -1,15 +1,18 @@
 {% if academy_contextual %}
-<section class="acd-contextual" data-acd-contextual="{{ academy_contextual.key }}" aria-label="آموزش">
+<section class="acd-contextual" data-acd-contextual="{{ academy_contextual.key }}" aria-label="راهنمای لحظه‌ای">
     <div class="acd-contextual-body">
-        <span class="acd-contextual-icon" aria-hidden="true"><i class="fas fa-circle-play"></i></span>
+        <span class="acd-contextual-avatar" aria-hidden="true"><i class="fas fa-user-tie"></i></span>
         <div>
+            <span class="acd-contextual-kicker">مربی فایلینگ دیوار</span>
             <strong class="acd-contextual-title">{{ academy_contextual.title }}</strong>
-            <p class="acd-contextual-msg">{{ academy_contextual.message }} — {{ academy_contextual.duration_display }}</p>
+            <p class="acd-contextual-msg">{{ academy_contextual.message }} · {{ academy_contextual.duration_display }}</p>
         </div>
     </div>
     <div class="acd-contextual-actions">
-        <a href="{{ academy_contextual.video_url }}" class="acd-btn acd-btn--primary acd-btn--sm">مشاهده آموزش</a>
-        <button type="button" class="acd-btn acd-btn--ghost acd-btn--sm" data-acd-dismiss-contextual="{{ academy_contextual.key }}">رد کردن</button>
+        <a href="{{ academy_contextual.video_url }}" class="acd-btn acd-btn--primary acd-btn--sm">
+            <i class="fas fa-circle-play" aria-hidden="true"></i> مشاهده آموزش
+        </a>
+        <button type="button" class="acd-btn acd-btn--ghost acd-btn--sm" data-acd-dismiss-contextual="{{ academy_contextual.key }}">بعداً</button>
     </div>
 </section>
 {% endif %}

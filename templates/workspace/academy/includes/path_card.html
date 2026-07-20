@@ -1,16 +1,42 @@
 <article class="acd-path-card{% if item.locked %} is-locked{% endif %}">
-    <div class="acd-path-card-icon" aria-hidden="true"><i class="fas {{ item.path.icon }}"></i></div>
-    <div class="acd-path-card-body">
-        <h3 class="acd-path-card-title">{{ item.path.title }}</h3>
-        <p class="acd-path-card-desc">{{ item.path.description|truncatechars:80 }}</p>
-        <p class="acd-path-card-meta">{{ item.done_count }}/{{ item.video_count }} ویدیو</p>
-        {% if item.percent %}
-        <div class="acd-path-mini-bar"><span style="width: {{ item.percent }}%"></span></div>
+    <div class="acd-path-card-top">
+        <div class="acd-path-card-icon" aria-hidden="true"><i class="fas {{ item.path.icon }}"></i></div>
+        <div class="acd-path-card-body">
+            <h3 class="acd-path-card-title">{{ item.path.title }}</h3>
+            <p class="acd-path-card-desc">{{ item.path.description|truncatechars:90 }}</p>
+        </div>
+    </div>
+    {% if not item.locked and item.video_count %}
+    <div class="acd-path-card-progress">
+        <div class="acd-path-mini-bar" role="progressbar" aria-valuenow="{{ item.percent }}" aria-valuemin="0" aria-valuemax="100">
+            <span style="width: {{ item.percent }}%"></span>
+        </div>
+        <span class="acd-path-card-percent">{{ item.percent }}٪</span>
+    </div>
+    <div class="acd-path-roadmap" aria-hidden="true">
+        {% for v in item.path.videos.all %}
+        {% if v.is_active %}
+        <span class="acd-path-roadmap-dot{% if forloop.counter <= item.done_count %} is-done{% elif forloop.counter == item.done_count|add:1 %} is-current{% endif %}"></span>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="acd-path-card-footer">
+        <p class="acd-path-card-meta">
+            {% if not item.locked %}
+            <span class="acd-path-meta-done">{{ item.done_count }} انجام‌شده</span>
+            <span>·</span>
+            <span>{{ item.video_count }} ویدیو</span>
+            {% else %}
+            <span>به‌زودی در دسترس</span>
+            {% endif %}
+        </p>
+        {% if item.locked %}
+        <span class="acd-path-lock"><i class="fas fa-lock" aria-hidden="true"></i></span>
+        {% else %}
+        <a href="{% url 'workspace:academy_path' slug=item.path.slug %}" class="acd-path-card-link">
+            ادامه مسیر <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        </a>
         {% endif %}
     </div>
-    {% if item.locked %}
-    <span class="acd-path-lock"><i class="fas fa-lock" aria-hidden="true"></i> به‌زودی</span>
-    {% else %}
-    <a href="{% url 'workspace:academy_path' slug=item.path.slug %}" class="acd-path-card-link">مشاهده مسیر</a>
-    {% endif %}
 </article>

@@ -1,22 +1,38 @@
-<section class="acd-progress" aria-labelledby="acd-progress-title">
+<section class="acd-progress acd-card" aria-labelledby="acd-progress-title">
     <div class="acd-progress-main">
-        <span class="acd-kicker"><i class="fas fa-signal" aria-hidden="true"></i> وضعیت یادگیری</span>
-        <h2 id="acd-progress-title" class="acd-progress-title">سطح شما: {{ summary.level_label }}</h2>
-        <div class="acd-level-dots" aria-label="سطح {{ summary.level }} از {{ summary.max_level }}">
-            {% for i in "12345" %}
-            <span class="acd-dot{% if forloop.counter <= summary.level %} is-on{% endif %}" aria-hidden="true"></span>
-            {% endfor %}
+        <span class="acd-kicker"><i class="fas fa-chart-line" aria-hidden="true"></i> پیشرفت شما</span>
+        <div class="acd-progress-header">
+            {% widthratio summary.level summary.max_level 100 as level_pct %}
+            <div class="acd-level-ring" aria-hidden="true">
+                <svg viewBox="0 0 36 36">
+                    <circle class="acd-level-ring-bg" cx="18" cy="18" r="15.5"></circle>
+                    <circle class="acd-level-ring-fill" cx="18" cy="18" r="15.5"
+                            stroke-dasharray="97.4"
+                            style="stroke-dashoffset: calc(97.4 - (97.4 * {{ summary.level }} / {{ summary.max_level }}));"></circle>
+                </svg>
+                <span class="acd-level-ring-label">{{ summary.level }}</span>
+            </div>
+            <div>
+                <h2 id="acd-progress-title" class="acd-progress-title">سطح {{ summary.level }} — {{ summary.level_label }}</h2>
+                <div class="acd-level-dots" aria-label="سطح {{ summary.level }} از {{ summary.max_level }}">
+                    {% for i in "12345" %}
+                    <span class="acd-dot{% if forloop.counter <= summary.level %} is-on{% endif %}" aria-hidden="true"></span>
+                    {% endfor %}
+                </div>
+                {% if summary.level < summary.max_level %}
+                <p class="acd-progress-eta"><i class="fas fa-clock" aria-hidden="true"></i> حدود {{ summary.eta_minutes }} دقیقه تا سطح بعدی</p>
+                {% else %}
+                <p class="acd-progress-eta"><i class="fas fa-star" aria-hidden="true"></i> همه مسیرهای MVP را تکمیل کرده‌اید</p>
+                {% endif %}
+            </div>
         </div>
-        {% if summary.level < summary.max_level %}
-        <p class="acd-progress-eta">حدود {{ summary.eta_minutes }} دقیقه تا سطح بعدی</p>
-        {% else %}
-        <p class="acd-progress-eta">همه مسیرهای MVP را تکمیل کرده‌اید</p>
-        {% endif %}
     </div>
-    <div class="acd-badges" aria-label="نشان‌ها">
+    <div class="acd-badges" aria-label="نشان‌ها و دستاوردها">
         {% for badge in summary.badges_all %}
-        <span class="acd-badge-chip{% if badge.slug in summary.earned_slugs %} is-earned{% else %} is-locked{% endif %}" title="{{ badge.description }}">
-            <i class="fas {{ badge.icon }}" aria-hidden="true"></i> {{ badge.title }}
+        <span class="acd-badge-chip{% if badge.slug in summary.earned_slugs %} is-earned{% elif badge.level <= summary.level %} is-progress{% else %} is-locked{% endif %}"
+              title="{{ badge.description }}">
+            <span class="acd-badge-chip-icon" aria-hidden="true"><i class="fas {{ badge.icon }}"></i></span>
+            <span class="acd-badge-chip-label">{{ badge.title }}</span>
         </span>
         {% endfor %}
     </div>

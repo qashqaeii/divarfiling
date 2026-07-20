@@ -1,28 +1,48 @@
 {% extends 'workspace/academy/base_academy.html' %}
 
 {% block academy_content %}
-<div class="acd-path-layout acd-path-layout--single">
+<div class="acd-path-layout{% if not path_ctx %} acd-path-layout--single{% endif %}">
     <main class="acd-path-main">
         <header class="acd-video-head">
             <a href="{% url 'workspace:academy_path' slug=video.path.slug %}" class="acd-back-link"><i class="fas fa-arrow-right" aria-hidden="true"></i> {{ video.path.title }}</a>
             <h1 class="acd-video-title">{{ video.title }}</h1>
+            {% if video.subtitle %}
             <p class="acd-video-sub">{{ video.subtitle }}</p>
+            {% endif %}
         </header>
         {% if player.available %}
-        <div data-acd-video-slug="{{ video.slug }}"{% if context_key %} data-acd-context="{{ context_key }}"{% endif %}>
+        <div class="acd-video-player-wrap" data-acd-video-slug="{{ video.slug }}"{% if context_key %} data-acd-context="{{ context_key }}"{% endif %}>
             {% include 'includes/mk_video_player.html' with video=player variant='academy' show_heading=False show_meta=True %}
         </div>
         {% else %}
         <p class="acd-mission-unavailable">این ویدیو به‌زودی اضافه می‌شود.</p>
         {% endif %}
+
+        <div class="acd-video-info">
+            {% if video.subtitle %}
+            <div class="acd-video-objective">
+                <span class="acd-video-objective-label"><i class="fas fa-lightbulb" aria-hidden="true"></i> هدف این درس</span>
+                <p>{{ video.subtitle }}</p>
+            </div>
+            {% endif %}
+            {% if video.action_label %}
+            <div class="acd-video-outcome">
+                <span class="acd-video-outcome-label"><i class="fas fa-flag-checkered" aria-hidden="true"></i> بعد از این درس</span>
+                <p>می‌توانید {{ video.action_label|lower }} — همین الان در نرم‌افزار امتحان کنید.</p>
+            </div>
+            {% endif %}
+        </div>
+
         {% if video.action_url and video.action_label %}
-        <a href="{{ video.action_url }}" class="acd-btn acd-btn--primary acd-video-cta" data-acd-cta="1">
+        <a href="{{ video.action_url }}" class="acd-btn acd-btn--primary acd-video-cta acd-btn--block" data-acd-cta="1">
             {{ video.action_label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
         </a>
         {% endif %}
     </main>
     {% if path_ctx %}
+    <div class="acd-path-sidebar">
     {% include 'workspace/academy/includes/playlist_sidebar.html' with path=path_ctx.path items=path_ctx.items %}
+    </div>
     {% endif %}
 </div>
 {% endblock %}

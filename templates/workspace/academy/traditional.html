@@ -2,21 +2,28 @@
 
 {% block academy_content %}
 <header class="acd-hero">
-    <span class="acd-hero-kicker"><i class="fas fa-compass" aria-hidden="true"></i> مسیر مشاور سنتی</span>
-    <h1 class="acd-hero-title">{{ path.title }}</h1>
-    <p class="acd-hero-lead">{{ path.description }}</p>
-    <p class="acd-hero-meta">{{ items|length }} ویدیو | ~{{ total_minutes }} دقیقه</p>
+    <div class="acd-hero-glow" aria-hidden="true"></div>
+    <div class="acd-hero-inner">
+        <span class="acd-hero-kicker"><i class="fas fa-compass" aria-hidden="true"></i> مسیر رشد</span>
+        <h1 class="acd-hero-title">{{ path.title }}</h1>
+        <p class="acd-hero-lead">{{ path.description }}</p>
+        <p class="acd-hero-meta"><i class="fas fa-film" aria-hidden="true"></i> {{ items|length }} ویدیو · ~{{ total_minutes }} دقیقه</p>
+    </div>
 </header>
 
 <ol class="acd-traditional-list">
     {% for item in items %}
     <li class="acd-traditional-item{% if item.completed %} is-done{% endif %}">
-        <span class="acd-traditional-num">{{ forloop.counter }}</span>
+        <span class="acd-traditional-num">
+            {% if item.completed %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}{{ forloop.counter }}{% endif %}
+        </span>
         <div class="acd-traditional-body">
             <strong>{{ item.video.title }}</strong>
             <span>{{ item.video.duration_display }}</span>
         </div>
-        <a href="{% url 'workspace:academy_video' slug=item.video.slug %}" class="acd-btn acd-btn--ghost">مشاهده</a>
+        <a href="{% url 'workspace:academy_video' slug=item.video.slug %}" class="acd-btn acd-btn--{% if item.completed %}ghost{% else %}primary{% endif %} acd-btn--sm">
+            {% if item.completed %}مرور{% else %}مشاهده{% endif %}
+        </a>
     </li>
     {% endfor %}
 </ol>

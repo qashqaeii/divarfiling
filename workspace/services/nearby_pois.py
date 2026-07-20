@@ -17,7 +17,7 @@ from workspace.services.listing_map import parse_map_coordinates
 
 logger = logging.getLogger(__name__)
 
-PAYLOAD_VERSION = 2
+PAYLOAD_VERSION = 3
 
 DEFAULT_OVERPASS_URLS = (
     'https://overpass-api.de/api/interpreter',
@@ -55,6 +55,38 @@ POI_CATEGORIES: Tuple[Dict[str, Any], ...] = (
         'overpass': ('nwr["highway"="bus_stop"]',),
     },
     {
+        'key': 'motorway', 'group': 'transport', 'label': 'بزرگراه', 'icon': 'fa-road',
+        'color': '#1e3a8a', 'fallback_name': 'بزرگراه / آزادراه',
+        'match': (
+            {'highway': 'motorway'},
+            {'highway': 'motorway_link'},
+        ),
+        'overpass': (
+            'nwr["highway"="motorway"]',
+            'nwr["highway"="motorway_link"]',
+        ),
+    },
+    {
+        'key': 'main_road', 'group': 'transport', 'label': 'معبر اصلی', 'icon': 'fa-road-circle-check',
+        'color': '#1d4ed8', 'fallback_name': 'خیابان / جاده اصلی',
+        'match': (
+            {'highway': 'trunk'},
+            {'highway': 'primary'},
+            {'highway': 'secondary'},
+        ),
+        'overpass': (
+            'nwr["highway"="trunk"]',
+            'nwr["highway"="primary"]',
+            'nwr["highway"="secondary"]',
+        ),
+    },
+    {
+        'key': 'street_type', 'group': 'transport', 'label': 'نوع معبر', 'icon': 'fa-road-barrier',
+        'color': '#475569', 'fallback_name': 'معبر',
+        'kind': 'street',
+        'overpass': (),
+    },
+    {
         'key': 'supermarket', 'group': 'daily', 'label': 'سوپرمارکت', 'icon': 'fa-cart-shopping',
         'color': '#0891b2', 'fallback_name': 'فروشگاه',
         'match': ({'shop': 'supermarket'}, {'shop': 'convenience'}, {'shop': 'general'}),
@@ -82,6 +114,23 @@ POI_CATEGORIES: Tuple[Dict[str, Any], ...] = (
         'overpass': ('nwr["amenity"="atm"]',),
     },
     {
+        'key': 'fuel', 'group': 'daily', 'label': 'پمپ بنزین', 'icon': 'fa-gas-pump',
+        'color': '#c2410c', 'fallback_name': 'پمپ بنزین',
+        'match': ({'amenity': 'fuel'},),
+        'overpass': ('nwr["amenity"="fuel"]',),
+    },
+    {
+        'key': 'parking', 'group': 'daily', 'label': 'پارکینگ عمومی', 'icon': 'fa-square-parking',
+        'color': '#4f46e5', 'fallback_name': 'پارکینگ',
+        'match': ({'amenity': 'parking'},),
+        'exclude_match': (
+            {'access': 'private'},
+            {'parking': 'private'},
+            {'access': 'customers'},
+        ),
+        'overpass': ('nwr["amenity"="parking"]',),
+    },
+    {
         'key': 'pharmacy', 'group': 'health', 'label': 'داروخانه', 'icon': 'fa-prescription-bottle-medical',
         'color': '#db2777', 'fallback_name': 'داروخانه',
         'match': ({'amenity': 'pharmacy'},),
@@ -89,11 +138,21 @@ POI_CATEGORIES: Tuple[Dict[str, Any], ...] = (
     },
     {
         'key': 'hospital', 'group': 'health', 'label': 'بیمارستان', 'icon': 'fa-hospital',
-        'color': '#dc2626', 'fallback_name': 'مرکز درمانی',
-        'match': ({'amenity': 'hospital'}, {'amenity': 'clinic'}, {'healthcare': 'hospital'}),
+        'color': '#dc2626', 'fallback_name': 'بیمارستان',
+        'match': ({'amenity': 'hospital'}, {'healthcare': 'hospital'}),
+        'overpass': ('nwr["amenity"="hospital"]',),
+    },
+    {
+        'key': 'clinic', 'group': 'health', 'label': 'کلینیک', 'icon': 'fa-stethoscope',
+        'color': '#e11d48', 'fallback_name': 'کلینیک / درمانگاه',
+        'match': (
+            {'amenity': 'clinic'},
+            {'healthcare': 'clinic'},
+            {'amenity': 'doctors'},
+        ),
         'overpass': (
-            'nwr["amenity"="hospital"]',
             'nwr["amenity"="clinic"]',
+            'nwr["amenity"="doctors"]',
         ),
     },
     {
@@ -218,6 +277,34 @@ def _search_radius_m() -> int:
     return int(getattr(settings, 'NEARBY_POI_SEARCH_RADIUS_M', 3000))
 
 
+def _street_type_radius_m() -> int:
+    return int(getattr(settings, 'NEARBY_POI_STREET_RADIUS_M', 120))
+
+
+HIGHWAY_TYPE_LABELS: Dict[str, str] = {
+    'motorway': 'بزرگراه',
+    'motorway_link': 'رابط بزرگراه',
+    'trunk': 'جاده اصلی',
+    'primary': 'خیابان اصلی',
+    'primary_link': 'رابط خیابان اصلی',
+    'secondary': 'خیابان فرعی مهم',
+    'secondary_link': 'رابط خیابان فرعی',
+    'tertiary': 'خیابان محلی',
+    'tertiary_link': 'رابط محلی',
+    'residential': 'کوچه مسکونی',
+    'living_street': 'کوچه مسکونی',
+    'unclassified': 'معبر محلی',
+    'service': 'کوچه/service',
+    'road': 'معبر',
+    'track': 'مسیر دسترسی',
+}
+
+SKIP_STREET_HIGHWAY = frozenset({
+    'footway', 'path', 'steps', 'cycleway', 'pedestrian', 'bridleway',
+    'corridor', 'elevator', 'proposed', 'construction', 'bus_guideway',
+})
+
+
 def _overpass_timeout() -> int:
     return int(getattr(settings, 'NEARBY_POI_OVERPASS_TIMEOUT', 30))
 
@@ -289,10 +376,113 @@ def _tags_match(tags: Dict[str, str], required: Dict[str, str]) -> bool:
 
 
 def _element_matches_category(tags: Dict[str, str], category: Dict[str, Any]) -> bool:
+    for rule in category.get('exclude_match') or ():
+        if _tags_match(tags, rule):
+            return False
     for rule in category.get('match') or ():
         if _tags_match(tags, rule):
             return True
     return False
+
+
+def _highway_type_label(highway: str) -> str:
+    return HIGHWAY_TYPE_LABELS.get(highway or '', 'معبر')
+
+
+def _parse_width_m(raw: str) -> Optional[int]:
+    text = (raw or '').strip().lower().replace(',', '.')
+    if not text:
+        return None
+    for suffix in (' m', 'm', ' meters', ' metre', ' metres'):
+        if text.endswith(suffix):
+            text = text[:-len(suffix)].strip()
+            break
+    try:
+        val = float(text)
+    except ValueError:
+        return None
+    if val <= 0 or val > 200:
+        return None
+    return int(round(val))
+
+
+def _street_width_label(tags: Dict[str, str]) -> str:
+    for key in ('width', 'est_width'):
+        parsed = _parse_width_m(str(tags.get(key) or ''))
+        if parsed:
+            return f'عرض {to_persian_digits(parsed)} متر'
+    lanes = tags.get('lanes')
+    if lanes and str(lanes).isdigit():
+        n = int(lanes)
+        if 1 <= n <= 8:
+            return f'{to_persian_digits(n)} لاین'
+    return ''
+
+
+def _street_type_name(tags: Dict[str, str]) -> str:
+    highway = (tags.get('highway') or '').strip()
+    base = _highway_type_label(highway)
+    width_part = _street_width_label(tags)
+    if width_part:
+        return f'{base} · {width_part}'
+    return base
+
+
+def _resolve_street_type_item(
+    lat: float,
+    lng: float,
+    elements: Sequence[Dict[str, Any]],
+    category: Dict[str, Any],
+) -> NearbyPoiItem:
+    group_key = category['group']
+    street_radius = _street_type_radius_m()
+    empty_label = _radius_empty_label(street_radius)
+    best_dist = float('inf')
+    best_tags: Dict[str, str] = {}
+
+    for element in elements:
+        tags = element.get('tags') or {}
+        highway = (tags.get('highway') or '').strip()
+        if not highway or highway in SKIP_STREET_HIGHWAY:
+            continue
+        coords = _element_coords(element)
+        if not coords:
+            continue
+        el_lat, el_lng = coords
+        dist = haversine_m(lat, lng, el_lat, el_lng)
+        if dist > street_radius or dist >= best_dist:
+            continue
+        best_dist = dist
+        best_tags = tags
+
+    if best_dist == float('inf'):
+        return NearbyPoiItem(
+            key=category['key'],
+            group=group_key,
+            group_label=_GROUP_LABELS.get(group_key, group_key),
+            label=category['label'],
+            icon=category['icon'],
+            color=category['color'],
+            found=False,
+            empty_label=empty_label,
+        )
+
+    dist_m = int(round(best_dist))
+    name = _street_type_name(best_tags)
+    dist_label = 'جلوی ملک' if dist_m <= 20 else format_distance_label(best_dist)
+    return NearbyPoiItem(
+        key=category['key'],
+        group=group_key,
+        group_label=_GROUP_LABELS.get(group_key, group_key),
+        label=category['label'],
+        icon=category['icon'],
+        color=category['color'],
+        found=True,
+        name=name,
+        distance_m=dist_m,
+        distance_label=dist_label,
+        walk_label=estimate_walk_label(best_dist) if dist_m > 20 else '',
+    )
 
 
 def _element_name(tags: Dict[str, str], fallback: str) -> str:
@@ -313,6 +503,10 @@ def build_overpass_query(lat: float, lng: float, *, radius_m: Optional[int] = No
                 continue
             seen.add(selector)
             selectors.append(f'  {selector}(around:{radius},{lat},{lng});')
+    street_r = _street_type_radius_m()
+    street_sel = f'way["highway"](around:{street_r},{lat},{lng});'
+    if street_sel not in seen:
+        selectors.append(f'  {street_sel}')
     body = '\n'.join(selectors)
     timeout = _overpass_timeout()
     return (
@@ -390,6 +584,10 @@ def resolve_nearby_items(
 
     for category in POI_CATEGORIES:
         group_key = category['group']
+        if category.get('kind') == 'street':
+            items.append(_resolve_street_type_item(lat, lng, elements, category))
+            continue
+
         best_dist = float('inf')
         best_name = ''
         for element in elements:

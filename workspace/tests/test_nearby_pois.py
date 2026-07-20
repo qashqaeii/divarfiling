@@ -78,7 +78,92 @@ class NearbyPoisServiceTests(TestCase):
         self.assertIn('highway"="bus_stop"', q)
         self.assertIn('place_of_worship"', q)
         self.assertIn('building"="mosque"', q)
+        self.assertIn('highway"="motorway"', q)
+        self.assertIn('amenity"="fuel"', q)
+        self.assertIn('amenity"="parking"', q)
+        self.assertIn('way["highway"](around:120,35.7,51.4);', q)
         self.assertIn('around:3000,35.7,51.4', q)
+
+    def test_resolve_v3_transport_and_daily_categories(self):
+        elements = [
+            {
+                'type': 'way', 'center': {'lat': 35.7578, 'lon': 51.4102},
+                'tags': {'highway': 'motorway', 'name': 'آزادراه همت'},
+            },
+            {
+                'type': 'way', 'center': {'lat': 35.7576, 'lon': 51.4101},
+                'tags': {'highway': 'primary', 'name': 'ولیعصر'},
+            },
+            {
+                'type': 'node', 'lat': 35.7582, 'lon': 51.4103,
+                'tags': {'amenity': 'fuel', 'name': 'پمپ بنزین ونک'},
+            },
+            {
+                'type': 'node', 'lat': 35.7583, 'lon': 51.4104,
+                'tags': {'amenity': 'parking', 'name': 'پارکینگ عمومی'},
+            },
+            {
+                'type': 'node', 'lat': 35.7584, 'lon': 51.4105,
+                'tags': {'amenity': 'parking', 'access': 'private', 'name': 'پارکینگ خصوصی'},
+            },
+            {
+                'type': 'node', 'lat': 35.7585, 'lon': 51.4106,
+                'tags': {'amenity': 'clinic', 'name': 'کلینیک سلامت'},
+            },
+        ]
+        items = resolve_nearby_items(35.7575, 51.4100, elements, radius_m=5000)
+        by_key = {item.key: item for item in items}
+        self.assertTrue(by_key['motorway'].found)
+        self.assertTrue(by_key['main_road'].found)
+        self.assertTrue(by_key['fuel'].found)
+        self.assertTrue(by_key['parking'].found)
+        self.assertEqual(by_key['parking'].name, 'پارکینگ عمومی')
+        self.assertTrue(by_key['clinic'].found)
+        self.assertFalse(by_key['hospital'].found)
+
+    def test_street_type_uses_small_radius_and_width(self):
+        elements = [
+            {
+                'type': 'way', 'center': {'lat': 35.75752, 'lon': 51.41002},
+                'tags': {'highway': 'residential', 'width': '8'},
+            },
+            {
+                'type': 'way', 'center': {'lat': 35.7590, 'lon': 51.4110},
+                'tags': {'highway': 'primary', 'lanes': '4'},
+            },
+        ]
+        items = resolve_nearby_items(35.7575, 51.4100, elements, radius_m=5000)
+        street = next(i for i in items if i.key == 'street_type')
+        self.assertTrue(street.found)
+        self.assertIn('کوچه مسکونی', street.name)
+        self.assertIn('عرض', street.name)
+        self.assertEqual(street.distance_label, 'جلوی ملک')
+
+    def test_old_payload_version_invalid(self):
+        prop = CRMProperty(
+            latitude=35.7575,
+            longitude=51.4100,
+            nearby_pois={
+                'version': 2,
+                'coords': {'lat': 35.7575, 'lng': 51.4100},
+                'radius_m': 3000,
+                'items': [{'key': 'metro', 'found': True}],
+            },
+        )
+        self.assertFalse(stored_nearby_pois_valid(prop))
+
+    def test_old_payload_version_one_invalid(self):
+        prop = CRMProperty(
+            latitude=35.7575,
+            longitude=51.4100,
+            nearby_pois={
+                'version': 1,
+                'coords': {'lat': 35.7575, 'lng': 51.4100},
+                'radius_m': 3000,
+                'items': [{'key': 'metro', 'found': True}],
+            },
+        )
+        self.assertFalse(stored_nearby_pois_valid(prop))
 
     def test_resolve_nearby_items_picks_nearest(self):
         items = resolve_nearby_items(35.7575, 51.4100, _sample_elements(), radius_m=5000)
@@ -109,19 +194,6 @@ class NearbyPoisServiceTests(TestCase):
         )
         self.assertTrue(stored_nearby_pois_valid(prop))
         prop.longitude = 51.4200
-        self.assertFalse(stored_nearby_pois_valid(prop))
-
-    def test_old_payload_version_invalid(self):
-        prop = CRMProperty(
-            latitude=35.7575,
-            longitude=51.4100,
-            nearby_pois={
-                'version': 1,
-                'coords': {'lat': 35.7575, 'lng': 51.4100},
-                'radius_m': 3000,
-                'items': [{'key': 'metro', 'found': True}],
-            },
-        )
         self.assertFalse(stored_nearby_pois_valid(prop))
 
     @patch('workspace.services.nearby_pois.fetch_overpass_elements')

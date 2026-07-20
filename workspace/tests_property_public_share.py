@@ -6,6 +6,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from workspace.models import CRMProperty, CRMPropertyPublicShare
+from workspace.services.nearby_pois import PAYLOAD_VERSION
 from workspace.services.property_public_share import (
     build_public_property_context,
     get_or_create_property_share,
@@ -536,7 +537,7 @@ class PropertyPublicNearbyPoisTests(TestCase):
 
     def _sample_nearby_payload(self):
         return {
-            'version': 2,
+            'version': PAYLOAD_VERSION,
             'coords': {'lat': 32.654, 'lng': 51.668},
             'radius_m': 3000,
             'fetched_at_label': '۱۴۰۴/۰۴/۲۹',

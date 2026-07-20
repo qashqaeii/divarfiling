@@ -267,7 +267,8 @@ AI_DAILY_TOKEN_LIMIT = config('AI_DAILY_TOKEN_LIMIT', default=30000, cast=int)
 NEARBY_POI_USER_DAILY_LIMIT = config('NEARBY_POI_USER_DAILY_LIMIT', default=25, cast=int)
 NEARBY_POI_GLOBAL_DAILY_LIMIT = config('NEARBY_POI_GLOBAL_DAILY_LIMIT', default=400, cast=int)
 NEARBY_POI_SEARCH_RADIUS_M = config('NEARBY_POI_SEARCH_RADIUS_M', default=3000, cast=int)
-NEARBY_POI_OVERPASS_TIMEOUT = config('NEARBY_POI_OVERPASS_TIMEOUT', default=25, cast=int)
+NEARBY_POI_OVERPASS_TIMEOUT = config('NEARBY_POI_OVERPASS_TIMEOUT', default=30, cast=int)
+NEARBY_POI_STREET_RADIUS_M = config('NEARBY_POI_STREET_RADIUS_M', default=120, cast=int)
 
 # Cache — برای rate limit لایسنس (در production از Redis استفاده کنید)
 CACHES = {

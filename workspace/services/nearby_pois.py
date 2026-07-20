@@ -899,5 +899,5 @@ def build_public_nearby_pois_context(prop, share) -> Optional[Dict[str, Any]]:
             'فاصله‌ها بر اساس موقعیت ملک محاسبه شده‌اند. '
             'نمایش روی نقشه ممکن است به‌صورت تقریبی باشد.'
         ) if approx else '',
-        'disclaimer': 'فاصله خط مستقیم — OpenStreetMap',
+        'disclaimer': 'فاصله خط مستقیم',
     }

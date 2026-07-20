@@ -55,6 +55,8 @@ class AcademyPageTests(TestCase):
         resp = self.client.get(reverse('workspace:academy_mission'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'ماموریت روز اول')
+        self.assertContains(resp, 'bot-install-video.js')
+        self.assertContains(resp, 'data-mk-vid-player')
 
     def test_onboarding_complete_redirect_url(self):
         resp = self.client.post(reverse('workspace:onboarding_complete'))

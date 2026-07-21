@@ -130,11 +130,8 @@ class AcademyVideoSitemap(SiteAwareSitemap):
     priority = 0.72
 
     def items(self):
-        from workspace.academy.models import AcademyVideo
-        return list(
-            AcademyVideo.objects.filter(is_public=True, is_active=True)
-            .order_by('path__order', 'order', 'id')
-        )
+        from workspace.academy.services.public_playlist_service import public_playlist_videos
+        return list(public_playlist_videos())
 
     def location(self, obj):
         return reverse('public_academy_video', kwargs={'slug': obj.slug})

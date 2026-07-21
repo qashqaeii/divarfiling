@@ -50,3 +50,23 @@ class PublicAcademyPlaylistTests(TestCase):
         resp = Client().get(reverse('public_academy'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, reverse('public_academy_playlist'))
+
+    def test_playlist_includes_all_non_agency_paths(self):
+        from workspace.academy.models import AcademyVideo
+        from workspace.academy.services.public_playlist_service import get_public_playlist_sections, playlist_stats
+
+        sections = get_public_playlist_sections()
+        stats = playlist_stats(sections)
+        expected = AcademyVideo.objects.filter(
+            is_active=True,
+            path__is_active=True,
+            path__requires_role='',
+        ).count()
+        self.assertEqual(stats['video_count'], expected)
+        self.assertGreater(stats['video_count'], 3)
+        self.assertGreater(stats['section_count'], 1)
+        slugs = {item['video'].slug for section in sections for item in section['videos']}
+        self.assertIn('intro-what-is-divar-filing', slugs)
+        self.assertIn('quick-start-workspace-tour', slugs)
+        self.assertIn('crm-create-contact', slugs)
+        self.assertNotIn('agency-team-intro', slugs)

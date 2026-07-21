@@ -32,14 +32,10 @@ def _poster_absolute(player: dict, site_url: str) -> str:
     return f'{site_url}{poster}' if poster.startswith('/') else f'{site_url}/{poster}'
 
 
-def public_playlist_paths():
-    """مسیرهایی که در پلی‌لیست عمومی نمایش داده می‌شوند (بدون محدودیت نقش)."""
-    return LearningPath.objects.filter(is_active=True, requires_role='').order_by('order', 'id')
-
-
 def public_playlist_videos():
-    """همه ویدیوهای فعال در مسیرهای عمومی — بدون فیلتر is_public."""
+    """ویدیوهایی که تیک «عمومی» دارند — مسیر والد لازم نیست عمومی باشد."""
     return AcademyVideo.objects.filter(
+        is_public=True,
         is_active=True,
         path__is_active=True,
         path__requires_role='',
@@ -49,9 +45,10 @@ def public_playlist_videos():
 def get_public_playlist_sections() -> list[dict]:
     sections = []
     global_index = 0
-    paths = public_playlist_paths()
+    path_ids = public_playlist_videos().values_list('path_id', flat=True).distinct()
+    paths = LearningPath.objects.filter(id__in=path_ids, is_active=True).order_by('order', 'id')
     for path in paths:
-        videos = list(path.videos.filter(is_active=True).order_by('order', 'id'))
+        videos = list(path.videos.filter(is_public=True, is_active=True).order_by('order', 'id'))
         if not videos:
             continue
         items = []

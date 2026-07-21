@@ -51,22 +51,40 @@ class PublicAcademyPlaylistTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, reverse('public_academy_playlist'))
 
-    def test_playlist_includes_all_non_agency_paths(self):
+    def test_playlist_only_shows_public_videos(self):
         from workspace.academy.models import AcademyVideo
         from workspace.academy.services.public_playlist_service import get_public_playlist_sections, playlist_stats
 
         sections = get_public_playlist_sections()
         stats = playlist_stats(sections)
         expected = AcademyVideo.objects.filter(
+            is_public=True,
             is_active=True,
             path__is_active=True,
             path__requires_role='',
         ).count()
         self.assertEqual(stats['video_count'], expected)
-        self.assertGreater(stats['video_count'], 3)
-        self.assertGreater(stats['section_count'], 1)
         slugs = {item['video'].slug for section in sections for item in section['videos']}
         self.assertIn('intro-what-is-divar-filing', slugs)
-        self.assertIn('quick-start-workspace-tour', slugs)
-        self.assertIn('crm-create-contact', slugs)
+        self.assertIn('intro-replace-excel-notebook', slugs)
+        self.assertNotIn('quick-start-workspace-tour', slugs)
         self.assertNotIn('agency-team-intro', slugs)
+
+    def test_public_video_in_non_public_path_still_lists(self):
+        from workspace.academy.models import AcademyVideo
+        from workspace.academy.services.public_playlist_service import get_public_playlist_sections
+
+        video = AcademyVideo.objects.get(slug='quick-start-workspace-tour')
+        self.assertFalse(video.is_public)
+        video.is_public = True
+        video.save(update_fields=['is_public'])
+        try:
+            slugs = {
+                item['video'].slug
+                for section in get_public_playlist_sections()
+                for item in section['videos']
+            }
+            self.assertIn('quick-start-workspace-tour', slugs)
+        finally:
+            video.is_public = False
+            video.save(update_fields=['is_public'])

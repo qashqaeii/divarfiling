@@ -24,6 +24,7 @@ from workspace.services.filing_video import get_filing_video_context
 from workspace.services.crm_video import get_crm_video_context
 from .sample_excel import get_sale_apartment_excel_preview
 from .education_content import education_hub_content
+from .education_academy import get_education_academy_hero
 from .android_tutorial_content import android_tutorial_content, android_tutorial_schema_json
 from .android_tutorial_video import get_android_video_context, resolve_android_video
 from .seo_landings import get_landing, landing_schema_json
@@ -635,6 +636,7 @@ class EducationView(TemplateView):
         ctx['install_video'] = get_bot_install_video_context()
         ctx['filing_video'] = get_filing_video_context()
         ctx['crm_video'] = get_crm_video_context()
+        ctx['academy_hero'] = get_education_academy_hero()
         user = self.request.user
         if user.is_authenticated:
             from workspace.services.access import get_bot_access_state
@@ -644,11 +646,11 @@ class EducationView(TemplateView):
             ctx['has_bot_license'] = False
         ctx['meta_title'] = 'آموزش — مرکز یادگیری فایلینگ دیوار'
         ctx['meta_description'] = (
-            'مسیرهای یادگیری CRM رایگان، ربات استخراج دیوار، فایلینگ و تحلیل بازار. '
+            'آکادمی ویدیویی رایگان، مسیرهای یادگیری CRM، ربات استخراج دیوار، فایلینگ و تحلیل بازار. '
             'راهنماهای گام‌به‌گام برای مشاوران املاک.'
         )
         ctx['meta_keywords'] = (
-            'آموزش فایلینگ دیوار, راهنمای CRM املاک, آموزش ربات دیوار, '
+            'آموزش فایلینگ دیوار, آکادمی ویدیویی, راهنمای CRM املاک, آموزش ربات دیوار, '
             'تحلیل بازار املاک, میزکار مشاور'
         )
         return ctx

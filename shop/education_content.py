@@ -97,10 +97,12 @@ def _enrich_education_content(content):
         for lesson, img in zip(mod['lessons'], images):
             lesson['image'], lesson['image_caption'] = img
 
-    content['featured'][0]['image'] = 'help-bot-license.png'
-    content['featured'][0]['image_caption'] = 'فعال‌سازی ربات — گام‌به‌گام'
-    content['featured'][1]['image'] = 'help-crm-dashboard.png'
-    content['featured'][1]['image_caption'] = 'راهنمای کامل میزکار مشاور'
+    content['featured'][0]['image'] = 'help-workspace-home.png'
+    content['featured'][0]['image_caption'] = 'آکادمی ویدیویی — مسیر یادگیری مشاور'
+    content['featured'][1]['image'] = 'help-bot-license.png'
+    content['featured'][1]['image_caption'] = 'فعال‌سازی ربات — گام‌به‌گام'
+    content['featured'][2]['image'] = 'help-crm-dashboard.png'
+    content['featured'][2]['image_caption'] = 'راهنمای کامل میزکار مشاور'
 
     content['hero_visual'] = [
         {'image': 'help-crm-contacts.png', 'caption': 'پرونده مشتری', 'accent': 'emerald'},
@@ -136,17 +138,23 @@ def _enrich_education_content(content):
 def education_hub_content():
     content = {
         'hero': {
-            'eyebrow': 'آموزش مشاوران املاک',
-            'title': 'از ثبت مشتری تا تحلیل محله — همه‌چیز در یک جا',
+            'eyebrow': 'آکادمی ویدیویی · آموزش مشاوران',
+            'title': 'از اولین ویدیو تا اولین معامله — مسیر کامل مشاور',
             'lead': (
-                'میزکار فایلینگ دیوار برای مشاورانی ساخته شده که هر روز با خریدار، مالک و آگهی سر و کار دارند. '
-                'اینجا یاد می‌گیرید چطور مشتری ثبت کنید، آگهی‌های محله را جمع کنید، قیمت را تحلیل کنید '
-                'و معامله را تا قرارداد پیگیری کنید — با تصویر واقعی از هر بخش.'
+                'با پلی‌لیست آکادمی، در چند دقیقه فایلینگ دیوار را بفهمید؛ '
+                'بعد مشتری ثبت کنید، آگهی محله را تحلیل کنید و معامله را تا قرارداد پیگیری کنید.'
             ),
+            'academy': {
+                'badge': 'آکادمی ویدیویی',
+                'title': 'ورود به پلی‌لیست آموزش',
+                'subtitle': 'ویدیوهای رایگان مثل یوتوب — از آشنایی تا شروع کار در میزکار',
+                'cta': 'تماشای آکادمی ویدیویی',
+                'cta_hint': 'شروع از ویدیوی معرفی',
+            },
         },
         'stats': [
-            {'num': 'رایگان', 'label': 'مدیریت مشتری و ملک'},
-            {'num': '۲۵+', 'label': 'آموزش تصویری'},
+            {'num': 'رایگان', 'label': 'آکادمی ویدیویی'},
+            {'num': '۱۰+', 'label': 'ویدیوی آموزشی'},
             {'num': '۳', 'label': 'مسیر بر اساس تجربه شما'},
             {'num': '۶', 'label': 'بخش تخصصی'},
         ],
@@ -154,7 +162,7 @@ def education_hub_content():
             'paths': {'title': 'از کجا شروع کنم؟', 'subtitle': 'مسیر مناسب سطح کار شما — هر کدام با تصویر و لینک مستقیم'},
             'modules': {'title': 'آموزش بخش‌به‌بخش', 'subtitle': 'هر ماژول با اسکرین‌شات واقعی — دقیقاً همان صفحه‌ای که در میزکار می‌بینید'},
             'gallery': {'title': 'گالری تصاویر', 'subtitle': 'مرور سریع همه بخش‌ها قبل از شروع کار'},
-            'featured': {'title': 'دو راهنمای ضروری', 'subtitle': 'بیشتر مشاوران از همین‌جا شروع می‌کنند'},
+            'featured': {'title': 'آکادمی و راهنماهای ضروری', 'subtitle': 'اول پلی‌لیست ویدیویی — بعد راهنمای ربات و میزکار'},
             'faq': {'title': 'سؤالات رایج مشاوران', 'subtitle': None},
             'cta': {'title': 'همین امروز شروع کنید', 'subtitle': 'ثبت‌نام رایگان — مدیریت مشتری بدون محدودیت. برای تحلیل بازار، ربات استخراج نیاز است.'},
         },

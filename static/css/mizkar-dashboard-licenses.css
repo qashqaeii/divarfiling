@@ -1,0 +1,402 @@
+/* Licenses tab — tile grid (loaded with dashboard) */
+.mk-dashboard-page .lic-spectrum-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.65rem;
+    margin-bottom: 0.75rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid var(--mk-border);
+    background: var(--mk-card);
+}
+
+.mk-dashboard-page .lic-spectrum-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--mk-text-muted);
+}
+
+.mk-dashboard-page .lic-spectrum-item em {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    font-style: normal;
+}
+
+.mk-dashboard-page .lic-spectrum-item--healthy em { background: #34d399; box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.25); }
+.mk-dashboard-page .lic-spectrum-item--stable em { background: #22d3ee; box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.25); }
+.mk-dashboard-page .lic-spectrum-item--warning em { background: #fbbf24; box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25); }
+.mk-dashboard-page .lic-spectrum-item--critical em { background: #fb923c; box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.25); }
+.mk-dashboard-page .lic-spectrum-item--expired em { background: #fb7185; box-shadow: 0 0 0 2px rgba(251, 113, 133, 0.25); }
+.mk-dashboard-page .lic-spectrum-item--unlimited em { background: #a78bfa; box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25); }
+
+.mk-dashboard-page .lic-tile--healthy {
+    --lic-accent: #34d399;
+    --lic-accent-soft: rgba(52, 211, 153, 0.12);
+    --lic-accent-glow: rgba(52, 211, 153, 0.22);
+}
+
+.mk-dashboard-page .lic-tile--stable {
+    --lic-accent: #22d3ee;
+    --lic-accent-soft: rgba(34, 211, 238, 0.12);
+    --lic-accent-glow: rgba(34, 211, 238, 0.2);
+}
+
+.mk-dashboard-page .lic-tile--warning {
+    --lic-accent: #fbbf24;
+    --lic-accent-soft: rgba(251, 191, 36, 0.14);
+    --lic-accent-glow: rgba(251, 191, 36, 0.24);
+}
+
+.mk-dashboard-page .lic-tile--critical {
+    --lic-accent: #fb923c;
+    --lic-accent-soft: rgba(251, 146, 60, 0.14);
+    --lic-accent-glow: rgba(251, 146, 60, 0.26);
+}
+
+.mk-dashboard-page .lic-tile--expired {
+    --lic-accent: #fb7185;
+    --lic-accent-soft: rgba(251, 113, 133, 0.1);
+    --lic-accent-glow: rgba(251, 113, 133, 0.18);
+}
+
+.mk-dashboard-page .lic-tile--unlimited {
+    --lic-accent: #a78bfa;
+    --lic-accent-soft: rgba(167, 139, 250, 0.14);
+    --lic-accent-glow: rgba(167, 139, 250, 0.22);
+}
+
+.mk-dashboard-page .lic-tile--inactive {
+    --lic-accent: #94a3b8;
+    --lic-accent-soft: rgba(148, 163, 184, 0.12);
+    --lic-accent-glow: rgba(148, 163, 184, 0.15);
+}
+
+.mk-dashboard-page .lic-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.mk-dashboard-page .lic-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 0;
+    padding: 0.75rem 0.8rem 0.65rem;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--mk-border) 88%, var(--lic-accent) 12%);
+    background: var(--mk-surface);
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s;
+}
+
+.mk-dashboard-page .lic-tile::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block: 0;
+    width: 3px;
+    background: var(--lic-accent);
+    border-radius: 14px 0 0 14px;
+}
+
+.mk-dashboard-page .lic-tile:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--mk-border) 55%, var(--lic-accent) 45%);
+    box-shadow: 0 12px 28px -18px var(--lic-accent-glow);
+}
+
+.mk-dashboard-page .lic-tile-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 100% 0%, var(--lic-accent-soft), transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.mk-dashboard-page .lic-tile-life {
+    position: relative;
+    z-index: 1;
+    height: 3px;
+    margin: -0.15rem 0 0.1rem;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.12);
+    overflow: hidden;
+}
+
+.mk-dashboard-page .lic-tile-life-fill {
+    display: block;
+    height: 100%;
+    width: var(--lic-health, 50%);
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--lic-accent), color-mix(in srgb, var(--lic-accent) 70%, #fff));
+    transition: width 0.4s ease;
+}
+
+.mk-dashboard-page .lic-tile-head,
+.mk-dashboard-page .lic-tile-expiry,
+.mk-dashboard-page .lic-tile-key,
+.mk-dashboard-page .lic-tile-meta,
+.mk-dashboard-page .lic-tile-details,
+.mk-dashboard-page .lic-tile-empty,
+.mk-dashboard-page .lic-tile-foot {
+    position: relative;
+    z-index: 1;
+}
+
+.mk-dashboard-page .lic-tile-identity {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.mk-dashboard-page .lic-tile-icon {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    font-size: 0.78rem;
+    color: var(--lic-accent);
+    background: var(--lic-accent-soft);
+}
+
+.mk-dashboard-page .lic-tile-names {
+    min-width: 0;
+}
+
+.mk-dashboard-page .lic-tile-title {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--mk-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mk-dashboard-page .lic-tile-plan {
+    margin: 0.08rem 0 0;
+    font-size: 0.64rem;
+    color: var(--mk-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mk-dashboard-page .lic-tile-expiry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 9px;
+    background: var(--lic-accent-soft);
+    border: 1px solid color-mix(in srgb, transparent 70%, var(--lic-accent) 30%);
+}
+
+.mk-dashboard-page .lic-tile-expiry-main {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.mk-dashboard-page .lic-tile-expiry-label {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mk-text-muted);
+}
+
+.mk-dashboard-page .lic-tile-date {
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--mk-text);
+}
+
+.mk-dashboard-page .lic-tile-date--struck {
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: var(--lic-accent);
+    color: var(--mk-text-muted);
+    opacity: 0.85;
+}
+
+.mk-dashboard-page .lic-tile-date--unlimited {
+    font-size: 0.85rem;
+    color: var(--lic-accent);
+}
+
+.mk-dashboard-page .lic-tile-remain {
+    flex-shrink: 0;
+    padding: 0.12rem 0.4rem;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    background: color-mix(in srgb, var(--mk-surface) 55%, var(--lic-accent-soft));
+    color: var(--lic-accent);
+    white-space: nowrap;
+}
+
+.mk-dashboard-page .lic-tile-key {
+    display: flex;
+    align-items: stretch;
+    gap: 0.35rem;
+}
+
+.mk-dashboard-page .lic-tile-key-code {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0.42rem 0.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--mk-border);
+    background: var(--mk-card);
+    font-family: ui-monospace, monospace;
+    font-size: 0.62rem;
+    line-height: 1.45;
+    color: var(--mk-purple);
+    word-break: break-all;
+}
+
+.mk-dashboard-page .lic-tile-copy {
+    flex-shrink: 0;
+    width: 2rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--mk-border) 70%, var(--lic-accent) 30%);
+    border-radius: 8px;
+    background: var(--lic-accent-soft);
+    color: var(--lic-accent);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.mk-dashboard-page .lic-tile-copy:hover {
+    background: color-mix(in srgb, var(--lic-accent-soft) 60%, var(--lic-accent) 40%);
+}
+
+.mk-dashboard-page .lic-tile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.mk-dashboard-page .lic-tile-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.12rem 0.38rem;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: var(--mk-text-muted);
+    background: var(--mk-card);
+    border: 1px solid var(--mk-border);
+}
+
+.mk-dashboard-page .lic-tile-chip i {
+    font-size: 0.52rem;
+    opacity: 0.7;
+}
+
+.mk-dashboard-page .lic-tile-chip--ok {
+    color: #34d399;
+    border-color: rgba(52, 211, 153, 0.22);
+    background: rgba(52, 211, 153, 0.08);
+}
+
+.mk-dashboard-page .lic-tile-chip--wait {
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.22);
+    background: rgba(251, 191, 36, 0.08);
+}
+
+.mk-dashboard-page .lic-tile-details {
+    border-radius: 9px;
+    border: 1px solid var(--mk-border);
+    background: var(--mk-card);
+    overflow: hidden;
+}
+
+.mk-dashboard-page .lic-tile-details summary {
+    padding: 0.42rem 0.55rem;
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: var(--mk-text-muted);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.mk-dashboard-page .lic-tile-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.mk-dashboard-page .lic-tile-details .lic-seats-table-wrap {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    border-top: 1px solid var(--mk-border);
+}
+
+.mk-dashboard-page .lic-tile-empty {
+    margin: 0;
+    font-size: 0.62rem;
+    color: var(--mk-text-muted);
+    text-align: center;
+    padding: 0.25rem 0;
+}
+
+.mk-dashboard-page .lic-tile-foot {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    padding-top: 0.15rem;
+    margin-top: auto;
+    border-top: 1px dashed color-mix(in srgb, var(--mk-border) 80%, var(--lic-accent) 20%);
+}
+
+.mk-dashboard-page .lic-tile-link {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--mk-text-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.mk-dashboard-page .lic-tile-link:hover {
+    color: var(--lic-accent);
+}
+
+.mk-dashboard-page .lic-tile-link--renew {
+    color: var(--lic-accent);
+}
+
+.mk-dashboard-page .lic-team-guide--compact {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 820px) {
+    .mk-dashboard-page .lic-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .mk-dashboard-page .lic-tile-expiry {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

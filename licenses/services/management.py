@@ -228,13 +228,29 @@ def _license_expiry_meta(license_obj: License) -> Dict[str, Any]:
     """وضعیت انقضا برای نمایش در داشبورد."""
     license_obj.sync_expiration_status(save=True)
     now = timezone.now()
+
+    if license_obj.status in ('suspended', 'inactive'):
+        return {
+            'has_expiry': bool(license_obj.expires_at),
+            'is_expired': license_obj.status == 'expired',
+            'expiring_soon': False,
+            'days_remaining': None,
+            'tone': 'inactive',
+            'health_pct': 0,
+            'remaining_label': license_obj.get_status_display(),
+        }
+
     if not license_obj.expires_at:
         return {
             'has_expiry': False,
             'is_expired': license_obj.status == 'expired',
             'expiring_soon': False,
             'days_remaining': None,
+            'tone': 'unlimited',
+            'health_pct': 100,
+            'remaining_label': 'نامحدود',
         }
+
     is_expired = license_obj.status == 'expired' or license_obj.expires_at <= now
     if is_expired:
         return {
@@ -242,13 +258,44 @@ def _license_expiry_meta(license_obj: License) -> Dict[str, Any]:
             'is_expired': True,
             'expiring_soon': False,
             'days_remaining': 0,
+            'tone': 'expired',
+            'health_pct': 0,
+            'remaining_label': 'منقضی شده',
         }
+
     days_remaining = max(0, (license_obj.expires_at.date() - now.date()).days)
+    if days_remaining <= 3:
+        tone = 'critical'
+    elif days_remaining <= 7:
+        tone = 'warning'
+    elif days_remaining <= 30:
+        tone = 'stable'
+    else:
+        tone = 'healthy'
+
+    duration = license_obj.plan.duration_days
+    if not duration and license_obj.created_at and license_obj.expires_at:
+        duration = max(1, (license_obj.expires_at - license_obj.created_at).days)
+    if duration:
+        health_pct = min(100, max(4, round(days_remaining / duration * 100)))
+    else:
+        health_pct = min(100, max(4, days_remaining))
+
+    if days_remaining == 0:
+        remaining_label = 'امروز'
+    elif days_remaining == 1:
+        remaining_label = '۱ روز مانده'
+    else:
+        remaining_label = f'{days_remaining} روز مانده'
+
     return {
         'has_expiry': True,
         'is_expired': False,
         'expiring_soon': days_remaining <= 7,
         'days_remaining': days_remaining,
+        'tone': tone,
+        'health_pct': health_pct,
+        'remaining_label': remaining_label,
     }
 
 

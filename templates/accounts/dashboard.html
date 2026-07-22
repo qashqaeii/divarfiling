@@ -8,7 +8,8 @@
 {% block body_class %}mk-account-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-licenses.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
 {% endblock %}
@@ -482,6 +483,17 @@
                 {% endif %}
             </header>
 
+            {% if license_dashboard.portfolios %}
+            <div class="lic-spectrum-legend" aria-label="راهنمای وضعیت انقضا">
+                <span class="lic-spectrum-item lic-spectrum-item--healthy"><em></em>سالم</span>
+                <span class="lic-spectrum-item lic-spectrum-item--stable"><em></em>پایدار</span>
+                <span class="lic-spectrum-item lic-spectrum-item--warning"><em></em>نزدیک انقضا</span>
+                <span class="lic-spectrum-item lic-spectrum-item--critical"><em></em>بحرانی</span>
+                <span class="lic-spectrum-item lic-spectrum-item--expired"><em></em>منقضی</span>
+                <span class="lic-spectrum-item lic-spectrum-item--unlimited"><em></em>نامحدود</span>
+            </div>
+            {% endif %}
+
             {% if license_dashboard.assigned_seats %}
             <section class="lic-seat-shared lic-seat-shared--compact" aria-label="لایسنس‌های تخصیص‌یافته">
                 <header class="lic-seat-shared-head">
@@ -533,70 +545,57 @@
             {% endif %}
 
             {% if license_dashboard.portfolios %}
-            <div class="lic-list">
+            <div class="lic-grid" role="list">
                 {% for item in license_dashboard.portfolios %}
                 {% with lic=item.license expiry=item.expiry %}
-                <article class="lic-card{% if expiry.is_expired %} lic-card--expired{% elif expiry.expiring_soon %} lic-card--expiring{% endif %}" data-license-id="{{ lic.id }}">
-                    <header class="lic-card-top">
-                        <div class="lic-card-identity">
-                            <span class="lic-card-icon {% if item.is_multi %}lic-card-icon--multi{% endif %}" aria-hidden="true">
-                                <i class="fas {% if item.is_multi %}fa-laptop-house{% else %}fa-desktop{% endif %}"></i>
+                <article class="lic-tile lic-tile--{{ expiry.tone }}" role="listitem" data-license-id="{{ lic.id }}" data-lic-tone="{{ expiry.tone }}"{% if lic.expires_at %} data-lic-expires="{{ lic.expires_at|date:'c' }}"{% endif %} style="--lic-health: {{ expiry.health_pct }}%;">
+                    <div class="lic-tile-glow" aria-hidden="true"></div>
+                    <div class="lic-tile-life" aria-hidden="true"><span class="lic-tile-life-fill"></span></div>
+
+                    <header class="lic-tile-head">
+                        <div class="lic-tile-identity">
+                            <span class="lic-tile-icon" aria-hidden="true">
+                                <i class="fas {% if item.is_multi %}fa-laptop-house{% else %}fa-key{% endif %}"></i>
                             </span>
-                            <div class="lic-card-identity-text">
-                                <h3 class="lic-card-title">{{ lic.order.product.title }}</h3>
-                                <p class="lic-card-plan">{{ lic.plan.name }} · {{ lic.plan.get_plan_type_display }}</p>
+                            <div class="lic-tile-names">
+                                <h3 class="lic-tile-title">{{ lic.order.product.title }}</h3>
+                                <p class="lic-tile-plan">{{ lic.plan.name }}</p>
                             </div>
-                        </div>
-                        <div class="lic-card-meta">
-                            <span class="lic-status lic-status--{{ lic.status }}">{{ lic.get_status_display }}</span>
-                            {% if expiry.has_expiry %}
-                            <div class="lic-expiry{% if expiry.is_expired %} lic-expiry--expired{% elif expiry.expiring_soon %} lic-expiry--soon{% endif %}"{% if lic.expires_at %} data-expires="{{ lic.expires_at|date:'c' }}"{% endif %}>
-                                <span class="lic-expiry-label">انقضا</span>
-                                <time class="lic-expiry-date" datetime="{{ lic.expires_at|date:'c' }}">{{ lic.expires_at|to_jalali_date:"%Y/%m/%d" }}</time>
-                                {% if expiry.is_expired %}
-                                <span class="lic-expiry-tag lic-expiry-tag--expired">منقضی</span>
-                                {% elif expiry.expiring_soon %}
-                                <span class="lic-expiry-tag lic-expiry-tag--soon">{{ expiry.days_remaining }} روز</span>
-                                {% endif %}
-                            </div>
-                            {% else %}
-                            <div class="lic-expiry lic-expiry--unlimited">
-                                <span class="lic-expiry-label">انقضا</span>
-                                <span class="lic-expiry-date">نامحدود</span>
-                            </div>
-                            {% endif %}
                         </div>
                     </header>
 
-                    <div class="lic-card-key lic-card-key--compact">
-                        <div class="license-item-key-row">
-                            <code class="license-key-minimal" id="license-key-{{ lic.id }}">{{ lic.license_key }}</code>
-                            <button type="button" class="license-copy-btn" onclick="copyLicenseKey('license-key-{{ lic.id }}')" title="کپی کلید" aria-label="کپی کلید">
-                                <i class="fas fa-copy" aria-hidden="true"></i>
-                            </button>
+                    <div class="lic-tile-expiry">
+                        {% if expiry.has_expiry %}
+                        <div class="lic-tile-expiry-main">
+                            <span class="lic-tile-expiry-label">انقضا</span>
+                            <time class="lic-tile-date{% if expiry.is_expired %} lic-tile-date--struck{% endif %}" datetime="{{ lic.expires_at|date:'c' }}">{{ lic.expires_at|to_jalali_date:"%Y/%m/%d" }}</time>
                         </div>
+                        <span class="lic-tile-remain lic-tile-remain--{{ expiry.tone }}" data-lic-remain>{% if expiry.is_expired %}منقضی{% else %}{{ expiry.remaining_label }}{% endif %}</span>
+                        {% else %}
+                        <div class="lic-tile-expiry-main">
+                            <span class="lic-tile-expiry-label">اعتبار</span>
+                            <span class="lic-tile-date lic-tile-date--unlimited">∞</span>
+                        </div>
+                        <span class="lic-tile-remain lic-tile-remain--unlimited">نامحدود</span>
+                        {% endif %}
                     </div>
 
-                    <div class="lic-slots-meter lic-slots-meter--slim">
-                        <div class="lic-slots-meter-top">
-                            <span>دستگاه‌ها</span>
-                            <strong>{{ item.slots_used }}/{{ lic.max_activations }}</strong>
-                        </div>
-                        <div class="lic-slots-bar" role="progressbar" aria-valuenow="{{ item.slots_used }}" aria-valuemin="0" aria-valuemax="{{ lic.max_activations }}">
-                            <span class="lic-slots-fill" style="width: {% widthratio item.slots_used lic.max_activations 100 %}%"></span>
-                        </div>
-                        <div class="lic-slots-legend">
-                            <span><em class="lic-dot lic-dot--active"></em>{{ item.active_count }} فعال</span>
-                            <span><em class="lic-dot lic-dot--pending"></em>{{ item.pending_count }} انتظار</span>
-                        </div>
+                    <div class="lic-tile-key">
+                        <code class="lic-tile-key-code" id="license-key-{{ lic.id }}">{{ lic.license_key }}</code>
+                        <button type="button" class="lic-tile-copy" onclick="copyLicenseKey('license-key-{{ lic.id }}')" title="کپی" aria-label="کپی کلید">
+                            <i class="fas fa-copy" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="lic-tile-meta">
+                        <span class="lic-tile-chip"><i class="fas fa-microchip" aria-hidden="true"></i>{{ item.slots_used }}/{{ lic.max_activations }}</span>
+                        {% if item.active_count %}<span class="lic-tile-chip lic-tile-chip--ok">{{ item.active_count }} فعال</span>{% endif %}
+                        {% if item.pending_count %}<span class="lic-tile-chip lic-tile-chip--wait">{{ item.pending_count }} انتظار</span>{% endif %}
                     </div>
 
                     {% if item.activations %}
-                    <details class="lic-seats-details"{% if item.activations %} open{% endif %}>
-                        <summary class="lic-seats-summary">
-                            <span>سیستم‌های ثبت‌شده</span>
-                            <span class="lic-seats-count">{{ item.activations|length }}</span>
-                        </summary>
+                    <details class="lic-tile-details">
+                        <summary>دستگاه‌ها</summary>
                         <div class="lic-seats-table-wrap">
                             <table class="lic-seats-table">
                                 <thead>
@@ -604,7 +603,7 @@
                                         <th scope="col">سیستم</th>
                                         <th scope="col">شناسه</th>
                                         <th scope="col">وضعیت</th>
-                                        <th scope="col">عضو</th>
+                                        {% if license_dashboard.can_assign_team %}<th scope="col">عضو</th>{% endif %}
                                         <th scope="col" class="lic-seats-th-actions"></th>
                                     </tr>
                                 </thead>
@@ -622,8 +621,8 @@
                                             <span class="lic-seat-badge lic-seat-badge--pending">انتظار</span>
                                             {% endif %}
                                         </td>
+                                        {% if license_dashboard.can_assign_team %}
                                         <td data-label="عضو">
-                                            {% if license_dashboard.can_assign_team %}
                                             <select class="lic-seat-member-select" data-seat-assign>
                                                 <option value="">—</option>
                                                 {% for member in license_dashboard.team_members %}
@@ -632,20 +631,12 @@
                                                 {% endif %}
                                                 {% endfor %}
                                             </select>
-                                            {% elif seat.assigned_user %}
-                                            <span class="lic-seat-member-name">{{ seat.assigned_user.get_full_name|default:seat.assigned_user.username }}</span>
-                                            {% else %}
-                                            <span class="lic-seat-member-empty">—</span>
-                                            {% endif %}
                                         </td>
+                                        {% endif %}
                                         <td data-label="عملیات">
                                             <div class="lic-seat-actions">
-                                                <button type="button" class="lic-seat-btn" data-seat-save-label title="ذخیره">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                                <button type="button" class="lic-seat-btn lic-seat-btn--danger" data-seat-remove{% if seat.is_active %} data-seat-remove-active{% endif %} title="حذف">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
+                                                <button type="button" class="lic-seat-btn" data-seat-save-label title="ذخیره"><i class="fas fa-check"></i></button>
+                                                <button type="button" class="lic-seat-btn lic-seat-btn--danger" data-seat-remove{% if seat.is_active %} data-seat-remove-active{% endif %} title="حذف"><i class="fas fa-trash"></i></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -655,38 +646,32 @@
                         </div>
                     </details>
                     {% else %}
-                    <p class="lic-no-seats lic-no-seats--compact">هنوز دستگاهی ثبت نشده — کلید را در ربات فعال کنید یا در اپ اندروید وارد شوید.</p>
+                    <p class="lic-tile-empty">فعال‌سازی در ربات یا اپ</p>
                     {% endif %}
 
-                    {% if item.slots_available > 0 %}
-                    <p class="lic-auto-hint"><i class="fas fa-magic" aria-hidden="true"></i> {{ item.slots_available }} اسلات خالی — فعال‌سازی در ربات، ثبت خودکار</p>
-                    {% elif item.is_multi %}
-                    <p class="lic-auto-hint lic-auto-hint--muted"><i class="fas fa-info-circle" aria-hidden="true"></i> تمام اسلات‌ها پر است</p>
-                    {% endif %}
-
-                    <footer class="lic-card-foot lic-card-foot--compact">
-                        <a href="{% url 'license_guide' %}" class="lic-card-link"><i class="fas fa-book-open" aria-hidden="true"></i> راهنما</a>
-                        <a href="#" onclick="showTab('downloads', event); return false;" class="lic-card-link"><i class="fas fa-download" aria-hidden="true"></i> دانلود</a>
+                    <footer class="lic-tile-foot">
+                        <a href="{% url 'license_guide' %}" class="lic-tile-link">راهنما</a>
+                        <a href="#" onclick="showTab('downloads', event); return false;" class="lic-tile-link">دانلود</a>
                         {% if expiry.is_expired and products %}
-                        <a href="{% url 'product_list' %}" class="lic-card-link lic-card-link--accent"><i class="fas fa-rotate-right" aria-hidden="true"></i> تمدید</a>
+                        <a href="{% url 'product_list' %}" class="lic-tile-link lic-tile-link--renew">تمدید</a>
                         {% endif %}
                     </footer>
                 </article>
                 {% endwith %}
                 {% endfor %}
-            </div>
 
-            {% if license_dashboard.can_assign_team %}
-            <aside class="lic-team-guide lic-team-guide--compact">
-                <i class="fas fa-users" aria-hidden="true"></i>
-                <p>برای هر سیستم، عضو تیم را انتخاب کنید تا امکانات ربات در میزکار او باز شود.</p>
-            </aside>
-            {% elif not license_dashboard.has_agency %}
-            <aside class="lic-team-guide lic-team-guide--compact lic-team-guide--muted">
-                <i class="fas fa-building" aria-hidden="true"></i>
-                <p>برای تخصیص به مشاوران، <a href="{% url 'workspace:crm_team' %}">تیم آژانس</a> را بسازید.</p>
-            </aside>
-            {% endif %}
+                {% if license_dashboard.can_assign_team %}
+                <aside class="lic-team-guide lic-team-guide--compact">
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                    <p>برای هر سیستم، عضو تیم را انتخاب کنید تا امکانات ربات در میزکار او باز شود.</p>
+                </aside>
+                {% elif not license_dashboard.has_agency %}
+                <aside class="lic-team-guide lic-team-guide--compact lic-team-guide--muted">
+                    <i class="fas fa-building" aria-hidden="true"></i>
+                    <p>برای تخصیص به مشاوران، <a href="{% url 'workspace:crm_team' %}">تیم آژانس</a> را بسازید.</p>
+                </aside>
+                {% endif %}
+            </div>
 
             {% elif not orders_pending_claim %}
             <div class="licenses-empty-state licenses-empty-state--compact">
@@ -1856,6 +1841,47 @@ document.querySelectorAll('.countdown').forEach(countdown => {
     updateCountdown();
     setInterval(updateCountdown, 60000); // به‌روزرسانی هر دقیقه
 });
+
+// به‌روزرسانی زمان باقی‌مانده روی کارت‌های لایسنس
+(function initLicTileRemain() {
+    const tiles = document.querySelectorAll('.lic-tile[data-lic-expires]');
+    if (!tiles.length) return;
+
+    function formatRemain(diffMs) {
+        if (diffMs <= 0) return 'منقضی';
+        const days = Math.floor(diffMs / 86400000);
+        const hours = Math.floor((diffMs % 86400000) / 3600000);
+        if (days > 0) return days + ' روز مانده';
+        if (hours > 0) return hours + ' ساعت مانده';
+        const mins = Math.floor((diffMs % 3600000) / 60000);
+        return Math.max(1, mins) + ' دقیقه مانده';
+    }
+
+    function tick() {
+        const now = Date.now();
+        tiles.forEach(function (tile) {
+            const remainEl = tile.querySelector('[data-lic-remain]');
+            if (!remainEl || tile.dataset.licTone === 'expired') return;
+            const exp = Date.parse(tile.dataset.licExpires);
+            if (Number.isNaN(exp)) return;
+            const diff = exp - now;
+            if (diff <= 0) {
+                tile.dataset.licTone = 'expired';
+                tile.className = tile.className.replace(/lic-tile--\w+/g, '').trim() + ' lic-tile--expired';
+                tile.style.setProperty('--lic-health', '0%');
+                remainEl.textContent = 'منقضی';
+                remainEl.className = 'lic-tile-remain lic-tile-remain--expired';
+                const dateEl = tile.querySelector('.lic-tile-date');
+                if (dateEl) dateEl.classList.add('lic-tile-date--struck');
+                return;
+            }
+            remainEl.textContent = formatRemain(diff);
+        });
+    }
+
+    tick();
+    setInterval(tick, 60000);
+})();
 
 // کپی لینک افیلیت
 function copyAffiliateLink() {

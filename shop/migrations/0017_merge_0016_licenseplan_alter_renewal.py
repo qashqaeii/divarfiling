@@ -6,8 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("shop", "0016_alter_licenseplan_features_alter_licenseplan_tagline"),
-        ("shop", "0016_order_renewal_license"),
+        ('shop', '0016_alter_licenseplan_features_alter_licenseplan_tagline'),
+        ('shop', '0016_order_renewal_license'),
     ]
 
     operations = []

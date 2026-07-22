@@ -8,7 +8,8 @@
 {% block body_class %}mk-account-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=18">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-head.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-licenses.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
@@ -16,129 +17,106 @@
 
 {% block content %}
 <div class="container mk-dashboard-page">
-    <header class="dash-profile-card">
-        <div class="dash-profile-card-inner">
-            <div class="dash-profile-main">
-                <div class="dash-hero-avatar-wrap">
+    <header class="dash-head">
+        <div class="dash-head-accent" aria-hidden="true">
+            <span class="dash-head-accent-glow{% if active_licenses %} is-live{% endif %}"></span>
+        </div>
+
+        <div class="dash-head-main">
+            <div class="dash-head-identity">
+                <div class="dash-head-avatar">
                     {% if user.profile and user.profile.avatar %}
-                        <img src="{{ user.profile.avatar.url }}" alt="" class="dash-hero-avatar-img">
+                    <img src="{{ user.profile.avatar.url }}" alt="" class="dash-hero-avatar-img">
                     {% else %}
-                        <span class="dash-hero-avatar" aria-hidden="true">{{ user.username|slice:":1"|upper }}</span>
+                    <span class="dash-hero-avatar" aria-hidden="true">{{ user.username|slice:":1"|upper }}</span>
                     {% endif %}
-                    <span class="dash-hero-status{% if active_licenses %} is-active{% endif %}" title="{% if active_licenses %}لایسنس فعال{% else %}بدون لایسنس فعال{% endif %}"></span>
+                    <span class="dash-hero-status{% if active_licenses %} is-active{% endif %}" title="{% if active_licenses %}لایسنس فعال{% else %}بدون لایسنس{% endif %}"></span>
                 </div>
-                <div class="dash-profile-info">
-                    <p class="dash-hero-kicker">
-                        <i class="fas fa-shield-check" aria-hidden="true"></i>
-                        حساب کاربری
-                    </p>
-                    <h1 class="dash-profile-name">{{ user.get_full_name|default:user.username }}</h1>
-                    <p class="dash-profile-username">@{{ user.username }}</p>
-                    <ul class="dash-profile-meta">
+                <div class="dash-head-copy">
+                    <h1 class="dash-head-name">{{ user.get_full_name|default:user.username }}</h1>
+                    <p class="dash-head-sub">
+                        <span>@{{ user.username }}</span>
+                        <span class="dash-head-dot" aria-hidden="true">·</span>
+                        <span>عضو {{ user.date_joined|to_jalali_date:"%Y/%m/%d" }}</span>
                         {% if user.phone %}
-                        <li>
-                            <i class="fas fa-mobile-screen" aria-hidden="true"></i>
-                            <span>{{ user.phone }}</span>
-                        </li>
+                        <span class="dash-head-dot" aria-hidden="true">·</span>
+                        <span dir="ltr">{{ user.phone }}</span>
                         {% endif %}
-                        {% if user.email %}
-                        <li>
-                            <i class="fas fa-envelope" aria-hidden="true"></i>
-                            <span dir="ltr">{{ user.email }}</span>
-                        </li>
-                        {% endif %}
-                        <li>
-                            <i class="fas fa-calendar-check" aria-hidden="true"></i>
-                            <span>عضو از {{ user.date_joined|to_jalali_date:"%Y/%m/%d" }}</span>
-                        </li>
-                    </ul>
-                    <div class="dash-profile-badges">
-                        <span class="dash-hero-tag{% if active_licenses %} dash-hero-tag--active{% endif %}" data-tone="violet">
-                            <i class="fas fa-key" aria-hidden="true"></i>
-                            {% if active_licenses %}{{ active_licenses }} لایسنس فعال{% else %}بدون لایسنس فعال{% endif %}
-                        </span>
-                        <span class="dash-hero-tag" data-tone="sky">
-                            <i class="fas fa-receipt" aria-hidden="true"></i>
-                            {{ paid_orders }} سفارش پرداخت‌شده
-                        </span>
-                        {% if consultant_agency_name %}
-                        <span class="dash-hero-tag" data-tone="teal">
-                            <i class="fas fa-building" aria-hidden="true"></i>
-                            {{ consultant_agency_name }}
-                        </span>
-                        {% endif %}
-                    </div>
-                    {% if consultant_socials_active %}
-                    <div class="dash-hero-socials" aria-label="شبکه‌های اجتماعی">
-                        {% for net in consultant_socials_active %}
-                        <a href="{{ net.url }}" class="dash-hero-social" target="_blank" rel="noopener noreferrer" title="{{ net.label }}" style="--dash-social: {{ net.color }}">
-                            {% if net.icon_file %}
-                            <img src="{% static net.icon_file %}?v=2" alt="{{ net.label }}" width="18" height="18">
-                            {% else %}
-                            <i class="{{ net.icon }}" aria-hidden="true"></i>
-                            {% endif %}
-                        </a>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+                    </p>
                 </div>
-            </div>            <div class="dash-profile-actions">
-                <a href="{% url 'workspace:home' %}" class="dash-action-btn dash-action-btn--primary">
+            </div>
+
+            <div class="dash-head-tags">
+                <span class="dash-head-pill{% if active_licenses %} dash-head-pill--live{% endif %}">
+                    <i class="fas fa-key" aria-hidden="true"></i>
+                    {% if active_licenses %}{{ active_licenses }} لایسنس{% else %}بدون لایسنس{% endif %}
+                </span>
+                <span class="dash-head-pill">
+                    <i class="fas fa-receipt" aria-hidden="true"></i>
+                    {{ paid_orders }} سفارش
+                </span>
+                {% if consultant_agency_name %}
+                <span class="dash-head-pill dash-head-pill--agency">
+                    <i class="fas fa-building" aria-hidden="true"></i>
+                    {{ consultant_agency_name }}
+                </span>
+                {% endif %}
+                {% if consultant_socials_active %}
+                <div class="dash-head-socials" aria-label="شبکه‌های اجتماعی">
+                    {% for net in consultant_socials_active %}
+                    <a href="{{ net.url }}" class="dash-hero-social" target="_blank" rel="noopener noreferrer" title="{{ net.label }}" style="--dash-social: {{ net.color }}">
+                        {% if net.icon_file %}
+                        <img src="{% static net.icon_file %}?v=2" alt="{{ net.label }}" width="16" height="16">
+                        {% else %}
+                        <i class="{{ net.icon }}" aria-hidden="true"></i>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <nav class="dash-head-actions" aria-label="میانبرها">
+                <a href="{% url 'workspace:home' %}" class="dash-head-btn dash-head-btn--primary">
                     <i class="fas fa-layer-group" aria-hidden="true"></i>
-                    <span>ورود به میزکار</span>
+                    <span>میزکار</span>
                 </a>
-                <button type="button" class="dash-action-btn dash-action-btn--secondary" onclick="showTab('profile', event)">
+                <button type="button" class="dash-head-btn dash-head-btn--ghost" onclick="showTab('profile', event)" title="ویرایش پروفایل">
                     <i class="fas fa-user-pen" aria-hidden="true"></i>
-                    <span>ویرایش پروفایل</span>
                 </button>
                 {% if pending_orders_count > 0 %}
-                <a href="{% url 'dashboard' %}?tab=orders&amp;order_status=pending" class="dash-action-btn dash-action-btn--warning" onclick="showTab('orders', event); return false;">
+                <a href="{% url 'dashboard' %}?tab=orders&amp;order_status=pending" class="dash-head-btn dash-head-btn--warn" onclick="showTab('orders', event); return false;" title="سفارش پرداخت‌نشده">
                     <i class="fas fa-clock" aria-hidden="true"></i>
-                    <span>{{ pending_orders_count }} سفارش پرداخت‌نشده</span>
+                    <span>{{ pending_orders_count }}</span>
                 </a>
                 {% endif %}
                 {% if active_licenses == 0 %}
-                <a href="{% url 'product_list' %}" class="dash-action-btn dash-action-btn--outline">
-                    <i class="fas fa-shopping-bag" aria-hidden="true"></i>
-                    <span>خرید لایسنس</span>
+                <a href="{% url 'product_list' %}" class="dash-head-btn dash-head-btn--buy" title="خرید لایسنس">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
                 </a>
                 {% endif %}
+            </nav>
+        </div>
+
+        <div class="dash-head-metrics" aria-label="آمار حساب">
+            <div class="dash-head-metric" data-accent="violet">
+                <span class="dash-head-metric-val">{{ total_orders }}</span>
+                <span class="dash-head-metric-lbl">سفارش</span>
+            </div>
+            <div class="dash-head-metric" data-accent="emerald">
+                <span class="dash-head-metric-val">{{ paid_orders }}</span>
+                <span class="dash-head-metric-lbl">پرداخت‌شده</span>
+            </div>
+            <div class="dash-head-metric" data-accent="sky">
+                <span class="dash-head-metric-val">{{ active_licenses }}</span>
+                <span class="dash-head-metric-lbl">لایسنس</span>
+            </div>
+            <div class="dash-head-metric" data-accent="amber">
+                <span class="dash-head-metric-val">{{ total_spent|floatformat:0 }}</span>
+                <span class="dash-head-metric-lbl">تومان</span>
             </div>
         </div>
     </header>
-
-    <section class="dash-stats" aria-label="آمار حساب">
-        <div class="dash-stats-grid">
-            <article class="dash-stat-card" data-accent="violet">
-                <span class="dash-stat-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
-                <span class="dash-stat-body">
-                    <span class="dash-stat-lbl">کل سفارش‌ها</span>
-                    <span class="dash-stat-val">{{ total_orders }}</span>
-                </span>
-            </article>
-            <article class="dash-stat-card" data-accent="emerald">
-                <span class="dash-stat-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
-                <span class="dash-stat-body">
-                    <span class="dash-stat-lbl">پرداخت شده</span>
-                    <span class="dash-stat-val">{{ paid_orders }}</span>
-                </span>
-            </article>
-            <article class="dash-stat-card" data-accent="sky">
-                <span class="dash-stat-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
-                <span class="dash-stat-body">
-                    <span class="dash-stat-lbl">لایسنس فعال</span>
-                    <span class="dash-stat-val">{{ active_licenses }}</span>
-                </span>
-            </article>
-            <article class="dash-stat-card" data-accent="amber">
-                <span class="dash-stat-icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
-                <span class="dash-stat-body">
-                    <span class="dash-stat-lbl">کل هزینه</span>
-                    <span class="dash-stat-val">{{ total_spent|floatformat:0 }} <small>تومان</small></span>
-                </span>
-            </article>
-        </div>
-    </section>
 
     {% if active_licenses == 0 %}
     <aside class="mk-workspace-cta mk-workspace-cta-free mb-4">

@@ -1,0 +1,321 @@
+/* Dashboard header — compact command bar */
+body.mk-account-dashboard .main-content {
+    padding-top: 0.5rem !important;
+}
+
+.mk-dashboard-page {
+    padding-top: 0.35rem !important;
+    padding-bottom: 2.5rem !important;
+}
+
+.mk-dashboard-page .dash-head {
+    position: relative;
+    margin-bottom: 0.75rem;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--mk-border) 90%, rgba(124, 58, 237, 0.12));
+    background: color-mix(in srgb, var(--mk-card) 94%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    overflow: hidden;
+    box-shadow: 0 10px 28px -22px rgba(15, 23, 42, 0.35);
+}
+
+html.mk-public:not([data-theme="light"]) .mk-dashboard-page .dash-head {
+    box-shadow: 0 14px 32px -24px rgba(0, 0, 0, 0.55);
+}
+
+.mk-dashboard-page .dash-head-accent {
+    height: 2px;
+    background: rgba(148, 163, 184, 0.15);
+    overflow: hidden;
+}
+
+.mk-dashboard-page .dash-head-accent-glow {
+    display: block;
+    height: 100%;
+    width: 35%;
+    background: linear-gradient(90deg, transparent, #94a3b8, transparent);
+    opacity: 0.5;
+    animation: dash-head-scan 4s ease-in-out infinite;
+}
+
+.mk-dashboard-page .dash-head-accent-glow.is-live {
+    width: 55%;
+    background: linear-gradient(90deg, transparent, #34d399, #22d3ee, transparent);
+    opacity: 0.85;
+}
+
+@keyframes dash-head-scan {
+    0%, 100% { transform: translateX(-120%); }
+    50% { transform: translateX(280%); }
+}
+
+.mk-dashboard-page .dash-head-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "identity actions"
+        "tags tags";
+    gap: 0.55rem 0.75rem;
+    padding: 0.7rem 0.85rem 0.65rem;
+    align-items: center;
+}
+
+.mk-dashboard-page .dash-head-identity {
+    grid-area: identity;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.mk-dashboard-page .dash-head-avatar {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.mk-dashboard-page .dash-head-avatar .dash-hero-avatar,
+.mk-dashboard-page .dash-head-avatar .dash-hero-avatar-img {
+    width: 2.65rem;
+    height: 2.65rem;
+    font-size: 0.95rem;
+    border-radius: 11px;
+    box-shadow: 0 0 0 2px var(--mk-card), 0 0 0 3px color-mix(in srgb, var(--mk-purple) 35%, transparent);
+}
+
+.mk-dashboard-page .dash-head-avatar .dash-hero-status {
+    width: 0.55rem;
+    height: 0.55rem;
+    bottom: -1px;
+    inset-inline-end: -1px;
+    border-width: 2px;
+}
+
+.mk-dashboard-page .dash-head-copy {
+    min-width: 0;
+}
+
+.mk-dashboard-page .dash-head-name {
+    margin: 0;
+    font-size: clamp(0.92rem, 2.2vw, 1.08rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+    color: var(--mk-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mk-dashboard-page .dash-head-sub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0.12rem 0 0;
+    font-size: 0.64rem;
+    color: var(--mk-text-muted);
+    line-height: 1.4;
+}
+
+.mk-dashboard-page .dash-head-dot {
+    opacity: 0.45;
+}
+
+.mk-dashboard-page .dash-head-tags {
+    grid-area: tags;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.mk-dashboard-page .dash-head-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.18rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--mk-text-muted);
+    background: var(--mk-surface);
+    border: 1px solid var(--mk-border);
+}
+
+.mk-dashboard-page .dash-head-pill i {
+    font-size: 0.52rem;
+    opacity: 0.75;
+}
+
+.mk-dashboard-page .dash-head-pill--live {
+    color: #059669;
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.22);
+}
+
+.mk-dashboard-page .dash-head-pill--agency {
+    max-width: 10rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mk-dashboard-page .dash-head-socials {
+    display: inline-flex;
+    gap: 0.25rem;
+    margin-inline-start: 0.15rem;
+}
+
+.mk-dashboard-page .dash-head-socials .dash-hero-social {
+    width: 1.55rem;
+    height: 1.55rem;
+    font-size: 0.68rem;
+}
+
+.mk-dashboard-page .dash-head-actions {
+    grid-area: actions;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.mk-dashboard-page .dash-head-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: 2rem;
+    padding: 0 0.65rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+
+.mk-dashboard-page .dash-head-btn--primary {
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    box-shadow: 0 6px 14px -8px rgba(99, 102, 241, 0.55);
+}
+
+.mk-dashboard-page .dash-head-btn--primary:hover {
+    transform: translateY(-1px);
+    color: #fff;
+}
+
+.mk-dashboard-page .dash-head-btn--ghost,
+.mk-dashboard-page .dash-head-btn--buy {
+    width: 2rem;
+    padding: 0;
+    color: var(--mk-text-muted);
+    background: var(--mk-surface);
+    border-color: var(--mk-border);
+}
+
+.mk-dashboard-page .dash-head-btn--ghost:hover,
+.mk-dashboard-page .dash-head-btn--buy:hover {
+    color: var(--mk-purple);
+    border-color: rgba(124, 58, 237, 0.28);
+}
+
+.mk-dashboard-page .dash-head-btn--warn {
+    min-width: 2rem;
+    padding: 0 0.45rem;
+    color: #d97706;
+    background: rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.28);
+}
+
+.mk-dashboard-page .dash-head-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--mk-border);
+    background: color-mix(in srgb, var(--mk-surface) 88%, transparent);
+}
+
+.mk-dashboard-page .dash-head-metric {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.05rem;
+    padding: 0.45rem 0.35rem;
+    min-width: 0;
+    text-align: center;
+}
+
+.mk-dashboard-page .dash-head-metric + .dash-head-metric::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 22%;
+    height: 56%;
+    width: 1px;
+    background: var(--mk-border);
+}
+
+.mk-dashboard-page .dash-head-metric-val {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+}
+
+.mk-dashboard-page .dash-head-metric-lbl {
+    font-size: 0.56rem;
+    font-weight: 600;
+    color: var(--mk-text-muted);
+}
+
+.mk-dashboard-page .dash-head-metric[data-accent="violet"] .dash-head-metric-val { color: #7c3aed; }
+.mk-dashboard-page .dash-head-metric[data-accent="emerald"] .dash-head-metric-val { color: #059669; }
+.mk-dashboard-page .dash-head-metric[data-accent="sky"] .dash-head-metric-val { color: #0284c7; }
+.mk-dashboard-page .dash-head-metric[data-accent="amber"] .dash-head-metric-val { color: #d97706; }
+
+@media (min-width: 768px) {
+    .mk-dashboard-page .dash-head-main {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        grid-template-areas: "identity tags actions";
+        gap: 0.65rem 0.85rem;
+    }
+
+    .mk-dashboard-page .dash-head-tags {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 520px) {
+    .mk-dashboard-page .dash-head-main {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "identity"
+            "actions"
+            "tags";
+    }
+
+    .mk-dashboard-page .dash-head-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .mk-dashboard-page .dash-head-btn--primary span {
+        display: inline;
+    }
+
+    .mk-dashboard-page .dash-head-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mk-dashboard-page .dash-head-metric:nth-child(3)::before {
+        display: none;
+    }
+}

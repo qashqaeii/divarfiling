@@ -254,7 +254,7 @@ class LeadCampaignTrackingTests(TestCase):
         )
         send_campaign_step(self.campaign, 1)
         data = campaign_funnel(self.campaign)
-        self.assertEqual(data['pilot_label'], 'Pilot Result')
+        self.assertEqual(data['pilot_label'], 'نتیجه پایلوت')
         self.assertIn('accepted', data['funnel'])
         self.assertEqual(data['funnel']['estimated_reach'], data['funnel']['accepted'])
 

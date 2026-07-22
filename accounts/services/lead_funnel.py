@@ -142,9 +142,11 @@ def campaign_funnel(campaign: LeadCampaign) -> Dict[str, Any]:
         'campaign_id': campaign.pk,
         'name': campaign.name,
         'kind': campaign.kind,
+        'kind_display': campaign.get_kind_display(),
         'status': campaign.status,
+        'status_display': campaign.get_status_display(),
         'is_pilot': campaign.is_pilot,
-        'pilot_label': 'Pilot Result' if campaign.is_pilot else 'Campaign Result',
+        'pilot_label': 'نتیجه پایلوت' if campaign.is_pilot else 'نتیجه کمپین',
         'funnel': {
             'leads': leads,
             'enrolled_total': enrolled_total,
@@ -172,7 +174,7 @@ def campaign_funnel(campaign: LeadCampaign) -> Dict[str, Any]:
         },
         'variants': variant_rows,
         'winner_note': (
-            'این نتیجه پایلوت فنی است؛ انتخاب نسخه برنده آماری نیازمند تجمیع چند Batch/منطقه است.'
+            'این نتیجه پایلوت فنی است؛ انتخاب نسخه برنده آماری نیازمند تجمیع چند منطقه یا چند بچ است.'
             if campaign.is_pilot
             else ''
         ),

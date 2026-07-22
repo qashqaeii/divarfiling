@@ -327,5 +327,24 @@
             initial.closest('.ck-plan').classList.add('is-selected');
             updateSummary();
         }
+
+        var loyaltyNotice = document.querySelector('[data-loyalty-notice]');
+        var loyaltyKey = 'ck-loyalty-dismissed';
+        if (loyaltyNotice) {
+            try {
+                if (localStorage.getItem(loyaltyKey) === '1') {
+                    loyaltyNotice.classList.add('is-dismissed');
+                }
+            } catch (e) {}
+
+            document.querySelectorAll('[data-loyalty-dismiss]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    loyaltyNotice.classList.add('is-dismissed');
+                    try {
+                        localStorage.setItem(loyaltyKey, '1');
+                    } catch (e) {}
+                });
+            });
+        }
     });
 })();

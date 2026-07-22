@@ -835,6 +835,124 @@
     color: var(--ck-total-color);
 }
 
+/* Order sidebar — qty, discount, payment */
+.ck-order-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    padding: 0.85rem 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.ck-order-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.ck-order-block[hidden] {
+    display: none !important;
+}
+
+.ck-order-block-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--mk-text-muted, #64748b);
+}
+
+.ck-order-block-label em {
+    font-style: normal;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+.ck-bulk-qty-row--compact {
+    width: 100%;
+    justify-content: center;
+}
+
+.ck-bulk-qty-row--compact .ck-qty-input {
+    flex: 1;
+    max-width: 3.5rem;
+}
+
+.ck-order-block .ck-bulk-qty-note {
+    margin: 0;
+    font-size: 0.62rem;
+    line-height: 1.45;
+    color: var(--mk-text-muted, #64748b);
+}
+
+.ck-promo--sidebar .ck-promo-row--sidebar {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.ck-promo--sidebar .ck-promo-input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.74rem;
+    border-radius: 8px;
+}
+
+.ck-promo--sidebar .ck-promo-btn {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.72rem;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+.ck-promo--sidebar .ck-promo-msg {
+    margin-top: 0.35rem;
+    font-size: 0.65rem;
+    padding: 0.35rem 0.5rem;
+}
+
+.ck-pay-methods--sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.ck-pay-method--sidebar {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 9px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    background: rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.ck-pay-method--sidebar input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ck-pay-method--sidebar.is-selected {
+    border-color: rgba(139, 92, 246, 0.45);
+    background: rgba(124, 58, 237, 0.1);
+}
+
+.ck-pay-method--sidebar .ck-pay-method-icon {
+    width: 1.65rem;
+    height: 1.65rem;
+    font-size: 0.68rem;
+    border-radius: 7px;
+}
+
+.ck-pay-method--sidebar .ck-pay-method-body strong {
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
 /* Pay button */
 .ck-pay-btn {
     display: flex;
@@ -921,14 +1039,43 @@
 .ck-form { border: none; margin: 0; padding: 0; }
 
 .ck-loyalty {
+    position: relative;
     display: flex;
     align-items: flex-start;
     gap: 0.65rem;
-    padding: 0.75rem 0.9rem;
+    padding: 0.75rem 2.25rem 0.75rem 0.9rem;
     margin-bottom: 1.15rem;
     border-radius: 10px;
     border: 1px solid rgba(251, 191, 36, 0.25);
     background: rgba(251, 191, 36, 0.07);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.ck-loyalty.is-dismissed {
+    display: none;
+}
+
+.ck-loyalty-close {
+    position: absolute;
+    top: 0.45rem;
+    left: 0.45rem;
+    width: 1.35rem;
+    height: 1.35rem;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.ck-loyalty-close:hover {
+    background: rgba(251, 191, 36, 0.28);
+    color: #fde68a;
 }
 
 .ck-loyalty i {
@@ -1725,7 +1872,44 @@
     }
 
     .ck-order {
-        display: none !important;
+        display: block !important;
+        position: static;
+        order: 2;
+        margin-top: 1rem;
+    }
+
+    .ck-main {
+        order: 1;
+    }
+
+    .ck-order-product,
+    .ck-order-lines,
+    .ck-order-total {
+        display: none;
+    }
+
+    .ck-order-badge {
+        display: none;
+    }
+
+    .ck-pay-btn--sidebar {
+        display: none;
+    }
+
+    .ck-order-trust {
+        display: none;
+    }
+
+    .ck-order-panel {
+        margin: 0;
+        padding: 0;
+        border: none;
+        gap: 0.65rem;
+    }
+
+    .ck-order {
+        padding: 1rem;
+        border-radius: 14px;
     }
 
     .ck-page-head-row .ck-pay-rail--inline {
@@ -1859,6 +2043,20 @@ html.mk-public[data-theme="light"] .ck-plan-price-block {
 
 html.mk-public[data-theme="light"] .ck-order {
     background: #fff;
+}
+
+html.mk-public[data-theme="light"] .ck-pay-method--sidebar {
+    background: #f8fafc;
+    border-color: var(--mk-border);
+}
+
+html.mk-public[data-theme="light"] .ck-pay-method--sidebar.is-selected {
+    background: rgba(124, 58, 237, 0.08);
+}
+
+html.mk-public[data-theme="light"] .ck-loyalty-close {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
 }
 
 html.mk-public[data-theme="light"] .ck-shell {

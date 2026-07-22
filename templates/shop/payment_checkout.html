@@ -6,7 +6,7 @@
 {% block body_class %}mk-checkout-page mk-checkout-page--pay{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=16">
 {% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
@@ -21,49 +21,25 @@
         <span class="ck-ambient-grid"></span>
     </div>
 
-    <header class="ck-hero ck-hero--pay">
-        <div class="ck-hero-inner">
-            <nav class="ck-topbar" aria-label="مسیر">
+    <div class="ck-page ck-page--full ck-page--pay">
+        <header class="ck-page-head ck-page-head--pay">
+            <div class="ck-page-head-row">
                 <a href="{% url 'buy' order.product.slug %}" class="ck-back">
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                    <span>بازگشت به انتخاب پلن</span>
+                    <span>بازگشت</span>
                 </a>
-                <div class="ck-topbar-badges">
-                    <span class="ck-secure-pill"><i class="fas fa-lock"></i> پرداخت امن SSL</span>
-                </div>
-            </nav>
-
-            <nav class="ck-pay-rail ck-pay-rail--hero" aria-label="مراحل پرداخت">
-                <div class="ck-pay-rail-item is-done">
-                    <span class="ck-pay-rail-dot"></span>
-                    <span>انتخاب پلن</span>
-                </div>
-                <div class="ck-pay-rail-line is-done"></div>
-                <div class="ck-pay-rail-item is-active">
-                    <span class="ck-pay-rail-dot"></span>
-                    <span>تأیید و پرداخت</span>
-                </div>
-                <div class="ck-pay-rail-line"></div>
-                <div class="ck-pay-rail-item">
-                    <span class="ck-pay-rail-dot"></span>
-                    <span>دریافت لایسنس</span>
-                </div>
-            </nav>
-
-            <div class="ck-hero-main ck-hero-main--compact">
-                <div class="ck-hero-copy">
-                    <span class="ck-hero-kicker">
-                        <span class="ck-hero-kicker-icon"><i class="fas fa-receipt"></i></span>
-                        مرور نهایی سفارش
-                    </span>
-                    <h1 class="ck-hero-title">آماده انتقال به درگاه پرداخت</h1>
-                    <p class="ck-hero-lead">جزئیات سفارش را بررسی کنید و با اطمینان به درگاه امن زیبال منتقل شوید.</p>
-                </div>
+                <nav class="ck-pay-rail ck-pay-rail--inline" aria-label="مراحل پرداخت">
+                    <div class="ck-pay-rail-item is-done"><span class="ck-pay-rail-dot"></span><span>پلن</span></div>
+                    <div class="ck-pay-rail-line is-done"></div>
+                    <div class="ck-pay-rail-item is-active"><span class="ck-pay-rail-dot"></span><span>پرداخت</span></div>
+                    <div class="ck-pay-rail-line"></div>
+                    <div class="ck-pay-rail-item"><span class="ck-pay-rail-dot"></span><span>لایسنس</span></div>
+                </nav>
+                <span class="ck-secure-pill"><i class="fas fa-lock"></i> SSL</span>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <div class="ck-page">
+        <div class="ck-layout ck-layout--pay">
         <div class="ck-shell ck-pay-shell">
             <div class="ck-pay-grid">
                 <aside class="ck-pay-summary" aria-label="خلاصه سفارش">
@@ -188,14 +164,15 @@
             </div>
         </div>
 
-        <section class="ck-trust-strip" aria-label="اعتماد و امنیت">
-            <ul>
-                <li><i class="fas fa-lock"></i> رمزنگاری SSL</li>
-                <li><i class="fas fa-certificate"></i> نماد اعتماد الکترونیکی</li>
-                <li><i class="fas fa-headset"></i> پشتیبانی فنی</li>
-                <li><i class="fas fa-file-invoice"></i> صدور فاکتور</li>
-            </ul>
-        </section>
+            <section class="ck-trust-strip" aria-label="اعتماد و امنیت">
+                <ul>
+                    <li><i class="fas fa-lock"></i> رمزنگاری SSL</li>
+                    <li><i class="fas fa-certificate"></i> نماد اعتماد الکترونیکی</li>
+                    <li><i class="fas fa-headset"></i> پشتیبانی فنی</li>
+                    <li><i class="fas fa-file-invoice"></i> صدور فاکتور</li>
+                </ul>
+            </section>
+        </div>
     </div>
 </div>
 {% endblock %}

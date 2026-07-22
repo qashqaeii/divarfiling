@@ -47,14 +47,40 @@ def _product_line_title(code: str) -> str:
     }.get(code, code)
 
 
+_LICENSE_PRODUCT_SLUG = 'divar-extraction-bot'
+# Starting list price (تومان) if shop catalog is unavailable — matches 1-day plan.
+_LICENSE_PRICE_FALLBACK = '50000'
+
+
+def _license_starting_price() -> str:
+    """Lowest active plan price for the Divar bot license (Google Offer.price)."""
+    try:
+        from shop.models import Product
+
+        product = (
+            Product.objects.filter(slug=_LICENSE_PRODUCT_SLUG, is_active=True)
+            .only('id')
+            .first()
+        )
+        if not product:
+            return _LICENSE_PRICE_FALLBACK
+        plan = product.plans.filter(is_active=True).order_by('price', 'id').first()
+        if not plan:
+            return _LICENSE_PRICE_FALLBACK
+        return str(int(plan.price))
+    except Exception:
+        return _LICENSE_PRICE_FALLBACK
+
+
 def _licensed_offer(page_url: str) -> dict[str, Any]:
-    """Honest offer for license-gated product lines — no fake price."""
+    """License-gated offer with real shop starting price (required by Google rich results)."""
     return {
         '@type': 'Offer',
+        'price': _license_starting_price(),
+        'priceCurrency': 'IRR',
         'availability': 'https://schema.org/InStock',
         'url': page_url,
-        'description': 'نیاز به لایسنس ربات دیوار — جزئیات در صفحه محصولات',
-        'priceCurrency': 'IRR',
+        'description': 'نیاز به لایسنس ربات دیوار — جزئیات پلن‌ها در صفحه محصولات',
     }
 
 
@@ -521,7 +547,7 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
 def schema_product_for_page(page: PageSpec, page_url: str) -> str:
     """
     Product entity for commercial intent pages.
-    CRM/solutions: free offer. Filing: license-gated (no fake price/rating).
+    CRM/solutions: free offer. Filing/extraction/MI: license offer with real starting price.
     """
     if page.content_key not in (
         'crm_product_line',

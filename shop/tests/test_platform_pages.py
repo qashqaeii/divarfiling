@@ -465,8 +465,9 @@ class PlatformFilingPhase2Tests(TestCase):
         self.assertIn('فایلینگ دیوار', body)
         self.assertIn('لایسنس ربات', body)
         self.assertNotIn('AggregateRating', body)
-        # Must not claim price 0 like CRM free core
+        # Must not claim price 0 like CRM free core; Google requires Offer.price
         self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": "[1-9]\d*"')
 
     def test_filing_next_path_exactly_three(self):
         from shop.platform.content.filing_hub import filing_product_line_content
@@ -573,6 +574,7 @@ class PlatformMarketIntelligencePhase2Tests(TestCase):
         self.assertIn('لایسنس', body)
         self.assertNotIn('AggregateRating', body)
         self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": "[1-9]\d*"')
 
     def test_market_next_path_exactly_three(self):
         from shop.platform.content.market_intelligence_hub import (
@@ -939,6 +941,7 @@ class PlatformExtractionPhase2Tests(TestCase):
         self.assertIn('market-intelligence', body)
         self.assertNotIn('AggregateRating', body)
         self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": "[1-9]\d*"')
 
     def test_extraction_next_path_three(self):
         from shop.platform.content.extraction_hub import extraction_product_line_content

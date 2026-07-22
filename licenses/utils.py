@@ -7,10 +7,9 @@ import hmac
 from django.conf import settings
 
 
-def generate_license_key(order):
+def generate_license_key(order, *, sequence: int = 1):
     """تولید کلید لایسنس امن"""
-    # ترکیب اطلاعات سفارش
-    data = f"{order.id}-{order.product.id}-{order.plan.id}-{order.user.id}"
+    data = f"{order.id}-{sequence}-{order.product.id}-{order.plan.id}-{order.user.id}"
     
     # تولید HMAC
     secret = settings.LICENSE_SECRET_KEY.encode()

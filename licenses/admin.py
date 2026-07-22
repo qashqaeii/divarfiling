@@ -7,7 +7,7 @@ from .models import License, LicenseActivation, AuditLog, ClientAppEvent
 
 @admin.register(License)
 class LicenseAdmin(admin.ModelAdmin):
-    list_display = ['license_key', 'order', 'plan', 'status', 'max_activations', 'created_at']
+    list_display = ['license_key', 'order', 'sequence', 'plan', 'status', 'max_activations', 'created_at']
     list_filter = ['status', 'plan', 'created_at']
     search_fields = ['license_key', 'order__id', 'order__user__username']
     readonly_fields = ['license_key', 'created_at']

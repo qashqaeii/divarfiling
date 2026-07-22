@@ -17,27 +17,42 @@
                 <span class="mk-icon mk-icon--lg mk-icon--emerald"><i class="fas fa-check-circle"></i></span>
             </div>
             <h1>پرداخت با موفقیت انجام شد!</h1>
-            {% if license %}
-            <p class="mk-pub-result-msg">سفارش شما با موفقیت ثبت و پرداخت شد. کلید لایسنس آماده است.</p>
+            {% if licenses %}
+            <p class="mk-pub-result-msg">
+                سفارش شما با موفقیت ثبت و پرداخت شد.
+                {% if licenses|length > 1 %}
+                {{ licenses|length }} کلید لایسنس آماده است.
+                {% else %}
+                کلید لایسنس آماده است.
+                {% endif %}
+            </p>
             {% else %}
             <p class="mk-pub-result-msg">سفارش شما تأیید شد. برای دریافت کلید لایسنس، شناسه سخت‌افزاری را از ربات در داشبورد ثبت کنید.</p>
             {% endif %}
 
-            {% if license %}
+            {% if licenses %}
             <div class="mk-pub-license-box">
-                <h2><i class="fas fa-key"></i> کلید لایسنس شما</h2>
-                <div class="mk-pub-license-key" id="license-key">{{ license.license_key }}</div>
-                <button type="button" class="mk-pub-copy-btn" onclick="copyLicenseKey()">
-                    <i class="fas fa-copy"></i> کپی کلید لایسنس
-                </button>
+                <h2><i class="fas fa-key"></i> {% if licenses|length > 1 %}کلیدهای لایسنس شما{% else %}کلید لایسنس شما{% endif %}</h2>
+                {% for lic in licenses %}
+                <div class="mk-pub-license-item"{% if not forloop.first %} style="margin-top:1rem;"{% endif %}>
+                    {% if licenses|length > 1 %}
+                    <div class="mk-pub-info-row" style="margin-bottom:0.5rem;">
+                        <span>لایسنس {{ forloop.counter }}</span>
+                        <span>{{ lic.plan.name }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="mk-pub-license-key" id="license-key-{{ forloop.counter }}">{{ lic.license_key }}</div>
+                    <button type="button" class="mk-pub-copy-btn" onclick="copyLicenseKey('license-key-{{ forloop.counter }}', this)">
+                        <i class="fas fa-copy"></i> کپی کلید
+                    </button>
+                </div>
+                {% endfor %}
                 <div class="mk-pub-license-warn">
                     <i class="fas fa-exclamation-triangle"></i>
-                    لطفاً این کلید را در جای امنی نگهداری کنید.
+                    لطفاً این کلیدها را در جای امنی نگهداری کنید.
                 </div>
             </div>
-            {% endif %}
-
-            {% if not license %}
+            {% else %}
             <div class="mk-pub-info-box mk-pub-claim-box">
                 <h2><i class="fas fa-microchip"></i> مرحله بعد: صدور لایسنس</h2>
                 <ol class="mk-pub-claim-steps" style="text-align: right; margin: 1rem 0; padding-right: 1.25rem;">
@@ -83,7 +98,7 @@
                 </div>
                 <div class="mk-pub-info-row">
                     <span>پلن:</span>
-                    <span>{{ order.plan.name }}</span>
+                    <span>{{ order.plan.name }}{% if order.quantity > 1 %} × {{ order.quantity }}{% endif %}</span>
                 </div>
                 {% if order.discount_amount > 0 %}
                 <div class="mk-pub-info-row mk-pub-info-row--accent">
@@ -113,17 +128,18 @@
 
 {% block extra_js %}
 <script>
-function copyLicenseKey() {
-    const licenseKey = document.getElementById('license-key').textContent;
-    const btn = event.target.closest('.mk-pub-copy-btn');
-    const originalText = btn.innerHTML;
+function copyLicenseKey(elementId, btn) {
+    const el = document.getElementById(elementId);
+    const licenseKey = el ? el.textContent : '';
+    const copyBtn = btn || event.target.closest('.mk-pub-copy-btn');
+    const originalText = copyBtn.innerHTML;
 
     const onSuccess = function() {
-        btn.innerHTML = '<i class="fas fa-check"></i> کپی شد!';
-        btn.style.background = 'rgba(16, 185, 129, 0.28)';
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> کپی شد!';
+        copyBtn.style.background = 'rgba(16, 185, 129, 0.28)';
         setTimeout(function() {
-            btn.innerHTML = originalText;
-            btn.style.background = '';
+            copyBtn.innerHTML = originalText;
+            copyBtn.style.background = '';
         }, 2000);
     };
 

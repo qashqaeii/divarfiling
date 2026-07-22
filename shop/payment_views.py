@@ -447,11 +447,13 @@ class PaymentSuccessView(LoginRequiredMixin, View):
             return redirect('dashboard')
 
         license_obj = License.objects.filter(order=order).first()
+        licenses = list(License.objects.filter(order=order).order_by('sequence', 'pk'))
         transaction = Transaction.objects.filter(order=order).first()
 
         context = {
             'order': order,
             'license': license_obj,
+            'licenses': licenses,
             'transaction': transaction,
             'can_download': order_can_download(order),
             'download_filename': get_order_download_filename(order) if order_can_download(order) else '',

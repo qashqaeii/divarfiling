@@ -155,10 +155,15 @@
                     {% cycle 'amber' 'sky' 'violet' 'emerald' as plan_accent silent %}
                     {% cycle 'trial' 'starter' 'pro' 'plus' as plan_tier silent %}
                     {% cycle 'fa-bolt' 'fa-calendar-day' 'fa-calendar-week' 'fa-calendar' as plan_icon silent %}
-                    <article class="pb-plan-card{% if forloop.counter == 3 %} pb-plan-card--featured{% endif %}" data-accent="{{ plan_accent }}" data-tier="{{ plan_tier }}">
+                    <article class="pb-plan-card{% if plan.is_featured %} pb-plan-card--featured{% endif %}{% if plan.has_promo_offer %} pb-plan-card--offer{% endif %}" data-accent="{{ plan_accent }}" data-tier="{{ plan_tier }}">
                         <span class="pb-plan-card-glow" aria-hidden="true"></span>
                         <span class="pb-plan-card-watermark" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
-                        {% if forloop.counter == 3 %}
+                        {% if plan.offer_badge %}
+                        <span class="pb-plan-card-ribbon pb-plan-card-ribbon--offer">
+                            <i class="fas fa-tags" aria-hidden="true"></i>
+                            {{ plan.offer_badge }}
+                        </span>
+                        {% elif plan.is_featured %}
                         <span class="pb-plan-card-ribbon">
                             <i class="fas fa-star" aria-hidden="true"></i>
                             پیشنهادی
@@ -178,9 +183,15 @@
                         </header>
                         <div class="pb-plan-card-price-block">
                             <div class="pb-plan-card-price">
+                                {% if plan.has_promo_offer %}
+                                <s class="pb-plan-card-compare">{{ plan.compare_at_price|currency }}</s>
+                                {% endif %}
                                 <span class="pb-plan-card-amount">{{ plan.price|currency }}</span>
                                 <span class="pb-plan-card-unit">تومان</span>
                             </div>
+                            {% if plan.has_promo_offer %}
+                            <span class="pb-plan-card-save">{{ plan.promo_discount_percent }}% تخفیف</span>
+                            {% endif %}
                             <span class="pb-plan-card-price-note">{% if plan.plan_type == 'daily' %}مناسب برای آشنایی با محصول{% else %}شامل ربات ویندوز و اپ اندروید{% endif %}</span>
                         </div>
                         <div class="pb-plan-card-platforms" aria-hidden="true">
@@ -199,7 +210,7 @@
                             <li><i class="fas fa-check" aria-hidden="true"></i> فعال‌سازی فوری پس از خرید</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> پشتیبانی نصب و راه‌اندازی</li>
                         </ul>
-                        <a href="{% if daily_plan_used and plan.plan_type == 'daily' %}{% url 'buy' product.slug %}{% else %}{% url 'buy' product.slug %}?plan={{ plan.id }}{% endif %}" class="pb-plan-card-cta{% if forloop.counter == 3 %} pb-plan-card-cta--primary{% endif %}{% if daily_plan_used and plan.plan_type == 'daily' %} pb-plan-card-cta--disabled{% endif %}"{% if daily_plan_used and plan.plan_type == 'daily' %} aria-disabled="true"{% endif %}>
+                        <a href="{% if daily_plan_used and plan.plan_type == 'daily' %}{% url 'buy' product.slug %}{% else %}{% url 'buy' product.slug %}?plan={{ plan.id }}{% endif %}" class="pb-plan-card-cta{% if plan.is_featured %} pb-plan-card-cta--primary{% endif %}{% if daily_plan_used and plan.plan_type == 'daily' %} pb-plan-card-cta--disabled{% endif %}"{% if daily_plan_used and plan.plan_type == 'daily' %} aria-disabled="true"{% endif %}>
                             {% if daily_plan_used and plan.plan_type == 'daily' %}
                             <span>قبلاً استفاده شده</span>
                             {% else %}

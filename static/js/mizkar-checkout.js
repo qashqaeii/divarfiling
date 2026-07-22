@@ -14,6 +14,9 @@
         var discountInput = document.getElementById('id_discount_code');
         var discountMsg = document.getElementById('discount-message');
         var payBtns = document.querySelectorAll('[data-pay-btn]');
+        var qtyInput = document.getElementById('id_quantity');
+        var qtyFieldset = document.getElementById('bulk-quantity-fieldset');
+        var qtyNote = document.getElementById('bulk-quantity-note');
 
         var applyDiscountUrl = root.dataset.applyDiscountUrl;
         var csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -25,14 +28,60 @@
             return document.querySelector('input[name="plan"]:checked');
         }
 
+        function getQuantity() {
+            if (!qtyInput) return 1;
+            var selected = getSelectedPlan();
+            if (!selected || selected.dataset.allowBulk !== 'true') return 1;
+            var min = parseInt(selected.dataset.minQuantity, 10) || 1;
+            var max = parseInt(selected.dataset.maxQuantity, 10) || 20;
+            var qty = parseInt(qtyInput.value, 10) || 1;
+            return Math.max(min, Math.min(max, qty));
+        }
+
+        function syncQuantityField() {
+            var selected = getSelectedPlan();
+            if (!qtyInput || !qtyFieldset) return;
+
+            var allowBulk = selected && selected.dataset.allowBulk === 'true';
+            qtyFieldset.hidden = !allowBulk;
+            if (!allowBulk) {
+                qtyInput.value = '1';
+                if (qtyNote) qtyNote.textContent = '';
+                return;
+            }
+
+            var min = parseInt(selected.dataset.minQuantity, 10) || 1;
+            var max = parseInt(selected.dataset.maxQuantity, 10) || 20;
+            qtyInput.min = String(min);
+            qtyInput.max = String(max);
+            var qty = getQuantity();
+            qtyInput.value = String(qty);
+            if (qtyNote) {
+                qtyNote.textContent = 'هر لایسنس شامل ۱ ویندوز + ۱ اندروید — جمعاً ' + qty + ' کلید جداگانه صادر می‌شود.';
+            }
+        }
+
+        function unitPricesFromSelected(selected) {
+            var unitOriginal = parseInt(selected.dataset.originalPrice, 10);
+            var unitFinal = parseInt(selected.dataset.finalPrice, 10);
+            if (currentPrices.discounts.length > 0) {
+                var qty = getQuantity();
+                unitFinal = Math.round(currentPrices.final / qty);
+            }
+            return { unitOriginal: unitOriginal, unitFinal: unitFinal };
+        }
+
         function updateSummary() {
             var selected = getSelectedPlan();
             if (!selected) return;
 
+            syncQuantityField();
+            var qty = getQuantity();
             var card = selected.closest('.ck-plan');
             var planName = card.querySelector('.ck-plan-name').textContent.trim();
-            var originalPrice = parseInt(selected.dataset.originalPrice, 10);
-            var finalPrice = parseInt(selected.dataset.finalPrice, 10);
+            var prices = unitPricesFromSelected(selected);
+            var originalPrice = prices.unitOriginal * qty;
+            var finalPrice = prices.unitFinal * qty;
 
             if (selected.dataset.hasRepeatDiscount === 'true' && !repeatPurchaseDiscount) {
                 var pct = parseInt(selected.dataset.repeatDiscountPercentage, 10);
@@ -56,7 +105,11 @@
                 allDiscounts = allDiscounts.concat(currentPrices.discounts);
             }
 
-            document.getElementById('summary-plan-name').textContent = planName;
+            var summaryName = planName;
+            if (qty > 1) {
+                summaryName += ' × ' + qty;
+            }
+            document.getElementById('summary-plan-name').textContent = summaryName;
             document.getElementById('summary-original-price').textContent =
                 formatNumber(originalPrice) + ' تومان';
 
@@ -100,9 +153,12 @@
             }
 
             var code = discountInput.value.trim().toUpperCase();
+            var qty = getQuantity();
+            var baseFinal = parseInt(selected.dataset.finalPrice, 10) * qty;
+
             if (!code) {
                 currentPrices.discounts = [];
-                currentPrices.final = parseInt(selected.dataset.finalPrice, 10);
+                currentPrices.final = baseFinal;
                 clearDiscountMessage();
                 updateSummary();
                 return;
@@ -119,7 +175,8 @@
                 },
                 body: JSON.stringify({
                     discount_code: code,
-                    plan_id: selected.value
+                    plan_id: selected.value,
+                    quantity: qty
                 })
             })
             .then(function (r) { return r.json(); })
@@ -139,7 +196,7 @@
                     );
                 } else {
                     currentPrices.discounts = [];
-                    currentPrices.final = parseInt(selected.dataset.finalPrice, 10);
+                    currentPrices.final = baseFinal;
                     showDiscountMessage(data.message || 'کد تخفیف معتبر نیست.', 'error');
                 }
                 updateSummary();
@@ -174,6 +231,24 @@
                     radio.checked = true;
                     radio.dispatchEvent(new Event('change', { bubbles: true }));
                 }
+            });
+        });
+
+        if (qtyInput) {
+            qtyInput.addEventListener('change', function () {
+                discountInput.value = '';
+                currentPrices.discounts = [];
+                clearDiscountMessage();
+                updateSummary();
+            });
+        }
+
+        document.querySelectorAll('[data-qty-step]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                if (!qtyInput) return;
+                var step = parseInt(btn.dataset.qtyStep, 10) || 0;
+                qtyInput.value = String(getQuantity() + step);
+                qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
             });
         });
 
@@ -237,6 +312,9 @@
                 if (!getSelectedPlan()) {
                     alert('لطفاً یک پلن انتخاب کنید.');
                     return;
+                }
+                if (qtyInput) {
+                    qtyInput.value = String(getQuantity());
                 }
                 form.requestSubmit();
             });

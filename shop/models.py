@@ -167,6 +167,41 @@ class LicensePlan(models.Model):
     name = models.CharField(max_length=100, verbose_name='نام پلن')
     plan_type = models.CharField(max_length=20, choices=PLAN_TYPES, verbose_name='نوع پلن')
     price = models.DecimalField(max_digits=12, decimal_places=0, validators=[MinValueValidator(0)], verbose_name='قیمت (تومان)')
+    compare_at_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=0,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        verbose_name='قیمت قبل از تخفیف (تومان)',
+        help_text='برای نمایش آفر ویژه — اگر بیشتر از قیمت فروش باشد، خط‌خورده نمایش داده می‌شود.',
+    )
+    is_featured = models.BooleanField(
+        default=False,
+        verbose_name='پلن پیشنهادی',
+        help_text='برچسب «پیشنهادی» روی کارت قیمت‌گذاری',
+    )
+    offer_badge = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='برچسب آفر',
+        help_text='مثلاً «آفر ویژه» — اگر خالی باشد و پلن پیشنهادی باشد، «پیشنهادی» نمایش داده می‌شود.',
+    )
+    allow_bulk_purchase = models.BooleanField(
+        default=False,
+        verbose_name='خرید چندتایی (آژانس)',
+        help_text='امکان خرید چند لایسنس مستقل در یک سفارش — هر لایسنس یک کلید جدا',
+    )
+    min_quantity = models.PositiveIntegerField(
+        default=1,
+        verbose_name='حداقل تعداد',
+        help_text='فقط برای خرید چندتایی آژانس',
+    )
+    max_quantity = models.PositiveIntegerField(
+        default=20,
+        verbose_name='حداکثر تعداد',
+        help_text='فقط برای خرید چندتایی آژانس',
+    )
     duration_days = models.IntegerField(null=True, blank=True, verbose_name='مدت اعتبار (روز)')
     max_activations = models.IntegerField(default=1, verbose_name='حداکثر فعال‌سازی')
     is_active = models.BooleanField(default=True, verbose_name='فعال')
@@ -179,6 +214,19 @@ class LicensePlan(models.Model):
     
     def __str__(self):
         return f'{self.product.title} - {self.name}'
+
+    def has_promo_offer(self) -> bool:
+        return bool(self.compare_at_price and self.compare_at_price > self.price)
+
+    def promo_discount_percent(self) -> int:
+        if not self.has_promo_offer():
+            return 0
+        return int((self.compare_at_price - self.price) * 100 // self.compare_at_price)
+
+    def list_price(self):
+        if self.has_promo_offer():
+            return self.compare_at_price
+        return self.price
 
 
 class Order(models.Model):
@@ -199,6 +247,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', verbose_name='کاربر')
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='product_orders', verbose_name='محصول')
     plan = models.ForeignKey(LicensePlan, on_delete=models.PROTECT, related_name='plan_orders', verbose_name='پلن')
+    quantity = models.PositiveIntegerField(default=1, verbose_name='تعداد لایسنس')
     amount = models.DecimalField(max_digits=12, decimal_places=0, verbose_name='مبلغ نهایی (تومان)')
     original_price = models.DecimalField(max_digits=12, decimal_places=0, null=True, blank=True, verbose_name='قیمت اصلی (تومان)')
     discount_amount = models.DecimalField(max_digits=12, decimal_places=0, default=0, verbose_name='مبلغ تخفیف (تومان)')

@@ -129,8 +129,12 @@
                                     {% if plan_data.purchase_blocked %}disabled{% endif %}
                                     data-original-price="{{ plan_data.original_price }}"
                                     data-final-price="{{ plan_data.final_price }}"
+                                    data-unit-final-price="{{ plan_data.final_price }}"
                                     data-has-repeat-discount="{% if plan_data.has_repeat_discount %}true{% else %}false{% endif %}"
                                     data-repeat-discount-percentage="{{ plan_data.repeat_discount_percentage }}"
+                                    data-allow-bulk="{% if plan_data.plan.allow_bulk_purchase %}true{% else %}false{% endif %}"
+                                    data-min-quantity="{{ plan_data.plan.min_quantity }}"
+                                    data-max-quantity="{{ plan_data.plan.max_quantity }}"
                                 >
                                 <span class="ck-plan-accent" aria-hidden="true"></span>
                                 <span class="ck-plan-check" aria-hidden="true"><i class="fas fa-check"></i></span>
@@ -156,20 +160,44 @@
                                         <span class="ck-plan-amount">{{ plan_data.final_price|currency }}</span>
                                         <span class="ck-plan-currency">تومان</span>
                                     </div>
+                                    {% if plan_data.has_promo_offer %}
+                                    <span class="ck-plan-save"><i class="fas fa-tags"></i> آفر ویژه</span>
+                                    {% endif %}
                                     {% for reason in plan_data.discount_reasons %}
+                                    {% if 'آفر' not in reason %}
                                     <span class="ck-plan-save"><i class="fas fa-tag"></i> {{ reason }}</span>
+                                    {% endif %}
                                     {% endfor %}
                                 </div>
 
                                 <ul class="ck-plan-feats">
                                     <li><span class="ck-plan-feat-icon"><i class="fas fa-clock"></i></span><span>{{ plan_data.plan.get_plan_type_display }} دسترسی</span></li>
                                     <li><span class="ck-plan-feat-icon"><i class="fas fa-microchip"></i></span><span>{{ plan_data.plan.max_activations }} دستگاه فعال</span></li>
+                                    {% if plan_data.plan.allow_bulk_purchase %}
+                                    <li><span class="ck-plan-feat-icon"><i class="fas fa-users"></i></span><span>خرید چندتایی برای آژانس ({{ plan_data.plan.min_quantity }} تا {{ plan_data.plan.max_quantity }} لایسنس)</span></li>
+                                    {% endif %}
                                     {% if plan_data.purchase_blocked %}
                                     <li><span class="ck-plan-feat-icon"><i class="fas fa-ban"></i></span><span>{{ plan_data.purchase_block_message }}</span></li>
                                     {% endif %}
                                 </ul>
                             </label>
                             {% endfor %}
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="ck-fieldset ck-bulk-qty-fieldset" id="bulk-quantity-fieldset" hidden>
+                        <legend class="ck-legend">
+                            <span class="ck-legend-num">۲</span>
+                            <span>تعداد لایسنس (آژانس)</span>
+                        </legend>
+                        <div class="ck-bulk-qty">
+                            <label for="id_quantity" class="ck-bulk-qty-label">هر لایسنس یک کلید مستقل — برای مشاوران تیم</label>
+                            <div class="ck-bulk-qty-row">
+                                <button type="button" class="ck-bulk-qty-btn" data-qty-step="-1" aria-label="کاهش">−</button>
+                                <input type="number" name="quantity" id="id_quantity" class="ck-qty-input" value="1" min="1" max="20" step="1">
+                                <button type="button" class="ck-bulk-qty-btn" data-qty-step="1" aria-label="افزایش">+</button>
+                            </div>
+                            <p class="ck-bulk-qty-note" id="bulk-quantity-note"></p>
                         </div>
                     </fieldset>
 
@@ -188,7 +216,7 @@
                     <div class="ck-checkout-extras">
                         <fieldset class="ck-fieldset ck-fieldset--extras">
                             <legend class="ck-legend ck-legend--extras">
-                                <span class="ck-legend-num">۲</span>
+                                <span class="ck-legend-num">۳</span>
                                 <span>کد تخفیف</span>
                                 <em>(اختیاری)</em>
                             </legend>
@@ -217,7 +245,7 @@
                         {% if payment_methods and show_payment_choice %}
                         <fieldset class="ck-fieldset ck-fieldset--extras">
                             <legend class="ck-legend ck-legend--extras">
-                                <span class="ck-legend-num">۳</span>
+                                <span class="ck-legend-num">۴</span>
                                 <span>روش پرداخت</span>
                             </legend>
                             <div class="ck-pay-methods ck-pay-methods--mobile" role="radiogroup" aria-label="روش پرداخت">
@@ -273,5 +301,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-checkout.js' %}?v=4" defer></script>
+<script src="{% static 'js/mizkar-checkout.js' %}?v=5" defer></script>
 {% endblock %}

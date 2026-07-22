@@ -11,6 +11,18 @@ class BuyForm(forms.ModelForm):
         widget=forms.RadioSelect,
         label='انتخاب پلن'
     )
+    quantity = forms.IntegerField(
+        min_value=1,
+        initial=1,
+        required=False,
+        label='تعداد لایسنس',
+        widget=forms.NumberInput(attrs={
+            'class': 'ck-qty-input',
+            'min': '1',
+            'step': '1',
+            'inputmode': 'numeric',
+        }),
+    )
     discount_code = forms.CharField(
         max_length=50,
         required=False,
@@ -49,6 +61,22 @@ class BuyForm(forms.ModelForm):
             if not ok:
                 raise forms.ValidationError(message)
         return plan
+
+    def clean_quantity(self):
+        quantity = self.cleaned_data.get('quantity') or 1
+        plan = self.cleaned_data.get('plan')
+        if not plan:
+            return 1
+        from shop.services.plan_pricing import clamp_quantity
+        return clamp_quantity(plan, quantity)
+
+    def clean(self):
+        cleaned = super().clean()
+        plan = cleaned.get('plan')
+        quantity = cleaned.get('quantity') or 1
+        if plan and not plan.allow_bulk_purchase and quantity != 1:
+            self.add_error('quantity', 'این پلن فقط به‌صورت تکی قابل خرید است.')
+        return cleaned
     
     def clean_discount_code(self):
         discount_code = self.cleaned_data.get('discount_code', '').strip().upper()

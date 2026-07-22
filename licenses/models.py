@@ -19,7 +19,8 @@ class License(models.Model):
         ('expired', 'منقضی شده'),
     ]
     
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='license', verbose_name='سفارش')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='licenses', verbose_name='سفارش')
+    sequence = models.PositiveSmallIntegerField(default=1, verbose_name='شماره در سفارش')
     license_key = models.CharField(max_length=100, unique=True, verbose_name='کلید لایسنس')
     plan = models.ForeignKey(LicensePlan, on_delete=models.PROTECT, verbose_name='پلن')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='inactive', verbose_name='وضعیت')
@@ -31,6 +32,12 @@ class License(models.Model):
         verbose_name = 'لایسنس'
         verbose_name_plural = 'لایسنس‌ها'
         ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['order', 'sequence'],
+                name='uniq_license_order_sequence',
+            ),
+        ]
     
     def __str__(self):
         return f'{self.license_key} - {self.order.user.username}'

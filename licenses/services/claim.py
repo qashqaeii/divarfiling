@@ -17,35 +17,51 @@ def _license_expires_at(plan):
     return None
 
 
-def issue_license_for_paid_order(order: Order) -> License | None:
+def issue_licenses_for_paid_order(order: Order) -> list[License]:
     """
-    صدور خودکار کلید لایسنس پس از پرداخت — بدون نیاز به شناسه سخت‌افزار.
-    idempotent: اگر لایسنس وجود داشته باشد همان را برمی‌گرداند.
+    صدور خودکار کلیدهای لایسنس پس از پرداخت — بدون نیاز به شناسه سخت‌افزار.
+    idempotent: اگر لایسنس‌ها وجود داشته باشند همان‌ها را برمی‌گرداند.
     """
     if order.status != 'paid':
-        return None
+        return []
 
-    existing = License.objects.filter(order=order).first()
-    if existing:
-        return existing
+    target_count = max(1, int(order.quantity or 1))
+    existing = list(
+        License.objects.filter(order=order).order_by('sequence', 'pk')
+    )
+    if len(existing) >= target_count:
+        return existing[:target_count]
 
-    license_obj = License.objects.create(
-        order=order,
-        license_key=generate_license_key(order),
-        plan=order.plan,
-        max_activations=order.plan.max_activations,
-        expires_at=_license_expires_at(order.plan),
-        status='inactive',
-    )
-    AuditLog.objects.create(
-        license=license_obj,
-        action_type='activation',
-        details={
-            'event': 'license_issued_on_payment',
-            'plan': order.plan.name,
-        },
-    )
-    return license_obj
+    created: list[License] = []
+    for sequence in range(len(existing) + 1, target_count + 1):
+        license_obj = License.objects.create(
+            order=order,
+            sequence=sequence,
+            license_key=generate_license_key(order, sequence=sequence),
+            plan=order.plan,
+            max_activations=order.plan.max_activations,
+            expires_at=_license_expires_at(order.plan),
+            status='inactive',
+        )
+        AuditLog.objects.create(
+            license=license_obj,
+            action_type='activation',
+            details={
+                'event': 'license_issued_on_payment',
+                'plan': order.plan.name,
+                'sequence': sequence,
+                'quantity': target_count,
+            },
+        )
+        created.append(license_obj)
+
+    return existing + created
+
+
+def issue_license_for_paid_order(order: Order) -> License | None:
+    """سازگاری با کد قدیمی — اولین لایسنس سفارش را برمی‌گرداند."""
+    licenses = issue_licenses_for_paid_order(order)
+    return licenses[0] if licenses else None
 
 
 def backfill_licenses_for_user(user) -> int:
@@ -53,9 +69,11 @@ def backfill_licenses_for_user(user) -> int:
     created = 0
     orders = Order.objects.filter(user=user, status='paid').select_related('plan')
     for order in orders:
-        if issue_license_for_paid_order(order):
-            if License.objects.filter(order=order).count():
-                created += 1
+        before = License.objects.filter(order=order).count()
+        issue_licenses_for_paid_order(order)
+        after = License.objects.filter(order=order).count()
+        if after > before:
+            created += after - before
     return created
 
 
@@ -95,10 +113,11 @@ def claim_license_for_order(user, order_id, hardware_fingerprint: str = '', *, l
     except Order.DoesNotExist as exc:
         raise ValidationError('سفارش پرداخت‌شده یافت نشد.') from exc
 
-    license_obj = issue_license_for_paid_order(order)
-    if not license_obj:
+    licenses = issue_licenses_for_paid_order(order)
+    if not licenses:
         raise ValidationError('امکان صدور لایسنس برای این سفارش وجود ندارد.')
 
+    license_obj = licenses[0]
     hw = (hardware_fingerprint or '').strip()
     if hw:
         _register_hardware(license_obj, hw)

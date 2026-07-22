@@ -23,7 +23,13 @@ class ProductMediaInline(admin.TabularInline):
 
 class LicensePlanInline(admin.TabularInline):
     model = LicensePlan
-    extra = 1
+    extra = 0
+    fields = [
+        'name', 'plan_type', 'price', 'compare_at_price', 'duration_days',
+        'max_activations', 'is_featured', 'offer_badge',
+        'allow_bulk_purchase', 'min_quantity', 'max_quantity',
+        'is_active', 'order',
+    ]
 
 
 @admin.register(Product)
@@ -58,7 +64,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'product', 'plan', 'amount', 'payment_method', 'status', 'discount_code', 'created_at']
+    list_display = ['id', 'user', 'product', 'plan', 'quantity', 'amount', 'payment_method', 'status', 'discount_code', 'created_at']
     list_filter = ['status', 'payment_method', 'created_at', 'discount_code']
     search_fields = ['id', 'user__username', 'user__email', 'discount_code__code']
     readonly_fields = ['id', 'created_at', 'paid_at']

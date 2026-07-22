@@ -299,58 +299,37 @@ class BuyView(LoginRequiredMixin, CreateView):
         )
 
         daily_plan_used = user_has_purchased_daily_plan(self.request.user)
-        
-        # بررسی اینکه آیا کاربر قبلاً خرید پرداخت شده برای این محصول دارد
-        has_previous_purchase = Order.objects.filter(
-            user=self.request.user,
-            product=self.product,
-            status='paid'
-        ).exists()
-        
-        # محاسبه قیمت‌ها برای هر پلن
+
+        from shop.services.plan_pricing import calculate_plan_purchase_prices
+
         plans_with_prices = []
         for plan in self.product.plans.filter(is_active=True).order_by('order', 'price'):
             purchase_ok, purchase_message, _purchase_reason = evaluate_plan_purchase(
                 self.request.user,
                 plan,
             )
-            original_price = plan.price
-            discount_amount = 0
-            final_price = original_price
-            discount_reasons = []
-            
-            # اعمال تخفیف خریدهای بعدی (اگر کاربر قبلاً خرید کرده باشد)
-            if has_previous_purchase and self.product.repeat_purchase_discount > 0:
-                from decimal import Decimal
-                repeat_discount_percentage = Decimal(str(self.product.repeat_purchase_discount))
-                repeat_discount = (original_price * repeat_discount_percentage) // 100
-                discount_amount += repeat_discount
-                final_price -= repeat_discount
-                discount_reasons.append(f'{int(repeat_discount_percentage)}% تخفیف خرید مجدد')
-
-            # تخفیف معرف
-            if self.request.user.is_authenticated:
-                from affiliates.services import apply_affiliate_discount
-                aff_disc, final_price, aff_label = apply_affiliate_discount(
-                    self.request.user, self.request, self.product, final_price
-                )
-                if aff_disc > 0:
-                    discount_amount += aff_disc
-                    if aff_label:
-                        discount_reasons.append(aff_label)
-            
+            pricing = calculate_plan_purchase_prices(
+                plan,
+                self.product,
+                self.request.user,
+                request=self.request,
+                quantity=1,
+            )
             plans_with_prices.append({
                 'plan': plan,
-                'original_price': original_price,
-                'discount_amount': discount_amount,
-                'final_price': final_price,
-                'has_discount': discount_amount > 0,
-                'has_repeat_discount': has_previous_purchase and self.product.repeat_purchase_discount > 0,
-                'repeat_discount_percentage': int(self.product.repeat_purchase_discount) if has_previous_purchase else 0,
-                'discount_reasons': discount_reasons,
+                'original_price': int(pricing['original_price']),
+                'discount_amount': int(pricing['discount_amount']),
+                'final_price': int(pricing['final_price']),
+                'has_discount': pricing['has_discount'],
+                'has_promo_offer': pricing['has_promo_offer'],
+                'has_repeat_discount': pricing['has_repeat_discount'],
+                'repeat_discount_percentage': pricing['repeat_discount_percentage'],
+                'discount_reasons': pricing['discount_reasons'],
                 'purchase_blocked': not purchase_ok,
                 'purchase_block_message': purchase_message,
             })
+
+        has_previous_purchase = any(p['has_repeat_discount'] for p in plans_with_prices)
         
         from shop.models import PaymentSettings
         pay_settings = PaymentSettings.load()
@@ -412,63 +391,44 @@ class BuyView(LoginRequiredMixin, CreateView):
         order = form.save(commit=False)
         order.user = self.request.user
         order.product = self.product
-        
-        # محاسبه قیمت با در نظر گیری تخفیف خریدهای بعدی و کد تخفیف
-        original_price = order.plan.price
-        total_discount_amount = 0
-        
-        # ذخیره قیمت اصلی
-        order.original_price = original_price
-        
-        # بررسی اینکه آیا کاربر قبلاً خرید پرداخت شده برای این محصول دارد
-        has_previous_purchase = Order.objects.filter(
-            user=self.request.user,
-            product=self.product,
-            status='paid'
-        ).exists()
-        
-        # محاسبه قیمت پس از تخفیف‌ها
-        price_after_discounts = original_price
-        
-        # اعمال تخفیف خریدهای بعدی
-        if has_previous_purchase and self.product.repeat_purchase_discount > 0:
-            from decimal import Decimal
-            repeat_discount_percentage = Decimal(str(self.product.repeat_purchase_discount))
-            repeat_discount = (original_price * repeat_discount_percentage) // 100
-            total_discount_amount += repeat_discount
-            price_after_discounts -= repeat_discount
+        order.quantity = form.cleaned_data.get('quantity') or 1
 
-        # تخفیف معرف (قبل از کد تخفیف)
-        from affiliates.services import apply_affiliate_discount, resolve_order_affiliate
+        from shop.services.plan_pricing import calculate_plan_purchase_prices
+
+        discount_code = form.cleaned_data.get('discount_code')
+        pricing = calculate_plan_purchase_prices(
+            order.plan,
+            self.product,
+            self.request.user,
+            request=self.request,
+            quantity=order.quantity,
+            discount_code=discount_code,
+        )
+        order.original_price = pricing['original_price']
+        order.discount_amount = pricing['discount_amount']
+        order.amount = pricing['final_price']
+
+        from affiliates.services import resolve_order_affiliate
         affiliate = resolve_order_affiliate(self.request.user, self.request)
         if affiliate:
             order.affiliate = affiliate
-        affiliate_discount, price_after_discounts, _affiliate_label = apply_affiliate_discount(
-            self.request.user, self.request, self.product, price_after_discounts
-        )
-        if affiliate_discount > 0:
-            total_discount_amount += affiliate_discount
-        
-        # اعمال کد تخفیف
-        discount_code = form.cleaned_data.get('discount_code')
+
         if discount_code:
             is_valid, message = discount_code.is_valid(self.request.user)
             if not is_valid:
                 form.add_error('discount_code', message)
                 return self.form_invalid(form)
-            
             order.discount_code = discount_code
-            code_discount, _ = discount_code.calculate_discount(price_after_discounts, self.request.user)
-            if code_discount > 0:
-                total_discount_amount += code_discount
-                price_after_discounts -= code_discount
-            else:
+            base_pricing = calculate_plan_purchase_prices(
+                order.plan,
+                self.product,
+                self.request.user,
+                request=self.request,
+                quantity=order.quantity,
+            )
+            if pricing['final_price'] >= base_pricing['final_price']:
                 form.add_error('discount_code', 'کد تخفیف قابل اعمال نیست.')
                 return self.form_invalid(form)
-        
-        # ذخیره مبالغ نهایی
-        order.discount_amount = total_discount_amount
-        order.amount = max(0, price_after_discounts)  # اطمینان از اینکه مبلغ منفی نشود
 
         from shop.models import PaymentSettings
         pay_settings = PaymentSettings.load()
@@ -991,21 +951,22 @@ def mark_review_helpful(request, review_id):
 @require_POST
 def apply_discount_code(request, slug):
     """اعمال کد تخفیف و محاسبه قیمت نهایی"""
-    from decimal import Decimal
     import json
-    
+
+    from shop.services.plan_pricing import calculate_plan_purchase_prices
+
     try:
         data = json.loads(request.body)
         discount_code_str = data.get('discount_code', '').strip().upper()
         plan_id = data.get('plan_id')
-        
+        quantity = int(data.get('quantity') or 1)
+
         if not plan_id:
             return JsonResponse({
                 'success': False,
                 'message': 'لطفاً یک پلن انتخاب کنید.'
             }, status=400)
-        
-        # دریافت محصول و پلن
+
         product = get_object_or_404(Product, slug=slug, is_active=True)
         plan = get_object_or_404(LicensePlan, id=plan_id, product=product, is_active=True)
 
@@ -1016,107 +977,92 @@ def apply_discount_code(request, slug):
                 'success': False,
                 'message': purchase_message,
             }, status=400)
-        
-        # محاسبه قیمت اولیه
-        original_price = plan.price
-        price_after_discounts = original_price
-        total_discount_amount = 0
-        discount_details = []
-        
-        # بررسی تخفیف خریدهای بعدی
-        has_previous_purchase = Order.objects.filter(
-            user=request.user,
-            product=product,
-            status='paid'
-        ).exists()
-        
-        if has_previous_purchase and product.repeat_purchase_discount > 0:
-            repeat_discount_percentage = Decimal(str(product.repeat_purchase_discount))
-            repeat_discount = (original_price * repeat_discount_percentage) // 100
-            total_discount_amount += repeat_discount
-            price_after_discounts -= repeat_discount
-            discount_details.append({
-                'type': 'repeat_purchase',
-                'label': f'{int(repeat_discount_percentage)}% تخفیف خرید مجدد',
-                'amount': int(repeat_discount)
-            })
 
-        from affiliates.services import apply_affiliate_discount
-        aff_disc, price_after_discounts, aff_label = apply_affiliate_discount(
-            request.user, request, product, price_after_discounts
-        )
-        if aff_disc > 0:
-            total_discount_amount += aff_disc
-            discount_details.append({
-                'type': 'affiliate',
-                'label': aff_label or 'تخفیف معرف',
-                'amount': int(aff_disc),
-            })
-        
-        # بررسی کد تخفیف
-        code_discount = 0
         discount_code_obj = None
         if discount_code_str:
             try:
                 discount_code_obj = DiscountCode.objects.get(code=discount_code_str)
-                
-                # بررسی اعتبار کد تخفیف
-                is_valid, error_msg = discount_code_obj.is_valid(request.user)
-                if not is_valid:
-                    return JsonResponse({
-                        'success': False,
-                        'message': error_msg
-                    }, status=400)
-                
-                # محاسبه تخفیف کد
-                code_discount, discount_message = discount_code_obj.calculate_discount(price_after_discounts, request.user)
-                
-                if code_discount > 0:
-                    total_discount_amount += code_discount
-                    price_after_discounts -= code_discount
-                    
-                    discount_label = ''
-                    if discount_code_obj.discount_type == 'percentage':
-                        discount_label = f'{int(discount_code_obj.discount_value)}% تخفیف'
-                    else:
-                        discount_label = f'{int(discount_code_obj.discount_value):,} تومان تخفیف'
-                    
-                    discount_details.append({
-                        'type': 'discount_code',
-                        'label': discount_label,
-                        'code': discount_code_obj.code,
-                        'amount': int(code_discount)
-                    })
-                else:
-                    return JsonResponse({
-                        'success': False,
-                        'message': discount_message or 'کد تخفیف قابل اعمال نیست.'
-                    }, status=400)
-                    
             except DiscountCode.DoesNotExist:
                 return JsonResponse({
                     'success': False,
                     'message': 'کد تخفیف یافت نشد.'
                 }, status=400)
-        
-        # اطمینان از اینکه مبلغ منفی نشود
-        final_price = max(0, price_after_discounts)
-        
+
+            is_valid, error_msg = discount_code_obj.is_valid(request.user)
+            if not is_valid:
+                return JsonResponse({
+                    'success': False,
+                    'message': error_msg
+                }, status=400)
+
+        base_pricing = calculate_plan_purchase_prices(
+            plan, product, request.user, request=request, quantity=quantity,
+        )
+        pricing = calculate_plan_purchase_prices(
+            plan,
+            product,
+            request.user,
+            request=request,
+            quantity=quantity,
+            discount_code=discount_code_obj,
+        )
+
+        if discount_code_obj and pricing['final_price'] >= base_pricing['final_price']:
+            return JsonResponse({
+                'success': False,
+                'message': 'کد تخفیف قابل اعمال نیست.'
+            }, status=400)
+
+        discount_details = []
+        if base_pricing['has_promo_offer']:
+            promo_amount = int(base_pricing['original_price'] - (base_pricing['unit_sale_price'] * base_pricing['quantity']))
+            if promo_amount > 0:
+                discount_details.append({
+                    'type': 'promo_offer',
+                    'label': f'{plan.promo_discount_percent()}% آفر ویژه',
+                    'amount': promo_amount,
+                })
+        if base_pricing['has_repeat_discount']:
+            repeat_amount = int(
+                (base_pricing['unit_sale_price'] * base_pricing['quantity'])
+                - (base_pricing['final_price'] if not discount_code_obj else pricing['final_price'])
+            )
+            discount_details.append({
+                'type': 'repeat_purchase',
+                'label': f'{base_pricing["repeat_discount_percentage"]}% تخفیف خرید مجدد',
+                'amount': max(0, repeat_amount),
+            })
+
+        if discount_code_obj:
+            code_discount = int(base_pricing['final_price'] - pricing['final_price'])
+            if code_discount > 0:
+                if discount_code_obj.discount_type == 'percentage':
+                    discount_label = f'{int(discount_code_obj.discount_value)}% تخفیف'
+                else:
+                    discount_label = f'{int(discount_code_obj.discount_value):,} تومان تخفیف'
+                discount_details.append({
+                    'type': 'discount_code',
+                    'label': discount_label,
+                    'code': discount_code_obj.code,
+                    'amount': code_discount,
+                })
+
         return JsonResponse({
             'success': True,
-            'original_price': int(original_price),
-            'total_discount': int(total_discount_amount),
-            'final_price': int(final_price),
+            'original_price': int(pricing['original_price']),
+            'total_discount': int(pricing['discount_amount']),
+            'final_price': int(pricing['final_price']),
             'discount_details': discount_details,
-            'has_discount': total_discount_amount > 0
+            'has_discount': pricing['has_discount'],
+            'quantity': pricing['quantity'],
         })
-        
-    except json.JSONDecodeError:
+
+    except (json.JSONDecodeError, ValueError, TypeError):
         return JsonResponse({
             'success': False,
             'message': 'خطا در پردازش درخواست.'
         }, status=400)
-    except Exception as e:
+    except Exception:
         return JsonResponse({
             'success': False,
             'message': 'خطایی رخ داد. لطفاً دوباره تلاش کنید.'

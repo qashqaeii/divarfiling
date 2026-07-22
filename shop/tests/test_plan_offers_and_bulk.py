@@ -36,6 +36,28 @@ class PlanPricingTests(TestCase):
         self.assertTrue(self.yearly.has_promo_offer())
         self.assertEqual(self.yearly.promo_discount_percent(), 12)
 
+    def test_normalized_features_custom_and_default(self):
+        custom = LicensePlan.objects.create(
+            product=self.product,
+            name='سفارشی',
+            plan_type='monthly',
+            price=500_000,
+            duration_days=30,
+            features=[
+                'پشتیبانی VIP',
+                {'text': 'CRM کامل', 'icon': 'fa-users'},
+            ],
+            is_active=True,
+        )
+        feats = custom.normalized_features()
+        self.assertEqual(len(feats), 2)
+        self.assertEqual(feats[0]['text'], 'پشتیبانی VIP')
+        self.assertEqual(feats[1]['icon'], 'fa-users')
+
+        defaults = self.yearly.normalized_features()
+        self.assertTrue(any('روز دسترسی' in f['text'] for f in defaults))
+        self.assertTrue(any('دستگاه' in f['text'] for f in defaults))
+
     def test_pricing_uses_compare_at_as_original(self):
         pricing = calculate_plan_purchase_prices(
             self.yearly, self.product, self.user, quantity=1,

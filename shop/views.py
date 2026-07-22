@@ -327,6 +327,8 @@ class BuyView(LoginRequiredMixin, CreateView):
                 'discount_reasons': pricing['discount_reasons'],
                 'purchase_blocked': not purchase_ok,
                 'purchase_block_message': purchase_message,
+                'features': plan.normalized_features(),
+                'tagline': plan.tagline.strip(),
             })
 
         has_previous_purchase = any(p['has_repeat_discount'] for p in plans_with_prices)

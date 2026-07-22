@@ -25,11 +25,37 @@ class LicensePlanInline(admin.TabularInline):
     model = LicensePlan
     extra = 0
     fields = [
-        'name', 'plan_type', 'price', 'compare_at_price', 'duration_days',
-        'max_activations', 'is_featured', 'offer_badge',
+        'name', 'plan_type', 'tagline', 'price', 'compare_at_price', 'duration_days',
+        'max_activations', 'is_featured', 'offer_badge', 'features',
         'allow_bulk_purchase', 'min_quantity', 'max_quantity',
         'is_active', 'order',
     ]
+
+
+@admin.register(LicensePlan)
+class LicensePlanAdmin(admin.ModelAdmin):
+    list_display = ['name', 'product', 'plan_type', 'price', 'is_featured', 'is_active', 'order']
+    list_filter = ['product', 'plan_type', 'is_featured', 'is_active']
+    search_fields = ['name', 'product__title', 'tagline']
+    ordering = ['product', 'order', 'price']
+    fieldsets = (
+        ('اطلاعات پلن', {
+            'fields': ('product', 'name', 'plan_type', 'tagline', 'order', 'is_active'),
+        }),
+        ('قیمت و آفر', {
+            'fields': ('price', 'compare_at_price', 'is_featured', 'offer_badge'),
+        }),
+        ('دسترسی', {
+            'fields': ('duration_days', 'max_activations', 'allow_bulk_purchase', 'min_quantity', 'max_quantity'),
+        }),
+        ('ویژگی\u200cهای کارت خرید', {
+            'fields': ('features',),
+            'description': (
+                'مثال: ["فعال\u200cسازی فوری", "پشتیبانی VIP"] '
+                'یا [{"text": "CRM کامل", "icon": "fa-users"}]'
+            ),
+        }),
+    )
 
 
 @admin.register(Product)

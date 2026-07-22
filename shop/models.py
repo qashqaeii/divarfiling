@@ -187,6 +187,18 @@ class LicensePlan(models.Model):
         verbose_name='برچسب آفر',
         help_text='مثلاً «آفر ویژه» — اگر خالی باشد و پلن پیشنهادی باشد، «پیشنهادی» نمایش داده می‌شود.',
     )
+    tagline = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='توضیح کوتاه پلن',
+        help_text='زیر عنوان پلن در صفحه خرید — مثلاً «مناسب شروع کار»',
+    )
+    features = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='ویژگی‌های پلن',
+        help_text='لیست متن یا آبجکت {"text": "...", "icon": "fa-check"} — در صورت خالی، ویژگی‌های پیش‌فرض نمایش داده می‌شود.',
+    )
     allow_bulk_purchase = models.BooleanField(
         default=False,
         verbose_name='خرید چندتایی (آژانس)',
@@ -214,6 +226,42 @@ class LicensePlan(models.Model):
     
     def __str__(self):
         return f'{self.product.title} - {self.name}'
+
+    def normalized_features(self) -> list[dict]:
+        """ویژگی‌های قابل نمایش در کارت پلن — {text, icon}."""
+        if self.features:
+            parsed = []
+            for item in self.features:
+                if isinstance(item, str):
+                    text = item.strip()
+                    if text:
+                        parsed.append({'text': text, 'icon': 'fa-check'})
+                elif isinstance(item, dict):
+                    text = str(item.get('text') or '').strip()
+                    if text:
+                        icon = str(item.get('icon') or 'fa-check').strip() or 'fa-check'
+                        if not icon.startswith('fa-'):
+                            icon = f'fa-{icon.lstrip("fa-")}'
+                        parsed.append({'text': text, 'icon': icon})
+            if parsed:
+                return parsed
+        return self._default_features()
+
+    def _default_features(self) -> list[dict]:
+        items = []
+        if self.duration_days:
+            items.append({'text': f'{self.duration_days} روز دسترسی', 'icon': 'fa-clock'})
+        else:
+            items.append({'text': f'{self.get_plan_type_display()} دسترسی', 'icon': 'fa-clock'})
+        items.append({'text': f'{self.max_activations} دستگاه فعال', 'icon': 'fa-microchip'})
+        items.append({'text': '۱ ویندوز + ۱ اندروید', 'icon': 'fa-link'})
+        items.append({'text': 'فعال‌سازی فوری پس از خرید', 'icon': 'fa-bolt'})
+        if self.allow_bulk_purchase:
+            items.append({
+                'text': f'خرید چندتایی آژانس ({self.min_quantity} تا {self.max_quantity})',
+                'icon': 'fa-users',
+            })
+        return items
 
     def has_promo_offer(self) -> bool:
         return bool(self.compare_at_price and self.compare_at_price > self.price)

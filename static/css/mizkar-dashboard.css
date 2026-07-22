@@ -1342,7 +1342,12 @@ html.mk-public[data-theme="light"] .modal-professional .modal-close-btn {
 }
 
 .mk-dashboard-page .dash-downloads-hub {
-    margin-top: 0.15rem;
+    margin-top: 0;
+    padding: 0.85rem 0.9rem 0.95rem;
+    border-radius: 12px;
+    border: 1px solid var(--mk-border);
+    background: var(--mk-surface);
+    overflow: hidden;
 }
 
 .mk-dashboard-page .dash-downloads-hub .mk-dl-hub {
@@ -1351,17 +1356,50 @@ html.mk-public[data-theme="light"] .modal-professional .modal-close-btn {
 }
 
 .mk-dashboard-page .dash-downloads-hub .mk-dl-hub-bg {
-    border-radius: var(--mk-radius-lg, 14px);
+    display: none;
 }
 
 .mk-dashboard-page .dash-downloads-hub .mk-dl-hub-inner {
-    padding: 1.25rem 0 0;
+    padding: 0;
     max-width: none;
 }
 
 .mk-dashboard-page .dash-downloads-hub .mk-dl-hub-head {
     text-align: right;
-    margin-inline: 0;
+    margin: 0 0 0.85rem;
+    max-width: none;
+}
+
+.mk-dashboard-page .dash-downloads-hub .mk-dl-hub-head h2 {
+    font-size: 0.95rem;
+}
+
+.mk-dashboard-page .dash-downloads-hub .mk-dl-hub-lead {
+    font-size: 0.72rem;
+    line-height: 1.55;
+}
+
+.mk-dashboard-page .dash-downloads-hub .mk-dl-hub-kicker {
+    font-size: 0.62rem;
+    margin-bottom: 0.45rem;
+    padding: 0.2rem 0.55rem;
+}
+
+.mk-dashboard-page .dl-tab-head {
+    margin-bottom: 0.65rem;
+}
+
+.mk-dashboard-page .dl-tab-title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--mk-text);
+}
+
+.mk-dashboard-page .dl-tab-sub {
+    margin: 0.12rem 0 0;
+    font-size: 0.68rem;
+    color: var(--mk-text-muted);
 }
 
 .mk-dashboard-page .license-claim-section {

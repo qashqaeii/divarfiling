@@ -8,10 +8,11 @@
 {% block body_class %}mk-account-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=18">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=19">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-head.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-licenses.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
 {% endblock %}
 
@@ -667,9 +668,13 @@
         </div>
 
         <!-- Tab: Downloads -->
-        <div id="tab-downloads" class="tab-content" style="display: none;">
+        <div id="tab-downloads" class="tab-content dl-tab" style="display: none;">
+            <header class="dl-tab-head">
+                <h2 class="dl-tab-title">دانلود اپ‌ها</h2>
+                <p class="dl-tab-sub">اپ اندروید و ربات ویندوز — با همان لایسنس میزکار</p>
+            </header>
             <div class="dash-downloads-hub">
-                {% include 'includes/app_download_hub.html' %}
+                {% include 'includes/app_download_hub.html' with compact=1 show_install_guide=1 %}
             </div>
         </div>
         

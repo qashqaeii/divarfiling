@@ -53,10 +53,12 @@
                             <span class="ck-success-ring ck-success-ring--pulse"></span>
                             <span class="ck-success-icon"><i class="fas fa-check"></i></span>
                         </div>
-                        <h1 id="ck-success-title" class="ck-success-title">پرداخت با موفقیت انجام شد</h1>
+                        <h1 id="ck-success-title" class="ck-success-title">{% if is_renewal %}لایسنس با موفقیت تمدید شد{% else %}پرداخت با موفقیت انجام شد{% endif %}</h1>
                         {% if licenses %}
                         <p class="ck-success-lead">
-                            {% if licenses|length > 1 %}
+                            {% if is_renewal %}
+                            همان کلید لایسنس شما فعال ماند — تاریخ اعتبار به‌روز شد.
+                            {% elif licenses|length > 1 %}
                             {{ licenses|length }} کلید لایسنس برای شما صادر شد — آماده کپی و فعال‌سازی.
                             {% else %}
                             کلید لایسنس شما آماده است — کپی کنید و در ربات یا اپ فعال کنید.
@@ -73,9 +75,9 @@
                             <span class="ck-success-card-icon"><i class="fas fa-key"></i></span>
                             <div>
                                 <h2 id="ck-license-heading">
-                                    {% if licenses|length > 1 %}کلیدهای لایسنس{% else %}کلید لایسنس{% endif %}
+                                    {% if is_renewal %}کلید تمدید‌شده{% elif licenses|length > 1 %}کلیدهای لایسنس{% else %}کلید لایسنس{% endif %}
                                 </h2>
-                                <p>این کلیدها را در جای امن نگه دارید — هر کلید یک دستگاه.</p>
+                                <p>{% if is_renewal %}همان کلید قبلی — دستگاه‌های فعال‌سازی‌شده حفظ می‌شوند.{% else %}این کلیدها را در جای امن نگه دارید — هر کلید یک دستگاه.{% endif %}</p>
                             </div>
                         </header>
 

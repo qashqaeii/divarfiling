@@ -442,21 +442,29 @@ class PaymentSuccessView(LoginRequiredMixin, View):
     """صفحه موفقیت پرداخت"""
 
     def get(self, request, order_id):
-        order = get_object_or_404(Order, id=order_id, user=request.user)
+        order = get_object_or_404(
+            Order.objects.select_related('renewal_license', 'renewal_license__plan'),
+            id=order_id,
+            user=request.user,
+        )
         if order.status != 'paid':
             return redirect('dashboard')
 
         license_obj = License.objects.filter(order=order).first()
-        licenses = list(License.objects.filter(order=order).order_by('sequence', 'pk'))
+        if order.renewal_license_id:
+            licenses = [order.renewal_license]
+        else:
+            licenses = list(License.objects.filter(order=order).order_by('sequence', 'pk'))
         transaction = Transaction.objects.filter(order=order).first()
 
         context = {
             'order': order,
-            'license': license_obj,
+            'license': license_obj if not order.renewal_license_id else order.renewal_license,
             'licenses': licenses,
             'transaction': transaction,
             'can_download': order_can_download(order),
             'download_filename': get_order_download_filename(order) if order_can_download(order) else '',
+            'is_renewal': bool(order.renewal_license_id),
         }
         return render(request, 'shop/payment_success.html', context)
 

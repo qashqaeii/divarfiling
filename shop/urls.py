@@ -11,6 +11,7 @@ urlpatterns = [
     path('products/', views.ProductListView.as_view(), name='product_list'),
     path('products/<slug:slug>/', views.ProductDetailView.as_view(), name='product_detail'),
     path('products/<slug:slug>/buy/', views.BuyView.as_view(), name='buy'),
+    path('licenses/<int:license_id>/renew/', views.RenewLicenseView.as_view(), name='renew_license'),
     path('products/<slug:slug>/apply-discount/', views.apply_discount_code, name='apply_discount'),
     path('products/<slug:slug>/rating/', views.submit_rating, name='submit_rating'),
     path('products/<slug:slug>/review/', views.submit_review, name='submit_review'),

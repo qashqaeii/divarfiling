@@ -353,6 +353,16 @@ def build_license_dashboard(user) -> Dict[str, Any]:
             'is_multi': lic.max_activations > 1,
         })
 
+    from licenses.services.renewal import evaluate_license_renewal
+
+    for portfolio in portfolios:
+        lic = portfolio['license']
+        expiry = portfolio['expiry']
+        can_renew, _renew_message = evaluate_license_renewal(lic)
+        portfolio['can_renew'] = can_renew and (
+            expiry.get('is_expired') or expiry.get('expiring_soon')
+        )
+
     return {
         'portfolios': portfolios,
         'team_members': team_members,

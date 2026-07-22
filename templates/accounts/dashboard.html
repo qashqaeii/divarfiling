@@ -631,8 +631,8 @@
                     <footer class="lic-tile-foot">
                         <a href="{% url 'license_guide' %}" class="lic-tile-link">راهنما</a>
                         <a href="#" onclick="showTab('downloads', event); return false;" class="lic-tile-link">دانلود</a>
-                        {% if expiry.is_expired and products %}
-                        <a href="{% url 'product_list' %}" class="lic-tile-link lic-tile-link--renew">تمدید</a>
+                        {% if item.can_renew %}
+                        <a href="{% url 'renew_license' lic.id %}" class="lic-tile-link lic-tile-link--renew">تمدید</a>
                         {% endif %}
                     </footer>
                 </article>

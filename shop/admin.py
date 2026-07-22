@@ -90,7 +90,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'product', 'plan', 'quantity', 'amount', 'payment_method', 'status', 'discount_code', 'created_at']
+    list_display = ['id', 'user', 'product', 'plan', 'quantity', 'amount', 'payment_method', 'status', 'renewal_license', 'discount_code', 'created_at']
     list_filter = ['status', 'payment_method', 'created_at', 'discount_code']
     search_fields = ['id', 'user__username', 'user__email', 'discount_code__code']
     readonly_fields = ['id', 'created_at', 'paid_at']

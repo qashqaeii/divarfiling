@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% load static currency_tags %}
+{% load static currency_tags persian_tags %}
 
-{% block title %}خرید — {{ product.title }}{% endblock %}
+{% block title %}{% if is_renewal %}تمدید لایسنس{% else %}خرید{% endif %} — {{ product.title }}{% endblock %}
 
 {% block body_class %}mk-checkout-page mk-checkout-page--buy{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=18">
 {% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
@@ -23,9 +23,9 @@
     <div class="ck-page ck-page--full">
         <header class="ck-page-head">
             <div class="ck-page-head-row">
-                <a href="{% url 'product_detail' product.slug %}" class="ck-back">
+                <a href="{% url 'dashboard' %}?tab=licenses#licenses" class="ck-back">
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                    <span>بازگشت</span>
+                    <span>میزکار</span>
                 </a>
                 <nav class="ck-pay-rail ck-pay-rail--inline" aria-label="مراحل خرید">
                     <div class="ck-pay-rail-item is-active"><span class="ck-pay-rail-dot"></span><span>پلن</span></div>
@@ -37,14 +37,31 @@
                 <span class="ck-secure-pill"><i class="fas fa-lock"></i> SSL</span>
             </div>
             <div class="ck-page-head-copy">
-                <h1 class="ck-page-title">{{ product.title }}</h1>
-                <p class="ck-page-sub">پلن لایسنس را انتخاب کنید — فعال‌سازی فوری پس از پرداخت</p>
+                <h1 class="ck-page-title">{% if is_renewal %}تمدید لایسنس{% else %}{{ product.title }}{% endif %}</h1>
+                <p class="ck-page-sub">{% if is_renewal %}همان کلید لایسنس — فقط تاریخ اعتبار تمدید می‌شود{% else %}پلن لایسنس را انتخاب کنید — فعال‌سازی فوری پس از پرداخت{% endif %}</p>
             </div>
         </header>
+
+        {% if is_renewal and renewal_preview %}
+        <div class="ck-renewal-banner" role="status">
+            <div class="ck-renewal-banner-icon" aria-hidden="true"><i class="fas fa-rotate"></i></div>
+            <div class="ck-renewal-banner-body">
+                <strong>تمدید لایسنس فعلی</strong>
+                <p>کلید <code dir="ltr" class="ck-renewal-key">{{ renewal_preview.license_key }}</code> پس از پرداخت تا
+                    {% if renewal_preview.new_expires_at %}
+                    <time datetime="{{ renewal_preview.new_expires_at|date:'c' }}">{{ renewal_preview.new_expires_at|to_jalali_date:"%Y/%m/%d" }}</time>
+                    {% else %}نامحدود{% endif %}
+                    تمدید می‌شود.
+                    {% if renewal_preview.is_expired %}نیازی به فعال‌سازی مجدد در ربات نیست.{% endif %}
+                </p>
+            </div>
+        </div>
+        {% endif %}
 
         <div class="ck-layout">
             <form method="post" id="buy-form" class="ck-form ck-form--checkout">
                 {% csrf_token %}
+                {% if renewal_license %}<input type="hidden" name="renew" value="{{ renewal_license.id }}">{% endif %}
 
                 <aside class="ck-order" aria-label="خلاصه سفارش">
                     <div class="ck-order-inner">
@@ -72,7 +89,7 @@
                         </div>
 
                         <div class="ck-order-panel">
-                            <div class="ck-order-block ck-order-block--qty" id="bulk-quantity-fieldset" hidden>
+                            <div class="ck-order-block ck-order-block--qty" id="bulk-quantity-fieldset"{% if is_renewal %} hidden{% endif %}>
                                 <span class="ck-order-block-label">تعداد لایسنس</span>
                                 <div class="ck-bulk-qty-row ck-bulk-qty-row--compact">
                                     <button type="button" class="ck-bulk-qty-btn" data-qty-step="-1" aria-label="کاهش">−</button>
@@ -122,7 +139,7 @@
                         </div>
 
                         <button type="button" class="ck-pay-btn ck-pay-btn--sidebar" data-pay-btn>
-                            <span class="ck-pay-btn-main"><i class="fas fa-lock"></i> پرداخت و دریافت لایسنس</span>
+                            <span class="ck-pay-btn-main"><i class="fas fa-lock"></i> {% if is_renewal %}پرداخت و تمدید{% else %}پرداخت و دریافت لایسنس{% endif %}</span>
                             <span class="ck-pay-btn-sub" id="pay-btn-hint">{% if show_payment_choice %}انتخاب روش پرداخت{% elif 'card_transfer' in payment_methods %}ثبت واریز کارت به کارت{% else %}انتقال به درگاه زیبال{% endif %}</span>
                         </button>
 

@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.urls import reverse, reverse_lazy
 from django.conf import settings
 from django.db import models
-from django.http import JsonResponse, HttpResponse, FileResponse
+from django.http import JsonResponse, HttpResponse, FileResponse, Http404
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -229,6 +229,22 @@ class ProductDetailView(DetailView):
         return context
 
 
+class RenewLicenseView(LoginRequiredMixin, View):
+    """ورود به جریان تمدید — همان کلید لایسنس با تاریخ انقضای جدید."""
+
+    def get(self, request, license_id):
+        from licenses.services.renewal import get_renewable_license_for_user
+        from urllib.parse import urlencode
+
+        license_obj = get_renewable_license_for_user(request.user, license_id)
+        product = license_obj.order.product
+        params = urlencode({
+            'renew': license_obj.pk,
+            'plan': license_obj.plan_id,
+        })
+        return redirect(f"{reverse('buy', kwargs={'slug': product.slug})}?{params}")
+
+
 class BuyView(LoginRequiredMixin, CreateView):
     model = Order
     form_class = BuyForm
@@ -236,12 +252,33 @@ class BuyView(LoginRequiredMixin, CreateView):
     
     def dispatch(self, request, *args, **kwargs):
         self.product = get_object_or_404(Product, slug=kwargs['slug'], is_active=True)
+        self.renewal_license = None
         if request.user.is_authenticated:
+            self.renewal_license = self._load_renewal_license()
             plan = self._get_selected_plan()
             blocked = self._redirect_for_plan_requirements(plan)
             if blocked:
                 return blocked
         return super().dispatch(request, *args, **kwargs)
+
+    def _load_renewal_license(self):
+        from licenses.services.renewal import get_renewable_license_for_user
+
+        renew_id = self.request.GET.get('renew') or self.request.POST.get('renew')
+        if not renew_id:
+            return None
+        try:
+            license_id = int(renew_id)
+        except (ValueError, TypeError):
+            return None
+        try:
+            license_obj = get_renewable_license_for_user(self.request.user, license_id)
+        except Http404:
+            messages.error(self.request, 'لایسنس انتخاب‌شده برای تمدید یافت نشد یا قابل تمدید نیست.')
+            return None
+        if license_obj.order.product_id != self.product.id:
+            raise Http404
+        return license_obj
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -250,6 +287,8 @@ class BuyView(LoginRequiredMixin, CreateView):
         requested_plan = self._get_requested_plan()
         if requested_plan and not kwargs.get('data'):
             kwargs.setdefault('initial', {})['plan'] = requested_plan.pk
+        if self.renewal_license and not kwargs.get('data'):
+            kwargs.setdefault('initial', {})['plan'] = self.renewal_license.plan_id
         return kwargs
 
     def _get_requested_plan(self):
@@ -353,11 +392,26 @@ class BuyView(LoginRequiredMixin, CreateView):
                 requested_ok, _, _ = evaluate_plan_purchase(self.request.user, requested_plan)
                 if requested_ok:
                     selected_plan_id = requested_plan.pk
+            if selected_plan_id is None and self.renewal_license:
+                selected_plan_id = self.renewal_license.plan_id
             if selected_plan_id is None:
                 for plan_data in plans_with_prices:
                     if not plan_data['purchase_blocked']:
                         selected_plan_id = plan_data['plan'].pk
                         break
+
+        renewal_preview = None
+        if self.renewal_license:
+            from licenses.services.renewal import compute_renewed_expires_at
+
+            preview_plan = selected_plan or self.renewal_license.plan
+            new_expires = compute_renewed_expires_at(self.renewal_license, preview_plan)
+            renewal_preview = {
+                'license_key': self.renewal_license.license_key,
+                'current_expires_at': self.renewal_license.expires_at,
+                'new_expires_at': new_expires,
+                'is_expired': self.renewal_license.status == 'expired',
+            }
 
         context.update({
             'product': self.product,
@@ -368,6 +422,9 @@ class BuyView(LoginRequiredMixin, CreateView):
             'pay_settings': pay_settings,
             'payment_methods': payment_methods,
             'show_payment_choice': len(payment_methods) > 1,
+            'renewal_license': self.renewal_license,
+            'is_renewal': bool(self.renewal_license),
+            'renewal_preview': renewal_preview,
         })
 
         from shop.services.plan_guards import requires_phone_verification_for_plan, verify_phone_redirect_url
@@ -386,6 +443,11 @@ class BuyView(LoginRequiredMixin, CreateView):
         return context
     
     def form_valid(self, form):
+        renew_param = self.request.POST.get('renew')
+        if renew_param and not self.renewal_license:
+            messages.error(self.request, 'درخواست تمدید نامعتبر است.')
+            return redirect(f"{reverse('dashboard')}?tab=licenses#licenses")
+
         blocked = self._redirect_for_plan_requirements(form.cleaned_data.get('plan'))
         if blocked:
             return blocked
@@ -393,7 +455,9 @@ class BuyView(LoginRequiredMixin, CreateView):
         order = form.save(commit=False)
         order.user = self.request.user
         order.product = self.product
-        order.quantity = form.cleaned_data.get('quantity') or 1
+        order.quantity = 1 if self.renewal_license else (form.cleaned_data.get('quantity') or 1)
+        if self.renewal_license:
+            order.renewal_license = self.renewal_license
 
         from shop.services.plan_pricing import calculate_plan_purchase_prices
 

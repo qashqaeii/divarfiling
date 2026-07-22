@@ -21,9 +21,16 @@ def issue_licenses_for_paid_order(order: Order) -> list[License]:
     """
     صدور خودکار کلیدهای لایسنس پس از پرداخت — بدون نیاز به شناسه سخت‌افزار.
     idempotent: اگر لایسنس‌ها وجود داشته باشند همان‌ها را برمی‌گرداند.
+    برای سفارش تمدید، همان کلید قبلی با تاریخ انقضای جدید به‌روز می‌شود.
     """
     if order.status != 'paid':
         return []
+
+    if order.renewal_license_id:
+        from licenses.services.renewal import fulfill_renewal_for_paid_order
+
+        renewed = fulfill_renewal_for_paid_order(order)
+        return [renewed] if renewed else []
 
     target_count = max(1, int(order.quantity or 1))
     existing = list(

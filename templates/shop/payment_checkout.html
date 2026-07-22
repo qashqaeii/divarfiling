@@ -24,7 +24,7 @@
     <div class="ck-page ck-page--full ck-page--pay">
         <header class="ck-page-head ck-page-head--pay">
             <div class="ck-page-head-row">
-                <a href="{% url 'buy' order.product.slug %}" class="ck-back">
+                <a href="{% if order.renewal_license_id %}{% url 'buy' order.product.slug %}?renew={{ order.renewal_license_id }}&amp;plan={{ order.plan_id }}{% else %}{% url 'buy' order.product.slug %}{% endif %}" class="ck-back">
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                     <span>بازگشت</span>
                 </a>
@@ -50,10 +50,10 @@
                         </div>
 
                         <div class="ck-order-product">
-                            <span class="ck-order-product-icon"><i class="fas fa-robot"></i></span>
+                            <span class="ck-order-product-icon"><i class="fas fa-{% if order.renewal_license_id %}rotate{% else %}robot{% endif %}"></i></span>
                             <div>
                                 <strong>{{ order.product.title }}</strong>
-                                <span>{{ order.plan.name }} — {{ order.plan.get_plan_type_display }}</span>
+                                <span>{% if order.renewal_license_id %}تمدید — {% endif %}{{ order.plan.name }} — {{ order.plan.get_plan_type_display }}</span>
                             </div>
                         </div>
 

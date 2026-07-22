@@ -2983,3 +2983,569 @@ html.mk-public .ck-promo-input::placeholder {
     color: var(--mk-primary, #818cf8);
 }
 
+/* ═══ Payment success — return from gateway ═══ */
+.mk-checkout-page--success {
+    --ck-success-glow: rgba(16, 185, 129, 0.35);
+}
+
+.ck-success-flow {
+    min-height: calc(100dvh - 3.5rem);
+}
+
+.ck-ambient--success .ck-ambient-orb--emerald {
+    width: min(480px, 65vw);
+    height: min(480px, 65vw);
+    top: -5%;
+    right: 15%;
+    opacity: 0.55;
+    background: rgba(16, 185, 129, 0.28);
+}
+
+.ck-ambient--success .ck-ambient-orb--violet {
+    opacity: 0.25;
+}
+
+.ck-ambient--success .ck-ambient-orb--cyan {
+    opacity: 0.2;
+}
+
+.ck-success-sparkles {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(52, 211, 153, 0.12) 0 2px, transparent 3px),
+        radial-gradient(circle at 78% 22%, rgba(167, 139, 250, 0.1) 0 2px, transparent 3px),
+        radial-gradient(circle at 62% 68%, rgba(56, 189, 248, 0.08) 0 2px, transparent 3px),
+        radial-gradient(circle at 35% 75%, rgba(52, 211, 153, 0.06) 0 1.5px, transparent 2.5px);
+    mask-image: radial-gradient(ellipse 70% 50% at 50% 15%, #000 10%, transparent 70%);
+    animation: ck-sparkle-drift 12s ease-in-out infinite alternate;
+}
+
+@keyframes ck-sparkle-drift {
+    from { transform: translateY(0); opacity: 0.7; }
+    to { transform: translateY(8px); opacity: 1; }
+}
+
+.ck-page--success .ck-page-head {
+    margin-bottom: 0.75rem;
+}
+
+.ck-page-head--success .ck-page-head-row {
+    margin-bottom: 0;
+}
+
+.ck-pay-rail--complete .ck-pay-rail-item.is-done .ck-pay-rail-dot {
+    background: #34d399;
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.18);
+}
+
+.ck-pay-rail--complete .ck-pay-rail-item.is-active .ck-pay-rail-dot {
+    background: #34d399;
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.25);
+}
+
+.ck-secure-pill--success {
+    color: #6ee7b7;
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(52, 211, 153, 0.28);
+}
+
+.ck-layout--success {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.ck-success-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+    gap: clamp(1rem, 2.5vw, 1.5rem);
+    align-items: start;
+}
+
+.ck-success-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Hero */
+.ck-success-hero {
+    text-align: center;
+    padding: clamp(0.5rem, 2vw, 1rem) clamp(0.5rem, 3vw, 1.5rem) 0.25rem;
+}
+
+.ck-success-badge {
+    position: relative;
+    width: 4.75rem;
+    height: 4.75rem;
+    margin: 0 auto 1rem;
+}
+
+.ck-success-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(52, 211, 153, 0.45);
+    background: radial-gradient(circle at 35% 30%, rgba(52, 211, 153, 0.22), rgba(7, 11, 23, 0.2) 65%);
+    animation: ck-success-pop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.ck-success-ring--pulse {
+    border-color: rgba(52, 211, 153, 0.15);
+    background: transparent;
+    animation: ck-success-pulse 2.2s ease-out 0.5s infinite;
+}
+
+@keyframes ck-success-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes ck-success-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1.55);
+        opacity: 0;
+    }
+}
+
+.ck-success-icon {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 1.65rem;
+    color: #34d399;
+    animation: ck-success-check 0.5s ease 0.25s both;
+}
+
+@keyframes ck-success-check {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.ck-success-title {
+    margin: 0 0 0.45rem;
+    font-size: clamp(1.25rem, 3vw, 1.65rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--mk-text, #fff);
+    animation: ck-success-fade-up 0.55s ease 0.15s both;
+}
+
+.ck-success-lead {
+    margin: 0 auto;
+    max-width: 32rem;
+    font-size: 0.86rem;
+    line-height: 1.65;
+    color: var(--mk-text-muted, #94a3b8);
+    animation: ck-success-fade-up 0.55s ease 0.25s both;
+}
+
+@keyframes ck-success-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Cards */
+.ck-success-card {
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--mk-border) 85%, rgba(52, 211, 153, 0.15));
+    background: color-mix(in srgb, var(--mk-card) 90%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 1.15rem 1.25rem 1.25rem;
+    box-shadow:
+        0 24px 48px -28px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    animation: ck-success-fade-up 0.55s ease 0.35s both;
+}
+
+.ck-success-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.ck-success-card-icon {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    color: #6ee7b7;
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.06));
+    border: 1px solid rgba(52, 211, 153, 0.22);
+}
+
+.ck-success-card-head h2 {
+    margin: 0 0 0.2rem;
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--mk-text, #fff);
+}
+
+.ck-success-card-head p {
+    margin: 0;
+    font-size: 0.76rem;
+    color: var(--mk-text-muted);
+    line-height: 1.55;
+}
+
+/* License keys */
+.ck-license-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.ck-license-item {
+    padding: 0.65rem 0.75rem;
+    border-radius: 14px;
+    background: rgba(7, 11, 23, 0.45);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.ck-license-item-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+    font-size: 0.72rem;
+    color: var(--mk-text-muted);
+}
+
+.ck-license-item-num {
+    font-weight: 700;
+    color: #a78bfa;
+}
+
+.ck-license-item-plan {
+    font-weight: 600;
+}
+
+.ck-license-key-wrap {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.ck-license-key {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+    font-size: clamp(0.68rem, 2vw, 0.78rem);
+    line-height: 1.5;
+    word-break: break-all;
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 10px;
+}
+
+.ck-license-copy {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0 0.85rem;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #c4b5fd;
+    background: rgba(124, 58, 237, 0.12);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ck-license-copy:hover {
+    background: rgba(124, 58, 237, 0.2);
+    border-color: rgba(167, 139, 250, 0.4);
+}
+
+.ck-license-copy.is-copied {
+    color: #6ee7b7;
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(52, 211, 153, 0.35);
+}
+
+.ck-success-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0.85rem 0 0;
+    padding-top: 0.75rem;
+    border-top: 1px dashed rgba(148, 163, 184, 0.2);
+    font-size: 0.72rem;
+    color: var(--mk-text-muted);
+}
+
+.ck-success-hint i {
+    color: #fbbf24;
+    font-size: 0.65rem;
+}
+
+/* Claim steps (no license yet) */
+.ck-claim-steps {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.ck-claim-steps li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 12px;
+    background: rgba(7, 11, 23, 0.35);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    font-size: 0.8rem;
+    color: var(--mk-text-secondary, #cbd5e1);
+}
+
+.ck-claim-step-num {
+    flex-shrink: 0;
+    width: 1.65rem;
+    height: 1.65rem;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #a78bfa;
+    background: rgba(124, 58, 237, 0.15);
+    border: 1px solid rgba(167, 139, 250, 0.22);
+}
+
+.ck-claim-step-text {
+    line-height: 1.5;
+}
+
+/* Download hub embed */
+.ck-success-download {
+    animation: ck-success-fade-up 0.55s ease 0.45s both;
+}
+
+.ck-success-download-inner {
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid var(--mk-border);
+}
+
+.ck-success-download-inner .mk-dl-hub {
+    margin: 0;
+}
+
+.ck-success-download-inner .mk-dl-hub-head {
+    padding-top: 1rem;
+}
+
+/* Actions */
+.ck-success-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: center;
+    padding-top: 0.25rem;
+    animation: ck-success-fade-up 0.55s ease 0.5s both;
+}
+
+.ck-success-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.72rem 1.15rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.ck-success-btn--primary {
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+    box-shadow: 0 8px 24px -8px rgba(99, 102, 241, 0.55);
+}
+
+.ck-success-btn--primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px -8px rgba(99, 102, 241, 0.65);
+    color: #fff;
+}
+
+.ck-success-btn--ghost {
+    color: var(--mk-text-secondary, #cbd5e1);
+    background: rgba(15, 23, 42, 0.45);
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+.ck-success-btn--ghost:hover {
+    background: rgba(15, 23, 42, 0.65);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: var(--mk-text, #fff);
+}
+
+.ck-success-card .ck-success-btn--primary {
+    width: 100%;
+}
+
+/* Receipt sidebar */
+.ck-success-receipt {
+    position: sticky;
+    top: 1rem;
+}
+
+.ck-success-receipt-shell {
+    position: relative;
+    overflow: visible;
+}
+
+.ck-success-receipt-shell .ck-order-inner {
+    padding: 1.25rem;
+}
+
+.ck-order-badge--success {
+    color: #6ee7b7;
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(52, 211, 153, 0.22);
+}
+
+.ck-success-paid-stamp {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    transform: rotate(-12deg);
+    padding: 0.2rem 0.55rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(52, 211, 153, 0.75);
+    border: 2px solid rgba(52, 211, 153, 0.35);
+    border-radius: 6px;
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+.ck-order-val--mono {
+    font-family: ui-monospace, monospace;
+    font-size: 0.68rem;
+    word-break: break-all;
+    text-align: left;
+    max-width: 58%;
+}
+
+.ck-order-total--success strong {
+    color: #34d399;
+}
+
+@media (max-width: 900px) {
+    .ck-success-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ck-success-receipt {
+        position: static;
+        order: -1;
+    }
+
+    .ck-success-receipt-shell .ck-order-inner {
+        padding: 1rem 1.1rem;
+    }
+
+    .ck-success-paid-stamp {
+        top: 0.75rem;
+        left: 0.75rem;
+    }
+
+    .ck-license-key-wrap {
+        flex-direction: column;
+    }
+
+    .ck-license-copy {
+        justify-content: center;
+        padding: 0.55rem;
+    }
+
+    .ck-success-actions {
+        flex-direction: column;
+    }
+
+    .ck-success-actions .ck-success-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    .ck-success-hero {
+        padding-top: 0.25rem;
+    }
+
+    .ck-success-badge {
+        width: 4rem;
+        height: 4rem;
+    }
+
+    .ck-success-icon {
+        font-size: 1.35rem;
+    }
+}
+
+html.mk-public[data-theme="light"] .ck-success-card {
+    background: rgba(255, 255, 255, 0.92);
+}
+
+html.mk-public[data-theme="light"] .ck-license-item {
+    background: rgba(248, 250, 252, 0.9);
+}
+
+html.mk-public[data-theme="light"] .ck-license-key {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+html.mk-public[data-theme="light"] .ck-claim-steps li {
+    background: rgba(248, 250, 252, 0.85);
+}
+
+html.mk-public[data-theme="light"] .ck-success-btn--ghost {
+    background: #f8fafc;
+}
+

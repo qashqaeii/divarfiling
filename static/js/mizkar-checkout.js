@@ -347,4 +347,54 @@
             });
         }
     });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var successRoot = document.querySelector('[data-pay-success]');
+        if (!successRoot) return;
+
+        successRoot.querySelectorAll('[data-copy-target]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var targetId = btn.getAttribute('data-copy-target');
+                var el = document.getElementById(targetId);
+                if (!el) return;
+
+                var text = el.textContent.trim();
+                var label = btn.querySelector('span');
+                var icon = btn.querySelector('i');
+                var originalLabel = label ? label.textContent : '';
+                var originalIconClass = icon ? icon.className : '';
+
+                function onCopied() {
+                    btn.classList.add('is-copied');
+                    if (label) label.textContent = 'کپی شد';
+                    if (icon) icon.className = 'fas fa-check';
+                    setTimeout(function () {
+                        btn.classList.remove('is-copied');
+                        if (label) label.textContent = originalLabel;
+                        if (icon) icon.className = originalIconClass;
+                    }, 2000);
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(onCopied).catch(function () {
+                        alert('خطا در کپی. لطفاً دستی کپی کنید.');
+                    });
+                } else {
+                    var area = document.createElement('textarea');
+                    area.value = text;
+                    area.style.position = 'fixed';
+                    area.style.opacity = '0';
+                    document.body.appendChild(area);
+                    area.select();
+                    try {
+                        document.execCommand('copy');
+                        onCopied();
+                    } catch (err) {
+                        alert('خطا در کپی. لطفاً دستی کپی کنید.');
+                    }
+                    document.body.removeChild(area);
+                }
+            });
+        });
+    });
 })();

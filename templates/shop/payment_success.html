@@ -1,167 +1,238 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load currency_tags %}
+{% load static currency_tags %}
 
-{% block title %}پرداخت موفق — فایلینگ دیوار{% endblock %}
-{% block body_class %}mk-pub-page{% endblock %}
+{% block title %}پرداخت موفق — {{ order.product.title }}{% endblock %}
+
+{% block body_class %}mk-checkout-page mk-checkout-page--success{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=17">
+{% if can_download or app_downloads.android.available %}
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=3">
+{% endif %}
 {% endblock %}
 
+{% block breadcrumbs %}{% endblock %}
+
 {% block content %}
-<div class="mk-pub-wrap">
-    <div class="container mk-pub-result">
-        <div class="mk-pub-result-card">
-            <div class="mk-pub-result-icon">
-                <span class="mk-icon mk-icon--lg mk-icon--emerald"><i class="fas fa-check-circle"></i></span>
-            </div>
-            <h1>پرداخت با موفقیت انجام شد!</h1>
-            {% if licenses %}
-            <p class="mk-pub-result-msg">
-                سفارش شما با موفقیت ثبت و پرداخت شد.
-                {% if licenses|length > 1 %}
-                {{ licenses|length }} کلید لایسنس آماده است.
-                {% else %}
-                کلید لایسنس آماده است.
-                {% endif %}
-            </p>
-            {% else %}
-            <p class="mk-pub-result-msg">سفارش شما تأیید شد. برای دریافت کلید لایسنس، شناسه سخت‌افزاری را از ربات در داشبورد ثبت کنید.</p>
-            {% endif %}
+<div class="ck-flow ck-success-flow" data-pay-success>
 
-            {% if licenses %}
-            <div class="mk-pub-license-box">
-                <h2><i class="fas fa-key"></i> {% if licenses|length > 1 %}کلیدهای لایسنس شما{% else %}کلید لایسنس شما{% endif %}</h2>
-                {% for lic in licenses %}
-                <div class="mk-pub-license-item"{% if not forloop.first %} style="margin-top:1rem;"{% endif %}>
-                    {% if licenses|length > 1 %}
-                    <div class="mk-pub-info-row" style="margin-bottom:0.5rem;">
-                        <span>لایسنس {{ forloop.counter }}</span>
-                        <span>{{ lic.plan.name }}</span>
-                    </div>
+    <div class="ck-ambient ck-ambient--success" aria-hidden="true">
+        <span class="ck-ambient-orb ck-ambient-orb--emerald"></span>
+        <span class="ck-ambient-orb ck-ambient-orb--violet"></span>
+        <span class="ck-ambient-orb ck-ambient-orb--cyan"></span>
+        <span class="ck-ambient-grid"></span>
+        <span class="ck-success-sparkles"></span>
+    </div>
+
+    <div class="ck-page ck-page--full ck-page--success">
+        <header class="ck-page-head ck-page-head--success">
+            <div class="ck-page-head-row">
+                <a href="{% url 'dashboard' %}" class="ck-back">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    <span>میزکار</span>
+                </a>
+                <nav class="ck-pay-rail ck-pay-rail--inline ck-pay-rail--complete" aria-label="مراحل خرید">
+                    <div class="ck-pay-rail-item is-done"><span class="ck-pay-rail-dot"></span><span>پلن</span></div>
+                    <div class="ck-pay-rail-line is-done"></div>
+                    <div class="ck-pay-rail-item is-done"><span class="ck-pay-rail-dot"></span><span>پرداخت</span></div>
+                    <div class="ck-pay-rail-line is-done"></div>
+                    <div class="ck-pay-rail-item is-done is-active"><span class="ck-pay-rail-dot"></span><span>لایسنس</span></div>
+                </nav>
+                <span class="ck-secure-pill ck-secure-pill--success"><i class="fas fa-check"></i> تأیید شد</span>
+            </div>
+        </header>
+
+        <div class="ck-layout ck-layout--success">
+            <div class="ck-success-grid">
+
+                <main class="ck-success-main">
+                    <section class="ck-success-hero" aria-labelledby="ck-success-title">
+                        <div class="ck-success-badge" aria-hidden="true">
+                            <span class="ck-success-ring"></span>
+                            <span class="ck-success-ring ck-success-ring--pulse"></span>
+                            <span class="ck-success-icon"><i class="fas fa-check"></i></span>
+                        </div>
+                        <h1 id="ck-success-title" class="ck-success-title">پرداخت با موفقیت انجام شد</h1>
+                        {% if licenses %}
+                        <p class="ck-success-lead">
+                            {% if licenses|length > 1 %}
+                            {{ licenses|length }} کلید لایسنس برای شما صادر شد — آماده کپی و فعال‌سازی.
+                            {% else %}
+                            کلید لایسنس شما آماده است — کپی کنید و در ربات یا اپ فعال کنید.
+                            {% endif %}
+                        </p>
+                        {% else %}
+                        <p class="ck-success-lead">سفارش تأیید شد. برای صدور کلید، شناسه سخت‌افزاری را از ربات در میزکار ثبت کنید.</p>
+                        {% endif %}
+                    </section>
+
+                    {% if licenses %}
+                    <section class="ck-success-card ck-success-licenses" aria-labelledby="ck-license-heading">
+                        <header class="ck-success-card-head">
+                            <span class="ck-success-card-icon"><i class="fas fa-key"></i></span>
+                            <div>
+                                <h2 id="ck-license-heading">
+                                    {% if licenses|length > 1 %}کلیدهای لایسنس{% else %}کلید لایسنس{% endif %}
+                                </h2>
+                                <p>این کلیدها را در جای امن نگه دارید — هر کلید یک دستگاه.</p>
+                            </div>
+                        </header>
+
+                        <div class="ck-license-list">
+                            {% for lic in licenses %}
+                            <article class="ck-license-item">
+                                {% if licenses|length > 1 %}
+                                <div class="ck-license-item-meta">
+                                    <span class="ck-license-item-num">#{{ forloop.counter }}</span>
+                                    <span class="ck-license-item-plan">{{ lic.plan.name }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="ck-license-key-wrap">
+                                    <code class="ck-license-key" id="license-key-{{ forloop.counter }}">{{ lic.license_key }}</code>
+                                    <button type="button" class="ck-license-copy" data-copy-target="license-key-{{ forloop.counter }}" aria-label="کپی کلید لایسنس">
+                                        <i class="fas fa-copy" aria-hidden="true"></i>
+                                        <span>کپی</span>
+                                    </button>
+                                </div>
+                            </article>
+                            {% endfor %}
+                        </div>
+
+                        <p class="ck-success-hint">
+                            <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                            کلید را با کسی به اشتراک نگذارید.
+                        </p>
+                    </section>
+                    {% else %}
+                    <section class="ck-success-card ck-success-claim" aria-labelledby="ck-claim-heading">
+                        <header class="ck-success-card-head">
+                            <span class="ck-success-card-icon"><i class="fas fa-microchip"></i></span>
+                            <div>
+                                <h2 id="ck-claim-heading">مرحله بعد: صدور لایسنس</h2>
+                                <p>چند قدم ساده تا فعال‌سازی ربات</p>
+                            </div>
+                        </header>
+
+                        <ol class="ck-claim-steps">
+                            <li>
+                                <span class="ck-claim-step-num">۱</span>
+                                <span class="ck-claim-step-text">ربات را دانلود و اجرا کنید</span>
+                            </li>
+                            <li>
+                                <span class="ck-claim-step-num">۲</span>
+                                <span class="ck-claim-step-text">شناسه سخت‌افزاری را از تب لایسنس کپی کنید</span>
+                            </li>
+                            <li>
+                                <span class="ck-claim-step-num">۳</span>
+                                <span class="ck-claim-step-text">در میزکار → لایسنس‌ها، شناسه را وارد کنید</span>
+                            </li>
+                            <li>
+                                <span class="ck-claim-step-num">۴</span>
+                                <span class="ck-claim-step-text">کلید را در ربات وارد و فعال کنید</span>
+                            </li>
+                        </ol>
+
+                        <a href="{% url 'dashboard' %}?tab=licenses#licenses" class="ck-success-btn ck-success-btn--primary">
+                            <i class="fas fa-key" aria-hidden="true"></i>
+                            رفتن به صدور لایسنس
+                        </a>
+                    </section>
                     {% endif %}
-                    <div class="mk-pub-license-key" id="license-key-{{ forloop.counter }}">{{ lic.license_key }}</div>
-                    <button type="button" class="mk-pub-copy-btn" onclick="copyLicenseKey('license-key-{{ forloop.counter }}', this)">
-                        <i class="fas fa-copy"></i> کپی کلید
-                    </button>
-                </div>
-                {% endfor %}
-                <div class="mk-pub-license-warn">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    لطفاً این کلیدها را در جای امنی نگهداری کنید.
-                </div>
-            </div>
-            {% else %}
-            <div class="mk-pub-info-box mk-pub-claim-box">
-                <h2><i class="fas fa-microchip"></i> مرحله بعد: صدور لایسنس</h2>
-                <ol class="mk-pub-claim-steps" style="text-align: right; margin: 1rem 0; padding-right: 1.25rem;">
-                    <li>ربات استخراج را دانلود و اجرا کنید.</li>
-                    <li>در تب «لایسنس»، شناسه سخت‌افزاری را کپی کنید.</li>
-                    <li>در داشبورد → تب «لایسنس‌ها»، شناسه را وارد کنید تا کلید صادر شود.</li>
-                    <li>کلید را در ربات وارد کرده و «فعال‌سازی» را بزنید.</li>
-                </ol>
-                <a href="{% url 'dashboard' %}?tab=licenses#licenses" class="btn btn-primary">
-                    <i class="fas fa-key"></i> رفتن به صدور لایسنس
-                </a>
-            </div>
-            {% endif %}
 
-            {% if can_download or app_downloads.android.available %}
-            <div class="mk-pub-download-hub-wrap">
-                {% include 'includes/app_download_hub.html' with compact=1 show_install_guide=1 windows_order_id=order.id download_filename=download_filename %}
-            </div>
-            {% endif %}
+                    {% if can_download or app_downloads.android.available %}
+                    <section class="ck-success-download" aria-label="دانلود اپ و ربات">
+                        <div class="ck-success-download-inner">
+                            {% include 'includes/app_download_hub.html' with compact=1 show_install_guide=1 windows_order_id=order.id download_filename=download_filename %}
+                        </div>
+                    </section>
+                    {% endif %}
 
-            {% if order %}
-            <div class="mk-pub-info-box">
-                <h2><i class="fas fa-receipt"></i> اطلاعات سفارش</h2>
-                <div class="mk-pub-info-row">
-                    <span>شماره سفارش:</span>
-                    <span>#{{ order.id }}</span>
-                </div>
-                {% if transaction and transaction.zibal_ref_number %}
-                <div class="mk-pub-info-row">
-                    <span>شماره مرجع بانکی:</span>
-                    <span><code>{{ transaction.zibal_ref_number }}</code></span>
-                </div>
-                {% endif %}
-                {% if transaction and transaction.zibal_track_id %}
-                <div class="mk-pub-info-row">
-                    <span>کد پیگیری زیبال:</span>
-                    <span><code>{{ transaction.zibal_track_id }}</code></span>
-                </div>
-                {% endif %}
-                <div class="mk-pub-info-row">
-                    <span>محصول:</span>
-                    <span>{{ order.product.title }}</span>
-                </div>
-                <div class="mk-pub-info-row">
-                    <span>پلن:</span>
-                    <span>{{ order.plan.name }}{% if order.quantity > 1 %} × {{ order.quantity }}{% endif %}</span>
-                </div>
-                {% if order.discount_amount > 0 %}
-                <div class="mk-pub-info-row mk-pub-info-row--accent">
-                    <span>تخفیف:</span>
-                    <span>-{{ order.discount_amount|currency }} تومان</span>
-                </div>
-                {% endif %}
-                <div class="mk-pub-info-row mk-pub-info-row--accent">
-                    <span>مبلغ پرداخت شده:</span>
-                    <span>{{ order.amount|currency }} تومان</span>
-                </div>
-            </div>
-            {% endif %}
+                    <nav class="ck-success-actions" aria-label="اقدامات بعدی">
+                        <a href="{% url 'dashboard' %}" class="ck-success-btn ck-success-btn--primary">
+                            <i class="fas fa-gauge-high" aria-hidden="true"></i>
+                            رفتن به میزکار
+                        </a>
+                        <a href="{% url 'license_guide' %}" class="ck-success-btn ck-success-btn--ghost">
+                            <i class="fas fa-book-open" aria-hidden="true"></i>
+                            راهنمای فعال‌سازی
+                        </a>
+                    </nav>
+                </main>
 
-            <div class="mk-pub-result-actions">
-                <a href="{% url 'dashboard' %}" class="btn btn-primary">
-                    <i class="fas fa-tachometer-alt"></i> رفتن به داشبورد
-                </a>
-                <a href="{% url 'license_guide' %}" class="btn btn-secondary">
-                    <i class="fas fa-book"></i> راهنمای فعال‌سازی
-                </a>
+                <aside class="ck-success-receipt" aria-label="رسید پرداخت">
+                    <div class="ck-shell ck-success-receipt-shell">
+                        <div class="ck-order-inner">
+                            <div class="ck-order-badge ck-order-badge--success">
+                                <i class="fas fa-receipt"></i>
+                                <span>رسید پرداخت</span>
+                            </div>
+
+                            <div class="ck-success-paid-stamp" aria-hidden="true">
+                                <span>پرداخت شد</span>
+                            </div>
+
+                            <div class="ck-order-product">
+                                <span class="ck-order-product-icon"><i class="fas fa-robot"></i></span>
+                                <div>
+                                    <strong>{{ order.product.title }}</strong>
+                                    <span>{{ order.plan.name }}{% if order.quantity > 1 %} × {{ order.quantity }}{% endif %}</span>
+                                </div>
+                            </div>
+
+                            <div class="ck-order-lines">
+                                <div class="ck-order-line">
+                                    <span>شماره سفارش</span>
+                                    <span class="ck-order-val ck-order-val--mono">{{ order.id }}</span>
+                                </div>
+                                {% if transaction and transaction.zibal_ref_number %}
+                                <div class="ck-order-line">
+                                    <span>مرجع بانکی</span>
+                                    <span class="ck-order-val ck-order-val--mono">{{ transaction.zibal_ref_number }}</span>
+                                </div>
+                                {% endif %}
+                                {% if transaction and transaction.zibal_track_id %}
+                                <div class="ck-order-line">
+                                    <span>پیگیری زیبال</span>
+                                    <span class="ck-order-val ck-order-val--mono">{{ transaction.zibal_track_id }}</span>
+                                </div>
+                                {% endif %}
+                                {% if order.discount_amount > 0 %}
+                                <div class="ck-order-line ck-order-line--discount">
+                                    <span>تخفیف</span>
+                                    <span class="ck-order-val">-{{ order.discount_amount|currency }} تومان</span>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="ck-order-total ck-order-total--success">
+                                <span>مبلغ پرداخت‌شده</span>
+                                <strong>{{ order.amount|currency }} تومان</strong>
+                            </div>
+
+                            <ul class="ck-order-trust">
+                                <li><i class="fas fa-bolt"></i> لایسنس بلافاصله فعال می‌شود</li>
+                                <li><i class="fas fa-headset"></i> پشتیبانی در میزکار</li>
+                            </ul>
+                        </div>
+                    </div>
+                </aside>
+
             </div>
+
+            <section class="ck-trust-strip" aria-label="اعتماد و امنیت">
+                <ul>
+                    <li><i class="fas fa-lock"></i> رمزنگاری SSL</li>
+                    <li><i class="fas fa-certificate"></i> نماد اعتماد الکترونیکی</li>
+                    <li><i class="fas fa-file-invoice"></i> صدور فاکتور</li>
+                    <li><i class="fas fa-shield-halved"></i> پرداخت امن زیبال</li>
+                </ul>
+            </section>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function copyLicenseKey(elementId, btn) {
-    const el = document.getElementById(elementId);
-    const licenseKey = el ? el.textContent : '';
-    const copyBtn = btn || event.target.closest('.mk-pub-copy-btn');
-    const originalText = copyBtn.innerHTML;
-
-    const onSuccess = function() {
-        copyBtn.innerHTML = '<i class="fas fa-check"></i> کپی شد!';
-        copyBtn.style.background = 'rgba(16, 185, 129, 0.28)';
-        setTimeout(function() {
-            copyBtn.innerHTML = originalText;
-            copyBtn.style.background = '';
-        }, 2000);
-    };
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(licenseKey).then(onSuccess).catch(function() {
-            alert('خطا در کپی کردن. لطفاً به صورت دستی کپی کنید.');
-        });
-    } else {
-        const textArea = document.createElement('textarea');
-        textArea.value = licenseKey;
-        textArea.style.position = 'fixed';
-        textArea.style.opacity = '0';
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-            document.execCommand('copy');
-            onSuccess();
-        } catch (err) {
-            alert('خطا در کپی کردن. لطفاً به صورت دستی کپی کنید.');
-        }
-        document.body.removeChild(textArea);
-    }
-}
-</script>
+<script src="{% static 'js/mizkar-checkout.js' %}?v=7"></script>
 {% endblock %}

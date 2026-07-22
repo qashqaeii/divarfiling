@@ -63,10 +63,17 @@ class PublicAcademyPlaylistTests(TestCase):
         video_nodes = [n for n in data['@graph'] if n.get('@type') == 'VideoObject']
         self.assertEqual(len(video_nodes), 1)
         video = video_nodes[0]
-        for key in ('uploadDate', 'datePublished', 'duration', 'thumbnailUrl', 'url', 'name'):
+        for key in ('uploadDate', 'datePublished', 'duration', 'thumbnailUrl', 'url', 'name', 'description', 'embedUrl'):
             self.assertIn(key, video)
+            self.assertTrue(video[key], msg=f'{key} should be non-empty')
         self.assertRegex(video['uploadDate'], r'^\d{4}-\d{2}-\d{2}T')
         self.assertTrue(video.get('isFamilyFriendly'))
+        # Nested ItemList videos must also be complete (Google validates these)
+        item_list = next(n for n in data['@graph'] if n.get('@type') == 'ItemList')
+        nested = item_list['itemListElement'][0]['item']
+        self.assertEqual(nested['@type'], 'VideoObject')
+        self.assertTrue(nested.get('description'))
+        self.assertTrue(nested.get('embedUrl'))
         courses = [n for n in data['@graph'] if n.get('@type') == 'Course']
         self.assertGreaterEqual(len(courses), 1)
         self.assertTrue(courses[0].get('isAccessibleForFree'))

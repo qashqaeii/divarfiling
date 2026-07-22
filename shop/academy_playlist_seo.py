@@ -93,6 +93,63 @@ def _first_poster_url(flat_items: list[dict], site_url: str) -> str:
     return f'{site_url}/static/logo.png'
 
 
+def _video_description(item: dict, *, fallback: str = '') -> str:
+    video = item['video']
+    text = (video.subtitle or '').strip() or (fallback or '').strip()
+    if text:
+        return text[:500]
+    path_title = ''
+    if item.get('path') is not None:
+        path_title = getattr(item['path'], 'title', '') or ''
+    if path_title:
+        return f'ویدیوی آموزشی «{video.title}» در مسیر {path_title} — آکادمی فایلینگ دیوار.'
+    return f'ویدیوی آموزشی «{video.title}» در آکادمی رایگان فایلینگ دیوار برای مشاوران املاک.'
+
+
+def _build_video_object(
+    item: dict,
+    *,
+    site_url: str,
+    page_url: str,
+    org: dict[str, Any],
+    item_list_id: str | None = None,
+    node_id: str | None = None,
+    fallback_description: str = '',
+) -> dict[str, Any]:
+    """Complete VideoObject for Google rich results (description + embed/content URL)."""
+    video = item['video']
+    seo = video_item_seo(item, site_url=site_url)
+    player = item.get('player') or {}
+    node: dict[str, Any] = {
+        '@type': 'VideoObject',
+        'name': video.title,
+        'description': _video_description(item, fallback=fallback_description),
+        'thumbnailUrl': seo['poster_url'],
+        'uploadDate': seo['upload_date'],
+        'datePublished': seo['upload_date'],
+        'duration': seo['duration_iso'],
+        'url': page_url,
+        'embedUrl': page_url,
+        'inLanguage': 'fa-IR',
+        'isFamilyFriendly': True,
+        'publisher': org,
+        'potentialAction': {
+            '@type': 'WatchAction',
+            'target': page_url,
+        },
+    }
+    if node_id:
+        node['@id'] = node_id
+    if item_list_id:
+        node['isPartOf'] = {'@id': item_list_id}
+    if player.get('available') and seo.get('embed_url'):
+        content_url = seo['embed_url']
+        if not content_url.startswith('http'):
+            content_url = f'{site_url}{content_url}'
+        node['contentUrl'] = content_url
+    return node
+
+
 def academy_playlist_meta(*, active_item, sections, stats) -> dict:
     if active_item:
         video = active_item['video']
@@ -186,20 +243,19 @@ def academy_playlist_schema_json(request, *, active_item, sections, flat_items) 
     item_list_elements = []
     for pos, item in enumerate(flat_items, start=1):
         item_url = _abs(request, item['url'], site_url)
-        item_seo = video_item_seo(item, site_url=site_url)
+        video_obj = _build_video_object(
+            item,
+            site_url=site_url,
+            page_url=item_url,
+            org=org,
+            item_list_id=item_list_id,
+        )
         item_list_elements.append({
             '@type': 'ListItem',
             'position': pos,
             'name': item['video'].title,
             'url': item_url,
-            'item': {
-                '@type': 'VideoObject',
-                'name': item['video'].title,
-                'url': item_url,
-                'thumbnailUrl': item_seo['poster_url'],
-                'uploadDate': item_seo['upload_date'],
-                'duration': item_seo['duration_iso'],
-            },
+            'item': video_obj,
         })
 
     # One Course per learning path + umbrella course
@@ -298,34 +354,17 @@ def academy_playlist_schema_json(request, *, active_item, sections, flat_items) 
     ]
 
     if active_item:
-        seo = video_item_seo(active_item, site_url=site_url)
-        video = active_item['video']
-        video_node: dict[str, Any] = {
-            '@type': 'VideoObject',
-            '@id': f'{page_url}#video',
-            'name': video.title,
-            'description': video.subtitle or page_desc,
-            'thumbnailUrl': [seo['poster_url']],
-            'uploadDate': seo['upload_date'],
-            'datePublished': seo['upload_date'],
-            'duration': seo['duration_iso'],
-            'url': page_url,
-            'embedUrl': page_url,
-            'inLanguage': 'fa-IR',
-            'isFamilyFriendly': True,
-            'isPartOf': {'@id': item_list_id},
-            'publisher': org,
-            'potentialAction': {
-                '@type': 'WatchAction',
-                'target': page_url,
-            },
-        }
-        if active_item['player'].get('available') and seo['embed_url']:
-            content_url = seo['embed_url']
-            if not content_url.startswith('http'):
-                content_url = f'{site_url}{content_url}'
-            video_node['contentUrl'] = content_url
-        graph.append(video_node)
+        graph.append(
+            _build_video_object(
+                active_item,
+                site_url=site_url,
+                page_url=page_url,
+                org=org,
+                item_list_id=item_list_id,
+                node_id=f'{page_url}#video',
+                fallback_description=page_desc,
+            )
+        )
 
     payload = {'@context': 'https://schema.org', '@graph': graph}
     return json.dumps(payload, ensure_ascii=False)

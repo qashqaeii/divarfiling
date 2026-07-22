@@ -672,6 +672,7 @@ class PublicAcademyView(TemplateView):
             academy_landing_meta,
             academy_landing_schema_json,
         )
+        from shop.education_academy import get_education_academy_hero
         from workspace.academy.services.public_playlist_service import (
             flatten_public_videos,
             get_public_playlist_sections,
@@ -685,6 +686,9 @@ class PublicAcademyView(TemplateView):
         flat = flatten_public_videos(sections)
         stats = playlist_stats(sections)
         meta = academy_landing_meta(stats=stats)
+        hero = get_education_academy_hero()
+        site_url = get_site_url()
+
         ctx['playlist_sections'] = sections
         ctx['playlist_stats'] = stats
         ctx['playlist_flat'] = flat
@@ -693,10 +697,32 @@ class PublicAcademyView(TemplateView):
         ctx['schema_data'] = academy_landing_schema_json(
             self.request, sections=sections, flat_items=flat,
         )
-        if flat:
-            poster = video_item_seo(flat[0], site_url=get_site_url()).get('poster_url')
-            if poster:
-                ctx['meta_image'] = poster
+
+        hero_poster = ''
+        hero_video = hero.get('video')
+        if hero_video:
+            for item in flat:
+                if item['video'].id == hero_video.id or item['video'].slug == hero_video.slug:
+                    hero_poster = video_item_seo(item, site_url=site_url).get('poster_url') or ''
+                    break
+            if not hero_poster:
+                player = hero.get('player') or {}
+                poster = player.get('poster') or ''
+                if poster.startswith(('http://', 'https://')):
+                    hero_poster = poster
+                elif poster:
+                    if player.get('poster_kind') == 'static':
+                        hero_poster = f'{site_url}/static/{poster.lstrip("/")}'
+                    elif poster.startswith('/'):
+                        hero_poster = f'{site_url}{poster}'
+                    else:
+                        hero_poster = f'{site_url}/{poster}'
+        elif flat:
+            hero_poster = video_item_seo(flat[0], site_url=site_url).get('poster_url') or ''
+
+        ctx['hero_poster'] = hero_poster
+        if hero_poster:
+            ctx['meta_image'] = hero_poster
         return ctx
 
 

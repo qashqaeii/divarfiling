@@ -2,103 +2,177 @@
 {% load static %}
 
 {% block title %}{{ meta_title }}{% endblock %}
-{% block body_class %}mk-pub-page acd-pub-page{% endblock %}
+{% block body_class %}mk-pub-page aal-page{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/mizkar-academy-landing.css' %}?v=1">
+{% endblock %}
 
 {% block breadcrumbs %}
-<nav class="acd-pl-crumb" aria-label="مسیر صفحه">
-    <div class="acd-pl-shell">
-        <ol class="acd-pl-crumb-list" itemscope itemtype="https://schema.org/BreadcrumbList">
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-                <a href="{% url 'home' %}" itemprop="item"><span itemprop="name">خانه</span></a>
-                <meta itemprop="position" content="1">
-            </li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-                <a href="{% url 'education' %}" itemprop="item"><span itemprop="name">آموزش</span></a>
-                <meta itemprop="position" content="2">
-            </li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page">
-                <span itemprop="name">آکادمی فایلینگ دیوار</span>
-                <meta itemprop="item" content="{{ request.build_absolute_uri }}">
-                <meta itemprop="position" content="3">
-            </li>
-        </ol>
-    </div>
+<nav class="aal-crumb" aria-label="مسیر صفحه">
+    <ol class="aal-crumb-list" itemscope itemtype="https://schema.org/BreadcrumbList">
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{% url 'home' %}" itemprop="item"><span itemprop="name">خانه</span></a>
+            <meta itemprop="position" content="1">
+        </li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{% url 'education' %}" itemprop="item"><span itemprop="name">آموزش</span></a>
+            <meta itemprop="position" content="2">
+        </li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page">
+            <span itemprop="name">آکادمی</span>
+            <meta itemprop="item" content="{{ request.build_absolute_uri }}">
+            <meta itemprop="position" content="3">
+        </li>
+    </ol>
 </nav>
 {% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'css/mizkar-academy-playlist.css' %}?v=3">
-{% endblock %}
-
 {% block content %}
-<div class="mk-pub-wrap acd-page">
-    <header class="acd-head acd-head--page">
-        <div class="acd-head-row">
-            <div class="acd-head-main">
-                <div class="acd-head-copy">
-                    <div class="acd-head-kicker">
-                        <span class="acd-head-mark" aria-hidden="true"></span>
-                        <span>آکادمی فایلینگ دیوار</span>
-                    </div>
-                    <h1 class="acd-head-title">از اولین فایل تا اولین معامله</h1>
-                    <p class="acd-head-desc">
-                        {{ playlist_stats.video_count }} ویدیوی آموزشی رایگان برای مشاوران املاک —
-                        مسیر آشنایی، شروع سریع و یادگیری حرفه‌ای در یک پلی‌لیست.
-                    </p>
-                </div>
+<div class="aal" id="aalRoot">
+
+    {# ─── Hero: one composition ─── #}
+    <header class="aal-hero" aria-labelledby="aalHeroTitle">
+        <div class="aal-hero-plane" aria-hidden="true">
+            {% if hero_poster %}
+            <img class="aal-hero-photo" src="{{ hero_poster }}" alt="" decoding="async" fetchpriority="high">
+            {% endif %}
+            <span class="aal-hero-scrim"></span>
+            <span class="aal-hero-grain"></span>
+            <span class="aal-hero-orb aal-hero-orb--a"></span>
+            <span class="aal-hero-orb aal-hero-orb--b"></span>
+        </div>
+
+        <div class="aal-hero-inner">
+            <p class="aal-brand" data-aal-reveal>فایلینگ دیوار</p>
+            <p class="aal-brand-sub" data-aal-reveal>Academy</p>
+            <h1 id="aalHeroTitle" class="aal-title" data-aal-reveal>از اولین فایل تا اولین معامله</h1>
+            <p class="aal-lead" data-aal-reveal>
+                مسیر ویدیویی رایگان برای مشاور املاک —
+                {% if playlist_stats.video_count %}{{ playlist_stats.video_count }} درس در حدود {{ playlist_stats.total_minutes }} دقیقه{% else %}از آشنایی تا شروع کار واقعی{% endif %}.
+            </p>
+
+            <div class="aal-cta" data-aal-reveal>
+                <a href="{% url 'public_academy_playlist' %}" class="aal-cta-primary">
+                    <span class="aal-cta-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                    <span class="aal-cta-copy">
+                        <strong>شروع پلی‌لیست</strong>
+                        <small>پخش پشت‌سرهم · رایگان</small>
+                    </span>
+                </a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'workspace:academy_mission' %}" class="aal-cta-secondary">ماموریت ۱۵ دقیقه‌ای</a>
+                {% else %}
+                <a href="{% url 'register' %}?next={% url 'workspace:academy_mission' %}" class="aal-cta-secondary">ثبت‌نام و تمرین در میزکار</a>
+                {% endif %}
             </div>
         </div>
-        <div class="acd-head-actions">
-            <a href="{% url 'public_academy_playlist' %}" class="acd-btn acd-btn--primary">
-                <i class="fas fa-play" aria-hidden="true"></i> مشاهده پلی‌لیست ویدیوها
-            </a>
-            {% if user.is_authenticated %}
-            <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--ghost">ورود به آکادمی میزکار</a>
-            <a href="{% url 'workspace:academy_mission' %}" class="acd-btn acd-btn--ghost">ماموریت ۱۵ دقیقه‌ای</a>
-            {% else %}
-            <a href="{% url 'register' %}?next={% url 'workspace:academy_mission' %}" class="acd-btn acd-btn--ghost">ثبت‌نام رایگان</a>
-            {% endif %}
-        </div>
+
+        <a href="#aal-paths" class="aal-scroll" data-aal-reveal aria-label="رفتن به مسیرها">
+            <span>مسیرها</span>
+            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        </a>
     </header>
 
+    {# ─── Paths ─── #}
     {% if playlist_sections %}
-    <section class="acd-paths" aria-labelledby="acd-intro-title">
-        {% include 'workspace/academy/includes/section_header.html' with section_id='acd-intro-title' title='مسیرهای آموزشی عمومی' icon='fa-compass' %}
-        <div class="acd-traditional-list">
-            {% for section in playlist_sections %}
-            <article class="acd-traditional-item">
-                <span class="acd-traditional-num">{{ forloop.counter }}</span>
-                <div class="acd-traditional-body">
-                    <strong>{{ section.path.title }}</strong>
-                    <span>{{ section.video_count }} ویدیو · ~{{ section.total_minutes }} دقیقه</span>
-                    <p>{{ section.path.description|truncatechars:120 }}</p>
-                    {% with first=section.videos.0 %}
-                    {% if first %}
-                    <a href="{{ first.url }}" class="acd-btn acd-btn--ghost" style="margin-top:.65rem;display:inline-flex;">
-                        شروع این مسیر <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                    </a>
-                    {% endif %}
-                    {% endwith %}
-                </div>
-            </article>
-            {% endfor %}
+    <section class="aal-section aal-paths" id="aal-paths" aria-labelledby="aalPathsTitle">
+        <div class="aal-section-head" data-aal-reveal>
+            <p class="aal-eyebrow">Learning Paths</p>
+            <h2 id="aalPathsTitle" class="aal-section-title">مسیر یادگیری را انتخاب کنید</h2>
+            <p class="aal-section-lead">هر فصل یک مهارت — از معرفی پلتفرم تا پیگیری مشتری.</p>
         </div>
+
+        <ol class="aal-path-rail">
+            {% for section in playlist_sections %}
+            {% with first=section.videos.0 %}
+            <li class="aal-path-item" data-aal-reveal style="--aal-i: {{ forloop.counter0 }}">
+                <a href="{% if first %}{{ first.url }}{% else %}{% url 'public_academy_playlist' %}{% endif %}" class="aal-path-link">
+                    <span class="aal-path-index" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
+                    <span class="aal-path-body">
+                        <strong class="aal-path-title">{{ section.path.title }}</strong>
+                        <span class="aal-path-meta">{{ section.video_count }} ویدیو · حدود {{ section.total_minutes }} دقیقه</span>
+                        {% if section.path.description %}
+                        <span class="aal-path-desc">{{ section.path.description|truncatechars:110 }}</span>
+                        {% endif %}
+                    </span>
+                    <span class="aal-path-go" aria-hidden="true">
+                        <i class="fas fa-arrow-left"></i>
+                    </span>
+                </a>
+            </li>
+            {% endwith %}
+            {% endfor %}
+        </ol>
     </section>
     {% endif %}
 
+    {# ─── How it works ─── #}
+    <section class="aal-section aal-flow" aria-labelledby="aalFlowTitle">
+        <div class="aal-section-head" data-aal-reveal>
+            <p class="aal-eyebrow">How it works</p>
+            <h2 id="aalFlowTitle" class="aal-section-title">سه قدم تا شروع حرفه‌ای</h2>
+            <p class="aal-section-lead">بدون لایسنس ربات — فقط تماشا، تمرین، تکرار.</p>
+        </div>
+        <ol class="aal-flow-list">
+            <li class="aal-flow-step" data-aal-reveal style="--aal-i: 0">
+                <span class="aal-flow-num">۱</span>
+                <strong>تماشا کنید</strong>
+                <p>پلی‌لیست عمومی را از معرفی شروع کنید و پشت‌سرهم پیش بروید.</p>
+            </li>
+            <li class="aal-flow-step" data-aal-reveal style="--aal-i: 1">
+                <span class="aal-flow-num">۲</span>
+                <strong>در میزکار تمرین کنید</strong>
+                <p>ثبت‌نام رایگان کنید و همان کارها را روی حساب واقعی خودتان انجام دهید.</p>
+            </li>
+            <li class="aal-flow-step" data-aal-reveal style="--aal-i: 2">
+                <span class="aal-flow-num">۳</span>
+                <strong>ماموریت ۱۵ دقیقه‌ای</strong>
+                <p>اولین فایل و مشتری را داخل محصول ثبت کنید — نه فقط در ویدیو.</p>
+            </li>
+        </ol>
+    </section>
+
+    {# ─── FAQ ─── #}
     {% if academy_faq %}
-    <section class="acd-paths" aria-labelledby="acd-faq-title" style="margin-top:1.5rem;">
-        {% include 'workspace/academy/includes/section_header.html' with section_id='acd-faq-title' title='سؤالات رایج آکادمی' icon='fa-circle-question' %}
-        <div class="acd-traditional-list">
+    <section class="aal-section aal-faq" aria-labelledby="aalFaqTitle">
+        <div class="aal-section-head" data-aal-reveal>
+            <p class="aal-eyebrow">FAQ</p>
+            <h2 id="aalFaqTitle" class="aal-section-title">سؤالات رایج</h2>
+            <p class="aal-section-lead">قبل از شروع، همین‌جا روشن کنید.</p>
+        </div>
+        <div class="aal-faq-list">
             {% for item in academy_faq %}
-            <details class="acd-traditional-item" style="display:block;padding:1rem 1.1rem;">
-                <summary style="font-weight:700;cursor:pointer;">{{ item.q }}</summary>
-                <p style="margin:.65rem 0 0;color:var(--ink-2,#525252);line-height:1.7;">{{ item.a }}</p>
+            <details class="aal-faq-item" data-aal-reveal style="--aal-i: {{ forloop.counter0 }}">
+                <summary>{{ item.q }}</summary>
+                <p>{{ item.a }}</p>
             </details>
             {% endfor %}
         </div>
     </section>
     {% endif %}
+
+    {# ─── Closing ─── #}
+    <section class="aal-close" aria-labelledby="aalCloseTitle">
+        <div class="aal-close-inner" data-aal-reveal>
+            <p class="aal-brand aal-brand--sm">فایلینگ دیوار</p>
+            <h2 id="aalCloseTitle" class="aal-close-title">همین الان یک ویدیو ببینید</h2>
+            <p class="aal-close-lead">بهترین شروع، فشردن دکمه پخش است.</p>
+            <a href="{% url 'public_academy_playlist' %}" class="aal-cta-primary aal-cta-primary--solo">
+                <span class="aal-cta-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                <span class="aal-cta-copy">
+                    <strong>ورود به پلی‌لیست</strong>
+                    <small>آکادمی ویدیویی</small>
+                </span>
+            </a>
+        </div>
+    </section>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/academy-landing.js' %}?v=1" defer></script>
 {% endblock %}

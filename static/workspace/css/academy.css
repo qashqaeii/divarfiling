@@ -1844,3 +1844,49 @@
 .acd-page .mk-vid--academy .mk-vid__wrap {
     border-radius: 0;
 }
+
+/* ══════════════════════════════════════
+   Public landing (/academy/) — light site
+   ══════════════════════════════════════ */
+.acd-pub-page .acd-page {
+    --acd-primary: #7c3aed;
+    --acd-primary-hover: #6d28d9;
+    --acd-primary-soft: rgba(124, 58, 237, 0.1);
+    --acd-primary-glow: rgba(124, 58, 237, 0.28);
+    --acd-surface: #ffffff;
+    --acd-card: #ffffff;
+    --acd-border: rgba(15, 23, 42, 0.08);
+    --acd-muted: #64748b;
+    --acd-text-secondary: #475569;
+    --acd-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --acd-shadow-lg: 0 12px 32px -16px rgba(15, 23, 42, 0.18);
+    color: #0f172a;
+}
+
+.acd-pub-page .acd-head-title,
+.acd-pub-page .acd-traditional-body strong,
+.acd-pub-page .acd-section-title {
+    color: #0f172a;
+}
+
+.acd-pub-page .acd-head-desc,
+.acd-pub-page .acd-traditional-body span,
+.acd-pub-page .acd-traditional-body p,
+.acd-pub-page .acd-section-desc {
+    color: #64748b;
+}
+
+html.mk-public[data-theme="dark"] .acd-pub-page .acd-page {
+    --acd-surface: #111827;
+    --acd-card: #0f172a;
+    --acd-border: rgba(148, 163, 184, 0.12);
+    --acd-muted: #94a3b8;
+    --acd-text-secondary: #94a3b8;
+    color: #f8fafc;
+}
+
+html.mk-public[data-theme="dark"] .acd-pub-page .acd-head-title,
+html.mk-public[data-theme="dark"] .acd-pub-page .acd-traditional-body strong,
+html.mk-public[data-theme="dark"] .acd-pub-page .acd-section-title {
+    color: #f8fafc;
+}

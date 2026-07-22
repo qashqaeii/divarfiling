@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}مرکز جذب سرنخ | پنل مدیریت{% endblock %}
+{% block body_class %}mk-admin-dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
+<style>
+.lead-acq-grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin:1rem 0}
+.lead-acq-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1rem}
+.lead-acq-card h3{margin:0 0 .5rem;font-size:1rem}
+.lead-acq-muted{color:#6b7280;font-size:.85rem}
+.lead-acq-table{width:100%;border-collapse:collapse;font-size:.9rem}
+.lead-acq-table th,.lead-acq-table td{border-bottom:1px solid #eee;padding:.45rem .35rem;text-align:right}
+.lead-acq-actions form{display:inline-block;margin-left:.35rem}
+.lead-acq-badge{display:inline-block;padding:.15rem .45rem;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:.75rem}
+.lead-acq-badge--pilot{background:#fef3c7;color:#92400e}
+.lead-acq-section{margin:1.5rem 0}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="adm-page adm-mkt-page" style="max-width:1200px;margin:0 auto;padding:1rem">
+  <header style="margin-bottom:1rem">
+    <p class="lead-acq-muted"><a href="{% url 'admin_panel_marketing' %}">بازگشت به مارکتینگ</a></p>
+    <h1>مرکز جذب سرنخ</h1>
+    <p class="lead-acq-muted">Import · Tracking با click_token · Acquisition/Conversion Attribution · Pilot Result</p>
+  </header>
+
+  <div class="lead-acq-grid">
+    <div class="lead-acq-card"><h3>سرنخ‌ها</h3><div style="font-size:1.6rem">{{ overview.leads_total }}</div>
+      <p class="lead-acq-muted">سرد {{ overview.leads_cold }} · تعامل {{ overview.leads_engaged }} · ثبت‌نام {{ overview.leads_registered }} · مشتری {{ overview.leads_customer }}</p></div>
+    <div class="lead-acq-card"><h3>بچ‌های commit</h3><div style="font-size:1.6rem">{{ overview.batches }}</div></div>
+    <div class="lead-acq-card"><h3>کمپین فعال/پایلوت</h3><div style="font-size:1.6rem">{{ overview.campaigns_active }}</div></div>
+  </div>
+
+  {% if messages %}
+  <section class="adm-alerts" aria-label="پیام‌ها">
+    {% for message in messages %}
+    <div class="adm-alert {% if message.tags == 'error' %}adm-alert--warn{% else %}adm-alert--info{% endif %}">
+      <span>{{ message }}</span>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section class="lead-acq-section lead-acq-card">
+    <h2>۱) ایمپورت JSON (phone-detector)</h2>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="import_preview">
+      <input type="file" name="file" accept=".json,application/json" required>
+      <button type="submit">پیش‌نمایش</button>
+    </form>
+    {% if preview %}
+    <div style="margin-top:1rem">
+      <p>Batch #{{ preview.batch_id }} · hash {{ preview.file_hash|slice:":12" }}…</p>
+      <ul>
+        <li>خوانده‌شده: {{ preview.stats.read }}</li>
+        <li>معتبر: {{ preview.stats.valid }}</li>
+        <li>تکراری داخل فایل: {{ preview.stats.duplicate_in_file }}</li>
+        <li>Lead موجود: {{ preview.stats.already_lead }}</li>
+        <li>کاربر موجود: {{ preview.stats.existing_user }}</li>
+        <li>Suppressed: {{ preview.stats.suppressed }}</li>
+        <li><strong>قابل ورود: {{ preview.stats.eligible }}</strong></li>
+      </ul>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="import_commit">
+        <button type="submit">تأیید و Commit</button>
+      </form>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="lead-acq-section lead-acq-card">
+    <h2>۲) ساخت کمپین جذب (Pilot)</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_campaign">
+      <label>لیست
+        <select name="list_id" required>
+          {% for lst in lists %}
+          <option value="{{ lst.id }}">#{{ lst.id }} — {{ lst.name }}</option>
+          {% empty %}
+          <option value="">لیستی نیست — اول ایمپورت کنید</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>نام <input name="name" placeholder="جذب آجودانیه"></label>
+      <label>لندینگ <input name="landing_url" value="https://divarfiling.ir/" style="min-width:280px"></label>
+      <label><input type="checkbox" name="is_pilot" value="1" checked> Pilot</label>
+      <label>per variant <input type="number" name="pilot_per_variant" value="15" min="1" max="100"></label>
+      <button type="submit">ساخت کمپین</button>
+    </form>
+  </section>
+
+  <section class="lead-acq-section lead-acq-card">
+    <h2>۳) کمپین‌ها و قیف</h2>
+    <table class="lead-acq-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>نام</th><th>وضعیت</th><th>Accepted</th><th>Clicked</th><th>Registered</th><th>Paid</th><th>عملیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in funnels %}
+        <tr>
+          <td><a href="{% url 'admin_panel_lead_campaign_detail' f.campaign_id %}">{{ f.campaign_id }}</a></td>
+          <td>{{ f.name }}
+            {% if f.is_pilot %}<span class="lead-acq-badge lead-acq-badge--pilot">{{ f.pilot_label }}</span>{% endif %}
+          </td>
+          <td>{{ f.status }}</td>
+          <td>{{ f.funnel.accepted }} <span class="lead-acq-muted">(Estimated Reach)</span></td>
+          <td>{{ f.funnel.clicked }}</td>
+          <td>{{ f.funnel.registered }}
+            <span class="lead-acq-muted">D{{ f.attribution.acquisition_direct }}/M{{ f.attribution.acquisition_phone_matched }}</span>
+          </td>
+          <td>{{ f.funnel.paid }}
+            <span class="lead-acq-muted">D{{ f.attribution.conversion_direct }}/M{{ f.attribution.conversion_phone_matched }}</span>
+          </td>
+          <td class="lead-acq-actions">
+            <form method="post">{% csrf_token %}
+              <input type="hidden" name="action" value="enroll_pilot">
+              <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+              <button type="submit">Enroll Pilot</button>
+            </form>
+            <form method="post">{% csrf_token %}
+              <input type="hidden" name="action" value="send_step">
+              <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+              <input type="hidden" name="step_number" value="1">
+              <button type="submit">Send Step1</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">کمپینی نیست</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="lead-acq-section lead-acq-card">
+    <h2>سرنخ‌های اخیر</h2>
+    <table class="lead-acq-table">
+      <thead><tr><th>موبایل</th><th>نام</th><th>نوع</th><th>وضعیت</th><th>شهر/منطقه</th></tr></thead>
+      <tbody>
+      {% for lead in leads_sample %}
+        <tr>
+          <td>{{ lead.phone_normalized }}</td>
+          <td>{{ lead.display_name }}</td>
+          <td>{{ lead.get_lead_type_display }} ({{ lead.classification_confidence }})</td>
+          <td>{{ lead.get_status_display }}</td>
+          <td>{{ lead.city }} / {{ lead.district }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5">خالی</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}

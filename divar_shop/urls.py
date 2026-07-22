@@ -11,6 +11,7 @@ from django.views.generic import RedirectView
 
 from divar_shop.robots import robots_txt
 from divar_shop.sitemaps import sitemaps
+from accounts.lead_acquisition_views import LeadClickRedirectView
 
 
 def favicon_redirect(_request):
@@ -36,6 +37,11 @@ urlpatterns = [
     ),
     path('', include('shop.urls')),
     path('accounts/', include('accounts.urls')),
+    path(
+        's/t/<str:click_token>/',
+        LeadClickRedirectView.as_view(),
+        name='lead_click_redirect_root',
+    ),
     path('api/', include('licenses.api_urls')),
     path('api/mobile/v1/', include('mobile_api.urls')),
     path('payment/', include('shop.payment_urls')),

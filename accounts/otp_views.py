@@ -1,6 +1,8 @@
 """ویوهای ورود و ثبت‌نام مبتنی بر OTP / پیامک."""
 from __future__ import annotations
 
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import login
 from django.shortcuts import redirect, render
@@ -16,6 +18,8 @@ from accounts.forms import (
 from accounts.models import User, UserProfile
 from accounts.phone_utils import normalize_phone, phone_username
 from accounts.services.otp import OtpError, OtpRateLimitError, request_otp, verify_otp
+
+logger = logging.getLogger(__name__)
 
 SESSION_PHONE = 'otp_phone'
 SESSION_PURPOSE = 'otp_purpose'
@@ -399,6 +403,12 @@ class OtpRegisterPasswordView(View):
         from affiliates.services import assign_referred_user, capture_referral_from_request
         affiliate = capture_referral_from_request(request)
         assign_referred_user(user, affiliate)
+
+        try:
+            from accounts.services.lead_attribution import attribute_signup
+            attribute_signup(user=user, request=request)
+        except Exception:
+            logger.exception('lead acquisition signup attribution failed')
 
         login(request, user, backend='accounts.backends.PhoneAuthBackend')
         next_url = _safe_next(request)

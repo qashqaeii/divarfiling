@@ -24,6 +24,12 @@ from .admin_views import (
     AdminRecoveryCenterView,
     AdminSystemSummaryView,
 )
+from .lead_acquisition_views import (
+    AdminLeadAcquisitionView,
+    AdminLeadCampaignDetailView,
+    AdminLeadFunnelJsonView,
+    LeadClickRedirectView,
+)
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
@@ -53,6 +59,41 @@ urlpatterns = [
     path('admin-panel/marketing/phonebook/status.json', AdminPhonebookStatusView.as_view(), name='admin_panel_phonebook_status'),
     path('admin-panel/marketing/phonebook/sync/', AdminPhonebookSyncView.as_view(), name='admin_panel_phonebook_sync'),
     path('admin-panel/marketing/<int:pk>/', AdminMarketingDetailView.as_view(), name='admin_panel_marketing_detail'),
+    path(
+        'admin-panel/marketing/leads/',
+        AdminLeadAcquisitionView.as_view(),
+        name='admin_panel_lead_acquisition',
+    ),
+    path(
+        'admin-panel/marketing/lists/',
+        AdminLeadAcquisitionView.as_view(),
+        name='admin_panel_lead_lists',
+    ),
+    path(
+        'admin-panel/marketing/campaigns/',
+        AdminLeadAcquisitionView.as_view(),
+        name='admin_panel_lead_campaigns',
+    ),
+    path(
+        'admin-panel/marketing/attribution/',
+        AdminLeadAcquisitionView.as_view(),
+        name='admin_panel_lead_attribution',
+    ),
+    path(
+        'admin-panel/marketing/lead-campaigns/<int:pk>/',
+        AdminLeadCampaignDetailView.as_view(),
+        name='admin_panel_lead_campaign_detail',
+    ),
+    path(
+        'admin-panel/marketing/lead-campaigns/<int:pk>/funnel.json',
+        AdminLeadFunnelJsonView.as_view(),
+        name='admin_panel_lead_funnel_json',
+    ),
+    path(
+        's/t/<str:click_token>/',
+        LeadClickRedirectView.as_view(),
+        name='lead_click_redirect',
+    ),
     path('admin-panel/blog/', AdminBlogView.as_view(), name='admin_panel_blog'),
     path('admin-panel/blog/stats.json', AdminBlogJsonView.as_view(), name='admin_panel_blog_stats_json'),
     path('admin-panel/blog/analytics.json', AdminBlogAnalyticsJsonView.as_view(), name='admin_panel_blog_analytics_json'),

@@ -1,10 +1,20 @@
 """
 مدل‌های کاربری، OTP و لاگ پیامک
 """
+import secrets
+
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+
+
+def _generate_click_token() -> str:
+    return secrets.token_urlsafe(12)
+
+
+def _generate_lead_token() -> str:
+    return secrets.token_urlsafe(10)
 
 
 class User(AbstractUser):
@@ -550,3 +560,584 @@ class RecoveryAttribution(models.Model):
 
     def __str__(self):
         return f'{self.get_status_display()} — log#{self.action_log_id}'
+
+
+# ─── Lead Acquisition Center ───────────────────────────────────────────────
+
+
+class LeadImportBatch(models.Model):
+    """بچ آپلود سرنخ (مثلاً خروجی phone-detector)."""
+
+    class Status(models.TextChoices):
+        PREVIEW = 'preview', 'پیش‌نمایش'
+        COMMITTED = 'committed', 'ثبت‌شده'
+        REJECTED = 'rejected', 'ردشده'
+
+    source = models.CharField(max_length=64, default='phone_detector', db_index=True)
+    original_filename = models.CharField(max_length=255, blank=True)
+    file_hash = models.CharField(max_length=64, unique=True, db_index=True)
+    city = models.CharField(max_length=100, blank=True)
+    city_id = models.CharField(max_length=32, blank=True)
+    district = models.CharField(max_length=100, blank=True)
+    district_id = models.CharField(max_length=32, blank=True)
+    listing_category = models.CharField(max_length=64, blank=True)
+    scraped_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    preview_stats = models.JSONField(default=dict, blank=True)
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PREVIEW,
+        db_index=True,
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lead_import_batches',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    committed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'بچ ایمپورت سرنخ'
+        verbose_name_plural = 'بچ‌های ایمپورت سرنخ'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.original_filename or self.file_hash[:12]} [{self.status}]'
+
+
+class MarketingLead(models.Model):
+    """سرنخ یکتای سیستم جذب — جدا از CRM مشاوران."""
+
+    class LeadType(models.TextChoices):
+        AGENCY = 'agency', 'آژانس'
+        CONSULTANT = 'consultant', 'مشاور'
+        UNKNOWN = 'unknown', 'نامشخص'
+
+    class Status(models.TextChoices):
+        COLD = 'cold', 'سرد'
+        ENGAGED = 'engaged', 'تعامل‌دار'
+        EXISTING_USER = 'existing_user', 'کاربر موجود'
+        REGISTERED = 'registered', 'ثبت‌نام‌شده'
+        CUSTOMER = 'customer', 'مشتری'
+        SUPPRESSED = 'suppressed', 'مسدود'
+
+    phone_normalized = models.CharField(max_length=20, unique=True, db_index=True)
+    public_token = models.CharField(
+        max_length=32,
+        unique=True,
+        default=_generate_lead_token,
+        editable=False,
+        help_text='شناسه داخلی ادمین — در لینک پیامک استفاده نشود',
+    )
+    display_name = models.CharField(max_length=255, blank=True)
+    source = models.CharField(max_length=64, default='phone_detector', db_index=True)
+    city = models.CharField(max_length=100, blank=True)
+    district = models.CharField(max_length=100, blank=True)
+    listing_category = models.CharField(max_length=64, blank=True)
+    lead_type = models.CharField(
+        max_length=16,
+        choices=LeadType.choices,
+        default=LeadType.UNKNOWN,
+        db_index=True,
+    )
+    classification_confidence = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.COLD,
+        db_index=True,
+    )
+    sighting_count = models.PositiveIntegerField(default=1)
+    districts_json = models.JSONField(default=list, blank=True)
+    last_seen_at = models.DateTimeField(null=True, blank=True)
+    matched_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='marketing_leads',
+    )
+    first_batch = models.ForeignKey(
+        LeadImportBatch,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='first_leads',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'سرنخ بازاریابی'
+        verbose_name_plural = 'سرنخ‌های بازاریابی'
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f'{self.phone_normalized} ({self.display_name or "—"})'
+
+
+class LeadList(models.Model):
+    """لیست/دسته قابل استفاده در کمپین."""
+
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=220, unique=True)
+    source = models.CharField(max_length=64, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    district = models.CharField(max_length=100, blank=True)
+    listing_category = models.CharField(max_length=64, blank=True)
+    tags = models.JSONField(default=list, blank=True)
+    batch = models.ForeignKey(
+        LeadImportBatch,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lists',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'لیست سرنخ'
+        verbose_name_plural = 'لیست‌های سرنخ'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
+
+class LeadListMember(models.Model):
+    lead_list = models.ForeignKey(LeadList, on_delete=models.CASCADE, related_name='members')
+    lead = models.ForeignKey(MarketingLead, on_delete=models.CASCADE, related_name='list_memberships')
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'عضو لیست سرنخ'
+        verbose_name_plural = 'اعضای لیست سرنخ'
+        constraints = [
+            models.UniqueConstraint(fields=['lead_list', 'lead'], name='uniq_lead_list_member'),
+        ]
+
+    def __str__(self):
+        return f'{self.lead_id} ∈ {self.lead_list_id}'
+
+
+class SuppressionEntry(models.Model):
+    """مسدودسازی دائمی ارسال — فقط لغو/شکایت/نامعتبر/fail مکرر."""
+
+    class Reason(models.TextChoices):
+        OPT_OUT = 'opt_out', 'لغو دریافت'
+        COMPLAINT = 'complaint', 'شکایت'
+        INVALID = 'invalid', 'شماره نامعتبر'
+        HARD_FAIL = 'hard_fail', 'شکست مکرر ارسال'
+        MANUAL = 'manual', 'دستی'
+
+    phone_normalized = models.CharField(max_length=20, unique=True, db_index=True)
+    reason = models.CharField(max_length=32, choices=Reason.choices, db_index=True)
+    notes = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='suppression_entries',
+    )
+
+    class Meta:
+        verbose_name = 'ورودی Suppression'
+        verbose_name_plural = 'Suppression'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.phone_normalized} [{self.reason}]'
+
+
+class LeadCampaign(models.Model):
+    """کمپین جذب سرنخ یا فعال‌سازی کاربر."""
+
+    class Kind(models.TextChoices):
+        ACQUISITION = 'acquisition', 'جذب سرنخ'
+        ACTIVATION = 'activation', 'فعال‌سازی / تبدیل خرید'
+
+    class Status(models.TextChoices):
+        DRAFT = 'draft', 'پیش‌نویس'
+        PILOT = 'pilot', 'پایلوت'
+        ACTIVE = 'active', 'فعال'
+        PAUSED = 'paused', 'متوقف'
+        COMPLETED = 'completed', 'تکمیل‌شده'
+        ARCHIVED = 'archived', 'بایگانی'
+
+    name = models.CharField(max_length=200)
+    kind = models.CharField(
+        max_length=16,
+        choices=Kind.choices,
+        default=Kind.ACQUISITION,
+        db_index=True,
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.DRAFT,
+        db_index=True,
+    )
+    lead_list = models.ForeignKey(
+        LeadList,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='campaigns',
+    )
+    landing_url = models.URLField(
+        max_length=500,
+        default='https://divarfiling.ir/',
+        help_text='مقصد بعد از کلیک روی لینک ردیابی',
+    )
+    is_pilot = models.BooleanField(default=False)
+    pilot_per_variant = models.PositiveIntegerField(default=15)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lead_campaigns',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'کمپین سرنخ'
+        verbose_name_plural = 'کمپین‌های سرنخ'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.name} [{self.get_kind_display()}]'
+
+
+class CampaignVariant(models.Model):
+    campaign = models.ForeignKey(LeadCampaign, on_delete=models.CASCADE, related_name='variants')
+    key = models.CharField(max_length=8, db_index=True)  # A / B
+    name = models.CharField(max_length=100, blank=True)
+    weight = models.PositiveSmallIntegerField(default=1)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'نسخه A/B'
+        verbose_name_plural = 'نسخه‌های A/B'
+        constraints = [
+            models.UniqueConstraint(fields=['campaign', 'key'], name='uniq_campaign_variant_key'),
+        ]
+
+    def __str__(self):
+        return f'{self.campaign_id}:{self.key}'
+
+
+class CampaignStep(models.Model):
+    class Audience(models.TextChoices):
+        ALL_ELIGIBLE = 'all_eligible', 'همه واجد شرایط'
+        NOT_REGISTERED = 'not_registered', 'ثبت‌نام‌نشده (یادآوری)'
+        ENGAGED_NOT_REGISTERED = 'engaged_not_registered', 'کلیک/لندینگ و ثبت‌نام‌نشده'
+
+    campaign = models.ForeignKey(LeadCampaign, on_delete=models.CASCADE, related_name='steps')
+    step_number = models.PositiveSmallIntegerField()
+    name = models.CharField(max_length=100, blank=True)
+    delay_days = models.PositiveSmallIntegerField(default=0)
+    audience = models.CharField(
+        max_length=32,
+        choices=Audience.choices,
+        default=Audience.ALL_ELIGIBLE,
+    )
+    message_template = models.TextField(
+        help_text='از {link} برای لینک ردیابی استفاده کنید',
+    )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'مرحله کمپین'
+        verbose_name_plural = 'مراحل کمپین'
+        ordering = ['campaign_id', 'step_number']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['campaign', 'step_number'],
+                name='uniq_campaign_step_number',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.campaign_id} step {self.step_number}'
+
+
+class CampaignEnrollment(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = 'active', 'فعال'
+        EXITED_REGISTERED = 'exited_registered', 'خروج به‌خاطر ثبت‌نام'
+        EXITED_PURCHASED = 'exited_purchased', 'خروج به‌خاطر خرید'
+        EXITED_OPT_OUT = 'exited_opt_out', 'خروج به‌خاطر لغو'
+        EXITED_SUPPRESSED = 'exited_suppressed', 'خروج به‌خاطر suppression'
+        COMPLETED = 'completed', 'تکمیل توالی'
+        HOLD = 'hold', 'نگه‌داشته'
+
+    campaign = models.ForeignKey(LeadCampaign, on_delete=models.CASCADE, related_name='enrollments')
+    lead = models.ForeignKey(MarketingLead, on_delete=models.CASCADE, related_name='enrollments')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lead_campaign_enrollments',
+    )
+    assigned_variant = models.ForeignKey(
+        CampaignVariant,
+        on_delete=models.PROTECT,
+        related_name='enrollments',
+    )
+    status = models.CharField(
+        max_length=24,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+        db_index=True,
+    )
+    current_step_number = models.PositiveSmallIntegerField(default=0)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+    exited_at = models.DateTimeField(null=True, blank=True)
+    last_message_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'ثبت‌نام در کمپین'
+        verbose_name_plural = 'ثبت‌نام‌های کمپین'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['campaign', 'lead'],
+                name='uniq_campaign_lead_enrollment',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['status', 'campaign']),
+        ]
+
+    def __str__(self):
+        return f'enroll {self.lead_id} → {self.campaign_id}'
+
+
+class CampaignMessage(models.Model):
+    class Status(models.TextChoices):
+        REQUESTED = 'requested', 'درخواست‌شده'
+        PROVIDER_ACCEPTED = 'provider_accepted', 'پذیرفته Provider'
+        DELIVERED = 'delivered', 'تحویل‌شده'
+        FAILED = 'failed', 'ناموفق'
+        SKIPPED = 'skipped', 'ردشده'
+
+    enrollment = models.ForeignKey(
+        CampaignEnrollment,
+        on_delete=models.CASCADE,
+        related_name='messages',
+    )
+    campaign = models.ForeignKey(LeadCampaign, on_delete=models.CASCADE, related_name='messages')
+    variant = models.ForeignKey(CampaignVariant, on_delete=models.PROTECT, related_name='messages')
+    step = models.ForeignKey(CampaignStep, on_delete=models.PROTECT, related_name='messages')
+    lead = models.ForeignKey(MarketingLead, on_delete=models.CASCADE, related_name='messages')
+    click_token = models.CharField(
+        max_length=48,
+        unique=True,
+        default=_generate_click_token,
+        db_index=True,
+        editable=False,
+    )
+    idempotency_key = models.CharField(max_length=220, unique=True)
+    body_rendered = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=24,
+        choices=Status.choices,
+        default=Status.REQUESTED,
+        db_index=True,
+    )
+    skip_reason = models.CharField(max_length=200, blank=True)
+    sms_log = models.ForeignKey(
+        SmsMessageLog,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lead_campaign_messages',
+    )
+    sms_cost_snapshot = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='هزینه پیامک به‌تومان در لحظه ارسال',
+    )
+    provider_message_id = models.CharField(max_length=128, blank=True)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    failed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'پیام کمپین سرنخ'
+        verbose_name_plural = 'پیام‌های کمپین سرنخ'
+        ordering = ['-requested_at']
+        indexes = [
+            models.Index(fields=['campaign', 'status']),
+            models.Index(fields=['lead', 'status']),
+        ]
+
+    def __str__(self):
+        return f'msg#{self.pk} {self.click_token[:8]}'
+
+
+class LeadTouchpoint(models.Model):
+    class EventType(models.TextChoices):
+        CLICK = 'click', 'کلیک'
+        LANDING_VIEW = 'landing_view', 'مشاهده لندینگ'
+        SIGNUP_START = 'signup_start', 'شروع ثبت‌نام'
+        SIGNUP_COMPLETE = 'signup_complete', 'تکمیل ثبت‌نام'
+        WORKSPACE_LOGIN = 'workspace_login', 'ورود میزکار'
+        CHECKOUT_START = 'checkout_start', 'شروع خرید'
+        PAID = 'paid', 'پرداخت'
+        LICENSED = 'licensed', 'فعال‌سازی لایسنس'
+
+    lead = models.ForeignKey(MarketingLead, on_delete=models.CASCADE, related_name='touchpoints')
+    message = models.ForeignKey(
+        CampaignMessage,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='touchpoints',
+    )
+    campaign = models.ForeignKey(
+        LeadCampaign,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='touchpoints',
+    )
+    variant = models.ForeignKey(
+        CampaignVariant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='touchpoints',
+    )
+    step = models.ForeignKey(
+        CampaignStep,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='touchpoints',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lead_touchpoints',
+    )
+    event_type = models.CharField(max_length=32, choices=EventType.choices, db_index=True)
+    ip_hash = models.CharField(max_length=64, blank=True)
+    user_agent = models.CharField(max_length=300, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'نقطه تماس سرنخ'
+        verbose_name_plural = 'نقاط تماس سرنخ'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['lead', 'event_type', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.event_type} lead#{self.lead_id}'
+
+
+class LeadAttribution(models.Model):
+    """نسبت‌دهی موازی: acquisition (ثبت‌نام) و conversion (خرید)."""
+
+    class Axis(models.TextChoices):
+        ACQUISITION = 'acquisition', 'جذب'
+        CONVERSION = 'conversion', 'تبدیل خرید'
+
+    class Kind(models.TextChoices):
+        DIRECT = 'direct', 'مستقیم'
+        MATCHED = 'matched', 'تطبیق شماره'
+
+    class TouchModel(models.TextChoices):
+        FIRST = 'first', 'First-touch'
+        LAST = 'last', 'Last-touch'
+
+    axis = models.CharField(max_length=16, choices=Axis.choices, db_index=True)
+    attribution_kind = models.CharField(max_length=16, choices=Kind.choices, db_index=True)
+    touch_model = models.CharField(max_length=8, choices=TouchModel.choices, db_index=True)
+    lead = models.ForeignKey(MarketingLead, on_delete=models.CASCADE, related_name='attributions')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lead_attributions',
+    )
+    campaign = models.ForeignKey(
+        LeadCampaign,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='attributions',
+    )
+    message = models.ForeignKey(
+        CampaignMessage,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='attributions',
+    )
+    variant = models.ForeignKey(
+        CampaignVariant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='attributions',
+    )
+    step = models.ForeignKey(
+        CampaignStep,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='attributions',
+    )
+    order = models.ForeignKey(
+        'shop.Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lead_attributions',
+    )
+    revenue_amount = models.PositiveIntegerField(null=True, blank=True)
+    registered_at = models.DateTimeField(null=True, blank=True)
+    converted_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'نسبت‌دهی سرنخ'
+        verbose_name_plural = 'نسبت‌دهی‌های سرنخ'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['axis', 'attribution_kind', 'touch_model']),
+            models.Index(fields=['lead', 'axis']),
+            models.Index(fields=['user', 'axis']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['lead', 'user', 'axis', 'touch_model'],
+                name='uniq_lead_user_axis_touch',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.axis}/{self.attribution_kind}/{self.touch_model} lead#{self.lead_id}'

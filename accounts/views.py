@@ -69,6 +69,12 @@ class RegisterView(CreateView):
             assign_referred_user(user, affiliate)
             login(self.request, user, backend='accounts.backends.PhoneAuthBackend')
             UserProfile.objects.get_or_create(user=user)
+            try:
+                from accounts.services.lead_attribution import attribute_signup
+                attribute_signup(user=user, request=self.request)
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception('lead acquisition signup attribution failed')
             messages.info(
                 self.request,
                 'حساب شما ساخته شد. برای امنیت بیشتر، بعداً شماره موبایل را با پیامک تأیید کنید.',

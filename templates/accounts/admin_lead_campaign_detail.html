@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}گزارش کمپین #{{ campaign.id }} | جذب سرنخ{% endblock %}
+{% block body_class %}mk-admin-dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+<style>
+.lead-detail{max-width:1100px;margin:0 auto;padding:1rem}
+.lead-detail table{width:100%;border-collapse:collapse;font-size:.9rem}
+.lead-detail th,.lead-detail td{border-bottom:1px solid #eee;padding:.4rem;text-align:right}
+.funnel-row{display:flex;flex-wrap:wrap;gap:.75rem;margin:1rem 0}
+.funnel-pill{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:.75rem 1rem;min-width:110px}
+.funnel-pill strong{display:block;font-size:1.25rem}
+.note{background:#fffbeb;border:1px solid #fcd34d;padding:.75rem;border-radius:8px}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lead-detail">
+  <p><a href="{% url 'admin_panel_lead_acquisition' %}">← مرکز جذب</a></p>
+  <h1>{{ campaign.name }} <small>#{{ campaign.id }}</small></h1>
+  <p>{{ funnel.pilot_label }} · {{ campaign.get_kind_display }} · {{ campaign.get_status_display }}</p>
+  {% if funnel.winner_note %}<p class="note">{{ funnel.winner_note }}</p>{% endif %}
+
+  <h2>قیف</h2>
+  <div class="funnel-row">
+    <div class="funnel-pill"><span>Leads</span><strong>{{ funnel.funnel.leads }}</strong></div>
+    <div class="funnel-pill"><span>Eligible</span><strong>{{ funnel.funnel.eligible }}</strong></div>
+    <div class="funnel-pill"><span>Accepted</span><strong>{{ funnel.funnel.accepted }}</strong><small>Estimated Reach</small></div>
+    <div class="funnel-pill"><span>Clicked</span><strong>{{ funnel.funnel.clicked }}</strong></div>
+    <div class="funnel-pill"><span>Registered</span><strong>{{ funnel.funnel.registered }}</strong></div>
+    <div class="funnel-pill"><span>Activated</span><strong>{{ funnel.funnel.activated }}</strong></div>
+    <div class="funnel-pill"><span>Checkout</span><strong>{{ funnel.funnel.checkout }}</strong></div>
+    <div class="funnel-pill"><span>Paid</span><strong>{{ funnel.funnel.paid }}</strong></div>
+    <div class="funnel-pill"><span>Licensed</span><strong>{{ funnel.funnel.licensed }}</strong></div>
+  </div>
+
+  <h2>Attribution</h2>
+  <ul>
+    <li>Acquisition direct / phone_matched: {{ funnel.attribution.acquisition_direct }} / {{ funnel.attribution.acquisition_phone_matched }}</li>
+    <li>Conversion direct / phone_matched: {{ funnel.attribution.conversion_direct }} / {{ funnel.attribution.conversion_phone_matched }}</li>
+    <li>SMS cost (snapshot): {{ funnel.attribution.sms_cost }} تومان</li>
+    <li>Revenue: {{ funnel.attribution.revenue }} · CAC: {{ funnel.attribution.cac|default:"—" }} · ROAS: {{ funnel.attribution.roas|default:"—" }}</li>
+  </ul>
+
+  <h2>Variants (Pilot Result)</h2>
+  <table>
+    <thead><tr><th>Variant</th><th>Enrolled</th><th>Accepted</th><th>Clicked</th><th>Registered</th><th>Paid</th></tr></thead>
+    <tbody>
+    {% for v in funnel.variants %}
+      <tr>
+        <td>{{ v.key }} — {{ v.name }}</td>
+        <td>{{ v.enrolled }}</td>
+        <td>{{ v.accepted }}</td>
+        <td>{{ v.clicked }}</td>
+        <td>{{ v.registered }}</td>
+        <td>{{ v.paid }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>پیام‌های اخیر</h2>
+  <table>
+    <thead><tr><th>زمان UTC</th><th>موبایل</th><th>V</th><th>Step</th><th>Status</th><th>token</th><th>هزینه</th></tr></thead>
+    <tbody>
+    {% for m in messages_recent %}
+      <tr>
+        <td>{{ m.requested_at }}</td>
+        <td>{{ m.lead.phone_normalized }}</td>
+        <td>{{ m.variant.key }}</td>
+        <td>{{ m.step.step_number }}</td>
+        <td>{{ m.status }}</td>
+        <td><code>{{ m.click_token|slice:":10" }}…</code></td>
+        <td>{{ m.sms_cost_snapshot }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7">پیامی نیست</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

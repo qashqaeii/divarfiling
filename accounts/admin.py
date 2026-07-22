@@ -5,12 +5,24 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .models import (
+    CampaignEnrollment,
+    CampaignMessage,
+    CampaignStep,
+    CampaignVariant,
+    LeadAttribution,
+    LeadCampaign,
+    LeadImportBatch,
+    LeadList,
+    LeadListMember,
+    LeadTouchpoint,
     MarketingAutomationActionLog,
     MarketingAutomationRun,
     MarketingCampaign,
     MarketingCampaignRecipient,
+    MarketingLead,
     OtpRequest,
     SmsMessageLog,
+    SuppressionEntry,
     User,
     UserProfile,
 )
@@ -175,3 +187,64 @@ class MarketingAutomationActionLogAdmin(admin.ModelAdmin):
         'order', 'product', 'action', 'reason', 'metadata', 'decision_key',
         'send_idempotency_key', 'created_at',
     ]
+
+
+@admin.register(LeadImportBatch)
+class LeadImportBatchAdmin(admin.ModelAdmin):
+    list_display = ['id', 'original_filename', 'city', 'district', 'status', 'created_at']
+    list_filter = ['status', 'source']
+    search_fields = ['file_hash', 'original_filename', 'city', 'district']
+    readonly_fields = ['file_hash', 'preview_stats', 'created_at', 'committed_at']
+
+
+@admin.register(MarketingLead)
+class MarketingLeadAdmin(admin.ModelAdmin):
+    list_display = [
+        'phone_normalized', 'display_name', 'lead_type', 'status', 'city', 'district',
+    ]
+    list_filter = ['status', 'lead_type', 'source']
+    search_fields = ['phone_normalized', 'display_name', 'public_token']
+
+
+@admin.register(LeadList)
+class LeadListAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'slug', 'city', 'district', 'created_at']
+    search_fields = ['name', 'slug']
+
+
+@admin.register(LeadCampaign)
+class LeadCampaignAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'kind', 'status', 'is_pilot', 'created_at']
+    list_filter = ['kind', 'status', 'is_pilot']
+
+
+@admin.register(CampaignMessage)
+class CampaignMessageAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'campaign', 'lead', 'variant', 'step', 'status', 'sms_cost_snapshot', 'requested_at',
+    ]
+    list_filter = ['status']
+    search_fields = ['click_token', 'idempotency_key', 'lead__phone_normalized']
+    readonly_fields = ['click_token', 'idempotency_key', 'requested_at']
+
+
+@admin.register(LeadAttribution)
+class LeadAttributionAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'axis', 'attribution_kind', 'touch_model', 'lead', 'user', 'campaign', 'created_at',
+    ]
+    list_filter = ['axis', 'attribution_kind', 'touch_model']
+
+
+@admin.register(SuppressionEntry)
+class SuppressionEntryAdmin(admin.ModelAdmin):
+    list_display = ['phone_normalized', 'reason', 'created_at']
+    list_filter = ['reason']
+    search_fields = ['phone_normalized']
+
+
+admin.site.register(LeadListMember)
+admin.site.register(CampaignVariant)
+admin.site.register(CampaignStep)
+admin.site.register(CampaignEnrollment)
+admin.site.register(LeadTouchpoint)

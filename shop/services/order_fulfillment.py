@@ -47,6 +47,13 @@ def fulfill_order_after_payment(
 
         order_ref = locked
 
+    try:
+        from accounts.services.lead_attribution import attribute_purchase
+        attribute_purchase(order=order_ref)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception('lead acquisition purchase attribution failed')
+
     return issue_license_for_paid_order(order_ref)
 
 

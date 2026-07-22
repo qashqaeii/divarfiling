@@ -295,6 +295,7 @@ AFFILIATE_DISCOUNT_FIRST_ORDER_ONLY = True  # تخفیف معرف فقط روی 
 # SMS_PROVIDER=console برای توسعه بدون ارسال واقعی؛ faraz برای تولید
 SMS_ENABLED = config('SMS_ENABLED', default=True, cast=bool)
 SMS_PROVIDER = config('SMS_PROVIDER', default='console')
+LEAD_SMS_COST_TOMAN = config('LEAD_SMS_COST_TOMAN', default=300, cast=int)
 FARAZSMS_API_KEY = config('FARAZSMS_API_KEY', default='')
 FARAZSMS_LINE_NUMBER = config('FARAZSMS_LINE_NUMBER', default='90008361')
 FARAZSMS_BASE_URL = config('FARAZSMS_BASE_URL', default='https://api.iranpayamak.com')

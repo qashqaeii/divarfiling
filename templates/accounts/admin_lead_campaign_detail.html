@@ -39,8 +39,8 @@
                 {% if funnel.is_pilot %}
                 <span class="adm-lac-chip adm-lac-chip--pilot"><i class="fas fa-flask"></i> {{ funnel.pilot_label }}</span>
                 {% endif %}
-                <span class="adm-lac-chip">هزینه پیامک: {{ a.sms_cost|default:0|currency }} تومان</span>
-                {% if a.cac %}<span class="adm-lac-chip">هزینه جذب هر خریدار {{ a.cac|currency }}</span>{% endif %}
+                <span class="adm-lac-chip">هزینه پیامک: {{ a.sms_cost|default:0|to_persian_digits }} ریال</span>
+                {% if a.cac %}<span class="adm-lac-chip">هزینه جذب هر خریدار {{ a.cac|to_persian_digits }} ریال</span>{% endif %}
                 {% if a.roas %}<span class="adm-lac-chip">بازدهی {{ a.roas|floatformat:2|to_persian_digits }}</span>{% endif %}
             </div>
         </div>
@@ -204,7 +204,7 @@
                             <td>{{ m.step.step_number|to_persian_digits }}</td>
                             <td><span class="adm-lac-status">{{ m.get_status_display }}</span></td>
                             <td><code class="adm-lac-token">{{ m.click_token|slice:":10" }}…</code></td>
-                            <td>{% if m.sms_cost_snapshot != None %}{{ m.sms_cost_snapshot|to_persian_digits }}{% else %}—{% endif %}</td>
+                            <td>{% if m.sms_cost_snapshot != None %}{{ m.sms_cost_snapshot|to_persian_digits }} ریال{% else %}—{% endif %}</td>
                         </tr>
                     {% empty %}
                         <tr>

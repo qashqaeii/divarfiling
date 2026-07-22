@@ -53,8 +53,39 @@ DEFAULT_STEP3 = (
 )
 
 
+def unicode_sms_parts(text: str) -> int:
+    """
+    تعداد بخش پیامک برای متن یونیکد (فارسی).
+    تک‌بخشی تا ۷۰ کاراکتر؛ چندبخشی هر بخش ۶۷ کاراکتر.
+    """
+    n = len(text or '')
+    if n <= 0:
+        return 0
+    if n <= 70:
+        return 1
+    return (n + 66) // 67
+
+
+def sms_cost_per_part_rial() -> int:
+    """تعرفه هر بخش از پنل پیامک (مثال شما: ۷۴۴۰ ریال ÷ ۳ بخش = ۲۴۸۰)."""
+    configured = getattr(settings, 'LEAD_SMS_COST_PER_PART_RIAL', None)
+    if configured is not None:
+        return int(configured or 0)
+    # سازگاری با تنظیم قدیمی تومانی
+    legacy_toman = int(getattr(settings, 'LEAD_SMS_COST_TOMAN', 0) or 0)
+    if legacy_toman:
+        return legacy_toman * 10
+    return 2480
+
+
+def estimate_sms_cost_rial(text: str) -> int:
+    """هزینه ارسال بر اساس طول متن × تعرفه هر بخش (ریال)."""
+    return unicode_sms_parts(text) * sms_cost_per_part_rial()
+
+
 def sms_unit_cost_toman() -> int:
-    return int(getattr(settings, 'LEAD_SMS_COST_TOMAN', 300) or 300)
+    """سازگاری قدیمی — ترجیحاً از estimate_sms_cost_rial استفاده شود."""
+    return max(1, sms_cost_per_part_rial() // 10)
 
 
 def absolute_click_url(request, click_token: str) -> str:
@@ -333,6 +364,7 @@ def send_step_message(
     click_token = generate_click_token()
     link = absolute_click_url(request, click_token)
     body = render_step_body(step=step, variant=variant, link=link, lead=lead)
+    cost_rial = estimate_sms_cost_rial(body)
 
     try:
         msg = CampaignMessage.objects.create(
@@ -345,7 +377,7 @@ def send_step_message(
             idempotency_key=idem,
             body_rendered=body,
             status=CampaignMessage.Status.REQUESTED,
-            sms_cost_snapshot=sms_unit_cost_toman(),
+            sms_cost_snapshot=cost_rial,
         )
     except IntegrityError:
         return CampaignMessage.objects.get(idempotency_key=idem)

@@ -971,7 +971,7 @@ class CampaignMessage(models.Model):
     sms_cost_snapshot = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text='هزینه پیامک به‌تومان در لحظه ارسال',
+        help_text='هزینه پیامک به‌ریال در لحظه ارسال (بر اساس تعداد بخش × تعرفه)',
     )
     provider_message_id = models.CharField(max_length=128, blank=True)
     requested_at = models.DateTimeField(auto_now_add=True)

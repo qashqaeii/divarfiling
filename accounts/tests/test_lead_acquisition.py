@@ -22,8 +22,10 @@ from accounts.services.lead_attribution import attribute_purchase, attribute_sig
 from accounts.services.lead_campaign_send import (
     create_acquisition_campaign,
     enroll_pilot,
+    estimate_sms_cost_rial,
     send_campaign_step,
     send_step_message,
+    unicode_sms_parts,
 )
 from accounts.services.lead_funnel import campaign_funnel
 from accounts.services.lead_import import commit_import_batch, preview_phone_detector_json, create_preview_batch
@@ -104,7 +106,16 @@ class LeadImportTests(TestCase):
         again = preview_phone_detector_json(raw, filename='t2.json')
         self.assertTrue(again.duplicate_file)
 
-    def test_same_district_files_merge_into_one_list(self):
+    def test_sms_cost_matches_provider_parts(self):
+        sample = (
+            'هنوز برای پیدا کردن فایل مناسب بین آگهی‌ها زمان زیادی می‌گذارید؟ '
+            'فایلینگ دیوار برای سریع‌تر شدن کار مشاوران املاک ساخته شده. ببینید چطور: '
+            'https://divarfiling.ir/s/t/2lp8ZE5pH_XftLE6/\nلغو۱۱'
+        )
+        # پنل واقعی: ۱۸۸ کاراکتر ≈ ۳ بخش × ۲۴۸۰ = ۷۴۴۰ ریال
+        self.assertEqual(len(sample), 188)
+        self.assertEqual(unicode_sms_parts(sample), 3)
+        self.assertEqual(estimate_sms_cost_rial(sample), 7440)
         from accounts.models import LeadList, LeadListMember
 
         payload_a = {
@@ -171,7 +182,8 @@ class LeadCampaignTrackingTests(TestCase):
         self.assertGreaterEqual(stats['accepted'], 1)
         msg = CampaignMessage.objects.filter(campaign=self.campaign).first()
         self.assertTrue(msg.click_token)
-        self.assertEqual(msg.sms_cost_snapshot, 300)
+        self.assertEqual(msg.sms_cost_snapshot, estimate_sms_cost_rial(msg.body_rendered))
+        self.assertGreaterEqual(unicode_sms_parts(msg.body_rendered), 1)
 
         stats2 = send_campaign_step(self.campaign, 1)
         self.assertGreaterEqual(stats2['idempotent'], 1)

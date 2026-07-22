@@ -104,6 +104,41 @@ class LeadImportTests(TestCase):
         again = preview_phone_detector_json(raw, filename='t2.json')
         self.assertTrue(again.duplicate_file)
 
+    def test_same_district_files_merge_into_one_list(self):
+        from accounts.models import LeadList, LeadListMember
+
+        payload_a = {
+            'metadata': {'city': 'تهران', 'district': 'اقدسیه', 'category': 'apartment-sell'},
+            'consultants': [
+                {'consultant_name': 'آژانس یک', 'phone': '09121110001'},
+                {'consultant_name': 'مشاور دو', 'phone': '09121110002'},
+            ],
+        }
+        payload_b = {
+            'metadata': {'city': 'تهران', 'district': 'اقدسیه', 'category': 'apartment-sell'},
+            'consultants': [
+                {'consultant_name': 'آژانس یک', 'phone': '09121110001'},  # تکراری بین فایل
+                {'consultant_name': 'مشاور سه', 'phone': '09121110003'},
+            ],
+        }
+        raw_a = json.dumps(payload_a).encode('utf-8')
+        raw_b = json.dumps(payload_b).encode('utf-8')
+        prev_a = preview_phone_detector_json(raw_a, filename='aq1.json')
+        batch_a = create_preview_batch(prev_a)
+        r1 = commit_import_batch(batch_a.pk, preview_rows=prev_a.rows)
+
+        prev_b = preview_phone_detector_json(raw_b, filename='aq2.json')
+        batch_b = create_preview_batch(prev_b)
+        r2 = commit_import_batch(batch_b.pk, preview_rows=prev_b.rows)
+
+        self.assertEqual(r1['list_id'], r2['list_id'])
+        self.assertEqual(
+            LeadList.objects.filter(city='تهران', district='اقدسیه').count(),
+            1,
+        )
+        self.assertEqual(LeadListMember.objects.filter(lead_list_id=r1['list_id']).count(), 3)
+        self.assertFalse(r2['list_created'])
+
 
 class LeadCampaignTrackingTests(TestCase):
     def setUp(self):

@@ -254,11 +254,11 @@ def create_preview_batch(
         defaults={
             'source': 'phone_detector',
             'original_filename': (preview.metadata or {}).get('original_filename') or '',
-            'city': (preview.metadata or {}).get('city') or '',
+            'city': normalize_region_label((preview.metadata or {}).get('city') or ''),
             'city_id': (preview.metadata or {}).get('city_id') or '',
-            'district': (preview.metadata or {}).get('district') or '',
+            'district': normalize_region_label((preview.metadata or {}).get('district') or ''),
             'district_id': (preview.metadata or {}).get('district_id') or '',
-            'listing_category': (preview.metadata or {}).get('listing_category') or '',
+            'listing_category': normalize_region_label((preview.metadata or {}).get('listing_category') or ''),
             'scraped_at': scraped_at,
             'metadata': {
                 **(preview.metadata or {}),
@@ -272,10 +272,197 @@ def create_preview_batch(
     return batch
 
 
-def _list_slug(city: str, district: str, category: str, batch_id: int) -> str:
-    base = slugify(f'pd-{city}-{district}-{category}-{batch_id}', allow_unicode=True)
-    base = re.sub(r'[^\w\-]+', '-', base, flags=re.UNICODE).strip('-')[:180]
-    return base or f'pd-batch-{batch_id}'
+def normalize_region_label(text: str) -> str:
+    """نرمال‌سازی نام شهر/منطقه برای ادغام (نیم‌فاصله، فاصله، ي/ك)."""
+    if not text:
+        return ''
+    t = str(text).strip()
+    t = t.replace('\u200c', '')  # ZWNJ
+    t = t.replace('ك', 'ک').replace('ي', 'ی').replace('ة', 'ه')
+    t = re.sub(r'\s+', ' ', t).strip()
+    return t
+
+
+def region_merge_key(city: str, district: str, category: str = '') -> str:
+    parts = [
+        normalize_region_label(city).casefold(),
+        normalize_region_label(district).casefold(),
+        normalize_region_label(category).casefold(),
+    ]
+    return '|'.join(parts)
+
+
+def _list_slug(city: str, district: str, category: str = '') -> str:
+    """اسلاگ پایدار منطقه‌ای — بدون batch_id تا فایل‌های همان منطقه ادغام شوند."""
+    city_n = normalize_region_label(city) or 'city'
+    district_n = normalize_region_label(district) or 'district'
+    cat_n = normalize_region_label(category) or 'all'
+    base = slugify(f'pd-{city_n}-{district_n}-{cat_n}', allow_unicode=True)
+    base = re.sub(r'[^\w\-]+', '-', base, flags=re.UNICODE).strip('-')[:200]
+    return base or 'pd-region'
+
+
+def get_or_create_region_list(
+    *,
+    city: str,
+    district: str,
+    listing_category: str = '',
+    batch: Optional[LeadImportBatch] = None,
+) -> tuple[LeadList, bool]:
+    """یک LeadList برای هر ترکیب شهر/منطقه/دسته."""
+    slug = _list_slug(city, district, listing_category)
+    city_n = normalize_region_label(city)
+    district_n = normalize_region_label(district)
+    cat_n = normalize_region_label(listing_category)
+    list_name = ' · '.join(
+        p for p in ('phone-detector', city_n or None, district_n or None, cat_n or None) if p
+    )
+    lead_list, created = LeadList.objects.get_or_create(
+        slug=slug,
+        defaults={
+            'name': list_name,
+            'source': 'phone_detector',
+            'city': city_n,
+            'district': district_n,
+            'listing_category': cat_n,
+            'tags': ['phone-detector', 'cold', city_n, district_n, 'region-merged'],
+            'batch': batch,
+        },
+    )
+    if not created:
+        dirty = False
+        if batch and not lead_list.batch_id:
+            lead_list.batch = batch
+            dirty = True
+        # هم‌تراز کردن برچسب‌های نمایشی
+        if city_n and lead_list.city != city_n:
+            lead_list.city = city_n
+            dirty = True
+        if district_n and lead_list.district != district_n:
+            lead_list.district = district_n
+            dirty = True
+        if dirty:
+            lead_list.save()
+    return lead_list, created
+
+
+@transaction.atomic
+def merge_duplicate_region_lists() -> dict:
+    """
+    لیست‌های تکراری همان منطقه را به لیست canonical (اسلاگ بدون batch_id) ادغام می‌کند.
+    """
+    from collections import defaultdict
+
+    from accounts.models import LeadCampaign
+
+    groups: dict[str, list[LeadList]] = defaultdict(list)
+    for lst in LeadList.objects.filter(source='phone_detector').order_by('id'):
+        key = region_merge_key(lst.city, lst.district, lst.listing_category)
+        if key == '||':
+            continue
+        groups[key].append(lst)
+
+    moved_members = 0
+    deleted_lists = 0
+
+    for _key, lists in groups.items():
+        canonical_slug = _list_slug(lists[0].city, lists[0].district, lists[0].listing_category)
+        primary = next((x for x in lists if x.slug == canonical_slug), None)
+        if primary is None:
+            primary = lists[0]
+            conflict = LeadList.objects.filter(slug=canonical_slug).exclude(pk=primary.pk).first()
+            if conflict:
+                primary = conflict
+                if primary not in lists:
+                    lists.append(primary)
+            else:
+                primary.slug = canonical_slug
+                primary.city = normalize_region_label(primary.city)
+                primary.district = normalize_region_label(primary.district)
+                primary.name = ' · '.join(
+                    p for p in (
+                        'phone-detector',
+                        primary.city or None,
+                        primary.district or None,
+                        normalize_region_label(primary.listing_category) or None,
+                    ) if p
+                )
+                if 'region-merged' not in (primary.tags or []):
+                    primary.tags = list(primary.tags or []) + ['region-merged']
+                primary.save()
+
+        for other in list(LeadList.objects.filter(pk__in=[x.pk for x in lists])):
+            if other.pk == primary.pk:
+                continue
+            for member in list(LeadListMember.objects.filter(lead_list=other)):
+                _, created = LeadListMember.objects.get_or_create(
+                    lead_list=primary,
+                    lead_id=member.lead_id,
+                )
+                if created:
+                    moved_members += 1
+                member.delete()
+            LeadCampaign.objects.filter(lead_list=other).update(lead_list=primary)
+            for batch in LeadImportBatch.objects.filter(status=LeadImportBatch.Status.COMMITTED):
+                stats = dict(batch.preview_stats or {})
+                if stats.get('list_id') == other.pk:
+                    stats['list_id'] = primary.pk
+                    stats['merged_into_list_id'] = primary.pk
+                    batch.preview_stats = stats
+                    batch.save(update_fields=['preview_stats'])
+            other.delete()
+            deleted_lists += 1
+
+    return {
+        'moved_members': moved_members,
+        'deleted_lists': deleted_lists,
+        'region_groups': len(groups),
+    }
+
+
+def region_lists_with_batches(limit: int = 50) -> list[dict]:
+    """خلاصه لیست‌های منطقه‌ای + تعداد بچ و عضو برای UI."""
+    from django.db.models import Count
+
+    rows = []
+    lists = (
+        LeadList.objects.filter(source='phone_detector')
+        .annotate(member_count=Count('members', distinct=True))
+        .order_by('city', 'district', '-updated_at')[:limit]
+    )
+    for lst in lists:
+        batch_qs = LeadImportBatch.objects.filter(
+            status=LeadImportBatch.Status.COMMITTED,
+            city=lst.city,
+            district=lst.district,
+        )
+        # همچنین با نرمال‌سازی نزدیک: همه بچ‌هایی که list_id در stats دارند
+        linked = LeadImportBatch.objects.filter(
+            status=LeadImportBatch.Status.COMMITTED,
+            preview_stats__list_id=lst.pk,
+        )
+        batch_ids = set(batch_qs.values_list('id', flat=True)) | set(linked.values_list('id', flat=True))
+        # نرمال‌سازی: اگر district با ZWNJ فرق دارد
+        for b in LeadImportBatch.objects.filter(status=LeadImportBatch.Status.COMMITTED).only(
+            'id', 'city', 'district', 'listing_category', 'preview_stats', 'original_filename', 'committed_at',
+        ):
+            if region_merge_key(b.city, b.district, b.listing_category or lst.listing_category) == region_merge_key(
+                lst.city, lst.district, lst.listing_category,
+            ):
+                batch_ids.add(b.id)
+        batches = list(
+            LeadImportBatch.objects.filter(id__in=batch_ids).order_by('-committed_at', '-created_at')
+        )
+        rows.append({
+            'list': lst,
+            'member_count': lst.member_count,
+            'batch_count': len(batches),
+            'batches': batches,
+            'latest_batch': batches[0] if batches else None,
+        })
+    # مرتب‌سازی: بیشتر عضو / جدیدتر
+    rows.sort(key=lambda r: (-r['member_count'], -(r['latest_batch'].pk if r['latest_batch'] else 0)))
+    return rows
 
 
 @transaction.atomic
@@ -294,26 +481,11 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
     existing_user_marked = 0
     members_added = 0
 
-    list_name = ' · '.join(
-        p for p in (
-            'phone-detector',
-            batch.city or None,
-            batch.district or None,
-            batch.listing_category or None,
-            f'batch-{batch.pk}',
-        ) if p
-    )
-    lead_list, _ = LeadList.objects.get_or_create(
-        slug=_list_slug(batch.city, batch.district, batch.listing_category, batch.pk),
-        defaults={
-            'name': list_name,
-            'source': 'phone_detector',
-            'city': batch.city,
-            'district': batch.district,
-            'listing_category': batch.listing_category,
-            'tags': ['phone-detector', 'cold', batch.city, batch.district],
-            'batch': batch,
-        },
+    lead_list, list_created = get_or_create_region_list(
+        city=batch.city,
+        district=batch.district,
+        listing_category=batch.listing_category,
+        batch=batch,
     )
 
     now = timezone.now()
@@ -407,6 +579,12 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
 
     batch.status = LeadImportBatch.Status.COMMITTED
     batch.committed_at = now
+    # نرمال‌سازی geo روی خود batch برای گروه‌بندی بعدی
+    city_n = normalize_region_label(batch.city)
+    district_n = normalize_region_label(batch.district)
+    if city_n != batch.city or district_n != batch.district:
+        batch.city = city_n
+        batch.district = district_n
     batch.preview_stats = {
         **(batch.preview_stats or {}),
         'committed_created': created,
@@ -414,12 +592,18 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
         'existing_user_marked': existing_user_marked,
         'members_added': members_added,
         'list_id': lead_list.pk,
+        'list_created': list_created,
+        'region_merged': not list_created,
     }
     batch.save()
+
+    # ادغام لیست‌های تکراری احتمالی همان منطقه (اسلاگ قدیمی)
+    merge_duplicate_region_lists()
 
     return {
         'batch_id': batch.pk,
         'list_id': lead_list.pk,
+        'list_created': list_created,
         'created': created,
         'updated': updated,
         'existing_user_marked': existing_user_marked,

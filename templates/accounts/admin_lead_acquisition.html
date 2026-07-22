@@ -196,9 +196,65 @@
             </div>
         </div>
 
+        {% if region_lists %}
+        <div class="adm-lac-panel" style="margin-top:1rem">
+            <h3 style="margin:0 0 .35rem;font-size:.95rem">لیست‌های منطقه‌ای (ادغام‌شده)</h3>
+            <p class="adm-lac-kpi-sub" style="margin:0 0 .65rem">
+                چند فایل JSON برای یک منطقه (مثلاً اقدسیه) در یک لیست واحد جمع می‌شوند.
+            </p>
+            <div class="adm-lac-table-wrap">
+                <table class="adm-lac-table">
+                    <thead>
+                        <tr>
+                            <th>منطقه</th>
+                            <th>دسته</th>
+                            <th>سرنخ</th>
+                            <th>تعداد فایل</th>
+                            <th>آخرین فایل</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in region_lists %}
+                        <tr>
+                            <td>
+                                <strong>{{ row.list.city }}{% if row.list.district %} / {{ row.list.district }}{% endif %}</strong>
+                                <div class="adm-lac-kpi-sub">لیست #{{ row.list.id }}</div>
+                            </td>
+                            <td>{{ row.list.listing_category|default:"—" }}</td>
+                            <td><strong>{{ row.member_count }}</strong></td>
+                            <td>
+                                <span class="adm-lac-chip {% if row.batch_count > 1 %}adm-lac-chip--live{% endif %}">
+                                    {{ row.batch_count }} فایل
+                                </span>
+                            </td>
+                            <td>
+                                {% if row.latest_batch %}
+                                <code style="font-size:.72rem">{{ row.latest_batch.original_filename|truncatechars:42 }}</code>
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        {% if row.batches|length > 1 %}
+                        <tr>
+                            <td colspan="5" style="background:rgba(13,148,136,.04)">
+                                <div class="adm-lac-kpi-sub" style="margin:0">
+                                    فایل‌های ادغام‌شده:
+                                    {% for b in row.batches %}
+                                        <span class="adm-lac-chip">#{{ b.id }} {{ b.original_filename|truncatechars:28 }}</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
         {% if batches %}
         <div class="adm-lac-panel" style="margin-top:1rem">
-            <h3 style="margin:0 0 .65rem;font-size:.9rem">بچ‌های اخیر</h3>
+            <h3 style="margin:0 0 .65rem;font-size:.9rem">تاریخچه آپلود (هر فایل یک بچ audit)</h3>
             <div class="adm-lac-table-wrap">
                 <table class="adm-lac-table">
                     <thead>
@@ -207,6 +263,7 @@
                             <th>فایل</th>
                             <th>منطقه</th>
                             <th>وضعیت</th>
+                            <th>لیست</th>
                             <th>زمان UTC</th>
                         </tr>
                     </thead>
@@ -217,6 +274,12 @@
                             <td>{{ b.original_filename|default:"—" }}</td>
                             <td>{{ b.city }} {% if b.district %}/ {{ b.district }}{% endif %}</td>
                             <td><span class="adm-lac-status {% if b.status == 'committed' %}adm-lac-status--active{% endif %}">{{ b.get_status_display }}</span></td>
+                            <td>
+                                {% if b.preview_stats.list_id %}
+                                #{{ b.preview_stats.list_id }}
+                                {% if b.preview_stats.region_merged %}<span class="adm-lac-chip adm-lac-chip--live">merged</span>{% endif %}
+                                {% else %}—{% endif %}
+                            </td>
                             <td>{{ b.created_at }}</td>
                         </tr>
                     {% endfor %}

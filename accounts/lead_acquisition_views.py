@@ -33,6 +33,7 @@ from accounts.services.lead_import import (
     commit_import_batch,
     create_preview_batch,
     preview_phone_detector_json,
+    region_lists_with_batches,
 )
 from accounts.services.lead_tokens import COOKIE_NAME, cookie_secure_kwargs, hash_ip, truncate_user_agent
 
@@ -92,8 +93,9 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         funnels = [campaign_funnel(c) for c in campaigns[:10]]
         ctx.update({
             'overview': overview_stats(),
-            'batches': LeadImportBatch.objects.order_by('-created_at')[:20],
-            'lists': LeadList.objects.order_by('-created_at')[:20],
+            'batches': LeadImportBatch.objects.order_by('-created_at')[:30],
+            'region_lists': region_lists_with_batches(limit=40),
+            'lists': LeadList.objects.order_by('city', 'district', '-created_at')[:40],
             'campaigns': campaigns,
             'funnels': funnels,
             'preview': self.request.session.get(SESSION_PREVIEW_KEY),

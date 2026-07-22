@@ -63,6 +63,7 @@ class AcademyVideo(models.Model):
     auto_confirm_event = models.CharField(max_length=64, blank=True, verbose_name='رویداد تأیید')
     mission_step = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='قدم ماموریت')
     is_active = models.BooleanField(default=True, verbose_name='فعال')
+    views_count = models.PositiveIntegerField(default=0, verbose_name='تعداد بازدید')
 
     class Meta:
         verbose_name = 'ویدیوی آکادمی'
@@ -331,3 +332,33 @@ class AcademyEvent(models.Model):
 
     def __str__(self):
         return f'{self.event_type} — {self.user_id}'
+
+
+class AcademyVideoViewDaily(models.Model):
+    """بازدید روزانه هر ویدیو — پایه Analytics پنل مدیریت."""
+
+    video = models.ForeignKey(
+        AcademyVideo,
+        on_delete=models.CASCADE,
+        related_name='daily_views',
+        verbose_name='ویدیو',
+    )
+    date = models.DateField(verbose_name='تاریخ', db_index=True)
+    views = models.PositiveIntegerField(default=0, verbose_name='بازدید')
+
+    class Meta:
+        verbose_name = 'بازدید روزانه ویدیو'
+        verbose_name_plural = 'بازدیدهای روزانه ویدیو'
+        ordering = ['-date', '-views']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['video', 'date'],
+                name='workspace_academyvideoviewdaily_video_date_uniq',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['date', 'views']),
+        ]
+
+    def __str__(self):
+        return f'{self.video_id} — {self.date}: {self.views}'

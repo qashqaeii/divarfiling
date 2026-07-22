@@ -38,13 +38,14 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-academy-playlist.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-academy-playlist.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
 <div class="acd-pl" id="acdPlaylistPage"
-     {% if active_item %}data-active-index="{{ active_item.global_index }}"{% endif %}
-     data-total="{{ playlist_stats.video_count }}">
+     {% if active_item %}data-active-index="{{ active_item.global_index }}" data-video-slug="{{ active_video.slug }}"{% endif %}
+     data-total="{{ playlist_stats.video_count }}"
+     data-view-url-tpl="/academy/api/videos/__SLUG__/view/">
     <div class="acd-pl-bg" aria-hidden="true">
         <span class="acd-pl-mesh acd-pl-mesh--1"></span>
         <span class="acd-pl-mesh acd-pl-mesh--2"></span>
@@ -60,6 +61,7 @@
                 <div class="acd-pl-topbar-meta" aria-label="آمار پلی‌لیست">
                     <span><i class="fas fa-film" aria-hidden="true"></i> {{ playlist_stats.video_count }} ویدیو</span>
                     <span><i class="fas fa-clock" aria-hidden="true"></i> ~{{ playlist_stats.total_minutes }} دقیقه</span>
+                    <span><i class="fas fa-eye" aria-hidden="true"></i> {{ playlist_stats.views_total|default:0 }} بازدید</span>
                     <span><i class="fas fa-unlock" aria-hidden="true"></i> رایگان</span>
                 </div>
             </div>
@@ -109,6 +111,10 @@
                             {% if active_player.duration %}
                             <span class="acd-pl-badge acd-pl-badge--dur"><i class="fas fa-clock" aria-hidden="true"></i> {{ active_player.duration }}</span>
                             {% endif %}
+                            <span class="acd-pl-badge acd-pl-badge--views" data-acd-pl-views>
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                                <span data-acd-pl-views-count>{{ active_video.views_count|default:0 }}</span> بازدید
+                            </span>
                         </div>
                         <h1 class="acd-pl-stage-title" id="acdPlVideoTitle">{{ active_video.title }}</h1>
                         {% if active_video.subtitle %}
@@ -202,6 +208,7 @@
                         <div class="acd-pl-stage-badges">
                             <span class="acd-pl-badge acd-pl-badge--ep">{{ playlist_stats.video_count }} ویدیو</span>
                             <span class="acd-pl-badge">~{{ playlist_stats.total_minutes }} دقیقه</span>
+                            <span class="acd-pl-badge"><i class="fas fa-eye" aria-hidden="true"></i> {{ playlist_stats.views_total|default:0 }} بازدید</span>
                             <span class="acd-pl-badge"><i class="fas fa-unlock" aria-hidden="true"></i> رایگان</span>
                         </div>
                         <h1 class="acd-pl-stage-title" id="acdPlHubTitle">پلی‌لیست آموزش ویدیویی آکادمی</h1>
@@ -273,7 +280,7 @@
                             <i class="fas fa-list-ul" aria-hidden="true"></i>
                             فهرست پلی‌لیست
                         </h2>
-                        <p class="acd-pl-sidebar-sub">{{ playlist_stats.video_count }} ویدیو · {{ playlist_stats.section_count }} فصل · رایگان</p>
+                        <p class="acd-pl-sidebar-sub">{{ playlist_stats.video_count }} ویدیو · {{ playlist_stats.section_count }} فصل · {{ playlist_stats.views_total|default:0 }} بازدید</p>
                     </div>
                     <button type="button" class="acd-pl-sidebar-close" data-acd-pl-close aria-label="بستن فهرست">
                         <i class="fas fa-times" aria-hidden="true"></i>
@@ -321,6 +328,7 @@
                                         {% if item.video.subtitle %}
                                         <span>{{ item.video.subtitle|truncatechars:52 }}</span>
                                         {% endif %}
+                                        <span class="acd-pl-track-views"><i class="fas fa-eye" aria-hidden="true"></i> {{ item.video.views_count|default:0 }} بازدید</span>
                                     </span>
                                 </span>
                             </a>
@@ -345,5 +353,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
-<script src="{% static 'js/academy-playlist.js' %}?v=2" defer></script>
+<script src="{% static 'js/academy-playlist.js' %}?v=3" defer></script>
 {% endblock %}

@@ -127,10 +127,12 @@ def resolve_public_video(sections: list[dict], slug: str | None = None) -> tuple
 def playlist_stats(sections: list[dict]) -> dict:
     flat = flatten_public_videos(sections)
     total_seconds = sum(item['video'].duration_seconds for item in flat)
+    views_total = sum(int(getattr(item['video'], 'views_count', 0) or 0) for item in flat)
     return {
         'video_count': len(flat),
         'section_count': len(sections),
         'total_minutes': max(1, total_seconds // 60),
+        'views_total': views_total,
         'paths': [s['path'].title for s in sections],
     }
 

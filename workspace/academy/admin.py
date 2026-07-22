@@ -7,6 +7,7 @@ from workspace.academy.models import (
     AcademyMission,
     AcademyMissionStep,
     AcademyVideo,
+    AcademyVideoViewDaily,
     CuratedPath,
     CuratedPathVideo,
     LearningPath,
@@ -35,12 +36,12 @@ class LearningPathAdmin(admin.ModelAdmin):
 class AcademyVideoAdmin(admin.ModelAdmin):
     list_display = (
         'title', 'slug', 'path', 'order', 'duration_seconds',
-        'has_poster', 'is_launch', 'is_public', 'is_active',
+        'views_count', 'has_poster', 'is_launch', 'is_public', 'is_active',
     )
     list_filter = ('path', 'is_launch', 'is_public', 'is_active')
     search_fields = ('title', 'slug', 'file_name')
     raw_id_fields = ('path',)
-    readonly_fields = ('poster_preview',)
+    readonly_fields = ('poster_preview', 'views_count')
     fieldsets = (
         (None, {
             'fields': ('path', 'slug', 'title', 'subtitle', 'order', 'duration_seconds'),
@@ -58,7 +59,7 @@ class AcademyVideoAdmin(admin.ModelAdmin):
             ),
         }),
         ('وضعیت', {
-            'fields': ('is_public', 'is_launch', 'is_active'),
+            'fields': ('is_public', 'is_launch', 'is_active', 'views_count'),
         }),
     )
 
@@ -147,3 +148,12 @@ class AcademyEventAdmin(admin.ModelAdmin):
     list_display = ('event_type', 'user', 'video', 'created_at')
     list_filter = ('event_type',)
     raw_id_fields = ('user', 'video')
+
+
+@admin.register(AcademyVideoViewDaily)
+class AcademyVideoViewDailyAdmin(admin.ModelAdmin):
+    list_display = ('video', 'date', 'views')
+    list_filter = ('date',)
+    date_hierarchy = 'date'
+    raw_id_fields = ('video',)
+    ordering = ('-date', '-views')

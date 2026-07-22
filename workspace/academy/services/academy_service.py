@@ -20,6 +20,7 @@ def get_home_context(user) -> dict:
     sync_mission_auto_confirm(user)
     summary = compute_progress_summary(user)
     paths = []
+    views_total = 0
     for path in LearningPath.objects.filter(is_active=True).prefetch_related('videos'):
         locked = not user_can_access_path(user, path)
         videos = path.videos.filter(is_active=True)
@@ -27,18 +28,22 @@ def get_home_context(user) -> dict:
         done = UserVideoProgress.objects.filter(
             user=user, video__in=videos, completed=True,
         ).count()
+        path_views = sum(int(v.views_count or 0) for v in videos)
+        views_total += path_views
         paths.append({
             'path': path,
             'locked': locked,
             'video_count': total,
             'done_count': done,
             'percent': int(done / total * 100) if total else 0,
+            'views_count': path_views,
         })
     traditional = CuratedPath.objects.filter(slug='traditional-advisor').prefetch_related('videos').first()
     return {
         'summary': summary,
         'paths': paths,
         'traditional_path': traditional,
+        'academy_views_total': views_total,
     }
 
 

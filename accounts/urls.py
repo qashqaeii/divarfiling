@@ -6,6 +6,9 @@ from django.urls import path
 
 from . import otp_views, views
 from .admin_views import (
+    AdminAcademyAnalyticsJsonView,
+    AdminAcademyJsonView,
+    AdminAcademyView,
     AdminBlogAnalyticsJsonView,
     AdminBlogImportPreviewView,
     AdminBlogImportView,
@@ -99,6 +102,9 @@ urlpatterns = [
     path('admin-panel/blog/analytics.json', AdminBlogAnalyticsJsonView.as_view(), name='admin_panel_blog_analytics_json'),
     path('admin-panel/blog/import/preview.json', AdminBlogImportPreviewView.as_view(), name='admin_panel_blog_import_preview'),
     path('admin-panel/blog/import/', AdminBlogImportView.as_view(), name='admin_panel_blog_import'),
+    path('admin-panel/academy/', AdminAcademyView.as_view(), name='admin_panel_academy'),
+    path('admin-panel/academy/stats.json', AdminAcademyJsonView.as_view(), name='admin_panel_academy_stats_json'),
+    path('admin-panel/academy/analytics.json', AdminAcademyAnalyticsJsonView.as_view(), name='admin_panel_academy_analytics_json'),
     path('admin-panel/plan-conversion/', AdminPlanConversionView.as_view(), name='admin_panel_plan_conversion'),
     path(
         'admin-panel/plan-conversion.json',

@@ -150,6 +150,7 @@ urlpatterns = [
     path('api/academy/mission/', academy_api_views.AcademyMissionAPIView.as_view(), name='api_academy_mission'),
     path('api/academy/mission/step/<int:step_order>/complete/', academy_api_views.AcademyMissionStepCompleteAPIView.as_view(), name='api_academy_mission_step_complete'),
     path('api/academy/video/<slug:slug>/progress/', academy_api_views.AcademyVideoProgressAPIView.as_view(), name='api_academy_video_progress'),
+    path('api/academy/video/<slug:slug>/view/', academy_api_views.AcademyVideoViewAPIView.as_view(), name='api_academy_video_view'),
     path('api/academy/video/<slug:slug>/', academy_api_views.AcademyVideoMetaAPIView.as_view(), name='api_academy_video_meta'),
     path('api/academy/contextual/', academy_api_views.AcademyContextualAPIView.as_view(), name='api_academy_contextual'),
     path('api/academy/contextual/dismiss/', academy_api_views.AcademyContextualDismissAPIView.as_view(), name='api_academy_contextual_dismiss'),

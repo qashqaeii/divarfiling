@@ -24,6 +24,7 @@ urlpatterns = [
     path('academy/', views.PublicAcademyView.as_view(), name='public_academy'),
     path('academy/videos/', views.PublicAcademyPlaylistView.as_view(), name='public_academy_playlist'),
     path('academy/videos/<slug:slug>/', views.PublicAcademyPlaylistView.as_view(), name='public_academy_video'),
+    path('academy/api/videos/<slug:slug>/view/', views.PublicAcademyVideoViewAPIView.as_view(), name='public_academy_video_view'),
     path('amoozesh/android/', views.AndroidTutorialView.as_view(), name='android_tutorial'),
     path('author/hossein-qashqaeii/', views.AuthorPageView.as_view(), name='author_hossein_qashqaeii'),
     path('66998772.txt', views.verification_file, name='verification_file'),

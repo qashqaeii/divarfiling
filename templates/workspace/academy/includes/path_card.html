@@ -27,6 +27,8 @@
             <span class="acd-path-meta-done">{{ item.done_count }} انجام‌شده</span>
             <span>·</span>
             <span>{{ item.video_count }} ویدیو</span>
+            <span>·</span>
+            <span class="acd-path-meta-views"><i class="fas fa-eye" aria-hidden="true"></i> {{ item.views_count|default:0 }} بازدید</span>
             {% else %}
             <span>به‌زودی در دسترس</span>
             {% endif %}

@@ -19,6 +19,7 @@ from workspace.academy.services.progress_service import (
     track_event,
     update_video_progress,
 )
+from workspace.academy.services.view_tracking import record_video_view
 from workspace.academy.services.academy_service import get_mission_context
 from workspace.mixins import WorkspaceLoginMixin
 
@@ -162,11 +163,34 @@ class AcademyEventsAPIView(WorkspaceLoginMixin, View):
             if not event_type:
                 continue
             video = None
-            slug = ev.get('video_slug') or ev.get('slug')
+            meta = ev.get('metadata') or {}
+            if not isinstance(meta, dict):
+                meta = {}
+            slug = ev.get('video_slug') or ev.get('slug') or meta.get('video_slug') or meta.get('slug')
             if slug:
-                video = AcademyVideo.objects.filter(slug=slug).first()
-            track_event(request.user, event_type, video=video, metadata=ev.get('metadata') or {})
+                video = AcademyVideo.objects.filter(slug=slug, is_active=True).first()
+            track_event(request.user, event_type, video=video, metadata=meta)
+            if event_type == 'academy_video_started' and video:
+                record_video_view(video)
         return JsonResponse({'ok': True})
+
+
+class AcademyVideoViewAPIView(View):
+    """ثبت بازدید پخش ویدیو — عمومی و میزکار (بدون نیاز به لاگین)."""
+
+    def post(self, request, slug: str):
+        video = get_object_or_404(AcademyVideo, slug=slug, is_active=True)
+        if not video.is_public and not request.user.is_authenticated:
+            return JsonResponse({'ok': False, 'error': 'forbidden'}, status=403)
+        views = record_video_view(video)
+        user = request.user if request.user.is_authenticated else None
+        track_event(
+            user,
+            'academy_video_started',
+            video=video,
+            metadata={'source': 'view_api', 'video_slug': slug},
+        )
+        return JsonResponse({'ok': True, 'views_count': views})
 
 
 class AcademyVideoMetaAPIView(View):
@@ -184,5 +208,6 @@ class AcademyVideoMetaAPIView(View):
                 'stream_url': video.get_stream_url(),
                 'action_url': video.action_url,
                 'action_label': video.action_label,
+                'views_count': video.views_count,
             },
         })

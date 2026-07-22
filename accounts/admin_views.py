@@ -44,6 +44,12 @@ from accounts.services.admin_blog import (
     get_blog_dashboard_stats,
     get_blog_posts_table,
 )
+from accounts.services.admin_academy import (
+    build_academy_stats_json,
+    get_academy_analytics_chart,
+    get_academy_dashboard_stats,
+    get_academy_videos_table,
+)
 from accounts.services.admin_plan_conversion import (
     build_plan_conversion_json,
     get_plan_conversion_context,
@@ -372,6 +378,62 @@ class AdminPhonebookSyncView(StaffRequiredMixin, View):
                 status=500,
             )
         return JsonResponse({'ok': True, **result.to_dict()})
+
+
+class AdminAcademyView(StaffRequiredMixin, TemplateView):
+    """آمار ویدیوهای آکادمی — بازدید، تکمیل و مسیرها."""
+
+    template_name = 'accounts/admin_academy.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        status = self.request.GET.get('status', 'all')
+        if status not in ('all', 'public', 'private', 'inactive'):
+            status = 'all'
+
+        days = _parse_int(self.request.GET.get('days'), 30, minimum=7, maximum=90)
+        stats = get_academy_dashboard_stats()
+        analytics = get_academy_analytics_chart(days=days)
+        ctx.update({
+            'academy_stats': stats,
+            'academy_videos': get_academy_videos_table(limit=80, status=status),
+            'status_filter': status,
+            'analytics_days': days,
+            'academy_pulse': analytics.get('pulse') or {},
+            'academy_traffic': analytics.get('traffic') or {},
+            'academy_analytics_json': json.dumps(analytics, ensure_ascii=False, default=str),
+        })
+        return ctx
+
+
+class AdminAcademyAnalyticsJsonView(StaffRequiredMixin, View):
+    """داده JSON نمودارهای Analytics آکادمی."""
+
+    def get(self, request):
+        days = _parse_int(request.GET.get('days'), 30, minimum=7, maximum=90)
+        payload = get_academy_analytics_chart(days=days)
+        return JsonResponse(payload, json_dumps_params={'ensure_ascii': False})
+
+
+class AdminAcademyJsonView(StaffRequiredMixin, View):
+    """خروجی JSON آمار آکادمی."""
+
+    def get(self, request):
+        days = _parse_int(request.GET.get('days'), 30, minimum=7, maximum=90)
+        status = request.GET.get('status', 'all')
+        if status not in ('all', 'public', 'private', 'inactive'):
+            status = 'all'
+        videos_limit = _parse_int(request.GET.get('videos_limit'), 1000, minimum=1, maximum=5000)
+
+        payload = build_academy_stats_json(days=days, status=status, videos_limit=videos_limit)
+        download = request.GET.get('download', '0') not in ('0', 'false', 'no', '')
+        response = JsonResponse(payload, json_dumps_params={'ensure_ascii': False, 'indent': 2})
+        if download:
+            stamp = timezone.now().strftime('%Y%m%d_%H%M')
+            response['Content-Disposition'] = (
+                f'attachment; filename="academy-stats-{days}d-{stamp}.json"'
+            )
+        return response
 
 
 class AdminBlogView(StaffRequiredMixin, TemplateView):

@@ -126,8 +126,58 @@
         }
     }
 
+    function csrfToken() {
+        var m = document.cookie.match(/csrftoken=([^;]+)/);
+        return m ? decodeURIComponent(m[1]) : '';
+    }
+
+    function toFaDigits(n) {
+        return String(n).replace(/\d/g, function (d) {
+            return '۰۱۲۳۴۵۶۷۸۹'[parseInt(d, 10)];
+        });
+    }
+
+    function initViewTracking() {
+        var page = document.getElementById('acdPlaylistPage');
+        if (!page) return;
+        var slug = page.getAttribute('data-video-slug');
+        var tpl = page.getAttribute('data-view-url-tpl');
+        if (!slug || !tpl) return;
+
+        var playerShell = document.querySelector('[data-acd-pl-player]');
+        var video = playerShell ? playerShell.querySelector('video') : null;
+        if (!video) return;
+
+        var sent = false;
+        video.addEventListener('play', function () {
+            if (sent) return;
+            sent = true;
+            var url = tpl.replace('__SLUG__', slug);
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: '{}',
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (!data || !data.ok) return;
+                    var el = document.querySelector('[data-acd-pl-views-count]');
+                    if (el && data.views_count != null) {
+                        el.textContent = toFaDigits(data.views_count);
+                    }
+                })
+                .catch(function () {});
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initDrawer();
+        initViewTracking();
         window.requestAnimationFrame(scrollActiveTrack);
     });
 })();

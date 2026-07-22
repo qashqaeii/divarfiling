@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% block title %}مدیریت آکادمی | پنل مدیریت{% endblock %}
+
+{% block body_class %}mk-admin-dashboard ab-luxe{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=4">
+{% endblock %}
+
+{% block content %}
+<div class="ab-page" id="aa-page"
+     data-analytics-url="{% url 'admin_panel_academy_analytics_json' %}"
+     data-initial-days="{{ analytics_days }}">
+
+    <div class="ab-ambient" aria-hidden="true">
+        <span class="ab-orb ab-orb--1"></span>
+        <span class="ab-orb ab-orb--2"></span>
+        <span class="ab-orb ab-orb--3"></span>
+        <span class="ab-grain"></span>
+    </div>
+
+    <header class="ab-hero">
+        <div class="ab-hero__main">
+            <div class="ab-hero__top">
+                <a href="{% url 'admin_panel' %}" class="ab-back">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>بازگشت به داشبورد</span>
+                </a>
+                <div class="ab-hero__badges">
+                    <span class="ab-pill ab-pill--live"><span class="ab-pill__dot"></span> Academy Studio</span>
+                    <span class="ab-pill">{{ academy_stats.videos_active|currency }} ویدیو فعال</span>
+                </div>
+            </div>
+
+            <div class="ab-hero__body">
+                <p class="ab-hero__eyebrow">Learning Analytics</p>
+                <h1 class="ab-hero__title">استودیو آمار <em>آکادمی</em></h1>
+                <p class="ab-hero__lead">بازدید ویدیوها، یادگیرندگان، تکمیل مسیر و ماموریت — برای پلی‌لیست عمومی و میزکار.</p>
+            </div>
+
+            <div class="ab-hero__actions">
+                <a href="{% url 'admin_panel_academy_stats_json' %}?days=30&status={{ status_filter }}&download=1" class="ab-btn ab-btn--gold">
+                    <i class="fas fa-file-code"></i>
+                    <span>دانلود آمار JSON</span>
+                </a>
+                <a href="{% url 'admin_panel_academy_stats_json' %}?days=30&status={{ status_filter }}" target="_blank" rel="noopener" class="ab-btn ab-btn--ghost">
+                    <i class="fas fa-eye"></i>
+                    <span>مشاهده JSON</span>
+                </a>
+                <a href="{% url 'public_academy_playlist' %}" target="_blank" rel="noopener" class="ab-btn ab-btn--ghost">
+                    <i class="fas fa-play"></i>
+                    <span>پلی‌لیست عمومی</span>
+                </a>
+                <a href="{% url 'workspace:academy_home' %}" target="_blank" rel="noopener" class="ab-btn ab-btn--ghost">
+                    <i class="fas fa-laptop"></i>
+                    <span>آکادمی میزکار</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="ab-hero__visual" aria-hidden="true">
+            <div class="ab-editorial-stack">
+                <article class="ab-stack-card ab-stack-card--1">
+                    <span class="ab-stack-icon"><i class="fas fa-graduation-cap"></i></span>
+                    <strong>Video Academy</strong>
+                    <small>{{ academy_stats.paths_total|currency }} مسیر</small>
+                </article>
+                <article class="ab-stack-card ab-stack-card--2">
+                    <span class="ab-stack-metric">{{ academy_stats.views_total|currency }}</span>
+                    <small>بازدید کل</small>
+                </article>
+                <article class="ab-stack-card ab-stack-card--3">
+                    <span class="ab-stack-icon"><i class="fas fa-users"></i></span>
+                    <strong>{{ academy_stats.learners_total|currency }} یادگیرنده</strong>
+                    <small>ماموریت {{ academy_stats.mission_rate|to_persian_digits }}٪</small>
+                </article>
+                <div class="ab-stack-glow"></div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="ab-nav" id="ab-nav" aria-label="بخش‌های آکادمی">
+        <div class="ab-nav__track">
+            <span class="ab-nav__indicator" id="ab-nav-indicator"></span>
+            <a href="#academy-overview" class="ab-nav__item is-active" data-tab="academy-overview">
+                <i class="fas fa-gauge-high"></i><span>نمای کلی</span>
+            </a>
+            <a href="#academy-videos" class="ab-nav__item" data-tab="academy-videos">
+                <i class="fas fa-film"></i><span>آرشیو ویدیو</span>
+            </a>
+            <a href="#academy-analytics" class="ab-nav__item" data-tab="academy-analytics">
+                <i class="fas fa-chart-line"></i><span>Analytics</span>
+            </a>
+        </div>
+    </nav>
+    <div class="ab-nav-spacer" id="ab-nav-spacer"></div>
+
+    <section id="academy-overview" class="ab-panel is-visible">
+        <div class="ab-kpi-grid">
+            <article class="ab-kpi" data-accent="teal">
+                <div class="ab-kpi__icon"><i class="fas fa-film"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ academy_stats.videos_total }}">{{ academy_stats.videos_total|currency }}</span>
+                    <span class="ab-kpi__lbl">کل ویدیوها</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="emerald">
+                <div class="ab-kpi__icon"><i class="fas fa-circle-check"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ academy_stats.videos_active }}">{{ academy_stats.videos_active|currency }}</span>
+                    <span class="ab-kpi__lbl">فعال · {{ academy_stats.videos_public|currency }} عمومی</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="violet">
+                <div class="ab-kpi__icon"><i class="fas fa-eye"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ academy_stats.views_total }}">{{ academy_stats.views_total|currency }}</span>
+                    <span class="ab-kpi__lbl">بازدید کل</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="amber">
+                <div class="ab-kpi__icon"><i class="fas fa-chart-simple"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ academy_stats.avg_views }}">{{ academy_stats.avg_views|currency }}</span>
+                    <span class="ab-kpi__lbl">میانگین بازدید</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="rose">
+                <div class="ab-kpi__icon"><i class="fas fa-user-graduate"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ academy_stats.learners_total }}">{{ academy_stats.learners_total|currency }}</span>
+                    <span class="ab-kpi__lbl">یادگیرنده یکتا</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="gold">
+                <div class="ab-kpi__icon"><i class="fas fa-flag-checkered"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ academy_stats.completions_month }}">{{ academy_stats.completions_month|currency }}</span>
+                    <span class="ab-kpi__lbl">تکمیل ۳۰ روز · ماموریت {{ academy_stats.mission_rate|to_persian_digits }}٪</span>
+                </div>
+            </article>
+        </div>
+
+        <div class="ab-bento">
+            <article class="ab-glass ab-bento__ranking">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-crown"></i> پربازدیدترین ویدیوها</h2>
+                        <p>رتبه‌بندی بر اساس views_count</p>
+                    </div>
+                    <a href="#academy-videos" class="ab-link">مشاهده همه</a>
+                </header>
+                <ol class="ab-rank-list">
+                    {% for v in academy_stats.top_videos %}
+                    <li class="ab-rank-item">
+                        <span class="ab-rank-num">{{ forloop.counter|to_persian_digits }}</span>
+                        <div class="ab-rank-body">
+                            <a href="{% if v.is_public %}/academy/videos/{{ v.slug }}/{% else %}/workspace/academy/video/{{ v.slug }}/{% endif %}" target="_blank" rel="noopener">{{ v.title|truncatechars:52 }}</a>
+                            <small>{% if v.path__title %}{{ v.path__title }}{% else %}—{% endif %}{% if v.is_public %} · عمومی{% endif %}</small>
+                        </div>
+                        <span class="ab-rank-views"><i class="fas fa-eye"></i> {{ v.views_count|currency }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="ab-empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>هنوز بازدیدی ثبت نشده.</p>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </article>
+
+            <article class="ab-glass ab-bento__categories">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-route"></i> مسیرهای یادگیری</h2>
+                        <p>توزیع بازدید بر اساس مسیر</p>
+                    </div>
+                </header>
+                <ul class="ab-cat-bars">
+                    {% for p in academy_stats.paths %}
+                    <li class="ab-cat-bar">
+                        <div class="ab-cat-bar__top">
+                            <span>{{ p.title }} · {{ p.video_count|currency }} ویدیو</span>
+                            <strong>{{ p.views|default:0|currency }}</strong>
+                        </div>
+                        <div class="ab-cat-bar__track">
+                            <span class="ab-cat-bar__fill" style="width: {% if academy_stats.views_total %}{% widthratio p.views|default:0 academy_stats.views_total 100 %}{% else %}0{% endif %}%"></span>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="ab-empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <p>مسیری ثبت نشده.</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <article class="ab-glass ab-bento__cta">
+                <div class="ab-cta-card">
+                    <span class="ab-cta-icon"><i class="fas fa-rocket"></i></span>
+                    <h3>ماموریت ۱۵ دقیقه‌ای</h3>
+                    <p>{{ academy_stats.mission_completed|currency }} تکمیل از {{ academy_stats.mission_started|currency }} شروع — نرخ {{ academy_stats.mission_rate|to_persian_digits }}٪</p>
+                    <div class="ab-cta-actions">
+                        <a href="{% url 'workspace:academy_mission' %}" target="_blank" rel="noopener" class="ab-btn ab-btn--gold ab-btn--sm">باز کردن ماموریت</a>
+                        <a href="/admin/workspace/academyvideo/" target="_blank" rel="noopener" class="ab-btn ab-btn--ghost ab-btn--sm">ویرایش ویدیوها</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section id="academy-videos" class="ab-panel" hidden>
+        <article class="ab-glass ab-posts-panel">
+            <header class="ab-glass__head ab-posts-head">
+                <div>
+                    <h2><i class="fas fa-film"></i> آرشیو ویدیوها</h2>
+                    <p>{{ academy_videos|length }} مورد · فیلتر و جستجو</p>
+                </div>
+                <div class="ab-posts-toolbar">
+                    <div class="ab-search">
+                        <i class="fas fa-search"></i>
+                        <input type="search" id="ab-post-search" placeholder="جستجو در عنوان یا slug..." autocomplete="off">
+                    </div>
+                    <div class="ab-segment" role="tablist">
+                        <a href="?status=all#academy-videos" class="ab-segment__btn {% if status_filter == 'all' %}is-active{% endif %}">همه</a>
+                        <a href="?status=public#academy-videos" class="ab-segment__btn {% if status_filter == 'public' %}is-active{% endif %}">عمومی</a>
+                        <a href="?status=private#academy-videos" class="ab-segment__btn {% if status_filter == 'private' %}is-active{% endif %}">خصوصی</a>
+                        <a href="?status=inactive#academy-videos" class="ab-segment__btn {% if status_filter == 'inactive' %}is-active{% endif %}">غیرفعال</a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="ab-posts-list" id="ab-posts-list">
+                {% for v in academy_videos %}
+                <article class="ab-post-row" data-search="{{ v.title }} {{ v.slug }} {{ v.path }}">
+                    <div class="ab-post-row__main">
+                        <div class="ab-post-row__status">
+                            {% if not v.is_active %}
+                            <span class="ab-status ab-status--draft">غیرفعال</span>
+                            {% elif v.is_public %}
+                            <span class="ab-status ab-status--live"><span class="ab-status__dot"></span>عمومی</span>
+                            {% else %}
+                            <span class="ab-status ab-status--draft">میزکار</span>
+                            {% endif %}
+                        </div>
+                        <div class="ab-post-row__content">
+                            <h3>{{ v.title }}</h3>
+                            <p class="ab-post-row__meta">
+                                <span><i class="fas fa-route"></i> {{ v.path }}</span>
+                                <span dir="ltr"><i class="fas fa-link"></i> {{ v.slug }}</span>
+                                <span><i class="fas fa-clock"></i> {{ v.duration_display }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="ab-post-row__stats">
+                        <div class="ab-post-stat">
+                            <span class="ab-post-stat__val">{{ v.views_count|currency }}</span>
+                            <span class="ab-post-stat__lbl">بازدید</span>
+                        </div>
+                        <div class="ab-post-stat">
+                            <span class="ab-post-stat__val">{{ v.completions|currency }}</span>
+                            <span class="ab-post-stat__lbl">تکمیل</span>
+                        </div>
+                    </div>
+                    <div class="ab-post-row__actions">
+                        {% if v.public_url %}
+                        <a href="{{ v.public_url }}" target="_blank" rel="noopener" class="ab-icon-btn" title="عمومی"><i class="fas fa-globe"></i></a>
+                        {% endif %}
+                        <a href="{{ v.workspace_url }}" target="_blank" rel="noopener" class="ab-icon-btn" title="میزکار"><i class="fas fa-laptop"></i></a>
+                        <a href="{{ v.admin_edit_url }}" target="_blank" rel="noopener" class="ab-icon-btn" title="ویرایش"><i class="fas fa-pen-to-square"></i></a>
+                    </div>
+                </article>
+                {% empty %}
+                <div class="ab-empty-state ab-empty-state--lg">
+                    <i class="fas fa-file-circle-xmark"></i>
+                    <p>ویدیویی یافت نشد.</p>
+                </div>
+                {% endfor %}
+            </div>
+            <p class="ab-search-empty" id="ab-search-empty" hidden>نتیجه‌ای برای جستجو یافت نشد.</p>
+        </article>
+    </section>
+
+    <section id="academy-analytics" class="ab-panel" hidden>
+        <header class="ab-analytics-head">
+            <div>
+                <p class="ab-analytics-head__eyebrow">Traffic Intelligence</p>
+                <h2 class="ab-analytics-head__title">آنالیز بازدید ویدیوها</h2>
+                <p class="ab-analytics-head__sub" id="aa-tracking-note">
+                    {% if academy_pulse.has_tracking_data %}
+                    ردیابی روزانه از {{ academy_pulse.tracking_since }} فعال است.
+                    {% else %}
+                    ردیابی روزانه از اولین پخش ویدیو شروع می‌شود.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="ab-analytics-head__tools">
+                <div class="ab-range" id="aa-analytics-range" role="group" aria-label="بازه نمودار">
+                    <button type="button" class="ab-range-btn{% if analytics_days == 7 %} is-active{% endif %}" data-days="7">۷ روز</button>
+                    <button type="button" class="ab-range-btn{% if analytics_days == 30 %} is-active{% endif %}" data-days="30">۳۰ روز</button>
+                    <button type="button" class="ab-range-btn{% if analytics_days == 90 %} is-active{% endif %}" data-days="90">۹۰ روز</button>
+                </div>
+                <span class="ab-analytics-loading" id="aa-analytics-loading" hidden>
+                    <i class="fas fa-spinner fa-spin"></i> به‌روزرسانی…
+                </span>
+            </div>
+        </header>
+
+        <div class="ab-pulse-grid">
+            <article class="ab-pulse" data-accent="teal">
+                <div class="ab-pulse__top">
+                    <span class="ab-pulse__icon"><i class="fas fa-bolt"></i></span>
+                    <span class="ab-pulse__badge" id="aa-pulse-today-badge" data-trend="{% if academy_pulse.today_vs_yesterday_pct != None %}{% if academy_pulse.today_vs_yesterday_pct >= 0 %}up{% else %}down{% endif %}{% else %}flat{% endif %}">
+                        {% if academy_pulse.today_vs_yesterday_pct != None %}
+                        {% if academy_pulse.today_vs_yesterday_pct >= 0 %}+{% endif %}{{ academy_pulse.today_vs_yesterday_pct|to_persian_digits }}٪
+                        {% else %}—{% endif %}
+                    </span>
+                </div>
+                <strong class="ab-pulse__val" id="aa-pulse-today">{{ academy_pulse.today|default:0|currency }}</strong>
+                <span class="ab-pulse__lbl">بازدید امروز</span>
+            </article>
+            <article class="ab-pulse" data-accent="violet">
+                <div class="ab-pulse__top"><span class="ab-pulse__icon"><i class="fas fa-calendar-day"></i></span></div>
+                <strong class="ab-pulse__val" id="aa-pulse-yesterday">{{ academy_pulse.yesterday|default:0|currency }}</strong>
+                <span class="ab-pulse__lbl">بازدید دیروز</span>
+            </article>
+            <article class="ab-pulse" data-accent="gold">
+                <div class="ab-pulse__top">
+                    <span class="ab-pulse__icon"><i class="fas fa-chart-line"></i></span>
+                    <span class="ab-pulse__badge" id="aa-pulse-week-badge" data-trend="{% if academy_pulse.week_vs_prev_pct != None %}{% if academy_pulse.week_vs_prev_pct >= 0 %}up{% else %}down{% endif %}{% else %}flat{% endif %}">
+                        {% if academy_pulse.week_vs_prev_pct != None %}
+                        {% if academy_pulse.week_vs_prev_pct >= 0 %}+{% endif %}{{ academy_pulse.week_vs_prev_pct|to_persian_digits }}٪
+                        {% else %}—{% endif %}
+                    </span>
+                </div>
+                <strong class="ab-pulse__val" id="aa-pulse-week">{{ academy_pulse.week|default:0|currency }}</strong>
+                <span class="ab-pulse__lbl">۷ روز اخیر</span>
+            </article>
+            <article class="ab-pulse" data-accent="emerald">
+                <div class="ab-pulse__top"><span class="ab-pulse__icon"><i class="fas fa-gauge-high"></i></span></div>
+                <strong class="ab-pulse__val" id="aa-pulse-period">{{ academy_traffic.period_total|default:0|currency }}</strong>
+                <span class="ab-pulse__lbl">بازه انتخاب‌شده</span>
+                <small class="ab-pulse__hint" id="aa-pulse-period-hint">میانگین روزانه {{ academy_traffic.avg_daily|default:0|currency }}</small>
+            </article>
+        </div>
+
+        <div class="ab-analytics-grid ab-analytics-grid--traffic">
+            <article class="ab-glass ab-chart-card ab-chart-card--hero">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-wave-square"></i> روند بازدید روزانه</h2>
+                        <p>خط ممتد: بازدید · نقطه‌چین: دوره قبل · میله: تکمیل</p>
+                    </div>
+                </header>
+                <div class="ab-chart-wrap ab-chart-wrap--hero">
+                    <canvas id="aa-chart-traffic"></canvas>
+                    <div class="ab-chart-empty" id="aa-empty-traffic" hidden>
+                        <i class="fas fa-chart-area"></i>
+                        <p>هنوز بازدید روزانه ثبت نشده</p>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="ab-analytics-grid ab-analytics-grid--triple">
+            <article class="ab-glass ab-chart-card">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-chart-pie"></i> بازدید بر اساس مسیر</h2>
+                        <p id="aa-path-chart-sub">در بازه انتخاب‌شده</p>
+                    </div>
+                </header>
+                <div class="ab-chart-wrap ab-chart-wrap--donut">
+                    <canvas id="aa-chart-paths"></canvas>
+                    <div class="ab-chart-empty" id="aa-empty-paths" hidden>
+                        <i class="fas fa-folder-open"></i>
+                        <p>داده‌ای برای نمایش نیست</p>
+                    </div>
+                </div>
+            </article>
+            <article class="ab-glass ab-chart-card ab-chart-card--wide">
+                <header class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-fire"></i> داغ‌ترین ویدیوها در بازه</h2>
+                        <p id="aa-period-chart-sub">بازدید دوره‌ای</p>
+                    </div>
+                </header>
+                <div class="ab-chart-wrap ab-chart-wrap--tall">
+                    <canvas id="aa-chart-period"></canvas>
+                    <div class="ab-chart-empty" id="aa-empty-period" hidden>
+                        <i class="fas fa-fire-flame-curved"></i>
+                        <p>هنوز بازدید دوره‌ای ثبت نشده</p>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<script type="application/json" id="aa-analytics-data">{{ academy_analytics_json|safe }}</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="{% static 'js/admin-academy.js' %}?v=1" defer></script>
+{% endblock %}

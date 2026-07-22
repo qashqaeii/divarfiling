@@ -19,7 +19,7 @@
                     </span>
                     <span class="acd-playlist-body">
                         <strong>{{ item.video.title }}</strong>
-                        <span>{{ item.video.duration_display }}</span>
+                        <span>{{ item.video.duration_display }} · {{ item.video.views_count|default:0 }} بازدید</span>
                     </span>
                     {% if item.completed %}
                     <span class="acd-playlist-check" aria-label="تماشا شده"><i class="fas fa-check"></i></span>

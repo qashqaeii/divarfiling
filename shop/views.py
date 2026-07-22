@@ -12,7 +12,9 @@ from django.db import models
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.views import View
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from pathlib import Path
 from .bot_catalog import (
     BOT_PRODUCT_SLUG, bot_page_content, get_bot_product, get_bot_product_buy_url,
@@ -698,6 +700,7 @@ class PublicAcademyView(TemplateView):
         return ctx
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class PublicAcademyPlaylistView(TemplateView):
     """پلی‌لیست عمومی ویدیوهای آکادمی — UI شبیه یوتوب/آپارات."""
     template_name = 'shop/academy_playlist.html'
@@ -769,6 +772,32 @@ class PublicAcademyPlaylistView(TemplateView):
             if poster:
                 ctx['meta_image'] = poster
         return ctx
+
+
+class PublicAcademyVideoViewAPIView(View):
+    """ثبت بازدید پخش ویدیو در پلی‌لیست عمومی."""
+
+    def post(self, request, slug: str):
+        from workspace.academy.models import AcademyVideo
+        from workspace.academy.services.progress_service import track_event
+        from workspace.academy.services.view_tracking import record_video_view
+
+        video = get_object_or_404(
+            AcademyVideo,
+            slug=slug,
+            is_active=True,
+            is_public=True,
+            path__is_active=True,
+        )
+        views = record_video_view(video)
+        user = request.user if request.user.is_authenticated else None
+        track_event(
+            user,
+            'academy_video_started',
+            video=video,
+            metadata={'source': 'public_playlist', 'video_slug': slug},
+        )
+        return JsonResponse({'ok': True, 'views_count': views})
 
 
 class AndroidTutorialView(TemplateView):

@@ -400,6 +400,10 @@ class BuyView(LoginRequiredMixin, CreateView):
                         selected_plan_id = plan_data['plan'].pk
                         break
 
+        selected_plan = None
+        if selected_plan_id:
+            selected_plan = self.product.plans.filter(pk=selected_plan_id, is_active=True).first()
+
         renewal_preview = None
         if self.renewal_license:
             from licenses.services.renewal import compute_renewed_expires_at
@@ -429,9 +433,6 @@ class BuyView(LoginRequiredMixin, CreateView):
 
         from shop.services.plan_guards import requires_phone_verification_for_plan, verify_phone_redirect_url
 
-        selected_plan = None
-        if selected_plan_id:
-            selected_plan = self.product.plans.filter(pk=selected_plan_id, is_active=True).first()
         context['phone_verification_required'] = (
             self.request.user.is_authenticated
             and requires_phone_verification_for_plan(selected_plan)

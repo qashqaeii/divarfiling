@@ -152,3 +152,11 @@ class LicenseRenewalTests(TestCase):
         url = reverse('renew_license', kwargs={'license_id': self.license.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
+
+    def test_buy_page_with_renew_query_renders(self):
+        self.client.login(username='renewuser', password='pass1234')
+        url = reverse('buy', kwargs={'slug': self.product.slug})
+        response = self.client.get(url, {'renew': self.license.pk, 'plan': self.plan.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'تمدید لایسنس')
+        self.assertContains(response, self.license.license_key)

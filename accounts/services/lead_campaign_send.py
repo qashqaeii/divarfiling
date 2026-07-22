@@ -330,7 +330,13 @@ def send_step_message(
     )
     existing = CampaignMessage.objects.filter(idempotency_key=idem).first()
     if existing:
-        return existing
+        # اختلال اپراتور / ارسال ناموفق: اجازه ارسال مجدد با همان مرحله
+        if existing.status == CampaignMessage.Status.FAILED:
+            existing.idempotency_key = f'{idem}:failed:{existing.pk}'
+            existing.skip_reason = ((existing.skip_reason or 'failed') + ';retried')[:200]
+            existing.save(update_fields=['idempotency_key', 'skip_reason'])
+        else:
+            return existing
 
     if not audience_allows(step=step, lead=lead, enrollment=enrollment):
         msg = CampaignMessage.objects.create(
@@ -413,17 +419,19 @@ def send_campaign_step(campaign: LeadCampaign, step_number: int, *, request=None
         .select_related('lead', 'assigned_variant')
         .order_by('id')[:limit]
     )
-    stats = {'sent': 0, 'accepted': 0, 'failed': 0, 'skipped': 0, 'idempotent': 0}
+    stats = {'sent': 0, 'accepted': 0, 'failed': 0, 'skipped': 0, 'idempotent': 0, 'retried': 0}
     for enroll in enrollments:
-        before = CampaignMessage.objects.filter(
-            idempotency_key=generate_idempotency_key(
-                enrollment_id=enroll.pk,
-                step_number=step.step_number,
-                variant_key=enroll.assigned_variant.key,
-            )
-        ).first()
+        idem = generate_idempotency_key(
+            enrollment_id=enroll.pk,
+            step_number=step.step_number,
+            variant_key=enroll.assigned_variant.key,
+        )
+        before = CampaignMessage.objects.filter(idempotency_key=idem).first()
+        was_failed = bool(before and before.status == CampaignMessage.Status.FAILED)
         msg = send_step_message(enrollment=enroll, step=step, request=request)
-        if before and before.pk == msg.pk:
+        if was_failed:
+            stats['retried'] += 1
+        elif before and before.pk == msg.pk:
             stats['idempotent'] += 1
         if msg.status == CampaignMessage.Status.PROVIDER_ACCEPTED:
             stats['accepted'] += 1
@@ -436,3 +444,104 @@ def send_campaign_step(campaign: LeadCampaign, step_number: int, *, request=None
         else:
             stats['sent'] += 1
     return stats
+
+
+@transaction.atomic
+def delete_lead_campaign(campaign_id: int, *, confirm: bool = False) -> dict:
+    """
+    حذف کامل کمپین جذب برای شروع مجدد پس از اختلال ارسال.
+    سرنخ‌ها و لیست منطقه باقی می‌مانند.
+    """
+    if not confirm:
+        raise LeadCampaignError('برای حذف، تأیید لازم است.', code='confirm_required')
+
+    campaign = LeadCampaign.objects.select_for_update().filter(pk=campaign_id).first()
+    if not campaign:
+        raise LeadCampaignError('کمپین یافت نشد.', code='not_found')
+    if campaign.kind != LeadCampaign.Kind.ACQUISITION:
+        raise LeadCampaignError('فقط کمپین جذب از این مسیر قابل حذف است.', code='wrong_kind')
+
+    # اگر خرید attributed به این کمپین باشد، حذف را سخت‌گیرانه رد می‌کنیم
+    from accounts.models import LeadAttribution
+    paid = LeadAttribution.objects.filter(
+        campaign=campaign,
+        axis=LeadAttribution.Axis.CONVERSION,
+    ).exists()
+    if paid:
+        raise LeadCampaignError(
+            'این کمپین خرید ثبت‌شده دارد و برای حفظ گزارش قابل حذف نیست.',
+            code='has_conversions',
+        )
+
+    name = campaign.name
+    msg_count = campaign.messages.count()
+    enroll_count = campaign.enrollments.count()
+    # Enrollment → Variant با PROTECT است؛ اول enrollment/message را پاک می‌کنیم
+    CampaignMessage.objects.filter(campaign=campaign).delete()
+    CampaignEnrollment.objects.filter(campaign=campaign).delete()
+    campaign.delete()
+    return {
+        'deleted_campaign_id': campaign_id,
+        'name': name,
+        'messages_removed': msg_count,
+        'enrollments_removed': enroll_count,
+    }
+
+
+@transaction.atomic
+def reset_campaign_for_retry(campaign_id: int) -> dict:
+    """
+    بدون حذف کمپین: پیام‌های ناموفق را آزاد می‌کند، enrollmentها را ACTIVE نگه می‌دارد،
+    و current_step را صفر می‌کند تا ارسال مرحله ۱ دوباره ممکن شود.
+    """
+    campaign = LeadCampaign.objects.select_for_update().filter(pk=campaign_id).first()
+    if not campaign:
+        raise LeadCampaignError('کمپین یافت نشد.', code='not_found')
+
+    failed_qs = CampaignMessage.objects.filter(
+        campaign=campaign,
+        status=CampaignMessage.Status.FAILED,
+    )
+    failed_count = failed_qs.count()
+    for msg in failed_qs.iterator():
+        msg.idempotency_key = f'{msg.idempotency_key}:reset:{msg.pk}'
+        msg.save(update_fields=['idempotency_key'])
+
+    # اگر همه پیام‌های مرحله ۱ failed/skipped بودند، step را ریست کن
+    active_enrolls = CampaignEnrollment.objects.filter(
+        campaign=campaign,
+        status__in=(
+            CampaignEnrollment.Status.ACTIVE,
+            CampaignEnrollment.Status.HOLD,
+            CampaignEnrollment.Status.COMPLETED,
+        ),
+    )
+    reset_enrolls = 0
+    for enroll in active_enrolls:
+        has_success = CampaignMessage.objects.filter(
+            enrollment=enroll,
+            status__in=(
+                CampaignMessage.Status.PROVIDER_ACCEPTED,
+                CampaignMessage.Status.DELIVERED,
+            ),
+        ).exists()
+        if not has_success:
+            enroll.status = CampaignEnrollment.Status.ACTIVE
+            enroll.current_step_number = 0
+            enroll.last_message_at = None
+            enroll.exited_at = None
+            enroll.save(update_fields=[
+                'status', 'current_step_number', 'last_message_at', 'exited_at',
+            ])
+            reset_enrolls += 1
+
+    if campaign.status in (LeadCampaign.Status.COMPLETED, LeadCampaign.Status.ARCHIVED):
+        campaign.status = LeadCampaign.Status.PILOT if campaign.is_pilot else LeadCampaign.Status.ACTIVE
+        campaign.completed_at = None
+        campaign.save(update_fields=['status', 'completed_at', 'updated_at'])
+
+    return {
+        'campaign_id': campaign.pk,
+        'failed_freed': failed_count,
+        'enrollments_reset': reset_enrolls,
+    }

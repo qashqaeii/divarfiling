@@ -24,7 +24,9 @@ from accounts.services.lead_attribution import record_touchpoint
 from accounts.services.lead_campaign_send import (
     LeadCampaignError,
     create_acquisition_campaign,
+    delete_lead_campaign,
     enroll_pilot,
+    reset_campaign_for_retry,
     send_campaign_step,
 )
 from accounts.services.lead_funnel import campaign_funnel, overview_stats
@@ -116,6 +118,10 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 return self._enroll_pilot(request)
             if action == 'send_step':
                 return self._send_step(request)
+            if action == 'retry_failed':
+                return self._retry_failed(request)
+            if action == 'delete_campaign':
+                return self._delete_campaign(request)
         except (LeadImportError, LeadCampaignError) as exc:
             messages.error(request, exc.message)
         except Exception as exc:  # noqa: BLE001
@@ -210,7 +216,8 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         result = enroll_pilot(campaign)
         messages.success(
             request,
-            f'پایلوت: enrolled={result["enrolled"]} held={result["held"]} variants={result["per_variant"]}',
+            f'ثبت در پایلوت انجام شد — واردشده: {result["enrolled"]}، نگه‌داشته: {result["held"]}، '
+            f'نسخه‌ها: {result["per_variant"]}',
         )
         return redirect('admin_panel_lead_acquisition')
 
@@ -218,7 +225,39 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         campaign = get_object_or_404(LeadCampaign, pk=int(request.POST.get('campaign_id') or 0))
         step_number = int(request.POST.get('step_number') or 1)
         stats = send_campaign_step(campaign, step_number, request=request)
-        messages.success(request, f'ارسال مرحله {step_number}: {stats}')
+        messages.success(
+            request,
+            f'ارسال مرحله {step_number} — پذیرفته: {stats["accepted"]}، ناموفق: {stats["failed"]}، '
+            f'ردشده: {stats["skipped"]}، ارسال‌مجدد: {stats.get("retried", 0)}، تکراری: {stats["idempotent"]}',
+        )
+        return redirect('admin_panel_lead_acquisition')
+
+    def _retry_failed(self, request):
+        campaign_id = int(request.POST.get('campaign_id') or 0)
+        reset = reset_campaign_for_retry(campaign_id)
+        step_number = int(request.POST.get('step_number') or 1)
+        campaign = get_object_or_404(LeadCampaign, pk=campaign_id)
+        stats = send_campaign_step(campaign, step_number, request=request)
+        messages.success(
+            request,
+            f'آماده‌سازی ارسال مجدد: {reset["failed_freed"]} پیام ناموفق آزاد شد، '
+            f'{reset["enrollments_reset"]} مخاطب ریست شد. نتیجه ارسال مرحله {step_number}: '
+            f'پذیرفته {stats["accepted"]} / ناموفق {stats["failed"]}',
+        )
+        return redirect('admin_panel_lead_acquisition')
+
+    def _delete_campaign(self, request):
+        campaign_id = int(request.POST.get('campaign_id') or 0)
+        if request.POST.get('confirm_delete') != '1':
+            messages.error(request, 'برای حذف کمپین باید تأیید را فعال کنید.')
+            return redirect('admin_panel_lead_acquisition')
+        result = delete_lead_campaign(campaign_id, confirm=True)
+        messages.success(
+            request,
+            f'کمپین «{result["name"]}» حذف شد '
+            f'(پیام‌ها: {result["messages_removed"]}، ثبت‌نام‌ها: {result["enrollments_removed"]}). '
+            f'لیست سرنخ‌ها باقی ماند — می‌توانید کمپین جدید بسازید.',
+        )
         return redirect('admin_panel_lead_acquisition')
 
 

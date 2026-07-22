@@ -404,6 +404,20 @@
                                         <input type="hidden" name="step_number" value="1">
                                         <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">ارسال مرحله ۱</button>
                                     </form>
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="retry_failed">
+                                        <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                        <input type="hidden" name="step_number" value="1">
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm" title="بعد از اختلال اپراتور، پیام‌های ناموفق را دوباره می‌فرستد">ارسال مجدد ناموفق‌ها</button>
+                                    </form>
+                                    <form method="post" onsubmit="return confirm('کمپین کاملاً حذف شود و از صفر شروع کنید؟ لیست سرنخ‌ها پاک نمی‌شود.');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete_campaign">
+                                        <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                        <input type="hidden" name="confirm_delete" value="1">
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--danger adm-lac-btn--sm">حذف کمپین</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

@@ -256,8 +256,49 @@ class LeadCampaignTrackingTests(TestCase):
             ).exists()
         )
 
+    def test_delete_campaign_allows_fresh_start(self):
+        from accounts.models import LeadCampaign
+        from accounts.services.lead_campaign_send import delete_lead_campaign
+
+        cid = self.campaign.pk
+        result = delete_lead_campaign(cid, confirm=True)
+        self.assertEqual(result['deleted_campaign_id'], cid)
+        self.assertFalse(LeadCampaign.objects.filter(pk=cid).exists())
+        # لیست سرنخ باقی است
+        self.assertTrue(self.lead_list.members.exists())
+
     @patch('accounts.services.lead_campaign_send.notify_marketing')
-    def test_funnel_pilot_label(self, mock_notify):
+    def test_failed_message_can_be_retried(self, mock_notify):
+        from accounts.models import SmsMessageLog
+
+        calls = {'n': 0}
+
+        def _fake(phone, text='', attributes=None):
+            calls['n'] += 1
+            log = SmsMessageLog.objects.create(
+                phone=phone, purpose='x', status=SmsMessageLog.Status.FAILED,
+            )
+            if calls['n'] == 1:
+                log.mark_failed('اختلال اپراتور شاتل')
+                return False, log
+            log.mark_sent(provider='console', message_id='ok', status=SmsMessageLog.Status.FAKE)
+            return True, log
+
+        mock_notify.side_effect = _fake
+        send_campaign_step(self.campaign, 1)
+        failed = CampaignMessage.objects.filter(
+            campaign=self.campaign, status=CampaignMessage.Status.FAILED,
+        ).count()
+        self.assertGreaterEqual(failed, 1)
+        stats = send_campaign_step(self.campaign, 1)
+        self.assertGreaterEqual(stats.get('retried', 0) + stats.get('accepted', 0), 1)
+        self.assertGreaterEqual(
+            CampaignMessage.objects.filter(
+                campaign=self.campaign,
+                status=CampaignMessage.Status.PROVIDER_ACCEPTED,
+            ).count(),
+            1,
+        )
         from accounts.models import SmsMessageLog
 
         mock_notify.side_effect = lambda phone, text='', attributes=None: (

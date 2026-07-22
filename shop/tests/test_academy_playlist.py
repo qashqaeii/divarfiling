@@ -77,7 +77,7 @@ class PublicAcademyPlaylistTests(TestCase):
         courses = [n for n in data['@graph'] if n.get('@type') == 'Course']
         self.assertGreaterEqual(len(courses), 1)
         self.assertTrue(courses[0].get('isAccessibleForFree'))
-        self.assertEqual(courses[0].get('offers', {}).get('price'), '0')
+        self.assertEqual(courses[0].get('offers', {}).get('price'), 0)
 
     def test_public_academy_landing_seo(self):
         resp = Client().get(reverse('public_academy'))

@@ -63,7 +63,7 @@ def _org_node(site_url: str, site_name: str) -> dict[str, Any]:
 def _free_offer(page_url: str) -> dict[str, Any]:
     return {
         '@type': 'Offer',
-        'price': '0',
+        'price': 0,
         'priceCurrency': 'IRR',
         'availability': 'https://schema.org/InStock',
         'url': page_url,

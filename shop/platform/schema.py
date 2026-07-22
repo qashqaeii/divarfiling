@@ -49,11 +49,11 @@ def _product_line_title(code: str) -> str:
 
 _LICENSE_PRODUCT_SLUG = 'divar-extraction-bot'
 # Starting list price (تومان) if shop catalog is unavailable — matches 1-day plan.
-_LICENSE_PRICE_FALLBACK = '50000'
+_LICENSE_PRICE_FALLBACK = 50000
 
 
-def _license_starting_price() -> str:
-    """Lowest active plan price for the Divar bot license (Google Offer.price)."""
+def _license_starting_price() -> int:
+    """Lowest active plan price for the Divar bot license (Google Offer.price as Number)."""
     try:
         from shop.models import Product
 
@@ -67,13 +67,13 @@ def _license_starting_price() -> str:
         plan = product.plans.filter(is_active=True).order_by('price', 'id').first()
         if not plan:
             return _LICENSE_PRICE_FALLBACK
-        return str(int(plan.price))
+        return int(plan.price)
     except Exception:
         return _LICENSE_PRICE_FALLBACK
 
 
 def _licensed_offer(page_url: str) -> dict[str, Any]:
-    """License-gated offer with real shop starting price (required by Google rich results)."""
+    """License-gated offer with real shop starting price (Google requires Number price)."""
     return {
         '@type': 'Offer',
         'price': _license_starting_price(),
@@ -98,15 +98,20 @@ def _organization_node() -> dict[str, Any]:
 
 
 def _free_offer(page_url: str) -> dict[str, Any]:
-    """Honest free offer for CRM core — price 0, no fake ratings."""
+    """Free CRM/core offer — price must be Number 0 (not string) for Google rich results."""
     return {
         '@type': 'Offer',
-        'price': '0',
+        'price': 0,
         'priceCurrency': 'IRR',
         'availability': 'https://schema.org/InStock',
         'url': page_url,
         'description': 'هسته CRM رایگان — بدون لایسنس ربات دیوار',
     }
+
+
+def _feature_list(items: list[str]) -> str:
+    """Google/schema.org featureList expects Text, not a JSON array."""
+    return '، '.join(items)
 
 
 def schema_webpage(
@@ -185,12 +190,12 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
             'inLanguage': 'fa-IR',
             'creator': creator,
             'offers': _free_offer(page_url),
-            'featureList': [
+            'featureList': _feature_list([
                 'CRM املاک رایگان',
                 'فایلینگ و استخراج دیوار',
                 'تحلیل بازار',
                 'مدیریت تیم آژانس',
-            ],
+            ]),
         }
     elif page.content_key == 'crm_product_line':
         schema = {
@@ -206,13 +211,13 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
             'inLanguage': 'fa-IR',
             'creator': creator,
             'offers': _free_offer(page_url),
-            'featureList': [
+            'featureList': _feature_list([
                 'مخاطب و پرونده مشتری',
                 'یادآور و صف کار امروز',
                 'معامله و قیف',
                 'تقویم و قالب پیام',
                 'تیم آژانس و نقش‌ها',
-            ],
+            ]),
         }
     elif page.content_key == 'crm_reminders':
         schema = {
@@ -232,11 +237,11 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'url': crm_url,
             },
             'offers': _free_offer(page_url),
-            'featureList': [
+            'featureList': _feature_list([
                 'یادآور زمان‌دار روی پرونده',
                 'صف کار امروز',
                 'تقویم ماهانه',
-            ],
+            ]),
         }
     elif page.content_key == 'solutions_hub':
         schema = {
@@ -269,12 +274,12 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'url': crm_url,
             },
             'offers': _free_offer(page_url),
-            'featureList': [
+            'featureList': _feature_list([
                 'یادآور تماس',
                 'صف کار امروز',
                 'تقویم بازدید',
                 'قالب پیام پیگیری',
-            ],
+            ]),
         }
     elif page.content_key == 'filing_product_line':
         schema = {
@@ -290,12 +295,12 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
             'inLanguage': 'fa-IR',
             'creator': creator,
             'offers': _licensed_offer(page_url),
-            'featureList': [
+            'featureList': _feature_list([
                 'آپلود خروجی استخراج',
                 'جدول بانک فایل و فیلتر',
                 'جزئیات آگهی',
                 'نقشه و مقایسه فایل',
-            ],
+            ]),
         }
     elif page.content_key == 'fast_property_search':
         filing_url = f'{site_url}/features/filing/'
@@ -316,12 +321,12 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'url': filing_url,
             },
             'offers': _licensed_offer(page_url),
-            'featureList': [
+            'featureList': _feature_list([
                 'فیلتر پیشرفته Dataset',
                 'جستجوی جدولی فایل',
                 'نقشه آگهی',
                 'مقایسه و کاهش تکراری',
-            ],
+            ]),
         }
     elif page.content_key == 'market_intelligence_product_line':
         filing_url = f'{site_url}/features/filing/'
@@ -343,12 +348,12 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'url': filing_url,
             },
             'offers': _licensed_offer(page_url),
-            'featureList': [
+            'featureList': _feature_list([
                 'گزارش تحلیل Dataset',
                 'نقشه آگهی‌ها',
                 'Value Score',
                 'مقایسه دوره‌ای فایل‌ها',
-            ],
+            ]),
         }
     elif page.content_key == 'property_pricing':
         market_url = f'{site_url}/features/market-intelligence/'
@@ -374,12 +379,12 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'url': site_url,
             },
             'offers': _licensed_offer(page_url),
-            'featureList': [
+            'featureList': _feature_list([
                 'فیلتر فایل‌های مشابه',
                 'میانه و بازه قیمت',
                 'نقشه و پراکندگی',
                 'Value Score نسبی',
-            ],
+            ]),
         }
     elif page.content_key == 'agency_product_line':
         crm_url = f'{site_url}/features/crm/'
@@ -406,12 +411,12 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 'url': crm_url,
             },
             'offers': _free_offer(page_url),
-            'featureList': [
+            'featureList': _feature_list([
                 'نقش‌های مالک، مدیر، منشی و مشاور',
                 'صندوق سرنخ و تخصیص',
                 'پیام و اطلاعیه تیم',
                 'گزارش عملکرد و Agency TV',
-            ],
+            ]),
         }
     elif page.content_key == 'agency_management':
         agency_url = f'{site_url}/features/agency/'
@@ -445,12 +450,12 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 },
             ],
             'offers': _free_offer(page_url),
-            'featureList': [
+            'featureList': _feature_list([
                 'صندوق سرنخ و تخصیص مسئول',
                 'پیگیری معوق و گزارش عملکرد',
                 'نقش‌ها و کنترل دسترسی',
                 'Agency TV به‌عنوان نمایشگر مکمل',
-            ],
+            ]),
         }
     elif page.content_key == 'extraction_product_line':
         filing_url = f'{site_url}/features/filing/'
@@ -485,13 +490,13 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 },
             ],
             'offers': _licensed_offer(f'{site_url}/products/divar-extraction-bot/'),
-            'featureList': [
+            'featureList': _feature_list([
                 'استخراج ساختاریافته امکانات و مشخصات آگهی',
                 'فیلتر شخصی و سیگنال نوع آگهی‌دهنده',
                 'خروجی Excel، CSV و JSON',
                 'کنترل تکراری بر اساس شناسه آگهی',
                 'آپلود Dataset به فایلینگ',
-            ],
+            ]),
         }
     elif page.content_key == 'build_property_database':
         extraction_url = f'{site_url}/features/extraction/'
@@ -531,12 +536,12 @@ def schema_software_application_for_page(page: PageSpec, page_url: str) -> str:
                 },
             ],
             'offers': _licensed_offer(f'{site_url}/products/divar-extraction-bot/'),
-            'featureList': [
+            'featureList': _feature_list([
                 'ساخت Dataset از آگهی‌های ساختاریافته',
                 'کنترل تکراری مبتنی بر شناسه',
                 'بانک فایل قابل جستجو در فایلینگ',
                 'فیلتر، جزئیات، نقشه و مقایسه',
-            ],
+            ]),
         }
     else:
         return ''

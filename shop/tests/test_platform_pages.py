@@ -228,7 +228,7 @@ class PlatformPageViewTests(TestCase):
         self.assertIn('"@type": "SoftwareApplication"', body)
         self.assertIn('"@type": "Product"', body)
         self.assertIn('CRM املاک', body)
-        self.assertIn('"price": "0"', body)
+        self.assertIn('"price": 0', body)
         self.assertNotIn('AggregateRating', body)
 
     def test_reminders_and_follow_up_have_product(self):
@@ -466,8 +466,8 @@ class PlatformFilingPhase2Tests(TestCase):
         self.assertIn('لایسنس ربات', body)
         self.assertNotIn('AggregateRating', body)
         # Must not claim price 0 like CRM free core; Google requires Offer.price
-        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
-        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": "[1-9]\d*"')
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": 0\b')
+        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": [1-9]\d*')
 
     def test_filing_next_path_exactly_three(self):
         from shop.platform.content.filing_hub import filing_product_line_content
@@ -522,7 +522,8 @@ class PlatformFastSearchPhase2Tests(TestCase):
         self.assertIn('"@type": "FAQPage"', body)
         self.assertIn('پیدا کردن سریع', body)
         self.assertNotIn('AggregateRating', body)
-        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": 0\b')
+        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": [1-9]\d*')
 
     def test_fast_search_next_path_three(self):
         from shop.platform.content.fast_property_search import fast_property_search_content
@@ -573,8 +574,8 @@ class PlatformMarketIntelligencePhase2Tests(TestCase):
         self.assertIn('تحلیل بازار', body)
         self.assertIn('لایسنس', body)
         self.assertNotIn('AggregateRating', body)
-        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
-        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": "[1-9]\d*"')
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": 0\b')
+        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": [1-9]\d*')
 
     def test_market_next_path_exactly_three(self):
         from shop.platform.content.market_intelligence_hub import (
@@ -649,7 +650,8 @@ class PlatformPropertyPricingPhase2Tests(TestCase):
         self.assertIn('قیمت', body)
         self.assertIn('market-intelligence', body)
         self.assertNotIn('AggregateRating', body)
-        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": 0\b')
+        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": [1-9]\d*')
 
     def test_pricing_next_path_three(self):
         from shop.platform.content.property_pricing import property_pricing_content
@@ -698,7 +700,7 @@ class PlatformAgencyPhase2Tests(TestCase):
         self.assertIn('"@type": "SoftwareApplication"', body)
         self.assertIn('"@type": "Product"', body)
         self.assertIn('مدیریت آژانس', body)
-        self.assertIn('"price": "0"', body)
+        self.assertIn('"price": 0', body)
         self.assertNotIn('AggregateRating', body)
 
     def test_agency_next_path_three(self):
@@ -823,7 +825,7 @@ class PlatformAgencyManagementPhase2Tests(TestCase):
         self.assertIn('مدیریت آژانس', body)
         self.assertIn('/features/agency/', body)
         self.assertIn('/features/crm/', body)
-        self.assertIn('"price": "0"', body)
+        self.assertIn('"price": 0', body)
         self.assertNotIn('AggregateRating', body)
 
     def test_agency_management_next_path_three(self):
@@ -940,8 +942,8 @@ class PlatformExtractionPhase2Tests(TestCase):
         self.assertIn('filing', body)
         self.assertIn('market-intelligence', body)
         self.assertNotIn('AggregateRating', body)
-        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
-        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": "[1-9]\d*"')
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": 0\b')
+        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": [1-9]\d*')
 
     def test_extraction_next_path_three(self):
         from shop.platform.content.extraction_hub import extraction_product_line_content
@@ -1054,7 +1056,8 @@ class PlatformBuildPropertyDatabasePhase2Tests(TestCase):
         self.assertIn('filing', body)
         self.assertIn('fast-property-search', body)
         self.assertNotIn('AggregateRating', body)
-        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": "0"')
+        self.assertNotRegex(body, r'"@type": "Product"[\s\S]{0,800}"price": 0\b')
+        self.assertRegex(body, r'"@type": "Offer"[\s\S]{0,200}"price": [1-9]\d*')
 
     def test_build_property_database_next_path_three(self):
         from shop.platform.content.build_property_database import (

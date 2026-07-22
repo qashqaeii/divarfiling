@@ -163,7 +163,10 @@
                             <a href="{% if v.is_public %}/academy/videos/{{ v.slug }}/{% else %}/workspace/academy/video/{{ v.slug }}/{% endif %}" target="_blank" rel="noopener">{{ v.title|truncatechars:52 }}</a>
                             <small>{% if v.path__title %}{{ v.path__title }}{% else %}—{% endif %}{% if v.is_public %} · عمومی{% endif %}</small>
                         </div>
-                        <span class="ab-rank-views"><i class="fas fa-eye"></i> {{ v.views_count|currency }}</span>
+                        <span class="ab-rank-views">
+                            <i class="fas fa-eye"></i> {{ v.views_count|currency }}
+                            {% if v.completions %}<small style="opacity:.7;margin-right:.35rem">· {{ v.completions|currency }} تکمیل</small>{% endif %}
+                        </span>
                     </li>
                     {% empty %}
                     <li class="ab-empty-state">

@@ -34,6 +34,12 @@ def get_academy_dashboard_stats() -> dict[str, Any]:
     views_total = qs.aggregate(total=Sum('views_count'))['total'] or 0
     public_views = public_qs.aggregate(total=Sum('views_count'))['total'] or 0
 
+    # اگر هنوز backfill نشده، از پیشرفت کاربران به‌عنوان کف بازدید استفاده کن
+    progress_floor = UserVideoProgress.objects.count()
+    if views_total == 0 and progress_floor:
+        views_total = progress_floor
+        public_views = UserVideoProgress.objects.filter(video__is_public=True, video__is_active=True).count()
+
     learners = UserVideoProgress.objects.values('user_id').distinct().count()
     completions_total = UserVideoProgress.objects.filter(completed=True).count()
     completions_month = UserVideoProgress.objects.filter(
@@ -43,6 +49,8 @@ def get_academy_dashboard_stats() -> dict[str, Any]:
         event_type='academy_video_started',
         created_at__gte=week_ago,
     ).count()
+    if starts_week == 0:
+        starts_week = UserVideoProgress.objects.filter(updated_at__gte=week_ago).count()
 
     mission = AcademyMission.objects.filter(is_active=True).first()
     mission_started = 0
@@ -55,22 +63,35 @@ def get_academy_dashboard_stats() -> dict[str, Any]:
 
     top_videos = list(
         active_qs.select_related('path')
-        .order_by('-views_count')[:8]
+        .annotate(completions=Count('user_progress', filter=Q(user_progress__completed=True)))
+        .annotate(starts=Count('user_progress'))
+        .order_by('-views_count', '-completions', '-starts')[:8]
         .values(
             'id', 'title', 'slug', 'views_count', 'is_public', 'is_active',
-            'path__title', 'duration_seconds',
+            'path__title', 'duration_seconds', 'completions', 'starts',
         )
     )
+    for row in top_videos:
+        # نمایش: اگر views_count صفر است، حداقل starts را نشان بده
+        if int(row.get('views_count') or 0) == 0:
+            row['views_count'] = int(row.get('starts') or 0)
 
     paths = list(
         LearningPath.objects.filter(is_active=True)
         .annotate(
             video_count=Count('videos', filter=Q(videos__is_active=True)),
             views=Sum('videos__views_count', filter=Q(videos__is_active=True)),
+            starts=Count(
+                'videos__user_progress',
+                filter=Q(videos__is_active=True),
+            ),
         )
         .order_by('order', 'id')
-        .values('id', 'title', 'slug', 'video_count', 'views')[:12]
+        .values('id', 'title', 'slug', 'video_count', 'views', 'starts')[:12]
     )
+    for row in paths:
+        if int(row.get('views') or 0) == 0:
+            row['views'] = int(row.get('starts') or 0)
 
     return {
         'videos_total': qs.count(),
@@ -93,11 +114,18 @@ def get_academy_dashboard_stats() -> dict[str, Any]:
         ),
         'top_videos': top_videos,
         'paths': paths,
+        'needs_backfill': (
+            (AcademyVideo.objects.aggregate(t=Sum('views_count'))['t'] or 0) == 0
+            and progress_floor > 0
+        ),
     }
 
 
 def get_academy_videos_table(*, limit: int = 80, status: str = 'all') -> list[dict[str, Any]]:
-    qs = AcademyVideo.objects.select_related('path')
+    qs = AcademyVideo.objects.select_related('path').annotate(
+        completions=Count('user_progress', filter=Q(user_progress__completed=True)),
+        starts=Count('user_progress'),
+    )
     if status == 'public':
         qs = qs.filter(is_active=True, is_public=True)
     elif status == 'private':
@@ -106,7 +134,7 @@ def get_academy_videos_table(*, limit: int = 80, status: str = 'all') -> list[di
         qs = qs.filter(is_active=False)
 
     rows = []
-    for video in qs.order_by('-views_count', 'path__order', 'order')[:limit]:
+    for video in qs.order_by('-views_count', '-completions', '-starts', 'path__order', 'order')[:limit]:
         try:
             public_url = reverse('public_academy_video', kwargs={'slug': video.slug}) if video.is_public else ''
         except Exception:
@@ -115,6 +143,7 @@ def get_academy_videos_table(*, limit: int = 80, status: str = 'all') -> list[di
             workspace_url = reverse('workspace:academy_video', kwargs={'slug': video.slug})
         except Exception:
             workspace_url = f'/workspace/academy/video/{video.slug}/'
+        views = int(video.views_count or 0) or int(getattr(video, 'starts', 0) or 0)
         rows.append({
             'id': video.id,
             'title': video.title,
@@ -123,10 +152,11 @@ def get_academy_videos_table(*, limit: int = 80, status: str = 'all') -> list[di
             'path_slug': video.path.slug if video.path_id else '',
             'is_public': video.is_public,
             'is_active': video.is_active,
-            'views_count': video.views_count,
+            'views_count': views,
             'duration_seconds': video.duration_seconds,
             'duration_display': video.duration_display,
-            'completions': UserVideoProgress.objects.filter(video=video, completed=True).count(),
+            'completions': int(getattr(video, 'completions', 0) or 0),
+            'starts': int(getattr(video, 'starts', 0) or 0),
             'public_url': public_url,
             'workspace_url': workspace_url,
             'admin_edit_url': f'/admin/workspace/academyvideo/{video.id}/change/',

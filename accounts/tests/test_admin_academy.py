@@ -110,3 +110,17 @@ class AdminAcademyPanelTests(TestCase):
         self.assertGreaterEqual(stats['videos_active'], 1)
         chart = get_academy_analytics_chart(days=7)
         self.assertIn('pulse', chart)
+
+    def test_backfill_from_progress(self):
+        from workspace.academy.models import AcademyVideo, UserVideoProgress
+        from workspace.academy.services.backfill_views import backfill_academy_views
+
+        video = AcademyVideo.objects.get(slug='admin-video')
+        AcademyVideo.objects.filter(pk=video.pk).update(views_count=0)
+        UserVideoProgress.objects.create(
+            user=self.staff, video=video, watched_seconds=40, completed=False,
+        )
+        result = backfill_academy_views(replace_daily=True)
+        self.assertGreaterEqual(result['views_total'], 1)
+        video.refresh_from_db()
+        self.assertGreaterEqual(video.views_count, 1)

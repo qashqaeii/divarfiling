@@ -386,6 +386,16 @@ class AdminAcademyView(StaffRequiredMixin, TemplateView):
     template_name = 'accounts/admin_academy.html'
 
     def get_context_data(self, **kwargs):
+        from django.db.models import Sum
+
+        from workspace.academy.models import AcademyVideo, UserVideoProgress
+        from workspace.academy.services.backfill_views import backfill_academy_views
+
+        # یک‌بار: اگر views_count هنوز خالی است ولی پیشرفت تاریخی داریم، بازسازی کن
+        views_sum = AcademyVideo.objects.aggregate(t=Sum('views_count'))['t'] or 0
+        if views_sum == 0 and UserVideoProgress.objects.exists():
+            backfill_academy_views(replace_daily=True)
+
         ctx = super().get_context_data(**kwargs)
         status = self.request.GET.get('status', 'all')
         if status not in ('all', 'public', 'private', 'inactive'):

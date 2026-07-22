@@ -8,7 +8,7 @@
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=13">
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=3">
 {% endblock %}
 
@@ -257,6 +257,13 @@
                             <i class="fas fa-chart-line"></i> پنل بازیابی
                         </a>
                     </div>
+                    <ul class="ecc-stat-strip" style="margin-bottom:1rem">
+                        <li><span>وضعیت</span><strong>{{ recovery_stats.status_label|default:"—" }}</strong></li>
+                        <li><span>واجد الان</span><strong data-count-up="{{ recovery_stats.eligible_now|default:0 }}">۰</strong></li>
+                        <li><span>ارسال امروز</span><strong data-count-up="{{ recovery_stats.sent_today|default:0 }}">۰</strong></li>
+                        <li><span>بازیابی‌شده</span><strong data-count-up="{{ recovery_stats.recovered|default:0 }}">۰</strong></li>
+                        <li><span>درآمد بازیابی</span><strong>{{ recovery_stats.revenue|default:0|currency }}</strong></li>
+                    </ul>
                     <p style="margin:0;opacity:.75;font-size:0.92rem">
                         KPI اجرایی: Strict matched · Assisted در کاوشگر.
                     </p>
@@ -893,17 +900,102 @@
                         </section>
                         {% endfor %}
                     </div>
-                    <article class="adm-json-card" style="margin-top:1rem" id="ecc-json">
-                        <div class="adm-json-main">
-                            <span class="adm-json-icon"><i class="fas fa-database"></i></span>
-                            <div>
-                                <h3>خروجی JSON یکپارچه</h3>
-                                <p>overview · trends · action_items · workspace</p>
+                    <article class="adm-json-card adm-json-card--stats" style="margin-top:1rem" id="ecc-json">
+                        <div class="adm-json-head">
+                            <div class="adm-json-main">
+                                <span class="adm-json-icon"><i class="fas fa-chart-pie"></i></span>
+                                <div>
+                                    <h3>خروجی JSON یکپارچه</h3>
+                                    <p>خلاصه آماری کل سیستم — بدون ریزجزئیات · {{ chart_days|to_persian_digits }} روز</p>
+                                </div>
+                            </div>
+                            <div class="adm-json-actions">
+                                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-download"></i> دانلود</a>
+                                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=0" class="adm-dl-btn" target="_blank" rel="noopener"><i class="fas fa-eye"></i> مشاهده</a>
                             </div>
                         </div>
-                        <div class="adm-json-actions">
-                            <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="adm-dl-btn adm-dl-btn--primary"><i class="fas fa-download"></i> دانلود</a>
-                            <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=0" class="adm-dl-btn" target="_blank" rel="noopener"><i class="fas fa-eye"></i> مشاهده</a>
+                        <ul class="adm-json-section-tags" aria-label="بخش‌های خروجی">
+                            <li>overview</li>
+                            <li>trends</li>
+                            <li>action_items</li>
+                            <li>workspace</li>
+                            <li>content</li>
+                            <li>marketing</li>
+                            <li>recovery</li>
+                        </ul>
+                        <div class="adm-json-modules">
+                            <section class="adm-json-module">
+                                <h4><i class="fas fa-gauge-high"></i> overview</h4>
+                                <ul class="adm-json-kpis">
+                                    <li><span>کاربر</span><strong>{{ stats.users_total|currency }}</strong></li>
+                                    <li><span>درآمد کل</span><strong>{{ stats.revenue_total|currency }}</strong></li>
+                                    <li><span>سفارش معلق</span><strong>{{ stats.orders_pending|currency }}</strong></li>
+                                    <li><span>لایسنس فعال</span><strong>{{ stats.licenses_active|currency }}</strong></li>
+                                </ul>
+                            </section>
+                            <section class="adm-json-module">
+                                <h4><i class="fas fa-list-check"></i> action_items</h4>
+                                <ul class="adm-json-kpis">
+                                    <li><span>کارت‌به‌کارت</span><strong>{{ stats.pending_card_transfers|currency }}</strong></li>
+                                    <li><span>تیکت خوانده‌نشده</span><strong>{{ stats.unread_tickets|currency }}</strong></li>
+                                    <li><span>برداشت معلق</span><strong>{{ stats.pending_withdrawals|currency }}</strong></li>
+                                    <li><span>واجد بازیابی</span><strong>{{ recovery_stats.eligible_now|default:0|currency }}</strong></li>
+                                </ul>
+                            </section>
+                            <section class="adm-json-module">
+                                <h4><i class="fas fa-briefcase"></i> workspace</h4>
+                                <ul class="adm-json-kpis">
+                                    <li><span>Dataset</span><strong>{{ operations_stats.datasets_total|currency }}</strong></li>
+                                    <li><span>تیکت باز</span><strong>{{ stats.open_tickets|currency }}</strong></li>
+                                    <li><span>مخاطب CRM</span><strong>{{ crm_stats.contacts_total|currency }}</strong></li>
+                                    <li><span>معامله باز</span><strong>{{ crm_stats.deals_open|currency }}</strong></li>
+                                </ul>
+                            </section>
+                            <section class="adm-json-module">
+                                <h4><i class="fas fa-newspaper"></i> مقالات</h4>
+                                <ul class="adm-json-kpis">
+                                    <li><span>کل</span><strong>{{ blog_stats.posts_total|default:0|currency }}</strong></li>
+                                    <li><span>منتشر</span><strong>{{ blog_stats.posts_published|default:0|currency }}</strong></li>
+                                    <li><span>بازدید</span><strong>{{ blog_stats.views_total|default:0|currency }}</strong></li>
+                                    <li><span>میانگین</span><strong>{{ blog_stats.avg_views|default:0|currency }}</strong></li>
+                                </ul>
+                            </section>
+                            <section class="adm-json-module">
+                                <h4><i class="fas fa-graduation-cap"></i> فیلم‌ها</h4>
+                                <ul class="adm-json-kpis">
+                                    <li><span>فعال</span><strong>{{ academy_stats.videos_active|default:0|currency }}</strong></li>
+                                    <li><span>بازدید</span><strong>{{ academy_stats.views_total|default:0|currency }}</strong></li>
+                                    <li><span>یادگیرنده</span><strong>{{ academy_stats.learners_total|default:0|currency }}</strong></li>
+                                    <li><span>تکمیل ماه</span><strong>{{ academy_stats.completions_month|default:0|currency }}</strong></li>
+                                </ul>
+                            </section>
+                            <section class="adm-json-module">
+                                <h4><i class="fas fa-bullhorn"></i> بازاریابی</h4>
+                                <ul class="adm-json-kpis">
+                                    <li><span>کمپین</span><strong>{{ marketing_stats.campaigns_total|currency }}</strong></li>
+                                    <li><span>ارسال</span><strong>{{ marketing_stats.sent_total|currency }}</strong></li>
+                                    <li><span>نرخ موفقیت</span><strong>{% if marketing_stats.success_rate %}{{ marketing_stats.success_rate|to_persian_digits }}٪{% else %}—{% endif %}</strong></li>
+                                    <li><span>SMS ۳۰روز</span><strong>{{ marketing_stats.sms_marketing_30d|currency }}</strong></li>
+                                </ul>
+                            </section>
+                            <section class="adm-json-module">
+                                <h4><i class="fas fa-rotate-left"></i> بازیابی</h4>
+                                <ul class="adm-json-kpis">
+                                    <li><span>وضعیت</span><strong>{{ recovery_stats.status_label|default:"—" }}</strong></li>
+                                    <li><span>واجد</span><strong>{{ recovery_stats.eligible_now|default:0|currency }}</strong></li>
+                                    <li><span>بازیابی</span><strong>{{ recovery_stats.recovered|default:0|currency }}</strong></li>
+                                    <li><span>درآمد</span><strong>{{ recovery_stats.revenue|default:0|currency }}</strong></li>
+                                </ul>
+                            </section>
+                            <section class="adm-json-module">
+                                <h4><i class="fas fa-chart-area"></i> trends</h4>
+                                <ul class="adm-json-kpis">
+                                    <li><span>بازه</span><strong>{{ chart_days|to_persian_digits }} روز</strong></li>
+                                    <li><span>درآمد ماه</span><strong>{{ stats.revenue_month|currency }}</strong></li>
+                                    <li><span>کاربر جدید ماه</span><strong>{{ stats.users_new_month|currency }}</strong></li>
+                                    <li><span>نرخ تبدیل</span><strong>{{ stats.conversion_rate|to_persian_digits }}٪</strong></li>
+                                </ul>
+                            </section>
                         </div>
                     </article>
                 </section>

@@ -29,6 +29,10 @@ class AdminDashboardServiceTests(TestCase):
         self.assertIn('activity_feed', ctx)
         self.assertIn('health_indicators', ctx)
         self.assertIn('today_stats', ctx)
+        self.assertIn('recovery_stats', ctx)
+        self.assertIn('blog_stats', ctx)
+        self.assertIn('academy_stats', ctx)
+        self.assertIn('eligible_now', ctx['recovery_stats'])
 
     def test_action_queue_empty_when_no_pending(self):
         stats = get_admin_dashboard_context(days=30)['stats']

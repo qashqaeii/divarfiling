@@ -86,13 +86,110 @@ def bot_product_defaults():
     }
 
 
-def bot_license_plans():
-    """پلن‌های پیش‌فرض لایسنس ربات — آزمایشی یک‌روزه، یک‌ماهه، سه‌ماهه، یک‌ساله."""
+def _shared_license_features():
+    """ویژگی‌های مشترک اکوسیستم — برای ترکیب با پلن‌ها."""
     return [
+        {'text': 'ربات ویندوز — استخراج حجیم دیوار', 'icon': 'fa-robot'},
+        {'text': 'اپ اندروید — CRM و فایلینگ موبایل', 'icon': 'fa-mobile-screen'},
+        {'text': 'فایلینگ دیوار + تحلیل بازار', 'icon': 'fa-chart-line'},
+        {'text': 'نقشه آگهی‌ها و مقایسه فایل‌ها', 'icon': 'fa-map-location-dot'},
+        {'text': 'آپلود و همگام‌سازی در میزکار', 'icon': 'fa-cloud-upload-alt'},
+    ]
+
+
+def bot_plan_marketing_by_key():
+    """
+    tagline و features هر پلن — کلید: (plan_type, allow_bulk, order).
+    با sync و seed_plan_features همگام نگه دارید.
+    """
+    return {
+        ('daily', False, 0): {
+            'tagline': 'آشنایی با محصول — قبل از تصمیم نهایی',
+            'features': [
+                {'text': '۱ روز دسترسی کامل به لایسنس', 'icon': 'fa-clock'},
+                {'text': '۱ اسلات ویندوز + ۱ اسلات اندروید', 'icon': 'fa-link'},
+                {'text': 'تست استخراج، فایلینگ و تحلیل', 'icon': 'fa-flask'},
+                {'text': 'فعال‌سازی فوری پس از پرداخت', 'icon': 'fa-bolt'},
+                {'text': 'پشتیبانی نصب و راه‌اندازی', 'icon': 'fa-headset'},
+                {'text': 'محدود به یک‌بار برای هر حساب', 'icon': 'fa-user-check'},
+            ],
+        },
+        ('monthly', False, 1): {
+            'tagline': 'شروع حرفه‌ای — مناسب مشاور مستقل',
+            'features': [
+                {'text': '۳۰ روز دسترسی کامل', 'icon': 'fa-calendar-day'},
+                {'text': '۱ ویندوز + ۱ اندروید', 'icon': 'fa-link'},
+                *_shared_license_features()[0:3],
+                {'text': 'فعال‌سازی فوری و پشتیبانی نصب', 'icon': 'fa-bolt'},
+            ],
+        },
+        ('quarterly', False, 2): {
+            'tagline': 'تعادل عالی قیمت و مدت — پرطرفدار',
+            'features': [
+                {'text': '۹۰ روز دسترسی بدون محدودیت', 'icon': 'fa-calendar-week'},
+                {'text': '۱ ویندوز + ۱ اندروید', 'icon': 'fa-link'},
+                *_shared_license_features(),
+                {'text': 'پشتیبانی فنی در مدت لایسنس', 'icon': 'fa-headset'},
+            ],
+        },
+        ('yearly', False, 3): {
+            'tagline': 'بهترین ارزش — یک سال بدون دغدغه تمدید',
+            'features': [
+                {'text': '۳۶۵ روز دسترسی کامل', 'icon': 'fa-calendar'},
+                {'text': '۱ ویندوز + ۱ اندروید', 'icon': 'fa-link'},
+                *_shared_license_features(),
+                {'text': 'به‌روزرسانی رایگان در مدت لایسنس', 'icon': 'fa-rotate'},
+                {'text': 'اولویت در پشتیبانی', 'icon': 'fa-star'},
+            ],
+        },
+        ('monthly', True, 4): {
+            'tagline': 'تیم ۲ تا ۵ مشاور — هر نفر یک کلید مستقل',
+            'features': [
+                {'text': '۳۰ روز — هر لایسنس کلید جدا', 'icon': 'fa-calendar-day'},
+                {'text': '۲ تا ۵ لایسنس در یک سفارش', 'icon': 'fa-users'},
+                {'text': 'هر کلید: ۱ ویندوز + ۱ اندروید', 'icon': 'fa-link'},
+                {'text': 'CRM و مدیریت تیم — رایگان', 'icon': 'fa-users-gear'},
+                {'text': 'استخراج، فایلینگ و تحلیل برای هر مشاور', 'icon': 'fa-database'},
+                {'text': 'پشتیبانی راه‌اندازی آژانس', 'icon': 'fa-headset'},
+            ],
+        },
+        ('quarterly', True, 5): {
+            'tagline': 'آژانس در حال رشد — ۲ تا ۱۰ مشاور',
+            'features': [
+                {'text': '۹۰ روز دسترسی هر لایسنس', 'icon': 'fa-calendar-week'},
+                {'text': '۲ تا ۱۰ کلید مستقل', 'icon': 'fa-users'},
+                {'text': 'هر مشاور: ویندوز + اندروید', 'icon': 'fa-link'},
+                *_shared_license_features()[0:4],
+                {'text': 'مناسب تیم‌های چندنفره', 'icon': 'fa-building'},
+                {'text': 'پشتیبانی VIP آژانس', 'icon': 'fa-headset'},
+            ],
+        },
+        ('yearly', True, 6): {
+            'tagline': 'سازمان بزرگ — تا ۲۵ مشاور، یک سال',
+            'features': [
+                {'text': '۳۶۰ روز دسترسی هر لایسنس', 'icon': 'fa-calendar'},
+                {'text': '۲ تا ۲۵ کلید جداگانه', 'icon': 'fa-users'},
+                {'text': 'هر مشاور: ویندوز + اندروید', 'icon': 'fa-link'},
+                *_shared_license_features(),
+                {'text': 'Agency TV و ماتریس عملکرد تیم', 'icon': 'fa-chart-simple'},
+                {'text': 'صدور فاکتور + پشتیبانی اختصاصی', 'icon': 'fa-file-invoice'},
+            ],
+        },
+    }
+
+
+def bot_plan_marketing_for_plan(plan_type: str, allow_bulk: bool, order: int) -> dict:
+    catalog = bot_plan_marketing_by_key()
+    return catalog.get((plan_type, allow_bulk, order), {'tagline': '', 'features': []})
+
+
+def bot_license_plans():
+    """پلن‌های پیش‌فرض لایسنس — آزمایشی، فردی و آژانس."""
+    base_plans = [
         {
-            'name': 'لایسنس آزمایشی یک‌روزه',
+            'name': 'پلن آزمایشی ۱ روزه',
             'plan_type': 'daily',
-            'price': 50_000,
+            'price': 200_000,
             'duration_days': 1,
             'max_activations': 2,
             'order': 0,
@@ -100,7 +197,7 @@ def bot_license_plans():
         {
             'name': 'لایسنس یک‌ماهه',
             'plan_type': 'monthly',
-            'price': 1_000_000,
+            'price': 990_000,
             'duration_days': 30,
             'max_activations': 2,
             'order': 1,
@@ -117,11 +214,56 @@ def bot_license_plans():
             'name': 'لایسنس یک‌ساله',
             'plan_type': 'yearly',
             'price': 8_000_000,
+            'compare_at_price': 10_000_000,
             'duration_days': 365,
             'max_activations': 2,
+            'offer_badge': 'آفر ویژه',
             'order': 3,
         },
+        {
+            'name': 'لایسنس یک ماهه آژانس',
+            'plan_type': 'monthly',
+            'price': 990_000,
+            'duration_days': 30,
+            'max_activations': 2,
+            'allow_bulk_purchase': True,
+            'min_quantity': 2,
+            'max_quantity': 5,
+            'order': 4,
+        },
+        {
+            'name': 'آژانس حرفه‌ای',
+            'plan_type': 'quarterly',
+            'price': 2_500_000,
+            'duration_days': 90,
+            'max_activations': 2,
+            'allow_bulk_purchase': True,
+            'min_quantity': 2,
+            'max_quantity': 10,
+            'order': 5,
+        },
+        {
+            'name': 'آژانس سازمانی',
+            'plan_type': 'yearly',
+            'price': 8_000_000,
+            'compare_at_price': 10_000_000,
+            'duration_days': 360,
+            'max_activations': 2,
+            'allow_bulk_purchase': True,
+            'min_quantity': 2,
+            'max_quantity': 25,
+            'order': 6,
+        },
     ]
+    for plan in base_plans:
+        marketing = bot_plan_marketing_for_plan(
+            plan['plan_type'],
+            plan.get('allow_bulk_purchase', False),
+            plan['order'],
+        )
+        plan['tagline'] = marketing.get('tagline', '')
+        plan['features'] = marketing.get('features', [])
+    return base_plans
 
 
 def extraction_tree_content():

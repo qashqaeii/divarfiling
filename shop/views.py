@@ -653,6 +653,10 @@ class EducationView(TemplateView):
             'آموزش فایلینگ دیوار, آکادمی ویدیویی, راهنمای CRM املاک, آموزش ربات دیوار, '
             'تحلیل بازار املاک, میزکار مشاور'
         )
+        from shop.academy_playlist_seo import education_hub_schema_json
+        edu = ctx.get('edu') or {}
+        faq_pairs = edu.get('faq') if isinstance(edu.get('faq'), list) else None
+        ctx['schema_data'] = education_hub_schema_json(self.request, faq_pairs=faq_pairs)
         return ctx
 
 
@@ -661,24 +665,36 @@ class PublicAcademyView(TemplateView):
     template_name = 'shop/academy.html'
 
     def get_context_data(self, **kwargs):
+        from shop.academy_playlist_seo import (
+            ACADEMY_PUBLIC_FAQ,
+            academy_landing_meta,
+            academy_landing_schema_json,
+        )
         from workspace.academy.services.public_playlist_service import (
+            flatten_public_videos,
             get_public_playlist_sections,
             playlist_stats,
+            video_item_seo,
         )
+        from shop.templatetags.seo_tags import get_site_url
+
         ctx = super().get_context_data(**kwargs)
         sections = get_public_playlist_sections()
+        flat = flatten_public_videos(sections)
         stats = playlist_stats(sections)
+        meta = academy_landing_meta(stats=stats)
         ctx['playlist_sections'] = sections
         ctx['playlist_stats'] = stats
-        ctx['meta_title'] = 'آکادمی فایلینگ دیوار — از اولین فایل تا اولین معامله'
-        ctx['meta_description'] = (
-            'آکادمی فایلینگ دیوار برای مشاوران املاک — '
-            f'{stats["video_count"]} ویدیوی آموزشی رایگان، شروع سریع و مسیر یادگیری حرفه‌ای.'
+        ctx['playlist_flat'] = flat
+        ctx['academy_faq'] = ACADEMY_PUBLIC_FAQ
+        ctx.update(meta)
+        ctx['schema_data'] = academy_landing_schema_json(
+            self.request, sections=sections, flat_items=flat,
         )
-        ctx['meta_keywords'] = (
-            'آکادمی فایلینگ دیوار, آموزش مشاور املاک, ویدیو آموزشی CRM, '
-            'نرم افزار مشاور املاک, میزکار مشاور'
-        )
+        if flat:
+            poster = video_item_seo(flat[0], site_url=get_site_url()).get('poster_url')
+            if poster:
+                ctx['meta_image'] = poster
         return ctx
 
 
@@ -700,19 +716,17 @@ class PublicAcademyPlaylistView(TemplateView):
         if slug and not active:
             from django.http import Http404
             raise Http404('ویدیو یافت نشد.')
+        # Hub (/academy/videos/) keeps active=None for index SEO (200, not redirect)
+        if slug:
+            self._playlist_active = active
+        else:
+            self._playlist_active = None
         self._playlist_sections = sections
-        self._playlist_active = active
         self._playlist_flat = flat
         return super().dispatch(request, *args, **kwargs)
 
-    def get(self, request, *args, **kwargs):
-        if not kwargs.get('slug') and self._playlist_active:
-            from django.shortcuts import redirect
-            return redirect('public_academy_video', slug=self._playlist_active['video'].slug)
-        return super().get(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
-        from shop.academy_playlist_seo import academy_playlist_meta, academy_playlist_schema_json
+        from shop.academy_playlist_seo import ACADEMY_PUBLIC_FAQ, academy_playlist_meta, academy_playlist_schema_json
         from shop.templatetags.seo_tags import get_site_url
         from workspace.academy.services.public_playlist_service import playlist_stats, video_item_seo
 
@@ -728,9 +742,11 @@ class PublicAcademyPlaylistView(TemplateView):
         ctx['playlist_flat'] = flat
         ctx['active_item'] = active
         ctx['playlist_stats'] = stats
+        ctx['academy_faq'] = ACADEMY_PUBLIC_FAQ
         ctx['schema_data'] = academy_playlist_schema_json(
             self.request, active_item=active, sections=sections, flat_items=flat,
         )
+        ctx['first_video_item'] = flat[0] if flat else None
         if active:
             seo = video_item_seo(active, site_url=get_site_url())
             player = active['player']
@@ -748,6 +764,10 @@ class PublicAcademyPlaylistView(TemplateView):
                     break
             ctx['prev_item'] = prev_item
             ctx['next_item'] = next_item
+        elif flat:
+            poster = video_item_seo(flat[0], site_url=get_site_url()).get('poster_url')
+            if poster:
+                ctx['meta_image'] = poster
         return ctx
 
 

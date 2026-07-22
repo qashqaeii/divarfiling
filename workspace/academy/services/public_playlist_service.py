@@ -1,9 +1,16 @@
 """سرویس پلی‌لیست عمومی ویدیوهای آکادمی."""
 from __future__ import annotations
 
+from datetime import datetime, timezone as dt_timezone
+from pathlib import Path
+
+from django.conf import settings
 from django.urls import reverse
 
 from workspace.academy.models import AcademyVideo, LearningPath
+
+# تاریخ پایدار برای ویدیوهایی که فایل/تاریخ محلی ندارند (الزام Google Video rich results)
+_FALLBACK_UPLOAD_DATE = datetime(2026, 4, 23, 8, 0, 0, tzinfo=dt_timezone.utc)
 
 
 def duration_iso8601(seconds: int) -> str:
@@ -19,6 +26,25 @@ def duration_iso8601(seconds: int) -> str:
     if secs or parts == ['PT']:
         parts.append(f'{secs}S')
     return ''.join(parts)
+
+
+def video_upload_date_iso(video: AcademyVideo) -> str:
+    """ISO-8601 uploadDate for Schema.org VideoObject (Google rich results)."""
+    mtimes: list[float] = []
+    if not video.video_url:
+        local = Path(settings.MEDIA_ROOT) / str(video.file_path).strip('/') / video.file_name
+        if local.is_file():
+            mtimes.append(local.stat().st_mtime)
+    if video.poster_image:
+        try:
+            mtimes.append(Path(video.poster_image.path).stat().st_mtime)
+        except (ValueError, OSError):
+            pass
+    if mtimes:
+        dt = datetime.fromtimestamp(min(mtimes), tz=dt_timezone.utc)
+    else:
+        dt = _FALLBACK_UPLOAD_DATE
+    return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
 def _poster_absolute(player: dict, site_url: str) -> str:
@@ -116,4 +142,5 @@ def video_item_seo(item: dict, *, site_url: str) -> dict:
         'poster_url': _poster_absolute(player, site_url),
         'duration_iso': duration_iso8601(video.duration_seconds),
         'embed_url': player.get('src') or '',
+        'upload_date': video_upload_date_iso(video),
     }

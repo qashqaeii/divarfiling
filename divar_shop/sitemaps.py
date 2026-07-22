@@ -126,8 +126,8 @@ class PlatformPagesSitemap(SiteAwareSitemap):
 class AcademyVideoSitemap(SiteAwareSitemap):
     """ویدیوهای عمومی آکادمی — URL جدا برای SEO."""
 
-    changefreq = 'monthly'
-    priority = 0.72
+    changefreq = 'weekly'
+    priority = 0.75
 
     def items(self):
         from workspace.academy.services.public_playlist_service import public_playlist_videos
@@ -135,6 +135,26 @@ class AcademyVideoSitemap(SiteAwareSitemap):
 
     def location(self, obj):
         return reverse('public_academy_video', kwargs={'slug': obj.slug})
+
+    def lastmod(self, obj):
+        from datetime import datetime, timezone as dt_timezone
+        from pathlib import Path
+
+        from django.conf import settings
+
+        mtimes = []
+        if not obj.video_url:
+            local = Path(settings.MEDIA_ROOT) / str(obj.file_path).strip('/') / obj.file_name
+            if local.is_file():
+                mtimes.append(local.stat().st_mtime)
+        if obj.poster_image:
+            try:
+                mtimes.append(Path(obj.poster_image.path).stat().st_mtime)
+            except (ValueError, OSError):
+                pass
+        if not mtimes:
+            return None
+        return datetime.fromtimestamp(min(mtimes), tz=dt_timezone.utc)
 
 
 sitemaps = {

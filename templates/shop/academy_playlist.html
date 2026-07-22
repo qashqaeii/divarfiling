@@ -17,14 +17,18 @@
                 <meta itemprop="position" content="2">
             </li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-                <a href="{% url 'public_academy_playlist' %}" itemprop="item"><span itemprop="name">آکادمی ویدیویی</span></a>
+                <a href="{% url 'public_academy' %}" itemprop="item"><span itemprop="name">آکادمی</span></a>
                 <meta itemprop="position" content="3">
+            </li>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                <a href="{% url 'public_academy_playlist' %}" itemprop="item"><span itemprop="name">پلی‌لیست ویدیویی</span></a>
+                <meta itemprop="position" content="4">
             </li>
             {% if active_video %}
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page">
                 <span itemprop="name">{{ active_video.title|truncatechars:36 }}</span>
                 <meta itemprop="item" content="{{ request.build_absolute_uri }}">
-                <meta itemprop="position" content="4">
+                <meta itemprop="position" content="5">
             </li>
             {% endif %}
         </ol>
@@ -191,6 +195,43 @@
                 <a href="{{ next_item.url }}" class="acd-pl-btn acd-pl-btn--primary">رفتن به ویدیوی بعدی</a>
                 {% endif %}
             </div>
+            {% else %}
+            <article class="acd-pl-stage acd-pl-hub" aria-labelledby="acdPlHubTitle">
+                <div class="acd-pl-stage-body">
+                    <div class="acd-pl-stage-head">
+                        <div class="acd-pl-stage-badges">
+                            <span class="acd-pl-badge acd-pl-badge--ep">{{ playlist_stats.video_count }} ویدیو</span>
+                            <span class="acd-pl-badge">~{{ playlist_stats.total_minutes }} دقیقه</span>
+                            <span class="acd-pl-badge"><i class="fas fa-unlock" aria-hidden="true"></i> رایگان</span>
+                        </div>
+                        <h1 class="acd-pl-stage-title" id="acdPlHubTitle">پلی‌لیست آموزش ویدیویی آکادمی</h1>
+                        <p class="acd-pl-stage-desc">
+                            مسیر کامل یادگیری فایلینگ دیوار برای مشاوران املاک —
+                            از معرفی پلتفرم تا شروع سریع. یک ویدیو را از فهرست انتخاب کنید یا از اول شروع کنید.
+                        </p>
+                    </div>
+                    {% if first_video_item %}
+                    <div class="acd-pl-stage-toolbar">
+                        <a href="{{ first_video_item.url }}" class="acd-pl-btn acd-pl-btn--primary">
+                            <i class="fas fa-play" aria-hidden="true"></i>
+                            شروع از اولین ویدیو
+                        </a>
+                        <a href="{% url 'public_academy' %}" class="acd-pl-btn acd-pl-btn--ghost">معرفی آکادمی</a>
+                    </div>
+                    {% endif %}
+                    {% if academy_faq %}
+                    <aside class="acd-pl-cta-band" style="flex-direction:column;align-items:stretch;gap:.75rem;">
+                        <strong>سؤالات رایج</strong>
+                        {% for item in academy_faq %}
+                        <details>
+                            <summary style="cursor:pointer;font-weight:600;">{{ item.q }}</summary>
+                            <p style="margin:.4rem 0 0;line-height:1.65;">{{ item.a }}</p>
+                        </details>
+                        {% endfor %}
+                    </aside>
+                    {% endif %}
+                </div>
+            </article>
             {% endif %}
 
             {# Mobile-only compact playlist preview #}

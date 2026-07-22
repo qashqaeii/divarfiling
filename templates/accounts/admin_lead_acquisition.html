@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load persian_tags %}
 
 {% block title %}مرکز جذب سرنخ | پنل مدیریت{% endblock %}
 {% block body_class %}mk-admin-dashboard{% endblock %}
@@ -7,159 +8,459 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<style>
-.lead-acq-grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin:1rem 0}
-.lead-acq-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1rem}
-.lead-acq-card h3{margin:0 0 .5rem;font-size:1rem}
-.lead-acq-muted{color:#6b7280;font-size:.85rem}
-.lead-acq-table{width:100%;border-collapse:collapse;font-size:.9rem}
-.lead-acq-table th,.lead-acq-table td{border-bottom:1px solid #eee;padding:.45rem .35rem;text-align:right}
-.lead-acq-actions form{display:inline-block;margin-left:.35rem}
-.lead-acq-badge{display:inline-block;padding:.15rem .45rem;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:.75rem}
-.lead-acq-badge--pilot{background:#fef3c7;color:#92400e}
-.lead-acq-section{margin:1.5rem 0}
-</style>
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="adm-page adm-mkt-page" style="max-width:1200px;margin:0 auto;padding:1rem">
-  <header style="margin-bottom:1rem">
-    <p class="lead-acq-muted"><a href="{% url 'admin_panel_marketing' %}">بازگشت به مارکتینگ</a></p>
-    <h1>مرکز جذب سرنخ</h1>
-    <p class="lead-acq-muted">Import · Tracking با click_token · Acquisition/Conversion Attribution · Pilot Result</p>
-  </header>
+<div class="adm-page adm-mkt-page adm-lac-page">
 
-  <div class="lead-acq-grid">
-    <div class="lead-acq-card"><h3>سرنخ‌ها</h3><div style="font-size:1.6rem">{{ overview.leads_total }}</div>
-      <p class="lead-acq-muted">سرد {{ overview.leads_cold }} · تعامل {{ overview.leads_engaged }} · ثبت‌نام {{ overview.leads_registered }} · مشتری {{ overview.leads_customer }}</p></div>
-    <div class="lead-acq-card"><h3>بچ‌های commit</h3><div style="font-size:1.6rem">{{ overview.batches }}</div></div>
-    <div class="lead-acq-card"><h3>کمپین فعال/پایلوت</h3><div style="font-size:1.6rem">{{ overview.campaigns_active }}</div></div>
-  </div>
+    <header class="adm-lac-hero">
+        <div class="adm-lac-hero-copy">
+            <p class="adm-lac-kicker">
+                <i class="fas fa-satellite-dish" aria-hidden="true"></i>
+                Lead Acquisition · فایلینگ دیوار
+            </p>
+            <h1 class="adm-lac-title">مرکز جذب سرنخ</h1>
+            <p class="adm-lac-tagline">از آگهی دیوار تا ثبت‌نام و لایسنس — با ردیابی دقیق هر پیام.</p>
+            <p class="adm-lac-desc">
+                سرنخ‌های phone-detector را دسته‌بندی کنید، کمپین پایلوت A/B بسازید،
+                و قیف Accepted → Clicked → Registered → Paid را با Attribution مستقیم و تطبیقی ببینید.
+            </p>
+            <div class="adm-lac-hero-actions">
+                <a class="adm-lac-btn adm-lac-btn--primary" href="#lac-import"><i class="fas fa-file-import"></i> ایمپورت JSON</a>
+                <a class="adm-lac-btn adm-lac-btn--amber" href="#lac-campaigns"><i class="fas fa-flask"></i> کمپین‌های پایلوت</a>
+                <a class="adm-lac-btn adm-lac-btn--ghost" href="{% url 'admin_panel_marketing' %}"><i class="fas fa-arrow-right"></i> مارکتینگ کاربران</a>
+            </div>
+            <div class="adm-lac-meta">
+                <span class="adm-lac-chip adm-lac-chip--live"><i class="fas fa-circle" style="font-size:.45rem"></i> click_token per message</span>
+                <span class="adm-lac-chip adm-lac-chip--pilot"><i class="fas fa-vial"></i> Pilot ≠ نه Winner آماری</span>
+                <span class="adm-lac-chip">UTC در DB · نمایش تهران در پنل</span>
+            </div>
+        </div>
+        <aside class="adm-lac-journey" aria-label="مسیر تبدیل">
+            <p class="adm-lac-journey-title">مسیر تبدیل سرنخ سرد</p>
+            <div class="adm-lac-pipeline">
+                <span class="adm-lac-pipe"><i class="fas fa-database"></i> Import</span>
+                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
+                <span class="adm-lac-pipe"><i class="fas fa-list"></i> List</span>
+                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
+                <span class="adm-lac-pipe"><i class="fas fa-paper-plane"></i> SMS</span>
+                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
+                <span class="adm-lac-pipe"><i class="fas fa-mouse-pointer"></i> Click</span>
+                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
+                <span class="adm-lac-pipe"><i class="fas fa-user-check"></i> Signup</span>
+                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
+                <span class="adm-lac-pipe"><i class="fas fa-key"></i> License</span>
+            </div>
+            <p class="adm-lac-kpi-sub" style="margin-top:.35rem">
+                بعد از ثبت‌نام → خروج از جذب و ورود به User Activation
+            </p>
+        </aside>
+    </header>
 
-  {% if messages %}
-  <section class="adm-alerts" aria-label="پیام‌ها">
-    {% for message in messages %}
-    <div class="adm-alert {% if message.tags == 'error' %}adm-alert--warn{% else %}adm-alert--info{% endif %}">
-      <span>{{ message }}</span>
-    </div>
-    {% endfor %}
-  </section>
-  {% endif %}
+    <nav class="adm-lac-tabs" aria-label="بخش‌های جذب سرنخ">
+        <div class="adm-lac-tabs__inner">
+            <a href="#lac-overview" class="adm-lac-tab is-active" data-lac-tab>نمای کلی</a>
+            <a href="#lac-import" class="adm-lac-tab" data-lac-tab>ایمپورت</a>
+            <a href="#lac-compose" class="adm-lac-tab" data-lac-tab>ساخت کمپین</a>
+            <a href="#lac-campaigns" class="adm-lac-tab" data-lac-tab>کمپین‌ها</a>
+            <a href="#lac-leads" class="adm-lac-tab" data-lac-tab>سرنخ‌ها</a>
+        </div>
+    </nav>
 
-  <section class="lead-acq-section lead-acq-card">
-    <h2>۱) ایمپورت JSON (phone-detector)</h2>
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="import_preview">
-      <input type="file" name="file" accept=".json,application/json" required>
-      <button type="submit">پیش‌نمایش</button>
-    </form>
-    {% if preview %}
-    <div style="margin-top:1rem">
-      <p>Batch #{{ preview.batch_id }} · hash {{ preview.file_hash|slice:":12" }}…</p>
-      <ul>
-        <li>خوانده‌شده: {{ preview.stats.read }}</li>
-        <li>معتبر: {{ preview.stats.valid }}</li>
-        <li>تکراری داخل فایل: {{ preview.stats.duplicate_in_file }}</li>
-        <li>Lead موجود: {{ preview.stats.already_lead }}</li>
-        <li>کاربر موجود: {{ preview.stats.existing_user }}</li>
-        <li>Suppressed: {{ preview.stats.suppressed }}</li>
-        <li><strong>قابل ورود: {{ preview.stats.eligible }}</strong></li>
-      </ul>
-      <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="import_commit">
-        <button type="submit">تأیید و Commit</button>
-      </form>
-    </div>
-    {% endif %}
-  </section>
-
-  <section class="lead-acq-section lead-acq-card">
-    <h2>۲) ساخت کمپین جذب (Pilot)</h2>
-    <form method="post">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="create_campaign">
-      <label>لیست
-        <select name="list_id" required>
-          {% for lst in lists %}
-          <option value="{{ lst.id }}">#{{ lst.id }} — {{ lst.name }}</option>
-          {% empty %}
-          <option value="">لیستی نیست — اول ایمپورت کنید</option>
-          {% endfor %}
-        </select>
-      </label>
-      <label>نام <input name="name" placeholder="جذب آجودانیه"></label>
-      <label>لندینگ <input name="landing_url" value="https://divarfiling.ir/" style="min-width:280px"></label>
-      <label><input type="checkbox" name="is_pilot" value="1" checked> Pilot</label>
-      <label>per variant <input type="number" name="pilot_per_variant" value="15" min="1" max="100"></label>
-      <button type="submit">ساخت کمپین</button>
-    </form>
-  </section>
-
-  <section class="lead-acq-section lead-acq-card">
-    <h2>۳) کمپین‌ها و قیف</h2>
-    <table class="lead-acq-table">
-      <thead>
-        <tr>
-          <th>ID</th><th>نام</th><th>وضعیت</th><th>Accepted</th><th>Clicked</th><th>Registered</th><th>Paid</th><th>عملیات</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for f in funnels %}
-        <tr>
-          <td><a href="{% url 'admin_panel_lead_campaign_detail' f.campaign_id %}">{{ f.campaign_id }}</a></td>
-          <td>{{ f.name }}
-            {% if f.is_pilot %}<span class="lead-acq-badge lead-acq-badge--pilot">{{ f.pilot_label }}</span>{% endif %}
-          </td>
-          <td>{{ f.status }}</td>
-          <td>{{ f.funnel.accepted }} <span class="lead-acq-muted">(Estimated Reach)</span></td>
-          <td>{{ f.funnel.clicked }}</td>
-          <td>{{ f.funnel.registered }}
-            <span class="lead-acq-muted">D{{ f.attribution.acquisition_direct }}/M{{ f.attribution.acquisition_phone_matched }}</span>
-          </td>
-          <td>{{ f.funnel.paid }}
-            <span class="lead-acq-muted">D{{ f.attribution.conversion_direct }}/M{{ f.attribution.conversion_phone_matched }}</span>
-          </td>
-          <td class="lead-acq-actions">
-            <form method="post">{% csrf_token %}
-              <input type="hidden" name="action" value="enroll_pilot">
-              <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
-              <button type="submit">Enroll Pilot</button>
-            </form>
-            <form method="post">{% csrf_token %}
-              <input type="hidden" name="action" value="send_step">
-              <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
-              <input type="hidden" name="step_number" value="1">
-              <button type="submit">Send Step1</button>
-            </form>
-          </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="8">کمپینی نیست</td></tr>
+    {% if messages %}
+    <section class="adm-alerts" aria-label="پیام‌ها">
+        {% for message in messages %}
+        <div class="adm-alert {% if message.tags == 'error' %}adm-alert--warn{% else %}adm-alert--info{% endif %}">
+            <i class="fas fa-{% if message.tags == 'error' %}triangle-exclamation{% else %}circle-check{% endif %}"></i>
+            <span>{{ message }}</span>
+        </div>
         {% endfor %}
-      </tbody>
-    </table>
-  </section>
+    </section>
+    {% endif %}
 
-  <section class="lead-acq-section lead-acq-card">
-    <h2>سرنخ‌های اخیر</h2>
-    <table class="lead-acq-table">
-      <thead><tr><th>موبایل</th><th>نام</th><th>نوع</th><th>وضعیت</th><th>شهر/منطقه</th></tr></thead>
-      <tbody>
-      {% for lead in leads_sample %}
-        <tr>
-          <td>{{ lead.phone_normalized }}</td>
-          <td>{{ lead.display_name }}</td>
-          <td>{{ lead.get_lead_type_display }} ({{ lead.classification_confidence }})</td>
-          <td>{{ lead.get_status_display }}</td>
-          <td>{{ lead.city }} / {{ lead.district }}</td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="5">خالی</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </section>
+    {# ── Overview ── #}
+    <section id="lac-overview" class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>وضعیت سیستم جذب</h2>
+                <p>شاخص‌های زنده بانک سرنخ و کمپین‌های فعال</p>
+            </div>
+        </div>
+        <div class="adm-lac-kpis">
+            <article class="adm-lac-kpi" data-accent="teal">
+                <span class="adm-lac-kpi-val">{{ overview.leads_total|default:0 }}</span>
+                <span class="adm-lac-kpi-lbl">کل سرنخ‌ها</span>
+                <p class="adm-lac-kpi-sub">سرد {{ overview.leads_cold }} · تعامل {{ overview.leads_engaged }}</p>
+            </article>
+            <article class="adm-lac-kpi" data-accent="cyan">
+                <span class="adm-lac-kpi-val">{{ overview.leads_registered|default:0 }}</span>
+                <span class="adm-lac-kpi-lbl">ثبت‌نام‌شده</span>
+                <p class="adm-lac-kpi-sub">مشتری {{ overview.leads_customer }}</p>
+            </article>
+            <article class="adm-lac-kpi" data-accent="amber">
+                <span class="adm-lac-kpi-val">{{ overview.batches|default:0 }}</span>
+                <span class="adm-lac-kpi-lbl">بچ‌های commit</span>
+                <p class="adm-lac-kpi-sub">phone-detector</p>
+            </article>
+            <article class="adm-lac-kpi" data-accent="slate">
+                <span class="adm-lac-kpi-val">{{ overview.campaigns_active|default:0 }}</span>
+                <span class="adm-lac-kpi-lbl">کمپین فعال / پایلوت</span>
+                <p class="adm-lac-kpi-sub">جذب + فعال‌سازی</p>
+            </article>
+        </div>
+
+        <div class="adm-lac-panel">
+            <div class="adm-lac-section-head" style="margin-bottom:.65rem">
+                <div>
+                    <h2 style="font-size:.95rem">توالی پیام سرد (قفل‌شده)</h2>
+                    <p>پیام ۲ یادآوری برای همه ثبت‌نام‌نشده‌هاست؛ پیام ۳ فقط سرنخ گرم</p>
+                </div>
+            </div>
+            <div class="adm-lac-steps-hint">
+                <div class="adm-lac-step-card">
+                    <b>Step 1 · روز ۰</b>
+                    <span>همه سرنخ‌های واجد شرایط enroll‌شده — معرفی و لندینگ</span>
+                </div>
+                <div class="adm-lac-step-card">
+                    <b>Step 2 · روز ۲–۳</b>
+                    <span>بدون ثبت‌نام و opt-out — حتی بدون کلیک (یادآوری)</span>
+                </div>
+                <div class="adm-lac-step-card">
+                    <b>Step 3 · روز ۶–۷</b>
+                    <span>فقط clicked / landing_view و هنوز ثبت‌نام‌نشده</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ── Import ── #}
+    <section id="lac-import" class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>ایمپورت حرفه‌ای</h2>
+                <p>پیش‌نمایش غیرمخرب، hash فایل، dedupe شماره، existing_user بدون suppression دائمی</p>
+            </div>
+        </div>
+        <div class="adm-lac-grid-2">
+            <div class="adm-lac-panel">
+                <form method="post" enctype="multipart/form-data" id="lac-import-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="import_preview">
+                    <div class="adm-lac-drop" id="lac-dropzone">
+                        <div class="adm-lac-drop-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+                        <strong>فایل JSON خروجی phone-detector را رها کنید</strong>
+                        <span>یا کلیک کنید تا انتخاب شود · فقط .json</span>
+                        <input type="file" name="file" id="lac-file" accept=".json,application/json" required>
+                    </div>
+                    <p class="adm-lac-kpi-sub" id="lac-file-name" style="margin-top:.65rem">فایلی انتخاب نشده</p>
+                    <div style="margin-top:.85rem">
+                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
+                            <i class="fas fa-eye"></i> ساخت پیش‌نمایش
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="adm-lac-panel">
+                {% if preview %}
+                <div class="adm-lac-meta" style="margin-bottom:.5rem">
+                    <span class="adm-lac-chip adm-lac-chip--live">Batch #{{ preview.batch_id }}</span>
+                    <span class="adm-lac-chip">hash {{ preview.file_hash|slice:":12" }}…</span>
+                    {% if preview.metadata.city %}
+                    <span class="adm-lac-chip">{{ preview.metadata.city }}{% if preview.metadata.district %} · {{ preview.metadata.district }}{% endif %}</span>
+                    {% endif %}
+                </div>
+                <div class="adm-lac-stat-grid">
+                    <div class="adm-lac-stat"><strong>{{ preview.stats.read|default:0 }}</strong><span>خوانده‌شده</span></div>
+                    <div class="adm-lac-stat adm-lac-stat--ok"><strong>{{ preview.stats.valid|default:0 }}</strong><span>معتبر</span></div>
+                    <div class="adm-lac-stat adm-lac-stat--warn"><strong>{{ preview.stats.duplicate_in_file|default:0 }}</strong><span>تکراری فایل</span></div>
+                    <div class="adm-lac-stat"><strong>{{ preview.stats.already_lead|default:0 }}</strong><span>Lead موجود</span></div>
+                    <div class="adm-lac-stat"><strong>{{ preview.stats.existing_user|default:0 }}</strong><span>کاربر موجود</span></div>
+                    <div class="adm-lac-stat adm-lac-stat--bad"><strong>{{ preview.stats.suppressed|default:0 }}</strong><span>مسدود</span></div>
+                    <div class="adm-lac-stat adm-lac-stat--accent"><strong>{{ preview.stats.eligible|default:0 }}</strong><span>قابل ورود</span></div>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="import_commit">
+                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
+                        <i class="fas fa-check-double"></i> تأیید و Commit به لیست
+                    </button>
+                </form>
+                {% else %}
+                <div class="adm-lac-empty">
+                    <i class="fas fa-clipboard-list"></i>
+                    هنوز پیش‌نمایش فعالی نیست. پس از آپلود، آمار کیفیت داده اینجا ظاهر می‌شود.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if batches %}
+        <div class="adm-lac-panel" style="margin-top:1rem">
+            <h3 style="margin:0 0 .65rem;font-size:.9rem">بچ‌های اخیر</h3>
+            <div class="adm-lac-table-wrap">
+                <table class="adm-lac-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>فایل</th>
+                            <th>منطقه</th>
+                            <th>وضعیت</th>
+                            <th>زمان UTC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for b in batches %}
+                        <tr>
+                            <td>#{{ b.id }}</td>
+                            <td>{{ b.original_filename|default:"—" }}</td>
+                            <td>{{ b.city }} {% if b.district %}/ {{ b.district }}{% endif %}</td>
+                            <td><span class="adm-lac-status {% if b.status == 'committed' %}adm-lac-status--active{% endif %}">{{ b.get_status_display }}</span></td>
+                            <td>{{ b.created_at }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    {# ── Compose ── #}
+    <section id="lac-compose" class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>ساخت کمپین جذب</h2>
+                <p>پایلوت ۱۵+۱۵ برای صحت Tracking — نه ادعای برنده آماری خرید</p>
+            </div>
+        </div>
+        <div class="adm-lac-panel">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_campaign">
+                <div class="adm-lac-form-row">
+                    <div class="adm-lac-field">
+                        <label for="list_id">لیست سرنخ</label>
+                        <select name="list_id" id="list_id" required>
+                            {% for lst in lists %}
+                            <option value="{{ lst.id }}">#{{ lst.id }} — {{ lst.name }}</option>
+                            {% empty %}
+                            <option value="">ابتدا یک بچ را Commit کنید</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="name">نام کمپین</label>
+                        <input name="name" id="name" placeholder="مثلاً جذب آجودانیه — پایلوت">
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="landing_url">لندینگ پس از کلیک</label>
+                        <input name="landing_url" id="landing_url" value="https://divarfiling.ir/">
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="pilot_per_variant">ظرفیت هر Variant</label>
+                        <input type="number" name="pilot_per_variant" id="pilot_per_variant" value="15" min="1" max="100">
+                    </div>
+                    <label class="adm-lac-check">
+                        <input type="checkbox" name="is_pilot" value="1" checked>
+                        حالت Pilot Result
+                    </label>
+                </div>
+                <div style="margin-top:1rem">
+                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary" {% if not lists %}disabled{% endif %}>
+                        <i class="fas fa-wand-magic-sparkles"></i> ایجاد کمپین A/B
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    {# ── Campaigns ── #}
+    <section id="lac-campaigns" class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>کمپین‌ها و قیف</h2>
+                <p>Accepted = Estimated Reach · تفکیک Acquisition / Conversion</p>
+            </div>
+        </div>
+        <div class="adm-lac-panel" style="padding:0;overflow:hidden">
+            <div class="adm-lac-table-wrap" style="border:none">
+                <table class="adm-lac-table">
+                    <thead>
+                        <tr>
+                            <th>کمپین</th>
+                            <th>وضعیت</th>
+                            <th>Accepted</th>
+                            <th>Clicked</th>
+                            <th>Registered</th>
+                            <th>Paid</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for f in funnels %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'admin_panel_lead_campaign_detail' f.campaign_id %}" style="font-weight:800;text-decoration:none;color:inherit">
+                                    #{{ f.campaign_id }} · {{ f.name }}
+                                </a>
+                                {% if f.is_pilot %}
+                                <div><span class="adm-lac-status adm-lac-status--pilot">{{ f.pilot_label }}</span></div>
+                                {% endif %}
+                            </td>
+                            <td><span class="adm-lac-status adm-lac-status--{{ f.status }}">{{ f.status }}</span></td>
+                            <td>
+                                <div class="adm-lac-metric">
+                                    <strong>{{ f.funnel.accepted }}</strong>
+                                    <small>Estimated Reach</small>
+                                </div>
+                            </td>
+                            <td><strong>{{ f.funnel.clicked }}</strong></td>
+                            <td>
+                                <div class="adm-lac-metric">
+                                    <strong>{{ f.funnel.registered }}</strong>
+                                    <small>D {{ f.attribution.acquisition_direct }} · M {{ f.attribution.acquisition_phone_matched }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="adm-lac-metric">
+                                    <strong>{{ f.funnel.paid }}</strong>
+                                    <small>D {{ f.attribution.conversion_direct }} · M {{ f.attribution.conversion_phone_matched }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="adm-lac-actions">
+                                    <a class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" href="{% url 'admin_panel_lead_campaign_detail' f.campaign_id %}">گزارش</a>
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="enroll_pilot">
+                                        <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm">Enroll</button>
+                                    </form>
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="send_step">
+                                        <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                        <input type="hidden" name="step_number" value="1">
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">Send 1</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="adm-lac-empty">
+                                    <i class="fas fa-bullhorn"></i>
+                                    هنوز کمپینی ندارید. از بخش ساخت کمپین شروع کنید.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    {# ── Leads ── #}
+    <section id="lac-leads" class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>سرنخ‌های اخیر</h2>
+                <p>طبقه‌بندی نام با confidence — بدون قطعیت قطعی آژانس</p>
+            </div>
+        </div>
+        <div class="adm-lac-panel" style="padding:0;overflow:hidden">
+            <div class="adm-lac-table-wrap" style="border:none">
+                <table class="adm-lac-table">
+                    <thead>
+                        <tr>
+                            <th>موبایل</th>
+                            <th>نام</th>
+                            <th>نوع</th>
+                            <th>وضعیت</th>
+                            <th>جغرافیا</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for lead in leads_sample %}
+                        <tr>
+                            <td><code>{{ lead.phone_normalized }}</code></td>
+                            <td>{{ lead.display_name|default:"—" }}</td>
+                            <td>
+                                {{ lead.get_lead_type_display }}
+                                <small class="adm-lac-kpi-sub">{{ lead.classification_confidence }}</small>
+                            </td>
+                            <td><span class="adm-lac-status adm-lac-status--{{ lead.status }}">{{ lead.get_status_display }}</span></td>
+                            <td>{{ lead.city }}{% if lead.district %} / {{ lead.district }}{% endif %}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="adm-lac-empty">
+                                    <i class="fas fa-users"></i>
+                                    بانکی خالی است — JSON را ایمپورت کنید.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const tabs = document.querySelectorAll('[data-lac-tab]');
+  function activate(hash) {
+    const id = (hash || '#lac-overview').replace('#', '');
+    tabs.forEach(function (t) {
+      t.classList.toggle('is-active', t.getAttribute('href') === '#' + id);
+    });
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      activate(t.getAttribute('href'));
+    });
+  });
+  activate(location.hash || '#lac-overview');
+  window.addEventListener('hashchange', function () { activate(location.hash); });
+
+  const drop = document.getElementById('lac-dropzone');
+  const file = document.getElementById('lac-file');
+  const nameEl = document.getElementById('lac-file-name');
+  if (!drop || !file) return;
+  function setName() {
+    nameEl.textContent = file.files && file.files[0]
+      ? ('انتخاب‌شده: ' + file.files[0].name)
+      : 'فایلی انتخاب نشده';
+  }
+  file.addEventListener('change', setName);
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) {
+      e.preventDefault();
+      drop.classList.add('is-dragover');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) {
+      e.preventDefault();
+      drop.classList.remove('is-dragover');
+    });
+  });
+  drop.addEventListener('drop', function (e) {
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length) {
+      file.files = files;
+      setName();
+    }
+  });
+})();
+</script>
 {% endblock %}

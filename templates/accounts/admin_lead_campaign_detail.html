@@ -1,85 +1,239 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
 
-{% block title %}گزارش کمپین #{{ campaign.id }} | جذب سرنخ{% endblock %}
+{% block title %}{{ campaign.name }} | گزارش جذب سرنخ{% endblock %}
 {% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<style>
-.lead-detail{max-width:1100px;margin:0 auto;padding:1rem}
-.lead-detail table{width:100%;border-collapse:collapse;font-size:.9rem}
-.lead-detail th,.lead-detail td{border-bottom:1px solid #eee;padding:.4rem;text-align:right}
-.funnel-row{display:flex;flex-wrap:wrap;gap:.75rem;margin:1rem 0}
-.funnel-pill{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:.75rem 1rem;min-width:110px}
-.funnel-pill strong{display:block;font-size:1.25rem}
-.note{background:#fffbeb;border:1px solid #fcd34d;padding:.75rem;border-radius:8px}
-</style>
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="lead-detail">
-  <p><a href="{% url 'admin_panel_lead_acquisition' %}">← مرکز جذب</a></p>
-  <h1>{{ campaign.name }} <small>#{{ campaign.id }}</small></h1>
-  <p>{{ funnel.pilot_label }} · {{ campaign.get_kind_display }} · {{ campaign.get_status_display }}</p>
-  {% if funnel.winner_note %}<p class="note">{{ funnel.winner_note }}</p>{% endif %}
+{% with f=funnel.funnel a=funnel.attribution %}
+<div class="adm-page adm-lac-page">
 
-  <h2>قیف</h2>
-  <div class="funnel-row">
-    <div class="funnel-pill"><span>Leads</span><strong>{{ funnel.funnel.leads }}</strong></div>
-    <div class="funnel-pill"><span>Eligible</span><strong>{{ funnel.funnel.eligible }}</strong></div>
-    <div class="funnel-pill"><span>Accepted</span><strong>{{ funnel.funnel.accepted }}</strong><small>Estimated Reach</small></div>
-    <div class="funnel-pill"><span>Clicked</span><strong>{{ funnel.funnel.clicked }}</strong></div>
-    <div class="funnel-pill"><span>Registered</span><strong>{{ funnel.funnel.registered }}</strong></div>
-    <div class="funnel-pill"><span>Activated</span><strong>{{ funnel.funnel.activated }}</strong></div>
-    <div class="funnel-pill"><span>Checkout</span><strong>{{ funnel.funnel.checkout }}</strong></div>
-    <div class="funnel-pill"><span>Paid</span><strong>{{ funnel.funnel.paid }}</strong></div>
-    <div class="funnel-pill"><span>Licensed</span><strong>{{ funnel.funnel.licensed }}</strong></div>
-  </div>
+    <header class="adm-lac-hero" style="margin-bottom:1.1rem">
+        <div class="adm-lac-hero-copy">
+            <p class="adm-lac-kicker">
+                <i class="fas fa-chart-line" aria-hidden="true"></i>
+                Campaign Intelligence
+            </p>
+            <h1 class="adm-lac-title">{{ campaign.name }}</h1>
+            <p class="adm-lac-tagline">#{{ campaign.id }} · {{ campaign.get_kind_display }} · {{ campaign.get_status_display }}</p>
+            <p class="adm-lac-desc">
+                گزارش تصمیم‌گیری با تفکیک Acquisition Attribution و Conversion Attribution.
+                برچسب Accepted به‌معنای Estimated Reach است — نه تحویل قطعی.
+            </p>
+            <div class="adm-lac-hero-actions">
+                <a class="adm-lac-btn adm-lac-btn--ghost" href="{% url 'admin_panel_lead_acquisition' %}">
+                    <i class="fas fa-arrow-right"></i> مرکز جذب
+                </a>
+                <a class="adm-lac-btn adm-lac-btn--primary" href="{% url 'admin_panel_lead_funnel_json' campaign.id %}">
+                    <i class="fas fa-code"></i> JSON قیف
+                </a>
+            </div>
+            <div class="adm-lac-meta">
+                {% if funnel.is_pilot %}
+                <span class="adm-lac-chip adm-lac-chip--pilot"><i class="fas fa-flask"></i> {{ funnel.pilot_label }}</span>
+                {% endif %}
+                <span class="adm-lac-chip">SMS cost snapshot: {{ a.sms_cost|default:0|currency }} ت</span>
+                {% if a.cac %}<span class="adm-lac-chip">CAC {{ a.cac|currency }}</span>{% endif %}
+                {% if a.roas %}<span class="adm-lac-chip">ROAS {{ a.roas|floatformat:2 }}</span>{% endif %}
+            </div>
+        </div>
+        <aside class="adm-lac-journey">
+            <p class="adm-lac-journey-title">خلاصه تبدیل</p>
+            <div class="adm-lac-kpis" style="margin:0;grid-template-columns:1fr 1fr">
+                <article class="adm-lac-kpi" data-accent="cyan" style="padding:.7rem">
+                    <span class="adm-lac-kpi-val" style="font-size:1.25rem">{{ f.registered }}</span>
+                    <span class="adm-lac-kpi-lbl">ثبت‌نام</span>
+                </article>
+                <article class="adm-lac-kpi" data-accent="amber" style="padding:.7rem">
+                    <span class="adm-lac-kpi-val" style="font-size:1.25rem">{{ f.paid }}</span>
+                    <span class="adm-lac-kpi-lbl">خرید</span>
+                </article>
+                <article class="adm-lac-kpi" style="padding:.7rem">
+                    <span class="adm-lac-kpi-val" style="font-size:1.25rem">{{ f.accepted }}</span>
+                    <span class="adm-lac-kpi-lbl">Accepted</span>
+                </article>
+                <article class="adm-lac-kpi" data-accent="rose" style="padding:.7rem">
+                    <span class="adm-lac-kpi-val" style="font-size:1.25rem">{{ f.clicked }}</span>
+                    <span class="adm-lac-kpi-lbl">Clicked</span>
+                </article>
+            </div>
+        </aside>
+    </header>
 
-  <h2>Attribution</h2>
-  <ul>
-    <li>Acquisition direct / phone_matched: {{ funnel.attribution.acquisition_direct }} / {{ funnel.attribution.acquisition_phone_matched }}</li>
-    <li>Conversion direct / phone_matched: {{ funnel.attribution.conversion_direct }} / {{ funnel.attribution.conversion_phone_matched }}</li>
-    <li>SMS cost (snapshot): {{ funnel.attribution.sms_cost }} تومان</li>
-    <li>Revenue: {{ funnel.attribution.revenue }} · CAC: {{ funnel.attribution.cac|default:"—" }} · ROAS: {{ funnel.attribution.roas|default:"—" }}</li>
-  </ul>
+    {% if funnel.winner_note %}
+    <div class="adm-lac-note" style="margin-bottom:1rem">
+        <i class="fas fa-info-circle"></i>
+        <span>{{ funnel.winner_note }}</span>
+    </div>
+    {% endif %}
 
-  <h2>Variants (Pilot Result)</h2>
-  <table>
-    <thead><tr><th>Variant</th><th>Enrolled</th><th>Accepted</th><th>Clicked</th><th>Registered</th><th>Paid</th></tr></thead>
-    <tbody>
-    {% for v in funnel.variants %}
-      <tr>
-        <td>{{ v.key }} — {{ v.name }}</td>
-        <td>{{ v.enrolled }}</td>
-        <td>{{ v.accepted }}</td>
-        <td>{{ v.clicked }}</td>
-        <td>{{ v.registered }}</td>
-        <td>{{ v.paid }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+    <section class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>قیف تبدیل</h2>
+                <p>Leads → Eligible → Accepted → Clicked → Registered → Activated → Checkout → Paid → Licensed</p>
+            </div>
+        </div>
+        <div class="adm-lac-panel">
+            <div class="adm-lac-funnel" id="lac-funnel"
+                 data-leads="{{ f.leads|default:0 }}"
+                 data-eligible="{{ f.eligible|default:0 }}"
+                 data-accepted="{{ f.accepted|default:0 }}"
+                 data-clicked="{{ f.clicked|default:0 }}"
+                 data-registered="{{ f.registered|default:0 }}"
+                 data-activated="{{ f.activated|default:0 }}"
+                 data-checkout="{{ f.checkout|default:0 }}"
+                 data-paid="{{ f.paid|default:0 }}"
+                 data-licensed="{{ f.licensed|default:0 }}">
+                <div class="adm-lac-funnel-row" data-key="leads"><span>Leads</span><div class="adm-lac-funnel-bar"><div class="adm-lac-funnel-fill"></div></div><strong>{{ f.leads }}</strong></div>
+                <div class="adm-lac-funnel-row" data-key="eligible"><span>Eligible</span><div class="adm-lac-funnel-bar"><div class="adm-lac-funnel-fill"></div></div><strong>{{ f.eligible }}</strong></div>
+                <div class="adm-lac-funnel-row" data-key="accepted"><span>Accepted</span><div class="adm-lac-funnel-bar"><div class="adm-lac-funnel-fill"></div></div><strong>{{ f.accepted }}</strong></div>
+                <div class="adm-lac-funnel-row" data-key="clicked"><span>Clicked</span><div class="adm-lac-funnel-bar"><div class="adm-lac-funnel-fill"></div></div><strong>{{ f.clicked }}</strong></div>
+                <div class="adm-lac-funnel-row" data-key="registered"><span>Registered</span><div class="adm-lac-funnel-bar"><div class="adm-lac-funnel-fill"></div></div><strong>{{ f.registered }}</strong></div>
+                <div class="adm-lac-funnel-row" data-key="activated"><span>Activated</span><div class="adm-lac-funnel-bar"><div class="adm-lac-funnel-fill"></div></div><strong>{{ f.activated }}</strong></div>
+                <div class="adm-lac-funnel-row" data-key="checkout"><span>Checkout</span><div class="adm-lac-funnel-bar"><div class="adm-lac-funnel-fill"></div></div><strong>{{ f.checkout }}</strong></div>
+                <div class="adm-lac-funnel-row" data-key="paid"><span>Paid</span><div class="adm-lac-funnel-bar"><div class="adm-lac-funnel-fill"></div></div><strong>{{ f.paid }}</strong></div>
+                <div class="adm-lac-funnel-row" data-key="licensed"><span>Licensed</span><div class="adm-lac-funnel-bar"><div class="adm-lac-funnel-fill"></div></div><strong>{{ f.licensed }}</strong></div>
+            </div>
+            {% if f.delivered %}
+            <p class="adm-lac-kpi-sub" style="margin-top:.75rem">Delivered واقعی (DLR): {{ f.delivered }}</p>
+            {% else %}
+            <p class="adm-lac-kpi-sub" style="margin-top:.75rem">DLR تحویل در دسترس نیست — از Accepted به‌عنوان Estimated Reach استفاده کنید.</p>
+            {% endif %}
+        </div>
+    </section>
 
-  <h2>پیام‌های اخیر</h2>
-  <table>
-    <thead><tr><th>زمان UTC</th><th>موبایل</th><th>V</th><th>Step</th><th>Status</th><th>token</th><th>هزینه</th></tr></thead>
-    <tbody>
-    {% for m in messages_recent %}
-      <tr>
-        <td>{{ m.requested_at }}</td>
-        <td>{{ m.lead.phone_normalized }}</td>
-        <td>{{ m.variant.key }}</td>
-        <td>{{ m.step.step_number }}</td>
-        <td>{{ m.status }}</td>
-        <td><code>{{ m.click_token|slice:":10" }}…</code></td>
-        <td>{{ m.sms_cost_snapshot }}</td>
-      </tr>
-    {% empty %}
-      <tr><td colspan="7">پیامی نیست</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
+    <section class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>Attribution موازی</h2>
+                <p>منبع جذب با Conversion بازنویسی نمی‌شود</p>
+            </div>
+        </div>
+        <div class="adm-lac-attr-grid">
+            <div class="adm-lac-attr-card">
+                <h3><i class="fas fa-user-plus" style="color:var(--lac-teal)"></i> Acquisition Attribution</h3>
+                <div class="adm-lac-attr-split">
+                    <div class="adm-lac-attr-pill">
+                        <strong>{{ a.acquisition_direct }}</strong>
+                        <span>direct · کلیک/کوکی</span>
+                    </div>
+                    <div class="adm-lac-attr-pill">
+                        <strong>{{ a.acquisition_phone_matched }}</strong>
+                        <span>phone_matched</span>
+                    </div>
+                </div>
+            </div>
+            <div class="adm-lac-attr-card adm-lac-attr-card--conv">
+                <h3><i class="fas fa-cart-shopping" style="color:var(--lac-amber)"></i> Conversion Attribution</h3>
+                <div class="adm-lac-attr-split">
+                    <div class="adm-lac-attr-pill">
+                        <strong>{{ a.conversion_direct }}</strong>
+                        <span>direct · فعال‌سازی</span>
+                    </div>
+                    <div class="adm-lac-attr-pill">
+                        <strong>{{ a.conversion_phone_matched }}</strong>
+                        <span>phone_matched</span>
+                    </div>
+                </div>
+                <p class="adm-lac-kpi-sub" style="margin-top:.65rem">درآمد: {{ a.revenue|default:0|currency }} تومان</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>مقایسه Variant · Pilot Result</h2>
+                <p>برای انتخاب برنده آماری به تجمیع چند Batch نیاز است</p>
+            </div>
+        </div>
+        <div class="adm-lac-variant-compare">
+            {% for v in funnel.variants %}
+            <article class="adm-lac-variant">
+                <div class="adm-lac-variant-key">{{ v.key }}</div>
+                <div style="font-weight:800;margin-bottom:.55rem">{{ v.name|default:"نسخه" }} {{ v.key }}</div>
+                <dl>
+                    <dt>Enrolled</dt><dd>{{ v.enrolled }}</dd>
+                    <dt>Accepted</dt><dd>{{ v.accepted }}</dd>
+                    <dt>Clicked</dt><dd>{{ v.clicked }}</dd>
+                    <dt>Registered</dt><dd>{{ v.registered }}</dd>
+                    <dt>Paid</dt><dd>{{ v.paid }}</dd>
+                </dl>
+            </article>
+            {% empty %}
+            <div class="adm-lac-empty"><i class="fas fa-flask"></i> Variantی ثبت نشده</div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>پیام‌های اخیر</h2>
+                <p>هر ردیف یک CampaignMessage با click_token یکتا</p>
+            </div>
+        </div>
+        <div class="adm-lac-panel" style="padding:0;overflow:hidden">
+            <div class="adm-lac-table-wrap" style="border:none">
+                <table class="adm-lac-table">
+                    <thead>
+                        <tr>
+                            <th>UTC</th>
+                            <th>موبایل</th>
+                            <th>V</th>
+                            <th>Step</th>
+                            <th>Status</th>
+                            <th>Token</th>
+                            <th>هزینه</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for m in messages_recent %}
+                        <tr>
+                            <td>{{ m.requested_at }}</td>
+                            <td><code>{{ m.lead.phone_normalized }}</code></td>
+                            <td><span class="adm-lac-variant-key" style="width:1.5rem;height:1.5rem;font-size:.7rem;margin:0">{{ m.variant.key }}</span></td>
+                            <td>{{ m.step.step_number }}</td>
+                            <td><span class="adm-lac-status">{{ m.status }}</span></td>
+                            <td><code class="adm-lac-token">{{ m.click_token|slice:":10" }}…</code></td>
+                            <td>{{ m.sms_cost_snapshot|default:"—" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7"><div class="adm-lac-empty"><i class="fas fa-comment-sms"></i> هنوز پیامی ارسال نشده</div></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </div>
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var root = document.getElementById('lac-funnel');
+  if (!root) return;
+  var base = Math.max(1, parseInt(root.getAttribute('data-leads') || '0', 10));
+  root.querySelectorAll('.adm-lac-funnel-row').forEach(function (row) {
+    var key = row.getAttribute('data-key');
+    var val = parseInt(root.getAttribute('data-' + key) || '0', 10);
+    var pct = Math.max(0, Math.min(100, Math.round((val / base) * 100)));
+    if (key === 'leads') pct = 100;
+    var fill = row.querySelector('.adm-lac-funnel-fill');
+    if (fill) fill.style.width = pct + '%';
+  });
+})();
+</script>
 {% endblock %}

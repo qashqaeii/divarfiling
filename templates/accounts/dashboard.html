@@ -8,7 +8,7 @@
 {% block body_class %}mk-account-dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=16">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
 {% endblock %}
@@ -235,21 +235,22 @@
                     {% if licenses %}
                         <div class="dash-preview-list">
                             {% for license in licenses|slice:":5" %}
-                                {% if license.status == 'active' %}
-                                    <article class="dash-preview-card">
-                                        <div class="dash-preview-card-main">
-                                            <strong class="dash-preview-card-title">{{ license.order.product.title }}</strong>
-                                            <div class="dash-preview-card-meta">
-                                                {% if license.expires_at %}
-                                                    <span><i class="fas fa-clock" aria-hidden="true"></i> انقضا: {{ license.expires_at|to_jalali_date:"%Y/%m/%d" }}</span>
-                                                {% else %}
-                                                    <span><i class="fas fa-infinity" aria-hidden="true"></i> بدون تاریخ انقضا</span>
-                                                {% endif %}
-                                            </div>
+                                <article class="dash-preview-card{% if license.status == 'expired' %} dash-preview-card--expired{% endif %}">
+                                    <div class="dash-preview-card-main">
+                                        <strong class="dash-preview-card-title">{{ license.order.product.title }}</strong>
+                                        <div class="dash-preview-card-meta">
+                                            {% if license.expires_at %}
+                                                <span class="dash-preview-expiry{% if license.status == 'expired' %} dash-preview-expiry--expired{% endif %}">
+                                                    <i class="fas fa-clock" aria-hidden="true"></i>
+                                                    {{ license.expires_at|to_jalali_date:"%Y/%m/%d" }}
+                                                </span>
+                                            {% else %}
+                                                <span><i class="fas fa-infinity" aria-hidden="true"></i> نامحدود</span>
+                                            {% endif %}
                                         </div>
-                                        <span class="badge badge-active">فعال</span>
-                                    </article>
-                                {% endif %}
+                                    </div>
+                                    <span class="badge {% if license.status == 'active' %}badge-active{% elif license.status == 'expired' %}badge-expired{% else %}badge-muted{% endif %}">{{ license.get_status_display }}</span>
+                                </article>
                             {% endfor %}
                         </div>
                         <a href="#" onclick="showTab('licenses', event); return false;" class="view-all-link view-all-link--compact">
@@ -468,26 +469,26 @@
         
         <!-- Tab: Licenses -->
         <div id="tab-licenses" class="tab-content" style="display: none;" data-license-mgmt>
-            <div class="licenses-page-header">
-                <div>
-                    <h2 class="licenses-page-title">مدیریت لایسنس‌ها</h2>
-                    <p class="licenses-page-subtitle">صدور کلید، مدیریت دستگاه‌ها و تخصیص دسترسی به اعضای تیم</p>
+            <header class="lic-page-head">
+                <div class="lic-page-head-copy">
+                    <h2 class="lic-page-title">لایسنس‌ها</h2>
+                    <p class="lic-page-sub">کلید، دستگاه‌ها و تخصیص تیم</p>
                 </div>
                 {% if products %}
-                    <a href="{% url 'product_list' %}" class="btn btn-primary btn-buy-license" title="ربات استخراج دیوار">
-                        <i class="fas fa-plus" aria-hidden="true"></i>
-                        خرید لایسنس جدید
-                    </a>
+                <a href="{% url 'product_list' %}" class="lic-page-cta" title="خرید لایسنس">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    <span>خرید</span>
+                </a>
                 {% endif %}
-            </div>
+            </header>
 
             {% if license_dashboard.assigned_seats %}
-            <section class="lic-seat-shared" aria-label="لایسنس‌های تخصیص‌یافته به من">
+            <section class="lic-seat-shared lic-seat-shared--compact" aria-label="لایسنس‌های تخصیص‌یافته">
                 <header class="lic-seat-shared-head">
                     <i class="fas fa-user-check" aria-hidden="true"></i>
                     <div>
                         <h3>دسترسی تیم</h3>
-                        <p>اسلات‌هایی که مدیر آژانس به شما تخصیص داده — امکانات ربات در میزکار باز است.</p>
+                        <p>اسلات‌های تخصیص‌یافته توسط مدیر آژانس</p>
                     </div>
                 </header>
                 <div class="lic-seat-shared-grid">
@@ -496,9 +497,9 @@
                         <strong>{{ seat.license.order.product.title }}</strong>
                         <span class="lic-seat-shared-meta">{{ seat.license.plan.name }} · {{ seat.display_name }}</span>
                         {% if seat.is_active %}
-                        <span class="lic-seat-badge lic-seat-badge--active">فعال در ربات</span>
+                        <span class="lic-seat-badge lic-seat-badge--active">فعال</span>
                         {% else %}
-                        <span class="lic-seat-badge lic-seat-badge--pending">در انتظار فعال‌سازی</span>
+                        <span class="lic-seat-badge lic-seat-badge--pending">در انتظار</span>
                         {% endif %}
                     </article>
                     {% endfor %}
@@ -507,173 +508,168 @@
             {% endif %}
 
             {% if orders_pending_claim %}
-            <div class="license-claim-section" id="claim-license">
-                <div class="license-claim-header">
-                    <h3 class="license-claim-title">
-                        <i class="fas fa-key" aria-hidden="true"></i>
-                        دریافت کلید لایسنس
-                    </h3>
-                    <p class="license-claim-desc">
-                        پس از پرداخت، کلید لایسنس شما اینجا نمایش داده می‌شود. آن را کپی کنید و در ربات ویندوز وارد کنید — شناسه سخت‌افزار به‌صورت خودکار ثبت می‌شود.
-                        اگر فقط از اپ اندروید استفاده می‌کنید، با همان حساب کاربری وارد اپ شوید؛ نیازی به وارد کردن کلید نیست.
-                    </p>
-                </div>
+            <section class="lic-claim lic-claim--compact" id="claim-license">
+                <header class="lic-claim-head">
+                    <h3><i class="fas fa-key" aria-hidden="true"></i> دریافت کلید</h3>
+                    <p>کلید را در ربات ویندوز فعال کنید — شناسه سخت‌افزار خودکار ثبت می‌شود.</p>
+                </header>
                 {% for order in orders_pending_claim %}
-                <div class="license-claim-card">
-                    <div class="license-claim-order-info">
+                <div class="lic-claim-row">
+                    <div class="lic-claim-info">
                         <strong>{{ order.product.title }}</strong>
-                        <span class="license-meta-item">
-                            <i class="fas fa-layer-group" aria-hidden="true"></i>
-                            پلن: {{ order.plan.name }}
-                        </span>
-                        <span class="license-meta-item">سفارش #{{ order.id|slice:":8" }}</span>
+                        <span>{{ order.plan.name }}</span>
                     </div>
-                    <form method="post" action="{% url 'claim_license' %}" class="license-claim-form">
+                    <form method="post" action="{% url 'claim_license' %}">
                         {% csrf_token %}
                         <input type="hidden" name="order_id" value="{{ order.id }}">
-                        <button type="submit" class="btn btn-primary btn-sm">
+                        <button type="submit" class="lic-claim-btn">
                             <i class="fas fa-key" aria-hidden="true"></i>
-                            نمایش کلید لایسنس
+                            نمایش کلید
                         </button>
                     </form>
                 </div>
                 {% endfor %}
-            </div>
+            </section>
             {% endif %}
 
             {% if license_dashboard.portfolios %}
-            <div class="lic-portfolios">
+            <div class="lic-list">
                 {% for item in license_dashboard.portfolios %}
-                {% with lic=item.license %}
-                <article class="lic-card" data-license-id="{{ lic.id }}">
-                    <header class="lic-card-head">
-                        <div class="lic-card-head-main">
-                            <div class="lic-card-icon {% if item.is_multi %}lic-card-icon--multi{% endif %}" aria-hidden="true">
+                {% with lic=item.license expiry=item.expiry %}
+                <article class="lic-card{% if expiry.is_expired %} lic-card--expired{% elif expiry.expiring_soon %} lic-card--expiring{% endif %}" data-license-id="{{ lic.id }}">
+                    <header class="lic-card-top">
+                        <div class="lic-card-identity">
+                            <span class="lic-card-icon {% if item.is_multi %}lic-card-icon--multi{% endif %}" aria-hidden="true">
                                 <i class="fas {% if item.is_multi %}fa-laptop-house{% else %}fa-desktop{% endif %}"></i>
-                            </div>
-                            <div>
+                            </span>
+                            <div class="lic-card-identity-text">
                                 <h3 class="lic-card-title">{{ lic.order.product.title }}</h3>
                                 <p class="lic-card-plan">{{ lic.plan.name }} · {{ lic.plan.get_plan_type_display }}</p>
                             </div>
                         </div>
-                        <div class="lic-card-head-side">
-                            <span class="license-status-badge license-status-{{ lic.status }}">{{ lic.get_status_display }}</span>
-                            {% if lic.expires_at %}
-                            <span class="lic-card-expiry" data-expires="{{ lic.expires_at|date:'c' }}">
-                                <i class="fas fa-clock" aria-hidden="true"></i>
-                                {{ lic.expires_at|to_jalali_date:"%Y/%m/%d" }}
-                            </span>
+                        <div class="lic-card-meta">
+                            <span class="lic-status lic-status--{{ lic.status }}">{{ lic.get_status_display }}</span>
+                            {% if expiry.has_expiry %}
+                            <div class="lic-expiry{% if expiry.is_expired %} lic-expiry--expired{% elif expiry.expiring_soon %} lic-expiry--soon{% endif %}"{% if lic.expires_at %} data-expires="{{ lic.expires_at|date:'c' }}"{% endif %}>
+                                <span class="lic-expiry-label">انقضا</span>
+                                <time class="lic-expiry-date" datetime="{{ lic.expires_at|date:'c' }}">{{ lic.expires_at|to_jalali_date:"%Y/%m/%d" }}</time>
+                                {% if expiry.is_expired %}
+                                <span class="lic-expiry-tag lic-expiry-tag--expired">منقضی</span>
+                                {% elif expiry.expiring_soon %}
+                                <span class="lic-expiry-tag lic-expiry-tag--soon">{{ expiry.days_remaining }} روز</span>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <div class="lic-expiry lic-expiry--unlimited">
+                                <span class="lic-expiry-label">انقضا</span>
+                                <span class="lic-expiry-date">نامحدود</span>
+                            </div>
                             {% endif %}
                         </div>
                     </header>
 
-                    <div class="lic-card-key">
-                        <label class="lic-card-key-label">کلید لایسنس</label>
+                    <div class="lic-card-key lic-card-key--compact">
                         <div class="license-item-key-row">
                             <code class="license-key-minimal" id="license-key-{{ lic.id }}">{{ lic.license_key }}</code>
-                            <button type="button" class="license-copy-btn" onclick="copyLicenseKey('license-key-{{ lic.id }}')" title="کپی">
+                            <button type="button" class="license-copy-btn" onclick="copyLicenseKey('license-key-{{ lic.id }}')" title="کپی کلید" aria-label="کپی کلید">
                                 <i class="fas fa-copy" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <p class="lic-card-key-hint">این کلید را در ربات ویندوز وارد کنید — شناسه سخت‌افزار خودکار ثبت می‌شود. برای اپ اندروید فقط با همان حساب وارد شوید.</p>
                     </div>
 
-                    <div class="lic-slots-meter" aria-label="مصرف اسلات">
+                    <div class="lic-slots-meter lic-slots-meter--slim">
                         <div class="lic-slots-meter-top">
-                            <span><i class="fas fa-microchip"></i> سیستم‌های ثبت‌شده</span>
-                            <strong>{{ item.slots_used }} / {{ lic.max_activations }}</strong>
+                            <span>دستگاه‌ها</span>
+                            <strong>{{ item.slots_used }}/{{ lic.max_activations }}</strong>
                         </div>
                         <div class="lic-slots-bar" role="progressbar" aria-valuenow="{{ item.slots_used }}" aria-valuemin="0" aria-valuemax="{{ lic.max_activations }}">
                             <span class="lic-slots-fill" style="width: {% widthratio item.slots_used lic.max_activations 100 %}%"></span>
                         </div>
                         <div class="lic-slots-legend">
-                            <span><em class="lic-dot lic-dot--active"></em> {{ item.active_count }} فعال در ربات</span>
-                            <span><em class="lic-dot lic-dot--pending"></em> {{ item.pending_count }} در انتظار</span>
+                            <span><em class="lic-dot lic-dot--active"></em>{{ item.active_count }} فعال</span>
+                            <span><em class="lic-dot lic-dot--pending"></em>{{ item.pending_count }} انتظار</span>
                         </div>
                     </div>
 
                     {% if item.activations %}
-                    <div class="lic-seats-table-wrap">
-                        <table class="lic-seats-table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">سیستم</th>
-                                    <th scope="col">شناسه سخت‌افزار</th>
-                                    <th scope="col">وضعیت</th>
-                                    <th scope="col">عضو تیم</th>
-                                    <th scope="col" class="lic-seats-th-actions">عملیات</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for seat in item.activations %}
-                                <tr data-activation-id="{{ seat.id }}">
-                                    <td data-label="سیستم">
-                                        <input type="text" class="lic-seat-label-input" value="{{ seat.label }}" placeholder="{{ seat.display_name }}" data-seat-label>
-                                    </td>
-                                    <td data-label="شناسه" dir="ltr"><code class="lic-hw-code">{{ seat.masked_fingerprint }}</code></td>
-                                    <td data-label="وضعیت">
-                                        {% if seat.is_active %}
-                                        <span class="lic-seat-badge lic-seat-badge--active">فعال</span>
-                                        {% else %}
-                                        <span class="lic-seat-badge lic-seat-badge--pending">در انتظار ربات</span>
-                                        {% endif %}
-                                    </td>
-                                    <td data-label="عضو تیم">
-                                        {% if license_dashboard.can_assign_team %}
-                                        <select class="lic-seat-member-select" data-seat-assign>
-                                            <option value="">— بدون تخصیص —</option>
-                                            {% for member in license_dashboard.team_members %}
-                                            {% if not member.is_self %}
-                                            <option value="{{ member.id }}" {% if seat.assigned_user_id == member.id %}selected{% endif %}>{{ member.name }} (@{{ member.username }})</option>
+                    <details class="lic-seats-details"{% if item.activations %} open{% endif %}>
+                        <summary class="lic-seats-summary">
+                            <span>سیستم‌های ثبت‌شده</span>
+                            <span class="lic-seats-count">{{ item.activations|length }}</span>
+                        </summary>
+                        <div class="lic-seats-table-wrap">
+                            <table class="lic-seats-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">سیستم</th>
+                                        <th scope="col">شناسه</th>
+                                        <th scope="col">وضعیت</th>
+                                        <th scope="col">عضو</th>
+                                        <th scope="col" class="lic-seats-th-actions"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for seat in item.activations %}
+                                    <tr data-activation-id="{{ seat.id }}">
+                                        <td data-label="سیستم">
+                                            <input type="text" class="lic-seat-label-input" value="{{ seat.label }}" placeholder="{{ seat.display_name }}" data-seat-label>
+                                        </td>
+                                        <td data-label="شناسه" dir="ltr"><code class="lic-hw-code">{{ seat.masked_fingerprint }}</code></td>
+                                        <td data-label="وضعیت">
+                                            {% if seat.is_active %}
+                                            <span class="lic-seat-badge lic-seat-badge--active">فعال</span>
+                                            {% else %}
+                                            <span class="lic-seat-badge lic-seat-badge--pending">انتظار</span>
                                             {% endif %}
-                                            {% endfor %}
-                                        </select>
-                                        {% elif seat.assigned_user %}
-                                        <span class="lic-seat-member-name">{{ seat.assigned_user.get_full_name|default:seat.assigned_user.username }}</span>
-                                        {% else %}
-                                        <span class="lic-seat-member-empty">—</span>
-                                        {% endif %}
-                                    </td>
-                                    <td data-label="عملیات">
-                                        <div class="lic-seat-actions">
-                                            <button type="button" class="lic-seat-btn" data-seat-save-label title="ذخیره نام">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button type="button" class="lic-seat-btn lic-seat-btn--danger" data-seat-remove{% if seat.is_active %} data-seat-remove-active{% endif %} title="حذف اسلات">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </td>
+                                        <td data-label="عضو">
+                                            {% if license_dashboard.can_assign_team %}
+                                            <select class="lic-seat-member-select" data-seat-assign>
+                                                <option value="">—</option>
+                                                {% for member in license_dashboard.team_members %}
+                                                {% if not member.is_self %}
+                                                <option value="{{ member.id }}" {% if seat.assigned_user_id == member.id %}selected{% endif %}>{{ member.name }}</option>
+                                                {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            {% elif seat.assigned_user %}
+                                            <span class="lic-seat-member-name">{{ seat.assigned_user.get_full_name|default:seat.assigned_user.username }}</span>
+                                            {% else %}
+                                            <span class="lic-seat-member-empty">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td data-label="عملیات">
+                                            <div class="lic-seat-actions">
+                                                <button type="button" class="lic-seat-btn" data-seat-save-label title="ذخیره">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" class="lic-seat-btn lic-seat-btn--danger" data-seat-remove{% if seat.is_active %} data-seat-remove-active{% endif %} title="حذف">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
                     {% else %}
-                    <p class="lic-no-seats">هنوز دستگاهی ثبت نشده — با فعال‌سازی کلید در ربات ویندوز یا ورود به اپ اندروید، سیستم اینجا ظاهر می‌شود.</p>
+                    <p class="lic-no-seats lic-no-seats--compact">هنوز دستگاهی ثبت نشده — کلید را در ربات فعال کنید یا در اپ اندروید وارد شوید.</p>
                     {% endif %}
 
                     {% if item.slots_available > 0 %}
-                    <div class="lic-add-device-form lic-auto-register-info">
-                        <h4 class="lic-add-device-title">
-                            <i class="fas fa-magic" aria-hidden="true"></i>
-                            ثبت خودکار دستگاه
-                            <span class="lic-add-device-remaining">{{ item.slots_available }} اسلات باقی‌مانده</span>
-                        </h4>
-                        <p class="lic-auto-register-text">نیازی به وارد کردن شناسه سخت‌افزار در سایت نیست. کلید را در <strong>ربات ویندوز</strong> فعال کنید یا با همان حساب در <strong>اپ اندروید</strong> وارد شوید — دستگاه به‌طور خودکار در جدول بالا ثبت می‌شود.</p>
-                        <p class="lic-auto-register-note"><i class="fas fa-info-circle" aria-hidden="true"></i> شناسه سخت‌افزار فقط در تب لایسنس ربات (قابل کپی) نمایش داده می‌شود.</p>
-                    </div>
+                    <p class="lic-auto-hint"><i class="fas fa-magic" aria-hidden="true"></i> {{ item.slots_available }} اسلات خالی — فعال‌سازی در ربات، ثبت خودکار</p>
                     {% elif item.is_multi %}
-                    <p class="lic-slots-full"><i class="fas fa-info-circle"></i> تمام {{ lic.max_activations }} اسلات این پلن استفاده شده است. برای ثبت دستگاه جدید، یکی از سیستم‌های جدول بالا را حذف کنید.</p>
+                    <p class="lic-auto-hint lic-auto-hint--muted"><i class="fas fa-info-circle" aria-hidden="true"></i> تمام اسلات‌ها پر است</p>
                     {% endif %}
 
-                    <footer class="lic-card-foot">
-                        <a href="{% url 'license_guide' %}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-book" aria-hidden="true"></i> راهنمای فعال‌سازی
-                        </a>
-                        <a href="#" onclick="showTab('downloads', event); return false;" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-download" aria-hidden="true"></i> دانلود اپ‌ها
-                        </a>
+                    <footer class="lic-card-foot lic-card-foot--compact">
+                        <a href="{% url 'license_guide' %}" class="lic-card-link"><i class="fas fa-book-open" aria-hidden="true"></i> راهنما</a>
+                        <a href="#" onclick="showTab('downloads', event); return false;" class="lic-card-link"><i class="fas fa-download" aria-hidden="true"></i> دانلود</a>
+                        {% if expiry.is_expired and products %}
+                        <a href="{% url 'product_list' %}" class="lic-card-link lic-card-link--accent"><i class="fas fa-rotate-right" aria-hidden="true"></i> تمدید</a>
+                        {% endif %}
                     </footer>
                 </article>
                 {% endwith %}
@@ -681,37 +677,29 @@
             </div>
 
             {% if license_dashboard.can_assign_team %}
-            <aside class="lic-team-guide">
+            <aside class="lic-team-guide lic-team-guide--compact">
                 <i class="fas fa-users" aria-hidden="true"></i>
-                <div>
-                    <strong>تخصیص به اعضای تیم</strong>
-                    <p>برای هر سیستم ثبت‌شده، عضو تیم را انتخاب کنید تا امکانات ربات (فایلینگ، تحلیل، نقشه) در میزکار او باز شود. عضو باید همان کلید لایسنس را در ربات خود فعال کند.</p>
-                </div>
+                <p>برای هر سیستم، عضو تیم را انتخاب کنید تا امکانات ربات در میزکار او باز شود.</p>
             </aside>
             {% elif not license_dashboard.has_agency %}
-            <aside class="lic-team-guide lic-team-guide--muted">
+            <aside class="lic-team-guide lic-team-guide--compact lic-team-guide--muted">
                 <i class="fas fa-building" aria-hidden="true"></i>
-                <div>
-                    <strong>پلن تیمی دارید؟</strong>
-                    <p>برای تخصیص اسلات به مشاوران، ابتدا <a href="{% url 'workspace:crm_team' %}">تیم آژانس</a> را در CRM بسازید و اعضا را اضافه کنید.</p>
-                </div>
+                <p>برای تخصیص به مشاوران، <a href="{% url 'workspace:crm_team' %}">تیم آژانس</a> را بسازید.</p>
             </aside>
             {% endif %}
 
             {% elif not orders_pending_claim %}
-                <div class="licenses-empty-state">
-                    <div class="licenses-empty-icon">
-                        <i class="fas fa-key" aria-hidden="true"></i>
-                    </div>
-                    <h3 class="licenses-empty-title">لایسنس فعالی ندارید</h3>
-                    <p class="licenses-empty-text">برای استفاده از ربات استخراج و امکانات تحلیل در میزکار، یک لایسنس خریداری کنید.</p>
-                    {% if products %}
-                        <a href="{% url 'product_list' %}" class="btn btn-primary btn-buy-license-empty">
-                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-                            خرید ربات استخراج
-                        </a>
-                    {% endif %}
-                </div>
+            <div class="licenses-empty-state licenses-empty-state--compact">
+                <div class="licenses-empty-icon"><i class="fas fa-key" aria-hidden="true"></i></div>
+                <h3 class="licenses-empty-title">لایسنس فعالی ندارید</h3>
+                <p class="licenses-empty-text">برای ربات استخراج و تحلیل بازار، یک لایسنس خریداری کنید.</p>
+                {% if products %}
+                <a href="{% url 'product_list' %}" class="btn btn-primary btn-buy-license-empty">
+                    <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                    خرید ربات
+                </a>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
 

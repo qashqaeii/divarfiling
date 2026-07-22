@@ -224,6 +224,34 @@ def remove_device_slot(user, activation_id: int) -> None:
     activation.delete()
 
 
+def _license_expiry_meta(license_obj: License) -> Dict[str, Any]:
+    """وضعیت انقضا برای نمایش در داشبورد."""
+    license_obj.sync_expiration_status(save=True)
+    now = timezone.now()
+    if not license_obj.expires_at:
+        return {
+            'has_expiry': False,
+            'is_expired': license_obj.status == 'expired',
+            'expiring_soon': False,
+            'days_remaining': None,
+        }
+    is_expired = license_obj.status == 'expired' or license_obj.expires_at <= now
+    if is_expired:
+        return {
+            'has_expiry': True,
+            'is_expired': True,
+            'expiring_soon': False,
+            'days_remaining': 0,
+        }
+    days_remaining = max(0, (license_obj.expires_at.date() - now.date()).days)
+    return {
+        'has_expiry': True,
+        'is_expired': False,
+        'expiring_soon': days_remaining <= 7,
+        'days_remaining': days_remaining,
+    }
+
+
 def build_license_dashboard(user) -> Dict[str, Any]:
     """داده‌های کامل تب لایسنس در داشبورد."""
     licenses = list(
@@ -269,6 +297,7 @@ def build_license_dashboard(user) -> Dict[str, Any]:
         active_count = sum(1 for a in activations if a.is_active)
         portfolios.append({
             'license': lic,
+            'expiry': _license_expiry_meta(lic),
             'activations': activations,
             'slots_used': len(activations),
             'slots_available': max(0, lic.max_activations - len(activations)),

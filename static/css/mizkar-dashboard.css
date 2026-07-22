@@ -3687,3 +3687,443 @@ body.mk-account-dashboard .mk-ft-accordion ul {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
+
+/* ═══ Licenses tab — minimal v2 ═══ */
+.mk-dashboard-page .lic-page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.mk-dashboard-page .lic-page-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--mk-text);
+}
+
+.mk-dashboard-page .lic-page-sub {
+    margin: 0.15rem 0 0;
+    font-size: 0.72rem;
+    color: var(--mk-text-muted);
+}
+
+.mk-dashboard-page .lic-page-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    text-decoration: none;
+    box-shadow: 0 6px 16px -8px rgba(99, 102, 241, 0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.mk-dashboard-page .lic-page-cta:hover {
+    transform: translateY(-1px);
+    color: #fff;
+    box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.65);
+}
+
+.mk-dashboard-page .lic-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.mk-dashboard-page .lic-card {
+    border-radius: 16px;
+    border: 1px solid var(--mk-border);
+    background: var(--mk-surface);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mk-dashboard-page .lic-card:hover {
+    border-color: color-mix(in srgb, var(--mk-border) 60%, rgba(124, 58, 237, 0.35));
+}
+
+.mk-dashboard-page .lic-card--expired {
+    border-color: color-mix(in srgb, var(--mk-border) 70%, rgba(251, 113, 133, 0.25));
+    background: color-mix(in srgb, var(--mk-surface) 92%, rgba(251, 113, 133, 0.04));
+}
+
+.mk-dashboard-page .lic-card--expiring {
+    border-color: color-mix(in srgb, var(--mk-border) 70%, rgba(251, 191, 36, 0.28));
+}
+
+.mk-dashboard-page .lic-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.9rem 1rem 0.75rem;
+    border-bottom: 1px solid var(--mk-border);
+}
+
+.mk-dashboard-page .lic-card-identity {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.mk-dashboard-page .lic-card-identity-text {
+    min-width: 0;
+}
+
+.mk-dashboard-page .lic-card-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.mk-dashboard-page .lic-status {
+    padding: 0.14rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.mk-dashboard-page .lic-status--active {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+}
+
+.mk-dashboard-page .lic-status--inactive {
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--mk-text-muted);
+}
+
+.mk-dashboard-page .lic-status--expired,
+.mk-dashboard-page .lic-status--suspended {
+    background: rgba(244, 63, 94, 0.12);
+    color: #fb7185;
+}
+
+.mk-dashboard-page .lic-expiry {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.22rem 0.55rem;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    background: var(--mk-card);
+    border: 1px solid var(--mk-border);
+    color: var(--mk-text-muted);
+}
+
+.mk-dashboard-page .lic-expiry-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    opacity: 0.75;
+}
+
+.mk-dashboard-page .lic-expiry-date {
+    font-weight: 600;
+    color: var(--mk-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.mk-dashboard-page .lic-expiry--expired .lic-expiry-date {
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: rgba(251, 113, 133, 0.85);
+    color: var(--mk-text-muted);
+    opacity: 0.8;
+}
+
+.mk-dashboard-page .lic-expiry--expired {
+    border-color: rgba(251, 113, 133, 0.22);
+    background: rgba(251, 113, 133, 0.06);
+}
+
+.mk-dashboard-page .lic-expiry--soon {
+    border-color: rgba(251, 191, 36, 0.28);
+    background: rgba(251, 191, 36, 0.08);
+}
+
+.mk-dashboard-page .lic-expiry--soon .lic-expiry-date {
+    color: #fbbf24;
+}
+
+.mk-dashboard-page .lic-expiry--unlimited .lic-expiry-date {
+    color: #38bdf8;
+}
+
+.mk-dashboard-page .lic-expiry-tag {
+    padding: 0.08rem 0.35rem;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 700;
+}
+
+.mk-dashboard-page .lic-expiry-tag--expired {
+    background: rgba(251, 113, 133, 0.15);
+    color: #fb7185;
+}
+
+.mk-dashboard-page .lic-expiry-tag--soon {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+}
+
+.mk-dashboard-page .lic-card-key--compact {
+    padding: 0.65rem 1rem 0.5rem;
+}
+
+.mk-dashboard-page .lic-card-key--compact .license-item-key-row {
+    margin-bottom: 0;
+}
+
+.mk-dashboard-page .lic-slots-meter--slim {
+    margin: 0 1rem 0.65rem;
+    padding: 0.6rem 0.7rem;
+}
+
+.mk-dashboard-page .lic-slots-meter--slim .lic-slots-meter-top span:first-child {
+    font-size: 0.68rem;
+}
+
+.mk-dashboard-page .lic-seats-details {
+    margin: 0 1rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid var(--mk-border);
+    background: var(--mk-card);
+    overflow: hidden;
+}
+
+.mk-dashboard-page .lic-seats-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--mk-text-muted);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.mk-dashboard-page .lic-seats-summary::-webkit-details-marker {
+    display: none;
+}
+
+.mk-dashboard-page .lic-seats-summary::after {
+    content: '\f078';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.55rem;
+    opacity: 0.5;
+    transition: transform 0.2s;
+}
+
+.mk-dashboard-page .lic-seats-details[open] .lic-seats-summary::after {
+    transform: rotate(180deg);
+}
+
+.mk-dashboard-page .lic-seats-count {
+    padding: 0.08rem 0.4rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--mk-purple);
+}
+
+.mk-dashboard-page .lic-seats-details .lic-seats-table-wrap {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    border-top: 1px solid var(--mk-border);
+}
+
+.mk-dashboard-page .lic-no-seats--compact {
+    margin: 0 1rem 0.65rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 8px;
+    background: var(--mk-card);
+    font-size: 0.7rem;
+    line-height: 1.55;
+}
+
+.mk-dashboard-page .lic-auto-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 1rem 0.65rem;
+    font-size: 0.68rem;
+    color: var(--mk-text-muted);
+}
+
+.mk-dashboard-page .lic-auto-hint i {
+    color: var(--mk-purple);
+    font-size: 0.62rem;
+}
+
+.mk-dashboard-page .lic-auto-hint--muted i {
+    color: var(--mk-text-muted);
+}
+
+.mk-dashboard-page .lic-card-foot--compact {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    padding: 0.55rem 1rem 0.75rem;
+    border-top: 1px solid var(--mk-border);
+}
+
+.mk-dashboard-page .lic-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--mk-text-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.mk-dashboard-page .lic-card-link:hover {
+    color: var(--mk-purple);
+}
+
+.mk-dashboard-page .lic-card-link--accent {
+    color: #fb7185;
+}
+
+.mk-dashboard-page .lic-card-link--accent:hover {
+    color: #f43f5e;
+}
+
+.mk-dashboard-page .lic-claim--compact {
+    margin-bottom: 0.85rem;
+    padding: 0.85rem;
+    border-radius: 12px;
+    border: 1px dashed rgba(124, 58, 237, 0.28);
+    background: rgba(124, 58, 237, 0.04);
+}
+
+.mk-dashboard-page .lic-claim-head h3 {
+    margin: 0 0 0.25rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--mk-text);
+}
+
+.mk-dashboard-page .lic-claim-head p {
+    margin: 0 0 0.65rem;
+    font-size: 0.7rem;
+    color: var(--mk-text-muted);
+    line-height: 1.5;
+}
+
+.mk-dashboard-page .lic-claim-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    background: var(--mk-surface);
+    border: 1px solid var(--mk-border);
+}
+
+.mk-dashboard-page .lic-claim-row + .lic-claim-row {
+    margin-top: 0.45rem;
+}
+
+.mk-dashboard-page .lic-claim-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    font-size: 0.74rem;
+}
+
+.mk-dashboard-page .lic-claim-info span {
+    font-size: 0.66rem;
+    color: var(--mk-text-muted);
+}
+
+.mk-dashboard-page .lic-claim-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.7rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    cursor: pointer;
+}
+
+.mk-dashboard-page .lic-seat-shared--compact {
+    margin-bottom: 0.85rem;
+    padding: 0.75rem;
+}
+
+.mk-dashboard-page .lic-team-guide--compact {
+    margin-top: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.7rem;
+}
+
+.mk-dashboard-page .lic-team-guide--compact p {
+    margin: 0;
+    line-height: 1.55;
+}
+
+.mk-dashboard-page .licenses-empty-state--compact {
+    padding: 2rem 1rem;
+}
+
+.mk-dashboard-page .dash-preview-expiry--expired {
+    text-decoration: line-through;
+    text-decoration-color: rgba(251, 113, 133, 0.75);
+    opacity: 0.75;
+}
+
+.mk-dashboard-page .dash-preview-card--expired {
+    opacity: 0.85;
+}
+
+.mk-dashboard-page .badge-expired {
+    background: rgba(251, 113, 133, 0.12);
+    color: #fb7185;
+}
+
+.mk-dashboard-page .badge-muted {
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--mk-text-muted);
+}
+
+@media (max-width: 640px) {
+    .mk-dashboard-page .lic-card-top {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mk-dashboard-page .lic-card-meta {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+}

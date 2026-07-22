@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=18">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-head.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-licenses.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
 {% endblock %}
 
@@ -920,297 +920,233 @@
         {% endif %}
         
         <!-- Tab: Profile -->
-        <div id="tab-profile" class="tab-content" style="display: none;">
-            <div class="dash-profile-tab-head">
-                <div>
-                    <h2 class="tab-content-title">پروفایل من</h2>
-                    <p class="dash-profile-tab-lead">اطلاعات حساب و پروفایل عمومی مشاور برای لینک اشتراک مشتری</p>
-                </div>
-            </div>
+        <div id="tab-profile" class="tab-content prof-tab" style="display: none;">
+            <header class="prof-head">
+                <h2 class="prof-head-title">پروفایل</h2>
+                <p class="prof-head-sub">حساب کاربری و برند عمومی برای اشتراک با مشتری</p>
+            </header>
 
-            <div class="dash-profile-sections">
-                <article class="dash-profile-panel">
-                    <header class="dash-profile-panel-head">
-                        <div class="dash-profile-panel-title-row">
-                            <span class="dash-profile-panel-icon" aria-hidden="true"><i class="fas fa-id-card"></i></span>
-                            <div>
-                                <h3 class="section-title">اطلاعات کاربری</h3>
-                                <p class="dash-profile-panel-sub">ورود و هویت حساب</p>
-                            </div>
-                        </div>
+            <div class="prof-grid">
+                <section class="prof-card">
+                    <header class="prof-card-head">
+                        <h3 class="prof-card-title">حساب کاربری</h3>
+                        <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
+                            <i class="fas fa-pen" aria-hidden="true"></i> ویرایش
+                        </button>
                     </header>
-                    <dl class="dash-field-list">
-                        <div class="dash-field-row">
+                    <dl class="prof-fields">
+                        <div class="prof-field">
                             <dt>نام کاربری</dt>
                             <dd>{{ user.username }}</dd>
                         </div>
-                        <div class="dash-field-row">
+                        <div class="prof-field">
                             <dt>ایمیل</dt>
                             <dd dir="ltr">{{ user.email|default:"—" }}</dd>
                         </div>
-                        <div class="dash-field-row">
-                            <dt>شماره تلفن</dt>
+                        <div class="prof-field">
+                            <dt>موبایل</dt>
                             <dd>{{ user.phone|default:"—" }}</dd>
                         </div>
-                        <div class="dash-field-row">
-                            <dt>تاریخ عضویت</dt>
+                        <div class="prof-field">
+                            <dt>عضویت</dt>
                             <dd>{{ user.date_joined|to_jalali_date:'%Y/%m/%d' }}</dd>
                         </div>
                     </dl>
-                    <div class="dash-profile-panel-actions">
-                        <button type="button" class="dash-action-btn dash-action-btn--primary dash-action-btn--block" onclick="openUserInfoModal()">
-                            <i class="fas fa-pen" aria-hidden="true"></i> ویرایش اطلاعات کاربری
-                        </button>
-                    </div>
-                </article>
+                </section>
 
-                <article class="dash-profile-panel">
-                    <header class="dash-profile-panel-head">
-                        <div class="dash-profile-panel-title-row">
-                            <span class="dash-profile-panel-icon" aria-hidden="true"><i class="fas fa-user-circle"></i></span>
-                            <div>
-                                <h3 class="section-title">اطلاعات تکمیلی</h3>
-                                <p class="dash-profile-panel-sub">آواتار، درباره من و آدرس</p>
-                            </div>
+                <section class="prof-card">
+                    <header class="prof-card-head">
+                        <div class="prof-card-head-main">
+                            {% if user.profile and user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" alt="" class="prof-avatar-thumb">
+                            {% endif %}
+                            <h3 class="prof-card-title">پروفایل تکمیلی</h3>
                         </div>
+                        <button type="button" class="prof-edit-btn" onclick="openProfileModal()">
+                            <i class="fas fa-pen" aria-hidden="true"></i> ویرایش
+                        </button>
                     </header>
                     {% if user.profile %}
-                        {% if user.profile.avatar %}
-                        <div class="dash-profile-avatar-row">
-                            <img src="{{ user.profile.avatar.url }}" alt="آواتار" class="avatar-preview-img">
+                    <dl class="prof-fields">
+                        <div class="prof-field prof-field--full">
+                            <dt>درباره من</dt>
+                            <dd>{{ user.profile.bio|default:"—" }}</dd>
                         </div>
-                        {% endif %}
-                        <dl class="dash-field-list">
-                            <div class="dash-field-row">
-                                <dt><i class="fas fa-user-circle" aria-hidden="true"></i> درباره من</dt>
-                                <dd>{{ user.profile.bio|default:"—" }}</dd>
-                            </div>
-                            <div class="dash-field-row">
-                                <dt><i class="fas fa-map-marker-alt" aria-hidden="true"></i> آدرس</dt>
-                                <dd>{{ user.profile.address|default:"—" }}</dd>
-                            </div>
-                            <div class="dash-field-row">
-                                <dt><i class="fas fa-building" aria-hidden="true"></i> شهر</dt>
-                                <dd>{{ user.profile.city|default:"—" }}</dd>
-                            </div>
-                            <div class="dash-field-row">
-                                <dt><i class="fas fa-mail-bulk" aria-hidden="true"></i> کد پستی</dt>
-                                <dd>{{ user.profile.postal_code|default:"—" }}</dd>
-                            </div>
-                        </dl>
+                        <div class="prof-field">
+                            <dt>شهر</dt>
+                            <dd>{{ user.profile.city|default:"—" }}</dd>
+                        </div>
+                        <div class="prof-field">
+                            <dt>کد پستی</dt>
+                            <dd>{{ user.profile.postal_code|default:"—" }}</dd>
+                        </div>
+                        <div class="prof-field prof-field--full">
+                            <dt>آدرس</dt>
+                            <dd>{{ user.profile.address|default:"—" }}</dd>
+                        </div>
+                    </dl>
                     {% else %}
-                        <p class="empty-text">اطلاعات تکمیلی ثبت نشده است.</p>
+                    <p class="prof-empty">اطلاعات تکمیلی ثبت نشده — از دکمه ویرایش شروع کنید.</p>
                     {% endif %}
-                    <div class="dash-profile-panel-actions">
-                        <button type="button" class="dash-action-btn dash-action-btn--primary dash-action-btn--block" onclick="openProfileModal()">
-                            <i class="fas fa-pen" aria-hidden="true"></i> ویرایش اطلاعات تکمیلی
-                        </button>
-                    </div>
-                </article>
+                </section>
             </div>
 
-            {# پروفایل عمومی مشاور — شبکه‌های اجتماعی و برندینگ #}
-            <article class="dash-profile-panel dash-profile-panel--consultant" id="consultantPublicProfile">
-                <header class="dash-profile-panel-head">
-                    <div class="dash-profile-panel-title-row">
-                        <span class="dash-profile-panel-icon dash-profile-panel-icon--teal" aria-hidden="true"><i class="fas fa-share-nodes"></i></span>
-                        <div>
-                            <h3 class="section-title">پروفایل عمومی مشاور</h3>
-                            <p class="dash-profile-panel-sub">این اطلاعات در مودال «اشتراک با مشتری» و صفحه لینک عمومی نمایش داده می‌شود</p>
-                        </div>
+            <section class="prof-card prof-card--public" id="consultantPublicProfile">
+                <header class="prof-card-head prof-card-head--public">
+                    <div>
+                        <h3 class="prof-card-title">پروفایل عمومی مشاور</h3>
+                        <p class="prof-card-desc">در لینک اشتراک مشتری و صفحه عمومی نمایش داده می‌شود</p>
                     </div>
                     {% if consultant_socials_active %}
-                    <span class="dash-profile-live-chip"><i class="fas fa-circle" aria-hidden="true"></i> {{ consultant_socials_active|length }} شبکه فعال</span>
+                    <span class="prof-live-chip">{{ consultant_socials_active|length }} شبکه فعال</span>
                     {% endif %}
                 </header>
 
-                <form id="consultantProfileForm" class="dash-consultant-form" enctype="multipart/form-data" onsubmit="submitConsultantProfileForm(event)">
+                <form id="consultantProfileForm" class="prof-form" enctype="multipart/form-data" onsubmit="submitConsultantProfileForm(event)">
                     {% csrf_token %}
-                    <div class="dash-consultant-grid">
-                        <div class="form-group dash-consultant-field">
-                            <label class="form-label" for="consultantAgencyName">
-                                <i class="fas fa-building" aria-hidden="true"></i>
-                                نام آژانس / برند نمایشی
-                            </label>
-                            <input type="text" name="agency_name" id="consultantAgencyName" class="form-control modal-input"
+
+                    <details class="prof-fold" open>
+                        <summary>برند و پیام</summary>
+                        <div class="prof-fold-body">
+                            <label class="prof-label" for="consultantAgencyName">نام آژانس / برند</label>
+                            <input type="text" name="agency_name" id="consultantAgencyName" class="prof-input"
                                    value="{{ consultant_agency_name }}" placeholder="مثلاً آژانس املاک آسمان">
+                            <label class="prof-label" for="consultantWelcome">پیام خوش‌آمد</label>
+                            <textarea name="default_welcome_message" id="consultantWelcome" class="prof-input prof-input--area" rows="2"
+                                      placeholder="برای هماهنگی بازدید با من تماس بگیرید…">{{ consultant_welcome_plain }}</textarea>
                         </div>
-                        <div class="form-group dash-consultant-field dash-consultant-field--full">
-                            <label class="form-label" for="consultantWelcome">
-                                <i class="fas fa-comment-dots" aria-hidden="true"></i>
-                                پیام خوش‌آمد پیش‌فرض صفحه مشتری
-                            </label>
-                            <textarea name="default_welcome_message" id="consultantWelcome" class="form-control modal-input" rows="3"
-                                      placeholder="مثلاً: برای هماهنگی بازدید با من در تماس باشید…">{{ consultant_welcome_plain }}</textarea>
-                            <small class="dash-field-hint">در همه لینک‌های عمومی نمایش داده می‌شود مگر برای یک فایل جداگانه سفارشی کنید.</small>
-                        </div>
-                    </div>
+                    </details>
 
-                    <div class="dash-consultant-block">
-                        <div class="dash-social-block-head">
-                            <h4><i class="fas fa-user-tie" aria-hidden="true"></i> مشاور</h4>
-                            <p>عکس و شبکه‌های شخصی مشاور — فقط موارد پرشده در صفحه مشتری دیده می‌شود.</p>
-                        </div>
-                        <div class="dash-consultant-upload-row">
-                            <div class="dash-consultant-photo-preview">
-                                {% if consultant_photo_url %}
-                                <img src="{{ consultant_photo_url }}" alt="" id="consultantPhotoPreview" width="80" height="80">
-                                {% else %}
-                                <img src="" alt="" id="consultantPhotoPreview" width="80" height="80" style="display:none">
-                                <span class="dash-upload-placeholder" id="consultantPhotoPlaceholder" aria-hidden="true"><i class="fas fa-user"></i></span>
-                                {% endif %}
+                    <details class="prof-fold">
+                        <summary>مشاور و شبکه‌های شخصی</summary>
+                        <div class="prof-fold-body">
+                            <div class="prof-upload-row">
+                                <div class="prof-photo">
+                                    {% if consultant_photo_url %}
+                                    <img src="{{ consultant_photo_url }}" alt="" id="consultantPhotoPreview" width="64" height="64">
+                                    {% else %}
+                                    <img src="" alt="" id="consultantPhotoPreview" width="64" height="64" style="display:none">
+                                    <span class="prof-photo-ph" id="consultantPhotoPlaceholder"><i class="fas fa-user"></i></span>
+                                    {% endif %}
+                                </div>
+                                <div class="prof-upload-field">
+                                    <label class="prof-label" for="consultantPhotoInput">عکس مشاور</label>
+                                    <input type="file" name="consultant_photo" id="consultantPhotoInput" class="prof-input prof-input--file"
+                                           accept="image/*" onchange="previewConsultantImage(event, 'consultantPhotoPreview', 'consultantPhotoPlaceholder')">
+                                    {% if consultant_photo_url %}
+                                    <label class="prof-check"><input type="checkbox" name="clear_consultant_photo" value="1"> حذف عکس</label>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <div class="form-group dash-consultant-field" style="flex:1;margin:0">
-                                <label class="form-label" for="consultantPhotoInput">عکس مشاور</label>
-                                <input type="file" name="consultant_photo" id="consultantPhotoInput" class="form-control modal-input"
-                                       accept="image/*" onchange="previewConsultantImage(event, 'consultantPhotoPreview', 'consultantPhotoPlaceholder')">
-                                {% if consultant_photo_url %}
-                                <label class="dash-clear-check">
-                                    <input type="checkbox" name="clear_consultant_photo" value="1"> حذف عکس فعلی
-                                </label>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="dash-social-grid">
-                            {% for net in consultant_social_networks %}
-                            <div class="dash-social-field" style="--dash-social: {{ net.color }}">
-                                <label class="dash-social-label" for="dash-social-{{ net.key }}">
-                                    <span class="dash-social-badge" aria-hidden="true">
+                            <div class="prof-social-list">
+                                {% for net in consultant_social_networks %}
+                                <div class="prof-social-row" style="--prof-social: {{ net.color }}">
+                                    <label class="prof-social-label" for="dash-social-{{ net.key }}">
                                         {% if net.icon_file %}
-                                        <img src="{% static net.icon_file %}?v=2" alt="" width="26" height="26">
+                                        <img src="{% static net.icon_file %}?v=2" alt="" width="20" height="20">
                                         {% else %}
-                                        <i class="fas fa-link"></i>
+                                        <i class="fas fa-link" aria-hidden="true"></i>
                                         {% endif %}
-                                    </span>
-                                    <span class="dash-social-meta">
-                                        <strong>{{ net.label }}</strong>
-                                        <small>{{ net.placeholder }}</small>
-                                    </span>
-                                </label>
-                                <input type="text"
-                                       class="form-control modal-input dash-social-input"
-                                       id="dash-social-{{ net.key }}"
-                                       name="social_{{ net.key }}"
-                                       value="{{ net.url }}"
-                                       placeholder="{{ net.placeholder }}"
-                                       dir="ltr"
-                                       autocomplete="off">
+                                        <span>{{ net.label }}</span>
+                                    </label>
+                                    <input type="text" class="prof-input prof-input--social" id="dash-social-{{ net.key }}"
+                                           name="social_{{ net.key }}" value="{{ net.url }}" placeholder="{{ net.placeholder }}"
+                                           dir="ltr" autocomplete="off">
+                                </div>
+                                {% empty %}
+                                <p class="prof-empty">شبکه‌ای تعریف نشده.</p>
+                                {% endfor %}
                             </div>
-                            {% empty %}
-                            <p class="empty-text">شبکه‌های اجتماعی در دسترس نیست.</p>
-                            {% endfor %}
                         </div>
-                    </div>
+                    </details>
 
-                    <div class="dash-consultant-block">
-                        <div class="dash-social-block-head">
-                            <h4><i class="fas fa-building" aria-hidden="true"></i> دفتر املاک</h4>
-                            <p>آدرس، تلفن ثابت، وبسایت، مختصات و کارت ویزیت دفتر.</p>
-                        </div>
-                        <div class="dash-consultant-grid">
-                            <div class="form-group dash-consultant-field dash-consultant-field--full">
-                                <label class="form-label" for="consultantAgencyAddress">آدرس دفتر</label>
-                                <textarea name="agency_address" id="consultantAgencyAddress" class="form-control modal-input" rows="2"
-                                          placeholder="خیابان، پلاک…">{{ consultant_agency_address }}</textarea>
+                    <details class="prof-fold">
+                        <summary>دفتر املاک</summary>
+                        <div class="prof-fold-body">
+                            <label class="prof-label" for="consultantAgencyAddress">آدرس</label>
+                            <textarea name="agency_address" id="consultantAgencyAddress" class="prof-input prof-input--area" rows="2"
+                                      placeholder="خیابان، پلاک…">{{ consultant_agency_address }}</textarea>
+                            <div class="prof-field-grid">
+                                <div>
+                                    <label class="prof-label" for="consultantAgencyCity">شهر</label>
+                                    <input type="text" name="agency_city" id="consultantAgencyCity" class="prof-input"
+                                           value="{{ consultant_agency_city }}" placeholder="تهران">
+                                </div>
+                                <div>
+                                    <label class="prof-label" for="consultantAgencyWebsite">وبسایت</label>
+                                    <input type="url" name="agency_website" id="consultantAgencyWebsite" class="prof-input"
+                                           value="{{ consultant_agency_website }}" placeholder="https://…" dir="ltr">
+                                </div>
+                                <div>
+                                    <label class="prof-label" for="consultantAgencyLandline">تلفن ثابت</label>
+                                    <input type="text" name="agency_landline" id="consultantAgencyLandline" class="prof-input"
+                                           value="{{ consultant_agency_landline }}" placeholder="۰۲۱…" dir="ltr">
+                                </div>
+                                <div>
+                                    <label class="prof-label" for="consultantAgencyLandlineAlt">تلفن دوم</label>
+                                    <input type="text" name="agency_landline_alt" id="consultantAgencyLandlineAlt" class="prof-input"
+                                           value="{{ consultant_agency_landline_alt }}" placeholder="اختیاری" dir="ltr">
+                                </div>
+                                <div>
+                                    <label class="prof-label" for="consultantAgencyLat">عرض</label>
+                                    <input type="text" name="agency_latitude" id="consultantAgencyLat" class="prof-input"
+                                           value="{{ consultant_agency_latitude }}" placeholder="35.6892" dir="ltr" inputmode="decimal">
+                                </div>
+                                <div>
+                                    <label class="prof-label" for="consultantAgencyLng">طول</label>
+                                    <input type="text" name="agency_longitude" id="consultantAgencyLng" class="prof-input"
+                                           value="{{ consultant_agency_longitude }}" placeholder="51.3890" dir="ltr" inputmode="decimal">
+                                </div>
                             </div>
-                            <div class="form-group dash-consultant-field">
-                                <label class="form-label" for="consultantAgencyCity">شهر</label>
-                                <input type="text" name="agency_city" id="consultantAgencyCity" class="form-control modal-input"
-                                       value="{{ consultant_agency_city }}" placeholder="تهران">
+                            <div class="prof-upload-row prof-upload-row--card">
+                                <div class="prof-photo prof-photo--card">
+                                    {% if consultant_business_card_url %}
+                                    <img src="{{ consultant_business_card_url }}" alt="" id="businessCardPreview" width="96" height="58">
+                                    {% else %}
+                                    <img src="" alt="" id="businessCardPreview" width="96" height="58" style="display:none">
+                                    <span class="prof-photo-ph" id="businessCardPlaceholder"><i class="fas fa-id-card"></i></span>
+                                    {% endif %}
+                                </div>
+                                <div class="prof-upload-field">
+                                    <label class="prof-label" for="businessCardInput">کارت ویزیت</label>
+                                    <input type="file" name="business_card_image" id="businessCardInput" class="prof-input prof-input--file"
+                                           accept="image/*" onchange="previewConsultantImage(event, 'businessCardPreview', 'businessCardPlaceholder')">
+                                    {% if consultant_business_card_url %}
+                                    <label class="prof-check"><input type="checkbox" name="clear_business_card_image" value="1"> حذف کارت</label>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <div class="form-group dash-consultant-field">
-                                <label class="form-label" for="consultantAgencyWebsite">وبسایت</label>
-                                <input type="url" name="agency_website" id="consultantAgencyWebsite" class="form-control modal-input"
-                                       value="{{ consultant_agency_website }}" placeholder="https://…" dir="ltr">
-                            </div>
-                            <div class="form-group dash-consultant-field">
-                                <label class="form-label" for="consultantAgencyLandline">تلفن ثابت</label>
-                                <input type="text" name="agency_landline" id="consultantAgencyLandline" class="form-control modal-input"
-                                       value="{{ consultant_agency_landline }}" placeholder="۰۲۱…" dir="ltr">
-                            </div>
-                            <div class="form-group dash-consultant-field">
-                                <label class="form-label" for="consultantAgencyLandlineAlt">تلفن ثابت دوم</label>
-                                <input type="text" name="agency_landline_alt" id="consultantAgencyLandlineAlt" class="form-control modal-input"
-                                       value="{{ consultant_agency_landline_alt }}" placeholder="اختیاری" dir="ltr">
-                            </div>
-                            <div class="form-group dash-consultant-field">
-                                <label class="form-label" for="consultantAgencyLat">عرض جغرافیایی</label>
-                                <input type="text" name="agency_latitude" id="consultantAgencyLat" class="form-control modal-input"
-                                       value="{{ consultant_agency_latitude }}" placeholder="35.6892" dir="ltr" inputmode="decimal">
-                            </div>
-                            <div class="form-group dash-consultant-field">
-                                <label class="form-label" for="consultantAgencyLng">طول جغرافیایی</label>
-                                <input type="text" name="agency_longitude" id="consultantAgencyLng" class="form-control modal-input"
-                                       value="{{ consultant_agency_longitude }}" placeholder="51.3890" dir="ltr" inputmode="decimal">
-                            </div>
-                        </div>
-                        <div class="dash-consultant-upload-row">
-                            <div class="dash-consultant-photo-preview dash-consultant-photo-preview--card">
-                                {% if consultant_business_card_url %}
-                                <img src="{{ consultant_business_card_url }}" alt="" id="businessCardPreview" width="120" height="72">
-                                {% else %}
-                                <img src="" alt="" id="businessCardPreview" width="120" height="72" style="display:none">
-                                <span class="dash-upload-placeholder" id="businessCardPlaceholder" aria-hidden="true"><i class="fas fa-id-card"></i></span>
-                                {% endif %}
-                            </div>
-                            <div class="form-group dash-consultant-field" style="flex:1;margin:0">
-                                <label class="form-label" for="businessCardInput">کارت ویزیت</label>
-                                <input type="file" name="business_card_image" id="businessCardInput" class="form-control modal-input"
-                                       accept="image/*" onchange="previewConsultantImage(event, 'businessCardPreview', 'businessCardPlaceholder')">
-                                {% if consultant_business_card_url %}
-                                <label class="dash-clear-check">
-                                    <input type="checkbox" name="clear_business_card_image" value="1"> حذف کارت فعلی
-                                </label>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="dash-social-block-head" style="margin-top:1rem">
-                            <h4><i class="fas fa-hashtag" aria-hidden="true"></i> شبکه‌های دفتر</h4>
-                        </div>
-                        <div class="dash-social-grid">
-                            {% for net in agency_social_networks %}
-                            <div class="dash-social-field" style="--dash-social: {{ net.color }}">
-                                <label class="dash-social-label" for="dash-agency-social-{{ net.key }}">
-                                    <span class="dash-social-badge" aria-hidden="true">
+                            <p class="prof-fold-kicker">شبکه‌های دفتر</p>
+                            <div class="prof-social-list">
+                                {% for net in agency_social_networks %}
+                                <div class="prof-social-row" style="--prof-social: {{ net.color }}">
+                                    <label class="prof-social-label" for="dash-agency-social-{{ net.key }}">
                                         {% if net.icon_file %}
-                                        <img src="{% static net.icon_file %}?v=2" alt="" width="26" height="26">
+                                        <img src="{% static net.icon_file %}?v=2" alt="" width="20" height="20">
                                         {% else %}
-                                        <i class="fas fa-link"></i>
+                                        <i class="fas fa-link" aria-hidden="true"></i>
                                         {% endif %}
-                                    </span>
-                                    <span class="dash-social-meta">
-                                        <strong>{{ net.label }}</strong>
-                                        <small>{{ net.placeholder }}</small>
-                                    </span>
-                                </label>
-                                <input type="text"
-                                       class="form-control modal-input dash-social-input"
-                                       id="dash-agency-social-{{ net.key }}"
-                                       name="agency_social_{{ net.key }}"
-                                       value="{{ net.url }}"
-                                       placeholder="{{ net.placeholder }}"
-                                       dir="ltr"
-                                       autocomplete="off">
+                                        <span>{{ net.label }}</span>
+                                    </label>
+                                    <input type="text" class="prof-input prof-input--social" id="dash-agency-social-{{ net.key }}"
+                                           name="agency_social_{{ net.key }}" value="{{ net.url }}" placeholder="{{ net.placeholder }}"
+                                           dir="ltr" autocomplete="off">
+                                </div>
+                                {% empty %}
+                                <p class="prof-empty">شبکه دفتر تعریف نشده.</p>
+                                {% endfor %}
                             </div>
-                            {% empty %}
-                            <p class="empty-text">شبکه‌های دفتر در دسترس نیست.</p>
-                            {% endfor %}
                         </div>
-                    </div>
+                    </details>
 
-                    <div id="consultantProfileError" class="alert alert-danger modal-error" style="display: none;"></div>
-                    <div class="dash-consultant-form-actions">
-                        <button type="submit" id="consultantProfileSubmitBtn" class="dash-action-btn dash-action-btn--primary">
-                            <i class="fas fa-save" aria-hidden="true"></i>
-                            <span>ذخیره پروفایل عمومی</span>
+                    <div id="consultantProfileError" class="alert alert-danger modal-error prof-form-error" style="display: none;"></div>
+                    <footer class="prof-form-foot">
+                        <button type="submit" id="consultantProfileSubmitBtn" class="prof-save-btn">
+                            <i class="fas fa-check" aria-hidden="true"></i> ذخیره پروفایل عمومی
                         </button>
-                        <p class="dash-consultant-form-note">
-                            <i class="fas fa-circle-info" aria-hidden="true"></i>
-                            پس از ذخیره، دکمه‌های ارسال در مودال اشتراک و آیکون‌های صفحه عمومی به‌روز می‌شوند.
-                        </p>
-                    </div>
+                    </footer>
                 </form>
-            </article>
+            </section>
         </div>
     </div>
 </div>

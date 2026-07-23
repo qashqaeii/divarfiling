@@ -21,6 +21,93 @@ from accounts.models import (
 
 TEHRAN_TZ = 'Asia/Tehran'
 
+FUNNEL_STEP_DEFS = (
+    ('eligible', 'واجد شرایط', '#64748b'),
+    ('enrolled', 'ثبت در کمپین', '#475569'),
+    ('accepted', 'ارسال پذیرفته', '#0d9488'),
+    ('clicked', 'کلیک لندینگ', '#0891b2'),
+    ('registered', 'ثبت‌نام', '#6366f1'),
+    ('paid', 'خرید / لایسنس', '#e11d48'),
+)
+
+STATUS_CHART_COLORS = {
+    LeadCampaign.Status.DRAFT: '#94a3b8',
+    LeadCampaign.Status.PILOT: '#d97706',
+    LeadCampaign.Status.ACTIVE: '#0d9488',
+    LeadCampaign.Status.PAUSED: '#64748b',
+    LeadCampaign.Status.COMPLETED: '#6366f1',
+    LeadCampaign.Status.ARCHIVED: '#cbd5e1',
+}
+
+
+def _rate(part: int | float, whole: int | float, *, digits: int = 1) -> float:
+    if not whole:
+        return 0.0
+    return round(100 * float(part) / float(whole), digits)
+
+
+def _short_campaign_label(name: str, campaign_id: int, *, max_len: int = 28) -> str:
+    text = (name or '').strip() or f'#{campaign_id}'
+    if len(text) <= max_len:
+        return text
+    return text[: max_len - 1] + '…'
+
+
+def _campaign_row_from_funnel(row: Dict[str, Any]) -> Dict[str, Any]:
+    funnel = row.get('funnel') or {}
+    attr = row.get('attribution') or {}
+    accepted = int(funnel.get('accepted', 0) or 0)
+    clicked = int(funnel.get('clicked', 0) or 0)
+    registered = int(funnel.get('registered', 0) or 0)
+    paid = int(funnel.get('paid', 0) or 0)
+    revenue = int(attr.get('revenue', 0) or 0)
+    sms_cost = int(attr.get('sms_cost', 0) or 0)
+    cid = int(row.get('campaign_id') or 0)
+    return {
+        'id': cid,
+        'label': _short_campaign_label(row.get('name') or '', cid),
+        'name': row.get('name') or '',
+        'status': row.get('status') or '',
+        'status_display': row.get('status_display') or '',
+        'is_pilot': bool(row.get('is_pilot')),
+        'eligible': int(funnel.get('eligible', 0) or 0),
+        'enrolled': int(funnel.get('enrolled_total', 0) or 0),
+        'accepted': accepted,
+        'clicked': clicked,
+        'registered': registered,
+        'paid': paid,
+        'revenue': revenue,
+        'sms_cost': sms_cost,
+        'cac': attr.get('cac'),
+        'roas': attr.get('roas'),
+        'ctr': _rate(clicked, accepted),
+        'click_to_reg': _rate(registered, clicked),
+        'reg_to_paid': _rate(paid, registered),
+        'overall_cvr': _rate(paid, accepted),
+    }
+
+
+def _build_funnel_steps(totals: Dict[str, int]) -> list[Dict[str, Any]]:
+    steps: list[Dict[str, Any]] = []
+    top_value = 0
+    prev_value = 0
+    for idx, (key, label, color) in enumerate(FUNNEL_STEP_DEFS):
+        value = int(totals.get(key, 0) or 0)
+        if idx == 0:
+            top_value = value or 1
+        steps.append({
+            'key': key,
+            'label': label,
+            'value': value,
+            'color': color,
+            'share_of_top': _rate(value, top_value),
+            'step_conversion': _rate(value, prev_value) if idx else 100.0,
+            'drop_from_prev': round(100 - _rate(value, prev_value), 1) if idx and prev_value else 0.0,
+        })
+        if value:
+            prev_value = value
+    return steps
+
 
 def campaign_funnel(campaign: LeadCampaign) -> Dict[str, Any]:
     enroll_qs = CampaignEnrollment.objects.filter(campaign=campaign)
@@ -233,94 +320,142 @@ def overview_stats() -> Dict[str, Any]:
     }
 
 
-def _short_campaign_label(name: str, campaign_id: int, *, max_len: int = 22) -> str:
-    text = (name or '').strip() or f'#{campaign_id}'
-    if len(text) <= max_len:
-        return text
-    return text[: max_len - 1] + '…'
-
-
 def acquisition_dashboard_charts(
     campaigns: list[LeadCampaign],
     funnels: list[Dict[str, Any]],
 ) -> Dict[str, Any]:
-    """داده نمودارهای نمای کلی — تجمیع کمپین‌های جذب."""
-    agg = {
+    """داده کامل نمودارها و جدول دقیق — تجمیع کمپین‌های جذب."""
+    totals = {
         'eligible': 0,
+        'enrolled': 0,
         'accepted': 0,
         'clicked': 0,
         'registered': 0,
         'paid': 0,
+        'revenue': 0,
+        'sms_cost': 0,
     }
-    variant_totals: Dict[str, Dict[str, int]] = {}
+    variant_items: Dict[str, Dict[str, Any]] = {}
 
     for row in funnels:
         funnel = row.get('funnel') or {}
-        for key in agg:
-            agg[key] += int(funnel.get(key, 0) or 0)
+        attr = row.get('attribution') or {}
+        totals['eligible'] += int(funnel.get('eligible', 0) or 0)
+        totals['enrolled'] += int(funnel.get('enrolled_total', 0) or 0)
+        totals['accepted'] += int(funnel.get('accepted', 0) or 0)
+        totals['clicked'] += int(funnel.get('clicked', 0) or 0)
+        totals['registered'] += int(funnel.get('registered', 0) or 0)
+        totals['paid'] += int(funnel.get('paid', 0) or 0)
+        totals['revenue'] += int(attr.get('revenue', 0) or 0)
+        totals['sms_cost'] += int(attr.get('sms_cost', 0) or 0)
+
         for variant in row.get('variants') or []:
             key = variant.get('key') or '?'
-            bucket = variant_totals.setdefault(key, {
+            bucket = variant_items.setdefault(key, {
+                'key': key,
+                'name': variant.get('name') or f'نسخه {key}',
                 'enrolled': 0,
                 'accepted': 0,
                 'clicked': 0,
                 'registered': 0,
                 'paid': 0,
             })
-            for field in bucket:
+            for field in ('enrolled', 'accepted', 'clicked', 'registered', 'paid'):
                 bucket[field] += int(variant.get(field, 0) or 0)
 
     status_labels: Dict[str, str] = dict(LeadCampaign.Status.choices)
-    status_counts: Dict[str, int] = {code: 0 for code in status_labels}
-    for campaign in campaigns:
-        status_counts[campaign.status] = status_counts.get(campaign.status, 0) + 1
+    status_items = []
+    for code, label in LeadCampaign.Status.choices:
+        count = sum(1 for c in campaigns if c.status == code)
+        if count:
+            status_items.append({
+                'code': code,
+                'label': label,
+                'value': count,
+                'color': STATUS_CHART_COLORS.get(code, '#94a3b8'),
+            })
 
-    top_rows = sorted(
-        funnels,
-        key=lambda item: int((item.get('funnel') or {}).get('accepted', 0) or 0),
-        reverse=True,
-    )[:10]
+    campaign_rows = [_campaign_row_from_funnel(row) for row in funnels]
+    campaign_rows.sort(key=lambda item: item['accepted'], reverse=True)
 
-    campaign_rows = []
-    for row in top_rows:
-        funnel = row.get('funnel') or {}
-        campaign_rows.append({
-            'id': row.get('campaign_id'),
-            'label': _short_campaign_label(row.get('name') or '', row.get('campaign_id') or 0),
-            'accepted': int(funnel.get('accepted', 0) or 0),
-            'clicked': int(funnel.get('clicked', 0) or 0),
-            'registered': int(funnel.get('registered', 0) or 0),
-            'paid': int(funnel.get('paid', 0) or 0),
+    chart_campaigns = campaign_rows[:8]
+
+    variant_list = []
+    for key in sorted(variant_items.keys()):
+        item = variant_items[key]
+        accepted = item['accepted']
+        clicked = item['clicked']
+        registered = item['registered']
+        paid = item['paid']
+        variant_list.append({
+            **item,
+            'ctr': _rate(clicked, accepted),
+            'click_to_reg': _rate(registered, clicked),
+            'reg_to_paid': _rate(paid, registered),
+            'overall_cvr': _rate(paid, accepted),
         })
 
-    accepted = agg['accepted']
-    clicked = agg['clicked']
-    registered = agg['registered']
-    paid = agg['paid']
+    winner_key = None
+    if len(variant_list) >= 2:
+        winner_key = max(variant_list, key=lambda v: (v['paid'], v['registered'], v['clicked'])).get('key')
+
+    funnel_steps = _build_funnel_steps(totals)
+    accepted = totals['accepted']
+    clicked = totals['clicked']
+    registered = totals['registered']
+    paid = totals['paid']
+    sms_cost = totals['sms_cost']
+    revenue = totals['revenue']
 
     return {
+        'meta': {
+            'campaign_count': len(campaigns),
+            'reported_campaigns': len(funnels),
+            'generated_at': timezone.now().isoformat(),
+        },
+        'summary': {
+            **totals,
+            'cac': int(sms_cost / paid) if paid else None,
+            'roas': round(float(Decimal(revenue) / Decimal(sms_cost)), 2) if sms_cost and revenue else None,
+            'ctr': _rate(clicked, accepted),
+            'click_to_reg': _rate(registered, clicked),
+            'reg_to_paid': _rate(paid, registered),
+            'overall_cvr': _rate(paid, accepted),
+        },
+        'funnel_steps': funnel_steps,
         'funnel': {
-            'labels': ['ارسال پذیرفته', 'کلیک', 'ثبت‌نام', 'خرید'],
-            'values': [accepted, clicked, registered, paid],
-            'colors': ['#0d9488', '#0891b2', '#6366f1', '#e11d48'],
+            'labels': [step['label'] for step in funnel_steps],
+            'values': [step['value'] for step in funnel_steps],
+            'colors': [step['color'] for step in funnel_steps],
+        },
+        'conversion_series': {
+            'labels': [step['label'] for step in funnel_steps[1:]],
+            'step_rates': [step['step_conversion'] for step in funnel_steps[1:]],
+            'share_rates': [step['share_of_top'] for step in funnel_steps],
         },
         'rates': {
-            'click_rate': round(100 * clicked / accepted, 1) if accepted else 0,
-            'register_rate': round(100 * registered / clicked, 1) if clicked else 0,
-            'purchase_rate': round(100 * paid / registered, 1) if registered else 0,
-            'overall_conversion': round(100 * paid / accepted, 1) if accepted else 0,
+            'click_rate': _rate(clicked, accepted),
+            'register_rate': _rate(registered, clicked),
+            'purchase_rate': _rate(paid, registered),
+            'overall_conversion': _rate(paid, accepted),
         },
         'status': {
-            'labels': [status_labels.get(code, code) for code in status_counts if status_counts[code]],
-            'values': [status_counts[code] for code in status_counts if status_counts[code]],
+            'labels': [item['label'] for item in status_items],
+            'values': [item['value'] for item in status_items],
+            'colors': [item['color'] for item in status_items],
+            'items': status_items,
+            'total': len(campaigns),
         },
-        'campaigns': campaign_rows,
+        'campaigns': chart_campaigns,
+        'campaign_table': campaign_rows,
         'variants': {
-            'labels': sorted(variant_totals.keys()),
-            'accepted': [variant_totals[k]['accepted'] for k in sorted(variant_totals.keys())],
-            'clicked': [variant_totals[k]['clicked'] for k in sorted(variant_totals.keys())],
-            'registered': [variant_totals[k]['registered'] for k in sorted(variant_totals.keys())],
-            'paid': [variant_totals[k]['paid'] for k in sorted(variant_totals.keys())],
+            'items': variant_list,
+            'winner': winner_key,
+            'labels': [item['key'] for item in variant_list],
+            'accepted': [item['accepted'] for item in variant_list],
+            'clicked': [item['clicked'] for item in variant_list],
+            'registered': [item['registered'] for item in variant_list],
+            'paid': [item['paid'] for item in variant_list],
         },
-        'totals': agg,
+        'totals': totals,
     }

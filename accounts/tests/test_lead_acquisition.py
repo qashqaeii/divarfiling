@@ -485,7 +485,8 @@ class LeadAdminViewTests(TestCase):
         self.assertContains(resp, 'lac-campaigns-bulk-form')
         self.assertContains(resp, 'lac-select-all')
         self.assertContains(resp, 'کلیک لندینگ')
-        self.assertContains(resp, 'lac-chart-funnel')
+        self.assertContains(resp, 'lac-chart-conversion')
+        self.assertContains(resp, 'lac-campaign-table')
         self.assertContains(resp, 'lac-charts-data')
 
     @patch('accounts.lead_acquisition_views.enroll_pilot')
@@ -741,4 +742,7 @@ class LeadOverviewDashboardTests(TestCase):
         self.assertIn('status', charts)
         self.assertIn('campaigns', charts)
         self.assertEqual(len(charts['campaigns']), 1)
-        self.assertEqual(len(charts['funnel']['values']), 4)
+        self.assertEqual(len(charts['funnel_steps']), 6)
+        self.assertIn('summary', charts)
+        self.assertIn('campaign_table', charts)
+        self.assertIn('conversion_series', charts)

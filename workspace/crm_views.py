@@ -100,7 +100,8 @@ def _crm_lead_api_rate_limit_exceeded(client_ip: str) -> bool:
 from workspace.services.features import extract_listing_features
 from workspace.services.crm import (
     resolve_listing_for_property,
-    apply_property_suggestions, build_customer_whatsapp_text, build_dashboard_charts,
+    apply_contact_suggestions, apply_property_suggestions, build_customer_whatsapp_text,
+    build_dashboard_charts,
     complete_follow_up, complete_property_follow_up, convert_lead, export_customers_excel_response,
     export_properties_csv_response, export_properties_excel_response, filter_contacts,
     filter_properties, get_communication_stats, get_dashboard_stats,
@@ -137,6 +138,7 @@ from workspace.services.crm_deal_checklist import (
 from workspace.services.crm_matching import (
     MATCH_TYPES,
     get_customer_matches,
+    get_property_contact_matches,
     normalize_matching_tolerance_percent,
 )
 from workspace.constants import LEAD_TYPES
@@ -1393,6 +1395,23 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 .select_related('customer')[:8]
             )
         ctx['active_tab'] = self.request.GET.get('tab', '')
+        ctx['contact_match_data'] = {
+            'eligible': False,
+            'matches': [],
+            'total_count': 0,
+            'message': '',
+        }
+        ctx['contact_suggestion_text'] = ''
+        ctx['contact_suggested'] = self.request.GET.get('suggested') == '1'
+        if (
+            ctx.get('is_property_owner')
+            and not ctx.get('property_is_deleted')
+            and not ctx.get('mask_sensitive')
+        ):
+            ctx['contact_match_data'] = get_property_contact_matches(p, self.request.user)
+            ctx['contact_suggestion_text'] = self.request.session.pop(
+                'crm_last_contact_suggestion_text', '',
+            )
         if ctx.get('is_property_owner') and not ctx.get('property_is_deleted'):
             from workspace.services.property_public_share import (
                 get_or_create_property_share,
@@ -1559,6 +1578,38 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 link.delete()
                 messages.success(request, f'پیوند «{name}» حذف شد.')
             return redirect(self._detail_redirect(property_id, tab='contacts'))
+        elif action == 'suggest_contacts':
+            raw = request.POST.get('matches_json', '[]')
+            try:
+                selected = json.loads(raw)
+            except json.JSONDecodeError:
+                selected = []
+            customer_ids = []
+            if isinstance(selected, list):
+                for item in selected:
+                    if isinstance(item, dict) and item.get('customer_id'):
+                        customer_ids.append(item['customer_id'])
+                    elif isinstance(item, (int, str)):
+                        customer_ids.append(item)
+            if not customer_ids:
+                messages.warning(request, 'حداقل یک مخاطب انتخاب کنید.')
+                return redirect(self._detail_redirect(property_id, tab='suggest-contacts'))
+            text, linked = apply_contact_suggestions(
+                prop,
+                request.user,
+                customer_ids,
+                note=request.POST.get('suggest_note', ''),
+                request=request,
+            )
+            if linked:
+                request.session['crm_last_contact_suggestion_text'] = text
+                messages.success(
+                    request,
+                    f'{linked} مخاطب پیشنهاد و به فایل پیوند شد.',
+                )
+                return redirect(self._detail_redirect(property_id, tab='contacts') + '&suggested=1')
+            messages.error(request, 'ثبت پیشنهاد انجام نشد — مخاطبان انتخاب‌شده در دسترس نیستند.')
+            return redirect(self._detail_redirect(property_id, tab='suggest-contacts'))
         elif action == 'schedule_followup':
             form = FollowUpForm(request.POST)
             if form.is_valid():

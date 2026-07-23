@@ -359,3 +359,49 @@ def suggest_contact_matches(
             },
         )
     return text, linked
+
+
+def property_contact_matches_payload(user, property_id: int) -> Optional[Dict[str, Any]]:
+    from workspace.services.crm_matching import get_property_contact_matches
+    from workspace.services.crm_scope import property_for_user
+
+    prop = property_for_user(user, property_id)
+    if not prop:
+        return None
+    data = get_property_contact_matches(prop, user)
+    return {
+        'eligible': bool(data.get('eligible')),
+        'message': data.get('message', ''),
+        'matches': data.get('matches') or [],
+        'total_count': int(data.get('total_count') or 0),
+        'property': {
+            'id': prop.pk,
+            'title': prop.title or '',
+            'deal_mode': prop.deal_mode or '',
+            'neighborhood': prop.neighborhood or prop.district or '',
+        },
+    }
+
+
+def suggest_property_contacts(
+    user,
+    property_id: int,
+    customer_ids: List[Any],
+    *,
+    note: str = '',
+    request=None,
+) -> Tuple[Optional[str], int]:
+    from workspace.services.crm import apply_contact_suggestions
+    from workspace.services.crm_scope import can_edit_property, property_for_user
+
+    prop = property_for_user(user, property_id)
+    if not prop:
+        return None, 0
+    if not can_edit_property(user, prop):
+        raise ValueError('امکان پیشنهاد مخاطب برای این فایل را ندارید.')
+    if not customer_ids:
+        raise ValueError('حداقل یک مخاطب انتخاب کنید.')
+    text, linked = apply_contact_suggestions(
+        prop, user, customer_ids, note=note, request=request,
+    )
+    return text, linked

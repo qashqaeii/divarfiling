@@ -832,6 +832,52 @@ class ContactSuggestView(APIView):
             return api_error(str(exc), code='VALIDATION_ERROR')
 
 
+class PropertyContactMatchesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, property_id):
+        from workspace.services.crm_match_notifications import property_contact_matches_payload
+        payload = property_contact_matches_payload(request.user, property_id)
+        if not payload:
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class PropertySuggestContactsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, property_id):
+        from workspace.services.crm_match_notifications import suggest_property_contacts
+        data = _parse_body(request)
+        selected = data.get('customer_ids') or data.get('matches') or data.get('selected') or []
+        if not isinstance(selected, list):
+            return api_error('لیست مخاطبان نامعتبر است.', code='VALIDATION_ERROR')
+        customer_ids = []
+        for item in selected:
+            if isinstance(item, dict):
+                cid = item.get('customer_id') or item.get('id')
+                if cid is not None:
+                    customer_ids.append(cid)
+            else:
+                customer_ids.append(item)
+        try:
+            text, count = suggest_property_contacts(
+                request.user,
+                property_id,
+                customer_ids,
+                note=(data.get('note') or ''),
+                request=request,
+            )
+            if count <= 0:
+                return api_error('ملک یافت نشد یا پیوندی انجام نشد.', code='NOT_FOUND', status=404)
+            return api_ok({
+                'suggested_count': count,
+                'whatsapp_text': text,
+            }, status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
 class ReminderDetailView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -1644,6 +1644,121 @@ def apply_property_suggestions(
     return build_suggestions_whatsapp_text(customer, matches), linked
 
 
+def _deal_type_for_property(prop: CRMProperty) -> str:
+    if prop.deal_mode in ('فروش', 'پیش‌فروش'):
+        return 'خرید'
+    if prop.deal_mode in ('رهن و اجاره', 'اجاره'):
+        return 'رهن و اجاره'
+    return 'سایر'
+
+
+def build_contact_suggestion_whatsapp_text(
+    customer: Customer,
+    prop: CRMProperty,
+    *,
+    public_url: str = '',
+) -> str:
+    """متن واتساپ پیشنهاد یک فایل شخصی به یک مخاطب."""
+    from workspace.services.formatting import format_toman
+
+    lines = [f'سلام {customer.name}،', '', 'یک ملک مناسب برای شما:', '']
+    lines.append(f'1. {prop.title or "ملک"}')
+    price = prop.sale_price or prop.monthly_rent or prop.deposit
+    if price:
+        label = format_toman(price)
+        if prop.monthly_rent and not prop.sale_price:
+            lines.append(f'   💰 اجاره {label}')
+        elif prop.deposit and not prop.sale_price:
+            lines.append(f'   💰 رهن {label}')
+        else:
+            lines.append(f'   💰 {label}')
+    if prop.area:
+        try:
+            area_txt = f'{int(float(prop.area))} متر'
+        except (TypeError, ValueError):
+            area_txt = str(prop.area)
+        lines.append(f'   📐 {area_txt}')
+    hood = prop.neighborhood or prop.district or prop.city
+    if hood:
+        lines.append(f'   📍 {hood}')
+    if public_url:
+        lines.append(f'   🔗 {public_url}')
+    lines.extend(['', 'در صورت تمایل برای بازدید هماهنگ می‌کنیم.', 'با احترام'])
+    return '\n'.join(lines)
+
+
+def apply_contact_suggestions(
+    prop: CRMProperty,
+    user,
+    customer_ids: List[Any],
+    *,
+    note: str = '',
+    request=None,
+) -> tuple[str, int]:
+    """
+    پیوند مخاطبان پیشنهادی به فایل شخصی.
+    برگشت: (متن واتساپ مخاطب اول, تعداد پیوند موفق).
+    """
+    from workspace.services.crm_scope import can_edit_customer, customer_for_user
+
+    if not customer_ids:
+        return '', 0
+
+    public_url = ''
+    if request is not None:
+        from workspace.services.property_public_share import (
+            get_or_create_property_share,
+            property_public_share_url,
+        )
+        share = get_or_create_property_share(user, prop)
+        public_url = property_public_share_url(request, share)
+
+    deal_type = _deal_type_for_property(prop)
+    linked_customers: List[Customer] = []
+    seen: set[int] = set()
+    for raw_id in customer_ids:
+        try:
+            cid = int(raw_id)
+        except (TypeError, ValueError):
+            continue
+        if cid in seen:
+            continue
+        seen.add(cid)
+        customer = customer_for_user(user, cid)
+        if not customer or not can_edit_customer(user, customer):
+            continue
+        link_customer_property(
+            customer,
+            prop,
+            'پیشنهادی',
+            deal_type=deal_type,
+            interest_level='متوسط',
+            notes='پیشنهاد خودکار',
+        )
+        content = note.strip() or f'پیشنهاد فایل شخصی «{prop.title}»'
+        log_activity(
+            customer,
+            'املاک',
+            content=content,
+            title='پیشنهاد ملک از فایل شخصی',
+            property_obj=prop,
+            metadata={
+                'suggestion_from': 'property',
+                'property_id': prop.pk,
+                'property_title': prop.title or '',
+            },
+        )
+        linked_customers.append(customer)
+
+    if not linked_customers:
+        return '', 0
+
+    text = build_contact_suggestion_whatsapp_text(
+        linked_customers[0], prop, public_url=public_url,
+    )
+    return text, len(linked_customers)
+
+
 def build_customer_whatsapp_text(customer, listing=None) -> str:
     from workspace.services.formatting import format_toman
 

@@ -1804,6 +1804,59 @@ function initCRMMatches() {
     updateSelection();
 }
 
+function initCRMPropContactMatches() {
+    const form = document.getElementById('crmPropSuggestForm');
+    if (!form) return;
+
+    const jsonInput = document.getElementById('crmPropMatchesJson');
+    const countEl = document.getElementById('crmPropSuggestCount');
+    const submitBtn = document.getElementById('crmPropSuggestSubmit');
+    const dock = document.getElementById('crmPropSuggestDock');
+    const selects = () => [...document.querySelectorAll('.crm-prop-match-select:checked')];
+
+    function syncCardState() {
+        document.querySelectorAll('[data-prop-match-card]').forEach(card => {
+            const cb = card.querySelector('.crm-prop-match-select');
+            card.classList.toggle('is-selected', !!(cb && cb.checked));
+        });
+    }
+
+    function payloadFromCheckbox(cb) {
+        const d = cb.dataset;
+        return {
+            customer_id: parseInt(d.customerId, 10),
+            name: d.name || '',
+            phone: d.phone || '',
+            customer_type: d.customerType || '',
+        };
+    }
+
+    function updateSelection() {
+        const items = selects().map(payloadFromCheckbox).filter(i => i.customer_id);
+        if (jsonInput) jsonInput.value = JSON.stringify(items);
+        if (countEl) countEl.textContent = items.length;
+        if (submitBtn) submitBtn.disabled = items.length === 0;
+        if (dock) dock.classList.toggle('is-active', items.length > 0);
+        syncCardState();
+    }
+
+    document.querySelectorAll('.crm-prop-match-select').forEach(cb => {
+        cb.addEventListener('change', updateSelection);
+    });
+
+    const selectAll = document.getElementById('crmPropSelectAllMatches');
+    if (selectAll) {
+        selectAll.addEventListener('click', () => {
+            const boxes = document.querySelectorAll('.crm-prop-match-select:not(:disabled)');
+            const allChecked = [...boxes].every(b => b.checked);
+            boxes.forEach(b => { b.checked = !allChecked; });
+            updateSelection();
+        });
+    }
+
+    updateSelection();
+}
+
 function initCRMContactPortfolio() {
     const root = document.getElementById('crmContactPortfolio');
     if (!root) return;
@@ -3692,6 +3745,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMQuickLead();
     initCRMImportDrawer();
     initCRMMatches();
+    initCRMPropContactMatches();
     initCRMMatchingTolerance();
     initCRMContactPortfolio();
     initCRMActivityDrawer(document);

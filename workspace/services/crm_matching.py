@@ -13,8 +13,13 @@ from workspace.constants import (
     LEAD_TYPES,
 )
 from workspace.models import CRMProperty, Customer, Listing
+from workspace.services.advertiser_signal import (
+    ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+    listing_advertiser_display,
+    listing_advertiser_signal,
+    property_advertiser_display,
+)
 from workspace.services.formatting import format_toman
-from workspace.services.advertiser_signal import listing_advertiser_display, property_advertiser_display
 
 MATCH_TYPES = {
     'خریدار', 'مستاجر', 'متقاضی خرید', 'متقاضی اجاره', 'سرنخ', 'سرمایه‌گذار', 'سازنده',
@@ -687,6 +692,11 @@ def _listing_is_sale_listing(listing: Listing) -> bool:
     return bool(listing.price) and not _listing_is_rent_listing(listing)
 
 
+def _listing_is_genuine_owner(listing: Listing) -> bool:
+    """فقط آگهی مالک واقعی فایلینگ — نه مشاور رسمی و نه مشاور پنهان."""
+    return listing_advertiser_signal(listing) == ADVERTISER_SIGNAL_GENUINE_PERSONAL
+
+
 def _crm_match_compatible(customer: Customer, prop: CRMProperty) -> bool:
     if is_builder_customer(customer):
         return True
@@ -1127,8 +1137,12 @@ def match_divar_listings(customer: Customer, user, *, limit: int | None = None) 
     tuning = _match_tuning(customer)
     result_limit = limit if limit is not None else tuning['result_limit']
     min_score = tuning['divar_min_score']
+    # اسکن بیشتر چون فقط مالک واقعی نگه داشته می‌شود.
+    scan_limit = min(tuning['divar_scan_limit'] * 2, 2400)
     scored = []
-    for lst in _divar_match_candidates_qs(customer, user, scan_limit=tuning['divar_scan_limit']):
+    for lst in _divar_match_candidates_qs(customer, user, scan_limit=scan_limit):
+        if not _listing_is_genuine_owner(lst):
+            continue
         if not _listing_match_compatible(customer, lst):
             continue
         item = _score_listing(customer, lst)
@@ -1166,6 +1180,8 @@ def _match_builder_group(
 
     divar_scored = []
     for listing, inferred in _filter_builder_listings(_divar_listings_qs(user), allowed_types):
+        if not _listing_is_genuine_owner(listing):
+            continue
         item = _score_listing_with_profile(
             profile, listing, prop_type=inferred,
             match_intent=intent,

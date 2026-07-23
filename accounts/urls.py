@@ -29,8 +29,11 @@ from .admin_views import (
 )
 from .lead_acquisition_views import (
     AdminLeadAcquisitionView,
+    AdminLeadBulkTemplatesView,
     AdminLeadCampaignDetailView,
     AdminLeadFunnelJsonView,
+    AdminLeadSendProgressStartView,
+    AdminLeadSendProgressTickView,
     LeadClickRedirectView,
 )
 
@@ -91,6 +94,21 @@ urlpatterns = [
         'admin-panel/marketing/lead-campaigns/<int:pk>/funnel.json',
         AdminLeadFunnelJsonView.as_view(),
         name='admin_panel_lead_funnel_json',
+    ),
+    path(
+        'admin-panel/marketing/leads/send-progress/start.json',
+        AdminLeadSendProgressStartView.as_view(),
+        name='admin_panel_lead_send_progress_start',
+    ),
+    path(
+        'admin-panel/marketing/leads/send-progress/tick.json',
+        AdminLeadSendProgressTickView.as_view(),
+        name='admin_panel_lead_send_progress_tick',
+    ),
+    path(
+        'admin-panel/marketing/leads/bulk-templates.json',
+        AdminLeadBulkTemplatesView.as_view(),
+        name='admin_panel_lead_bulk_templates',
     ),
     path(
         's/t/<str:click_token>/',

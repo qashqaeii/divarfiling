@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -421,7 +421,12 @@
         <div class="adm-lac-section-head">
             <div>
                 <h2>کمپین‌ها و قیف</h2>
-                <p>انتخاب چندتایی · عملیات گروهی روی کمپین‌های انتخاب‌شده</p>
+                <p>انتخاب چندتایی · ارسال کامل همه سرنخ‌ها · قالب A/B یکسان برای همه</p>
+            </div>
+            <div class="adm-lac-section-head__actions">
+                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-open-bulk-templates-all" title="اعمال قالب A/B روی همه کمپین‌های جذب">
+                    <i class="fas fa-clone"></i> قالب A/B برای همه
+                </button>
             </div>
         </div>
 
@@ -439,11 +444,17 @@
                     <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-bulk-clear">لغو انتخاب</button>
                 </div>
                 <div class="adm-lac-bulk-bar__actions">
+                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-bulk-templates-selected">
+                        <i class="fas fa-clone"></i> قالب A/B
+                    </button>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-bulk-op="enroll_all" data-bulk-form="lac-campaigns-bulk-form">
+                        <i class="fas fa-users"></i> ثبت همه سرنخ‌ها
+                    </button>
                     <button type="button" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm" data-bulk-op="enroll_pilot" data-bulk-form="lac-campaigns-bulk-form">
                         <i class="fas fa-flask"></i> ثبت پایلوت
                     </button>
                     <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" data-bulk-op="send_step" data-bulk-form="lac-campaigns-bulk-form">
-                        <i class="fas fa-paper-plane"></i> ارسال مرحله ۱
+                        <i class="fas fa-paper-plane"></i> ارسال کامل مرحله ۱
                     </button>
                     <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-bulk-op="reset_campaign" data-bulk-form="lac-campaigns-bulk-form">
                         <i class="fas fa-rotate-left"></i> ریست
@@ -521,12 +532,12 @@
                                         <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
                                         <button type="submit" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm">ثبت در پایلوت</button>
                                     </form>
-                                    <form method="post">
+                                    <form method="post" class="lac-send-step-form" data-campaign-id="{{ f.campaign_id }}">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="send_step">
                                         <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
                                         <input type="hidden" name="step_number" value="1">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">ارسال مرحله ۱</button>
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">ارسال کامل</button>
                                     </form>
                                     <form method="post" onsubmit="return confirm('پیام‌های ناموفق آزاد شوند و کمپین برای ارسال مجدد ریست شود؟');">
                                         {% csrf_token %}
@@ -675,6 +686,82 @@
             </footer>
         </form>
     </dialog>
+
+    <dialog class="adm-lac-modal" id="lac-bulk-templates-modal">
+        <form method="post" class="adm-lac-modal__inner" id="lac-bulk-templates-form">
+            {% csrf_token %}
+            <header class="adm-lac-modal__head">
+                <div>
+                    <h3 id="lac-bulk-templates-title">قالب A/B برای همه کمپین‌ها</h3>
+                    <p class="adm-lac-kpi-sub" id="lac-bulk-templates-sub">یک بار ویرایش کنید — روی همه کمپین‌های هدف اعمال می‌شود</p>
+                    <p class="adm-lac-kpi-sub">متغیرها: <code>{district}</code> · <code>{link}</code> · <code>{name}</code></p>
+                </div>
+                <button type="button" class="adm-lac-modal__close" data-lac-bulk-templates-close aria-label="بستن">&times;</button>
+            </header>
+            <div class="adm-lac-modal__body">
+                <input type="hidden" id="lac-bulk-templates-apply-all" value="0">
+                <div class="adm-lac-msg-editor">
+                    <div class="adm-lac-msg-pane" data-variant="A">
+                        <div class="adm-lac-msg-pane__head">
+                            <span class="adm-lac-variant-key">A</span>
+                            <strong>نسخه A · معرفی مستقیم</strong>
+                            <span class="adm-lac-msg-len" id="lac-bulk-len-a">۰ کاراکتر</span>
+                        </div>
+                        <textarea id="lac-bulk-variant-a" rows="5" placeholder="متن پیامک نسخه A">{{ default_variant_a }}</textarea>
+                    </div>
+                    <div class="adm-lac-msg-pane" data-variant="B">
+                        <div class="adm-lac-msg-pane__head">
+                            <span class="adm-lac-variant-key">B</span>
+                            <strong>نسخه B · سوال + ارزش</strong>
+                            <span class="adm-lac-msg-len" id="lac-bulk-len-b">۰ کاراکتر</span>
+                        </div>
+                        <textarea id="lac-bulk-variant-b" rows="5" placeholder="متن پیامک نسخه B">{{ default_variant_b }}</textarea>
+                    </div>
+                </div>
+                <p class="adm-lac-kpi-sub" id="lac-bulk-templates-status" hidden></p>
+            </div>
+            <footer class="adm-lac-modal__foot">
+                <button type="button" class="adm-lac-btn adm-lac-btn--ghost" data-lac-bulk-templates-close>انصراف</button>
+                <button type="submit" class="adm-lac-btn adm-lac-btn--primary" id="lac-bulk-templates-save">
+                    <i class="fas fa-save"></i> اعمال روی همه
+                </button>
+            </footer>
+        </form>
+    </dialog>
+
+    <dialog class="adm-lac-modal adm-lac-send-modal" id="lac-send-progress-modal">
+        <div class="adm-lac-modal__inner">
+            <header class="adm-lac-modal__head">
+                <div>
+                    <h3 id="lac-send-modal-title">ارسال کامل مرحله ۱</h3>
+                    <p class="adm-lac-kpi-sub" id="lac-send-modal-sub">ابتدا همه سرنخ‌های واجد شرایط ثبت می‌شوند · سپس ارسال chunk به chunk</p>
+                </div>
+            </header>
+            <div class="adm-lac-modal__body">
+                <div class="adm-lac-send-progress">
+                    <div class="adm-lac-progress-track" aria-hidden="true">
+                        <div class="adm-lac-progress-fill" id="lac-send-progress-fill" style="width:0%"></div>
+                    </div>
+                    <div class="adm-lac-send-progress-meta">
+                        <strong id="lac-send-progress-pct">۰٪</strong>
+                        <span id="lac-send-progress-count">۰ / ۰</span>
+                    </div>
+                    <div class="adm-lac-send-stats">
+                        <div class="adm-lac-send-stat"><span>پذیرفته</span><strong id="lac-send-stat-accepted">۰</strong></div>
+                        <div class="adm-lac-send-stat"><span>ناموفق</span><strong id="lac-send-stat-failed">۰</strong></div>
+                        <div class="adm-lac-send-stat"><span>ردشده</span><strong id="lac-send-stat-skipped">۰</strong></div>
+                        <div class="adm-lac-send-stat"><span>باقی‌مانده</span><strong id="lac-send-stat-remaining">۰</strong></div>
+                    </div>
+                    <p class="adm-lac-send-status" id="lac-send-status-msg">آماده‌سازی...</p>
+                    <p class="adm-lac-kpi-sub" id="lac-send-batch-hint"></p>
+                </div>
+            </div>
+            <footer class="adm-lac-modal__foot">
+                <button type="button" class="adm-lac-btn adm-lac-btn--ghost" id="lac-send-cancel" disabled>انصراف</button>
+                <button type="button" class="adm-lac-btn adm-lac-btn--primary" id="lac-send-close" disabled>بستن</button>
+            </footer>
+        </div>
+    </dialog>
 </div>
 {% endblock %}
 
@@ -739,6 +826,96 @@
     campaignEdit = JSON.parse('{{ campaign_edit_json|escapejs }}');
   } catch (e) { campaignEdit = {}; }
 
+  var allCampaignIds = [];
+  try {
+    allCampaignIds = JSON.parse('{{ all_campaign_ids_json|escapejs }}');
+  } catch (e2) { allCampaignIds = []; }
+
+  var bulkTemplatesUrl = '{% url "admin_panel_lead_bulk_templates" %}';
+  var bulkTemplatesModal = document.getElementById('lac-bulk-templates-modal');
+  var bulkTemplatesForm = document.getElementById('lac-bulk-templates-form');
+  var bulkTaA = document.getElementById('lac-bulk-variant-a');
+  var bulkTaB = document.getElementById('lac-bulk-variant-b');
+  var bulkLenA = document.getElementById('lac-bulk-len-a');
+  var bulkLenB = document.getElementById('lac-bulk-len-b');
+  var bulkTemplatesApplyAll = document.getElementById('lac-bulk-templates-apply-all');
+  var bulkTemplatesStatus = document.getElementById('lac-bulk-templates-status');
+  var bulkTemplatesSaving = false;
+  var bulkTemplatesTargetIds = [];
+
+  function persianDigits(n) {
+    return String(n).replace(/\d/g, function (d) {
+      return '۰۱۲۳۴۵۶۷۸۹'[d];
+    });
+  }
+
+  function updateBulkLen() {
+    if (bulkLenA && bulkTaA) bulkLenA.textContent = persianDigits(bulkTaA.value.length) + ' کاراکتر';
+    if (bulkLenB && bulkTaB) bulkLenB.textContent = persianDigits(bulkTaB.value.length) + ' کاراکتر';
+  }
+  if (bulkTaA) bulkTaA.addEventListener('input', updateBulkLen);
+  if (bulkTaB) bulkTaB.addEventListener('input', updateBulkLen);
+  updateBulkLen();
+
+  function openBulkTemplatesModal(opts) {
+    opts = opts || {};
+    bulkTemplatesTargetIds = opts.campaignIds || [];
+    var applyAll = !!opts.applyAll;
+    if (bulkTemplatesApplyAll) bulkTemplatesApplyAll.value = applyAll ? '1' : '0';
+    var title = document.getElementById('lac-bulk-templates-title');
+    var sub = document.getElementById('lac-bulk-templates-sub');
+    var saveBtn = document.getElementById('lac-bulk-templates-save');
+    if (applyAll) {
+      if (title) title.textContent = 'قالب A/B برای همه کمپین‌ها';
+      if (sub) sub.textContent = persianDigits(allCampaignIds.length) + ' کمپین · یک بار ویرایش و اعمال همزمان';
+      if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> اعمال روی همه';
+    } else {
+      if (title) title.textContent = 'قالب A/B برای کمپین‌های انتخاب‌شده';
+      if (sub) sub.textContent = persianDigits(bulkTemplatesTargetIds.length) + ' کمپین انتخاب شده';
+      if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> اعمال روی انتخاب‌شده‌ها';
+    }
+    if (bulkTemplatesStatus) {
+      bulkTemplatesStatus.hidden = true;
+      bulkTemplatesStatus.textContent = '';
+    }
+    if (bulkTemplatesModal) {
+      if (bulkTemplatesModal.showModal) bulkTemplatesModal.showModal();
+      else bulkTemplatesModal.setAttribute('open', 'open');
+    }
+  }
+
+  function closeBulkTemplatesModal() {
+    if (!bulkTemplatesModal) return;
+    if (bulkTemplatesModal.close) bulkTemplatesModal.close();
+    else bulkTemplatesModal.removeAttribute('open');
+  }
+
+  document.querySelectorAll('[data-lac-bulk-templates-close]').forEach(function (btn) {
+    btn.addEventListener('click', closeBulkTemplatesModal);
+  });
+
+  var openBulkAll = document.getElementById('lac-open-bulk-templates-all');
+  if (openBulkAll) {
+    openBulkAll.addEventListener('click', function () {
+      openBulkTemplatesModal({ applyAll: true });
+    });
+  }
+
+  var bulkTemplatesSelected = document.getElementById('lac-bulk-templates-selected');
+  if (bulkTemplatesSelected) {
+    bulkTemplatesSelected.addEventListener('click', function () {
+      var ids = [];
+      document.querySelectorAll('.lac-campaign-check:checked').forEach(function (cb) {
+        ids.push(parseInt(cb.value, 10));
+      });
+      if (!ids.length) {
+        alert('حداقل یک کمپین را انتخاب کنید — یا از «قالب A/B برای همه» استفاده کنید.');
+        return;
+      }
+      openBulkTemplatesModal({ campaignIds: ids, applyAll: false });
+    });
+  }
+
   var modal = document.getElementById('lac-edit-modal');
   var form = document.getElementById('lac-edit-form');
   var taA = document.getElementById('lac-edit-variant-a');
@@ -746,11 +923,6 @@
   var lenA = document.getElementById('lac-len-a');
   var lenB = document.getElementById('lac-len-b');
 
-  function persianDigits(n) {
-    return String(n).replace(/\d/g, function (d) {
-      return '۰۱۲۳۴۵۶۷۸۹'[d];
-    });
-  }
   function smsParts(text) {
     var n = (text || '').length;
     if (n <= 0) return 0;
@@ -842,11 +1014,259 @@
           alert('حداقل یک کمپین را انتخاب کنید.');
           return;
         }
+        var op = btn.getAttribute('data-bulk-op');
+        if (op === 'send_step') {
+          var ids = [];
+          bulkChecks.forEach(function (cb) {
+            if (cb.checked) ids.push(parseInt(cb.value, 10));
+          });
+          runSendProgress(ids, 1);
+          return;
+        }
         var confirmMsg = btn.getAttribute('data-confirm');
         if (confirmMsg && !window.confirm(confirmMsg)) return;
-        document.getElementById('lac-bulk-op').value = btn.getAttribute('data-bulk-op');
+        document.getElementById('lac-bulk-op').value = op;
         bulkForm.submit();
       });
+    });
+  }
+
+  var sendStartUrl = '{% url "admin_panel_lead_send_progress_start" %}';
+  var sendTickUrl = '{% url "admin_panel_lead_send_progress_tick" %}';
+  var sendModal = document.getElementById('lac-send-progress-modal');
+  var sendRunning = false;
+
+  function getCsrfToken() {
+    var el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+  }
+
+  function openSendModal() {
+    if (!sendModal) return;
+    if (sendModal.showModal) sendModal.showModal();
+    else sendModal.setAttribute('open', 'open');
+  }
+
+  function closeSendModal() {
+    if (!sendModal) return;
+    if (sendModal.close) sendModal.close();
+    else sendModal.removeAttribute('open');
+  }
+
+  function setSendUi(state) {
+    var cancelBtn = document.getElementById('lac-send-cancel');
+    var closeBtn = document.getElementById('lac-send-close');
+    if (cancelBtn) cancelBtn.disabled = state.running;
+    if (closeBtn) closeBtn.disabled = state.running;
+  }
+
+  function updateSendProgressView(state) {
+    var pct = state.initialTotal > 0
+      ? Math.min(100, Math.round(((state.initialTotal - state.remaining) / state.initialTotal) * 100))
+      : 100;
+    var fill = document.getElementById('lac-send-progress-fill');
+    var pctEl = document.getElementById('lac-send-progress-pct');
+    var countEl = document.getElementById('lac-send-progress-count');
+    if (fill) fill.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = persianDigits(pct) + '٪';
+    if (countEl) {
+      countEl.textContent = persianDigits(state.initialTotal - state.remaining) + ' / ' + persianDigits(state.initialTotal);
+    }
+    var map = {
+      'lac-send-stat-accepted': state.accepted,
+      'lac-send-stat-failed': state.failed,
+      'lac-send-stat-skipped': state.skipped,
+      'lac-send-stat-remaining': state.remaining,
+    };
+    Object.keys(map).forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) node.textContent = persianDigits(map[id]);
+    });
+    var msg = document.getElementById('lac-send-status-msg');
+    if (msg) msg.textContent = state.message || '';
+  }
+
+  async function postJson(url, payload, retries) {
+    retries = retries == null ? 3 : retries;
+    var lastErr = null;
+    for (var attempt = 0; attempt <= retries; attempt += 1) {
+      try {
+        var resp = await fetch(url, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: JSON.stringify(payload),
+        });
+        var data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          throw new Error((data && data.error) || 'خطا در ارتباط با سرور');
+        }
+        return data;
+      } catch (err) {
+        lastErr = err;
+        if (attempt >= retries) break;
+        await new Promise(function (r) { setTimeout(r, 400 * (attempt + 1)); });
+      }
+    }
+    throw lastErr || new Error('خطا در ارتباط با سرور');
+  }
+
+  if (bulkTemplatesForm) {
+    bulkTemplatesForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (bulkTemplatesSaving) return;
+      var applyAll = bulkTemplatesApplyAll && bulkTemplatesApplyAll.value === '1';
+      var payload = {
+        variant_a: bulkTaA ? bulkTaA.value : '',
+        variant_b: bulkTaB ? bulkTaB.value : '',
+        apply_all: applyAll,
+      };
+      if (!applyAll) payload.campaign_ids = bulkTemplatesTargetIds;
+      bulkTemplatesSaving = true;
+      if (bulkTemplatesStatus) {
+        bulkTemplatesStatus.hidden = false;
+        bulkTemplatesStatus.textContent = 'در حال اعمال...';
+      }
+      try {
+        var data = await postJson(bulkTemplatesUrl, payload);
+        if (bulkTemplatesStatus) {
+          bulkTemplatesStatus.textContent = 'به‌روزرسانی شد — ' +
+            persianDigits(data.updated_count || 0) + ' کمپین';
+        }
+        setTimeout(function () {
+          closeBulkTemplatesModal();
+          window.location.reload();
+        }, 600);
+      } catch (err) {
+        if (bulkTemplatesStatus) bulkTemplatesStatus.textContent = err.message || String(err);
+      } finally {
+        bulkTemplatesSaving = false;
+      }
+    });
+  }
+
+  async function runSendProgress(campaignIds, stepNumber) {
+    if (sendRunning) {
+      alert('یک عملیات ارسال در حال اجراست.');
+      return;
+    }
+    sendRunning = true;
+    openSendModal();
+    setSendUi({ running: true });
+    var state = {
+      initialTotal: 0,
+      remaining: 0,
+      accepted: 0,
+      failed: 0,
+      skipped: 0,
+      message: 'در حال شمارش مخاطبان...',
+    };
+    updateSendProgressView(state);
+    var stallCount = 0;
+    var lastRemaining = -1;
+    var tickCount = 0;
+    var maxTicks = 5000;
+    try {
+      var start = await postJson(sendStartUrl, {
+        campaign_ids: campaignIds,
+        step_number: stepNumber,
+      });
+      state.initialTotal = start.total_pending || 0;
+      state.remaining = state.initialTotal;
+      maxTicks = Math.max(5000, state.initialTotal * 3);
+      var hint = document.getElementById('lac-send-batch-hint');
+      if (hint) {
+        var enroll = start.enroll || {};
+        var enrollNote = '';
+        if (enroll.campaigns) {
+          enrollNote = ' · ثبت: ' + persianDigits((enroll.enrolled || 0) + (enroll.activated || 0)) + ' سرنخ';
+        }
+        hint.textContent = 'هر مرحله حداکثر ' + persianDigits(start.batch_size || 10) + ' پیام · ' +
+          persianDigits(start.campaign_count || campaignIds.length) + ' کمپین' + enrollNote;
+      }
+      if (state.initialTotal <= 0) {
+        state.message = 'همه پیام‌های این مرحله قبلاً ارسال شده‌اند (یا سرنخ واجد شرایطی نیست).';
+        updateSendProgressView(state);
+        setSendUi({ running: false });
+        sendRunning = false;
+        return;
+      }
+      state.message = 'ارسال در جریان است...';
+      updateSendProgressView(state);
+
+      while (state.remaining > 0 && tickCount < maxTicks) {
+        tickCount += 1;
+        var tick = await postJson(sendTickUrl, {
+          campaign_ids: campaignIds,
+          step_number: stepNumber,
+        });
+        var tickProcessed = tick.processed || 0;
+        var tickMoved = (tick.accepted || 0) + (tick.failed || 0) + (tick.skipped || 0);
+        state.accepted += tick.accepted || 0;
+        state.failed += tick.failed || 0;
+        state.skipped += tick.skipped || 0;
+        var prevRemaining = state.remaining;
+        state.remaining = tick.total_pending || 0;
+        state.message = tick.done
+          ? 'ارسال کامل شد.'
+          : 'chunk بعدی... (باقی ' + persianDigits(state.remaining) + ')';
+        updateSendProgressView(state);
+        if (tick.done || state.remaining <= 0) break;
+        if (tickProcessed > 0 || tickMoved > 0 || state.remaining < prevRemaining) {
+          stallCount = 0;
+        } else if (state.remaining === lastRemaining) {
+          stallCount += 1;
+          if (stallCount >= 12) {
+            throw new Error(
+              'ارسال متوقف شد — ' + persianDigits(state.remaining) +
+              ' سرنخ باقی مانده. دوباره «ارسال کامل» را بزنید یا کمپین را ریست کنید.'
+            );
+          }
+          state.message = 'تلاش مجدد... (' + persianDigits(stallCount) + '/۱۲)';
+          updateSendProgressView(state);
+        } else {
+          stallCount = 0;
+        }
+        lastRemaining = state.remaining;
+        await new Promise(function (r) { setTimeout(r, tickProcessed > 0 ? 120 : 350); });
+      }
+      if (state.remaining > 0 && tickCount >= maxTicks) {
+        throw new Error(
+          'سقف تلاش رسید — ' + persianDigits(state.remaining) +
+          ' سرنخ باقی مانده. دوباره «ارسال کامل» را بزنید تا ادامه یابد.'
+        );
+      }
+      state.message = 'تمام — پذیرفته: ' + persianDigits(state.accepted) +
+        ' · ناموفق: ' + persianDigits(state.failed) +
+        ' · ردشده: ' + persianDigits(state.skipped);
+      updateSendProgressView(state);
+    } catch (err) {
+      state.message = err.message || String(err);
+      updateSendProgressView(state);
+    } finally {
+      sendRunning = false;
+      setSendUi({ running: false });
+    }
+  }
+
+  document.querySelectorAll('.lac-send-step-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var cid = parseInt(form.getAttribute('data-campaign-id') || form.querySelector('[name=campaign_id]').value, 10);
+      if (!cid) return;
+      runSendProgress([cid], parseInt(form.querySelector('[name=step_number]').value || '1', 10));
+    });
+  });
+
+  var sendClose = document.getElementById('lac-send-close');
+  if (sendClose) {
+    sendClose.addEventListener('click', function () {
+      closeSendModal();
+      if (!sendRunning) window.location.reload();
     });
   }
 })();

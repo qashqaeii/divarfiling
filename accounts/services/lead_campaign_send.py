@@ -100,22 +100,25 @@ def send_batch_size() -> int:
 
 
 def pending_enrollments_for_step(campaign: LeadCampaign, step: CampaignStep):
-    """مخاطبان فعال که هنوز پیام موفق این مرحله را نگرفته‌اند."""
+    """مخاطبان فعال که هنوز برای این مرحله ارسال نشده‌اند."""
+    handled = CampaignMessage.objects.filter(
+        campaign=campaign,
+        step=step,
+        status__in=(
+            CampaignMessage.Status.PROVIDER_ACCEPTED,
+            CampaignMessage.Status.DELIVERED,
+            CampaignMessage.Status.SKIPPED,
+            CampaignMessage.Status.FAILED,
+        ),
+    ).values('enrollment_id')
     return (
         CampaignEnrollment.objects.filter(
             campaign=campaign,
             status=CampaignEnrollment.Status.ACTIVE,
             assigned_variant__isnull=False,
         )
-        .exclude(
-            messages__step=step,
-            messages__status__in=(
-                CampaignMessage.Status.PROVIDER_ACCEPTED,
-                CampaignMessage.Status.DELIVERED,
-            ),
-        )
+        .exclude(pk__in=handled)
         .select_related('lead', 'assigned_variant')
-        .distinct()
         .order_by('id')
     )
 
@@ -512,6 +515,127 @@ def enroll_pilot(
     return {'enrolled': enrolled, 'held': held, 'per_variant': counts}
 
 
+@transaction.atomic
+def enroll_all_eligible(campaign: LeadCampaign) -> dict:
+    """
+    ثبت همه سرنخ‌های واجد شرایط در کمپین — بدون سقف پایلوت.
+    enrollmentهای HOLD موجود را ACTIVE می‌کند.
+    """
+    if not campaign.lead_list_id:
+        raise LeadCampaignError('لیست سرنخ برای کمپین مشخص نیست.', code='no_list')
+    variants = list(campaign.variants.filter(is_active=True).order_by('key'))
+    if len(variants) < 1:
+        raise LeadCampaignError('حداقل یک Variant لازم است.', code='no_variant')
+
+    leads = list(eligible_leads_for_list(campaign.lead_list))
+    enrolled = 0
+    activated = 0
+    skipped_other_campaign = 0
+
+    for lead in leads:
+        if find_user_by_phone(lead.phone_normalized):
+            if lead.status != MarketingLead.Status.EXISTING_USER:
+                lead.status = MarketingLead.Status.EXISTING_USER
+                lead.save(update_fields=['status', 'updated_at'])
+            continue
+
+        if CampaignEnrollment.objects.filter(
+            lead=lead,
+            status=CampaignEnrollment.Status.ACTIVE,
+            campaign__kind=LeadCampaign.Kind.ACQUISITION,
+        ).exclude(campaign=campaign).exists():
+            skipped_other_campaign += 1
+            continue
+
+        variant = pick_stable_variant(variants, lead_id=lead.pk)
+        enroll, created = CampaignEnrollment.objects.get_or_create(
+            campaign=campaign,
+            lead=lead,
+            defaults={
+                'assigned_variant': variant,
+                'status': CampaignEnrollment.Status.ACTIVE,
+                'current_step_number': 0,
+            },
+        )
+        if created:
+            enrolled += 1
+            continue
+        dirty = False
+        if not enroll.assigned_variant_id:
+            enroll.assigned_variant = variant
+            dirty = True
+        if enroll.status != CampaignEnrollment.Status.ACTIVE:
+            enroll.status = CampaignEnrollment.Status.ACTIVE
+            dirty = True
+        if dirty:
+            enroll.save(update_fields=['assigned_variant', 'status'])
+            activated += 1
+
+    campaign.status = LeadCampaign.Status.ACTIVE
+    campaign.started_at = campaign.started_at or timezone.now()
+    campaign.save(update_fields=['status', 'started_at', 'updated_at'])
+    return {
+        'enrolled': enrolled,
+        'activated': activated,
+        'skipped_other_campaign': skipped_other_campaign,
+        'total_active': CampaignEnrollment.objects.filter(
+            campaign=campaign,
+            status=CampaignEnrollment.Status.ACTIVE,
+        ).count(),
+    }
+
+
+def enroll_campaigns_for_full_send(campaign_ids: list[int]) -> dict:
+    """قبل از ارسال کامل: همه سرنخ‌های واجد شرایط را ثبت می‌کند."""
+    summary = {
+        'campaigns': 0,
+        'enrolled': 0,
+        'activated': 0,
+        'errors': [],
+    }
+    for cid in campaign_ids:
+        campaign = LeadCampaign.objects.filter(pk=cid).first()
+        if not campaign:
+            summary['errors'].append({'campaign_id': cid, 'message': 'کمپین یافت نشد'})
+            continue
+        try:
+            result = enroll_all_eligible(campaign)
+        except LeadCampaignError as exc:
+            summary['errors'].append({'campaign_id': cid, 'message': exc.message})
+            continue
+        summary['campaigns'] += 1
+        summary['enrolled'] += result['enrolled']
+        summary['activated'] += result['activated']
+    return summary
+
+
+@transaction.atomic
+def bulk_update_variant_templates(
+    campaign_ids: list[int],
+    *,
+    variant_a: str,
+    variant_b: str,
+) -> dict:
+    """اعمال یک قالب A/B روی چند کمپین."""
+    a_text = (variant_a or '').strip()
+    b_text = (variant_b or '').strip()
+    if not a_text or not b_text:
+        raise LeadCampaignError('متن نسخه A و B نمی‌تواند خالی باشد.', code='empty_template')
+    updated: list[int] = []
+    errors: list[dict] = []
+    for cid in campaign_ids:
+        try:
+            update_acquisition_campaign(
+                cid,
+                variant_a_template=a_text,
+                variant_b_template=b_text,
+            )
+            updated.append(cid)
+        except LeadCampaignError as exc:
+            errors.append({'campaign_id': cid, 'message': exc.message})
+    return {'updated': updated, 'updated_count': len(updated), 'errors': errors}
+
+
 def render_step_body(*, step: CampaignStep, variant: CampaignVariant, link: str, lead: MarketingLead) -> str:
     template = step.message_template
     if step.step_number == 1:
@@ -731,6 +855,123 @@ def send_campaign_step(campaign: LeadCampaign, step_number: int, *, request=None
     return stats
 
 
+def pending_totals_for_campaigns(campaign_ids: list[int], step_number: int) -> dict:
+    """تعداد مخاطبان در صف ارسال برای هر کمپین."""
+    per_campaign: dict[int, int] = {}
+    total = 0
+    for cid in campaign_ids:
+        campaign = LeadCampaign.objects.filter(pk=cid).first()
+        if not campaign:
+            per_campaign[cid] = 0
+            continue
+        step = campaign.steps.filter(step_number=step_number, is_active=True).first()
+        if not step:
+            per_campaign[cid] = 0
+            continue
+        n = pending_enrollments_for_step(campaign, step).count()
+        per_campaign[cid] = n
+        total += n
+    return {
+        'total_pending': total,
+        'per_campaign': per_campaign,
+        'campaign_count': len(campaign_ids),
+    }
+
+
+def send_campaigns_step_chunk(
+    campaign_ids: list[int],
+    step_number: int,
+    *,
+    request=None,
+    limit: int | None = None,
+) -> dict:
+    """
+    یک chunk از ارسال مرحله را روی چند کمپین انجام می‌دهد.
+    خطای تک‌پیام باعث توقف کل chunk نمی‌شود؛ idempotency ارسال مجدد را امن می‌کند.
+    """
+    batch_limit = send_batch_size() if limit is None else max(1, min(500, int(limit)))
+    agg = {
+        'accepted': 0,
+        'failed': 0,
+        'skipped': 0,
+        'idempotent': 0,
+        'retried': 0,
+        'errors': 0,
+        'processed': 0,
+        'sent': 0,
+        'campaigns_touched': 0,
+    }
+    remaining_limit = batch_limit
+
+    for cid in campaign_ids:
+        if remaining_limit <= 0:
+            break
+        campaign = LeadCampaign.objects.filter(pk=cid).first()
+        if not campaign:
+            continue
+        step = campaign.steps.filter(step_number=step_number, is_active=True).first()
+        if not step:
+            continue
+        if pending_enrollments_for_step(campaign, step).count() <= 0:
+            continue
+        stats = send_campaign_step(
+            campaign,
+            step_number,
+            request=request,
+            limit=remaining_limit,
+        )
+        agg['campaigns_touched'] += 1
+        for key in agg:
+            if key == 'campaigns_touched':
+                continue
+            agg[key] += int(stats.get(key, 0) or 0)
+        remaining_limit -= int(stats.get('processed', 0) or 0)
+
+    totals = pending_totals_for_campaigns(campaign_ids, step_number)
+    total_pending = totals['total_pending']
+    if agg['processed'] <= 0 and total_pending > 0:
+        # اگر به‌دلیل race یا پیام قبلی chunk خالی شد، یک بار دیگر تلاش می‌کنیم
+        for cid in campaign_ids:
+            campaign = LeadCampaign.objects.filter(pk=cid).first()
+            if not campaign:
+                continue
+            step = campaign.steps.filter(step_number=step_number, is_active=True).first()
+            if not step:
+                continue
+            enroll = pending_enrollments_for_step(campaign, step).first()
+            if not enroll:
+                continue
+            try:
+                msg = send_step_message(enrollment=enroll, step=step, request=request)
+            except Exception:  # noqa: BLE001
+                logger.exception('lead campaign fallback send failed enrollment=%s', enroll.pk)
+                agg['errors'] += 1
+                agg['processed'] += 1
+                break
+            agg['processed'] += 1
+            if msg.status == CampaignMessage.Status.PROVIDER_ACCEPTED:
+                agg['accepted'] += 1
+                agg['sent'] += 1
+            elif msg.status == CampaignMessage.Status.FAILED:
+                agg['failed'] += 1
+                agg['sent'] += 1
+            elif msg.status == CampaignMessage.Status.SKIPPED:
+                agg['skipped'] += 1
+            else:
+                agg['sent'] += 1
+            totals = pending_totals_for_campaigns(campaign_ids, step_number)
+            total_pending = totals['total_pending']
+            break
+
+    return {
+        **agg,
+        **totals,
+        'batch_limit': batch_limit,
+        'done': total_pending == 0,
+        'step_number': step_number,
+    }
+
+
 @transaction.atomic
 def delete_lead_campaign(campaign_id: int, *, confirm: bool = False) -> dict:
     """
@@ -788,9 +1029,7 @@ def reset_campaign_for_retry(campaign_id: int) -> dict:
         status=CampaignMessage.Status.FAILED,
     )
     failed_count = failed_qs.count()
-    for msg in failed_qs.iterator():
-        msg.idempotency_key = f'{msg.idempotency_key}:reset:{msg.pk}'
-        msg.save(update_fields=['idempotency_key'])
+    failed_qs.delete()
 
     # اگر همه پیام‌های مرحله ۱ failed/skipped بودند، step را ریست کن
     active_enrolls = CampaignEnrollment.objects.filter(

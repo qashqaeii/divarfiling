@@ -22,12 +22,15 @@ from accounts.services.lead_attribution import attribute_purchase, attribute_sig
 from accounts.services.lead_campaign_send import (
     auto_create_campaign_for_import,
     batches_pending_campaign,
+    bulk_update_variant_templates,
     create_acquisition_campaign,
+    enroll_all_eligible,
     enroll_pilot,
     ensure_campaign_for_batch,
     estimate_sms_cost_rial,
     generate_acquisition_campaign_name,
     pilot_per_variant_for_count,
+    reset_campaign_for_retry,
     send_campaign_step,
     send_step_message,
     unicode_sms_parts,
@@ -422,6 +425,7 @@ class LeadCampaignTrackingTests(TestCase):
             campaign=self.campaign, status=CampaignMessage.Status.FAILED,
         ).count()
         self.assertGreaterEqual(failed, 1)
+        reset_campaign_for_retry(self.campaign.pk)
         stats = send_campaign_step(self.campaign, 1)
         self.assertGreaterEqual(stats.get('retried', 0) + stats.get('accepted', 0), 1)
         self.assertGreaterEqual(
@@ -506,6 +510,53 @@ class LeadAdminViewTests(TestCase):
         self.assertEqual(mock_enroll.call_count, 2)
 
     @patch('accounts.services.lead_campaign_send.notify_marketing')
+    def test_send_progress_api_chunks_until_done(self, mock_notify):
+        from accounts.models import LeadList, SmsMessageLog
+
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='prog.json')
+        batch = create_preview_batch(preview)
+        result = commit_import_batch(batch.pk, preview_rows=preview.rows)
+        lead_list = LeadList.objects.get(pk=result['list_id'])
+        campaign = create_acquisition_campaign(
+            name='Progress test',
+            lead_list=lead_list,
+            is_pilot=True,
+            pilot_per_variant=10,
+        )
+        enroll_pilot(campaign)
+        mock_notify.side_effect = lambda phone, text='', attributes=None: (
+            True,
+            SmsMessageLog.objects.create(phone=phone, purpose='x', status=SmsMessageLog.Status.FAKE),
+        )
+
+        start = self.client.post(
+            reverse('admin_panel_lead_send_progress_start'),
+            data=json.dumps({'campaign_ids': [campaign.pk], 'step_number': 1}),
+            content_type='application/json',
+        )
+        self.assertEqual(start.status_code, 200)
+        start_data = start.json()
+        self.assertTrue(start_data['ok'])
+        self.assertGreaterEqual(start_data['total_pending'], 1)
+
+        total_accepted = 0
+        for _ in range(20):
+            tick = self.client.post(
+                reverse('admin_panel_lead_send_progress_tick'),
+                data=json.dumps({'campaign_ids': [campaign.pk], 'step_number': 1}),
+                content_type='application/json',
+            )
+            self.assertEqual(tick.status_code, 200)
+            tick_data = tick.json()
+            self.assertTrue(tick_data['ok'])
+            total_accepted += tick_data.get('accepted', 0)
+            if tick_data.get('done'):
+                break
+        self.assertTrue(tick_data.get('done'))
+        self.assertGreaterEqual(total_accepted, 1)
+
+    @patch('accounts.services.lead_campaign_send.notify_marketing')
     def test_send_step_post_returns_redirect_not_500(self, mock_notify):
         from accounts.models import LeadList, SmsMessageLog
 
@@ -534,3 +585,122 @@ class LeadAdminViewTests(TestCase):
             },
         )
         self.assertEqual(resp.status_code, 302)
+
+
+class LeadCampaignFullSendTests(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            username='staff_full',
+            password='x',
+            is_staff=True,
+        )
+        self.client = Client()
+        self.client.force_login(self.staff)
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='full.json')
+        batch = create_preview_batch(preview)
+        result = commit_import_batch(batch.pk, preview_rows=preview.rows)
+        from accounts.models import LeadList
+
+        self.lead_list = LeadList.objects.get(pk=result['list_id'])
+        self.campaign = create_acquisition_campaign(
+            name='Full send test',
+            lead_list=self.lead_list,
+            is_pilot=True,
+            pilot_per_variant=1,
+        )
+        enroll_pilot(self.campaign)
+
+    def test_enroll_all_eligible_activates_held_leads(self):
+        from accounts.models import LeadListMember
+
+        CampaignEnrollment.objects.filter(campaign=self.campaign).delete()
+        extra = MarketingLead.objects.create(
+            phone_normalized='09123333333',
+            display_name='Extra lead',
+            status=MarketingLead.Status.COLD,
+        )
+        LeadListMember.objects.create(lead_list=self.lead_list, lead=extra)
+        enroll_pilot(self.campaign, per_variant=1)
+        held = CampaignEnrollment.objects.filter(
+            campaign=self.campaign,
+            status=CampaignEnrollment.Status.HOLD,
+        ).count()
+        self.assertGreaterEqual(held, 1)
+        result = enroll_all_eligible(self.campaign)
+        self.assertGreaterEqual(result['activated'] + result['enrolled'], 1)
+        self.assertEqual(
+            CampaignEnrollment.objects.filter(
+                campaign=self.campaign,
+                status=CampaignEnrollment.Status.ACTIVE,
+            ).count(),
+            result['total_active'],
+        )
+        self.assertEqual(
+            CampaignEnrollment.objects.filter(
+                campaign=self.campaign,
+                status=CampaignEnrollment.Status.HOLD,
+            ).count(),
+            0,
+        )
+
+    def test_bulk_update_variant_templates(self):
+        campaign2 = create_acquisition_campaign(
+            name='Bulk tpl 2',
+            lead_list=self.lead_list,
+            is_pilot=False,
+        )
+        result = bulk_update_variant_templates(
+            [self.campaign.pk, campaign2.pk],
+            variant_a='قالب A یکسان {link}',
+            variant_b='قالب B یکسان {link}',
+        )
+        self.assertEqual(result['updated_count'], 2)
+        for cid in (self.campaign.pk, campaign2.pk):
+            step = LeadCampaign.objects.get(pk=cid).steps.get(step_number=1)
+            self.assertIn('قالب A یکسان', step.message_template)
+            self.assertIn('قالب B یکسان', step.message_template)
+
+    @patch('accounts.services.lead_campaign_send.notify_marketing')
+    def test_send_progress_start_enrolls_all_before_count(self, mock_notify):
+        from accounts.models import SmsMessageLog
+
+        mock_notify.side_effect = lambda phone, text='', attributes=None: (
+            True,
+            SmsMessageLog.objects.create(phone=phone, purpose='x', status=SmsMessageLog.Status.FAKE),
+        )
+        start = self.client.post(
+            reverse('admin_panel_lead_send_progress_start'),
+            data=json.dumps({'campaign_ids': [self.campaign.pk], 'step_number': 1}),
+            content_type='application/json',
+        )
+        self.assertEqual(start.status_code, 200)
+        data = start.json()
+        self.assertTrue(data['ok'])
+        self.assertIn('enroll', data)
+        self.assertEqual(
+            CampaignEnrollment.objects.filter(
+                campaign=self.campaign,
+                status=CampaignEnrollment.Status.HOLD,
+            ).count(),
+            0,
+        )
+        self.assertGreaterEqual(data['total_pending'], 2)
+
+    def test_bulk_templates_api_apply_all(self):
+        resp = self.client.post(
+            reverse('admin_panel_lead_bulk_templates'),
+            data=json.dumps({
+                'apply_all': True,
+                'variant_a': 'API A {link}',
+                'variant_b': 'API B {link}',
+            }),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertTrue(payload['ok'])
+        self.assertGreaterEqual(payload['updated_count'], 1)
+        step = self.campaign.steps.get(step_number=1)
+        self.assertIn('API A', step.message_template)
+        self.assertIn('API B', step.message_template)

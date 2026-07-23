@@ -1398,3 +1398,78 @@ html.mk-public:not([data-theme="light"]) .adm-lac-bulk-bar {
 .adm-lac-table--selectable tr.is-selected td:first-child {
     box-shadow: inset 3px 0 0 var(--lac-teal);
 }
+
+/* Send progress modal */
+.adm-lac-send-modal .adm-lac-modal__inner {
+    width: min(520px, calc(100vw - 2rem));
+}
+
+.adm-lac-send-progress {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.adm-lac-progress-track {
+    height: 12px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.22);
+    overflow: hidden;
+}
+
+.adm-lac-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--lac-teal), var(--lac-cyan));
+    transition: width 0.35s var(--lac-ease);
+}
+
+.adm-lac-send-progress-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.adm-lac-send-progress-meta strong {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: var(--lac-teal-deep);
+}
+
+.adm-lac-send-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+@media (max-width: 560px) {
+    .adm-lac-send-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.adm-lac-send-stat {
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid var(--lac-line);
+    background: rgba(15, 23, 42, 0.03);
+    text-align: center;
+}
+
+.adm-lac-send-stat span {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--lac-muted);
+    font-weight: 700;
+}
+
+.adm-lac-send-stat strong {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 1.05rem;
+}
+
+.adm-lac-send-status {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--lac-teal-deep);
+}

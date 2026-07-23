@@ -28,14 +28,20 @@ from accounts.services.lead_campaign_send import (
     LeadCampaignError,
     auto_create_campaign_for_import,
     batches_pending_campaign,
+    bulk_update_variant_templates,
     create_acquisition_campaign,
     delete_lead_campaign,
+    enroll_all_eligible,
+    enroll_campaigns_for_full_send,
     enroll_pilot,
     ensure_campaign_for_batch,
     eligible_count_for_list,
     get_step1_variant_templates,
+    pending_totals_for_campaigns,
     reset_campaign_for_retry,
+    send_batch_size,
     send_campaign_step,
+    send_campaigns_step_chunk,
     update_acquisition_campaign,
 )
 from accounts.services.lead_funnel import campaign_funnel, overview_stats
@@ -84,6 +90,35 @@ def _lac_redirect(fragment: str = ''):
     if fragment:
         url = f'{url}#{fragment.lstrip("#")}'
     return HttpResponseRedirect(url)
+
+
+def _parse_campaign_ids_payload(payload) -> list[int]:
+    raw = payload.get('campaign_ids') if hasattr(payload, 'get') else None
+    if raw is None:
+        return []
+    if isinstance(raw, (str, int)):
+        raw = [raw]
+    ids: list[int] = []
+    for item in raw:
+        try:
+            cid = int(item)
+        except (TypeError, ValueError):
+            continue
+        if cid > 0:
+            ids.append(cid)
+    return list(dict.fromkeys(ids))
+
+
+def _parse_json_or_post(request) -> dict:
+    if request.content_type and 'application/json' in request.content_type:
+        try:
+            body = json.loads(request.body.decode('utf-8') or '{}')
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise LeadCampaignError('درخواست JSON نامعتبر است.', code='bad_json') from exc
+        if not isinstance(body, dict):
+            raise LeadCampaignError('ساختار JSON نامعتبر است.', code='bad_json')
+        return body
+    return request.POST.dict() if hasattr(request.POST, 'dict') else dict(request.POST)
 
 
 class LeadClickRedirectView(View):
@@ -168,7 +203,11 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 get_step1_variant_templates(campaigns[0])['B'] if campaigns else DEFAULT_STEP1_B
             ),
             'campaign_edit_json': json.dumps(campaign_edit, ensure_ascii=False),
+            'all_campaign_ids_json': json.dumps([c.pk for c in campaigns], ensure_ascii=False),
             'batches_pending_campaign': batches_pending_campaign(limit=20),
+            'send_progress_start_url': reverse('admin_panel_lead_send_progress_start'),
+            'send_progress_tick_url': reverse('admin_panel_lead_send_progress_tick'),
+            'bulk_templates_url': reverse('admin_panel_lead_bulk_templates'),
         })
         return ctx
 
@@ -522,7 +561,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         return redirect('admin_panel_lead_acquisition')
 
     def _parse_campaign_ids(self, request) -> list[int]:
-        ids = []
+        ids: list[int] = []
         for raw in request.POST.getlist('campaign_ids'):
             try:
                 cid = int(raw)
@@ -530,7 +569,9 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 continue
             if cid > 0:
                 ids.append(cid)
-        return list(dict.fromkeys(ids))
+        if ids:
+            return list(dict.fromkeys(ids))
+        return _parse_campaign_ids_payload(request.POST)
 
     def _bulk_campaigns(self, request):
         op = (request.POST.get('bulk_op') or '').strip()
@@ -550,6 +591,13 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                     result = enroll_pilot(campaign)
                     summaries.append(
                         f'#{cid}: {result["enrolled"]} ثبت · {result["held"]} نگه‌داشته',
+                    )
+                    ok_count += 1
+                elif op == 'enroll_all':
+                    result = enroll_all_eligible(get_object_or_404(LeadCampaign, pk=cid))
+                    summaries.append(
+                        f'#{cid}: {result["enrolled"]} جدید · {result["activated"]} فعال‌شده · '
+                        f'کل {result["total_active"]}',
                     )
                     ok_count += 1
                 elif op == 'send_step':
@@ -581,7 +629,8 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
 
         labels = {
             'enroll_pilot': 'ثبت پایلوت گروهی',
-            'send_step': 'ارسال مرحله ۱ گروهی',
+            'enroll_all': 'ثبت همه سرنخ‌ها',
+            'send_step': 'ارسال کامل مرحله ۱',
             'reset_campaign': 'ریست گروهی',
             'delete_campaign': 'حذف گروهی',
         }
@@ -658,3 +707,81 @@ class AdminLeadFunnelJsonView(StaffRequiredMixin, View):
     def get(self, request, pk: int):
         campaign = get_object_or_404(LeadCampaign, pk=pk)
         return JsonResponse(campaign_funnel(campaign), json_dumps_params={'ensure_ascii': False})
+
+
+class AdminLeadSendProgressStartView(StaffRequiredMixin, View):
+    """شمارش کل مخاطبان در صف ارسال — قبل از progress bar."""
+
+    def post(self, request):
+        try:
+            payload = _parse_json_or_post(request)
+            ids = _parse_campaign_ids_payload(payload)
+            if not ids and request.POST.getlist('campaign_ids'):
+                ids = [int(x) for x in request.POST.getlist('campaign_ids') if str(x).isdigit()]
+            step_number = int(payload.get('step_number') or request.POST.get('step_number') or 1)
+            if not ids:
+                return JsonResponse({'ok': False, 'error': 'حداقل یک کمپین انتخاب کنید.'}, status=400)
+            enroll_summary = enroll_campaigns_for_full_send(ids)
+            totals = pending_totals_for_campaigns(ids, step_number)
+            return JsonResponse({
+                'ok': True,
+                'step_number': step_number,
+                'campaign_ids': ids,
+                'batch_size': send_batch_size(),
+                'enroll': enroll_summary,
+                **totals,
+            }, json_dumps_params={'ensure_ascii': False})
+        except LeadCampaignError as exc:
+            return JsonResponse({'ok': False, 'error': exc.message}, status=400)
+
+
+class AdminLeadSendProgressTickView(StaffRequiredMixin, View):
+    """ارسال یک chunk و برگرداندن پیشرفت — برای polling از UI."""
+
+    def post(self, request):
+        try:
+            payload = _parse_json_or_post(request)
+            ids = _parse_campaign_ids_payload(payload)
+            if not ids and request.POST.getlist('campaign_ids'):
+                ids = [int(x) for x in request.POST.getlist('campaign_ids') if str(x).isdigit()]
+            step_number = int(payload.get('step_number') or request.POST.get('step_number') or 1)
+            if not ids:
+                return JsonResponse({'ok': False, 'error': 'حداقل یک کمپین انتخاب کنید.'}, status=400)
+            result = send_campaigns_step_chunk(ids, step_number, request=request)
+            return JsonResponse({'ok': True, **result}, json_dumps_params={'ensure_ascii': False})
+        except LeadCampaignError as exc:
+            return JsonResponse({'ok': False, 'error': exc.message}, status=400)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception('send progress tick failed')
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=500)
+
+
+class AdminLeadBulkTemplatesView(StaffRequiredMixin, View):
+    """اعمال یک قالب A/B روی چند کمپین (یا همه کمپین‌های جذب)."""
+
+    def post(self, request):
+        try:
+            payload = _parse_json_or_post(request)
+            ids = _parse_campaign_ids_payload(payload)
+            if not ids and request.POST.getlist('campaign_ids'):
+                ids = [int(x) for x in request.POST.getlist('campaign_ids') if str(x).isdigit()]
+            apply_all = payload.get('apply_all') in (True, '1', 1, 'true')
+            if apply_all or not ids:
+                ids = list(
+                    LeadCampaign.objects.filter(kind=LeadCampaign.Kind.ACQUISITION)
+                    .order_by('-created_at')
+                    .values_list('pk', flat=True)
+                )
+            if not ids:
+                return JsonResponse({'ok': False, 'error': 'هیچ کمپینی برای به‌روزرسانی یافت نشد.'}, status=400)
+            variant_a = (payload.get('variant_a') or request.POST.get('variant_a') or '').strip()
+            variant_b = (payload.get('variant_b') or request.POST.get('variant_b') or '').strip()
+            result = bulk_update_variant_templates(ids, variant_a=variant_a, variant_b=variant_b)
+            return JsonResponse({
+                'ok': True,
+                'updated_count': result['updated_count'],
+                'updated': result['updated'],
+                'errors': result['errors'],
+            }, json_dumps_params={'ensure_ascii': False})
+        except LeadCampaignError as exc:
+            return JsonResponse({'ok': False, 'error': exc.message}, status=400)

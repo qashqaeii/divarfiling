@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -800,9 +800,18 @@
     var bulkCount = document.getElementById('lac-bulk-count');
     var bulkClear = document.getElementById('lac-bulk-clear');
 
+    function countChecked() {
+      var n = 0;
+      bulkChecks.forEach(function (cb) { if (cb.checked) n += 1; });
+      return n;
+    }
+
     function updateBulkBar() {
-      var n = bulkForm.querySelectorAll('.lac-campaign-check:checked').length;
-      if (bulkBar) bulkBar.hidden = n === 0;
+      var n = countChecked();
+      if (bulkBar) {
+        bulkBar.hidden = n === 0;
+        bulkBar.classList.toggle('is-visible', n > 0);
+      }
       if (bulkCount) bulkCount.textContent = persianDigits(n) + ' انتخاب';
       bulkChecks.forEach(function (cb) {
         var row = cb.closest('tr');
@@ -829,7 +838,7 @@
     }
     document.querySelectorAll('[data-bulk-op]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        if (!bulkForm.querySelector('.lac-campaign-check:checked')) {
+        if (countChecked() === 0) {
           alert('حداقل یک کمپین را انتخاب کنید.');
           return;
         }

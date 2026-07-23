@@ -490,7 +490,154 @@ def pipeline_overview() -> dict[str, Any]:
             'cold': cold,
             'engaged': engaged,
             'registered': registered,
+            'activated': activated,
+            'nurture': nurture,
+            'expiring': int(counts.get(GrowthJourney.Stage.EXPIRING_SOON, 0) or 0),
+            'churn': int(counts.get(GrowthJourney.Stage.CHURN_RISK, 0) or 0),
+            'renewed': int(counts.get(GrowthJourney.Stage.RENEWED, 0) or 0),
         },
+        'charts': build_pipeline_charts(counts=counts, summary={
+            'cold': cold,
+            'engaged': engaged,
+            'registered': registered,
+            'activated': activated,
+            'nurture': nurture,
+            'pending': pending,
+            'customers': customers,
+        }),
+    }
+
+
+def build_pipeline_charts(*, counts: dict, summary: dict) -> dict[str, Any]:
+    """داده نمودارهای داشبورد پایپلاین رشد."""
+    import jdatetime
+    from datetime import timedelta
+    from django.db.models.functions import TruncDate
+
+    funnel_labels = [
+        'سرد', 'تعامل', 'ثبت‌نام', 'فعال', 'بدون خرید', 'سبد معلق', 'مشتری',
+    ]
+    funnel_values = [
+        summary.get('cold', 0),
+        summary.get('engaged', 0),
+        summary.get('registered', 0),
+        summary.get('activated', 0),
+        summary.get('nurture', 0),
+        summary.get('pending', 0),
+        summary.get('customers', 0),
+    ]
+
+    # توزیع مرحله برای دونات (فقط stageهای با count>0)
+    stage_order = [
+        GrowthJourney.Stage.COLD_LEAD,
+        GrowthJourney.Stage.ENGAGED,
+        GrowthJourney.Stage.REGISTERED,
+        GrowthJourney.Stage.ACTIVATED,
+        GrowthJourney.Stage.NURTURE_UNPAID,
+        GrowthJourney.Stage.PENDING_CHECKOUT,
+        GrowthJourney.Stage.CUSTOMER,
+        GrowthJourney.Stage.EXPIRING_SOON,
+        GrowthJourney.Stage.RENEWED,
+        GrowthJourney.Stage.CHURN_RISK,
+        GrowthJourney.Stage.SUPPRESSED,
+    ]
+    labels_map = dict(GrowthJourney.Stage.choices)
+    dist_labels, dist_values, dist_keys = [], [], []
+    for key in stage_order:
+        c = int(counts.get(key, 0) or 0)
+        if c <= 0:
+            continue
+        dist_keys.append(key)
+        dist_labels.append(labels_map.get(key, key))
+        dist_values.append(c)
+
+    # روند ۱۴ روزه رویدادها
+    now = timezone.now()
+    since = now - timedelta(days=13)
+    day_counts = {
+        row['day'].date() if hasattr(row['day'], 'date') else row['day']: row['c']
+        for row in (
+            GrowthJourneyEvent.objects.filter(created_at__gte=since)
+            .annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(c=Count('id'))
+        )
+        if row['day']
+    }
+    trend_labels, trend_values = [], []
+    for i in range(13, -1, -1):
+        day = timezone.localtime(now - timedelta(days=i)).date()
+        jday = jdatetime.date.fromgregorian(date=day)
+        trend_labels.append(jday.strftime('%m/%d'))
+        trend_values.append(int(day_counts.get(day, 0) or 0))
+
+    # رویدادها بر اساس نوع (۱۴ روز)
+    event_type_rows = (
+        GrowthJourneyEvent.objects.filter(created_at__gte=since)
+        .values('event_type')
+        .annotate(c=Count('id'))
+        .order_by('-c')[:8]
+    )
+    event_label_map = {
+        'lead_imported': 'ورود سرنخ',
+        'click_landing': 'کلیک',
+        'signup': 'ثبت‌نام',
+        'workspace_login': 'ورود میزکار',
+        'checkout_start': 'سبد',
+        'no_purchase_window': 'پیگیری خرید',
+        'paid_licensed': 'خرید',
+        'license_expiring': 'نزدیک انقضا',
+        'expired_no_renew': 'ریسک ریزش',
+        'manual_set': 'همگام‌سازی',
+        'opt_out': 'لغو',
+    }
+    event_labels = [
+        event_label_map.get(r['event_type'], r['event_type']) for r in event_type_rows
+    ]
+    event_values = [int(r['c'] or 0) for r in event_type_rows]
+
+    # نرخ تبدیل تقریبی نسبت به کل
+    total = max(1, sum(int(v or 0) for v in counts.values()))
+    cold_eng = summary.get('cold', 0) + summary.get('engaged', 0)
+    rates = {
+        'click_rate': round(100.0 * summary.get('engaged', 0) / max(1, cold_eng), 1) if cold_eng else 0,
+        'reg_rate': round(
+            100.0 * summary.get('registered', 0) / max(1, summary.get('engaged', 0) or cold_eng),
+            1,
+        ),
+        'pay_rate': round(
+            100.0 * summary.get('customers', 0) / max(
+                1,
+                summary.get('registered', 0)
+                + summary.get('activated', 0)
+                + summary.get('nurture', 0)
+                + summary.get('customers', 0),
+            ),
+            1,
+        ),
+        'customer_share': round(100.0 * summary.get('customers', 0) / total, 1),
+    }
+
+    source_rows = (
+        GrowthJourney.objects.values('source')
+        .annotate(c=Count('id'))
+        .order_by('-c')
+    )
+    source_map = dict(GrowthJourney.Source.choices)
+    source_labels = [source_map.get(r['source'], r['source']) for r in source_rows]
+    source_values = [int(r['c'] or 0) for r in source_rows]
+
+    return {
+        'funnel': {'labels': funnel_labels, 'values': funnel_values},
+        'distribution': {
+            'labels': dist_labels,
+            'values': dist_values,
+            'keys': dist_keys,
+        },
+        'trend': {'labels': trend_labels, 'values': trend_values},
+        'events': {'labels': event_labels, 'values': event_values},
+        'sources': {'labels': source_labels, 'values': source_values},
+        'rates': rates,
     }
 
 

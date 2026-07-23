@@ -73,6 +73,7 @@ class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
 
         last_run = cache.get('growth_pipeline_last_run') or {}
         run_summary = summarize_last_run(last_run)
+        charts = overview.get('charts') or {}
 
         recent_fa = []
         for ev in overview.get('recent_events') or []:
@@ -92,7 +93,8 @@ class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
             'last_run': last_run,
             'run_summary': run_summary,
             'recent_events_fa': recent_fa,
-            'last_run_json': json.dumps(last_run, ensure_ascii=False, default=str),
+            'charts_json': json.dumps(charts, ensure_ascii=False, default=str),
+            'rates': (charts.get('rates') or {}),
         })
         return ctx
 

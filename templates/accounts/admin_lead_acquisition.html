@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -137,155 +137,185 @@
         <div class="adm-lac-section-head">
             <div>
                 <h2>ورود حرفه‌ای فایل</h2>
-                <p>پیش‌نمایش بدون تغییر، اثرانگشت فایل، حذف شماره تکراری، کاربر موجود بدون مسدودسازی دائمی</p>
+                <p>آپلود تکی یا دسته‌ای · پس از ثبت، کمپین A/B به‌صورت خودکار ساخته می‌شود</p>
             </div>
+            {% if bulk_previews %}
+            <span class="adm-lac-chip adm-lac-chip--live">{{ bulk_previews|length|to_persian_digits }} فایل در صف</span>
+            {% endif %}
         </div>
-        <div class="adm-lac-grid-2">
-            <div class="adm-lac-panel">
+
+        <div class="adm-lac-upload-workspace">
+            <div class="adm-lac-panel adm-lac-panel--upload">
                 <form method="post" enctype="multipart/form-data" id="lac-import-form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="import_preview">
-                    <div class="adm-lac-drop" id="lac-dropzone">
-                        <div class="adm-lac-drop-icon"><i class="fas fa-cloud-arrow-up"></i></div>
-                        <strong>فایل خروجی استخراجگر دیوار را اینجا رها کنید</strong>
-                        <span>یا کلیک کنید تا انتخاب شود · فقط فایل جی‌سان</span>
-                        <input type="file" name="file" id="lac-file" accept=".json,application/json" required>
+                    <div class="adm-lac-drop adm-lac-drop--bulk" id="lac-dropzone">
+                        <div class="adm-lac-drop-icon"><i class="fas fa-layer-group"></i></div>
+                        <strong>فایل‌های JSON استخراجگر را اینجا رها کنید</strong>
+                        <span>تکی یا چندتایی · حداکثر ۲۰ فایل · فقط JSON</span>
+                        <input type="file" name="files" id="lac-file" accept=".json,application/json" multiple>
                     </div>
-                    <p class="adm-lac-kpi-sub" id="lac-file-name" style="margin-top:.65rem">فایلی انتخاب نشده</p>
-                    <div style="margin-top:.85rem">
+                    <div class="adm-lac-upload-meta">
+                        <p class="adm-lac-kpi-sub" id="lac-file-name">فایلی انتخاب نشده</p>
                         <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
-                            <i class="fas fa-eye"></i> ساخت پیش‌نمایش
+                            <i class="fas fa-eye"></i> پیش‌نمایش
                         </button>
                     </div>
                 </form>
+                <div class="adm-lac-upload-hints">
+                    <span><i class="fas fa-fingerprint"></i> اثرانگشت فایل</span>
+                    <span><i class="fas fa-filter"></i> حذف تکراری</span>
+                    <span><i class="fas fa-wand-magic-sparkles"></i> کمپین خودکار A/B</span>
+                </div>
             </div>
 
-            <div class="adm-lac-panel">
+            <div class="adm-lac-panel adm-lac-panel--preview">
                 {% if preview %}
-                <div class="adm-lac-meta" style="margin-bottom:.5rem">
-                    <span class="adm-lac-chip adm-lac-chip--live">بچ {{ preview.batch_id|to_persian_digits }}</span>
-                    <span class="adm-lac-chip">اثرانگشت {{ preview.file_hash|slice:":12" }}…</span>
-                    {% if preview.metadata.city %}
-                    <span class="adm-lac-chip">{{ preview.metadata.city }}{% if preview.metadata.district %} · {{ preview.metadata.district }}{% endif %}</span>
-                    {% endif %}
+                <div class="adm-lac-preview-active">
+                    <div class="adm-lac-preview-head">
+                        <div>
+                            <strong>پیش‌نمایش فعال</strong>
+                            <p class="adm-lac-kpi-sub">{{ preview.metadata.original_filename|default:"—" }}</p>
+                        </div>
+                        <div class="adm-lac-meta">
+                            <span class="adm-lac-chip adm-lac-chip--live">بچ {{ preview.batch_id|to_persian_digits }}</span>
+                            {% if preview.metadata.city %}
+                            <span class="adm-lac-chip">{{ preview.metadata.city }}{% if preview.metadata.district %} · {{ preview.metadata.district }}{% endif %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="adm-lac-stat-grid adm-lac-stat-grid--compact">
+                        <div class="adm-lac-stat adm-lac-stat--accent"><strong>{{ preview.stats.eligible|default:0|to_persian_digits }}</strong><span>قابل ورود</span></div>
+                        <div class="adm-lac-stat adm-lac-stat--ok"><strong>{{ preview.stats.valid|default:0|to_persian_digits }}</strong><span>معتبر</span></div>
+                        <div class="adm-lac-stat adm-lac-stat--warn"><strong>{{ preview.stats.duplicate_in_file|default:0|to_persian_digits }}</strong><span>تکراری</span></div>
+                        <div class="adm-lac-stat"><strong>{{ preview.stats.existing_user|default:0|to_persian_digits }}</strong><span>کاربر موجود</span></div>
+                    </div>
+                    <div class="adm-lac-preview-actions">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="import_commit">
+                            <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
+                                <i class="fas fa-check-double"></i> ثبت + ساخت کمپین
+                            </button>
+                        </form>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="import_discard">
+                            <input type="hidden" name="batch_id" value="{{ preview.batch_id }}">
+                            <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm">رد</button>
+                        </form>
+                    </div>
                 </div>
-                <div class="adm-lac-stat-grid">
-                    <div class="adm-lac-stat"><strong>{{ preview.stats.read|default:0|to_persian_digits }}</strong><span>خوانده‌شده</span></div>
-                    <div class="adm-lac-stat adm-lac-stat--ok"><strong>{{ preview.stats.valid|default:0|to_persian_digits }}</strong><span>معتبر</span></div>
-                    <div class="adm-lac-stat adm-lac-stat--warn"><strong>{{ preview.stats.duplicate_in_file|default:0|to_persian_digits }}</strong><span>تکراری در فایل</span></div>
-                    <div class="adm-lac-stat"><strong>{{ preview.stats.already_lead|default:0|to_persian_digits }}</strong><span>سرنخ موجود</span></div>
-                    <div class="adm-lac-stat"><strong>{{ preview.stats.existing_user|default:0|to_persian_digits }}</strong><span>کاربر موجود</span></div>
-                    <div class="adm-lac-stat adm-lac-stat--bad"><strong>{{ preview.stats.suppressed|default:0|to_persian_digits }}</strong><span>مسدود</span></div>
-                    <div class="adm-lac-stat adm-lac-stat--accent"><strong>{{ preview.stats.eligible|default:0|to_persian_digits }}</strong><span>قابل ورود</span></div>
-                </div>
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="import_commit">
-                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
-                        <i class="fas fa-check-double"></i> تأیید و ثبت در لیست
-                    </button>
-                </form>
                 {% else %}
-                <div class="adm-lac-empty">
+                <div class="adm-lac-empty adm-lac-empty--compact">
                     <i class="fas fa-clipboard-list"></i>
-                    هنوز پیش‌نمایش فعالی نیست. پس از آپلود، آمار کیفیت داده اینجا ظاهر می‌شود.
+                    پیش‌نمایش اینجا نمایش داده می‌شود
+                </div>
+                {% endif %}
+
+                {% if bulk_previews|length > 1 %}
+                <div class="adm-lac-bulk-queue">
+                    <div class="adm-lac-bulk-queue-head">
+                        <strong>صف ورود دسته‌ای</strong>
+                        <form method="post" style="margin:0">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="import_commit_bulk">
+                            <button type="submit" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm">
+                                <i class="fas fa-bolt"></i> ثبت همه ({{ bulk_previews|length|to_persian_digits }})
+                            </button>
+                        </form>
+                    </div>
+                    <ul class="adm-lac-bulk-list">
+                    {% for item in bulk_previews %}
+                        <li class="adm-lac-bulk-item {% if preview.batch_id == item.batch_id %}is-active{% endif %}">
+                            <span class="adm-lac-bulk-item__name">{{ item.filename|truncatechars:36 }}</span>
+                            <span class="adm-lac-bulk-item__stat">{{ item.stats.eligible|default:0|to_persian_digits }} سرنخ</span>
+                        </li>
+                    {% endfor %}
+                    </ul>
                 </div>
                 {% endif %}
             </div>
         </div>
 
-        {% if region_lists %}
-        <div class="adm-lac-panel" style="margin-top:1rem">
-            <h3 style="margin:0 0 .35rem;font-size:.95rem">لیست‌های منطقه‌ای (ادغام‌شده)</h3>
-            <p class="adm-lac-kpi-sub" style="margin:0 0 .65rem">
-                چند فایل برای یک منطقه (مثلاً اقدسیه) در یک لیست واحد جمع می‌شوند.
-            </p>
-            <div class="adm-lac-table-wrap">
-                <table class="adm-lac-table">
-                    <thead>
-                        <tr>
-                            <th>منطقه</th>
-                            <th>دسته</th>
-                            <th>سرنخ</th>
-                            <th>تعداد فایل</th>
-                            <th>آخرین فایل</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <div class="adm-lac-accordions">
+            {% if region_lists %}
+            <details class="adm-lac-accordion">
+                <summary class="adm-lac-accordion__head">
+                    <span class="adm-lac-accordion__icon"><i class="fas fa-map-location-dot"></i></span>
+                    <span class="adm-lac-accordion__title">
+                        <strong>لیست‌های منطقه‌ای (ادغام‌شده)</strong>
+                        <small>{{ region_lists|length|to_persian_digits }} منطقه · چند فایل → یک لیست</small>
+                    </span>
+                    <span class="adm-lac-accordion__chev"><i class="fas fa-chevron-down"></i></span>
+                </summary>
+                <div class="adm-lac-accordion__body">
+                    <div class="adm-lac-region-cards">
                     {% for row in region_lists %}
-                        <tr>
-                            <td>
-                                <strong>{{ row.list.city }}{% if row.list.district %} / {{ row.list.district }}{% endif %}</strong>
-                                <div class="adm-lac-kpi-sub">لیست {{ row.list.id|to_persian_digits }}</div>
-                            </td>
-                            <td>{{ row.list.listing_category|default:"—" }}</td>
-                            <td><strong>{{ row.member_count|to_persian_digits }}</strong></td>
-                            <td>
-                                <span class="adm-lac-chip {% if row.batch_count > 1 %}adm-lac-chip--live{% endif %}">
-                                    {{ row.batch_count|to_persian_digits }} فایل
-                                </span>
-                            </td>
-                            <td>
-                                {% if row.latest_batch %}
-                                <code style="font-size:.72rem">{{ row.latest_batch.original_filename|truncatechars:42 }}</code>
-                                {% else %}—{% endif %}
-                            </td>
-                        </tr>
-                        {% if row.batches|length > 1 %}
-                        <tr>
-                            <td colspan="5" style="background:rgba(13,148,136,.04)">
-                                <div class="adm-lac-kpi-sub" style="margin:0">
-                                    فایل‌های ادغام‌شده:
-                                    {% for b in row.batches %}
-                                        <span class="adm-lac-chip">{{ b.id|to_persian_digits }} · {{ b.original_filename|truncatechars:28 }}</span>
-                                    {% endfor %}
+                        <article class="adm-lac-region-card">
+                            <header class="adm-lac-region-card__head">
+                                <div>
+                                    <strong>{{ row.list.city }}{% if row.list.district %} / {{ row.list.district }}{% endif %}</strong>
+                                    <span class="adm-lac-kpi-sub">لیست {{ row.list.id|to_persian_digits }} · {{ row.list.listing_category|default:"—" }}</span>
                                 </div>
-                            </td>
-                        </tr>
-                        {% endif %}
+                                <div class="adm-lac-region-card__stats">
+                                    <span class="adm-lac-chip adm-lac-chip--live">{{ row.member_count|to_persian_digits }} سرنخ</span>
+                                    <span class="adm-lac-chip">{{ row.batch_count|to_persian_digits }} فایل</span>
+                                </div>
+                            </header>
+                            {% if row.batches %}
+                            <details class="adm-lac-nested">
+                                <summary>فایل‌های ادغام‌شده</summary>
+                                <ul class="adm-lac-nested-list">
+                                {% for b in row.batches %}
+                                    <li>
+                                        <code>#{{ b.id|to_persian_digits }}</code>
+                                        {{ b.original_filename|truncatechars:40 }}
+                                        <time>{{ b.committed_at|default:b.created_at|to_jalali_fa:"%Y/%m/%d" }}</time>
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                            </details>
+                            {% endif %}
+                        </article>
                     {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {% endif %}
+                    </div>
+                </div>
+            </details>
+            {% endif %}
 
-        {% if batches %}
-        <div class="adm-lac-panel" style="margin-top:1rem">
-            <h3 style="margin:0 0 .65rem;font-size:.9rem">تاریخچه آپلود (هر فایل یک سابقه جدا)</h3>
-            <div class="adm-lac-table-wrap">
-                <table class="adm-lac-table">
-                    <thead>
-                        <tr>
-                            <th>شناسه</th>
-                            <th>فایل</th>
-                            <th>منطقه</th>
-                            <th>وضعیت</th>
-                            <th>لیست</th>
-                            <th>زمان شمسی</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            {% if batches %}
+            <details class="adm-lac-accordion">
+                <summary class="adm-lac-accordion__head">
+                    <span class="adm-lac-accordion__icon"><i class="fas fa-clock-rotate-left"></i></span>
+                    <span class="adm-lac-accordion__title">
+                        <strong>تاریخچه آپلود</strong>
+                        <small>هر فایل یک سابقه جدا · {{ batches|length|to_persian_digits }} مورد اخیر</small>
+                    </span>
+                    <span class="adm-lac-accordion__chev"><i class="fas fa-chevron-down"></i></span>
+                </summary>
+                <div class="adm-lac-accordion__body">
+                    <div class="adm-lac-history-list">
                     {% for b in batches %}
-                        <tr>
-                            <td>{{ b.id|to_persian_digits }}</td>
-                            <td>{{ b.original_filename|default:"—" }}</td>
-                            <td>{{ b.city }} {% if b.district %}/ {{ b.district }}{% endif %}</td>
-                            <td><span class="adm-lac-status {% if b.status == 'committed' %}adm-lac-status--active{% endif %}">{{ b.get_status_display }}</span></td>
-                            <td>
+                        <article class="adm-lac-history-item">
+                            <div class="adm-lac-history-item__main">
+                                <strong>{{ b.original_filename|default:"—"|truncatechars:48 }}</strong>
+                                <span class="adm-lac-kpi-sub">#{{ b.id|to_persian_digits }} · {{ b.city }}{% if b.district %} / {{ b.district }}{% endif %}</span>
+                            </div>
+                            <div class="adm-lac-history-item__meta">
+                                <span class="adm-lac-status {% if b.status == 'committed' %}adm-lac-status--active{% endif %}">{{ b.get_status_display }}</span>
                                 {% if b.preview_stats.list_id %}
-                                {{ b.preview_stats.list_id|to_persian_digits }}
-                                {% if b.preview_stats.region_merged %}<span class="adm-lac-chip adm-lac-chip--live">ادغام‌شده</span>{% endif %}
-                                {% else %}—{% endif %}
-                            </td>
-                            <td>{{ b.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
-                        </tr>
+                                <span class="adm-lac-chip">لیست {{ b.preview_stats.list_id|to_persian_digits }}</span>
+                                {% endif %}
+                                <time>{{ b.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</time>
+                            </div>
+                        </article>
                     {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                    </div>
+                </div>
+            </details>
+            {% endif %}
         </div>
-        {% endif %}
     </section>
 
     <section id="lac-compose" class="adm-lac-section">
@@ -391,6 +421,9 @@
                             <td>
                                 <div class="adm-lac-actions">
                                     <a class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" href="{% url 'admin_panel_lead_campaign_detail' f.campaign_id %}">گزارش</a>
+                                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-lac-edit="{{ f.campaign_id }}">
+                                        <i class="fas fa-pen"></i> ویرایش
+                                    </button>
                                     <form method="post">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="enroll_pilot">
@@ -404,19 +437,27 @@
                                         <input type="hidden" name="step_number" value="1">
                                         <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">ارسال مرحله ۱</button>
                                     </form>
+                                    <form method="post" onsubmit="return confirm('پیام‌های ناموفق آزاد شوند و کمپین برای ارسال مجدد ریست شود؟');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="reset_campaign">
+                                        <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" title="ریست بدون حذف کمپین">
+                                            <i class="fas fa-rotate-left"></i> ریست
+                                        </button>
+                                    </form>
                                     <form method="post">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="retry_failed">
                                         <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
                                         <input type="hidden" name="step_number" value="1">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm" title="بعد از اختلال اپراتور، پیام‌های ناموفق را دوباره می‌فرستد">ارسال مجدد ناموفق‌ها</button>
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm" title="ریست + ارسال مجدد ناموفق‌ها">ارسال مجدد</button>
                                     </form>
-                                    <form method="post" onsubmit="return confirm('کمپین کاملاً حذف شود و از صفر شروع کنید؟ لیست سرنخ‌ها پاک نمی‌شود.');">
+                                    <form method="post" onsubmit="return confirm('کمپین کاملاً حذف شود؟ لیست سرنخ‌ها پاک نمی‌شود.');">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="delete_campaign">
                                         <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
                                         <input type="hidden" name="confirm_delete" value="1">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--danger adm-lac-btn--sm">حذف کمپین</button>
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--danger adm-lac-btn--sm">حذف</button>
                                     </form>
                                 </div>
                             </td>
@@ -483,6 +524,65 @@
             </div>
         </div>
     </section>
+
+    <dialog class="adm-lac-modal" id="lac-edit-modal">
+        <form method="post" class="adm-lac-modal__inner" id="lac-edit-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_campaign">
+            <input type="hidden" name="campaign_id" id="lac-edit-campaign-id">
+            <header class="adm-lac-modal__head">
+                <div>
+                    <h3>ویرایش کمپین و پیام‌های A/B</h3>
+                    <p class="adm-lac-kpi-sub">متغیرها: <code>{district}</code> · <code>{link}</code> · <code>{name}</code></p>
+                </div>
+                <button type="button" class="adm-lac-modal__close" data-lac-modal-close aria-label="بستن">&times;</button>
+            </header>
+            <div class="adm-lac-modal__body">
+                <div class="adm-lac-form-row">
+                    <div class="adm-lac-field adm-lac-field--full">
+                        <label for="lac-edit-name">نام کمپین</label>
+                        <input name="name" id="lac-edit-name" required>
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="lac-edit-landing">صفحه فرود</label>
+                        <input name="landing_url" id="lac-edit-landing">
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="lac-edit-pilot">ظرفیت هر نسخه</label>
+                        <input type="number" name="pilot_per_variant" id="lac-edit-pilot" min="1" max="500">
+                    </div>
+                    <label class="adm-lac-check">
+                        <input type="checkbox" name="is_pilot" value="1" id="lac-edit-is-pilot">
+                        حالت پایلوت
+                    </label>
+                </div>
+                <div class="adm-lac-msg-editor">
+                    <div class="adm-lac-msg-pane" data-variant="A">
+                        <div class="adm-lac-msg-pane__head">
+                            <span class="adm-lac-variant-key">A</span>
+                            <strong>نسخه A · معرفی مستقیم</strong>
+                            <span class="adm-lac-msg-len" id="lac-len-a">۰ کاراکتر</span>
+                        </div>
+                        <textarea name="variant_a" id="lac-edit-variant-a" rows="5" placeholder="متن پیامک نسخه A"></textarea>
+                    </div>
+                    <div class="adm-lac-msg-pane" data-variant="B">
+                        <div class="adm-lac-msg-pane__head">
+                            <span class="adm-lac-variant-key">B</span>
+                            <strong>نسخه B · سوال + ارزش</strong>
+                            <span class="adm-lac-msg-len" id="lac-len-b">۰ کاراکتر</span>
+                        </div>
+                        <textarea name="variant_b" id="lac-edit-variant-b" rows="5" placeholder="متن پیامک نسخه B"></textarea>
+                    </div>
+                </div>
+            </div>
+            <footer class="adm-lac-modal__foot">
+                <button type="button" class="adm-lac-btn adm-lac-btn--ghost" data-lac-modal-close>انصراف</button>
+                <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
+                    <i class="fas fa-save"></i> ذخیره تغییرات
+                </button>
+            </footer>
+        </form>
+    </dialog>
 </div>
 {% endblock %}
 
@@ -507,31 +607,97 @@
   const drop = document.getElementById('lac-dropzone');
   const file = document.getElementById('lac-file');
   const nameEl = document.getElementById('lac-file-name');
-  if (!drop || !file) return;
-  function setName() {
-    nameEl.textContent = file.files && file.files[0]
-      ? ('انتخاب‌شده: ' + file.files[0].name)
-      : 'فایلی انتخاب نشده';
-  }
-  file.addEventListener('change', setName);
-  ['dragenter', 'dragover'].forEach(function (ev) {
-    drop.addEventListener(ev, function (e) {
-      e.preventDefault();
-      drop.classList.add('is-dragover');
-    });
-  });
-  ['dragleave', 'drop'].forEach(function (ev) {
-    drop.addEventListener(ev, function (e) {
-      e.preventDefault();
-      drop.classList.remove('is-dragover');
-    });
-  });
-  drop.addEventListener('drop', function (e) {
-    const files = e.dataTransfer && e.dataTransfer.files;
-    if (files && files.length) {
-      file.files = files;
-      setName();
+  if (drop && file && nameEl) {
+    function setName() {
+      const n = file.files ? file.files.length : 0;
+      if (!n) {
+        nameEl.textContent = 'فایلی انتخاب نشده';
+        return;
+      }
+      if (n === 1) {
+        nameEl.textContent = 'انتخاب‌شده: ' + file.files[0].name;
+        return;
+      }
+      nameEl.textContent = n + ' فایل انتخاب شد — آماده پیش‌نمایش دسته‌ای';
     }
+    file.addEventListener('change', setName);
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) {
+        e.preventDefault();
+        drop.classList.add('is-dragover');
+      });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) {
+        e.preventDefault();
+        drop.classList.remove('is-dragover');
+      });
+    });
+    drop.addEventListener('drop', function (e) {
+      const files = e.dataTransfer && e.dataTransfer.files;
+      if (files && files.length) {
+        file.files = files;
+        setName();
+      }
+    });
+  }
+
+  var campaignEdit = {};
+  try {
+    campaignEdit = JSON.parse('{{ campaign_edit_json|escapejs }}');
+  } catch (e) { campaignEdit = {}; }
+
+  var modal = document.getElementById('lac-edit-modal');
+  var form = document.getElementById('lac-edit-form');
+  var taA = document.getElementById('lac-edit-variant-a');
+  var taB = document.getElementById('lac-edit-variant-b');
+  var lenA = document.getElementById('lac-len-a');
+  var lenB = document.getElementById('lac-len-b');
+
+  function persianDigits(n) {
+    return String(n).replace(/\d/g, function (d) {
+      return '۰۱۲۳۴۵۶۷۸۹'[d];
+    });
+  }
+  function smsParts(text) {
+    var n = (text || '').length;
+    if (n <= 0) return 0;
+    if (n <= 70) return 1;
+    return Math.ceil(n / 67);
+  }
+  function updateLen(el, target) {
+    if (!el || !target) return;
+    var n = el.value.length;
+    target.textContent = persianDigits(n) + ' کاراکتر · ' + persianDigits(smsParts(el.value)) + ' بخش';
+  }
+  if (taA) taA.addEventListener('input', function () { updateLen(taA, lenA); });
+  if (taB) taB.addEventListener('input', function () { updateLen(taB, lenB); });
+
+  function openEditModal(id) {
+    var data = campaignEdit[String(id)];
+    if (!data || !modal) return;
+    document.getElementById('lac-edit-campaign-id').value = id;
+    document.getElementById('lac-edit-name').value = data.name || '';
+    document.getElementById('lac-edit-landing').value = data.landing_url || '';
+    document.getElementById('lac-edit-pilot').value = data.pilot_per_variant || 15;
+    document.getElementById('lac-edit-is-pilot').checked = !!data.is_pilot;
+    if (taA) taA.value = data.variant_a || '';
+    if (taB) taB.value = data.variant_b || '';
+    updateLen(taA, lenA);
+    updateLen(taB, lenB);
+    if (modal.showModal) modal.showModal();
+    else modal.setAttribute('open', 'open');
+  }
+  document.querySelectorAll('[data-lac-edit]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      openEditModal(btn.getAttribute('data-lac-edit'));
+    });
+  });
+  document.querySelectorAll('[data-lac-modal-close]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (modal.close) modal.close();
+      else modal.removeAttribute('open');
+    });
   });
 })();
 </script>

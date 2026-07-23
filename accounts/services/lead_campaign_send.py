@@ -119,6 +119,161 @@ def pending_enrollments_for_step(campaign: LeadCampaign, step: CampaignStep):
     )
 
 
+def build_variant_step1_template(variant_a: str, variant_b: str) -> str:
+    return f'<<<VARIANT:A>>>\n{variant_a.strip()}\n<<<VARIANT:B>>>\n{variant_b.strip()}'
+
+
+def pilot_per_variant_for_count(eligible_count: int, *, is_pilot: bool = True) -> int:
+    """ظرفیت هر نسخه A/B بر اساس تعداد سرنخ واجد شرایط."""
+    if eligible_count <= 0:
+        return 1
+    if not is_pilot:
+        return max(1, min(500, eligible_count))
+    # پایلوت: حداکثر ۱۵ در هر نسخه، حداقل ۱
+    half = max(1, eligible_count // 2)
+    return max(1, min(15, half))
+
+
+def generate_acquisition_campaign_name(
+    *,
+    lead_list: LeadList,
+    batch_id: Optional[int] = None,
+    eligible_count: int = 0,
+    is_pilot: bool = True,
+) -> str:
+    """نام‌گذاری حرفه‌ای کمپین جذب."""
+    from django.utils import timezone as tz
+
+    parts: list[str] = ['جذب']
+    geo = ' / '.join(
+        p for p in (lead_list.city, lead_list.district) if p
+    )
+    if geo:
+        parts.append(geo)
+    if lead_list.listing_category:
+        parts.append(lead_list.listing_category)
+    if is_pilot:
+        parts.append('پایلوت A/B')
+    if eligible_count:
+        parts.append(f'{eligible_count} سرنخ')
+    now = tz.localtime()
+    parts.append(now.strftime('%Y/%m/%d'))
+    if batch_id:
+        parts.append(f'فایل #{batch_id}')
+    return ' · '.join(parts)
+
+
+def eligible_count_for_list(lead_list: LeadList) -> int:
+    return (
+        MarketingLead.objects.filter(
+            list_memberships__lead_list=lead_list,
+            status__in=(MarketingLead.Status.COLD, MarketingLead.Status.ENGAGED),
+        )
+        .exclude(
+            phone_normalized__in=SuppressionEntry.objects.values_list('phone_normalized', flat=True),
+        )
+        .distinct()
+        .count()
+    )
+
+
+def auto_create_campaign_for_import(
+    *,
+    lead_list: LeadList,
+    batch_id: int,
+    eligible_count: int,
+    created_by=None,
+    landing_url: str = 'https://divarfiling.ir/',
+) -> Optional[LeadCampaign]:
+    """
+    پس از commit فایل، کمپین دو نسخه‌ای می‌سازد — اگر کمپین draft/pilot فعال
+    برای همین لیست نباشد.
+    """
+    existing = LeadCampaign.objects.filter(
+        lead_list=lead_list,
+        kind=LeadCampaign.Kind.ACQUISITION,
+        status__in=(
+            LeadCampaign.Status.DRAFT,
+            LeadCampaign.Status.PILOT,
+            LeadCampaign.Status.ACTIVE,
+        ),
+    ).first()
+    if existing:
+        return None
+
+    per_variant = pilot_per_variant_for_count(eligible_count, is_pilot=True)
+    name = generate_acquisition_campaign_name(
+        lead_list=lead_list,
+        batch_id=batch_id,
+        eligible_count=eligible_count,
+        is_pilot=True,
+    )
+    return create_acquisition_campaign(
+        name=name,
+        lead_list=lead_list,
+        created_by=created_by,
+        landing_url=landing_url,
+        is_pilot=True,
+        pilot_per_variant=per_variant,
+    )
+
+
+def get_step1_variant_templates(campaign: LeadCampaign) -> dict[str, str]:
+    step = campaign.steps.filter(step_number=1, is_active=True).first()
+    if not step:
+        return {'A': DEFAULT_STEP1_A, 'B': DEFAULT_STEP1_B}
+    return parse_variant_templates(step.message_template)
+
+
+@transaction.atomic
+def update_acquisition_campaign(
+    campaign_id: int,
+    *,
+    name: Optional[str] = None,
+    landing_url: Optional[str] = None,
+    pilot_per_variant: Optional[int] = None,
+    is_pilot: Optional[bool] = None,
+    variant_a_template: Optional[str] = None,
+    variant_b_template: Optional[str] = None,
+) -> LeadCampaign:
+    campaign = LeadCampaign.objects.select_for_update().filter(pk=campaign_id).first()
+    if not campaign:
+        raise LeadCampaignError('کمپین یافت نشد.', code='not_found')
+    if campaign.kind != LeadCampaign.Kind.ACQUISITION:
+        raise LeadCampaignError('فقط کمپین جذب قابل ویرایش است.', code='wrong_kind')
+
+    dirty_fields: list[str] = []
+    if name is not None:
+        campaign.name = name.strip() or campaign.name
+        dirty_fields.append('name')
+    if landing_url is not None:
+        campaign.landing_url = landing_url.strip() or campaign.landing_url
+        dirty_fields.append('landing_url')
+    if pilot_per_variant is not None:
+        campaign.pilot_per_variant = max(1, min(500, int(pilot_per_variant)))
+        dirty_fields.append('pilot_per_variant')
+    if is_pilot is not None:
+        campaign.is_pilot = bool(is_pilot)
+        dirty_fields.append('is_pilot')
+    if dirty_fields:
+        dirty_fields.append('updated_at')
+        campaign.save(update_fields=dirty_fields)
+
+    if variant_a_template is not None or variant_b_template is not None:
+        step = campaign.steps.filter(step_number=1, is_active=True).first()
+        if not step:
+            raise LeadCampaignError('مرحله ۱ یافت نشد.', code='no_step')
+        current = get_step1_variant_templates(campaign)
+        a_text = (variant_a_template if variant_a_template is not None else current['A']).strip()
+        b_text = (variant_b_template if variant_b_template is not None else current['B']).strip()
+        if not a_text or not b_text:
+            raise LeadCampaignError('متن نسخه A و B نمی‌تواند خالی باشد.', code='empty_template')
+        step.message_template = build_variant_step1_template(a_text, b_text)
+        step.save(update_fields=['message_template'])
+
+    return campaign
+
+
 def absolute_click_url(request, click_token: str) -> str:
     # مسیر کوتاه عمومی طبق پلن: /s/t/<click_token>/
     try:

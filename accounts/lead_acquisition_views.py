@@ -7,6 +7,7 @@ import logging
 from django.contrib import messages
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
@@ -22,12 +23,17 @@ from accounts.models import (
 )
 from accounts.services.lead_attribution import record_touchpoint
 from accounts.services.lead_campaign_send import (
+    DEFAULT_STEP1_A,
+    DEFAULT_STEP1_B,
     LeadCampaignError,
+    auto_create_campaign_for_import,
     create_acquisition_campaign,
     delete_lead_campaign,
     enroll_pilot,
+    get_step1_variant_templates,
     reset_campaign_for_retry,
     send_campaign_step,
+    update_acquisition_campaign,
 )
 from accounts.services.lead_funnel import campaign_funnel, overview_stats
 from accounts.services.lead_import import (
@@ -42,6 +48,39 @@ from accounts.services.lead_tokens import COOKIE_NAME, cookie_secure_kwargs, has
 logger = logging.getLogger(__name__)
 
 SESSION_PREVIEW_KEY = 'lead_import_preview_rows'
+SESSION_BULK_PREVIEW_KEY = 'lead_import_bulk_previews'
+
+
+def _serialize_preview_rows(preview_rows) -> list:
+    return [
+        {
+            'phone': r.phone,
+            'name': r.name,
+            'district': r.district,
+            'category': r.category,
+            'outcome': r.outcome,
+            'lead_type': r.lead_type,
+            'confidence': str(r.confidence),
+        }
+        for r in preview_rows
+    ]
+
+
+def _preview_item_from_session(item: dict) -> dict:
+    return {
+        'batch_id': item.get('batch_id'),
+        'file_hash': item.get('file_hash'),
+        'stats': item.get('stats') or {},
+        'metadata': item.get('metadata') or {},
+        'filename': (item.get('metadata') or {}).get('original_filename') or item.get('filename') or '—',
+    }
+
+
+def _lac_redirect(fragment: str = ''):
+    url = reverse('admin_panel_lead_acquisition')
+    if fragment:
+        url = f'{url}#{fragment.lstrip("#")}'
+    return HttpResponseRedirect(url)
 
 
 class LeadClickRedirectView(View):
@@ -93,6 +132,17 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             LeadCampaign.objects.select_related('lead_list', 'created_by').order_by('-created_at')[:30]
         )
         funnels = [campaign_funnel(c) for c in campaigns[:10]]
+        campaign_edit = {}
+        for c in campaigns[:15]:
+            tpl = get_step1_variant_templates(c)
+            campaign_edit[str(c.pk)] = {
+                'name': c.name,
+                'landing_url': c.landing_url or '',
+                'pilot_per_variant': c.pilot_per_variant,
+                'is_pilot': c.is_pilot,
+                'variant_a': tpl['A'],
+                'variant_b': tpl['B'],
+            }
         ctx.update({
             'overview': overview_stats(),
             'batches': LeadImportBatch.objects.order_by('-created_at')[:30],
@@ -101,7 +151,18 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             'campaigns': campaigns,
             'funnels': funnels,
             'preview': self.request.session.get(SESSION_PREVIEW_KEY),
+            'bulk_previews': [
+                _preview_item_from_session(i)
+                for i in (self.request.session.get(SESSION_BULK_PREVIEW_KEY) or [])
+            ],
             'leads_sample': MarketingLead.objects.order_by('-updated_at')[:25],
+            'default_variant_a': (
+                get_step1_variant_templates(campaigns[0])['A'] if campaigns else DEFAULT_STEP1_A
+            ),
+            'default_variant_b': (
+                get_step1_variant_templates(campaigns[0])['B'] if campaigns else DEFAULT_STEP1_B
+            ),
+            'campaign_edit_json': json.dumps(campaign_edit, ensure_ascii=False),
         })
         return ctx
 
@@ -112,14 +173,22 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 return self._import_preview(request)
             if action == 'import_commit':
                 return self._import_commit(request)
+            if action == 'import_commit_bulk':
+                return self._import_commit_bulk(request)
+            if action == 'import_discard':
+                return self._import_discard(request)
             if action == 'create_campaign':
                 return self._create_campaign(request)
+            if action == 'update_campaign':
+                return self._update_campaign(request)
             if action == 'enroll_pilot':
                 return self._enroll_pilot(request)
             if action == 'send_step':
                 return self._send_step(request)
             if action == 'retry_failed':
                 return self._retry_failed(request)
+            if action == 'reset_campaign':
+                return self._reset_campaign(request)
             if action == 'delete_campaign':
                 return self._delete_campaign(request)
         except (LeadImportError, LeadCampaignError) as exc:
@@ -130,51 +199,69 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         return redirect('admin_panel_lead_acquisition')
 
     def _import_preview(self, request):
-        uploaded = request.FILES.get('file')
-        if not uploaded:
-            messages.error(request, 'فایل انتخاب نشده است.')
+        uploads = request.FILES.getlist('files') or []
+        single = request.FILES.get('file')
+        if single and single not in uploads:
+            uploads.insert(0, single)
+        if not uploads:
+            messages.error(request, 'فایلی انتخاب نشده است.')
             return redirect('admin_panel_lead_acquisition')
-        raw = uploaded.read()
-        preview = preview_phone_detector_json(raw, filename=uploaded.name)
-        if preview.duplicate_file:
-            messages.error(request, 'این فایل قبلاً commit شده است (hash تکراری).')
-            return redirect('admin_panel_lead_acquisition')
-        batch = create_preview_batch(preview, uploaded_by=request.user)
-        # ذخیره ردیف‌ها در session برای commit
-        request.session[SESSION_PREVIEW_KEY] = {
-            'batch_id': batch.pk,
-            'file_hash': preview.file_hash,
-            'stats': preview.stats,
-            'metadata': preview.metadata,
-            'rows': [
-                {
-                    'phone': r.phone,
-                    'name': r.name,
-                    'district': r.district,
-                    'category': r.category,
-                    'outcome': r.outcome,
-                    'lead_type': r.lead_type,
-                    'confidence': str(r.confidence),
-                }
-                for r in preview.rows
-            ],
-        }
-        messages.success(
-            request,
-            f'پیش‌نمایش آماده است — قابل ورود: {preview.stats.get("eligible", 0)}',
-        )
-        return redirect('admin_panel_lead_acquisition')
 
-    def _import_commit(self, request):
+        bulk_items = list(request.session.get(SESSION_BULK_PREVIEW_KEY) or [])
+        added = 0
+        skipped_dup = 0
+        last_preview = None
+
+        for uploaded in uploads[:20]:
+            raw = uploaded.read()
+            preview = preview_phone_detector_json(raw, filename=uploaded.name)
+            if preview.duplicate_file:
+                skipped_dup += 1
+                continue
+            batch = create_preview_batch(preview, uploaded_by=request.user)
+            item = {
+                'batch_id': batch.pk,
+                'file_hash': preview.file_hash,
+                'stats': preview.stats,
+                'metadata': preview.metadata,
+                'filename': uploaded.name,
+                'rows': _serialize_preview_rows(preview.rows),
+            }
+            bulk_items = [i for i in bulk_items if i.get('batch_id') != batch.pk]
+            bulk_items.append(item)
+            last_preview = item
+            added += 1
+
+        request.session[SESSION_BULK_PREVIEW_KEY] = bulk_items
+        if last_preview:
+            request.session[SESSION_PREVIEW_KEY] = last_preview
+
+        if added == 0:
+            messages.error(request, 'هیچ فایل جدیدی برای پیش‌نمایش نبود (تکراری یا نامعتبر).')
+        elif added == 1:
+            stats = last_preview['stats']
+            messages.success(
+                request,
+                f'پیش‌نمایش آماده — قابل ورود: {stats.get("eligible", 0)}',
+            )
+        else:
+            total_eligible = sum(i['stats'].get('eligible', 0) for i in bulk_items[-added:])
+            messages.success(
+                request,
+                f'{added} فایل در صف پیش‌نمایش — مجموع قابل ورود: {total_eligible}',
+            )
+        if skipped_dup:
+            messages.warning(request, f'{skipped_dup} فایل تکراری (قبلاً commit شده) رد شد.')
+        return _lac_redirect('lac-import')
+
+    def _commit_single_preview(self, request, payload: dict, *, auto_campaign: bool = True) -> dict:
         from decimal import Decimal
 
         from accounts.services.lead_import import PreviewRow
 
-        payload = request.session.get(SESSION_PREVIEW_KEY) or {}
         batch_id = payload.get('batch_id')
         if not batch_id:
-            messages.error(request, 'پیش‌نمایش فعالی نیست.')
-            return redirect('admin_panel_lead_acquisition')
+            raise LeadImportError('شناسه بچ نامعتبر است.', code='bad_batch')
         rows = [
             PreviewRow(
                 phone=r['phone'],
@@ -188,13 +275,90 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             for r in payload.get('rows') or []
         ]
         result = commit_import_batch(batch_id, preview_rows=rows)
+        campaign = None
+        if auto_campaign:
+            from accounts.models import LeadList
+
+            lead_list = LeadList.objects.get(pk=result['list_id'])
+            eligible = result.get('members_added', 0) or payload.get('stats', {}).get('eligible', 0)
+            campaign = auto_create_campaign_for_import(
+                lead_list=lead_list,
+                batch_id=result['batch_id'],
+                eligible_count=eligible,
+                created_by=request.user,
+            )
+        result['campaign'] = campaign
+        return result
+
+    def _import_commit(self, request):
+        payload = request.session.get(SESSION_PREVIEW_KEY) or {}
+        if not payload.get('batch_id'):
+            messages.error(request, 'پیش‌نمایش فعالی نیست.')
+            return redirect('admin_panel_lead_acquisition')
+        result = self._commit_single_preview(request, payload)
+        batch_id = payload.get('batch_id')
+        bulk = request.session.get(SESSION_BULK_PREVIEW_KEY) or []
+        request.session[SESSION_BULK_PREVIEW_KEY] = [
+            i for i in bulk if i.get('batch_id') != batch_id
+        ]
         request.session.pop(SESSION_PREVIEW_KEY, None)
-        messages.success(
-            request,
+        if request.session.get(SESSION_BULK_PREVIEW_KEY):
+            request.session[SESSION_PREVIEW_KEY] = request.session[SESSION_BULK_PREVIEW_KEY][-1]
+
+        msg = (
             f'ایمپورت ثبت شد — ایجاد: {result["created"]}، به‌روزرسانی: {result["updated"]}، '
-            f'کاربر موجود: {result["existing_user_marked"]}، عضو لیست: {result["members_added"]}',
+            f'کاربر موجود: {result["existing_user_marked"]}، عضو لیست: {result["members_added"]}'
         )
-        return redirect('admin_panel_lead_acquisition')
+        if result.get('campaign'):
+            msg += f' · کمپین #{result["campaign"].pk} «{result["campaign"].name}» ساخته شد'
+        messages.success(request, msg)
+        return _lac_redirect('lac-campaigns')
+
+    def _import_commit_bulk(self, request):
+        bulk = list(request.session.get(SESSION_BULK_PREVIEW_KEY) or [])
+        if not bulk:
+            messages.error(request, 'صف پیش‌نمایش خالی است.')
+            return redirect('admin_panel_lead_acquisition')
+        total_created = total_updated = total_members = 0
+        campaigns_created = []
+        for item in bulk:
+            try:
+                result = self._commit_single_preview(request, item)
+            except LeadImportError as exc:
+                messages.warning(request, f'بچ {item.get("batch_id")}: {exc.message}')
+                continue
+            total_created += result['created']
+            total_updated += result['updated']
+            total_members += result['members_added']
+            if result.get('campaign'):
+                campaigns_created.append(result['campaign'])
+        request.session.pop(SESSION_BULK_PREVIEW_KEY, None)
+        request.session.pop(SESSION_PREVIEW_KEY, None)
+        msg = (
+            f'ورود دسته‌ای — {len(bulk)} فایل · ایجاد: {total_created} · '
+            f'به‌روز: {total_updated} · عضو لیست: {total_members}'
+        )
+        if campaigns_created:
+            names = '، '.join(f'#{c.pk}' for c in campaigns_created[:5])
+            msg += f' · کمپین‌های جدید: {names}'
+        messages.success(request, msg)
+        return _lac_redirect('lac-campaigns')
+
+    def _import_discard(self, request):
+        batch_id = request.POST.get('batch_id')
+        bulk = list(request.session.get(SESSION_BULK_PREVIEW_KEY) or [])
+        if batch_id:
+            bulk = [i for i in bulk if str(i.get('batch_id')) != str(batch_id)]
+            request.session[SESSION_BULK_PREVIEW_KEY] = bulk
+            if (request.session.get(SESSION_PREVIEW_KEY) or {}).get('batch_id') == int(batch_id or 0):
+                request.session.pop(SESSION_PREVIEW_KEY, None)
+                if bulk:
+                    request.session[SESSION_PREVIEW_KEY] = bulk[-1]
+        else:
+            request.session.pop(SESSION_BULK_PREVIEW_KEY, None)
+            request.session.pop(SESSION_PREVIEW_KEY, None)
+        messages.info(request, 'پیش‌نمایش پاک شد.')
+        return _lac_redirect('lac-import')
 
     def _create_campaign(self, request):
         list_id = int(request.POST.get('list_id') or 0)
@@ -209,7 +373,34 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             pilot_per_variant=int(request.POST.get('pilot_per_variant') or 15),
         )
         messages.success(request, f'کمپین #{campaign.pk} ساخته شد.')
-        return redirect('admin_panel_lead_acquisition')
+        return _lac_redirect('lac-campaigns')
+
+    def _update_campaign(self, request):
+        campaign_id = int(request.POST.get('campaign_id') or 0)
+        campaign = update_acquisition_campaign(
+            campaign_id,
+            name=(request.POST.get('name') or '').strip() or None,
+            landing_url=(request.POST.get('landing_url') or '').strip() or None,
+            pilot_per_variant=int(request.POST.get('pilot_per_variant') or 0) or None,
+            is_pilot=request.POST.get('is_pilot') == '1' if 'is_pilot' in request.POST else None,
+            variant_a_template=(request.POST.get('variant_a') or '').strip() or None,
+            variant_b_template=(request.POST.get('variant_b') or '').strip() or None,
+        )
+        messages.success(request, f'کمپین «{campaign.name}» به‌روزرسانی شد.')
+        next_url = (request.POST.get('next') or '').strip()
+        if next_url.startswith('/'):
+            return redirect(next_url)
+        return redirect('admin_panel_lead_campaign_detail', pk=campaign.pk)
+
+    def _reset_campaign(self, request):
+        campaign_id = int(request.POST.get('campaign_id') or 0)
+        reset = reset_campaign_for_retry(campaign_id)
+        messages.success(
+            request,
+            f'ریست کمپین — {reset["failed_freed"]} پیام ناموفق آزاد شد، '
+            f'{reset["enrollments_reset"]} مخاطب برای ارسال مجدد آماده شد.',
+        )
+        return _lac_redirect('lac-campaigns')
 
     def _enroll_pilot(self, request):
         campaign = get_object_or_404(LeadCampaign, pk=int(request.POST.get('campaign_id') or 0))
@@ -274,12 +465,38 @@ class AdminLeadCampaignDetailView(StaffRequiredMixin, TemplateView):
         campaign = get_object_or_404(LeadCampaign, pk=kwargs['pk'])
         ctx['campaign'] = campaign
         ctx['funnel'] = campaign_funnel(campaign)
+        ctx['variant_templates'] = get_step1_variant_templates(campaign)
         ctx['messages_recent'] = (
             CampaignMessage.objects.filter(campaign=campaign)
             .select_related('lead', 'variant', 'step')
             .order_by('-requested_at')[:100]
         )
         return ctx
+
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get('action') or ''
+        try:
+            if action == 'update_campaign':
+                campaign_id = int(request.POST.get('campaign_id') or kwargs['pk'])
+                update_acquisition_campaign(
+                    campaign_id,
+                    name=(request.POST.get('name') or '').strip() or None,
+                    landing_url=(request.POST.get('landing_url') or '').strip() or None,
+                    pilot_per_variant=int(request.POST.get('pilot_per_variant') or 0) or None,
+                    is_pilot=request.POST.get('is_pilot') == '1' if 'is_pilot' in request.POST else None,
+                    variant_a_template=(request.POST.get('variant_a') or '').strip() or None,
+                    variant_b_template=(request.POST.get('variant_b') or '').strip() or None,
+                )
+                messages.success(request, 'کمپین و پیام‌های A/B به‌روزرسانی شد.')
+            elif action == 'reset_campaign':
+                reset = reset_campaign_for_retry(int(kwargs['pk']))
+                messages.success(
+                    request,
+                    f'ریست انجام شد — {reset["enrollments_reset"]} مخاطب آماده ارسال مجدد.',
+                )
+        except LeadCampaignError as exc:
+            messages.error(request, exc.message)
+        return redirect('admin_panel_lead_campaign_detail', pk=kwargs['pk'])
 
 
 class AdminLeadFunnelJsonView(StaffRequiredMixin, View):

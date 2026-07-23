@@ -20,12 +20,16 @@ from accounts.models import (
 )
 from accounts.services.lead_attribution import attribute_purchase, attribute_signup
 from accounts.services.lead_campaign_send import (
+    auto_create_campaign_for_import,
     create_acquisition_campaign,
     enroll_pilot,
     estimate_sms_cost_rial,
+    generate_acquisition_campaign_name,
+    pilot_per_variant_for_count,
     send_campaign_step,
     send_step_message,
     unicode_sms_parts,
+    update_acquisition_campaign,
 )
 from accounts.services.lead_funnel import campaign_funnel
 from accounts.services.lead_import import commit_import_batch, preview_phone_detector_json, create_preview_batch
@@ -149,6 +153,51 @@ class LeadImportTests(TestCase):
         )
         self.assertEqual(LeadListMember.objects.filter(lead_list_id=r1['list_id']).count(), 3)
         self.assertFalse(r2['list_created'])
+
+    def test_auto_campaign_after_import(self):
+        from accounts.models import LeadList
+
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='auto.json')
+        batch = create_preview_batch(preview)
+        result = commit_import_batch(batch.pk, preview_rows=preview.rows)
+        lead_list = LeadList.objects.get(pk=result['list_id'])
+        eligible = preview.stats.get('eligible', 0)
+        campaign = auto_create_campaign_for_import(
+            lead_list=lead_list,
+            batch_id=batch.pk,
+            eligible_count=eligible,
+        )
+        self.assertIsNotNone(campaign)
+        self.assertIn('جذب', campaign.name)
+        self.assertIn('پایلوت A/B', campaign.name)
+        self.assertEqual(campaign.pilot_per_variant, pilot_per_variant_for_count(eligible))
+        # دومین بار نباید کمپین تکراری بسازد
+        self.assertIsNone(auto_create_campaign_for_import(
+            lead_list=lead_list,
+            batch_id=batch.pk,
+            eligible_count=eligible,
+        ))
+
+    def test_update_campaign_variants(self):
+        from accounts.models import LeadList
+
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='u.json')
+        batch = create_preview_batch(preview)
+        result = commit_import_batch(batch.pk, preview_rows=preview.rows)
+        lead_list = LeadList.objects.get(pk=result['list_id'])
+        campaign = create_acquisition_campaign(name='Test', lead_list=lead_list)
+        updated = update_acquisition_campaign(
+            campaign.pk,
+            name='جذب · تست',
+            variant_a_template='نسخه A تست {link}',
+            variant_b_template='نسخه B تست {link}',
+        )
+        self.assertEqual(updated.name, 'جذب · تست')
+        step = updated.steps.get(step_number=1)
+        self.assertIn('نسخه A تست', step.message_template)
+        self.assertIn('نسخه B تست', step.message_template)
 
 
 class LeadCampaignTrackingTests(TestCase):

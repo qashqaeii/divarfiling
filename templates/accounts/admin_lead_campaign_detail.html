@@ -8,7 +8,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -73,6 +73,70 @@
         <span>{{ funnel.winner_note }}</span>
     </div>
     {% endif %}
+
+    <section class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>ویرایش کمپین و پیام‌های A/B</h2>
+                <p>مرحله ۱ · متغیرها: <code>{district}</code> · <code>{link}</code> · <code>{name}</code></p>
+            </div>
+            <form method="post" onsubmit="return confirm('کمپین برای ارسال مجدد ریست شود؟');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reset_campaign">
+                <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm">
+                    <i class="fas fa-rotate-left"></i> ریست کمپین
+                </button>
+            </form>
+        </div>
+        <div class="adm-lac-panel">
+            <form method="post" id="lac-detail-edit-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_campaign">
+                <input type="hidden" name="campaign_id" value="{{ campaign.id }}">
+                <div class="adm-lac-form-row">
+                    <div class="adm-lac-field adm-lac-field--full">
+                        <label for="detail-name">نام کمپین</label>
+                        <input name="name" id="detail-name" value="{{ campaign.name }}" required>
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="detail-landing">صفحه فرود</label>
+                        <input name="landing_url" id="detail-landing" value="{{ campaign.landing_url }}">
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="detail-pilot">ظرفیت هر نسخه</label>
+                        <input type="number" name="pilot_per_variant" id="detail-pilot" value="{{ campaign.pilot_per_variant }}" min="1" max="500">
+                    </div>
+                    <label class="adm-lac-check">
+                        <input type="checkbox" name="is_pilot" value="1" {% if campaign.is_pilot %}checked{% endif %}>
+                        حالت پایلوت
+                    </label>
+                </div>
+                <div class="adm-lac-msg-editor">
+                    <div class="adm-lac-msg-pane" data-variant="A">
+                        <div class="adm-lac-msg-pane__head">
+                            <span class="adm-lac-variant-key">A</span>
+                            <strong>نسخه A</strong>
+                            <span class="adm-lac-msg-len" id="detail-len-a">۰ کاراکتر</span>
+                        </div>
+                        <textarea name="variant_a" id="detail-variant-a" rows="6">{{ variant_templates.A }}</textarea>
+                    </div>
+                    <div class="adm-lac-msg-pane" data-variant="B">
+                        <div class="adm-lac-msg-pane__head">
+                            <span class="adm-lac-variant-key">B</span>
+                            <strong>نسخه B</strong>
+                            <span class="adm-lac-msg-len" id="detail-len-b">۰ کاراکتر</span>
+                        </div>
+                        <textarea name="variant_b" id="detail-variant-b" rows="6">{{ variant_templates.B }}</textarea>
+                    </div>
+                </div>
+                <div style="margin-top:1rem;display:flex;gap:.45rem;flex-wrap:wrap">
+                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
+                        <i class="fas fa-save"></i> ذخیره تغییرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
 
     <section class="adm-lac-section">
         <div class="adm-lac-section-head">
@@ -224,16 +288,37 @@
 <script>
 (function () {
   var root = document.getElementById('lac-funnel');
-  if (!root) return;
-  var base = Math.max(1, parseInt(root.getAttribute('data-leads') || '0', 10));
-  root.querySelectorAll('.adm-lac-funnel-row').forEach(function (row) {
-    var key = row.getAttribute('data-key');
-    var val = parseInt(root.getAttribute('data-' + key) || '0', 10);
-    var pct = Math.max(0, Math.min(100, Math.round((val / base) * 100)));
-    if (key === 'leads') pct = 100;
-    var fill = row.querySelector('.adm-lac-funnel-fill');
-    if (fill) fill.style.width = pct + '%';
-  });
+  if (root) {
+    var base = Math.max(1, parseInt(root.getAttribute('data-leads') || '0', 10));
+    root.querySelectorAll('.adm-lac-funnel-row').forEach(function (row) {
+      var key = row.getAttribute('data-key');
+      var val = parseInt(root.getAttribute('data-' + key) || '0', 10);
+      var pct = Math.max(0, Math.min(100, Math.round((val / base) * 100)));
+      if (key === 'leads') pct = 100;
+      var fill = row.querySelector('.adm-lac-funnel-fill');
+      if (fill) fill.style.width = pct + '%';
+    });
+  }
+
+  function persianDigits(n) {
+    return String(n).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; });
+  }
+  function smsParts(text) {
+    var n = (text || '').length;
+    if (n <= 0) return 0;
+    if (n <= 70) return 1;
+    return Math.ceil(n / 67);
+  }
+  function bindLen(ta, target) {
+    if (!ta || !target) return;
+    function upd() {
+      target.textContent = persianDigits(ta.value.length) + ' کاراکتر · ' + persianDigits(smsParts(ta.value)) + ' بخش';
+    }
+    ta.addEventListener('input', upd);
+    upd();
+  }
+  bindLen(document.getElementById('detail-variant-a'), document.getElementById('detail-len-a'));
+  bindLen(document.getElementById('detail-variant-b'), document.getElementById('detail-len-b'));
 })();
 </script>
 {% endblock %}

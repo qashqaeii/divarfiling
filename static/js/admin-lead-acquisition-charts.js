@@ -126,7 +126,33 @@
     }).join('');
   }
 
-  function renderCampaignTable(rows) {
+  function renderTableTotals(totals) {
+    var row = document.getElementById('lac-campaign-table-totals');
+    if (!row) return;
+    if (!totals) {
+      row.innerHTML = '<td colspan="12" class="adm-lac-table-empty">—</td>';
+      return;
+    }
+    row.innerHTML =
+      '<td class="adm-lac-table-name">' +
+      '<span class="adm-lac-table-totals-label">' + (totals.label || 'جمع کل') + '</span>' +
+      '<small class="adm-lac-table-totals-sub">آمار تجمیع همه کمپین‌های جدول</small>' +
+      '</td>' +
+      '<td><span class="adm-lac-table-totals-badge">' + formatNum(totals.campaign_count) + ' کمپین</span></td>' +
+      '<td><strong>' + formatNum(totals.eligible) + '</strong></td>' +
+      '<td><strong>' + formatNum(totals.enrolled) + '</strong></td>' +
+      '<td><strong>' + formatNum(totals.accepted) + '</strong></td>' +
+      '<td><strong>' + formatNum(totals.clicked) + '</strong></td>' +
+      '<td><strong>' + formatNum(totals.registered) + '</strong></td>' +
+      '<td><strong class="adm-lac-table-totals-accent">' + formatNum(totals.paid) + '</strong></td>' +
+      '<td><strong>' + formatPct(totals.ctr) + '</strong></td>' +
+      '<td><strong>' + formatPct(totals.overall_cvr) + '</strong></td>' +
+      '<td><strong>' + formatMoney(totals.revenue) + '</strong></td>' +
+      '<td><strong>' + formatMoney(totals.sms_cost) + '</strong></td>';
+  }
+
+  function renderCampaignTable(rows, totals) {
+    renderTableTotals(totals);
     var body = document.getElementById('lac-campaign-table-body');
     if (!body) return;
     if (!rows || !rows.length) {
@@ -189,7 +215,7 @@
     renderMeta(data);
     renderSummary(data.summary);
     renderFunnelCascade(data.funnel_steps);
-    renderCampaignTable(data.campaign_table);
+    renderCampaignTable(data.campaign_table, data.table_totals);
 
     var statusSub = document.getElementById('lac-status-sub');
     if (statusSub && data.status) {

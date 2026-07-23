@@ -196,7 +196,10 @@
                 <div class="adm-lac-table-scroll">
                     <table class="adm-lac-data-table" id="lac-campaign-table">
                         <thead>
-                            <tr>
+                            <tr id="lac-campaign-table-totals" class="adm-lac-table-totals-row">
+                                <td colspan="12" class="adm-lac-table-empty">در حال بارگذاری جمع کل...</td>
+                            </tr>
+                            <tr class="adm-lac-table-head-row">
                                 <th>کمپین</th>
                                 <th>وضعیت</th>
                                 <th>واجد</th>
@@ -878,7 +881,7 @@
 {% block extra_js %}
 <script type="application/json" id="lac-charts-data">{{ lac_charts_json|safe }}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="{% static 'js/admin-lead-acquisition-charts.js' %}?v=2"></script>
+<script src="{% static 'js/admin-lead-acquisition-charts.js' %}?v=3"></script>
 <script>
 (function () {
   const tabs = document.querySelectorAll('[data-lac-tab]');

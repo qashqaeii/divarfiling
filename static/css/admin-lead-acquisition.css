@@ -755,6 +755,63 @@ html.mk-public:not([data-theme="light"]) .adm-lac-data-table th {
     padding: 1.25rem !important;
 }
 
+.adm-lac-table-totals-row td {
+    background: linear-gradient(180deg, rgba(13,148,136,0.1) 0%, rgba(13,148,136,0.04) 100%);
+    border-bottom: 2px solid rgba(13,148,136,0.22);
+    font-weight: 800;
+    vertical-align: middle;
+    padding: 0.65rem 0.65rem;
+}
+
+.adm-lac-table-head-row th {
+    top: 0;
+    z-index: 1;
+}
+
+.adm-lac-table-scroll .adm-lac-data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+html.mk-public:not([data-theme="light"]) .adm-lac-table-totals-row td {
+    background: linear-gradient(180deg, rgba(13,148,136,0.18) 0%, rgba(13,148,136,0.06) 100%);
+    border-bottom-color: rgba(45,212,191,0.25);
+}
+
+.adm-lac-table-totals-row:hover td {
+    background: linear-gradient(180deg, rgba(13,148,136,0.12) 0%, rgba(13,148,136,0.05) 100%);
+}
+
+.adm-lac-table-totals-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 900;
+    color: var(--lac-teal-deep);
+}
+
+.adm-lac-table-totals-sub {
+    display: block;
+    margin-top: 0.12rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--lac-muted);
+}
+
+.adm-lac-table-totals-badge {
+    display: inline-block;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    background: rgba(13,148,136,0.14);
+    color: var(--lac-teal-deep);
+}
+
+.adm-lac-table-totals-accent {
+    color: var(--lac-rose);
+}
+
 .adm-lac-kpi-val {
     display: block;
     font-size: 1.55rem;

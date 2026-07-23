@@ -10,34 +10,67 @@
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=9">
 <style>
+.adm-gp-guide {
+    display: grid;
+    gap: .85rem;
+    margin: 0 0 1.25rem;
+}
+.adm-gp-guide-card {
+    padding: 1rem 1.1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(13,148,136,.25);
+    background: linear-gradient(135deg, rgba(240,253,250,.95), rgba(236,254,255,.9));
+}
+.adm-gp-guide-card h3 { margin: 0 0 .4rem; font-size: 1rem; }
+.adm-gp-guide-card p { margin: 0; color: #475569; font-size: .9rem; line-height: 1.65; }
+.adm-gp-guide-card ol { margin: .5rem 0 0; padding-right: 1.2rem; color: #334155; font-size: .88rem; line-height: 1.7; }
+.adm-gp-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: .65rem;
+    margin-bottom: 1.1rem;
+}
+.adm-gp-kpi {
+    padding: .9rem 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,.28);
+    background: #fff;
+}
+.adm-gp-kpi strong { display: block; font-size: 1.45rem; font-weight: 800; color: #0f766e; }
+.adm-gp-kpi span { display: block; margin-top: .25rem; font-size: .8rem; color: #64748b; }
 .adm-gp-stage-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: .65rem;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: .7rem;
     margin: 1rem 0 1.25rem;
 }
 .adm-gp-stage {
     display: block;
     text-decoration: none;
     color: inherit;
-    padding: .85rem .9rem;
+    padding: .95rem 1rem;
     border-radius: 14px;
     border: 1px solid rgba(148,163,184,.25);
-    background: rgba(248,250,252,.9);
+    background: rgba(248,250,252,.95);
     transition: transform .15s ease, border-color .15s ease;
+    min-height: 150px;
 }
 .adm-gp-stage:hover { transform: translateY(-2px); border-color: #0d9488; }
 .adm-gp-stage.is-active { border-color: #0d9488; box-shadow: 0 0 0 2px rgba(13,148,136,.2); }
-.adm-gp-stage strong { display: block; font-size: 1.35rem; font-weight: 800; }
-.adm-gp-stage span { display: block; font-size: .78rem; color: #64748b; margin-top: .2rem; }
-.adm-gp-banner {
+.adm-gp-stage .adm-gp-count { display: block; font-size: 1.5rem; font-weight: 800; color: #0f766e; }
+.adm-gp-stage .adm-gp-title { display: block; font-weight: 700; margin: .2rem 0 .35rem; }
+.adm-gp-stage .adm-gp-mean,
+.adm-gp-stage .adm-gp-next { display: block; font-size: .78rem; color: #64748b; line-height: 1.45; margin-top: .25rem; }
+.adm-gp-stage .adm-gp-next { color: #0f766e; }
+.adm-gp-run {
+    padding: 1rem 1.1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,.28);
+    background: #fff;
     margin-bottom: 1rem;
-    padding: .75rem 1rem;
-    border-radius: 12px;
-    border: 1px solid rgba(13,148,136,.3);
-    background: linear-gradient(90deg, rgba(13,148,136,.08), rgba(8,145,178,.06));
-    display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between;
 }
+.adm-gp-run ul { margin: .5rem 0 0; padding-right: 1.1rem; line-height: 1.7; }
+.adm-gp-run .adm-gp-sms { font-weight: 700; color: #0f766e; }
 </style>
 {% endblock %}
 
@@ -48,43 +81,26 @@
         <div class="adm-lac-hero-copy">
             <p class="adm-lac-kicker">
                 <i class="fas fa-route" aria-hidden="true"></i>
-                رشد یکپارچه · جذب ↔ مارکتینگ
+                داشبورد عملیاتی · نه فقط آمار
             </p>
             <h1 class="adm-lac-title">پایپلاین رشد</h1>
-            <p class="adm-lac-tagline">از ورود سرنخ تا خرید، سبد معلق و تمدید لایسنس — یک مسیر مشترک.</p>
-            <p class="adm-lac-desc">
-                موتورهای جذب، Activation، Recovery و تمدید لایسنس روی یک وضعیت Journey هماهنگ می‌شوند
-                تا پیام تکراری نرود و هر مخاطب مرحله‌به‌مرحله جلو برود.
-            </p>
+            <p class="adm-lac-tagline">این صفحه نشان می‌دهد هر شماره الان کجای مسیر است و سیستم خودکار چه می‌کند.</p>
             <div class="adm-lac-hero-actions">
                 <a class="adm-lac-btn adm-lac-btn--primary" href="{% url 'admin_panel_lead_acquisition' %}">
-                    <i class="fas fa-user-plus"></i> مرکز جذب
+                    <i class="fas fa-user-plus"></i> مرکز جذب (ورود فایل / مرحله ۱)
                 </a>
-                <a class="adm-lac-btn adm-lac-btn--amber" href="{% url 'admin_panel_marketing' %}">
-                    <i class="fas fa-bullhorn"></i> اتوماسیون بازاریابی
-                </a>
-                <a class="adm-lac-btn adm-lac-btn--ghost" href="{% url 'admin_panel_recovery_center' %}">
-                    <i class="fas fa-rotate"></i> Recovery
+                <a class="adm-lac-btn adm-lac-btn--ghost" href="{% url 'admin_panel_marketing' %}">
+                    <i class="fas fa-bullhorn"></i> مارکتینگ دستی
                 </a>
             </div>
         </div>
-        <aside class="adm-lac-journey" aria-label="مسیر">
-            <p class="adm-lac-journey-title">مسیر رسمی</p>
-            <div class="adm-lac-pipeline" style="flex-wrap:wrap">
-                <span class="adm-lac-pipe">سرد</span>
-                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
-                <span class="adm-lac-pipe">تعامل</span>
-                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
-                <span class="adm-lac-pipe">ثبت‌نام</span>
-                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
-                <span class="adm-lac-pipe">خرید معلق</span>
-                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
-                <span class="adm-lac-pipe">مشتری</span>
-                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
-                <span class="adm-lac-pipe">تمدید</span>
-            </div>
-            <p class="adm-lac-kpi-sub" style="margin-top:.5rem">
-                کرون: <code>python manage.py run_growth_pipeline</code>
+        <aside class="adm-lac-journey" aria-label="کار شما">
+            <p class="adm-lac-journey-title">کار شما از این به بعد</p>
+            <p class="adm-lac-kpi-sub" style="line-height:1.7;margin:0">
+                ۱) فایل سرنخ را وارد کنید<br>
+                ۲) در صورت نیاز «ارسال کامل مرحله ۱» را بزنید<br>
+                ۳) بقیه را کرون هر ۲ ساعت انجام می‌دهد<br>
+                ۴) اینجا فقط وضعیت را ببینید / کسی را متوقف کنید
             </p>
         </aside>
     </header>
@@ -99,48 +115,113 @@
     </section>
     {% endif %}
 
-    <div class="adm-gp-banner">
-        <div>
-            <strong>کل مخاطبین پایپلاین:</strong>
-            {{ overview.total|default:0|to_persian_digits }}
-            · متوقف‌شده {{ overview.paused|default:0|to_persian_digits }}
-            · مسدود {{ overview.suppressed|default:0|to_persian_digits }}
+    <section class="adm-gp-guide">
+        <article class="adm-gp-guide-card">
+            <h3>این صفحه چیست؟</h3>
+            <p>
+                برای هر شماره موبایل یک «پرونده مسیر» ساخته می‌شود (Growth Journey).
+                مثل تخته وضعیت مشتری: سرد → کلیک کرده → ثبت‌نام → سبد معلق → خرید → تمدید.
+                سیستم پیامک‌ها را بر اساس همین وضعیت می‌فرستد تا دو بار پیام تکراری نرود.
+            </p>
+        </article>
+        <article class="adm-gp-guide-card">
+            <h3>الان بعد از ذخیره کرون چه می‌شود؟</h3>
+            <ol>
+                <li><strong>هر ۲ ساعت:</strong> یادآوری جذب (مرحله ۲ و ۳) برای کسانی که موعدشان رسیده.</li>
+                <li><strong>هر ۲ ساعت:</strong> پیام فعال‌سازی برای ثبت‌نام‌کرده‌هایی که هنوز نخریده‌اند.</li>
+                <li><strong>هر ۴ ساعت (کرون جدا):</strong> بازیابی سفارش پرداخت‌نشده (حداکثر ۱ SMS در هر اجرا).</li>
+                <li><strong>لحظه‌ای:</strong> اگر کسی ثبت‌نام کند، از جذب خارج و وارد مسیر خرید می‌شود.</li>
+                <li><strong>اگر بخرد:</strong> پیام فروش قطع می‌شود و وضعیت «مشتری» می‌گیرد.</li>
+            </ol>
+        </article>
+    </section>
+
+    <div class="adm-gp-kpis">
+        <div class="adm-gp-kpi">
+            <strong>{{ overview.total|default:0|to_persian_digits }}</strong>
+            <span>کل پرونده‌های مسیر</span>
         </div>
-        <form method="post">
+        <div class="adm-gp-kpi">
+            <strong>{{ summary.cold_or_engaged|default:0|to_persian_digits }}</strong>
+            <span>هنوز ثبت‌نام نکرده (سرد + کلیک‌کرده)</span>
+        </div>
+        <div class="adm-gp-kpi">
+            <strong>{{ summary.waiting_purchase|default:0|to_persian_digits }}</strong>
+            <span>ثبت‌نام کرده، منتظر خرید</span>
+        </div>
+        <div class="adm-gp-kpi">
+            <strong>{{ summary.pending_checkout|default:0|to_persian_digits }}</strong>
+            <span>سفارش پرداخت‌نشده</span>
+        </div>
+        <div class="adm-gp-kpi">
+            <strong>{{ summary.customers|default:0|to_persian_digits }}</strong>
+            <span>مشتری خریده‌کرده</span>
+        </div>
+    </div>
+
+    <section class="adm-gp-run">
+        <div class="adm-lac-section-head" style="margin-bottom:.35rem">
+            <div>
+                <h2 style="font-size:1rem;margin:0">آخرین کاری که سیستم انجام داد</h2>
+                <p style="margin:.25rem 0 0">
+                    {% if run_summary.has_data %}
+                    از {{ run_summary.started_at|default:"—" }} تا {{ run_summary.finished_at|default:"—" }}
+                    {% else %}
+                    هنوز گزارشی از کرون در حافظه نیست — تا اجرای بعدی (ساعت زوج) صبر کنید یا یک‌بار دستی تست کنید.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% if run_summary.has_data %}
+        <p class="adm-gp-sms">
+            پیامک ارسال‌شده در آن اجرا: {{ run_summary.sms_sent|to_persian_digits }}
+            {% if run_summary.sms_failed %} · ناموفق {{ run_summary.sms_failed|to_persian_digits }}{% endif %}
+        </p>
+        <ul>
+            {% for line in run_summary.lines %}
+            <li>{{ line }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <form method="post" style="margin-top:.75rem">
             {% csrf_token %}
             <input type="hidden" name="action" value="backfill">
-            <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm">
-                <i class="fas fa-database"></i> Backfill از سرنخ‌ها
+            <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm"
+                    onclick="return confirm('فقط وضعیت‌ها را از سرنخ‌ها همگام می‌کند؛ پیامک نمی‌فرستد. ادامه؟');">
+                <i class="fas fa-database"></i> همگام‌سازی وضعیت‌ها (بدون پیامک)
             </button>
         </form>
-    </div>
+    </section>
 
     <section class="adm-lac-section">
         <div class="adm-lac-section-head">
             <div>
-                <h2>مراحل پایپلاین</h2>
-                <p>برای دریل‌داون روی یک مرحله کلیک کنید</p>
+                <h2>تخته وضعیت مخاطبین</h2>
+                <p>روی هر کارت کلیک کنید تا لیست شماره‌های همان مرحله را ببینید</p>
             </div>
         </div>
         <div class="adm-gp-stage-grid">
             {% for s in overview.stages %}
             <a class="adm-gp-stage {% if selected_stage == s.key %}is-active{% endif %}"
                href="?stage={{ s.key }}">
-                <strong>{{ s.count|to_persian_digits }}</strong>
-                <span>{{ s.label }}</span>
+                <span class="adm-gp-count">{{ s.count|to_persian_digits }}</span>
+                <span class="adm-gp-title">{{ s.label }}</span>
+                <span class="adm-gp-mean">{{ s.meaning }}</span>
+                <span class="adm-gp-next">بعداً چه می‌شود؟ {{ s.next_action }}</span>
             </a>
             {% endfor %}
         </div>
     </section>
 
-    {% if selected_stage %}
+    {% if selected_stage and selected_meta %}
     <section class="adm-lac-section">
         <div class="adm-lac-section-head">
             <div>
-                <h2>جزئیات مرحله</h2>
-                <p>{{ selected_stage }} — حداکثر ۸۰ ردیف</p>
+                <h2>{{ selected_meta.label }} — {{ detail_rows|length|to_persian_digits }} شماره</h2>
+                <p>{{ selected_meta.meaning }}</p>
+                <p style="margin-top:.35rem;color:#0f766e"><strong>کار شما:</strong> {{ selected_meta.you_do }}</p>
             </div>
-            <a class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" href="{% url 'admin_panel_growth_pipeline' %}">پاک کردن فیلتر</a>
+            <a class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" href="{% url 'admin_panel_growth_pipeline' %}">بستن لیست</a>
         </div>
         <div class="adm-lac-table-scroll">
             <table class="adm-lac-data-table">
@@ -148,11 +229,9 @@
                     <tr class="adm-lac-table-head-row">
                         <th>شماره</th>
                         <th>منبع</th>
-                        <th>کاربر</th>
-                        <th>سرنخ</th>
-                        <th>وضعیت nurture</th>
-                        <th>ورود به مرحله</th>
-                        <th>اقدام</th>
+                        <th>وضعیت ارسال</th>
+                        <th>ورود به این مرحله</th>
+                        <th>اقدام شما</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -160,12 +239,10 @@
                     <tr>
                         <td>{{ row.phone }}</td>
                         <td>{{ row.source }}</td>
-                        <td>{% if row.user_id %}#{{ row.user_id|to_persian_digits }}{% else %}—{% endif %}</td>
-                        <td>{% if row.lead_id %}#{{ row.lead_id|to_persian_digits }}{% else %}—{% endif %}</td>
                         <td>
-                            {% if row.suppressed %}مسدود
-                            {% elif row.paused %}متوقف
-                            {% else %}فعال{% endif %}
+                            {% if row.suppressed %}مسدود (پیام نمی‌گیرد)
+                            {% elif row.paused %}متوقف‌شده توسط شما
+                            {% else %}ارسال خودکار فعال{% endif %}
                         </td>
                         <td>{{ row.entered_at|date:"Y-m-d H:i" }}</td>
                         <td style="white-space:nowrap">
@@ -175,23 +252,23 @@
                                 <input type="hidden" name="journey_id" value="{{ row.id }}">
                                 {% if row.paused %}
                                 <input type="hidden" name="action" value="resume">
-                                <button class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" type="submit">از سرگیری</button>
+                                <button class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" type="submit">از سرگیری پیام</button>
                                 {% else %}
                                 <input type="hidden" name="action" value="pause">
-                                <button class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" type="submit">توقف</button>
+                                <button class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" type="submit">توقف پیام</button>
                                 {% endif %}
                             </form>
-                            <form method="post" style="display:inline" onsubmit="return confirm('مسدود شود؟');">
+                            <form method="post" style="display:inline" onsubmit="return confirm('این شماره برای همیشه از پیام خودکار خارج شود؟');">
                                 {% csrf_token %}
                                 <input type="hidden" name="journey_id" value="{{ row.id }}">
                                 <input type="hidden" name="action" value="suppress">
-                                <button class="adm-lac-btn adm-lac-btn--danger adm-lac-btn--sm" type="submit">مسدود</button>
+                                <button class="adm-lac-btn adm-lac-btn--danger adm-lac-btn--sm" type="submit">مسدود کامل</button>
                             </form>
                             {% else %}—{% endif %}
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="7" class="adm-lac-table-empty">ردیفی در این مرحله نیست. Backfill را اجرا کنید.</td></tr>
+                    <tr><td colspan="5" class="adm-lac-table-empty">در این مرحله کسی نیست.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -202,8 +279,8 @@
     <section class="adm-lac-section">
         <div class="adm-lac-section-head">
             <div>
-                <h2>رویدادهای اخیر</h2>
-                <p>آخرین انتقال‌های stage</p>
+                <h2>آخرین حرکت‌های مسیر</h2>
+                <p>مثلاً کلیک، ثبت‌نام، خرید — به زبان ساده</p>
             </div>
         </div>
         <div class="adm-lac-table-scroll">
@@ -211,40 +288,28 @@
                 <thead>
                     <tr class="adm-lac-table-head-row">
                         <th>شماره</th>
-                        <th>رویداد</th>
-                        <th>از</th>
-                        <th>به</th>
+                        <th>چه اتفاقی افتاد</th>
+                        <th>از وضعیت</th>
+                        <th>به وضعیت</th>
                         <th>زمان</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for ev in overview.recent_events %}
+                    {% for ev in recent_events_fa %}
                     <tr>
                         <td>{{ ev.journey__phone_normalized }}</td>
-                        <td>{{ ev.event_type }}</td>
-                        <td>{{ ev.stage_from|default:"—" }}</td>
-                        <td>{{ ev.stage_to }}</td>
+                        <td>{{ ev.event_label }}</td>
+                        <td>{{ ev.stage_from_label }}</td>
+                        <td>{{ ev.stage_to_label }}</td>
                         <td>{{ ev.created_at|date:"Y-m-d H:i" }}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="adm-lac-table-empty">هنوز رویدادی ثبت نشده.</td></tr>
+                    <tr><td colspan="5" class="adm-lac-table-empty">هنوز حرکتی ثبت نشده.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </section>
-
-    {% if last_run %}
-    <section class="adm-lac-section">
-        <div class="adm-lac-section-head">
-            <div>
-                <h2>آخرین اجرای کرون</h2>
-                <p>{{ last_run.started_at|default:"" }} → {{ last_run.finished_at|default:"" }}</p>
-            </div>
-        </div>
-        <pre style="overflow:auto;max-height:240px;padding:1rem;border-radius:12px;background:#0f172a;color:#e2e8f0;font-size:.75rem">{{ last_run_json }}</pre>
-    </section>
-    {% endif %}
 
 </div>
 {% endblock %}

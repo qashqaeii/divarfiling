@@ -356,23 +356,117 @@ def backfill_journeys(*, limit: int = 5000) -> dict[str, int]:
 
 
 def pipeline_overview() -> dict[str, Any]:
-    """شاخص‌های داشبورد پایپلاین رشد."""
+    """شاخص‌های داشبورد پایپلاین رشد — با توضیح کاربردی برای ادمین."""
     counts = {
         row['stage']: row['c']
         for row in GrowthJourney.objects.values('stage').annotate(c=Count('id'))
     }
+
+    # ترتیب مسیر واقعی کسب‌وکار (نه الفبایی)
+    stage_guide = [
+        {
+            'key': GrowthJourney.Stage.COLD_LEAD,
+            'label': 'سرنخ سرد',
+            'meaning': 'پیامک معرفی خورده یا در صف است؛ هنوز لینک را باز نکرده.',
+            'next_action': 'کرون بعد از ۲ روز یادآوری (مرحله ۲) می‌فرستد.',
+            'you_do': 'کاری لازم نیست.',
+        },
+        {
+            'key': GrowthJourney.Stage.ENGAGED,
+            'label': 'لینک را باز کرده',
+            'meaning': 'روی لینک پیامک کلیک کرده / لندینگ دیده؛ هنوز ثبت‌نام نکرده.',
+            'next_action': 'کرون یادآوری می‌فرستد؛ بعد از چند روز پیام گرم‌تر (مرحله ۳).',
+            'you_do': 'کاری لازم نیست.',
+        },
+        {
+            'key': GrowthJourney.Stage.REGISTERED,
+            'label': 'ثبت‌نام کرده',
+            'meaning': 'حساب ساخته؛ هنوز خرید/لایسنس فعال ندارد.',
+            'next_action': 'پیام خوش‌آمد Activation و یادآوری خرید خودکار می‌رود.',
+            'you_do': 'کاری لازم نیست مگر بخواهید دستی تخفیف بدهید.',
+        },
+        {
+            'key': GrowthJourney.Stage.ACTIVATED,
+            'label': 'وارد میزکار شده',
+            'meaning': 'حداقل یک‌بار وارد داشبورد شده؛ هنوز مشتری پولی نیست.',
+            'next_action': 'یادآوری خرید ادامه دارد تا بخرد یا سبد بسازد.',
+            'you_do': 'کاری لازم نیست.',
+        },
+        {
+            'key': GrowthJourney.Stage.NURTURE_UNPAID,
+            'label': 'پیگیری بدون خرید',
+            'meaning': 'ثبت‌نام کرده و چند یادآوری خریده؛ هنوز پول نداده.',
+            'next_action': 'یادآوری‌های Activation ادامه می‌یابد (با سقف مراحل).',
+            'you_do': 'اختیاری: از مرکز مارکتینگ کمپین دستی بفرستید.',
+        },
+        {
+            'key': GrowthJourney.Stage.PENDING_CHECKOUT,
+            'label': 'سفارش پرداخت‌نشده',
+            'meaning': 'سفارش ساخته ولی پرداخت نکرده (سبد معلق).',
+            'next_action': 'کرون Recovery پیام بازیابی می‌فرستد (جدا از جذب).',
+            'you_do': 'کاری لازم نیست اگر recovery-cron روشن است.',
+        },
+        {
+            'key': GrowthJourney.Stage.CUSTOMER,
+            'label': 'مشتری (خرید کرده)',
+            'meaning': 'پرداخت موفق / لایسنس فعال دارد.',
+            'next_action': 'پیام فروش متوقف می‌شود؛ نزدیک انقضا تمدید می‌آید.',
+            'you_do': 'کاری لازم نیست.',
+        },
+        {
+            'key': GrowthJourney.Stage.EXPIRING_SOON,
+            'label': 'لایسنس رو به انقضا',
+            'meaning': 'لایسنس تا چند روز دیگر تمام می‌شود.',
+            'next_action': 'با --renewal-live پیام تمدید می‌رود (فعلاً اگر در کرون باشد).',
+            'you_do': 'اگر می‌خواهید تمدید خودکار SMS شود، فلگ renewal-live را در کرون بگذارید.',
+        },
+        {
+            'key': GrowthJourney.Stage.RENEWED,
+            'label': 'تمدید کرده',
+            'meaning': 'دوباره خرید/تمدید کرده.',
+            'next_action': 'مثل مشتری عادی می‌ماند.',
+            'you_do': 'کاری لازم نیست.',
+        },
+        {
+            'key': GrowthJourney.Stage.CHURN_RISK,
+            'label': 'منقضی بدون تمدید',
+            'meaning': 'لایسنس تمام شده و هنوز تمدید نکرده.',
+            'next_action': 'پیام بازگشت/تمدید (اگر renewal-live روشن باشد).',
+            'you_do': 'اختیاری: پیگیری دستی مشتریان مهم.',
+        },
+        {
+            'key': GrowthJourney.Stage.SUPPRESSED,
+            'label': 'مسدود / لغو دریافت',
+            'meaning': 'دیگر پیام بازاریابی نباید بگیرد.',
+            'next_action': 'هیچ SMS خودکاری نمی‌رود.',
+            'you_do': 'فقط اگر اشتباه مسدود شده، از لیست suppression خارج کنید.',
+        },
+    ]
+
     stages = []
-    for key, label in GrowthJourney.Stage.choices:
+    for item in stage_guide:
+        key = item['key']
         stages.append({
-            'key': key,
-            'label': label,
+            **item,
             'count': int(counts.get(key, 0) or 0),
         })
+
     total = sum(s['count'] for s in stages)
     paused = GrowthJourney.objects.filter(nurture_paused=True).count()
     suppressed = GrowthJourney.objects.filter(
         Q(suppressed=True) | Q(stage=GrowthJourney.Stage.SUPPRESSED)
     ).count()
+
+    # خلاصه عملی برای داشبورد بالا
+    cold = int(counts.get(GrowthJourney.Stage.COLD_LEAD, 0) or 0)
+    engaged = int(counts.get(GrowthJourney.Stage.ENGAGED, 0) or 0)
+    registered = int(counts.get(GrowthJourney.Stage.REGISTERED, 0) or 0)
+    activated = int(counts.get(GrowthJourney.Stage.ACTIVATED, 0) or 0)
+    nurture = int(counts.get(GrowthJourney.Stage.NURTURE_UNPAID, 0) or 0)
+    pending = int(counts.get(GrowthJourney.Stage.PENDING_CHECKOUT, 0) or 0)
+    customers = int(counts.get(GrowthJourney.Stage.CUSTOMER, 0) or 0)
+    waiting_purchase = registered + activated + nurture
+
     recent = list(
         GrowthJourneyEvent.objects.select_related('journey')
         .order_by('-created_at')[:20]
@@ -381,12 +475,90 @@ def pipeline_overview() -> dict[str, Any]:
             'journey__phone_normalized', 'journey_id',
         )
     )
+
     return {
         'total': total,
         'paused': paused,
         'suppressed': suppressed,
         'stages': stages,
         'recent_events': recent,
+        'summary': {
+            'cold_or_engaged': cold + engaged,
+            'waiting_purchase': waiting_purchase,
+            'pending_checkout': pending,
+            'customers': customers,
+            'cold': cold,
+            'engaged': engaged,
+            'registered': registered,
+        },
+    }
+
+
+def summarize_last_run(last_run: Optional[dict] = None) -> dict[str, Any]:
+    """خلاصه فارسی و قابل‌فهم از خروجی run_growth_pipeline."""
+    last_run = last_run or {}
+    parts = last_run.get('parts') or {}
+    lines = []
+    sms_sent = 0
+    sms_failed = 0
+
+    acq = parts.get('acquisition') or {}
+    for camp in acq.get('campaigns') or []:
+        for step_no, st in (camp.get('steps') or {}).items():
+            accepted = int(st.get('accepted') or 0)
+            failed = int(st.get('failed') or 0)
+            due = int(st.get('due') or 0)
+            sms_sent += accepted
+            sms_failed += failed
+            if accepted or due:
+                lines.append(
+                    f'جذب کمپین #{camp.get("campaign_id")} مرحله {step_no}: '
+                    f'{accepted} پیامک ارسال · {due} در صف'
+                )
+
+    act = parts.get('activation') or {}
+    for camp in act.get('campaigns') or []:
+        for step_no, st in (camp.get('steps') or {}).items():
+            accepted = int(st.get('accepted') or 0)
+            failed = int(st.get('failed') or 0)
+            due = int(st.get('due') or 0)
+            sms_sent += accepted
+            sms_failed += failed
+            if accepted or due:
+                lines.append(
+                    f'فعال‌سازی مرحله {step_no}: {accepted} پیامک · {due} در صف'
+                )
+
+    backfill = parts.get('backfill')
+    if backfill:
+        lines.append(
+            f'همگام‌سازی اولیه: {backfill.get("leads", 0)} سرنخ بررسی · '
+            f'{backfill.get("created", 0)} پرونده جدید · {backfill.get("updated", 0)} به‌روز'
+        )
+
+    recovery = parts.get('recovery')
+    if recovery and not recovery.get('error'):
+        would = recovery.get('would_send') or recovery.get('recovery_stats', {}).get('would_send')
+        if would is not None:
+            lines.append(f'بازیابی سبد (شبیه‌سازی/اجرا): would_send≈{would}')
+
+    renewal = parts.get('license_renewal') or {}
+    if renewal:
+        lines.append(
+            f'تمدید لایسنس: بررسی {renewal.get("examined", 0)} · '
+            f'would_send {renewal.get("would_send", 0)} · ارسال واقعی {renewal.get("sent", 0)}'
+        )
+
+    if not lines:
+        lines.append('در این اجرا پیامکی due نبود (یا هنوز کرون اجرا نشده).')
+
+    return {
+        'sms_sent': sms_sent,
+        'sms_failed': sms_failed,
+        'lines': lines,
+        'started_at': last_run.get('started_at'),
+        'finished_at': last_run.get('finished_at'),
+        'has_data': bool(last_run),
     }
 
 

@@ -16,8 +16,30 @@ from accounts.models import GrowthJourney
 from accounts.services.growth_journey import (
     journeys_for_stage,
     pipeline_overview,
+    summarize_last_run,
     transition,
 )
+
+STAGE_LABELS = dict(GrowthJourney.Stage.choices)
+
+EVENT_LABELS = {
+    'lead_imported': 'ورود سرنخ',
+    'click_landing': 'کلیک روی لینک',
+    'signup': 'ثبت‌نام',
+    'signup_complete': 'ثبت‌نام',
+    'workspace_login': 'ورود به میزکار',
+    'checkout_start': 'شروع خرید / سبد',
+    'no_purchase_window': 'یادآوری بدون خرید',
+    'paid_licensed': 'خرید و لایسنس',
+    'license_expiring': 'نزدیک انقضا',
+    'repurchase': 'تمدید',
+    'expired_no_renew': 'انقضا بدون تمدید',
+    'opt_out': 'لغو دریافت',
+    'suppressed': 'مسدود',
+    'manual_set': 'تنظیم دستی / همگام‌سازی',
+    'pause_nurture': 'توقف پیام‌ها',
+    'resume_nurture': 'از سرگیری پیام‌ها',
+}
 
 
 class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
@@ -28,7 +50,12 @@ class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
         overview = pipeline_overview()
         stage = (self.request.GET.get('stage') or '').strip()
         detail_rows = []
+        selected_meta = None
         if stage:
+            for s in overview.get('stages') or []:
+                if s['key'] == stage:
+                    selected_meta = s
+                    break
             for j in journeys_for_stage(stage, limit=80):
                 detail_rows.append({
                     'id': j.pk,
@@ -43,12 +70,28 @@ class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
                     'entered_at': j.stage_entered_at,
                     'last_touch_at': j.last_touch_at,
                 })
+
         last_run = cache.get('growth_pipeline_last_run') or {}
+        run_summary = summarize_last_run(last_run)
+
+        recent_fa = []
+        for ev in overview.get('recent_events') or []:
+            recent_fa.append({
+                **ev,
+                'event_label': EVENT_LABELS.get(ev.get('event_type'), ev.get('event_type')),
+                'stage_from_label': STAGE_LABELS.get(ev.get('stage_from') or '', ev.get('stage_from') or '—'),
+                'stage_to_label': STAGE_LABELS.get(ev.get('stage_to') or '', ev.get('stage_to') or '—'),
+            })
+
         ctx.update({
             'overview': overview,
+            'summary': overview.get('summary') or {},
             'selected_stage': stage,
+            'selected_meta': selected_meta,
             'detail_rows': detail_rows,
             'last_run': last_run,
+            'run_summary': run_summary,
+            'recent_events_fa': recent_fa,
             'last_run_json': json.dumps(last_run, ensure_ascii=False, default=str),
         })
         return ctx
@@ -61,8 +104,8 @@ class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
             stats = backfill_journeys(limit=5000)
             messages.success(
                 request,
-                f'Backfill انجام شد — leads={stats.get("leads")} users={stats.get("users")} '
-                f'updated={stats.get("updated")}',
+                f'همگام‌سازی انجام شد: {stats.get("leads")} سرنخ بررسی شد، '
+                f'{stats.get("created")} پرونده جدید، {stats.get("updated")} به‌روز شد.',
             )
             return redirect('admin_panel_growth_pipeline')
 
@@ -76,7 +119,9 @@ class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
             )
             messages.success(
                 request,
-                'Nurture متوقف شد.' if action == 'pause' else 'Nurture از سر گرفته شد.',
+                'ارسال خودکار برای این شماره متوقف شد.'
+                if action == 'pause'
+                else 'ارسال خودکار دوباره فعال شد.',
             )
             url = reverse('admin_panel_growth_pipeline')
             if journey.stage:
@@ -91,7 +136,7 @@ class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
                 reason='manual',
                 notes='admin growth pipeline',
             )
-            messages.success(request, 'مخاطب به suppression اضافه شد.')
+            messages.success(request, 'این شماره دیگر پیام خودکار نمی‌گیرد.')
             return redirect(reverse('admin_panel_growth_pipeline') + f'?stage={journey.stage}')
 
         messages.error(request, 'اقدام نامعتبر.')
@@ -101,7 +146,6 @@ class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
 class AdminGrowthPipelineJsonView(StaffRequiredMixin, View):
     def get(self, request):
         overview = pipeline_overview()
-        # serialize datetimes
         recent = []
         for ev in overview.get('recent_events') or []:
             row = dict(ev)
@@ -110,5 +154,7 @@ class AdminGrowthPipelineJsonView(StaffRequiredMixin, View):
                 row['created_at'] = created.isoformat() if hasattr(created, 'isoformat') else str(created)
             recent.append(row)
         overview['recent_events'] = recent
-        overview['last_run'] = cache.get('growth_pipeline_last_run') or {}
+        last_run = cache.get('growth_pipeline_last_run') or {}
+        overview['last_run'] = last_run
+        overview['run_summary'] = summarize_last_run(last_run)
         return JsonResponse({'ok': True, 'overview': overview})

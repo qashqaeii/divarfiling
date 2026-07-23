@@ -80,6 +80,30 @@ class PropertyContactMatchEngineTests(TestCase):
         types = {m['customer_type'] for m in matches}
         self.assertNotIn('مستاجر', types)
 
+    def test_rent_applicant_excluded_from_sale(self):
+        """متقاضی اجاره نباید روی فایل فروش پیشنهاد شود (LEAD_TYPES اشتباه بود)."""
+        rent_applicant = Customer.objects.create(
+            user=self.user,
+            name='متقاضی اجاره',
+            phone='09121110004',
+            customer_type='متقاضی اجاره',
+            status='در حال پیگیری',
+            deposit_min=100_000_000,
+            deposit_max=800_000_000,
+            rent_min=5_000_000,
+            rent_max=40_000_000,
+            areas='ونک',
+            property_type='آپارتمان',
+            min_area=70,
+            max_area=120,
+        )
+        data = get_property_contact_matches(self.prop, self.user)
+        ids = {m['customer_id'] for m in data['matches']}
+        types = {m['customer_type'] for m in data['matches']}
+        self.assertNotIn(rent_applicant.pk, ids)
+        self.assertNotIn('متقاضی اجاره', types)
+        self.assertIn(self.buyer.pk, ids)
+
     def test_already_linked_excluded(self):
         PropertyContact.objects.create(
             customer=self.buyer,

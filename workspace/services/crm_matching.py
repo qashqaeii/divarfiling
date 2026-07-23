@@ -700,32 +700,33 @@ def _listing_is_genuine_owner(listing: Listing) -> bool:
 def _crm_match_compatible(customer: Customer, prop: CRMProperty) -> bool:
     if is_builder_customer(customer):
         return True
-    if customer.customer_type in LEAD_TYPES or customer.customer_type == 'سرنخ':
+    # متقاضی خرید/اجاره قبل از LEAD_TYPES — فقط سرنخ برای هر دو معامله آزاد است.
+    if _is_rent_customer(customer):
+        return _crm_property_is_rent_listing(prop)
+    if _is_sale_customer(customer):
+        return _crm_property_is_sale_listing(prop)
+    if customer.customer_type == 'سرنخ':
         return _crm_property_is_rent_listing(prop) or _crm_property_is_sale_listing(prop)
     if customer.customer_type == 'مالک':
         if _profile_has_rent_criteria(customer):
             return _crm_property_is_rent_listing(prop) or _crm_property_is_sale_listing(prop)
         return _crm_property_is_sale_listing(prop) or _crm_property_is_rent_listing(prop)
-    if _is_rent_customer(customer):
-        return _crm_property_is_rent_listing(prop)
-    if _is_sale_customer(customer):
-        return _crm_property_is_sale_listing(prop)
     return _crm_property_is_rent_listing(prop) or _crm_property_is_sale_listing(prop)
 
 
 def _listing_match_compatible(customer: Customer, listing: Listing) -> bool:
     if is_builder_customer(customer):
         return True
-    if customer.customer_type in LEAD_TYPES or customer.customer_type == 'سرنخ':
+    if _is_rent_customer(customer):
+        return _listing_is_rent_listing(listing)
+    if _is_sale_customer(customer):
+        return _listing_is_sale_listing(listing)
+    if customer.customer_type == 'سرنخ':
         return _listing_is_rent_listing(listing) or _listing_is_sale_listing(listing)
     if customer.customer_type == 'مالک':
         if _profile_has_rent_criteria(customer):
             return _listing_is_rent_listing(listing) or _listing_is_sale_listing(listing)
         return _listing_is_sale_listing(listing) or _listing_is_rent_listing(listing)
-    if _is_rent_customer(customer):
-        return _listing_is_rent_listing(listing)
-    if _is_sale_customer(customer):
-        return _listing_is_sale_listing(listing)
     return _listing_is_rent_listing(listing) or _listing_is_sale_listing(listing)
 
 
@@ -1439,34 +1440,32 @@ def _customer_match_candidates_qs(prop: CRMProperty, user, *, scan_limit: int):
 
     type_q = Q()
     if is_rent and not is_sale:
-        type_q = Q(customer_type__in=['مستاجر', 'متقاضی اجاره', 'سرنخ', 'سازنده']) | Q(
-            customer_type__in=LEAD_TYPES,
-        )
+        type_q = Q(customer_type__in=[
+            'مستاجر', 'متقاضی اجاره', 'سرنخ', 'سازنده',
+        ])
     elif is_sale and not is_rent:
-        type_q = Q(
-            customer_type__in=[
-                'خریدار', 'متقاضی خرید', 'سرمایه‌گذار', 'سرنخ', 'سازنده',
-            ],
-        ) | Q(customer_type__in=LEAD_TYPES)
+        type_q = Q(customer_type__in=[
+            'خریدار', 'متقاضی خرید', 'سرمایه‌گذار', 'سرنخ', 'سازنده',
+        ])
     if type_q:
         qs = qs.filter(type_q)
 
     if is_sale and prop.sale_price:
         price = int(prop.sale_price)
         # بودجه مشتری باید بتواند قیمت ملک را با تلورانس حداکثر پوشش دهد.
+        # فقط سرنخ/سازنده بدون بودجه خرید از فیلتر بودجه معاف‌اند (نه متقاضی اجاره).
         budget_ok = (
             Q(budget_min__isnull=True, budget_max__isnull=True)
             | (
                 (Q(budget_min__isnull=True) | Q(budget_min__lte=int(price / max(1e-9, (1 - tol)))))
                 & (Q(budget_max__isnull=True) | Q(budget_max__gte=int(price / (1 + tol))))
             )
-            | Q(customer_type='سازنده')
-            | Q(customer_type__in=LEAD_TYPES)
+            | Q(customer_type__in=['سازنده', 'سرنخ'])
         )
         qs = qs.filter(budget_ok)
 
     if is_rent:
-        rent_ok = Q(customer_type__in=LEAD_TYPES) | Q(customer_type='سازنده')
+        rent_ok = Q(customer_type__in=['سرنخ', 'سازنده'])
         deposit_q = Q()
         rent_q = Q()
         if prop.deposit:

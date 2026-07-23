@@ -16,6 +16,7 @@ from accounts.models import (
     CampaignStep,
     CampaignVariant,
     LeadCampaign,
+    LeadImportBatch,
     LeadList,
     LeadListMember,
     MarketingLead,
@@ -186,35 +187,100 @@ def auto_create_campaign_for_import(
     landing_url: str = 'https://divarfiling.ir/',
 ) -> Optional[LeadCampaign]:
     """
-    پس از commit فایل، کمپین دو نسخه‌ای می‌سازد — اگر کمپین draft/pilot فعال
-    برای همین لیست نباشد.
+    پس از commit فایل، کمپین دو نسخه‌ای می‌سازد — یک کمپین به ازای هر بچ (فایل).
+    اگر برای همین بچ قبلاً کمپین ساخته شده باشد، تکرار نمی‌سازد.
     """
-    existing = LeadCampaign.objects.filter(
-        lead_list=lead_list,
-        kind=LeadCampaign.Kind.ACQUISITION,
-        status__in=(
-            LeadCampaign.Status.DRAFT,
-            LeadCampaign.Status.PILOT,
-            LeadCampaign.Status.ACTIVE,
-        ),
-    ).first()
-    if existing:
+    batch = LeadImportBatch.objects.filter(pk=batch_id).first()
+    if batch:
+        existing_id = (batch.preview_stats or {}).get('campaign_id')
+        if existing_id and LeadCampaign.objects.filter(pk=existing_id).exists():
+            return LeadCampaign.objects.filter(pk=existing_id).first()
+
+    count = eligible_count
+    if count <= 0:
+        count = eligible_count_for_list(lead_list)
+    if count <= 0:
         return None
 
-    per_variant = pilot_per_variant_for_count(eligible_count, is_pilot=True)
+    per_variant = pilot_per_variant_for_count(count, is_pilot=True)
     name = generate_acquisition_campaign_name(
         lead_list=lead_list,
         batch_id=batch_id,
-        eligible_count=eligible_count,
+        eligible_count=count,
         is_pilot=True,
     )
-    return create_acquisition_campaign(
+    campaign = create_acquisition_campaign(
         name=name,
         lead_list=lead_list,
         created_by=created_by,
         landing_url=landing_url,
         is_pilot=True,
         pilot_per_variant=per_variant,
+    )
+    if batch:
+        stats = dict(batch.preview_stats or {})
+        stats['campaign_id'] = campaign.pk
+        batch.preview_stats = stats
+        batch.save(update_fields=['preview_stats'])
+    return campaign
+
+
+def batches_pending_campaign(limit: int = 30) -> list[dict]:
+    """بچ‌های commit‌شده که هنوز کمپین ندارند (برای UI و backfill)."""
+    rows: list[dict] = []
+    for batch in LeadImportBatch.objects.filter(
+        status=LeadImportBatch.Status.COMMITTED,
+    ).order_by('-committed_at', '-created_at')[: limit * 3]:
+        stats = batch.preview_stats or {}
+        cid = stats.get('campaign_id')
+        if cid and LeadCampaign.objects.filter(pk=cid).exists():
+            continue
+        list_id = stats.get('list_id')
+        if not list_id:
+            continue
+        lead_list = LeadList.objects.filter(pk=list_id).first()
+        if not lead_list:
+            continue
+        eligible = stats.get('members_added') or stats.get('eligible') or 0
+        if not eligible:
+            eligible = eligible_count_for_list(lead_list)
+        rows.append({
+            'batch': batch,
+            'list': lead_list,
+            'eligible': eligible,
+        })
+        if len(rows) >= limit:
+            break
+    return rows
+
+
+def ensure_campaign_for_batch(
+    batch_id: int,
+    *,
+    created_by=None,
+    landing_url: str = 'https://divarfiling.ir/',
+) -> Optional[LeadCampaign]:
+    """ساخت کمپین برای یک بچ commit‌شده — مخصوص فایل‌های قبلاً واردشده."""
+    batch = LeadImportBatch.objects.filter(
+        pk=batch_id,
+        status=LeadImportBatch.Status.COMMITTED,
+    ).first()
+    if not batch:
+        raise LeadCampaignError('بچ ثبت‌شده یافت نشد.', code='batch_not_found')
+    list_id = (batch.preview_stats or {}).get('list_id')
+    if not list_id:
+        raise LeadCampaignError('لیست سرنخ برای این بچ مشخص نیست.', code='no_list')
+    lead_list = LeadList.objects.filter(pk=list_id).first()
+    if not lead_list:
+        raise LeadCampaignError('لیست سرنخ یافت نشد.', code='list_not_found')
+    stats = batch.preview_stats or {}
+    eligible = stats.get('members_added') or stats.get('eligible') or 0
+    return auto_create_campaign_for_import(
+        lead_list=lead_list,
+        batch_id=batch.pk,
+        eligible_count=eligible,
+        created_by=created_by,
+        landing_url=landing_url,
     )
 
 

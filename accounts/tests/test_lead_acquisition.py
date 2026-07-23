@@ -21,8 +21,10 @@ from accounts.models import (
 from accounts.services.lead_attribution import attribute_purchase, attribute_signup
 from accounts.services.lead_campaign_send import (
     auto_create_campaign_for_import,
+    batches_pending_campaign,
     create_acquisition_campaign,
     enroll_pilot,
+    ensure_campaign_for_batch,
     estimate_sms_cost_rial,
     generate_acquisition_campaign_name,
     pilot_per_variant_for_count,
@@ -172,12 +174,65 @@ class LeadImportTests(TestCase):
         self.assertIn('جذب', campaign.name)
         self.assertIn('پایلوت A/B', campaign.name)
         self.assertEqual(campaign.pilot_per_variant, pilot_per_variant_for_count(eligible))
-        # دومین بار نباید کمپین تکراری بسازد
-        self.assertIsNone(auto_create_campaign_for_import(
+        # دومین بار برای همان بچ نباید کمپین تکراری بسازد
+        again = auto_create_campaign_for_import(
             lead_list=lead_list,
             batch_id=batch.pk,
             eligible_count=eligible,
-        ))
+        )
+        self.assertEqual(again.pk, campaign.pk)
+
+    def test_ensure_campaign_for_committed_batch_without_campaign(self):
+        from accounts.models import LeadImportBatch, LeadList
+
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='backfill.json')
+        batch = create_preview_batch(preview)
+        commit_import_batch(batch.pk, preview_rows=preview.rows)
+        batch.refresh_from_db()
+        self.assertEqual(batch.status, LeadImportBatch.Status.COMMITTED)
+        self.assertFalse((batch.preview_stats or {}).get('campaign_id'))
+
+        pending = batches_pending_campaign(limit=10)
+        self.assertTrue(any(r['batch'].pk == batch.pk for r in pending))
+
+        campaign = ensure_campaign_for_batch(batch.pk)
+        self.assertIsNotNone(campaign)
+        batch.refresh_from_db()
+        self.assertEqual(batch.preview_stats.get('campaign_id'), campaign.pk)
+        self.assertFalse(batches_pending_campaign(limit=10))
+
+    def test_two_batches_same_list_each_get_campaign(self):
+        from accounts.models import LeadList
+
+        payload_a = {
+            'metadata': {'city': 'تهران', 'district': 'اقدسیه', 'category': 'apartment-sell'},
+            'consultants': [{'consultant_name': 'آژانس', 'phone': '09121110001'}],
+        }
+        payload_b = {
+            'metadata': {'city': 'تهران', 'district': 'اقدسیه', 'category': 'apartment-sell'},
+            'consultants': [{'consultant_name': 'مشاور', 'phone': '09121110002'}],
+        }
+        prev_a = preview_phone_detector_json(json.dumps(payload_a).encode(), filename='a.json')
+        batch_a = create_preview_batch(prev_a)
+        r_a = commit_import_batch(batch_a.pk, preview_rows=prev_a.rows)
+
+        prev_b = preview_phone_detector_json(json.dumps(payload_b).encode(), filename='b.json')
+        batch_b = create_preview_batch(prev_b)
+        r_b = commit_import_batch(batch_b.pk, preview_rows=prev_b.rows)
+
+        self.assertEqual(r_a['list_id'], r_b['list_id'])
+        lead_list = LeadList.objects.get(pk=r_a['list_id'])
+
+        c_a = auto_create_campaign_for_import(
+            lead_list=lead_list, batch_id=batch_a.pk, eligible_count=1,
+        )
+        c_b = auto_create_campaign_for_import(
+            lead_list=lead_list, batch_id=batch_b.pk, eligible_count=1,
+        )
+        self.assertIsNotNone(c_a)
+        self.assertIsNotNone(c_b)
+        self.assertNotEqual(c_a.pk, c_b.pk)
 
     def test_update_campaign_variants(self):
         from accounts.models import LeadList

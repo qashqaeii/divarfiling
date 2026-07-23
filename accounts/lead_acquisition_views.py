@@ -27,9 +27,12 @@ from accounts.services.lead_campaign_send import (
     DEFAULT_STEP1_B,
     LeadCampaignError,
     auto_create_campaign_for_import,
+    batches_pending_campaign,
     create_acquisition_campaign,
     delete_lead_campaign,
     enroll_pilot,
+    ensure_campaign_for_batch,
+    eligible_count_for_list,
     get_step1_variant_templates,
     reset_campaign_for_retry,
     send_campaign_step,
@@ -163,6 +166,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 get_step1_variant_templates(campaigns[0])['B'] if campaigns else DEFAULT_STEP1_B
             ),
             'campaign_edit_json': json.dumps(campaign_edit, ensure_ascii=False),
+            'batches_pending_campaign': batches_pending_campaign(limit=20),
         })
         return ctx
 
@@ -177,6 +181,10 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 return self._import_commit_bulk(request)
             if action == 'import_discard':
                 return self._import_discard(request)
+            if action == 'create_campaign_from_batch':
+                return self._create_campaign_from_batch(request)
+            if action == 'create_campaigns_pending':
+                return self._create_campaigns_pending(request)
             if action == 'create_campaign':
                 return self._create_campaign(request)
             if action == 'update_campaign':
@@ -210,6 +218,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         bulk_items = list(request.session.get(SESSION_BULK_PREVIEW_KEY) or [])
         added = 0
         skipped_dup = 0
+        duplicate_batches: list[dict] = []
         last_preview = None
 
         for uploaded in uploads[:20]:
@@ -217,6 +226,11 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             preview = preview_phone_detector_json(raw, filename=uploaded.name)
             if preview.duplicate_file:
                 skipped_dup += 1
+                if preview.existing_batch_id:
+                    duplicate_batches.append({
+                        'batch_id': preview.existing_batch_id,
+                        'filename': uploaded.name,
+                    })
                 continue
             batch = create_preview_batch(preview, uploaded_by=request.user)
             item = {
@@ -251,7 +265,13 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 f'{added} فایل در صف پیش‌نمایش — مجموع قابل ورود: {total_eligible}',
             )
         if skipped_dup:
-            messages.warning(request, f'{skipped_dup} فایل تکراری (قبلاً commit شده) رد شد.')
+            messages.warning(
+                request,
+                f'{skipped_dup} فایل تکراری (قبلاً ثبت شده) — commit مجدد ممکن نیست؛ '
+                f'از «ساخت کمپین برای فایل‌های بدون کمپین» استفاده کنید.',
+            )
+        if duplicate_batches and added == 0:
+            request.session['lead_import_duplicate_batches'] = duplicate_batches
         return _lac_redirect('lac-import')
 
     def _commit_single_preview(self, request, payload: dict, *, auto_campaign: bool = True) -> dict:
@@ -276,11 +296,14 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         ]
         result = commit_import_batch(batch_id, preview_rows=rows)
         campaign = None
+        eligible = 0
         if auto_campaign:
             from accounts.models import LeadList
 
             lead_list = LeadList.objects.get(pk=result['list_id'])
             eligible = result.get('members_added', 0) or payload.get('stats', {}).get('eligible', 0)
+            if eligible <= 0:
+                eligible = eligible_count_for_list(lead_list)
             campaign = auto_create_campaign_for_import(
                 lead_list=lead_list,
                 batch_id=result['batch_id'],
@@ -288,6 +311,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 created_by=request.user,
             )
         result['campaign'] = campaign
+        result['eligible_for_campaign'] = eligible if auto_campaign else 0
         return result
 
     def _import_commit(self, request):
@@ -311,7 +335,56 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         )
         if result.get('campaign'):
             msg += f' · کمپین #{result["campaign"].pk} «{result["campaign"].name}» ساخته شد'
+        elif result.get('eligible_for_campaign', 0) <= 0:
+            msg += ' · کمپین ساخته نشد (سرنخ سرد/تعامل‌دار در لیست نیست)'
         messages.success(request, msg)
+        return _lac_redirect('lac-campaigns')
+
+    def _create_campaign_from_batch(self, request):
+        batch_id = int(request.POST.get('batch_id') or 0)
+        campaign = ensure_campaign_for_batch(batch_id, created_by=request.user)
+        if campaign:
+            messages.success(
+                request,
+                f'کمپین #{campaign.pk} «{campaign.name}» برای فایل #{batch_id} ساخته شد.',
+            )
+        else:
+            messages.warning(
+                request,
+                f'کمپین برای فایل #{batch_id} ساخته نشد — سرنخ واجد شرایطی در لیست نیست.',
+            )
+        return _lac_redirect('lac-campaigns')
+
+    def _create_campaigns_pending(self, request):
+        pending = batches_pending_campaign(limit=50)
+        if not pending:
+            messages.info(request, 'همه فایل‌های ثبت‌شده کمپین دارند.')
+            return _lac_redirect('lac-import')
+        created = []
+        skipped = 0
+        for row in pending:
+            try:
+                campaign = ensure_campaign_for_batch(
+                    row['batch'].pk,
+                    created_by=request.user,
+                )
+            except LeadCampaignError as exc:
+                messages.warning(request, f'بچ {row["batch"].pk}: {exc.message}')
+                skipped += 1
+                continue
+            if campaign:
+                created.append(campaign)
+            else:
+                skipped += 1
+        if created:
+            names = '، '.join(f'#{c.pk}' for c in created[:8])
+            msg = f'{len(created)} کمپین ساخته شد: {names}'
+            if skipped:
+                msg += f' · {skipped} مورد رد شد'
+            messages.success(request, msg)
+        else:
+            messages.warning(request, 'هیچ کمپین جدیدی ساخته نشد.')
+        request.session.pop('lead_import_duplicate_batches', None)
         return _lac_redirect('lac-campaigns')
 
     def _import_commit_bulk(self, request):
@@ -341,6 +414,8 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         if campaigns_created:
             names = '، '.join(f'#{c.pk}' for c in campaigns_created[:5])
             msg += f' · کمپین‌های جدید: {names}'
+        elif total_members == 0 and not campaigns_created:
+            msg += ' · کمپین خودکار ساخته نشد (فایل تکراری یا بدون سرنخ جدید — از «ساخت کمپین» استفاده کنید)'
         messages.success(request, msg)
         return _lac_redirect('lac-campaigns')
 

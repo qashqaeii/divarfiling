@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -143,6 +143,57 @@
             <span class="adm-lac-chip adm-lac-chip--live">{{ bulk_previews|length|to_persian_digits }} فایل در صف</span>
             {% endif %}
         </div>
+
+        {% if batches_pending_campaign %}
+        <div class="adm-lac-pending-campaigns">
+            <div class="adm-lac-pending-campaigns__copy">
+                <i class="fas fa-circle-exclamation"></i>
+                <div>
+                    <strong>{{ batches_pending_campaign|length|to_persian_digits }} فایل ثبت‌شده بدون کمپین</strong>
+                    <p class="adm-lac-kpi-sub">فایل‌هایی که قبلاً وارد شده‌اند commit مجدد نمی‌شوند — کمپین را از همینجا بسازید.</p>
+                </div>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_campaigns_pending">
+                <button type="submit" class="adm-lac-btn adm-lac-btn--amber">
+                    <i class="fas fa-wand-magic-sparkles"></i> ساخت کمپین برای همه
+                </button>
+            </form>
+        </div>
+        <details class="adm-lac-accordion adm-lac-accordion--inline">
+            <summary class="adm-lac-accordion__head">
+                <span class="adm-lac-accordion__icon"><i class="fas fa-file-circle-plus"></i></span>
+                <span class="adm-lac-accordion__title">
+                    <strong>فایل‌های در انتظار کمپین</strong>
+                    <small>ساخت تکی برای هر فایل</small>
+                </span>
+                <span class="adm-lac-accordion__chev"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="adm-lac-accordion__body">
+                <ul class="adm-lac-pending-list">
+                {% for row in batches_pending_campaign %}
+                    <li class="adm-lac-pending-item">
+                        <div>
+                            <strong>{{ row.batch.original_filename|truncatechars:42 }}</strong>
+                            <span class="adm-lac-kpi-sub">
+                                #{{ row.batch.id|to_persian_digits }} ·
+                                {{ row.list.city }}{% if row.list.district %} / {{ row.list.district }}{% endif %} ·
+                                {{ row.eligible|to_persian_digits }} سرنخ
+                            </span>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="create_campaign_from_batch">
+                            <input type="hidden" name="batch_id" value="{{ row.batch.id }}">
+                            <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">ساخت کمپین</button>
+                        </form>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        </details>
+        {% endif %}
 
         <div class="adm-lac-upload-workspace">
             <div class="adm-lac-panel adm-lac-panel--upload">

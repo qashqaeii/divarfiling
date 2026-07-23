@@ -1258,3 +1258,62 @@ html.mk-public:not([data-theme="light"]) .adm-lac-modal__inner {
     cursor: pointer;
     color: inherit;
 }
+
+/* Pending campaigns banner */
+.adm-lac-pending-campaigns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(217, 119, 6, 0.35);
+    background: linear-gradient(135deg, rgba(255, 251, 235, 0.95), rgba(255, 255, 255, 0.8));
+}
+
+html.mk-public:not([data-theme="light"]) .adm-lac-pending-campaigns {
+    background: linear-gradient(135deg, rgba(120, 53, 15, 0.25), rgba(15, 23, 42, 0.6));
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+.adm-lac-pending-campaigns__copy {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+}
+
+.adm-lac-pending-campaigns__copy > i {
+    color: var(--lac-amber);
+    margin-top: 0.15rem;
+}
+
+.adm-lac-pending-campaigns__copy strong {
+    display: block;
+    font-size: 0.88rem;
+}
+
+.adm-lac-accordion--inline {
+    margin-bottom: 0.85rem;
+}
+
+.adm-lac-pending-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.45rem;
+}
+
+.adm-lac-pending-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    padding: 0.6rem 0.7rem;
+    border-radius: 10px;
+    border: 1px solid var(--lac-line);
+    background: rgba(15, 23, 42, 0.02);
+}

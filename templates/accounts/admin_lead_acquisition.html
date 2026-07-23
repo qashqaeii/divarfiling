@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -421,14 +421,49 @@
         <div class="adm-lac-section-head">
             <div>
                 <h2>کمپین‌ها و قیف</h2>
-                <p>پذیرفته‌شده = برآورد پوشش · تفکیک نسبت‌دهی جذب و خرید</p>
+                <p>انتخاب چندتایی · عملیات گروهی روی کمپین‌های انتخاب‌شده</p>
             </div>
         </div>
+
+        <div class="adm-lac-campaigns-wrap">
+        <form method="post" id="lac-campaigns-bulk-form" class="adm-lac-bulk-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="bulk_campaigns">
+            <input type="hidden" name="bulk_op" id="lac-bulk-op" value="">
+            <input type="hidden" name="step_number" value="1">
+        </form>
+
+            <div class="adm-lac-bulk-bar" id="lac-bulk-bar" hidden>
+                <div class="adm-lac-bulk-bar__info">
+                    <span class="adm-lac-bulk-bar__count" id="lac-bulk-count">۰ انتخاب</span>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-bulk-clear">لغو انتخاب</button>
+                </div>
+                <div class="adm-lac-bulk-bar__actions">
+                    <button type="button" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm" data-bulk-op="enroll_pilot" data-bulk-form="lac-campaigns-bulk-form">
+                        <i class="fas fa-flask"></i> ثبت پایلوت
+                    </button>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" data-bulk-op="send_step" data-bulk-form="lac-campaigns-bulk-form">
+                        <i class="fas fa-paper-plane"></i> ارسال مرحله ۱
+                    </button>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-bulk-op="reset_campaign" data-bulk-form="lac-campaigns-bulk-form">
+                        <i class="fas fa-rotate-left"></i> ریست
+                    </button>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--danger adm-lac-btn--sm" data-bulk-op="delete_campaign" data-bulk-form="lac-campaigns-bulk-form" data-confirm="کمپین‌های انتخاب‌شده حذف شوند؟ لیست سرنخ‌ها باقی می‌ماند.">
+                        <i class="fas fa-trash"></i> حذف
+                    </button>
+                </div>
+            </div>
+
         <div class="adm-lac-panel" style="padding:0;overflow:hidden">
             <div class="adm-lac-table-wrap" style="border:none">
-                <table class="adm-lac-table">
+                <table class="adm-lac-table adm-lac-table--selectable">
                     <thead>
                         <tr>
+                            <th class="adm-lac-check-col">
+                                <label class="adm-lac-row-check" title="انتخاب همه">
+                                    <input type="checkbox" id="lac-select-all" aria-label="انتخاب همه کمپین‌ها">
+                                </label>
+                            </th>
                             <th>کمپین</th>
                             <th>وضعیت</th>
                             <th>پذیرفته‌شده</th>
@@ -440,7 +475,12 @@
                     </thead>
                     <tbody>
                     {% for f in funnels %}
-                        <tr>
+                        <tr data-campaign-row="{{ f.campaign_id }}">
+                            <td class="adm-lac-check-col">
+                                <label class="adm-lac-row-check">
+                                    <input type="checkbox" name="campaign_ids" value="{{ f.campaign_id }}" form="lac-campaigns-bulk-form" class="lac-campaign-check" aria-label="انتخاب کمپین {{ f.campaign_id }}">
+                                </label>
+                            </td>
                             <td>
                                 <a href="{% url 'admin_panel_lead_campaign_detail' f.campaign_id %}" style="font-weight:800;text-decoration:none;color:inherit">
                                     {{ f.campaign_id|to_persian_digits }} · {{ f.name }}
@@ -515,7 +555,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="adm-lac-empty">
                                     <i class="fas fa-bullhorn"></i>
                                     هنوز کمپینی ندارید. از بخش ساخت کمپین شروع کنید.
@@ -526,6 +566,7 @@
                     </tbody>
                 </table>
             </div>
+        </div>
         </div>
     </section>
 
@@ -750,6 +791,55 @@
       else modal.removeAttribute('open');
     });
   });
+
+  var bulkForm = document.getElementById('lac-campaigns-bulk-form');
+  if (bulkForm) {
+    var bulkChecks = document.querySelectorAll('.lac-campaign-check');
+    var selectAll = document.getElementById('lac-select-all');
+    var bulkBar = document.getElementById('lac-bulk-bar');
+    var bulkCount = document.getElementById('lac-bulk-count');
+    var bulkClear = document.getElementById('lac-bulk-clear');
+
+    function updateBulkBar() {
+      var n = bulkForm.querySelectorAll('.lac-campaign-check:checked').length;
+      if (bulkBar) bulkBar.hidden = n === 0;
+      if (bulkCount) bulkCount.textContent = persianDigits(n) + ' انتخاب';
+      bulkChecks.forEach(function (cb) {
+        var row = cb.closest('tr');
+        if (row) row.classList.toggle('is-selected', cb.checked);
+      });
+      if (selectAll) {
+        selectAll.indeterminate = n > 0 && n < bulkChecks.length;
+        selectAll.checked = n > 0 && n === bulkChecks.length;
+      }
+    }
+    bulkChecks.forEach(function (cb) { cb.addEventListener('change', updateBulkBar); });
+    if (selectAll) {
+      selectAll.addEventListener('change', function () {
+        bulkChecks.forEach(function (cb) { cb.checked = selectAll.checked; });
+        updateBulkBar();
+      });
+    }
+    if (bulkClear) {
+      bulkClear.addEventListener('click', function () {
+        bulkChecks.forEach(function (cb) { cb.checked = false; });
+        if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+        updateBulkBar();
+      });
+    }
+    document.querySelectorAll('[data-bulk-op]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (!bulkForm.querySelector('.lac-campaign-check:checked')) {
+          alert('حداقل یک کمپین را انتخاب کنید.');
+          return;
+        }
+        var confirmMsg = btn.getAttribute('data-confirm');
+        if (confirmMsg && !window.confirm(confirmMsg)) return;
+        document.getElementById('lac-bulk-op').value = btn.getAttribute('data-bulk-op');
+        bulkForm.submit();
+      });
+    });
+  }
 })();
 </script>
 {% endblock %}

@@ -478,6 +478,32 @@ class LeadAdminViewTests(TestCase):
         resp = self.client.get(reverse('admin_panel_lead_acquisition'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'مرکز جذب سرنخ')
+        self.assertContains(resp, 'lac-campaigns-bulk-form')
+        self.assertContains(resp, 'lac-select-all')
+
+    @patch('accounts.lead_acquisition_views.enroll_pilot')
+    def test_bulk_enroll_pilot(self, mock_enroll):
+        from accounts.models import LeadList
+
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='bulk.json')
+        batch = create_preview_batch(preview)
+        result = commit_import_batch(batch.pk, preview_rows=preview.rows)
+        lead_list = LeadList.objects.get(pk=result['list_id'])
+        c1 = create_acquisition_campaign(name='C1', lead_list=lead_list)
+        c2 = create_acquisition_campaign(name='C2', lead_list=lead_list)
+        mock_enroll.return_value = {'enrolled': 2, 'held': 0, 'per_variant': {'A': 1, 'B': 1}}
+
+        resp = self.client.post(
+            reverse('admin_panel_lead_acquisition'),
+            {
+                'action': 'bulk_campaigns',
+                'bulk_op': 'enroll_pilot',
+                'campaign_ids': [str(c1.pk), str(c2.pk)],
+            },
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(mock_enroll.call_count, 2)
 
     @patch('accounts.services.lead_campaign_send.notify_marketing')
     def test_send_step_post_returns_redirect_not_500(self, mock_notify):

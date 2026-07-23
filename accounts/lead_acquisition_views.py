@@ -132,11 +132,13 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         campaigns = list(
-            LeadCampaign.objects.select_related('lead_list', 'created_by').order_by('-created_at')[:30]
+            LeadCampaign.objects.filter(kind=LeadCampaign.Kind.ACQUISITION)
+            .select_related('lead_list', 'created_by')
+            .order_by('-created_at')[:50]
         )
-        funnels = [campaign_funnel(c) for c in campaigns[:10]]
+        funnels = [campaign_funnel(c) for c in campaigns]
         campaign_edit = {}
-        for c in campaigns[:15]:
+        for c in campaigns:
             tpl = get_step1_variant_templates(c)
             campaign_edit[str(c.pk)] = {
                 'name': c.name,
@@ -199,6 +201,8 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 return self._reset_campaign(request)
             if action == 'delete_campaign':
                 return self._delete_campaign(request)
+            if action == 'bulk_campaigns':
+                return self._bulk_campaigns(request)
         except (LeadImportError, LeadCampaignError) as exc:
             messages.error(request, exc.message)
         except Exception as exc:  # noqa: BLE001
@@ -516,6 +520,82 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             f'پذیرفته {stats["accepted"]} / ناموفق {stats["failed"]}',
         )
         return redirect('admin_panel_lead_acquisition')
+
+    def _parse_campaign_ids(self, request) -> list[int]:
+        ids = []
+        for raw in request.POST.getlist('campaign_ids'):
+            try:
+                cid = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if cid > 0:
+                ids.append(cid)
+        return list(dict.fromkeys(ids))
+
+    def _bulk_campaigns(self, request):
+        op = (request.POST.get('bulk_op') or '').strip()
+        ids = self._parse_campaign_ids(request)
+        if not ids:
+            messages.error(request, 'حداقل یک کمپین را انتخاب کنید.')
+            return _lac_redirect('lac-campaigns')
+
+        ok_count = 0
+        err_lines: list[str] = []
+        summaries: list[str] = []
+
+        for cid in ids:
+            try:
+                if op == 'enroll_pilot':
+                    campaign = get_object_or_404(LeadCampaign, pk=cid)
+                    result = enroll_pilot(campaign)
+                    summaries.append(
+                        f'#{cid}: {result["enrolled"]} ثبت · {result["held"]} نگه‌داشته',
+                    )
+                    ok_count += 1
+                elif op == 'send_step':
+                    campaign = get_object_or_404(LeadCampaign, pk=cid)
+                    step_number = int(request.POST.get('step_number') or 1)
+                    stats = send_campaign_step(campaign, step_number, request=request)
+                    summaries.append(
+                        f'#{cid}: پذیرفته {stats["accepted"]} · ناموفق {stats["failed"]}',
+                    )
+                    ok_count += 1
+                elif op == 'reset_campaign':
+                    reset = reset_campaign_for_retry(cid)
+                    summaries.append(
+                        f'#{cid}: {reset["enrollments_reset"]} مخاطب ریست',
+                    )
+                    ok_count += 1
+                elif op == 'delete_campaign':
+                    result = delete_lead_campaign(cid, confirm=True)
+                    summaries.append(f'#{cid}: «{result["name"]}» حذف شد')
+                    ok_count += 1
+                else:
+                    messages.error(request, 'عملیات گروهی نامعتبر است.')
+                    return _lac_redirect('lac-campaigns')
+            except LeadCampaignError as exc:
+                err_lines.append(f'#{cid}: {exc.message}')
+            except Exception as exc:  # noqa: BLE001
+                logger.exception('bulk campaign op failed campaign=%s op=%s', cid, op)
+                err_lines.append(f'#{cid}: {exc}')
+
+        labels = {
+            'enroll_pilot': 'ثبت پایلوت گروهی',
+            'send_step': 'ارسال مرحله ۱ گروهی',
+            'reset_campaign': 'ریست گروهی',
+            'delete_campaign': 'حذف گروهی',
+        }
+        label = labels.get(op, op)
+        if ok_count:
+            detail = ' · '.join(summaries[:6])
+            if len(summaries) > 6:
+                detail += f' · و {len(summaries) - 6} مورد دیگر'
+            messages.success(request, f'{label} — {ok_count} از {len(ids)} کمپین · {detail}')
+        if err_lines:
+            messages.warning(request, 'خطا: ' + ' · '.join(err_lines[:8]))
+        if not ok_count and not err_lines:
+            messages.info(request, 'عملیاتی انجام نشد.')
+        return _lac_redirect('lac-campaigns')
 
     def _delete_campaign(self, request):
         campaign_id = int(request.POST.get('campaign_id') or 0)

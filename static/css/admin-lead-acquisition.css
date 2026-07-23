@@ -1317,3 +1317,80 @@ html.mk-public:not([data-theme="light"]) .adm-lac-pending-campaigns {
     border: 1px solid var(--lac-line);
     background: rgba(15, 23, 42, 0.02);
 }
+
+/* Bulk campaign selection */
+.adm-lac-campaigns-wrap {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.adm-lac-bulk-form {
+    display: none;
+}
+
+.adm-lac-bulk-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: 14px;
+    border: 1px solid rgba(13, 148, 136, 0.35);
+    background: linear-gradient(135deg, rgba(240, 253, 250, 0.95), rgba(255, 255, 255, 0.85));
+    box-shadow: 0 8px 24px -16px rgba(13, 148, 136, 0.45);
+}
+
+html.mk-public:not([data-theme="light"]) .adm-lac-bulk-bar {
+    background: linear-gradient(135deg, rgba(19, 78, 74, 0.55), rgba(15, 23, 42, 0.75));
+}
+
+.adm-lac-bulk-bar[hidden] {
+    display: none !important;
+}
+
+.adm-lac-bulk-bar__info {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.adm-lac-bulk-bar__count {
+    font-size: 0.82rem;
+    font-weight: 900;
+    color: var(--lac-teal-deep);
+}
+
+.adm-lac-bulk-bar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.adm-lac-check-col {
+    width: 2.5rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.adm-lac-row-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.adm-lac-row-check input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--lac-teal);
+    cursor: pointer;
+}
+
+.adm-lac-table--selectable tr.is-selected td {
+    background: rgba(13, 148, 136, 0.07);
+}
+
+.adm-lac-table--selectable tr.is-selected td:first-child {
+    box-shadow: inset 3px 0 0 var(--lac-teal);
+}

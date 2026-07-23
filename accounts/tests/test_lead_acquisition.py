@@ -484,6 +484,9 @@ class LeadAdminViewTests(TestCase):
         self.assertContains(resp, 'مرکز جذب سرنخ')
         self.assertContains(resp, 'lac-campaigns-bulk-form')
         self.assertContains(resp, 'lac-select-all')
+        self.assertContains(resp, 'کلیک لندینگ')
+        self.assertContains(resp, 'lac-chart-funnel')
+        self.assertContains(resp, 'lac-charts-data')
 
     @patch('accounts.lead_acquisition_views.enroll_pilot')
     def test_bulk_enroll_pilot(self, mock_enroll):
@@ -704,3 +707,38 @@ class LeadCampaignFullSendTests(TestCase):
         step = self.campaign.steps.get(step_number=1)
         self.assertIn('API A', step.message_template)
         self.assertIn('API B', step.message_template)
+
+
+class LeadOverviewDashboardTests(TestCase):
+    def test_overview_stats_includes_clicks_and_purchases(self):
+        from accounts.services.lead_funnel import acquisition_dashboard_charts, overview_stats
+
+        stats = overview_stats()
+        self.assertIn('total_clicks', stats)
+        self.assertIn('total_purchases', stats)
+        self.assertIn('accepted_sms', stats)
+        self.assertGreaterEqual(stats['leads_total'], 0)
+
+    def test_acquisition_dashboard_charts_structure(self):
+        from accounts.services.lead_funnel import acquisition_dashboard_charts, campaign_funnel
+
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='chart.json')
+        batch = create_preview_batch(preview)
+        result = commit_import_batch(batch.pk, preview_rows=preview.rows)
+        from accounts.models import LeadList
+
+        lead_list = LeadList.objects.get(pk=result['list_id'])
+        campaign = create_acquisition_campaign(
+            name='Chart test campaign',
+            lead_list=lead_list,
+            is_pilot=True,
+        )
+        funnels = [campaign_funnel(campaign)]
+        charts = acquisition_dashboard_charts([campaign], funnels)
+        self.assertIn('funnel', charts)
+        self.assertIn('rates', charts)
+        self.assertIn('status', charts)
+        self.assertIn('campaigns', charts)
+        self.assertEqual(len(charts['campaigns']), 1)
+        self.assertEqual(len(charts['funnel']['values']), 4)

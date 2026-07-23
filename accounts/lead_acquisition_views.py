@@ -44,7 +44,11 @@ from accounts.services.lead_campaign_send import (
     send_campaigns_step_chunk,
     update_acquisition_campaign,
 )
-from accounts.services.lead_funnel import campaign_funnel, overview_stats
+from accounts.services.lead_funnel import (
+    acquisition_dashboard_charts,
+    campaign_funnel,
+    overview_stats,
+)
 from accounts.services.lead_import import (
     LeadImportError,
     commit_import_batch,
@@ -185,6 +189,10 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             }
         ctx.update({
             'overview': overview_stats(),
+            'lac_charts_json': json.dumps(
+                acquisition_dashboard_charts(campaigns, funnels),
+                ensure_ascii=False,
+            ),
             'batches': LeadImportBatch.objects.order_by('-created_at')[:30],
             'region_lists': region_lists_with_batches(limit=40),
             'lists': LeadList.objects.order_by('city', 'district', '-created_at')[:40],

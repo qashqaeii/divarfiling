@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -107,6 +107,86 @@
                 <span class="adm-lac-kpi-lbl">کمپین فعال / پایلوت</span>
                 <p class="adm-lac-kpi-sub">جذب + فعال‌سازی</p>
             </article>
+            <article class="adm-lac-kpi" data-accent="violet">
+                <span class="adm-lac-kpi-val">{{ overview.total_clicks|default:0|to_persian_digits }}</span>
+                <span class="adm-lac-kpi-lbl">کلیک لندینگ</span>
+                <p class="adm-lac-kpi-sub">
+                    {% if overview.ctr_pct is not None %}نرخ کلیک {{ overview.ctr_pct|to_persian_digits }}٪{% else %}سرنخ یکتا{% endif %}
+                </p>
+            </article>
+            <article class="adm-lac-kpi" data-accent="rose">
+                <span class="adm-lac-kpi-val">{{ overview.total_purchases|default:0|to_persian_digits }}</span>
+                <span class="adm-lac-kpi-lbl">خرید / لایسنس</span>
+                <p class="adm-lac-kpi-sub">
+                    {% if overview.purchase_revenue %}درآمد {{ overview.purchase_revenue|to_persian_digits }} ریال{% else %}تبدیل نهایی{% endif %}
+                </p>
+            </article>
+        </div>
+
+        <div class="adm-lac-analytics">
+            <div class="adm-lac-analytics__head">
+                <div>
+                    <h3>قیف و عملکرد کمپین‌ها</h3>
+                    <p>نمای یک‌نگاه · تجمیع کمپین‌های جذب (حداکثر ۵۰ کمپین اخیر)</p>
+                </div>
+                <div class="adm-lac-rate-strip" id="lac-rate-strip" aria-label="نرخ‌های تبدیل"></div>
+            </div>
+
+            <div class="adm-lac-funnel-visual" id="lac-funnel-visual" aria-label="قیف تجمیعی"></div>
+
+            <div class="adm-lac-charts-grid">
+                <article class="adm-lac-chart-card adm-lac-chart-card--wide">
+                    <header class="adm-lac-chart-card__head">
+                        <div>
+                            <strong>قیف تجمیعی</strong>
+                            <span>ارسال → کلیک → ثبت‌نام → خرید</span>
+                        </div>
+                        <i class="fas fa-filter" aria-hidden="true"></i>
+                    </header>
+                    <div class="adm-lac-chart-wrap adm-lac-chart-wrap--tall">
+                        <canvas id="lac-chart-funnel" aria-label="نمودار قیف"></canvas>
+                    </div>
+                </article>
+
+                <article class="adm-lac-chart-card">
+                    <header class="adm-lac-chart-card__head">
+                        <div>
+                            <strong>وضعیت کمپین‌ها</strong>
+                            <span>پایلوت · فعال · تکمیل</span>
+                        </div>
+                        <i class="fas fa-chart-pie" aria-hidden="true"></i>
+                    </header>
+                    <div class="adm-lac-chart-wrap adm-lac-chart-wrap--donut">
+                        <canvas id="lac-chart-status" aria-label="وضعیت کمپین‌ها"></canvas>
+                    </div>
+                </article>
+
+                <article class="adm-lac-chart-card adm-lac-chart-card--wide">
+                    <header class="adm-lac-chart-card__head">
+                        <div>
+                            <strong>مقایسه کمپین‌ها</strong>
+                            <span>۱۰ کمپین برتر بر اساس ارسال</span>
+                        </div>
+                        <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                    </header>
+                    <div class="adm-lac-chart-wrap adm-lac-chart-wrap--tall">
+                        <canvas id="lac-chart-campaigns" aria-label="مقایسه کمپین‌ها"></canvas>
+                    </div>
+                </article>
+
+                <article class="adm-lac-chart-card">
+                    <header class="adm-lac-chart-card__head">
+                        <div>
+                            <strong>نسخه A / B</strong>
+                            <span>عملکرد پایلوت دو نسخه‌ای</span>
+                        </div>
+                        <i class="fas fa-code-branch" aria-hidden="true"></i>
+                    </header>
+                    <div class="adm-lac-chart-wrap adm-lac-chart-wrap--tall">
+                        <canvas id="lac-chart-variants" aria-label="مقایسه A و B"></canvas>
+                    </div>
+                </article>
+            </div>
         </div>
 
         <div class="adm-lac-panel">
@@ -766,6 +846,9 @@
 {% endblock %}
 
 {% block extra_js %}
+<script type="application/json" id="lac-charts-data">{{ lac_charts_json|safe }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/admin-lead-acquisition-charts.js' %}?v=1"></script>
 <script>
 (function () {
   const tabs = document.querySelectorAll('[data-lac-tab]');

@@ -186,11 +186,39 @@ class LeadCampaignTrackingTests(TestCase):
         self.assertGreaterEqual(unicode_sms_parts(msg.body_rendered), 1)
 
         stats2 = send_campaign_step(self.campaign, 1)
-        self.assertGreaterEqual(stats2['idempotent'], 1)
+        self.assertEqual(stats2['accepted'], 0)
+        self.assertEqual(stats2['remaining'], 0)
+        self.assertEqual(stats2['pending_before'], 0)
         self.assertEqual(
             CampaignMessage.objects.filter(campaign=self.campaign, step__step_number=1).count(),
-            CampaignEnrollment.objects.filter(campaign=self.campaign).count(),
+            CampaignEnrollment.objects.filter(
+                campaign=self.campaign,
+                status=CampaignEnrollment.Status.ACTIVE,
+            ).count(),
         )
+
+    @patch('accounts.services.lead_campaign_send.notify_marketing')
+    def test_send_respects_batch_size_and_reports_remaining(self, mock_notify):
+        from accounts.models import LeadListMember, SmsMessageLog
+
+        mock_notify.side_effect = lambda phone, text='', attributes=None: (
+            True,
+            SmsMessageLog.objects.create(phone=phone, purpose='x', status=SmsMessageLog.Status.FAKE),
+        )
+        for idx, phone in enumerate(('09121110010', '09121110011', '09121110012'), start=1):
+            lead = MarketingLead.objects.create(
+                phone_normalized=phone,
+                display_name=f'Lead {idx}',
+                status=MarketingLead.Status.COLD,
+            )
+            LeadListMember.objects.create(lead_list=self.lead_list, lead=lead)
+        enroll_pilot(self.campaign, per_variant=5)
+
+        with self.settings(LEAD_CAMPAIGN_SEND_BATCH_SIZE=2):
+            stats = send_campaign_step(self.campaign, 1)
+        self.assertLessEqual(stats['accepted'], 2)
+        self.assertEqual(stats['batch_limit'], 2)
+        self.assertEqual(stats['remaining'], stats['pending_before'] - stats['processed'])
 
     @patch('accounts.services.lead_campaign_send.notify_marketing')
     def test_click_redirect_sets_cookie_and_touchpoints(self, mock_notify):
@@ -346,3 +374,33 @@ class LeadAdminViewTests(TestCase):
         resp = self.client.get(reverse('admin_panel_lead_acquisition'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'مرکز جذب سرنخ')
+
+    @patch('accounts.services.lead_campaign_send.notify_marketing')
+    def test_send_step_post_returns_redirect_not_500(self, mock_notify):
+        from accounts.models import LeadList, SmsMessageLog
+
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='post.json')
+        batch = create_preview_batch(preview)
+        result = commit_import_batch(batch.pk, preview_rows=preview.rows)
+        lead_list = LeadList.objects.get(pk=result['list_id'])
+        campaign = create_acquisition_campaign(
+            name='POST test',
+            lead_list=lead_list,
+            is_pilot=True,
+            pilot_per_variant=10,
+        )
+        enroll_pilot(campaign)
+        mock_notify.side_effect = lambda phone, text='', attributes=None: (
+            True,
+            SmsMessageLog.objects.create(phone=phone, purpose='x', status=SmsMessageLog.Status.FAKE),
+        )
+        resp = self.client.post(
+            reverse('admin_panel_lead_acquisition'),
+            {
+                'action': 'send_step',
+                'campaign_id': campaign.pk,
+                'step_number': 1,
+            },
+        )
+        self.assertEqual(resp.status_code, 302)

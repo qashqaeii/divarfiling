@@ -296,6 +296,8 @@ AFFILIATE_DISCOUNT_FIRST_ORDER_ONLY = True  # تخفیف معرف فقط روی 
 SMS_ENABLED = config('SMS_ENABLED', default=True, cast=bool)
 SMS_PROVIDER = config('SMS_PROVIDER', default='console')
 LEAD_SMS_COST_PER_PART_RIAL = config('LEAD_SMS_COST_PER_PART_RIAL', default=2480, cast=int)
+# حداکثر SMS در هر کلیک «ارسال مرحله» — جلوگیری از timeout گunicorn (پیش‌فرض ۳۰ث)
+LEAD_CAMPAIGN_SEND_BATCH_SIZE = config('LEAD_CAMPAIGN_SEND_BATCH_SIZE', default=10, cast=int)
 # سازگاری قدیمی (تومان برای هر بخش) — اگر PER_PART_RIAL ست نباشد استفاده می‌شود
 LEAD_SMS_COST_TOMAN = config('LEAD_SMS_COST_TOMAN', default=0, cast=int)
 FARAZSMS_API_KEY = config('FARAZSMS_API_KEY', default='')

@@ -225,11 +225,16 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         campaign = get_object_or_404(LeadCampaign, pk=int(request.POST.get('campaign_id') or 0))
         step_number = int(request.POST.get('step_number') or 1)
         stats = send_campaign_step(campaign, step_number, request=request)
-        messages.success(
-            request,
+        msg = (
             f'ارسال مرحله {step_number} — پذیرفته: {stats["accepted"]}، ناموفق: {stats["failed"]}، '
-            f'ردشده: {stats["skipped"]}، ارسال‌مجدد: {stats.get("retried", 0)}، تکراری: {stats["idempotent"]}',
+            f'ردشده: {stats["skipped"]}، ارسال‌مجدد: {stats.get("retried", 0)}، '
+            f'تکراری: {stats["idempotent"]}'
         )
+        if stats.get('errors'):
+            msg += f'، خطا: {stats["errors"]}'
+        if stats.get('remaining'):
+            msg += f' — {stats["remaining"]} مخاطب در صف؛ دوباره «ارسال مرحله {step_number}» را بزنید.'
+        messages.success(request, msg)
         return redirect('admin_panel_lead_acquisition')
 
     def _retry_failed(self, request):

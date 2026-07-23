@@ -88,6 +88,37 @@ def sms_unit_cost_toman() -> int:
     return max(1, sms_cost_per_part_rial() // 10)
 
 
+def send_batch_size() -> int:
+    """حداکثر ارسال در یک درخواست HTTP — جلوگیری از timeout گunicorn."""
+    raw = getattr(settings, 'LEAD_CAMPAIGN_SEND_BATCH_SIZE', 10)
+    try:
+        size = int(raw or 10)
+    except (TypeError, ValueError):
+        size = 10
+    return max(1, min(50, size))
+
+
+def pending_enrollments_for_step(campaign: LeadCampaign, step: CampaignStep):
+    """مخاطبان فعال که هنوز پیام موفق این مرحله را نگرفته‌اند."""
+    return (
+        CampaignEnrollment.objects.filter(
+            campaign=campaign,
+            status=CampaignEnrollment.Status.ACTIVE,
+            assigned_variant__isnull=False,
+        )
+        .exclude(
+            messages__step=step,
+            messages__status__in=(
+                CampaignMessage.Status.PROVIDER_ACCEPTED,
+                CampaignMessage.Status.DELIVERED,
+            ),
+        )
+        .select_related('lead', 'assigned_variant')
+        .distinct()
+        .order_by('id')
+    )
+
+
 def absolute_click_url(request, click_token: str) -> str:
     # مسیر کوتاه عمومی طبق پلن: /s/t/<click_token>/
     try:
@@ -386,7 +417,10 @@ def send_step_message(
             sms_cost_snapshot=cost_rial,
         )
     except IntegrityError:
-        return CampaignMessage.objects.get(idempotency_key=idem)
+        existing = CampaignMessage.objects.filter(idempotency_key=idem).first()
+        if existing:
+            return existing
+        raise
 
     ok, sms_log = notify_marketing(phone=lead.phone_normalized, text=body)
     # purpose در notify_marketing فعلاً marketing است؛ برای گزارش lead از CampaignMessage استفاده می‌کنیم
@@ -406,21 +440,34 @@ def send_step_message(
     return msg
 
 
-def send_campaign_step(campaign: LeadCampaign, step_number: int, *, request=None, limit: int = 500) -> dict:
+def send_campaign_step(campaign: LeadCampaign, step_number: int, *, request=None, limit: int | None = None) -> dict:
     step = campaign.steps.filter(step_number=step_number, is_active=True).first()
     if not step:
         raise LeadCampaignError('مرحله یافت نشد.', code='no_step')
 
-    enrollments = (
-        CampaignEnrollment.objects.filter(
-            campaign=campaign,
-            status=CampaignEnrollment.Status.ACTIVE,
-        )
-        .select_related('lead', 'assigned_variant')
-        .order_by('id')[:limit]
-    )
-    stats = {'sent': 0, 'accepted': 0, 'failed': 0, 'skipped': 0, 'idempotent': 0, 'retried': 0}
+    batch_limit = send_batch_size() if limit is None else max(1, min(500, int(limit)))
+    pending_qs = pending_enrollments_for_step(campaign, step)
+    total_pending = pending_qs.count()
+    enrollments = list(pending_qs[:batch_limit])
+
+    stats = {
+        'sent': 0,
+        'accepted': 0,
+        'failed': 0,
+        'skipped': 0,
+        'idempotent': 0,
+        'retried': 0,
+        'errors': 0,
+        'processed': 0,
+        'pending_before': total_pending,
+        'remaining': max(0, total_pending - len(enrollments)),
+        'batch_limit': batch_limit,
+    }
     for enroll in enrollments:
+        if not enroll.assigned_variant_id:
+            stats['skipped'] += 1
+            stats['processed'] += 1
+            continue
         idem = generate_idempotency_key(
             enrollment_id=enroll.pk,
             step_number=step.step_number,
@@ -428,7 +475,24 @@ def send_campaign_step(campaign: LeadCampaign, step_number: int, *, request=None
         )
         before = CampaignMessage.objects.filter(idempotency_key=idem).first()
         was_failed = bool(before and before.status == CampaignMessage.Status.FAILED)
-        msg = send_step_message(enrollment=enroll, step=step, request=request)
+        try:
+            msg = send_step_message(enrollment=enroll, step=step, request=request)
+        except LeadCampaignError as exc:
+            stats['errors'] += 1
+            stats['processed'] += 1
+            logger.warning(
+                'lead campaign step send skipped enrollment=%s err=%s',
+                enroll.pk,
+                exc.message,
+            )
+            continue
+        except Exception:
+            stats['errors'] += 1
+            stats['processed'] += 1
+            logger.exception('lead campaign step send failed enrollment=%s', enroll.pk)
+            continue
+
+        stats['processed'] += 1
         if was_failed:
             stats['retried'] += 1
         elif before and before.pk == msg.pk:

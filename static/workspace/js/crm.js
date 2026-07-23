@@ -1980,30 +1980,37 @@ function initCRMAreasPicker(root) {
 
         function renderTags() {
             selectedWrap.innerHTML = '';
-            selected.forEach(name => {
-                const tag = document.createElement('span');
-                tag.className = 'crm-areas-tag' + (catalogValues.has(name) ? '' : ' crm-areas-tag--custom');
-                tag.dataset.areaName = name;
+            if (!selected.length) {
+                const empty = document.createElement('span');
+                empty.className = 'crm-areas-selected-empty';
+                empty.textContent = 'هنوز محله\u200cای انتخاب نشده';
+                selectedWrap.appendChild(empty);
+            } else {
+                selected.forEach(name => {
+                    const tag = document.createElement('span');
+                    tag.className = 'crm-areas-tag' + (catalogValues.has(name) ? '' : ' crm-areas-tag--custom');
+                    tag.dataset.areaName = name;
 
-                const label = document.createElement('span');
-                label.textContent = name;
-                tag.appendChild(label);
+                    const label = document.createElement('span');
+                    label.textContent = name;
+                    tag.appendChild(label);
 
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'crm-areas-tag-remove';
-                btn.setAttribute('aria-label', `حذف ${name}`);
-                btn.innerHTML = '&times;';
-                btn.addEventListener('click', () => {
-                    const idx = selected.indexOf(name);
-                    if (idx >= 0) selected.splice(idx, 1);
-                    syncCheckboxes();
-                    syncHidden();
-                    renderTags();
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'crm-areas-tag-remove';
+                    btn.setAttribute('aria-label', `حذف ${name}`);
+                    btn.innerHTML = '&times;';
+                    btn.addEventListener('click', () => {
+                        const idx = selected.indexOf(name);
+                        if (idx >= 0) selected.splice(idx, 1);
+                        syncCheckboxes();
+                        syncHidden();
+                        renderTags();
+                    });
+                    tag.appendChild(btn);
+                    selectedWrap.appendChild(tag);
                 });
-                tag.appendChild(btn);
-                selectedWrap.appendChild(tag);
-            });
+            }
             syncHidden();
         }
 

@@ -5,8 +5,21 @@
         <div class="crm-matches-hero-bg" aria-hidden="true"></div>
         <div class="crm-matches-hero-content">
             <div class="crm-matches-hero-badge"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> تطبیق هوشمند</div>
-            <h3>پیشنهاد مخاطب بر اساس ترجیحات مشتری</h3>
-            <p>بودجه، محله، متراژ، نوع معامله و نوع مشتری — مخاطبان از قبل پیوندشده در این لیست نیستند</p>
+            <h3>
+                پیشنهاد مخاطب بر اساس ترجیحات
+                {% if contact_match_data.deal_label %}
+                <span class="crm-matches-tolerance-badge">· {{ contact_match_data.deal_label }}</span>
+                {% endif %}
+            </h3>
+            <p>
+                {% if contact_match_data.is_sale and not contact_match_data.is_rent %}
+                فقط خریدار، متقاضی خرید، سرمایه‌گذار، سرنخ و سازنده — بر اساس بودجه، محله و متراژ
+                {% elif contact_match_data.is_rent and not contact_match_data.is_sale %}
+                فقط مستاجر، متقاضی اجاره و سرنخ — بر اساس رهن/اجاره، محله و متراژ
+                {% else %}
+                بودجه، محله، متراژ و نوع معامله — مخاطبان پیوندشده در این لیست نیستند
+                {% endif %}
+            </p>
             {% if contact_match_data.eligible %}
             <div class="crm-matches-hero-stats">
                 <span class="crm-matches-hero-stat crm-matches-hero-stat--total">
@@ -23,15 +36,6 @@
         <p>{{ contact_match_data.message }}</p>
     </div>
     {% else %}
-
-    {% if contact_suggested %}
-    <div class="mk-notice mk-notice--success mk-notice--inline mk-notice--compact" role="status">
-        <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
-        <div class="mk-notice__body">
-            <span class="mk-notice__text">پیشنهادها ثبت شد — مخاطبان در تب <button type="button" class="crm-matches-toast-link" data-tab-jump="contacts">مخاطبین</button> پیوند شده‌اند.</span>
-        </div>
-    </div>
-    {% endif %}
 
     <div class="crm-matches-grid crm-matches-grid-v2 crm-matches-grid--single">
         <div class="crm-matches-col crm-matches-col-v2">
@@ -60,9 +64,13 @@
                         <div class="crm-match-title-row">
                             <strong class="crm-match-title">{{ m.name }}</strong>
                             {% if m.intent_label %}<span class="crm-match-intent">{{ m.intent_label }}</span>{% endif %}
+                            {% if m.matching_tolerance_percent != None %}
+                            <span class="crm-match-intent" title="انعطاف‌پذیری ترجیحات">تلورانس {{ m.matching_tolerance_percent }}٪</span>
+                            {% endif %}
                         </div>
                         <div class="crm-match-meta crm-match-meta-v2">
                             {% if m.customer_type %}<span><i class="fas fa-user-tag" aria-hidden="true"></i> {{ m.customer_type }}</span>{% endif %}
+                            {% if m.status %}<span><i class="fas fa-circle-dot" aria-hidden="true"></i> {{ m.status }}</span>{% endif %}
                             {% if m.budget_label %}<span class="crm-match-price"><i class="fas fa-coins" aria-hidden="true"></i> {{ m.budget_label }}</span>{% endif %}
                             {% if m.areas %}<span><i class="fas fa-location-dot" aria-hidden="true"></i> {{ m.areas }}</span>{% endif %}
                             {% if m.property_type %}<span><i class="fas fa-building" aria-hidden="true"></i> {{ m.property_type }}</span>{% endif %}
@@ -78,6 +86,14 @@
                         <a href="{% url 'workspace:crm_detail' m.customer_id %}" class="crm-match-link crm-match-link-v2 crm-match-link--app" title="پرونده مخاطب">
                             <i class="fas fa-folder-open" aria-hidden="true"></i>
                         </a>
+                        {% if m.phone %}
+                        <a href="{{ m.phone|phone_tel_href }}" class="crm-match-link crm-match-link-v2" title="تماس">
+                            <i class="fas fa-phone" aria-hidden="true"></i>
+                        </a>
+                        <a href="{{ m.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-match-link crm-match-link-v2 crm-match-link--public" title="واتساپ">
+                            <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                        </a>
+                        {% endif %}
                     </div>
                 </li>
                 {% endfor %}
@@ -88,6 +104,7 @@
                     {% include 'includes/icon_slot.html' with decor='search' size='md' only %}
                 </span>
                 <p>مخاطب مناسبی با ترجیحات ثبت‌شده یافت نشد.</p>
+                <p class="crm-match-empty-hint">ترجیحات بودجه، محله و نوع ملک را در پرونده مخاطبان تکمیل کنید.</p>
             </div>
             {% endif %}
         </div>
@@ -104,14 +121,11 @@
                     <span class="crm-suggest-dock-icon" aria-hidden="true"><i class="fas fa-check-double"></i></span>
                     <div>
                         <span class="crm-suggest-count"><strong id="crmPropSuggestCount">0</strong> مخاطب انتخاب شده</span>
-                        <small>پس از ثبت، با نقش «پیشنهادی» به این فایل پیوند می‌خورند</small>
+                        <small>پس از ثبت، با نقش «پیشنهادی» پیوند می‌خورند و متن واتساپ آماده می‌شود</small>
                     </div>
                 </div>
                 <div class="crm-suggest-actions">
                     <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" id="crmPropSelectAllMatches">انتخاب همه</button>
-                    {% if contact_suggestion_text %}
-                    <button type="button" class="crm-btn crm-btn-accent crm-btn-sm" data-copy="{{ contact_suggestion_text }}"><i class="fas fa-copy"></i> کپی متن</button>
-                    {% endif %}
                     <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm crm-suggest-submit" id="crmPropSuggestSubmit" disabled>
                         <i class="fas fa-paper-plane"></i> ثبت و پیشنهاد
                     </button>

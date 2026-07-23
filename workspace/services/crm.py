@@ -652,6 +652,7 @@ def link_customer_property(
     interest_level: str = '',
     is_primary: bool = False,
     notes: str = '',
+    log: bool = True,
 ) -> PropertyContact:
     link, created = PropertyContact.objects.update_or_create(
         customer=customer,
@@ -664,14 +665,15 @@ def link_customer_property(
             'notes': notes,
         },
     )
-    action = 'پیوند جدید' if created else 'به‌روزرسانی پیوند'
-    log_activity(
-        customer,
-        'املاک',
-        content=f'{action}: {property_obj.title} — نقش {role}',
-        property_obj=property_obj,
-        metadata={'role': role, 'deal_type': deal_type},
-    )
+    if log:
+        action = 'پیوند جدید' if created else 'به‌روزرسانی پیوند'
+        log_activity(
+            customer,
+            'املاک',
+            content=f'{action}: {property_obj.title} — نقش {role}',
+            property_obj=property_obj,
+            metadata={'role': role, 'deal_type': deal_type},
+        )
     return link
 
 
@@ -1663,15 +1665,13 @@ def build_contact_suggestion_whatsapp_text(
 
     lines = [f'سلام {customer.name}،', '', 'یک ملک مناسب برای شما:', '']
     lines.append(f'1. {prop.title or "ملک"}')
-    price = prop.sale_price or prop.monthly_rent or prop.deposit
-    if price:
-        label = format_toman(price)
-        if prop.monthly_rent and not prop.sale_price:
-            lines.append(f'   💰 اجاره {label}')
-        elif prop.deposit and not prop.sale_price:
-            lines.append(f'   💰 رهن {label}')
-        else:
-            lines.append(f'   💰 {label}')
+    if prop.sale_price:
+        lines.append(f'   💰 {format_toman(prop.sale_price)}')
+    else:
+        if prop.deposit:
+            lines.append(f'   💰 رهن {format_toman(prop.deposit)}')
+        if prop.monthly_rent:
+            lines.append(f'   💰 اجاره {format_toman(prop.monthly_rent)}')
     if prop.area:
         try:
             area_txt = f'{int(float(prop.area))} متر'
@@ -1681,6 +1681,8 @@ def build_contact_suggestion_whatsapp_text(
     hood = prop.neighborhood or prop.district or prop.city
     if hood:
         lines.append(f'   📍 {hood}')
+    if prop.property_type:
+        lines.append(f'   🏠 {prop.property_type}')
     if public_url:
         lines.append(f'   🔗 {public_url}')
     lines.extend(['', 'در صورت تمایل برای بازدید هماهنگ می‌کنیم.', 'با احترام'])
@@ -1694,15 +1696,25 @@ def apply_contact_suggestions(
     *,
     note: str = '',
     request=None,
-) -> tuple[str, int]:
+) -> Dict[str, Any]:
     """
     پیوند مخاطبان پیشنهادی به فایل شخصی.
-    برگشت: (متن واتساپ مخاطب اول, تعداد پیوند موفق).
+    برگشت: {
+      linked_count, whatsapp_text, public_url,
+      suggestions: [{customer_id, name, phone, whatsapp_text, whatsapp_url}]
+    }
     """
     from workspace.services.crm_scope import can_edit_customer, customer_for_user
+    from workspace.services.property_suggestion_share import whatsapp_url_for_customer
 
+    empty = {
+        'linked_count': 0,
+        'whatsapp_text': '',
+        'public_url': '',
+        'suggestions': [],
+    }
     if not customer_ids:
-        return '', 0
+        return empty
 
     public_url = ''
     if request is not None:
@@ -1714,8 +1726,10 @@ def apply_contact_suggestions(
         public_url = property_public_share_url(request, share)
 
     deal_type = _deal_type_for_property(prop)
-    linked_customers: List[Customer] = []
+    suggestions: List[Dict[str, Any]] = []
     seen: set[int] = set()
+    note_content = note.strip() or f'پیشنهاد فایل شخصی «{prop.title}»'
+
     for raw_id in customer_ids:
         try:
             cid = int(raw_id)
@@ -1734,29 +1748,42 @@ def apply_contact_suggestions(
             deal_type=deal_type,
             interest_level='متوسط',
             notes='پیشنهاد خودکار',
+            log=False,
         )
-        content = note.strip() or f'پیشنهاد فایل شخصی «{prop.title}»'
         log_activity(
             customer,
             'املاک',
-            content=content,
+            content=note_content,
             title='پیشنهاد ملک از فایل شخصی',
             property_obj=prop,
             metadata={
                 'suggestion_from': 'property',
                 'property_id': prop.pk,
                 'property_title': prop.title or '',
+                'role': 'پیشنهادی',
+                'deal_type': deal_type,
             },
         )
-        linked_customers.append(customer)
+        wa_text = build_contact_suggestion_whatsapp_text(
+            customer, prop, public_url=public_url,
+        )
+        suggestions.append({
+            'customer_id': customer.pk,
+            'name': customer.name,
+            'phone': customer.phone or '',
+            'whatsapp_text': wa_text,
+            'whatsapp_url': whatsapp_url_for_customer(customer, wa_text),
+        })
 
-    if not linked_customers:
-        return '', 0
+    if not suggestions:
+        return empty
 
-    text = build_contact_suggestion_whatsapp_text(
-        linked_customers[0], prop, public_url=public_url,
-    )
-    return text, len(linked_customers)
+    return {
+        'linked_count': len(suggestions),
+        'whatsapp_text': suggestions[0]['whatsapp_text'],
+        'public_url': public_url,
+        'suggestions': suggestions,
+    }
 
 
 def build_customer_whatsapp_text(customer, listing=None) -> str:

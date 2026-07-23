@@ -361,24 +361,58 @@ def suggest_contact_matches(
     return text, linked
 
 
-def property_contact_matches_payload(user, property_id: int) -> Optional[Dict[str, Any]]:
+def property_contact_matches_payload(user, property_id: int, request=None) -> Optional[Dict[str, Any]]:
+    from django.urls import reverse
+
     from workspace.services.crm_matching import get_property_contact_matches
-    from workspace.services.crm_scope import property_for_user
+    from workspace.services.crm_property_share import build_property_share_context
+    from workspace.services.crm_scope import can_edit_property, property_for_user
 
     prop = property_for_user(user, property_id)
     if not prop:
         return None
+    share_ctx = build_property_share_context(user, prop)
+    if share_ctx.mask_sensitive or not can_edit_property(user, prop):
+        return {
+            'eligible': False,
+            'forbidden': True,
+            'message': 'دسترسی به پیشنهاد مخاطب برای این فایل مجاز نیست.',
+            'matches': [],
+            'total_count': 0,
+            'property': {
+                'id': prop.pk,
+                'title': prop.title or '',
+                'deal_mode': prop.deal_mode or '',
+            },
+        }
     data = get_property_contact_matches(prop, user)
+    matches = []
+    for m in data.get('matches') or []:
+        item = dict(m)
+        try:
+            item['internal_url'] = reverse(
+                'workspace:crm_detail', kwargs={'customer_id': item['customer_id']},
+            )
+        except Exception:
+            item['internal_url'] = ''
+        matches.append(item)
     return {
         'eligible': bool(data.get('eligible')),
+        'forbidden': False,
         'message': data.get('message', ''),
-        'matches': data.get('matches') or [],
+        'matches': matches,
         'total_count': int(data.get('total_count') or 0),
+        'deal_mode': data.get('deal_mode', ''),
+        'deal_label': data.get('deal_label', ''),
+        'is_sale': bool(data.get('is_sale')),
+        'is_rent': bool(data.get('is_rent')),
         'property': {
             'id': prop.pk,
             'title': prop.title or '',
             'deal_mode': prop.deal_mode or '',
             'neighborhood': prop.neighborhood or prop.district or '',
+            'area': prop.area,
+            'property_type': prop.property_type or '',
         },
     }
 
@@ -390,18 +424,21 @@ def suggest_property_contacts(
     *,
     note: str = '',
     request=None,
-) -> Tuple[Optional[str], int]:
+) -> Dict[str, Any]:
     from workspace.services.crm import apply_contact_suggestions
+    from workspace.services.crm_property_share import build_property_share_context
     from workspace.services.crm_scope import can_edit_property, property_for_user
 
     prop = property_for_user(user, property_id)
     if not prop:
-        return None, 0
+        raise ValueError('ملک یافت نشد.')
+    share_ctx = build_property_share_context(user, prop)
+    if share_ctx.mask_sensitive:
+        raise ValueError('در اشتراک محرمانه امکان پیشنهاد مخاطب وجود ندارد.')
     if not can_edit_property(user, prop):
         raise ValueError('امکان پیشنهاد مخاطب برای این فایل را ندارید.')
     if not customer_ids:
         raise ValueError('حداقل یک مخاطب انتخاب کنید.')
-    text, linked = apply_contact_suggestions(
+    return apply_contact_suggestions(
         prop, user, customer_ids, note=note, request=request,
     )
-    return text, linked

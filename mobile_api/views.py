@@ -837,9 +837,15 @@ class PropertyContactMatchesView(APIView):
 
     def get(self, request, property_id):
         from workspace.services.crm_match_notifications import property_contact_matches_payload
-        payload = property_contact_matches_payload(request.user, property_id)
+        payload = property_contact_matches_payload(request.user, property_id, request=request)
         if not payload:
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        if payload.get('forbidden'):
+            return api_error(
+                payload.get('message') or 'دسترسی مجاز نیست.',
+                code='FORBIDDEN',
+                status=403,
+            )
         return api_ok(payload)
 
 
@@ -861,18 +867,24 @@ class PropertySuggestContactsView(APIView):
             else:
                 customer_ids.append(item)
         try:
-            text, count = suggest_property_contacts(
+            result = suggest_property_contacts(
                 request.user,
                 property_id,
                 customer_ids,
                 note=(data.get('note') or ''),
                 request=request,
             )
-            if count <= 0:
-                return api_error('ملک یافت نشد یا پیوندی انجام نشد.', code='NOT_FOUND', status=404)
+            if not result.get('linked_count'):
+                return api_error(
+                    'هیچ مخاطبی پیوند نشد — دسترسی یا شناسه‌ها را بررسی کنید.',
+                    code='NOT_FOUND',
+                    status=404,
+                )
             return api_ok({
-                'suggested_count': count,
-                'whatsapp_text': text,
+                'suggested_count': result['linked_count'],
+                'whatsapp_text': result.get('whatsapp_text') or '',
+                'public_url': result.get('public_url') or '',
+                'suggestions': result.get('suggestions') or [],
             }, status=201)
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')

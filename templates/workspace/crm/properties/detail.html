@@ -434,11 +434,11 @@
                     <span class="crm-prop-seg__txt"><span class="crm-prop-seg__full">مخاطبین</span><span class="crm-prop-seg__short">مخاطب</span></span>
                     {% if not mask_sensitive and contact_links %}<em>{{ contact_links|length }}</em>{% endif %}
                 </button>
-                {% if is_property_owner and not property_is_deleted %}
+                {% if can_suggest_contacts %}
                 <button type="button" class="crm-tab crm-tab-pro" data-tab="suggest-contacts" role="tab" aria-selected="false">
                     <span class="crm-prop-seg__ico" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
                     <span class="crm-prop-seg__txt"><span class="crm-prop-seg__full">پیشنهاد مخاطب</span><span class="crm-prop-seg__short">پیشنهاد</span></span>
-                    {% if not mask_sensitive and contact_match_data.total_count %}<em>{{ contact_match_data.total_count }}</em>{% endif %}
+                    {% if contact_match_data.total_count %}<em>{{ contact_match_data.total_count }}</em>{% endif %}
                 </button>
                 {% endif %}
                 <button type="button" class="crm-tab crm-tab-pro" data-tab="activity" role="tab" aria-selected="false">
@@ -494,10 +494,25 @@
                     </div>
                     {% else %}
                     {% if contact_suggested %}
-                    <div class="mk-notice mk-notice--success mk-notice--inline mk-notice--compact" role="status">
+                    <div class="mk-notice mk-notice--success mk-notice--inline" role="status">
                         <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
                         <div class="mk-notice__body">
                             <span class="mk-notice__text">پیشنهاد مخاطب ثبت شد و با نقش «پیشنهادی» پیوند خورد.</span>
+                            {% if contact_suggestion_text or contact_suggestion_items %}
+                            <div class="crm-suggest-actions" style="margin-top:0.5rem;display:flex;flex-wrap:wrap;gap:0.4rem;">
+                                {% if contact_suggestion_text %}
+                                <button type="button" class="crm-btn crm-btn-accent crm-btn-sm" data-copy="{{ contact_suggestion_text }}"><i class="fas fa-copy"></i> کپی متن</button>
+                                {% endif %}
+                                {% for s in contact_suggestion_items %}
+                                    {% if s.whatsapp_url %}
+                                    <a href="{{ s.whatsapp_url }}" target="_blank" rel="noopener" class="crm-btn crm-btn-primary crm-btn-sm">
+                                        <i class="fab fa-whatsapp"></i> واتساپ {{ s.name }}
+                                    </a>
+                                    {% endif %}
+                                {% endfor %}
+                                <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-tab-jump="suggest-contacts">پیشنهاد بیشتر</button>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     {% endif %}
@@ -538,21 +553,13 @@
                 </div>
             </div>
 
-            {% if is_property_owner and not property_is_deleted %}
+            {% if can_suggest_contacts %}
             <div data-panel="suggest-contacts" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
                 <header class="crm-prop-panel-head">
                     <div><h2>پیشنهاد مخاطب</h2><p>تطبیق هوشمند بر اساس ترجیحات و نوع مشتری</p></div>
                 </header>
                 <div class="crm-prop-panel-body">
-                    {% if mask_sensitive %}
-                    <div class="crm-prop-locked-panel">
-                        <div class="crm-prop-locked-icon"><i class="fas fa-user-shield"></i></div>
-                        <h3>پیشنهاد مخاطب در دسترس نیست</h3>
-                        <p>در ارسال محرمانه، پیشنهاد و اطلاعات مخاطبین نمایش داده نمی‌شود.</p>
-                    </div>
-                    {% else %}
                     {% include 'workspace/crm/includes/contact_matches_panel.html' %}
-                    {% endif %}
                 </div>
             </div>
             {% endif %}

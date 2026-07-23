@@ -1301,8 +1301,17 @@ def get_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Di
 # ---------------------------------------------------------------------------
 
 MATCH_ELIGIBLE_CUSTOMER_TYPES = MATCH_TYPES | LEAD_TYPES
+# نوع‌های مجاز بر اساس حالت معاملهٔ ملک (متقاضی اجاره فقط اجاره؛ متقاضی خرید فقط فروش)
+SALE_CONTACT_MATCH_TYPES = frozenset({
+    'خریدار', 'متقاضی خرید', 'سرمایه‌گذار', 'سرنخ', 'سازنده',
+})
+RENT_CONTACT_MATCH_TYPES = frozenset({
+    'مستاجر', 'متقاضی اجاره', 'سرنخ',
+})
 MATCH_CUSTOMER_SCAN_LIMIT = MATCH_CRM_SCAN_LIMIT
+MATCH_CUSTOMER_SCAN_LIMIT_BROAD = MATCH_CRM_SCAN_LIMIT_BROAD
 MATCH_CUSTOMER_RESULT_LIMIT = MATCH_RESULT_LIMIT
+MATCH_CUSTOMER_RESULT_LIMIT_BROAD = MATCH_RESULT_LIMIT_BROAD
 # پیش‌فیلتر SQL با حداکثر تلورانس مجاز (۰–۵۰٪)
 _REVERSE_SQL_TOLERANCE = MATCHING_TOLERANCE_MAX_PERCENT / 100.0
 
@@ -1315,6 +1324,16 @@ def _property_is_contact_match_eligible(prop: CRMProperty) -> bool:
     if prop.transaction_status not in ('فعال', 'در مذاکره'):
         return False
     return _crm_property_is_rent_listing(prop) or _crm_property_is_sale_listing(prop)
+
+
+def _property_deal_label(prop: CRMProperty) -> str:
+    if _crm_property_is_sale_listing(prop) and _crm_property_is_rent_listing(prop):
+        return prop.deal_mode or 'فروش / اجاره'
+    if _crm_property_is_sale_listing(prop):
+        return prop.deal_mode or 'فروش'
+    if _crm_property_is_rent_listing(prop):
+        return prop.deal_mode or 'رهن و اجاره'
+    return prop.deal_mode or ''
 
 
 def _customer_budget_label(customer: Customer) -> str:
@@ -1344,6 +1363,7 @@ def _customer_budget_label(customer: Customer) -> str:
 def _customer_match_card(customer: Customer, score_item: Dict[str, Any]) -> Dict[str, Any]:
     return {
         'customer_id': customer.pk,
+        'id': customer.pk,
         'name': customer.name,
         'phone': customer.phone or '',
         'customer_type': customer.customer_type or '',
@@ -1356,6 +1376,7 @@ def _customer_match_card(customer: Customer, score_item: Dict[str, Any]) -> Dict
         'match_intent': score_item.get('match_intent') or '',
         'matching_tolerance_percent': customer_matching_tolerance_percent(customer),
         'status': customer.status or '',
+        'can_suggest': True,
     }
 
 
@@ -1364,6 +1385,8 @@ def _score_builder_customer_for_property(
     prop: CRMProperty,
 ) -> Optional[Dict[str, Any]]:
     """بهترین امتیاز سازنده روی پروفایل تأمین پروژه یا بازار آپارتمان."""
+    if prop.deal_mode not in {'فروش', 'پیش‌فروش'}:
+        return None
     best: Optional[Dict[str, Any]] = None
     candidates = [
         (
@@ -1385,8 +1408,6 @@ def _score_builder_customer_for_property(
             expanded |= _PROPERTY_TYPE_MAP.get(item, {item})
         if prop.property_type and expanded and prop.property_type not in expanded:
             continue
-        if prop.deal_mode not in {'فروش', 'پیش‌فروش'}:
-            continue
         scored = _score_crm_property_with_profile(
             profile,
             prop,
@@ -1406,6 +1427,9 @@ def _score_customer_for_property(
         return None
     if customer.status == 'بایگانی':
         return None
+    # فقط مخاطب متعلق به خود کاربر قابل پیشنهاد/پیوند است
+    if getattr(customer, 'user_id', None) is None:
+        return None
     if not _crm_match_compatible(customer, prop):
         return None
 
@@ -1422,52 +1446,62 @@ def _score_customer_for_property(
     return _customer_match_card(customer, scored)
 
 
+def _owned_match_customers_qs(user):
+    """فقط مخاطبین خود کاربر — موارد اشتراکی قابل پیوند با نقش پیشنهادی نیستند."""
+    return Customer.objects.filter(user=user)
+
+
 def _customer_match_candidates_qs(prop: CRMProperty, user, *, scan_limit: int):
     """پیش‌فیلتر مخاطبین واجد شرایط برای یک فایل شخصی."""
-    from workspace.services.crm_scope import customers_qs
-
-    linked_ids = prop.contact_links.values_list('customer_id', flat=True)
+    linked_ids = list(prop.contact_links.values_list('customer_id', flat=True))
     qs = (
-        customers_qs(user)
+        _owned_match_customers_qs(user)
         .filter(customer_type__in=MATCH_ELIGIBLE_CUSTOMER_TYPES)
         .exclude(status='بایگانی')
-        .exclude(pk__in=linked_ids)
     )
+    if linked_ids:
+        qs = qs.exclude(pk__in=linked_ids)
 
     tol = _REVERSE_SQL_TOLERANCE
     is_rent = _crm_property_is_rent_listing(prop)
     is_sale = _crm_property_is_sale_listing(prop)
 
-    type_q = Q()
     if is_rent and not is_sale:
-        type_q = Q(customer_type__in=[
-            'مستاجر', 'متقاضی اجاره', 'سرنخ', 'سازنده',
-        ])
+        qs = qs.filter(customer_type__in=sorted(RENT_CONTACT_MATCH_TYPES))
     elif is_sale and not is_rent:
-        type_q = Q(customer_type__in=[
-            'خریدار', 'متقاضی خرید', 'سرمایه‌گذار', 'سرنخ', 'سازنده',
-        ])
-    if type_q:
-        qs = qs.filter(type_q)
+        qs = qs.filter(customer_type__in=sorted(SALE_CONTACT_MATCH_TYPES))
+    else:
+        # حالت نادر: هر دو سیگنال — اتحاد انواع
+        qs = qs.filter(
+            customer_type__in=sorted(SALE_CONTACT_MATCH_TYPES | RENT_CONTACT_MATCH_TYPES),
+        )
 
     if is_sale and prop.sale_price:
         price = int(prop.sale_price)
-        # بودجه مشتری باید بتواند قیمت ملک را با تلورانس حداکثر پوشش دهد.
-        # فقط سرنخ/سازنده بدون بودجه خرید از فیلتر بودجه معاف‌اند (نه متقاضی اجاره).
-        budget_ok = (
+        # سازنده: بودجه خرید پروژه جداست — از فیلتر بودجه فروش عادی معاف.
+        # سرنخ فقط وقتی بودجه ندارد معاف است؛ وگرنه همان بازه اعمال می‌شود.
+        budget_match = (
             Q(budget_min__isnull=True, budget_max__isnull=True)
             | (
                 (Q(budget_min__isnull=True) | Q(budget_min__lte=int(price / max(1e-9, (1 - tol)))))
                 & (Q(budget_max__isnull=True) | Q(budget_max__gte=int(price / (1 + tol))))
             )
-            | Q(customer_type__in=['سازنده', 'سرنخ'])
         )
-        qs = qs.filter(budget_ok)
+        qs = qs.filter(
+            Q(customer_type='سازنده')
+            | (Q(customer_type='سرنخ') & Q(budget_min__isnull=True, budget_max__isnull=True))
+            | budget_match
+        )
 
-    if is_rent:
-        rent_ok = Q(customer_type__in=['سرنخ', 'سازنده'])
-        deposit_q = Q()
-        rent_q = Q()
+    if is_rent and not is_sale:
+        rent_exempt = Q(customer_type='سرنخ') & Q(
+            deposit_min__isnull=True,
+            deposit_max__isnull=True,
+            rent_min__isnull=True,
+            rent_max__isnull=True,
+        )
+        deposit_q = Q(deposit_min__isnull=True, deposit_max__isnull=True)
+        rent_q = Q(rent_min__isnull=True, rent_max__isnull=True)
         if prop.deposit:
             d = int(prop.deposit)
             deposit_q = (
@@ -1494,15 +1528,17 @@ def _customer_match_candidates_qs(prop: CRMProperty, user, *, scan_limit: int):
         elif prop.monthly_rent:
             money_q = rent_q
         if money_q:
-            qs = qs.filter(rent_ok | money_q)
+            qs = qs.filter(rent_exempt | money_q)
 
+    # متراژ: سازنده معاف (acquisition از builder_buy_* استفاده می‌کند)
     if prop.area:
         area = float(prop.area)
-        qs = qs.filter(
-            Q(min_area__isnull=True) | Q(min_area__lte=area / max(1e-9, (1 - tol))),
-        ).filter(
-            Q(max_area__isnull=True) | Q(max_area__gte=area / (1 + tol)),
+        area_ok = (
+            Q(min_area__isnull=True) | Q(min_area__lte=area / max(1e-9, (1 - tol)))
+        ) & (
+            Q(max_area__isnull=True) | Q(max_area__gte=area / (1 + tol))
         )
+        qs = qs.filter(Q(customer_type='سازنده') | area_ok)
 
     return qs.order_by('-updated_at')[:scan_limit]
 
@@ -1513,15 +1549,15 @@ def match_customers_for_property(
     *,
     limit: int | None = None,
 ) -> List[Dict[str, Any]]:
-    result_limit = limit if limit is not None else MATCH_CUSTOMER_RESULT_LIMIT
+    # اسکن گسترده‌تر تا خریداران قوی با updated_at قدیمی از دست نروند
+    scan_limit = MATCH_CUSTOMER_SCAN_LIMIT_BROAD
+    result_limit = limit if limit is not None else MATCH_CUSTOMER_RESULT_LIMIT_BROAD
     scored: List[Dict[str, Any]] = []
-    for customer in _customer_match_candidates_qs(
-        prop, user, scan_limit=MATCH_CUSTOMER_SCAN_LIMIT,
-    ):
+    for customer in _customer_match_candidates_qs(prop, user, scan_limit=scan_limit):
         item = _score_customer_for_property(customer, prop)
         if item:
             scored.append(item)
-    scored.sort(key=lambda x: x['score'], reverse=True)
+    scored.sort(key=lambda x: (x['score'], x.get('customer_id') or 0), reverse=True)
     return scored[:result_limit]
 
 
@@ -1532,12 +1568,18 @@ def get_property_contact_matches(prop: CRMProperty, user) -> Dict[str, Any]:
             'eligible': False,
             'matches': [],
             'total_count': 0,
-            'message': 'تطبیق مخاطب برای این فایل فعال نیست (وضعیت معامله یا بایگانی).',
+            'deal_mode': prop.deal_mode or '',
+            'deal_label': _property_deal_label(prop),
+            'message': 'تطبیق مخاطب فقط برای فایل‌های فعال فروش یا اجاره در دسترس است.',
         }
     matches = match_customers_for_property(prop, user)
     return {
         'eligible': True,
         'matches': matches,
         'total_count': len(matches),
+        'deal_mode': prop.deal_mode or '',
+        'deal_label': _property_deal_label(prop),
+        'is_sale': _crm_property_is_sale_listing(prop),
+        'is_rent': _crm_property_is_rent_listing(prop),
         'message': '',
     }

@@ -1400,18 +1400,28 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             'matches': [],
             'total_count': 0,
             'message': '',
+            'deal_label': '',
         }
         ctx['contact_suggestion_text'] = ''
+        ctx['contact_suggestion_items'] = []
         ctx['contact_suggested'] = self.request.GET.get('suggested') == '1'
-        if (
-            ctx.get('is_property_owner')
+        can_suggest_contacts = (
+            bool(ctx.get('can_edit_property'))
             and not ctx.get('property_is_deleted')
             and not ctx.get('mask_sensitive')
-        ):
+        )
+        ctx['can_suggest_contacts'] = can_suggest_contacts
+        if can_suggest_contacts:
             ctx['contact_match_data'] = get_property_contact_matches(p, self.request.user)
-            ctx['contact_suggestion_text'] = self.request.session.pop(
-                'crm_last_contact_suggestion_text', '',
-            )
+            session_payload = self.request.session.pop('crm_last_contact_suggestions', None)
+            if isinstance(session_payload, dict):
+                ctx['contact_suggestion_text'] = session_payload.get('whatsapp_text') or ''
+                ctx['contact_suggestion_items'] = session_payload.get('suggestions') or []
+            else:
+                # سازگاری با کلید قدیمی
+                ctx['contact_suggestion_text'] = self.request.session.pop(
+                    'crm_last_contact_suggestion_text', '',
+                )
         if ctx.get('is_property_owner') and not ctx.get('property_is_deleted'):
             from workspace.services.property_public_share import (
                 get_or_create_property_share,
@@ -1594,15 +1604,20 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             if not customer_ids:
                 messages.warning(request, 'حداقل یک مخاطب انتخاب کنید.')
                 return redirect(self._detail_redirect(property_id, tab='suggest-contacts'))
-            text, linked = apply_contact_suggestions(
+            result = apply_contact_suggestions(
                 prop,
                 request.user,
                 customer_ids,
                 note=request.POST.get('suggest_note', ''),
                 request=request,
             )
+            linked = int(result.get('linked_count') or 0)
             if linked:
-                request.session['crm_last_contact_suggestion_text'] = text
+                request.session['crm_last_contact_suggestions'] = {
+                    'whatsapp_text': result.get('whatsapp_text') or '',
+                    'suggestions': result.get('suggestions') or [],
+                    'count': linked,
+                }
                 messages.success(
                     request,
                     f'{linked} مخاطب پیشنهاد و به فایل پیوند شد.',

@@ -10,7 +10,7 @@ User = get_user_model()
 
 class PropertyContactMatchesApiTests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='09126667788', password='test')
+        self.user = User.objects.create_user(username='09126667788', phone='09126667788', password='test')
         token = RefreshToken.for_user(self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
         self.property = CRMProperty.objects.create(
@@ -44,7 +44,9 @@ class PropertyContactMatchesApiTests(APITestCase):
         self.assertEqual(resp.status_code, 200)
         data = resp.json()['data']
         self.assertTrue(data['eligible'])
+        self.assertFalse(data.get('forbidden'))
         self.assertGreaterEqual(data['total_count'], 1)
+        self.assertEqual(data.get('deal_mode'), 'فروش')
         ids = {m['customer_id'] for m in data['matches']}
         self.assertIn(self.customer.pk, ids)
 
@@ -55,7 +57,10 @@ class PropertyContactMatchesApiTests(APITestCase):
             format='json',
         )
         self.assertEqual(resp.status_code, 201)
-        self.assertEqual(resp.json()['data']['suggested_count'], 1)
+        body = resp.json()['data']
+        self.assertEqual(body['suggested_count'], 1)
+        self.assertTrue(body['suggestions'])
+        self.assertIn('whatsapp_text', body['suggestions'][0])
         self.assertTrue(
             PropertyContact.objects.filter(
                 customer=self.customer,
@@ -66,4 +71,15 @@ class PropertyContactMatchesApiTests(APITestCase):
 
     def test_not_found_property(self):
         resp = self.client.get('/api/mobile/v1/crm/properties/999999/contact-matches')
+        self.assertEqual(resp.status_code, 404)
+
+    def test_other_user_forbidden(self):
+        other = User.objects.create_user(
+            username='09126669900', phone='09126669900', password='test',
+        )
+        token = RefreshToken.for_user(other)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        resp = self.client.get(
+            f'/api/mobile/v1/crm/properties/{self.property.pk}/contact-matches',
+        )
         self.assertEqual(resp.status_code, 404)

@@ -9,104 +9,111 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=13">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
-<div class="adm-page ecc-page">
+<div class="adm-page ecc-page ecc-page--v2">
     <div class="ecc-shell">
 
-        {# ─── 1. Executive Header ─── #}
-        <header class="ecc-header" id="ecc-command">
+        {# ─── Command bar ─── #}
+        <header class="ecc-header ecc-header--compact" id="ecc-command">
             <div class="ecc-header-main">
-                <p class="ecc-header-kicker">
-                    <i class="fas fa-shield-halved" aria-hidden="true"></i>
-                    Executive Command Center
-                </p>
-                <h1 class="ecc-header-title">مرکز فرمان مدیریت</h1>
+                <div class="ecc-header-title-row">
+                    <h1 class="ecc-header-title">مرکز فرمان</h1>
+                    <span class="ecc-status-pill">{{ system_meta.server_label }}</span>
+                    <span class="ecc-health" aria-label="سلامت سیستم">
+                        {% for h in health_indicators %}
+                        <span class="ecc-health-dot ecc-health-dot--{{ h.status }}" title="{{ h.label }}: {{ h.detail }}"></span>
+                        {% endfor %}
+                    </span>
+                </div>
                 <ul class="ecc-header-meta">
-                    <li>
-                        <span class="ecc-status-pill">{{ system_meta.server_label }}</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-code-branch" aria-hidden="true"></i>
-                        نسخه <strong>v{{ system_meta.version|to_persian_digits }}</strong>
-                    </li>
-                    <li>
-                        <span class="ecc-health" aria-label="سلامت زیرسیستم‌ها">
-                            {% for h in health_indicators %}
-                            <span class="ecc-health-dot ecc-health-dot--{{ h.status }}" title="{{ h.label }}: {{ h.detail }}"></span>
-                            {% endfor %}
-                        </span>
-                    </li>
+                    <li>v{{ system_meta.version|to_persian_digits }}</li>
                     {% if stats.system_start_at %}
-                    <li>
-                        <i class="fas fa-flag-checkered" aria-hidden="true"></i>
-                        عمر سیستم: <strong>{{ stats.system_uptime_days|to_persian_digits }} روز</strong>
-                    </li>
+                    <li>{{ stats.system_uptime_days|to_persian_digits }} روز آنلاین</li>
                     {% endif %}
+                    <li class="ecc-header-clock">
+                        <time id="ecc-live-clock">--:--:--</time>
+                        <span id="ecc-live-date"></span>
+                    </li>
                 </ul>
             </div>
-            <div class="ecc-header-side">
-                <div class="ecc-header-clock">
-                    <time id="ecc-live-clock">--:--:--</time>
-                    <span id="ecc-live-date"></span>
-                </div>
-                <div class="ecc-header-actions">
-                    {% if alert_count %}
-                    <a href="#ecc-alerts" class="ecc-alert-badge">
-                        <i class="fas fa-bell"></i>
-                        {{ alert_count|to_persian_digits }} هشدار
-                    </a>
-                    {% endif %}
-                    <button type="button" class="ecc-btn" id="ecc-refresh-btn" title="بروزرسانی">
-                        <i class="fas fa-rotate"></i> Refresh
-                    </button>
-                    <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="ecc-btn ecc-btn--primary">
-                        <i class="fas fa-file-excel"></i> Export
-                    </a>
-                    <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="ecc-btn ecc-btn--ghost">
-                        <i class="fas fa-file-code"></i> JSON
-                    </a>
-                    <a href="/admin/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener">
-                        <i class="fas fa-cog"></i> Admin
-                    </a>
-                </div>
+            <div class="ecc-header-actions">
+                {% if alert_count %}
+                <a href="#ecc-glance" class="ecc-alert-badge">
+                    <i class="fas fa-bell"></i>
+                    {{ alert_count|to_persian_digits }}
+                </a>
+                {% endif %}
+                <button type="button" class="ecc-btn" id="ecc-refresh-btn" title="بروزرسانی">
+                    <i class="fas fa-rotate"></i>
+                </button>
+                <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="ecc-btn ecc-btn--primary" title="خروجی اکسل">
+                    <i class="fas fa-file-excel"></i>
+                </a>
+                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="ecc-btn ecc-btn--ghost" title="JSON">
+                    <i class="fas fa-file-code"></i>
+                </a>
+                <a href="/admin/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
+                    <i class="fas fa-cog"></i>
+                </a>
             </div>
         </header>
 
         <div class="ecc-body">
-            {# ─── 16. Navigation ─── #}
             <nav class="ecc-sidebar" aria-label="ناوبری داشبورد">
                 <a href="#ecc-command" class="ecc-nav-item is-active"><i class="fas fa-gauge-high"></i> فرمان</a>
+                <a href="#ecc-glance" class="ecc-nav-item"><i class="fas fa-eye"></i> یک نگاه</a>
+                <a href="#ecc-growth" class="ecc-nav-item"><i class="fas fa-route"></i> رشد</a>
                 <a href="#ecc-revenue" class="ecc-nav-item"><i class="fas fa-chart-area"></i> درآمد</a>
-                <a href="#ecc-plan-conversion" class="ecc-nav-item"><i class="fas fa-filter-circle-dollar"></i> تبدیل پلن</a>
-                <a href="#ecc-recovery" class="ecc-nav-item"><i class="fas fa-rotate-left"></i> بازیابی</a>
-                <a href="#ecc-users" class="ecc-nav-item"><i class="fas fa-users"></i> کاربران</a>
                 <a href="#ecc-sales" class="ecc-nav-item">
                     <i class="fas fa-cart-shopping"></i> فروش
                     {% if stats.orders_pending %}<span class="ecc-nav-badge">{{ stats.orders_pending|to_persian_digits }}</span>{% endif %}
                 </a>
+                <a href="#ecc-recovery" class="ecc-nav-item"><i class="fas fa-rotate-left"></i> بازیابی</a>
+                <a href="#ecc-marketing" class="ecc-nav-item"><i class="fas fa-bullhorn"></i> بازاریابی</a>
+                <a href="#ecc-plan-conversion" class="ecc-nav-item"><i class="fas fa-filter-circle-dollar"></i> تبدیل</a>
+                <a href="#ecc-users" class="ecc-nav-item"><i class="fas fa-users"></i> کاربران</a>
                 <a href="#ecc-licensing" class="ecc-nav-item"><i class="fas fa-key"></i> لایسنس</a>
                 <a href="#ecc-crm" class="ecc-nav-item"><i class="fas fa-building"></i> CRM</a>
-                <a href="#ecc-marketing" class="ecc-nav-item"><i class="fas fa-bullhorn"></i> بازاریابی</a>
-                <a href="#ecc-blog" class="ecc-nav-item"><i class="fas fa-newspaper"></i> مقالات</a>
-                <a href="#ecc-academy" class="ecc-nav-item"><i class="fas fa-graduation-cap"></i> آکادمی</a>
                 <a href="#ecc-operations" class="ecc-nav-item"><i class="fas fa-server"></i> عملیات</a>
                 <a href="#ecc-support" class="ecc-nav-item">
                     <i class="fas fa-headset"></i> پشتیبانی
                     {% if stats.unread_tickets %}<span class="ecc-nav-badge">{{ stats.unread_tickets|to_persian_digits }}</span>{% endif %}
                 </a>
+                <a href="#ecc-blog" class="ecc-nav-item"><i class="fas fa-newspaper"></i> مقالات</a>
+                <a href="#ecc-academy" class="ecc-nav-item"><i class="fas fa-graduation-cap"></i> آکادمی</a>
                 <a href="#ecc-activity" class="ecc-nav-item"><i class="fas fa-stream"></i> فعالیت</a>
-                <a href="#ecc-windows" class="ecc-nav-item"><i class="fab fa-windows"></i> اپ ویندوز</a>
+                <a href="#ecc-windows" class="ecc-nav-item"><i class="fab fa-windows"></i> ویندوز</a>
                 <a href="#ecc-affiliates" class="ecc-nav-item"><i class="fas fa-handshake"></i> همکاری</a>
                 <a href="#ecc-exports" class="ecc-nav-item"><i class="fas fa-file-export"></i> خروجی</a>
             </nav>
 
             <main class="ecc-main">
 
-                {# ─── 2. KPI Row ─── #}
-                <section class="ecc-section" aria-label="شاخص‌های کلیدی">
+                {# ─── Module dock ─── #}
+                <section class="ecc-section ecc-order-modules" aria-label="میانبرهای مدیریت">
+                    <div class="ecc-module-dock">
+                        {% for mod in command_modules %}
+                        <a
+                            class="ecc-module"
+                            data-accent="{{ mod.accent }}"
+                            {% if mod.href %}href="{{ mod.href }}" target="_blank" rel="noopener"{% else %}href="{% url mod.url_name %}"{% endif %}
+                        >
+                            <span class="ecc-module-icon"><i class="fas {{ mod.icon }}"></i></span>
+                            <span class="ecc-module-text">
+                                <strong>{{ mod.title }}</strong>
+                                <em>{{ mod.desc }}</em>
+                            </span>
+                            {% if mod.badge %}<span class="ecc-module-badge">{{ mod.badge|to_persian_digits }}</span>{% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                {# ─── KPI ─── #}
+                <section class="ecc-section ecc-order-kpi" aria-label="شاخص‌های کلیدی">
                     <div class="ecc-kpi-grid">
                         {% for card in kpi_cards %}
                         <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
@@ -129,35 +136,125 @@
                     </div>
                 </section>
 
-                {# ─── 3. Alerts Center ─── #}
-                <section class="ecc-section ecc-alerts" id="ecc-alerts" aria-label="هشدارهای مدیریتی">
-                    <div class="ecc-alerts-head">
-                        <h2><i class="fas fa-triangle-exclamation"></i> مرکز هشدار</h2>
-                        <span class="ecc-btn ecc-btn--ghost" style="pointer-events:none">{{ alert_count|to_persian_digits }} مورد فعال</span>
+                {# ─── Glance bento ─── #}
+                <section class="ecc-section ecc-glance ecc-order-glance" id="ecc-glance" aria-label="نمای یک‌نگاه">
+                    <div class="ecc-glance-grid">
+                        <article class="ecc-bento ecc-bento--alerts" id="ecc-alerts">
+                            <header class="ecc-bento-head">
+                                <h2><i class="fas fa-triangle-exclamation"></i> هشدارها</h2>
+                                <span>{{ alert_count|to_persian_digits }}</span>
+                            </header>
+                            {% if alerts_center %}
+                            <div class="ecc-alerts-stack">
+                                {% for alert in alerts_center %}
+                                <a href="{{ alert.anchor }}" class="ecc-alert-card" data-accent="{{ alert.accent }}" data-severity="{{ alert.severity }}">
+                                    <span class="ecc-alert-icon"><i class="fas {{ alert.icon }}"></i></span>
+                                    <span class="ecc-alert-body">
+                                        <strong>{{ alert.title }}</strong>
+                                        <span>{{ alert.detail }}</span>
+                                    </span>
+                                </a>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="ecc-empty ecc-empty--compact">
+                                <i class="fas fa-circle-check"></i>
+                                <strong>سیستم سالم</strong>
+                            </div>
+                            {% endif %}
+                        </article>
+
+                        <article class="ecc-bento ecc-bento--queue">
+                            <header class="ecc-bento-head">
+                                <h2><i class="fas fa-bolt"></i> صف اقدام</h2>
+                                <span>{{ action_queue|length|to_persian_digits }}</span>
+                            </header>
+                            {% if action_queue %}
+                            <ul class="ecc-queue-list">
+                                {% for item in action_queue %}
+                                <li>
+                                    <a href="{{ item.anchor }}" data-accent="{{ item.accent }}">
+                                        <i class="fas {{ item.icon }}"></i>
+                                        <span>
+                                            <strong>{{ item.title }}</strong>
+                                            <em>{{ item.action }}</em>
+                                        </span>
+                                        <b>{{ item.count|to_persian_digits }}</b>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <div class="ecc-empty ecc-empty--compact">
+                                <i class="fas fa-check-double"></i>
+                                <strong>صف خالی است</strong>
+                            </div>
+                            {% endif %}
+                        </article>
+
+                        <article class="ecc-bento ecc-bento--today">
+                            <header class="ecc-bento-head">
+                                <h2><i class="fas fa-sun"></i> امروز</h2>
+                            </header>
+                            <div class="ecc-today-grid">
+                                <div>
+                                    <em>درآمد</em>
+                                    <strong data-count-up="{{ today_stats.revenue_today }}" data-format="money">۰</strong>
+                                </div>
+                                <div>
+                                    <em>پرداخت</em>
+                                    <strong data-count-up="{{ today_stats.orders_paid_today }}">۰</strong>
+                                </div>
+                                <div>
+                                    <em>ثبت‌نام</em>
+                                    <strong data-count-up="{{ today_stats.signups_today }}">۰</strong>
+                                </div>
+                                <div>
+                                    <em>ناموفق</em>
+                                    <strong data-count-up="{{ today_stats.orders_failed_today }}">۰</strong>
+                                </div>
+                            </div>
+                        </article>
                     </div>
-                    {% if alerts_center %}
-                    <div class="ecc-alerts-grid">
-                        {% for alert in alerts_center %}
-                        <a href="{{ alert.anchor }}" class="ecc-alert-card" data-accent="{{ alert.accent }}" data-severity="{{ alert.severity }}">
-                            <span class="ecc-alert-icon"><i class="fas {{ alert.icon }}"></i></span>
-                            <span class="ecc-alert-body">
-                                <strong>{{ alert.title }}</strong>
-                                <span>{{ alert.detail }}</span>
-                            </span>
-                        </a>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="ecc-empty">
-                        <i class="fas fa-circle-check"></i>
-                        <strong>همه سیستم‌ها سالم هستند</strong>
-                        <span>هشدار فعالی برای نمایش وجود ندارد.</span>
-                    </div>
-                    {% endif %}
                 </section>
 
-                {# ─── 4. Revenue Analytics ─── #}
-                <section class="ecc-section" id="ecc-revenue" aria-labelledby="eccRevenueTitle">
+                {# ─── Growth strip ─── #}
+                <section class="ecc-section ecc-order-growth" id="ecc-growth" aria-labelledby="eccGrowthTitle">
+                    <div class="ecc-section-head ecc-section-head--slim">
+                        <div>
+                            <h2 id="eccGrowthTitle"><i class="fas fa-route"></i> پایپلاین رشد</h2>
+                            <p>سرنخ تا مشتری — خلاصه یک‌نگاه</p>
+                        </div>
+                        <a href="{% url 'admin_panel_growth_pipeline' %}" class="ecc-btn ecc-btn--primary">
+                            <i class="fas fa-arrow-left"></i> داشبورد رشد
+                        </a>
+                    </div>
+                    <div class="ecc-growth-strip">
+                        <div class="ecc-growth-cell">
+                            <em>کل سفرها</em>
+                            <strong data-count-up="{{ growth_snapshot.total }}">۰</strong>
+                        </div>
+                        <div class="ecc-growth-cell" data-accent="cyan">
+                            <em>پیش از ثبت‌نام</em>
+                            <strong data-count-up="{{ growth_snapshot.pre_signup }}">۰</strong>
+                        </div>
+                        <div class="ecc-growth-cell" data-accent="violet">
+                            <em>در انتظار خرید</em>
+                            <strong data-count-up="{{ growth_snapshot.waiting_purchase }}">۰</strong>
+                        </div>
+                        <div class="ecc-growth-cell" data-accent="amber">
+                            <em>سبد معلق</em>
+                            <strong data-count-up="{{ growth_snapshot.pending_checkout }}">۰</strong>
+                        </div>
+                        <div class="ecc-growth-cell" data-accent="emerald">
+                            <em>مشتری</em>
+                            <strong data-count-up="{{ growth_snapshot.customers }}">۰</strong>
+                        </div>
+                    </div>
+                </section>
+
+                {# ─── Revenue Analytics ─── #}
+                <section class="ecc-section ecc-order-revenue" id="ecc-revenue" aria-labelledby="eccRevenueTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccRevenueTitle"><i class="fas fa-chart-area"></i> تحلیل درآمد</h2>
@@ -213,7 +310,7 @@
                 </section>
 
                 {# ─── 4b. Plan Conversion Analytics ─── #}
-                <section class="ecc-section" id="ecc-plan-conversion" aria-labelledby="eccPlanConvTitle">
+                <section class="ecc-section ecc-order-plan" id="ecc-plan-conversion" aria-labelledby="eccPlanConvTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccPlanConvTitle"><i class="fas fa-filter-circle-dollar"></i> آنالیز تبدیل پلن‌ها</h2>
@@ -247,7 +344,7 @@
                 </section>
 
                 {# ─── 4c. Recovery Center ─── #}
-                <section class="ecc-section" id="ecc-recovery" aria-labelledby="eccRecoveryTitle">
+                <section class="ecc-section ecc-order-recovery" id="ecc-recovery" aria-labelledby="eccRecoveryTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccRecoveryTitle"><i class="fas fa-rotate-left"></i> مرکز بازیابی</h2>
@@ -270,7 +367,7 @@
                 </section>
 
                 {# ─── 5. Users Analytics ─── #}
-                <section class="ecc-section" id="ecc-users" aria-labelledby="eccUsersTitle">
+                <section class="ecc-section ecc-order-users" id="ecc-users" aria-labelledby="eccUsersTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccUsersTitle"><i class="fas fa-users"></i> تحلیل کاربران</h2>
@@ -350,7 +447,7 @@
                 </section>
 
                 {# ─── 6. Sales Center ─── #}
-                <section class="ecc-section" id="ecc-sales" aria-labelledby="eccSalesTitle">
+                <section class="ecc-section ecc-order-sales" id="ecc-sales" aria-labelledby="eccSalesTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccSalesTitle"><i class="fas fa-cart-shopping"></i> مرکز فروش</h2>
@@ -456,7 +553,7 @@
                 </section>
 
                 {# ─── 7. Licensing Center ─── #}
-                <section class="ecc-section" id="ecc-licensing" aria-labelledby="eccLicTitle">
+                <section class="ecc-section ecc-order-licensing" id="ecc-licensing" aria-labelledby="eccLicTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccLicTitle"><i class="fas fa-key"></i> مرکز لایسنس</h2>
@@ -532,7 +629,7 @@
                 </section>
 
                 {# ─── 8. CRM Overview ─── #}
-                <section class="ecc-section" id="ecc-crm" aria-labelledby="eccCrmTitle">
+                <section class="ecc-section ecc-order-crm" id="ecc-crm" aria-labelledby="eccCrmTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccCrmTitle"><i class="fas fa-building"></i> نمای CRM</h2>
@@ -570,7 +667,7 @@
                 </section>
 
                 {# ─── 9. Marketing Dashboard ─── #}
-                <section class="ecc-section" id="ecc-marketing" aria-labelledby="eccMktTitle">
+                <section class="ecc-section ecc-order-marketing" id="ecc-marketing" aria-labelledby="eccMktTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccMktTitle"><i class="fas fa-bullhorn"></i> بازاریابی</h2>
@@ -600,7 +697,7 @@
                 </section>
 
                 {# ─── 9b. Blog Dashboard ─── #}
-                <section class="ecc-section" id="ecc-blog" aria-labelledby="eccBlogTitle">
+                <section class="ecc-section ecc-order-blog" id="ecc-blog" aria-labelledby="eccBlogTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccBlogTitle"><i class="fas fa-newspaper"></i> مقالات و بلاگ</h2>
@@ -618,7 +715,7 @@
                 </section>
 
                 {# ─── 9c. Academy Dashboard ─── #}
-                <section class="ecc-section" id="ecc-academy" aria-labelledby="eccAcademyTitle">
+                <section class="ecc-section ecc-order-academy" id="ecc-academy" aria-labelledby="eccAcademyTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccAcademyTitle"><i class="fas fa-graduation-cap"></i> آکادمی ویدیویی</h2>
@@ -640,7 +737,7 @@
                 </section>
 
                 {# ─── 10. Operations Center ─── #}
-                <section class="ecc-section" id="ecc-operations" aria-labelledby="eccOpsTitle">
+                <section class="ecc-section ecc-order-ops" id="ecc-operations" aria-labelledby="eccOpsTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccOpsTitle"><i class="fas fa-server"></i> مرکز عملیات</h2>
@@ -670,7 +767,7 @@
                 </section>
 
                 {# ─── 11. Support Center ─── #}
-                <section class="ecc-section" id="ecc-support" aria-labelledby="eccSupportTitle">
+                <section class="ecc-section ecc-order-support" id="ecc-support" aria-labelledby="eccSupportTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccSupportTitle"><i class="fas fa-headset"></i> مرکز پشتیبانی</h2>
@@ -753,7 +850,7 @@
                 </section>
 
                 {# ─── 12. Activity Feed ─── #}
-                <section class="ecc-section" id="ecc-activity" aria-labelledby="eccActivityTitle">
+                <section class="ecc-section ecc-order-activity" id="ecc-activity" aria-labelledby="eccActivityTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccActivityTitle"><i class="fas fa-stream"></i> تایم‌لاین فعالیت</h2>
@@ -790,7 +887,7 @@
                 </section>
 
                 {# ─── Windows App ─── #}
-                <section class="ecc-section" id="ecc-windows" aria-labelledby="eccWinTitle">
+                <section class="ecc-section ecc-order-windows" id="ecc-windows" aria-labelledby="eccWinTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccWinTitle"><i class="fab fa-windows"></i> اپ ویندوز</h2>
@@ -830,7 +927,7 @@
                 </section>
 
                 {# ─── Affiliates ─── #}
-                <section class="ecc-section" id="ecc-affiliates" aria-labelledby="eccAffTitle">
+                <section class="ecc-section ecc-order-affiliates" id="ecc-affiliates" aria-labelledby="eccAffTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccAffTitle"><i class="fas fa-handshake"></i> همکاری در فروش</h2>
@@ -869,7 +966,7 @@
                 </section>
 
                 {# ─── Exports ─── #}
-                <section class="ecc-section" id="ecc-exports" aria-labelledby="eccExportTitle">
+                <section class="ecc-section ecc-order-exports" id="ecc-exports" aria-labelledby="eccExportTitle">
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccExportTitle"><i class="fas fa-file-export"></i> مرکز خروجی</h2>

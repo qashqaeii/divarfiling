@@ -1368,6 +1368,8 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
         'kpi_cards': build_kpi_cards(stats, today_stats, yesterday_stats),
         'alerts_center': alerts_center,
         'alert_count': alert_count,
+        'command_modules': build_command_modules(stats, alert_count=alert_count),
+        'growth_snapshot': get_growth_pipeline_snapshot(),
         'crm_stats': get_crm_overview_stats(),
         'sales_stats': get_sales_center_stats(),
         'licensing_stats': get_licensing_center_stats(),
@@ -1420,3 +1422,107 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
         'windows_first_launches': get_windows_first_launches(TABLE_FETCH_LIMIT),
         'windows_user_funnel': get_windows_user_funnel(TABLE_FETCH_LIMIT),
     }
+
+
+def build_command_modules(stats: Dict[str, Any], *, alert_count: int = 0) -> List[Dict[str, Any]]:
+    """میانبرهای سطح‌بالا برای مدیر — یک نگاه."""
+    return [
+        {
+            'title': 'پایپلاین رشد',
+            'desc': 'سرنخ تا خرید',
+            'icon': 'fa-route',
+            'accent': 'teal',
+            'url_name': 'admin_panel_growth_pipeline',
+            'badge': None,
+        },
+        {
+            'title': 'جذب سرنخ',
+            'desc': 'ورود فایل و کمپین',
+            'icon': 'fa-user-plus',
+            'accent': 'cyan',
+            'url_name': 'admin_panel_lead_acquisition',
+            'badge': None,
+        },
+        {
+            'title': 'بازاریابی',
+            'desc': 'سگمنت و پیامک',
+            'icon': 'fa-bullhorn',
+            'accent': 'violet',
+            'url_name': 'admin_panel_marketing',
+            'badge': None,
+        },
+        {
+            'title': 'بازیابی',
+            'desc': 'سبد معلق',
+            'icon': 'fa-rotate-left',
+            'accent': 'amber',
+            'url_name': 'admin_panel_recovery_center',
+            'badge': int(stats.get('orders_pending') or 0) or None,
+        },
+        {
+            'title': 'تبدیل پلن',
+            'desc': 'قیف فروش',
+            'icon': 'fa-filter-circle-dollar',
+            'accent': 'blue',
+            'url_name': 'admin_panel_plan_conversion',
+            'badge': None,
+        },
+        {
+            'title': 'مقالات',
+            'desc': 'محتوا',
+            'icon': 'fa-newspaper',
+            'accent': 'indigo',
+            'url_name': 'admin_panel_blog',
+            'badge': None,
+        },
+        {
+            'title': 'آکادمی',
+            'desc': 'ویدیو',
+            'icon': 'fa-graduation-cap',
+            'accent': 'emerald',
+            'url_name': 'admin_panel_academy',
+            'badge': None,
+        },
+        {
+            'title': 'Django Admin',
+            'desc': 'تنظیمات عمیق',
+            'icon': 'fa-gears',
+            'accent': 'slate',
+            'href': '/admin/',
+            'badge': alert_count or None,
+        },
+    ]
+
+
+def get_growth_pipeline_snapshot() -> Dict[str, Any]:
+    """خلاصه سبک برای کارت رشد در داشبورد اصلی."""
+    try:
+        from accounts.models import GrowthJourney
+        from django.db.models import Count
+        counts = {
+            row['stage']: row['c']
+            for row in GrowthJourney.objects.values('stage').annotate(c=Count('id'))
+        }
+        cold = int(counts.get(GrowthJourney.Stage.COLD_LEAD, 0) or 0)
+        engaged = int(counts.get(GrowthJourney.Stage.ENGAGED, 0) or 0)
+        registered = int(counts.get(GrowthJourney.Stage.REGISTERED, 0) or 0)
+        activated = int(counts.get(GrowthJourney.Stage.ACTIVATED, 0) or 0)
+        nurture = int(counts.get(GrowthJourney.Stage.NURTURE_UNPAID, 0) or 0)
+        pending = int(counts.get(GrowthJourney.Stage.PENDING_CHECKOUT, 0) or 0)
+        customers = int(counts.get(GrowthJourney.Stage.CUSTOMER, 0) or 0)
+        total = sum(int(v or 0) for v in counts.values())
+        return {
+            'total': total,
+            'pre_signup': cold + engaged,
+            'waiting_purchase': registered + activated + nurture,
+            'pending_checkout': pending,
+            'customers': customers,
+        }
+    except Exception:
+        return {
+            'total': 0,
+            'pre_signup': 0,
+            'waiting_purchase': 0,
+            'pending_checkout': 0,
+            'customers': 0,
+        }

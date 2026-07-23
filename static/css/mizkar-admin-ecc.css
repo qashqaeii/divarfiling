@@ -1105,3 +1105,574 @@ html.mk-public:not([data-theme="light"]) .ecc-alerts-head h2 {
         transform: none;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ECC v2 — Compact command dashboard
+   ═══════════════════════════════════════════════════════════ */
+
+body.mk-admin-dashboard .adm-page.ecc-page--v2 {
+    max-width: 1600px;
+    padding: 0.85rem 1rem 2rem;
+}
+
+.ecc-page--v2 .ecc-shell {
+    gap: 0.85rem;
+}
+
+.ecc-page--v2 .ecc-body {
+    grid-template-columns: 168px minmax(0, 1fr);
+    gap: 0.85rem;
+}
+
+.ecc-page--v2 .ecc-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.ecc-page--v2 .ecc-section {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.ecc-page--v2 .ecc-section-head {
+    margin-bottom: 0.65rem;
+    gap: 0.65rem;
+    padding: 0 0.15rem;
+}
+
+.ecc-page--v2 .ecc-section-head h2 {
+    font-size: 0.98rem;
+    margin: 0;
+}
+
+.ecc-page--v2 .ecc-section-head p {
+    margin: 0.15rem 0 0;
+    font-size: 0.75rem;
+    opacity: 0.72;
+}
+
+.ecc-page--v2 .ecc-section-head--slim {
+    align-items: center;
+}
+
+/* Visual order */
+.ecc-order-modules { order: 1; }
+.ecc-order-kpi { order: 2; }
+.ecc-order-glance { order: 3; }
+.ecc-order-growth { order: 4; }
+.ecc-order-revenue { order: 5; }
+.ecc-order-sales { order: 6; }
+.ecc-order-recovery { order: 7; }
+.ecc-order-marketing { order: 8; }
+.ecc-order-plan { order: 9; }
+.ecc-order-users { order: 10; }
+.ecc-order-licensing { order: 11; }
+.ecc-order-crm { order: 12; }
+.ecc-order-ops { order: 13; }
+.ecc-order-support { order: 14; }
+.ecc-order-blog { order: 15; }
+.ecc-order-academy { order: 16; }
+.ecc-order-activity { order: 17; }
+.ecc-order-windows { order: 18; }
+.ecc-order-affiliates { order: 19; }
+.ecc-order-exports { order: 20; }
+
+/* Compact header */
+.ecc-header--compact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.25rem;
+    padding: 0.7rem 1rem;
+    border-radius: 14px;
+    background: var(--ecc-surface);
+    border: 1px solid var(--ecc-border);
+    box-shadow: var(--ecc-shadow-sm);
+}
+
+.ecc-header--compact .ecc-header-title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+}
+
+.ecc-header--compact .ecc-header-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.ecc-header--compact .ecc-header-meta {
+    margin-top: 0.25rem;
+    gap: 0.35rem 0.85rem;
+    font-size: 0.72rem;
+}
+
+.ecc-header--compact .ecc-header-clock {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+}
+
+.ecc-header--compact .ecc-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.ecc-header--compact .ecc-btn {
+    min-width: 2.25rem;
+    height: 2.25rem;
+    padding: 0 0.55rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+}
+
+.ecc-header--compact .ecc-alert-badge {
+    min-height: 2.25rem;
+    padding: 0 0.65rem;
+    border-radius: 10px;
+    font-size: 0.78rem;
+}
+
+/* Slim sidebar */
+.ecc-page--v2 .ecc-sidebar {
+    position: sticky;
+    top: 0.75rem;
+    padding: 0.55rem;
+    border-radius: 14px;
+    gap: 0.15rem;
+    max-height: calc(100vh - 1.5rem);
+    overflow: auto;
+}
+
+.ecc-page--v2 .ecc-nav-item {
+    padding: 0.45rem 0.55rem;
+    border-radius: 9px;
+    font-size: 0.78rem;
+    gap: 0.45rem;
+}
+
+.ecc-page--v2 .ecc-nav-item i {
+    width: 1rem;
+    font-size: 0.78rem;
+    opacity: 0.85;
+}
+
+/* Module dock */
+.ecc-page--v2 .ecc-order-modules {
+    padding: 0.65rem;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.ecc-module-dock {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.ecc-module {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 12px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+    min-height: 3.1rem;
+}
+
+.ecc-module:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--ecc-shadow-md);
+    border-color: rgba(99, 102, 241, 0.28);
+}
+
+.ecc-module-icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    background: rgba(99, 102, 241, 0.1);
+    color: #4f46e5;
+}
+
+.ecc-module[data-accent="teal"] .ecc-module-icon { background: rgba(20, 184, 166, 0.12); color: #0d9488; }
+.ecc-module[data-accent="cyan"] .ecc-module-icon { background: rgba(6, 182, 212, 0.12); color: #0891b2; }
+.ecc-module[data-accent="violet"] .ecc-module-icon { background: rgba(124, 58, 237, 0.12); color: #7c3aed; }
+.ecc-module[data-accent="amber"] .ecc-module-icon { background: rgba(245, 158, 11, 0.14); color: #d97706; }
+.ecc-module[data-accent="blue"] .ecc-module-icon { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+.ecc-module[data-accent="indigo"] .ecc-module-icon { background: rgba(99, 102, 241, 0.12); color: #4f46e5; }
+.ecc-module[data-accent="emerald"] .ecc-module-icon { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.ecc-module[data-accent="slate"] .ecc-module-icon { background: rgba(100, 116, 139, 0.14); color: #475569; }
+
+.ecc-module-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 0.05rem;
+}
+
+.ecc-module-text strong {
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.ecc-module-text em {
+    font-style: normal;
+    font-size: 0.65rem;
+    color: var(--ecc-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ecc-module-badge {
+    position: absolute;
+    top: 0.35rem;
+    left: 0.35rem;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: #f43f5e;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Dense KPI */
+.ecc-page--v2 .ecc-kpi-grid {
+    gap: 0.55rem;
+}
+
+.ecc-page--v2 .ecc-kpi {
+    padding: 0.7rem 0.75rem 0.55rem;
+    border-radius: 12px;
+}
+
+.ecc-page--v2 .ecc-kpi-val {
+    font-size: 1.2rem;
+}
+
+.ecc-page--v2 .ecc-kpi-lbl {
+    font-size: 0.72rem;
+}
+
+.ecc-page--v2 .ecc-kpi-sub {
+    font-size: 0.62rem;
+}
+
+.ecc-page--v2 .ecc-kpi-spark {
+    height: 28px;
+    margin-top: 0.35rem;
+}
+
+/* Glance bento */
+.ecc-page--v2 .ecc-glance {
+    padding: 0.65rem;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.ecc-glance-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1.15fr 0.9fr;
+    gap: 0.65rem;
+}
+
+.ecc-bento {
+    border: 1px solid var(--ecc-border);
+    border-radius: 14px;
+    background: var(--ecc-surface);
+    padding: 0.75rem;
+    min-height: 0;
+    box-shadow: var(--ecc-shadow-sm);
+}
+
+.ecc-bento-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+}
+
+.ecc-bento-head h2 {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ecc-bento-head span {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ecc-text-muted);
+    background: var(--ecc-surface-2);
+    border: 1px solid var(--ecc-border);
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
+}
+
+.ecc-alerts-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 220px;
+    overflow: auto;
+}
+
+.ecc-page--v2 .ecc-alert-card {
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    gap: 0.55rem;
+}
+
+.ecc-page--v2 .ecc-alert-body strong {
+    font-size: 0.78rem;
+}
+
+.ecc-page--v2 .ecc-alert-body span {
+    font-size: 0.68rem;
+}
+
+.ecc-queue-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 220px;
+    overflow: auto;
+}
+
+.ecc-queue-list a {
+    display: grid;
+    grid-template-columns: 1.1rem 1fr auto;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.55rem;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid transparent;
+    background: var(--ecc-surface-2);
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.ecc-queue-list a:hover {
+    border-color: var(--ecc-border);
+    transform: translateX(-2px);
+}
+
+.ecc-queue-list i {
+    font-size: 0.78rem;
+    opacity: 0.85;
+}
+
+.ecc-queue-list span {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 0.05rem;
+}
+
+.ecc-queue-list strong {
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.ecc-queue-list em {
+    font-style: normal;
+    font-size: 0.62rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-queue-list b {
+    font-size: 0.82rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.ecc-today-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+}
+
+.ecc-today-grid > div {
+    padding: 0.55rem 0.6rem;
+    border-radius: 10px;
+    background: var(--ecc-surface-2);
+    border: 1px solid var(--ecc-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.ecc-today-grid em {
+    font-style: normal;
+    font-size: 0.65rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-today-grid strong {
+    font-size: 0.92rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.ecc-empty--compact {
+    padding: 1.25rem 0.75rem;
+    text-align: center;
+    gap: 0.35rem;
+}
+
+.ecc-empty--compact i {
+    font-size: 1.15rem;
+    color: var(--ecc-accent-emerald);
+}
+
+.ecc-empty--compact strong {
+    font-size: 0.8rem;
+}
+
+/* Growth strip */
+.ecc-growth-strip {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.ecc-growth-cell {
+    padding: 0.7rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface-2);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ecc-growth-cell em {
+    font-style: normal;
+    font-size: 0.68rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-growth-cell strong {
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.ecc-growth-cell[data-accent="cyan"] strong { color: #0891b2; }
+.ecc-growth-cell[data-accent="violet"] strong { color: #7c3aed; }
+.ecc-growth-cell[data-accent="amber"] strong { color: #d97706; }
+.ecc-growth-cell[data-accent="emerald"] strong { color: #059669; }
+
+.ecc-page--v2 .ecc-stat-strip {
+    gap: 0.45rem;
+    margin-bottom: 0.75rem !important;
+}
+
+.ecc-page--v2 .ecc-stat-strip li {
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+}
+
+.ecc-page--v2 .ecc-grid {
+    gap: 0.65rem;
+}
+
+.ecc-page--v2 .ecc-card {
+    border-radius: 12px;
+    padding: 0.75rem;
+}
+
+.ecc-page--v2 .ecc-card-head h3 {
+    font-size: 0.85rem;
+}
+
+@media (max-width: 1280px) {
+    .ecc-module-dock {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .ecc-glance-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ecc-bento--today {
+        grid-column: 1 / -1;
+    }
+
+    .ecc-growth-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1024px) {
+    .ecc-page--v2 .ecc-body {
+        grid-template-columns: 1fr;
+    }
+
+    .ecc-page--v2 .ecc-sidebar {
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
+        max-height: none;
+        gap: 0.3rem;
+    }
+
+    .ecc-page--v2 .ecc-nav-item {
+        flex: 0 0 auto;
+    }
+
+    .ecc-header--compact {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 720px) {
+    .ecc-module-dock,
+    .ecc-glance-grid,
+    .ecc-growth-strip,
+    .ecc-today-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ecc-bento--today {
+        grid-column: auto;
+    }
+}

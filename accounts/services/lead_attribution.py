@@ -63,6 +63,11 @@ def record_touchpoint(
         if lead.status == MarketingLead.Status.COLD:
             lead.status = MarketingLead.Status.ENGAGED
             lead.save(update_fields=['status', 'updated_at'])
+        try:
+            from accounts.services.growth_journey import on_click_landing
+            on_click_landing(lead=lead, message=message)
+        except Exception:
+            pass
     return tp
 
 
@@ -162,7 +167,16 @@ def attribute_signup(
         lead = message.lead
 
     if not lead:
-        # سرنخ سرد نبوده — attribution نداریم
+        # ثبت‌نام ارگانیک — سرنخ بساز تا Activation و Journey کار کنند
+        lead = MarketingLead.objects.create(
+            phone_normalized=phone,
+            status=MarketingLead.Status.REGISTERED,
+            matched_user=user,
+            source='organic_signup',
+            display_name=(getattr(user, 'first_name', '') or '')[:255],
+        )
+        _finalize_signup_journey(user=user, lead=lead)
+        enroll_user_in_activation_campaign(user=user, lead=lead)
         return None
 
     if not message:
@@ -177,6 +191,7 @@ def attribute_signup(
         lead.matched_user = user
         lead.save(update_fields=['status', 'matched_user', 'updated_at'])
         _exit_acquisition_enrollments(lead, user, status=CampaignEnrollment.Status.EXITED_REGISTERED)
+        _finalize_signup_journey(user=user, lead=lead)
         enroll_user_in_activation_campaign(user=user, lead=lead)
         return None
 
@@ -259,8 +274,17 @@ def attribute_signup(
     lead.matched_user = user
     lead.save(update_fields=['status', 'matched_user', 'updated_at'])
     _exit_acquisition_enrollments(lead, user, status=CampaignEnrollment.Status.EXITED_REGISTERED)
+    _finalize_signup_journey(user=user, lead=lead)
     enroll_user_in_activation_campaign(user=user, lead=lead)
     return last_attr
+
+
+def _finalize_signup_journey(*, user, lead: MarketingLead) -> None:
+    try:
+        from accounts.services.growth_journey import on_signup
+        on_signup(user=user, lead=lead)
+    except Exception:
+        pass
 
 
 def _exit_acquisition_enrollments(lead: MarketingLead, user, *, status: str) -> None:
@@ -288,6 +312,11 @@ def attribute_purchase(*, order, request=None, cookie_token: str = '') -> Option
     if not lead and user:
         lead = MarketingLead.objects.filter(matched_user=user).first()
     if not lead:
+        try:
+            from accounts.services.growth_journey import on_purchase
+            on_purchase(user=user, order=order, lead=None)
+        except Exception:
+            pass
         return None
 
     token = cookie_token
@@ -321,6 +350,13 @@ def attribute_purchase(*, order, request=None, cookie_token: str = '') -> Option
     if not message:
         lead.status = MarketingLead.Status.CUSTOMER
         lead.save(update_fields=['status', 'updated_at'])
+        try:
+            from accounts.services.growth_journey import on_purchase
+            from accounts.services.user_activation import exit_activation_on_purchase
+            on_purchase(user=user, order=order, lead=lead)
+            exit_activation_on_purchase(lead=lead, user=user)
+        except Exception:
+            pass
         return None
 
     if kind == LeadAttribution.Kind.DIRECT and message.campaign.kind == LeadCampaign.Kind.ACTIVATION:
@@ -404,4 +440,9 @@ def attribute_purchase(*, order, request=None, cookie_token: str = '') -> Option
         exited_at=now,
         user=user,
     )
+    try:
+        from accounts.services.growth_journey import on_purchase
+        on_purchase(user=user, order=order, lead=lead)
+    except Exception:
+        pass
     return last_attr

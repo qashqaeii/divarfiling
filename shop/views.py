@@ -328,6 +328,23 @@ class BuyView(LoginRequiredMixin, CreateView):
         from shop.services.plan_funnel import record_plan_funnel_event
         plan = self._get_requested_plan() or self._get_selected_plan()
         record_plan_funnel_event(request, 'checkout_view', product=self.product, plan=plan)
+        if request.user.is_authenticated:
+            try:
+                from accounts.services.growth_journey import on_checkout_start
+                from accounts.models import MarketingLead, LeadTouchpoint
+                from accounts.phone_utils import normalize_phone
+                from accounts.services.lead_attribution import record_touchpoint
+                on_checkout_start(user=request.user)
+                phone = normalize_phone(getattr(request.user, 'phone', '') or '')
+                lead = MarketingLead.objects.filter(phone_normalized=phone).first() if phone else None
+                if lead:
+                    record_touchpoint(
+                        lead=lead,
+                        event_type=LeadTouchpoint.EventType.CHECKOUT_START,
+                        user=request.user,
+                    )
+            except Exception:
+                pass
         return super().get(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):

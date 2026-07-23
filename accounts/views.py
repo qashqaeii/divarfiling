@@ -84,6 +84,16 @@ class RegisterView(CreateView):
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'accounts/dashboard.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.user.is_authenticated and request.method == 'GET':
+            try:
+                from accounts.services.growth_journey import on_workspace_login
+                on_workspace_login(user=request.user)
+            except Exception:
+                pass
+        return response
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

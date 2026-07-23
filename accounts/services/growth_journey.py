@@ -1,0 +1,507 @@
+"""Orchestrator پایپلاین رشد یکپارچه — transition و backfill."""
+from __future__ import annotations
+
+import logging
+from typing import Any, Optional
+
+from django.db import transaction
+from django.db.models import Count, Q
+from django.utils import timezone
+
+from accounts.models import GrowthJourney, GrowthJourneyEvent, MarketingLead
+from accounts.phone_utils import find_user_by_phone, normalize_phone
+
+logger = logging.getLogger(__name__)
+
+# رتبهٔ مرحله برای جلوگیری از پسرفت ناخواسته (به‌جز suppressed و رویدادهای صریح)
+STAGE_RANK = {
+    GrowthJourney.Stage.COLD_LEAD: 10,
+    GrowthJourney.Stage.ENGAGED: 20,
+    GrowthJourney.Stage.REGISTERED: 30,
+    GrowthJourney.Stage.ACTIVATED: 35,
+    GrowthJourney.Stage.NURTURE_UNPAID: 40,
+    GrowthJourney.Stage.PENDING_CHECKOUT: 50,
+    GrowthJourney.Stage.CUSTOMER: 60,
+    GrowthJourney.Stage.EXPIRING_SOON: 70,
+    GrowthJourney.Stage.RENEWED: 65,
+    GrowthJourney.Stage.CHURN_RISK: 75,
+    GrowthJourney.Stage.SUPPRESSED: 1000,
+}
+
+# رویدادهایی که اجازه پسرفت یا پرش دارند
+FORCE_EVENTS = frozenset({
+    'opt_out',
+    'suppressed',
+    'paid_licensed',
+    'checkout_start',
+    'license_expiring',
+    'expired_no_renew',
+    'repurchase',
+    'pause_nurture',
+    'resume_nurture',
+    'manual_set',
+})
+
+
+def _resolve_phone(*, phone: str = '', user=None, lead: Optional[MarketingLead] = None) -> str:
+    if phone:
+        return normalize_phone(phone)
+    if lead and lead.phone_normalized:
+        return normalize_phone(lead.phone_normalized)
+    if user is not None:
+        return normalize_phone(getattr(user, 'phone', '') or '')
+    return ''
+
+
+def get_or_create_journey(
+    *,
+    phone: str = '',
+    user=None,
+    lead: Optional[MarketingLead] = None,
+    source: str = GrowthJourney.Source.ACQUISITION,
+) -> Optional[GrowthJourney]:
+    phone = _resolve_phone(phone=phone, user=user, lead=lead)
+    if not phone:
+        return None
+
+    defaults = {
+        'source': source,
+        'stage': GrowthJourney.Stage.COLD_LEAD,
+        'last_touch_at': timezone.now(),
+    }
+    if user is not None:
+        defaults['user'] = user
+    if lead is not None:
+        defaults['lead'] = lead
+
+    journey, created = GrowthJourney.objects.get_or_create(
+        phone_normalized=phone,
+        defaults=defaults,
+    )
+    update_fields = []
+    if user is not None and journey.user_id != getattr(user, 'pk', None):
+        journey.user = user
+        update_fields.append('user')
+    if lead is not None and journey.lead_id != getattr(lead, 'pk', None):
+        journey.lead = lead
+        update_fields.append('lead')
+    if update_fields:
+        update_fields.append('updated_at')
+        journey.save(update_fields=update_fields)
+    return journey
+
+
+@transaction.atomic
+def transition(
+    *,
+    event_type: str,
+    phone: str = '',
+    user=None,
+    lead: Optional[MarketingLead] = None,
+    stage: Optional[str] = None,
+    source: Optional[str] = None,
+    ref_model: str = '',
+    ref_id: str = '',
+    metadata: Optional[dict] = None,
+    allow_regress: bool = False,
+) -> Optional[GrowthJourney]:
+    """تنها نقطهٔ تغییر stage در پایپلاین رشد."""
+    phone = _resolve_phone(phone=phone, user=user, lead=lead)
+    if not phone:
+        return None
+
+    if stage is None:
+        stage = _infer_stage(event_type)
+    if not stage:
+        logger.warning('growth_journey: no stage for event=%s', event_type)
+        return None
+
+    journey = get_or_create_journey(phone=phone, user=user, lead=lead, source=source or GrowthJourney.Source.ACQUISITION)
+    if not journey:
+        return None
+
+    journey = GrowthJourney.objects.select_for_update().get(pk=journey.pk)
+    old_stage = journey.stage
+
+    if event_type == 'pause_nurture':
+        journey.nurture_paused = True
+        journey.save(update_fields=['nurture_paused', 'updated_at'])
+        GrowthJourneyEvent.objects.create(
+            journey=journey,
+            stage_from=old_stage,
+            stage_to=old_stage,
+            event_type=event_type,
+            ref_model=ref_model,
+            ref_id=str(ref_id or ''),
+            metadata=metadata or {},
+        )
+        return journey
+
+    if event_type == 'resume_nurture':
+        journey.nurture_paused = False
+        journey.save(update_fields=['nurture_paused', 'updated_at'])
+        GrowthJourneyEvent.objects.create(
+            journey=journey,
+            stage_from=old_stage,
+            stage_to=old_stage,
+            event_type=event_type,
+            ref_model=ref_model,
+            ref_id=str(ref_id or ''),
+            metadata=metadata or {},
+        )
+        return journey
+
+    if stage == GrowthJourney.Stage.SUPPRESSED or event_type in ('opt_out', 'suppressed'):
+        journey.stage = GrowthJourney.Stage.SUPPRESSED
+        journey.suppressed = True
+        journey.stage_entered_at = timezone.now()
+        journey.last_touch_at = timezone.now()
+        if user is not None:
+            journey.user = user
+        if lead is not None:
+            journey.lead = lead
+        journey.save()
+        GrowthJourneyEvent.objects.create(
+            journey=journey,
+            stage_from=old_stage,
+            stage_to=journey.stage,
+            event_type=event_type,
+            ref_model=ref_model,
+            ref_id=str(ref_id or ''),
+            metadata=metadata or {},
+        )
+        _exit_active_enrollments(journey, reason=event_type)
+        return journey
+
+    force = allow_regress or event_type in FORCE_EVENTS
+    old_rank = STAGE_RANK.get(old_stage, 0)
+    new_rank = STAGE_RANK.get(stage, 0)
+    if not force and new_rank < old_rank:
+        # فقط لمس زمانی؛ stage ثابت
+        journey.last_touch_at = timezone.now()
+        journey.save(update_fields=['last_touch_at', 'updated_at'])
+        return journey
+
+    if old_stage == stage and event_type not in FORCE_EVENTS:
+        journey.last_touch_at = timezone.now()
+        if user is not None and journey.user_id != user.pk:
+            journey.user = user
+            journey.save(update_fields=['last_touch_at', 'user', 'updated_at'])
+        else:
+            journey.save(update_fields=['last_touch_at', 'updated_at'])
+        return journey
+
+    journey.stage = stage
+    journey.stage_entered_at = timezone.now()
+    journey.last_touch_at = timezone.now()
+    if source:
+        journey.source = source
+    if user is not None:
+        journey.user = user
+    if lead is not None:
+        journey.lead = lead
+    if stage == GrowthJourney.Stage.CUSTOMER:
+        journey.suppressed = False
+    journey.save()
+
+    GrowthJourneyEvent.objects.create(
+        journey=journey,
+        stage_from=old_stage,
+        stage_to=stage,
+        event_type=event_type,
+        ref_model=ref_model,
+        ref_id=str(ref_id or ''),
+        metadata=metadata or {},
+    )
+    return journey
+
+
+def _infer_stage(event_type: str) -> Optional[str]:
+    mapping = {
+        'lead_imported': GrowthJourney.Stage.COLD_LEAD,
+        'click_landing': GrowthJourney.Stage.ENGAGED,
+        'signup': GrowthJourney.Stage.REGISTERED,
+        'signup_complete': GrowthJourney.Stage.REGISTERED,
+        'workspace_login': GrowthJourney.Stage.ACTIVATED,
+        'checkout_start': GrowthJourney.Stage.PENDING_CHECKOUT,
+        'no_purchase_window': GrowthJourney.Stage.NURTURE_UNPAID,
+        'paid_licensed': GrowthJourney.Stage.CUSTOMER,
+        'license_expiring': GrowthJourney.Stage.EXPIRING_SOON,
+        'repurchase': GrowthJourney.Stage.RENEWED,
+        'expired_no_renew': GrowthJourney.Stage.CHURN_RISK,
+        'opt_out': GrowthJourney.Stage.SUPPRESSED,
+        'suppressed': GrowthJourney.Stage.SUPPRESSED,
+    }
+    return mapping.get(event_type)
+
+
+def _exit_active_enrollments(journey: GrowthJourney, *, reason: str) -> None:
+    from accounts.models import CampaignEnrollment, LeadCampaign
+    if not journey.lead_id:
+        return
+    status = (
+        CampaignEnrollment.Status.EXITED_OPT_OUT
+        if reason in ('opt_out', 'suppressed')
+        else CampaignEnrollment.Status.EXITED_SUPPRESSED
+    )
+    now = timezone.now()
+    CampaignEnrollment.objects.filter(
+        lead_id=journey.lead_id,
+        status=CampaignEnrollment.Status.ACTIVE,
+        campaign__kind__in=(LeadCampaign.Kind.ACQUISITION, LeadCampaign.Kind.ACTIVATION),
+    ).update(status=status, exited_at=now)
+
+
+def lead_status_to_stage(status: str) -> str:
+    return {
+        MarketingLead.Status.COLD: GrowthJourney.Stage.COLD_LEAD,
+        MarketingLead.Status.ENGAGED: GrowthJourney.Stage.ENGAGED,
+        MarketingLead.Status.REGISTERED: GrowthJourney.Stage.REGISTERED,
+        MarketingLead.Status.CUSTOMER: GrowthJourney.Stage.CUSTOMER,
+        MarketingLead.Status.SUPPRESSED: GrowthJourney.Stage.SUPPRESSED,
+        MarketingLead.Status.EXISTING_USER: GrowthJourney.Stage.REGISTERED,
+    }.get(status, GrowthJourney.Stage.COLD_LEAD)
+
+
+def backfill_journeys(*, limit: int = 5000) -> dict[str, int]:
+    """ساخت/به‌روزرسانی Journey از MarketingLead و کاربران دارای سفارش/لایسنس."""
+    from django.contrib.auth import get_user_model
+    from licenses.models import License
+    from shop.models import Order
+
+    User = get_user_model()
+    stats = {'leads': 0, 'users': 0, 'updated': 0, 'created': 0}
+
+    for lead in MarketingLead.objects.order_by('-updated_at')[:limit]:
+        journey = get_or_create_journey(
+            phone=lead.phone_normalized,
+            lead=lead,
+            user=lead.matched_user,
+            source=(
+                GrowthJourney.Source.EXISTING_USER
+                if lead.status == MarketingLead.Status.EXISTING_USER
+                else GrowthJourney.Source.ACQUISITION
+            ),
+        )
+        if not journey:
+            continue
+        target = lead_status_to_stage(lead.status)
+        created = journey.events.count() == 0 and journey.stage == GrowthJourney.Stage.COLD_LEAD
+        if journey.stage != target:
+            transition(
+                phone=lead.phone_normalized,
+                lead=lead,
+                user=lead.matched_user,
+                event_type='manual_set',
+                stage=target,
+                allow_regress=True,
+                metadata={'backfill': True, 'from_lead_status': lead.status},
+            )
+            stats['updated'] += 1
+        elif created:
+            stats['created'] += 1
+        stats['leads'] += 1
+
+    # کاربران با سفارش معلق
+    pending_user_ids = (
+        Order.objects.filter(status__in=('pending', 'pending_verification'))
+        .values_list('user_id', flat=True)
+        .distinct()[:limit]
+    )
+    for user in User.objects.filter(pk__in=pending_user_ids).exclude(phone=''):
+        phone = normalize_phone(user.phone or '')
+        if not phone:
+            continue
+        transition(
+            phone=phone,
+            user=user,
+            event_type='checkout_start',
+            stage=GrowthJourney.Stage.PENDING_CHECKOUT,
+            source=GrowthJourney.Source.ORGANIC,
+            allow_regress=True,
+            metadata={'backfill': True},
+        )
+        stats['users'] += 1
+
+    # مشتریان با لایسنس فعال
+    active_lic_user_ids = (
+        License.objects.filter(order__status='paid', status='active')
+        .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+        .values_list('order__user_id', flat=True)
+        .distinct()[:limit]
+    )
+    for user in User.objects.filter(pk__in=active_lic_user_ids).exclude(phone=''):
+        phone = normalize_phone(user.phone or '')
+        if not phone:
+            continue
+        journey = GrowthJourney.objects.filter(phone_normalized=phone).first()
+        if journey and journey.stage in (
+            GrowthJourney.Stage.EXPIRING_SOON,
+            GrowthJourney.Stage.CHURN_RISK,
+            GrowthJourney.Stage.RENEWED,
+        ):
+            continue
+        transition(
+            phone=phone,
+            user=user,
+            event_type='paid_licensed',
+            stage=GrowthJourney.Stage.CUSTOMER,
+            source=GrowthJourney.Source.ORGANIC,
+            allow_regress=True,
+            metadata={'backfill': True},
+        )
+        stats['users'] += 1
+
+    return stats
+
+
+def pipeline_overview() -> dict[str, Any]:
+    """شاخص‌های داشبورد پایپلاین رشد."""
+    counts = {
+        row['stage']: row['c']
+        for row in GrowthJourney.objects.values('stage').annotate(c=Count('id'))
+    }
+    stages = []
+    for key, label in GrowthJourney.Stage.choices:
+        stages.append({
+            'key': key,
+            'label': label,
+            'count': int(counts.get(key, 0) or 0),
+        })
+    total = sum(s['count'] for s in stages)
+    paused = GrowthJourney.objects.filter(nurture_paused=True).count()
+    suppressed = GrowthJourney.objects.filter(
+        Q(suppressed=True) | Q(stage=GrowthJourney.Stage.SUPPRESSED)
+    ).count()
+    recent = list(
+        GrowthJourneyEvent.objects.select_related('journey')
+        .order_by('-created_at')[:20]
+        .values(
+            'event_type', 'stage_from', 'stage_to', 'created_at',
+            'journey__phone_normalized', 'journey_id',
+        )
+    )
+    return {
+        'total': total,
+        'paused': paused,
+        'suppressed': suppressed,
+        'stages': stages,
+        'recent_events': recent,
+    }
+
+
+def journeys_for_stage(stage: str, *, limit: int = 100):
+    return (
+        GrowthJourney.objects.filter(stage=stage)
+        .select_related('user', 'lead')
+        .order_by('-stage_entered_at')[:limit]
+    )
+
+
+def on_lead_imported(lead: MarketingLead) -> Optional[GrowthJourney]:
+    if lead.status == MarketingLead.Status.EXISTING_USER:
+        return transition(
+            phone=lead.phone_normalized,
+            lead=lead,
+            user=lead.matched_user,
+            event_type='manual_set',
+            stage=GrowthJourney.Stage.REGISTERED,
+            source=GrowthJourney.Source.EXISTING_USER,
+            allow_regress=True,
+            metadata={'existing_user': True},
+        )
+    return transition(
+        phone=lead.phone_normalized,
+        lead=lead,
+        user=lead.matched_user,
+        event_type='lead_imported',
+        stage=GrowthJourney.Stage.COLD_LEAD,
+        source=GrowthJourney.Source.ACQUISITION,
+    )
+
+
+def on_click_landing(*, lead: MarketingLead, message=None) -> Optional[GrowthJourney]:
+    return transition(
+        phone=lead.phone_normalized,
+        lead=lead,
+        event_type='click_landing',
+        stage=GrowthJourney.Stage.ENGAGED,
+        source=GrowthJourney.Source.ACQUISITION,
+        ref_model='CampaignMessage',
+        ref_id=getattr(message, 'pk', '') or '',
+    )
+
+
+def on_signup(*, user, lead: Optional[MarketingLead] = None) -> Optional[GrowthJourney]:
+    phone = normalize_phone(getattr(user, 'phone', '') or '')
+    if lead is None and phone:
+        lead = MarketingLead.objects.filter(phone_normalized=phone).first()
+    return transition(
+        phone=phone,
+        user=user,
+        lead=lead,
+        event_type='signup',
+        stage=GrowthJourney.Stage.REGISTERED,
+        source=GrowthJourney.Source.ACQUISITION if lead else GrowthJourney.Source.ORGANIC,
+        ref_model='User',
+        ref_id=user.pk,
+        allow_regress=True,
+    )
+
+
+def on_workspace_login(*, user) -> Optional[GrowthJourney]:
+    phone = normalize_phone(getattr(user, 'phone', '') or '')
+    if not phone:
+        return None
+    journey = GrowthJourney.objects.filter(phone_normalized=phone).first()
+    if journey and journey.stage in (
+        GrowthJourney.Stage.CUSTOMER,
+        GrowthJourney.Stage.PENDING_CHECKOUT,
+        GrowthJourney.Stage.EXPIRING_SOON,
+        GrowthJourney.Stage.CHURN_RISK,
+        GrowthJourney.Stage.RENEWED,
+        GrowthJourney.Stage.SUPPRESSED,
+    ):
+        journey.last_touch_at = timezone.now()
+        journey.save(update_fields=['last_touch_at', 'updated_at'])
+        return journey
+    return transition(
+        phone=phone,
+        user=user,
+        event_type='workspace_login',
+        stage=GrowthJourney.Stage.ACTIVATED,
+        allow_regress=False,
+        ref_model='User',
+        ref_id=user.pk,
+    )
+
+
+def on_checkout_start(*, user, order=None) -> Optional[GrowthJourney]:
+    phone = normalize_phone(getattr(user, 'phone', '') or '')
+    if not phone:
+        return None
+    return transition(
+        phone=phone,
+        user=user,
+        event_type='checkout_start',
+        stage=GrowthJourney.Stage.PENDING_CHECKOUT,
+        allow_regress=True,
+        ref_model='Order' if order is not None else '',
+        ref_id=str(getattr(order, 'pk', '') or ''),
+    )
+
+
+def on_purchase(*, user, order=None, lead: Optional[MarketingLead] = None) -> Optional[GrowthJourney]:
+    phone = normalize_phone(getattr(user, 'phone', '') or '')
+    if lead is None and phone:
+        lead = MarketingLead.objects.filter(phone_normalized=phone).first()
+    return transition(
+        phone=phone,
+        user=user,
+        lead=lead,
+        event_type='paid_licensed',
+        stage=GrowthJourney.Stage.CUSTOMER,
+        allow_regress=True,
+        ref_model='Order' if order is not None else '',
+        ref_id=str(getattr(order, 'pk', '') or ''),
+    )

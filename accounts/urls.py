@@ -27,6 +27,10 @@ from .admin_views import (
     AdminRecoveryCenterView,
     AdminSystemSummaryView,
 )
+from .growth_pipeline_views import (
+    AdminGrowthPipelineJsonView,
+    AdminGrowthPipelineView,
+)
 from .lead_acquisition_views import (
     AdminLeadAcquisitionView,
     AdminLeadBulkTemplatesView,
@@ -65,6 +69,16 @@ urlpatterns = [
     path('admin-panel/marketing/phonebook/status.json', AdminPhonebookStatusView.as_view(), name='admin_panel_phonebook_status'),
     path('admin-panel/marketing/phonebook/sync/', AdminPhonebookSyncView.as_view(), name='admin_panel_phonebook_sync'),
     path('admin-panel/marketing/<int:pk>/', AdminMarketingDetailView.as_view(), name='admin_panel_marketing_detail'),
+    path(
+        'admin-panel/marketing/growth/',
+        AdminGrowthPipelineView.as_view(),
+        name='admin_panel_growth_pipeline',
+    ),
+    path(
+        'admin-panel/marketing/growth.json',
+        AdminGrowthPipelineJsonView.as_view(),
+        name='admin_panel_growth_pipeline_json',
+    ),
     path(
         'admin-panel/marketing/leads/',
         AdminLeadAcquisitionView.as_view(),

@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load persian_tags %}
+
+{% block title %}پایپلاین رشد | پنل مدیریت{% endblock %}
+{% block body_class %}mk-admin-dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=9">
+<style>
+.adm-gp-stage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: .65rem;
+    margin: 1rem 0 1.25rem;
+}
+.adm-gp-stage {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    padding: .85rem .9rem;
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,.25);
+    background: rgba(248,250,252,.9);
+    transition: transform .15s ease, border-color .15s ease;
+}
+.adm-gp-stage:hover { transform: translateY(-2px); border-color: #0d9488; }
+.adm-gp-stage.is-active { border-color: #0d9488; box-shadow: 0 0 0 2px rgba(13,148,136,.2); }
+.adm-gp-stage strong { display: block; font-size: 1.35rem; font-weight: 800; }
+.adm-gp-stage span { display: block; font-size: .78rem; color: #64748b; margin-top: .2rem; }
+.adm-gp-banner {
+    margin-bottom: 1rem;
+    padding: .75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(13,148,136,.3);
+    background: linear-gradient(90deg, rgba(13,148,136,.08), rgba(8,145,178,.06));
+    display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="adm-page adm-mkt-page adm-lac-page">
+
+    <header class="adm-lac-hero">
+        <div class="adm-lac-hero-copy">
+            <p class="adm-lac-kicker">
+                <i class="fas fa-route" aria-hidden="true"></i>
+                رشد یکپارچه · جذب ↔ مارکتینگ
+            </p>
+            <h1 class="adm-lac-title">پایپلاین رشد</h1>
+            <p class="adm-lac-tagline">از ورود سرنخ تا خرید، سبد معلق و تمدید لایسنس — یک مسیر مشترک.</p>
+            <p class="adm-lac-desc">
+                موتورهای جذب، Activation، Recovery و تمدید لایسنس روی یک وضعیت Journey هماهنگ می‌شوند
+                تا پیام تکراری نرود و هر مخاطب مرحله‌به‌مرحله جلو برود.
+            </p>
+            <div class="adm-lac-hero-actions">
+                <a class="adm-lac-btn adm-lac-btn--primary" href="{% url 'admin_panel_lead_acquisition' %}">
+                    <i class="fas fa-user-plus"></i> مرکز جذب
+                </a>
+                <a class="adm-lac-btn adm-lac-btn--amber" href="{% url 'admin_panel_marketing' %}">
+                    <i class="fas fa-bullhorn"></i> اتوماسیون بازاریابی
+                </a>
+                <a class="adm-lac-btn adm-lac-btn--ghost" href="{% url 'admin_panel_recovery_center' %}">
+                    <i class="fas fa-rotate"></i> Recovery
+                </a>
+            </div>
+        </div>
+        <aside class="adm-lac-journey" aria-label="مسیر">
+            <p class="adm-lac-journey-title">مسیر رسمی</p>
+            <div class="adm-lac-pipeline" style="flex-wrap:wrap">
+                <span class="adm-lac-pipe">سرد</span>
+                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
+                <span class="adm-lac-pipe">تعامل</span>
+                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
+                <span class="adm-lac-pipe">ثبت‌نام</span>
+                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
+                <span class="adm-lac-pipe">خرید معلق</span>
+                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
+                <span class="adm-lac-pipe">مشتری</span>
+                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
+                <span class="adm-lac-pipe">تمدید</span>
+            </div>
+            <p class="adm-lac-kpi-sub" style="margin-top:.5rem">
+                کرون: <code>python manage.py run_growth_pipeline</code>
+            </p>
+        </aside>
+    </header>
+
+    {% if messages %}
+    <section class="adm-alerts" aria-label="پیام‌ها">
+        {% for message in messages %}
+        <div class="adm-alert {% if message.tags == 'error' %}adm-alert--warn{% else %}adm-alert--info{% endif %}">
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    <div class="adm-gp-banner">
+        <div>
+            <strong>کل مخاطبین پایپلاین:</strong>
+            {{ overview.total|default:0|to_persian_digits }}
+            · متوقف‌شده {{ overview.paused|default:0|to_persian_digits }}
+            · مسدود {{ overview.suppressed|default:0|to_persian_digits }}
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="backfill">
+            <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm">
+                <i class="fas fa-database"></i> Backfill از سرنخ‌ها
+            </button>
+        </form>
+    </div>
+
+    <section class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>مراحل پایپلاین</h2>
+                <p>برای دریل‌داون روی یک مرحله کلیک کنید</p>
+            </div>
+        </div>
+        <div class="adm-gp-stage-grid">
+            {% for s in overview.stages %}
+            <a class="adm-gp-stage {% if selected_stage == s.key %}is-active{% endif %}"
+               href="?stage={{ s.key }}">
+                <strong>{{ s.count|to_persian_digits }}</strong>
+                <span>{{ s.label }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if selected_stage %}
+    <section class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>جزئیات مرحله</h2>
+                <p>{{ selected_stage }} — حداکثر ۸۰ ردیف</p>
+            </div>
+            <a class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" href="{% url 'admin_panel_growth_pipeline' %}">پاک کردن فیلتر</a>
+        </div>
+        <div class="adm-lac-table-scroll">
+            <table class="adm-lac-data-table">
+                <thead>
+                    <tr class="adm-lac-table-head-row">
+                        <th>شماره</th>
+                        <th>منبع</th>
+                        <th>کاربر</th>
+                        <th>سرنخ</th>
+                        <th>وضعیت nurture</th>
+                        <th>ورود به مرحله</th>
+                        <th>اقدام</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in detail_rows %}
+                    <tr>
+                        <td>{{ row.phone }}</td>
+                        <td>{{ row.source }}</td>
+                        <td>{% if row.user_id %}#{{ row.user_id|to_persian_digits }}{% else %}—{% endif %}</td>
+                        <td>{% if row.lead_id %}#{{ row.lead_id|to_persian_digits }}{% else %}—{% endif %}</td>
+                        <td>
+                            {% if row.suppressed %}مسدود
+                            {% elif row.paused %}متوقف
+                            {% else %}فعال{% endif %}
+                        </td>
+                        <td>{{ row.entered_at|date:"Y-m-d H:i" }}</td>
+                        <td style="white-space:nowrap">
+                            {% if not row.suppressed %}
+                            <form method="post" style="display:inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="journey_id" value="{{ row.id }}">
+                                {% if row.paused %}
+                                <input type="hidden" name="action" value="resume">
+                                <button class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" type="submit">از سرگیری</button>
+                                {% else %}
+                                <input type="hidden" name="action" value="pause">
+                                <button class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" type="submit">توقف</button>
+                                {% endif %}
+                            </form>
+                            <form method="post" style="display:inline" onsubmit="return confirm('مسدود شود؟');">
+                                {% csrf_token %}
+                                <input type="hidden" name="journey_id" value="{{ row.id }}">
+                                <input type="hidden" name="action" value="suppress">
+                                <button class="adm-lac-btn adm-lac-btn--danger adm-lac-btn--sm" type="submit">مسدود</button>
+                            </form>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="adm-lac-table-empty">ردیفی در این مرحله نیست. Backfill را اجرا کنید.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>رویدادهای اخیر</h2>
+                <p>آخرین انتقال‌های stage</p>
+            </div>
+        </div>
+        <div class="adm-lac-table-scroll">
+            <table class="adm-lac-data-table">
+                <thead>
+                    <tr class="adm-lac-table-head-row">
+                        <th>شماره</th>
+                        <th>رویداد</th>
+                        <th>از</th>
+                        <th>به</th>
+                        <th>زمان</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ev in overview.recent_events %}
+                    <tr>
+                        <td>{{ ev.journey__phone_normalized }}</td>
+                        <td>{{ ev.event_type }}</td>
+                        <td>{{ ev.stage_from|default:"—" }}</td>
+                        <td>{{ ev.stage_to }}</td>
+                        <td>{{ ev.created_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="adm-lac-table-empty">هنوز رویدادی ثبت نشده.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {% if last_run %}
+    <section class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>آخرین اجرای کرون</h2>
+                <p>{{ last_run.started_at|default:"" }} → {{ last_run.finished_at|default:"" }}</p>
+            </div>
+        </div>
+        <pre style="overflow:auto;max-height:240px;padding:1rem;border-radius:12px;background:#0f172a;color:#e2e8f0;font-size:.75rem">{{ last_run_json }}</pre>
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}

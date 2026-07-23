@@ -1141,3 +1141,104 @@ class LeadAttribution(models.Model):
 
     def __str__(self):
         return f'{self.axis}/{self.attribution_kind}/{self.touch_model} lead#{self.lead_id}'
+
+
+# ─── Unified Growth Pipeline ───────────────────────────────────────────────
+
+
+class GrowthJourney(models.Model):
+    """وضعیت یکپارچه قیف رشد — پل بین جذب سرنخ و اتوماسیون بازاریابی."""
+
+    class Stage(models.TextChoices):
+        COLD_LEAD = 'cold_lead', 'سرنخ سرد'
+        ENGAGED = 'engaged', 'تعامل‌دار'
+        REGISTERED = 'registered', 'ثبت‌نام‌شده'
+        ACTIVATED = 'activated', 'فعال‌شده'
+        NURTURE_UNPAID = 'nurture_unpaid', 'پیگیری بدون خرید'
+        PENDING_CHECKOUT = 'pending_checkout', 'خرید معلق'
+        CUSTOMER = 'customer', 'مشتری'
+        EXPIRING_SOON = 'expiring_soon', 'نزدیک انقضا'
+        RENEWED = 'renewed', 'تمدیدشده'
+        CHURN_RISK = 'churn_risk', 'ریسک ریزش'
+        SUPPRESSED = 'suppressed', 'مسدود'
+
+    class Source(models.TextChoices):
+        ACQUISITION = 'acquisition', 'جذب سرنخ'
+        ORGANIC = 'organic', 'ارگانیک'
+        EXISTING_USER = 'existing_user', 'کاربر موجود'
+
+    phone_normalized = models.CharField(max_length=20, unique=True, db_index=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='growth_journeys',
+    )
+    lead = models.ForeignKey(
+        MarketingLead,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='growth_journeys',
+    )
+    stage = models.CharField(
+        max_length=24,
+        choices=Stage.choices,
+        default=Stage.COLD_LEAD,
+        db_index=True,
+    )
+    stage_entered_at = models.DateTimeField(auto_now_add=True)
+    source = models.CharField(
+        max_length=16,
+        choices=Source.choices,
+        default=Source.ACQUISITION,
+        db_index=True,
+    )
+    last_touch_at = models.DateTimeField(null=True, blank=True)
+    suppressed = models.BooleanField(default=False, db_index=True)
+    nurture_paused = models.BooleanField(default=False, db_index=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'سفر رشد'
+        verbose_name_plural = 'سفرهای رشد'
+        ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['stage', '-stage_entered_at']),
+            models.Index(fields=['suppressed', 'nurture_paused', 'stage']),
+        ]
+
+    def __str__(self):
+        return f'{self.phone_normalized} [{self.stage}]'
+
+
+class GrowthJourneyEvent(models.Model):
+    """رویداد append-only تغییر مرحله در پایپلاین رشد."""
+
+    journey = models.ForeignKey(
+        GrowthJourney,
+        on_delete=models.CASCADE,
+        related_name='events',
+    )
+    stage_from = models.CharField(max_length=24, blank=True)
+    stage_to = models.CharField(max_length=24, db_index=True)
+    event_type = models.CharField(max_length=48, db_index=True)
+    ref_model = models.CharField(max_length=64, blank=True)
+    ref_id = models.CharField(max_length=64, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'رویداد سفر رشد'
+        verbose_name_plural = 'رویدادهای سفر رشد'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['journey', '-created_at']),
+            models.Index(fields=['event_type', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.event_type}: {self.stage_from or "—"} → {self.stage_to}'

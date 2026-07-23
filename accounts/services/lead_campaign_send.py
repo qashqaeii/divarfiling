@@ -648,14 +648,53 @@ def render_step_body(*, step: CampaignStep, variant: CampaignVariant, link: str,
 
 
 def audience_allows(*, step: CampaignStep, lead: MarketingLead, enrollment: CampaignEnrollment) -> bool:
+    from accounts.models import LeadCampaign
+    from accounts.services.growth_suppression import (
+        PURPOSE_ACQUISITION,
+        PURPOSE_ACTIVATION,
+        is_send_allowed,
+    )
+
+    campaign = enrollment.campaign
+    is_activation = campaign.kind == LeadCampaign.Kind.ACTIVATION
+    purpose = PURPOSE_ACTIVATION if is_activation else PURPOSE_ACQUISITION
+
+    if lead.status == MarketingLead.Status.SUPPRESSED:
+        return False
+    if SuppressionEntry.objects.filter(phone_normalized=lead.phone_normalized).exists():
+        return False
+    if not is_send_allowed(
+        lead.phone_normalized,
+        purpose=purpose,
+        user=enrollment.user,
+    ):
+        return False
+
+    if is_activation:
+        # فقط ثبت‌نام‌شدهٔ بدون خرید/لایسنس فعال
+        if lead.status != MarketingLead.Status.REGISTERED:
+            return False
+        if lead.status == MarketingLead.Status.CUSTOMER:
+            return False
+        user = enrollment.user or find_user_by_phone(lead.phone_normalized)
+        if not user:
+            return False
+        from django.db.models import Q
+        from licenses.models import License
+        has_license = License.objects.filter(
+            order__user=user,
+            order__status='paid',
+            status='active',
+        ).filter(
+            Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
+        ).exists()
+        return not has_license
+
     if lead.status in (
         MarketingLead.Status.REGISTERED,
         MarketingLead.Status.CUSTOMER,
-        MarketingLead.Status.SUPPRESSED,
         MarketingLead.Status.EXISTING_USER,
     ):
-        return False
-    if SuppressionEntry.objects.filter(phone_normalized=lead.phone_normalized).exists():
         return False
     if find_user_by_phone(lead.phone_normalized):
         return False

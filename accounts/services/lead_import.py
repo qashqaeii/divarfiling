@@ -525,6 +525,11 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
             else:
                 created += 1
             existing_user_marked += 1
+            try:
+                from accounts.services.growth_journey import on_lead_imported
+                on_lead_imported(lead)
+            except Exception:
+                pass
             continue
 
         if row.outcome in ('eligible', 'already_lead_update', 'already_lead_blocked'):
@@ -576,6 +581,11 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
                 )
                 if member_created:
                     members_added += 1
+            try:
+                from accounts.services.growth_journey import on_lead_imported
+                on_lead_imported(lead)
+            except Exception:
+                pass
 
     batch.status = LeadImportBatch.Status.COMMITTED
     batch.committed_at = now

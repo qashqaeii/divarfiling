@@ -166,6 +166,18 @@ def build_segment_recipients(
         phone = _phone_ok(item.phone)
         if not phone or phone in seen:
             continue
+        # پایپلاین رشد: از ارسال هم‌پوشان با Recovery/Activation جلوگیری کن
+        try:
+            from accounts.services.growth_suppression import (
+                PURPOSE_MARKETING,
+                PURPOSE_RECOVERY,
+                is_send_allowed,
+            )
+            purpose = PURPOSE_RECOVERY if segment_key == 'pending_orders' else PURPOSE_MARKETING
+            if not is_send_allowed(phone, purpose=purpose, user=getattr(item, 'user', None)):
+                continue
+        except Exception:
+            pass
         seen.add(phone)
         item.phone = phone
         out.append(item)

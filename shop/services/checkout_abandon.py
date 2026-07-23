@@ -297,7 +297,7 @@ def ensure_checkout_abandon_event(order: Order) -> PlanFunnelEvent | None:
     idem_key = checkout_abandon_idempotency_key(order_id)
     try:
         with transaction.atomic():
-            obj, _created = PlanFunnelEvent.objects.get_or_create(
+            obj, created = PlanFunnelEvent.objects.get_or_create(
                 idempotency_key=idem_key,
                 defaults={
                     'event_type': 'checkout_abandon',
@@ -309,6 +309,12 @@ def ensure_checkout_abandon_event(order: Order) -> PlanFunnelEvent | None:
                     'metadata': meta,
                 },
             )
+            if created and order.user_id:
+                try:
+                    from accounts.services.growth_journey import on_checkout_start
+                    on_checkout_start(user=order.user, order=order)
+                except Exception:
+                    pass
             return obj
     except IntegrityError:
         return PlanFunnelEvent.objects.filter(idempotency_key=idem_key).first()

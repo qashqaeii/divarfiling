@@ -9,6 +9,8 @@ from .models import (
     CampaignMessage,
     CampaignStep,
     CampaignVariant,
+    GrowthJourney,
+    GrowthJourneyEvent,
     LeadAttribution,
     LeadCampaign,
     LeadImportBatch,
@@ -241,6 +243,24 @@ class SuppressionEntryAdmin(admin.ModelAdmin):
     list_display = ['phone_normalized', 'reason', 'created_at']
     list_filter = ['reason']
     search_fields = ['phone_normalized']
+
+
+@admin.register(GrowthJourney)
+class GrowthJourneyAdmin(admin.ModelAdmin):
+    list_display = [
+        'phone_normalized', 'stage', 'source', 'user', 'lead',
+        'nurture_paused', 'suppressed', 'stage_entered_at', 'updated_at',
+    ]
+    list_filter = ['stage', 'source', 'suppressed', 'nurture_paused']
+    search_fields = ['phone_normalized']
+    raw_id_fields = ['user', 'lead']
+
+
+@admin.register(GrowthJourneyEvent)
+class GrowthJourneyEventAdmin(admin.ModelAdmin):
+    list_display = ['id', 'journey', 'event_type', 'stage_from', 'stage_to', 'created_at']
+    list_filter = ['event_type', 'stage_to']
+    raw_id_fields = ['journey']
 
 
 admin.site.register(LeadListMember)

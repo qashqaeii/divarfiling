@@ -539,6 +539,14 @@ def resolve_pending_recovery_audience(
             if dkey not in seen_dedupe_winners:
                 seen_dedupe_winners.add(dkey)
                 stats['unique_recipients'] += 1
+            try:
+                from accounts.services.growth_journey import on_checkout_start
+                order = resolution.order
+                user = getattr(order, 'user', None) if order else None
+                if user:
+                    on_checkout_start(user=user, order=order)
+            except Exception:
+                pass
 
         resolutions.append(resolution)
 

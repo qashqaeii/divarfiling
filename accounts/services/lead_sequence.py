@@ -1,4 +1,4 @@
-"""Scheduler توالی سه‌مرحله‌ای جذب سرنخ."""
+"""Scheduler توالی جذب و فعال‌سازی سرنخ."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,7 +7,7 @@ from typing import Optional
 from django.db.models import Q
 from django.utils import timezone
 
-from accounts.models import CampaignEnrollment, CampaignStep, LeadCampaign
+from accounts.models import CampaignEnrollment, CampaignStep, GrowthJourney, LeadCampaign
 from accounts.services.lead_campaign_send import send_step_message
 
 
@@ -17,12 +17,11 @@ def due_enrollments_for_step(campaign: LeadCampaign, step: CampaignStep):
         campaign=campaign,
         status=CampaignEnrollment.Status.ACTIVE,
         current_step_number__lt=step.step_number,
-    ).select_related('lead', 'assigned_variant')
+    ).select_related('lead', 'assigned_variant', 'user', 'campaign')
 
     if step.step_number == 1:
         return qs.filter(current_step_number=0)
 
-    # بعد از پیام قبلی: enrolled_at یا last_message_at + delay
     delay = timedelta(days=step.delay_days)
     return qs.filter(
         Q(last_message_at__lte=now - delay)
@@ -31,14 +30,15 @@ def due_enrollments_for_step(campaign: LeadCampaign, step: CampaignStep):
     )
 
 
-def run_acquisition_sequence(
+def _run_kind_sequence(
     *,
+    kind: str,
     campaign_id: Optional[int] = None,
     limit_per_step: int = 200,
     request=None,
 ) -> dict:
     campaigns = LeadCampaign.objects.filter(
-        kind=LeadCampaign.Kind.ACQUISITION,
+        kind=kind,
         status__in=(LeadCampaign.Status.PILOT, LeadCampaign.Status.ACTIVE),
     )
     if campaign_id:
@@ -47,7 +47,7 @@ def run_acquisition_sequence(
     report = []
     for campaign in campaigns:
         steps = list(campaign.steps.filter(is_active=True).order_by('step_number'))
-        camp_stats = {'campaign_id': campaign.pk, 'steps': {}}
+        camp_stats = {'campaign_id': campaign.pk, 'kind': kind, 'steps': {}}
         for step in steps:
             due = list(due_enrollments_for_step(campaign, step)[:limit_per_step])
             accepted = failed = skipped = 0
@@ -55,6 +55,12 @@ def run_acquisition_sequence(
                 msg = send_step_message(enrollment=enroll, step=step, request=request)
                 if msg.status == msg.Status.PROVIDER_ACCEPTED:
                     accepted += 1
+                    if (
+                        kind == LeadCampaign.Kind.ACTIVATION
+                        and step.step_number >= 2
+                        and enroll.lead_id
+                    ):
+                        _mark_nurture_unpaid(enroll)
                 elif msg.status == msg.Status.FAILED:
                     failed += 1
                 else:
@@ -67,3 +73,48 @@ def run_acquisition_sequence(
             }
         report.append(camp_stats)
     return {'campaigns': report}
+
+
+def _mark_nurture_unpaid(enrollment: CampaignEnrollment) -> None:
+    try:
+        from accounts.services.growth_journey import transition
+        transition(
+            phone=enrollment.lead.phone_normalized,
+            lead=enrollment.lead,
+            user=enrollment.user,
+            event_type='no_purchase_window',
+            stage=GrowthJourney.Stage.NURTURE_UNPAID,
+            metadata={'activation_step': enrollment.current_step_number},
+        )
+    except Exception:
+        pass
+
+
+def run_acquisition_sequence(
+    *,
+    campaign_id: Optional[int] = None,
+    limit_per_step: int = 200,
+    request=None,
+) -> dict:
+    return _run_kind_sequence(
+        kind=LeadCampaign.Kind.ACQUISITION,
+        campaign_id=campaign_id,
+        limit_per_step=limit_per_step,
+        request=request,
+    )
+
+
+def run_activation_sequence(
+    *,
+    campaign_id: Optional[int] = None,
+    limit_per_step: int = 200,
+    request=None,
+) -> dict:
+    from accounts.services.user_activation import get_or_create_default_activation_campaign
+    get_or_create_default_activation_campaign()
+    return _run_kind_sequence(
+        kind=LeadCampaign.Kind.ACTIVATION,
+        campaign_id=campaign_id,
+        limit_per_step=limit_per_step,
+        request=request,
+    )

@@ -494,6 +494,28 @@ def pipeline_overview() -> dict[str, Any]:
     }
 
 
+def _parse_run_timestamp(value):
+    """ISO string یا datetime → datetime aware برای نمایش شمسی."""
+    if value is None or value == '':
+        return None
+    if hasattr(value, 'strftime'):
+        return value
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        from django.utils.dateparse import parse_datetime
+        dt = parse_datetime(text.replace('Z', '+00:00'))
+        if dt is None:
+            from datetime import datetime
+            dt = datetime.fromisoformat(text.replace('Z', '+00:00'))
+        if timezone.is_naive(dt):
+            dt = timezone.make_aware(dt, timezone.get_current_timezone())
+        return dt
+    except Exception:
+        return None
+
+
 def summarize_last_run(last_run: Optional[dict] = None) -> dict[str, Any]:
     """خلاصه فارسی و قابل‌فهم از خروجی run_growth_pipeline."""
     last_run = last_run or {}
@@ -556,8 +578,8 @@ def summarize_last_run(last_run: Optional[dict] = None) -> dict[str, Any]:
         'sms_sent': sms_sent,
         'sms_failed': sms_failed,
         'lines': lines,
-        'started_at': last_run.get('started_at'),
-        'finished_at': last_run.get('finished_at'),
+        'started_at': _parse_run_timestamp(last_run.get('started_at')),
+        'finished_at': _parse_run_timestamp(last_run.get('finished_at')),
         'has_data': bool(last_run),
     }
 

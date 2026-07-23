@@ -30,6 +30,13 @@ def to_jalali_fa(value, format_string="%Y/%m/%d %H:%M"):
         return ''
 
     try:
+        if isinstance(value, str):
+            from django.utils.dateparse import parse_datetime
+            parsed = parse_datetime(value.replace('Z', '+00:00'))
+            if parsed is None:
+                from datetime import datetime
+                parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            value = parsed
         if timezone.is_aware(value):
             value = timezone.localtime(value)
         jdt = jdatetime.datetime.fromgregorian(datetime=value)

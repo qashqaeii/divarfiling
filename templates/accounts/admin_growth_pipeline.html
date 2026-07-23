@@ -165,7 +165,7 @@
                 <h2 style="font-size:1rem;margin:0">آخرین کاری که سیستم انجام داد</h2>
                 <p style="margin:.25rem 0 0">
                     {% if run_summary.has_data %}
-                    از {{ run_summary.started_at|default:"—" }} تا {{ run_summary.finished_at|default:"—" }}
+                    از {{ run_summary.started_at|to_jalali_fa:"%Y/%m/%d %H:%M" }} تا {{ run_summary.finished_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}
                     {% else %}
                     هنوز گزارشی از کرون در حافظه نیست — تا اجرای بعدی (ساعت زوج) صبر کنید یا یک‌بار دستی تست کنید.
                     {% endif %}
@@ -244,7 +244,7 @@
                             {% elif row.paused %}متوقف‌شده توسط شما
                             {% else %}ارسال خودکار فعال{% endif %}
                         </td>
-                        <td>{{ row.entered_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ row.entered_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
                         <td style="white-space:nowrap">
                             {% if not row.suppressed %}
                             <form method="post" style="display:inline">
@@ -301,7 +301,7 @@
                         <td>{{ ev.event_label }}</td>
                         <td>{{ ev.stage_from_label }}</td>
                         <td>{{ ev.stage_to_label }}</td>
-                        <td>{{ ev.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ ev.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
                     </tr>
                     {% empty %}
                     <tr><td colspan="5" class="adm-lac-table-empty">هنوز حرکتی ثبت نشده.</td></tr>

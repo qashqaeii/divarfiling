@@ -1161,64 +1161,24 @@ def home_page_content():
     """محتوای صفحه اصلی — فایلینگ دیوار."""
     return {
         'hero': {
-            'title_prefix': 'هر آگهی ',
-            'title_brand': 'دیوار',
-            'title_suffix': '، یک فرصت معامله است!',
-            'title': 'هر آگهی دیوار، یک فرصت معامله است!',
-            'subtitle': 'فایلینگ هوشمند املاک بر پایه داده‌های واقعی دیوار',
-            'lead': (
-                'دیگر لازم نیست ساعت‌ها بین آگهی‌ها بگردید. ربات استخراج، آگهی‌های جدید دیوار را '
-                'جمع‌آوری می‌کند؛ CRM شما آن‌ها را مرتب می‌کند؛ و تحلیل بازار به شما نشان می‌دهد '
-                'هر محله واقعاً چه قیمتی دارد.'
+            'eyebrow': 'سیستم‌عامل مشاوران حرفه‌ای املاک',
+            'title_prefix': 'وقتی شما ',
+            'title_brand': 'می‌بینید',
+            'title_suffix': '، بقیه هنوز جستجو می‌کنند.',
+            'title': 'وقتی شما می‌بینید، بقیه هنوز جستجو می‌کنند.',
+            'subtitle': (
+                'فایلینگ دیوار؛ سیستم‌عامل مشاور حرفه‌ای برای دیدن فرصت‌ها زودتر، '
+                'مدیریت دقیق فایل و مشتری، و جلو ماندن از بازار.'
             ),
-            'deck_features': [
-                {
-                    'icon': 'fa-bullseye',
-                    'decor_icon': 'rocket',
-                    'title': 'استخراج خودکار',
-                    'desc': 'آگهی‌های جدید دیوار',
-                    'accent': 'violet',
-                },
-                {
-                    'icon': 'fa-folder',
-                    'decor_icon': 'folder',
-                    'title': 'فایلینگ هوشمند',
-                    'desc': 'مرتب‌سازی و دسته‌بندی',
-                    'accent': 'indigo',
-                },
-                {
-                    'icon': 'fa-chart-pie',
-                    'decor_icon': 'sparkles',
-                    'title': 'تحلیل بازار',
-                    'desc': 'نمودارها و مقایسه محله‌ها',
-                    'accent': 'sky',
-                },
-                {
-                    'icon': 'fa-users',
-                    'decor_icon': 'clipboard_list',
-                    'title': 'CRM حرفه‌ای',
-                    'desc': 'مدیریت مشتریان و مالکین',
-                    'accent': 'emerald',
-                },
-                {
-                    'icon': 'fa-bell',
-                    'decor_icon': 'sticky_note',
-                    'title': 'یادآورها و پیگیری‌ها',
-                    'desc': 'هیچ فرصتی را از دست ندهید',
-                    'accent': 'amber',
-                },
-                {
-                    'icon': 'fa-map-location-dot',
-                    'decor_icon': 'map_pin',
-                    'title': 'نقشه و بنچمارک',
-                    'desc': 'قیمت و امتیاز محله‌ها',
-                    'accent': 'rose',
-                },
-            ],
+            'trust': 'رایگان شروع کنید · بدون پیچیدگی فنی · مخصوص بازار ایران',
             'cta_primary_label': 'ورود به میزکار',
             'cta_primary_icon': 'fa-layer-group',
-            'cta_guest_label': 'شروع رایگان میزکار',
-            'cta_guest_icon': 'fa-gift',
+            'cta_guest_label': 'شروع کار حرفه‌ای',
+            'cta_guest_icon': 'fa-rocket',
+            'cta_academy_label': 'ویدیوهای آکادمی',
+            'cta_academy_icon': 'fa-play',
+            'cta_secondary_label': 'تفاوت را ببینید',
+            'cta_secondary_icon': 'fa-arrow-down',
             'cta_bot_label': 'فعال‌سازی ربات استخراج',
             'cta_bot_icon': 'fa-robot',
         },

@@ -23,7 +23,7 @@
         --hh-page-bg: #f8fafc;
         --hh-surface: #ffffff;
         --hh-title: #0f172a;
-        --hh-brand: #dc2626;
+        --hh-brand: #f59e0b;
         --hh-subtitle: #475569;
         --hh-kicker-color: #5b21b6;
         --hh-kicker-icon: #7c3aed;
@@ -59,7 +59,7 @@
         --hh-page-bg: #070b14;
         --hh-surface: #0b1220;
         --hh-title: #f8fafc;
-        --hh-brand: #fb7185;
+        --hh-brand: #fbbf24;
         --hh-subtitle: #94a3b8;
         --hh-kicker-color: #ddd6fe;
         --hh-kicker-icon: #c4b5fd;
@@ -159,9 +159,9 @@
     }
 
     /* ── Hero: natural height vertical stack
-       Specificity beats mizkar-home .mk-hero--deck mobile rules ── */
-    .mk-home-page .home-hero.mk-hero--split.mk-hero--pro.mk-hero--deck,
-    .mk-home-page section.home-hero.mk-hero--deck {
+       Specificity beats mizkar-home .mk-hero--cinema mobile rules ── */
+    .mk-home-page .home-hero.mk-hero--split.mk-hero--pro.mk-hero--cinema,
+    .mk-home-page section.home-hero.mk-hero--cinema {
         position: relative;
         isolation: isolate;
         min-height: 0 !important;
@@ -174,8 +174,8 @@
         background: var(--hh-page-bg) !important;
     }
 
-    .mk-home-page .home-hero.mk-hero--split.mk-hero--pro.mk-hero--deck::after,
-    .mk-home-page .home-hero.mk-hero--split.mk-hero--pro.mk-hero--deck::before {
+    .mk-home-page .home-hero.mk-hero--split.mk-hero--pro.mk-hero--cinema::after,
+    .mk-home-page .home-hero.mk-hero--split.mk-hero--pro.mk-hero--cinema::before {
         display: none !important;
         content: none !important;
     }
@@ -207,7 +207,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: 72% 28%;
+        object-position: 70% 35%;
         filter: var(--hh-img-filter);
     }
 
@@ -365,6 +365,37 @@
         background: var(--hh-ghost-bg);
         border: 1px solid var(--hh-ghost-border);
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .home-hero__btn--academy {
+        color: #fff;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.95) 0%, #ea580c 100%);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 12px 24px -12px rgba(234, 88, 12, 0.55);
+    }
+
+    .home-hero__btn--academy > i {
+        display: grid;
+        place-items: center;
+        width: 1.65rem;
+        height: 1.65rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        font-size: 0.62rem;
+    }
+
+    .home-hero__trust {
+        margin: 0;
+        padding: 0.15rem 0.1rem 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1.55;
+        color: #64748b;
+        text-align: center;
+    }
+
+    html.mk-public[data-theme="dark"] .home-hero__trust {
+        color: #94a3b8;
     }
 
     /* Feature cards — 2-column grid */

@@ -345,6 +345,11 @@ class Customer(models.Model):
     want_storage = models.BooleanField(default=False, verbose_name='انباری')
     want_elevator = models.BooleanField(default=False, verbose_name='آسانسور')
     areas = models.TextField(blank=True, verbose_name='محله‌های مورد نظر')
+    matching_tolerance_percent = models.PositiveSmallIntegerField(
+        default=20,
+        verbose_name='انعطاف‌پذیری تطبیق (٪)',
+        help_text='حداکثر فاصله مجاز از بازه بودجه و متراژ — ۰ تا ۵۰٪',
+    )
     tags = models.CharField(max_length=500, blank=True, verbose_name='برچسب‌ها')
     builder_buy_property_types = models.CharField(
         max_length=120, blank=True, verbose_name='انواع ملک هدف خرید (سازنده)',

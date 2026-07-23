@@ -20,9 +20,57 @@ MATCH_TYPES = {
     'خریدار', 'مستاجر', 'متقاضی خرید', 'متقاضی اجاره', 'سرنخ', 'سرمایه‌گذار', 'سازنده',
 }
 
-# حداکثر فاصله مجاز از بازه بودجه/متراژ (۲۰٪ بیشتر یا کمتر).
-# خارج از این باند اصلاً پیشنهاد نمی‌شود؛ داخل باند با امتیاز و برچسب نرم می‌ماند.
-RANGE_TOLERANCE = 0.20
+# پیش‌فرض انعطاف‌پذیری تطبیق — قابل تنظیم per-contact در matching_tolerance_percent.
+DEFAULT_MATCHING_TOLERANCE_PERCENT = 20
+MATCHING_TOLERANCE_MIN_PERCENT = 0
+MATCHING_TOLERANCE_MAX_PERCENT = 50
+MATCHING_TOLERANCE_STEP_PERCENT = 5
+# نسبت پیش‌فرض (۲۰٪) — برای سازگاری با کدهای قدیمی.
+RANGE_TOLERANCE = DEFAULT_MATCHING_TOLERANCE_PERCENT / 100.0
+
+
+def normalize_matching_tolerance_percent(
+    value,
+    *,
+    default: int = DEFAULT_MATCHING_TOLERANCE_PERCENT,
+) -> int:
+    """اعتبارسنجی انعطاف‌پذیری: ۰–۵۰٪ با گام ۵٪."""
+    if value is None or value == '':
+        return default
+    try:
+        pct = int(value)
+    except (TypeError, ValueError):
+        raise ValueError('انعطاف‌پذیری باید عدد باشد.')
+    if pct < MATCHING_TOLERANCE_MIN_PERCENT or pct > MATCHING_TOLERANCE_MAX_PERCENT:
+        raise ValueError(
+            f'انعطاف‌پذیری باید بین {MATCHING_TOLERANCE_MIN_PERCENT} '
+            f'تا {MATCHING_TOLERANCE_MAX_PERCENT} درصد باشد.'
+        )
+    if pct % MATCHING_TOLERANCE_STEP_PERCENT != 0:
+        raise ValueError(
+            f'انعطاف‌پذیری باید مضرب {MATCHING_TOLERANCE_STEP_PERCENT} درصد باشد.'
+        )
+    return pct
+
+
+def profile_tolerance_ratio(profile) -> float:
+    """نسبت تلورانس (۰.۰–۰.۵) از پروفایل مخاطب."""
+    raw = getattr(profile, 'matching_tolerance_percent', None)
+    try:
+        pct = normalize_matching_tolerance_percent(raw)
+    except ValueError:
+        pct = DEFAULT_MATCHING_TOLERANCE_PERCENT
+    return pct / 100.0
+
+
+def customer_matching_tolerance_percent(customer: Customer) -> int:
+    try:
+        return normalize_matching_tolerance_percent(
+            getattr(customer, 'matching_tolerance_percent', None),
+        )
+    except ValueError:
+        return DEFAULT_MATCHING_TOLERANCE_PERCENT
+
 
 MATCH_CRM_SCAN_LIMIT = 800
 MATCH_CRM_SCAN_LIMIT_BROAD = 1200
@@ -104,7 +152,8 @@ def _within_range_tolerance(
 def _profile_area_eligible(profile, area: Optional[float]) -> bool:
     if area is None or area <= 0:
         return True
-    return _within_range_tolerance(area, profile.min_area, profile.max_area)
+    tol = profile_tolerance_ratio(profile)
+    return _within_range_tolerance(area, profile.min_area, profile.max_area, tolerance=tol)
 
 
 def _profile_budget_eligible(
@@ -115,13 +164,14 @@ def _profile_budget_eligible(
     rent: Optional[int] = None,
     is_rent: bool = False,
 ) -> bool:
+    tol = profile_tolerance_ratio(profile)
     if is_rent:
-        if not _within_range_tolerance(deposit, profile.deposit_min, profile.deposit_max):
+        if not _within_range_tolerance(deposit, profile.deposit_min, profile.deposit_max, tolerance=tol):
             return False
-        if not _within_range_tolerance(rent, profile.rent_min, profile.rent_max):
+        if not _within_range_tolerance(rent, profile.rent_min, profile.rent_max, tolerance=tol):
             return False
         return True
-    return _within_range_tolerance(sale_price, profile.budget_min, profile.budget_max)
+    return _within_range_tolerance(sale_price, profile.budget_min, profile.budget_max, tolerance=tol)
 
 
 def _profile_allowed_property_types(profile) -> Optional[Set[str]]:
@@ -684,6 +734,7 @@ def _builder_supply_profile(customer: Customer):
         rent_max=customer.rent_max,
         min_area=customer.min_area,
         max_area=customer.max_area,
+        matching_tolerance_percent=customer_matching_tolerance_percent(customer),
         rooms=customer.rooms,
         rooms_min=customer.rooms_min,
         rooms_max=customer.rooms_max,
@@ -712,6 +763,7 @@ def _builder_acquisition_profile(customer: Customer):
         rent_max=None,
         min_area=customer.builder_buy_min_area,
         max_area=customer.builder_buy_max_area,
+        matching_tolerance_percent=customer_matching_tolerance_percent(customer),
         rooms=customer.rooms,
         rooms_min=None,
         rooms_max=None,
@@ -935,6 +987,7 @@ def _crm_properties_qs(user):
 def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
     """پیش‌فیلتر SQL تا فایل‌های داخل بازه بودجه/متراژ از دست نروند."""
     qs = _crm_properties_qs(user)
+    tol = profile_tolerance_ratio(customer)
     if is_builder_customer(customer):
         return qs.order_by('-updated_at')[:scan_limit]
 
@@ -942,7 +995,7 @@ def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
         qs = qs.filter(deal_mode__in=['رهن و اجاره', 'اجاره']).filter(
             Q(deposit__gt=0) | Q(monthly_rent__gt=0),
         )
-        bounds = _deposit_rent_sql_bounds(customer)
+        bounds = _deposit_rent_sql_bounds(customer, tolerance=tol)
         if bounds['deposit_lo'] is not None:
             qs = qs.filter(deposit__gte=bounds['deposit_lo'])
         if bounds['deposit_hi'] is not None:
@@ -953,7 +1006,7 @@ def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
             qs = qs.filter(monthly_rent__lte=bounds['rent_hi'])
     elif _is_sale_customer(customer):
         qs = qs.filter(deal_mode__in=['فروش', 'پیش‌فروش']).filter(sale_price__gt=0)
-        sql_lo, sql_hi = _budget_sql_bounds(customer)
+        sql_lo, sql_hi = _budget_sql_bounds(customer, tolerance=tol)
         if sql_lo is not None:
             qs = qs.filter(sale_price__gte=sql_lo)
         if sql_hi is not None:
@@ -970,9 +1023,9 @@ def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
         qs = qs.filter(property_type__in=sorted(allowed))
 
     if customer.min_area:
-        qs = qs.filter(area__gte=customer.min_area * (1 - RANGE_TOLERANCE))
+        qs = qs.filter(area__gte=customer.min_area * (1 - tol))
     if customer.max_area:
-        qs = qs.filter(area__lte=customer.max_area * (1 + RANGE_TOLERANCE))
+        qs = qs.filter(area__lte=customer.max_area * (1 + tol))
 
     return qs.order_by('-updated_at')[:scan_limit]
 
@@ -987,12 +1040,13 @@ def _divar_listings_base_qs(user):
 
 def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
     qs = _divar_listings_base_qs(user)
+    tol = profile_tolerance_ratio(customer)
     if is_builder_customer(customer):
         return qs[:scan_limit]
 
     if _is_rent_customer(customer):
         qs = qs.filter(Q(deposit__gt=0) | Q(rent__gt=0))
-        bounds = _deposit_rent_sql_bounds(customer)
+        bounds = _deposit_rent_sql_bounds(customer, tolerance=tol)
         if bounds['deposit_lo'] is not None:
             qs = qs.filter(deposit__gte=bounds['deposit_lo'])
         if bounds['deposit_hi'] is not None:
@@ -1007,7 +1061,7 @@ def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
         ).filter(
             Q(rent__isnull=True) | Q(rent=0),
         )
-        sql_lo, sql_hi = _budget_sql_bounds(customer)
+        sql_lo, sql_hi = _budget_sql_bounds(customer, tolerance=tol)
         if sql_lo is not None:
             qs = qs.filter(price__gte=sql_lo)
         if sql_hi is not None:
@@ -1020,9 +1074,9 @@ def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
         )
 
     if customer.min_area:
-        qs = qs.filter(area__gte=customer.min_area * (1 - RANGE_TOLERANCE))
+        qs = qs.filter(area__gte=customer.min_area * (1 - tol))
     if customer.max_area:
-        qs = qs.filter(area__lte=customer.max_area * (1 + RANGE_TOLERANCE))
+        qs = qs.filter(area__lte=customer.max_area * (1 + tol))
 
     return qs[:scan_limit]
 
@@ -1183,13 +1237,19 @@ def get_builder_customer_matches(customer: Customer, user, *, divar_enabled: boo
         'divar_matches': divar_matches,
         'divar_locked': not divar_enabled,
         'total_count': compute_match_total_count({'match_groups': groups}),
+        'matching_tolerance_percent': customer_matching_tolerance_percent(customer),
         'message': '',
     }
 
 
+def _match_payload_with_tolerance(payload: Dict[str, Any], customer: Customer) -> Dict[str, Any]:
+    payload['matching_tolerance_percent'] = customer_matching_tolerance_percent(customer)
+    return payload
+
+
 def get_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Dict[str, Any]:
     if customer.customer_type not in MATCH_TYPES and customer.customer_type not in LEAD_TYPES:
-        return {
+        return _match_payload_with_tolerance({
             'eligible': False,
             'is_builder': False,
             'match_groups': [],
@@ -1198,7 +1258,7 @@ def get_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Di
             'divar_locked': not divar_enabled,
             'total_count': 0,
             'message': 'تطبیق خودکار برای این نوع مخاطب فعال نیست.',
-        }
+        }, customer)
 
     if is_builder_customer(customer):
         return get_builder_customer_matches(customer, user, divar_enabled=divar_enabled)
@@ -1216,4 +1276,4 @@ def get_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Di
         'message': '',
     }
     payload['total_count'] = compute_match_total_count(payload)
-    return payload
+    return _match_payload_with_tolerance(payload, customer)

@@ -1631,6 +1631,118 @@ function initCRMQuickLead() {
     });
 }
 
+function initCRMMatchingTolerance() {
+    const root = document.querySelector('[data-crm-match-tolerance]');
+    if (!root || root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const range = root.querySelector('.crm-contact-pref-tolerance-range');
+    const output = root.querySelector('.crm-contact-pref-tolerance-value');
+    const toast = root.querySelector('[data-crm-match-tolerance-toast]');
+    const url = root.dataset.url || '';
+    if (!range || !url || range.disabled) return;
+
+    let previous = parseInt(range.value, 10);
+    let timer = null;
+    let inflight = null;
+
+    function paintTrack() {
+        const pct = (parseInt(range.value, 10) / 50) * 100;
+        range.style.setProperty('--crm-tol-pct', `${pct}%`);
+    }
+
+    function syncOutput() {
+        const val = parseInt(range.value, 10);
+        if (output) output.textContent = `${crmToPersianDigits(String(val))}٪`;
+        range.setAttribute('aria-valuenow', String(val));
+    }
+
+    function showToast(message, isError = false) {
+        if (!toast) return;
+        toast.textContent = message;
+        toast.hidden = false;
+        toast.classList.toggle('is-error', isError);
+        window.clearTimeout(showToast._t);
+        showToast._t = window.setTimeout(() => { toast.hidden = true; }, 2600);
+    }
+
+    function updateToleranceBadges(val) {
+        const label = `· تلورانس ${crmToPersianDigits(String(val))}٪`;
+        document.querySelectorAll('[data-crm-match-tolerance-badge]').forEach(el => {
+            el.textContent = label;
+        });
+    }
+
+    async function persist(value) {
+        if (inflight) inflight.abort();
+        inflight = new AbortController();
+        root.classList.add('is-saving');
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ matching_tolerance_percent: value }),
+                signal: inflight.signal,
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || 'ذخیره انجام نشد');
+
+            previous = value;
+            updateToleranceBadges(value);
+
+            const matchesRoot = document.getElementById('crmMatches');
+            if (matchesRoot && data.matches_html) {
+                matchesRoot.outerHTML = data.matches_html;
+                initCRMMatches();
+            }
+
+            const tabCount = document.querySelector('[data-crm-match-tab-count]');
+            if (tabCount && data.match_tab_count != null) {
+                tabCount.textContent = crmToPersianDigits(String(data.match_tab_count));
+            }
+
+            showToast('انعطاف‌پذیری ذخیره شد — پیشنهادها به‌روز شد.');
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            range.value = String(previous);
+            paintTrack();
+            syncOutput();
+            showToast(err.message || 'خطا در ذخیره', true);
+        } finally {
+            root.classList.remove('is-saving');
+            inflight = null;
+        }
+    }
+
+    function scheduleSave() {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+            const val = parseInt(range.value, 10);
+            if (val === previous) return;
+            persist(val);
+        }, 350);
+    }
+
+    paintTrack();
+    syncOutput();
+
+    range.addEventListener('input', () => {
+        syncOutput();
+        paintTrack();
+        scheduleSave();
+    });
+
+    range.addEventListener('change', () => {
+        window.clearTimeout(timer);
+        const val = parseInt(range.value, 10);
+        if (val !== previous) persist(val);
+    });
+}
+
 function initCRMMatches() {
     const form = document.getElementById('crmSuggestForm');
     if (!form) return;
@@ -3580,6 +3692,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMQuickLead();
     initCRMImportDrawer();
     initCRMMatches();
+    initCRMMatchingTolerance();
     initCRMContactPortfolio();
     initCRMActivityDrawer(document);
     initCRMTabJump();

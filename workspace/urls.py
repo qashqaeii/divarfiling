@@ -86,6 +86,7 @@ urlpatterns = [
     path('crm/contacts/', crm_views.CustomerListView.as_view(), name='crm_contacts'),
     path('crm/contacts/quick/', crm_views.CustomerQuickCreateView.as_view(), name='crm_quick_lead'),
     path('crm/contacts/<int:customer_id>/status/', crm_views.CustomerStatusUpdateView.as_view(), name='crm_contact_status'),
+    path('crm/contacts/<int:customer_id>/matching-tolerance/', crm_views.CustomerMatchingToleranceView.as_view(), name='crm_contact_matching_tolerance'),
     path('crm/contacts/<int:customer_id>/panel/', crm_views.CustomerPanelView.as_view(), name='crm_contact_panel'),
     path('crm/contacts/new/', crm_views.CustomerCreateView.as_view(), name='crm_create'),
     path('crm/contacts/<int:customer_id>/', crm_views.CustomerDetailView.as_view(), name='crm_detail'),

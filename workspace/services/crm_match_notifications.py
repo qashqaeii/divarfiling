@@ -307,6 +307,7 @@ def contact_matches_payload(user, contact_id: int, request=None) -> Optional[Dic
         'crm_matches': crm_matches,
         'divar_matches': divar_matches,
         'total_count': total_count,
+        'matching_tolerance_percent': data.get('matching_tolerance_percent', 20),
         'customer': {
             'id': customer.pk,
             'full_name': customer.name,

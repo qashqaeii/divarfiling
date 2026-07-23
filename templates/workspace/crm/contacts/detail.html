@@ -226,7 +226,7 @@
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="matches" role="tab">
                         <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-house"></i></span>
                         <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">پیشنهاد ملک</span><span class="crm-contact-seg__short">پیشنهاد</span></span>
-                        <em>{% crm_match_tab_count match_data %}</em>
+                        <em data-crm-match-tab-count>{% crm_match_tab_count match_data %}</em>
                     </button>
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="visits" role="tab">
                         <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-door-open"></i></span>
@@ -601,6 +601,8 @@
                 </div>
                 {% endif %}
                 {% endif %}
+
+                {% include 'workspace/crm/includes/contact_matching_tolerance_slider.html' %}
             </div>
 
             <div class="crm-contact-side-card crm-contact-side-card--followup crm-followup-v2">

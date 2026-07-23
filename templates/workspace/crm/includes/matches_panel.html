@@ -6,10 +6,10 @@
         <div class="crm-matches-hero-content">
             <div class="crm-matches-hero-badge"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> تطبیق هوشمند</div>
             {% if match_data.is_builder %}
-            <h3>پیشنهاد دوگانه برای سازنده</h3>
+            <h3>پیشنهاد دوگانه برای سازنده <span class="crm-matches-tolerance-badge" data-crm-match-tolerance-badge>· تلورانس {{ match_data.matching_tolerance_percent|default:20 }}٪</span></h3>
             <p>تأمین پروژه (خرید زمین/کلنگی) و بازار آپارتمان (فروش واحد) — در دو بخش جدا</p>
             {% else %}
-            <h3>پیشنهاد ملک بر اساس پروفایل مخاطب</h3>
+            <h3>پیشنهاد ملک بر اساس پروفایل مخاطب <span class="crm-matches-tolerance-badge" data-crm-match-tolerance-badge>· تلورانس {{ match_data.matching_tolerance_percent|default:20 }}٪</span></h3>
             <p>بودجه، محله، متراژ و نوع معامله — امتیاز تطبیق برای هر فایل محاسبه شده است</p>
             {% endif %}
             {% if match_data.eligible %}

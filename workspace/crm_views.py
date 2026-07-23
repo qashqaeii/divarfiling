@@ -10,6 +10,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -133,7 +134,11 @@ from workspace.services.crm_deal_stages import (
 from workspace.services.crm_deal_checklist import (
     checklist_progress, ensure_deal_checklist, toggle_checklist_item,
 )
-from workspace.services.crm_matching import MATCH_TYPES, get_customer_matches
+from workspace.services.crm_matching import (
+    MATCH_TYPES,
+    get_customer_matches,
+    normalize_matching_tolerance_percent,
+)
 from workspace.constants import LEAD_TYPES
 from workspace.services.crm_match_notifications import is_match_eligible
 from workspace.services.crm_import import (
@@ -429,6 +434,63 @@ class CustomerStatusUpdateView(LoginRequiredMixin, View):
         })
 
 
+def _contact_matches_panel_context(user, customer, request):
+    """Context برای رندر پنل پیشنهاد ملک."""
+    divar_enabled = has_active_bot_license(user)
+    match_data = get_customer_matches(customer, user, divar_enabled=divar_enabled)
+    from workspace.services.property_suggestion_share import enrich_match_data_links
+    match_data = enrich_match_data_links(user, request, match_data)
+    return {
+        'match_data': match_data,
+        'customer': customer,
+        'has_bot_license': divar_enabled,
+        'suggested': False,
+        'suggestion_text': '',
+    }
+
+
+class CustomerMatchingToleranceView(LoginRequiredMixin, View):
+    """ذخیره انعطاف‌پذیری تطبیق و بازمحاسبه پیشنهادها."""
+
+    def post(self, request, customer_id):
+        customer = customer_for_user(request.user, customer_id)
+        if not customer:
+            return JsonResponse({'ok': False, 'error': 'مخاطب یافت نشد'}, status=404)
+        if not can_edit_customer(request.user, customer):
+            return JsonResponse({'ok': False, 'error': 'امکان ویرایش این مخاطب را ندارید'}, status=403)
+        if not request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+
+        raw = payload.get('matching_tolerance_percent')
+        try:
+            pct = normalize_matching_tolerance_percent(raw)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+
+        customer.matching_tolerance_percent = pct
+        customer.save(update_fields=['matching_tolerance_percent', 'updated_at'])
+
+        panel_ctx = _contact_matches_panel_context(request.user, customer, request)
+        match_data = panel_ctx['match_data']
+        from workspace.templatetags.crm_tags import crm_match_tab_count
+        matches_html = render_to_string(
+            'workspace/crm/includes/matches_panel.html',
+            panel_ctx,
+            request=request,
+        )
+        return JsonResponse({
+            'ok': True,
+            'matching_tolerance_percent': pct,
+            'match_tab_count': crm_match_tab_count(match_data),
+            'total_count': int(match_data.get('total_count') or 0),
+            'matches_html': matches_html,
+        })
+
+
 class CustomerPanelView(LoginRequiredMixin, View):
     """پنل کناری — خلاصه مخاطب."""
 
@@ -636,10 +698,10 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         )
         ctx['crm_section'] = 'contacts'
         divar_enabled = has_active_bot_license(self.request.user)
-        match_data = get_customer_matches(c, self.request.user, divar_enabled=divar_enabled)
-        from workspace.services.property_suggestion_share import enrich_match_data_links
-        ctx['match_data'] = enrich_match_data_links(self.request.user, self.request, match_data)
+        ctx.update(_contact_matches_panel_context(self.request.user, c, self.request))
         ctx['match_data_json'] = json.dumps(ctx['match_data'], ensure_ascii=False)
+        ctx['match_eligible'] = is_match_eligible(c)
+        ctx['can_edit_customer'] = can_edit_customer(self.request.user, c)
         ctx['suggestion_text'] = self.request.session.pop('crm_last_suggestion_text', '')
         ctx['active_tab'] = self.request.GET.get('tab', '')
         ctx['suggested'] = self.request.GET.get('suggested', '')

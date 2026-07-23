@@ -1207,8 +1207,8 @@ class GrowthJourney(models.Model):
         verbose_name_plural = 'سفرهای رشد'
         ordering = ['-updated_at']
         indexes = [
-            models.Index(fields=['stage', '-stage_entered_at']),
-            models.Index(fields=['suppressed', 'nurture_paused', 'stage']),
+            models.Index(fields=['stage', '-stage_entered_at'], name='accounts_gr_stage_ef35a0_idx'),
+            models.Index(fields=['suppressed', 'nurture_paused', 'stage'], name='accounts_gr_suppres_f87ebb_idx'),
         ]
 
     def __str__(self):
@@ -1236,8 +1236,8 @@ class GrowthJourneyEvent(models.Model):
         verbose_name_plural = 'رویدادهای سفر رشد'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['journey', '-created_at']),
-            models.Index(fields=['event_type', '-created_at']),
+            models.Index(fields=['journey', '-created_at'], name='accounts_gr_journey_7a30f0_idx'),
+            models.Index(fields=['event_type', '-created_at'], name='accounts_gr_event_t_2e06f0_idx'),
         ]
 
     def __str__(self):

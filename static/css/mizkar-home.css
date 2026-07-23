@@ -16526,16 +16526,21 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--cinema .mk-hero-bg::af
     justify-content: center;
     align-items: stretch;
     width: 100%;
-    max-width: none;
+    max-width: none !important;
     height: 100%;
     min-height: 100%;
-    margin: 0;
+    margin: 0 !important;
     padding: clamp(1.5rem, 4vh, 2.75rem) clamp(1.25rem, 4vw, 3rem) clamp(2rem, 5vh, 3.25rem) !important;
     grid-template-columns: none !important;
 }
 
 .mk-home-page .mk-hero--cinema .mk-hero-split {
-    display: block;
+    /* direction:ltr pins copy to physical LEFT; inner keeps RTL text */
+    direction: ltr;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
     width: 100%;
     max-width: none;
     min-height: 0;
@@ -16544,19 +16549,25 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--cinema .mk-hero-bg::af
 }
 
 .mk-home-page .mk-hero--cinema .mk-hero-inner {
+    direction: rtl;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: flex-start;
     grid-column: auto;
-    width: 100%;
-    max-width: min(40rem, 46%);
-    margin-left: 0 !important;
-    margin-right: auto !important;
-    margin-inline: unset !important;
+    width: min(40rem, 44vw);
+    max-width: 40rem;
+    margin: 0 !important;
+    margin-inline: 0 !important;
     padding: 0 !important;
     transform: none !important;
     text-align: right;
     justify-self: auto;
+    align-self: center;
+}
+
+.mk-home-page .mk-hero--cinema .mk-hero-mag {
+    display: none !important;
 }
 
 .mk-home-page .mk-hero--cinema .mk-hero-stack {
@@ -16711,23 +16722,31 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-hero--cinema .mk-hero-subtit
 
 @media (max-width: 1200px) {
     .mk-home-page .mk-hero--cinema .mk-hero-inner {
-        max-width: min(38rem, 54%);
+        width: min(38rem, 50vw);
+        max-width: 38rem;
     }
 }
 
 @media (max-width: 992px) {
     .mk-home-page .mk-hero--cinema .mk-hero-inner {
-        max-width: min(36rem, 68%);
+        width: min(34rem, 58vw);
+        max-width: 34rem;
     }
 
     .mk-home-page .mk-hero--cinema .mk-hero-bg {
-        background-position: 64% center !important;
+        background-position: 62% center !important;
     }
 }
 
-@media (max-width: 900px) {
+@media (min-width: 769px) and (max-width: 900px) {
     .mk-home-page .mk-hero--cinema .mk-hero-title {
         font-size: clamp(1.55rem, 4.2vw, 2.1rem);
+    }
+
+    .mk-home-page .mk-hero--cinema .mk-hero-cta .btn {
+        min-height: 2.45rem;
+        padding: 0.55rem 0.95rem;
+        font-size: 0.8rem;
     }
 }
 

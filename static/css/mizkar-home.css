@@ -17065,3 +17065,186 @@ html.mk-public .mk-home-page .mk-hero--cinema .mk-hero-container.container,
     margin-left: 0 !important;
     margin-right: 0 !important;
 }
+
+/* ??? Hero AI pulses (ultra-subtle, city / hologram map) ??? */
+.mk-home-page .mk-hero--cinema .mk-hero-ai-pulses {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+    /* ??? ??? ???? ????? ? ??? ???? ?????????? */
+    clip-path: inset(42% 2% 8% 48%);
+}
+
+.mk-home-page .mk-hero--cinema .mk-hero-ai-dot {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 196, 120, 0.95) 0%, rgba(251, 146, 60, 0.35) 45%, transparent 72%);
+    box-shadow:
+        0 0 6px 1px rgba(251, 146, 60, 0.35),
+        0 0 16px 4px rgba(251, 146, 60, 0.12);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.65);
+    will-change: opacity, transform;
+    mix-blend-mode: screen;
+}
+
+.mk-home-page .mk-hero--cinema .mk-hero-ai-dot--a {
+    left: 68%;
+    top: 66%;
+    animation: mk-hero-ai-blink 7.2s ease-in-out 0.4s infinite;
+}
+
+.mk-home-page .mk-hero--cinema .mk-hero-ai-dot--b {
+    left: 76.5%;
+    top: 71%;
+    width: 4px;
+    height: 4px;
+    animation: mk-hero-ai-blink 8.6s ease-in-out 2.1s infinite;
+}
+
+.mk-home-page .mk-hero--cinema .mk-hero-ai-dot--c {
+    left: 82%;
+    top: 63.5%;
+    width: 4.5px;
+    height: 4.5px;
+    background: radial-gradient(circle, rgba(196, 181, 253, 0.9) 0%, rgba(139, 92, 246, 0.3) 48%, transparent 72%);
+    box-shadow:
+        0 0 5px 1px rgba(167, 139, 250, 0.28),
+        0 0 14px 3px rgba(124, 58, 237, 0.1);
+    animation: mk-hero-ai-blink 9.4s ease-in-out 4.3s infinite;
+}
+
+.mk-home-page .mk-hero--cinema .mk-hero-ai-dot--d {
+    left: 72%;
+    top: 78%;
+    width: 3.5px;
+    height: 3.5px;
+    animation: mk-hero-ai-blink 10.2s ease-in-out 1.2s infinite;
+}
+
+/* ???? ???? ???? ?????? ? ?? «???? ??» */
+.mk-home-page .mk-hero--cinema .mk-hero-ai-ping {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(251, 146, 60, 0.45);
+    box-shadow: 0 0 8px rgba(251, 146, 60, 0.2);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+    mix-blend-mode: screen;
+    will-change: opacity, transform;
+}
+
+.mk-home-page .mk-hero--cinema .mk-hero-ai-ping--1 {
+    left: 76.5%;
+    top: 71%;
+    animation: mk-hero-ai-ring 9.8s ease-out 3.4s infinite;
+}
+
+/* ????? ????? ???? ????? ? ?? ?? ??? ?? ??? ???? */
+.mk-home-page .mk-hero--cinema .mk-hero-ai-trace {
+    position: absolute;
+    left: 68%;
+    top: 66%;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: rgba(255, 214, 170, 0.85);
+    box-shadow: 0 0 8px 2px rgba(251, 146, 60, 0.22);
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    mix-blend-mode: screen;
+    will-change: left, top, opacity;
+    animation: mk-hero-ai-travel 11.5s cubic-bezier(0.45, 0.05, 0.25, 1) 1.6s infinite;
+}
+
+@keyframes mk-hero-ai-blink {
+    0%, 12%, 100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.55);
+    }
+    18% {
+        opacity: 0.38;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    28% {
+        opacity: 0.18;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    36% {
+        opacity: 0.42;
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+    48%, 100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.55);
+    }
+}
+
+@keyframes mk-hero-ai-ring {
+    0%, 100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.35);
+    }
+    8% {
+        opacity: 0.28;
+        transform: translate(-50%, -50%) scale(0.7);
+    }
+    32% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2.4);
+    }
+    33%, 100% {
+        opacity: 0;
+    }
+}
+
+@keyframes mk-hero-ai-travel {
+    0%, 8% {
+        opacity: 0;
+        left: 68%;
+        top: 66%;
+    }
+    14% {
+        opacity: 0.32;
+        left: 68%;
+        top: 66%;
+    }
+    38% {
+        opacity: 0.28;
+        left: 76.5%;
+        top: 71%;
+    }
+    52% {
+        opacity: 0.22;
+        left: 82%;
+        top: 63.5%;
+    }
+    64% {
+        opacity: 0.18;
+        left: 72%;
+        top: 78%;
+    }
+    74%, 100% {
+        opacity: 0;
+        left: 72%;
+        top: 78%;
+    }
+}
+
+@media (max-width: 900px) {
+    .mk-home-page .mk-hero--cinema .mk-hero-ai-pulses {
+        clip-path: inset(48% 0% 6% 40%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mk-home-page .mk-hero--cinema .mk-hero-ai-pulses {
+        display: none;
+    }
+}

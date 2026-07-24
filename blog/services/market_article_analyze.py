@@ -66,7 +66,11 @@ def run_dataset_analysis(dataset: Dataset) -> dict[str, Any]:
         report=prof,
     )
 
-    geo_points = _extract_geo_points(listings, limit=800)
+    geo_points = _extract_geo_points(
+        listings,
+        transaction_type=dataset.transaction_type or '',
+        limit=800,
+    )
 
     return {
         'report': prof,
@@ -127,7 +131,16 @@ def extract_quality_metrics(analysis: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _extract_geo_points(listings, *, limit: int = 800) -> list[dict[str, float]]:
+def _extract_geo_points(
+    listings,
+    *,
+    transaction_type: str = '',
+    limit: int = 800,
+) -> list[dict[str, float]]:
+    from workspace.services.formatting import full_deposit_equiv
+
+    tx = transaction_profile(transaction_type)
+    is_rent = bool(tx.get('is_rent') and not tx.get('is_sale'))
     points: list[dict[str, float]] = []
     for lst in listings:
         lat = getattr(lst, 'latitude', None)
@@ -141,20 +154,35 @@ def _extract_geo_points(listings, *, limit: int = 800) -> list[dict[str, float]]
             continue
         if not (-90 <= lat_f <= 90 and -180 <= lng_f <= 180):
             continue
+
+        value = 0.0
         weight = 1.0
-        pps_val = 0.0
-        pps = getattr(lst, 'price_per_sqm', None)
-        if pps:
+        if is_rent:
             try:
-                pps_val = float(pps)
-                weight = max(0.4, min(3.0, pps_val / 50_000_000))
+                fd = full_deposit_equiv(
+                    getattr(lst, 'deposit', None),
+                    getattr(lst, 'rent', None),
+                )
+                if fd:
+                    value = float(fd)
+                    weight = max(0.4, min(3.0, value / 800_000_000))
             except (TypeError, ValueError):
                 weight = 1.0
+        else:
+            pps = getattr(lst, 'price_per_sqm', None)
+            if pps:
+                try:
+                    value = float(pps)
+                    weight = max(0.4, min(3.0, value / 50_000_000))
+                except (TypeError, ValueError):
+                    weight = 1.0
+
         points.append({
             'lat': lat_f,
             'lng': lng_f,
             'w': round(weight, 3),
-            'pps': pps_val,
+            'value': value,
+            'pps': value,
         })
         if len(points) >= limit:
             break

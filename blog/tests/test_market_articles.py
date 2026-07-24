@@ -154,14 +154,62 @@ class MarketArticleSanitizeComposerTests(TestCase):
             city='اهواز',
             district='کیانپارس',
             tx_label='فروش',
-            pps_median_fmt='۵۰ میلیون',
+            metric_label='قیمت هر متر',
+            metric_fmt='۵۰ میلیون',
             trend_fmt='+۱٪',
             valid_count=100,
             confidence_score=80,
-            geo_points=[{'lat': 31.3 + i * 0.001, 'lng': 48.6 + i * 0.001, 'w': 1.0} for i in range(20)],
+            geo_points=[{'lat': 31.3 + i * 0.001, 'lng': 48.6 + i * 0.001, 'w': 1.0, 'value': 50e6} for i in range(20)],
         )
         self.assertTrue(content.name.endswith('.png'))
         self.assertGreater(len(content.read()), 1000)
+
+    def test_composer_rent_uses_deposit_not_empty_pps(self):
+        report = {
+            'tx': {'is_sale': False, 'is_rent': True},
+            'confidence': {'score': 90, 'display_score': 90, 'level_plain': 'بسیار بالا'},
+            'data_quality': {'valid_count': 452, 'raw_count': 480, 'removed_count': 28, 'quality_pct': 94.2},
+            'publication_scope': {'date_from_fmt': '۱۴۰۵/۰۳/۰۷', 'date_to_fmt': '۱۴۰۵/۰۵/۰۱'},
+            'market_sentiment': {'label': 'مناسب مستأجر'},
+            'liquidity': {'label': 'نقدشوندگی بسیار بالا', 'score': 156},
+            'price_analysis': {
+                'price_per_sqm': {},
+                'deposit': {'median_fmt': '۶۰۰ میلیون تومان'},
+                'rent': {'median_fmt': '۸ میلیون تومان'},
+                'full_deposit': {
+                    'median_fmt': '۷۵۰ میلیون تومان',
+                    'p25_fmt': '۶۰۰ میلیون تومان',
+                    'p75_fmt': '۹۰۰ میلیون تومان',
+                },
+            },
+            'market_depth': {'under_pct': 38.9, 'fair_pct': 22.8, 'over_pct': 38.3},
+            'price_trends': {'has_data': False},
+            'area_segments': [
+                {'bucket_plain': '۳۰–۶۰ متر', 'count': 16, 'share_pct': 3.5, 'median_deposit_fmt': '۴۰۰ میلیون', 'median_full_deposit_fmt': '۵۰۰ میلیون'},
+                {'bucket_plain': '۹۰–۱۵۰ متر', 'count': 227, 'share_pct': 50.2, 'median_deposit_fmt': '۶۵۰ میلیون', 'median_full_deposit_fmt': '۸۰۰ میلیون'},
+            ],
+            'opportunities': {
+                'count': 3,
+                'items': [{'area_fmt': '۹۰ متر', 'full_deposit_fmt': '۵۵۰ میلیون تومان', 'gap_pct': 12}],
+            },
+            'insights': [],
+            'professional_summary': {},
+        }
+        composed = compose_market_article(
+            report=report,
+            dataset_meta={
+                'city': 'شاهین‌شهر',
+                'district': 'عطار',
+                'transaction_type': 'اجاره',
+                'subcategory': 'آپارتمان',
+            },
+        )
+        self.assertIn('۷۵۰ میلیون تومان', composed['excerpt'])
+        self.assertIn('۶۰۰ میلیون تومان', composed['content_html'])
+        self.assertNotIn('قیمت معمول هر متر حدود —', composed['excerpt'])
+        self.assertIn('۹۰–۱۵۰ متر', composed['content_html'])
+        self.assertIn('۵۵۰ میلیون تومان', composed['content_html'])
+        self.assertTrue(any('رهن' in f['q'] for f in composed['faq']))
 
 
 @override_settings(MARKET_ARTICLE_SKIP_MAP_TILES=True)

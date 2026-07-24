@@ -21,12 +21,20 @@ def compose_market_article(
     tx_label = _tx_label(tx_raw, tx)
     is_rent = bool(tx.get('is_rent') and not tx.get('is_sale'))
 
-    title = (
-        f'قیمت {subcat} در {district} {city}؛ '
-        f'تحلیل بازار {tx_label}، قیمت هر متر و راهنمای خرید و فروش'
-    )
-    if len(title) > 200:
-        title = f'تحلیل بازار {subcat} در {district} {city} — قیمت هر متر و وضعیت {tx_label}'
+    if is_rent:
+        title = (
+            f'رهن و اجاره {subcat} در {district} {city}؛ '
+            f'تحلیل بازار {tx_label}، رهن کامل و راهنمای معامله'
+        )
+        if len(title) > 200:
+            title = f'تحلیل بازار {tx_label} {subcat} در {district} {city}'
+    else:
+        title = (
+            f'قیمت {subcat} در {district} {city}؛ '
+            f'تحلیل بازار {tx_label}، قیمت هر متر و راهنمای خرید و فروش'
+        )
+        if len(title) > 200:
+            title = f'تحلیل بازار {subcat} در {district} {city} — قیمت هر متر و وضعیت {tx_label}'
 
     conf = report.get('confidence') or {}
     dq = report.get('data_quality') or {}
@@ -56,22 +64,32 @@ def compose_market_article(
     conf_level = conf.get('level_plain') or conf.get('level') or '—'
     pps_med = pps.get('median_fmt') or '—'
     price_med = price.get('median_fmt') or '—'
+    deposit_med = deposit.get('median_fmt') or '—'
+    rent_med = rent.get('median_fmt') or '—'
+    full_med = full_dep.get('median_fmt') or '—'
+    primary = _primary_metric(is_rent, pps=pps, price=price, deposit=deposit, rent=rent, full_dep=full_dep)
     date_from = scope.get('date_from_fmt') or '—'
     date_to = scope.get('date_to_fmt') or '—'
     under_pct = depth.get('under_pct')
-    fair_pct = depth.get('fair_pct')
-    over_pct = depth.get('over_pct')
     trend_fmt = trends.get('pps_monthly_fmt') or _fmt_trend(trends)
     sentiment_label = sentiment.get('label') or 'نامشخص'
     liq_label = liquidity.get('label') or '—'
     top_seg = _top_segment_name(segments)
 
-    excerpt = (
-        f'در {district} {city}، بر اساس {valid_n} فایل معتبر {subcat}، '
-        f'قیمت معمول هر متر حدود {pps_med} است. '
-        f'وضعیت بازار: {sentiment_label}. '
-        f'این گزارش برای خریدار، فروشنده، مشاور، سازنده و سرمایه‌گذار نوشته شده است.'
-    )[:300]
+    if is_rent:
+        excerpt = (
+            f'در {district} {city}، بر اساس {valid_n} فایل معتبر {subcat}، '
+            f'رهن معمول {deposit_med}، اجاره معمول {rent_med} و معادل رهن کامل حدود {full_med} است. '
+            f'وضعیت بازار: {sentiment_label}. '
+            f'این گزارش برای مستأجر، موجر، مشاور، سازنده و سرمایه‌گذار نوشته شده است.'
+        )[:300]
+    else:
+        excerpt = (
+            f'در {district} {city}، بر اساس {valid_n} فایل معتبر {subcat}، '
+            f'قیمت معمول هر متر حدود {pps_med} است. '
+            f'وضعیت بازار: {sentiment_label}. '
+            f'این گزارش برای خریدار، فروشنده، مشاور، سازنده و سرمایه‌گذار نوشته شده است.'
+        )[:300]
 
     faq = _build_faq(
         city=city, district=district, subcat=subcat, tx_label=tx_label,
@@ -79,7 +97,7 @@ def compose_market_article(
         date_from=date_from, date_to=date_to, segments=segments,
         negotiation=negotiation, sentiment_label=sentiment_label,
         under_pct=under_pct, is_rent=is_rent, deposit=deposit, rent=rent,
-        full_dep=full_dep, top_seg=top_seg,
+        full_dep=full_dep, top_seg=top_seg, primary=primary,
     )
 
     maps = map_assets or {}
@@ -90,32 +108,32 @@ def compose_market_article(
         _section_who_this_is_for(city, district, subcat, tx_label),
         _section_intro(
             city, district, subcat, tx_label, valid_n, date_from, date_to,
-            pps_med, price_med, trend_fmt, sentiment_label, conf_score, conf_level,
-            prof, is_rent, deposit, rent, full_dep,
+            primary, trend_fmt, sentiment_label, conf_score, conf_level,
+            prof, is_rent, deposit, rent, full_dep, pps_med, price_med,
         ),
         _section_kpi_cards(
-            pps_med, price_med, valid_n, under_pct, trend_fmt, liq_label,
-            conf_score, top_seg, is_rent, deposit, rent, full_dep,
+            primary, valid_n, under_pct, trend_fmt, liq_label,
+            conf_score, top_seg, is_rent, deposit, rent, full_dep, price_med,
         ),
         _section_plain_status(
-            sentiment, liquidity, depth, insights, pps, conf_level, city, district,
+            sentiment, liquidity, depth, insights, primary, conf_level, city, district, is_rent,
         ),
         _section_audiences(
-            city, district, sentiment_label, under_pct, pps, negotiation,
+            city, district, sentiment_label, under_pct, primary, negotiation,
             trend_fmt, liq_label, is_rent, top_seg,
         ),
-        _section_pps(pps, depth, is_rent, deposit, rent, full_dep),
-        _section_segments(segments, pps_med, is_rent),
+        _section_pps(primary, depth, is_rent, deposit, rent, full_dep, pps),
+        _section_segments(segments, primary, is_rent),
         _section_amenities(amenities, amenity_val),
-        _section_trends(trends, sentiment_label, under_pct),
-        _section_maps(maps, map_caption, city, district),
-        _section_opportunities(opportunities, under_pct, top_seg),
-        _section_negotiation(negotiation, pps, is_rent),
+        _section_trends(trends, sentiment_label, under_pct, is_rent),
+        _section_maps(maps, map_caption, city, district, is_rent),
+        _section_opportunities(opportunities, under_pct, top_seg, is_rent),
+        _section_negotiation(negotiation, primary, is_rent),
         _section_verdict(
             city, district, sentiment_label, opportunities, conf_level, insights, under_pct,
         ),
         _section_methodology(
-            valid_n, removed, raw_n, date_from, date_to, conf_score, conf_level, dq,
+            valid_n, removed, raw_n, date_from, date_to, conf_score, conf_level, dq, is_rent,
         ),
         _section_faq(faq),
         _section_cta(),
@@ -132,6 +150,40 @@ def compose_market_article(
 
 def _e(value: Any) -> str:
     return html.escape(str(value if value is not None else '—'))
+
+
+def _primary_metric(is_rent: bool, *, pps, price, deposit, rent, full_dep) -> dict[str, Any]:
+    """متریک اصلی نمایش برای فروش (قیمت هر متر) یا اجاره (رهن کامل)."""
+    if is_rent:
+        anchor = full_dep if full_dep.get('median_fmt') else (deposit if deposit.get('median_fmt') else rent)
+        return {
+            'is_rent': True,
+            'label': 'معادل رهن کامل معمول',
+            'short_label': 'رهن کامل',
+            'fmt': full_dep.get('median_fmt') or deposit.get('median_fmt') or rent.get('median_fmt') or '—',
+            'p25_fmt': anchor.get('p25_fmt') or full_dep.get('p25_fmt') or deposit.get('p25_fmt') or '—',
+            'p75_fmt': anchor.get('p75_fmt') or full_dep.get('p75_fmt') or deposit.get('p75_fmt') or '—',
+            'range_50_fmt': anchor.get('range_50_fmt') or full_dep.get('range_50_fmt') or '—',
+            'range_80_fmt': anchor.get('range_80_fmt') or full_dep.get('range_80_fmt') or '—',
+            'cv': full_dep.get('cv') or deposit.get('cv') or rent.get('cv'),
+            'deposit_fmt': deposit.get('median_fmt') or '—',
+            'rent_fmt': rent.get('median_fmt') or '—',
+            'full_fmt': full_dep.get('median_fmt') or '—',
+            'compare_hint': 'رهن کامل / رهن+اجاره',
+        }
+    return {
+        'is_rent': False,
+        'label': 'قیمت میانه هر متر',
+        'short_label': 'قیمت هر متر',
+        'fmt': pps.get('median_fmt') or '—',
+        'p25_fmt': pps.get('p25_fmt') or pps.get('low_fmt') or '—',
+        'p75_fmt': pps.get('p75_fmt') or pps.get('high_fmt') or '—',
+        'range_50_fmt': pps.get('range_50_fmt') or pps.get('iqr_fmt') or '—',
+        'range_80_fmt': pps.get('range_80_fmt') or '—',
+        'cv': pps.get('cv'),
+        'price_fmt': price.get('median_fmt') or '—',
+        'compare_hint': 'قیمت هر متر',
+    }
 
 
 def _tx_label(raw: str, tx: dict) -> str:
@@ -162,7 +214,14 @@ def _fmt_trend(trends: dict) -> str:
 def _top_segment_name(segments: list) -> str:
     if not segments:
         return '—'
-    return segments[0].get('bucket_plain') or segments[0].get('bucket') or '—'
+    best = max(
+        segments,
+        key=lambda s: (
+            float(s.get('share_pct') or s.get('pct') or 0),
+            int(s.get('count') or 0),
+        ),
+    )
+    return best.get('bucket_plain') or best.get('bucket') or '—'
 
 
 def _section_who_this_is_for(city, district, subcat, tx_label) -> str:
@@ -186,15 +245,15 @@ def _section_who_this_is_for(city, district, subcat, tx_label) -> str:
 
 def _section_intro(
     city, district, subcat, tx_label, valid_n, date_from, date_to,
-    pps_med, price_med, trend_fmt, sentiment_label, conf_score, conf_level,
-    prof, is_rent, deposit, rent, full_dep,
+    primary, trend_fmt, sentiment_label, conf_score, conf_level,
+    prof, is_rent, deposit, rent, full_dep, pps_med, price_med,
 ) -> str:
     if isinstance(prof, dict) and (prof.get('intro') or '').strip():
         intro_html = f'<p>{_e(prof["intro"].strip())}</p>'
     else:
         intro_html = (
             f'<p>در این گزارش، بازار {_e(tx_label)} {_e(subcat)} در محله {_e(district)} شهر {_e(city)} '
-            f'با زبان ساده و اعداد واقعی بررسی شده است. هدف این است که قبل از خرید، فروش یا قیمت‌گذاری، '
+            f'با زبان ساده و اعداد واقعی بررسی شده است. هدف این است که قبل از معامله یا قیمت‌گذاری، '
             f'تصویر روشنی از «عرف بازار» داشته باشید.</p>'
         )
 
@@ -202,15 +261,17 @@ def _section_intro(
     if isinstance(prof, dict) and prof.get('quality_note'):
         quality_note = f'<p class="mk-market-note">{_e(prof["quality_note"])}</p>'
 
-    rent_bits = ''
     if is_rent:
-        rent_bits = f'''
+        metric_lis = f'''
+    <li>{_e(primary["label"])}: <strong>{_e(primary["fmt"])}</strong></li>
     <li>رهن معمول: <strong>{_e(deposit.get("median_fmt") or "—")}</strong></li>
     <li>اجاره معمول: <strong>{_e(rent.get("median_fmt") or "—")}</strong></li>
-    <li>معادل رهن کامل: <strong>{_e(full_dep.get("median_fmt") or "—")}</strong></li>
 '''
     else:
-        rent_bits = f'<li>قیمت معمول کل واحد: <strong>{_e(price_med)}</strong></li>'
+        metric_lis = f'''
+    <li>قیمت معمول هر متر: <strong>{_e(pps_med)}</strong></li>
+    <li>قیمت معمول کل واحد: <strong>{_e(price_med)}</strong></li>
+'''
 
     return f'''
 <section class="mk-market-section" id="executive-summary">
@@ -219,8 +280,7 @@ def _section_intro(
   <ul class="mk-market-bullets">
     <li>تعداد فایل‌های معتبر بررسی‌شده: <strong>{_e(valid_n)}</strong></li>
     <li>بازه زمانی داده‌ها: از <strong>{_e(date_from)}</strong> تا <strong>{_e(date_to)}</strong></li>
-    <li>قیمت معمول هر متر: <strong>{_e(pps_med)}</strong></li>
-    {rent_bits}
+    {metric_lis}
     <li>روند قیمت: <strong>{_e(trend_fmt)}</strong></li>
     <li>وضعیت کلی بازار: <strong>{_e(sentiment_label)}</strong></li>
     <li>میزان اعتماد به این تحلیل: <strong>{_e(conf_score)}</strong> ({_e(conf_level)})</li>
@@ -236,24 +296,32 @@ def _section_intro(
 
 
 def _section_kpi_cards(
-    pps_med, price_med, valid_n, under_pct, trend_fmt, liq_label,
-    conf_score, top_seg, is_rent, deposit, rent, full_dep,
+    primary, valid_n, under_pct, trend_fmt, liq_label,
+    conf_score, top_seg, is_rent, deposit, rent, full_dep, price_med,
 ) -> str:
     under = f'{under_pct}٪' if under_pct is not None else '—'
-    cards = [
-        ('قیمت میانه هر متر', pps_med),
-        ('فایل معتبر', valid_n),
-        ('زیر بازار', under),
-        ('روند قیمت', trend_fmt),
-        ('نقدشوندگی', liq_label),
-        ('اعتماد تحلیل', conf_score),
-        ('متراژ پرتقاضا', top_seg),
-    ]
     if is_rent:
-        cards.insert(1, ('رهن معمول', deposit.get('median_fmt') or '—'))
-        cards.insert(2, ('اجاره معمول', rent.get('median_fmt') or '—'))
+        cards = [
+            (primary['label'], primary['fmt']),
+            ('رهن معمول', deposit.get('median_fmt') or '—'),
+            ('اجاره معمول', rent.get('median_fmt') or '—'),
+            ('فایل معتبر', valid_n),
+            ('زیر بازار', under),
+            ('روند قیمت', trend_fmt),
+            ('نقدشوندگی', liq_label),
+            ('اعتماد تحلیل', conf_score),
+        ]
     else:
-        cards.insert(1, ('قیمت معمول کل', price_med))
+        cards = [
+            (primary['label'], primary['fmt']),
+            ('قیمت معمول کل', price_med),
+            ('فایل معتبر', valid_n),
+            ('زیر بازار', under),
+            ('روند قیمت', trend_fmt),
+            ('نقدشوندگی', liq_label),
+            ('اعتماد تحلیل', conf_score),
+            ('متراژ پرتقاضا', top_seg),
+        ]
 
     items = ''.join(
         f'<div class="mk-market-kpi"><span class="mk-market-kpi__lbl">{_e(lbl)}</span>'
@@ -269,7 +337,7 @@ def _section_kpi_cards(
 '''
 
 
-def _section_plain_status(sentiment, liquidity, depth, insights, pps, conf_level, city, district) -> str:
+def _section_plain_status(sentiment, liquidity, depth, insights, primary, conf_level, city, district, is_rent) -> str:
     lines = []
     if sentiment.get('label'):
         lines.append(
@@ -288,9 +356,10 @@ def _section_plain_status(sentiment, liquidity, depth, insights, pps, conf_level
             f'{_e(depth.get("fair_pct", "—"))}٪ در بازه معمول و '
             f'{_e(depth.get("over_pct", "—"))}٪ بالاتر از عرف هستند.'
         )
-    if pps.get('cv') is not None:
+    if primary.get('cv') is not None:
+        metric_name = 'رهن کامل' if is_rent else 'قیمت هر متر'
         lines.append(
-            f'پراکندگی قیمت هر متر (شاخص CV برابر {_e(pps.get("cv"))}) نشان می‌دهد '
+            f'پراکندگی {_e(metric_name)} (شاخص CV برابر {_e(primary.get("cv"))}) نشان می‌دهد '
             f'چقدر فضای مذاکره و اختلاف قیمت در بازار وجود دارد.'
         )
     lines.append(f'سطح اعتماد به این تحلیل: {_e(conf_level)}.')
@@ -307,30 +376,33 @@ def _section_plain_status(sentiment, liquidity, depth, insights, pps, conf_level
 
 
 def _section_audiences(
-    city, district, sentiment_label, under_pct, pps, negotiation,
+    city, district, sentiment_label, under_pct, primary, negotiation,
     trend_fmt, liq_label, is_rent, top_seg,
 ) -> str:
     target = '—'
     if isinstance(negotiation, dict):
         target = negotiation.get('target_fmt') or negotiation.get('offer_range_fmt') or target
     if target == '—':
-        target = pps.get('p25_fmt') or pps.get('median_fmt') or '—'
-    med = pps.get('median_fmt') or '—'
-    p75 = pps.get('p75_fmt') or '—'
+        target = primary.get('p25_fmt') or primary.get('fmt') or '—'
+    med = primary.get('fmt') or '—'
+    p75 = primary.get('p75_fmt') or '—'
     under = f'{under_pct}٪' if under_pct is not None else 'بخشی'
+    hint = primary.get('compare_hint') or 'عرف بازار'
 
     buyer_title = 'اگر خریدار یا مستأجر هستید'
     seller_title = 'اگر فروشنده یا موجر هستید'
     if is_rent:
         buyer_body = (
-            f'اول رهن/اجاره را با عرف محله ({_e(med)} برای هر متر یا معادل رهن کامل) مقایسه کنید. '
+            f'اول رهن و اجاره را با عرف محله مقایسه کنید: رهن معمول {_e(primary.get("deposit_fmt"))}، '
+            f'اجاره معمول {_e(primary.get("rent_fmt"))} و {_e(hint)} حدود {_e(med)}. '
             f'حدود {_e(under)} فایل‌ها زیر عرف‌اند؛ این‌ها نقطه شروع مذاکره خوب‌اند، نه لزوماً بهترین انتخاب. '
             f'بازه پیشنهادی مذاکره حدود {_e(target)} است.'
         )
         seller_body = (
-            f'اگر فایل‌تان خیلی بالاتر از {_e(p75)} باشد، احتمال ماندگاری بیشتر و بازدید کمتر است. '
+            f'اگر فایل‌تان خیلی بالاتر از {_e(p75)} (بر اساس {_e(hint)}) باشد، احتمال ماندگاری بیشتر و بازدید کمتر است. '
             f'قیمت نزدیک میانه ({_e(med)}) معمولاً جذب بهتری دارد. وضعیت بازار: {_e(sentiment_label)}.'
         )
+        builder_metric = med
     else:
         buyer_body = (
             f'قیمت هر متر را با میانه {_e(med)} بسنجید. فایل‌های خیلی بالاتر از {_e(p75)} را '
@@ -342,6 +414,7 @@ def _section_audiences(
             f'بالاتر از {_e(p75)} نیاز به مزیت واضح (نوساز، امکانات، موقعیت) دارد. '
             f'روند فعلی: {_e(trend_fmt)}.'
         )
+        builder_metric = med
 
     return f'''
 <section class="mk-market-section" id="audiences">
@@ -371,35 +444,51 @@ def _section_audiences(
   <div class="mk-market-role">
     <h3>اگر سازنده یا انبوه‌ساز هستید</h3>
     <p>
-      پرتقاضاترین بازه متراژ در این داده «{_e(top_seg)}» است. سطح قیمت قابل دفاع نزدیک میانه هر متر ({_e(med)}) است؛
-      برای پروژه‌های لوکس باید فاصله قیمت با عرف محله را شفاف توضیح دهید.
+      پرتقاضاترین بازه متراژ در این داده «{_e(top_seg)}» است. سطح قیمت قابل دفاع نزدیک {_e(primary.get("short_label"))}
+      ({_e(builder_metric)}) است؛ برای پروژه‌های لوکس باید فاصله قیمت با عرف محله را شفاف توضیح دهید.
     </p>
   </div>
 </section>
 '''
 
 
-def _section_pps(pps, depth, is_rent, deposit, rent, full_dep) -> str:
-    rows = []
-    if pps:
-        rows.extend([
+def _section_pps(primary, depth, is_rent, deposit, rent, full_dep, pps) -> str:
+    if is_rent:
+        rows = [
+            ('رهن میانه', deposit.get('median_fmt')),
+            ('اجاره میانه', rent.get('median_fmt')),
+            ('معادل رهن کامل', full_dep.get('median_fmt')),
+            ('بازه معمول نیمی از فایل‌ها (رهن کامل)', primary.get('range_50_fmt')),
+            ('بازه وسیع‌تر (اغلب بازار)', primary.get('range_80_fmt')),
+            ('محدوده ارزان‌تر (حدود چارک پایین)', primary.get('p25_fmt')),
+            ('محدوده گران‌تر (حدود چارک بالا)', primary.get('p75_fmt')),
+        ]
+        heading = 'تحلیل رهن، اجاره و معادل رهن کامل'
+        lead = (
+            'عدد اصلی مقایسه در بازار اجاره «معادل رهن کامل» است (رهن + ۳۰ برابر اجاره ماهانه)، '
+            'چون ترکیب رهن/اجاره واحدها یکسان نیست. بازه‌ها از صدک‌های واقعی داده محاسبه شده‌اند.'
+        )
+    else:
+        rows = [
             ('قیمت میانه هر متر', pps.get('median_fmt')),
             ('بازه معمول نیمی از فایل‌ها', pps.get('range_50_fmt') or pps.get('iqr_fmt')),
             ('بازه وسیع‌تر (اغلب بازار)', pps.get('range_80_fmt')),
             ('محدوده ارزان‌تر (حدود چارک پایین)', pps.get('p25_fmt') or pps.get('low_fmt')),
             ('محدوده گران‌تر (حدود چارک بالا)', pps.get('p75_fmt') or pps.get('high_fmt')),
-        ])
-    if is_rent:
-        rows.extend([
-            ('رهن میانه', deposit.get('median_fmt')),
-            ('اجاره میانه', rent.get('median_fmt')),
-            ('معادل رهن کامل', full_dep.get('median_fmt')),
-        ])
-    if not rows:
-        return ''
+        ]
+        heading = 'تحلیل قیمت هر متر (و عرف معامله)'
+        lead = (
+            'عدد اصلی مقایسه آگهی‌ها «قیمت هر متر» است؛ چون متراژ واحدها یکسان نیست. '
+            'بازه‌ها از صدک‌های واقعی داده محاسبه شده‌اند، نه حدس کارشناسی.'
+        )
     body = ''.join(
-        f'<tr><th>{_e(a)}</th><td>{_e(b or "—")}</td></tr>' for a, b in rows if a
+        f'<tr><th>{_e(a)}</th><td>{_e(b or "—")}</td></tr>'
+        for a, b in rows if a and b and b != '—'
     )
+    if not body:
+        body = ''.join(
+            f'<tr><th>{_e(a)}</th><td>{_e(b or "—")}</td></tr>' for a, b in rows if a
+        )
     mix = ''
     if depth.get('under_pct') is not None:
         mix = (
@@ -410,44 +499,59 @@ def _section_pps(pps, depth, is_rent, deposit, rent, full_dep) -> str:
         )
     return f'''
 <section class="mk-market-section" id="price-per-sqm">
-  <h2>تحلیل قیمت هر متر (و عرف معامله)</h2>
-  <p>
-    عدد اصلی مقایسه آگهی‌ها «قیمت هر متر» است؛ چون متراژ واحدها یکسان نیست.
-    بازه‌ها از صدک‌های واقعی داده محاسبه شده‌اند، نه حدس کارشناسی.
-  </p>
+  <h2>{_e(heading)}</h2>
+  <p>{_e(lead)}</p>
   <table class="mk-market-table"><tbody>{body}</tbody></table>
   {mix}
 </section>
 '''
 
 
-def _section_segments(segments: list, market_pps: str, is_rent: bool) -> str:
+def _section_segments(segments: list, primary: dict, is_rent: bool) -> str:
     if not segments:
         return ''
     rows = []
     for seg in segments[:8]:
         name = seg.get('bucket_plain') or seg.get('bucket') or '—'
+        if is_rent:
+            col_a = seg.get('median_deposit_fmt') or seg.get('median_rent_fmt') or '—'
+            col_b = seg.get('median_full_deposit_fmt') or seg.get('median_deposit_fmt') or '—'
+        else:
+            col_a = (
+                seg.get('median_pps_fmt')
+                or seg.get('pps_median_fmt')
+                or seg.get('price_per_sqm_fmt')
+                or '—'
+            )
+            col_b = (
+                seg.get('median_price_fmt')
+                or seg.get('price_median_fmt')
+                or seg.get('price_fmt')
+                or '—'
+            )
         rows.append(
             '<tr>'
             f'<td>{_e(name)}</td>'
             f'<td>{_e(seg.get("count", "—"))}</td>'
             f'<td>{_e(seg.get("share_pct", seg.get("pct", "—")))}</td>'
-            f'<td>{_e(seg.get("area_median_fmt", seg.get("median_area_fmt", "—")))}</td>'
-            f'<td>{_e(seg.get("pps_median_fmt", seg.get("price_per_sqm_fmt", "—")))}</td>'
-            f'<td>{_e(seg.get("price_median_fmt", seg.get("price_fmt", "—")))}</td>'
+            f'<td>{_e(seg.get("median_area_fmt", seg.get("area_median_fmt", "—")))}</td>'
+            f'<td>{_e(col_a)}</td>'
+            f'<td>{_e(col_b)}</td>'
             '</tr>'
         )
     tip = (
         'اگر خریدارید، از بازه پرتقاضا شروع کنید چون انتخاب و مقایسه آسان‌تر است. '
         'اگر سازنده‌اید، همین بازه معمولاً نقدشوندگی بهتری دارد.'
     )
+    head_a = 'رهن/اجاره معمول' if is_rent else 'قیمت هر متر'
+    head_b = 'رهن کامل معمول' if is_rent else 'قیمت کل معمول'
     return f'''
 <section class="mk-market-section" id="area-segments">
   <h2>تحلیل متراژ؛ کدام سایز بیشتر عرضه شده؟</h2>
-  <p>مقایسه بازه‌های متراژ نسبت به میانه کل بازار ({_e(market_pps)}).</p>
+  <p>مقایسه بازه‌های متراژ نسبت به {_e(primary.get("short_label"))} بازار ({_e(primary.get("fmt"))}).</p>
   <table class="mk-market-table">
     <thead><tr>
-      <th>بازه متراژ</th><th>تعداد</th><th>سهم</th><th>متراژ معمول</th><th>قیمت هر متر</th><th>قیمت/رهن معمول</th>
+      <th>بازه متراژ</th><th>تعداد</th><th>سهم</th><th>متراژ معمول</th><th>{_e(head_a)}</th><th>{_e(head_b)}</th>
     </tr></thead>
     <tbody>{''.join(rows)}</tbody>
   </table>
@@ -497,7 +601,7 @@ def _section_amenities(amenities: Any, amenity_val: Any) -> str:
 '''
 
 
-def _section_trends(trends: dict, sentiment_label: str, under_pct) -> str:
+def _section_trends(trends: dict, sentiment_label: str, under_pct, is_rent: bool) -> str:
     if not trends or not trends.get('has_data'):
         return '''
 <section class="mk-market-section" id="trends">
@@ -507,8 +611,9 @@ def _section_trends(trends: dict, sentiment_label: str, under_pct) -> str:
 '''
     tmap = trends.get('trends') or {}
     lines = [f'خوانش کلی مرتبط با روند: {_e(sentiment_label)}.']
+    metric_word = 'رهن کامل' if is_rent else 'قیمت هر متر'
     if trends.get('pps_monthly_fmt'):
-        lines.append(f'تغییر ماهانه قیمت هر متر: {_e(trends["pps_monthly_fmt"])}.')
+        lines.append(f'تغییر ماهانه {_e(metric_word)}: {_e(trends["pps_monthly_fmt"])}.')
     for key, label in (('weekly', 'هفتگی'), ('monthly', 'ماهانه'), ('quarterly', 'فصلی'), ('yearly', 'سالانه')):
         if key in tmap:
             lines.append(f'تغییر {_e(label)}: {_e(tmap[key])}٪.')
@@ -520,14 +625,14 @@ def _section_trends(trends: dict, sentiment_label: str, under_pct) -> str:
   <h2>روند بازار؛ قیمت به کدام سمت می‌رود؟</h2>
   <ul class="mk-market-bullets">{lis}</ul>
   <p class="mk-market-tip">
-    روند مثبت معمولاً قدرت فروشنده را بیشتر می‌کند؛ روند منفی فضای چانه‌زنی خریدار را بازتر می‌کند.
+    روند مثبت معمولاً قدرت فروشنده/موجر را بیشتر می‌کند؛ روند منفی فضای چانه‌زنی مستأجر/خریدار را بازتر می‌کند.
     روند، پیش‌بینی قطعی آینده نیست — تصویر حرکت اخیر قیمت است.
   </p>
 </section>
 '''
 
 
-def _section_maps(maps: dict[str, str], caption: str, city: str, district: str) -> str:
+def _section_maps(maps: dict[str, str], caption: str, city: str, district: str, is_rent: bool = False) -> str:
     if not maps:
         return f'''
 <section class="mk-market-section" id="spatial">
@@ -535,13 +640,19 @@ def _section_maps(maps: dict[str, str], caption: str, city: str, district: str) 
   <p>مختصات کافی برای ساخت نقشه شهری/ماهواره‌ای در {_e(district)} {_e(city)} موجود نبود.</p>
 </section>
 '''
-    blocks = []
+    value_label = 'سطح رهن کامل' if is_rent else 'سطح قیمت هر متر'
     specs = [
         ('featured', 'نقشه شاخص بازار', caption or f'تراکم بازار در {district} {city}'),
-        ('street_heat', 'نقشه شهری + تراکم فایل‌ها', 'لایه تراکم تجمیعی روی نقشه خیابان‌ها'),
-        ('satellite', 'نمای ماهواره‌ای منطقه', 'تصویر ماهواره‌ای با لایه تراکم؛ بدون موقعیت دقیق آگهی'),
-        ('price', 'نقشه سطح قیمت هر متر', 'رنگ گرم‌تر یعنی سطح قیمت بالاتر در شبکه تجمیعی'),
+        ('street_heat', 'هیت‌مپ تراکم روی نقشه شهری', 'لایه هیت‌مپ تراکم روی نقشه خیابان‌ها — زوم نزدیک محله'),
+        ('street_grid', 'شبکه تراکم محله', 'هر خانه شبکه = تجمیع چند فایل نزدیک هم'),
+        ('street_value', f'نقشه {value_label} (شهری)', f'رنگ گرم‌تر یعنی {_e(value_label)} بالاتر در شبکه تجمیعی'),
+        ('street_dots', 'پراکنش تجمیعی فایل‌ها', 'نقاط درشت‌تر = سلول‌های پرتراکم‌تر'),
+        ('satellite_heat', 'هیت‌مپ روی تصویر ماهواره‌ای', 'لایه تراکم روی ماهواره — بدون موقعیت دقیق آگهی'),
+        ('satellite_value', f'{value_label} روی ماهواره', f'رنگ گرم‌تر یعنی {_e(value_label)} بالاتر'),
+        ('satellite', 'نمای ماهواره‌ای منطقه', 'تصویر ماهواره‌ای با لایه تراکم'),
+        ('price', f'نقشه {value_label}', f'رنگ گرم‌تر یعنی {_e(value_label)} بالاتر'),
     ]
+    blocks = []
     seen = set()
     for key, title, cap in specs:
         url = maps.get(key)
@@ -559,15 +670,15 @@ def _section_maps(maps: dict[str, str], caption: str, city: str, district: str) 
 <section class="mk-market-section" id="spatial">
   <h2>نقشه و تحلیل مکانی</h2>
   <p>
-    نقشه‌ها روی بستر شهری یا ماهواره‌ای واقعی ساخته شده‌اند و لایه تحلیل به‌صورت تجمیعی است
-    تا هم قابل‌فهم باشد، هم حریم خصوصی حفظ شود.
+    نقشه‌ها با زوم نزدیک روی محله، روی بستر شهری یا ماهواره‌ای واقعی ساخته شده‌اند.
+    لایه‌های هیت‌مپ، شبکه، سطح ارزش و پراکنش تجمیعی هستند تا هم قابل‌فهم باشند، هم حریم خصوصی حفظ شود.
   </p>
   {''.join(blocks)}
 </section>
 '''
 
 
-def _section_opportunities(opportunities: Any, under_pct, top_seg) -> str:
+def _section_opportunities(opportunities: Any, under_pct, top_seg, is_rent: bool = False) -> str:
     lines = []
     if under_pct is not None:
         lines.append(f'حدود {_e(under_pct)}٪ فایل‌ها زیر قیمت عرف بازار شناسایی شده‌اند.')
@@ -583,9 +694,17 @@ def _section_opportunities(opportunities: Any, under_pct, top_seg) -> str:
             if not isinstance(item, dict):
                 continue
             area = item.get('area_fmt') or item.get('area_bucket') or item.get('bucket')
-            pps = item.get('pps_fmt') or item.get('price_per_sqm_fmt')
+            if is_rent:
+                value = (
+                    item.get('full_deposit_fmt')
+                    or item.get('rent_equiv_fmt')
+                    or item.get('deposit_fmt')
+                    or item.get('price_fmt')
+                )
+            else:
+                value = item.get('pps_fmt') or item.get('price_per_sqm_fmt') or item.get('price_fmt')
             gap = item.get('gap_pct') or item.get('discount_pct')
-            bits = [x for x in (area, pps, f'شکاف {_e(gap)}٪' if gap is not None else '') if x]
+            bits = [x for x in (area, value, f'شکاف {_e(gap)}٪' if gap is not None else '') if x]
             if bits:
                 lines.append(' · '.join(str(b) for b in bits))
     if top_seg and top_seg != '—':
@@ -604,7 +723,7 @@ def _section_opportunities(opportunities: Any, under_pct, top_seg) -> str:
 '''
 
 
-def _section_negotiation(negotiation: Any, pps: dict, is_rent: bool) -> str:
+def _section_negotiation(negotiation: Any, primary: dict, is_rent: bool) -> str:
     lines = []
     if isinstance(negotiation, dict):
         mapping = (
@@ -624,13 +743,14 @@ def _section_negotiation(negotiation: Any, pps: dict, is_rent: bool) -> str:
                     lines.append(_e(item))
                 elif isinstance(item, dict) and item.get('text'):
                     lines.append(_e(item['text']))
-    if not lines and pps:
-        if pps.get('p25_fmt'):
-            lines.append(f'محدوده مناسب پیشنهاد (نزدیک چارک پایین): {_e(pps["p25_fmt"])}')
-        if pps.get('median_fmt'):
-            lines.append(f'خط میانه بازار: {_e(pps["median_fmt"])}')
-        if pps.get('p75_fmt'):
-            lines.append(f'بالای این سطح معمولاً نیاز به دلیل قوی دارد: {_e(pps["p75_fmt"])}')
+    if not lines and primary:
+        label = primary.get('short_label') or 'عرف'
+        if primary.get('p25_fmt') and primary['p25_fmt'] != '—':
+            lines.append(f'محدوده مناسب پیشنهاد (نزدیک چارک پایین {_e(label)}): {_e(primary["p25_fmt"])}')
+        if primary.get('fmt') and primary['fmt'] != '—':
+            lines.append(f'خط میانه بازار ({_e(label)}): {_e(primary["fmt"])}')
+        if primary.get('p75_fmt') and primary['p75_fmt'] != '—':
+            lines.append(f'بالای این سطح معمولاً نیاز به دلیل قوی دارد: {_e(primary["p75_fmt"])}')
     if not lines:
         return ''
     lis = ''.join(f'<li>{x}</li>' for x in lines)
@@ -665,7 +785,9 @@ def _section_verdict(city, district, sentiment_label, opportunities, conf_level,
 '''
 
 
-def _section_methodology(valid_n, removed, raw_n, date_from, date_to, conf_score, conf_level, dq) -> str:
+def _section_methodology(valid_n, removed, raw_n, date_from, date_to, conf_score, conf_level, dq, is_rent=False) -> str:
+    center = 'میانه رهن کامل / رهن+اجاره' if is_rent else 'میانه قیمت هر متر'
+    under_rule = 'نسبت رهن کامل به میانه و عمق قیمت' if is_rent else 'نسبت قیمت هر متر به میانه و عمق قیمت'
     return f'''
 <section class="mk-market-section" id="methodology">
   <h2>روش‌شناسی و کیفیت داده</h2>
@@ -674,8 +796,8 @@ def _section_methodology(valid_n, removed, raw_n, date_from, date_to, conf_score
     <li>تعداد فایل معتبر پس از پالایش پرت‌ها: {_e(valid_n)}</li>
     <li>فایل‌های حذف‌شده/غیرعادی: {_e(removed)}</li>
     <li>بازه زمانی پوشش داده: از {_e(date_from)} تا {_e(date_to)}</li>
-    <li>شاخص مرکزی: میانه قیمت (مقاوم‌تر از میانگین در برابر آگهی غیرعادی)</li>
-    <li>تشخیص زیر بازار: نسبت قیمت هر متر به میانه و عمق قیمت</li>
+    <li>شاخص مرکزی: {_e(center)} (مقاوم‌تر از میانگین در برابر آگهی غیرعادی)</li>
+    <li>تشخیص زیر بازار: {_e(under_rule)}</li>
     <li>امتیاز اعتماد: {_e(conf_score)} ({_e(conf_level)})</li>
     <li>کیفیت داده: {_e(dq.get("quality_pct", "—"))}٪</li>
   </ul>
@@ -700,22 +822,33 @@ def _build_faq(**kwargs) -> list[dict[str, str]]:
     top_seg = kwargs['top_seg']
     negotiation = kwargs['negotiation']
     is_rent = kwargs['is_rent']
+    primary = kwargs.get('primary') or {}
+    deposit = kwargs.get('deposit') or {}
+    rent = kwargs.get('rent') or {}
+    full_dep = kwargs.get('full_dep') or {}
 
+    anchor = primary.get('fmt') or pps_med
     target = '—'
     if isinstance(negotiation, dict):
         target = negotiation.get('target_fmt') or negotiation.get('offer_range_fmt') or '—'
     if target == '—':
-        target = pps_med
+        target = primary.get('p25_fmt') or anchor
 
-    price_q = (
-        f'رهن و اجاره معمول {subcat} در {district} {city} چقدر است؟'
-        if is_rent else
-        f'قیمت هر متر {subcat} در {district} {city} چقدر است؟'
-    )
-    price_a = (
-        f'بر اساس این تحلیل، قیمت معمول هر متر حدود {pps_med} است'
-        + (f' و قیمت/رهن معمول کل نزدیک {kwargs.get("price_med") or "—"} گزارش شده.' if not is_rent else '.')
-    )
+    if is_rent:
+        price_q = f'رهن و اجاره معمول {subcat} در {district} {city} چقدر است؟'
+        price_a = (
+            f'بر اساس این تحلیل، رهن معمول حدود {deposit.get("median_fmt") or "—"}، '
+            f'اجاره معمول حدود {rent.get("median_fmt") or "—"} و معادل رهن کامل حدود '
+            f'{full_dep.get("median_fmt") or anchor} است.'
+        )
+        defend = primary.get('fmt') or full_dep.get('median_fmt') or '—'
+    else:
+        price_q = f'قیمت هر متر {subcat} در {district} {city} چقدر است؟'
+        price_a = (
+            f'بر اساس این تحلیل، قیمت معمول هر متر حدود {pps_med} است'
+            f' و قیمت معمول کل نزدیک {kwargs.get("price_med") or "—"} گزارش شده.'
+        )
+        defend = pps_med
 
     return [
         {'q': price_q, 'a': price_a},
@@ -733,7 +866,7 @@ def _build_faq(**kwargs) -> list[dict[str, str]]:
         {'q': 'داده‌ها مربوط به چه بازه‌ای هستند؟', 'a': f'از {date_from} تا {date_to}.'},
         {
             'q': 'سازنده یا سرمایه‌گذار از این گزارش چه استفاده‌ای می‌کند؟',
-            'a': f'متراژ پرتقاضا ({top_seg})، سطح قیمت قابل دفاع ({pps_med}) و وضعیت نقدشوندگی برای تصمیم ساخت یا ورود سرمایه.',
+            'a': f'متراژ پرتقاضا ({top_seg})، سطح قیمت قابل دفاع ({defend}) و وضعیت نقدشوندگی برای تصمیم ساخت یا ورود سرمایه.',
         },
     ]
 
@@ -756,16 +889,16 @@ def _section_cta() -> str:
     همین نوع تحلیل را می‌توانید روی فایل‌های خود در میزکار اجرا کنید، فرصت‌های زیر بازار را فیلتر کنید
     و با ربات فایلینگ دیوار بانک فایل به‌روز بسازید.
   </p>
-  <ul class="mk-market-bullets">
-    <li><a href="/features/market-intelligence/">امکانات تحلیل بازار</a></li>
-    <li><a href="/products/">ربات فایلینگ دیوار</a></li>
-    <li><a href="/workspace/">ورود به میزکار</a></li>
-    <li><a href="/blog/">سایر تحلیل‌ها و مقالات</a></li>
-  </ul>
+  <div class="mk-market-cta-links">
+    <a href="/shop/">امکانات تحلیل بازار</a>
+    <a href="/bots/divar-filing/">ربات فایلینگ دیوار</a>
+    <a href="/accounts/workspace/">ورود به میزکار</a>
+    <a href="/blog/">سایر تحلیل‌ها و مقالات</a>
+  </div>
 </section>
 '''
 
 
 def _tags(city: str, district: str, tx_label: str, subcat: str) -> list[str]:
-    tags = [city, district, tx_label, subcat, 'تحلیل بازار', 'قیمت هر متر', 'خرید خانه']
-    return [t for t in tags if t and t != '—'][:8]
+    tags = [f'تحلیل بازار {city}', district, tx_label, subcat, 'قیمت مسکن']
+    return [t for t in tags if t]

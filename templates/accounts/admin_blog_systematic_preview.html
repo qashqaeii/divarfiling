@@ -49,7 +49,7 @@
                     <li>اعتماد: {{ metrics.confidence_score|default:"—" }}</li>
                     <li>کیفیت: {{ metrics.quality_pct|default:"—" }}٪</li>
                     <li>معتبر / خام: {{ metrics.valid_count }} / {{ metrics.raw_count }}</li>
-                    <li>بازه: {{ metrics.data_from|default:"—" }} → {{ metrics.data_to|default:"—" }}</li>
+                    <li>بازه: {{ metrics.date_from_fmt|default:metrics.data_from|default:"—" }} → {{ metrics.date_to_fmt|default:metrics.data_to|default:"—" }}</li>
                 </ul>
             </div>
 

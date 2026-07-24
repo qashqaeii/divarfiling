@@ -77,17 +77,36 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
 
     market_key = market_key_for_dataset(dataset)
     tx = report.get('tx') or {}
-    tx_label = 'اجاره' if tx.get('is_rent') and not tx.get('is_sale') else 'فروش'
-    pps = (report.get('price_analysis') or {}).get('price_per_sqm') or {}
+    is_rent = bool(tx.get('is_rent') and not tx.get('is_sale'))
+    tx_label = 'اجاره' if is_rent else 'فروش'
+    pa = report.get('price_analysis') or {}
+    pps = pa.get('price_per_sqm') or {}
+    full_dep = pa.get('full_deposit') or {}
+    deposit = pa.get('deposit') or {}
     trends = report.get('price_trends') or {}
     conf = report.get('confidence') or {}
+
+    if is_rent:
+        metric_label = 'معادل رهن کامل'
+        metric_fmt = (
+            full_dep.get('median_fmt')
+            or deposit.get('median_fmt')
+            or pps.get('median_fmt')
+            or '—'
+        )
+        trend_fmt = trends.get('full_deposit_monthly_fmt') or trends.get('pps_monthly_fmt') or '—'
+    else:
+        metric_label = 'قیمت هر متر'
+        metric_fmt = pps.get('median_fmt') or '—'
+        trend_fmt = trends.get('pps_monthly_fmt') or '—'
 
     image_file = render_featured_image(
         city=meta.get('city') or '',
         district=meta.get('district') or '',
         tx_label=tx_label,
-        pps_median_fmt=pps.get('median_fmt') or '—',
-        trend_fmt=trends.get('pps_monthly_fmt') or '—',
+        metric_label=metric_label,
+        metric_fmt=metric_fmt,
+        trend_fmt=trend_fmt,
         valid_count=int(metrics.get('valid_count') or 0),
         confidence_score=conf.get('display_score') or conf.get('score') or '—',
         geo_points=geo,
@@ -96,7 +115,8 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
         city=meta.get('city') or '',
         district=meta.get('district') or '',
         tx_label=tx_label,
-        pps_median_fmt=pps.get('median_fmt') or '—',
+        metric_label=metric_label,
+        metric_fmt=metric_fmt,
         valid_count=int(metrics.get('valid_count') or 0),
         confidence_score=conf.get('display_score') or conf.get('score') or '—',
         geo_points=geo,
@@ -285,6 +305,14 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
     seo = run.seo_json or {}
     link = get_existing_link(run.market_key)
     chart = run.chart_assets or {}
+    report_blob = run.report_json or {}
+    stored_metrics = report_blob.get('metrics') if isinstance(report_blob, dict) else {}
+    if not isinstance(stored_metrics, dict):
+        stored_metrics = {}
+    map_keys = {
+        'featured', 'street_heat', 'street_grid', 'street_value', 'street_dots',
+        'satellite_heat', 'satellite_value', 'satellite', 'price',
+    }
     return {
         'run': run,
         'seo': seo,
@@ -296,7 +324,7 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
         'featured_image_url': run.featured_image.url if run.featured_image else '',
         'map_assets': {
             k: v for k, v in chart.items()
-            if k in ('featured', 'street_heat', 'satellite', 'price') and v
+            if k in map_keys and isinstance(v, str) and v
         },
         'existing_link': link,
         'can_create_draft': link is None,
@@ -308,5 +336,7 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
             'raw_count': run.raw_count,
             'data_from': run.data_from,
             'data_to': run.data_to,
+            'date_from_fmt': stored_metrics.get('date_from_fmt') or '',
+            'date_to_fmt': stored_metrics.get('date_to_fmt') or '',
         },
     }

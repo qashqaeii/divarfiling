@@ -5,6 +5,7 @@ import html
 from typing import Any
 
 from blog.services.market_article_seo import (
+    render_charts_section,
     render_convert_band,
     render_cta_section,
     render_maps_section,
@@ -146,6 +147,10 @@ def compose_market_article(
             anchor='convert-access',
         ),
         _section_trends(trends, sentiment_label, under_pct, is_rent),
+        _section_charts(
+            maps, city, district, is_rent,
+            subcat=subcat, tx_label=tx_label, primary=primary,
+        ),
         _section_maps(
             maps, map_caption, city, district, is_rent,
             subcat=subcat, tx_label=tx_label, primary=primary, valid_n=valid_n,
@@ -679,6 +684,27 @@ def _section_trends(trends: dict, sentiment_label: str, under_pct, is_rent: bool
   </p>
 </section>
 '''
+
+
+def _section_charts(
+    assets: dict[str, str],
+    city: str,
+    district: str,
+    is_rent: bool = False,
+    *,
+    subcat: str = 'ملک',
+    tx_label: str = 'معامله',
+    primary: dict | None = None,
+) -> str:
+    charts = {
+        k: v for k, v in (assets or {}).items()
+        if isinstance(k, str) and k.startswith('chart_') and isinstance(v, str) and v
+    }
+    return render_charts_section(
+        charts,
+        city=city, district=district, is_rent=is_rent,
+        subcat=subcat, tx_label=tx_label, primary=primary,
+    )
 
 
 def _section_maps(

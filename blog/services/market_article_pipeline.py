@@ -22,6 +22,7 @@ from blog.services.market_article_analyze import (
 )
 from blog.services.market_article_access import analyze_district_access
 from blog.services.market_article_assets import render_article_maps, render_featured_image
+from blog.services.market_article_charts import render_article_charts
 from blog.services.market_article_composer import compose_market_article
 from blog.services.market_article_eligibility import market_key_for_dataset
 from blog.utils import get_or_create_tag
@@ -225,7 +226,7 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
         metric_fmt = pps.get('median_fmt') or '—'
         trend_fmt = trends.get('pps_monthly_fmt') or '—'
 
-    image_file = render_featured_image(
+    image_file, featured_meta = render_featured_image(
         city=meta.get('city') or '',
         district=meta.get('district') or '',
         tx_label=tx_label,
@@ -251,6 +252,13 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
         confidence_score=conf.get('display_score') or conf.get('score') or '—',
         geo_points=geo,
         access_markers=district_access.get('map_markers') if district_access.get('ok') else None,
+    )
+
+    chart_files = render_article_charts(
+        report=report if isinstance(report, dict) else {},
+        city=meta.get('city') or '',
+        district=meta.get('district') or '',
+        is_rent=is_rent,
     )
 
     related = _related_market_posts(city=meta.get('city') or '', exclude_slug=market_key)
@@ -295,16 +303,17 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
             'geo_count': len(geo or []),
             'access_score': district_access.get('score') if district_access.get('ok') else None,
             'access_grade': district_access.get('grade') if district_access.get('ok') else None,
+            **featured_meta,
         }
         run.featured_image.save(image_file.name, image_file, save=False)
         run.save()
 
-        map_urls = _save_extra_maps(run, extra_maps)
+        asset_urls = _save_extra_maps(run, {**extra_maps, **chart_files})
         composed2 = compose_market_article(
             report=report,
             dataset_meta=meta,
-            map_image_url=map_urls.get('featured') or (run.featured_image.url if run.featured_image else ''),
-            map_assets=map_urls,
+            map_image_url=asset_urls.get('featured') or (run.featured_image.url if run.featured_image else ''),
+            map_assets=asset_urls,
             map_caption=f'نقشه بازار {meta.get("district")} {meta.get("city")}',
             related_posts=related,
         )
@@ -457,8 +466,14 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
     if not isinstance(stored_metrics, dict):
         stored_metrics = {}
     map_keys = {
-        'featured', 'street_heat', 'street_grid', 'street_value', 'street_hotspots',
-        'street_dots', 'satellite_heat', 'satellite_value', 'satellite', 'price',
+        'featured',
+        'street_heat', 'street_grid', 'street_value', 'street_hotspots', 'street_dots',
+        'satellite_heat', 'satellite_value', 'satellite', 'price',
+        'map_sat_heat', 'map_sat_value', 'map_sat_hotspots', 'map_sat_grid', 'map_sat_dots',
+        'map_dark_heat', 'map_dark_value', 'map_dark_hotspots', 'map_dark_dots',
+        'map_light_heat', 'map_light_value', 'map_light_grid', 'map_light_hotspots',
+        'map_street_heat', 'map_street_value', 'map_street_hotspots', 'map_street_grid', 'map_street_dots',
+        'chart_price_ladder', 'chart_area_share', 'chart_market_depth', 'chart_access', 'chart_amenities',
     }
     is_building = run.status == MarketArticleRun.Status.BUILDING
     is_failed = run.status == MarketArticleRun.Status.FAILED

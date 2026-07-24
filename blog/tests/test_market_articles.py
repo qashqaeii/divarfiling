@@ -184,6 +184,8 @@ class MarketArticleSanitizeComposerTests(TestCase):
             map_assets={
                 'street_heat': '/media/heat.png',
                 'street_value': '/media/value.png',
+                'chart_price_ladder': '/media/chart-ladder.png',
+                'chart_market_depth': '/media/chart-depth.png',
             },
             related_posts=[{'title': 'تحلیل نمونه', 'url': '/blog/sample/'}],
         )
@@ -191,13 +193,15 @@ class MarketArticleSanitizeComposerTests(TestCase):
         self.assertIn('هیت‌مپ تراکم', html)
         self.assertIn('alt="هیت‌مپ تراکم', html)
         self.assertIn('mk-market-map__body', html)
+        self.assertIn('mk-market-chart', html)
+        self.assertIn('نردبان', html)
         self.assertIn('/blog/melk-zir-bazar-bala-bazar-value-score-rahnama/', html)
         self.assertIn('تحلیل نمونه', html)
         self.assertIn('/blog/sample/', html)
         self.assertIn('/robot-divar/', html)
 
     def test_featured_image_png(self):
-        content = render_featured_image(
+        content, meta = render_featured_image(
             city='اهواز',
             district='کیانپارس',
             tx_label='فروش',
@@ -210,6 +214,7 @@ class MarketArticleSanitizeComposerTests(TestCase):
         )
         self.assertTrue(content.name.endswith('.png'))
         self.assertGreater(len(content.read()), 1000)
+        self.assertIn(meta.get('featured_style'), {'satellite', 'dark', 'light', 'street', 'kpi'})
 
     def test_composer_rent_uses_deposit_not_empty_pps(self):
         report = {

@@ -26,9 +26,70 @@ ARTICLE_MAP_H = 960
 TILE_SIZE = 256
 USER_AGENT = 'DivarFilingMarketArticle/1.0 (https://divarfiling.ir; market-report)'
 
-TILE_STREET_TMPL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
-TILE_SAT_TMPL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+TILE_TEMPLATES = {
+    'street': 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+    'light': 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+    'dark': 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+    'satellite': 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+}
 STREET_SUBS = 'abcd'
+
+# ترکیب‌های متنوع basemap × لایه — ماهواره وزن بیشتر دارد تا عکس‌های شاخص شبیه هم نشوند
+_FEATURED_COMBOS = (
+    ('satellite', 'heat'),
+    ('satellite', 'value'),
+    ('satellite', 'hotspots'),
+    ('satellite', 'grid'),
+    ('satellite', 'dots'),
+    ('satellite', 'heat'),
+    ('satellite', 'value'),
+    ('dark', 'heat'),
+    ('dark', 'value'),
+    ('dark', 'hotspots'),
+    ('dark', 'dots'),
+    ('light', 'heat'),
+    ('light', 'value'),
+    ('light', 'grid'),
+    ('light', 'hotspots'),
+    ('street', 'heat'),
+    ('street', 'value'),
+    ('street', 'hotspots'),
+    ('street', 'grid'),
+    ('street', 'dots'),
+)
+
+_ARTICLE_MAP_POOL = (
+    ('map_sat_heat', 'satellite', 'heat', 'تراکم روی ماهواره', 'بافت شهری + هیت‌مپ عرضه'),
+    ('map_sat_value', 'satellite', 'value', 'ارزش روی ماهواره', 'سطح قیمت/رهن روی تصویر ماهواره‌ای'),
+    ('map_sat_hotspots', 'satellite', 'hotspots', 'کانون‌ها روی ماهواره', 'رتبه کانون‌های پرتراکم روی بافت واقعی'),
+    ('map_sat_grid', 'satellite', 'grid', 'شبکه روی ماهواره', 'شمارش فایل در شبکه روی تصویر ماهواره‌ای'),
+    ('map_sat_dots', 'satellite', 'dots', 'پراکنش روی ماهواره', 'نقاط تجمیعی عرضه روی بافت واقعی'),
+    ('map_dark_heat', 'dark', 'heat', 'هیت‌مپ شب‌گونه', 'تراکم عرضه روی نقشه تیره'),
+    ('map_dark_value', 'dark', 'value', 'ارزش شب‌گونه', 'سطح ارزش روی نقشه تیره'),
+    ('map_dark_hotspots', 'dark', 'hotspots', 'کانون‌های شب‌گونه', 'رتبه‌بندی کانون‌ها روی نقشه تیره'),
+    ('map_dark_dots', 'dark', 'dots', 'پراکنش شب‌گونه', 'نقاط تجمیعی روی نقشه تیره'),
+    ('map_light_heat', 'light', 'heat', 'هیت‌مپ روشن', 'تراکم روی نقشه مینیمال روشن'),
+    ('map_light_value', 'light', 'value', 'ارزش روشن', 'سطح ارزش روی نقشه روشن'),
+    ('map_light_grid', 'light', 'grid', 'شبکه کمی روشن', 'شمارش فایل روی شبکه روشن'),
+    ('map_light_hotspots', 'light', 'hotspots', 'کانون‌های روشن', 'رتبه کانون‌ها روی نقشه مینیمال'),
+    ('map_street_heat', 'street', 'heat', 'هیت‌مپ شهری', 'تراکم روی نقشه خیابانی'),
+    ('map_street_value', 'street', 'value', 'ارزش شهری', 'سطح ارزش روی نقشه خیابانی'),
+    ('map_street_hotspots', 'street', 'hotspots', 'کانون‌های شهری', 'اولویت بازدید روی نقشه خیابانی'),
+    ('map_street_grid', 'street', 'grid', 'شبکه کمی شهری', 'عمق محلی عرضه روی نقشه خیابانی'),
+    ('map_street_dots', 'street', 'dots', 'پراکنش شهری', 'نقاط تجمیعی روی نقشه خیابانی'),
+)
+
+# نگاشت سازگاری با کلیدهای قدیمی در مقالات قبلی
+_LEGACY_KEY_ALIASES = {
+    'street_heat': 'map_street_heat',
+    'street_value': 'map_street_value',
+    'street_grid': 'map_street_grid',
+    'street_hotspots': 'map_street_hotspots',
+    'satellite_heat': 'map_sat_heat',
+    'satellite_value': 'map_sat_value',
+    'satellite': 'map_sat_heat',
+    'price': 'map_street_value',
+}
 
 _FONT_DIR = Path(__file__).resolve().parent.parent / 'assets' / 'fonts'
 _FONT_FILES = {
@@ -50,18 +111,35 @@ def render_featured_image(
     valid_count: int,
     confidence_score: Any,
     geo_points: list[dict] | None = None,
-) -> ContentFile:
+) -> tuple[ContentFile, dict[str, str]]:
+    """عکس شاخص با basemap/لایه کاملاً تصادفی در هر ساخت تا مقالات شبیه هم نشوند."""
     img = None
+    meta: dict[str, str] = {'featured_style': '', 'featured_overlay': ''}
     if geo_points and len(geo_points) >= 8:
+        style, overlay = random.SystemRandom().choice(_FEATURED_COMBOS)
+        meta = {'featured_style': style, 'featured_overlay': overlay}
+        style_fa = {
+            'satellite': 'ماهواره‌ای',
+            'dark': 'تیره',
+            'light': 'روشن',
+            'street': 'شهری',
+        }.get(style, 'شهری')
+        overlay_fa = {
+            'heat': 'تراکم فایل',
+            'value': metric_label,
+            'hotspots': 'کانون‌های پرتراکم',
+            'grid': 'شبکه کمی',
+            'dots': 'پراکنش تجمیعی',
+        }.get(overlay, 'تحلیل مکانی')
         img = _compose_map_canvas(
             geo_points,
             width=OG_WIDTH,
             height=OG_HEIGHT,
-            style='street',
-            overlay='heat',
+            style=style,
+            overlay=overlay,
             title=f'نقشه بازار · {district}',
-            subtitle=f'{city} · {tx_label} · تراکم فایل‌ها',
-            footer=f'{metric_label}: {metric_fmt} · {valid_count} فایل · اعتماد {confidence_score}',
+            subtitle=f'{city} · {tx_label} · نمای {style_fa}',
+            footer=f'{overlay_fa}: {metric_fmt} · {valid_count} فایل · اعتماد {confidence_score}',
             place=f'{district} · {city}',
             metric_label=metric_label,
             metric_fmt=metric_fmt,
@@ -72,7 +150,8 @@ def render_featured_image(
         img = _render_kpi_card(
             city, district, tx_label, metric_label, metric_fmt, trend_fmt, valid_count, confidence_score,
         )
-    return _to_content_file(img, f'market-og-{_safe(city)}-{_safe(district)}.png')
+        meta = {'featured_style': 'kpi', 'featured_overlay': ''}
+    return _to_content_file(img, f'market-og-{_safe(city)}-{_safe(district)}.png'), meta
 
 
 def render_article_maps(
@@ -87,51 +166,14 @@ def render_article_maps(
     geo_points: list[dict] | None = None,
     access_markers: list[dict] | None = None,
 ) -> dict[str, ContentFile]:
-    """نقشه‌های کاربردی بدنه مقاله — هر کدام یک سؤال مشخص را جواب می‌دهد."""
+    """نقشه‌های متنوع بدنه مقاله — ترکیب ماهواره/تیره/روشن/شهری برای هر بازار فرق می‌کند."""
     out: dict[str, ContentFile] = {}
     if not geo_points or len(geo_points) < 8:
         return out
 
     place = f'{district} · {city}'
-    specs = [
-        (
-            'street_heat', 'street', 'heat',
-            f'کجا عرضه بیشتر است؟ · {district}',
-            f'هیت‌مپ تراکم فایل · {tx_label} · {valid_count} فایل معتبر',
-            'تراکم فایل‌ها روی نقشه شهری',
-        ),
-        (
-            'street_value', 'street', 'value',
-            f'کجا گران‌تر / ارزان‌تر است؟ · {district}',
-            f'سطح {metric_label} · میانه بازار: {metric_fmt}',
-            f'سطح {metric_label}',
-        ),
-        (
-            'street_grid', 'street', 'grid',
-            f'شبکه محله در یک نگاه · {district}',
-            'هر خانه = تجمیع چند فایل نزدیک · شدت رنگ = تعداد فایل',
-            'شبکه تراکم کمی',
-        ),
-        (
-            'street_hotspots', 'street', 'hotspots',
-            f'نقاط پرتراکم بازار · {district}',
-            '۳ تا ۵ کانون عرضه برای اولویت بازدید و فیلتر فایل',
-            'کانون‌های پرتراکم',
-        ),
-        (
-            'satellite_heat', 'satellite', 'heat',
-            f'بافت شهری روی ماهواره · {district}',
-            'همان لایه تراکم روی تصویر ماهواره‌ای برای درک بافت محله',
-            'تراکم روی ماهواره',
-        ),
-        (
-            'satellite_value', 'satellite', 'value',
-            f'{metric_label} روی ماهواره · {district}',
-            f'رنگ گرم‌تر = {_e_plain(metric_label)} بالاتر · میانه: {metric_fmt}',
-            f'سطح {metric_label} روی ماهواره',
-        ),
-    ]
-    for key, style, overlay, title, footer, _purpose in specs:
+    specs = _pick_article_map_specs(city=city, district=district, tx_label=tx_label)
+    for key, style, overlay, title_core, footer_core in specs:
         markers = access_markers if style == 'satellite' else None
         img = _compose_map_canvas(
             geo_points,
@@ -139,9 +181,9 @@ def render_article_maps(
             height=ARTICLE_MAP_H,
             style=style,
             overlay=overlay,
-            title=title,
+            title=f'{title_core} · {district}',
             subtitle=place,
-            footer=footer,
+            footer=f'{footer_core} · {tx_label} · {valid_count} فایل · {metric_label}: {metric_fmt}',
             place=place,
             metric_label=metric_label,
             metric_fmt=metric_fmt,
@@ -152,6 +194,51 @@ def render_article_maps(
         if img:
             out[key] = _to_content_file(img, f'market-{key}-{_safe(city)}-{_safe(district)}.png')
     return out
+
+
+def _pick_article_map_specs(*, city: str, district: str, tx_label: str) -> list[tuple]:
+    """۶–۷ نقشه متنوع: حداقل ۳ ماهواره + سبک‌ها و لایه‌های غیرتکراری برای هر محله."""
+    rng = random.Random(f'{city}|{district}|{tx_label}|maps-v3')
+    sat = [x for x in _ARTICLE_MAP_POOL if x[1] == 'satellite']
+    others = [x for x in _ARTICLE_MAP_POOL if x[1] != 'satellite']
+    rng.shuffle(sat)
+    rng.shuffle(others)
+
+    picked: list[tuple] = list(sat[:3])
+    used_overlays = {x[2] for x in picked}
+    used_styles = {'satellite'}
+
+    def _try_add(item: tuple) -> bool:
+        if item in picked:
+            return False
+        style, overlay = item[1], item[2]
+        # ترجیح: لایه و basemap تکراری کمتر
+        if overlay in used_overlays and len(picked) < 5:
+            return False
+        picked.append(item)
+        used_overlays.add(overlay)
+        used_styles.add(style)
+        return True
+
+    for item in others:
+        if len(picked) >= 7:
+            break
+        style = item[1]
+        if style not in used_styles:
+            _try_add(item)
+    for item in others:
+        if len(picked) >= 7:
+            break
+        _try_add(item)
+    for item in others + sat:
+        if len(picked) >= 6:
+            break
+        if item not in picked:
+            picked.append(item)
+    rng.shuffle(picked)
+    # ماهواره‌ها را جلوتر نگه دار تا در مقاله زودتر دیده شوند
+    picked.sort(key=lambda x: 0 if x[1] == 'satellite' else 1)
+    return picked[:7]
 
 
 def _e_plain(text: str) -> str:
@@ -444,9 +531,10 @@ def _fetch_tile(url: str, *, retries: int = 3, timeout: int = 10) -> Image.Image
 
 def _tile_url(style: str, z: int, x: int, y: int) -> str:
     if style == 'satellite':
-        return TILE_SAT_TMPL.format(z=z, y=y, x=x)
+        return TILE_TEMPLATES['satellite'].format(z=z, y=y, x=x)
+    tmpl = TILE_TEMPLATES.get(style) or TILE_TEMPLATES['street']
     sub = random.choice(list(STREET_SUBS))
-    return TILE_STREET_TMPL.format(s=sub, z=z, x=x, y=y)
+    return tmpl.format(s=sub, z=z, x=x, y=y)
 
 
 def _build_basemap(
@@ -475,7 +563,8 @@ def _build_basemap(
         # سقف زمانی برای جلوگیری از گیر کردن طولانی (پس‌زمینه هم محدود می‌ماند)
         deadline = time.monotonic() + (55 if is_sat else 35)
 
-    canvas = Image.new('RGB', (cols * TILE_SIZE, rows * TILE_SIZE), '#d7dee8')
+    fill = {'satellite': '#1e293b', 'dark': '#0f172a', 'light': '#e8eef5'}.get(style, '#d7dee8')
+    canvas = Image.new('RGB', (cols * TILE_SIZE, rows * TILE_SIZE), fill)
     jobs = [
         (tx, ty, _tile_url(style, zoom, tx, ty))
         for ty in range(min_ty, max_ty + 1)
@@ -667,10 +756,17 @@ def _compose_map_canvas(
     view = Image.new('RGB', (map_w, map_h), '#d7dee8')
     view.paste(basemap, (-crop_x, -crop_y))
 
-    # slight darken for overlay readability on satellite
+    # خوانایی لایه روی basemapهای مختلف
     if style == 'satellite':
         shade = Image.new('RGBA', (map_w, map_h), (15, 23, 42, 55))
         view = Image.alpha_composite(view.convert('RGBA'), shade).convert('RGB')
+    elif style == 'light':
+        shade = Image.new('RGBA', (map_w, map_h), (15, 23, 42, 18))
+        view = Image.alpha_composite(view.convert('RGBA'), shade).convert('RGB')
+    elif style == 'dark':
+        # کمی روشن‌تر تا رنگ لایه‌ها بهتر دیده شود
+        lift = Image.new('RGBA', (map_w, map_h), (255, 255, 255, 18))
+        view = Image.alpha_composite(view.convert('RGBA'), lift).convert('RGB')
 
     cells, meta = _aggregate_cells(points)
     if not cells:
@@ -749,6 +845,18 @@ def _compose_map_canvas(
             draw_heat.rounded_rectangle((bx, by, bx + 58, by + 28), radius=8, fill=(15, 23, 42, 230))
             draw_heat.text((bx + 29, by + 14), f'#{badge} · {c["n"]}', fill=(248, 250, 252, 255), font=count_font, anchor='mm')
 
+    elif overlay == 'dots':
+        ranked = sorted(cells, key=lambda c: c['n'], reverse=True)
+        for c in ranked:
+            x, y = project(c['lat'], c['lng'])
+            if not (-10 <= x < map_w + 10 and -10 <= y < map_h + 10):
+                continue
+            t = (c['n'] - n_lo) / (n_hi - n_lo)
+            r = 5 + min(16, 3.2 * math.sqrt(c['n']))
+            color = _density_color(t, alpha=int(120 + 100 * t))
+            draw_heat.ellipse((x - r, y - r, x + r, y + r), fill=color)
+            draw_heat.ellipse((x - r, y - r, x + r, y + r), outline=(255, 255, 255, 140), width=1)
+
     else:  # heat
         for c in cells:
             x, y = project(c['lat'], c['lng'])
@@ -762,6 +870,8 @@ def _compose_map_canvas(
         heat = heat.filter(ImageFilter.GaussianBlur(radius=7 if overlay == 'heat' else 4))
     elif overlay == 'grid':
         heat = heat.filter(ImageFilter.GaussianBlur(radius=0.8))
+    elif overlay == 'dots':
+        heat = heat.filter(ImageFilter.GaussianBlur(radius=0.6))
 
     view_rgba = Image.alpha_composite(view.convert('RGBA'), heat)
 
@@ -966,6 +1076,10 @@ def _draw_legend_panel(
         _draw_text(draw, (x + 12, y + 66), 'کم فایل', fill='#94a3b8', font=font, anchor='lt')
         _draw_text(draw, (x + w - 12, y + 66), 'پر فایل', fill='#94a3b8', font=font, anchor='rt')
         _draw_text(draw, (x + 12, y + 86), 'عدد روی خانه = تعداد', fill='#cbd5e1', font=font, anchor='lt')
+    elif overlay == 'dots':
+        _draw_text(draw, (x + 12, y + 10), 'پراکنش تجمیعی', fill='#f8fafc', font=title_font, anchor='lt')
+        _draw_text(draw, (x + 12, y + 42), 'نقطه درشت‌تر = سلول پرتراکم‌تر', fill='#cbd5e1', font=font, anchor='lt')
+        _draw_text(draw, (x + 12, y + 66), 'بدون افشای موقعیت تک‌آگهی', fill='#94a3b8', font=font, anchor='lt')
     else:
         _draw_text(draw, (x + 12, y + 10), 'تراکم فایل‌ها', fill='#f8fafc', font=title_font, anchor='lt')
         colors = ['#fde047', '#fb923c', '#ef4444', '#7f1d1d']

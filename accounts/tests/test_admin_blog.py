@@ -83,6 +83,7 @@ class AdminBlogPanelTests(TestCase):
         resp = self.client.get(reverse('admin_panel_blog'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'مدیریت مقالات')
+        self.assertContains(resp, 'مقالات سیستماتیک')
 
     def test_import_api(self):
         User.objects.create_superuser(username='admin', password='pass1234', email='b@test.com')

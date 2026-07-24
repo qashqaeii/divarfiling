@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% block title %}مقالات سیستماتیک | پنل مدیریت{% endblock %}
+{% block body_class %}mk-admin-dashboard ab-luxe{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=5">
+{% endblock %}
+
+{% block content %}
+<div class="ab-page ab-systematic-page">
+    <header class="ab-hero ab-hero--compact">
+        <div class="ab-hero__main">
+            <div class="ab-hero__top">
+                <a href="{% url 'admin_panel_blog' %}#blog-systematic" class="ab-back">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>بازگشت به استودیو مقالات</span>
+                </a>
+                <span class="ab-pill">{{ eligible_total|currency }} دیتاست واجد شرایط</span>
+            </div>
+            <h1 class="ab-hero__title">مقالات <em>سیستماتیک</em></h1>
+            <p class="ab-hero__lead">دیتاست را انتخاب کنید، پیش‌نمایش داده‌محور بسازید، سپس پیش‌نویس را دستی منتشر کنید.</p>
+        </div>
+    </header>
+
+    <form method="get" class="ab-sys-filters" id="ab-sys-filters">
+        <label>
+            <span>شهر</span>
+            <input type="text" name="city" value="{{ filter_values.city }}" list="ab-cities" placeholder="مثلاً اهواز">
+            <datalist id="ab-cities">{% for c in filter_options.cities %}<option value="{{ c }}">{% endfor %}</datalist>
+        </label>
+        <label>
+            <span>محله</span>
+            <input type="text" name="district" value="{{ filter_values.district }}" list="ab-districts" placeholder="مثلاً کیانپارس">
+            <datalist id="ab-districts">{% for d in filter_options.districts %}<option value="{{ d }}">{% endfor %}</datalist>
+        </label>
+        <label>
+            <span>نوع معامله</span>
+            <input type="text" name="transaction_type" value="{{ filter_values.transaction_type }}" list="ab-txs">
+            <datalist id="ab-txs">{% for t in filter_options.transaction_types %}<option value="{{ t }}">{% endfor %}</datalist>
+        </label>
+        <label>
+            <span>نوع ملک</span>
+            <input type="text" name="subcategory" value="{{ filter_values.subcategory }}" list="ab-subs">
+            <datalist id="ab-subs">{% for s in filter_options.subcategories %}<option value="{{ s }}">{% endfor %}</datalist>
+        </label>
+        <label>
+            <span>وضعیت مقاله</span>
+            <select name="article_status">
+                <option value="">همه</option>
+                {% for key, label in status_choices.items %}
+                <option value="{{ key }}" {% if filter_values.article_status == key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            <span>حداقل رکورد</span>
+            <input type="number" name="min_rows" min="100" value="{{ filter_values.min_rows }}">
+        </label>
+        <label>
+            <span>مرتب‌سازی</span>
+            <select name="sort">
+                {% for key, label in sort_choices.items %}
+                <option value="{{ key }}" {% if filter_values.sort == key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <div class="ab-sys-filters__actions">
+            <button type="submit" class="ab-btn ab-btn--gold"><i class="fas fa-filter"></i> اعمال</button>
+            <a href="{% url 'admin_panel_blog_systematic' %}" class="ab-btn ab-btn--ghost">پاک کردن</a>
+        </div>
+    </form>
+
+    <div class="ab-sys-table-wrap">
+        <table class="ab-sys-table">
+            <thead>
+                <tr>
+                    <th>دیتاست</th>
+                    <th>شهر / محله</th>
+                    <th>معامله / ملک</th>
+                    <th>رکورد</th>
+                    <th>اعتماد / کیفیت</th>
+                    <th>بازه داده</th>
+                    <th>وضعیت مقاله</th>
+                    <th>آخرین تولید</th>
+                    <th>اکشن</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td>
+                        <strong>{{ row.name }}</strong>
+                        <small class="ab-muted">{{ row.owner }}</small>
+                    </td>
+                    <td>{{ row.city }}<br><span class="ab-muted">{{ row.district }}</span></td>
+                    <td>{{ row.transaction_type }}<br><span class="ab-muted">{{ row.subcategory }}</span></td>
+                    <td>
+                        {{ row.row_count|currency }}
+                        {% if row.valid_count %}<br><span class="ab-muted">معتبر: {{ row.valid_count|currency }}</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if row.confidence_score != None %}
+                            {{ row.confidence_score }}
+                            {% if row.quality_pct != None %}<br><span class="ab-muted">کیفیت {{ row.quality_pct }}٪</span>{% endif %}
+                        {% else %}
+                            <span class="ab-muted">پس از پیش‌نمایش</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.data_from or row.data_to %}
+                            {{ row.data_from|default:"—" }} → {{ row.data_to|default:"—" }}
+                        {% else %}
+                            <span class="ab-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="ab-status ab-status--{{ row.article_status }}">{{ row.article_status_label }}</span></td>
+                    <td>{% if row.last_generated_at %}{{ row.last_generated_at|date:"Y/m/d H:i" }}{% else %}—{% endif %}</td>
+                    <td class="ab-sys-actions">
+                        <a class="ab-btn ab-btn--ghost ab-btn--xs" href="{{ row.analyze_url }}" target="_blank" rel="noopener" title="مشاهده تحلیل">
+                            <i class="fas fa-chart-line"></i>
+                        </a>
+                        <form method="post" action="{% url 'admin_panel_blog_systematic_build' dataset_id=row.id %}" style="display:inline">
+                            {% csrf_token %}
+                            <button type="submit" class="ab-btn ab-btn--gold ab-btn--xs" title="ساخت پیش‌نمایش مقاله">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                            </button>
+                        </form>
+                        {% if row.run_id %}
+                        <a class="ab-btn ab-btn--ghost ab-btn--xs" href="{% url 'admin_panel_blog_systematic_preview' run_id=row.run_id %}" title="مشاهده پیش‌نمایش">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% endif %}
+                        {% if row.post_url %}
+                        <a class="ab-btn ab-btn--ghost ab-btn--xs" href="{{ row.post_url }}" target="_blank" rel="noopener" title="مشاهده مقاله">
+                            <i class="fas fa-newspaper"></i>
+                        </a>
+                        {% endif %}
+                        {% if row.post_admin_url %}
+                        <a class="ab-btn ab-btn--ghost ab-btn--xs" href="{{ row.post_admin_url }}" target="_blank" rel="noopener" title="ویرایش در ادمین">
+                            <i class="fas fa-pen"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="ab-muted" style="text-align:center;padding:2rem">دیتاست واجد شرایطی یافت نشد.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="ab-sys-pager" aria-label="صفحه‌بندی">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&{{ querystring }}">قبلی</a>
+        {% endif %}
+        <span>صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&{{ querystring }}">بعدی</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

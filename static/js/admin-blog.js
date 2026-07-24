@@ -120,7 +120,7 @@
     }
 
     function initPanels() {
-        var sections = ['blog-overview', 'blog-posts', 'blog-analytics', 'blog-import'];
+        var sections = ['blog-overview', 'blog-posts', 'blog-analytics', 'blog-import', 'blog-systematic'];
         var els = sections.map(function (id) { return document.getElementById(id); });
         var navItems = document.querySelectorAll('.ab-nav__item');
 

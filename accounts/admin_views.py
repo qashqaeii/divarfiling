@@ -44,6 +44,7 @@ from accounts.services.admin_blog import (
     get_blog_dashboard_stats,
     get_blog_posts_table,
 )
+from blog.services.market_article_eligibility import count_eligible_datasets
 from accounts.services.admin_academy import (
     build_academy_stats_json,
     get_academy_analytics_chart,
@@ -469,6 +470,7 @@ class AdminBlogView(StaffRequiredMixin, TemplateView):
             'blog_traffic': analytics.get('traffic') or {},
             'blog_analytics_json': json.dumps(analytics, ensure_ascii=False, default=str),
             'sample_json_url': '/static/samples/article-import-sample.json',
+            'systematic_eligible_count': count_eligible_datasets(),
         })
         return ctx
 

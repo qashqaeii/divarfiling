@@ -27,6 +27,16 @@ from .admin_views import (
     AdminRecoveryCenterView,
     AdminSystemSummaryView,
 )
+from .admin_blog_systematic_views import (
+    AdminBlogSystematicBuildPreviewView,
+    AdminBlogSystematicDraftView,
+    AdminBlogSystematicListView,
+    AdminBlogSystematicPreviewView,
+    AdminBlogSystematicRebuildView,
+    AdminBlogSystematicSeoView,
+    AdminBlogSystematicUpdatePostView,
+    StaffDatasetAnalyzeView,
+)
 from .growth_pipeline_views import (
     AdminGrowthPipelineJsonView,
     AdminGrowthPipelineView,
@@ -137,6 +147,46 @@ urlpatterns = [
     path('admin-panel/blog/analytics.json', AdminBlogAnalyticsJsonView.as_view(), name='admin_panel_blog_analytics_json'),
     path('admin-panel/blog/import/preview.json', AdminBlogImportPreviewView.as_view(), name='admin_panel_blog_import_preview'),
     path('admin-panel/blog/import/', AdminBlogImportView.as_view(), name='admin_panel_blog_import'),
+    path(
+        'admin-panel/blog/systematic/',
+        AdminBlogSystematicListView.as_view(),
+        name='admin_panel_blog_systematic',
+    ),
+    path(
+        'admin-panel/blog/systematic/datasets/<uuid:dataset_id>/preview/',
+        AdminBlogSystematicBuildPreviewView.as_view(),
+        name='admin_panel_blog_systematic_build',
+    ),
+    path(
+        'admin-panel/blog/systematic/preview/<uuid:run_id>/',
+        AdminBlogSystematicPreviewView.as_view(),
+        name='admin_panel_blog_systematic_preview',
+    ),
+    path(
+        'admin-panel/blog/systematic/runs/<uuid:run_id>/seo/',
+        AdminBlogSystematicSeoView.as_view(),
+        name='admin_panel_blog_systematic_seo',
+    ),
+    path(
+        'admin-panel/blog/systematic/runs/<uuid:run_id>/draft/',
+        AdminBlogSystematicDraftView.as_view(),
+        name='admin_panel_blog_systematic_draft',
+    ),
+    path(
+        'admin-panel/blog/systematic/runs/<uuid:run_id>/update-post/',
+        AdminBlogSystematicUpdatePostView.as_view(),
+        name='admin_panel_blog_systematic_update',
+    ),
+    path(
+        'admin-panel/blog/systematic/runs/<uuid:run_id>/rebuild/',
+        AdminBlogSystematicRebuildView.as_view(),
+        name='admin_panel_blog_systematic_rebuild',
+    ),
+    path(
+        'admin-panel/blog/systematic/datasets/<uuid:dataset_id>/analyze/',
+        StaffDatasetAnalyzeView.as_view(),
+        name='admin_panel_blog_systematic_analyze',
+    ),
     path('admin-panel/academy/', AdminAcademyView.as_view(), name='admin_panel_academy'),
     path('admin-panel/academy/stats.json', AdminAcademyJsonView.as_view(), name='admin_panel_academy_stats_json'),
     path('admin-panel/academy/analytics.json', AdminAcademyAnalyticsJsonView.as_view(), name='admin_panel_academy_analytics_json'),

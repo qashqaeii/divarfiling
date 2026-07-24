@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}پیش‌نمایش مقاله سیستماتیک | پنل مدیریت{% endblock %}
+{% block body_class %}mk-admin-dashboard ab-luxe{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=7">
+{% endblock %}
+
+{% block content %}
+<div class="ab-page ab-sys-preview">
+    <header class="ab-hero ab-hero--compact">
+        <div class="ab-hero__main">
+            <div class="ab-hero__top">
+                <a href="{% url 'admin_panel_blog_systematic' %}" class="ab-back">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>بازگشت به فهرست</span>
+                </a>
+                <span class="ab-pill">{{ run.status }}</span>
+            </div>
+            <h1 class="ab-hero__title">پیش‌نمایش مقاله</h1>
+            <p class="ab-hero__lead">اعداد از موتور تحلیل واقعی آمده‌اند. پس از تأیید، پیش‌نویس در بلاگ ساخته می‌شود.</p>
+        </div>
+    </header>
+
+    <div class="ab-sys-preview-layout">
+        <aside class="ab-sys-seo-panel">
+            <form method="post" action="{% url 'admin_panel_blog_systematic_seo' run_id=run.id %}">
+                {% csrf_token %}
+                <h2>SEO</h2>
+                <label>عنوان (Meta title)
+                    <input type="text" name="title" value="{{ title }}" maxlength="200" required>
+                </label>
+                <label>اسلاگ
+                    <input type="text" name="slug" value="{{ slug }}" maxlength="200" {% if existing_link %}readonly{% endif %} dir="ltr">
+                </label>
+                <label>خلاصه (Meta description)
+                    <textarea name="excerpt" rows="4" maxlength="300">{{ excerpt }}</textarea>
+                </label>
+                <button type="submit" class="ab-btn ab-btn--ghost">ذخیره SEO</button>
+            </form>
+
+            <div class="ab-sys-metrics">
+                <h3>کیفیت داده</h3>
+                <ul>
+                    <li>اعتماد: {{ metrics.confidence_score|default:"—" }}</li>
+                    <li>کیفیت: {{ metrics.quality_pct|default:"—" }}٪</li>
+                    <li>معتبر / خام: {{ metrics.valid_count }} / {{ metrics.raw_count }}</li>
+                    <li>بازه: {{ metrics.data_from|default:"—" }} → {{ metrics.data_to|default:"—" }}</li>
+                </ul>
+            </div>
+
+            {% if featured_image_url %}
+            <div class="ab-sys-og">
+                <h3>تصویر شاخص (OG)</h3>
+                <img src="{{ featured_image_url }}" alt="تصویر شاخص" width="600" height="315">
+            </div>
+            {% endif %}
+
+            <div class="ab-sys-schema">
+                <h3>Schema (نمونه)</h3>
+                <pre dir="ltr">{{ schema_preview }}</pre>
+            </div>
+
+            <div class="ab-sys-preview-actions">
+                {% if can_create_draft %}
+                <form method="post" action="{% url 'admin_panel_blog_systematic_draft' run_id=run.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="title" value="{{ title }}">
+                    <input type="hidden" name="excerpt" value="{{ excerpt }}">
+                    <input type="hidden" name="slug" value="{{ slug }}">
+                    <button type="submit" class="ab-btn ab-btn--gold"><i class="fas fa-file-circle-plus"></i> ایجاد به‌عنوان پیش‌نویس</button>
+                </form>
+                {% endif %}
+                {% if can_update %}
+                <form method="post" action="{% url 'admin_panel_blog_systematic_update' run_id=run.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="title" value="{{ title }}">
+                    <input type="hidden" name="excerpt" value="{{ excerpt }}">
+                    <button type="submit" class="ab-btn ab-btn--gold"><i class="fas fa-rotate"></i> به‌روزرسانی مقاله موجود</button>
+                </form>
+                {% endif %}
+                <form method="post" action="{% url 'admin_panel_blog_systematic_rebuild' run_id=run.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="ab-btn ab-btn--ghost"><i class="fas fa-wand-magic-sparkles"></i> تولید مجدد پیش‌نمایش</button>
+                </form>
+                <a href="{% url 'admin_panel_blog_systematic' %}" class="ab-btn ab-btn--ghost">لغو</a>
+                {% if run.post_id %}
+                <a href="/admin/blog/post/{{ run.post_id }}/change/" class="ab-btn ab-btn--ghost" target="_blank" rel="noopener">ویرایش در Django Admin</a>
+                <a href="{{ run.post.get_absolute_url }}" class="ab-btn ab-btn--ghost" target="_blank" rel="noopener">مشاهده در بلاگ</a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <article class="ab-sys-article-preview mk-blog-detail-page">
+            {% if featured_image_url %}
+            <img class="ab-sys-article-hero" src="{{ featured_image_url }}" alt="{{ title }}">
+            {% endif %}
+            <h1>{{ title }}</h1>
+            <p class="mk-blog-detail-lead">{{ excerpt }}</p>
+            <div class="mk-blog-prose mk-market-article-body">
+                {{ content_html|safe }}
+            </div>
+        </article>
+    </div>
+</div>
+{% endblock %}

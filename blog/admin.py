@@ -2,7 +2,7 @@
 پنل مدیریت بلاگ
 """
 from django.contrib import admin
-from .models import Category, Tag, Post
+from .models import Category, MarketArticleLink, MarketArticleRun, Post, Tag
 
 
 @admin.register(Category)
@@ -26,3 +26,16 @@ class PostAdmin(admin.ModelAdmin):
     filter_horizontal = ['tags']
     readonly_fields = ['views_count', 'created_at', 'updated_at']
 
+
+@admin.register(MarketArticleRun)
+class MarketArticleRunAdmin(admin.ModelAdmin):
+    list_display = ['market_key', 'status', 'dataset', 'confidence_score', 'valid_count', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['market_key']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(MarketArticleLink)
+class MarketArticleLinkAdmin(admin.ModelAdmin):
+    list_display = ['market_key', 'post', 'primary_dataset', 'last_generated_at']
+    search_fields = ['market_key']

@@ -9,7 +9,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -103,6 +103,9 @@
             </a>
             <a href="#blog-import" class="ab-nav__item" data-tab="blog-import">
                 <i class="fas fa-file-import"></i><span>درون‌ریزی</span>
+            </a>
+            <a href="#blog-systematic" class="ab-nav__item" data-tab="blog-systematic">
+                <i class="fas fa-chart-area"></i><span>مقالات سیستماتیک</span>
             </a>
         </div>
     </nav>
@@ -544,6 +547,33 @@
         </div>
     </section>
 
+    {# ─── Systematic articles hub ─── #}
+    <section id="blog-systematic" class="ab-panel" hidden>
+        <div class="ab-section-head">
+            <div>
+                <p class="ab-eyebrow">Data → SEO Article</p>
+                <h2>مقالات سیستماتیک</h2>
+                <p class="ab-muted">از دیتاست‌های باکیفیت، مقاله داده‌محور و سئوشده بسازید — انتشار فقط با تأیید شما.</p>
+            </div>
+        </div>
+        <div class="ab-kpi-grid ab-kpi-grid--compact">
+            <article class="ab-kpi" data-accent="teal">
+                <div class="ab-kpi__icon"><i class="fas fa-database"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val">{{ systematic_eligible_count|default:0 }}</span>
+                    <span class="ab-kpi__lbl">دیتاست واجد شرایط (≥۱۰۰)</span>
+                </div>
+            </article>
+        </div>
+        <div class="ab-empty-card" style="margin-top:1.25rem">
+            <p>فهرست کامل دیتاست‌ها، فیلتر، پیش‌نمایش مقاله و ساخت پیش‌نویس در صفحه اختصاصی قرار دارد.</p>
+            <a href="{% url 'admin_panel_blog_systematic' %}" class="ab-btn ab-btn--gold">
+                <i class="fas fa-arrow-left"></i>
+                <span>ورود به فهرست دیتاست‌ها</span>
+            </a>
+        </div>
+    </section>
+
 </div>
 {% endblock %}
 
@@ -560,5 +590,5 @@ window.admBlogMeta = {
     analyticsDays: {{ analytics_days }},
 };
 </script>
-<script src="{% static 'js/admin-blog.js' %}?v=6"></script>
+<script src="{% static 'js/admin-blog.js' %}?v=7"></script>
 {% endblock %}

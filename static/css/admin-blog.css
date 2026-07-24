@@ -1528,3 +1528,72 @@ html.mk-public:not([data-theme="light"]) .ab-code-editor {
         animation: none;
     }
 }
+
+/* -- Systematic articles -- */
+.ab-empty-card {
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.ab-hero--compact { padding-bottom: 1.25rem; }
+.ab-sys-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 1.25rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+.ab-sys-filters label { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.8rem; color: #94a3b8; }
+.ab-sys-filters input,
+.ab-sys-filters select {
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 0.55rem 0.7rem;
+}
+.ab-sys-filters__actions { display: flex; gap: 0.5rem; align-items: end; }
+.ab-sys-table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid rgba(148, 163, 184, 0.15); }
+.ab-sys-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.ab-sys-table th,
+.ab-sys-table td { padding: 0.75rem 0.85rem; border-bottom: 1px solid rgba(148, 163, 184, 0.12); text-align: right; vertical-align: top; }
+.ab-sys-table th { background: rgba(15, 23, 42, 0.7); color: #94a3b8; font-weight: 600; }
+.ab-sys-table small,
+.ab-muted { color: #94a3b8; display: block; margin-top: 0.2rem; }
+.ab-sys-actions { white-space: nowrap; }
+.ab-btn--xs { padding: 0.35rem 0.55rem; font-size: 0.75rem; }
+.ab-status { display: inline-block; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.75rem; background: rgba(148,163,184,.15); }
+.ab-status--none { background: rgba(148,163,184,.15); }
+.ab-status--draft, .ab-status--ready { background: rgba(245,158,11,.18); color: #fbbf24; }
+.ab-status--published { background: rgba(16,185,129,.18); color: #34d399; }
+.ab-status--stale { background: rgba(244,63,94,.18); color: #fb7185; }
+.ab-sys-pager { display: flex; gap: 1rem; justify-content: center; margin: 1.25rem 0; }
+.ab-sys-preview-layout { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 1.25rem; align-items: start; }
+.ab-sys-seo-panel { position: sticky; top: 1rem; padding: 1rem; border-radius: 16px; background: rgba(15,23,42,.55); border: 1px solid rgba(148,163,184,.15); display: flex; flex-direction: column; gap: 1rem; }
+.ab-sys-seo-panel label { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.65rem; }
+.ab-sys-seo-panel input,
+.ab-sys-seo-panel textarea { border-radius: 10px; border: 1px solid rgba(148,163,184,.25); background: #0f172a; color: #e2e8f0; padding: 0.55rem 0.7rem; }
+.ab-sys-preview-actions { display: flex; flex-direction: column; gap: 0.5rem; }
+.ab-sys-article-preview { padding: 1.25rem; border-radius: 16px; background: #fff; color: #0f172a; }
+.ab-sys-article-hero { width: 100%; border-radius: 12px; margin-bottom: 1rem; }
+.ab-sys-schema pre { max-height: 180px; overflow: auto; font-size: 0.7rem; background: #0f172a; padding: 0.75rem; border-radius: 10px; }
+.mk-market-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+.mk-market-kpi { padding: 0.85rem; border-radius: 12px; background: rgba(15,118,110,.08); border: 1px solid rgba(15,118,110,.15); }
+.mk-market-kpi__lbl { display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 0.35rem; }
+.mk-market-table { width: 100%; border-collapse: collapse; margin: 0.75rem 0 1rem; font-size: 0.9rem; }
+.mk-market-table th, .mk-market-table td { border: 1px solid #e2e8f0; padding: 0.5rem 0.65rem; }
+.mk-market-map img { width: 100%; height: auto; border-radius: 12px; }
+.mk-market-bullets { line-height: 1.85; }
+@media (max-width: 960px) {
+  .ab-sys-preview-layout { grid-template-columns: 1fr; }
+  .ab-sys-seo-panel { position: static; }
+}

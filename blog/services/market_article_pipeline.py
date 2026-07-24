@@ -240,7 +240,7 @@ def create_draft(run: MarketArticleRun, user=None) -> Post:
 
     post = Post.objects.create(
         title=title,
-        slug=slug,
+        slug=slug[:220],
         author=author,
         category=category,
         content=run.content_html,

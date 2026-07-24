@@ -14,7 +14,7 @@ User = get_user_model()
 class Category(models.Model):
     """دسته‌بندی مقالات"""
     name = models.CharField(max_length=100, verbose_name='نام')
-    slug = models.SlugField(unique=True, verbose_name='نامک')
+    slug = models.SlugField(max_length=120, unique=True, verbose_name='نامک')
     description = models.TextField(blank=True, verbose_name='توضیحات')
     order = models.IntegerField(default=0, verbose_name='ترتیب')
     
@@ -29,8 +29,8 @@ class Category(models.Model):
 
 class Tag(models.Model):
     """برچسب مقالات"""
-    name = models.CharField(max_length=50, unique=True, verbose_name='نام')
-    slug = models.SlugField(unique=True, verbose_name='نامک')
+    name = models.CharField(max_length=100, unique=True, verbose_name='نام')
+    slug = models.SlugField(max_length=120, unique=True, verbose_name='نامک')
     
     class Meta:
         verbose_name = 'برچسب'
@@ -44,7 +44,7 @@ class Tag(models.Model):
 class Post(models.Model):
     """مقاله"""
     title = models.CharField(max_length=200, verbose_name='عنوان')
-    slug = models.SlugField(unique=True, verbose_name='نامک')
+    slug = models.SlugField(max_length=220, unique=True, verbose_name='نامک')
     author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='نویسنده')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='دسته‌بندی')
     tags = models.ManyToManyField(Tag, blank=True, verbose_name='برچسب‌ها')

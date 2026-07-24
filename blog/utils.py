@@ -46,11 +46,12 @@ def normalize_persian_tag_name(text: str) -> str:
 
 
 def unique_tag_slug(base: str) -> str:
-    slug = persian_to_slug(base) or 'tag'
+    slug = (persian_to_slug(base) or 'tag')[:110]
     candidate = slug
     counter = 1
     while Tag.objects.filter(slug=candidate).exists():
-        candidate = f'{slug}-{counter}'
+        suffix = f'-{counter}'
+        candidate = f'{slug[: 120 - len(suffix)]}{suffix}'
         counter += 1
     return candidate
 
@@ -62,17 +63,21 @@ def get_or_create_tag(tag_name: str) -> Tag:
     نام‌هایی مثل «قیمت گذاری ملک» و «قیمت‌گذاری ملک» slug یکسان دارند؛
     اگر برچسب با همان slug وجود داشته باشد، همان برگردانده می‌شود.
     """
+    tag_name = (tag_name or '').strip()[:100]
+    if not tag_name:
+        tag_name = 'tag'
+
     tag = Tag.objects.filter(name=tag_name).first()
     if tag:
         return tag
 
-    normalized = normalize_persian_tag_name(tag_name)
+    normalized = normalize_persian_tag_name(tag_name)[:100]
     if normalized and normalized != tag_name:
         tag = Tag.objects.filter(name=normalized).first()
         if tag:
             return tag
 
-    base_slug = persian_to_slug(normalized or tag_name)
+    base_slug = persian_to_slug(normalized or tag_name)[:120]
     if base_slug:
         tag = Tag.objects.filter(slug=base_slug).first()
         if tag:
@@ -83,10 +88,11 @@ def get_or_create_tag(tag_name: str) -> Tag:
 
 
 def unique_post_slug(base: str) -> str:
-    slug = persian_to_slug(base) or 'post'
+    slug = (persian_to_slug(base) or 'post')[:210]
     candidate = slug
     counter = 1
     while Post.objects.filter(slug=candidate).exists():
-        candidate = f'{slug}-{counter}'
+        suffix = f'-{counter}'
+        candidate = f'{slug[: 220 - len(suffix)]}{suffix}'
         counter += 1
     return candidate

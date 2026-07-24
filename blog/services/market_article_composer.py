@@ -916,4 +916,4 @@ def _section_cta() -> str:
 
 def _tags(city: str, district: str, tx_label: str, subcat: str) -> list[str]:
     tags = [f'تحلیل بازار {city}', district, tx_label, subcat, 'قیمت مسکن']
-    return [t for t in tags if t]
+    return [t.strip()[:100] for t in tags if t and str(t).strip()]

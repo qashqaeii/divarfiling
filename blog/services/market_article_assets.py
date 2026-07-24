@@ -181,7 +181,7 @@ def _meters_per_pixel(lat: float, zoom: int) -> float:
     return 156543.03392 * math.cos(math.radians(lat)) / (2 ** zoom)
 
 
-def _percentile_bbox(points: list[dict], lo: float = 0.07, hi: float = 0.93) -> tuple[float, float, float, float]:
+def _percentile_bbox(points: list[dict], lo: float = 0.10, hi: float = 0.90) -> tuple[float, float, float, float]:
     lats = sorted(float(p['lat']) for p in points)
     lngs = sorted(float(p['lng']) for p in points)
     n = len(lats)
@@ -189,19 +189,20 @@ def _percentile_bbox(points: list[dict], lo: float = 0.07, hi: float = 0.93) -> 
     i1 = min(n - 1, int(n * hi))
     min_lat, max_lat = lats[i0], lats[i1]
     min_lng, max_lng = lngs[i0], lngs[i1]
-    if max_lat - min_lat < 0.0012:
+    if max_lat - min_lat < 0.0009:
         mid = (max_lat + min_lat) / 2
-        min_lat, max_lat = mid - 0.001, mid + 0.001
-    if max_lng - min_lng < 0.0012:
+        min_lat, max_lat = mid - 0.00075, mid + 0.00075
+    if max_lng - min_lng < 0.0009:
         mid = (max_lng + min_lng) / 2
-        min_lng, max_lng = mid - 0.001, mid + 0.001
+        min_lng, max_lng = mid - 0.00075, mid + 0.00075
     return min_lat, max_lat, min_lng, max_lng
 
 
 def _choose_zoom(min_lat, max_lat, min_lng, max_lng, map_w: int, map_h: int, *, tight: bool) -> int:
-    fill = 0.70 if tight else 0.88
-    best = 13
-    for z in range(18, 11, -1):
+    # fill بالاتر = زوم نزدیک‌تر (bbox بخش بیشتری از کادر را پر می‌کند)
+    fill = 0.86 if tight else 0.94
+    best = 14
+    for z in range(18, 12, -1):
         x0, y0 = _latlon_to_world_px(max_lat, min_lng, z)
         x1, y1 = _latlon_to_world_px(min_lat, max_lng, z)
         bw, bh = abs(x1 - x0), abs(y1 - y0)
@@ -382,14 +383,20 @@ def _compose_map_canvas(
         return None
 
     min_lat, max_lat, min_lng, max_lng = _percentile_bbox(points)
-    pad_lat = max((max_lat - min_lat) * (0.06 if tight else 0.12), 0.0007)
-    pad_lng = max((max_lng - min_lng) * (0.06 if tight else 0.12), 0.0007)
+    pad_lat = max((max_lat - min_lat) * (0.03 if tight else 0.08), 0.00045)
+    pad_lng = max((max_lng - min_lng) * (0.03 if tight else 0.08), 0.00045)
     min_lat -= pad_lat
     max_lat += pad_lat
     min_lng -= pad_lng
     max_lng += pad_lng
 
     zoom = _choose_zoom(min_lat, max_lat, min_lng, max_lng, map_w, map_h, tight=tight)
+    # یک پله نزدیک‌تر اگر هنوز کادر را از حد معقول پر نکند
+    if tight and zoom < 18:
+        x0, y0 = _latlon_to_world_px(max_lat, min_lng, zoom + 1)
+        x1, y1 = _latlon_to_world_px(min_lat, max_lng, zoom + 1)
+        if abs(x1 - x0) <= map_w * 0.96 and abs(y1 - y0) <= map_h * 0.96:
+            zoom += 1
     wx0, wy0 = _latlon_to_world_px(max_lat, min_lng, zoom)
     wx1, wy1 = _latlon_to_world_px(min_lat, max_lng, zoom)
     center_x = (wx0 + wx1) / 2

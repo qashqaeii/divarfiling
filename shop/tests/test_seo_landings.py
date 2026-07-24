@@ -9,7 +9,12 @@ class SeoLandingPageTests(TestCase):
     def test_wave1_slugs_registered(self):
         self.assertEqual(
             set(LANDING_SLUGS),
-            {'real-estate-crm', 'real-estate-software', 'robot-divar'},
+            {
+                'real-estate-crm',
+                'real-estate-software',
+                'robot-divar',
+                'real-estate-market-analysis',
+            },
         )
 
     def test_all_landings_have_content(self):
@@ -44,6 +49,15 @@ class SeoLandingPageTests(TestCase):
         self.assertContains(resp, 'divar-extraction-bot')
         self.assertContains(resp, 'help-bot-extract-tab.png')
 
+    def test_real_estate_market_analysis_page(self):
+        resp = self.client.get('/real-estate-market-analysis/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'تحلیل بازار املاک')
+        self.assertContains(resp, 'سوالات متداول')
+        self.assertContains(resp, 'شروع رایگان میزکار')
+        self.assertContains(resp, 'help-analyze-dashboard.png')
+        self.assertContains(resp, 'seo-hero-shot')
+
     def test_unknown_landing_404(self):
         resp = self.client.get('/divar-filing/')
         self.assertEqual(resp.status_code, 404)
@@ -71,6 +85,7 @@ class SeoLandingPageTests(TestCase):
         resp = self.client.get('/')
         self.assertContains(resp, 'راهنماهای تخصصی')
         self.assertContains(resp, 'نرم افزار مشاور املاک')
+        self.assertContains(resp, 'تحلیل بازار املاک')
 
     def test_sitemap_includes_landings(self):
         resp = self.client.get('/sitemap-landings.xml')
@@ -78,3 +93,4 @@ class SeoLandingPageTests(TestCase):
         body = resp.content.decode('utf-8')
         self.assertIn('/real-estate-crm/', body)
         self.assertIn('/robot-divar/', body)
+        self.assertIn('/real-estate-market-analysis/', body)

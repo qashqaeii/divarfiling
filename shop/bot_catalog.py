@@ -1149,7 +1149,7 @@ def product_rating_display_stats():
 
 # ضریب نمایش آمار صفحه اصلی (عدد واقعی دیتابیس × این مقدار)
 HOME_STATS_DISPLAY_MULTIPLIER = 3
-HOME_STATS_CACHE_KEY = 'shop:home_display_stats:v1'
+HOME_STATS_CACHE_KEY = 'shop:home_display_stats:v2'
 HOME_STATS_CACHE_TTL = 60  # ثانیه — آمار لایو با کش کوتاه
 
 
@@ -1169,6 +1169,47 @@ def _home_satisfaction_rate() -> int:
         return 99
     rate = round((int(agg['positive'] or 0) / total) * 100)
     return max(1, min(99, rate))
+
+
+def _home_uptime_payload(now):
+    """زمان کارکرد دقیق سیستم از اولین فعال‌سازی/لایسنس."""
+    from accounts.services.admin_dashboard import get_system_start_at
+    from django.utils import timezone
+    from workspace.services.jalali_input import format_jalali_date, to_persian_digits
+
+    start = get_system_start_at()
+    if not start:
+        return {
+            'uptime_label': None,
+            'uptime_started_jalali': None,
+            'uptime_days': 0,
+            'uptime_hours': 0,
+            'uptime_minutes': 0,
+            'uptime_total_seconds': 0,
+        }
+
+    start_local = timezone.localtime(start) if timezone.is_aware(start) else start
+    now_local = timezone.localtime(now) if timezone.is_aware(now) else now
+    total_seconds = max(0, int((now_local - start_local).total_seconds()))
+    days = total_seconds // 86400
+    hours = (total_seconds % 86400) // 3600
+    minutes = (total_seconds % 3600) // 60
+
+    parts = []
+    if days:
+        parts.append(f'{days} روز')
+    if hours or days:
+        parts.append(f'{hours} ساعت')
+    parts.append(f'{minutes} دقیقه')
+
+    return {
+        'uptime_label': to_persian_digits(' و '.join(parts)),
+        'uptime_started_jalali': to_persian_digits(format_jalali_date(start_local)),
+        'uptime_days': days,
+        'uptime_hours': hours,
+        'uptime_minutes': minutes,
+        'uptime_total_seconds': total_seconds,
+    }
 
 
 def home_display_stats():
@@ -1195,6 +1236,8 @@ def home_display_stats():
         Q(expires_at__isnull=True) | Q(expires_at__gt=now),
     ).count()
 
+    uptime = _home_uptime_payload(now)
+
     stats = {
         'total_users': users_raw * mult,
         'total_orders': orders_raw * mult,
@@ -1207,6 +1250,7 @@ def home_display_stats():
             'total_orders': orders_raw,
             'total_licenses': licenses_raw,
         },
+        **uptime,
     }
     cache.set(HOME_STATS_CACHE_KEY, stats, HOME_STATS_CACHE_TTL)
     return stats

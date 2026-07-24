@@ -7,8 +7,8 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=87">
-<link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=88">
+<link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=14">
 <link rel="stylesheet" href="{% static 'css/home-day-story.css' %}?v=7">
 {% endblock %}
 
@@ -148,43 +148,58 @@
 {# ─── آمار لایو ─── #}
 <section class="mk-home-stats" aria-label="آمار زنده و واقعی پلتفرم">
     <div class="container">
-        <p class="mk-stats-live-note">
-            <span class="mk-stats-live-dot" aria-hidden="true"></span>
-            <span class="mk-stats-live-badge">لایو</span>
-            آمار زنده و واقعی از سامانه
-        </p>
-        <div class="mk-stats-strip mk-reveal">
-            <article class="mk-stat-item" data-accent="violet">
-                <span class="mk-stat-item-icon"><i class="fas fa-users"></i></span>
-                <span class="mk-stat-item-text">
-                    <span class="mk-stat-val" data-count="{{ stats.total_users }}">{{ stats.total_users|intcomma }}</span>
-                    <span class="mk-stat-lbl">کاربر فعال</span>
-                </span>
-            </article>
-            <span class="mk-stat-sep" aria-hidden="true"></span>
-            <article class="mk-stat-item" data-accent="sky">
-                <span class="mk-stat-item-icon"><i class="fas fa-shopping-bag"></i></span>
-                <span class="mk-stat-item-text">
-                    <span class="mk-stat-val" data-count="{{ stats.total_orders }}">{{ stats.total_orders|intcomma }}</span>
-                    <span class="mk-stat-lbl">خرید موفق</span>
-                </span>
-            </article>
-            <span class="mk-stat-sep" aria-hidden="true"></span>
-            <article class="mk-stat-item" data-accent="emerald">
-                <span class="mk-stat-item-icon"><i class="fas fa-key"></i></span>
-                <span class="mk-stat-item-text">
-                    <span class="mk-stat-val" data-count="{{ stats.total_licenses }}">{{ stats.total_licenses|intcomma }}</span>
-                    <span class="mk-stat-lbl">لایسنس فعال</span>
-                </span>
-            </article>
-            <span class="mk-stat-sep" aria-hidden="true"></span>
-            <article class="mk-stat-item" data-accent="amber">
-                <span class="mk-stat-item-icon"><i class="fas fa-heart"></i></span>
-                <span class="mk-stat-item-text">
-                    <span class="mk-stat-val">{{ stats.satisfaction_rate }}<small>%</small></span>
-                    <span class="mk-stat-lbl">رضایت کاربران</span>
-                </span>
-            </article>
+        <div class="mk-stats-panel mk-reveal">
+            <header class="mk-stats-panel-head">
+                <div class="mk-stats-live">
+                    <span class="mk-stats-live-dot" aria-hidden="true"></span>
+                    <span class="mk-stats-live-label">لایو</span>
+                    <span class="mk-stats-live-text">آمار زنده و واقعی از سامانه</span>
+                </div>
+                {% if stats.uptime_label %}
+                <div class="mk-stats-uptime"
+                     title="{% if stats.uptime_started_jalali %}شروع از {{ stats.uptime_started_jalali }}{% endif %}">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    <span class="mk-stats-uptime-kicker">زمان کارکرد سیستم</span>
+                    <strong class="mk-stats-uptime-val">{{ stats.uptime_label }}</strong>
+                    {% if stats.uptime_started_jalali %}
+                    <span class="mk-stats-uptime-since">از {{ stats.uptime_started_jalali }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </header>
+            <div class="mk-stats-strip">
+                <article class="mk-stat-item" data-accent="violet">
+                    <span class="mk-stat-item-icon"><i class="fas fa-users"></i></span>
+                    <span class="mk-stat-item-text">
+                        <span class="mk-stat-val" data-count="{{ stats.total_users }}">{{ stats.total_users|intcomma }}</span>
+                        <span class="mk-stat-lbl">کاربر فعال</span>
+                    </span>
+                </article>
+                <span class="mk-stat-sep" aria-hidden="true"></span>
+                <article class="mk-stat-item" data-accent="sky">
+                    <span class="mk-stat-item-icon"><i class="fas fa-shopping-bag"></i></span>
+                    <span class="mk-stat-item-text">
+                        <span class="mk-stat-val" data-count="{{ stats.total_orders }}">{{ stats.total_orders|intcomma }}</span>
+                        <span class="mk-stat-lbl">خرید موفق</span>
+                    </span>
+                </article>
+                <span class="mk-stat-sep" aria-hidden="true"></span>
+                <article class="mk-stat-item" data-accent="emerald">
+                    <span class="mk-stat-item-icon"><i class="fas fa-key"></i></span>
+                    <span class="mk-stat-item-text">
+                        <span class="mk-stat-val" data-count="{{ stats.total_licenses }}">{{ stats.total_licenses|intcomma }}</span>
+                        <span class="mk-stat-lbl">لایسنس فعال</span>
+                    </span>
+                </article>
+                <span class="mk-stat-sep" aria-hidden="true"></span>
+                <article class="mk-stat-item" data-accent="amber">
+                    <span class="mk-stat-item-icon"><i class="fas fa-heart"></i></span>
+                    <span class="mk-stat-item-text">
+                        <span class="mk-stat-val">{{ stats.satisfaction_rate }}<small>%</small></span>
+                        <span class="mk-stat-lbl">رضایت کاربران</span>
+                    </span>
+                </article>
+            </div>
         </div>
     </div>
 </section>

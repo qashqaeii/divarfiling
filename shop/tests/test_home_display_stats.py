@@ -57,3 +57,9 @@ class HomeDisplayStatsTests(TestCase):
         self.assertGreaterEqual(stats['total_users'], 1 * HOME_STATS_DISPLAY_MULTIPLIER)
         self.assertGreaterEqual(stats['satisfaction_rate'], 1)
         self.assertLessEqual(stats['satisfaction_rate'], 99)
+        self.assertIn('uptime_label', stats)
+        self.assertIn('uptime_total_seconds', stats)
+        self.assertGreaterEqual(stats['uptime_total_seconds'], 0)
+        if stats['uptime_label']:
+            self.assertRegex(stats['uptime_label'], r'[۰-۹]')
+            self.assertIn('دقیقه', stats['uptime_label'])

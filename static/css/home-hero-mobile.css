@@ -512,7 +512,34 @@
     }
 
     .mk-home-page .mk-stats-strip {
+        border-radius: 0;
+    }
+
+    .mk-home-page .mk-stats-panel {
         border-radius: 16px;
+    }
+
+    .mk-home-page .mk-stats-panel-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+        padding: 0.75rem 0.85rem;
+    }
+
+    .mk-home-page .mk-stats-live-text {
+        white-space: normal;
+        line-height: 1.45;
+    }
+
+    .mk-home-page .mk-stats-uptime {
+        justify-content: flex-start;
+        border-radius: 12px;
+        padding: 0.45rem 0.7rem;
+    }
+
+    .mk-home-page .mk-stats-uptime-since {
+        width: 100%;
+        margin-inline-start: 1.1rem;
     }
 
     html.mk-public[data-theme="light"] .mk-home-page .mk-stat-item {

@@ -16093,40 +16093,78 @@ select.crm-files-adv-control {
 .crm-team-role-card p { margin: 0.35rem 0 0; font-size: 0.58rem; color: var(--ws-text-muted); line-height: 1.5; }
 
 .crm-team-member-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-    gap: 0.65rem; padding: 0.85rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
+    gap: 0.85rem;
+    padding: 0.95rem;
 }
 .crm-team-member-tile {
+    --tile-accent: var(--ws-primary);
+    --tile-accent-soft: color-mix(in srgb, var(--ws-primary) 14%, transparent);
     position: relative;
-    border-radius: 16px;
-    border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+    display: flex;
+    flex-direction: column;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
     background:
-        radial-gradient(90% 80% at 100% 0%, color-mix(in srgb, var(--ws-primary) 7%, transparent), transparent 55%),
+        linear-gradient(165deg, color-mix(in srgb, var(--ws-surface) 92%, #fff) 0%, var(--ws-surface) 48%),
         var(--ws-surface);
     overflow: hidden;
-    transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.55) inset,
+        0 8px 22px color-mix(in srgb, var(--ws-text) 4.5%, transparent);
+    transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+}
+.crm-team-member-tile-accent {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 3px;
+    background: linear-gradient(
+        90deg,
+        var(--tile-accent),
+        color-mix(in srgb, var(--tile-accent) 40%, #38bdf8)
+    );
+    pointer-events: none;
+    z-index: 2;
 }
 .crm-team-member-tile-glow {
     position: absolute;
-    inset: -20% auto auto -15%;
+    inset: -28% auto auto -18%;
+    width: 62%;
+    height: 78%;
+    background: radial-gradient(circle, var(--tile-accent-soft), transparent 68%);
+    pointer-events: none;
+    opacity: 0.95;
+}
+.crm-team-member-tile::after {
+    content: '';
+    position: absolute;
+    inset: auto -10% -35% auto;
     width: 55%;
-    height: 70%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--ws-primary) 12%, transparent), transparent 70%);
+    height: 55%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--tile-accent) 8%, transparent), transparent 70%);
     pointer-events: none;
 }
 .crm-team-member-tile:hover {
-    border-color: color-mix(in srgb, var(--ws-primary) 28%, transparent);
-    box-shadow: 0 10px 28px color-mix(in srgb, var(--ws-text) 6%, transparent);
-    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--tile-accent) 32%, transparent);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.65) inset,
+        0 16px 36px color-mix(in srgb, var(--ws-text) 8%, transparent);
+    transform: translateY(-3px);
 }
 .crm-team-member-tile--owner {
-    border-color: color-mix(in srgb, #f59e0b 35%, var(--ws-border));
-    background:
-        radial-gradient(90% 80% at 100% 0%, color-mix(in srgb, #f59e0b 10%, transparent), transparent 55%),
-        var(--ws-surface);
+    --tile-accent: #d97706;
+    --tile-accent-soft: color-mix(in srgb, #f59e0b 16%, transparent);
+    border-color: color-mix(in srgb, #f59e0b 34%, var(--ws-border));
 }
-.crm-team-member-tile--owner .crm-team-member-tile-glow {
-    background: radial-gradient(circle, color-mix(in srgb, #f59e0b 14%, transparent), transparent 70%);
+.crm-team-member-tile--licensed {
+    --tile-accent: #0f766e;
+    --tile-accent-soft: color-mix(in srgb, #0f766e 14%, transparent);
+}
+.crm-team-member-tile--unlicensed {
+    --tile-accent: #64748b;
+    --tile-accent-soft: color-mix(in srgb, #94a3b8 12%, transparent);
 }
 .crm-team-member-tile-head {
     position: relative;
@@ -16136,35 +16174,47 @@ select.crm-files-adv-control {
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.55rem;
-    padding: 0.9rem 0.9rem 0.55rem;
+    padding: 1rem 1rem 0.55rem;
 }
 .crm-team-member-id {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 0.7rem;
     min-width: 0;
     flex: 1;
+}
+.crm-team-member-id .crm-team-avatar--lg {
+    width: 2.85rem;
+    height: 2.85rem;
+    border-radius: 14px;
+    font-weight: 900;
+    box-shadow:
+        0 0 0 3px color-mix(in srgb, var(--ws-surface) 90%, transparent),
+        0 0 0 5px color-mix(in srgb, var(--tile-accent) 28%, transparent),
+        0 6px 16px color-mix(in srgb, var(--tile-accent) 18%, transparent);
 }
 .crm-team-member-id-text { min-width: 0; }
 .crm-team-member-tile-head strong {
     display: block;
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     font-weight: 850;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 .crm-team-username {
     display: block;
-    font-size: 0.58rem;
+    font-size: 0.6rem;
     color: var(--ws-text-muted);
-    margin-top: 0.15rem;
+    margin-top: 0.18rem;
+    opacity: 0.9;
 }
 .crm-team-member-badges {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: flex-end;
     gap: 0.3rem;
 }
 .crm-team-member-tile-stats {
@@ -16172,32 +16222,38 @@ select.crm-files-adv-control {
     z-index: 1;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.35rem;
-    padding: 0.15rem 0.85rem 0.65rem;
+    gap: 0.4rem;
+    padding: 0.2rem 0.95rem 0.7rem;
 }
 .crm-team-member-tile-stats > span {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.08rem;
-    min-height: 3.1rem;
-    padding: 0.4rem 0.25rem;
-    border-radius: 12px;
+    gap: 0.1rem;
+    min-height: 3.25rem;
+    padding: 0.45rem 0.25rem;
+    border-radius: 13px;
     font-size: 0.62rem;
     color: var(--ws-text-muted);
-    background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
-    border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--ws-surface) 70%, #fff), color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface)));
+    border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
     text-align: center;
+    transition: border-color 0.15s, transform 0.15s;
+}
+.crm-team-member-tile:hover .crm-team-member-tile-stats > span:not(.is-zero) {
+    border-color: color-mix(in srgb, var(--tile-accent) 22%, transparent);
 }
 .crm-team-member-tile-stats > span i {
-    font-size: 0.68rem;
-    color: var(--ws-primary);
-    opacity: 0.85;
+    font-size: 0.7rem;
+    color: var(--tile-accent);
+    opacity: 0.9;
     margin: 0;
 }
 .crm-team-member-tile-stats > span b {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     font-weight: 900;
     color: var(--ws-text);
     font-variant-numeric: tabular-nums;
@@ -16210,26 +16266,26 @@ select.crm-files-adv-control {
     color: var(--ws-text-muted);
     line-height: 1.2;
 }
-.crm-team-member-tile-stats > span.is-zero { opacity: 0.42; }
+.crm-team-member-tile-stats > span.is-zero { opacity: 0.4; }
 .crm-team-member-score {
     grid-column: 1 / -1;
     flex-direction: row !important;
     gap: 0.35rem !important;
-    min-height: 2.35rem !important;
-    background: var(--ws-primary-soft) !important;
-    border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent) !important;
-    color: var(--ws-primary) !important;
+    min-height: 2.4rem !important;
+    background: color-mix(in srgb, var(--tile-accent) 12%, var(--ws-surface)) !important;
+    border-color: color-mix(in srgb, var(--tile-accent) 24%, transparent) !important;
+    color: var(--tile-accent) !important;
 }
-.crm-team-member-score b { color: var(--ws-primary) !important; }
+.crm-team-member-score b { color: var(--tile-accent) !important; }
 .crm-team-member-tile-privacy {
     position: relative;
     z-index: 1;
-    margin: 0 0.85rem 0.55rem;
-    padding: 0.55rem 0.65rem;
-    border-radius: 10px;
+    margin: 0 0.95rem 0.55rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 11px;
     font-size: 0.62rem;
     color: var(--ws-text-muted);
-    background: color-mix(in srgb, var(--ws-border) 25%, transparent);
+    background: color-mix(in srgb, var(--ws-border) 22%, transparent);
 }
 .crm-team-member-tile-foot {
     position: relative;
@@ -16239,13 +16295,15 @@ select.crm-files-adv-control {
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 0.35rem;
-    padding: 0.55rem 0.85rem 0.75rem;
+    margin-top: auto;
+    padding: 0.6rem 0.95rem 0.85rem;
     font-size: 0.58rem;
     color: var(--ws-text-muted);
-    border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 28%, transparent);
 }
 .crm-team-member-tile-actions { display: flex; align-items: center; gap: 0.25rem; }
-.crm-team-owner-badge { color: var(--ws-primary); font-weight: 700; }
+.crm-team-owner-badge { color: #d97706; font-weight: 800; }
 .crm-team-inline-form { margin: 0; }
 .crm-team-icon-btn-v2 {
     width: 1.65rem; height: 1.65rem; border: none; border-radius: 8px;
@@ -16899,56 +16957,188 @@ select.crm-files-adv-control {
 .crm-team-goal-bar { height: 6px; background: var(--ws-border); border-radius: 99px; overflow: hidden; margin-top: 0.25rem; }
 .crm-team-goal-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--ws-primary), color-mix(in srgb, var(--ws-primary) 55%, #0ea5e9)); }
 .crm-team-goals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.45rem; align-items: end; }
-.crm-team-license-badge { color: #b45309; font-size: 0.75rem; }
-.crm-team-license-badge--none { color: #94a3b8; opacity: 0.55; }
-.crm-team-license-badge--owner { color: #0f766e; }
+.crm-team-license-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.22rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    background: color-mix(in srgb, #b45309 12%, var(--ws-surface));
+    color: #b45309;
+    border: 1px solid color-mix(in srgb, #b45309 22%, transparent);
+}
+.crm-team-license-badge i { font-size: 0.55rem; }
+.crm-team-license-badge--on {
+    background: color-mix(in srgb, #0f766e 12%, var(--ws-surface));
+    color: #0f766e;
+    border-color: color-mix(in srgb, #0f766e 24%, transparent);
+}
+.crm-team-license-badge--none {
+    background: color-mix(in srgb, #94a3b8 12%, var(--ws-surface));
+    color: #64748b;
+    border-color: color-mix(in srgb, #94a3b8 28%, transparent);
+    opacity: 0.92;
+}
+.crm-team-license-badge--owner {
+    background: color-mix(in srgb, #d97706 12%, var(--ws-surface));
+    color: #b45309;
+    border-color: color-mix(in srgb, #d97706 28%, transparent);
+}
 .crm-team-license-alloc {
-    margin: 0.35rem 0 0.15rem;
-    padding: 0.45rem 0.55rem;
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--ws-primary, #0f766e) 6%, var(--ws-surface, #fff));
-    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 80%, transparent);
+    position: relative;
+    z-index: 1;
+    margin: 0.15rem 0.95rem 0.55rem;
+    padding: 0.65rem 0.7rem 0.7rem;
+    border-radius: 14px;
+    background:
+        linear-gradient(135deg, color-mix(in srgb, #0f766e 8%, var(--ws-surface)), color-mix(in srgb, #0ea5e9 5%, var(--ws-surface)));
+    border: 1px solid color-mix(in srgb, #0f766e 18%, var(--ws-border));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.crm-team-license-alloc.is-assigned {
+    background:
+        linear-gradient(135deg, color-mix(in srgb, #0f766e 12%, var(--ws-surface)), color-mix(in srgb, #14b8a6 6%, var(--ws-surface)));
+    border-color: color-mix(in srgb, #0f766e 28%, transparent);
+}
+.crm-team-license-alloc.is-open {
+    background:
+        linear-gradient(135deg, color-mix(in srgb, #f59e0b 8%, var(--ws-surface)), color-mix(in srgb, #0ea5e9 4%, var(--ws-surface)));
+    border-color: color-mix(in srgb, #d97706 22%, var(--ws-border));
+}
+.crm-team-license-alloc-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.45rem;
+    font-size: 0.62rem;
+    font-weight: 850;
+    color: color-mix(in srgb, var(--ws-text) 78%, #0f766e);
+}
+.crm-team-license-alloc.is-open .crm-team-license-alloc-label {
+    color: color-mix(in srgb, var(--ws-text) 72%, #b45309);
+}
+.crm-team-license-alloc-label i {
+    display: inline-grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 8px;
+    font-size: 0.58rem;
+    background: color-mix(in srgb, #0f766e 14%, transparent);
+    color: #0f766e;
+}
+.crm-team-license-alloc.is-open .crm-team-license-alloc-label i {
+    background: color-mix(in srgb, #d97706 16%, transparent);
+    color: #b45309;
 }
 .crm-team-license-alloc-row {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.72rem;
+    align-items: stretch;
+    gap: 0.45rem;
 }
-.crm-team-license-alloc-row > span {
-    flex: 1 1 auto;
+.crm-team-license-keychip {
+    flex: 1 1 8rem;
     min-width: 0;
-    color: var(--ws-text-muted, #64748b);
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    padding: 0.4rem 0.55rem;
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--ws-surface) 88%, #fff);
+    border: 1px solid color-mix(in srgb, #0f766e 16%, var(--ws-border));
 }
+.crm-team-license-keychip code {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #0f766e;
+    letter-spacing: 0.04em;
+}
+.crm-team-license-keychip em {
+    font-style: normal;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.crm-team-license-select,
 .crm-team-license-alloc-row .crm-select {
-    flex: 1 1 10rem;
+    flex: 1 1 9rem;
     min-width: 0;
+    min-height: 2.35rem;
+    border-radius: 11px !important;
+    font-size: 0.72rem !important;
+    font-weight: 700;
+    border-color: color-mix(in srgb, #d97706 28%, var(--ws-border)) !important;
+    background: color-mix(in srgb, var(--ws-surface) 92%, #fff);
 }
 .crm-team-license-btn {
     appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 2.35rem;
+    padding: 0.4rem 0.95rem;
     border: none;
-    border-radius: 8px;
-    padding: 0.35rem 0.7rem;
-    font-size: 0.7rem;
-    font-weight: 600;
+    border-radius: 11px;
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: -0.01em;
     cursor: pointer;
-    background: var(--ws-primary, #0f766e);
     color: #fff;
     white-space: nowrap;
+    background:
+        linear-gradient(135deg, #0f766e 0%, #0d9488 55%, #0891b2 100%);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.25) inset,
+        0 6px 14px color-mix(in srgb, #0f766e 28%, transparent);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, opacity 0.15s;
+}
+.crm-team-license-btn i { font-size: 0.68rem; }
+.crm-team-license-btn:hover:not(:disabled) {
+    filter: brightness(1.05);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.3) inset,
+        0 10px 20px color-mix(in srgb, #0f766e 34%, transparent);
+    transform: translateY(-1px);
+}
+.crm-team-license-btn:active:not(:disabled) {
+    transform: translateY(0);
 }
 .crm-team-license-btn:disabled {
-    opacity: 0.45;
+    opacity: 0.42;
     cursor: not-allowed;
+    filter: grayscale(0.25);
+    box-shadow: none;
 }
 .crm-team-license-btn--ghost {
     background: transparent;
     color: #b45309;
-    border: 1px solid color-mix(in srgb, #b45309 35%, transparent);
+    border: 1px solid color-mix(in srgb, #b45309 38%, transparent);
+    box-shadow: none;
+}
+.crm-team-license-btn--ghost:hover:not(:disabled) {
+    background: color-mix(in srgb, #b45309 10%, transparent);
+    filter: none;
+    box-shadow: none;
 }
 .crm-team-license-empty {
-    font-size: 0.68rem;
-    color: var(--ws-text-muted, #94a3b8);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    padding: 0.45rem 0.55rem;
+    border-radius: 10px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+    background: color-mix(in srgb, var(--ws-border) 18%, transparent);
 }
 
 /* ?? Property detail v2 ? unified hero + grid (contact-detail pro pattern) ?? */

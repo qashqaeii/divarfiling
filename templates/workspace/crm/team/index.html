@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=15">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-announcements.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-audit.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-mobile.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-mobile.css' %}?v=7">
 {% endblock %}
 
 {% block crm_content %}
@@ -565,8 +565,9 @@
         <div class="crm-team-member-grid">
             {% for row in member_rows %}
             {% with m=row.member p=row.perf %}
-            <article class="crm-team-member-tile {% if m.role == 'owner' %}crm-team-member-tile--owner{% endif %}">
+            <article class="crm-team-member-tile {% if m.role == 'owner' %}crm-team-member-tile--owner{% endif %}{% if row.allocated_license %} crm-team-member-tile--licensed{% elif agency_license_pool and m.role != 'owner' %} crm-team-member-tile--unlicensed{% endif %}">
                 <div class="crm-team-member-tile-glow" aria-hidden="true"></div>
+                <div class="crm-team-member-tile-accent" aria-hidden="true"></div>
                 <header class="crm-team-member-tile-head">
                     <div class="crm-team-member-id">
                         <span class="crm-team-avatar crm-team-avatar--lg" style="--hue: {{ m.user.username|crm_avatar_hue }}">{{ m.user.get_full_name|default:m.user.username|crm_initials }}</span>
@@ -579,34 +580,47 @@
                         <span class="crm-team-role-pill" style="{% crm_agency_role_style m.role %}">{{ m.get_role_display }}</span>
                         {% if agency_license_pool %}
                             {% if m.role == 'owner' %}
-                            <span class="crm-team-license-badge crm-team-license-badge--owner" title="مالک لایسنس‌های آژانس"><i class="fas fa-key"></i></span>
+                            <span class="crm-team-license-badge crm-team-license-badge--owner" title="مالک لایسنس‌های آژانس"><i class="fas fa-crown"></i> مالک کلیدها</span>
                             {% elif row.allocated_license %}
-                            <span class="crm-team-license-badge" title="لایسنس تخصیص‌یافته"><i class="fas fa-key"></i></span>
+                            <span class="crm-team-license-badge crm-team-license-badge--on" title="لایسنس تخصیص‌یافته"><i class="fas fa-key"></i> فعال</span>
                             {% else %}
-                            <span class="crm-team-license-badge crm-team-license-badge--none" title="بدون لایسنس"><i class="fas fa-key"></i></span>
+                            <span class="crm-team-license-badge crm-team-license-badge--none" title="بدون لایسنس"><i class="fas fa-key"></i> بدون کلید</span>
                             {% endif %}
                         {% endif %}
                     </div>
                 </header>
                 {% if can_manage_team and m.role != 'owner' and agency_license_pool %}
-                <div class="crm-team-license-alloc" data-member-license data-member-id="{{ m.user_id }}">
+                <div class="crm-team-license-alloc {% if row.allocated_license %}is-assigned{% else %}is-open{% endif %}" data-member-license data-member-id="{{ m.user_id }}">
+                    <div class="crm-team-license-alloc-label">
+                        <i class="fas fa-key" aria-hidden="true"></i>
+                        <span>{% if row.allocated_license %}لایسنس تخصیص‌یافته{% else %}تخصیص لایسنس{% endif %}</span>
+                    </div>
                     {% if row.allocated_license %}
                     <div class="crm-team-license-alloc-row">
-                        <span><i class="fas fa-check-circle"></i> کلید …{{ row.allocated_license.key_short }} · {{ row.allocated_license.plan_name }}</span>
-                        <button type="button" class="crm-team-license-btn crm-team-license-btn--ghost" data-revoke-license="{{ row.allocated_license.id }}">لغو</button>
+                        <div class="crm-team-license-keychip">
+                            <code dir="ltr">…{{ row.allocated_license.key_short }}</code>
+                            <em>{{ row.allocated_license.plan_name }}</em>
+                        </div>
+                        <button type="button" class="crm-team-license-btn crm-team-license-btn--ghost" data-revoke-license="{{ row.allocated_license.id }}">
+                            <i class="fas fa-unlink" aria-hidden="true"></i>
+                            <span>لغو</span>
+                        </button>
                     </div>
                     {% else %}
                     <div class="crm-team-license-alloc-row">
                         {% if agency_license_pool.available_licenses %}
-                        <select class="crm-select crm-select-sm" data-assign-license-select aria-label="انتخاب لایسنس">
-                            <option value="">تخصیص لایسنس…</option>
+                        <select class="crm-select crm-select-sm crm-team-license-select" data-assign-license-select aria-label="انتخاب لایسنس">
+                            <option value="">انتخاب کلید آزاد…</option>
                             {% for lic in agency_license_pool.available_licenses %}
                             <option value="{{ lic.id }}">#{{ lic.sequence }} · …{{ lic.key_short }} · {{ lic.plan_name }}</option>
                             {% endfor %}
                         </select>
-                        <button type="button" class="crm-team-license-btn" data-assign-license disabled>تخصیص</button>
+                        <button type="button" class="crm-team-license-btn" data-assign-license disabled>
+                            <i class="fas fa-user-check" aria-hidden="true"></i>
+                            <span>تخصیص</span>
+                        </button>
                         {% else %}
-                        <span class="crm-team-license-empty">کلید آزادی برای تخصیص نیست</span>
+                        <span class="crm-team-license-empty"><i class="fas fa-inbox" aria-hidden="true"></i> کلید آزادی در استخر نیست</span>
                         {% endif %}
                     </div>
                     {% endif %}

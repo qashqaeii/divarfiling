@@ -40,7 +40,7 @@
                 </p>
 
                 <h1 class="home-hero__title">
-                    {{ home_page.hero.title_prefix }}<span class="home-hero__brand">{{ home_page.hero.title_brand }}</span>{{ home_page.hero.title_suffix }}
+                    {{ home_page.hero.title_prefix }}<span class="home-hero__brand">{{ home_page.hero.title_brand }}</span>{% if home_page.hero.title_line2 %}<br>{{ home_page.hero.title_line2 }}{% else %}{{ home_page.hero.title_suffix }}{% endif %}
                 </h1>
 
                 <p class="home-hero__subtitle">
@@ -107,7 +107,7 @@
                             <span>{{ home_page.hero.eyebrow }}</span>
                         </p>
                         <h1 class="mk-hero-title">
-                            <span class="mk-hero-title-line">{{ home_page.hero.title_prefix }}<span class="mk-hero-title-brand">{{ home_page.hero.title_brand }}</span>{{ home_page.hero.title_suffix }}</span>
+                            <span class="mk-hero-title-line">{{ home_page.hero.title_prefix }}<span class="mk-hero-title-brand">{{ home_page.hero.title_brand }}</span>{% if home_page.hero.title_line2 %}<br>{{ home_page.hero.title_line2 }}{% else %}{{ home_page.hero.title_suffix }}{% endif %}</span>
                         </h1>
                         <p class="mk-hero-subtitle mk-hero-subtitle--pro">{{ home_page.hero.subtitle }}</p>
                     </div>

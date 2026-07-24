@@ -17,7 +17,7 @@ from workspace.services.listing_map import parse_map_coordinates
 
 logger = logging.getLogger(__name__)
 
-PAYLOAD_VERSION = 3
+PAYLOAD_VERSION = 4
 
 DEFAULT_OVERPASS_URLS = (
     'https://overpass-api.de/api/interpreter',
@@ -129,6 +129,28 @@ POI_CATEGORIES: Tuple[Dict[str, Any], ...] = (
             {'access': 'customers'},
         ),
         'overpass': ('nwr["amenity"="parking"]',),
+    },
+    {
+        'key': 'cafe', 'group': 'daily', 'label': 'کافه', 'icon': 'fa-mug-saucer',
+        'color': '#a16207', 'fallback_name': 'کافه',
+        'match': ({'amenity': 'cafe'}, {'amenity': 'ice_cream'}),
+        'overpass': (
+            'nwr["amenity"="cafe"]',
+            'nwr["amenity"="ice_cream"]',
+        ),
+    },
+    {
+        'key': 'restaurant', 'group': 'daily', 'label': 'رستوران', 'icon': 'fa-utensils',
+        'color': '#b45309', 'fallback_name': 'رستوران',
+        'match': (
+            {'amenity': 'restaurant'},
+            {'amenity': 'fast_food'},
+            {'amenity': 'food_court'},
+        ),
+        'overpass': (
+            'nwr["amenity"="restaurant"]',
+            'nwr["amenity"="fast_food"]',
+        ),
     },
     {
         'key': 'pharmacy', 'group': 'health', 'label': 'داروخانه', 'icon': 'fa-prescription-bottle-medical',

@@ -645,82 +645,9 @@ def _section_amenities(amenities: Any, amenity_val: Any) -> str:
 
 
 def _section_district_access(access: Any, *, city: str, district: str) -> str:
-    if not isinstance(access, dict) or not access.get('ok'):
-        return ''
-    score = int(access.get('score') or 0)
-    grade = _e(access.get('grade') or '—')
-    grade_label = _e(access.get('grade_label') or '')
-    radius = _e(access.get('radius_label') or access.get('radius_m') or '—')
-    summary = _e(access.get('summary') or '')
-    total = _e(access.get('total_pois') or 0)
+    from blog.services.market_article_access_html import render_district_access_section
+    return render_district_access_section(access, city=city, district=district)
 
-    group_cards = []
-    for g in access.get('groups') or []:
-        gscore = int(g.get('score') or 0)
-        chips = []
-        for item in g.get('items') or []:
-            count = int(item.get('count') or 0)
-            nearest = item.get('nearest_m')
-            near_bit = f' · نزدیک‌ترین {nearest}م' if nearest is not None and count else ''
-            chips.append(
-                f'<li class="mk-access-chip{" mk-access-chip--empty" if count == 0 else ""}">'
-                f'<i class="fas {_e(item.get("icon") or "fa-location-dot")}" style="color:{_e(item.get("color") or "#0d9488")}" aria-hidden="true"></i>'
-                f'<span class="mk-access-chip__label">{_e(item.get("label"))}</span>'
-                f'<strong class="mk-access-chip__count">{count}</strong>'
-                f'<span class="mk-access-chip__meta">{_e(near_bit)}</span>'
-                f'</li>'
-            )
-        group_cards.append(
-            f'<article class="mk-access-group">'
-            f'<header class="mk-access-group__head">'
-            f'<h3>{_e(g.get("label"))}</h3>'
-            f'<span class="mk-access-group__score">{gscore}</span>'
-            f'</header>'
-            f'<div class="mk-access-meter" aria-hidden="true"><span style="width:{gscore}%"></span></div>'
-            f'<ul class="mk-access-chips">{"".join(chips)}</ul>'
-            f'</article>'
-        )
-
-    hi_lis = ''.join(
-        f'<li><strong>{_e(h.get("label"))}</strong> — {_e(h.get("count"))} مورد'
-        f'{(" · نزدیک‌ترین " + str(h.get("nearest_m")) + "م") if h.get("nearest_m") is not None else ""}</li>'
-        for h in (access.get('highlights') or [])[:5]
-    )
-    gap_lis = ''.join(
-        f'<li>{_e(g.get("label"))}</li>' for g in (access.get('gaps') or [])[:5]
-    )
-    hi_block = f'<div class="mk-access-side"><h3>نقاط قوت</h3><ul>{hi_lis}</ul></div>' if hi_lis else ''
-    gap_block = f'<div class="mk-access-side mk-access-side--gap"><h3>کمبود نسبی</h3><ul>{gap_lis}</ul></div>' if gap_lis else ''
-
-    return f'''
-<section class="mk-market-section mk-access-section" id="district-access">
-  <h2>دسترسی محله؛ امکانات شهری اطراف {_e(district)}</h2>
-  <p>
-    علاوه بر امکانات داخل فایل‌ها، بافت واقعی محله را از نقشه باز OpenStreetMap خوانده‌ایم —
-    در شعاع حدود {_e(radius)} حول مرکز تراکم آگهی‌های {_e(city)}.
-  </p>
-  <div class="mk-access-hero">
-    <div class="mk-access-score" style="--access-score:{score}">
-      <div class="mk-access-score__ring" aria-hidden="true"></div>
-      <div class="mk-access-score__core">
-        <strong>{score}</strong>
-        <span>از ۱۰۰</span>
-      </div>
-    </div>
-    <div class="mk-access-score__copy">
-      <p class="mk-access-grade"><span>{grade}</span> {grade_label}</p>
-      <p>{summary}</p>
-      <p class="mk-access-footnote">{total} نقطه خدماتی شناسایی‌شده · منبع: OpenStreetMap</p>
-    </div>
-  </div>
-  <div class="mk-access-sides">{hi_block}{gap_block}</div>
-  <div class="mk-access-groups">{''.join(group_cards)}</div>
-  <p class="mk-market-tip">
-    این امتیاز «زندگی روزمره و خدمات» است، نه جایگزین کارشناسی قیمت.
-    برای مذاکره با مالک/مستأجر می‌توانید کمبودها و نقاط قوت را جداگانه مطرح کنید.
-  </p>
-</section>
-'''
 
 
 def _section_trends(trends: dict, sentiment_label: str, under_pct, is_rent: bool) -> str:

@@ -685,9 +685,6 @@
                 currentX = x;
                 currentY = y;
                 mag.classList.add('is-active');
-                if (magImg.dataset.src && (!magImg.getAttribute('src') || magImg.src.indexOf('data:') === 0)) {
-                    magImg.src = magImg.dataset.src;
-                }
             }
 
             var point = clampPoint(x, y);

@@ -7,50 +7,15 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=91">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=90">
 <link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=14">
-<link rel="stylesheet" href="{% static 'css/home-hero-ai.css' %}?v=1">
-<style>
-/* fallback critical pulses — if external CSS delayed */
-.home-hero__desktop { position: relative; }
-.mk-hero-ai-pulses {
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 5 !important;
-  pointer-events: none !important;
-  overflow: hidden !important;
-}
-.mk-hero-ai-dot {
-  position: absolute !important;
-  width: 8px !important;
-  height: 8px !important;
-  border-radius: 50% !important;
-  background: #ffb45c !important;
-  box-shadow: 0 0 12px 4px rgba(251,146,60,.55) !important;
-  transform: translate(-50%,-50%) !important;
-  opacity: .45 !important;
-  animation: mkHeroAiBlinkInline 5s ease-in-out infinite !important;
-}
-.mk-hero-ai-dot--a { left: 64% !important; top: 58% !important; }
-.mk-hero-ai-dot--b { left: 72% !important; top: 66% !important; animation-delay: 1.2s !important; }
-.mk-hero-ai-dot--c { left: 79% !important; top: 54% !important; background: #c4b5fd !important; animation-delay: 2.2s !important; }
-.mk-hero-ai-dot--d { left: 69% !important; top: 74% !important; animation-delay: .7s !important; }
-.mk-hero-ai-ping, .mk-hero-ai-trace { display: none; }
-@keyframes mkHeroAiBlinkInline {
-  0%, 100% { opacity: .25; transform: translate(-50%,-50%) scale(.8); }
-  40% { opacity: .95; transform: translate(-50%,-50%) scale(1.15); }
-}
-@media (max-width: 768px) {
-  .mk-hero-ai-pulses { display: none !important; }
-}
-</style>
 <link rel="stylesheet" href="{% static 'css/home-day-story.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
 
 {# ─── Hero ─── #}
-<section class="home-hero mk-hero mk-hero--split mk-hero--pro mk-hero--cinema" aria-label="معرفی فایلینگ دیوار" data-hero-magnifier>
+<section class="home-hero mk-hero mk-hero--split mk-hero--pro mk-hero--cinema" aria-label="معرفی فایلینگ دیوار">
 
     <div class="home-hero__mobile">
         <div class="home-hero__media">
@@ -124,11 +89,9 @@
                     <img
                         class="mk-hero-mag-img"
                         data-hero-mag-img
-                        data-src="{% static 'hero.webp' %}?v=2"
-                        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                        src="{% static 'hero.webp' %}?v=2"
                         alt=""
                         decoding="async"
-                        loading="lazy"
                         draggable="false"
                     >
                 </div>
@@ -1076,5 +1039,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-home.js' %}?v=15" defer></script>
+<script src="{% static 'js/mizkar-home.js' %}?v=14" defer></script>
 {% endblock %}

@@ -1,0 +1,101 @@
+/* Hero AI discovery pulses — city / hologram map (desktop) */
+.mk-hero-ai-pulses {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.mk-hero-ai-dot,
+.mk-hero-ai-ping,
+.mk-hero-ai-trace {
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.mk-hero-ai-dot {
+    width: 8px;
+    height: 8px;
+    background: #ffb45c;
+    box-shadow:
+        0 0 0 2px rgba(255, 180, 92, 0.4),
+        0 0 12px 4px rgba(251, 146, 60, 0.55),
+        0 0 28px 10px rgba(251, 146, 60, 0.25);
+    opacity: 0.35;
+}
+
+.mk-hero-ai-dot--a { left: 64%; top: 58%; }
+.mk-hero-ai-dot--b { left: 72%; top: 66%; width: 7px; height: 7px; }
+.mk-hero-ai-dot--c {
+    left: 79%;
+    top: 54%;
+    width: 7px;
+    height: 7px;
+    background: #c4b5fd;
+    box-shadow:
+        0 0 0 2px rgba(196, 181, 253, 0.4),
+        0 0 12px 4px rgba(167, 139, 250, 0.5),
+        0 0 24px 8px rgba(124, 58, 237, 0.22);
+}
+.mk-hero-ai-dot--d { left: 69%; top: 74%; width: 6px; height: 6px; }
+
+.mk-hero-ai-ping {
+    left: 72%;
+    top: 66%;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid rgba(255, 180, 92, 0.75);
+    box-shadow: 0 0 14px rgba(251, 146, 60, 0.4);
+    opacity: 0;
+}
+
+.mk-hero-ai-trace {
+    left: 64%;
+    top: 58%;
+    width: 6px;
+    height: 6px;
+    background: #ffe0b2;
+    box-shadow:
+        0 0 10px 3px rgba(255, 180, 92, 0.7),
+        0 0 22px 8px rgba(251, 146, 60, 0.35);
+    opacity: 0;
+}
+
+@media (min-width: 769px) {
+    .mk-hero-ai-dot--a { animation: mkHeroAiBlink 5s ease-in-out infinite; }
+    .mk-hero-ai-dot--b { animation: mkHeroAiBlink 5.8s ease-in-out 1.2s infinite; }
+    .mk-hero-ai-dot--c { animation: mkHeroAiBlink 6.4s ease-in-out 2.2s infinite; }
+    .mk-hero-ai-dot--d { animation: mkHeroAiBlink 7s ease-in-out 0.7s infinite; }
+    .mk-hero-ai-ping { animation: mkHeroAiRing 6.5s ease-out 1.8s infinite; }
+    .mk-hero-ai-trace { animation: mkHeroAiTravel 8s cubic-bezier(0.45, 0.05, 0.25, 1) 0.5s infinite; }
+}
+
+@keyframes mkHeroAiBlink {
+    0%, 10%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(0.75); }
+    18% { opacity: 0.95; transform: translate(-50%, -50%) scale(1.15); }
+    28% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.95); }
+    38% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.1); }
+    52% { opacity: 0.25; transform: translate(-50%, -50%) scale(0.8); }
+}
+
+@keyframes mkHeroAiRing {
+    0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.35); }
+    8% { opacity: 0.7; transform: translate(-50%, -50%) scale(0.7); }
+    30% { opacity: 0; transform: translate(-50%, -50%) scale(2.8); }
+}
+
+@keyframes mkHeroAiTravel {
+    0%, 8% { opacity: 0; left: 64%; top: 58%; }
+    14% { opacity: 0.95; left: 64%; top: 58%; }
+    36% { opacity: 0.9; left: 72%; top: 66%; }
+    54% { opacity: 0.8; left: 79%; top: 54%; }
+    72% { opacity: 0.55; left: 69%; top: 74%; }
+    84%, 100% { opacity: 0; left: 69%; top: 74%; }
+}
+
+@media (max-width: 768px) {
+    .mk-hero-ai-pulses { display: none; }
+}

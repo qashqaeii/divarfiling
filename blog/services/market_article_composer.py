@@ -4,6 +4,12 @@ from __future__ import annotations
 import html
 from typing import Any
 
+from blog.services.market_article_seo import (
+    render_cta_section,
+    render_maps_section,
+    render_related_links_section,
+)
+
 
 def compose_market_article(
     *,
@@ -12,6 +18,7 @@ def compose_market_article(
     map_image_url: str = '',
     map_caption: str = '',
     map_assets: dict[str, str] | None = None,
+    related_posts: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     city = dataset_meta.get('city') or 'ایران'
     district = dataset_meta.get('district') or 'منطقه'
@@ -126,7 +133,10 @@ def compose_market_article(
         _section_segments(segments, primary, is_rent),
         _section_amenities(amenities, amenity_val),
         _section_trends(trends, sentiment_label, under_pct, is_rent),
-        _section_maps(maps, map_caption, city, district, is_rent),
+        _section_maps(
+            maps, map_caption, city, district, is_rent,
+            subcat=subcat, tx_label=tx_label, primary=primary, valid_n=valid_n,
+        ),
         _section_opportunities(opportunities, under_pct, top_seg, is_rent),
         _section_negotiation(negotiation, primary, is_rent),
         _section_verdict(
@@ -136,7 +146,11 @@ def compose_market_article(
             valid_n, removed, raw_n, date_from, date_to, conf_score, conf_level, dq, is_rent,
         ),
         _section_faq(faq),
-        _section_cta(),
+        _section_related_links(
+            city=city, district=district, subcat=subcat, tx_label=tx_label, is_rent=is_rent,
+            related_posts=related_posts or [],
+        ),
+        _section_cta(city=city, district=district, tx_label=tx_label),
     ]
 
     return {
@@ -230,7 +244,9 @@ def _section_who_this_is_for(city, district, subcat, tx_label) -> str:
   <h2>این گزارش برای چه کسانی نوشته شده؟</h2>
   <p>
     تحلیل بازار {_e(subcat)} در {_e(district)} {_e(city)} ({_e(tx_label)}) طوری نوشته شده
-    که بدون اصطلاحات پیچیده، برای همه قابل‌استفاده باشد:
+    که بدون اصطلاحات پیچیده، برای همه قابل‌استفاده باشد. این گزارش بخشی از مجموعه
+    <a href="/real-estate-market-analysis/">تحلیل بازار املاک</a> در فایلینگ دیوار است
+    و با همان منطق <a href="/blog/tahlil-gheymat-amlak-divar/">تحلیل قیمت آگهی‌های دیوار</a> ساخته شده.
   </p>
   <div class="mk-market-audience-grid">
     <div><strong>خریدار / مستأجر</strong><span>بفهمید قیمت عادلانه چیست و کجا مذاکره کنید.</span></div>
@@ -632,65 +648,22 @@ def _section_trends(trends: dict, sentiment_label: str, under_pct, is_rent: bool
 '''
 
 
-def _section_maps(maps: dict[str, str], caption: str, city: str, district: str, is_rent: bool = False) -> str:
-    if not maps:
-        return f'''
-<section class="mk-market-section" id="spatial">
-  <h2>نقشه و تحلیل مکانی</h2>
-  <p>مختصات کافی برای ساخت نقشه شهری/ماهواره‌ای در {_e(district)} {_e(city)} موجود نبود.</p>
-</section>
-'''
-    value_label = 'سطح رهن کامل' if is_rent else 'سطح قیمت هر متر'
-    specs = [
-        ('featured', 'نقشه شاخص بازار', 'نقطه شروع خوانش مکانی؛ تراکم فایل‌ها روی نقشه شهری نزدیک محله'),
-        ('street_heat', 'کجا عرضه بیشتر است؟', 'هیت‌مپ تراکم: زرد = کم‌فایل، قرمز = پرتراکم. برای پیدا کردن کانون عرضه محله.'),
-        ('street_value', f'کجا گران‌تر یا ارزان‌تر است؟ ({value_label})', f'رنگ آبی‌تر = {_e(value_label)} پایین‌تر، قرمزتر = بالاتر. برای مقایسه عرف مکانی.'),
-        ('street_grid', 'شبکه کمی محله', 'هر خانه شبکه چند فایل نزدیک را تجمیع می‌کند؛ عدد روی خانه‌های گرم = تعداد فایل.'),
-        ('street_hotspots', 'کانون‌های پرتراکم برای اولویت بازدید', '۳ تا ۵ نقطه پرتراکم رتبه‌بندی شده‌اند؛ برای فیلتر فایل و برنامه‌ریزی بازدید مفیدند.'),
-        ('satellite_heat', 'بافت شهری روی ماهواره', 'همان تراکم روی تصویر ماهواره‌ای؛ برای درک بافت ساخته‌شده و خیابان‌ها.'),
-        ('satellite_value', f'{value_label} روی ماهواره', f'ترکیب بافت فیزیکی محله با سطح {_e(value_label)}.'),
-        ('satellite', 'نمای ماهواره‌ای منطقه', 'تصویر ماهواره‌ای با لایه تراکم'),
-        ('price', f'نقشه {value_label}', f'رنگ گرم‌تر یعنی {_e(value_label)} بالاتر'),
-        ('street_dots', 'پراکنش تجمیعی فایل‌ها', 'نقاط درشت‌تر = سلول‌های پرتراکم‌تر'),
-    ]
-    blocks = []
-    seen = set()
-    for key, title, cap in specs:
-        url = maps.get(key)
-        if not url or url in seen:
-            continue
-        seen.add(url)
-        blocks.append(f'''
-  <figure class="mk-market-map">
-    <div class="mk-market-map__head">
-      <h3>{_e(title)}</h3>
-      <span class="mk-market-map__tag">{_e(district)} · {_e(city)}</span>
-    </div>
-    <img src="{_e(url)}" alt="{_e(title)} — {_e(district)} {_e(city)}" width="1600" height="960" loading="lazy">
-    <figcaption>
-      {_e(cap)}
-      <span class="mk-market-map__privacy">نمایش تجمیعی شبکه‌ای — موقعیت تک‌آگهی نشان داده نمی‌شود.</span>
-    </figcaption>
-  </figure>
-''')
-    guide = '''
-  <div class="mk-market-map-guide">
-    <strong>چطور نقشه‌ها را بخوانید:</strong>
-    اول تراکم (کجا فایل زیاد است)، بعد سطح ارزش (کجا گران‌تر/ارزان‌تر است)،
-    سپس کانون‌های پرتراکم را برای اولویت بازدید ببینید. ماهواره فقط بافت فیزیکی را شفاف‌تر می‌کند.
-  </div>
-'''
-    return f'''
-<section class="mk-market-section" id="spatial">
-  <h2>نقشه و تحلیل مکانی</h2>
-  <p>
-    نقشه‌ها با زوم نزدیک روی محله، مقیاس، جهت شمال و راهنمای رنگ ساخته شده‌اند تا کاربردی و قابل‌اتکا باشند.
-    همه لایه‌ها تجمیعی‌اند تا حریم خصوصی حفظ شود.
-  </p>
-  {guide}
-  {''.join(blocks)}
-</section>
-'''
+def _section_maps(
+    maps: dict[str, str],
+    caption: str,
+    city: str,
+    district: str,
+    is_rent: bool = False,
+    *,
+    subcat: str = 'ملک',
+    tx_label: str = 'معامله',
+    primary: dict | None = None,
+    valid_n: int = 0,
+) -> str:
+    return render_maps_section(
+        maps, caption, city, district, is_rent,
+        subcat=subcat, tx_label=tx_label, primary=primary, valid_n=valid_n,
+    )
 
 
 def _section_opportunities(opportunities: Any, under_pct, top_seg, is_rent: bool = False) -> str:
@@ -819,6 +792,9 @@ def _section_methodology(valid_n, removed, raw_n, date_from, date_to, conf_score
   <p>
     محدودیت مهم: این تحلیل بر اساس آگهی‌های موجود است، نه معاملات قطعی ثبت‌شده.
     ممکن است بخشی از بازار در داده نباشد. گزارش جایگزین کارشناسی میدانی نیست.
+    برای اجرای همین روش روی فایل‌های خود،
+    <a href="/real-estate-market-analysis/">تحلیل بازار املاک</a> و
+    <a href="/blog/tahlil-gheymat-amlak-divar/">راهنمای تحلیل قیمت دیوار</a> را ببینید.
   </p>
 </section>
 '''
@@ -896,24 +872,34 @@ def _section_faq(faq: list[dict[str, str]]) -> str:
 '''
 
 
-def _section_cta() -> str:
-    return '''
-<section class="mk-market-section mk-market-cta" id="cta">
-  <h2>ادامه مسیر با فایلینگ دیوار</h2>
-  <p>
-    همین نوع تحلیل را می‌توانید روی فایل‌های خود در میزکار اجرا کنید، فرصت‌های زیر بازار را فیلتر کنید
-    و با ربات فایلینگ دیوار بانک فایل به‌روز بسازید.
-  </p>
-  <div class="mk-market-cta-links">
-    <a href="/shop/">امکانات تحلیل بازار</a>
-    <a href="/bots/divar-filing/">ربات فایلینگ دیوار</a>
-    <a href="/accounts/workspace/">ورود به میزکار</a>
-    <a href="/blog/">سایر تحلیل‌ها و مقالات</a>
-  </div>
-</section>
-'''
+def _section_related_links(
+    *,
+    city: str,
+    district: str,
+    subcat: str,
+    tx_label: str,
+    is_rent: bool,
+    related_posts: list[dict[str, str]],
+) -> str:
+    return render_related_links_section(
+        city=city, district=district, subcat=subcat, tx_label=tx_label,
+        is_rent=is_rent, related_posts=related_posts,
+    )
+
+
+def _section_cta(*, city: str = '', district: str = '', tx_label: str = '') -> str:
+    return render_cta_section(city=city, district=district, tx_label=tx_label)
 
 
 def _tags(city: str, district: str, tx_label: str, subcat: str) -> list[str]:
-    tags = [f'تحلیل بازار {city}', district, tx_label, subcat, 'قیمت مسکن']
+    tags = [
+        f'تحلیل بازار {city}',
+        f'قیمت {subcat} {district}',
+        district,
+        city,
+        tx_label,
+        subcat,
+        'قیمت مسکن',
+        'نقشه بازار املاک',
+    ]
     return [t.strip()[:100] for t in tags if t and str(t).strip()]

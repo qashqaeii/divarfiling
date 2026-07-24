@@ -174,17 +174,65 @@ def _safe(text: str) -> str:
     return ''.join(c if c.isalnum() else '-' for c in (text or 'x'))[:40]
 
 
-def _shape_persian(text: str) -> str:
-    """شکل‌دهی صحیح حروف فارسی/عربی برای رندر PIL."""
-    raw = str(text or '')
-    if not raw:
-        return ''
+def _has_arabic(text: str) -> bool:
+    return any(
+        ('\u0600' <= ch <= '\u06FF')
+        or ('\u0750' <= ch <= '\u077F')
+        or ('\u08A0' <= ch <= '\u08FF')
+        or ('\uFB50' <= ch <= '\uFDFF')
+        or ('\uFE70' <= ch <= '\uFEFF')
+        for ch in (text or '')
+    )
+
+
+def _bidi_display(text: str) -> str:
+    """نسخه پایدار get_display؛ الگوریتم پایتون python-bidi (نه Rust) + base_dir=R."""
+    try:
+        from bidi.algorithm import get_display  # type: ignore
+    except Exception:
+        try:
+            from bidi import get_display  # type: ignore
+        except Exception as exc:
+            logger.warning('python-bidi import failed: %s', exc)
+            return text
+    try:
+        return get_display(text, base_dir='R')
+    except TypeError:
+        try:
+            return get_display(text)
+        except Exception as exc:
+            logger.warning('get_display failed: %s', exc)
+            return text
+    except Exception as exc:
+        logger.warning('get_display failed: %s', exc)
+        return text
+
+
+def _reshape_arabic(text: str) -> str:
     try:
         import arabic_reshaper
-        from bidi.algorithm import get_display
-        return get_display(arabic_reshaper.reshape(raw))
-    except Exception:
+        return arabic_reshaper.reshape(text)
+    except Exception as exc:
+        logger.warning('arabic_reshaper failed: %s', exc)
+        return text
+
+
+def _shape_persian(text: str) -> str:
+    """آماده‌سازی فارسی برای اندازه‌گیری عرض / مسیر bidi (بدون kwargs رندر)."""
+    raw = str(text or '')
+    if not raw or not _has_arabic(raw):
         return raw
+    mode, _kwargs = _persian_render_mode()
+    reshaped = _reshape_arabic(raw)
+    if mode == 'rtl':
+        return raw
+    if mode == 'bidi':
+        return _bidi_display(reshaped)
+    if mode == 'reshape_rev':
+        return reshaped[::-1]
+    if mode == 'reshape':
+        return reshaped
+    return raw
 
 
 @lru_cache(maxsize=64)
@@ -208,8 +256,125 @@ def _font(size: int, weight: str = 'regular'):
     return ImageFont.load_default()
 
 
+@lru_cache(maxsize=1)
+def _pillow_supports_rtl() -> bool:
+    """آیا Pillow با libraqm از direction=rtl پشتیبانی می‌کند؟"""
+    try:
+        img = Image.new('RGB', (8, 8), 'white')
+        draw = ImageDraw.Draw(img)
+        font = _font(16, 'bold')
+        draw.text((0, 0), 'آ', font=font, direction='rtl', language='fa')
+        return True
+    except Exception:
+        return False
+
+
+def _glyph_on_right(full: str, glyph: str, font, draw_kwargs: dict = None) -> bool:
+    """آیا گلیف `glyph` در سمت راست `full` رندر می‌شود؟ (برای تشخیص RTL واقعی)."""
+    kwargs = dict(draw_kwargs or {})
+    img = Image.new('L', (420, 96), 0)
+    gimg = Image.new('L', (420, 96), 0)
+    ImageDraw.Draw(img).text((24, 16), full, fill=255, font=font, **kwargs)
+    ImageDraw.Draw(gimg).text((24, 16), glyph, fill=255, font=font, **kwargs)
+    fa = img.load()
+    ga = gimg.load()
+    w, h = img.size
+
+    def col_ink(px, x: int) -> bool:
+        for y in range(h):
+            if px[x, y] > 0:
+                return True
+        return False
+
+    cols_f = [x for x in range(w) if col_ink(fa, x)]
+    cols_g = [x for x in range(w) if col_ink(ga, x)]
+    if not cols_f or not cols_g:
+        return False
+    left, right = cols_f[0], cols_f[-1]
+    g_left, g_right = cols_g[0], cols_g[-1]
+    gw = max(1, g_right - g_left + 1)
+
+    def score(x0: int) -> float:
+        matched = total = 0
+        for dx in range(gw):
+            x = x0 + dx
+            if x < 0 or x >= w:
+                continue
+            for y in range(h):
+                want = ga[g_left + dx, y] > 0
+                got = fa[x, y] > 0
+                if want or got:
+                    total += 1
+                    if want == got:
+                        matched += 1
+        return matched / total if total else 0.0
+
+    left_score = score(left)
+    right_score = score(right - gw + 1)
+    return right_score >= left_score
+
+
+@lru_cache(maxsize=1)
+def _persian_render_mode() -> tuple[str, tuple]:
+    """
+    انتخاب تجربی مسیر رندر فارسی روی همین Pillow/FreeType:
+    - rtl: متن منطقی + direction=rtl (libraqm)
+    - bidi: reshape + get_display روی canvas LTR
+    - reshape_rev / reshape / raw: مسیرهای پشتیبان
+    دوبار اعمال کردن bidi + RTL فونت باعث برعکس شدن متن می‌شود.
+    """
+    font = _font(40, 'bold')
+    probe = 'ژتراکم'  # ژ باید سمت راست باشد
+    glyph = 'ژ'
+    candidates: list[tuple[str, str, dict]] = []
+    if _pillow_supports_rtl():
+        candidates.append(('rtl', probe, {'direction': 'rtl', 'language': 'fa'}))
+    reshaped = _reshape_arabic(probe)
+    candidates.extend(
+        [
+            ('bidi', _bidi_display(reshaped), {}),
+            ('reshape_rev', reshaped[::-1], {}),
+            ('reshape', reshaped, {}),
+            ('raw', probe, {}),
+        ]
+    )
+    for mode, text, kwargs in candidates:
+        try:
+            if _glyph_on_right(text, glyph if mode == 'rtl' else _reshape_arabic(glyph), font, kwargs):
+                logger.info('Persian map text render mode: %s', mode)
+                return mode, tuple(sorted(kwargs.items()))
+        except Exception as exc:
+            logger.debug('Persian render probe failed for %s: %s', mode, exc)
+    logger.warning('Persian render probe inconclusive; falling back to bidi')
+    return 'bidi', tuple()
+
+
+def _prepare_persian_draw(text: str) -> tuple[str, dict]:
+    """متن + kwargs مناسب draw.text برای فارسی خوانا."""
+    raw = str(text or '')
+    if not raw or not _has_arabic(raw):
+        return raw, {}
+    mode, kw_items = _persian_render_mode()
+    kwargs = dict(kw_items)
+    if mode == 'rtl':
+        return raw, kwargs
+    reshaped = _reshape_arabic(raw)
+    if mode == 'bidi':
+        return _bidi_display(reshaped), {}
+    if mode == 'reshape_rev':
+        return reshaped[::-1], {}
+    if mode == 'reshape':
+        return reshaped, {}
+    return raw, {}
+
+
 def _draw_text(draw: ImageDraw.ImageDraw, xy, text: str, *, fill, font, anchor: str = 'lt') -> None:
-    draw.text(xy, _shape_persian(text), fill=fill, font=font, anchor=anchor)
+    """رندر فارسی با مسیر انتخاب‌شدهٔ تجربی (جلوگیری از double-RTL)."""
+    raw = str(text or '')
+    if not raw:
+        return
+    prepared, kwargs = _prepare_persian_draw(raw)
+    draw.text(xy, prepared, fill=fill, font=font, anchor=anchor, **kwargs)
 
 
 def _latlon_to_world_px(lat: float, lon: float, zoom: int) -> tuple[float, float]:
@@ -686,15 +851,15 @@ def _draw_scale_bar(draw: ImageDraw.ImageDraw, x: int, y: int, lat: float, zoom:
 
 def _draw_place_badge(draw: ImageDraw.ImageDraw, x: int, y: int, place: str, font) -> None:
     text = place or 'محله'
-    shaped = _shape_persian(text)
+    sample, _ = _prepare_persian_draw(text)
     try:
-        bbox = font.getbbox(shaped)
+        bbox = font.getbbox(sample)
         tw = max(140, min(420, (bbox[2] - bbox[0]) + 36))
     except Exception:
         tw = max(140, min(420, 14 + len(text) * 11))
     draw.rounded_rectangle((x, y, x + tw, y + 34), radius=10, fill=(15, 23, 42, 220))
     draw.rectangle((x, y + 7, x + 4, y + 27), fill=(20, 184, 166))
-    draw.text((x + 16, y + 17), shaped, fill=(248, 250, 252), font=font, anchor='lm')
+    _draw_text(draw, (x + 16, y + 17), text, fill=(248, 250, 252), font=font, anchor='lm')
 
 
 def _draw_legend_panel(

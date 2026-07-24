@@ -57,6 +57,47 @@ def _save_extra_maps(run: MarketArticleRun, extras: dict) -> dict[str, str]:
     return urls
 
 
+def _related_market_posts(*, city: str, exclude_slug: str = '', limit: int = 6) -> list[dict[str, str]]:
+    """مقالات مرتبط منتشرشده برای لینک‌سازی داخلی."""
+    qs = (
+        Post.objects.filter(is_published=True)
+        .select_related('category')
+        .order_by('-published_at', '-id')
+    )
+    if exclude_slug:
+        qs = qs.exclude(slug=exclude_slug)
+
+    cat_posts = list(qs.filter(category__slug=CATEGORY_SLUG)[:20])
+    if city:
+        city_hits = [p for p in cat_posts if city in (p.title or '')]
+        others = [p for p in cat_posts if p not in city_hits]
+        ordered = city_hits + others
+    else:
+        ordered = cat_posts
+
+    if len(ordered) < limit:
+        extras = list(qs.exclude(pk__in=[p.pk for p in ordered])[: limit * 2])
+        for p in extras:
+            if city and city in (p.title or ''):
+                ordered.insert(0, p)
+            else:
+                ordered.append(p)
+
+    out: list[dict[str, str]] = []
+    seen = set()
+    for post in ordered:
+        if post.slug in seen:
+            continue
+        seen.add(post.slug)
+        out.append({
+            'title': post.title,
+            'url': post.get_absolute_url(),
+        })
+        if len(out) >= limit:
+            break
+    return out
+
+
 def build_preview(dataset: Dataset, user) -> MarketArticleRun:
     if dataset.row_count < 100:
         raise MarketArticleError('حداقل ۱۰۰ رکورد برای ساخت مقاله لازم است.')
@@ -122,12 +163,15 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
         geo_points=geo,
     )
 
+    related = _related_market_posts(city=meta.get('city') or '', exclude_slug=market_key)
+
     composed = compose_market_article(
         report=report,
         dataset_meta=meta,
         map_image_url='',
         map_assets={},
         map_caption=f'نقشه تراکم بازار {meta.get("district")} {meta.get("city")}',
+        related_posts=related,
     )
 
     seo = {
@@ -171,6 +215,7 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
             map_image_url=map_urls.get('featured') or (run.featured_image.url if run.featured_image else ''),
             map_assets=map_urls,
             map_caption=f'نقشه بازار {meta.get("district")} {meta.get("city")}',
+            related_posts=related,
         )
         run.content_html = composed2['content_html']
         run.faq_json = composed2['faq']

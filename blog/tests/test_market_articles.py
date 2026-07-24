@@ -146,8 +146,51 @@ class MarketArticleSanitizeComposerTests(TestCase):
         self.assertIn('اگر مشاور', composed['content_html'])
         self.assertIn('اگر سرمایه‌گذار', composed['content_html'])
         self.assertIn('اگر سازنده', composed['content_html'])
+        self.assertIn('/real-estate-market-analysis/', composed['content_html'])
+        self.assertIn('ادامه مطالعه و لینک‌های کاربردی', composed['content_html'])
         self.assertGreaterEqual(len(composed['faq']), 5)
         self.assertNotIn('SECRET', composed['content_html'])
+
+    def test_map_section_has_rich_seo_copy_and_links(self):
+        report = {
+            'tx': {'is_sale': True, 'is_rent': False},
+            'confidence': {'score': 80, 'display_score': 80},
+            'data_quality': {'valid_count': 120, 'raw_count': 130, 'quality_pct': 90},
+            'publication_scope': {'date_from_fmt': '۱۴۰۴/۰۱/۰۱', 'date_to_fmt': '۱۴۰۴/۰۳/۰۱'},
+            'market_sentiment': {'label': 'مناسب خریدار'},
+            'liquidity': {'label': 'متوسط', 'score': 50},
+            'price_analysis': {
+                'price_per_sqm': {'median_fmt': '۵۰ میلیون', 'p25_fmt': '۴۰ میلیون', 'p75_fmt': '۶۰ میلیون'},
+                'price': {'median_fmt': '۴ میلیارد'},
+            },
+            'market_depth': {'under_pct': 30, 'fair_pct': 40, 'over_pct': 30},
+            'price_trends': {'has_data': False},
+            'area_segments': [],
+            'insights': [],
+            'professional_summary': {},
+        }
+        composed = compose_market_article(
+            report=report,
+            dataset_meta={
+                'city': 'اهواز',
+                'district': 'کیانپارس',
+                'transaction_type': 'فروش',
+                'subcategory': 'آپارتمان',
+            },
+            map_assets={
+                'street_heat': '/media/heat.png',
+                'street_value': '/media/value.png',
+            },
+            related_posts=[{'title': 'تحلیل نمونه', 'url': '/blog/sample/'}],
+        )
+        html = composed['content_html']
+        self.assertIn('هیت‌مپ تراکم', html)
+        self.assertIn('alt="هیت‌مپ تراکم', html)
+        self.assertIn('mk-market-map__body', html)
+        self.assertIn('/blog/melk-zir-bazar-bala-bazar-value-score-rahnama/', html)
+        self.assertIn('تحلیل نمونه', html)
+        self.assertIn('/blog/sample/', html)
+        self.assertIn('/robot-divar/', html)
 
     def test_featured_image_png(self):
         content = render_featured_image(

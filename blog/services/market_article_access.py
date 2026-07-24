@@ -13,10 +13,7 @@ from workspace.services.nearby_pois import (
     _element_coords,
     _element_matches_category,
     fetch_overpass_elements,
-    group_nearby_items,
     haversine_m,
-    nearest_highlights,
-    resolve_nearby_items,
 )
 
 logger = logging.getLogger(__name__)
@@ -122,44 +119,48 @@ def analyze_district_access(geo_points: list[dict] | None) -> dict[str, Any]:
         }
 
     tallies = _tally_categories(lat, lng, elements, radius_m=radius_m)
-    nearby_items = resolve_nearby_items(lat, lng, elements, radius_m=radius_m)
-    item_dicts: list[dict[str, Any]] = []
-    for item in nearby_items:
-        d = item.as_dict()
-        key = d.get('key') or ''
-        tally = tallies.get(key) or {}
-        if d.get('found') and key != 'street_type':
-            d['count'] = int(tally.get('count') or 0)
-        elif key == 'street_type' and d.get('found'):
-            d['count'] = 1
-        else:
-            d['count'] = 0
-        item_dicts.append(d)
-
-    groups_ui = group_nearby_items(item_dicts)
-    categories = _categories_from_tallies(tallies, item_dicts)
+    categories = _categories_from_tallies(tallies)
     score_groups = _build_score_groups(categories)
     score, grade, grade_label = _score_access(score_groups)
-    highlights = nearest_highlights(item_dicts, limit=4)
-    # برای هایلایت مقاله، تعداد هم نشان داده شود
-    for h in highlights:
-        key = h.get('key')
-        if key and key in tallies:
-            h['count'] = int(tallies[key].get('count') or 0)
 
+    # گروه‌های UI فقط با تعداد (بدون فاصله / نوع معبر)
+    groups_ui = []
+    for g in score_groups:
+        items = [i for i in (g.get('items') or []) if int(i.get('count') or 0) > 0]
+        if not items:
+            continue
+        items = sorted(items, key=lambda x: int(x.get('count') or 0), reverse=True)
+        groups_ui.append({
+            'key': g['key'],
+            'label': g['label'],
+            'count': sum(int(i.get('count') or 0) for i in items),
+            'score': g.get('score'),
+            'items': items,
+        })
+
+    highlights = sorted(
+        [c for c in categories if int(c.get('count') or 0) >= 1],
+        key=lambda c: int(c.get('count') or 0),
+        reverse=True,
+    )[:4]
     gaps = [
         {
-            'key': i['key'],
-            'label': i['label'],
-            'icon': i.get('icon'),
-            'color': i.get('color'),
+            'key': c['key'],
+            'label': c['label'],
+            'icon': c.get('icon'),
+            'color': c.get('color'),
         }
-        for i in item_dicts
-        if not i.get('found') and i.get('key') != 'street_type'
-    ]
-    found_count = sum(1 for i in item_dicts if i.get('found'))
-    total_count = len(item_dicts)
-    total_pois = sum(int((t.get('count') or 0)) for t in tallies.values())
+        for c in categories
+        if int(c.get('count') or 0) == 0
+        and c['key'] in {
+            'hospital', 'pharmacy', 'supermarket', 'school', 'park',
+            'metro', 'fire_station', 'police', 'cafe', 'restaurant',
+        }
+    ][:6]
+
+    found_count = sum(1 for c in categories if int(c.get('count') or 0) > 0)
+    total_count = len(categories)
+    total_pois = sum(int(c.get('count') or 0) for c in categories)
 
     return {
         'ok': True,
@@ -171,7 +172,7 @@ def analyze_district_access(geo_points: list[dict] | None) -> dict[str, Any]:
         'grade': grade,
         'grade_label': grade_label,
         'summary': _summary_fa(score, grade_label, categories, gaps),
-        'items': item_dicts,
+        'items': categories,
         'groups': groups_ui,
         'categories': categories,
         'highlights': highlights,
@@ -264,28 +265,22 @@ def _tally_categories(
 
 def _categories_from_tallies(
     tallies: dict[str, dict[str, Any]],
-    items: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    by_key = {i['key']: i for i in items}
     out: list[dict[str, Any]] = []
     for category in POI_CATEGORIES:
         if category.get('kind') == 'street':
             continue
         key = category['key']
-        item = by_key.get(key) or {}
         tally = tallies.get(key) or {}
+        count = int(tally.get('count') or 0)
         out.append({
             'key': key,
             'group': category['group'],
             'label': category['label'],
             'icon': category['icon'],
             'color': category['color'],
-            'count': int(tally.get('count') or 0),
-            'nearest_m': item.get('distance_m'),
-            'nearest_name': item.get('name') or None,
-            'distance_label': item.get('distance_label') or '',
-            'walk_label': item.get('walk_label') or '',
-            'found': bool(item.get('found')),
+            'count': count,
+            'found': count > 0,
             'samples': tally.get('samples') or [],
         })
     return out

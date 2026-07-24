@@ -2777,8 +2777,19 @@ html.mk-public .mk-blog-detail-hero h1 {
 }
 .mk-poi-item__side strong { color: #0f172a; font-size: 0.92rem; }
 .mk-poi-item__side small { color: #64748b; font-size: 0.75rem; }
-.mk-poi-item--missing { opacity: 0.72; }
-.mk-poi-missing-note { margin: 0.35rem 0 0.85rem; color: #64748b; font-size: 0.9rem; }
+.mk-poi-item--count .mk-poi-item__side {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+.mk-poi-item--count .mk-poi-item__side strong {
+  font-size: 1.15rem;
+  color: #0f766e;
+}
+.mk-poi-item--count .mk-poi-item__main .mk-poi-item__label {
+  color: #0f172a;
+  font-size: 0.95rem;
+}
 
 @media (max-width: 640px) {
   .mk-access-section .mk-access-hero { text-align: center; }

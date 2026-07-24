@@ -51,7 +51,7 @@ class DistrictAccessHelpersTests(SimpleTestCase):
         self.assertIn('police', keys)
         self.assertIn('fire_station', keys)
 
-    def test_section_renders_crm_style_when_ok(self):
+    def test_section_renders_counts_only(self):
         access = {
             'ok': True,
             'score': 76,
@@ -60,102 +60,73 @@ class DistrictAccessHelpersTests(SimpleTestCase):
             'radius_label': '۳ کیلومتر',
             'summary': 'امتیاز نمونه',
             'total_pois': 42,
-            'found_count': 18,
-            'total_count': 24,
-            'missing_count': 6,
+            'found_count': 10,
+            'total_count': 22,
+            'missing_count': 12,
             'highlights': [
                 {
                     'label': 'سوپرمارکت',
-                    'name': 'افق کوروش',
-                    'distance_label': '۲۷ متر',
-                    'walk_label': 'حدود ۱ دقیقه پیاده',
                     'icon': 'fa-cart-shopping',
                     'color': '#0891b2',
                     'count': 5,
-                    'found': True,
                 }
             ],
-            'gaps': [{'label': 'آتش‌نشانی'}],
+            'gaps': [{'label': 'آتش‌نشانی', 'key': 'fire_station'}],
             'groups': [
                 {
                     'key': 'daily',
                     'label': 'زندگی روزمره',
-                    'found_count': 2,
                     'items': [
                         {
                             'key': 'supermarket',
                             'label': 'سوپرمارکت',
-                            'name': 'افق کوروش',
                             'icon': 'fa-cart-shopping',
                             'color': '#0891b2',
                             'count': 5,
-                            'found': True,
-                            'distance_label': '۲۷ متر',
-                            'walk_label': 'حدود ۱ دقیقه پیاده',
                         },
                         {
                             'key': 'cafe',
                             'label': 'کافه',
-                            'name': 'کافه نادری',
                             'icon': 'fa-mug-saucer',
                             'color': '#a16207',
                             'count': 8,
-                            'found': True,
-                            'distance_label': '۱۲۰ متر',
-                            'walk_label': 'حدود ۲ دقیقه پیاده',
                         },
                         {
-                            'key': 'restaurant',
-                            'label': 'رستوران',
-                            'icon': 'fa-utensils',
-                            'color': '#b45309',
-                            'count': 0,
-                            'found': False,
-                            'empty_label': 'در شعاع ۳ کیلومتر یافت نشد',
+                            'key': 'street_type',
+                            'label': 'نوع معبر',
+                            'count': 1,
                         },
                     ],
                 },
                 {
                     'key': 'safety',
                     'label': 'امنیت و خدمات',
-                    'found_count': 2,
                     'items': [
                         {
                             'key': 'police',
                             'label': 'کلانتری',
-                            'name': 'نیروی انتظامی',
                             'icon': 'fa-shield-halved',
                             'color': '#1d4ed8',
                             'count': 2,
-                            'found': True,
-                            'distance_label': '۵۸۰ متر',
-                            'walk_label': 'حدود ۷ دقیقه پیاده',
-                        },
-                        {
-                            'key': 'fire_station',
-                            'label': 'آتش‌نشانی',
-                            'name': 'ایستگاه ۸۴',
-                            'icon': 'fa-fire-extinguisher',
-                            'color': '#b45309',
-                            'count': 1,
-                            'found': True,
-                            'distance_label': '۷۱۰ متر',
-                            'walk_label': 'حدود ۹ دقیقه پیاده',
                         },
                     ],
                 },
             ],
         }
-        html = _section_district_access(access, city='تهران', district='جردن')
+        html = _section_district_access(access, city='قم', district='شهرک قدس')
         self.assertIn('district-access', html)
         self.assertIn('امکانات و دسترسی‌های منطقه', html)
         self.assertIn('سوپرمارکت', html)
-        self.assertIn('۵ مورد', html)
+        self.assertIn('۵', html)
         self.assertIn('کافه', html)
         self.assertIn('کلانتری', html)
-        self.assertIn('آتش‌نشانی', html)
-        self.assertIn('mk-poi-item__count', html)
-        self.assertIn('حدود ۱ دقیقه پیاده', html)
+        self.assertNotIn('OpenStreetMap', html)
+        self.assertNotIn('پنل فایل شخصی', html)
+        self.assertNotIn('نوع معبر', html)
+        self.assertNotIn('پیاده', html)
+        self.assertNotIn('فاصله', html)
+        self.assertNotRegex(html, r'\d+\s*متر')
+        self.assertNotIn('۲۷ متر', html)
 
     def test_section_soft_message_when_overpass_fails(self):
         html = render_district_access_section(

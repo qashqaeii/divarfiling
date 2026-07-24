@@ -142,13 +142,20 @@ def _extract_geo_points(listings, *, limit: int = 800) -> list[dict[str, float]]
         if not (-90 <= lat_f <= 90 and -180 <= lng_f <= 180):
             continue
         weight = 1.0
+        pps_val = 0.0
         pps = getattr(lst, 'price_per_sqm', None)
         if pps:
             try:
-                weight = max(0.4, min(3.0, float(pps) / 50_000_000))
+                pps_val = float(pps)
+                weight = max(0.4, min(3.0, pps_val / 50_000_000))
             except (TypeError, ValueError):
                 weight = 1.0
-        points.append({'lat': lat_f, 'lng': lng_f, 'w': round(weight, 3)})
+        points.append({
+            'lat': lat_f,
+            'lng': lng_f,
+            'w': round(weight, 3),
+            'pps': pps_val,
+        })
         if len(points) >= limit:
             break
     return points

@@ -1,4 +1,4 @@
-"""تولید HTML مقاله سیستماتیک ۱۵بخشی از گزارش تحلیل."""
+"""تولید HTML مقاله سیستماتیک — متن ساده، دقیق و چندمخاطبه."""
 from __future__ import annotations
 
 import html
@@ -11,16 +11,22 @@ def compose_market_article(
     dataset_meta: dict[str, Any],
     map_image_url: str = '',
     map_caption: str = '',
+    map_assets: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     city = dataset_meta.get('city') or 'ایران'
     district = dataset_meta.get('district') or 'منطقه'
     tx_raw = dataset_meta.get('transaction_type') or ''
     subcat = dataset_meta.get('subcategory') or 'ملک'
-    tx_label = _tx_label(tx_raw, report.get('tx') or {})
+    tx = report.get('tx') or {}
+    tx_label = _tx_label(tx_raw, tx)
+    is_rent = bool(tx.get('is_rent') and not tx.get('is_sale'))
 
-    title = f'قیمت {subcat} در {district} {city}؛ تحلیل بازار {tx_label} و قیمت هر متر'
+    title = (
+        f'قیمت {subcat} در {district} {city}؛ '
+        f'تحلیل بازار {tx_label}، قیمت هر متر و راهنمای خرید و فروش'
+    )
     if len(title) > 200:
-        title = f'تحلیل بازار {subcat} در {district} {city}'
+        title = f'تحلیل بازار {subcat} در {district} {city} — قیمت هر متر و وضعیت {tx_label}'
 
     conf = report.get('confidence') or {}
     dq = report.get('data_quality') or {}
@@ -32,6 +38,9 @@ def compose_market_article(
     pa = report.get('price_analysis') or {}
     pps = pa.get('price_per_sqm') or {}
     price = pa.get('price') or {}
+    deposit = pa.get('deposit') or {}
+    rent = pa.get('rent') or {}
+    full_dep = pa.get('full_deposit') or {}
     segments = report.get('area_segments') or []
     amenities = report.get('amenities_coverage') or {}
     amenity_val = report.get('amenity_valuation') or {}
@@ -40,71 +49,82 @@ def compose_market_article(
     insights = report.get('insights') or []
     prof = report.get('professional_summary') or {}
 
-    valid_n = dq.get('valid_count') or scope.get('analyzed_count') or 0
-    raw_n = dq.get('raw_count') or valid_n
-    removed = dq.get('removed_count') or max(0, int(raw_n) - int(valid_n))
+    valid_n = int(dq.get('valid_count') or scope.get('analyzed_count') or 0)
+    raw_n = int(dq.get('raw_count') or valid_n)
+    removed = int(dq.get('removed_count') or max(0, raw_n - valid_n))
     conf_score = conf.get('display_score') or conf.get('score') or '—'
     conf_level = conf.get('level_plain') or conf.get('level') or '—'
     pps_med = pps.get('median_fmt') or '—'
+    price_med = price.get('median_fmt') or '—'
     date_from = scope.get('date_from_fmt') or '—'
     date_to = scope.get('date_to_fmt') or '—'
     under_pct = depth.get('under_pct')
+    fair_pct = depth.get('fair_pct')
+    over_pct = depth.get('over_pct')
     trend_fmt = trends.get('pps_monthly_fmt') or _fmt_trend(trends)
     sentiment_label = sentiment.get('label') or 'نامشخص'
     liq_label = liquidity.get('label') or '—'
+    top_seg = _top_segment_name(segments)
 
     excerpt = (
-        f'تحلیل بازار {subcat} در {district} {city} بر اساس {valid_n} فایل معتبر؛ '
-        f'قیمت معمول هر متر {pps_med}؛ وضعیت بازار: {sentiment_label}؛ '
-        f'اعتماد تحلیل {conf_score}.'
+        f'در {district} {city}، بر اساس {valid_n} فایل معتبر {subcat}، '
+        f'قیمت معمول هر متر حدود {pps_med} است. '
+        f'وضعیت بازار: {sentiment_label}. '
+        f'این گزارش برای خریدار، فروشنده، مشاور، سازنده و سرمایه‌گذار نوشته شده است.'
     )[:300]
 
     faq = _build_faq(
-        city=city,
-        district=district,
-        subcat=subcat,
-        pps_med=pps_med,
-        valid_n=valid_n,
-        date_from=date_from,
-        date_to=date_to,
-        segments=segments,
-        negotiation=negotiation,
-        sentiment_label=sentiment_label,
-        under_pct=under_pct,
+        city=city, district=district, subcat=subcat, tx_label=tx_label,
+        pps_med=pps_med, price_med=price_med, valid_n=valid_n,
+        date_from=date_from, date_to=date_to, segments=segments,
+        negotiation=negotiation, sentiment_label=sentiment_label,
+        under_pct=under_pct, is_rent=is_rent, deposit=deposit, rent=rent,
+        full_dep=full_dep, top_seg=top_seg,
     )
 
-    parts: list[str] = []
-    parts.append(_section_intro(
-        city, district, subcat, tx_label, valid_n, date_from, date_to,
-        pps_med, trend_fmt, sentiment_label, conf_score, conf_level, prof,
-    ))
-    parts.append(_section_kpi_cards(
-        pps_med, price, valid_n, under_pct, trend_fmt, liq_label, conf_score, segments,
-    ))
-    parts.append(_section_market_status(
-        sentiment, liquidity, depth, insights, pps, conf_level,
-    ))
-    parts.append(_section_pps(pps, depth, pa))
-    parts.append(_section_segments(segments, pps_med))
-    parts.append(_section_amenities(amenities, amenity_val))
-    parts.append(_section_trends(trends, sentiment_label))
-    parts.append(_section_map(map_image_url, map_caption, city, district))
-    parts.append(_section_opportunities(opportunities, under_pct))
-    parts.append(_section_negotiation(negotiation, pps))
-    parts.append(_section_verdict(
-        city, district, sentiment_label, opportunities, conf_level, insights,
-    ))
-    parts.append(_section_methodology(
-        valid_n, removed, raw_n, date_from, date_to, conf_score, conf_level, dq,
-    ))
-    parts.append(_section_faq(faq))
-    parts.append(_section_cta())
+    maps = map_assets or {}
+    if map_image_url and 'featured' not in maps:
+        maps = {**maps, 'featured': map_image_url}
 
-    content = '\n'.join(p for p in parts if p)
+    parts = [
+        _section_who_this_is_for(city, district, subcat, tx_label),
+        _section_intro(
+            city, district, subcat, tx_label, valid_n, date_from, date_to,
+            pps_med, price_med, trend_fmt, sentiment_label, conf_score, conf_level,
+            prof, is_rent, deposit, rent, full_dep,
+        ),
+        _section_kpi_cards(
+            pps_med, price_med, valid_n, under_pct, trend_fmt, liq_label,
+            conf_score, top_seg, is_rent, deposit, rent, full_dep,
+        ),
+        _section_plain_status(
+            sentiment, liquidity, depth, insights, pps, conf_level, city, district,
+        ),
+        _section_audiences(
+            city, district, sentiment_label, under_pct, pps, negotiation,
+            trend_fmt, liq_label, is_rent, top_seg,
+        ),
+        _section_pps(pps, depth, is_rent, deposit, rent, full_dep),
+        _section_segments(segments, pps_med, is_rent),
+        _section_amenities(amenities, amenity_val),
+        _section_trends(trends, sentiment_label, under_pct),
+        _section_maps(maps, map_caption, city, district),
+        _section_opportunities(opportunities, under_pct, top_seg),
+        _section_negotiation(negotiation, pps, is_rent),
+        _section_verdict(
+            city, district, sentiment_label, opportunities, conf_level, insights, under_pct,
+        ),
+        _section_methodology(
+            valid_n, removed, raw_n, date_from, date_to, conf_score, conf_level, dq,
+        ),
+        _section_faq(faq),
+        _section_cta(),
+    ]
+
     return {
         'title': title,
         'excerpt': excerpt,
-        'content_html': content,
+        'content_html': '\n'.join(p for p in parts if p),
         'faq': faq,
         'tags': _tags(city, district, tx_label, subcat),
     }
@@ -132,134 +152,276 @@ def _fmt_trend(trends: dict) -> str:
         return 'داده روند کافی نیست'
     monthly = trends.get('pps_monthly_pct')
     if monthly is None:
-        t = (trends.get('trends') or {}).get('monthly')
-        if t is None:
-            return 'داده روند کافی نیست'
-        monthly = t
+        monthly = (trends.get('trends') or {}).get('monthly')
+    if monthly is None:
+        return 'داده روند کافی نیست'
     sign = '+' if monthly > 0 else ''
     return f'{sign}{monthly}٪ ماهانه'
 
 
-def _section_intro(
-    city, district, subcat, tx_label, valid_n, date_from, date_to,
-    pps_med, trend_fmt, sentiment_label, conf_score, conf_level, prof,
-) -> str:
-    intro = ''
-    if isinstance(prof, dict):
-        intro = (prof.get('intro') or '').strip()
-    if not intro:
-        intro = (
-            f'در این گزارش، بازار {tx_label} {subcat} در محله {district} شهر {city} '
-            f'بر اساس {valid_n} فایل معتبر بررسی شده است.'
-        )
-    quality_note = ''
-    if isinstance(prof, dict) and prof.get('quality_note'):
-        quality_note = f'<p class="mk-market-note">{_e(prof["quality_note"])}</p>'
+def _top_segment_name(segments: list) -> str:
+    if not segments:
+        return '—'
+    return segments[0].get('bucket_plain') or segments[0].get('bucket') or '—'
+
+
+def _section_who_this_is_for(city, district, subcat, tx_label) -> str:
     return f'''
-<section class="mk-market-section" id="executive-summary">
-  <h2>خلاصه اجرایی بازار { _e(district) }</h2>
-  <p>{_e(intro)}</p>
-  <ul class="mk-market-bullets">
-    <li>تعداد فایل‌های بررسی‌شده: <strong>{_e(valid_n)}</strong></li>
-    <li>بازه زمانی داده‌ها: از <strong>{_e(date_from)}</strong> تا <strong>{_e(date_to)}</strong></li>
-    <li>قیمت معمول هر متر: <strong>{_e(pps_med)}</strong></li>
-    <li>روند بازار: <strong>{_e(trend_fmt)}</strong></li>
-    <li>وضعیت بازار: <strong>{_e(sentiment_label)}</strong></li>
-    <li>اعتماد تحلیل: <strong>{_e(conf_score)}</strong> ({_e(conf_level)})</li>
-  </ul>
-  {quality_note}
+<section class="mk-market-section mk-market-audience-nav" id="who">
+  <h2>این گزارش برای چه کسانی نوشته شده؟</h2>
+  <p>
+    تحلیل بازار {_e(subcat)} در {_e(district)} {_e(city)} ({_e(tx_label)}) طوری نوشته شده
+    که بدون اصطلاحات پیچیده، برای همه قابل‌استفاده باشد:
+  </p>
+  <div class="mk-market-audience-grid">
+    <div><strong>خریدار / مستأجر</strong><span>بفهمید قیمت عادلانه چیست و کجا مذاکره کنید.</span></div>
+    <div><strong>فروشنده / موجر</strong><span>قیمت‌گذاری واقع‌بینانه و زمان مناسب عرضه.</span></div>
+    <div><strong>مشاور املاک</strong><span>عددهای آماده برای جلسه، گزارش به مالک و فیلتر فرصت.</span></div>
+    <div><strong>سرمایه‌گذار</strong><span>عمق بازار، نقدشوندگی و فضای زیر‌قیمت.</span></div>
+    <div><strong>سازنده / انبوه‌ساز</strong><span>متراژ پرتقاضا و سطح قیمت قابل دفاع.</span></div>
+  </div>
 </section>
 '''
 
 
-def _section_kpi_cards(pps_med, price, valid_n, under_pct, trend_fmt, liq_label, conf_score, segments) -> str:
-    top_seg = segments[0] if segments else {}
-    dense = top_seg.get('bucket_plain') or top_seg.get('bucket') or '—'
-    price_med = (price or {}).get('median_fmt') or '—'
+def _section_intro(
+    city, district, subcat, tx_label, valid_n, date_from, date_to,
+    pps_med, price_med, trend_fmt, sentiment_label, conf_score, conf_level,
+    prof, is_rent, deposit, rent, full_dep,
+) -> str:
+    if isinstance(prof, dict) and (prof.get('intro') or '').strip():
+        intro_html = f'<p>{_e(prof["intro"].strip())}</p>'
+    else:
+        intro_html = (
+            f'<p>در این گزارش، بازار {_e(tx_label)} {_e(subcat)} در محله {_e(district)} شهر {_e(city)} '
+            f'با زبان ساده و اعداد واقعی بررسی شده است. هدف این است که قبل از خرید، فروش یا قیمت‌گذاری، '
+            f'تصویر روشنی از «عرف بازار» داشته باشید.</p>'
+        )
+
+    quality_note = ''
+    if isinstance(prof, dict) and prof.get('quality_note'):
+        quality_note = f'<p class="mk-market-note">{_e(prof["quality_note"])}</p>'
+
+    rent_bits = ''
+    if is_rent:
+        rent_bits = f'''
+    <li>رهن معمول: <strong>{_e(deposit.get("median_fmt") or "—")}</strong></li>
+    <li>اجاره معمول: <strong>{_e(rent.get("median_fmt") or "—")}</strong></li>
+    <li>معادل رهن کامل: <strong>{_e(full_dep.get("median_fmt") or "—")}</strong></li>
+'''
+    else:
+        rent_bits = f'<li>قیمت معمول کل واحد: <strong>{_e(price_med)}</strong></li>'
+
+    return f'''
+<section class="mk-market-section" id="executive-summary">
+  <h2>خلاصه اجرایی؛ بازار {_e(district)} در یک نگاه</h2>
+  {intro_html}
+  <ul class="mk-market-bullets">
+    <li>تعداد فایل‌های معتبر بررسی‌شده: <strong>{_e(valid_n)}</strong></li>
+    <li>بازه زمانی داده‌ها: از <strong>{_e(date_from)}</strong> تا <strong>{_e(date_to)}</strong></li>
+    <li>قیمت معمول هر متر: <strong>{_e(pps_med)}</strong></li>
+    {rent_bits}
+    <li>روند قیمت: <strong>{_e(trend_fmt)}</strong></li>
+    <li>وضعیت کلی بازار: <strong>{_e(sentiment_label)}</strong></li>
+    <li>میزان اعتماد به این تحلیل: <strong>{_e(conf_score)}</strong> ({_e(conf_level)})</li>
+  </ul>
+  {quality_note}
+  <p class="mk-market-tip">
+    <strong>به زبان خیلی ساده:</strong>
+    میانه یعنی «وسط بازار»؛ نصف فایل‌ها ارزان‌تر و نصف دیگر گران‌تر از این عدد هستند.
+    این معیار از میانگین در برابر آگهی‌های غیرعادی مقاوم‌تر است.
+  </p>
+</section>
+'''
+
+
+def _section_kpi_cards(
+    pps_med, price_med, valid_n, under_pct, trend_fmt, liq_label,
+    conf_score, top_seg, is_rent, deposit, rent, full_dep,
+) -> str:
     under = f'{under_pct}٪' if under_pct is not None else '—'
     cards = [
         ('قیمت میانه هر متر', pps_med),
-        ('قیمت معمول کل', price_med),
         ('فایل معتبر', valid_n),
-        ('فایل‌های زیر بازار', under),
+        ('زیر بازار', under),
         ('روند قیمت', trend_fmt),
         ('نقدشوندگی', liq_label),
-        ('امتیاز اعتماد', conf_score),
-        ('پرتراکم‌ترین متراژ', dense),
+        ('اعتماد تحلیل', conf_score),
+        ('متراژ پرتقاضا', top_seg),
     ]
+    if is_rent:
+        cards.insert(1, ('رهن معمول', deposit.get('median_fmt') or '—'))
+        cards.insert(2, ('اجاره معمول', rent.get('median_fmt') or '—'))
+    else:
+        cards.insert(1, ('قیمت معمول کل', price_med))
+
     items = ''.join(
         f'<div class="mk-market-kpi"><span class="mk-market-kpi__lbl">{_e(lbl)}</span>'
         f'<strong class="mk-market-kpi__val">{_e(val)}</strong></div>'
-        for lbl, val in cards
+        for lbl, val in cards[:8]
     )
     return f'''
 <section class="mk-market-section" id="market-kpis">
   <h2>شاخص‌های اصلی بازار</h2>
+  <p>این کارت‌ها مهم‌ترین عددهایی هستند که قبل از تصمیم‌گیری باید ببینید.</p>
   <div class="mk-market-kpi-grid">{items}</div>
 </section>
 '''
 
 
-def _section_market_status(sentiment, liquidity, depth, insights, pps, conf_level) -> str:
+def _section_plain_status(sentiment, liquidity, depth, insights, pps, conf_level, city, district) -> str:
     lines = []
     if sentiment.get('label'):
-        lines.append(f'وضعیت کلی بازار: {_e(sentiment.get("label"))}.')
-    if sentiment.get('factors'):
-        for f in sentiment['factors'][:4]:
-            lines.append(str(f))
+        lines.append(
+            f'الان بازار {_e(district)} در {_e(city)} در وضعیت «{_e(sentiment.get("label"))}» قرار دارد.'
+        )
+    for f in (sentiment.get('factors') or [])[:4]:
+        lines.append(str(f))
     if liquidity.get('label'):
-        lines.append(f'نقدشوندگی: {_e(liquidity.get("label"))} (امتیاز {_e(liquidity.get("score", "—"))}).')
+        lines.append(
+            f'نقدشوندگی (سرعت جذب فایل مناسب): {_e(liquidity.get("label"))}'
+            f' با امتیاز {_e(liquidity.get("score", "—"))}.'
+        )
     if depth.get('under_pct') is not None:
         lines.append(
-            f'حدود {_e(depth.get("under_pct"))}٪ فایل‌ها زیر بازار، '
+            f'از نظر قیمت‌گذاری، حدود {_e(depth.get("under_pct"))}٪ فایل‌ها زیر عرف بازار، '
             f'{_e(depth.get("fair_pct", "—"))}٪ در بازه معمول و '
-            f'{_e(depth.get("over_pct", "—"))}٪ بالای بازار هستند.'
+            f'{_e(depth.get("over_pct", "—"))}٪ بالاتر از عرف هستند.'
         )
     if pps.get('cv') is not None:
-        lines.append(f'پراکندگی قیمت هر متر (CV): {_e(pps.get("cv"))} — شاخص فضای مذاکره.')
+        lines.append(
+            f'پراکندگی قیمت هر متر (شاخص CV برابر {_e(pps.get("cv"))}) نشان می‌دهد '
+            f'چقدر فضای مذاکره و اختلاف قیمت در بازار وجود دارد.'
+        )
     lines.append(f'سطح اعتماد به این تحلیل: {_e(conf_level)}.')
-    for tip in (insights or [])[:5]:
+    for tip in (insights or [])[:4]:
         if isinstance(tip, str) and tip.strip():
             lines.append(tip.strip())
     lis = ''.join(f'<li>{_e(x)}</li>' for x in lines)
     return f'''
 <section class="mk-market-section" id="market-status">
-  <h2>تحلیل کامل وضعیت بازار</h2>
+  <h2>وضعیت بازار به زبان ساده</h2>
   <ul class="mk-market-bullets">{lis}</ul>
 </section>
 '''
 
 
-def _section_pps(pps: dict, depth: dict, pa: dict) -> str:
-    if not pps:
+def _section_audiences(
+    city, district, sentiment_label, under_pct, pps, negotiation,
+    trend_fmt, liq_label, is_rent, top_seg,
+) -> str:
+    target = '—'
+    if isinstance(negotiation, dict):
+        target = negotiation.get('target_fmt') or negotiation.get('offer_range_fmt') or target
+    if target == '—':
+        target = pps.get('p25_fmt') or pps.get('median_fmt') or '—'
+    med = pps.get('median_fmt') or '—'
+    p75 = pps.get('p75_fmt') or '—'
+    under = f'{under_pct}٪' if under_pct is not None else 'بخشی'
+
+    buyer_title = 'اگر خریدار یا مستأجر هستید'
+    seller_title = 'اگر فروشنده یا موجر هستید'
+    if is_rent:
+        buyer_body = (
+            f'اول رهن/اجاره را با عرف محله ({_e(med)} برای هر متر یا معادل رهن کامل) مقایسه کنید. '
+            f'حدود {_e(under)} فایل‌ها زیر عرف‌اند؛ این‌ها نقطه شروع مذاکره خوب‌اند، نه لزوماً بهترین انتخاب. '
+            f'بازه پیشنهادی مذاکره حدود {_e(target)} است.'
+        )
+        seller_body = (
+            f'اگر فایل‌تان خیلی بالاتر از {_e(p75)} باشد، احتمال ماندگاری بیشتر و بازدید کمتر است. '
+            f'قیمت نزدیک میانه ({_e(med)}) معمولاً جذب بهتری دارد. وضعیت بازار: {_e(sentiment_label)}.'
+        )
+    else:
+        buyer_body = (
+            f'قیمت هر متر را با میانه {_e(med)} بسنجید. فایل‌های خیلی بالاتر از {_e(p75)} را '
+            f'بااحتیاط بررسی کنید. حدود {_e(under)} بازار زیر عرف است؛ فرصت‌ها را با کیفیت ساخت و امکانات فیلتر کنید. '
+            f'محدوده هدف مذاکره: حدود {_e(target)}.'
+        )
+        seller_body = (
+            f'قیمت‌گذاری نزدیک میانه ({_e(med)}) معمولاً واقعی‌تر و قابل‌دفاع‌تر است. '
+            f'بالاتر از {_e(p75)} نیاز به مزیت واضح (نوساز، امکانات، موقعیت) دارد. '
+            f'روند فعلی: {_e(trend_fmt)}.'
+        )
+
+    return f'''
+<section class="mk-market-section" id="audiences">
+  <h2>راهنمای کاربردی برای نقش‌های مختلف</h2>
+  <div class="mk-market-role">
+    <h3>{buyer_title}</h3>
+    <p>{buyer_body}</p>
+  </div>
+  <div class="mk-market-role">
+    <h3>{seller_title}</h3>
+    <p>{seller_body}</p>
+  </div>
+  <div class="mk-market-role">
+    <h3>اگر مشاور املاک هستید</h3>
+    <p>
+      از میانه {_e(med)} به‌عنوان لنگر جلسه با مالک استفاده کنید، فرصت‌های زیر بازار را جداگانه پیگیری کنید،
+      و متراژ پرتراکم ({_e(top_seg)}) را در پیشنهاد به مشتری پررنگ کنید. نقدشوندگی فعلی: {_e(liq_label)}.
+    </p>
+  </div>
+  <div class="mk-market-role">
+    <h3>اگر سرمایه‌گذار هستید</h3>
+    <p>
+      به ترکیب «زیر بازار + نقدشوندگی + روند» نگاه کنید. وضعیت کلی {_e(sentiment_label)} است و روند {_e(trend_fmt)}.
+      فایل ارزان بدون قابلیت فروش مجدد سریع، فرصت نیست.
+    </p>
+  </div>
+  <div class="mk-market-role">
+    <h3>اگر سازنده یا انبوه‌ساز هستید</h3>
+    <p>
+      پرتقاضاترین بازه متراژ در این داده «{_e(top_seg)}» است. سطح قیمت قابل دفاع نزدیک میانه هر متر ({_e(med)}) است؛
+      برای پروژه‌های لوکس باید فاصله قیمت با عرف محله را شفاف توضیح دهید.
+    </p>
+  </div>
+</section>
+'''
+
+
+def _section_pps(pps, depth, is_rent, deposit, rent, full_dep) -> str:
+    rows = []
+    if pps:
+        rows.extend([
+            ('قیمت میانه هر متر', pps.get('median_fmt')),
+            ('بازه معمول نیمی از فایل‌ها', pps.get('range_50_fmt') or pps.get('iqr_fmt')),
+            ('بازه وسیع‌تر (اغلب بازار)', pps.get('range_80_fmt')),
+            ('محدوده ارزان‌تر (حدود چارک پایین)', pps.get('p25_fmt') or pps.get('low_fmt')),
+            ('محدوده گران‌تر (حدود چارک بالا)', pps.get('p75_fmt') or pps.get('high_fmt')),
+        ])
+    if is_rent:
+        rows.extend([
+            ('رهن میانه', deposit.get('median_fmt')),
+            ('اجاره میانه', rent.get('median_fmt')),
+            ('معادل رهن کامل', full_dep.get('median_fmt')),
+        ])
+    if not rows:
         return ''
-    rows = [
-        ('قیمت میانه هر متر', pps.get('median_fmt')),
-        ('بازه معمول (۵۰٪)', pps.get('range_50_fmt') or pps.get('iqr_fmt')),
-        ('بازه وسیع‌تر (۸۰٪)', pps.get('range_80_fmt')),
-        ('محدوده ارزان‌تر', pps.get('p25_fmt') or pps.get('low_fmt')),
-        ('محدوده گران‌تر', pps.get('p75_fmt') or pps.get('high_fmt')),
-    ]
     body = ''.join(
         f'<tr><th>{_e(a)}</th><td>{_e(b or "—")}</td></tr>' for a, b in rows if a
     )
     mix = ''
     if depth.get('under_pct') is not None:
         mix = (
-            f'<p>ترکیب بازار: {_e(depth.get("under_pct"))}٪ زیر بازار، '
-            f'{_e(depth.get("fair_pct", "—"))}٪ معمول، '
-            f'{_e(depth.get("over_pct", "—"))}٪ بالای بازار.</p>'
+            f'<p>ترکیب قیمت‌گذاری بازار: '
+            f'<strong>{_e(depth.get("under_pct"))}٪</strong> زیر بازار، '
+            f'<strong>{_e(depth.get("fair_pct", "—"))}٪</strong> معمول، '
+            f'<strong>{_e(depth.get("over_pct", "—"))}٪</strong> بالای بازار.</p>'
         )
     return f'''
 <section class="mk-market-section" id="price-per-sqm">
-  <h2>تحلیل قیمت هر متر</h2>
+  <h2>تحلیل قیمت هر متر (و عرف معامله)</h2>
+  <p>
+    عدد اصلی مقایسه آگهی‌ها «قیمت هر متر» است؛ چون متراژ واحدها یکسان نیست.
+    بازه‌ها از صدک‌های واقعی داده محاسبه شده‌اند، نه حدس کارشناسی.
+  </p>
   <table class="mk-market-table"><tbody>{body}</tbody></table>
   {mix}
 </section>
 '''
 
 
-def _section_segments(segments: list, market_pps: str) -> str:
+def _section_segments(segments: list, market_pps: str, is_rent: bool) -> str:
     if not segments:
         return ''
     rows = []
@@ -275,16 +437,21 @@ def _section_segments(segments: list, market_pps: str) -> str:
             f'<td>{_e(seg.get("price_median_fmt", seg.get("price_fmt", "—")))}</td>'
             '</tr>'
         )
+    tip = (
+        'اگر خریدارید، از بازه پرتقاضا شروع کنید چون انتخاب و مقایسه آسان‌تر است. '
+        'اگر سازنده‌اید، همین بازه معمولاً نقدشوندگی بهتری دارد.'
+    )
     return f'''
 <section class="mk-market-section" id="area-segments">
-  <h2>تحلیل متراژ</h2>
+  <h2>تحلیل متراژ؛ کدام سایز بیشتر عرضه شده؟</h2>
   <p>مقایسه بازه‌های متراژ نسبت به میانه کل بازار ({_e(market_pps)}).</p>
   <table class="mk-market-table">
     <thead><tr>
-      <th>بازه</th><th>تعداد</th><th>سهم</th><th>متراژ معمول</th><th>قیمت هر متر</th><th>قیمت کل</th>
+      <th>بازه متراژ</th><th>تعداد</th><th>سهم</th><th>متراژ معمول</th><th>قیمت هر متر</th><th>قیمت/رهن معمول</th>
     </tr></thead>
     <tbody>{''.join(rows)}</tbody>
   </table>
+  <p class="mk-market-tip">{_e(tip)}</p>
 </section>
 '''
 
@@ -295,7 +462,7 @@ def _section_amenities(amenities: Any, amenity_val: Any) -> str:
         for key, val in list(amenities.items())[:12]:
             if isinstance(val, dict):
                 pct = val.get('pct') or val.get('coverage_pct') or val.get('share')
-                items.append(f'{key}: {_e(pct)}٪ پوشش')
+                items.append(f'{key}: {_e(pct)}٪ پوشش در فایل‌ها')
             elif val is not None:
                 items.append(f'{key}: {_e(val)}')
     elif isinstance(amenities, list):
@@ -314,162 +481,185 @@ def _section_amenities(amenities: Any, amenity_val: Any) -> str:
                 premium_lines.append(f'{key}: {_e(val["note"])}')
     if not items and not premium_lines:
         return ''
-    lis = ''.join(f'<li>{_e(x) if not x.startswith("<") else x}</li>' for x in items)
-    # fix double escape - items already have escaped pct
     lis = ''.join(f'<li>{x}</li>' for x in items)
     prem = ''.join(f'<li>{x}</li>' for x in premium_lines)
-    prem_block = f'<h3>اثر تقریبی روی قیمت</h3><ul class="mk-market-bullets">{prem}</ul>' if prem else ''
+    prem_block = (
+        f'<h3>اثر تقریبی امکانات روی قیمت</h3><ul class="mk-market-bullets">{prem}</ul>'
+        if prem else ''
+    )
     return f'''
 <section class="mk-market-section" id="amenities">
-  <h2>تحلیل امکانات</h2>
+  <h2>امکانات؛ چه چیزی در این بازار رایج است؟</h2>
+  <p>پوشش امکانات نشان می‌دهد نبود یک ویژگی چقدر غیرعادی است و در مذاکره باید لحاظ شود.</p>
   <ul class="mk-market-bullets">{lis}</ul>
   {prem_block}
 </section>
 '''
 
 
-def _section_trends(trends: dict, sentiment_label: str) -> str:
+def _section_trends(trends: dict, sentiment_label: str, under_pct) -> str:
     if not trends or not trends.get('has_data'):
         return '''
 <section class="mk-market-section" id="trends">
   <h2>روند بازار</h2>
-  <p>برای محاسبه روند قابل اتکا، داده زمانی کافی در این دیتاست موجود نبود.</p>
+  <p>در این دیتاست، داده زمانی کافی برای محاسبه روند قابل اتکا وجود نداشت. عددهای قیمت لحظه‌ای همچنان معتبرند.</p>
 </section>
 '''
     tmap = trends.get('trends') or {}
-    lines = [f'وضعیت کلی مرتبط با روند: {_e(sentiment_label)}.']
+    lines = [f'خوانش کلی مرتبط با روند: {_e(sentiment_label)}.']
     if trends.get('pps_monthly_fmt'):
         lines.append(f'تغییر ماهانه قیمت هر متر: {_e(trends["pps_monthly_fmt"])}.')
     for key, label in (('weekly', 'هفتگی'), ('monthly', 'ماهانه'), ('quarterly', 'فصلی'), ('yearly', 'سالانه')):
         if key in tmap:
             lines.append(f'تغییر {_e(label)}: {_e(tmap[key])}٪.')
-    if trends.get('points'):
-        lines.append(f'تعداد نقاط زمانی استفاده‌شده: {_e(trends["points"])}.')
+    if under_pct is not None:
+        lines.append(f'هم‌زمان حدود {_e(under_pct)}٪ فایل‌ها زیر عرف قیمت هستند.')
     lis = ''.join(f'<li>{x}</li>' for x in lines)
     return f'''
 <section class="mk-market-section" id="trends">
-  <h2>روند بازار</h2>
+  <h2>روند بازار؛ قیمت به کدام سمت می‌رود؟</h2>
   <ul class="mk-market-bullets">{lis}</ul>
-  <p>تفسیر: روند مثبت معمولاً فضای فروشنده‌محورتر و روند منفی فضای مذاکره خریدار را تقویت می‌کند؛ اعداد بالا مبنای تصمیم‌اند نه پیش‌بینی قطعی.</p>
+  <p class="mk-market-tip">
+    روند مثبت معمولاً قدرت فروشنده را بیشتر می‌کند؛ روند منفی فضای چانه‌زنی خریدار را بازتر می‌کند.
+    روند، پیش‌بینی قطعی آینده نیست — تصویر حرکت اخیر قیمت است.
+  </p>
 </section>
 '''
 
 
-def _section_map(url: str, caption: str, city: str, district: str) -> str:
-    if not url:
+def _section_maps(maps: dict[str, str], caption: str, city: str, district: str) -> str:
+    if not maps:
         return f'''
 <section class="mk-market-section" id="spatial">
   <h2>نقشه و تحلیل مکانی</h2>
-  <p>مختصات کافی برای تولید نقشه تراکم در {_e(district)} {_e(city)} در دسترس نبود. تحلیل مکانی در نسخه بعدی با داده جغرافیایی کامل‌تر تکمیل می‌شود.</p>
+  <p>مختصات کافی برای ساخت نقشه شهری/ماهواره‌ای در {_e(district)} {_e(city)} موجود نبود.</p>
 </section>
 '''
-    cap = caption or f'نقشه تراکم بازار در {district} {city}'
+    blocks = []
+    specs = [
+        ('featured', 'نقشه شاخص بازار', caption or f'تراکم بازار در {district} {city}'),
+        ('street_heat', 'نقشه شهری + تراکم فایل‌ها', 'لایه تراکم تجمیعی روی نقشه خیابان‌ها'),
+        ('satellite', 'نمای ماهواره‌ای منطقه', 'تصویر ماهواره‌ای با لایه تراکم؛ بدون موقعیت دقیق آگهی'),
+        ('price', 'نقشه سطح قیمت هر متر', 'رنگ گرم‌تر یعنی سطح قیمت بالاتر در شبکه تجمیعی'),
+    ]
+    seen = set()
+    for key, title, cap in specs:
+        url = maps.get(key)
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        blocks.append(f'''
+  <figure class="mk-market-map">
+    <h3>{_e(title)}</h3>
+    <img src="{_e(url)}" alt="{_e(title)} — {_e(district)} {_e(city)}" width="1200" height="720" loading="lazy">
+    <figcaption>{_e(cap)} — نمایش شبکه‌ای و تجمیعی؛ موقعیت تک‌آگهی نشان داده نمی‌شود.</figcaption>
+  </figure>
+''')
     return f'''
 <section class="mk-market-section" id="spatial">
   <h2>نقشه و تحلیل مکانی</h2>
-  <figure class="mk-market-map">
-    <img src="{_e(url)}" alt="{_e(cap)}" width="1200" height="630" loading="lazy">
-    <figcaption>{_e(cap)} — نمایش تجمیعی؛ موقعیت دقیق آگهی‌ها نمایش داده نمی‌شود.</figcaption>
-  </figure>
+  <p>
+    نقشه‌ها روی بستر شهری یا ماهواره‌ای واقعی ساخته شده‌اند و لایه تحلیل به‌صورت تجمیعی است
+    تا هم قابل‌فهم باشد، هم حریم خصوصی حفظ شود.
+  </p>
+  {''.join(blocks)}
 </section>
 '''
 
 
-def _section_opportunities(opportunities: Any, under_pct) -> str:
+def _section_opportunities(opportunities: Any, under_pct, top_seg) -> str:
     lines = []
     if under_pct is not None:
-        lines.append(f'حدود {_e(under_pct)}٪ فایل‌ها زیر قیمت بازار شناسایی شده‌اند.')
+        lines.append(f'حدود {_e(under_pct)}٪ فایل‌ها زیر قیمت عرف بازار شناسایی شده‌اند.')
     data = opportunities
     if isinstance(opportunities, dict):
         if opportunities.get('count') is not None:
-            lines.append(f'تعداد فرصت‌های رتبه‌بندی‌شده: {_e(opportunities.get("count"))}.')
+            lines.append(f'تعداد فرصت‌های رتبه‌بندی‌شده در مدل: {_e(opportunities.get("count"))}.')
         if opportunities.get('summary'):
             lines.append(str(opportunities['summary']))
         data = opportunities.get('items') or opportunities.get('deals') or []
     if isinstance(data, list):
-        areas = []
-        for item in data[:8]:
+        for item in data[:6]:
             if not isinstance(item, dict):
                 continue
-            # Only aggregate fields — never token/link
             area = item.get('area_fmt') or item.get('area_bucket') or item.get('bucket')
             pps = item.get('pps_fmt') or item.get('price_per_sqm_fmt')
             gap = item.get('gap_pct') or item.get('discount_pct')
             bits = [x for x in (area, pps, f'شکاف {_e(gap)}٪' if gap is not None else '') if x]
             if bits:
-                areas.append(' · '.join(str(b) for b in bits))
-        if areas:
-            lines.append('نمونه‌های تجمیعی فرصت (بدون شناسه):')
-            lines.extend(areas[:5])
+                lines.append(' · '.join(str(b) for b in bits))
+    if top_seg and top_seg != '—':
+        lines.append(f'بازه متراژ پرتکرار فرصت‌ها معمولاً نزدیک «{_e(top_seg)}» دیده می‌شود.')
     if not lines:
         return ''
-    lis = ''.join(f'<li>{_e(x) if "·" not in str(x) else _e(x)}</li>' for x in lines)
     lis = ''.join(f'<li>{_e(x)}</li>' for x in lines)
     return f'''
 <section class="mk-market-section" id="opportunities">
-  <h2>فرصت‌های بازار</h2>
+  <h2>فرصت‌های بازار (بدون افشای فایل مشخص)</h2>
   <ul class="mk-market-bullets">{lis}</ul>
-  <p>پیشنهاد عملی: فایل‌های زیر بازار را با کیفیت ساخت، امکانات و زمان ماندگاری روی بازار تطبیق دهید؛ قیمت پایین به‌تنهایی معیار خرید نیست.</p>
+  <p class="mk-market-tip">
+    قیمت پایین به‌تنهایی فرصت نیست. کیفیت ساخت، امکانات، زمان ماندگاری روی بازار و قابلیت فروش مجدد را همراه عدد ببینید.
+  </p>
 </section>
 '''
 
 
-def _section_negotiation(negotiation: Any, pps: dict) -> str:
+def _section_negotiation(negotiation: Any, pps: dict, is_rent: bool) -> str:
     lines = []
     if isinstance(negotiation, dict):
-        for key, label in (
-            ('target_fmt', 'قیمت هدف خرید'),
-            ('target', 'قیمت هدف خرید'),
+        mapping = (
+            ('target_fmt', 'قیمت/رهن هدف'),
             ('line_fmt', 'خط مذاکره'),
-            ('offer_range_fmt', 'محدوده پیشنهاد'),
-            ('reject_above_fmt', 'آستانه نیاز به بررسی/رد'),
+            ('offer_range_fmt', 'محدوده پیشنهاد منطقی'),
+            ('reject_above_fmt', 'بالای این سطح را بااحتیاط بررسی کنید'),
             ('note', 'توضیح'),
             ('summary', 'جمع‌بندی مذاکره'),
-        ):
+        )
+        for key, label in mapping:
             if negotiation.get(key):
                 lines.append(f'{label}: {_e(negotiation[key])}')
         if isinstance(negotiation.get('items'), list):
             for item in negotiation['items'][:6]:
                 if isinstance(item, str):
-                    lines.append(item)
+                    lines.append(_e(item))
                 elif isinstance(item, dict) and item.get('text'):
-                    lines.append(str(item['text']))
+                    lines.append(_e(item['text']))
     if not lines and pps:
         if pps.get('p25_fmt'):
             lines.append(f'محدوده مناسب پیشنهاد (نزدیک چارک پایین): {_e(pps["p25_fmt"])}')
         if pps.get('median_fmt'):
             lines.append(f'خط میانه بازار: {_e(pps["median_fmt"])}')
         if pps.get('p75_fmt'):
-            lines.append(f'بالای این سطح معمولاً نیاز به بررسی دقیق دارد: {_e(pps["p75_fmt"])}')
+            lines.append(f'بالای این سطح معمولاً نیاز به دلیل قوی دارد: {_e(pps["p75_fmt"])}')
     if not lines:
         return ''
-    lis = ''.join(f'<li>{x if x.startswith("محدوده") or ":" in x else _e(x)}</li>' for x in lines)
-    # lines already escaped where needed
     lis = ''.join(f'<li>{x}</li>' for x in lines)
     return f'''
 <section class="mk-market-section" id="negotiation">
-  <h2>راهبرد مذاکره</h2>
+  <h2>راهبرد مذاکره با عدد واقعی</h2>
   <ul class="mk-market-bullets">{lis}</ul>
+  <p>این آستانه‌ها از توزیع واقعی قیمت در همین دیتاست استخراج شده‌اند و جایگزین بازدید حضوری نیستند.</p>
 </section>
 '''
 
 
-def _section_verdict(city, district, sentiment_label, opportunities, conf_level, insights) -> str:
-    opp_note = 'فرصت زیر بازار در داده‌ها دیده می‌شود.' if opportunities else 'فرصت برجسته تجمیعی ثبت نشده است.'
-    risk = f'اعتماد تحلیل در سطح «{_e(conf_level)}» است؛ تصمیم نهایی باید با بازدید و صحت‌سنجی فایل انجام شود.'
-    tip = ''
-    for item in (insights or [])[:1]:
-        if isinstance(item, str):
-            tip = item
-    tip_html = f' — {_e(tip)}' if tip else ''
+def _section_verdict(city, district, sentiment_label, opportunities, conf_level, insights, under_pct) -> str:
+    opp_note = (
+        f'وجود فایل‌های زیر عرف (حدود {under_pct}٪) فرصت جستجو ایجاد می‌کند.'
+        if under_pct else 'فرصت برجسته تجمیعی ثبت نشده است.'
+    )
+    if opportunities:
+        opp_note = 'مدل فرصت، تعدادی فایل زیر بازار را رتبه‌بندی کرده است؛ جزئیات شناسایی‌پذیر منتشر نمی‌شود.'
+    tip = next((i for i in (insights or []) if isinstance(i, str) and i.strip()), '')
+    tip_html = f' {_e(tip)}' if tip else ''
     return f'''
 <section class="mk-market-section" id="verdict">
   <h2>جمع‌بندی کارشناسی</h2>
-  <p>بازار {_e(district)} در {_e(city)} هم‌اکنون {_e(sentiment_label)} ارزیابی می‌شود.</p>
+  <p>بازار {_e(district)} در {_e(city)} هم‌اکنون «{_e(sentiment_label)}» ارزیابی می‌شود.</p>
   <ul class="mk-market-bullets">
-    <li>مهم‌ترین فرصت: {_e(opp_note)}</li>
-    <li>مهم‌ترین ریسک: {risk}</li>
-    <li>کاربرد: این تحلیل مبنای قیمت‌گذاری، فیلتر فرصت و مذاکره برای مشاور و خریدار است{tip_html}.</li>
+    <li><strong>مهم‌ترین فرصت:</strong> {_e(opp_note)}</li>
+    <li><strong>مهم‌ترین ریسک:</strong> اعتماد تحلیل در سطح «{_e(conf_level)}» است؛ تصمیم نهایی با بازدید و صحت‌سنجی فایل انجام شود.</li>
+    <li><strong>کاربرد:</strong> این گزارش مبنای قیمت‌گذاری، فیلتر فرصت و مذاکره برای خریدار، فروشنده، مشاور، سازنده و سرمایه‌گذار است.{tip_html}</li>
   </ul>
 </section>
 '''
@@ -480,16 +670,19 @@ def _section_methodology(valid_n, removed, raw_n, date_from, date_to, conf_score
 <section class="mk-market-section" id="methodology">
   <h2>روش‌شناسی و کیفیت داده</h2>
   <ul class="mk-market-bullets">
-    <li>تعداد فایل بررسی‌شده (خام): {_e(raw_n)}</li>
-    <li>تعداد فایل معتبر پس از پالایش: {_e(valid_n)}</li>
+    <li>تعداد فایل خام: {_e(raw_n)}</li>
+    <li>تعداد فایل معتبر پس از پالایش پرت‌ها: {_e(valid_n)}</li>
     <li>فایل‌های حذف‌شده/غیرعادی: {_e(removed)}</li>
-    <li>بازه زمانی تحلیل: از {_e(date_from)} تا {_e(date_to)}</li>
-    <li>شاخص مرکزی قیمت: میانه (مقاوم‌تر از میانگین در برابر پرت‌ها)</li>
-    <li>تشخیص زیر بازار: نسبت قیمت هر متر به میانه بازار و عمق قیمت</li>
+    <li>بازه زمانی پوشش داده: از {_e(date_from)} تا {_e(date_to)}</li>
+    <li>شاخص مرکزی: میانه قیمت (مقاوم‌تر از میانگین در برابر آگهی غیرعادی)</li>
+    <li>تشخیص زیر بازار: نسبت قیمت هر متر به میانه و عمق قیمت</li>
     <li>امتیاز اعتماد: {_e(conf_score)} ({_e(conf_level)})</li>
     <li>کیفیت داده: {_e(dq.get("quality_pct", "—"))}٪</li>
   </ul>
-  <p>محدودیت‌ها: تحلیل بر اساس آگهی‌های موجود است، نه معاملات قطعی ثبت‌شده؛ ممکن است بخشی از بازار در داده نباشد. این گزارش جایگزین کارشناسی میدانی نیست.</p>
+  <p>
+    محدودیت مهم: این تحلیل بر اساس آگهی‌های موجود است، نه معاملات قطعی ثبت‌شده.
+    ممکن است بخشی از بازار در داده نباشد. گزارش جایگزین کارشناسی میدانی نیست.
+  </p>
 </section>
 '''
 
@@ -502,57 +695,51 @@ def _build_faq(**kwargs) -> list[dict[str, str]]:
     valid_n = kwargs['valid_n']
     date_from = kwargs['date_from']
     date_to = kwargs['date_to']
-    segments = kwargs['segments']
-    negotiation = kwargs['negotiation']
     sentiment_label = kwargs['sentiment_label']
     under_pct = kwargs['under_pct']
-
-    top_seg = '—'
-    if segments:
-        top_seg = segments[0].get('bucket_plain') or segments[0].get('bucket') or '—'
+    top_seg = kwargs['top_seg']
+    negotiation = kwargs['negotiation']
+    is_rent = kwargs['is_rent']
 
     target = '—'
     if isinstance(negotiation, dict):
         target = negotiation.get('target_fmt') or negotiation.get('offer_range_fmt') or '—'
-    if target == '—' and kwargs.get('pps_med'):
+    if target == '—':
         target = pps_med
 
-    faq = [
+    price_q = (
+        f'رهن و اجاره معمول {subcat} در {district} {city} چقدر است؟'
+        if is_rent else
+        f'قیمت هر متر {subcat} در {district} {city} چقدر است؟'
+    )
+    price_a = (
+        f'بر اساس این تحلیل، قیمت معمول هر متر حدود {pps_med} است'
+        + (f' و قیمت/رهن معمول کل نزدیک {kwargs.get("price_med") or "—"} گزارش شده.' if not is_rent else '.')
+    )
+
+    return [
+        {'q': price_q, 'a': price_a},
+        {'q': 'کدام متراژ بیشتر در بازار دیده می‌شود؟', 'a': f'پرتراکم‌ترین بازه در داده فعلی «{top_seg}» است.'},
         {
-            'q': f'قیمت هر متر {subcat} در {district} {city} چقدر است؟',
-            'a': f'بر اساس این تحلیل، قیمت معمول هر متر حدود {pps_med} است.',
+            'q': 'برای خرید یا اجاره چه عددی منطقی است؟',
+            'a': f'با توجه به میانه و آستانه‌های مذاکره، محدوده هدف حدود {target} است؛ بازدید و مقایسه ضروری است.',
         },
         {
-            'q': 'کدام متراژ عرضه بیشتری دارد؟',
-            'a': f'پرتراکم‌ترین بازه متراژ در داده فعلی «{top_seg}» است.',
+            'q': 'آیا الان بازار به نفع خریدار است یا فروشنده؟',
+            'a': f'وضعیت فعلی: {sentiment_label}'
+                 + (f' و حدود {under_pct}٪ فایل‌ها زیر عرف‌اند.' if under_pct is not None else '.'),
         },
+        {'q': 'این تحلیل چند فایل را بررسی کرده؟', 'a': f'{valid_n} فایل معتبر پس از پالایش داده.'},
+        {'q': 'داده‌ها مربوط به چه بازه‌ای هستند؟', 'a': f'از {date_from} تا {date_to}.'},
         {
-            'q': 'چه قیمتی برای خرید مناسب است؟',
-            'a': f'با توجه به میانه و آستانه‌های مذاکره، محدوده هدف حدود {target} ارزیابی می‌شود؛ بازدید و مقایسه فایل ضروری است.',
-        },
-        {
-            'q': 'آیا بازار برای خریداران مناسب است؟',
-            'a': f'وضعیت فعلی بازار: {sentiment_label}'
-                 + (f' و حدود {under_pct}٪ فایل‌ها زیر بازار هستند.' if under_pct is not None else '.'),
-        },
-        {
-            'q': 'این تحلیل بر اساس چند فایل ساخته شده؟',
-            'a': f'{valid_n} فایل معتبر پس از پالایش داده در محاسبه لحاظ شده است.',
-        },
-        {
-            'q': 'داده‌ها مربوط به چه بازه‌ای هستند؟',
-            'a': f'از {date_from} تا {date_to}.',
+            'q': 'سازنده یا سرمایه‌گذار از این گزارش چه استفاده‌ای می‌کند؟',
+            'a': f'متراژ پرتقاضا ({top_seg})، سطح قیمت قابل دفاع ({pps_med}) و وضعیت نقدشوندگی برای تصمیم ساخت یا ورود سرمایه.',
         },
     ]
-    return faq
 
 
 def _section_faq(faq: list[dict[str, str]]) -> str:
-    blocks = []
-    for item in faq:
-        blocks.append(
-            f'<h3>{_e(item["q"])}</h3><p>{_e(item["a"])}</p>'
-        )
+    blocks = [f'<h3>{_e(item["q"])}</h3><p>{_e(item["a"])}</p>' for item in faq]
     return f'''
 <section class="blog-faq mk-market-section" id="faq">
   <h2>سوالات متداول</h2>
@@ -565,7 +752,10 @@ def _section_cta() -> str:
     return '''
 <section class="mk-market-section mk-market-cta" id="cta">
   <h2>ادامه مسیر با فایلینگ دیوار</h2>
-  <p>همین تحلیل را می‌توانید روی فایل‌های خود در میزکار اجرا کنید، فرصت‌های زیر بازار را فیلتر کنید و با ربات فایلینگ دیوار بانک فایل به‌روز بسازید.</p>
+  <p>
+    همین نوع تحلیل را می‌توانید روی فایل‌های خود در میزکار اجرا کنید، فرصت‌های زیر بازار را فیلتر کنید
+    و با ربات فایلینگ دیوار بانک فایل به‌روز بسازید.
+  </p>
   <ul class="mk-market-bullets">
     <li><a href="/features/market-intelligence/">امکانات تحلیل بازار</a></li>
     <li><a href="/products/">ربات فایلینگ دیوار</a></li>
@@ -577,5 +767,5 @@ def _section_cta() -> str:
 
 
 def _tags(city: str, district: str, tx_label: str, subcat: str) -> list[str]:
-    tags = [city, district, tx_label, subcat, 'تحلیل بازار', 'قیمت هر متر']
+    tags = [city, district, tx_label, subcat, 'تحلیل بازار', 'قیمت هر متر', 'خرید خانه']
     return [t for t in tags if t and t != '—'][:8]

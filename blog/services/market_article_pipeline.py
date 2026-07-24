@@ -7,6 +7,7 @@ from datetime import date, datetime
 import json
 
 from django.contrib.auth import get_user_model
+from django.core.files.storage import default_storage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.utils import timezone
@@ -17,7 +18,7 @@ from blog.services.market_article_analyze import (
     run_dataset_analysis,
     sanitize_report_for_public,
 )
-from blog.services.market_article_assets import render_featured_image
+from blog.services.market_article_assets import render_article_maps, render_featured_image
 from blog.services.market_article_composer import compose_market_article
 from blog.services.market_article_eligibility import market_key_for_dataset
 from blog.utils import get_or_create_tag
@@ -35,6 +36,25 @@ class MarketArticleError(Exception):
 
 def _json_safe(value: Any) -> Any:
     return json.loads(json.dumps(value, cls=DjangoJSONEncoder, default=str))
+
+
+def _save_extra_maps(run: MarketArticleRun, extras: dict) -> dict[str, str]:
+    """ذخیره نقشه‌های تکمیلی کنار featured و برگرداندن URLها."""
+    urls: dict[str, str] = {}
+    chart = dict(run.chart_assets or {})
+    for key, content in extras.items():
+        field_name = f'{run.pk.hex[:8]}-{content.name}'
+        # store via featured_image storage path pattern using ContentFile on chart_assets paths
+        path = default_storage.save(f'blog/market-maps/{field_name}', content)
+        url = default_storage.url(path)
+        urls[key] = url
+        chart[key] = url
+    if run.featured_image:
+        urls['featured'] = run.featured_image.url
+        chart['featured'] = run.featured_image.url
+    chart['geo_count'] = chart.get('geo_count')
+    run.chart_assets = chart
+    return urls
 
 
 def build_preview(dataset: Dataset, user) -> MarketArticleRun:
@@ -72,12 +92,21 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
         confidence_score=conf.get('display_score') or conf.get('score') or '—',
         geo_points=geo,
     )
+    extra_maps = render_article_maps(
+        city=meta.get('city') or '',
+        district=meta.get('district') or '',
+        tx_label=tx_label,
+        pps_median_fmt=pps.get('median_fmt') or '—',
+        valid_count=int(metrics.get('valid_count') or 0),
+        confidence_score=conf.get('display_score') or conf.get('score') or '—',
+        geo_points=geo,
+    )
 
-    # Temporary run without map URL in HTML first; update after save
     composed = compose_market_article(
         report=report,
         dataset_meta=meta,
         map_image_url='',
+        map_assets={},
         map_caption=f'نقشه تراکم بازار {meta.get("district")} {meta.get("city")}',
     )
 
@@ -110,22 +139,28 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
             data_to=metrics.get('data_to'),
             source_dataset_updated_at=dataset.updated_at,
             created_by=user if getattr(user, 'is_authenticated', False) else None,
+            chart_assets={'geo_count': len(geo or [])},
         )
         run.featured_image.save(image_file.name, image_file, save=False)
         run.save()
 
-        # Recompose with public media URL for map section
-        map_url = run.featured_image.url if run.featured_image else ''
+        map_urls = _save_extra_maps(run, extra_maps)
         composed2 = compose_market_article(
             report=report,
             dataset_meta=meta,
-            map_image_url=map_url,
-            map_caption=f'نقشه تراکم / شاخص بازار {meta.get("district")} {meta.get("city")}',
+            map_image_url=map_urls.get('featured') or (run.featured_image.url if run.featured_image else ''),
+            map_assets=map_urls,
+            map_caption=f'نقشه بازار {meta.get("district")} {meta.get("city")}',
         )
         run.content_html = composed2['content_html']
         run.faq_json = composed2['faq']
-        run.chart_assets = {'featured': map_url, 'geo_count': len(geo or [])}
-        run.save(update_fields=['content_html', 'faq_json', 'chart_assets', 'updated_at'])
+        run.seo_json = {
+            **seo,
+            'title': composed2['title'][:200],
+            'excerpt': composed2['excerpt'][:300],
+            'tags': composed2['tags'],
+        }
+        run.save(update_fields=['content_html', 'faq_json', 'seo_json', 'chart_assets', 'updated_at'])
 
     return run
 
@@ -249,6 +284,7 @@ def update_existing_post(run: MarketArticleRun) -> Post:
 def preview_context(run: MarketArticleRun) -> dict[str, Any]:
     seo = run.seo_json or {}
     link = get_existing_link(run.market_key)
+    chart = run.chart_assets or {}
     return {
         'run': run,
         'seo': seo,
@@ -258,6 +294,10 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
         'content_html': run.content_html,
         'faq': run.faq_json or [],
         'featured_image_url': run.featured_image.url if run.featured_image else '',
+        'map_assets': {
+            k: v for k, v in chart.items()
+            if k in ('featured', 'street_heat', 'satellite', 'price') and v
+        },
         'existing_link': link,
         'can_create_draft': link is None,
         'can_update': link is not None,

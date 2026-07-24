@@ -6,8 +6,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -21,8 +21,8 @@
                 </a>
                 <span class="ab-pill">{{ run.status }}</span>
             </div>
-            <h1 class="ab-hero__title">پیش‌نمایش مقاله</h1>
-            <p class="ab-hero__lead">اعداد از موتور تحلیل واقعی آمده‌اند. پس از تأیید، پیش‌نویس در بلاگ ساخته می‌شود.</p>
+            <h1 class="ab-hero__title">پیش‌نمایش مقاله حرفه‌ای</h1>
+            <p class="ab-hero__lead">نقشه شهری/ماهواره‌ای، اعداد واقعی تحلیل، و متن چندمخاطبه — پس از تأیید به‌صورت پیش‌نویس بلاگ ذخیره می‌شود.</p>
         </div>
     </header>
 
@@ -53,10 +53,19 @@
                 </ul>
             </div>
 
-            {% if featured_image_url %}
+            {% if featured_image_url or map_assets %}
             <div class="ab-sys-og">
-                <h3>تصویر شاخص (OG)</h3>
-                <img src="{{ featured_image_url }}" alt="تصویر شاخص" width="600" height="315">
+                <h3>تصاویر نقشه / شاخص</h3>
+                <div class="ab-sys-og-grid">
+                    {% if featured_image_url %}
+                    <img src="{{ featured_image_url }}" alt="تصویر شاخص" width="600" height="315">
+                    {% endif %}
+                    {% for key, url in map_assets.items %}
+                        {% if url != featured_image_url %}
+                        <img src="{{ url }}" alt="نقشه {{ key }}" width="600" height="360">
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
             {% endif %}
 

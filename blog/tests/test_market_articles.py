@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -142,6 +142,10 @@ class MarketArticleSanitizeComposerTests(TestCase):
         self.assertIn('۵۰ میلیون', composed['content_html'])
         self.assertIn('120', composed['content_html'])
         self.assertIn('سوالات متداول', composed['content_html'])
+        self.assertIn('اگر خریدار', composed['content_html'])
+        self.assertIn('اگر مشاور', composed['content_html'])
+        self.assertIn('اگر سرمایه‌گذار', composed['content_html'])
+        self.assertIn('اگر سازنده', composed['content_html'])
         self.assertGreaterEqual(len(composed['faq']), 5)
         self.assertNotIn('SECRET', composed['content_html'])
 
@@ -160,6 +164,7 @@ class MarketArticleSanitizeComposerTests(TestCase):
         self.assertGreater(len(content.read()), 1000)
 
 
+@override_settings(MARKET_ARTICLE_SKIP_MAP_TILES=True)
 class MarketArticlePipelineTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(

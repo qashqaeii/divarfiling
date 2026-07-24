@@ -180,13 +180,13 @@ def iter_renewal_candidates(*, now=None) -> list[dict[str, Any]]:
     return candidates
 
 
-@transaction.atomic
 def run_license_renewal(
     *,
     dry_run: bool = True,
     limit: int = 100,
     live: bool = False,
 ) -> dict[str, Any]:
+    # Per-action atomics only — outer atomic would poison the loop on UniqueViolation.
     if not renewal_enabled() and live:
         return {'ok': False, 'error': 'LICENSE_RENEWAL_FLOW_ENABLED=False', 'sent': 0}
 
@@ -224,7 +224,7 @@ def run_license_renewal(
         phone = item['phone']
         step_key = item['step_key']
 
-        # Journey stage
+        # Journey stage (own atomic inside transition)
         try:
             if step_key == STEP_CHURN:
                 transition(
@@ -254,7 +254,12 @@ def run_license_renewal(
             continue
 
         send_key = _idempotency_key(license_id=lic.pk, step_key=step_key, day_bucket=day_bucket)
-        decision_key = f'dry:{send_key}' if dry_run or not live else f'live:{send_key}'
+        # Dry keys are run-scoped so re-running dry_run the same day is safe.
+        # Live keys stay day-scoped for cross-run send idempotency.
+        if dry_run or not live:
+            decision_key = f'dry:{run.pk}:{send_key}'
+        else:
+            decision_key = f'live:{send_key}'
         body = _render_body(
             user=user,
             product_title=item['product'],
@@ -264,21 +269,22 @@ def run_license_renewal(
 
         if dry_run or not live:
             try:
-                MarketingAutomationActionLog.objects.create(
-                    run=run,
-                    flow_key=FLOW_KEY,
-                    step_key=step_key,
-                    user=user,
-                    phone_hash=_phone_hash(phone),
-                    masked_phone=_mask_phone(phone),
-                    order=lic.order,
-                    product=getattr(lic.order, 'product', None),
-                    action=MarketingAutomationActionLog.Action.WOULD_SEND,
-                    reason='dry_run',
-                    metadata={'body_preview': body[:200], 'license_id': lic.pk},
-                    decision_key=decision_key,
-                    send_idempotency_key=None,
-                )
+                with transaction.atomic():
+                    MarketingAutomationActionLog.objects.create(
+                        run=run,
+                        flow_key=FLOW_KEY,
+                        step_key=step_key,
+                        user=user,
+                        phone_hash=_phone_hash(phone),
+                        masked_phone=_mask_phone(phone),
+                        order=lic.order,
+                        product=getattr(lic.order, 'product', None),
+                        action=MarketingAutomationActionLog.Action.WOULD_SEND,
+                        reason='dry_run',
+                        metadata={'body_preview': body[:200], 'license_id': lic.pk},
+                        decision_key=decision_key,
+                        send_idempotency_key=None,
+                    )
                 stats['would_send'] += 1
                 stats['eligible'] += 1
             except IntegrityError:

@@ -8,15 +8,15 @@
 <nav class="acd-pl-crumb" aria-label="مسیر صفحه">
     <div class="acd-pl-shell">
         <ol class="acd-pl-crumb-list" itemscope itemtype="https://schema.org/BreadcrumbList">
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <li class="acd-pl-crumb-home" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
                 <a href="{% url 'home' %}" itemprop="item"><span itemprop="name">خانه</span></a>
                 <meta itemprop="position" content="1">
             </li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <li class="acd-pl-crumb-mid" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
                 <a href="{% url 'education' %}" itemprop="item"><span itemprop="name">آموزش</span></a>
                 <meta itemprop="position" content="2">
             </li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <li class="acd-pl-crumb-mid" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
                 <a href="{% url 'public_academy' %}" itemprop="item"><span itemprop="name">آکادمی</span></a>
                 <meta itemprop="position" content="3">
             </li>
@@ -25,8 +25,8 @@
                 <meta itemprop="position" content="4">
             </li>
             {% if active_video %}
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page">
-                <span itemprop="name">{{ active_video.title|truncatechars:36 }}</span>
+            <li class="acd-pl-crumb-current" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page">
+                <span itemprop="name">{{ active_video.title|truncatechars:28 }}</span>
                 <meta itemprop="item" content="{{ request.build_absolute_uri }}">
                 <meta itemprop="position" content="5">
             </li>
@@ -38,11 +38,11 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-academy-playlist.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-academy-playlist.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
-<div class="acd-pl" id="acdPlaylistPage"
+<div class="acd-pl{% if active_item %} acd-pl--watch{% else %} acd-pl--hub{% endif %}" id="acdPlaylistPage"
      {% if active_item %}data-active-index="{{ active_item.global_index }}" data-video-slug="{{ active_video.slug }}"{% endif %}
      data-total="{{ playlist_stats.video_count }}"
      data-view-url-tpl="/academy/api/videos/__SLUG__/view/">
@@ -55,25 +55,28 @@
 
     <div class="acd-pl-shell acd-pl-topbar">
         <div class="acd-pl-topbar-brand">
-            <span class="acd-pl-kicker"><i class="fas fa-graduation-cap" aria-hidden="true"></i> <span class="acd-pl-kicker-label">آکادمی ویدیویی</span></span>
+            <span class="acd-pl-kicker" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span>
             <div class="acd-pl-topbar-copy">
                 <p class="acd-pl-playlist-name">پلی‌لیست مشاور املاک</p>
                 <div class="acd-pl-topbar-meta" aria-label="آمار پلی‌لیست">
                     <span><i class="fas fa-film" aria-hidden="true"></i> {{ playlist_stats.video_count }} ویدیو</span>
                     <span><i class="fas fa-clock" aria-hidden="true"></i> ~{{ playlist_stats.total_minutes }} دقیقه</span>
-                    <span><i class="fas fa-eye" aria-hidden="true"></i> {{ playlist_stats.views_total|default:0 }} بازدید</span>
-                    <span><i class="fas fa-unlock" aria-hidden="true"></i> رایگان</span>
+                    <span class="acd-pl-topbar-meta-extra"><i class="fas fa-eye" aria-hidden="true"></i> {{ playlist_stats.views_total|default:0 }} بازدید</span>
+                    <span class="acd-pl-topbar-meta-extra"><i class="fas fa-unlock" aria-hidden="true"></i> رایگان</span>
                 </div>
             </div>
         </div>
         <div class="acd-pl-topbar-actions">
             {% if user.is_authenticated %}
-            <a href="{% url 'workspace:academy_home' %}" class="acd-pl-btn acd-pl-btn--ghost acd-pl-btn--sm">
+            <a href="{% url 'workspace:academy_home' %}" class="acd-pl-btn acd-pl-btn--ghost acd-pl-btn--sm acd-pl-btn--desk">
                 <i class="fas fa-layer-group" aria-hidden="true"></i> میزکار آکادمی
+            </a>
+            <a href="{% url 'workspace:academy_home' %}" class="acd-pl-btn acd-pl-btn--ghost acd-pl-btn--sm acd-pl-btn--icon acd-pl-btn--mobile-only" title="میزکار آکادمی" aria-label="میزکار آکادمی">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
             </a>
             {% else %}
             <a href="{% url 'register' %}?next={% url 'workspace:academy_mission' %}" class="acd-pl-btn acd-pl-btn--primary acd-pl-btn--sm">
-                <i class="fas fa-user-plus" aria-hidden="true"></i> شروع رایگان
+                <i class="fas fa-user-plus" aria-hidden="true"></i> <span class="acd-pl-btn-label">شروع رایگان</span>
             </a>
             {% endif %}
             <a href="{% url 'education' %}" class="acd-pl-btn acd-pl-btn--ghost acd-pl-btn--sm acd-pl-btn--icon" title="مرکز آموزش" aria-label="مرکز آموزش">
@@ -218,21 +221,21 @@
                         </p>
                     </div>
                     {% if first_video_item %}
-                    <div class="acd-pl-stage-toolbar">
-                        <a href="{{ first_video_item.url }}" class="acd-pl-btn acd-pl-btn--primary">
+                    <div class="acd-pl-stage-toolbar acd-pl-hub-actions">
+                        <a href="{{ first_video_item.url }}" class="acd-pl-btn acd-pl-btn--primary acd-pl-btn--block">
                             <i class="fas fa-play" aria-hidden="true"></i>
                             شروع از اولین ویدیو
                         </a>
-                        <a href="{% url 'public_academy' %}" class="acd-pl-btn acd-pl-btn--ghost">معرفی آکادمی</a>
+                        <a href="{% url 'public_academy' %}" class="acd-pl-btn acd-pl-btn--ghost acd-pl-btn--block">معرفی آکادمی</a>
                     </div>
                     {% endif %}
                     {% if academy_faq %}
-                    <aside class="acd-pl-cta-band" style="flex-direction:column;align-items:stretch;gap:.75rem;">
-                        <strong>سؤالات رایج</strong>
+                    <aside class="acd-pl-faq" aria-label="سؤالات رایج">
+                        <h2 class="acd-pl-faq-title">سؤالات رایج</h2>
                         {% for item in academy_faq %}
-                        <details>
-                            <summary style="cursor:pointer;font-weight:600;">{{ item.q }}</summary>
-                            <p style="margin:.4rem 0 0;line-height:1.65;">{{ item.a }}</p>
+                        <details class="acd-pl-faq-item">
+                            <summary class="acd-pl-faq-q">{{ item.q }}</summary>
+                            <p class="acd-pl-faq-a">{{ item.a }}</p>
                         </details>
                         {% endfor %}
                     </aside>
@@ -258,13 +261,16 @@
                         <span class="acd-pl-rail-thumb" aria-hidden="true">
                             {% if item.player.poster %}
                             <img src="{% if item.player.poster_kind == 'static' %}{% static item.player.poster %}{% else %}{{ item.player.poster }}{% endif %}"
-                                 alt="" loading="lazy" width="140" height="80">
+                                 alt="" loading="lazy" decoding="async" width="140" height="80">
                             {% else %}
                             <span class="acd-pl-track-thumb-fallback"><i class="fas fa-play"></i></span>
                             {% endif %}
                             <span class="acd-pl-rail-num">{{ item.global_index }}</span>
+                            {% if item.video.duration_display %}
+                            <span class="acd-pl-rail-dur">{{ item.video.duration_display }}</span>
+                            {% endif %}
                         </span>
-                        <span class="acd-pl-rail-title">{{ item.video.title|truncatechars:40 }}</span>
+                        <span class="acd-pl-rail-title">{{ item.video.title|truncatechars:36 }}</span>
                     </a>
                     {% endfor %}
                 </div>
@@ -353,5 +359,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
-<script src="{% static 'js/academy-playlist.js' %}?v=3" defer></script>
+<script src="{% static 'js/academy-playlist.js' %}?v=4" defer></script>
 {% endblock %}

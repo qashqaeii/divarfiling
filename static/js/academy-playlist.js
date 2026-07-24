@@ -36,6 +36,18 @@
                     scrim.setAttribute('aria-hidden', 'true');
                 }
             }
+            if (open) {
+                window.requestAnimationFrame(function () {
+                    var active = sidebar.querySelector('.acd-pl-track.is-active');
+                    if (active) {
+                        try {
+                            active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                        } catch (e) {
+                            active.scrollIntoView(false);
+                        }
+                    }
+                });
+            }
         }
 
         openBtns.forEach(function (btn) {
@@ -74,32 +86,43 @@
             mqDesktop.addListener(onViewportChange);
         }
 
-        /* Drag handle to dismiss */
+        /* Drag handle / sheet header to dismiss */
         var grab = sidebar.querySelector('[data-acd-pl-grab]');
-        if (grab) {
+        var sheetHead = sidebar.querySelector('.acd-pl-sidebar-head');
+        var dragTargets = [grab, sheetHead].filter(Boolean);
+        if (dragTargets.length) {
             var startY = 0;
             var dragging = false;
 
-            grab.addEventListener('touchstart', function (e) {
+            function onStart(e) {
                 if (isDesktop() || !sidebar.classList.contains('is-open')) return;
+                if (e.target.closest('.acd-pl-sidebar-close')) return;
                 dragging = true;
                 startY = e.touches[0].clientY;
-            }, { passive: true });
+                sidebar.style.transition = 'none';
+            }
 
-            grab.addEventListener('touchmove', function (e) {
+            function onMove(e) {
                 if (!dragging) return;
                 var dy = e.touches[0].clientY - startY;
                 if (dy > 0) {
                     sidebar.style.transform = 'translateY(' + dy + 'px)';
                 }
-            }, { passive: true });
+            }
 
-            grab.addEventListener('touchend', function (e) {
+            function onEnd(e) {
                 if (!dragging) return;
                 dragging = false;
+                sidebar.style.transition = '';
                 var dy = (e.changedTouches[0] && e.changedTouches[0].clientY) - startY;
                 sidebar.style.transform = '';
-                if (dy > 80) setOpen(false);
+                if (dy > 70) setOpen(false);
+            }
+
+            dragTargets.forEach(function (el) {
+                el.addEventListener('touchstart', onStart, { passive: true });
+                el.addEventListener('touchmove', onMove, { passive: true });
+                el.addEventListener('touchend', onEnd);
             });
         }
 
@@ -110,19 +133,31 @@
 
     function scrollActiveTrack() {
         var active = document.querySelector('.acd-pl-track.is-active');
-        if (!active) return;
-
         var body = document.getElementById('acdPlList');
-        if (body && mqDesktop.matches) {
-            var top = active.offsetTop - 72;
-            body.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        if (active && body) {
+            if (mqDesktop.matches) {
+                var top = active.offsetTop - 72;
+                body.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+            } else if (document.querySelector('.acd-pl-sidebar.is-open')) {
+                try {
+                    active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } catch (e) {
+                    active.scrollIntoView(false);
+                }
+            }
         }
 
         var railActive = document.querySelector('.acd-pl-rail-item.is-active');
-        var rail = document.querySelector('.acd-pl-rail-scroller');
-        if (railActive && rail) {
-            var left = railActive.offsetLeft - 16;
-            rail.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+        if (railActive) {
+            try {
+                railActive.scrollIntoView({
+                    inline: 'center',
+                    block: 'nearest',
+                    behavior: 'smooth',
+                });
+            } catch (e) {
+                railActive.scrollIntoView(false);
+            }
         }
     }
 

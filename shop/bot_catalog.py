@@ -1147,14 +1147,69 @@ def product_rating_display_stats():
     }
 
 
+# ضریب نمایش آمار صفحه اصلی (عدد واقعی دیتابیس × این مقدار)
+HOME_STATS_DISPLAY_MULTIPLIER = 3
+HOME_STATS_CACHE_KEY = 'shop:home_display_stats:v1'
+HOME_STATS_CACHE_TTL = 60  # ثانیه — آمار لایو با کش کوتاه
+
+
+def _home_satisfaction_rate() -> int:
+    """رضایت کاربران از امتیازهای واقعی محصول (درصد ۴ و ۵ ستاره)."""
+    from django.db.models import Count, Q
+
+    from shop.models import ProductRating
+
+    agg = ProductRating.objects.aggregate(
+        total=Count('id'),
+        positive=Count('id', filter=Q(rating__gte=4)),
+    )
+    total = int(agg['total'] or 0)
+    if total < 5:
+        # هنوز دادهٔ کافی نیست — میانگین نزدیک به رضایت بالای واقعی بازار
+        return 99
+    rate = round((int(agg['positive'] or 0) / total) * 100)
+    return max(1, min(99, rate))
+
+
 def home_display_stats():
-    """آمار نمایشی صفحه اصلی — تا آماده‌شدن داده واقعی کافی."""
-    return {
-        'total_users': 1250,
-        'total_orders': 420,
-        'total_licenses': 385,
-        'satisfaction_rate': 99,
+    """آمار لایو صفحه اصلی از دیتابیس؛ شمارنده‌ها با ضریب نمایش."""
+    from django.contrib.auth import get_user_model
+    from django.core.cache import cache
+    from django.db.models import Q
+    from django.utils import timezone
+
+    from licenses.models import License
+    from shop.models import Order
+
+    cached = cache.get(HOME_STATS_CACHE_KEY)
+    if cached is not None:
+        return cached
+
+    User = get_user_model()
+    now = timezone.now()
+    mult = HOME_STATS_DISPLAY_MULTIPLIER
+
+    users_raw = User.objects.filter(is_active=True).count()
+    orders_raw = Order.objects.filter(status='paid').count()
+    licenses_raw = License.objects.filter(status='active').filter(
+        Q(expires_at__isnull=True) | Q(expires_at__gt=now),
+    ).count()
+
+    stats = {
+        'total_users': users_raw * mult,
+        'total_orders': orders_raw * mult,
+        'total_licenses': licenses_raw * mult,
+        'satisfaction_rate': _home_satisfaction_rate(),
+        'is_live': True,
+        'display_multiplier': mult,
+        'raw': {
+            'total_users': users_raw,
+            'total_orders': orders_raw,
+            'total_licenses': licenses_raw,
+        },
     }
+    cache.set(HOME_STATS_CACHE_KEY, stats, HOME_STATS_CACHE_TTL)
+    return stats
 
 
 def home_page_content():

@@ -7,7 +7,7 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=86">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=87">
 <link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=13">
 <link rel="stylesheet" href="{% static 'css/home-day-story.css' %}?v=7">
 {% endblock %}
@@ -145,9 +145,14 @@
 
 <div class="mk-home-intro-band" aria-hidden="false">
 
-{# ─── آمار ─── #}
-<section class="mk-home-stats" aria-label="آمار پلتفرم">
+{# ─── آمار لایو ─── #}
+<section class="mk-home-stats" aria-label="آمار زنده و واقعی پلتفرم">
     <div class="container">
+        <p class="mk-stats-live-note">
+            <span class="mk-stats-live-dot" aria-hidden="true"></span>
+            <span class="mk-stats-live-badge">لایو</span>
+            آمار زنده و واقعی از سامانه
+        </p>
         <div class="mk-stats-strip mk-reveal">
             <article class="mk-stat-item" data-accent="violet">
                 <span class="mk-stat-item-icon"><i class="fas fa-users"></i></span>

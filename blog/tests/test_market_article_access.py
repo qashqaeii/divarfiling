@@ -2,6 +2,7 @@
 from django.test import SimpleTestCase
 
 from blog.services.market_article_access import (
+    _SKIP_CATEGORY_KEYS,
     _count_to_score,
     _geo_center,
     _score_access,
@@ -44,89 +45,62 @@ class DistrictAccessHelpersTests(SimpleTestCase):
         self.assertIn(grade[0], 'AB')
         self.assertTrue(label)
 
-    def test_cafe_restaurant_categories_exist(self):
+    def test_road_categories_skipped_for_district(self):
+        self.assertIn('main_road', _SKIP_CATEGORY_KEYS)
+        self.assertIn('motorway', _SKIP_CATEGORY_KEYS)
         keys = {c['key'] for c in POI_CATEGORIES}
         self.assertIn('cafe', keys)
-        self.assertIn('restaurant', keys)
         self.assertIn('police', keys)
-        self.assertIn('fire_station', keys)
 
-    def test_section_renders_counts_only(self):
+    def test_section_renders_professional_counts(self):
         access = {
             'ok': True,
-            'score': 76,
-            'grade': 'B+',
-            'grade_label': 'دسترسی خوب',
+            'score': 86,
+            'grade': 'A',
+            'grade_label': 'دسترسی عالی',
             'radius_label': '۳ کیلومتر',
             'summary': 'امتیاز نمونه',
-            'total_pois': 42,
-            'found_count': 10,
-            'total_count': 22,
-            'missing_count': 12,
+            'total_pois': 200,
+            'found_count': 18,
+            'total_count': 21,
             'highlights': [
-                {
-                    'label': 'سوپرمارکت',
-                    'icon': 'fa-cart-shopping',
-                    'color': '#0891b2',
-                    'count': 5,
-                }
+                {'label': 'پارک', 'icon': 'fa-tree', 'color': '#059669', 'count': 98},
+                {'label': 'رستوران', 'icon': 'fa-utensils', 'color': '#b45309', 'count': 29},
             ],
-            'gaps': [{'label': 'آتش‌نشانی', 'key': 'fire_station'}],
+            'gaps': [{'label': 'مترو', 'key': 'metro'}],
             'groups': [
                 {
                     'key': 'daily',
                     'label': 'زندگی روزمره',
                     'items': [
-                        {
-                            'key': 'supermarket',
-                            'label': 'سوپرمارکت',
-                            'icon': 'fa-cart-shopping',
-                            'color': '#0891b2',
-                            'count': 5,
-                        },
-                        {
-                            'key': 'cafe',
-                            'label': 'کافه',
-                            'icon': 'fa-mug-saucer',
-                            'color': '#a16207',
-                            'count': 8,
-                        },
-                        {
-                            'key': 'street_type',
-                            'label': 'نوع معبر',
-                            'count': 1,
-                        },
+                        {'key': 'restaurant', 'label': 'رستوران', 'icon': 'fa-utensils', 'color': '#b45309', 'count': 29},
+                        {'key': 'cafe', 'label': 'کافه', 'icon': 'fa-mug-saucer', 'color': '#a16207', 'count': 21},
+                        {'key': 'main_road', 'label': 'معبر اصلی', 'count': 217},
                     ],
                 },
                 {
                     'key': 'safety',
                     'label': 'امنیت و خدمات',
                     'items': [
-                        {
-                            'key': 'police',
-                            'label': 'کلانتری',
-                            'icon': 'fa-shield-halved',
-                            'color': '#1d4ed8',
-                            'count': 2,
-                        },
+                        {'key': 'police', 'label': 'کلانتری', 'icon': 'fa-shield-halved', 'color': '#1d4ed8', 'count': 1},
+                        {'key': 'fire_station', 'label': 'آتش‌نشانی', 'icon': 'fa-fire-extinguisher', 'color': '#b45309', 'count': 3},
                     ],
                 },
             ],
         }
         html = _section_district_access(access, city='قم', district='شهرک قدس')
-        self.assertIn('district-access', html)
+        self.assertIn('mk-access-section', html)
+        self.assertIn('mk-access-shell', html)
+        self.assertIn('mk-access-cell-grid', html)
         self.assertIn('امکانات و دسترسی‌های منطقه', html)
-        self.assertIn('سوپرمارکت', html)
-        self.assertIn('۵', html)
-        self.assertIn('کافه', html)
+        self.assertIn('رستوران', html)
         self.assertIn('کلانتری', html)
+        self.assertIn('mk-access-score__num', html)
+        self.assertIn('از ۱۰۰', html)
+        self.assertNotIn('معبر اصلی', html)
         self.assertNotIn('OpenStreetMap', html)
-        self.assertNotIn('پنل فایل شخصی', html)
-        self.assertNotIn('نوع معبر', html)
         self.assertNotIn('پیاده', html)
-        self.assertNotIn('فاصله', html)
-        self.assertNotRegex(html, r'\d+\s*متر')
-        self.assertNotIn('۲۷ متر', html)
+        self.assertIn('یافت‌نشده', html)
 
     def test_section_soft_message_when_overpass_fails(self):
         html = render_district_access_section(

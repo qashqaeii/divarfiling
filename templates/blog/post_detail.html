@@ -7,7 +7,7 @@
 {% load seo_tags %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=14">
 {% endblock %}
 
 {% block content %}
@@ -127,7 +127,7 @@
             </div>
 
             <article class="mk-blog-article">
-                <div class="mk-blog-prose" id="blog-content">
+                <div class="mk-blog-prose{% if 'mk-market-section' in post.content or 'mk-access-section' in post.content %} mk-market-article-body{% endif %}" id="blog-content">
                     {{ post.content|safe }}
                 </div>
 

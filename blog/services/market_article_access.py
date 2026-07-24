@@ -213,6 +213,9 @@ def _geo_center(points: list[dict]) -> tuple[float, float] | None:
     return lats[mid], lngs[mid]
 
 
+_SKIP_CATEGORY_KEYS = frozenset({'street_type', 'motorway', 'main_road'})
+
+
 def _tally_categories(
     lat: float,
     lng: float,
@@ -222,7 +225,7 @@ def _tally_categories(
 ) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     for category in POI_CATEGORIES:
-        if category.get('kind') == 'street':
+        if category.get('kind') == 'street' or category['key'] in _SKIP_CATEGORY_KEYS:
             continue
         seen_ids: set[Any] = set()
         samples: list[dict[str, Any]] = []
@@ -268,7 +271,7 @@ def _categories_from_tallies(
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for category in POI_CATEGORIES:
-        if category.get('kind') == 'street':
+        if category.get('kind') == 'street' or category['key'] in _SKIP_CATEGORY_KEYS:
             continue
         key = category['key']
         tally = tallies.get(key) or {}

@@ -5,9 +5,12 @@ from django.http import JsonResponse
 from django.views import View
 
 from licenses.services.management import (
+    activate_license_for_owner,
+    assign_license_to_member,
     assign_seat_to_member,
     register_device_slot,
     remove_device_slot,
+    revoke_license_assignment,
     revoke_seat_assignment,
     update_device_slot,
 )
@@ -96,5 +99,61 @@ class RemoveDeviceSlotView(_LicenseActionView):
         try:
             remove_device_slot(request.user, int(activation_id))
             return JsonResponse({'ok': True, 'message': 'اسلات حذف شد. می‌توانید دستگاه جدید ثبت کنید.'})
+        except Exception as exc:
+            return self._json_error(exc)
+
+
+class AssignLicenseView(_LicenseActionView):
+    """تخصیص کلید کامل لایسنس به عضو آژانس."""
+
+    def post(self, request):
+        license_id = request.POST.get('license_id', '').strip()
+        member_id = request.POST.get('member_id', '').strip()
+        try:
+            license_obj = assign_license_to_member(
+                request.user, int(license_id), int(member_id),
+            )
+            name = (
+                license_obj.assigned_user.get_full_name()
+                or license_obj.assigned_user.username
+            )
+            return JsonResponse({
+                'ok': True,
+                'message': f'لایسنس به {name} تخصیص یافت — دسترسی کامل فعال شد.',
+                'license_id': license_obj.pk,
+                'assigned_user': name,
+                'allocation_state': 'assigned',
+            })
+        except Exception as exc:
+            return self._json_error(exc)
+
+
+class RevokeLicenseAssignmentView(_LicenseActionView):
+    def post(self, request):
+        license_id = request.POST.get('license_id', '').strip()
+        try:
+            license_obj = revoke_license_assignment(request.user, int(license_id))
+            state = 'owner_active' if license_obj.status == 'active' else 'available'
+            return JsonResponse({
+                'ok': True,
+                'message': 'تخصیص لایسنس لغو شد.',
+                'license_id': license_obj.pk,
+                'allocation_state': state,
+            })
+        except Exception as exc:
+            return self._json_error(exc)
+
+
+class ActivateLicenseForOwnerView(_LicenseActionView):
+    def post(self, request):
+        license_id = request.POST.get('license_id', '').strip()
+        try:
+            license_obj = activate_license_for_owner(request.user, int(license_id))
+            return JsonResponse({
+                'ok': True,
+                'message': 'لایسنس برای شما فعال شد.',
+                'license_id': license_obj.pk,
+                'allocation_state': 'owner_active',
+            })
         except Exception as exc:
             return self._json_error(exc)

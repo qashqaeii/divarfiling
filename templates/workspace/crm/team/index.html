@@ -577,15 +577,41 @@
                     </div>
                     <div class="crm-team-member-badges">
                         <span class="crm-team-role-pill" style="{% crm_agency_role_style m.role %}">{{ m.get_role_display }}</span>
-                        {% if license_dashboard and can_manage_team %}
-                        {% for tm in license_dashboard.team_members %}
-                        {% if tm.id == m.user_id and license_dashboard.assigned_seats %}
-                        <span class="crm-team-license-badge" title="لایسنس تخصیص‌یافته"><i class="fas fa-key"></i></span>
-                        {% endif %}
-                        {% endfor %}
+                        {% if agency_license_pool %}
+                            {% if m.role == 'owner' %}
+                            <span class="crm-team-license-badge crm-team-license-badge--owner" title="مالک لایسنس‌های آژانس"><i class="fas fa-key"></i></span>
+                            {% elif row.allocated_license %}
+                            <span class="crm-team-license-badge" title="لایسنس تخصیص‌یافته"><i class="fas fa-key"></i></span>
+                            {% else %}
+                            <span class="crm-team-license-badge crm-team-license-badge--none" title="بدون لایسنس"><i class="fas fa-key"></i></span>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </header>
+                {% if can_manage_team and m.role != 'owner' and agency_license_pool %}
+                <div class="crm-team-license-alloc" data-member-license data-member-id="{{ m.user_id }}">
+                    {% if row.allocated_license %}
+                    <div class="crm-team-license-alloc-row">
+                        <span><i class="fas fa-check-circle"></i> کلید …{{ row.allocated_license.key_short }} · {{ row.allocated_license.plan_name }}</span>
+                        <button type="button" class="crm-team-license-btn crm-team-license-btn--ghost" data-revoke-license="{{ row.allocated_license.id }}">لغو</button>
+                    </div>
+                    {% else %}
+                    <div class="crm-team-license-alloc-row">
+                        {% if agency_license_pool.available_licenses %}
+                        <select class="crm-select crm-select-sm" data-assign-license-select aria-label="انتخاب لایسنس">
+                            <option value="">تخصیص لایسنس…</option>
+                            {% for lic in agency_license_pool.available_licenses %}
+                            <option value="{{ lic.id }}">#{{ lic.sequence }} · …{{ lic.key_short }} · {{ lic.plan_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="crm-team-license-btn" data-assign-license disabled>تخصیص</button>
+                        {% else %}
+                        <span class="crm-team-license-empty">کلید آزادی برای تخصیص نیست</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
                 {% if can_view_team_performance or m.user_id == request.user.id %}
                 <div class="crm-team-member-tile-stats" aria-label="آمار عضو">
                     <span title="تعداد مخاطب" class="{% if not p.contacts %}is-zero{% endif %}"><i class="fas fa-users"></i><b>{{ p.contacts|default:0 }}</b><em>مخاطب</em></span>
@@ -1070,5 +1096,76 @@ document.addEventListener('DOMContentLoaded', function () {
 {% endif %}
 {% if tab == 'audit' and can_manage_team %}
 <script src="{% static 'workspace/js/crm-team-audit.js' %}?v=1"></script>
+{% endif %}
+{% if can_manage_team and agency_license_pool %}
+<script>
+(function () {
+    function csrfToken() {
+        var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        if (m) return decodeURIComponent(m[1]);
+        var el = document.querySelector('[name=csrfmiddlewaretoken]');
+        return el ? el.value : '';
+    }
+    async function postForm(url, fields) {
+        var body = new URLSearchParams();
+        Object.keys(fields).forEach(function (k) { body.append(k, fields[k]); });
+        var res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: body.toString(),
+            credentials: 'same-origin',
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok || data.ok === false) {
+            throw new Error(data.message || data.error || 'خطا در انجام عملیات');
+        }
+        return data;
+    }
+    document.querySelectorAll('[data-member-license]').forEach(function (panel) {
+        var memberId = panel.getAttribute('data-member-id');
+        var select = panel.querySelector('[data-assign-license-select]');
+        var assignBtn = panel.querySelector('[data-assign-license]');
+        var revokeBtn = panel.querySelector('[data-revoke-license]');
+        if (select && assignBtn) {
+            select.addEventListener('change', function () {
+                assignBtn.disabled = !select.value;
+            });
+            assignBtn.addEventListener('click', async function () {
+                if (!select.value) return;
+                assignBtn.disabled = true;
+                try {
+                    await postForm('{% url "license_assign_license" %}', {
+                        license_id: select.value,
+                        member_id: memberId,
+                    });
+                    window.location.reload();
+                } catch (err) {
+                    alert(err.message || 'خطا');
+                    assignBtn.disabled = false;
+                }
+            });
+        }
+        if (revokeBtn) {
+            revokeBtn.addEventListener('click', async function () {
+                if (!window.confirm('تخصیص لایسنس از این عضو لغو شود؟')) return;
+                revokeBtn.disabled = true;
+                try {
+                    await postForm('{% url "license_revoke_license" %}', {
+                        license_id: revokeBtn.getAttribute('data-revoke-license'),
+                    });
+                    window.location.reload();
+                } catch (err) {
+                    alert(err.message || 'خطا');
+                    revokeBtn.disabled = false;
+                }
+            });
+        }
+    });
+})();
+</script>
 {% endif %}
 {% endblock %}

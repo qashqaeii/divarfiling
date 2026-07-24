@@ -10,7 +10,7 @@ from licenses.models import License, LicenseActivation
 from licenses.services.security import normalize_hardware_fingerprint
 from mobile_api.models import DEFAULT_NOTIFICATION_PREFS, MobileDevice
 from mobile_api.services.license_service import license_payload_for_user
-from workspace.services.access import _paid_license_qs
+from workspace.services.access import _assigned_license_qs, _paid_license_qs
 
 
 def _maybe_send_welcome_push(user, old_token: str, new_token: str) -> None:
@@ -85,6 +85,12 @@ def _ensure_mobile_activation(
         .order_by('-created_at')
         .first()
     )
+    if not lic:
+        lic = (
+            _assigned_license_qs(user)
+            .order_by('-created_at')
+            .first()
+        )
     if not lic:
         return None
 

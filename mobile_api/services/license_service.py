@@ -6,17 +6,25 @@ from typing import Any, Dict, Optional
 from django.utils import timezone
 
 from licenses.models import License
-from workspace.services.access import has_active_bot_license, _paid_license_qs
+from workspace.services.access import (
+    _assigned_license_qs,
+    _paid_license_qs,
+    _user_bot_license,
+    has_active_bot_license,
+)
 
 
 def _primary_license(user) -> Optional[License]:
+    lic = _user_bot_license(user)
+    if lic:
+        return lic
     return (
         _paid_license_qs(user)
-        .filter(status='active')
+        .filter(status__in=['active', 'inactive'])
         .select_related('plan')
         .order_by('-expires_at')
         .first()
-    )
+    ) or _assigned_license_qs(user).select_related('plan').first()
 
 
 def license_payload_for_user(user) -> Dict[str, Any]:

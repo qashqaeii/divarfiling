@@ -14,9 +14,12 @@ import json
 from .models import User, UserProfile
 from .forms import RegisterForm, ProfileForm, UserInfoForm, LoginForm
 from licenses.dashboard_views import (
+    ActivateLicenseForOwnerView,
+    AssignLicenseView,
     AssignSeatView,
     RegisterDeviceSlotView,
     RemoveDeviceSlotView,
+    RevokeLicenseAssignmentView,
     RevokeSeatView,
     UpdateDeviceSlotView,
 )

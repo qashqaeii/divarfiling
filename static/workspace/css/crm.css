@@ -16900,6 +16900,56 @@ select.crm-files-adv-control {
 .crm-team-goal-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--ws-primary), color-mix(in srgb, var(--ws-primary) 55%, #0ea5e9)); }
 .crm-team-goals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.45rem; align-items: end; }
 .crm-team-license-badge { color: #b45309; font-size: 0.75rem; }
+.crm-team-license-badge--none { color: #94a3b8; opacity: 0.55; }
+.crm-team-license-badge--owner { color: #0f766e; }
+.crm-team-license-alloc {
+    margin: 0.35rem 0 0.15rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--ws-primary, #0f766e) 6%, var(--ws-surface, #fff));
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 80%, transparent);
+}
+.crm-team-license-alloc-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+}
+.crm-team-license-alloc-row > span {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--ws-text-muted, #64748b);
+}
+.crm-team-license-alloc-row .crm-select {
+    flex: 1 1 10rem;
+    min-width: 0;
+}
+.crm-team-license-btn {
+    appearance: none;
+    border: none;
+    border-radius: 8px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--ws-primary, #0f766e);
+    color: #fff;
+    white-space: nowrap;
+}
+.crm-team-license-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+.crm-team-license-btn--ghost {
+    background: transparent;
+    color: #b45309;
+    border: 1px solid color-mix(in srgb, #b45309 35%, transparent);
+}
+.crm-team-license-empty {
+    font-size: 0.68rem;
+    color: var(--ws-text-muted, #94a3b8);
+}
 
 /* ?? Property detail v2 ? unified hero + grid (contact-detail pro pattern) ?? */
 .crm-prop-detail-v2 {

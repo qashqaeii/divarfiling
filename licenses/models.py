@@ -27,6 +27,24 @@ class License(models.Model):
     max_activations = models.IntegerField(default=1, verbose_name='حداکثر فعال‌سازی')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
     expires_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ انقضا')
+    assigned_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='allocated_licenses',
+        verbose_name='تخصیص به عضو',
+        help_text='عضو تیم که این کلید لایسنس به او اختصاص داده شده است.',
+    )
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='licenses_assigned_by_me',
+        verbose_name='تخصیص توسط',
+    )
+    assigned_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ تخصیص کلید')
     
     class Meta:
         verbose_name = 'لایسنس'

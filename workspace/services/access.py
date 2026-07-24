@@ -21,6 +21,17 @@ def _paid_license_qs(user):
     ).exclude(status__in=['suspended', 'expired'])
 
 
+def _assigned_license_qs(user):
+    """کلیدهای تخصیص‌یافته به عضو تیم (مسیر آژانس — دسترسی فوری)."""
+    return License.objects.filter(
+        assigned_user=user,
+        order__status='paid',
+        status='active',
+    ).filter(
+        Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
+    ).exclude(status__in=['suspended', 'expired'])
+
+
 def _assigned_active_seat_qs(user):
     """اسلات‌های تخصیص‌یافته به عضو تیم — فقط اسلات فعال در ربات."""
     return LicenseActivation.objects.filter(
@@ -41,12 +52,14 @@ def has_purchased_bot_license(user) -> bool:
 
 
 def has_active_bot_license(user) -> bool:
-    """لایسنس فعال ربات — مالک یا عضو تیم با اسلات تخصیص‌یافته."""
+    """لایسنس فعال ربات — مالک، عضو با کلید تخصیص‌یافته، یا اسلات دستگاه فعال."""
     if not user or not user.is_authenticated:
         return False
     if getattr(settings, 'WORKSPACE_LICENSE_STAFF_BYPASS', False) and user.is_staff:
         return True
     if _paid_license_qs(user).filter(status='active').exists():
+        return True
+    if _assigned_license_qs(user).exists():
         return True
     return _assigned_active_seat_qs(user).exists()
 
@@ -76,7 +89,7 @@ def get_bot_access_state(user) -> dict:
 
 
 def _user_bot_license(user) -> Optional[License]:
-    """لایسنس مرتبط با کاربر — مالک یا عضو تیم با اسلات فعال."""
+    """لایسنس مرتبط با کاربر — مالک، کلید تخصیص‌یافته، یا اسلات فعال."""
     lic = (
         _paid_license_qs(user)
         .filter(status='active')
@@ -86,6 +99,14 @@ def _user_bot_license(user) -> Optional[License]:
     )
     if lic:
         return lic
+    allocated = (
+        _assigned_license_qs(user)
+        .select_related('plan')
+        .order_by('-expires_at')
+        .first()
+    )
+    if allocated:
+        return allocated
     activation = (
         _assigned_active_seat_qs(user)
         .select_related('license', 'license__plan')

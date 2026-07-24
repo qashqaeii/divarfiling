@@ -2734,12 +2734,19 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
                 'active_deals': totals['active_deals'] if can_view_perf else 0,
                 'members': len(members_list),
             }
+            allocated_map = {}
+            if can_manage_team(user):
+                from licenses.services.management import build_agency_license_pool
+                pool_early = build_agency_license_pool(agency.owner)
+                allocated_map = pool_early.get('assigned_by_user') or {}
+                ctx['agency_license_pool'] = pool_early
             ctx['member_rows'] = [
                 {
                     'member': m,
                     'perf': (
                         perf_by_member.get(m.pk) or perf_by_user.get(m.user_id) or {}
                     ) if can_view_perf or m.user_id == user.id else {},
+                    'allocated_license': allocated_map.get(m.user_id),
                 }
                 for m in members_list
             ]
@@ -2823,8 +2830,12 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         if agency and can_manage_team(user):
             from licenses.services.management import build_license_dashboard
             ctx['license_dashboard'] = build_license_dashboard(user)
+            if 'agency_license_pool' not in ctx:
+                from licenses.services.management import build_agency_license_pool
+                ctx['agency_license_pool'] = build_agency_license_pool(agency.owner)
         else:
             ctx['license_dashboard'] = None
+            ctx.setdefault('agency_license_pool', None)
         return ctx
 
     def post(self, request):

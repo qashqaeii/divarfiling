@@ -26,6 +26,10 @@ class SeoLandingPageTests(TestCase):
             self.assertGreaterEqual(len(landing['faq']), 5)
             self.assertIn('visuals', landing)
             self.assertTrue(landing['visuals'].get('hero_image'))
+        market = get_landing('real-estate-market-analysis')
+        self.assertTrue(market['hero'].get('h1_short'))
+        self.assertTrue(market['hero'].get('brand'))
+        self.assertGreaterEqual(len(market.get('outcomes') or []), 3)
 
     def test_real_estate_crm_page(self):
         resp = self.client.get('/real-estate-crm/')
@@ -52,11 +56,22 @@ class SeoLandingPageTests(TestCase):
     def test_real_estate_market_analysis_page(self):
         resp = self.client.get('/real-estate-market-analysis/')
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'تحلیل بازار املاک')
+        self.assertTemplateUsed(resp, 'shop/seo_landing_market.html')
+        self.assertContains(resp, 'seo-market')
+        self.assertContains(resp, 'ma-sticky-cta')
+        self.assertContains(resp, 'تحلیل بازار املاک با داده دیوار')
         self.assertContains(resp, 'سوالات متداول')
         self.assertContains(resp, 'شروع رایگان میزکار')
+        self.assertContains(resp, 'ببینید چطور کار می‌کند')
         self.assertContains(resp, 'help-analyze-dashboard.png')
-        self.assertContains(resp, 'seo-hero-shot')
+        self.assertContains(resp, 'ma-hero-shot')
+        self.assertContains(resp, 'mizkar-seo-market-analysis.css')
+
+    def test_wave1_landings_keep_shared_template(self):
+        resp = self.client.get('/real-estate-crm/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'shop/seo_landing.html')
+        self.assertNotContains(resp, 'seo-market-page')
 
     def test_unknown_landing_404(self):
         resp = self.client.get('/divar-filing/')
@@ -66,7 +81,6 @@ class SeoLandingPageTests(TestCase):
         resp = self.client.get('/')
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, '/real-estate-crm/')
-        self.assertContains(resp, 'میزکار CRM املاک رایگان')
         self.assertContains(resp, 'CRM مشاور املاک')
         self.assertContains(resp, '/real-estate-software/')
         self.assertContains(resp, '/robot-divar/')

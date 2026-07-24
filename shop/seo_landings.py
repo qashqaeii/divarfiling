@@ -532,15 +532,37 @@ LANDINGS: dict[str, dict[str, Any]] = {
         ),
         'hero': {
             'eyebrow': 'تحلیل بازار · داده دیوار',
+            'brand': 'فایلینگ دیوار',
             'icon': 'fa-chart-line',
             'decor_icon': 'sparkles',
             'accent': 'amber',
+            'h1_short': 'تحلیل بازار املاک با داده دیوار',
             'h1': 'تحلیل بازار املاک با داده دیوار: روند قیمت، مقایسه محله و تصمیم حرفه‌ای',
             'lead': (
                 'به‌جای حدس قیمت، با میانگین، میانه، توزیع متراژ و نقشه تراکم فایل '
                 'از آگهی‌های واقعی دیوار تصمیم بگیرید — در میزکار فارسی فایلینگ دیوار.'
             ),
         },
+        'outcomes': [
+            {
+                'icon': 'fa-chart-bar',
+                'accent': 'amber',
+                'title': 'میانه قیمت محله',
+                'text': 'عدد منصفانه برای مذاکره با مالک',
+            },
+            {
+                'icon': 'fa-map',
+                'accent': 'teal',
+                'title': 'نقشه تراکم و ارزش',
+                'text': 'کانون عرضه را قبل از بازدید ببینید',
+            },
+            {
+                'icon': 'fa-file-alt',
+                'accent': 'amber',
+                'title': 'گزارش جلسه',
+                'text': 'استدلال داده‌محور به‌جای حدس',
+            },
+        ],
         'problem': {
             'title': 'چرا تحلیل بازار برای مشاور حیاتی است؟',
             'paragraphs': [
@@ -559,11 +581,11 @@ LANDINGS: dict[str, dict[str, Any]] = {
         },
         'features': [
             {'icon': 'fa-chart-bar', 'decor_icon': 'sparkles', 'accent': 'amber', 'title': 'میانگین و میانه', 'text': 'قیمت کل و هر متر بر اساس فایل‌های معتبر محله'},
-            {'icon': 'fa-ruler-combined', 'decor_icon': 'ruler', 'accent': 'violet', 'title': 'توزیع متراژ', 'text': 'سهم بازه‌های متراژ و قیمت هر متر در یک نگاه'},
+            {'icon': 'fa-ruler-combined', 'decor_icon': 'ruler', 'accent': 'teal', 'title': 'توزیع متراژ', 'text': 'سهم بازه‌های متراژ و قیمت هر متر در یک نگاه'},
             {'icon': 'fa-map', 'decor_icon': 'map_pin', 'accent': 'sky', 'title': 'نقشه حرارتی', 'text': 'تراکم فایل، سطح ارزش و کانون عرضه روی نقشه'},
             {'icon': 'fa-balance-scale', 'decor_icon': 'layers', 'accent': 'emerald', 'title': 'مقایسه فایل', 'text': 'انتخاب مشابه و محدوده پیشنهادی برای جلسه'},
-            {'icon': 'fa-file-alt', 'decor_icon': 'sticky_note', 'accent': 'rose', 'title': 'گزارش مذاکره', 'text': 'خروجی قابل ارائه به مالک و خریدار'},
-            {'icon': 'fa-sync', 'decor_icon': 'upload', 'accent': 'indigo', 'title': 'داده زنده دیوار', 'text': 'تحلیل روی همان دیتاست استخراج‌شده'},
+            {'icon': 'fa-file-alt', 'decor_icon': 'sticky_note', 'accent': 'amber', 'title': 'گزارش مذاکره', 'text': 'خروجی قابل ارائه به مالک و خریدار'},
+            {'icon': 'fa-sync', 'decor_icon': 'upload', 'accent': 'teal', 'title': 'داده زنده دیوار', 'text': 'تحلیل روی همان دیتاست استخراج‌شده'},
         ],
         'comparison': {
             'title': 'مقایسه با نگاه سنتی به بازار',

@@ -619,6 +619,14 @@ class LicenseGuideView(TemplateView):
 class SeoLandingView(TemplateView):
     """لندینگ سئو — محتوا از seo_landings.py"""
     template_name = 'shop/seo_landing.html'
+    MARKET_TEMPLATE = 'shop/seo_landing_market.html'
+    MARKET_SLUG = 'real-estate-market-analysis'
+
+    def get_template_names(self):
+        slug = self.kwargs.get('landing_slug', '')
+        if slug == self.MARKET_SLUG:
+            return [self.MARKET_TEMPLATE]
+        return [self.template_name]
 
     def dispatch(self, request, *args, **kwargs):
         slug = kwargs.get('landing_slug', '')

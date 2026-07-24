@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ landing.meta_title }}{% endblock %}
+{% block body_class %}mk-pub-page seo-market-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-seo-landing.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-seo-market-analysis.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+{% with v=landing.visuals %}
+<div class="seo-market" data-ma-root>
+
+    {# ── Hero: one composition ── #}
+    <header class="ma-hero">
+        <div class="ma-hero-atmosphere" aria-hidden="true"></div>
+        <div class="container ma-hero-inner">
+            <div class="ma-hero-copy mk-reveal">
+                <p class="ma-brand">{{ landing.hero.brand|default:"فایلینگ دیوار" }}</p>
+                <h1 class="ma-h1">
+                    <span class="ma-h1-short">{{ landing.hero.h1_short|default:landing.hero.h1 }}</span>
+                    <span class="ma-h1-full visually-hidden">{{ landing.hero.h1 }}</span>
+                </h1>
+                <p class="ma-lead">{{ landing.hero.lead }}</p>
+                <div class="ma-hero-actions">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'workspace:home' %}" class="ma-btn ma-btn--primary">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        ورود به میزکار
+                    </a>
+                    {% else %}
+                    <a href="{% url 'register' %}" class="ma-btn ma-btn--primary">
+                        <i class="fas fa-gift" aria-hidden="true"></i>
+                        شروع رایگان میزکار
+                    </a>
+                    {% endif %}
+                    <a href="#ma-capabilities" class="ma-btn ma-btn--ghost">
+                        ببینید چطور کار می‌کند
+                        <i class="fas fa-arrow-down" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if v.hero_image %}
+        <div class="ma-hero-visual mk-reveal">
+            <button type="button" class="ma-hero-shot" data-seo-lightbox
+                data-src="{% static v.hero_image %}"
+                data-caption="{{ v.hero_caption }}"
+                aria-label="بزرگنمایی داشبورد تحلیل بازار">
+                <img src="{% static v.hero_image %}" alt="{{ v.hero_caption }}"
+                    width="1680" height="1000" loading="eager" decoding="async">
+            </button>
+            <p class="ma-hero-caption">{{ v.hero_caption }}</p>
+        </div>
+        {% endif %}
+    </header>
+
+    {# ── Outcomes (below first viewport) ── #}
+    {% if landing.outcomes %}
+    <section class="ma-outcomes" aria-label="نتیجه تحلیل بازار">
+        <div class="container">
+            <ul class="ma-outcomes-list mk-reveal mk-reveal-stagger">
+                {% for item in landing.outcomes %}
+                <li class="ma-outcome ma-outcome--{{ item.accent }}">
+                    <span class="ma-outcome-icon" aria-hidden="true"><i class="fas {{ item.icon }}"></i></span>
+                    <div>
+                        <strong>{{ item.title }}</strong>
+                        <span>{{ item.text }}</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ── Problem ── #}
+    <section class="ma-section ma-problem" aria-labelledby="ma-problem-title">
+        <div class="container ma-split mk-reveal">
+            <div class="ma-split-copy">
+                <p class="ma-kicker ma-kicker--warn">چالش روزانه</p>
+                <h2 id="ma-problem-title">{{ landing.problem.title }}</h2>
+                {% for p in landing.problem.paragraphs %}
+                <p class="ma-prose">{{ p }}</p>
+                {% endfor %}
+                <ul class="ma-pain-list">
+                    {% for b in landing.problem.bullets %}
+                    <li>{{ b }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% if v.problem_image %}
+            <figure class="ma-split-visual">
+                <button type="button" class="ma-frame" data-seo-lightbox
+                    data-src="{% static v.problem_image %}"
+                    data-caption="{{ v.problem_caption }}"
+                    aria-label="بزرگنمایی: {{ v.problem_caption }}">
+                    <img src="{% static v.problem_image %}" alt="{{ v.problem_caption }}" loading="lazy" decoding="async">
+                </button>
+                <figcaption>{{ v.problem_caption }}</figcaption>
+            </figure>
+            {% endif %}
+        </div>
+    </section>
+
+    {# ── Capabilities ── #}
+    <section class="ma-section ma-capabilities" id="ma-capabilities" aria-labelledby="ma-cap-title">
+        <div class="container">
+            <header class="ma-section-head mk-reveal">
+                <p class="ma-kicker">امکانات میزکار</p>
+                <h2 id="ma-cap-title">از داده خام تا تصمیم جلسه</h2>
+                <p class="ma-section-desc">شاخص‌هایی که برای مذاکره با مالک و خریدار واقعاً به کار می‌آیند.</p>
+            </header>
+            <div class="ma-cap-track mk-reveal mk-reveal-stagger" tabindex="0" role="list">
+                {% for f in landing.features %}
+                <article class="ma-cap-card ma-cap-card--{{ f.accent }}" role="listitem">
+                    <span class="ma-cap-icon" aria-hidden="true">
+                        {% include 'includes/icon_slot.html' with decor=f.decor_icon fa=f.icon only %}
+                    </span>
+                    <h3>{{ f.title }}</h3>
+                    <p>{{ f.text }}</p>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {# ── Showcase ── #}
+    {% if v.showcase %}
+    <section class="ma-section ma-stage" aria-labelledby="ma-stage-title">
+        <div class="container">
+            <header class="ma-section-head mk-reveal">
+                <p class="ma-kicker">{{ v.showcase.kicker }}</p>
+                <h2 id="ma-stage-title">{{ v.showcase.title }}</h2>
+                <p class="ma-section-desc">{{ v.showcase.desc }}</p>
+            </header>
+            <div class="ma-stage-grid mk-reveal mk-reveal-stagger">
+                {% for item in v.showcase.items %}
+                <figure class="ma-stage-card{% if item.size == 'wide' %} ma-stage-card--wide{% endif %}">
+                    <button type="button" class="ma-frame ma-frame--stage" data-seo-lightbox
+                        data-src="{% static item.image %}" data-caption="{{ item.caption }}"
+                        aria-label="بزرگنمایی: {{ item.caption }}">
+                        <img src="{% static item.image %}" alt="{{ item.caption }}" loading="lazy" decoding="async">
+                    </button>
+                    <figcaption>{{ item.caption }}</figcaption>
+                </figure>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ── Deep sections ── #}
+    {% for section in landing.sections %}
+    <section class="ma-section ma-deep{% if forloop.counter0|divisibleby:2 %} ma-deep--flip{% endif %}"
+        aria-labelledby="ma-deep-{{ forloop.counter }}">
+        <div class="container ma-split mk-reveal">
+            <div class="ma-split-copy">
+                <h2 id="ma-deep-{{ forloop.counter }}">{{ section.title }}</h2>
+                {% for p in section.paragraphs %}
+                <p class="ma-prose">{{ p }}</p>
+                {% endfor %}
+                {% for sub in section.subsections %}
+                <div class="ma-sub">
+                    <h3>{{ sub.title }}</h3>
+                    <p class="ma-prose">{{ sub.text }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% if section.image %}
+            <figure class="ma-split-visual">
+                <button type="button" class="ma-frame" data-seo-lightbox
+                    data-src="{% static section.image.image %}" data-caption="{{ section.image.caption }}"
+                    aria-label="بزرگنمایی: {{ section.image.caption }}">
+                    <img src="{% static section.image.image %}" alt="{{ section.image.caption }}" loading="lazy" decoding="async">
+                </button>
+                <figcaption>{{ section.image.caption }}</figcaption>
+            </figure>
+            {% endif %}
+        </div>
+    </section>
+    {% endfor %}
+
+    {# ── Mid CTA ── #}
+    <section class="ma-cta-band" aria-label="دعوت به اقدام">
+        <div class="container ma-cta-inner mk-reveal">
+            <h2>{{ landing.cta_mid_title }}</h2>
+            <div class="ma-hero-actions">
+                {% if user.is_authenticated %}
+                <a href="{% url 'workspace:home' %}" class="ma-btn ma-btn--primary ma-btn--lg">ورود به میزکار</a>
+                {% else %}
+                <a href="{% url 'register' %}" class="ma-btn ma-btn--primary ma-btn--lg">شروع رایگان میزکار</a>
+                {% endif %}
+                {% if bot_product %}
+                <a href="{% url 'product_detail' bot_product.slug %}" class="ma-btn ma-btn--outline ma-btn--lg">ربات استخراج</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    {# ── Comparison ── #}
+    <section class="ma-section ma-compare" aria-labelledby="ma-compare-title">
+        <div class="container">
+            <header class="ma-section-head mk-reveal">
+                <p class="ma-kicker">مقایسه</p>
+                <h2 id="ma-compare-title">{{ landing.comparison.title }}</h2>
+            </header>
+
+            <div class="ma-compare-table-wrap mk-reveal" aria-hidden="false">
+                <table class="ma-compare-table">
+                    <thead>
+                        <tr>
+                            {% for h in landing.comparison.headers %}
+                            <th scope="col">{{ h }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in landing.comparison.rows %}
+                        <tr>
+                            {% for cell in row %}
+                            <td{% if forloop.first %} scope="row"{% elif forloop.last %} class="ma-win"{% endif %}>{{ cell }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="ma-compare-cards mk-reveal mk-reveal-stagger">
+                {% for row in landing.comparison.rows %}
+                <article class="ma-compare-card">
+                    <h3>{{ row.0 }}</h3>
+                    <div class="ma-compare-pair">
+                        <div class="ma-compare-side ma-compare-side--old">
+                            <span class="ma-compare-label">{{ landing.comparison.headers.1 }}</span>
+                            <p>{{ row.1 }}</p>
+                        </div>
+                        <div class="ma-compare-side ma-compare-side--new">
+                            <span class="ma-compare-label">{{ landing.comparison.headers.2 }}</span>
+                            <p>{{ row.2 }}</p>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {# ── Steps ── #}
+    <section class="ma-section ma-steps-sec" aria-labelledby="ma-steps-title">
+        <div class="container">
+            <header class="ma-section-head mk-reveal">
+                <p class="ma-kicker">مسیر شروع</p>
+                <h2 id="ma-steps-title">{{ landing.steps.title }}</h2>
+            </header>
+            <ol class="ma-steps mk-reveal mk-reveal-stagger">
+                {% for step in landing.steps.items %}
+                <li class="ma-step">
+                    <span class="ma-step-n" aria-hidden="true">{{ step.n }}</span>
+                    <div>
+                        <strong>{{ step.title }}</strong>
+                        <p>{{ step.text }}</p>
+                    </div>
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+    </section>
+
+    {# ── Related ── #}
+    <section class="ma-section" aria-labelledby="ma-related-title">
+        <div class="container">
+            <header class="ma-section-head mk-reveal">
+                <p class="ma-kicker">ادامه مسیر</p>
+                <h2 id="ma-related-title">صفحات مرتبط</h2>
+            </header>
+            <div class="ma-related mk-reveal mk-reveal-stagger">
+                {% for link in landing.internal_links %}
+                <a href="{% if link.url_name == 'product_detail' %}{% url link.url_name slug=link.url_kwargs.slug %}{% else %}{% url link.url_name %}{% endif %}" class="ma-related-card">
+                    <strong>{{ link.label }}</strong>
+                    {% if link.desc %}<span>{{ link.desc }}</span>{% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {# ── FAQ ── #}
+    <section class="ma-section ma-faq-sec" aria-labelledby="ma-faq-title">
+        <div class="container ma-faq-layout">
+            <header class="ma-section-head mk-reveal">
+                <p class="ma-kicker">پرسش‌ها</p>
+                <h2 id="ma-faq-title">سوالات متداول</h2>
+            </header>
+            <div class="ma-faq-list mk-reveal" data-seo-faq>
+                {% for q, a in landing.faq %}
+                <details class="ma-faq-item seo-faq-item">
+                    <summary>
+                        <h3>{{ q }}</h3>
+                        <span class="ma-faq-toggle" aria-hidden="true"></span>
+                    </summary>
+                    <p>{{ a }}</p>
+                </details>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {# ── Final CTA ── #}
+    <section class="ma-cta-band ma-cta-band--final" aria-label="شروع">
+        <div class="container ma-cta-inner mk-reveal">
+            <h2>{{ landing.cta_final_title }}</h2>
+            <p class="ma-cta-sub">میزکار رایگان — بدون کارت بانکی برای شروع</p>
+            <div class="ma-hero-actions">
+                {% if user.is_authenticated %}
+                <a href="{% url 'workspace:home' %}" class="ma-btn ma-btn--primary ma-btn--lg">ورود به میزکار</a>
+                {% else %}
+                <a href="{% url 'register' %}" class="ma-btn ma-btn--primary ma-btn--lg">شروع رایگان میزکار</a>
+                {% endif %}
+                <a href="{% url 'education' %}" class="ma-btn ma-btn--outline ma-btn--lg">مشاهده آموزش‌ها</a>
+            </div>
+        </div>
+    </section>
+
+    {# ── Sticky mobile CTA ── #}
+    <div class="ma-sticky-cta" data-ma-sticky hidden>
+        {% if user.is_authenticated %}
+        <a href="{% url 'workspace:home' %}" class="ma-btn ma-btn--primary ma-btn--block">ورود به میزکار</a>
+        {% else %}
+        <a href="{% url 'register' %}" class="ma-btn ma-btn--primary ma-btn--block">شروع رایگان میزکار</a>
+        {% endif %}
+    </div>
+
+</div>
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/mizkar-seo-landing.js' %}?v=3" defer></script>
+<script src="{% static 'js/mizkar-seo-market.js' %}?v=1" defer></script>
+{% endblock %}

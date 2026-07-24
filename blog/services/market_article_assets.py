@@ -8,6 +8,8 @@ import random
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from django.core.files.base import ContentFile
@@ -17,14 +19,23 @@ logger = logging.getLogger(__name__)
 
 OG_WIDTH = 1200
 OG_HEIGHT = 630
-ARTICLE_MAP_W = 1200
-ARTICLE_MAP_H = 760
+# رزولوشن بالاتر برای نمایش شارپ روی دسکتاپ/رтина
+ARTICLE_MAP_W = 1600
+ARTICLE_MAP_H = 960
 TILE_SIZE = 256
 USER_AGENT = 'DivarFilingMarketArticle/1.0 (https://divarfiling.ir; market-report)'
 
 TILE_STREET_TMPL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
 TILE_SAT_TMPL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
 STREET_SUBS = 'abcd'
+
+_FONT_DIR = Path(__file__).resolve().parent.parent / 'assets' / 'fonts'
+_FONT_FILES = {
+    'regular': 'Vazirmatn-Regular.ttf',
+    'medium': 'Vazirmatn-Medium.ttf',
+    'semibold': 'Vazirmatn-SemiBold.ttf',
+    'bold': 'Vazirmatn-Bold.ttf',
+}
 
 
 def render_featured_image(
@@ -144,8 +155,17 @@ def _e_plain(text: str) -> str:
 
 
 def _to_content_file(img: Image.Image, name: str) -> ContentFile:
+    """PNG با فشرده‌سازی ملایم — کیفیت بصری حفظ می‌شود."""
+    if img.mode not in ('RGB', 'RGBA'):
+        img = img.convert('RGB')
     buf = io.BytesIO()
-    img.save(buf, format='PNG', optimize=True)
+    img.save(
+        buf,
+        format='PNG',
+        optimize=False,
+        compress_level=3,
+        dpi=(144, 144),
+    )
     buf.seek(0)
     return ContentFile(buf.read(), name=name)
 
@@ -154,18 +174,42 @@ def _safe(text: str) -> str:
     return ''.join(c if c.isalnum() else '-' for c in (text or 'x'))[:40]
 
 
-def _font(size: int):
-    for path in (
-        'C:/Windows/Fonts/tahoma.ttf',
-        'C:/Windows/Fonts/arial.ttf',
-        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-        '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
-    ):
+def _shape_persian(text: str) -> str:
+    """شکل‌دهی صحیح حروف فارسی/عربی برای رندر PIL."""
+    raw = str(text or '')
+    if not raw:
+        return ''
+    try:
+        import arabic_reshaper
+        from bidi.algorithm import get_display
+        return get_display(arabic_reshaper.reshape(raw))
+    except Exception:
+        return raw
+
+
+@lru_cache(maxsize=64)
+def _font(size: int, weight: str = 'regular'):
+    """فونت Vazirmatn پروژه؛ در نبود، فونت‌های سیستم با پشتیبانی فارسی."""
+    size = max(8, int(size))
+    weight = weight if weight in _FONT_FILES else 'regular'
+    candidates = [
+        _FONT_DIR / _FONT_FILES[weight],
+        _FONT_DIR / _FONT_FILES['regular'],
+        Path('C:/Windows/Fonts/tahoma.ttf'),
+        Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'),
+        Path('/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'),
+    ]
+    for path in candidates:
         try:
-            return ImageFont.truetype(path, size=size)
+            if path.is_file():
+                return ImageFont.truetype(str(path), size=size)
         except OSError:
             continue
     return ImageFont.load_default()
+
+
+def _draw_text(draw: ImageDraw.ImageDraw, xy, text: str, *, fill, font, anchor: str = 'lt') -> None:
+    draw.text(xy, _shape_persian(text), fill=fill, font=font, anchor=anchor)
 
 
 def _latlon_to_world_px(lat: float, lon: float, zoom: int) -> tuple[float, float]:
@@ -246,7 +290,7 @@ def _build_basemap(
     cols = max_tx - min_tx + 1
     rows = max_ty - min_ty + 1
     total = cols * rows
-    if total > 72 or total < 1:
+    if total > 100 or total < 1:
         return None
 
     canvas = Image.new('RGB', (cols * TILE_SIZE, rows * TILE_SIZE), '#d7dee8')
@@ -446,8 +490,9 @@ def _compose_map_canvas(
 
     heat = Image.new('RGBA', (map_w, map_h), (0, 0, 0, 0))
     draw_heat = ImageDraw.Draw(heat)
-    label_font = _font(14)
-    tiny_font = _font(12)
+    label_font = _font(16, 'semibold')
+    tiny_font = _font(13, 'medium')
+    count_font = _font(13, 'bold')
 
     if overlay == 'grid':
         for c in cells:
@@ -463,7 +508,7 @@ def _compose_map_canvas(
             draw_heat.rectangle((xa, ya, xb, yb), fill=color, outline=(255, 255, 255, 70))
             if c['n'] >= max(2, int(n_hi * 0.45)) and (xb - xa) > 28:
                 cx, cy = (xa + xb) / 2, (ya + yb) / 2
-                draw_heat.text((cx, cy), str(c['n']), fill=(255, 255, 255, 230), font=tiny_font, anchor='mm')
+                draw_heat.text((cx, cy), str(c['n']), fill=(255, 255, 255, 230), font=count_font, anchor='mm')
 
     elif overlay == 'value':
         for c in cells:
@@ -487,7 +532,7 @@ def _compose_map_canvas(
             t = (c['n'] - n_lo) / (n_hi - n_lo)
             r = 16 + min(28, 6 * math.sqrt(c['n']))
             draw_heat.ellipse((x - r, y - r, x + r, y + r), fill=_density_color(t * 0.75, alpha=int(40 + 90 * t)))
-        heat = heat.filter(ImageFilter.GaussianBlur(radius=8))
+        heat = heat.filter(ImageFilter.GaussianBlur(radius=6))
         draw_heat = ImageDraw.Draw(heat)
         ranked = sorted(cells, key=lambda c: c['n'], reverse=True)[:5]
         for i, c in enumerate(ranked, start=1):
@@ -499,8 +544,8 @@ def _compose_map_canvas(
             draw_heat.ellipse((x - r + 3, y - r + 3, x + r - 3, y + r - 3), outline=(220, 38, 38, 220), width=2)
             badge = f'{i}'
             bx, by = x + r + 6, y - r - 4
-            draw_heat.rounded_rectangle((bx, by, bx + 54, by + 26), radius=8, fill=(15, 23, 42, 220))
-            draw_heat.text((bx + 27, by + 13), f'#{badge} · {c["n"]}', fill=(248, 250, 252, 255), font=tiny_font, anchor='mm')
+            draw_heat.rounded_rectangle((bx, by, bx + 58, by + 28), radius=8, fill=(15, 23, 42, 230))
+            draw_heat.text((bx + 29, by + 14), f'#{badge} · {c["n"]}', fill=(248, 250, 252, 255), font=count_font, anchor='mm')
 
     else:  # heat
         for c in cells:
@@ -512,9 +557,9 @@ def _compose_map_canvas(
             draw_heat.ellipse((x - r, y - r, x + r, y + r), fill=_density_color(t, alpha=int(45 + 130 * t)))
 
     if overlay in ('heat', 'value'):
-        heat = heat.filter(ImageFilter.GaussianBlur(radius=9 if overlay == 'heat' else 6))
+        heat = heat.filter(ImageFilter.GaussianBlur(radius=7 if overlay == 'heat' else 4))
     elif overlay == 'grid':
-        heat = heat.filter(ImageFilter.GaussianBlur(radius=1))
+        heat = heat.filter(ImageFilter.GaussianBlur(radius=0.8))
 
     view_rgba = Image.alpha_composite(view.convert('RGBA'), heat)
     chrome = Image.new('RGBA', (map_w, map_h), (0, 0, 0, 0))
@@ -525,8 +570,8 @@ def _compose_map_canvas(
     _draw_place_badge(draw_chrome, 28, 24, place, label_font)
     _draw_legend_panel(
         draw_chrome,
-        map_w - 208,
-        map_h - (118 if overlay == 'value' else 102),
+        map_w - 230,
+        map_h - (128 if overlay == 'value' else 112),
         overlay=overlay,
         metric_label=metric_label,
         metric_fmt=metric_fmt,
@@ -538,28 +583,31 @@ def _compose_map_canvas(
     frame = Image.new('RGB', (width, height), '#0b1220')
     frame.paste(view, (0, header_h))
     draw = ImageDraw.Draw(frame)
-    title_font = _font(25 if width >= 1100 else 19)
-    sub_font = _font(16)
-    small = _font(15)
+    title_font = _font(28 if width >= 1400 else (24 if width >= 1100 else 18), 'bold')
+    sub_font = _font(17, 'medium')
+    small = _font(16, 'regular')
+    tiny_font = _font(13, 'regular')
 
     draw.rectangle((0, 0, width, header_h), fill='#0b1220')
     draw.rectangle((0, height - footer_h, width, height), fill='#0b1220')
     draw.rectangle((0, header_h - 3, width, header_h), fill='#14b8a6')
-    draw.text((28, 16), title, fill='#f8fafc', font=title_font, anchor='lt')
-    draw.text((28, 48), subtitle, fill='#94a3b8', font=sub_font, anchor='lt')
+    _draw_text(draw, (28, 16), title, fill='#f8fafc', font=title_font, anchor='lt')
+    _draw_text(draw, (28, 48), subtitle, fill='#94a3b8', font=sub_font, anchor='lt')
     if brand:
-        draw.text((width - 28, 22), 'فایلینگ دیوار', fill='#5eead4', font=sub_font, anchor='rt')
-        draw.text((width - 28, 48), 'تحلیل داده‌محور بازار', fill='#64748b', font=tiny_font, anchor='rt')
+        _draw_text(draw, (width - 28, 20), 'فایلینگ دیوار', fill='#5eead4', font=_font(17, 'semibold'), anchor='rt')
+        _draw_text(draw, (width - 28, 46), 'تحلیل داده‌محور بازار', fill='#64748b', font=tiny_font, anchor='rt')
 
-    draw.text((28, height - footer_h + 18), footer, fill='#cbd5e1', font=small, anchor='lt')
-    draw.text(
+    _draw_text(draw, (28, height - footer_h + 16), footer, fill='#cbd5e1', font=small, anchor='lt')
+    _draw_text(
+        draw,
         (28, height - 28),
         'نمایش تجمیعی شبکه‌ای · موقعیت تک‌آگهی نشان داده نمی‌شود',
         fill='#64748b',
         font=tiny_font,
         anchor='lt',
     )
-    draw.text(
+    _draw_text(
+        draw,
         (width - 28, height - 28),
         f'زوم {zoom} · Carto/Esri',
         fill='#64748b',
@@ -612,9 +660,9 @@ def _value_color(t: float, *, alpha: int) -> tuple[int, int, int, int]:
 
 
 def _draw_north_arrow(draw: ImageDraw.ImageDraw, x: int, y: int) -> None:
-    draw.ellipse((x - 18, y - 18, x + 18, y + 18), fill=(15, 23, 42, 200), outline=(255, 255, 255, 180))
+    draw.ellipse((x - 18, y - 18, x + 18, y + 18), fill=(15, 23, 42, 210), outline=(255, 255, 255, 200))
     draw.polygon([(x, y - 12), (x - 7, y + 8), (x, y + 3), (x + 7, y + 8)], fill=(248, 250, 252))
-    draw.text((x, y + 26), 'N', fill=(15, 23, 42), font=_font(11), anchor='mm')
+    draw.text((x, y + 26), 'N', fill=(15, 23, 42), font=_font(12, 'bold'), anchor='mm')
 
 
 def _draw_scale_bar(draw: ImageDraw.ImageDraw, x: int, y: int, lat: float, zoom: int, font) -> None:
@@ -622,27 +670,31 @@ def _draw_scale_bar(draw: ImageDraw.ImageDraw, x: int, y: int, lat: float, zoom:
     target_m = 500
     for cand in (100, 200, 250, 500, 1000, 2000, 5000):
         px = cand / max(mpp, 1e-6)
-        if 70 <= px <= 180:
+        if 80 <= px <= 220:
             target_m = cand
             break
     else:
-        target_m = max(100, int(round(120 * mpp / 100) * 100))
+        target_m = max(100, int(round(140 * mpp / 100) * 100))
     px = target_m / max(mpp, 1e-6)
     label = f'{target_m} متر' if target_m < 1000 else f'{target_m / 1000:g} کیلومتر'
-    draw.rounded_rectangle((x - 8, y - 22, x + px + 12, y + 10), radius=8, fill=(15, 23, 42, 200))
+    draw.rounded_rectangle((x - 8, y - 24, x + px + 14, y + 12), radius=8, fill=(15, 23, 42, 210))
     draw.rectangle((x, y - 2, x + px, y + 2), fill=(248, 250, 252))
     draw.rectangle((x, y - 6, x + 2, y + 6), fill=(248, 250, 252))
     draw.rectangle((x + px - 2, y - 6, x + px, y + 6), fill=(248, 250, 252))
-    draw.text((x + px / 2, y - 12), label, fill=(226, 232, 240), font=font, anchor='mm')
+    _draw_text(draw, (x + px / 2, y - 13), label, fill=(226, 232, 240), font=font, anchor='mm')
 
 
 def _draw_place_badge(draw: ImageDraw.ImageDraw, x: int, y: int, place: str, font) -> None:
     text = place or 'محله'
-    # approximate width
-    tw = max(120, min(320, 10 + len(text) * 9))
-    draw.rounded_rectangle((x, y, x + tw, y + 32), radius=10, fill=(15, 23, 42, 210))
-    draw.rectangle((x, y + 6, x + 4, y + 26), fill=(20, 184, 166))
-    draw.text((x + 14, y + 16), text, fill=(248, 250, 252), font=font, anchor='lm')
+    shaped = _shape_persian(text)
+    try:
+        bbox = font.getbbox(shaped)
+        tw = max(140, min(420, (bbox[2] - bbox[0]) + 36))
+    except Exception:
+        tw = max(140, min(420, 14 + len(text) * 11))
+    draw.rounded_rectangle((x, y, x + tw, y + 34), radius=10, fill=(15, 23, 42, 220))
+    draw.rectangle((x, y + 7, x + 4, y + 27), fill=(20, 184, 166))
+    draw.text((x + 16, y + 17), shaped, fill=(248, 250, 252), font=font, anchor='lm')
 
 
 def _draw_legend_panel(
@@ -656,58 +708,58 @@ def _draw_legend_panel(
     font,
     title_font,
 ) -> None:
-    w, h = 188, 96 if overlay != 'value' else 110
-    draw.rounded_rectangle((x, y, x + w, y + h), radius=12, fill=(15, 23, 42, 220))
+    w, h = 210, 104 if overlay != 'value' else 118
+    draw.rounded_rectangle((x, y, x + w, y + h), radius=12, fill=(15, 23, 42, 230))
 
     if overlay == 'value':
-        title = (metric_label or 'سطح ارزش')[:22]
-        draw.text((x + 12, y + 10), title, fill='#f8fafc', font=title_font, anchor='lt')
+        title = (metric_label or 'سطح ارزش')[:24]
+        _draw_text(draw, (x + 12, y + 10), title, fill='#f8fafc', font=title_font, anchor='lt')
         colors = ['#3b82f6', '#14b8a6', '#f59e0b', '#ef4444']
         for i, col in enumerate(colors):
-            bx = x + 12 + i * 40
-            draw.rectangle((bx, y + 38, bx + 34, y + 52), fill=col)
-        draw.text((x + 12, y + 60), 'پایین', fill='#94a3b8', font=font, anchor='lt')
-        draw.text((x + w - 12, y + 60), 'بالا', fill='#94a3b8', font=font, anchor='rt')
+            bx = x + 14 + i * 46
+            draw.rectangle((bx, y + 40, bx + 40, y + 54), fill=col)
+        _draw_text(draw, (x + 12, y + 64), 'پایین', fill='#94a3b8', font=font, anchor='lt')
+        _draw_text(draw, (x + w - 12, y + 64), 'بالا', fill='#94a3b8', font=font, anchor='rt')
         if metric_fmt:
-            draw.text((x + 12, y + 82), f'میانه: {metric_fmt}'[:28], fill='#cbd5e1', font=font, anchor='lt')
+            _draw_text(draw, (x + 12, y + 88), f'میانه: {metric_fmt}'[:30], fill='#cbd5e1', font=font, anchor='lt')
     elif overlay == 'hotspots':
-        draw.text((x + 12, y + 10), 'کانون عرضه', fill='#f8fafc', font=title_font, anchor='lt')
-        draw.text((x + 12, y + 40), 'شماره = رتبه تراکم', fill='#cbd5e1', font=font, anchor='lt')
-        draw.text((x + 12, y + 62), 'عدد کنار # = تعداد فایل', fill='#94a3b8', font=font, anchor='lt')
+        _draw_text(draw, (x + 12, y + 10), 'کانون عرضه', fill='#f8fafc', font=title_font, anchor='lt')
+        _draw_text(draw, (x + 12, y + 42), 'شماره = رتبه تراکم', fill='#cbd5e1', font=font, anchor='lt')
+        _draw_text(draw, (x + 12, y + 66), 'عدد کنار # = تعداد فایل', fill='#94a3b8', font=font, anchor='lt')
     elif overlay == 'grid':
-        draw.text((x + 12, y + 10), 'شبکه تراکم', fill='#f8fafc', font=title_font, anchor='lt')
+        _draw_text(draw, (x + 12, y + 10), 'شبکه تراکم', fill='#f8fafc', font=title_font, anchor='lt')
         colors = ['#fde047', '#fb923c', '#ef4444', '#7f1d1d']
         for i, col in enumerate(colors):
-            bx = x + 12 + i * 40
-            draw.rectangle((bx, y + 38, bx + 34, y + 52), fill=col)
-        draw.text((x + 12, y + 62), 'کم فایل', fill='#94a3b8', font=font, anchor='lt')
-        draw.text((x + w - 12, y + 62), 'پر فایل', fill='#94a3b8', font=font, anchor='rt')
-        draw.text((x + 12, y + 80), 'عدد روی خانه = تعداد', fill='#cbd5e1', font=font, anchor='lt')
+            bx = x + 14 + i * 46
+            draw.rectangle((bx, y + 40, bx + 40, y + 54), fill=col)
+        _draw_text(draw, (x + 12, y + 66), 'کم فایل', fill='#94a3b8', font=font, anchor='lt')
+        _draw_text(draw, (x + w - 12, y + 66), 'پر فایل', fill='#94a3b8', font=font, anchor='rt')
+        _draw_text(draw, (x + 12, y + 86), 'عدد روی خانه = تعداد', fill='#cbd5e1', font=font, anchor='lt')
     else:
-        draw.text((x + 12, y + 10), 'تراکم فایل‌ها', fill='#f8fafc', font=title_font, anchor='lt')
+        _draw_text(draw, (x + 12, y + 10), 'تراکم فایل‌ها', fill='#f8fafc', font=title_font, anchor='lt')
         colors = ['#fde047', '#fb923c', '#ef4444', '#7f1d1d']
         for i, col in enumerate(colors):
-            bx = x + 12 + i * 40
-            draw.rectangle((bx, y + 38, bx + 34, y + 52), fill=col)
-        draw.text((x + 12, y + 62), 'کم', fill='#94a3b8', font=font, anchor='lt')
-        draw.text((x + w - 12, y + 62), 'زیاد', fill='#94a3b8', font=font, anchor='rt')
-        draw.text((x + 12, y + 80), 'بدون موقعیت دقیق آگهی', fill='#cbd5e1', font=font, anchor='lt')
+            bx = x + 14 + i * 46
+            draw.rectangle((bx, y + 40, bx + 40, y + 54), fill=col)
+        _draw_text(draw, (x + 12, y + 66), 'کم', fill='#94a3b8', font=font, anchor='lt')
+        _draw_text(draw, (x + w - 12, y + 66), 'زیاد', fill='#94a3b8', font=font, anchor='rt')
+        _draw_text(draw, (x + 12, y + 86), 'بدون موقعیت دقیق آگهی', fill='#cbd5e1', font=font, anchor='lt')
 
 
 def _render_kpi_card(city, district, tx_label, metric_label, metric_fmt, trend, valid_count, confidence) -> Image.Image:
     img = Image.new('RGB', (OG_WIDTH, OG_HEIGHT), '#0b1220')
     draw = ImageDraw.Draw(img)
     draw.rectangle((0, 0, OG_WIDTH, 180), fill='#134e4a')
-    title_font = _font(40)
-    sub_font = _font(24)
-    big_font = _font(44)
-    small_font = _font(20)
-    draw.text((64, 48), 'فایلینگ دیوار', fill='#5eead4', font=sub_font, anchor='lt')
-    draw.text((64, 100), f'{district} · {city}', fill='#f8fafc', font=title_font, anchor='lt')
-    draw.text((64, 165), f'تحلیل داده‌محور بازار {tx_label}', fill='#94a3b8', font=sub_font, anchor='lt')
+    title_font = _font(40, 'bold')
+    sub_font = _font(24, 'semibold')
+    big_font = _font(42, 'bold')
+    small_font = _font(20, 'medium')
+    _draw_text(draw, (64, 48), 'فایلینگ دیوار', fill='#5eead4', font=sub_font, anchor='lt')
+    _draw_text(draw, (64, 100), f'{district} · {city}', fill='#f8fafc', font=title_font, anchor='lt')
+    _draw_text(draw, (64, 165), f'تحلیل داده‌محور بازار {tx_label}', fill='#94a3b8', font=sub_font, anchor='lt')
     draw.rounded_rectangle((64, 240, 1136, 420), radius=24, fill='#1e293b')
-    draw.text((96, 270), metric_label, fill='#94a3b8', font=small_font, anchor='lt')
-    draw.text((96, 320), str(metric_fmt or '—'), fill='#f8fafc', font=big_font, anchor='lt')
-    draw.text((64, 470), f'{valid_count} فایل معتبر · اعتماد {confidence}', fill='#e2e8f0', font=sub_font, anchor='lt')
-    draw.text((64, 530), f'روند: {trend or "—"}', fill='#94a3b8', font=small_font, anchor='lt')
+    _draw_text(draw, (96, 270), metric_label, fill='#94a3b8', font=small_font, anchor='lt')
+    _draw_text(draw, (96, 320), str(metric_fmt or '—'), fill='#f8fafc', font=big_font, anchor='lt')
+    _draw_text(draw, (64, 470), f'{valid_count} فایل معتبر · اعتماد {confidence}', fill='#e2e8f0', font=sub_font, anchor='lt')
+    _draw_text(draw, (64, 530), f'روند: {trend or "—"}', fill='#94a3b8', font=small_font, anchor='lt')
     return img

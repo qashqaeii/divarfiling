@@ -666,7 +666,7 @@ def _section_maps(maps: dict[str, str], caption: str, city: str, district: str, 
       <h3>{_e(title)}</h3>
       <span class="mk-market-map__tag">{_e(district)} · {_e(city)}</span>
     </div>
-    <img src="{_e(url)}" alt="{_e(title)} — {_e(district)} {_e(city)}" width="1200" height="760" loading="lazy">
+    <img src="{_e(url)}" alt="{_e(title)} — {_e(district)} {_e(city)}" width="1600" height="960" loading="lazy">
     <figcaption>
       {_e(cap)}
       <span class="mk-market-map__privacy">نمایش تجمیعی شبکه‌ای — موقعیت تک‌آگهی نشان داده نمی‌شود.</span>

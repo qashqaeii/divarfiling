@@ -310,8 +310,8 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
     if not isinstance(stored_metrics, dict):
         stored_metrics = {}
     map_keys = {
-        'featured', 'street_heat', 'street_grid', 'street_value', 'street_dots',
-        'satellite_heat', 'satellite_value', 'satellite', 'price',
+        'featured', 'street_heat', 'street_grid', 'street_value', 'street_hotspots',
+        'street_dots', 'satellite_heat', 'satellite_value', 'satellite', 'price',
     }
     return {
         'run': run,

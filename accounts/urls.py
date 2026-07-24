@@ -31,6 +31,7 @@ from .admin_blog_systematic_views import (
     AdminBlogSystematicBuildPreviewView,
     AdminBlogSystematicDraftView,
     AdminBlogSystematicListView,
+    AdminBlogSystematicPreviewStatusView,
     AdminBlogSystematicPreviewView,
     AdminBlogSystematicRebuildView,
     AdminBlogSystematicSeoView,
@@ -161,6 +162,11 @@ urlpatterns = [
         'admin-panel/blog/systematic/preview/<uuid:run_id>/',
         AdminBlogSystematicPreviewView.as_view(),
         name='admin_panel_blog_systematic_preview',
+    ),
+    path(
+        'admin-panel/blog/systematic/preview/<uuid:run_id>/status.json',
+        AdminBlogSystematicPreviewStatusView.as_view(),
+        name='admin_panel_blog_systematic_preview_status',
     ),
     path(
         'admin-panel/blog/systematic/runs/<uuid:run_id>/seo/',

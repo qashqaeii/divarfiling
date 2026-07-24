@@ -18,6 +18,7 @@ PAGE_SIZE = 20
 ARTICLE_STATUS_NONE = 'none'
 ARTICLE_STATUS_DRAFT = 'draft'
 ARTICLE_STATUS_READY = 'ready'
+ARTICLE_STATUS_BUILDING = 'building'
 ARTICLE_STATUS_PUBLISHED = 'published'
 ARTICLE_STATUS_STALE = 'stale'
 
@@ -25,6 +26,7 @@ STATUS_LABELS = {
     ARTICLE_STATUS_NONE: 'ساخته نشده',
     ARTICLE_STATUS_DRAFT: 'پیش‌نویس',
     ARTICLE_STATUS_READY: 'آماده بررسی',
+    ARTICLE_STATUS_BUILDING: 'در حال ساخت',
     ARTICLE_STATUS_PUBLISHED: 'منتشرشده',
     ARTICLE_STATUS_STALE: 'نیازمند به‌روزرسانی',
 }
@@ -125,6 +127,8 @@ def _article_status_for_dataset(
             return ARTICLE_STATUS_PUBLISHED, link, run
         return ARTICLE_STATUS_DRAFT, link, run
 
+    if run and run.status == MarketArticleRun.Status.BUILDING:
+        return ARTICLE_STATUS_BUILDING, link, run
     if run and run.status == MarketArticleRun.Status.PREVIEW:
         return ARTICLE_STATUS_READY, link, run
     if run and run.status == MarketArticleRun.Status.DRAFT_LINKED and run.post_id:

@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from unittest.mock import patch
 
 from blog.models import MarketArticleLink, MarketArticleRun, Post
 from blog.services.market_article_analyze import sanitize_report_for_public
@@ -258,7 +259,7 @@ class MarketArticleSanitizeComposerTests(TestCase):
         self.assertTrue(any('رهن' in f['q'] for f in composed['faq']))
 
 
-@override_settings(MARKET_ARTICLE_SKIP_MAP_TILES=True)
+@override_settings(MARKET_ARTICLE_SKIP_MAP_TILES=True, MARKET_ARTICLE_SKIP_ACCESS=True)
 class MarketArticlePipelineTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -309,3 +310,30 @@ class MarketArticlePipelineTests(TestCase):
         resp = c.get(reverse('admin_panel_blog_systematic_preview', kwargs={'run_id': run.pk}))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'پیش‌نمایش')
+
+    @patch('blog.services.market_article_pipeline.threading.Thread')
+    def test_rebuild_enqueues_without_blocking(self, mock_thread):
+        from unittest.mock import MagicMock
+
+        mock_thread.return_value = MagicMock()
+        first = build_preview(self.ds, self.staff)
+        c = Client()
+        c.force_login(self.staff)
+        resp = c.post(reverse('admin_panel_blog_systematic_rebuild', kwargs={'run_id': first.pk}))
+        self.assertEqual(resp.status_code, 302)
+        mock_thread.return_value.start.assert_called_once()
+        first.refresh_from_db()
+        self.assertEqual(first.status, MarketArticleRun.Status.DISCARDED)
+        new_run = MarketArticleRun.objects.exclude(pk=first.pk).latest('created_at')
+        self.assertEqual(new_run.status, MarketArticleRun.Status.BUILDING)
+
+    def test_preview_status_json(self):
+        run = build_preview(self.ds, self.staff)
+        c = Client()
+        c.force_login(self.staff)
+        resp = c.get(reverse('admin_panel_blog_systematic_preview_status', kwargs={'run_id': run.pk}))
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['ready'])
+        self.assertFalse(data['building'])
+        self.assertEqual(data['status'], MarketArticleRun.Status.PREVIEW)

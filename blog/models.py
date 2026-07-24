@@ -100,8 +100,10 @@ class MarketArticleRun(models.Model):
     """پیش‌نمایش / اجرای تولید مقاله سیستماتیک از دیتاست."""
 
     class Status(models.TextChoices):
+        BUILDING = 'building', 'در حال ساخت'
         PREVIEW = 'preview', 'پیش‌نمایش'
         DRAFT_LINKED = 'draft_linked', 'متصل به پیش‌نویس'
+        FAILED = 'failed', 'ناموفق'
         DISCARDED = 'discarded', 'لغو شده'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

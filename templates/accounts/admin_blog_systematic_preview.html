@@ -6,7 +6,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=12">
 {% endblock %}
 
@@ -19,13 +19,35 @@
                     <i class="fas fa-arrow-right"></i>
                     <span>بازگشت به فهرست</span>
                 </a>
-                <span class="ab-pill">{{ run.status }}</span>
+                <span class="ab-pill">{{ run.get_status_display }}</span>
             </div>
             <h1 class="ab-hero__title">پیش‌نمایش مقاله حرفه‌ای</h1>
             <p class="ab-hero__lead">نقشه شهری/ماهواره‌ای، اعداد واقعی تحلیل، و متن چندمخاطبه — پس از تأیید به‌صورت پیش‌نویس بلاگ ذخیره می‌شود.</p>
         </div>
     </header>
 
+    {% if is_building %}
+    <div class="ab-sys-building" id="ab-sys-building" data-status-url="{{ status_url }}">
+        <div class="ab-sys-building__card">
+            <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+            <h2>در حال ساخت پیش‌نمایش…</h2>
+            <p>تحلیل داده، نقشه شهری/ماهواره‌ای و امتیاز دسترسی در پس‌زمینه اجرا می‌شود. این صفحه به‌صورت خودکار به‌روز می‌شود.</p>
+            <p class="ab-sys-building__hint">معمولاً ۱ تا ۳ دقیقه طول می‌کشد — دیگر خطای ۵۰۲ رخ نمی‌دهد.</p>
+        </div>
+    </div>
+    {% elif is_failed %}
+    <div class="ab-sys-building ab-sys-building--failed">
+        <div class="ab-sys-building__card">
+            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+            <h2>ساخت پیش‌نمایش ناموفق بود</h2>
+            <p>{{ build_error|default:"خطای ناشناخته. دوباره تلاش کنید." }}</p>
+            <form method="post" action="{% url 'admin_panel_blog_systematic_rebuild' run_id=run.id %}">
+                {% csrf_token %}
+                <button type="submit" class="ab-btn ab-btn--gold"><i class="fas fa-rotate"></i> تلاش مجدد</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
     <div class="ab-sys-preview-layout">
         <aside class="ab-sys-seo-panel">
             <form method="post" action="{% url 'admin_panel_blog_systematic_seo' run_id=run.id %}">
@@ -115,5 +137,35 @@
             </div>
         </article>
     </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if is_building %}
+<script>
+(function () {
+  var el = document.getElementById('ab-sys-building');
+  if (!el) return;
+  var url = el.getAttribute('data-status-url');
+  var tries = 0;
+  function tick() {
+    tries += 1;
+    fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ready || data.failed) {
+          window.location.reload();
+          return;
+        }
+        if (tries < 180) setTimeout(tick, 2000);
+      })
+      .catch(function () {
+        if (tries < 180) setTimeout(tick, 3000);
+      });
+  }
+  setTimeout(tick, 1500);
+})();
+</script>
+{% endif %}
 {% endblock %}

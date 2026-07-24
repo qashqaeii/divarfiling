@@ -457,6 +457,7 @@ def _build_basemap(
     max_tx: int,
     min_ty: int,
     max_ty: int,
+    deadline: float | None = None,
 ) -> Image.Image | None:
     cols = max_tx - min_tx + 1
     rows = max_ty - min_ty + 1
@@ -470,6 +471,9 @@ def _build_basemap(
     workers = 6 if is_sat else 12
     tile_timeout = 14 if is_sat else 10
     base_retries = 4 if is_sat else 3
+    if deadline is None:
+        # سقف زمانی برای جلوگیری از گیر کردن طولانی (پس‌زمینه هم محدود می‌ماند)
+        deadline = time.monotonic() + (55 if is_sat else 35)
 
     canvas = Image.new('RGB', (cols * TILE_SIZE, rows * TILE_SIZE), '#d7dee8')
     jobs = [
@@ -510,6 +514,9 @@ def _build_basemap(
     max_rounds = 4 if is_sat else 2
     for round_i in range(max_rounds):
         if not failed:
+            break
+        if time.monotonic() >= deadline:
+            logger.info('basemap deadline reached (%s): %s/%s ok', style, len(placed), total)
             break
         time.sleep(0.35 * (round_i + 1))
         _paste_batch(

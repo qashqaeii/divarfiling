@@ -5,11 +5,13 @@ from typing import Any
 
 from datetime import date, datetime
 import json
+import logging
+import threading
 
 from django.contrib.auth import get_user_model
 from django.core.files.storage import default_storage
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import transaction
+from django.db import close_old_connections, transaction
 from django.utils import timezone
 
 from blog.models import Category, MarketArticleLink, MarketArticleRun, Post
@@ -26,6 +28,7 @@ from blog.utils import get_or_create_tag
 from workspace.models import Dataset
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 CATEGORY_SLUG = 'tahlil-bazar'
 CATEGORY_NAME = 'تحلیل بازار'
@@ -33,6 +36,49 @@ CATEGORY_NAME = 'تحلیل بازار'
 
 class MarketArticleError(Exception):
     pass
+
+
+def _validate_dataset_for_article(dataset: Dataset) -> None:
+    if dataset.row_count < 100:
+        raise MarketArticleError('حداقل ۱۰۰ رکورد برای ساخت مقاله لازم است.')
+    if not (dataset.city and dataset.transaction_type and dataset.subcategory):
+        raise MarketArticleError('شهر، نوع معامله و نوع ملک باید مشخص باشند.')
+
+
+def _create_building_run(dataset: Dataset, user) -> MarketArticleRun:
+    market_key = market_key_for_dataset(dataset)
+    district = (dataset.district or '').strip() or 'منطقه'
+    city = (dataset.city or '').strip()
+    return MarketArticleRun.objects.create(
+        dataset=dataset,
+        market_key=market_key,
+        status=MarketArticleRun.Status.BUILDING,
+        seo_json={
+            'title': f'در حال ساخت تحلیل بازار {district} {city}'.strip()[:200],
+            'slug': market_key[:200],
+            'excerpt': 'تولید نقشه و متن در پس‌زمینه انجام می‌شود؛ این صفحه به‌صورت خودکار به‌روز می‌شود.',
+            'tags': [],
+        },
+        content_html='',
+        faq_json=[],
+        chart_assets={},
+        created_by=user if getattr(user, 'is_authenticated', False) else None,
+        source_dataset_updated_at=dataset.updated_at,
+    )
+
+
+def _mark_run_failed(run_id, exc: BaseException) -> None:
+    try:
+        run = MarketArticleRun.objects.filter(pk=run_id).first()
+        if not run:
+            return
+        chart = dict(run.chart_assets or {})
+        chart['build_error'] = str(exc)[:500]
+        run.status = MarketArticleRun.Status.FAILED
+        run.chart_assets = chart
+        run.save(update_fields=['status', 'chart_assets', 'updated_at'])
+    except Exception:
+        logger.exception('failed to mark market article run as failed run=%s', run_id)
 
 
 def _json_safe(value: Any) -> Any:
@@ -100,11 +146,48 @@ def _related_market_posts(*, city: str, exclude_slug: str = '', limit: int = 6) 
 
 
 def build_preview(dataset: Dataset, user) -> MarketArticleRun:
-    if dataset.row_count < 100:
-        raise MarketArticleError('حداقل ۱۰۰ رکورد برای ساخت مقاله لازم است.')
-    if not (dataset.city and dataset.transaction_type and dataset.subcategory):
-        raise MarketArticleError('شهر، نوع معامله و نوع ملک باید مشخص باشند.')
+    """ساخت هم‌زمان پیش‌نمایش (تست‌ها / فراخوانی مستقیم)."""
+    _validate_dataset_for_article(dataset)
+    run = _create_building_run(dataset, user)
+    return _complete_preview_build(run)
 
+
+def enqueue_preview_build(
+    dataset: Dataset,
+    user,
+    *,
+    discard_run: MarketArticleRun | None = None,
+) -> MarketArticleRun:
+    """شروع ساخت در پس‌زمینه — پاسخ HTTP فوری (جلوگیری از 502 گانیکورن/nginx)."""
+    _validate_dataset_for_article(dataset)
+    run = _create_building_run(dataset, user)
+    if discard_run is not None:
+        discard_run.status = MarketArticleRun.Status.DISCARDED
+        discard_run.save(update_fields=['status', 'updated_at'])
+
+    run_id = run.pk
+
+    def _worker():
+        close_old_connections()
+        try:
+            target = MarketArticleRun.objects.select_related('dataset').get(pk=run_id)
+            _complete_preview_build(target)
+        except Exception as exc:
+            logger.exception('market article preview build failed run=%s', run_id)
+            _mark_run_failed(run_id, exc)
+        finally:
+            close_old_connections()
+
+    threading.Thread(
+        target=_worker,
+        name=f'market-preview-{run_id}',
+        daemon=True,
+    ).start()
+    return run
+
+
+def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
+    dataset = run.dataset
     analysis = run_dataset_analysis(dataset)
     safe = sanitize_report_for_public(analysis)
     geo = safe.pop('_geo_for_assets', analysis.get('geo_points') or [])
@@ -189,34 +272,30 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
     }
 
     with transaction.atomic():
-        run = MarketArticleRun(
-            dataset=dataset,
-            market_key=market_key,
-            status=MarketArticleRun.Status.PREVIEW,
-            report_json=_json_safe({
-                'report': report,
-                'dataset_meta': meta,
-                'metrics': metrics,
-                'district_access': district_access,
-            }),
-            seo_json=seo,
-            content_html=composed['content_html'],
-            faq_json=composed['faq'],
-            quality_score=metrics.get('quality_score'),
-            confidence_score=metrics.get('confidence_score'),
-            valid_count=int(metrics.get('valid_count') or 0),
-            raw_count=int(metrics.get('raw_count') or 0),
-            quality_pct=metrics.get('quality_pct'),
-            data_from=metrics.get('data_from'),
-            data_to=metrics.get('data_to'),
-            source_dataset_updated_at=dataset.updated_at,
-            created_by=user if getattr(user, 'is_authenticated', False) else None,
-            chart_assets={
-                'geo_count': len(geo or []),
-                'access_score': district_access.get('score') if district_access.get('ok') else None,
-                'access_grade': district_access.get('grade') if district_access.get('ok') else None,
-            },
-        )
+        run.market_key = market_key
+        run.status = MarketArticleRun.Status.PREVIEW
+        run.report_json = _json_safe({
+            'report': report,
+            'dataset_meta': meta,
+            'metrics': metrics,
+            'district_access': district_access,
+        })
+        run.seo_json = seo
+        run.content_html = composed['content_html']
+        run.faq_json = composed['faq']
+        run.quality_score = metrics.get('quality_score')
+        run.confidence_score = metrics.get('confidence_score')
+        run.valid_count = int(metrics.get('valid_count') or 0)
+        run.raw_count = int(metrics.get('raw_count') or 0)
+        run.quality_pct = metrics.get('quality_pct')
+        run.data_from = metrics.get('data_from')
+        run.data_to = metrics.get('data_to')
+        run.source_dataset_updated_at = dataset.updated_at
+        run.chart_assets = {
+            'geo_count': len(geo or []),
+            'access_score': district_access.get('score') if district_access.get('ok') else None,
+            'access_grade': district_access.get('grade') if district_access.get('ok') else None,
+        }
         run.featured_image.save(image_file.name, image_file, save=False)
         run.save()
 
@@ -269,8 +348,18 @@ def get_existing_link(market_key: str) -> MarketArticleLink | None:
     )
 
 
+def _ensure_run_ready(run: MarketArticleRun) -> None:
+    if run.status == MarketArticleRun.Status.BUILDING:
+        raise MarketArticleError('پیش‌نمایش هنوز در حال ساخت است. چند لحظه صبر کنید.')
+    if run.status == MarketArticleRun.Status.FAILED:
+        raise MarketArticleError('ساخت پیش‌نمایش ناموفق بود. دوباره تولید کنید.')
+    if run.status == MarketArticleRun.Status.DISCARDED:
+        raise MarketArticleError('این پیش‌نمایش لغو شده است.')
+
+
 @transaction.atomic
 def create_draft(run: MarketArticleRun, user=None) -> Post:
+    _ensure_run_ready(run)
     seo = run.seo_json or {}
     title = (seo.get('title') or run.market_key)[:200]
     excerpt = (seo.get('excerpt') or '')[:300]
@@ -329,6 +418,7 @@ def create_draft(run: MarketArticleRun, user=None) -> Post:
 
 @transaction.atomic
 def update_existing_post(run: MarketArticleRun) -> Post:
+    _ensure_run_ready(run)
     link = get_existing_link(run.market_key)
     if not link:
         raise MarketArticleError('مقاله قبلی برای این ترکیب بازار یافت نشد.')
@@ -370,6 +460,12 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
         'featured', 'street_heat', 'street_grid', 'street_value', 'street_hotspots',
         'street_dots', 'satellite_heat', 'satellite_value', 'satellite', 'price',
     }
+    is_building = run.status == MarketArticleRun.Status.BUILDING
+    is_failed = run.status == MarketArticleRun.Status.FAILED
+    ready = run.status in (
+        MarketArticleRun.Status.PREVIEW,
+        MarketArticleRun.Status.DRAFT_LINKED,
+    )
     return {
         'run': run,
         'seo': seo,
@@ -384,8 +480,11 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
             if k in map_keys and isinstance(v, str) and v
         },
         'existing_link': link,
-        'can_create_draft': link is None,
-        'can_update': link is not None,
+        'is_building': is_building,
+        'is_failed': is_failed,
+        'build_error': chart.get('build_error') or '',
+        'can_create_draft': link is None and ready,
+        'can_update': link is not None and ready,
         'metrics': {
             'confidence_score': run.confidence_score,
             'quality_pct': run.quality_pct,

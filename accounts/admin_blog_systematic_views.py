@@ -4,7 +4,9 @@ from __future__ import annotations
 import json
 
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -17,8 +19,8 @@ from blog.services.market_article_eligibility import (
 )
 from blog.services.market_article_pipeline import (
     MarketArticleError,
-    build_preview,
     create_draft,
+    enqueue_preview_build,
     preview_context,
     save_seo_edits,
     update_existing_post,
@@ -62,14 +64,14 @@ class AdminBlogSystematicBuildPreviewView(StaffRequiredMixin, View):
     def post(self, request, dataset_id):
         dataset = get_object_or_404(Dataset, pk=dataset_id, is_active=True)
         try:
-            run = build_preview(dataset, request.user)
+            run = enqueue_preview_build(dataset, request.user)
         except MarketArticleError as exc:
             messages.error(request, str(exc))
             return redirect('admin_panel_blog_systematic')
         except Exception as exc:  # noqa: BLE001 — surface to admin
             messages.error(request, f'خطا در ساخت پیش‌نمایش: {exc}')
             return redirect('admin_panel_blog_systematic')
-        messages.success(request, 'پیش‌نمایش مقاله ساخته شد.')
+        messages.info(request, 'ساخت پیش‌نمایش شروع شد؛ نقشه و متن در پس‌زمینه تولید می‌شوند.')
         return redirect('admin_panel_blog_systematic_preview', run_id=run.pk)
 
 
@@ -90,12 +92,40 @@ class AdminBlogSystematicPreviewView(StaffRequiredMixin, TemplateView):
             ensure_ascii=False,
             indent=2,
         )
+        ctx['status_url'] = reverse(
+            'admin_panel_blog_systematic_preview_status',
+            kwargs={'run_id': run.pk},
+        )
         return ctx
+
+
+class AdminBlogSystematicPreviewStatusView(StaffRequiredMixin, View):
+    def get(self, request, run_id):
+        run = get_object_or_404(MarketArticleRun, pk=run_id)
+        ready = run.status in (
+            MarketArticleRun.Status.PREVIEW,
+            MarketArticleRun.Status.DRAFT_LINKED,
+        )
+        failed = run.status == MarketArticleRun.Status.FAILED
+        return JsonResponse({
+            'status': run.status,
+            'ready': ready,
+            'failed': failed,
+            'building': run.status == MarketArticleRun.Status.BUILDING,
+            'error': (run.chart_assets or {}).get('build_error') or '',
+            'preview_url': reverse(
+                'admin_panel_blog_systematic_preview',
+                kwargs={'run_id': run.pk},
+            ),
+        })
 
 
 class AdminBlogSystematicSeoView(StaffRequiredMixin, View):
     def post(self, request, run_id):
         run = get_object_or_404(MarketArticleRun, pk=run_id)
+        if run.status == MarketArticleRun.Status.BUILDING:
+            messages.warning(request, 'تا پایان ساخت پیش‌نمایش نمی‌توان SEO را ذخیره کرد.')
+            return redirect('admin_panel_blog_systematic_preview', run_id=run.pk)
         save_seo_edits(
             run,
             title=request.POST.get('title', ''),
@@ -149,15 +179,19 @@ class AdminBlogSystematicUpdatePostView(StaffRequiredMixin, View):
 class AdminBlogSystematicRebuildView(StaffRequiredMixin, View):
     def post(self, request, run_id):
         old = get_object_or_404(MarketArticleRun, pk=run_id)
+        if old.status == MarketArticleRun.Status.BUILDING:
+            messages.warning(request, 'همین الان یک ساخت در حال اجراست.')
+            return redirect('admin_panel_blog_systematic_preview', run_id=old.pk)
         dataset = old.dataset
-        old.status = MarketArticleRun.Status.DISCARDED
-        old.save(update_fields=['status', 'updated_at'])
         try:
-            run = build_preview(dataset, request.user)
+            run = enqueue_preview_build(dataset, request.user, discard_run=old)
+        except MarketArticleError as exc:
+            messages.error(request, str(exc))
+            return redirect('admin_panel_blog_systematic')
         except Exception as exc:  # noqa: BLE001
             messages.error(request, f'خطا در تولید مجدد: {exc}')
             return redirect('admin_panel_blog_systematic')
-        messages.success(request, 'پیش‌نمایش دوباره ساخته شد.')
+        messages.info(request, 'تولید مجدد شروع شد؛ چند لحظه صبر کنید تا پیش‌نمایش آماده شود.')
         return redirect('admin_panel_blog_systematic_preview', run_id=run.pk)
 
 

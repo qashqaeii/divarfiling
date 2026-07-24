@@ -39,12 +39,10 @@
             if (open) {
                 window.requestAnimationFrame(function () {
                     var active = sidebar.querySelector('.acd-pl-track.is-active');
-                    if (active) {
-                        try {
-                            active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                        } catch (e) {
-                            active.scrollIntoView(false);
-                        }
+                    var list = document.getElementById('acdPlList');
+                    if (active && list) {
+                        var top = active.offsetTop - 56;
+                        list.scrollTop = Math.max(0, top);
                     }
                 });
             }

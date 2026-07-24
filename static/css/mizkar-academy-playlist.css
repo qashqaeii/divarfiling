@@ -45,7 +45,6 @@ html.mk-public[data-theme="light"] .acd-pl-page {
     min-height: 100vh;
     color: var(--acd-pl-text);
     padding-bottom: calc(5.25rem + var(--acd-pl-safe-bottom));
-    overflow-x: clip;
 }
 
 .acd-pl-bg {
@@ -81,8 +80,18 @@ html.mk-public[data-theme="light"] .acd-pl-page {
     width: var(--acd-pl-shell);
     margin-inline: auto;
     position: relative;
-    z-index: 1;
     box-sizing: border-box;
+}
+
+/* Keep page chrome above the decorative bg — but NEVER trap the
+   fixed playlist sheet inside a low stacking context (that made the
+   scrim cover the open drawer). */
+.acd-pl-crumb,
+.acd-pl-topbar,
+.acd-pl-progress,
+.acd-pl-main {
+    position: relative;
+    z-index: 1;
 }
 
 /* ── Breadcrumb (compact on mobile) ── */
@@ -1079,13 +1088,15 @@ html.mk-public[data-theme="light"] .acd-pl-page {
 
 .acd-pl-badge--views i { font-size: 0.6rem; }
 
-/* Scrim + FAB */
+/* Scrim + FAB — must sit in the same stacking context as the sheet
+   (never trap the sheet under a low-z parent while scrim is higher). */
 .acd-pl-scrim {
     position: fixed;
     inset: 0;
-    z-index: 115;
+    z-index: 1200;
     background: rgba(2, 6, 14, 0.58);
     backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     border: 0;
     padding: 0;
     cursor: pointer;
@@ -1100,7 +1111,7 @@ html.mk-public[data-theme="light"] .acd-pl-page {
     position: fixed;
     inset-inline-start: max(0.85rem, env(safe-area-inset-left, 0px));
     bottom: calc(0.9rem + var(--acd-pl-safe-bottom));
-    z-index: 110;
+    z-index: 1190;
     min-height: 2.75rem;
     padding: 0.65rem 1rem;
     border: 0;
@@ -1131,23 +1142,43 @@ html.mk-public[data-theme="light"] .acd-pl-page {
 
 /* ── Mobile / tablet bottom sheet ── */
 @media (max-width: 1099px) {
+    .acd-pl-layout {
+        /* Do not create a stacking context that traps the sheet */
+        z-index: auto;
+        isolation: auto;
+    }
+
     .acd-pl-sidebar {
         display: flex;
         position: fixed;
         inset-inline: 0;
         bottom: 0;
         top: auto;
+        left: 0;
+        right: 0;
+        width: 100%;
         max-height: min(82vh, 720px);
+        height: auto;
         border-radius: 20px 20px 0 0;
-        z-index: 120;
-        transform: translateY(110%);
+        z-index: 1210;
+        transform: translate3d(0, 110%, 0);
         transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
         border-bottom: 0;
         border-inline: 0;
-        will-change: transform;
+        background: var(--acd-pl-surface-solid);
+        box-shadow: 0 -16px 48px -20px rgba(0, 0, 0, 0.55);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
     }
 
-    .acd-pl-sidebar.is-open { transform: translateY(0); }
+    .acd-pl-sidebar.is-open {
+        transform: translate3d(0, 0, 0);
+    }
+
+    body.acd-pl-drawer-open .acd-pl-fab {
+        opacity: 0;
+        pointer-events: none;
+    }
 
     .acd-pl-sidebar-grab { display: block; }
 
@@ -1155,7 +1186,6 @@ html.mk-public[data-theme="light"] .acd-pl-page {
 
     body.acd-pl-drawer-open {
         overflow: hidden;
-        touch-action: none;
     }
 }
 
@@ -1302,6 +1332,8 @@ html.mk-public[data-theme="light"] .acd-pl-page {
         grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
         gap: 1.35rem;
         align-items: start;
+        position: relative;
+        z-index: 1;
     }
 
     .acd-pl-sidebar {

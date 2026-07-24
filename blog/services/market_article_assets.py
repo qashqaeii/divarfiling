@@ -5,6 +5,7 @@ import io
 import logging
 import math
 import random
+import time
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -84,6 +85,7 @@ def render_article_maps(
     valid_count: int,
     confidence_score: Any,
     geo_points: list[dict] | None = None,
+    access_markers: list[dict] | None = None,
 ) -> dict[str, ContentFile]:
     """نقشه‌های کاربردی بدنه مقاله — هر کدام یک سؤال مشخص را جواب می‌دهد."""
     out: dict[str, ContentFile] = {}
@@ -130,6 +132,7 @@ def render_article_maps(
         ),
     ]
     for key, style, overlay, title, footer, _purpose in specs:
+        markers = access_markers if style == 'satellite' else None
         img = _compose_map_canvas(
             geo_points,
             width=ARTICLE_MAP_W,
@@ -144,6 +147,7 @@ def render_article_maps(
             metric_fmt=metric_fmt,
             brand=True,
             tight=True,
+            access_markers=markers,
         )
         if img:
             out[key] = _to_content_file(img, f'market-{key}-{_safe(city)}-{_safe(district)}.png')
@@ -421,16 +425,18 @@ def _choose_zoom(min_lat, max_lat, min_lng, max_lng, map_w: int, map_h: int, *, 
     return best
 
 
-def _fetch_tile(url: str, *, retries: int = 3) -> Image.Image | None:
+def _fetch_tile(url: str, *, retries: int = 3, timeout: int = 10) -> Image.Image | None:
     last_err = None
-    for _ in range(retries):
+    for attempt in range(retries):
         try:
             req = urllib.request.Request(url, headers={'User-Agent': USER_AGENT})
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
                 data = resp.read()
             return Image.open(io.BytesIO(data)).convert('RGB')
         except (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError) as exc:
             last_err = exc
+            if attempt + 1 < retries:
+                time.sleep(0.25 * (attempt + 1))
             continue
     logger.debug('tile fetch failed %s: %s', url, last_err)
     return None
@@ -458,6 +464,13 @@ def _build_basemap(
     if total > 100 or total < 1:
         return None
 
+    # ماهواره کندتر و حساس‌تر به تایل ناقص است — آستانه و تلاش بیشتر
+    is_sat = style == 'satellite'
+    min_ratio = 0.97 if is_sat else 0.88
+    workers = 6 if is_sat else 12
+    tile_timeout = 14 if is_sat else 10
+    base_retries = 4 if is_sat else 3
+
     canvas = Image.new('RGB', (cols * TILE_SIZE, rows * TILE_SIZE), '#d7dee8')
     jobs = [
         (tx, ty, _tile_url(style, zoom, tx, ty))
@@ -465,36 +478,52 @@ def _build_basemap(
         for tx in range(min_tx, max_tx + 1)
     ]
 
-    ok = 0
-    failed: list[tuple[int, int]] = []
-    with ThreadPoolExecutor(max_workers=12) as pool:
-        futures = {pool.submit(_fetch_tile, url): (tx, ty) for tx, ty, url in jobs}
-        for fut in as_completed(futures):
-            tx, ty = futures[fut]
-            tile = fut.result()
-            if tile is None:
-                failed.append((tx, ty))
-                continue
-            ok += 1
-            canvas.paste(tile, ((tx - min_tx) * TILE_SIZE, (ty - min_ty) * TILE_SIZE))
+    placed: set[tuple[int, int]] = set()
+    failed: list[tuple[int, int]] = [(tx, ty) for tx, ty, _ in jobs]
 
-    if failed:
-        with ThreadPoolExecutor(max_workers=8) as pool:
+    def _paste_batch(coords: list[tuple[int, int]], *, retries: int, pool_size: int) -> None:
+        nonlocal failed
+        still: list[tuple[int, int]] = []
+        with ThreadPoolExecutor(max_workers=pool_size) as pool:
             futures = {
-                pool.submit(_fetch_tile, _tile_url(style, zoom, tx, ty), retries=4): (tx, ty)
-                for tx, ty in failed
+                pool.submit(
+                    _fetch_tile,
+                    _tile_url(style, zoom, tx, ty),
+                    retries=retries,
+                    timeout=tile_timeout,
+                ): (tx, ty)
+                for tx, ty in coords
             }
             for fut in as_completed(futures):
                 tx, ty = futures[fut]
                 tile = fut.result()
                 if tile is None:
+                    still.append((tx, ty))
                     continue
-                ok += 1
+                placed.add((tx, ty))
                 canvas.paste(tile, ((tx - min_tx) * TILE_SIZE, (ty - min_ty) * TILE_SIZE))
+        failed = still
 
-    if ok < max(1, int(total * 0.88)):
-        logger.warning('basemap incomplete: %s/%s tiles', ok, total)
+    _paste_batch(failed, retries=base_retries, pool_size=workers)
+
+    # چند دور تکمیل برای تایل‌های جامانده (مخصوصاً ماهواره)
+    max_rounds = 4 if is_sat else 2
+    for round_i in range(max_rounds):
+        if not failed:
+            break
+        time.sleep(0.35 * (round_i + 1))
+        _paste_batch(
+            failed,
+            retries=5 if is_sat else 4,
+            pool_size=4 if is_sat else 8,
+        )
+
+    ok = len(placed)
+    if ok < max(1, int(total * min_ratio)):
+        logger.warning('basemap incomplete (%s): %s/%s tiles', style, ok, total)
         return None
+    if failed:
+        logger.info('basemap accepted with gaps (%s): %s/%s ok', style, ok, total)
     return canvas
 
 
@@ -580,6 +609,7 @@ def _compose_map_canvas(
     metric_fmt: str,
     brand: bool,
     tight: bool = True,
+    access_markers: list[dict] | None = None,
 ) -> Image.Image | None:
     from django.conf import settings
     if getattr(settings, 'MARKET_ARTICLE_SKIP_MAP_TILES', False):
@@ -727,6 +757,22 @@ def _compose_map_canvas(
         heat = heat.filter(ImageFilter.GaussianBlur(radius=0.8))
 
     view_rgba = Image.alpha_composite(view.convert('RGBA'), heat)
+
+    if access_markers:
+        poi_layer = Image.new('RGBA', (map_w, map_h), (0, 0, 0, 0))
+        poi_draw = ImageDraw.Draw(poi_layer)
+        for m in access_markers[:36]:
+            try:
+                mx, my = project(float(m['lat']), float(m['lng']))
+            except (KeyError, TypeError, ValueError):
+                continue
+            if not (8 <= mx < map_w - 8 and 8 <= my < map_h - 8):
+                continue
+            color = _hex_rgb(m.get('color') or '#14b8a6', alpha=230)
+            poi_draw.ellipse((mx - 7, my - 7, mx + 7, my + 7), fill=(255, 255, 255, 220))
+            poi_draw.ellipse((mx - 5, my - 5, mx + 5, my + 5), fill=color)
+        view_rgba = Image.alpha_composite(view_rgba, poi_layer)
+
     chrome = Image.new('RGBA', (map_w, map_h), (0, 0, 0, 0))
     draw_chrome = ImageDraw.Draw(chrome)
     _draw_north_arrow(draw_chrome, map_w - 42, 36)
@@ -801,6 +847,19 @@ def _density_color(t: float, *, alpha: int) -> tuple[int, int, int, int]:
             b = int(c0[2] + u * (c1[2] - c0[2]))
             return (r, g, b, alpha)
     return (*stops[-1][1], alpha)
+
+
+def _hex_rgb(color: str, *, alpha: int = 255) -> tuple[int, int, int, int]:
+    raw = (color or '').strip().lstrip('#')
+    if len(raw) == 3:
+        raw = ''.join(ch * 2 for ch in raw)
+    try:
+        r = int(raw[0:2], 16)
+        g = int(raw[2:4], 16)
+        b = int(raw[4:6], 16)
+        return (r, g, b, alpha)
+    except (ValueError, IndexError):
+        return (20, 184, 166, alpha)
 
 
 def _value_color(t: float, *, alpha: int) -> tuple[int, int, int, int]:

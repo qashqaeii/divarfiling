@@ -18,6 +18,7 @@ from blog.services.market_article_analyze import (
     run_dataset_analysis,
     sanitize_report_for_public,
 )
+from blog.services.market_article_access import analyze_district_access
 from blog.services.market_article_assets import render_article_maps, render_featured_image
 from blog.services.market_article_composer import compose_market_article
 from blog.services.market_article_eligibility import market_key_for_dataset
@@ -152,6 +153,11 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
         confidence_score=conf.get('display_score') or conf.get('score') or '—',
         geo_points=geo,
     )
+
+    district_access = analyze_district_access(geo)
+    if isinstance(report, dict) and district_access.get('ok'):
+        report = {**report, 'district_access': district_access}
+
     extra_maps = render_article_maps(
         city=meta.get('city') or '',
         district=meta.get('district') or '',
@@ -161,6 +167,7 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
         valid_count=int(metrics.get('valid_count') or 0),
         confidence_score=conf.get('display_score') or conf.get('score') or '—',
         geo_points=geo,
+        access_markers=district_access.get('map_markers') if district_access.get('ok') else None,
     )
 
     related = _related_market_posts(city=meta.get('city') or '', exclude_slug=market_key)
@@ -190,6 +197,7 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
                 'report': report,
                 'dataset_meta': meta,
                 'metrics': metrics,
+                'district_access': district_access,
             }),
             seo_json=seo,
             content_html=composed['content_html'],
@@ -203,7 +211,11 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
             data_to=metrics.get('data_to'),
             source_dataset_updated_at=dataset.updated_at,
             created_by=user if getattr(user, 'is_authenticated', False) else None,
-            chart_assets={'geo_count': len(geo or [])},
+            chart_assets={
+                'geo_count': len(geo or []),
+                'access_score': district_access.get('score') if district_access.get('ok') else None,
+                'access_grade': district_access.get('grade') if district_access.get('ok') else None,
+            },
         )
         run.featured_image.save(image_file.name, image_file, save=False)
         run.save()

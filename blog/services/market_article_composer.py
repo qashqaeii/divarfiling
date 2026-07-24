@@ -5,6 +5,7 @@ import html
 from typing import Any
 
 from blog.services.market_article_seo import (
+    render_convert_band,
     render_cta_section,
     render_maps_section,
     render_related_links_section,
@@ -59,6 +60,7 @@ def compose_market_article(
     segments = report.get('area_segments') or []
     amenities = report.get('amenities_coverage') or {}
     amenity_val = report.get('amenity_valuation') or {}
+    district_access = report.get('district_access') or {}
     opportunities = report.get('opportunities') or {}
     negotiation = report.get('negotiation') or {}
     insights = report.get('insights') or []
@@ -129,13 +131,29 @@ def compose_market_article(
             city, district, sentiment_label, under_pct, primary, negotiation,
             trend_fmt, liq_label, is_rent, top_seg,
         ),
+        render_convert_band(
+            city=city, district=district,
+            audience='مشاور، سازنده یا سرمایه‌گذار',
+            anchor='convert-mid',
+        ),
         _section_pps(primary, depth, is_rent, deposit, rent, full_dep, pps),
         _section_segments(segments, primary, is_rent),
         _section_amenities(amenities, amenity_val),
+        _section_district_access(district_access, city=city, district=district),
+        render_convert_band(
+            city=city, district=district,
+            audience='مالک، مشاور یا کسی که می‌خواهد منطقه خودش را آنالیز کند',
+            anchor='convert-access',
+        ),
         _section_trends(trends, sentiment_label, under_pct, is_rent),
         _section_maps(
             maps, map_caption, city, district, is_rent,
             subcat=subcat, tx_label=tx_label, primary=primary, valid_n=valid_n,
+        ),
+        render_convert_band(
+            city=city, district=district,
+            audience='کسی که می‌خواهد همین نقشه‌ها را برای محله خودش بسازد',
+            anchor='convert-maps',
         ),
         _section_opportunities(opportunities, under_pct, top_seg, is_rent),
         _section_negotiation(negotiation, primary, is_rent),
@@ -247,6 +265,9 @@ def _section_who_this_is_for(city, district, subcat, tx_label) -> str:
     که بدون اصطلاحات پیچیده، برای همه قابل‌استفاده باشد. این گزارش بخشی از مجموعه
     <a href="/real-estate-market-analysis/">تحلیل بازار املاک</a> در فایلینگ دیوار است
     و با همان منطق <a href="/blog/tahlil-gheymat-amlak-divar/">تحلیل قیمت آگهی‌های دیوار</a> ساخته شده.
+    اگر می‌خواهید <strong>محله خودتان</strong> را همین‌طور آنالیز کنید،
+    با <a href="/accounts/register/">ثبت‌نام میزکار</a> شروع کنید و برای استخراج خودکار
+    <a href="/products/divar-extraction-bot/">لایسنس ربات</a> را فعال کنید.
   </p>
   <div class="mk-market-audience-grid">
     <div><strong>خریدار / مستأجر</strong><span>بفهمید قیمت عادلانه چیست و کجا مذاکره کنید.</span></div>
@@ -448,6 +469,9 @@ def _section_audiences(
     <p>
       از میانه {_e(med)} به‌عنوان لنگر جلسه با مالک استفاده کنید، فرصت‌های زیر بازار را جداگانه پیگیری کنید،
       و متراژ پرتراکم ({_e(top_seg)}) را در پیشنهاد به مشتری پررنگ کنید. نقدشوندگی فعلی: {_e(liq_label)}.
+      برای تکرار همین گزارش روی محله‌های خودتان:
+      <a href="/products/divar-extraction-bot/">لایسنس ربات</a> +
+      <a href="/accounts/register/">میزکار</a>.
     </p>
   </div>
   <div class="mk-market-role">
@@ -455,6 +479,7 @@ def _section_audiences(
     <p>
       به ترکیب «زیر بازار + نقدشوندگی + روند» نگاه کنید. وضعیت کلی {_e(sentiment_label)} است و روند {_e(trend_fmt)}.
       فایل ارزان بدون قابلیت فروش مجدد سریع، فرصت نیست.
+      رصد مداوم محله‌ها را با <a href="/real-estate-market-analysis/">تحلیل بازار فایلینگ</a> روی Dataset خودتان انجام دهید.
     </p>
   </div>
   <div class="mk-market-role">
@@ -462,6 +487,8 @@ def _section_audiences(
     <p>
       پرتقاضاترین بازه متراژ در این داده «{_e(top_seg)}» است. سطح قیمت قابل دفاع نزدیک {_e(primary.get("short_label"))}
       ({_e(builder_metric)}) است؛ برای پروژه‌های لوکس باید فاصله قیمت با عرف محله را شفاف توضیح دهید.
+      قبل از تصمیم پروژه، محله هدف را در
+      <a href="/accounts/register/">میزکار</a> با داده زنده دیوار بسازید.
     </p>
   </div>
 </section>
@@ -613,6 +640,85 @@ def _section_amenities(amenities: Any, amenity_val: Any) -> str:
   <p>پوشش امکانات نشان می‌دهد نبود یک ویژگی چقدر غیرعادی است و در مذاکره باید لحاظ شود.</p>
   <ul class="mk-market-bullets">{lis}</ul>
   {prem_block}
+</section>
+'''
+
+
+def _section_district_access(access: Any, *, city: str, district: str) -> str:
+    if not isinstance(access, dict) or not access.get('ok'):
+        return ''
+    score = int(access.get('score') or 0)
+    grade = _e(access.get('grade') or '—')
+    grade_label = _e(access.get('grade_label') or '')
+    radius = _e(access.get('radius_label') or access.get('radius_m') or '—')
+    summary = _e(access.get('summary') or '')
+    total = _e(access.get('total_pois') or 0)
+
+    group_cards = []
+    for g in access.get('groups') or []:
+        gscore = int(g.get('score') or 0)
+        chips = []
+        for item in g.get('items') or []:
+            count = int(item.get('count') or 0)
+            nearest = item.get('nearest_m')
+            near_bit = f' · نزدیک‌ترین {nearest}م' if nearest is not None and count else ''
+            chips.append(
+                f'<li class="mk-access-chip{" mk-access-chip--empty" if count == 0 else ""}">'
+                f'<i class="fas {_e(item.get("icon") or "fa-location-dot")}" style="color:{_e(item.get("color") or "#0d9488")}" aria-hidden="true"></i>'
+                f'<span class="mk-access-chip__label">{_e(item.get("label"))}</span>'
+                f'<strong class="mk-access-chip__count">{count}</strong>'
+                f'<span class="mk-access-chip__meta">{_e(near_bit)}</span>'
+                f'</li>'
+            )
+        group_cards.append(
+            f'<article class="mk-access-group">'
+            f'<header class="mk-access-group__head">'
+            f'<h3>{_e(g.get("label"))}</h3>'
+            f'<span class="mk-access-group__score">{gscore}</span>'
+            f'</header>'
+            f'<div class="mk-access-meter" aria-hidden="true"><span style="width:{gscore}%"></span></div>'
+            f'<ul class="mk-access-chips">{"".join(chips)}</ul>'
+            f'</article>'
+        )
+
+    hi_lis = ''.join(
+        f'<li><strong>{_e(h.get("label"))}</strong> — {_e(h.get("count"))} مورد'
+        f'{(" · نزدیک‌ترین " + str(h.get("nearest_m")) + "م") if h.get("nearest_m") is not None else ""}</li>'
+        for h in (access.get('highlights') or [])[:5]
+    )
+    gap_lis = ''.join(
+        f'<li>{_e(g.get("label"))}</li>' for g in (access.get('gaps') or [])[:5]
+    )
+    hi_block = f'<div class="mk-access-side"><h3>نقاط قوت</h3><ul>{hi_lis}</ul></div>' if hi_lis else ''
+    gap_block = f'<div class="mk-access-side mk-access-side--gap"><h3>کمبود نسبی</h3><ul>{gap_lis}</ul></div>' if gap_lis else ''
+
+    return f'''
+<section class="mk-market-section mk-access-section" id="district-access">
+  <h2>دسترسی محله؛ امکانات شهری اطراف {_e(district)}</h2>
+  <p>
+    علاوه بر امکانات داخل فایل‌ها، بافت واقعی محله را از نقشه باز OpenStreetMap خوانده‌ایم —
+    در شعاع حدود {_e(radius)} حول مرکز تراکم آگهی‌های {_e(city)}.
+  </p>
+  <div class="mk-access-hero">
+    <div class="mk-access-score" style="--access-score:{score}">
+      <div class="mk-access-score__ring" aria-hidden="true"></div>
+      <div class="mk-access-score__core">
+        <strong>{score}</strong>
+        <span>از ۱۰۰</span>
+      </div>
+    </div>
+    <div class="mk-access-score__copy">
+      <p class="mk-access-grade"><span>{grade}</span> {grade_label}</p>
+      <p>{summary}</p>
+      <p class="mk-access-footnote">{total} نقطه خدماتی شناسایی‌شده · منبع: OpenStreetMap</p>
+    </div>
+  </div>
+  <div class="mk-access-sides">{hi_block}{gap_block}</div>
+  <div class="mk-access-groups">{''.join(group_cards)}</div>
+  <p class="mk-market-tip">
+    این امتیاز «زندگی روزمره و خدمات» است، نه جایگزین کارشناسی قیمت.
+    برای مذاکره با مالک/مستأجر می‌توانید کمبودها و نقاط قوت را جداگانه مطرح کنید.
+  </p>
 </section>
 '''
 

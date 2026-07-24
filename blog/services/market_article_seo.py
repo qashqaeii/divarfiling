@@ -339,6 +339,8 @@ def render_related_links_section(
   </ul>
   <h3>ابزارها و صفحات محصول</h3>
   <ul class="mk-market-related-list">
+    <li><a href="/products/divar-extraction-bot/">خرید لایسنس ربات استخراج دیوار</a></li>
+    <li><a href="/accounts/register/">ثبت‌نام رایگان میزکار</a></li>
     <li><a href="/real-estate-market-analysis/">تحلیل بازار املاک در فایلینگ دیوار</a></li>
     <li><a href="/real-estate-filing/">فایلینگ دیوار؛ بانک فایل و دیتاست محله</a></li>
     <li><a href="/robot-divar/">ربات استخراج آگهی دیوار</a></li>
@@ -351,20 +353,74 @@ def render_related_links_section(
 
 
 def render_cta_section(*, city: str = '', district: str = '', tx_label: str = '') -> str:
-    place = f'{district} {city}'.strip() or 'محله خود'
+    place = f'{district} {city}'.strip() or 'محله خودتان'
+    bot_url = '/products/divar-extraction-bot/'
     return f'''
-<section class="mk-market-section mk-market-cta" id="cta">
-  <h2>همین تحلیل را برای فایل‌های خود در {_e(place)} بسازید</h2>
+<section class="mk-market-section mk-market-cta mk-market-cta--final" id="cta">
+  <h2>محله خودتان را مثل {_e(place)} تحلیل کنید</h2>
   <p>
-    گزارش بالا نمونه‌ای از تحلیل داده‌محور بازار {_e(tx_label)} است. می‌توانید Dataset محله خود را در میزکار بسازید،
-    فرصت‌های زیر بازار را فیلتر کنید، نقشه مکانی ببینید و با
-    <a href="/robot-divar/">ربات فایلینگ دیوار</a> بانک فایل را به‌روز نگه دارید.
+    این گزارش یک نمونه عمومی از تحلیل داده‌محور بازار {_e(tx_label)} است.
+    اگر مشاور، سازنده، سرمایه‌گذار یا مالکید و می‌خواهید <strong>همین منطق را روی فایل‌های واقعی محله خودتان</strong>
+    اجرا کنید، مسیر فایلینگ دیوار این است: استخراج آگهی با لایسنس ربات → ساخت Dataset در میزکار →
+    نقشه، امتیاز دسترسی، Value Score و گزارش جلسه.
   </p>
-  <div class="mk-market-cta-links">
-    <a href="/real-estate-market-analysis/">شروع تحلیل بازار</a>
-    <a href="/real-estate-filing/">فایلینگ دیوار</a>
-    <a href="/accounts/register/">ثبت‌نام و ورود به میزکار</a>
-    <a href="/blog/?cat=tahlil-bazar">سایر تحلیل‌های بازار</a>
+  <div class="mk-market-cta-personas">
+    <article>
+      <strong>مشاور املاک</strong>
+      <span>بانک فایل به‌روز، گزارش برای مالک، و فیلتر فرصت زیر بازار — بدون اسکرول دستی دیوار.</span>
+    </article>
+    <article>
+      <strong>سازنده / انبوه‌ساز</strong>
+      <span>متراژ پرتقاضا، سطح قیمت قابل دفاع و نقشه عرضه را قبل از تصمیم پروژه ببینید.</span>
+    </article>
+    <article>
+      <strong>سرمایه‌گذار</strong>
+      <span>عمق بازار، نقدشوندگی و فایل‌های زیر عرف را با داده محله خودتان رصد کنید.</span>
+    </article>
+    <article>
+      <strong>مالک / موجر</strong>
+      <span>قیمت‌گذاری واقع‌بینانه با میانه محله؛ آماده‌سازی برای مذاکره یا سپردن به مشاور.</span>
+    </article>
   </div>
+  <div class="mk-market-cta-links">
+    <a class="mk-market-cta-btn mk-market-cta-btn--primary" href="{_e(bot_url)}">خرید لایسنس ربات استخراج</a>
+    <a class="mk-market-cta-btn mk-market-cta-btn--primary" href="/accounts/register/">شروع رایگان میزکار</a>
+    <a class="mk-market-cta-btn" href="/real-estate-market-analysis/">تحلیل بازار در پلتفرم</a>
+    <a class="mk-market-cta-btn" href="/real-estate-filing/">فایلینگ دیوار</a>
+    <a class="mk-market-cta-btn" href="/robot-divar/">ربات دیوار</a>
+  </div>
+  <p class="mk-market-cta-note">
+    ثبت‌نام میزکار رایگان است؛ برای استخراج خودکار و مقیاس حرفه‌ای،
+    <a href="{_e(bot_url)}">لایسنس ربات</a> را فعال کنید تا داده محله‌تان همیشه تازه بماند.
+  </p>
 </section>
+'''
+
+
+def render_convert_band(
+    *,
+    city: str = '',
+    district: str = '',
+    audience: str = '',
+    anchor: str = 'convert',
+) -> str:
+    """نوار تبدیل میانی — سوق به لایسنس و میزکار."""
+    place = f'{district} {city}'.strip() or 'محله خودتان'
+    who = audience or 'مشاور، سازنده یا سرمایه‌گذار'
+    bot_url = '/products/divar-extraction-bot/'
+    return f'''
+<aside class="mk-market-convert" id="{_e(anchor)}" aria-label="دعوت به استفاده از پلتفرم">
+  <div class="mk-market-convert__copy">
+    <strong>می‌خواهید {_e(place)} یا محله خودتان را همین‌طور آنالیز کنید؟</strong>
+    <p>
+      اگر {_e(who)} هستید، در فایلینگ دیوار Dataset بسازید، نقشه و امتیاز دسترسی بگیرید
+      و با لایسنس ربات، آگهی‌های تازه دیوار را خودکار وارد میزکار کنید.
+    </p>
+  </div>
+  <div class="mk-market-convert__actions">
+    <a href="{_e(bot_url)}">خرید لایسنس</a>
+    <a href="/accounts/register/">ثبت‌نام میزکار</a>
+    <a href="/real-estate-market-analysis/">شروع تحلیل بازار</a>
+  </div>
+</aside>
 '''

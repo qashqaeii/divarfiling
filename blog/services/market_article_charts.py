@@ -6,10 +6,19 @@ from typing import Any
 from django.core.files.base import ContentFile
 from PIL import Image, ImageDraw
 
-from blog.services.market_article_assets import _draw_text, _font, _to_content_file
+from blog.services.market_article_assets import (
+    _draw_text,
+    _font,
+    _prepare_persian_draw,
+    _to_content_file,
+)
 
 CHART_W = 1400
-CHART_H = 780
+CHART_H_MIN = 780
+_PAD = 48
+_INNER_L = 72
+_INNER_R = CHART_W - 72
+_HEADER_BOTTOM = 168
 
 _PALETTE = (
     (13, 148, 136),
@@ -60,24 +69,37 @@ def _safe(text: str) -> str:
     return ''.join(c if c.isalnum() else '-' for c in (text or 'x'))[:40]
 
 
-def _blank(title: str, subtitle: str) -> tuple[Image.Image, ImageDraw.ImageDraw]:
-    img = Image.new('RGB', (CHART_W, CHART_H), '#0b1220')
-    overlay = Image.new('RGBA', (CHART_W, CHART_H), (0, 0, 0, 0))
+def _measure_text(text: str, font) -> tuple[int, int]:
+    """عرض/ارتفاع واقعی متن بعد از آماده‌سازی فارسی."""
+    prepared, _kwargs = _prepare_persian_draw(str(text or ''))
+    if not prepared:
+        return 0, 0
+    try:
+        bbox = font.getbbox(prepared)
+        return max(0, bbox[2] - bbox[0]), max(0, bbox[3] - bbox[1])
+    except Exception:
+        return len(prepared) * max(8, getattr(font, 'size', 16) // 2), getattr(font, 'size', 16)
+
+
+def _blank(title: str, subtitle: str, *, height: int | None = None) -> tuple[Image.Image, ImageDraw.ImageDraw, int]:
+    h = max(CHART_H_MIN, int(height or CHART_H_MIN))
+    img = Image.new('RGB', (CHART_W, h), '#0b1220')
+    overlay = Image.new('RGBA', (CHART_W, h), (0, 0, 0, 0))
     od = ImageDraw.Draw(overlay)
     od.ellipse((-120, -160, 520, 420), fill=(13, 148, 136, 40))
-    od.ellipse((CHART_W - 480, CHART_H - 360, CHART_W + 80, CHART_H + 120), fill=(14, 165, 233, 28))
+    od.ellipse((CHART_W - 480, h - 360, CHART_W + 80, h + 120), fill=(14, 165, 233, 28))
     img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
     draw = ImageDraw.Draw(img)
     draw.rounded_rectangle(
-        (48, 48, CHART_W - 48, CHART_H - 48),
+        (_PAD, _PAD, CHART_W - _PAD, h - _PAD),
         radius=28,
         fill=(15, 23, 42),
         outline=(51, 65, 85),
         width=2,
     )
-    _draw_text(draw, (72, 72), title, fill='#f8fafc', font=_font(34, 'bold'))
-    _draw_text(draw, (72, 118), subtitle, fill='#94a3b8', font=_font(20, 'medium'))
-    return img, draw
+    _draw_text(draw, (_INNER_L, 72), title, fill='#f8fafc', font=_font(34, 'bold'))
+    _draw_text(draw, (_INNER_L, 118), subtitle, fill='#94a3b8', font=_font(20, 'medium'))
+    return img, draw, h
 
 
 def _parse_num(value: Any) -> float | None:
@@ -92,6 +114,80 @@ def _parse_num(value: Any) -> float | None:
         return float(digits) if digits not in ('', '-', '.', '-.') else None
     except ValueError:
         return None
+
+
+def _label_column_width(labels: list[str], font, *, pad: int = 28, minimum: int = 160, maximum: int = 360) -> int:
+    widest = max((_measure_text(lbl, font)[0] for lbl in labels), default=0)
+    return max(minimum, min(maximum, widest + pad))
+
+
+def _chart_height_for_rows(n: int, row_h: int, *, top: int = _HEADER_BOTTOM, bottom_pad: int = 72) -> int:
+    return max(CHART_H_MIN, top + n * row_h + bottom_pad)
+
+
+def _draw_hbar_rows(
+    draw: ImageDraw.ImageDraw,
+    rows: list[tuple[str, float, str]],
+    *,
+    top: int,
+    row_h: int,
+    bar_h: int,
+    label_w: int,
+    track: bool = False,
+    value_suffix: str = '',
+) -> None:
+    """
+    چیدمان بدون هم‌پوشانی:
+    [برچسب در ستون چپ] [میله] [مقدار در ستون راست]
+    """
+    label_font = _font(20, 'semibold')
+    value_font = _font(20, 'bold')
+    vals = [r[1] for r in rows]
+    vmax = max(vals) if vals else 1.0
+    if vmax <= 0:
+        vmax = 1.0
+
+    value_texts = [f'{r[2]}{value_suffix}' for r in rows]
+    value_col_w = max(72, max((_measure_text(t, value_font)[0] for t in value_texts), default=48) + 16)
+    bar_left = _INNER_L + label_w + 16
+    bar_right = _INNER_R - value_col_w - 12
+    span = max(40, bar_right - bar_left)
+
+    for i, (label, num, fmt) in enumerate(rows):
+        y0 = top + i * row_h
+        cy = y0 + row_h / 2
+        bar_y0 = cy - bar_h / 2
+        bar_y1 = cy + bar_h / 2
+        width = max(18.0, (float(num) / vmax) * span)
+        color = _PALETTE[i % len(_PALETTE)]
+
+        if track:
+            draw.rounded_rectangle(
+                (bar_left, bar_y0, bar_right, bar_y1),
+                radius=12,
+                fill=(30, 41, 59),
+            )
+        draw.rounded_rectangle(
+            (bar_left, bar_y0, bar_left + width, bar_y1),
+            radius=12,
+            fill=color,
+        )
+        _draw_text(
+            draw,
+            (_INNER_L + label_w, cy),
+            label,
+            fill='#e2e8f0',
+            font=label_font,
+            anchor='rm',
+        )
+        _draw_text(
+            draw,
+            (_INNER_R, cy),
+            f'{fmt}{value_suffix}',
+            fill='#f8fafc',
+            font=value_font,
+            anchor='rm',
+        )
 
 
 def _chart_price_ladder(report: dict, *, place: str, is_rent: bool) -> Image.Image | None:
@@ -119,20 +215,14 @@ def _chart_price_ladder(report: dict, *, place: str, is_rent: bool) -> Image.Ima
     if len(rows) < 3:
         return None
 
-    img, draw = _blank(title, f'{place} · توزیع چارک‌ها و دهک‌ها')
-    vals = [r[1] for r in rows]
-    vmin, vmax = min(vals), max(vals)
-    if vmax <= vmin:
-        vmax = vmin + 1
-    left = 120
-    top, bar_h, gap = 190, 68, 18
-    for i, (label, num, fmt) in enumerate(rows):
-        y = top + i * (bar_h + gap)
-        width = 180 + ((num - vmin) / (vmax - vmin)) * (CHART_W - 440)
-        color = _PALETTE[i % len(_PALETTE)]
-        draw.rounded_rectangle((left, y, left + width, y + bar_h), radius=14, fill=color)
-        _draw_text(draw, (left + 18, y + bar_h / 2), label, fill='#f8fafc', font=_font(22, 'semibold'), anchor='lm')
-        _draw_text(draw, (left + width - 18, y + bar_h / 2), str(fmt), fill='#f8fafc', font=_font(22, 'bold'), anchor='rm')
+    row_h, bar_h = 92, 52
+    label_w = _label_column_width([r[0] for r in rows], _font(20, 'semibold'))
+    img, draw, _h = _blank(
+        title,
+        f'{place} · توزیع چارک‌ها و دهک‌ها',
+        height=_chart_height_for_rows(len(rows), row_h),
+    )
+    _draw_hbar_rows(draw, rows, top=_HEADER_BOTTOM, row_h=row_h, bar_h=bar_h, label_w=label_w)
     return img
 
 
@@ -155,23 +245,31 @@ def _chart_area_segments(report: dict, *, place: str) -> Image.Image | None:
             val = float(count)
         if val is None:
             continue
-        rows.append((str(label), val, share if share is not None else count))
+        raw_num = _parse_num(share if share is not None else count)
+        if raw_num is not None and share is not None and raw_num <= 100:
+            fmt = f'{val:.0f}٪'
+        else:
+            fmt = str(share if share is not None else count)
+        rows.append((str(label), val, fmt))
     if len(rows) < 2:
         return None
 
-    img, draw = _blank('سهم بازه‌های متراژ', f'{place} · عمق عرضه در هر باند متراژ')
-    total = sum(r[1] for r in rows) or 1
-    left, right, top = 120, CHART_W - 120, 200
-    for i, (label, val, raw) in enumerate(rows):
-        y = top + i * 70
-        width = max(24, (val / total) * (right - left))
-        color = _PALETTE[i % len(_PALETTE)]
-        draw.rounded_rectangle((left, y, right, y + 42), radius=12, fill=(30, 41, 59))
-        draw.rounded_rectangle((left, y, left + width, y + 42), radius=12, fill=color)
-        _draw_text(draw, (left, y - 22), label, fill='#cbd5e1', font=_font(18, 'medium'))
-        raw_num = _parse_num(raw)
-        pct = f'{val:.0f}%' if raw_num is not None and raw_num <= 100 else str(raw)
-        _draw_text(draw, (right, y + 21), pct, fill='#f8fafc', font=_font(20, 'bold'), anchor='rm')
+    row_h, bar_h = 78, 36
+    label_w = _label_column_width([r[0] for r in rows], _font(20, 'semibold'), maximum=420)
+    img, draw, _h = _blank(
+        'سهم بازه‌های متراژ',
+        f'{place} · عمق عرضه در هر باند متراژ',
+        height=_chart_height_for_rows(len(rows), row_h),
+    )
+    _draw_hbar_rows(
+        draw,
+        rows,
+        top=_HEADER_BOTTOM,
+        row_h=row_h,
+        bar_h=bar_h,
+        label_w=label_w,
+        track=True,
+    )
     return img
 
 
@@ -194,8 +292,8 @@ def _chart_market_depth(report: dict, *, place: str) -> Image.Image | None:
     if not parts:
         return None
 
-    img, draw = _blank('عمق بازار نسبت به عرف', f'{place} · سهم فایل‌های زیر/نزدیک/بالای عرف')
-    cx, cy, r = CHART_W // 2 - 80, CHART_H // 2 + 40, 170
+    img, draw, h = _blank('عمق بازار نسبت به عرف', f'{place} · سهم فایل‌های زیر/نزدیک/بالای عرف')
+    cx, cy, r = CHART_W // 2 - 160, h // 2 + 28, 170
     total = sum(p[1] for p in parts) or 1
     start = -90.0
     for _, val, color in parts:
@@ -203,14 +301,18 @@ def _chart_market_depth(report: dict, *, place: str) -> Image.Image | None:
         draw.pieslice((cx - r, cy - r, cx + r, cy + r), start=start, end=start + sweep, fill=color)
         start += sweep
     draw.ellipse((cx - 88, cy - 88, cx + 88, cy + 88), fill=(15, 23, 42))
-    _draw_text(draw, (cx, cy - 12), 'عمق', fill='#94a3b8', font=_font(20, 'medium'), anchor='mm')
+    _draw_text(draw, (cx, cy - 14), 'عمق', fill='#94a3b8', font=_font(20, 'medium'), anchor='mm')
     _draw_text(draw, (cx, cy + 18), 'بازار', fill='#f8fafc', font=_font(28, 'bold'), anchor='mm')
-    legend_x, legend_y = cx + r + 70, cy - 90
+
+    legend_x = cx + r + 56
+    legend_y = cy - (len(parts) * 72) / 2
+    label_font = _font(22, 'semibold')
+    value_font = _font(18, 'medium')
     for i, (label, val, color) in enumerate(parts):
-        y = legend_y + i * 58
-        draw.rounded_rectangle((legend_x, y, legend_x + 28, y + 28), radius=8, fill=color)
-        _draw_text(draw, (legend_x + 42, y + 4), label, fill='#e2e8f0', font=_font(22, 'semibold'))
-        _draw_text(draw, (legend_x + 42, y + 30), f'{val:.0f}٪', fill='#94a3b8', font=_font(18, 'medium'))
+        y = legend_y + i * 72
+        draw.rounded_rectangle((legend_x, y + 8, legend_x + 28, y + 36), radius=8, fill=color)
+        _draw_text(draw, (legend_x + 42, y + 8), label, fill='#e2e8f0', font=label_font)
+        _draw_text(draw, (legend_x + 42, y + 40), f'{val:.0f}٪', fill='#94a3b8', font=value_font)
     return img
 
 
@@ -224,20 +326,18 @@ def _chart_access_groups(report: dict, *, place: str) -> Image.Image | None:
         if count <= 0:
             count = sum(int(i.get('count') or 0) for i in (g.get('items') or []))
         if count > 0:
-            rows.append((g.get('label') or g.get('key') or 'گروه', count))
+            rows.append((str(g.get('label') or g.get('key') or 'گروه'), float(count), str(count)))
     if len(rows) < 2:
         return None
 
-    img, draw = _blank('تعداد امکانات به‌تفکیک گروه', f'{place} · شعاع {access.get("radius_label") or "منطقه"}')
-    vmax = max(r[1] for r in rows) or 1
-    left, top = 120, 200
-    for i, (label, count) in enumerate(rows):
-        y = top + i * 68
-        width = 80 + (count / vmax) * (CHART_W - 280)
-        color = _PALETTE[i % len(_PALETTE)]
-        draw.rounded_rectangle((left, y, left + width, y + 46), radius=12, fill=color)
-        _draw_text(draw, (left + 16, y + 23), str(label), fill='#f8fafc', font=_font(20, 'semibold'), anchor='lm')
-        _draw_text(draw, (left + width - 16, y + 23), str(count), fill='#f8fafc', font=_font(22, 'bold'), anchor='rm')
+    row_h, bar_h = 86, 46
+    label_w = _label_column_width([r[0] for r in rows], _font(20, 'semibold'), maximum=420)
+    img, draw, _h = _blank(
+        'تعداد امکانات به‌تفکیک گروه',
+        f'{place} · شعاع {access.get("radius_label") or "منطقه"}',
+        height=_chart_height_for_rows(len(rows), row_h),
+    )
+    _draw_hbar_rows(draw, rows, top=_HEADER_BOTTOM, row_h=row_h, bar_h=bar_h, label_w=label_w)
     return img
 
 
@@ -271,18 +371,24 @@ def _chart_amenities(report: dict, *, place: str) -> Image.Image | None:
             or item.get('share')
         )
         if label and pct is not None:
-            rows.append((str(label), pct))
+            rows.append((str(label), float(pct), f'{pct:.0f}٪'))
     if len(rows) < 2:
         return None
 
-    img, draw = _blank('پوشش امکانات داخل فایل‌ها', f'{place} · درصد فایل‌هایی که هر امکان را دارند')
-    left, right, top = 120, CHART_W - 120, 200
-    for i, (label, pct) in enumerate(rows):
-        y = top + i * 60
-        width = max(20, min(100.0, pct) / 100.0 * (right - left))
-        color = _PALETTE[i % len(_PALETTE)]
-        draw.rounded_rectangle((left, y, right, y + 40), radius=10, fill=(30, 41, 59))
-        draw.rounded_rectangle((left, y, left + width, y + 40), radius=10, fill=color)
-        _draw_text(draw, (left, y - 20), label, fill='#cbd5e1', font=_font(17, 'medium'))
-        _draw_text(draw, (right, y + 20), f'{pct:.0f}٪', fill='#f8fafc', font=_font(18, 'bold'), anchor='rm')
+    row_h, bar_h = 78, 36
+    label_w = _label_column_width([r[0] for r in rows], _font(20, 'semibold'), maximum=360)
+    img, draw, _h = _blank(
+        'پوشش امکانات داخل فایل‌ها',
+        f'{place} · درصد فایل‌هایی که هر امکان را دارند',
+        height=_chart_height_for_rows(len(rows), row_h),
+    )
+    _draw_hbar_rows(
+        draw,
+        rows,
+        top=_HEADER_BOTTOM,
+        row_h=row_h,
+        bar_h=bar_h,
+        label_w=label_w,
+        track=True,
+    )
     return img

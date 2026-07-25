@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=11">
 {% endblock %}
 
 {% block content %}
@@ -640,63 +640,81 @@
                                     <small>مستقیم {{ f.attribution.conversion_direct|to_persian_digits }} · تطبیق {{ f.attribution.conversion_phone_matched|to_persian_digits }}</small>
                                 </div>
                             </td>
-                            <td>
-                                <div class="adm-lac-actions">
-                                    <a class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" href="{% url 'admin_panel_lead_campaign_detail' f.campaign_id %}">گزارش</a>
-                                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-lac-edit="{{ f.campaign_id }}">
-                                        <i class="fas fa-pen"></i> ویرایش
-                                    </button>
-                                    <form method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="enroll_pilot">
-                                        <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm">ثبت در پایلوت</button>
-                                    </form>
-                                    <div class="adm-lac-send-steps" role="group" aria-label="ارسال دستی مراحل">
+                            <td class="adm-lac-actions-cell">
+                                <div class="adm-lac-actions adm-lac-actions--toolbar" role="toolbar" aria-label="عملیات کمپین">
+                                    <div class="adm-lac-action-group" role="group" aria-label="مشاهده و ویرایش">
+                                        <a class="adm-lac-icon-btn" href="{% url 'admin_panel_lead_campaign_detail' f.campaign_id %}" title="گزارش" aria-label="گزارش">
+                                            <i class="fas fa-chart-column" aria-hidden="true"></i>
+                                        </a>
+                                        <button type="button" class="adm-lac-icon-btn" data-lac-edit="{{ f.campaign_id }}" title="ویرایش" aria-label="ویرایش">
+                                            <i class="fas fa-pen" aria-hidden="true"></i>
+                                        </button>
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="enroll_pilot">
+                                            <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                            <button type="submit" class="adm-lac-icon-btn adm-lac-icon-btn--amber" title="ثبت در پایلوت" aria-label="ثبت در پایلوت">
+                                                <i class="fas fa-flask" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div class="adm-lac-action-group adm-lac-send-steps" role="group" aria-label="ارسال دستی مراحل">
                                         <form method="post" class="lac-send-step-form" data-campaign-id="{{ f.campaign_id }}">
                                             {% csrf_token %}
                                             <input type="hidden" name="action" value="send_step">
                                             <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
                                             <input type="hidden" name="step_number" value="1">
-                                            <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" title="ارسال مرحله ۱">ارسال ۱</button>
+                                            <button type="submit" class="adm-lac-icon-btn adm-lac-icon-btn--send" title="ارسال مرحله ۱" aria-label="ارسال مرحله ۱">
+                                                <i class="fas fa-paper-plane" aria-hidden="true"></i><span>۱</span>
+                                            </button>
                                         </form>
                                         <form method="post" class="lac-send-step-form" data-campaign-id="{{ f.campaign_id }}">
                                             {% csrf_token %}
                                             <input type="hidden" name="action" value="send_step">
                                             <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
                                             <input type="hidden" name="step_number" value="2">
-                                            <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" title="ارسال دستی مرحله ۲">ارسال ۲</button>
+                                            <button type="submit" class="adm-lac-icon-btn adm-lac-icon-btn--send" title="ارسال مرحله ۲" aria-label="ارسال مرحله ۲">
+                                                <i class="fas fa-paper-plane" aria-hidden="true"></i><span>۲</span>
+                                            </button>
                                         </form>
                                         <form method="post" class="lac-send-step-form" data-campaign-id="{{ f.campaign_id }}">
                                             {% csrf_token %}
                                             <input type="hidden" name="action" value="send_step">
                                             <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
                                             <input type="hidden" name="step_number" value="3">
-                                            <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" title="ارسال دستی مرحله ۳">ارسال ۳</button>
+                                            <button type="submit" class="adm-lac-icon-btn adm-lac-icon-btn--send" title="ارسال مرحله ۳" aria-label="ارسال مرحله ۳">
+                                                <i class="fas fa-paper-plane" aria-hidden="true"></i><span>۳</span>
+                                            </button>
                                         </form>
                                     </div>
-                                    <form method="post" onsubmit="return confirm('پیام‌های ناموفق آزاد شوند و کمپین برای ارسال مجدد ریست شود؟');">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="reset_campaign">
-                                        <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" title="ریست بدون حذف کمپین">
-                                            <i class="fas fa-rotate-left"></i> ریست
-                                        </button>
-                                    </form>
-                                    <form method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="retry_failed">
-                                        <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
-                                        <input type="hidden" name="step_number" value="1">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm" title="ریست + ارسال مجدد ناموفق‌ها">ارسال مجدد</button>
-                                    </form>
-                                    <form method="post" onsubmit="return confirm('کمپین کاملاً حذف شود؟ لیست سرنخ‌ها پاک نمی‌شود.');">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="delete_campaign">
-                                        <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
-                                        <input type="hidden" name="confirm_delete" value="1">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--danger adm-lac-btn--sm">حذف</button>
-                                    </form>
+                                    <div class="adm-lac-action-group" role="group" aria-label="بازیابی و حذف">
+                                        <form method="post" onsubmit="return confirm('پیام‌های ناموفق آزاد شوند و کمپین برای ارسال مجدد ریست شود؟');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="reset_campaign">
+                                            <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                            <button type="submit" class="adm-lac-icon-btn" title="ریست کمپین" aria-label="ریست کمپین">
+                                                <i class="fas fa-rotate-left" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="retry_failed">
+                                            <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                            <input type="hidden" name="step_number" value="1">
+                                            <button type="submit" class="adm-lac-icon-btn adm-lac-icon-btn--amber" title="ارسال مجدد ناموفق‌ها" aria-label="ارسال مجدد ناموفق‌ها">
+                                                <i class="fas fa-arrows-rotate" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" onsubmit="return confirm('کمپین کاملاً حذف شود؟ لیست سرنخ‌ها پاک نمی‌شود.');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete_campaign">
+                                            <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                            <input type="hidden" name="confirm_delete" value="1">
+                                            <button type="submit" class="adm-lac-icon-btn adm-lac-icon-btn--danger" title="حذف کمپین" aria-label="حذف کمپین">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

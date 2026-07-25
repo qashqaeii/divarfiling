@@ -1035,6 +1035,115 @@ html.mk-public:not([data-theme="light"]) .adm-lac-field select {
     gap: 0.3rem;
 }
 
+.adm-lac-actions-cell {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.adm-lac-actions--toolbar {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.adm-lac-action-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.12rem;
+    border-radius: 9px;
+    border: 1px solid var(--lac-line);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+html.mk-public:not([data-theme="light"]) .adm-lac-action-group {
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.adm-lac-action-group form {
+    margin: 0;
+    display: inline-flex;
+}
+
+.adm-lac-icon-btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    width: 1.9rem;
+    height: 1.9rem;
+    padding: 0;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--lac-muted);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s var(--lac-ease), color 0.15s var(--lac-ease);
+}
+
+.adm-lac-icon-btn:hover {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--lac-teal-deep);
+}
+
+.adm-lac-icon-btn:focus-visible {
+    outline: 2px solid rgba(13, 148, 136, 0.45);
+    outline-offset: 1px;
+}
+
+.adm-lac-icon-btn--send {
+    width: auto;
+    min-width: 2.15rem;
+    padding: 0 0.35rem;
+    color: var(--lac-teal-deep);
+}
+
+.adm-lac-icon-btn--send i {
+    font-size: 0.68rem;
+}
+
+.adm-lac-icon-btn--send span {
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.adm-lac-icon-btn--send:hover {
+    background: rgba(13, 148, 136, 0.16);
+    color: var(--lac-teal-deep);
+}
+
+.adm-lac-icon-btn--amber {
+    color: #b45309;
+}
+
+.adm-lac-icon-btn--amber:hover {
+    background: rgba(245, 158, 11, 0.16);
+    color: #92400e;
+}
+
+.adm-lac-icon-btn--danger {
+    color: #be123c;
+}
+
+.adm-lac-icon-btn--danger:hover {
+    background: rgba(225, 29, 72, 0.12);
+    color: #9f1239;
+}
+
+@media (max-width: 1100px) {
+    .adm-lac-actions--toolbar {
+        flex-wrap: wrap;
+        max-width: 14rem;
+    }
+}
+
 .adm-lac-status {
     display: inline-flex;
     align-items: center;
@@ -1603,13 +1712,14 @@ html.mk-public:not([data-theme="light"]) .adm-lac-field textarea {
 
 .adm-lac-send-steps {
     display: inline-flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
+    flex-wrap: nowrap;
+    gap: 0.1rem;
     align-items: center;
 }
 
 .adm-lac-send-steps form {
     margin: 0;
+    display: inline-flex;
 }
 
 .adm-lac-msg-pane__head {

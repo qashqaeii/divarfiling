@@ -6,8 +6,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -166,13 +166,13 @@
             </div>
         </aside>
 
-        <article class="ab-sys-article-preview mk-blog-detail-page">
+        <article class="ab-sys-article-preview mk-blog-detail-page" data-theme="light">
             {% if featured_image_url %}
             <img class="ab-sys-article-hero" src="{{ featured_image_url }}" alt="{{ title }}">
             {% endif %}
             <h1>{{ title }}</h1>
             <p class="mk-blog-detail-lead">{{ excerpt }}</p>
-            <div class="mk-blog-prose mk-market-article-body">
+            <div class="mk-blog-prose mk-market-article-body ab-sys-article-body">
                 {{ content_html|safe }}
             </div>
         </article>

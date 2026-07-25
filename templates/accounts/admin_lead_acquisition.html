@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -535,11 +535,11 @@
         <div class="adm-lac-section-head">
             <div>
                 <h2>کمپین‌ها و قیف</h2>
-                <p>انتخاب چندتایی · ارسال کامل همه سرنخ‌ها · قالب A/B یکسان برای همه</p>
+                <p>انتخاب چندتایی · ارسال دستی مراحل ۱–۳ · قالب پیام سراسری برای همه</p>
             </div>
             <div class="adm-lac-section-head__actions">
-                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-open-bulk-templates-all" title="اعمال قالب A/B روی همه کمپین‌های جذب">
-                    <i class="fas fa-clone"></i> قالب A/B برای همه
+                <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" id="lac-open-bulk-templates-all" title="ویرایش قالب سراسری مراحل ۱–۳ — برای همه کمپین‌ها و کمپین‌های جدید">
+                    <i class="fas fa-pen-to-square"></i> ویرایش قالب سراسری پیام‌ها
                 </button>
             </div>
         </div>
@@ -559,7 +559,7 @@
                 </div>
                 <div class="adm-lac-bulk-bar__actions">
                     <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-bulk-templates-selected">
-                        <i class="fas fa-clone"></i> قالب A/B
+                        <i class="fas fa-clone"></i> قالب پیام‌ها
                     </button>
                     <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-bulk-op="enroll_all" data-bulk-form="lac-campaigns-bulk-form">
                         <i class="fas fa-users"></i> ثبت همه سرنخ‌ها
@@ -567,8 +567,14 @@
                     <button type="button" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm" data-bulk-op="enroll_pilot" data-bulk-form="lac-campaigns-bulk-form">
                         <i class="fas fa-flask"></i> ثبت پایلوت
                     </button>
-                    <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" data-bulk-op="send_step" data-bulk-form="lac-campaigns-bulk-form">
-                        <i class="fas fa-paper-plane"></i> ارسال کامل مرحله ۱
+                    <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" data-bulk-op="send_step" data-step="1" data-bulk-form="lac-campaigns-bulk-form">
+                        <i class="fas fa-paper-plane"></i> ارسال مرحله ۱
+                    </button>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" data-bulk-op="send_step" data-step="2" data-bulk-form="lac-campaigns-bulk-form" title="ارسال دستی به کسانی که مرحله ۱ را گرفته‌اند">
+                        <i class="fas fa-paper-plane"></i> ارسال مرحله ۲
+                    </button>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" data-bulk-op="send_step" data-step="3" data-bulk-form="lac-campaigns-bulk-form" title="ارسال دستی به کسانی که مرحله ۲ را گرفته‌اند">
+                        <i class="fas fa-paper-plane"></i> ارسال مرحله ۳
                     </button>
                     <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-bulk-op="reset_campaign" data-bulk-form="lac-campaigns-bulk-form">
                         <i class="fas fa-rotate-left"></i> ریست
@@ -646,13 +652,29 @@
                                         <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
                                         <button type="submit" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm">ثبت در پایلوت</button>
                                     </form>
-                                    <form method="post" class="lac-send-step-form" data-campaign-id="{{ f.campaign_id }}">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="send_step">
-                                        <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
-                                        <input type="hidden" name="step_number" value="1">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">ارسال کامل</button>
-                                    </form>
+                                    <div class="adm-lac-send-steps" role="group" aria-label="ارسال دستی مراحل">
+                                        <form method="post" class="lac-send-step-form" data-campaign-id="{{ f.campaign_id }}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="send_step">
+                                            <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                            <input type="hidden" name="step_number" value="1">
+                                            <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" title="ارسال مرحله ۱">ارسال ۱</button>
+                                        </form>
+                                        <form method="post" class="lac-send-step-form" data-campaign-id="{{ f.campaign_id }}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="send_step">
+                                            <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                            <input type="hidden" name="step_number" value="2">
+                                            <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" title="ارسال دستی مرحله ۲">ارسال ۲</button>
+                                        </form>
+                                        <form method="post" class="lac-send-step-form" data-campaign-id="{{ f.campaign_id }}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="send_step">
+                                            <input type="hidden" name="campaign_id" value="{{ f.campaign_id }}">
+                                            <input type="hidden" name="step_number" value="3">
+                                            <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" title="ارسال دستی مرحله ۳">ارسال ۳</button>
+                                        </form>
+                                    </div>
                                     <form method="post" onsubmit="return confirm('پیام‌های ناموفق آزاد شوند و کمپین برای ارسال مجدد ریست شود؟');">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="reset_campaign">
@@ -806,9 +828,9 @@
             {% csrf_token %}
             <header class="adm-lac-modal__head">
                 <div>
-                    <h3 id="lac-bulk-templates-title">قالب A/B برای همه کمپین‌ها</h3>
-                    <p class="adm-lac-kpi-sub" id="lac-bulk-templates-sub">یک بار ویرایش کنید — روی همه کمپین‌های هدف اعمال می‌شود</p>
-                    <p class="adm-lac-kpi-sub">متغیرها: <code>{district}</code> · <code>{link}</code> · <code>{name}</code></p>
+                    <h3 id="lac-bulk-templates-title">قالب سراسری پیام‌ها (مراحل ۱–۳)</h3>
+                    <p class="adm-lac-kpi-sub" id="lac-bulk-templates-sub">ذخیره می‌شود و برای همه کمپین‌های فعلی + کمپین‌های جدید اعمال می‌گردد</p>
+                    <p class="adm-lac-kpi-sub">متغیرها: <code>{district}</code> · <code>{link}</code> · <code>{name}</code> — در لحظهٔ ارسال جایگزین می‌شوند</p>
                 </div>
                 <button type="button" class="adm-lac-modal__close" data-lac-bulk-templates-close aria-label="بستن">&times;</button>
             </header>
@@ -818,18 +840,34 @@
                     <div class="adm-lac-msg-pane" data-variant="A">
                         <div class="adm-lac-msg-pane__head">
                             <span class="adm-lac-variant-key">A</span>
-                            <strong>نسخه A · معرفی مستقیم</strong>
+                            <strong>مرحله ۱ · نسخه A</strong>
                             <span class="adm-lac-msg-len" id="lac-bulk-len-a">۰ کاراکتر</span>
                         </div>
-                        <textarea id="lac-bulk-variant-a" rows="5" placeholder="متن پیامک نسخه A">{{ default_variant_a }}</textarea>
+                        <textarea id="lac-bulk-variant-a" rows="5" placeholder="مشاور املاک {district} هستید؟ … معرفی کوتاه: {link}">{{ default_variant_a }}</textarea>
                     </div>
                     <div class="adm-lac-msg-pane" data-variant="B">
                         <div class="adm-lac-msg-pane__head">
                             <span class="adm-lac-variant-key">B</span>
-                            <strong>نسخه B · سوال + ارزش</strong>
+                            <strong>مرحله ۱ · نسخه B</strong>
                             <span class="adm-lac-msg-len" id="lac-bulk-len-b">۰ کاراکتر</span>
                         </div>
-                        <textarea id="lac-bulk-variant-b" rows="5" placeholder="متن پیامک نسخه B">{{ default_variant_b }}</textarea>
+                        <textarea id="lac-bulk-variant-b" rows="5" placeholder="مشاور املاک {district} هستید؟ … ببینید چطور: {link}">{{ default_variant_b }}</textarea>
+                    </div>
+                    <div class="adm-lac-msg-pane" data-step="2">
+                        <div class="adm-lac-msg-pane__head">
+                            <span class="adm-lac-variant-key">۲</span>
+                            <strong>مرحله ۲ · یادآوری</strong>
+                            <span class="adm-lac-msg-len" id="lac-bulk-len-2">۰ کاراکتر</span>
+                        </div>
+                        <textarea id="lac-bulk-step-2" rows="4" placeholder="یادآوری … {link}">{{ default_step_2 }}</textarea>
+                    </div>
+                    <div class="adm-lac-msg-pane" data-step="3">
+                        <div class="adm-lac-msg-pane__head">
+                            <span class="adm-lac-variant-key">۳</span>
+                            <strong>مرحله ۳ · تبدیل گرم</strong>
+                            <span class="adm-lac-msg-len" id="lac-bulk-len-3">۰ کاراکتر</span>
+                        </div>
+                        <textarea id="lac-bulk-step-3" rows="4" placeholder="آخرین تلاش … {link}">{{ default_step_3 }}</textarea>
                     </div>
                 </div>
                 <p class="adm-lac-kpi-sub" id="lac-bulk-templates-status" hidden></p>
@@ -837,7 +875,7 @@
             <footer class="adm-lac-modal__foot">
                 <button type="button" class="adm-lac-btn adm-lac-btn--ghost" data-lac-bulk-templates-close>انصراف</button>
                 <button type="submit" class="adm-lac-btn adm-lac-btn--primary" id="lac-bulk-templates-save">
-                    <i class="fas fa-save"></i> اعمال روی همه
+                    <i class="fas fa-save"></i> ذخیره و اعمال برای همه
                 </button>
             </footer>
         </form>
@@ -953,8 +991,12 @@
   var bulkTemplatesForm = document.getElementById('lac-bulk-templates-form');
   var bulkTaA = document.getElementById('lac-bulk-variant-a');
   var bulkTaB = document.getElementById('lac-bulk-variant-b');
+  var bulkTa2 = document.getElementById('lac-bulk-step-2');
+  var bulkTa3 = document.getElementById('lac-bulk-step-3');
   var bulkLenA = document.getElementById('lac-bulk-len-a');
   var bulkLenB = document.getElementById('lac-bulk-len-b');
+  var bulkLen2 = document.getElementById('lac-bulk-len-2');
+  var bulkLen3 = document.getElementById('lac-bulk-len-3');
   var bulkTemplatesApplyAll = document.getElementById('lac-bulk-templates-apply-all');
   var bulkTemplatesStatus = document.getElementById('lac-bulk-templates-status');
   var bulkTemplatesSaving = false;
@@ -969,9 +1011,12 @@
   function updateBulkLen() {
     if (bulkLenA && bulkTaA) bulkLenA.textContent = persianDigits(bulkTaA.value.length) + ' کاراکتر';
     if (bulkLenB && bulkTaB) bulkLenB.textContent = persianDigits(bulkTaB.value.length) + ' کاراکتر';
+    if (bulkLen2 && bulkTa2) bulkLen2.textContent = persianDigits(bulkTa2.value.length) + ' کاراکتر';
+    if (bulkLen3 && bulkTa3) bulkLen3.textContent = persianDigits(bulkTa3.value.length) + ' کاراکتر';
   }
-  if (bulkTaA) bulkTaA.addEventListener('input', updateBulkLen);
-  if (bulkTaB) bulkTaB.addEventListener('input', updateBulkLen);
+  [bulkTaA, bulkTaB, bulkTa2, bulkTa3].forEach(function (el) {
+    if (el) el.addEventListener('input', updateBulkLen);
+  });
   updateBulkLen();
 
   function openBulkTemplatesModal(opts) {
@@ -983,18 +1028,30 @@
     var sub = document.getElementById('lac-bulk-templates-sub');
     var saveBtn = document.getElementById('lac-bulk-templates-save');
     if (applyAll) {
-      if (title) title.textContent = 'قالب A/B برای همه کمپین‌ها';
-      if (sub) sub.textContent = persianDigits(allCampaignIds.length) + ' کمپین · یک بار ویرایش و اعمال همزمان';
-      if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> اعمال روی همه';
+      if (title) title.textContent = 'قالب سراسری پیام‌ها (مراحل ۱–۳)';
+      if (sub) sub.textContent = 'ذخیره برای همه کمپین‌های فعلی (' + persianDigits(allCampaignIds.length) + ') و کمپین‌های جدید';
+      if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> ذخیره و اعمال برای همه';
     } else {
-      if (title) title.textContent = 'قالب A/B برای کمپین‌های انتخاب‌شده';
-      if (sub) sub.textContent = persianDigits(bulkTemplatesTargetIds.length) + ' کمپین انتخاب شده';
-      if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> اعمال روی انتخاب‌شده‌ها';
+      if (title) title.textContent = 'قالب سراسری + اعمال روی انتخاب‌شده‌ها';
+      if (sub) sub.textContent = persianDigits(bulkTemplatesTargetIds.length) + ' کمپین · قالب سراسری هم به‌روز می‌شود';
+      if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> ذخیره و اعمال روی انتخاب‌شده‌ها';
     }
     if (bulkTemplatesStatus) {
       bulkTemplatesStatus.hidden = true;
       bulkTemplatesStatus.textContent = '';
     }
+    fetch(bulkTemplatesUrl, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && data.ok) {
+          if (bulkTaA && data.variant_a) bulkTaA.value = data.variant_a;
+          if (bulkTaB && data.variant_b) bulkTaB.value = data.variant_b;
+          if (bulkTa2 && data.step_2) bulkTa2.value = data.step_2;
+          if (bulkTa3 && data.step_3) bulkTa3.value = data.step_3;
+          updateBulkLen();
+        }
+      })
+      .catch(function () {});
     if (bulkTemplatesModal) {
       if (bulkTemplatesModal.showModal) bulkTemplatesModal.showModal();
       else bulkTemplatesModal.setAttribute('open', 'open');
@@ -1026,7 +1083,7 @@
         ids.push(parseInt(cb.value, 10));
       });
       if (!ids.length) {
-        alert('حداقل یک کمپین را انتخاب کنید — یا از «قالب A/B برای همه» استفاده کنید.');
+        alert('حداقل یک کمپین را انتخاب کنید — یا از «ویرایش قالب سراسری پیام‌ها» استفاده کنید.');
         return;
       }
       openBulkTemplatesModal({ campaignIds: ids, applyAll: false });
@@ -1137,7 +1194,8 @@
           bulkChecks.forEach(function (cb) {
             if (cb.checked) ids.push(parseInt(cb.value, 10));
           });
-          runSendProgress(ids, 1);
+          var stepNo = parseInt(btn.getAttribute('data-step') || '1', 10) || 1;
+          runSendProgress(ids, stepNo);
           return;
         }
         var confirmMsg = btn.getAttribute('data-confirm');
@@ -1240,6 +1298,8 @@
       var payload = {
         variant_a: bulkTaA ? bulkTaA.value : '',
         variant_b: bulkTaB ? bulkTaB.value : '',
+        step_2: bulkTa2 ? bulkTa2.value : '',
+        step_3: bulkTa3 ? bulkTa3.value : '',
         apply_all: applyAll,
       };
       if (!applyAll) payload.campaign_ids = bulkTemplatesTargetIds;
@@ -1251,7 +1311,7 @@
       try {
         var data = await postJson(bulkTemplatesUrl, payload);
         if (bulkTemplatesStatus) {
-          bulkTemplatesStatus.textContent = 'به‌روزرسانی شد — ' +
+          bulkTemplatesStatus.textContent = 'قالب سراسری ذخیره شد — اعمال روی ' +
             persianDigits(data.updated_count || 0) + ' کمپین';
         }
         setTimeout(function () {
@@ -1271,8 +1331,17 @@
       alert('یک عملیات ارسال در حال اجراست.');
       return;
     }
+    stepNumber = parseInt(stepNumber, 10) || 1;
     sendRunning = true;
     openSendModal();
+    var titleEl = document.getElementById('lac-send-modal-title');
+    var subEl = document.getElementById('lac-send-modal-sub');
+    if (titleEl) titleEl.textContent = 'ارسال کامل مرحله ' + persianDigits(stepNumber);
+    if (subEl) {
+      subEl.textContent = stepNumber === 1
+        ? 'ابتدا همه سرنخ‌های واجد شرایط ثبت می‌شوند · سپس ارسال chunk به chunk'
+        : 'ارسال دستی به کسانی که مرحله قبل را گرفته‌اند (بدون انتظار delay)';
+    }
     setSendUi({ running: true });
     var state = {
       initialTotal: 0,

@@ -23,12 +23,10 @@ from accounts.models import (
 )
 from accounts.services.lead_attribution import record_touchpoint
 from accounts.services.lead_campaign_send import (
-    DEFAULT_STEP1_A,
-    DEFAULT_STEP1_B,
     LeadCampaignError,
     auto_create_campaign_for_import,
     batches_pending_campaign,
-    bulk_update_variant_templates,
+    bulk_update_message_templates,
     create_acquisition_campaign,
     delete_lead_campaign,
     enroll_all_eligible,
@@ -36,9 +34,11 @@ from accounts.services.lead_campaign_send import (
     enroll_pilot,
     ensure_campaign_for_batch,
     eligible_count_for_list,
+    get_global_message_templates,
     get_step1_variant_templates,
     pending_totals_for_campaigns,
     reset_campaign_for_retry,
+    save_global_variant_templates,
     send_batch_size,
     send_campaign_step,
     send_campaigns_step_chunk,
@@ -204,12 +204,10 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 for i in (self.request.session.get(SESSION_BULK_PREVIEW_KEY) or [])
             ],
             'leads_sample': MarketingLead.objects.order_by('-updated_at')[:25],
-            'default_variant_a': (
-                get_step1_variant_templates(campaigns[0])['A'] if campaigns else DEFAULT_STEP1_A
-            ),
-            'default_variant_b': (
-                get_step1_variant_templates(campaigns[0])['B'] if campaigns else DEFAULT_STEP1_B
-            ),
+            'default_variant_a': get_global_message_templates()['A'],
+            'default_variant_b': get_global_message_templates()['B'],
+            'default_step_2': get_global_message_templates()['step_2'],
+            'default_step_3': get_global_message_templates()['step_3'],
             'campaign_edit_json': json.dumps(campaign_edit, ensure_ascii=False),
             'all_campaign_ids_json': json.dumps([c.pk for c in campaigns], ensure_ascii=False),
             'batches_pending_campaign': batches_pending_campaign(limit=20),
@@ -638,7 +636,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         labels = {
             'enroll_pilot': 'ثبت پایلوت گروهی',
             'enroll_all': 'ثبت همه سرنخ‌ها',
-            'send_step': 'ارسال کامل مرحله ۱',
+            'send_step': f'ارسال کامل مرحله {request.POST.get("step_number") or 1}',
             'reset_campaign': 'ریست گروهی',
             'delete_campaign': 'حذف گروهی',
         }
@@ -727,9 +725,16 @@ class AdminLeadSendProgressStartView(StaffRequiredMixin, View):
             if not ids and request.POST.getlist('campaign_ids'):
                 ids = [int(x) for x in request.POST.getlist('campaign_ids') if str(x).isdigit()]
             step_number = int(payload.get('step_number') or request.POST.get('step_number') or 1)
+            if step_number not in (1, 2, 3):
+                return JsonResponse({'ok': False, 'error': 'شماره مرحله نامعتبر است.'}, status=400)
             if not ids:
                 return JsonResponse({'ok': False, 'error': 'حداقل یک کمپین انتخاب کنید.'}, status=400)
-            enroll_summary = enroll_campaigns_for_full_send(ids)
+            # ثبت سرنخ فقط برای مرحله ۱ لازم است؛ ۲ و ۳ روی enroll فعلی کار می‌کنند
+            enroll_summary = (
+                enroll_campaigns_for_full_send(ids)
+                if step_number == 1
+                else {'campaigns': 0, 'enrolled': 0, 'activated': 0}
+            )
             totals = pending_totals_for_campaigns(ids, step_number)
             return JsonResponse({
                 'ok': True,
@@ -765,7 +770,17 @@ class AdminLeadSendProgressTickView(StaffRequiredMixin, View):
 
 
 class AdminLeadBulkTemplatesView(StaffRequiredMixin, View):
-    """اعمال یک قالب A/B روی چند کمپین (یا همه کمپین‌های جذب)."""
+    """ذخیره قالب سراسری مراحل ۱–۳ و اعمال روی کمپین‌های انتخاب‌شده یا همه."""
+
+    def get(self, request):
+        tpl = get_global_message_templates()
+        return JsonResponse({
+            'ok': True,
+            'variant_a': tpl['A'],
+            'variant_b': tpl['B'],
+            'step_2': tpl['step_2'],
+            'step_3': tpl['step_3'],
+        }, json_dumps_params={'ensure_ascii': False})
 
     def post(self, request):
         try:
@@ -774,22 +789,52 @@ class AdminLeadBulkTemplatesView(StaffRequiredMixin, View):
             if not ids and request.POST.getlist('campaign_ids'):
                 ids = [int(x) for x in request.POST.getlist('campaign_ids') if str(x).isdigit()]
             apply_all = payload.get('apply_all') in (True, '1', 1, 'true')
-            if apply_all or not ids:
-                ids = list(
-                    LeadCampaign.objects.filter(kind=LeadCampaign.Kind.ACQUISITION)
-                    .order_by('-created_at')
-                    .values_list('pk', flat=True)
-                )
-            if not ids:
-                return JsonResponse({'ok': False, 'error': 'هیچ کمپینی برای به‌روزرسانی یافت نشد.'}, status=400)
             variant_a = (payload.get('variant_a') or request.POST.get('variant_a') or '').strip()
             variant_b = (payload.get('variant_b') or request.POST.get('variant_b') or '').strip()
-            result = bulk_update_variant_templates(ids, variant_a=variant_a, variant_b=variant_b)
+            step_2 = (payload.get('step_2') or request.POST.get('step_2') or '').strip()
+            step_3 = (payload.get('step_3') or request.POST.get('step_3') or '').strip()
+
+            if apply_all or not ids:
+                result = save_global_variant_templates(
+                    variant_a,
+                    variant_b,
+                    step_2=step_2,
+                    step_3=step_3,
+                    user=request.user,
+                    apply_to_all=True,
+                )
+            else:
+                save_global_variant_templates(
+                    variant_a,
+                    variant_b,
+                    step_2=step_2,
+                    step_3=step_3,
+                    user=request.user,
+                    apply_to_all=False,
+                )
+                result = bulk_update_message_templates(
+                    ids,
+                    variant_a=variant_a,
+                    variant_b=variant_b,
+                    step_2=step_2,
+                    step_3=step_3,
+                )
+                result['saved'] = True
+                result['variant_a'] = variant_a
+                result['variant_b'] = variant_b
+                result['step_2'] = step_2
+                result['step_3'] = step_3
+
             return JsonResponse({
                 'ok': True,
-                'updated_count': result['updated_count'],
-                'updated': result['updated'],
-                'errors': result['errors'],
+                'saved': True,
+                'updated_count': result.get('updated_count', 0),
+                'updated': result.get('updated', []),
+                'errors': result.get('errors', []),
+                'variant_a': result.get('variant_a', variant_a),
+                'variant_b': result.get('variant_b', variant_b),
+                'step_2': result.get('step_2', step_2),
+                'step_3': result.get('step_3', step_3),
             }, json_dumps_params={'ensure_ascii': False})
         except LeadCampaignError as exc:
             return JsonResponse({'ok': False, 'error': exc.message}, status=400)

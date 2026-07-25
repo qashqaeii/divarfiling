@@ -1143,6 +1143,93 @@ class LeadAttribution(models.Model):
         return f'{self.axis}/{self.attribution_kind}/{self.touch_model} lead#{self.lead_id}'
 
 
+class LeadAcquisitionMessageDefaults(models.Model):
+    """قالب سراسری پیامک مرکز جذب — یک رکورد؛ ویرایش برای همه کمپین‌ها اعمال می‌شود."""
+
+    variant_a = models.TextField(
+        verbose_name='قالب نسخه A (مرحله ۱)',
+        help_text='متغیرها: {district} · {link} · {name}',
+    )
+    variant_b = models.TextField(
+        verbose_name='قالب نسخه B (مرحله ۱)',
+        help_text='متغیرها: {district} · {link} · {name}',
+    )
+    step_2 = models.TextField(
+        verbose_name='قالب مرحله ۲ (یادآوری)',
+        help_text='متغیرها: {district} · {link} · {name}',
+        blank=True,
+        default='',
+    )
+    step_3 = models.TextField(
+        verbose_name='قالب مرحله ۳ (تبدیل گرم)',
+        help_text='متغیرها: {district} · {link} · {name}',
+        blank=True,
+        default='',
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lead_message_default_edits',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'قالب سراسری پیام جذب'
+        verbose_name_plural = 'قالب سراسری پیام جذب'
+
+    def __str__(self):
+        return f'قالب سراسری مراحل ۱–۳ · به‌روز {self.updated_at:%Y-%m-%d %H:%M}'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls) -> 'LeadAcquisitionMessageDefaults':
+        obj, created = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                'variant_a': (
+                    'مشاور املاک {district} هستید؟ فایلینگ دیوار کمک می‌کند فایل‌های مناسب منطقه را '
+                    'سریع‌تر پیدا و مشتری‌ها را منظم پیگیری کنید. معرفی کوتاه: {link}'
+                ),
+                'variant_b': (
+                    'مشاور املاک {district} هستید؟ هنوز بین آگهی‌ها برای پیدا کردن فایل وقت می‌گذارید؟ '
+                    'فایلینگ دیوار کارتان را سریع‌تر می‌کند. ببینید چطور: {link}'
+                ),
+                'step_2': (
+                    'از جست‌وجوی فایل تا ثبت مشتری و یادآوری پیگیری؛ همه در یک میزکار مخصوص مشاور املاک. '
+                    'لایسنس یک‌روزه فایلینگ دیوار را امتحان کنید: {link}'
+                ),
+                'step_3': (
+                    'اگر هنوز فایلینگ دیوار را امتحان نکرده‌اید، با لایسنس یک‌روزه می‌توانید امکاناتش را '
+                    'در کار واقعی خودتان بسنجید: {link}'
+                ),
+            },
+        )
+        # رکورد قدیمی بدون step_2/3 را پر کن
+        if not created:
+            dirty: list[str] = []
+            if not (obj.step_2 or '').strip():
+                obj.step_2 = (
+                    'از جست‌وجوی فایل تا ثبت مشتری و یادآوری پیگیری؛ همه در یک میزکار مخصوص مشاور املاک. '
+                    'لایسنس یک‌روزه فایلینگ دیوار را امتحان کنید: {link}'
+                )
+                dirty.append('step_2')
+            if not (obj.step_3 or '').strip():
+                obj.step_3 = (
+                    'اگر هنوز فایلینگ دیوار را امتحان نکرده‌اید، با لایسنس یک‌روزه می‌توانید امکاناتش را '
+                    'در کار واقعی خودتان بسنجید: {link}'
+                )
+                dirty.append('step_3')
+            if dirty:
+                obj.save(update_fields=dirty + ['updated_at'])
+        return obj
+
+
 # ─── Unified Growth Pipeline ───────────────────────────────────────────────
 
 

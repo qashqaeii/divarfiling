@@ -696,18 +696,76 @@ class LeadCampaignFullSendTests(TestCase):
             reverse('admin_panel_lead_bulk_templates'),
             data=json.dumps({
                 'apply_all': True,
-                'variant_a': 'API A {link}',
-                'variant_b': 'API B {link}',
+                'variant_a': 'API A {district} {link}',
+                'variant_b': 'API B {district} {link}',
+                'step_2': 'API Step2 {district} {link}',
+                'step_3': 'API Step3 {link}',
             }),
             content_type='application/json',
         )
         self.assertEqual(resp.status_code, 200)
         payload = resp.json()
         self.assertTrue(payload['ok'])
+        self.assertTrue(payload.get('saved'))
         self.assertGreaterEqual(payload['updated_count'], 1)
         step = self.campaign.steps.get(step_number=1)
         self.assertIn('API A', step.message_template)
         self.assertIn('API B', step.message_template)
+        self.assertIn('{district}', step.message_template)
+        self.assertIn('API Step2', self.campaign.steps.get(step_number=2).message_template)
+        self.assertIn('API Step3', self.campaign.steps.get(step_number=3).message_template)
+
+        from accounts.services.lead_campaign_send import get_global_message_templates
+        global_tpl = get_global_message_templates()
+        self.assertIn('API A', global_tpl['A'])
+        self.assertIn('{link}', global_tpl['A'])
+        self.assertIn('API Step2', global_tpl['step_2'])
+        self.assertIn('API Step3', global_tpl['step_3'])
+
+        # کمپین جدید هم همان قالب سراسری را می‌گیرد
+        from accounts.models import LeadList
+        lead_list = LeadList.objects.first()
+        new_c = create_acquisition_campaign(name='From global tpl', lead_list=lead_list)
+        new_step = new_c.steps.get(step_number=1)
+        self.assertIn('API A', new_step.message_template)
+        self.assertIn('{district}', new_step.message_template)
+        self.assertIn('API Step2', new_c.steps.get(step_number=2).message_template)
+        self.assertIn('API Step3', new_c.steps.get(step_number=3).message_template)
+
+    @patch('accounts.services.lead_campaign_send.notify_marketing')
+    def test_manual_send_step2_after_step1(self, mock_notify):
+        from accounts.models import CampaignEnrollment, SmsMessageLog
+        from accounts.services.lead_campaign_send import enroll_all_eligible, send_campaign_step
+
+        mock_notify.side_effect = lambda phone, text='', attributes=None: (
+            True,
+            SmsMessageLog.objects.create(phone=phone, purpose='x', status=SmsMessageLog.Status.FAKE),
+        )
+        enroll_all_eligible(self.campaign)
+        # قبل از مرحله ۱، صف مرحله ۲ خالی است
+        start_empty = self.client.post(
+            reverse('admin_panel_lead_send_progress_start'),
+            data=json.dumps({'campaign_ids': [self.campaign.pk], 'step_number': 2}),
+            content_type='application/json',
+        )
+        self.assertEqual(start_empty.status_code, 200)
+        self.assertEqual(start_empty.json()['total_pending'], 0)
+
+        send_campaign_step(self.campaign, 1, request=None)
+        active = CampaignEnrollment.objects.filter(
+            campaign=self.campaign,
+            status=CampaignEnrollment.Status.ACTIVE,
+            current_step_number=1,
+        ).count()
+        self.assertGreaterEqual(active, 1)
+
+        start2 = self.client.post(
+            reverse('admin_panel_lead_send_progress_start'),
+            data=json.dumps({'campaign_ids': [self.campaign.pk], 'step_number': 2}),
+            content_type='application/json',
+        )
+        self.assertEqual(start2.status_code, 200)
+        self.assertGreaterEqual(start2.json()['total_pending'], 1)
 
 
 class LeadOverviewDashboardTests(TestCase):

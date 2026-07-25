@@ -1589,6 +1589,29 @@ html.mk-public:not([data-theme="light"]) .adm-lac-field textarea {
     border-color: rgba(217, 119, 6, 0.2);
 }
 
+.adm-lac-msg-pane[data-step="2"],
+.adm-lac-msg-pane[data-step="3"] {
+    grid-column: 1 / -1;
+    background: rgba(13, 148, 136, 0.05);
+    border-color: rgba(13, 148, 136, 0.22);
+}
+
+.adm-lac-msg-pane[data-step="3"] {
+    background: rgba(37, 99, 235, 0.05);
+    border-color: rgba(37, 99, 235, 0.2);
+}
+
+.adm-lac-send-steps {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.adm-lac-send-steps form {
+    margin: 0;
+}
+
 .adm-lac-msg-pane__head {
     display: flex;
     flex-wrap: wrap;
@@ -1611,7 +1634,7 @@ html.mk-public:not([data-theme="light"]) .adm-lac-field textarea {
 }
 
 .adm-lac-modal {
-    width: min(720px, calc(100vw - 2rem));
+    width: min(840px, calc(100vw - 2rem));
     max-height: calc(100vh - 2rem);
     padding: 0;
     border: none;

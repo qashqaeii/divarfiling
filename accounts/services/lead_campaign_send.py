@@ -15,6 +15,7 @@ from accounts.models import (
     CampaignMessage,
     CampaignStep,
     CampaignVariant,
+    LeadAcquisitionMessageDefaults,
     LeadCampaign,
     LeadImportBatch,
     LeadList,
@@ -41,8 +42,8 @@ DEFAULT_STEP1_A = (
     'سریع‌تر پیدا و مشتری‌ها را منظم پیگیری کنید. معرفی کوتاه: {link}'
 )
 DEFAULT_STEP1_B = (
-    'هنوز برای پیدا کردن فایل مناسب بین آگهی‌ها زمان زیادی می‌گذارید؟ '
-    'فایلینگ دیوار برای سریع‌تر شدن کار مشاوران املاک ساخته شده. ببینید چطور: {link}'
+    'مشاور املاک {district} هستید؟ هنوز بین آگهی‌ها برای پیدا کردن فایل وقت می‌گذارید؟ '
+    'فایلینگ دیوار کارتان را سریع‌تر می‌کند. ببینید چطور: {link}'
 )
 DEFAULT_STEP2 = (
     'از جست‌وجوی فایل تا ثبت مشتری و یادآوری پیگیری؛ همه در یک میزکار مخصوص مشاور املاک. '
@@ -100,7 +101,10 @@ def send_batch_size() -> int:
 
 
 def pending_enrollments_for_step(campaign: LeadCampaign, step: CampaignStep):
-    """مخاطبان فعال که هنوز برای این مرحله ارسال نشده‌اند."""
+    """
+    مخاطبان فعال که هنوز برای این مرحله ارسال نشده‌اند.
+    مرحله ۲/۳ فقط بعد از تکمیل مرحله قبل (بدون الزام delay) — مناسب ارسال دستی.
+    """
     handled = CampaignMessage.objects.filter(
         campaign=campaign,
         step=step,
@@ -111,16 +115,14 @@ def pending_enrollments_for_step(campaign: LeadCampaign, step: CampaignStep):
             CampaignMessage.Status.FAILED,
         ),
     ).values('enrollment_id')
-    return (
-        CampaignEnrollment.objects.filter(
-            campaign=campaign,
-            status=CampaignEnrollment.Status.ACTIVE,
-            assigned_variant__isnull=False,
-        )
-        .exclude(pk__in=handled)
-        .select_related('lead', 'assigned_variant')
-        .order_by('id')
-    )
+    qs = CampaignEnrollment.objects.filter(
+        campaign=campaign,
+        status=CampaignEnrollment.Status.ACTIVE,
+        assigned_variant__isnull=False,
+    ).exclude(pk__in=handled)
+    if step.step_number >= 2:
+        qs = qs.filter(current_step_number=step.step_number - 1)
+    return qs.select_related('lead', 'assigned_variant').order_by('id')
 
 
 def build_variant_step1_template(variant_a: str, variant_b: str) -> str:
@@ -287,11 +289,113 @@ def ensure_campaign_for_batch(
     )
 
 
+def get_global_message_templates() -> dict[str, str]:
+    """قالب سراسری مراحل ۱–۳ — منبع پیش‌فرض برای کمپین‌های جدید و ویرایش همگانی."""
+    try:
+        row = LeadAcquisitionMessageDefaults.load()
+        a = (row.variant_a or '').strip() or DEFAULT_STEP1_A
+        b = (row.variant_b or '').strip() or DEFAULT_STEP1_B
+        s2 = (row.step_2 or '').strip() or DEFAULT_STEP2
+        s3 = (row.step_3 or '').strip() or DEFAULT_STEP3
+        return {'A': a, 'B': b, 'step_2': s2, 'step_3': s3}
+    except Exception:
+        logger.exception('failed to load global lead message templates')
+        return {
+            'A': DEFAULT_STEP1_A,
+            'B': DEFAULT_STEP1_B,
+            'step_2': DEFAULT_STEP2,
+            'step_3': DEFAULT_STEP3,
+        }
+
+
+def get_global_variant_templates() -> dict[str, str]:
+    """سازگاری با کد قدیمی — فقط A/B مرحله ۱."""
+    tpl = get_global_message_templates()
+    return {'A': tpl['A'], 'B': tpl['B']}
+
+
+def _require_link_templates(**named: str) -> None:
+    for label, text in named.items():
+        if not (text or '').strip():
+            raise LeadCampaignError(f'متن {label} نمی‌تواند خالی باشد.', code='empty_template')
+        if '{link}' not in text:
+            raise LeadCampaignError(f'{label} باید شامل {{link}} باشد.', code='missing_link')
+
+
+def save_global_variant_templates(
+    variant_a: str,
+    variant_b: str,
+    *,
+    step_2: str = '',
+    step_3: str = '',
+    user=None,
+    apply_to_all: bool = True,
+) -> dict:
+    """ذخیره قالب سراسری مراحل ۱–۳ و در صورت نیاز اعمال روی همه کمپین‌های جذب."""
+    global_now = get_global_message_templates()
+    a_text = (variant_a or '').strip() or global_now['A']
+    b_text = (variant_b or '').strip() or global_now['B']
+    s2_text = (step_2 or '').strip() or global_now['step_2']
+    s3_text = (step_3 or '').strip() or global_now['step_3']
+    _require_link_templates(
+        **{'نسخه A': a_text, 'نسخه B': b_text, 'مرحله ۲': s2_text, 'مرحله ۳': s3_text},
+    )
+
+    row = LeadAcquisitionMessageDefaults.load()
+    row.variant_a = a_text
+    row.variant_b = b_text
+    row.step_2 = s2_text
+    row.step_3 = s3_text
+    if user is not None and getattr(user, 'is_authenticated', False):
+        row.updated_by = user
+    row.save()
+
+    result = {
+        'saved': True,
+        'variant_a': a_text,
+        'variant_b': b_text,
+        'step_2': s2_text,
+        'step_3': s3_text,
+        'updated': [],
+        'updated_count': 0,
+        'errors': [],
+    }
+    if apply_to_all:
+        ids = list(
+            LeadCampaign.objects.filter(kind=LeadCampaign.Kind.ACQUISITION)
+            .order_by('-created_at')
+            .values_list('pk', flat=True)
+        )
+        bulk = bulk_update_message_templates(
+            ids,
+            variant_a=a_text,
+            variant_b=b_text,
+            step_2=s2_text,
+            step_3=s3_text,
+        )
+        result.update(bulk)
+    return result
+
+
 def get_step1_variant_templates(campaign: LeadCampaign) -> dict[str, str]:
     step = campaign.steps.filter(step_number=1, is_active=True).first()
     if not step:
-        return {'A': DEFAULT_STEP1_A, 'B': DEFAULT_STEP1_B}
+        return get_global_variant_templates()
     return parse_variant_templates(step.message_template)
+
+
+def get_campaign_step_templates(campaign: LeadCampaign) -> dict[str, str]:
+    """قالب‌های مراحل ۱–۳ یک کمپین (A/B + step_2 + step_3)."""
+    global_tpl = get_global_message_templates()
+    variants = get_step1_variant_templates(campaign)
+    step2 = campaign.steps.filter(step_number=2, is_active=True).first()
+    step3 = campaign.steps.filter(step_number=3, is_active=True).first()
+    return {
+        'A': variants.get('A') or global_tpl['A'],
+        'B': variants.get('B') or global_tpl['B'],
+        'step_2': ((step2.message_template if step2 else '') or global_tpl['step_2']).strip(),
+        'step_3': ((step3.message_template if step3 else '') or global_tpl['step_3']).strip(),
+    }
 
 
 @transaction.atomic
@@ -304,6 +408,8 @@ def update_acquisition_campaign(
     is_pilot: Optional[bool] = None,
     variant_a_template: Optional[str] = None,
     variant_b_template: Optional[str] = None,
+    step_2_template: Optional[str] = None,
+    step_3_template: Optional[str] = None,
 ) -> LeadCampaign:
     campaign = LeadCampaign.objects.select_for_update().filter(pk=campaign_id).first()
     if not campaign:
@@ -337,7 +443,23 @@ def update_acquisition_campaign(
         b_text = (variant_b_template if variant_b_template is not None else current['B']).strip()
         if not a_text or not b_text:
             raise LeadCampaignError('متن نسخه A و B نمی‌تواند خالی باشد.', code='empty_template')
+        if '{link}' not in a_text or '{link}' not in b_text:
+            raise LeadCampaignError('نسخه A و B باید شامل {link} باشند.', code='missing_link')
         step.message_template = build_variant_step1_template(a_text, b_text)
+        step.save(update_fields=['message_template'])
+
+    for step_no, tpl in ((2, step_2_template), (3, step_3_template)):
+        if tpl is None:
+            continue
+        text = tpl.strip()
+        if not text:
+            raise LeadCampaignError(f'متن مرحله {step_no} نمی‌تواند خالی باشد.', code='empty_template')
+        if '{link}' not in text:
+            raise LeadCampaignError(f'مرحله {step_no} باید شامل {{link}} باشد.', code='missing_link')
+        step = campaign.steps.filter(step_number=step_no, is_active=True).first()
+        if not step:
+            raise LeadCampaignError(f'مرحله {step_no} یافت نشد.', code='no_step')
+        step.message_template = text
         step.save(update_fields=['message_template'])
 
     return campaign
@@ -366,7 +488,6 @@ def create_acquisition_campaign(
     variant_a_template: str = '',
     variant_b_template: str = '',
 ) -> LeadCampaign:
-    district = lead_list.district or 'منطقه شما'
     campaign = LeadCampaign.objects.create(
         name=name,
         kind=LeadCampaign.Kind.ACQUISITION,
@@ -380,8 +501,12 @@ def create_acquisition_campaign(
     CampaignVariant.objects.create(campaign=campaign, key='A', name='نسخه A', weight=1)
     CampaignVariant.objects.create(campaign=campaign, key='B', name='نسخه B', weight=1)
 
-    t_a = (variant_a_template or DEFAULT_STEP1_A).replace('{district}', district)
-    t_b = (variant_b_template or DEFAULT_STEP1_B).replace('{district}', district)
+    # {district}/{link}/{name} تا لحظهٔ ارسال جایگزین می‌شوند — اینجا bake نکن
+    global_tpl = get_global_message_templates()
+    t_a = (variant_a_template or global_tpl['A']).strip()
+    t_b = (variant_b_template or global_tpl['B']).strip()
+    t_2 = global_tpl['step_2']
+    t_3 = global_tpl['step_3']
 
     CampaignStep.objects.create(
         campaign=campaign,
@@ -389,7 +514,7 @@ def create_acquisition_campaign(
         name='معرفی',
         delay_days=0,
         audience=CampaignStep.Audience.ALL_ELIGIBLE,
-        message_template=f'<<<VARIANT:A>>>\n{t_a}\n<<<VARIANT:B>>>\n{t_b}',
+        message_template=build_variant_step1_template(t_a, t_b),
     )
     CampaignStep.objects.create(
         campaign=campaign,
@@ -397,7 +522,7 @@ def create_acquisition_campaign(
         name='یادآوری',
         delay_days=2,
         audience=CampaignStep.Audience.NOT_REGISTERED,
-        message_template=DEFAULT_STEP2,
+        message_template=t_2,
     )
     CampaignStep.objects.create(
         campaign=campaign,
@@ -405,7 +530,7 @@ def create_acquisition_campaign(
         name='تبدیل گرم',
         delay_days=6,
         audience=CampaignStep.Audience.ENGAGED_NOT_REGISTERED,
-        message_template=DEFAULT_STEP3,
+        message_template=t_3,
     )
     return campaign
 
@@ -610,15 +735,19 @@ def enroll_campaigns_for_full_send(campaign_ids: list[int]) -> dict:
 
 
 @transaction.atomic
-def bulk_update_variant_templates(
+def bulk_update_message_templates(
     campaign_ids: list[int],
     *,
     variant_a: str,
     variant_b: str,
+    step_2: str = '',
+    step_3: str = '',
 ) -> dict:
-    """اعمال یک قالب A/B روی چند کمپین."""
+    """اعمال قالب مراحل ۱–۳ روی چند کمپین."""
     a_text = (variant_a or '').strip()
     b_text = (variant_b or '').strip()
+    s2_text = (step_2 or '').strip()
+    s3_text = (step_3 or '').strip()
     if not a_text or not b_text:
         raise LeadCampaignError('متن نسخه A و B نمی‌تواند خالی باشد.', code='empty_template')
     updated: list[int] = []
@@ -629,11 +758,28 @@ def bulk_update_variant_templates(
                 cid,
                 variant_a_template=a_text,
                 variant_b_template=b_text,
+                step_2_template=s2_text or None,
+                step_3_template=s3_text or None,
             )
             updated.append(cid)
         except LeadCampaignError as exc:
             errors.append({'campaign_id': cid, 'message': exc.message})
     return {'updated': updated, 'updated_count': len(updated), 'errors': errors}
+
+
+@transaction.atomic
+def bulk_update_variant_templates(
+    campaign_ids: list[int],
+    *,
+    variant_a: str,
+    variant_b: str,
+) -> dict:
+    """سازگاری با کد قدیمی — فقط A/B مرحله ۱."""
+    return bulk_update_message_templates(
+        campaign_ids,
+        variant_a=variant_a,
+        variant_b=variant_b,
+    )
 
 
 def render_step_body(*, step: CampaignStep, variant: CampaignVariant, link: str, lead: MarketingLead) -> str:

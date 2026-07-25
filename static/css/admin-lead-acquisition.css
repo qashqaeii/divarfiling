@@ -1691,6 +1691,29 @@ html.mk-public:not([data-theme="light"]) .adm-lac-field textarea {
 /* ── Template studio modal ── */
 .adm-lac-modal--tpl {
     width: min(1080px, calc(100vw - 1.5rem));
+    max-height: calc(100vh - 1.25rem);
+}
+
+.adm-lac-modal--tpl .adm-lac-modal__inner {
+    max-height: calc(100vh - 1.25rem);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.adm-lac-modal--tpl .adm-lac-modal__body {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.adm-lac-modal--tpl .adm-lac-tpl-foot {
+    position: sticky;
+    bottom: 0;
+    flex-shrink: 0;
+    background: #fff;
+    box-shadow: 0 -8px 24px -16px rgba(15, 23, 42, 0.45);
+}
+
+html.mk-public:not([data-theme="light"]) .adm-lac-modal--tpl .adm-lac-tpl-foot {
+    background: #0f172a;
 }
 
 .adm-lac-tpl-kicker {
@@ -2171,6 +2194,7 @@ html.mk-public:not([data-theme="light"]) .adm-lac-tpl-preview-switch button.is-a
 
 .adm-lac-modal__inner {
     display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     max-height: calc(100vh - 2rem);
     border-radius: 16px;
     border: 1px solid var(--lac-line);
@@ -2204,11 +2228,16 @@ html.mk-public:not([data-theme="light"]) .adm-lac-modal__inner {
 .adm-lac-modal__foot {
     border-top: 1px solid var(--lac-line);
     justify-content: flex-end;
+    flex-shrink: 0;
+    background: inherit;
+    z-index: 2;
 }
 
 .adm-lac-modal__body {
     padding: 1rem;
+    min-height: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .adm-lac-modal__close {

@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=12">
 {% endblock %}
 
 {% block content %}
@@ -841,63 +841,186 @@
         </form>
     </dialog>
 
-    <dialog class="adm-lac-modal" id="lac-bulk-templates-modal">
+    <dialog class="adm-lac-modal adm-lac-modal--tpl" id="lac-bulk-templates-modal">
         <form method="post" class="adm-lac-modal__inner" id="lac-bulk-templates-form">
             {% csrf_token %}
-            <header class="adm-lac-modal__head">
+            <header class="adm-lac-modal__head adm-lac-tpl-head">
                 <div>
+                    <p class="adm-lac-tpl-kicker"><i class="fas fa-message" aria-hidden="true"></i> استودیو پیام جذب</p>
                     <h3 id="lac-bulk-templates-title">قالب سراسری پیام‌ها (مراحل ۱–۳)</h3>
                     <p class="adm-lac-kpi-sub" id="lac-bulk-templates-sub">ذخیره می‌شود و برای همه کمپین‌های فعلی + کمپین‌های جدید اعمال می‌گردد</p>
-                    <p class="adm-lac-kpi-sub">متغیرها: <code>{district}</code> · <code>{link}</code> · <code>{name}</code> — در لحظهٔ ارسال جایگزین می‌شوند</p>
                 </div>
                 <button type="button" class="adm-lac-modal__close" data-lac-bulk-templates-close aria-label="بستن">&times;</button>
             </header>
-            <div class="adm-lac-modal__body">
+            <div class="adm-lac-modal__body adm-lac-tpl-body">
                 <input type="hidden" id="lac-bulk-templates-apply-all" value="0">
-                <div class="adm-lac-msg-editor">
-                    <div class="adm-lac-msg-pane" data-variant="A">
-                        <div class="adm-lac-msg-pane__head">
-                            <span class="adm-lac-variant-key">A</span>
-                            <strong>مرحله ۱ · نسخه A</strong>
-                            <span class="adm-lac-msg-len" id="lac-bulk-len-a">۰ کاراکتر</span>
-                        </div>
-                        <textarea id="lac-bulk-variant-a" rows="5" placeholder="مشاور املاک {district} هستید؟ … معرفی کوتاه: {link}">{{ default_variant_a }}</textarea>
+
+                <div class="adm-lac-tpl-journey" role="tablist" aria-label="مراحل پیام">
+                    <button type="button" class="adm-lac-tpl-tab is-active" data-tpl-tab="1" role="tab" aria-selected="true">
+                        <span class="adm-lac-tpl-tab__num">۱</span>
+                        <span class="adm-lac-tpl-tab__copy">
+                            <strong>معرفی</strong>
+                            <small>A/B · همه واجد شرایط</small>
+                        </span>
+                    </button>
+                    <button type="button" class="adm-lac-tpl-tab" data-tpl-tab="2" role="tab" aria-selected="false">
+                        <span class="adm-lac-tpl-tab__num">۲</span>
+                        <span class="adm-lac-tpl-tab__copy">
+                            <strong>یادآوری</strong>
+                            <small>ثبت‌نام‌نشده‌ها</small>
+                        </span>
+                    </button>
+                    <button type="button" class="adm-lac-tpl-tab" data-tpl-tab="3" role="tab" aria-selected="false">
+                        <span class="adm-lac-tpl-tab__num">۳</span>
+                        <span class="adm-lac-tpl-tab__copy">
+                            <strong>تبدیل گرم</strong>
+                            <small>درگیر ولی بدون ثبت‌نام</small>
+                        </span>
+                    </button>
+                </div>
+
+                <div class="adm-lac-tpl-toolbar">
+                    <div class="adm-lac-tpl-vars" aria-label="درج متغیر">
+                        <span class="adm-lac-tpl-vars__label">درج متغیر:</span>
+                        <button type="button" class="adm-lac-tpl-chip" data-insert-var="{district}" title="منطقه سرنخ">{district}</button>
+                        <button type="button" class="adm-lac-tpl-chip" data-insert-var="{link}" title="لینک کوتاه ردیابی">{link}</button>
+                        <button type="button" class="adm-lac-tpl-chip" data-insert-var="{name}" title="نام نمایشی سرنخ">{name}</button>
                     </div>
-                    <div class="adm-lac-msg-pane" data-variant="B">
-                        <div class="adm-lac-msg-pane__head">
-                            <span class="adm-lac-variant-key">B</span>
-                            <strong>مرحله ۱ · نسخه B</strong>
-                            <span class="adm-lac-msg-len" id="lac-bulk-len-b">۰ کاراکتر</span>
-                        </div>
-                        <textarea id="lac-bulk-variant-b" rows="5" placeholder="مشاور املاک {district} هستید؟ … ببینید چطور: {link}">{{ default_variant_b }}</textarea>
-                    </div>
-                    <div class="adm-lac-msg-pane" data-step="2">
-                        <div class="adm-lac-msg-pane__head">
-                            <span class="adm-lac-variant-key">۲</span>
-                            <strong>مرحله ۲ · یادآوری</strong>
-                            <span class="adm-lac-msg-len" id="lac-bulk-len-2">۰ کاراکتر</span>
-                        </div>
-                        <textarea id="lac-bulk-step-2" rows="4" placeholder="یادآوری … {link}">{{ default_step_2 }}</textarea>
-                    </div>
-                    <div class="adm-lac-msg-pane" data-step="3">
-                        <div class="adm-lac-msg-pane__head">
-                            <span class="adm-lac-variant-key">۳</span>
-                            <strong>مرحله ۳ · تبدیل گرم</strong>
-                            <span class="adm-lac-msg-len" id="lac-bulk-len-3">۰ کاراکتر</span>
-                        </div>
-                        <textarea id="lac-bulk-step-3" rows="4" placeholder="آخرین تلاش … {link}">{{ default_step_3 }}</textarea>
+                    <div class="adm-lac-tpl-sample">
+                        <label for="lac-tpl-sample-district">نمونه منطقه</label>
+                        <input type="text" id="lac-tpl-sample-district" value="زعفرانیه" maxlength="40" autocomplete="off">
                     </div>
                 </div>
-                <p class="adm-lac-kpi-sub" id="lac-bulk-templates-status" hidden></p>
+
+                <div class="adm-lac-tpl-workspace">
+                    <div class="adm-lac-tpl-panels">
+                        <section class="adm-lac-tpl-panel is-active" data-tpl-panel="1" role="tabpanel">
+                            <div class="adm-lac-tpl-panel__intro">
+                                <div>
+                                    <h4>مرحله ۱ · تست A/B معرفی</h4>
+                                    <p>اولین تماس — دو نسخه برای مقایسه نرخ کلیک و ثبت‌نام. هر دو باید شامل <code>{link}</code> باشند.</p>
+                                </div>
+                                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-tpl-restore="step1" title="بازگردانی متن پیش‌فرض سیستم">
+                                    <i class="fas fa-rotate-left"></i> پیش‌فرض سیستم
+                                </button>
+                            </div>
+                            <div class="adm-lac-msg-editor adm-lac-msg-editor--ab">
+                                <div class="adm-lac-msg-pane" data-variant="A">
+                                    <div class="adm-lac-msg-pane__head">
+                                        <span class="adm-lac-variant-key">A</span>
+                                        <strong>نسخه A · معرفی مستقیم</strong>
+                                    </div>
+                                    <textarea id="lac-bulk-variant-a" class="lac-tpl-field" data-tpl-key="variant_a" rows="6" placeholder="مشاور املاک {district} هستید؟ … معرفی کوتاه: {link}">{{ default_variant_a }}</textarea>
+                                    <div class="adm-lac-tpl-meta" data-meta-for="variant_a">
+                                        <span class="adm-lac-tpl-meta__chars">۰ کاراکتر</span>
+                                        <span class="adm-lac-tpl-meta__parts">۰ بخش</span>
+                                        <span class="adm-lac-tpl-meta__cost">۰ ریال</span>
+                                        <span class="adm-lac-tpl-meta__warn" hidden>نیاز به {link}</span>
+                                    </div>
+                                </div>
+                                <div class="adm-lac-msg-pane" data-variant="B">
+                                    <div class="adm-lac-msg-pane__head">
+                                        <span class="adm-lac-variant-key">B</span>
+                                        <strong>نسخه B · سوال + ارزش</strong>
+                                    </div>
+                                    <textarea id="lac-bulk-variant-b" class="lac-tpl-field" data-tpl-key="variant_b" rows="6" placeholder="مشاور املاک {district} هستید؟ … ببینید چطور: {link}">{{ default_variant_b }}</textarea>
+                                    <div class="adm-lac-tpl-meta" data-meta-for="variant_b">
+                                        <span class="adm-lac-tpl-meta__chars">۰ کاراکتر</span>
+                                        <span class="adm-lac-tpl-meta__parts">۰ بخش</span>
+                                        <span class="adm-lac-tpl-meta__cost">۰ ریال</span>
+                                        <span class="adm-lac-tpl-meta__warn" hidden>نیاز به {link}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="adm-lac-tpl-panel" data-tpl-panel="2" role="tabpanel" hidden>
+                            <div class="adm-lac-tpl-panel__intro">
+                                <div>
+                                    <h4>مرحله ۲ · یادآوری</h4>
+                                    <p>برای کسانی که مرحله ۱ را گرفته‌اند و هنوز ثبت‌نام نکرده‌اند. ارزش محصول را کوتاه یادآوری کنید.</p>
+                                </div>
+                                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-tpl-restore="step2">
+                                    <i class="fas fa-rotate-left"></i> پیش‌فرض سیستم
+                                </button>
+                            </div>
+                            <div class="adm-lac-msg-pane" data-step="2">
+                                <textarea id="lac-bulk-step-2" class="lac-tpl-field" data-tpl-key="step_2" rows="7" placeholder="یادآوری … {link}">{{ default_step_2 }}</textarea>
+                                <div class="adm-lac-tpl-meta" data-meta-for="step_2">
+                                    <span class="adm-lac-tpl-meta__chars">۰ کاراکتر</span>
+                                    <span class="adm-lac-tpl-meta__parts">۰ بخش</span>
+                                    <span class="adm-lac-tpl-meta__cost">۰ ریال</span>
+                                    <span class="adm-lac-tpl-meta__warn" hidden>نیاز به {link}</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="adm-lac-tpl-panel" data-tpl-panel="3" role="tabpanel" hidden>
+                            <div class="adm-lac-tpl-panel__intro">
+                                <div>
+                                    <h4>مرحله ۳ · تبدیل گرم</h4>
+                                    <p>آخرین تلاش برای مخاطب درگیر — دعوت به لایسنس یک‌روزه یا اقدام مشخص.</p>
+                                </div>
+                                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-tpl-restore="step3">
+                                    <i class="fas fa-rotate-left"></i> پیش‌فرض سیستم
+                                </button>
+                            </div>
+                            <div class="adm-lac-msg-pane" data-step="3">
+                                <textarea id="lac-bulk-step-3" class="lac-tpl-field" data-tpl-key="step_3" rows="7" placeholder="آخرین تلاش … {link}">{{ default_step_3 }}</textarea>
+                                <div class="adm-lac-tpl-meta" data-meta-for="step_3">
+                                    <span class="adm-lac-tpl-meta__chars">۰ کاراکتر</span>
+                                    <span class="adm-lac-tpl-meta__parts">۰ بخش</span>
+                                    <span class="adm-lac-tpl-meta__cost">۰ ریال</span>
+                                    <span class="adm-lac-tpl-meta__warn" hidden>نیاز به {link}</span>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <aside class="adm-lac-tpl-preview" aria-label="پیش‌نمایش پیامک">
+                        <div class="adm-lac-tpl-preview__head">
+                            <strong>پیش‌نمایش زنده</strong>
+                            <div class="adm-lac-tpl-preview-switch" role="group" aria-label="نسخه پیش‌نمایش">
+                                <button type="button" class="is-active" data-preview-key="variant_a">A</button>
+                                <button type="button" data-preview-key="variant_b">B</button>
+                                <button type="button" data-preview-key="step_2">۲</button>
+                                <button type="button" data-preview-key="step_3">۳</button>
+                            </div>
+                        </div>
+                        <div class="adm-lac-tpl-phone">
+                            <div class="adm-lac-tpl-phone__notch" aria-hidden="true"></div>
+                            <div class="adm-lac-tpl-phone__bubble">
+                                <p id="lac-tpl-preview-text">—</p>
+                            </div>
+                            <div class="adm-lac-tpl-phone__foot">
+                                <span id="lac-tpl-preview-parts">۰ بخش</span>
+                                <span id="lac-tpl-preview-cost">۰ ریال</span>
+                            </div>
+                        </div>
+                        <ul class="adm-lac-tpl-tips">
+                            <li><i class="fas fa-link"></i> <code>{link}</code> الزامی است و در ارسال به لینک کوتاه تبدیل می‌شود</li>
+                            <li><i class="fas fa-map-marker-alt"></i> <code>{district}</code> با منطقه سرنخ پر می‌شود</li>
+                            <li><i class="fas fa-layer-group"></i> پیامک فارسی: تا ۷۰ کاراکتر ۱ بخش؛ بعد هر ۶۷ کاراکتر یک بخش بیشتر</li>
+                        </ul>
+                    </aside>
+                </div>
+
+                <p class="adm-lac-tpl-status" id="lac-bulk-templates-status" hidden></p>
             </div>
-            <footer class="adm-lac-modal__foot">
-                <button type="button" class="adm-lac-btn adm-lac-btn--ghost" data-lac-bulk-templates-close>انصراف</button>
-                <button type="submit" class="adm-lac-btn adm-lac-btn--primary" id="lac-bulk-templates-save">
-                    <i class="fas fa-save"></i> ذخیره و اعمال برای همه
+            <footer class="adm-lac-modal__foot adm-lac-tpl-foot">
+                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-tpl-restore-all">
+                    <i class="fas fa-rotate-left"></i> همه به پیش‌فرض
                 </button>
+                <div class="adm-lac-tpl-foot__actions">
+                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost" data-lac-bulk-templates-close>انصراف</button>
+                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary" id="lac-bulk-templates-save">
+                        <i class="fas fa-save"></i> ذخیره و اعمال برای همه
+                    </button>
+                </div>
             </footer>
         </form>
     </dialog>
+    <script type="application/json" id="lac-factory-templates">{{ factory_templates_json|safe }}</script>
 
     <dialog class="adm-lac-modal adm-lac-send-modal" id="lac-send-progress-modal">
         <div class="adm-lac-modal__inner">
@@ -1011,14 +1134,18 @@
   var bulkTaB = document.getElementById('lac-bulk-variant-b');
   var bulkTa2 = document.getElementById('lac-bulk-step-2');
   var bulkTa3 = document.getElementById('lac-bulk-step-3');
-  var bulkLenA = document.getElementById('lac-bulk-len-a');
-  var bulkLenB = document.getElementById('lac-bulk-len-b');
-  var bulkLen2 = document.getElementById('lac-bulk-len-2');
-  var bulkLen3 = document.getElementById('lac-bulk-len-3');
   var bulkTemplatesApplyAll = document.getElementById('lac-bulk-templates-apply-all');
   var bulkTemplatesStatus = document.getElementById('lac-bulk-templates-status');
   var bulkTemplatesSaving = false;
   var bulkTemplatesTargetIds = [];
+  var tplActiveField = bulkTaA;
+  var tplPreviewKey = 'variant_a';
+  var tplCostPerPart = {{ sms_cost_per_part_rial|default:2480 }};
+  var factoryTemplates = {};
+  try {
+    var factoryEl = document.getElementById('lac-factory-templates');
+    factoryTemplates = factoryEl ? JSON.parse(factoryEl.textContent || '{}') : {};
+  } catch (e3) { factoryTemplates = {}; }
 
   function persianDigits(n) {
     return String(n).replace(/\d/g, function (d) {
@@ -1026,16 +1153,155 @@
     });
   }
 
-  function updateBulkLen() {
-    if (bulkLenA && bulkTaA) bulkLenA.textContent = persianDigits(bulkTaA.value.length) + ' کاراکتر';
-    if (bulkLenB && bulkTaB) bulkLenB.textContent = persianDigits(bulkTaB.value.length) + ' کاراکتر';
-    if (bulkLen2 && bulkTa2) bulkLen2.textContent = persianDigits(bulkTa2.value.length) + ' کاراکتر';
-    if (bulkLen3 && bulkTa3) bulkLen3.textContent = persianDigits(bulkTa3.value.length) + ' کاراکتر';
+  function unicodeSmsParts(text) {
+    var n = (text || '').length;
+    if (n <= 0) return 0;
+    if (n <= 70) return 1;
+    return Math.floor((n + 66) / 67);
   }
-  [bulkTaA, bulkTaB, bulkTa2, bulkTa3].forEach(function (el) {
-    if (el) el.addEventListener('input', updateBulkLen);
+
+  function tplFieldByKey(key) {
+    return document.querySelector('.lac-tpl-field[data-tpl-key="' + key + '"]');
+  }
+
+  function renderFieldMeta(key) {
+    var field = tplFieldByKey(key);
+    var meta = document.querySelector('[data-meta-for="' + key + '"]');
+    if (!field || !meta) return;
+    var raw = field.value || '';
+    var sampleDistrict = (document.getElementById('lac-tpl-sample-district') || {}).value || 'منطقه شما';
+    var rendered = raw
+      .replace(/\{district\}/g, sampleDistrict)
+      .replace(/\{name\}/g, 'مشاور')
+      .replace(/\{link\}/g, 'https://divarfiling.ir/s/t/demo');
+    var parts = unicodeSmsParts(rendered);
+    var cost = parts * tplCostPerPart;
+    var charsEl = meta.querySelector('.adm-lac-tpl-meta__chars');
+    var partsEl = meta.querySelector('.adm-lac-tpl-meta__parts');
+    var costEl = meta.querySelector('.adm-lac-tpl-meta__cost');
+    var warnEl = meta.querySelector('.adm-lac-tpl-meta__warn');
+    if (charsEl) charsEl.textContent = persianDigits(raw.length) + ' کاراکتر';
+    if (partsEl) {
+      partsEl.textContent = persianDigits(parts) + ' بخش';
+      partsEl.classList.toggle('is-warn', parts >= 3);
+    }
+    if (costEl) costEl.textContent = persianDigits(cost.toLocaleString('en-US')) + ' ریال';
+    if (warnEl) warnEl.hidden = raw.indexOf('{link}') !== -1;
+    field.classList.toggle('is-invalid', raw.indexOf('{link}') === -1 || !raw.trim());
+  }
+
+  function updateTplPreview() {
+    var field = tplFieldByKey(tplPreviewKey);
+    var textEl = document.getElementById('lac-tpl-preview-text');
+    var partsEl = document.getElementById('lac-tpl-preview-parts');
+    var costEl = document.getElementById('lac-tpl-preview-cost');
+    if (!field || !textEl) return;
+    var sampleDistrict = (document.getElementById('lac-tpl-sample-district') || {}).value || 'منطقه شما';
+    var rendered = (field.value || '')
+      .replace(/\{district\}/g, sampleDistrict)
+      .replace(/\{name\}/g, 'مشاور')
+      .replace(/\{link\}/g, 'https://divarfiling.ir/s/t/demo');
+    textEl.textContent = rendered.trim() || 'متن پیام را بنویسید…';
+    var parts = unicodeSmsParts(rendered);
+    var cost = parts * tplCostPerPart;
+    if (partsEl) partsEl.textContent = persianDigits(parts) + ' بخش';
+    if (costEl) costEl.textContent = persianDigits(cost.toLocaleString('en-US')) + ' ریال';
+  }
+
+  function refreshTplStudio() {
+    ['variant_a', 'variant_b', 'step_2', 'step_3'].forEach(renderFieldMeta);
+    updateTplPreview();
+  }
+
+  function setTplTab(step, preferredPreviewKey) {
+    step = String(step || '1');
+    document.querySelectorAll('[data-tpl-tab]').forEach(function (btn) {
+      var on = btn.getAttribute('data-tpl-tab') === step;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-tpl-panel]').forEach(function (panel) {
+      var on = panel.getAttribute('data-tpl-panel') === step;
+      panel.classList.toggle('is-active', on);
+      panel.hidden = !on;
+    });
+    if (preferredPreviewKey) {
+      tplPreviewKey = preferredPreviewKey;
+    } else if (step === '1') {
+      tplPreviewKey = (tplPreviewKey === 'variant_b') ? 'variant_b' : 'variant_a';
+    } else if (step === '2') {
+      tplPreviewKey = 'step_2';
+    } else {
+      tplPreviewKey = 'step_3';
+    }
+    document.querySelectorAll('[data-preview-key]').forEach(function (btn) {
+      btn.classList.toggle('is-active', btn.getAttribute('data-preview-key') === tplPreviewKey);
+    });
+    updateTplPreview();
+  }
+
+  function insertAtCursor(textarea, token) {
+    if (!textarea) return;
+    var start = textarea.selectionStart || 0;
+    var end = textarea.selectionEnd || 0;
+    var val = textarea.value || '';
+    textarea.value = val.slice(0, start) + token + val.slice(end);
+    var pos = start + token.length;
+    textarea.focus();
+    try { textarea.setSelectionRange(pos, pos); } catch (e4) {}
+    refreshTplStudio();
+  }
+
+  function restoreFactory(which) {
+    if (!factoryTemplates) return;
+    if (which === 'step1' || which === 'all') {
+      if (bulkTaA) bulkTaA.value = factoryTemplates.variant_a || '';
+      if (bulkTaB) bulkTaB.value = factoryTemplates.variant_b || '';
+    }
+    if (which === 'step2' || which === 'all') {
+      if (bulkTa2) bulkTa2.value = factoryTemplates.step_2 || '';
+    }
+    if (which === 'step3' || which === 'all') {
+      if (bulkTa3) bulkTa3.value = factoryTemplates.step_3 || '';
+    }
+    refreshTplStudio();
+  }
+
+  document.querySelectorAll('[data-tpl-tab]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setTplTab(btn.getAttribute('data-tpl-tab'));
+    });
   });
-  updateBulkLen();
+  document.querySelectorAll('.lac-tpl-field').forEach(function (el) {
+    el.addEventListener('focus', function () { tplActiveField = el; });
+    el.addEventListener('input', refreshTplStudio);
+  });
+  document.querySelectorAll('[data-insert-var]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      insertAtCursor(tplActiveField || bulkTaA, btn.getAttribute('data-insert-var') || '');
+    });
+  });
+  document.querySelectorAll('[data-preview-key]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var key = btn.getAttribute('data-preview-key') || 'variant_a';
+      var map = { variant_a: '1', variant_b: '1', step_2: '2', step_3: '3' };
+      setTplTab(map[key] || '1', key);
+    });
+  });
+  document.querySelectorAll('[data-tpl-restore]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      restoreFactory(btn.getAttribute('data-tpl-restore'));
+    });
+  });
+  var restoreAllBtn = document.getElementById('lac-tpl-restore-all');
+  if (restoreAllBtn) {
+    restoreAllBtn.addEventListener('click', function () {
+      if (window.confirm('همه قالب‌ها به متن پیش‌فرض سیستم برگردند؟')) restoreFactory('all');
+    });
+  }
+  var sampleDistrictInput = document.getElementById('lac-tpl-sample-district');
+  if (sampleDistrictInput) sampleDistrictInput.addEventListener('input', refreshTplStudio);
+  refreshTplStudio();
 
   function openBulkTemplatesModal(opts) {
     opts = opts || {};
@@ -1058,6 +1324,7 @@
       bulkTemplatesStatus.hidden = true;
       bulkTemplatesStatus.textContent = '';
     }
+    setTplTab('1');
     fetch(bulkTemplatesUrl, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
       .then(function (r) { return r.json(); })
       .then(function (data) {
@@ -1066,10 +1333,12 @@
           if (bulkTaB && data.variant_b) bulkTaB.value = data.variant_b;
           if (bulkTa2 && data.step_2) bulkTa2.value = data.step_2;
           if (bulkTa3 && data.step_3) bulkTa3.value = data.step_3;
-          updateBulkLen();
+          if (data.factory) factoryTemplates = data.factory;
+          if (data.sms_cost_per_part_rial) tplCostPerPart = data.sms_cost_per_part_rial;
+          refreshTplStudio();
         }
       })
-      .catch(function () {});
+      .catch(function () { refreshTplStudio(); });
     if (bulkTemplatesModal) {
       if (bulkTemplatesModal.showModal) bulkTemplatesModal.showModal();
       else bulkTemplatesModal.setAttribute('open', 'open');
@@ -1320,6 +1589,18 @@
         step_3: bulkTa3 ? bulkTa3.value : '',
         apply_all: applyAll,
       };
+      var missing = ['variant_a', 'variant_b', 'step_2', 'step_3'].filter(function (k) {
+        var v = payload[k] || '';
+        return !v.trim() || v.indexOf('{link}') === -1;
+      });
+      if (missing.length) {
+        refreshTplStudio();
+        if (bulkTemplatesStatus) {
+          bulkTemplatesStatus.hidden = false;
+          bulkTemplatesStatus.textContent = 'همه قالب‌ها باید غیرخالی و شامل {link} باشند.';
+        }
+        return;
+      }
       if (!applyAll) payload.campaign_ids = bulkTemplatesTargetIds;
       bulkTemplatesSaving = true;
       if (bulkTemplatesStatus) {

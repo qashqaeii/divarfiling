@@ -23,6 +23,10 @@ from accounts.models import (
 )
 from accounts.services.lead_attribution import record_touchpoint
 from accounts.services.lead_campaign_send import (
+    DEFAULT_STEP1_A,
+    DEFAULT_STEP1_B,
+    DEFAULT_STEP2,
+    DEFAULT_STEP3,
     LeadCampaignError,
     auto_create_campaign_for_import,
     batches_pending_campaign,
@@ -42,6 +46,7 @@ from accounts.services.lead_campaign_send import (
     send_batch_size,
     send_campaign_step,
     send_campaigns_step_chunk,
+    sms_cost_per_part_rial,
     update_acquisition_campaign,
 )
 from accounts.services.lead_funnel import (
@@ -208,6 +213,13 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             'default_variant_b': get_global_message_templates()['B'],
             'default_step_2': get_global_message_templates()['step_2'],
             'default_step_3': get_global_message_templates()['step_3'],
+            'factory_templates_json': json.dumps({
+                'variant_a': DEFAULT_STEP1_A,
+                'variant_b': DEFAULT_STEP1_B,
+                'step_2': DEFAULT_STEP2,
+                'step_3': DEFAULT_STEP3,
+            }, ensure_ascii=False),
+            'sms_cost_per_part_rial': sms_cost_per_part_rial(),
             'campaign_edit_json': json.dumps(campaign_edit, ensure_ascii=False),
             'all_campaign_ids_json': json.dumps([c.pk for c in campaigns], ensure_ascii=False),
             'batches_pending_campaign': batches_pending_campaign(limit=20),
@@ -780,6 +792,13 @@ class AdminLeadBulkTemplatesView(StaffRequiredMixin, View):
             'variant_b': tpl['B'],
             'step_2': tpl['step_2'],
             'step_3': tpl['step_3'],
+            'factory': {
+                'variant_a': DEFAULT_STEP1_A,
+                'variant_b': DEFAULT_STEP1_B,
+                'step_2': DEFAULT_STEP2,
+                'step_3': DEFAULT_STEP3,
+            },
+            'sms_cost_per_part_rial': sms_cost_per_part_rial(),
         }, json_dumps_params={'ensure_ascii': False})
 
     def post(self, request):

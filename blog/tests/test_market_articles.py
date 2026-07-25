@@ -15,6 +15,7 @@ from blog.services.market_article_eligibility import (
     ARTICLE_STATUS_STALE,
     build_market_key,
     eligible_datasets_qs,
+    list_eligible_datasets,
     market_key_for_dataset,
 )
 from blog.services.market_article_pipeline import (
@@ -75,6 +76,27 @@ class MarketArticleEligibilityTests(TestCase):
 
     def test_eligible_queryset_includes_quality_dataset(self):
         self.assertTrue(eligible_datasets_qs().filter(pk=self.ds.pk).exists())
+
+    def test_eligible_includes_city_level_without_district(self):
+        """استخراج سطح‌شهر (بدون district/neighborhood) باید در لیست بیاید."""
+        ds = Dataset.objects.create(
+            user=self.user,
+            name='تست سطح شهر',
+            original_filename='city.xlsx',
+            file_format='xlsx',
+            row_count=400,
+            city='تهران',
+            district='',
+            transaction_type='فروش',
+            subcategory='آپارتمان',
+            is_active=True,
+        )
+        self.assertTrue(eligible_datasets_qs().filter(pk=ds.pk).exists())
+        listing = list_eligible_datasets(city='تهران', sort='date')
+        row_ids = {r['id'] for r in listing['rows']}
+        self.assertIn(str(ds.pk), row_ids)
+        city_row = next(r for r in listing['rows'] if r['id'] == str(ds.pk))
+        self.assertEqual(city_row['district'], 'کل شهر')
 
     def test_market_key_stable(self):
         key = market_key_for_dataset(self.ds)

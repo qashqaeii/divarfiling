@@ -85,6 +85,7 @@ def _dominant_neighborhood(dataset: Dataset) -> str:
 
 
 def eligible_datasets_qs() -> QuerySet[Dataset]:
+    """دیتاست‌های سطح‌محله و سطح‌شهر (بدون district) هر دو واجد شرایط‌اند."""
     return (
         Dataset.objects.filter(
             is_active=True,
@@ -93,11 +94,6 @@ def eligible_datasets_qs() -> QuerySet[Dataset]:
         .exclude(city='')
         .exclude(transaction_type='')
         .exclude(subcategory='')
-        .filter(
-            Q(district__gt='')
-            | Q(listings__neighborhood__gt='')
-        )
-        .distinct()
         .select_related('user')
     )
 
@@ -203,7 +199,11 @@ def list_eligible_datasets(
         if article_status and status != article_status:
             continue
         market_key = market_key_for_dataset(dataset)
-        district_label = (dataset.district or '').strip() or _dominant_neighborhood(dataset) or '—'
+        district_label = (
+            (dataset.district or '').strip()
+            or _dominant_neighborhood(dataset)
+            or 'کل شهر'
+        )
         rows.append({
             'id': str(dataset.pk),
             'name': dataset.name,

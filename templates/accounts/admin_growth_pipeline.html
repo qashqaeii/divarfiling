@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'css/admin-growth-pipeline.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/admin-growth-pipeline.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -173,7 +173,7 @@
     </section>
 
     {% if selected_stage and selected_meta %}
-    <section class="adm-lac-section">
+    <section class="adm-lac-section" id="gp-stage-detail">
         <div class="adm-lac-section-head">
             <div>
                 <h2>{{ selected_meta.label }}</h2>
@@ -233,38 +233,92 @@
     </section>
     {% endif %}
 
-    <section class="adm-lac-section">
+    <section class="adm-lac-section adm-gp-activity" id="gp-recent-moves">
         <div class="adm-lac-section-head">
             <div>
                 <h2>آخرین حرکت‌ها</h2>
-                <p>۲۰ رویداد اخیر مسیر</p>
+                <p>فعالیت زنده مسیر رشد — {{ recent_events_count|default:0|to_persian_digits }} رویداد اخیر</p>
+            </div>
+            <div class="adm-gp-activity-legend" aria-hidden="true">
+                <span class="adm-gp-legend-item" data-move="forward"><i class="fas fa-arrow-up"></i> پیشرفت</span>
+                <span class="adm-gp-legend-item" data-move="same"><i class="fas fa-minus"></i> بدون تغییر</span>
+                <span class="adm-gp-legend-item" data-move="back"><i class="fas fa-arrow-down"></i> بازگشت</span>
+                <span class="adm-gp-legend-item" data-move="blocked"><i class="fas fa-ban"></i> مسدود</span>
             </div>
         </div>
-        <div class="adm-lac-table-scroll">
-            <table class="adm-lac-data-table">
-                <thead>
-                    <tr class="adm-lac-table-head-row">
-                        <th>شماره</th>
-                        <th>رویداد</th>
-                        <th>از</th>
-                        <th>به</th>
-                        <th>زمان</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ev in recent_events_fa %}
-                    <tr>
-                        <td>{{ ev.journey__phone_normalized }}</td>
-                        <td>{{ ev.event_label }}</td>
-                        <td>{{ ev.stage_from_label }}</td>
-                        <td>{{ ev.stage_to_label }}</td>
-                        <td>{{ ev.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="5" class="adm-lac-table-empty">رویدادی نیست.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+        <div class="adm-gp-activity-card">
+            <div class="adm-lac-table-scroll">
+                <table class="adm-lac-data-table adm-gp-activity-table">
+                    <thead>
+                        <tr class="adm-lac-table-head-row">
+                            <th>مخاطب</th>
+                            <th>رویداد</th>
+                            <th>جابه‌جایی مرحله</th>
+                            <th>زمان</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ev in recent_events_fa %}
+                        <tr class="adm-gp-activity-row" data-move="{{ ev.movement }}">
+                            <td>
+                                <div class="adm-gp-contact">
+                                    <span class="adm-gp-contact__phone" dir="ltr">{{ ev.phone|to_persian_digits }}</span>
+                                    {% if ev.journey_id %}
+                                    <a class="adm-gp-contact__link" href="?stage={{ ev.stage_to|default:ev.stage_from }}#gp-stage-detail" title="مشاهده مرحله">
+                                        پرونده #{{ ev.journey_id|to_persian_digits }}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="adm-gp-event-badge" data-tone="{{ ev.event_tone }}">
+                                    <i class="fas {{ ev.event_icon }}" aria-hidden="true"></i>
+                                    {{ ev.event_label }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="adm-gp-path" data-move="{{ ev.movement }}">
+                                    {% if ev.stage_changed %}
+                                    <span class="adm-gp-stage-chip" title="مرحله قبلی">{{ ev.stage_from_label }}</span>
+                                    <span class="adm-gp-path__arrow" aria-hidden="true">
+                                        {% if ev.movement == 'back' %}
+                                        <i class="fas fa-arrow-left"></i>
+                                        {% elif ev.movement == 'blocked' %}
+                                        <i class="fas fa-ban"></i>
+                                        {% else %}
+                                        <i class="fas fa-arrow-left"></i>
+                                        {% endif %}
+                                    </span>
+                                    <span class="adm-gp-stage-chip adm-gp-stage-chip--to" title="مرحله فعلی">{{ ev.stage_to_label }}</span>
+                                    {% else %}
+                                    <span class="adm-gp-stage-chip adm-gp-stage-chip--to">{{ ev.stage_to_label }}</span>
+                                    <span class="adm-gp-path__note">بدون تغییر مرحله</span>
+                                    {% endif %}
+                                    <span class="adm-gp-path__summary">{{ ev.path_text }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="adm-gp-time">
+                                    <strong>{{ ev.relative_fa|default:"—" }}</strong>
+                                    <small>{{ ev.created_at|to_jalali_fa:"%Y/%m/%d · %H:%M" }}</small>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">
+                                <div class="adm-gp-activity-empty">
+                                    <i class="fas fa-route" aria-hidden="true"></i>
+                                    <strong>هنوز حرکتی ثبت نشده</strong>
+                                    <p>با ورود سرنخ، کلیک، ثبت‌نام یا خرید، رویدادها اینجا دیده می‌شوند.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </section>
 

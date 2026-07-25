@@ -8,12 +8,15 @@ from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.timesince import timesince
 from django.views import View
 from django.views.generic import TemplateView
 
 from accounts.admin_views import StaffRequiredMixin
 from accounts.models import GrowthJourney
 from accounts.services.growth_journey import (
+    STAGE_RANK,
     journeys_for_stage,
     pipeline_overview,
     summarize_last_run,
@@ -40,6 +43,96 @@ EVENT_LABELS = {
     'pause_nurture': 'توقف پیام‌ها',
     'resume_nurture': 'از سرگیری پیام‌ها',
 }
+
+EVENT_TONES = {
+    'lead_imported': 'neutral',
+    'click_landing': 'info',
+    'signup': 'success',
+    'signup_complete': 'success',
+    'workspace_login': 'info',
+    'checkout_start': 'amber',
+    'no_purchase_window': 'amber',
+    'paid_licensed': 'success',
+    'license_expiring': 'amber',
+    'repurchase': 'success',
+    'expired_no_renew': 'danger',
+    'opt_out': 'danger',
+    'suppressed': 'danger',
+    'manual_set': 'neutral',
+    'pause_nurture': 'amber',
+    'resume_nurture': 'info',
+}
+
+EVENT_ICONS = {
+    'lead_imported': 'fa-user-plus',
+    'click_landing': 'fa-mouse-pointer',
+    'signup': 'fa-user-check',
+    'signup_complete': 'fa-user-check',
+    'workspace_login': 'fa-right-to-bracket',
+    'checkout_start': 'fa-cart-shopping',
+    'no_purchase_window': 'fa-bell',
+    'paid_licensed': 'fa-crown',
+    'license_expiring': 'fa-hourglass-half',
+    'repurchase': 'fa-arrows-rotate',
+    'expired_no_renew': 'fa-triangle-exclamation',
+    'opt_out': 'fa-ban',
+    'suppressed': 'fa-ban',
+    'manual_set': 'fa-screwdriver-wrench',
+    'pause_nurture': 'fa-pause',
+    'resume_nurture': 'fa-play',
+}
+
+
+def _movement_kind(stage_from: str, stage_to: str) -> str:
+    if not stage_from or not stage_to or stage_from == stage_to:
+        return 'same'
+    rank_from = STAGE_RANK.get(stage_from, 0)
+    rank_to = STAGE_RANK.get(stage_to, 0)
+    if stage_to == GrowthJourney.Stage.SUPPRESSED:
+        return 'blocked'
+    if rank_to > rank_from:
+        return 'forward'
+    if rank_to < rank_from:
+        return 'back'
+    return 'same'
+
+
+def _enrich_recent_event(ev: dict) -> dict:
+    event_type = ev.get('event_type') or ''
+    stage_from = ev.get('stage_from') or ''
+    stage_to = ev.get('stage_to') or ''
+    from_label = STAGE_LABELS.get(stage_from, stage_from or '—')
+    to_label = STAGE_LABELS.get(stage_to, stage_to or '—')
+    movement = _movement_kind(stage_from, stage_to)
+    created = ev.get('created_at')
+    relative = ''
+    if created is not None:
+        try:
+            relative = timesince(created, timezone.now())
+        except Exception:
+            relative = ''
+
+    if movement == 'same':
+        path_text = f'ماندن در «{to_label}»' if to_label != '—' else 'بدون تغییر مرحله'
+    elif movement == 'blocked':
+        path_text = f'مسدود از «{from_label}»'
+    else:
+        path_text = f'از «{from_label}» به «{to_label}»'
+
+    phone = (ev.get('journey__phone_normalized') or '').strip()
+    return {
+        **ev,
+        'phone': phone,
+        'event_label': EVENT_LABELS.get(event_type, event_type or 'رویداد'),
+        'event_tone': EVENT_TONES.get(event_type, 'neutral'),
+        'event_icon': EVENT_ICONS.get(event_type, 'fa-circle-dot'),
+        'stage_from_label': from_label,
+        'stage_to_label': to_label,
+        'movement': movement,
+        'path_text': path_text,
+        'relative_fa': f'{relative} پیش' if relative else '',
+        'stage_changed': bool(stage_from and stage_to and stage_from != stage_to),
+    }
 
 
 class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
@@ -75,14 +168,7 @@ class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
         run_summary = summarize_last_run(last_run)
         charts = overview.get('charts') or {}
 
-        recent_fa = []
-        for ev in overview.get('recent_events') or []:
-            recent_fa.append({
-                **ev,
-                'event_label': EVENT_LABELS.get(ev.get('event_type'), ev.get('event_type')),
-                'stage_from_label': STAGE_LABELS.get(ev.get('stage_from') or '', ev.get('stage_from') or '—'),
-                'stage_to_label': STAGE_LABELS.get(ev.get('stage_to') or '', ev.get('stage_to') or '—'),
-            })
+        recent_fa = [_enrich_recent_event(ev) for ev in (overview.get('recent_events') or [])]
 
         ctx.update({
             'overview': overview,
@@ -93,6 +179,7 @@ class AdminGrowthPipelineView(StaffRequiredMixin, TemplateView):
             'last_run': last_run,
             'run_summary': run_summary,
             'recent_events_fa': recent_fa,
+            'recent_events_count': len(recent_fa),
             'charts_json': json.dumps(charts, ensure_ascii=False, default=str),
             'rates': (charts.get('rates') or {}),
         })

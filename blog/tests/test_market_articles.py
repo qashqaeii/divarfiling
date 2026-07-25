@@ -342,3 +342,15 @@ class MarketArticlePipelineTests(TestCase):
         self.assertTrue(data['ready'])
         self.assertFalse(data['building'])
         self.assertEqual(data['status'], MarketArticleRun.Status.PREVIEW)
+        self.assertIn('progress', data)
+        self.assertEqual(data['progress']['pct'], 100)
+        self.assertTrue(data['progress']['steps'])
+
+    def test_building_run_has_live_progress_seed(self):
+        from blog.services.market_article_pipeline import _create_building_run, build_progress_payload
+        run = _create_building_run(self.ds, self.staff)
+        payload = build_progress_payload(run.chart_assets)
+        self.assertEqual(payload['step'], 'queued')
+        self.assertGreaterEqual(payload['pct'], 1)
+        self.assertEqual(len(payload['steps']), 8)
+        self.assertIn('queued', payload['done'])

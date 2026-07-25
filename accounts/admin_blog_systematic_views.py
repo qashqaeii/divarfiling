@@ -19,6 +19,7 @@ from blog.services.market_article_eligibility import (
 )
 from blog.services.market_article_pipeline import (
     MarketArticleError,
+    build_progress_payload,
     create_draft,
     enqueue_preview_build,
     preview_context,
@@ -107,12 +108,22 @@ class AdminBlogSystematicPreviewStatusView(StaffRequiredMixin, View):
             MarketArticleRun.Status.DRAFT_LINKED,
         )
         failed = run.status == MarketArticleRun.Status.FAILED
+        progress = build_progress_payload(run.chart_assets)
+        if ready and not failed:
+            progress = {
+                **progress,
+                'pct': 100,
+                'step': 'save',
+                'label': 'ذخیره پیش‌نمایش نهایی',
+                'detail': 'آماده',
+            }
         return JsonResponse({
             'status': run.status,
             'ready': ready,
             'failed': failed,
             'building': run.status == MarketArticleRun.Status.BUILDING,
             'error': (run.chart_assets or {}).get('build_error') or '',
+            'progress': progress,
             'preview_url': reverse(
                 'admin_panel_blog_systematic_preview',
                 kwargs={'run_id': run.pk},

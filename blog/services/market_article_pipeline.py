@@ -40,6 +40,65 @@ class MarketArticleError(Exception):
     pass
 
 
+# مراحل ساخت پیش‌نمایش — برای نوار پیشرفت زنده در پنل ادمین
+BUILD_PROGRESS_STEPS: list[dict[str, Any]] = [
+    {'key': 'queued', 'label': 'آماده‌سازی صف ساخت', 'pct': 3},
+    {'key': 'analyze', 'label': 'تحلیل داده و آمار بازار', 'pct': 18},
+    {'key': 'featured', 'label': 'ساخت تصویر شاخص نقشه', 'pct': 32},
+    {'key': 'access', 'label': 'امتیاز امکانات و دسترسی منطقه', 'pct': 48},
+    {'key': 'maps', 'label': 'رندر نقشه‌های شهری و ماهواره‌ای', 'pct': 68},
+    {'key': 'charts', 'label': 'ساخت نمودارهای تحلیلی', 'pct': 82},
+    {'key': 'compose', 'label': 'تولید متن و ساختار مقاله', 'pct': 92},
+    {'key': 'save', 'label': 'ذخیره پیش‌نمایش نهایی', 'pct': 100},
+]
+
+_BUILD_STEP_BY_KEY = {s['key']: s for s in BUILD_PROGRESS_STEPS}
+
+
+def build_progress_payload(chart_assets: dict | None) -> dict[str, Any]:
+    """وضعیت پیشرفت برای API و قالب پیش‌نمایش."""
+    chart = chart_assets if isinstance(chart_assets, dict) else {}
+    step = chart.get('build_step') or 'queued'
+    meta = _BUILD_STEP_BY_KEY.get(step) or _BUILD_STEP_BY_KEY['queued']
+    done = [k for k in (chart.get('build_steps_done') or []) if k in _BUILD_STEP_BY_KEY]
+    try:
+        pct = int(chart.get('build_pct') if chart.get('build_pct') is not None else meta['pct'])
+    except (TypeError, ValueError):
+        pct = int(meta['pct'])
+    return {
+        'pct': max(0, min(100, pct)),
+        'step': step,
+        'label': chart.get('build_label') or meta['label'],
+        'detail': chart.get('build_detail') or '',
+        'done': done,
+        'steps': BUILD_PROGRESS_STEPS,
+    }
+
+
+def _set_build_progress(
+    run: MarketArticleRun,
+    *,
+    step: str,
+    detail: str = '',
+    pct: int | None = None,
+) -> None:
+    meta = _BUILD_STEP_BY_KEY.get(step) or {'key': step, 'label': step, 'pct': pct or 0}
+    chart = dict(run.chart_assets or {})
+    done = list(chart.get('build_steps_done') or [])
+    if step not in done:
+        done.append(step)
+    chart.update({
+        'build_step': step,
+        'build_label': meta['label'],
+        'build_pct': max(0, min(100, int(pct if pct is not None else meta['pct']))),
+        'build_detail': (detail or '')[:220],
+        'build_steps_done': done,
+        'build_updated_at': timezone.now().isoformat(),
+    })
+    run.chart_assets = chart
+    run.save(update_fields=['chart_assets', 'updated_at'])
+
+
 def _validate_dataset_for_article(dataset: Dataset) -> None:
     if dataset.row_count < 100:
         raise MarketArticleError('حداقل ۱۰۰ رکورد برای ساخت مقاله لازم است.')
@@ -63,7 +122,14 @@ def _create_building_run(dataset: Dataset, user) -> MarketArticleRun:
         },
         content_html='',
         faq_json=[],
-        chart_assets={},
+        chart_assets={
+            'build_step': 'queued',
+            'build_label': _BUILD_STEP_BY_KEY['queued']['label'],
+            'build_pct': 3,
+            'build_detail': f'{district} · {city}'.strip(' ·'),
+            'build_steps_done': ['queued'],
+            'build_updated_at': timezone.now().isoformat(),
+        },
         created_by=user if getattr(user, 'is_authenticated', False) else None,
         source_dataset_updated_at=dataset.updated_at,
     )
@@ -190,6 +256,9 @@ def enqueue_preview_build(
 
 def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
     dataset = run.dataset
+    place_hint = f'{(dataset.district or "").strip() or "منطقه"} · {(dataset.city or "").strip()}'.strip(' ·')
+
+    _set_build_progress(run, step='analyze', detail=f'خواندن و پاک‌سازی فایل‌های {place_hint}')
     analysis = run_dataset_analysis(dataset)
     safe = sanitize_report_for_public(analysis)
     geo = safe.pop('_geo_for_assets', analysis.get('geo_points') or [])
@@ -212,6 +281,7 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
     deposit = pa.get('deposit') or {}
     trends = report.get('price_trends') or {}
     conf = report.get('confidence') or {}
+    valid_n = int(metrics.get('valid_count') or 0)
 
     if is_rent:
         metric_label = 'معادل رهن کامل'
@@ -227,6 +297,11 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
         metric_fmt = pps.get('median_fmt') or '—'
         trend_fmt = trends.get('pps_monthly_fmt') or '—'
 
+    _set_build_progress(
+        run,
+        step='featured',
+        detail=f'{valid_n} فایل معتبر · {len(geo or [])} نقطه مکانی',
+    )
     image_file, featured_meta = render_featured_image(
         city=meta.get('city') or '',
         district=meta.get('district') or '',
@@ -234,28 +309,51 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
         metric_label=metric_label,
         metric_fmt=metric_fmt,
         trend_fmt=trend_fmt,
-        valid_count=int(metrics.get('valid_count') or 0),
+        valid_count=valid_n,
         confidence_score=conf.get('display_score') or conf.get('score') or '—',
         geo_points=geo,
     )
 
+    _set_build_progress(
+        run,
+        step='access',
+        detail='استعلام امکانات شهری از OpenStreetMap',
+    )
     district_access = analyze_district_access(geo)
     # همیشه به report وصل شود تا بخش HTML امکانات/دسترسی در پیش‌نمایش ساخته شود
     if isinstance(report, dict) and isinstance(district_access, dict):
         report = {**report, 'district_access': district_access}
+    access_detail = ''
+    if district_access.get('ok'):
+        access_detail = (
+            f'امتیاز {district_access.get("score")} · '
+            f'{district_access.get("total_pois") or 0} نقطه خدماتی'
+        )
+    elif district_access.get('reason'):
+        access_detail = f'وضعیت: {district_access.get("reason")}'
 
+    _set_build_progress(
+        run,
+        step='maps',
+        detail=access_detail or 'دانلود کاشی نقشه و لایه‌های هیت‌مپ',
+    )
     extra_maps = render_article_maps(
         city=meta.get('city') or '',
         district=meta.get('district') or '',
         tx_label=tx_label,
         metric_label=metric_label,
         metric_fmt=metric_fmt,
-        valid_count=int(metrics.get('valid_count') or 0),
+        valid_count=valid_n,
         confidence_score=conf.get('display_score') or conf.get('score') or '—',
         geo_points=geo,
         access_markers=district_access.get('map_markers') if district_access.get('ok') else None,
     )
 
+    _set_build_progress(
+        run,
+        step='charts',
+        detail=f'{len(extra_maps)} نقشه آماده · در حال ساخت نمودارها',
+    )
     chart_files = render_article_charts(
         report=report if isinstance(report, dict) else {},
         city=meta.get('city') or '',
@@ -265,6 +363,11 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
 
     related = _related_market_posts(city=meta.get('city') or '', exclude_slug=market_key)
 
+    _set_build_progress(
+        run,
+        step='compose',
+        detail=f'{len(chart_files)} نمودار · نوشتن متن چندمخاطبه',
+    )
     composed = compose_market_article(
         report=report,
         dataset_meta=meta,
@@ -281,6 +384,7 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
         'tags': composed['tags'],
     }
 
+    _set_build_progress(run, step='save', detail='ذخیره تصویر، نقشه‌ها و HTML نهایی')
     with transaction.atomic():
         run.market_key = market_key
         run.status = MarketArticleRun.Status.PREVIEW
@@ -295,7 +399,7 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
         run.faq_json = composed['faq']
         run.quality_score = metrics.get('quality_score')
         run.confidence_score = metrics.get('confidence_score')
-        run.valid_count = int(metrics.get('valid_count') or 0)
+        run.valid_count = valid_n
         run.raw_count = int(metrics.get('raw_count') or 0)
         run.quality_pct = metrics.get('quality_pct')
         run.data_from = metrics.get('data_from')
@@ -305,6 +409,11 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
             'geo_count': len(geo or []),
             'access_score': district_access.get('score') if district_access.get('ok') else None,
             'access_grade': district_access.get('grade') if district_access.get('ok') else None,
+            'build_step': 'save',
+            'build_label': _BUILD_STEP_BY_KEY['save']['label'],
+            'build_pct': 100,
+            'build_detail': 'آماده',
+            'build_steps_done': [s['key'] for s in BUILD_PROGRESS_STEPS],
             **featured_meta,
         }
         run.featured_image.save(image_file.name, image_file, save=False)
@@ -501,6 +610,7 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
         'is_building': is_building,
         'is_failed': is_failed,
         'build_error': chart.get('build_error') or '',
+        'build_progress': build_progress_payload(chart),
         'can_create_draft': link is None and ready,
         'can_update': link is not None and ready,
         'metrics': {

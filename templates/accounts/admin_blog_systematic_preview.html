@@ -6,7 +6,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=15">
 {% endblock %}
 
@@ -27,12 +27,52 @@
     </header>
 
     {% if is_building %}
-    <div class="ab-sys-building" id="ab-sys-building" data-status-url="{{ status_url }}">
+    <div class="ab-sys-building" id="ab-sys-building"
+         data-status-url="{{ status_url }}"
+         data-initial-pct="{{ build_progress.pct|default:3 }}"
+         data-initial-step="{{ build_progress.step|default:'queued' }}"
+         data-initial-label="{{ build_progress.label|default:'آماده‌سازی صف ساخت' }}"
+         data-initial-detail="{{ build_progress.detail|default:'' }}">
         <div class="ab-sys-building__card">
-            <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
-            <h2>در حال ساخت پیش‌نمایش…</h2>
-            <p>تحلیل داده، نقشه شهری/ماهواره‌ای و امتیاز دسترسی در پس‌زمینه اجرا می‌شود. این صفحه به‌صورت خودکار به‌روز می‌شود.</p>
-            <p class="ab-sys-building__hint">معمولاً ۱ تا ۳ دقیقه طول می‌کشد — دیگر خطای ۵۰۲ رخ نمی‌دهد.</p>
+            <div class="ab-sys-building__head">
+                <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                <h2>در حال ساخت پیش‌نمایش…</h2>
+            </div>
+            <p class="ab-sys-building__now" id="ab-sys-now">
+                <strong id="ab-sys-label">{{ build_progress.label|default:"آماده‌سازی صف ساخت" }}</strong>
+                <span id="ab-sys-detail">{% if build_progress.detail %}{{ build_progress.detail }}{% else %}شروع پردازش…{% endif %}</span>
+            </p>
+
+            <div class="ab-sys-progress" aria-live="polite">
+                <div class="ab-sys-progress__meta">
+                    <span>پیشرفت زنده</span>
+                    <strong id="ab-sys-pct">{{ build_progress.pct|default:3 }}٪</strong>
+                </div>
+                <div class="ab-sys-progress__track" role="progressbar"
+                     aria-valuemin="0" aria-valuemax="100"
+                     aria-valuenow="{{ build_progress.pct|default:3 }}"
+                     id="ab-sys-bar-wrap">
+                    <div class="ab-sys-progress__fill" id="ab-sys-bar"
+                         style="width: {{ build_progress.pct|default:3 }}%"></div>
+                </div>
+            </div>
+
+            <ol class="ab-sys-steps" id="ab-sys-steps">
+                {% for step in build_progress.steps %}
+                <li class="ab-sys-steps__item{% if step.key in build_progress.done and step.key != build_progress.step %} is-done{% elif step.key == build_progress.step %} is-active{% endif %}"
+                    data-step="{{ step.key }}">
+                    <span class="ab-sys-steps__mark" aria-hidden="true">
+                        <i class="fas fa-check"></i>
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                        <i class="fas fa-circle"></i>
+                    </span>
+                    <span class="ab-sys-steps__label">{{ step.label }}</span>
+                    <span class="ab-sys-steps__pct">{{ step.pct }}٪</span>
+                </li>
+                {% endfor %}
+            </ol>
+
+            <p class="ab-sys-building__hint">معمولاً ۱ تا ۳ دقیقه طول می‌کشد — این صفحه هر ۱٫۵ ثانیه وضعیت را تازه می‌کند و خطای ۵۰۲ رخ نمی‌دهد.</p>
         </div>
     </div>
     {% elif is_failed %}
@@ -148,23 +188,60 @@
   var el = document.getElementById('ab-sys-building');
   if (!el) return;
   var url = el.getAttribute('data-status-url');
+  var labelEl = document.getElementById('ab-sys-label');
+  var detailEl = document.getElementById('ab-sys-detail');
+  var pctEl = document.getElementById('ab-sys-pct');
+  var barEl = document.getElementById('ab-sys-bar');
+  var barWrap = document.getElementById('ab-sys-bar-wrap');
+  var stepsRoot = document.getElementById('ab-sys-steps');
   var tries = 0;
+  var lastPct = parseInt(el.getAttribute('data-initial-pct') || '3', 10) || 3;
+
+  function toFaDigits(n) {
+    return String(n).replace(/\d/g, function (d) {
+      return '۰۱۲۳۴۵۶۷۸۹'[parseInt(d, 10)];
+    });
+  }
+
+  function applyProgress(p) {
+    if (!p) return;
+    var pct = Math.max(lastPct, Math.min(100, parseInt(p.pct, 10) || 0));
+    lastPct = pct;
+    if (labelEl) labelEl.textContent = p.label || 'در حال پردازش…';
+    if (detailEl) detailEl.textContent = p.detail || 'لطفاً صبر کنید…';
+    if (pctEl) pctEl.textContent = toFaDigits(pct) + '٪';
+    if (barEl) barEl.style.width = pct + '%';
+    if (barWrap) barWrap.setAttribute('aria-valuenow', String(pct));
+    if (!stepsRoot) return;
+    var done = {};
+    (p.done || []).forEach(function (k) { done[k] = true; });
+    var current = p.step || '';
+    stepsRoot.querySelectorAll('.ab-sys-steps__item').forEach(function (item) {
+      var key = item.getAttribute('data-step');
+      item.classList.remove('is-done', 'is-active');
+      if (key === current) item.classList.add('is-active');
+      else if (done[key]) item.classList.add('is-done');
+    });
+  }
+
   function tick() {
     tries += 1;
     fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
       .then(function (r) { return r.json(); })
       .then(function (data) {
+        if (data.progress) applyProgress(data.progress);
         if (data.ready || data.failed) {
-          window.location.reload();
+          if (data.progress) applyProgress(Object.assign({}, data.progress, { pct: 100 }));
+          setTimeout(function () { window.location.reload(); }, 450);
           return;
         }
-        if (tries < 180) setTimeout(tick, 2000);
+        if (tries < 240) setTimeout(tick, 1500);
       })
       .catch(function () {
-        if (tries < 180) setTimeout(tick, 3000);
+        if (tries < 240) setTimeout(tick, 2500);
       });
   }
-  setTimeout(tick, 1500);
+  setTimeout(tick, 800);
 })();
 </script>
 {% endif %}

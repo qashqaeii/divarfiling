@@ -92,15 +92,20 @@ class DistrictAccessHelpersTests(SimpleTestCase):
         self.assertIn('mk-access-section', html)
         self.assertIn('mk-access-shell', html)
         self.assertIn('mk-access-cell-grid', html)
+        self.assertIn('mk-access-tally-grid', html)
         self.assertIn('امکانات و دسترسی‌های منطقه', html)
         self.assertIn('رستوران', html)
         self.assertIn('کلانتری', html)
+        self.assertIn('پارک', html)
         self.assertIn('mk-access-score__num', html)
         self.assertIn('از ۱۰۰', html)
         self.assertNotIn('معبر اصلی', html)
         self.assertNotIn('OpenStreetMap', html)
         self.assertNotIn('پیاده', html)
         self.assertIn('یافت‌نشده', html)
+        # اعداد فارسی تعداد
+        self.assertIn('۲۹', html)
+        self.assertIn('۹۸', html)
 
     def test_section_soft_message_when_overpass_fails(self):
         html = render_district_access_section(
@@ -113,3 +118,28 @@ class DistrictAccessHelpersTests(SimpleTestCase):
 
     def test_section_empty_when_skipped(self):
         self.assertEqual(_section_district_access({'ok': False, 'reason': 'skipped'}, city='x', district='y'), '')
+
+    def test_tally_from_categories_when_groups_empty(self):
+        access = {
+            'ok': True,
+            'score': 70,
+            'grade': 'B+',
+            'grade_label': 'دسترسی خوب',
+            'radius_label': '۳ کیلومتر',
+            'summary': 'نمونه',
+            'total_pois': 435,
+            'found_count': 2,
+            'total_count': 20,
+            'groups': [],
+            'categories': [
+                {'key': 'clinic', 'label': 'کلینیک', 'icon': 'fa-stethoscope', 'color': '#e11d48', 'count': 224, 'nearest_m': 180},
+                {'key': 'park', 'label': 'پارک', 'icon': 'fa-tree', 'color': '#059669', 'count': 211, 'nearest_m': 90},
+            ],
+            'gaps': [],
+        }
+        html = render_district_access_section(access, city='تهران', district='جردن')
+        self.assertIn('mk-access-tally', html)
+        self.assertIn('کلینیک', html)
+        self.assertIn('پارک', html)
+        self.assertIn('۲۲۴', html)
+        self.assertIn('۲۱۱', html)

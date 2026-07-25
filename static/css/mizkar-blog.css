@@ -2798,13 +2798,10 @@ html.mk-public .mk-blog-detail-hero h1 {
 }
 .mk-access-hi__count {
   grid-column: 2;
-  color: #0f172a;
-  font-size: 1.2rem;
+  color: #0f172a !important;
+  font-size: 1.35rem;
   font-weight: 800;
   line-height: 1.1;
-}
-.mk-access-hi__unit {
-  display: none;
 }
 .mk-access-hi__count::after {
   content: ' مورد';
@@ -2812,6 +2809,87 @@ html.mk-public .mk-blog-detail-hero h1 {
   font-weight: 600;
   color: #64748b;
   margin-right: 0.25rem;
+}
+.mk-access-hi__near {
+  grid-column: 2;
+  color: #64748b !important;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.mk-access-tally-block {
+  margin: 0 0 1.15rem;
+}
+.mk-access-tally-block__title {
+  margin: 0 0 0.7rem !important;
+  font-size: 0.98rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+.mk-access-tally-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+@media (min-width: 720px) {
+  .mk-access-tally-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1100px) {
+  .mk-access-tally-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.mk-access-tally {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 0.55rem;
+  align-items: center;
+  min-width: 0;
+  padding: 0.7rem 0.75rem;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-right: 3px solid var(--acc-color, #0d9488);
+}
+.mk-access-tally__icon {
+  grid-row: 1 / span 2;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 148, 136, 0.1);
+  color: var(--acc-color, #0d9488);
+  font-size: 0.9rem;
+}
+.mk-access-tally__label {
+  color: #334155 !important;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.3;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mk-access-tally__count {
+  grid-row: 1 / span 2;
+  grid-column: 3;
+  min-width: 2.4rem;
+  text-align: center;
+  padding: 0.3rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e !important;
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1.1;
+}
+.mk-access-tally__near {
+  grid-column: 2;
+  color: #64748b !important;
+  font-size: 0.75rem;
+  line-height: 1.3;
 }
 
 .mk-access-groups {
@@ -2863,26 +2941,36 @@ html.mk-public .mk-blog-detail-hero h1 {
   flex-shrink: 0;
   font-size: 0.85rem;
 }
-.mk-access-cell__label {
+.mk-access-cell__text {
   flex: 1;
   min-width: 0;
-  color: #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.mk-access-cell__label {
+  color: #334155 !important;
   font-size: 0.86rem;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.mk-access-cell__near {
+  color: #64748b !important;
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
 .mk-access-cell__count {
   flex-shrink: 0;
-  min-width: 1.7rem;
+  min-width: 1.9rem;
   text-align: center;
-  padding: 0.15rem 0.45rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 999px;
-  background: rgba(15, 118, 110, 0.1);
-  color: #0f766e;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e !important;
   font-weight: 800;
-  font-size: 0.86rem;
+  font-size: 0.92rem;
 }
 
 .mk-access-miss {
@@ -2928,6 +3016,7 @@ html.mk-public .mk-blog-detail-hero h1 {
 
 @media (max-width: 640px) {
   .mk-access-hi-grid { grid-template-columns: 1fr; }
+  .mk-access-tally-grid { grid-template-columns: 1fr; }
   .mk-access-cell-grid { grid-template-columns: 1fr; }
   .mk-access-hero { text-align: center; }
   .mk-access-hero__copy { text-align: right; }

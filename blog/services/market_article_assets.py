@@ -34,15 +34,8 @@ TILE_TEMPLATES = {
 }
 STREET_SUBS = 'abcd'
 
-# ترکیب‌های متنوع basemap × لایه — ماهواره وزن بیشتر دارد تا عکس‌های شاخص شبیه هم نشوند
+# ترکیب‌های متنوع basemap × لایه — ماهواره فقط بخشی از گزینه‌هاست
 _FEATURED_COMBOS = (
-    ('satellite', 'heat'),
-    ('satellite', 'value'),
-    ('satellite', 'hotspots'),
-    ('satellite', 'grid'),
-    ('satellite', 'dots'),
-    ('satellite', 'heat'),
-    ('satellite', 'value'),
     ('dark', 'heat'),
     ('dark', 'value'),
     ('dark', 'hotspots'),
@@ -56,6 +49,9 @@ _FEATURED_COMBOS = (
     ('street', 'hotspots'),
     ('street', 'grid'),
     ('street', 'dots'),
+    ('satellite', 'heat'),
+    ('satellite', 'value'),
+    ('satellite', 'hotspots'),
 )
 
 _ARTICLE_MAP_POOL = (
@@ -173,8 +169,12 @@ def render_article_maps(
 
     place = f'{district} · {city}'
     specs = _pick_article_map_specs(city=city, district=district, tx_label=tx_label)
+    # نشانگر دسترسی روی نقشه خیابانی/روشن خواناتر است — نه فقط ماهواره
+    marker_styles = {s[1] for s in specs if s[1] in {'street', 'light'}}
+    if not marker_styles and specs:
+        marker_styles = {specs[0][1]}
     for key, style, overlay, title_core, footer_core in specs:
-        markers = access_markers if style == 'satellite' else None
+        markers = access_markers if style in marker_styles else None
         img = _compose_map_canvas(
             geo_points,
             width=ARTICLE_MAP_W,
@@ -197,47 +197,108 @@ def render_article_maps(
 
 
 def _pick_article_map_specs(*, city: str, district: str, tx_label: str) -> list[tuple]:
-    """۶–۷ نقشه متنوع: حداقل ۳ ماهواره + سبک‌ها و لایه‌های غیرتکراری برای هر محله."""
-    rng = random.Random(f'{city}|{district}|{tx_label}|maps-v3')
-    sat = [x for x in _ARTICLE_MAP_POOL if x[1] == 'satellite']
-    others = [x for x in _ARTICLE_MAP_POOL if x[1] != 'satellite']
-    rng.shuffle(sat)
-    rng.shuffle(others)
+    """۶–۷ نقشه متنوع: هر لایه روی basemap مناسب — حداکثر ۲ ماهواره."""
+    rng = random.Random(f'{city}|{district}|{tx_label}|maps-v4')
 
-    picked: list[tuple] = list(sat[:3])
-    used_overlays = {x[2] for x in picked}
-    used_styles = {'satellite'}
+    # لایه → basemapهای مناسب (خوانایی رنگ هیت‌مپ اولویت دارد)
+    preferred = {
+        'heat': ('dark', 'light', 'street', 'satellite'),
+        'value': ('street', 'light', 'dark', 'satellite'),
+        'hotspots': ('street', 'dark', 'light', 'satellite'),
+        'grid': ('light', 'street', 'dark', 'satellite'),
+        'dots': ('dark', 'street', 'light', 'satellite'),
+    }
+    by_key = {x[0]: x for x in _ARTICLE_MAP_POOL}
+    overlays = list(preferred.keys())
+    rng.shuffle(overlays)
 
-    def _try_add(item: tuple) -> bool:
-        if item in picked:
+    picked: list[tuple] = []
+    used_styles: set[str] = set()
+    used_overlays: set[str] = set()
+    sat_count = 0
+
+    def _add(style: str, overlay: str) -> bool:
+        nonlocal sat_count
+        key = {
+            ('satellite', 'heat'): 'map_sat_heat',
+            ('satellite', 'value'): 'map_sat_value',
+            ('satellite', 'hotspots'): 'map_sat_hotspots',
+            ('satellite', 'grid'): 'map_sat_grid',
+            ('satellite', 'dots'): 'map_sat_dots',
+            ('dark', 'heat'): 'map_dark_heat',
+            ('dark', 'value'): 'map_dark_value',
+            ('dark', 'hotspots'): 'map_dark_hotspots',
+            ('dark', 'dots'): 'map_dark_dots',
+            ('light', 'heat'): 'map_light_heat',
+            ('light', 'value'): 'map_light_value',
+            ('light', 'grid'): 'map_light_grid',
+            ('light', 'hotspots'): 'map_light_hotspots',
+            ('street', 'heat'): 'map_street_heat',
+            ('street', 'value'): 'map_street_value',
+            ('street', 'hotspots'): 'map_street_hotspots',
+            ('street', 'grid'): 'map_street_grid',
+            ('street', 'dots'): 'map_street_dots',
+        }.get((style, overlay))
+        item = by_key.get(key) if key else None
+        if not item or item in picked:
             return False
-        style, overlay = item[1], item[2]
-        # ترجیح: لایه و basemap تکراری کمتر
+        if style == 'satellite' and sat_count >= 2:
+            return False
         if overlay in used_overlays and len(picked) < 5:
             return False
         picked.append(item)
-        used_overlays.add(overlay)
         used_styles.add(style)
+        used_overlays.add(overlay)
+        if style == 'satellite':
+            sat_count += 1
         return True
 
-    for item in others:
-        if len(picked) >= 7:
-            break
-        style = item[1]
-        if style not in used_styles:
-            _try_add(item)
-    for item in others:
-        if len(picked) >= 7:
-            break
-        _try_add(item)
-    for item in others + sat:
+    # اول: برای هر لایه بهترین basemap غیرماهواره‌ای
+    for overlay in overlays:
         if len(picked) >= 6:
             break
-        if item not in picked:
-            picked.append(item)
-    rng.shuffle(picked)
-    # ماهواره‌ها را جلوتر نگه دار تا در مقاله زودتر دیده شوند
-    picked.sort(key=lambda x: 0 if x[1] == 'satellite' else 1)
+        for style in preferred[overlay]:
+            if style == 'satellite' and sat_count >= 1 and len(picked) < 4:
+                continue
+            if _add(style, overlay):
+                break
+
+    # اطمینان از تنوع basemap (حداقل street + dark/light)
+    for style in ('street', 'dark', 'light'):
+        if style in used_styles or len(picked) >= 7:
+            continue
+        for overlay in overlays:
+            if overlay not in used_overlays and _add(style, overlay):
+                break
+
+    # حداکثر یک/دو ماهواره برای بافت واقعی محله
+    if sat_count < 2 and len(picked) < 7:
+        for overlay in ('value', 'hotspots', 'heat'):
+            if _add('satellite', overlay):
+                break
+
+    # تکمیل تا ۶
+    pool = list(_ARTICLE_MAP_POOL)
+    rng.shuffle(pool)
+    for item in pool:
+        if len(picked) >= 6:
+            break
+        style, overlay = item[1], item[2]
+        if style == 'satellite' and sat_count >= 2:
+            continue
+        if item in picked:
+            continue
+        if overlay in used_overlays and style in used_styles:
+            continue
+        picked.append(item)
+        used_styles.add(style)
+        used_overlays.add(overlay)
+        if style == 'satellite':
+            sat_count += 1
+
+    # ترتیب خوانا: خیابانی/روشن اول، ماهواره آخر
+    order = {'street': 0, 'light': 1, 'dark': 2, 'satellite': 3}
+    picked.sort(key=lambda x: (order.get(x[1], 9), x[2]))
     return picked[:7]
 
 
@@ -756,17 +817,19 @@ def _compose_map_canvas(
     view = Image.new('RGB', (map_w, map_h), '#d7dee8')
     view.paste(basemap, (-crop_x, -crop_y))
 
-    # خوانایی لایه روی basemapهای مختلف
+    # خوانایی لایه روی basemapهای مختلف — کنتراست بیشتر برای هیت‌مپ
     if style == 'satellite':
-        shade = Image.new('RGBA', (map_w, map_h), (15, 23, 42, 55))
+        shade = Image.new('RGBA', (map_w, map_h), (15, 23, 42, 95))
         view = Image.alpha_composite(view.convert('RGBA'), shade).convert('RGB')
     elif style == 'light':
-        shade = Image.new('RGBA', (map_w, map_h), (15, 23, 42, 18))
+        shade = Image.new('RGBA', (map_w, map_h), (15, 23, 42, 28))
         view = Image.alpha_composite(view.convert('RGBA'), shade).convert('RGB')
     elif style == 'dark':
-        # کمی روشن‌تر تا رنگ لایه‌ها بهتر دیده شود
-        lift = Image.new('RGBA', (map_w, map_h), (255, 255, 255, 18))
+        lift = Image.new('RGBA', (map_w, map_h), (255, 255, 255, 10))
         view = Image.alpha_composite(view.convert('RGBA'), lift).convert('RGB')
+    elif style == 'street':
+        shade = Image.new('RGBA', (map_w, map_h), (15, 23, 42, 22))
+        view = Image.alpha_composite(view.convert('RGBA'), shade).convert('RGB')
 
     cells, meta = _aggregate_cells(points)
     if not cells:
@@ -802,11 +865,11 @@ def _compose_map_canvas(
             if xb < 0 or yb < 0 or xa > map_w or ya > map_h:
                 continue
             t = (c['n'] - n_lo) / (n_hi - n_lo)
-            color = _density_color(t, alpha=int(55 + 140 * t))
-            draw_heat.rectangle((xa, ya, xb, yb), fill=color, outline=(255, 255, 255, 70))
+            color = _density_color(t, alpha=int(110 + 130 * t))
+            draw_heat.rectangle((xa, ya, xb, yb), fill=color, outline=(255, 255, 255, 100))
             if c['n'] >= max(2, int(n_hi * 0.45)) and (xb - xa) > 28:
                 cx, cy = (xa + xb) / 2, (ya + yb) / 2
-                draw_heat.text((cx, cy), str(c['n']), fill=(255, 255, 255, 230), font=count_font, anchor='mm')
+                draw_heat.text((cx, cy), str(c['n']), fill=(255, 255, 255, 245), font=count_font, anchor='mm')
 
     elif overlay == 'value':
         for c in cells:
@@ -816,21 +879,20 @@ def _compose_map_canvas(
             if not (-20 <= x < map_w + 20 and -20 <= y < map_h + 20):
                 continue
             t = (c['value'] - v_lo) / (v_hi - v_lo)
-            r = 14 + min(22, 4.2 * math.sqrt(c['n']))
-            color = _value_color(t, alpha=int(90 + 110 * min(1.0, 0.35 + 0.2 * math.log1p(c['n']))))
+            r = 15 + min(24, 4.5 * math.sqrt(c['n']))
+            color = _value_color(t, alpha=int(140 + 100 * min(1.0, 0.4 + 0.25 * math.log1p(c['n']))))
             draw_heat.ellipse((x - r, y - r, x + r, y + r), fill=color)
-            draw_heat.ellipse((x - r, y - r, x + r, y + r), outline=(255, 255, 255, 90))
+            draw_heat.ellipse((x - r, y - r, x + r, y + r), outline=(255, 255, 255, 140))
 
     elif overlay == 'hotspots':
-        # soft density field first
         for c in cells:
             x, y = project(c['lat'], c['lng'])
             if not (0 <= x < map_w and 0 <= y < map_h):
                 continue
             t = (c['n'] - n_lo) / (n_hi - n_lo)
-            r = 16 + min(28, 6 * math.sqrt(c['n']))
-            draw_heat.ellipse((x - r, y - r, x + r, y + r), fill=_density_color(t * 0.75, alpha=int(40 + 90 * t)))
-        heat = heat.filter(ImageFilter.GaussianBlur(radius=6))
+            r = 18 + min(30, 6.5 * math.sqrt(c['n']))
+            draw_heat.ellipse((x - r, y - r, x + r, y + r), fill=_density_color(t, alpha=int(90 + 130 * t)))
+        heat = heat.filter(ImageFilter.GaussianBlur(radius=4))
         draw_heat = ImageDraw.Draw(heat)
         ranked = sorted(cells, key=lambda c: c['n'], reverse=True)[:5]
         for i, c in enumerate(ranked, start=1):
@@ -838,11 +900,11 @@ def _compose_map_canvas(
             if not (20 <= x < map_w - 20 and 20 <= y < map_h - 20):
                 continue
             r = 18 + min(10, c['n'])
-            draw_heat.ellipse((x - r, y - r, x + r, y + r), outline=(255, 255, 255, 230), width=3)
-            draw_heat.ellipse((x - r + 3, y - r + 3, x + r - 3, y + r - 3), outline=(220, 38, 38, 220), width=2)
+            draw_heat.ellipse((x - r, y - r, x + r, y + r), outline=(255, 255, 255, 240), width=3)
+            draw_heat.ellipse((x - r + 3, y - r + 3, x + r - 3, y + r - 3), outline=(220, 38, 38, 240), width=2)
             badge = f'{i}'
             bx, by = x + r + 6, y - r - 4
-            draw_heat.rounded_rectangle((bx, by, bx + 58, by + 28), radius=8, fill=(15, 23, 42, 230))
+            draw_heat.rounded_rectangle((bx, by, bx + 58, by + 28), radius=8, fill=(15, 23, 42, 235))
             draw_heat.text((bx + 29, by + 14), f'#{badge} · {c["n"]}', fill=(248, 250, 252, 255), font=count_font, anchor='mm')
 
     elif overlay == 'dots':
@@ -852,10 +914,10 @@ def _compose_map_canvas(
             if not (-10 <= x < map_w + 10 and -10 <= y < map_h + 10):
                 continue
             t = (c['n'] - n_lo) / (n_hi - n_lo)
-            r = 5 + min(16, 3.2 * math.sqrt(c['n']))
-            color = _density_color(t, alpha=int(120 + 100 * t))
+            r = 6 + min(18, 3.4 * math.sqrt(c['n']))
+            color = _density_color(t, alpha=int(170 + 80 * t))
             draw_heat.ellipse((x - r, y - r, x + r, y + r), fill=color)
-            draw_heat.ellipse((x - r, y - r, x + r, y + r), outline=(255, 255, 255, 140), width=1)
+            draw_heat.ellipse((x - r, y - r, x + r, y + r), outline=(255, 255, 255, 180), width=1)
 
     else:  # heat
         for c in cells:
@@ -863,15 +925,26 @@ def _compose_map_canvas(
             if not (-30 <= x < map_w + 30 and -30 <= y < map_h + 30):
                 continue
             t = (c['n'] - n_lo) / (n_hi - n_lo)
-            r = 20 + min(36, 7.5 * math.sqrt(c['n']))
-            draw_heat.ellipse((x - r, y - r, x + r, y + r), fill=_density_color(t, alpha=int(45 + 130 * t)))
+            r = 22 + min(40, 8.0 * math.sqrt(c['n']))
+            # هسته پررنگ + هاله نیمه‌شفاف برای تمایز بهتر سطوح
+            draw_heat.ellipse(
+                (x - r, y - r, x + r, y + r),
+                fill=_density_color(t, alpha=int(100 + 140 * t)),
+            )
+            core_r = max(8, r * 0.42)
+            draw_heat.ellipse(
+                (x - core_r, y - core_r, x + core_r, y + core_r),
+                fill=_density_color(min(1.0, t + 0.15), alpha=int(160 + 90 * t)),
+            )
 
-    if overlay in ('heat', 'value'):
-        heat = heat.filter(ImageFilter.GaussianBlur(radius=7 if overlay == 'heat' else 4))
+    if overlay == 'heat':
+        heat = heat.filter(ImageFilter.GaussianBlur(radius=3.5))
+    elif overlay == 'value':
+        heat = heat.filter(ImageFilter.GaussianBlur(radius=2.5))
     elif overlay == 'grid':
-        heat = heat.filter(ImageFilter.GaussianBlur(radius=0.8))
+        heat = heat.filter(ImageFilter.GaussianBlur(radius=0.5))
     elif overlay == 'dots':
-        heat = heat.filter(ImageFilter.GaussianBlur(radius=0.6))
+        heat = heat.filter(ImageFilter.GaussianBlur(radius=0.4))
 
     view_rgba = Image.alpha_composite(view.convert('RGBA'), heat)
 
@@ -946,13 +1019,14 @@ def _compose_map_canvas(
 
 
 def _density_color(t: float, *, alpha: int) -> tuple[int, int, int, int]:
-    """کم = زرد کمرنگ → زیاد = قرمز — متمایز از نقشه ارزش."""
+    """کم = لیمویی روشن → زیاد = قرمز تیره — اشباع بالا برای تمایز روی نقشه."""
     t = max(0.0, min(1.0, t))
     stops = [
-        (0.0, (253, 224, 71)),
-        (0.35, (251, 146, 60)),
-        (0.65, (239, 68, 68)),
-        (1.0, (127, 29, 29)),
+        (0.0, (250, 204, 21)),   # yellow-400
+        (0.28, (249, 115, 22)),  # orange-500
+        (0.55, (239, 68, 68)),   # red-500
+        (0.8, (185, 28, 28)),    # red-700
+        (1.0, (127, 29, 29)),    # red-900
     ]
     for i in range(len(stops) - 1):
         t0, c0 = stops[i]
@@ -980,13 +1054,14 @@ def _hex_rgb(color: str, *, alpha: int = 255) -> tuple[int, int, int, int]:
 
 
 def _value_color(t: float, *, alpha: int) -> tuple[int, int, int, int]:
-    """پایین = آبی → میانه = فیروزه‌ای/کهربایی → بالا = قرمز."""
+    """پایین = آبی پررنگ → میانه = فیروزه‌ای/کهربایی → بالا = قرمز."""
     t = max(0.0, min(1.0, t))
     stops = [
-        (0.0, (59, 130, 246)),
-        (0.33, (20, 184, 166)),
-        (0.66, (245, 158, 11)),
-        (1.0, (239, 68, 68)),
+        (0.0, (37, 99, 235)),    # blue-600
+        (0.3, (13, 148, 136)),   # teal-600
+        (0.55, (234, 179, 8)),   # yellow-500
+        (0.78, (249, 115, 22)),  # orange-500
+        (1.0, (220, 38, 38)),    # red-600
     ]
     for i in range(len(stops) - 1):
         t0, c0 = stops[i]

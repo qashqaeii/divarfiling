@@ -276,6 +276,13 @@ def _categories_from_tallies(
         key = category['key']
         tally = tallies.get(key) or {}
         count = int(tally.get('count') or 0)
+        samples = tally.get('samples') or []
+        nearest_m = None
+        if samples:
+            try:
+                nearest_m = int(samples[0].get('distance_m'))
+            except (TypeError, ValueError, IndexError, AttributeError):
+                nearest_m = None
         out.append({
             'key': key,
             'group': category['group'],
@@ -284,7 +291,8 @@ def _categories_from_tallies(
             'color': category['color'],
             'count': count,
             'found': count > 0,
-            'samples': tally.get('samples') or [],
+            'nearest_m': nearest_m,
+            'samples': samples,
         })
     return out
 

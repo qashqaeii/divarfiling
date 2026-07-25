@@ -6,6 +6,7 @@ from typing import Any
 from datetime import date, datetime
 import json
 import logging
+import re
 import threading
 
 from django.contrib.auth import get_user_model
@@ -239,7 +240,8 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
     )
 
     district_access = analyze_district_access(geo)
-    if isinstance(report, dict) and district_access.get('ok'):
+    # همیشه به report وصل شود تا بخش HTML امکانات/دسترسی در پیش‌نمایش ساخته شود
+    if isinstance(report, dict) and isinstance(district_access, dict):
         report = {**report, 'district_access': district_access}
 
     extra_maps = render_article_maps(
@@ -398,7 +400,7 @@ def create_draft(run: MarketArticleRun, user=None) -> Post:
         slug=slug[:220],
         author=author,
         category=category,
-        content=run.content_html,
+        content=_ensure_access_section_in_html(run),
         excerpt=excerpt,
         is_published=False,
         published_at=None,
@@ -436,7 +438,7 @@ def update_existing_post(run: MarketArticleRun) -> Post:
     seo = run.seo_json or {}
     post.title = (seo.get('title') or post.title)[:200]
     post.excerpt = (seo.get('excerpt') or post.excerpt)[:300]
-    post.content = run.content_html
+    post.content = _ensure_access_section_in_html(run)
     # keep slug stable
     if run.featured_image:
         post.featured_image = run.featured_image
@@ -481,13 +483,14 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
         MarketArticleRun.Status.PREVIEW,
         MarketArticleRun.Status.DRAFT_LINKED,
     )
+    content_html = _ensure_access_section_in_html(run)
     return {
         'run': run,
         'seo': seo,
         'title': seo.get('title') or '',
         'slug': seo.get('slug') or run.market_key,
         'excerpt': seo.get('excerpt') or '',
-        'content_html': run.content_html,
+        'content_html': content_html,
         'faq': run.faq_json or [],
         'featured_image_url': run.featured_image.url if run.featured_image else '',
         'map_assets': {
@@ -511,3 +514,50 @@ def preview_context(run: MarketArticleRun) -> dict[str, Any]:
             'date_to_fmt': stored_metrics.get('date_to_fmt') or '',
         },
     }
+
+
+def _ensure_access_section_in_html(run: MarketArticleRun) -> str:
+    """اگر HTML ذخیره‌شده بخش دسترسی را ندارد، از report_json تزریق کن."""
+    content = run.content_html or ''
+    if 'mk-access-section' in content and 'mk-access-tally' in content:
+        return content
+    blob = run.report_json if isinstance(run.report_json, dict) else {}
+    access = blob.get('district_access')
+    if not isinstance(access, dict):
+        report = blob.get('report') if isinstance(blob.get('report'), dict) else {}
+        access = report.get('district_access') if isinstance(report, dict) else None
+    if not isinstance(access, dict) or not access:
+        return content
+
+    meta = blob.get('dataset_meta') if isinstance(blob.get('dataset_meta'), dict) else {}
+    city = meta.get('city') or ''
+    district = meta.get('district') or ''
+    from blog.services.market_article_access_html import render_district_access_section
+    section = render_district_access_section(access, city=city, district=district)
+    if not section:
+        return content
+
+    if 'mk-access-section' in content:
+        # نسخه قدیمی بدون tally — جایگزین کن
+        updated = re.sub(
+            r'<section class="mk-access-section"[^>]*>.*?</section>',
+            section,
+            content,
+            count=1,
+            flags=re.DOTALL,
+        )
+        return updated if updated != content else content
+
+    anchor = '<section class="mk-market-section" id="trends">'
+    if anchor in content:
+        return content.replace(anchor, section + '\n' + anchor, 1)
+    convert = 'id="convert-access"'
+    idx = content.find(convert)
+    if idx != -1:
+        # قبل از convert-access
+        start = content.rfind('<aside', 0, idx)
+        if start == -1:
+            start = content.rfind('<section', 0, idx)
+        if start != -1:
+            return content[:start] + section + '\n' + content[start:]
+    return content + '\n' + section

@@ -18,8 +18,55 @@ def _n(value: Any) -> str:
         return _e(value)
 
 
+def _distance_label(meters: Any) -> str:
+    try:
+        m = int(meters)
+    except (TypeError, ValueError):
+        return ''
+    if m <= 0:
+        return ''
+    if m < 1000:
+        return f'{_n(m)} متر'
+    km = m / 1000.0
+    if abs(km - round(km)) < 0.05:
+        return f'{_n(int(round(km)))} کیلومتر'
+    label = f'{km:.1f}'.rstrip('0').rstrip('.')
+    return f'{_e(to_persian_digits(label))} کیلومتر'
+
+
+def _iter_count_items(access: dict) -> list[dict[str, Any]]:
+    """لیست یکدست از دسته‌های دارای تعداد — از groups یا categories/items."""
+    seen: set[str] = set()
+    out: list[dict[str, Any]] = []
+
+    def _push(item: dict[str, Any]) -> None:
+        key = str(item.get('key') or item.get('label') or '')
+        if not key or key in seen:
+            return
+        if key in {'street_type', 'motorway', 'main_road'}:
+            return
+        count = int(item.get('count') or 0)
+        if count <= 0:
+            return
+        seen.add(key)
+        out.append(item)
+
+    for g in access.get('groups') or []:
+        for item in g.get('items') or []:
+            if isinstance(item, dict):
+                _push(item)
+
+    for key in ('categories', 'items', 'highlights'):
+        for item in access.get(key) or []:
+            if isinstance(item, dict):
+                _push(item)
+
+    out.sort(key=lambda x: int(x.get('count') or 0), reverse=True)
+    return out
+
+
 def render_district_access_section(access: Any, *, city: str, district: str) -> str:
-    if not isinstance(access, dict):
+    if not isinstance(access, dict) or not access:
         return ''
     if not access.get('ok'):
         reason = access.get('reason') or ''
@@ -45,23 +92,52 @@ def render_district_access_section(access: Any, *, city: str, district: str) -> 
     category_found = int(access.get('found_count') or 0)
     category_total = int(access.get('total_count') or 0)
 
+    count_items = _iter_count_items(access)
+
     hi_cards: list[str] = []
-    for h in (access.get('highlights') or [])[:4]:
+    for h in count_items[:4]:
         count = int(h.get('count') or 0)
-        if count <= 0:
-            continue
+        nearest = _distance_label(h.get('nearest_m'))
+        nearest_html = (
+            f'<span class="mk-access-hi__near">نزدیک‌ترین: {nearest}</span>'
+            if nearest else ''
+        )
         hi_cards.append(
             f'<div class="mk-access-hi" style="--acc-color:{_e(h.get("color") or "#0d9488")}">'
             f'<span class="mk-access-hi__icon" aria-hidden="true">'
             f'<i class="fas {_e(h.get("icon") or "fa-location-dot")}"></i></span>'
             f'<span class="mk-access-hi__label">{_e(h.get("label"))}</span>'
             f'<span class="mk-access-hi__count">{_n(count)}</span>'
-            f'<span class="mk-access-hi__unit">مورد</span>'
+            f'{nearest_html}'
             f'</div>'
         )
     hi_block = (
         f'<div class="mk-access-hi-grid">{"".join(hi_cards)}</div>'
         if hi_cards else ''
+    )
+
+    # شبکه تخت همه دسته‌ها — همیشه با برچسب + عدد بزرگ (مثل کلینیک ۲۲۴)
+    tally_cells: list[str] = []
+    for item in count_items[:24]:
+        color = _e(item.get('color') or '#0d9488')
+        icon = _e(item.get('icon') or 'fa-location-dot')
+        nearest = _distance_label(item.get('nearest_m'))
+        near_bit = f'<span class="mk-access-tally__near">{nearest}</span>' if nearest else ''
+        tally_cells.append(
+            f'<div class="mk-access-tally" style="--acc-color:{color}">'
+            f'<span class="mk-access-tally__icon" aria-hidden="true">'
+            f'<i class="fas {icon}"></i></span>'
+            f'<span class="mk-access-tally__label">{_e(item.get("label"))}</span>'
+            f'<span class="mk-access-tally__count">{_n(item.get("count"))}</span>'
+            f'{near_bit}'
+            f'</div>'
+        )
+    tally_block = (
+        f'<div class="mk-access-tally-block">'
+        f'<div class="mk-access-tally-block__title">تعداد امکانات در شعاع بررسی</div>'
+        f'<div class="mk-access-tally-grid">{"".join(tally_cells)}</div>'
+        f'</div>'
+        if tally_cells else ''
     )
 
     group_blocks: list[str] = []
@@ -75,11 +151,19 @@ def render_district_access_section(access: Any, *, city: str, district: str) -> 
                 continue
             color = _e(item.get('color') or '#0d9488')
             icon = _e(item.get('icon') or 'fa-location-dot')
+            nearest = _distance_label(item.get('nearest_m'))
+            near_bit = (
+                f'<span class="mk-access-cell__near">{nearest}</span>'
+                if nearest else ''
+            )
             cells.append(
                 f'<div class="mk-access-cell" style="--acc-color:{color}">'
                 f'<span class="mk-access-cell__icon" aria-hidden="true">'
                 f'<i class="fas {icon}"></i></span>'
+                f'<span class="mk-access-cell__text">'
                 f'<span class="mk-access-cell__label">{_e(item.get("label"))}</span>'
+                f'{near_bit}'
+                f'</span>'
                 f'<span class="mk-access-cell__count">{_n(count)}</span>'
                 f'</div>'
             )
@@ -91,6 +175,11 @@ def render_district_access_section(access: Any, *, city: str, district: str) -> 
             f'<div class="mk-access-cell-grid">{"".join(cells)}</div>'
             f'</div>'
         )
+
+    groups_block = (
+        f'<div class="mk-access-groups">{"".join(group_blocks)}</div>'
+        if group_blocks else ''
+    )
 
     missing = [
         g for g in (access.get('gaps') or [])
@@ -116,6 +205,16 @@ def render_district_access_section(access: Any, *, city: str, district: str) -> 
         meta_bits.append(f'{_n(category_found)} از {_n(category_total)} دسته')
     meta = ' · '.join(meta_bits)
 
+    if not tally_block and not groups_block and not hi_block:
+        return (
+            f'<section class="mk-access-section" id="district-access">'
+            f'<div class="mk-access-shell">'
+            f'<h2 class="mk-access-title">امکانات و دسترسی‌های منطقه</h2>'
+            f'<p class="mk-access-unavailable">'
+            f'برای {_e(district)} {_e(city)} نقطه خدماتی کافی در شعاع بررسی یافت نشد.'
+            f'</p></div></section>'
+        )
+
     return (
         f'<section class="mk-access-section" id="district-access" data-district="{_e(district)}" data-city="{_e(city)}">'
         f'<div class="mk-access-shell">'
@@ -138,7 +237,8 @@ def render_district_access_section(access: Any, *, city: str, district: str) -> 
         f'<p class="mk-access-summary">{summary}</p>'
         f'</div></div>'
         f'{hi_block}'
-        f'<div class="mk-access-groups">{"".join(group_blocks)}</div>'
+        f'{tally_block}'
+        f'{groups_block}'
         f'{missing_block}'
         f'</div></section>'
     )

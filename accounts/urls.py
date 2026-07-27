@@ -26,6 +26,8 @@ from .admin_views import (
     AdminRecoveryCenterJsonView,
     AdminRecoveryCenterView,
     AdminSystemSummaryView,
+    AdminUsersManagementDetailView,
+    AdminUsersManagementListView,
 )
 from .admin_blog_systematic_views import (
     AdminBlogSystematicBuildPreviewView,
@@ -78,6 +80,12 @@ urlpatterns = [
     path('admin-panel/', AdminDashboardView.as_view(), name='admin_panel'),
     path('admin-panel/export/<str:export_key>/', AdminExportView.as_view(), name='admin_panel_export'),
     path('admin-panel/system-summary.json', AdminSystemSummaryView.as_view(), name='admin_panel_system_summary'),
+    path('admin-panel/users.json', AdminUsersManagementListView.as_view(), name='admin_panel_users_json'),
+    path(
+        'admin-panel/users/<int:user_id>.json',
+        AdminUsersManagementDetailView.as_view(),
+        name='admin_panel_user_detail_json',
+    ),
     path('admin-panel/marketing/', AdminMarketingView.as_view(), name='admin_panel_marketing'),
     path('admin-panel/marketing/preview.json', AdminMarketingPreviewView.as_view(), name='admin_panel_marketing_preview'),
     path('admin-panel/marketing/phonebook/status.json', AdminPhonebookStatusView.as_view(), name='admin_panel_phonebook_status'),

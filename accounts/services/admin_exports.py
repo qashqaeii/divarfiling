@@ -480,6 +480,11 @@ def _windows_first_launches_rows() -> Tuple[List[str], Iterable[ExportRow]]:
     return headers, rows
 
 
+def _users_management_export_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    from accounts.services.admin_users_management import export_users_management_rows
+    return export_users_management_rows()
+
+
 EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
     'pending_orders': {
         'title': 'سفارش‌های پرداخت‌نشده',
@@ -521,6 +526,14 @@ EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
         'icon': 'fa-users',
         'accent': 'violet',
         'builder': _all_users_rows,
+    },
+    'users_management': {
+        'title': 'مدیریت کاربران (تحلیل کامل)',
+        'description': 'لایسنس، پرداخت، ویندوز/اندروید، دیتاست و CRM',
+        'category': 'users',
+        'icon': 'fa-users-gear',
+        'accent': 'indigo',
+        'builder': _users_management_export_rows,
     },
     'new_users': {
         'title': 'کاربران جدید',

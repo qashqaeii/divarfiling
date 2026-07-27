@@ -66,6 +66,10 @@ from accounts.services.admin_phonebook_sync import (
     sync_users_to_phonebook,
 )
 from accounts.services.admin_system_summary import system_summary_json_response
+from accounts.services.admin_users_management import (
+    get_user_management_detail,
+    list_users_management,
+)
 from accounts.services.sms import get_sms_balance_snapshot
 from blog.services.article_import import (
     ArticleImportError,
@@ -145,6 +149,46 @@ class AdminSystemSummaryView(StaffRequiredMixin, View):
 
         download = request.GET.get('download', '1') not in ('0', 'false', 'no')
         return system_summary_json_response(days=days, detail_limit=limit, download=download)
+
+
+class AdminUsersManagementListView(StaffRequiredMixin, View):
+    """JSON لیست مدیریت کاربران — جستجو، فیلتر، صفحه‌بندی."""
+
+    def get(self, request):
+        filters = {
+            'license': (request.GET.get('license') or '').strip(),
+            'windows': (request.GET.get('windows') or '').strip(),
+            'android': (request.GET.get('android') or '').strip(),
+            'datasets': (request.GET.get('datasets') or '').strip(),
+            'crm': (request.GET.get('crm') or '').strip(),
+            'paid': (request.GET.get('paid') or '').strip(),
+        }
+        payload = list_users_management(
+            q=(request.GET.get('q') or '').strip(),
+            page=_parse_int(request.GET.get('page'), 1, minimum=1, maximum=9999) or 1,
+            page_size=_parse_int(request.GET.get('page_size'), 25, minimum=1, maximum=100) or 25,
+            sort=(request.GET.get('sort') or '-date_joined').strip(),
+            filters=filters,
+        )
+        return JsonResponse(
+            payload,
+            encoder=DjangoJSONEncoder,
+            json_dumps_params={'ensure_ascii': False},
+        )
+
+
+class AdminUsersManagementDetailView(StaffRequiredMixin, View):
+    """JSON جزئیات یک کاربر برای پنل مدیریت."""
+
+    def get(self, request, user_id):
+        data = get_user_management_detail(user_id)
+        if not data:
+            return JsonResponse({'ok': False, 'error': 'کاربر یافت نشد'}, status=404)
+        return JsonResponse(
+            {'ok': True, 'user': data},
+            encoder=DjangoJSONEncoder,
+            json_dumps_params={'ensure_ascii': False},
+        )
 
 
 def _parse_int(raw, default=None, *, minimum=None, maximum=None):

@@ -9,7 +9,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=13">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -370,8 +370,8 @@
                 <section class="ecc-section ecc-order-users" id="ecc-users" aria-labelledby="eccUsersTitle">
                     <div class="ecc-section-head">
                         <div>
-                            <h2 id="eccUsersTitle"><i class="fas fa-users"></i> تحلیل کاربران</h2>
-                            <p>ثبت‌نام، نگهداشت، لایسنس و کاربران برتر</p>
+                            <h2 id="eccUsersTitle"><i class="fas fa-users"></i> تحلیل و مدیریت کاربران</h2>
+                            <p>ثبت‌نام، نگهداشت، لایسنس و مدیریت کامل کاربران</p>
                         </div>
                     </div>
                     <ul class="ecc-stat-strip" style="margin-bottom:1rem">
@@ -441,6 +441,82 @@
                                     </table>
                                 </div>
                                 {% include 'accounts/partials/adm_tbl_toggle.html' with total=recent_users|length preview=table_preview_rows %}
+                            </div>
+                        </article>
+
+                        {# ─── مدیریت کاربران (جدول + جزئیات) ─── #}
+                        <article class="ecc-card ecc-card--full adm-cell--table adm-cell--pro" id="ecc-users-mgmt"
+                                 data-users-list-url="{% url 'admin_panel_users_json' %}"
+                                 data-users-detail-url-template="{% url 'admin_panel_user_detail_json' 0 %}"
+                                 data-users-export-url="{% url 'admin_panel_export' 'users_management' %}?format=xlsx">
+                            <div class="ecc-card-head">
+                                <div>
+                                    <h3>مدیریت کاربران</h3>
+                                    <p class="ecc-card-sub">لایسنس، پرداخت، نصب اپ، دیتاست و CRM — برای جزئیات روی ردیف کلیک کنید</p>
+                                </div>
+                                <a href="{% url 'admin_panel_export' 'users_management' %}?format=xlsx" class="ecc-btn ecc-btn--ghost" title="خروجی اکسل">
+                                    <i class="fas fa-file-excel"></i> اکسل
+                                </a>
+                            </div>
+                            <div class="ecc-users-mgmt-tools">
+                                <input type="search" id="eccUsersMgmtSearch" class="ecc-table-search" placeholder="جستجو نام، موبایل، ایمیل..." aria-label="جستجوی کاربر" autocomplete="off">
+                                <div class="ecc-users-mgmt-filters" role="group" aria-label="فیلتر کاربران">
+                                    <select id="eccUsersMgmtLicense" class="ecc-users-mgmt-select" aria-label="لایسنس">
+                                        <option value="">همه لایسنس‌ها</option>
+                                        <option value="active">لایسنس فعال</option>
+                                        <option value="none">بدون لایسنس</option>
+                                        <option value="paid_no_license">پرداخت‌کرده بدون لایسنس</option>
+                                    </select>
+                                    <select id="eccUsersMgmtWindows" class="ecc-users-mgmt-select" aria-label="ویندوز">
+                                        <option value="">ویندوز: همه</option>
+                                        <option value="1">نصب/فعال ویندوز</option>
+                                        <option value="0">بدون ویندوز</option>
+                                    </select>
+                                    <select id="eccUsersMgmtAndroid" class="ecc-users-mgmt-select" aria-label="اندروید">
+                                        <option value="">اندروید: همه</option>
+                                        <option value="1">اپ اندروید</option>
+                                        <option value="0">بدون اندروید</option>
+                                    </select>
+                                    <select id="eccUsersMgmtDatasets" class="ecc-users-mgmt-select" aria-label="دیتاست">
+                                        <option value="">دیتاست: همه</option>
+                                        <option value="1">دارای دیتاست</option>
+                                        <option value="0">بدون دیتاست</option>
+                                    </select>
+                                    <select id="eccUsersMgmtCrm" class="ecc-users-mgmt-select" aria-label="CRM">
+                                        <option value="">CRM: همه</option>
+                                        <option value="1">دارای مخاطب</option>
+                                        <option value="0">بدون مخاطب</option>
+                                    </select>
+                                    <select id="eccUsersMgmtPaid" class="ecc-users-mgmt-select" aria-label="پرداخت">
+                                        <option value="">پرداخت: همه</option>
+                                        <option value="1">پرداخت‌کرده</option>
+                                        <option value="0">بدون پرداخت</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="adm-table-wrap adm-table-wrap--tall">
+                                <table class="adm-table adm-table--pro adm-table--compact ecc-users-mgmt-table" id="eccUsersMgmtTable">
+                                    <thead>
+                                        <tr>
+                                            <th>کاربر</th>
+                                            <th>لایسنس</th>
+                                            <th>پرداخت</th>
+                                            <th>ویندوز</th>
+                                            <th>اندروید</th>
+                                            <th>دیتاست</th>
+                                            <th>CRM</th>
+                                            <th>آخرین ورود</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="eccUsersMgmtBody">
+                                        <tr><td colspan="8" class="adm-empty">در حال بارگذاری…</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="ecc-users-mgmt-pager" id="eccUsersMgmtPager" hidden>
+                                <button type="button" class="ecc-btn ecc-btn--ghost" id="eccUsersMgmtPrev" disabled>قبلی</button>
+                                <span class="ecc-users-mgmt-page-info" id="eccUsersMgmtPageInfo"></span>
+                                <button type="button" class="ecc-btn ecc-btn--ghost" id="eccUsersMgmtNext" disabled>بعدی</button>
                             </div>
                         </article>
                     </div>
@@ -1100,6 +1176,25 @@
             </main>
         </div>
     </div>
+
+    {# ─── User management detail drawer ─── #}
+    <aside class="ecc-user-drawer" id="eccUserDrawer" aria-hidden="true" hidden>
+        <div class="ecc-user-drawer-overlay" data-user-drawer-close></div>
+        <div class="ecc-user-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="eccUserDrawerTitle">
+            <div class="ecc-user-drawer-head">
+                <div>
+                    <h2 id="eccUserDrawerTitle">جزئیات کاربر</h2>
+                    <p class="ecc-user-drawer-sub" id="eccUserDrawerSub"></p>
+                </div>
+                <button type="button" class="ecc-user-drawer-close" data-user-drawer-close aria-label="بستن">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="ecc-user-drawer-body" id="eccUserDrawerBody">
+                <p class="adm-empty">در حال بارگذاری…</p>
+            </div>
+        </div>
+    </aside>
 </div>
 {% endblock %}
 
@@ -1109,5 +1204,6 @@
 window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=10"></script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=11"></script>
+<script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=1"></script>
 {% endblock %}

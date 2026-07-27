@@ -46,6 +46,7 @@ def breadcrumbs(context, **kwargs):
                     'about': 'درباره ما',
                     'contact': 'تماس با ما',
                     'terms': 'قوانین و مقررات',
+                    'privacy': 'حریم خصوصی',
                     'license-guide': 'راهنمای فعال‌سازی',
                     'dashboard': 'داشبورد',
                     'profile': 'پروفایل',

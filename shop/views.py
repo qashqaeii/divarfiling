@@ -579,6 +579,10 @@ class TermsView(TemplateView):
     template_name = 'shop/terms.html'
 
 
+class PrivacyView(TemplateView):
+    template_name = 'shop/privacy.html'
+
+
 class AndroidAppDownloadView(View):
     """دانلود عمومی APK اندروید از django/files/."""
 

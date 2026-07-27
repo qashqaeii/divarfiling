@@ -24,6 +24,7 @@ from workspace.services.importer import (
 from workspace.services.price_history import load_latest_snapshots, should_record_price
 
 MAX_MOBILE_ITEMS = 100
+MAX_CLOUD_EXTRACT_ITEMS = 500
 EXTRACTIONS_DAILY_LIMIT = 10
 INGEST_VERSION = 5
 logger = logging.getLogger(__name__)
@@ -142,12 +143,22 @@ def _validate_schedule_run_for_ingest(user, run_id: int) -> None:
         raise ValueError('اجرای زمان‌بندی معتبر نیست.')
 
 
+def _ingest_item_limit(filters: Dict[str, Any]) -> int:
+    if str(filters.get('source_client') or '') == 'cloud_extract':
+        try:
+            requested = int(filters.get('max_items') or MAX_CLOUD_EXTRACT_ITEMS)
+        except (TypeError, ValueError):
+            requested = MAX_CLOUD_EXTRACT_ITEMS
+        return max(1, min(MAX_CLOUD_EXTRACT_ITEMS, requested))
+    return MAX_MOBILE_ITEMS
+
+
 def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     items = payload.get('items') or []
-    if len(items) > MAX_MOBILE_ITEMS:
-        raise ValueError(f'حداکثر {MAX_MOBILE_ITEMS} آگهی مجاز است.')
-
     filters = payload.get('filters') or {}
+    item_limit = _ingest_item_limit(filters)
+    if len(items) > item_limit:
+        raise ValueError(f'حداکثر {item_limit} آگهی مجاز است.')
     category = str(filters.get('category') or 'apartment-rent')
     tx_type, subcat = _resolve_tx_subcategory(filters, category)
     city, district = _resolve_location(filters)

@@ -19,6 +19,7 @@ urlpatterns = [
     path('about/', views.AboutView.as_view(), name='about'),
     path('contact/', views.ContactView.as_view(), name='contact'),
     path('terms/', views.TermsView.as_view(), name='terms'),
+    path('privacy/', views.PrivacyView.as_view(), name='privacy'),
     path('license-guide/', views.LicenseGuideView.as_view(), name='license_guide'),
     path('download/android/', views.AndroidAppDownloadView.as_view(), name='android_app_download'),
     path('amoozesh/', views.EducationView.as_view(), name='education'),

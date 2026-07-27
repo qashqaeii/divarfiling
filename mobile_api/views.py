@@ -104,6 +104,12 @@ from mobile_api.services.schedule_service import (
     toggle_schedule,
     update_schedule,
 )
+from mobile_api.services.cloud_extract_service import (
+    create_job as create_cloud_extraction_job,
+    get_job as get_cloud_extraction_job,
+    job_to_dict as cloud_job_to_dict,
+    list_jobs as list_cloud_extraction_jobs,
+)
 from mobile_api.serializers import (
     activity_to_dict,
     contact_to_dict,
@@ -1174,3 +1180,244 @@ class PropertyDocumentDetailView(APIView):
         if not delete_property_document(request.user, property_id, document_id):
             return api_error('مدرک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok({'deleted': True})
+
+
+class CloudExtractionListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        items = [cloud_job_to_dict(j) for j in list_cloud_extraction_jobs(request.user)]
+        return api_ok(items)
+
+    def post(self, request):
+        err = require_light_extract(request.user)
+        if err:
+            return api_error(err, code='LICENSE_REQUIRED', status=403)
+        data = _parse_body(request)
+        try:
+            job = create_cloud_extraction_job(request.user, data)
+            return api_ok(cloud_job_to_dict(job), status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class CloudExtractionDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, job_id):
+        job = get_cloud_extraction_job(request.user, job_id)
+        if not job:
+            return api_error('کار استخراج یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(cloud_job_to_dict(job))
+
+
+def _crm_template_to_dict(tpl) -> dict:
+    return {
+        'id': tpl.pk,
+        'title': tpl.name,
+        'body': tpl.body,
+        'category': tpl.category,
+    }
+
+
+class CRMTemplatesListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from workspace.services.crm_templates import list_templates
+        items = [_crm_template_to_dict(t) for t in list_templates(request.user)]
+        return api_ok(items)
+
+
+class CRMSavedFiltersListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from workspace.services.crm_saved_filters import list_saved_filters, serialize_filter
+        entity = (request.GET.get('entity') or request.GET.get('scope') or '').strip()
+        if not entity:
+            return api_error('پارامتر entity الزامی است.', code='VALIDATION_ERROR')
+        items = [serialize_filter(f) for f in list_saved_filters(request.user, entity)]
+        return api_ok(items)
+
+
+def _ticket_to_dict(ticket) -> dict:
+    return {
+        'id': ticket.pk,
+        'ticket_number': ticket.ticket_number,
+        'subject': ticket.subject,
+        'status': ticket.status,
+        'priority': ticket.priority,
+        'category': ticket.category,
+        'user_has_unread': ticket.user_has_unread,
+        'created_at': ticket.created_at.isoformat() if ticket.created_at else None,
+        'updated_at': ticket.updated_at.isoformat() if ticket.updated_at else None,
+        'last_message_at': ticket.last_message_at.isoformat() if ticket.last_message_at else None,
+        'closed_at': ticket.closed_at.isoformat() if ticket.closed_at else None,
+    }
+
+
+class SupportTicketsListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from workspace.services.support_tickets import filter_user_tickets
+        tickets = filter_user_tickets(request.user)
+        return api_ok([_ticket_to_dict(t) for t in tickets[:50]])
+
+    def post(self, request):
+        from workspace.services.support_tickets import create_ticket
+        from workspace.support_constants import TICKET_CATEGORY_OTHER, TICKET_PRIORITY_NORMAL
+
+        data = _parse_body(request)
+        subject = (data.get('subject') or '').strip()
+        body = (data.get('body') or '').strip()
+        if not subject:
+            return api_error('موضوع الزامی است.', code='VALIDATION_ERROR')
+        if not body:
+            return api_error('متن پیام الزامی است.', code='VALIDATION_ERROR')
+        category = (data.get('category') or TICKET_CATEGORY_OTHER).strip()
+        priority = (data.get('priority') or TICKET_PRIORITY_NORMAL).strip()
+        try:
+            ticket = create_ticket(
+                user=request.user,
+                subject=subject,
+                category=category,
+                priority=priority,
+                body=body,
+            )
+            return api_ok(_ticket_to_dict(ticket), status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class AIQuotaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            from ai_workspace.constants import is_ai_enabled
+            from ai_workspace.services.quota import get_status
+            from mobile_api.services.license_service import license_payload_for_user
+
+            if not is_ai_enabled():
+                raise RuntimeError('AI disabled')
+            status = get_status(request.user)
+            plan_label = license_payload_for_user(request.user).get('plan') or 'پلن'
+            return api_ok({
+                'remaining': status.remaining,
+                'limit': status.daily_limit,
+                'plan_label': plan_label,
+            })
+        except Exception:
+            return api_ok({'remaining': 0, 'limit': 0, 'plan_label': ''})
+
+
+class AIDraftMessageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = _parse_body(request)
+        contact_id = data.get('contact_id')
+        listing_token = (data.get('listing_token') or '').strip()
+        intent = (data.get('intent') or '').strip()
+        notes = (data.get('notes') or '').strip()
+
+        quota_remaining = 0
+        try:
+            from ai_workspace.constants import is_ai_enabled
+            from ai_workspace.services.crm_message import generate_message, result_to_dict as crm_result_to_dict
+            from ai_workspace.services.gateway import FeatureDisabledError
+            from ai_workspace.services.quota import QuotaExceededError, get_status
+            from workspace.services.crm_scope import customer_for_user
+
+            if is_ai_enabled() and contact_id:
+                customer = customer_for_user(request.user, contact_id)
+                if customer:
+                    try:
+                        from ai_workspace.constants import normalize_crm_tone
+                        tone = normalize_crm_tone(data.get('tone') or intent or 'رسمی')
+                        result = generate_message(request.user, customer, tone=tone)
+                        payload = crm_result_to_dict(result)
+                        quota_remaining = get_status(request.user).remaining
+                        text = payload.get('text') or ''
+                        if notes and notes not in text:
+                            text = f'{text}\n\n{notes}'.strip()
+                        return api_ok({'text': text, 'quota_remaining': quota_remaining})
+                    except (FeatureDisabledError, QuotaExceededError):
+                        pass
+        except Exception:
+            logger.exception('ai draft-message failed for user=%s', request.user.pk)
+
+        name = ''
+        if contact_id:
+            from workspace.services.crm_scope import customer_for_user
+            customer = customer_for_user(request.user, contact_id)
+            if customer:
+                name = customer.name or ''
+        listing_hint = f' (آگهی {listing_token})' if listing_token else ''
+        intent_hint = f' — {intent}' if intent else ''
+        text = (
+            f'سلام {name or "مشتری"} عزیز،\n'
+            f'در خصوص درخواست شما{listing_hint}{intent_hint} در خدمتم.\n'
+            f'{notes}'.strip()
+        ).strip()
+        return api_ok({'text': text, 'quota_remaining': quota_remaining})
+
+
+class AISummarizeListingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = _parse_body(request)
+        listing_token = (data.get('listing_token') or '').strip()
+        if not listing_token:
+            return api_error('شناسه آگهی الزامی است.', code='VALIDATION_ERROR')
+
+        from workspace.models import Listing
+
+        listing = (
+            Listing.objects.filter(dataset__user=request.user, token=listing_token)
+            .select_related('dataset')
+            .order_by('-updated_at')
+            .first()
+        )
+        if not listing:
+            return api_error('آگهی یافت نشد.', code='NOT_FOUND', status=404)
+
+        try:
+            from ai_workspace.constants import is_ai_enabled
+            from ai_workspace.services.gateway import FeatureDisabledError
+            from ai_workspace.services.listing_summary import generate_summary, result_to_dict as listing_result_to_dict
+            from ai_workspace.services.quota import QuotaExceededError
+
+            if is_ai_enabled():
+                result = generate_summary(request.user, listing.dataset, listing)
+                payload = listing_result_to_dict(result)
+                summary_data = payload.get('data') or {}
+                text = summary_data.get('summary') if isinstance(summary_data, dict) else ''
+                if not text:
+                    text = (result.text or '').strip()
+                if text:
+                    return api_ok({'text': text, 'summary': summary_data})
+        except (FeatureDisabledError, QuotaExceededError):
+            pass
+        except Exception:
+            logger.exception('ai summarize-listing failed token=%s', listing_token)
+
+        parts = [listing.title or 'آگهی']
+        if listing.neighborhood or listing.city:
+            parts.append(' — '.join(p for p in (listing.neighborhood, listing.city) if p))
+        if listing.price:
+            parts.append(f'قیمت: {listing.price:,}')
+        elif listing.rent or listing.deposit:
+            rent_part = f'اجاره {listing.rent:,}' if listing.rent else ''
+            dep_part = f'ودیعه {listing.deposit:,}' if listing.deposit else ''
+            parts.append(' · '.join(p for p in (dep_part, rent_part) if p))
+        if listing.area:
+            parts.append(f'متراژ {listing.area} متر')
+        if listing.rooms:
+            parts.append(f'{listing.rooms} خواب')
+        text = ' · '.join(str(p) for p in parts if p)
+        return api_ok({'text': text, 'summary': {'summary': text}})
+

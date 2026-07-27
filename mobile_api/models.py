@@ -174,3 +174,45 @@ class MobileExtractionRun(models.Model):
 
     def __str__(self):
         return f'run#{self.pk} — {self.status}'
+
+
+class MobileCloudExtractionJob(models.Model):
+    """استخراج ابری از سرور — برای اپ اندروید."""
+    STATUS_QUEUED = 'queued'
+    STATUS_RUNNING = 'running'
+    STATUS_SUCCESS = 'success'
+    STATUS_FAILED = 'failed'
+    STATUS_CHOICES = [
+        (STATUS_QUEUED, 'در صف'),
+        (STATUS_RUNNING, 'در حال اجرا'),
+        (STATUS_SUCCESS, 'موفق'),
+        (STATUS_FAILED, 'ناموفق'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='mobile_cloud_extraction_jobs',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_QUEUED,
+        db_index=True,
+    )
+    filters = models.JSONField(default=dict, blank=True)
+    max_items = models.PositiveIntegerField(default=200)
+    dataset_id = models.UUIDField(null=True, blank=True)
+    ingested_count = models.PositiveIntegerField(default=0)
+    error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'کار استخراج ابری موبایل'
+        verbose_name_plural = 'کارهای استخراج ابری موبایل'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'cloud#{self.pk} — {self.status}'

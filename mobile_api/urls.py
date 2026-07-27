@@ -43,6 +43,8 @@ urlpatterns = [
     path('crm/today', views.TodayView.as_view(), name='today'),
     path('crm/today/actions', views.TodayTaskActionView.as_view(), name='today_actions'),
     path('crm/reminders/<int:reminder_id>', views.ReminderDetailView.as_view(), name='reminder_detail'),
+    path('crm/templates', views.CRMTemplatesListView.as_view(), name='crm_templates'),
+    path('crm/saved-filters', views.CRMSavedFiltersListView.as_view(), name='crm_saved_filters'),
 
     path('crm/deals/pipeline', views.DealPipelineView.as_view(), name='deals_pipeline'),
     path('crm/deals/stages', views.DealStagesView.as_view(), name='deals_stages'),
@@ -70,8 +72,16 @@ urlpatterns = [
     path('filing/listings/<str:token>', views.ListingDetailView.as_view(), name='listing_detail'),
     path('filing/listings/<str:token>/public-share', views.ListingPublicShareView.as_view(), name='listing_public_share'),
 
+    path('support/tickets', views.SupportTicketsListCreateView.as_view(), name='support_tickets'),
+
+    path('ai/quota', views.AIQuotaView.as_view(), name='ai_quota'),
+    path('ai/draft-message', views.AIDraftMessageView.as_view(), name='ai_draft_message'),
+    path('ai/summarize-listing', views.AISummarizeListingView.as_view(), name='ai_summarize_listing'),
+
     path('extractions/limits', views.ExtractionLimitsView.as_view(), name='extraction_limits'),
     path('extractions/upload', views.ExtractionUploadView.as_view(), name='extraction_upload'),
+    path('extractions/cloud', views.CloudExtractionListCreateView.as_view(), name='extraction_cloud'),
+    path('extractions/cloud/<int:job_id>', views.CloudExtractionDetailView.as_view(), name='extraction_cloud_detail'),
     path('extractions/schedules', views.ExtractionSchedulesListView.as_view(), name='extraction_schedules'),
     path('extractions/schedules/due', views.ExtractionSchedulesDueView.as_view(), name='extraction_schedules_due'),
     path('extractions/schedules/<int:schedule_id>', views.ExtractionScheduleDetailView.as_view(), name='extraction_schedule_detail'),

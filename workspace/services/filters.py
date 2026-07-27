@@ -43,35 +43,55 @@ def _float_param(val: str) -> Optional[float]:
         return None
 
 
-def parse_filter_params(request) -> Dict[str, Any]:
-    g = request.GET
+def parse_filter_params_from_mapping(g) -> Dict[str, Any]:
+    """پارس فیلتر از QueryDict / dict — مشترک وب و موبایل."""
+    def get(k, default=''):
+        if hasattr(g, 'get'):
+            val = g.get(k, default)
+        elif isinstance(g, dict):
+            val = g.get(k, default)
+        else:
+            val = default
+        if val is None:
+            return default
+        return val
+
+    rooms_raw = get('rooms', '')
+    rooms = str(rooms_raw).strip() if rooms_raw != '' else ''
     return {
-        'q': g.get('q', '').strip(),
-        'token': g.get('token', '').strip(),
-        'desc': g.get('desc', '').strip(),
-        'neighborhood': g.get('neighborhood', '').strip(),
-        'rooms': g.get('rooms', '').strip(),
-        'tag': g.get('tag', ''),
-        'consultant': g.get('consultant', ''),
-        'favorites': g.get('favorites', ''),
-        'duplicates': g.get('duplicates', ''),
-        'elevator': g.get('elevator', ''),
-        'parking': g.get('parking', ''),
-        'storage': g.get('storage', ''),
-        'has_geo': g.get('has_geo', ''),
-        'value': g.get('value', ''),
-        'area_min': _float_param(g.get('area_min', '')),
-        'area_max': _float_param(g.get('area_max', '')),
-        'price_min': _int_param(g.get('price_min', '')),
-        'price_max': _int_param(g.get('price_max', '')),
-        'deposit_min': _int_param(g.get('deposit_min', '')),
-        'deposit_max': _int_param(g.get('deposit_max', '')),
-        'rent_min': _int_param(g.get('rent_min', '')),
-        'rent_max': _int_param(g.get('rent_max', '')),
-        'year_min': _int_param(g.get('year_min', '')),
-        'year_max': _int_param(g.get('year_max', '')),
-        'sort': g.get('sort', ''),
+        'q': str(get('q', '') or '').strip(),
+        'token': str(get('token', '') or '').strip(),
+        'desc': str(get('desc', '') or '').strip(),
+        'neighborhood': str(get('neighborhood', '') or '').strip(),
+        'rooms': rooms,
+        'tag': str(get('tag', '') or ''),
+        'consultant': str(get('consultant', '') or ''),
+        'favorites': str(get('favorites', '') or ''),
+        'duplicates': str(get('duplicates', '') or ''),
+        'unique': str(get('unique', '') or ''),
+        'new_only': str(get('new_only', '') or ''),
+        'elevator': str(get('elevator', '') or ''),
+        'parking': str(get('parking', '') or ''),
+        'storage': str(get('storage', '') or ''),
+        'has_geo': str(get('has_geo', '') or ''),
+        'value': str(get('value', '') or ''),
+        'area_min': _float_param(str(get('area_min', '') or '')),
+        'area_max': _float_param(str(get('area_max', '') or '')),
+        'price_min': _int_param(str(get('price_min', '') or '')),
+        'price_max': _int_param(str(get('price_max', '') or '')),
+        'deposit_min': _int_param(str(get('deposit_min', '') or '')),
+        'deposit_max': _int_param(str(get('deposit_max', '') or '')),
+        'rent_min': _int_param(str(get('rent_min', '') or '')),
+        'rent_max': _int_param(str(get('rent_max', '') or '')),
+        'year_min': _int_param(str(get('year_min', '') or '')),
+        'year_max': _int_param(str(get('year_max', '') or '')),
+        'sort': str(get('sort', '') or ''),
+        'dataset_id': str(get('dataset_id', '') or '').strip(),
     }
+
+
+def parse_filter_params(request) -> Dict[str, Any]:
+    return parse_filter_params_from_mapping(request.GET)
 
 
 def apply_listing_filters(qs: QuerySet, filters: Dict, user) -> QuerySet:

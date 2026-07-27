@@ -23,8 +23,28 @@ from workspace.services.crm_today import get_today_queue
 from accounts.phone_utils import normalize_phone
 
 
-def list_contacts(user, *, q: str = '', page: int = 1, page_size: int = 50) -> Tuple[List[dict], dict]:
-    qs = filter_contacts(user, {'q': q})
+def list_contacts(
+    user,
+    *,
+    q: str = '',
+    page: int = 1,
+    page_size: int = 50,
+    customer_type: str = '',
+    status: str = '',
+    priority: str = '',
+    due: str = '',
+    sort: str = '',
+    tag: str = '',
+) -> Tuple[List[dict], dict]:
+    qs = filter_contacts(user, {
+        'q': q,
+        'customer_type': customer_type,
+        'status': status,
+        'priority': priority,
+        'due': due,
+        'sort': sort,
+        'tags': tag,
+    })
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
     items = [contact_to_dict(c) for c in page_obj.object_list]
@@ -221,6 +241,11 @@ def create_reminder(user, contact_id: int, data: Dict[str, Any]) -> Reminder:
         raise ValueError('زمان سررسید الزامی است.')
     if timezone.is_naive(due_at):
         due_at = timezone.make_aware(due_at, timezone.get_current_timezone())
+    from workspace.constants import REMINDER_RECURRENCE
+    allowed = {key for key, _ in REMINDER_RECURRENCE}
+    recurrence = (data.get('recurrence') or '').strip()
+    if recurrence not in allowed:
+        recurrence = ''
     reminder = Reminder.objects.create(
         user=user,
         customer=c,
@@ -228,9 +253,104 @@ def create_reminder(user, contact_id: int, data: Dict[str, Any]) -> Reminder:
         note=(data.get('note') or '').strip(),
         due_at=due_at,
         token=(data.get('token') or '')[:100],
+        recurrence=recurrence,
     )
     log_activity(c, 'یادآور', content=title, title='یادآور جدید')
     return reminder
+
+
+def create_standalone_reminder(user, data: Dict[str, Any]) -> Reminder:
+    """ایجاد یادآور با contact_id اختیاری."""
+    contact_id = data.get('contact_id')
+    if contact_id:
+        return create_reminder(user, int(contact_id), data)
+    title = (data.get('title') or '').strip()
+    if not title:
+        raise ValueError('عنوان یادآور الزامی است.')
+    due_raw = data.get('due_at') or data.get('due_date')
+    due_at = parse_datetime(due_raw) if due_raw else None
+    if not due_at:
+        raise ValueError('زمان سررسید الزامی است.')
+    if timezone.is_naive(due_at):
+        due_at = timezone.make_aware(due_at, timezone.get_current_timezone())
+    from workspace.constants import REMINDER_RECURRENCE
+    allowed = {key for key, _ in REMINDER_RECURRENCE}
+    recurrence = (data.get('recurrence') or '').strip()
+    if recurrence not in allowed:
+        recurrence = ''
+    return Reminder.objects.create(
+        user=user,
+        customer=None,
+        title=title,
+        note=(data.get('note') or '').strip(),
+        due_at=due_at,
+        token=(data.get('token') or '')[:100],
+        recurrence=recurrence,
+    )
+
+
+def list_reminders(
+    user,
+    *,
+    due_from=None,
+    due_to=None,
+    done: Optional[bool] = None,
+    limit: int = 200,
+) -> List[Reminder]:
+    qs = reminders_qs(user).select_related('customer').order_by('due_at')
+    if due_from is not None:
+        qs = qs.filter(due_at__gte=due_from)
+    if due_to is not None:
+        qs = qs.filter(due_at__lte=due_to)
+    if done is True:
+        qs = qs.filter(is_done=True)
+    elif done is False:
+        qs = qs.filter(is_done=False)
+    return list(qs[:limit])
+
+
+def update_reminder(user, reminder_id: int, data: Dict[str, Any]) -> Optional[Reminder]:
+    r = reminders_qs(user).filter(pk=reminder_id).select_related('customer').first()
+    if not r:
+        return None
+    fields = []
+    if 'title' in data:
+        title = (data.get('title') or '').strip()
+        if not title:
+            raise ValueError('عنوان یادآور الزامی است.')
+        r.title = title
+        fields.append('title')
+    if 'note' in data:
+        r.note = (data.get('note') or '').strip()
+        fields.append('note')
+    if data.get('due_at') or data.get('due_date'):
+        due_raw = data.get('due_at') or data.get('due_date')
+        due_at = parse_datetime(due_raw)
+        if not due_at:
+            raise ValueError('زمان سررسید نامعتبر است.')
+        if timezone.is_naive(due_at):
+            due_at = timezone.make_aware(due_at, timezone.get_current_timezone())
+        r.due_at = due_at
+        fields.append('due_at')
+    if 'recurrence' in data:
+        from workspace.constants import REMINDER_RECURRENCE
+        allowed = {key for key, _ in REMINDER_RECURRENCE}
+        recurrence = (data.get('recurrence') or '').strip()
+        if recurrence not in allowed:
+            raise ValueError('نوع تکرار نامعتبر است.')
+        r.recurrence = recurrence
+        fields.append('recurrence')
+    if fields:
+        r.save(update_fields=fields)
+    return r
+
+
+def delete_reminder(user, reminder_id: int) -> bool:
+    r = reminders_qs(user).filter(pk=reminder_id).first()
+    if not r:
+        return False
+    r.delete()
+    return True
 
 
 def complete_reminder(user, reminder_id: int, *, note: str = '') -> Optional[Reminder]:
@@ -242,14 +362,21 @@ def complete_reminder(user, reminder_id: int, *, note: str = '') -> Optional[Rem
     if r.customer_id:
         content = (note or '').strip() or f'یادآور «{r.title}» انجام شد.'
         log_activity(r.customer, 'یادآور', content=content, title='انجام یادآور')
+    if r.recurrence:
+        from workspace.services.crm import advance_recurring_reminder
+        advance_recurring_reminder(r)
     return r
 
 
-def postpone_reminder(user, reminder_id: int, *, days: int = 1) -> Optional[Reminder]:
+def postpone_reminder(user, reminder_id: int, *, days: int = 1, hours: int = 0) -> Optional[Reminder]:
     r = reminders_qs(user).filter(pk=reminder_id, is_done=False).first()
     if not r:
         return None
-    r.due_at = r.due_at + timedelta(days=max(1, days))
+    delta_days = max(0, int(days or 0))
+    delta_hours = max(0, int(hours or 0))
+    if delta_days == 0 and delta_hours == 0:
+        delta_days = 1
+    r.due_at = r.due_at + timedelta(days=delta_days, hours=delta_hours)
     r.save(update_fields=['due_at'])
     return r
 

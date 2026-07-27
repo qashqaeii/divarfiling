@@ -153,6 +153,11 @@ def add_staff_reply(*, ticket, staff_user, body, attachment=None, is_internal=Fa
         ticket.save(update_fields=[
             'status', 'last_message_at', 'user_has_unread', 'staff_has_unread', 'updated_at',
         ])
+        try:
+            from mobile_api.services.support_mobile import notify_ticket_staff_reply
+            notify_ticket_staff_reply(ticket, body)
+        except Exception:
+            pass
     return message
 
 

@@ -33,7 +33,7 @@ PROPERTY_TX_COLORS = {
     'بایگانی': ('#f8fafc', '#64748b', '#94a3b8'),
 }
 
-CRM_FILTER_SCOPES = ['contacts', 'properties', 'deals']
+CRM_FILTER_SCOPES = ['contacts', 'properties', 'deals', 'listings']
 
 CRM_FILTER_PARAMS = {
     'contacts': {'q', 'customer_type', 'status', 'priority', 'due', 'sort', 'tag'},
@@ -44,6 +44,13 @@ CRM_FILTER_PARAMS = {
         'year_min', 'year_max', 'age_max',
     },
     'deals': {'q', 'stage', 'bucket', 'sort'},
+    'listings': {
+        'q', 'neighborhood', 'rooms', 'consultant', 'duplicates', 'unique', 'new_only',
+        'elevator', 'parking', 'storage', 'value', 'sort', 'dataset_id',
+        'area_min', 'area_max', 'price_min', 'price_max',
+        'deposit_min', 'deposit_max', 'rent_min', 'rent_max',
+        'year_min', 'year_max', 'favorites', 'tag', 'has_geo',
+    },
 }
 PROPERTY_PUBLISH_STATUSES = ['پیش‌نویس', 'منتشرشده', 'مخفی', 'بایگانی']
 INTEREST_LEVELS = ['بالا', 'متوسط', 'پایین']
@@ -545,6 +552,7 @@ AUTOMATION_ACTIONS = [
 
 REMINDER_RECURRENCE = [
     ('', 'یک‌بار'),
+    ('daily', 'روزانه'),
     ('weekly', 'هفتگی'),
     ('biweekly', 'دو هفته‌ای'),
     ('monthly', 'ماهانه'),

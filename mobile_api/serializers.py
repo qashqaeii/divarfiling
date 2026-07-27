@@ -390,14 +390,20 @@ def activity_to_dict(a: CustomerActivity) -> Dict[str, Any]:
 
 
 def reminder_to_dict(r: Reminder) -> Dict[str, Any]:
+    contact_name = ''
+    if r.customer_id and getattr(r, 'customer', None) is not None:
+        contact_name = getattr(r.customer, 'name', '') or ''
     return {
         'id': r.pk,
         'title': r.title,
         'note': r.note or '',
         'contact_id': r.customer_id,
+        'contact_name': contact_name,
         'due_at': r.due_at.isoformat() if r.due_at else None,
         'done': r.is_done,
         'token': r.token or '',
+        'recurrence': r.recurrence or '',
+        'series_id': r.series_id,
     }
 
 

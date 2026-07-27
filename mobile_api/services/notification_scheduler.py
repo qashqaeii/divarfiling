@@ -36,6 +36,7 @@ TYPE_TO_PREF = {
     'price_drop': 'price_drop',
     'customer_match': 'customer_match',
     'license_expiry': 'license_alerts',
+    'support_reply': 'crm_reminders',  # اعلان پاسخ پشتیبانی؛ از کانال اعلان‌های فعال استفاده می‌کند
 }
 
 
@@ -93,7 +94,7 @@ def _reminder_notified(reminder: Reminder) -> bool:
 def _reminder_deep_link(reminder: Reminder) -> str:
     if reminder.customer_id:
         return f'divarfiling://crm/contacts/{reminder.customer_id}'
-    return 'divarfiling://crm/today'
+    return 'divarfiling://calendar'
 
 
 def _reminder_notification_type(reminder: Reminder) -> str:

@@ -44,9 +44,12 @@ urlpatterns = [
     path('crm/contacts/<int:contact_id>/suggest', views.ContactSuggestView.as_view(), name='contact_suggest'),
     path('crm/today', views.TodayView.as_view(), name='today'),
     path('crm/today/actions', views.TodayTaskActionView.as_view(), name='today_actions'),
+    path('crm/reminders', views.RemindersListCreateView.as_view(), name='reminders'),
     path('crm/reminders/<int:reminder_id>', views.ReminderDetailView.as_view(), name='reminder_detail'),
     path('crm/templates', views.CRMTemplatesListView.as_view(), name='crm_templates'),
     path('crm/saved-filters', views.CRMSavedFiltersListView.as_view(), name='crm_saved_filters'),
+    path('crm/saved-filters/<int:filter_id>', views.CRMSavedFilterDeleteView.as_view(), name='crm_saved_filter_delete'),
+    path('crm/saved-filters/<int:filter_id>/pin', views.CRMSavedFilterPinView.as_view(), name='crm_saved_filter_pin'),
 
     path('crm/deals/pipeline', views.DealPipelineView.as_view(), name='deals_pipeline'),
     path('crm/deals/stages', views.DealStagesView.as_view(), name='deals_stages'),
@@ -75,6 +78,10 @@ urlpatterns = [
     path('filing/listings/<str:token>/public-share', views.ListingPublicShareView.as_view(), name='listing_public_share'),
 
     path('support/tickets', views.SupportTicketsListCreateView.as_view(), name='support_tickets'),
+    path('support/tickets/<int:ticket_id>', views.SupportTicketDetailView.as_view(), name='support_ticket_detail'),
+    path('support/tickets/<int:ticket_id>/reply', views.SupportTicketReplyView.as_view(), name='support_ticket_reply'),
+    path('support/tickets/<int:ticket_id>/close', views.SupportTicketCloseView.as_view(), name='support_ticket_close'),
+    path('support/tickets/<int:ticket_id>/reopen', views.SupportTicketReopenView.as_view(), name='support_ticket_reopen'),
 
     path('ai/quota', views.AIQuotaView.as_view(), name='ai_quota'),
     path('ai/draft-message', views.AIDraftMessageView.as_view(), name='ai_draft_message'),

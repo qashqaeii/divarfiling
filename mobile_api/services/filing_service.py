@@ -1,15 +1,26 @@
 """فایلینگ workspace برای API موبایل."""
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from datetime import timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Min, Q
+from django.utils import timezone
 
 from mobile_api.serializers import dataset_to_dict, listing_detail_to_dict, listing_to_dict
 from workspace.models import Dataset, Listing
 from workspace.services.access import has_active_bot_license
+from workspace.services.filters import (
+    apply_advertiser_signal_filter,
+    apply_amenity_filters,
+    apply_listing_filters,
+    apply_value_filter,
+    get_neighborhoods_qs,
+    needs_advertiser_signal_filter,
+    sort_queryset,
+)
 
 
 def _datasets_qs(user):
@@ -52,43 +63,147 @@ def dataset_detail_payload(user, dataset_id: str) -> Optional[dict]:
     return dataset_to_dict(ds)
 
 
+def _default_sort_for_dataset(ds: Optional[Dataset]) -> str:
+    if not ds:
+        return '-created_at'
+    tx = (ds.transaction_type or '').lower()
+    if 'rent' in tx or 'اجاره' in (ds.transaction_type or ''):
+        return '-deposit'
+    return '-price'
+
+
+def _apply_unique_filter(qs):
+    keep_ids = qs.values('token').annotate(keep_id=Min('id')).values_list('keep_id', flat=True)
+    return qs.filter(pk__in=list(keep_ids))
+
+
+def _apply_duplicates_only(qs, base_qs):
+    dup_tokens = (
+        base_qs.values('token')
+        .annotate(c=Count('token'))
+        .filter(c__gt=1)
+        .values_list('token', flat=True)
+    )
+    return qs.filter(token__in=list(dup_tokens))
+
+
+def _apply_new_only(qs, ds: Optional[Dataset]):
+    since = None
+    if ds is not None:
+        since = getattr(ds, 'last_opened_at', None) or getattr(ds, 'last_viewed_at', None)
+    if since is None:
+        since = timezone.now() - timedelta(days=3)
+    return qs.filter(created_at__gte=since)
+
+
+def _needs_post_filters(filters: Dict[str, Any]) -> bool:
+    return any(filters.get(k) for k in (
+        'rooms', 'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
+    )) or needs_advertiser_signal_filter(filters)
+
+
+def _value_map_for_listings(listings: List) -> Dict[int, Optional[float]]:
+    if not listings:
+        return {}
+    try:
+        from workspace.services.analyzer import compute_expected_values, enrich_dataframe
+    except Exception:
+        return {}
+    try:
+        enriched = compute_expected_values(enrich_dataframe(listings), mode='sale')
+    except Exception:
+        return {}
+    value_map: Dict[int, Optional[float]] = {}
+    for _, r in enriched.iterrows():
+        score = r.get('value_score')
+        if score is None:
+            continue
+        try:
+            if score != score:
+                continue
+        except TypeError:
+            pass
+        try:
+            value_map[int(r['listing_id'])] = float(score)
+        except (KeyError, TypeError, ValueError):
+            continue
+    return value_map
+
+
+def filter_listings_queryset(
+    user,
+    qs,
+    filters: Dict[str, Any],
+    *,
+    dataset: Optional[Dataset] = None,
+    default_sort: str = '-created_at',
+):
+    """اعمال فیلتر عمیق + sort روی QuerySet آگهی."""
+    base_qs = qs
+    # جستجوی متنی موبایل کمی گسترده‌تر از وب است
+    q = (filters.get('q') or '').strip()
+    filters_for_db = {**filters, 'q': ''}
+    qs = apply_listing_filters(qs, filters_for_db, user)
+    if q:
+        qs = qs.filter(
+            Q(title__icontains=q)
+            | Q(neighborhood__icontains=q)
+            | Q(city__icontains=q)
+            | Q(token__icontains=q)
+        )
+
+    if filters.get('duplicates') == '1':
+        qs = _apply_duplicates_only(qs, base_qs)
+    if filters.get('unique') == '1':
+        qs = _apply_unique_filter(qs)
+    if filters.get('new_only') == '1':
+        qs = _apply_new_only(qs, dataset)
+
+    sort = filters.get('sort') or default_sort
+
+    if _needs_post_filters(filters):
+        filtered = list(qs)
+        if needs_advertiser_signal_filter(filters):
+            filtered = apply_advertiser_signal_filter(filtered, filters['consultant'])
+        filtered = apply_amenity_filters(filtered, filters)
+        if filters.get('value'):
+            value_map = _value_map_for_listings(filtered)
+            filtered = apply_value_filter(filtered, value_map, filters.get('value', ''))
+        pk_list = [x.pk for x in filtered]
+        qs = Listing.objects.filter(pk__in=pk_list)
+        qs = sort_queryset(qs, sort, default_sort)
+    else:
+        qs = sort_queryset(qs, sort, default_sort)
+    return qs
+
+
 def list_listings(
     user,
     dataset_id: str,
     *,
     page: int = 1,
     page_size: int = 50,
-    q: str = '',
-    price_min: Optional[int] = None,
-    price_max: Optional[int] = None,
-    area_min: Optional[int] = None,
-    area_max: Optional[int] = None,
-    rooms: Optional[int] = None,
+    filters: Optional[Dict[str, Any]] = None,
 ) -> Tuple[List[dict], dict]:
     ds = get_dataset(user, dataset_id)
     if not ds:
-        return [], {'page': page, 'page_size': page_size, 'total': 0}
-    qs = Listing.objects.filter(dataset=ds).order_by('-created_at')
-    if q:
-        qs = qs.filter(
-            Q(title__icontains=q) | Q(neighborhood__icontains=q) | Q(token__icontains=q)
-        )
-    if price_min is not None:
-        qs = qs.filter(price__gte=price_min)
-    if price_max is not None:
-        qs = qs.filter(price__lte=price_max)
-    if area_min is not None:
-        qs = qs.filter(area__gte=area_min)
-    if area_max is not None:
-        qs = qs.filter(area__lte=area_max)
-    if rooms is not None:
-        qs = qs.filter(rooms__icontains=str(rooms))
+        return [], {'page': page, 'page_size': page_size, 'total': 0, 'neighborhoods': []}
+
+    filters = filters or {}
+    default_sort = _default_sort_for_dataset(ds)
+    qs = Listing.objects.filter(dataset=ds)
+    qs = filter_listings_queryset(
+        user, qs, filters, dataset=ds, default_sort=default_sort,
+    )
+    neighborhoods = get_neighborhoods_qs(Listing.objects.filter(dataset=ds))
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
     return [listing_to_dict(lst) for lst in page_obj.object_list], {
         'page': page,
         'page_size': page_size,
         'total': paginator.count,
+        'neighborhoods': neighborhoods,
+        'sort': filters.get('sort') or default_sort,
     }
 
 
@@ -187,40 +302,23 @@ def search_listings(
     *,
     page: int = 1,
     page_size: int = 30,
-    q: str = '',
-    dataset_id: Optional[str] = None,
-    price_min: Optional[int] = None,
-    price_max: Optional[int] = None,
-    area_min: Optional[int] = None,
-    area_max: Optional[int] = None,
-    rooms: Optional[int] = None,
+    filters: Optional[Dict[str, Any]] = None,
 ) -> Tuple[List[dict], dict]:
     if not has_active_bot_license(user):
         return [], {'page': page, 'page_size': page_size, 'total': 0}
-    qs = (
-        Listing.objects.filter(dataset__user=user, dataset__is_active=True)
-        .select_related('dataset')
-        .order_by('-created_at')
-    )
+
+    filters = filters or {}
+    qs = Listing.objects.filter(dataset__user=user, dataset__is_active=True).select_related('dataset')
+    dataset = None
+    dataset_id = filters.get('dataset_id')
     if dataset_id:
         qs = qs.filter(dataset_id=dataset_id)
-    if q:
-        qs = qs.filter(
-            Q(title__icontains=q)
-            | Q(neighborhood__icontains=q)
-            | Q(city__icontains=q)
-            | Q(token__icontains=q)
-        )
-    if price_min is not None:
-        qs = qs.filter(price__gte=price_min)
-    if price_max is not None:
-        qs = qs.filter(price__lte=price_max)
-    if area_min is not None:
-        qs = qs.filter(area__gte=area_min)
-    if area_max is not None:
-        qs = qs.filter(area__lte=area_max)
-    if rooms is not None:
-        qs = qs.filter(rooms__icontains=str(rooms))
+        dataset = get_dataset(user, str(dataset_id))
+
+    default_sort = _default_sort_for_dataset(dataset) if dataset else '-created_at'
+    qs = filter_listings_queryset(
+        user, qs, filters, dataset=dataset, default_sort=default_sort,
+    )
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
     items: List[dict] = []
@@ -232,4 +330,5 @@ def search_listings(
         'page': page,
         'page_size': page_size,
         'total': paginator.count,
+        'sort': filters.get('sort') or default_sort,
     }

@@ -587,7 +587,7 @@ def log_phone_call(
     return activity
 
 
-_RECURRENCE_DAYS = {'weekly': 7, 'biweekly': 14, 'monthly': 30}
+_RECURRENCE_DAYS = {'daily': 1, 'weekly': 7, 'biweekly': 14, 'monthly': 30}
 
 
 def advance_recurring_reminder(reminder: Reminder) -> Optional[Reminder]:

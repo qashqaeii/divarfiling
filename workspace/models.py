@@ -1179,6 +1179,7 @@ class CRMSavedFilter(models.Model):
         ('contacts', 'مخاطبین'),
         ('properties', 'املاک'),
         ('deals', 'معاملات'),
+        ('listings', 'فایلینگ'),
     ]
 
     user = models.ForeignKey(

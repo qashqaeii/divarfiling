@@ -21,13 +21,17 @@ from mobile_api.services.crm_service import (
     create_note,
     create_quick_lead,
     create_reminder,
+    create_standalone_reminder,
+    delete_reminder,
     get_contact,
     link_listing_to_contact,
     list_contacts,
+    list_reminders,
     postpone_follow_up,
     postpone_reminder,
     today_payload,
     update_contact,
+    update_reminder,
 )
 from mobile_api.services.dashboard_service import dashboard_payload
 from mobile_api.services.deals_service import (
@@ -275,10 +279,18 @@ class ContactsListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        q = request.GET.get('q', '')
         page = clamp_page(request.GET.get('page', 1))
         page_size = clamp_page_size(request.GET.get('page_size', 50), default=50, maximum=100)
-        items, meta = list_contacts(request.user, q=q, page=page, page_size=page_size)
+        params = {
+            'q': request.GET.get('q', ''),
+            'customer_type': request.GET.get('customer_type', ''),
+            'status': request.GET.get('status', ''),
+            'priority': request.GET.get('priority', ''),
+            'due': request.GET.get('due', ''),
+            'sort': request.GET.get('sort', ''),
+            'tag': request.GET.get('tag', '') or request.GET.get('tags', ''),
+        }
+        items, meta = list_contacts(request.user, page=page, page_size=page_size, **params)
         return api_ok(items, meta=meta)
 
 
@@ -332,28 +344,15 @@ class DatasetListingsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, dataset_id):
+        from workspace.services.filters import parse_filter_params_from_mapping
+
         if not get_dataset(request.user, dataset_id):
             return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
         page = clamp_page(request.GET.get('page', 1))
         page_size = clamp_page_size(request.GET.get('page_size', 50), default=50, maximum=100)
-        q = request.GET.get('q', '')
-
-        def _int_param(name: str):
-            val = request.GET.get(name)
-            if val is None or val == '':
-                return None
-            try:
-                return int(val)
-            except ValueError:
-                return None
-
+        filters = parse_filter_params_from_mapping(request.GET)
         items, meta = list_listings(
-            request.user, dataset_id, page=page, page_size=page_size, q=q,
-            price_min=_int_param('price_min'),
-            price_max=_int_param('price_max'),
-            area_min=_int_param('area_min'),
-            area_max=_int_param('area_max'),
-            rooms=_int_param('rooms'),
+            request.user, dataset_id, page=page, page_size=page_size, filters=filters,
         )
         return api_ok(items, meta=meta)
 
@@ -465,31 +464,13 @@ class FilingSearchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        from workspace.services.filters import parse_filter_params_from_mapping
+
         page = clamp_page(request.GET.get('page', 1))
         page_size = clamp_page_size(request.GET.get('page_size', 30), default=30, maximum=100)
-        q = request.GET.get('q', '') or ''
-        dataset_id = request.GET.get('dataset_id') or None
-
-        def _int_param(name: str):
-            val = request.GET.get(name)
-            if val is None or val == '':
-                return None
-            try:
-                return int(val)
-            except ValueError:
-                return None
-
+        filters = parse_filter_params_from_mapping(request.GET)
         items, meta = search_listings(
-            request.user,
-            page=page,
-            page_size=page_size,
-            q=q,
-            dataset_id=dataset_id,
-            price_min=_int_param('price_min'),
-            price_max=_int_param('price_max'),
-            area_min=_int_param('area_min'),
-            area_max=_int_param('area_max'),
-            rooms=_int_param('rooms'),
+            request.user, page=page, page_size=page_size, filters=filters,
         )
         return api_ok(items, meta=meta)
 
@@ -913,15 +894,71 @@ class ReminderDetailView(APIView):
 
     def patch(self, request, reminder_id):
         data = _parse_body(request)
-        action = data.get('action', 'complete')
-        if action == 'postpone':
-            days = int(data.get('days', 1) or 1)
-            r = postpone_reminder(request.user, reminder_id, days=days)
-        else:
-            r = complete_reminder(request.user, reminder_id, note=data.get('note', ''))
+        action = data.get('action')
+        if action in ('complete', 'postpone', 'snooze'):
+            if action == 'postpone' or action == 'snooze':
+                days = int(data.get('days', 0) or 0)
+                hours = int(data.get('hours', 0) or 0)
+                if action == 'snooze' and hours == 0 and days == 0:
+                    hours = int(data.get('minutes', 60) or 60) // 60 or 1
+                r = postpone_reminder(request.user, reminder_id, days=days, hours=hours)
+            else:
+                r = complete_reminder(request.user, reminder_id, note=data.get('note', ''))
+            if not r:
+                return api_error('یادآور یافت نشد.', code='NOT_FOUND', status=404)
+            return api_ok(reminder_to_dict(r))
+        try:
+            r = update_reminder(request.user, reminder_id, data)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
         if not r:
             return api_error('یادآور یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(reminder_to_dict(r))
+
+    def delete(self, request, reminder_id):
+        if not delete_reminder(request.user, reminder_id):
+            return api_error('یادآور یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({})
+
+
+class RemindersListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from datetime import datetime
+        from django.utils import timezone
+        from django.utils.dateparse import parse_date, parse_datetime as parse_dt
+
+        due_from_raw = request.GET.get('due_from') or request.GET.get('from')
+        due_to_raw = request.GET.get('due_to') or request.GET.get('to')
+        done_raw = request.GET.get('done')
+        due_from = parse_dt(due_from_raw) if due_from_raw else None
+        due_to = parse_dt(due_to_raw) if due_to_raw else None
+        if due_from_raw and due_from is None:
+            d = parse_date(due_from_raw)
+            if d:
+                due_from = timezone.make_aware(datetime.combine(d, datetime.min.time()))
+        if due_to_raw and due_to is None:
+            d = parse_date(due_to_raw)
+            if d:
+                due_to = timezone.make_aware(datetime.combine(d, datetime.max.time().replace(microsecond=0)))
+        done = None
+        if done_raw is not None and str(done_raw).strip() != '':
+            done = str(done_raw).lower() in ('1', 'true', 'yes')
+        items = list_reminders(
+            request.user,
+            due_from=due_from,
+            due_to=due_to,
+            done=done,
+        )
+        return api_ok([reminder_to_dict(r) for r in items])
+    def post(self, request):
+        data = _parse_body(request)
+        try:
+            reminder = create_standalone_reminder(request.user, data)
+            return api_ok(reminder_to_dict(reminder), status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
 
 
 class TodayTaskActionView(APIView):
@@ -935,9 +972,14 @@ class TodayTaskActionView(APIView):
         if not contact_id and not reminder_id:
             return api_error('شناسه مخاطب یا یادآور الزامی است.', code='VALIDATION_ERROR')
         if reminder_id:
-            if action == 'postpone':
-                days = int(data.get('days', 1) or 1)
-                r = postpone_reminder(request.user, int(reminder_id), days=days)
+            if action in ('postpone', 'snooze'):
+                days = int(data.get('days', 0) or 0)
+                hours = int(data.get('hours', 0) or 0)
+                if action == 'snooze' and hours == 0 and days == 0:
+                    hours = 1
+                if days == 0 and hours == 0:
+                    days = 1
+                r = postpone_reminder(request.user, int(reminder_id), days=days, hours=hours)
                 if not r:
                     return api_error('یادآور یافت نشد.', code='NOT_FOUND', status=404)
                 return api_ok(reminder_to_dict(r))
@@ -1247,28 +1289,78 @@ class CRMSavedFiltersListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from workspace.services.crm_saved_filters import list_saved_filters, serialize_filter
+        from workspace.services.crm_saved_filters import (
+            estimate_listings_new_count,
+            list_saved_filters,
+            serialize_filter,
+        )
         entity = (request.GET.get('entity') or request.GET.get('scope') or '').strip()
         if not entity:
             return api_error('پارامتر entity الزامی است.', code='VALIDATION_ERROR')
-        items = [serialize_filter(f) for f in list_saved_filters(request.user, entity)]
+        with_new = str(request.GET.get('include_new_count', '')).lower() in ('1', 'true', 'yes')
+        rows = list_saved_filters(request.user, entity)
+        items = []
+        for f in rows:
+            new_count = None
+            if with_new and f.scope == 'listings':
+                try:
+                    new_count = estimate_listings_new_count(request.user, f)
+                except Exception:
+                    new_count = 0
+            items.append(serialize_filter(f, new_count=new_count))
         return api_ok(items)
 
+    def post(self, request):
+        from workspace.services.crm_saved_filters import save_filter, serialize_filter
 
-def _ticket_to_dict(ticket) -> dict:
-    return {
-        'id': ticket.pk,
-        'ticket_number': ticket.ticket_number,
-        'subject': ticket.subject,
-        'status': ticket.status,
-        'priority': ticket.priority,
-        'category': ticket.category,
-        'user_has_unread': ticket.user_has_unread,
-        'created_at': ticket.created_at.isoformat() if ticket.created_at else None,
-        'updated_at': ticket.updated_at.isoformat() if ticket.updated_at else None,
-        'last_message_at': ticket.last_message_at.isoformat() if ticket.last_message_at else None,
-        'closed_at': ticket.closed_at.isoformat() if ticket.closed_at else None,
-    }
+        data = _parse_body(request)
+        name = (data.get('name') or '').strip()
+        scope = (data.get('scope') or data.get('entity') or '').strip()
+        params = data.get('params') or data.get('payload') or {}
+        is_pinned = bool(data.get('is_pinned', False))
+        if not isinstance(params, dict):
+            return api_error('params باید آبجکت باشد.', code='VALIDATION_ERROR')
+        try:
+            obj = save_filter(
+                request.user,
+                name=name,
+                scope=scope,
+                params=params,
+                is_pinned=is_pinned,
+            )
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(serialize_filter(obj), status=201)
+
+
+class CRMSavedFilterDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, filter_id):
+        from workspace.services.crm_saved_filters import delete_filter
+
+        if not delete_filter(request.user, filter_id):
+            return api_error('فیلتر یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({'deleted': True})
+
+
+class CRMSavedFilterPinView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, filter_id):
+        from workspace.models import CRMSavedFilter
+        from workspace.services.crm_saved_filters import serialize_filter, toggle_pin
+
+        try:
+            obj = toggle_pin(request.user, filter_id)
+        except CRMSavedFilter.DoesNotExist:
+            return api_error('فیلتر یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(serialize_filter(obj))
+
+
+def _ticket_to_dict(ticket, *, request=None, include_messages: bool = False) -> dict:
+    from mobile_api.services.support_mobile import ticket_to_dict
+    return ticket_to_dict(ticket, request=request, include_messages=include_messages)
 
 
 class SupportTicketsListCreateView(APIView):
@@ -1277,7 +1369,7 @@ class SupportTicketsListCreateView(APIView):
     def get(self, request):
         from workspace.services.support_tickets import filter_user_tickets
         tickets = filter_user_tickets(request.user)
-        return api_ok([_ticket_to_dict(t) for t in tickets[:50]])
+        return api_ok([_ticket_to_dict(t, request=request) for t in tickets[:50]])
 
     def post(self, request):
         from workspace.services.support_tickets import create_ticket
@@ -1300,9 +1392,85 @@ class SupportTicketsListCreateView(APIView):
                 priority=priority,
                 body=body,
             )
-            return api_ok(_ticket_to_dict(ticket), status=201)
+            return api_ok(_ticket_to_dict(ticket, request=request), status=201)
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class SupportTicketDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, ticket_id):
+        from mobile_api.services.support_mobile import ticket_detail_payload
+        payload = ticket_detail_payload(request.user, ticket_id, request=request)
+        if not payload:
+            return api_error('تیکت یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class SupportTicketReplyView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, ticket_id):
+        from mobile_api.services.support_mobile import get_user_ticket, ticket_message_to_dict, ticket_to_dict
+        from workspace.services.support_tickets import add_user_reply, validate_attachment_file
+
+        ticket = get_user_ticket(request.user, ticket_id)
+        if not ticket:
+            return api_error('تیکت یافت نشد.', code='NOT_FOUND', status=404)
+        body = (request.data.get('body') or '').strip()
+        if not body:
+            return api_error('متن پاسخ الزامی است.', code='VALIDATION_ERROR')
+        attachment = request.FILES.get('attachment') or request.FILES.get('file')
+        if attachment:
+            err = validate_attachment_file(attachment)
+            if err:
+                return api_error(err, code='VALIDATION_ERROR')
+        try:
+            message = add_user_reply(
+                ticket=ticket,
+                user=request.user,
+                body=body,
+                attachment=attachment,
+            )
+            ticket.refresh_from_db()
+            return api_ok({
+                'ticket': ticket_to_dict(ticket, request=request),
+                'message': ticket_message_to_dict(message, request=request),
+            }, status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+
+class SupportTicketCloseView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, ticket_id):
+        from mobile_api.services.support_mobile import get_user_ticket, ticket_to_dict
+        from workspace.services.support_tickets import close_ticket
+
+        ticket = get_user_ticket(request.user, ticket_id)
+        if not ticket:
+            return api_error('تیکت یافت نشد.', code='NOT_FOUND', status=404)
+        close_ticket(ticket=ticket, by_user=request.user, staff=False)
+        ticket.refresh_from_db()
+        return api_ok(ticket_to_dict(ticket, request=request))
+
+
+class SupportTicketReopenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, ticket_id):
+        from mobile_api.services.support_mobile import get_user_ticket, ticket_to_dict
+        from workspace.services.support_tickets import reopen_ticket
+
+        ticket = get_user_ticket(request.user, ticket_id)
+        if not ticket:
+            return api_error('تیکت یافت نشد.', code='NOT_FOUND', status=404)
+        reopen_ticket(ticket=ticket)
+        ticket.refresh_from_db()
+        return api_ok(ticket_to_dict(ticket, request=request))
 
 
 class AIQuotaView(APIView):

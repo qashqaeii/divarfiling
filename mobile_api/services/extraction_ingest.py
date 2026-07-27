@@ -361,10 +361,10 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         logger.exception('failed to send extract notification')
 
     try:
-        from workspace.services.crm_match_notifications import notify_matches_after_extract
-        notify_matches_after_extract(user, dataset_id=str(dataset.pk))
+        from workspace.services.crm_match_notifications import schedule_notify_matches_after_extract
+        schedule_notify_matches_after_extract(user, dataset_id=str(dataset.pk))
     except Exception:
-        logger.exception('failed to run post-extract customer matching')
+        logger.exception('failed to schedule post-extract customer matching')
 
     if run_id:
         try:

@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import logging
+import threading
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from django.contrib.auth import get_user_model
+from django.db import close_old_connections, transaction
 from django.utils import timezone
 
 from workspace.constants import LEAD_TYPES
@@ -16,6 +19,7 @@ MATCH_ELIGIBLE_TYPES = MATCH_TYPES | LEAD_TYPES
 AUTO_NOTIFY_MIN_SCORE = 55
 AUTO_NOTIFY_MAX_PER_USER = 8
 AUTO_NOTIFY_MAX_PER_CUSTOMER = 1
+POST_EXTRACT_MAX_CUSTOMERS = 60
 
 
 def is_match_eligible(customer: Customer) -> bool:
@@ -106,12 +110,18 @@ def discover_customer_matches(
     *,
     divar_enabled: bool,
     min_score: int = AUTO_NOTIFY_MIN_SCORE,
+    dataset_id: str = '',
 ) -> List[Dict[str, Any]]:
     if not is_match_eligible(customer):
         return []
     if customer.status == 'بایگانی':
         return []
-    data = get_customer_matches(customer, user, divar_enabled=divar_enabled)
+    data = get_customer_matches(
+        customer,
+        user,
+        divar_enabled=divar_enabled,
+        dataset_id=dataset_id or None,
+    )
     if not data.get('eligible'):
         return []
     all_matches = list(data.get('crm_matches', [])) + list(data.get('divar_matches', []))
@@ -213,7 +223,13 @@ def _notify_customer_match_digest(
     return True
 
 
-def process_user_customer_matches(user, *, divar_enabled: bool) -> int:
+def process_user_customer_matches(
+    user,
+    *,
+    divar_enabled: bool,
+    dataset_id: str = '',
+    max_customers: int = 200,
+) -> int:
     from mobile_api.services.notification_scheduler import user_push_enabled
 
     if not user_push_enabled(user, 'customer_match'):
@@ -224,12 +240,17 @@ def process_user_customer_matches(user, *, divar_enabled: bool) -> int:
         Customer.objects.filter(user=user)
         .exclude(status='بایگانی')
         .filter(customer_type__in=MATCH_ELIGIBLE_TYPES)
-        .order_by('-updated_at')[:200]
+        .order_by('-updated_at')[:max_customers]
     )
     for customer in customers:
         if len(batch) >= AUTO_NOTIFY_MAX_PER_USER:
             break
-        matches = discover_customer_matches(customer, user, divar_enabled=divar_enabled)
+        matches = discover_customer_matches(
+            customer,
+            user,
+            divar_enabled=divar_enabled,
+            dataset_id=dataset_id,
+        )
         if not matches:
             continue
         batch.append((customer, matches[:3]))
@@ -274,7 +295,43 @@ def notify_matches_after_extract(user, *, dataset_id: str = '') -> int:
     """پس از استخراج/آپلود فایلینگ — بررسی فوری تطبیق‌ها."""
     from workspace.services.access import has_active_bot_license
 
-    return process_user_customer_matches(user, divar_enabled=has_active_bot_license(user))
+    return process_user_customer_matches(
+        user,
+        divar_enabled=has_active_bot_license(user),
+        dataset_id=dataset_id,
+        max_customers=POST_EXTRACT_MAX_CUSTOMERS,
+    )
+
+
+def _run_post_extract_matching(user_id: int, dataset_id: str = '') -> None:
+    close_old_connections()
+    try:
+        User = get_user_model()
+        user = User.objects.filter(pk=user_id, is_active=True).first()
+        if not user:
+            return
+        notify_matches_after_extract(user, dataset_id=dataset_id)
+    except Exception:
+        logger.exception('post-extract customer matching failed user=%s dataset=%s', user_id, dataset_id)
+    finally:
+        close_old_connections()
+
+
+def schedule_notify_matches_after_extract(user, *, dataset_id: str = '') -> None:
+    """اجرای تطبیق پس از استخراج در پس‌زمینه تا آپلود موبایل timeout نشود."""
+    user_id = user.pk
+    ds_id = str(dataset_id or '')
+
+    def _start() -> None:
+        thread = threading.Thread(
+            target=_run_post_extract_matching,
+            args=(user_id, ds_id),
+            daemon=True,
+            name=f'post-extract-match-{user_id}',
+        )
+        thread.start()
+
+    transaction.on_commit(_start)
 
 
 def contact_matches_payload(user, contact_id: int, request=None) -> Optional[Dict[str, Any]]:

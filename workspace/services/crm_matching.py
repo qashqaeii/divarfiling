@@ -1041,16 +1041,19 @@ def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
     return qs.order_by('-updated_at')[:scan_limit]
 
 
-def _divar_listings_base_qs(user):
-    return (
+def _divar_listings_base_qs(user, *, dataset_id=None):
+    qs = (
         Listing.objects.filter(dataset__user=user, dataset__is_active=True, is_expired=False)
         .select_related('dataset')
         .order_by('-published_at')
     )
+    if dataset_id:
+        qs = qs.filter(dataset_id=dataset_id)
+    return qs
 
 
-def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
-    qs = _divar_listings_base_qs(user)
+def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int, dataset_id=None):
+    qs = _divar_listings_base_qs(user, dataset_id=dataset_id)
     tol = profile_tolerance_ratio(customer)
     if is_builder_customer(customer):
         return qs[:scan_limit]
@@ -1134,14 +1137,16 @@ def match_crm_properties(customer: Customer, user, *, limit: int | None = None) 
     return scored[:result_limit]
 
 
-def match_divar_listings(customer: Customer, user, *, limit: int | None = None) -> List[Dict[str, Any]]:
+def match_divar_listings(customer: Customer, user, *, limit: int | None = None, dataset_id=None) -> List[Dict[str, Any]]:
     tuning = _match_tuning(customer)
     result_limit = limit if limit is not None else tuning['result_limit']
     min_score = tuning['divar_min_score']
     # اسکن بیشتر چون فقط مالک واقعی نگه داشته می‌شود.
     scan_limit = min(tuning['divar_scan_limit'] * 2, 2400)
+    if dataset_id:
+        scan_limit = min(scan_limit, 500)
     scored = []
-    for lst in _divar_match_candidates_qs(customer, user, scan_limit=scan_limit):
+    for lst in _divar_match_candidates_qs(customer, user, scan_limit=scan_limit, dataset_id=dataset_id):
         if not _listing_is_genuine_owner(lst):
             continue
         if not _listing_match_compatible(customer, lst):
@@ -1264,7 +1269,7 @@ def _match_payload_with_tolerance(payload: Dict[str, Any], customer: Customer) -
     return payload
 
 
-def get_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Dict[str, Any]:
+def get_customer_matches(customer: Customer, user, *, divar_enabled: bool, dataset_id=None) -> Dict[str, Any]:
     if customer.customer_type not in MATCH_TYPES and customer.customer_type not in LEAD_TYPES:
         return _match_payload_with_tolerance({
             'eligible': False,
@@ -1281,7 +1286,7 @@ def get_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Di
         return get_builder_customer_matches(customer, user, divar_enabled=divar_enabled)
 
     crm_matches = match_crm_properties(customer, user)
-    divar_matches = match_divar_listings(customer, user) if divar_enabled else []
+    divar_matches = match_divar_listings(customer, user, dataset_id=dataset_id) if divar_enabled else []
     divar_locked = not divar_enabled
     payload = {
         'eligible': True,

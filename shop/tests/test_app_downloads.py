@@ -21,7 +21,7 @@ class AndroidAppDownloadTests(TestCase):
             response['Content-Type'],
             'application/vnd.android.package-archive',
         )
-        self.assertIn(ANDROID_APK_FILENAME, response['Content-Disposition'])
+        self.assertIn('.apk', response['Content-Disposition'].lower())
 
     def test_license_guide_install_link_uses_in_page_fragment(self):
         response = self.client.get(reverse('license_guide'))

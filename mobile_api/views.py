@@ -207,6 +207,18 @@ class LogoutView(APIView):
         return api_ok({})
 
 
+class AppVersionView(APIView):
+    """نسخهٔ منتشرشده اپ اندروید — عمومی (بدون لاگین) برای آپدیت داخلی."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [MobileLoginThrottle]
+
+    def get(self, request):
+        from mobile_api.services.app_update_service import app_version_payload
+
+        return api_ok(app_version_payload(request))
+
+
 class DeviceRegisterView(APIView):
     permission_classes = [IsAuthenticated]
 

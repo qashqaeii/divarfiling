@@ -15,6 +15,8 @@ urlpatterns = [
 
     path('license/status', views.LicenseStatusView.as_view(), name='license_status'),
 
+    path('app/version', views.AppVersionView.as_view(), name='app_version'),
+
     path('dashboard', views.DashboardView.as_view(), name='dashboard'),
 
     path('settings/profile', views.ProfileView.as_view(), name='profile'),

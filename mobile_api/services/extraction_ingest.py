@@ -23,7 +23,7 @@ from workspace.services.importer import (
 )
 from workspace.services.price_history import load_latest_snapshots, should_record_price
 
-MAX_MOBILE_ITEMS = 100
+MAX_MOBILE_ITEMS = 250
 MAX_CLOUD_EXTRACT_ITEMS = 500
 EXTRACTIONS_DAILY_LIMIT = 10
 INGEST_VERSION = 5

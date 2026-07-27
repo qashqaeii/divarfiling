@@ -171,6 +171,36 @@ def _listing_image_urls(lst: Listing) -> List[str]:
     return deduplicate_divar_image_urls(images)
 
 
+def _absolute_media_url(url: str, request=None) -> str:
+    """تبدیل /media/... به URL مطلق برای کلاینت موبایل."""
+    value = str(url or '').strip()
+    if not value:
+        return ''
+    if value.startswith('/media/'):
+        if request is not None:
+            try:
+                return request.build_absolute_uri(value)
+            except Exception:
+                pass
+        return f'https://divarfiling.ir{value}'
+    return value
+
+
+def _property_image_urls(raw_images, *, request=None, limit=None):
+    urls: List[str] = []
+    for img in raw_images or []:
+        url = normalize_external_image_url(img if isinstance(img, str) else str(img))
+        if not url:
+            continue
+        url = _absolute_media_url(url, request=request)
+        if url:
+            urls.append(url)
+    urls = deduplicate_divar_image_urls(urls)
+    if limit is not None:
+        return urls[: max(0, int(limit))]
+    return urls
+
+
 def _dataset_thumbnail(ds: Dataset) -> str:
     lst = (
         Listing.objects.filter(dataset=ds)
@@ -430,7 +460,13 @@ def deal_to_dict(d: CRMDeal, *, detailed: bool = False) -> Dict[str, Any]:
     return data
 
 
-def property_to_dict(p: CRMProperty, *, detailed: bool = False) -> Dict[str, Any]:
+def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) -> Dict[str, Any]:
+    # لیست موبایل هم باید کاور داشته باشد؛ قبلاً فقط detailed تصاویر می‌فرستاد.
+    images = _property_image_urls(
+        p.images or [],
+        request=request,
+        limit=None if detailed else 6,
+    )
     data = {
         'id': p.pk,
         'title': p.title,
@@ -451,6 +487,8 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False) -> Dict[str, Any
         'phone': p.phone or '',
         'owner_name': p.owner_name or '',
         'business_type': p.business_type or '',
+        'images': images,
+        'thumbnail_url': images[0] if images else '',
         'created_at': p.created_at.isoformat() if p.created_at else None,
         'updated_at': p.updated_at.isoformat() if p.updated_at else None,
     }
@@ -465,7 +503,6 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False) -> Dict[str, Any
             'has_elevator': p.has_elevator,
             'amenities': p.amenities or '',
             'notes': p.notes or '',
-            'images': p.images or [],
         })
     return data
 
@@ -499,7 +536,7 @@ def property_detail_to_dict(
     mask_sensitive: bool = False,
     request=None,
 ) -> Dict[str, Any]:
-    property_data = property_to_dict(prop, detailed=True)
+    property_data = property_to_dict(prop, detailed=True, request=request)
     if mask_sensitive:
         property_data['address'] = ''
         property_data['notes'] = ''

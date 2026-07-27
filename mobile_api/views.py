@@ -1061,14 +1061,16 @@ class PropertiesListView(APIView):
             'transaction_status': request.GET.get('transaction_status', ''),
             'city': request.GET.get('city', ''),
         }
-        items, meta = list_properties_paginated(request.user, page=page, page_size=page_size, query=query)
+        items, meta = list_properties_paginated(
+            request.user, page=page, page_size=page_size, query=query, request=request,
+        )
         return api_ok(items, meta=meta)
 
     def post(self, request):
         data = _parse_body(request)
         try:
             prop = create_property_from_mobile(request.user, data)
-            return api_ok(property_to_dict(prop, detailed=True), status=201)
+            return api_ok(property_to_dict(prop, detailed=True, request=request), status=201)
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
 
@@ -1087,7 +1089,7 @@ class PropertyDetailView(APIView):
         prop = update_property_from_mobile(request.user, property_id, data)
         if not prop:
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
-        return api_ok(property_to_dict(prop, detailed=True))
+        return api_ok(property_to_dict(prop, detailed=True, request=request))
 
     def delete(self, request, property_id):
         if not soft_delete_property(request.user, property_id):
@@ -1129,7 +1131,7 @@ class PropertyStatusView(APIView):
             return api_error(str(exc), code='VALIDATION_ERROR')
         if not prop:
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
-        return api_ok(property_to_dict(prop, detailed=True))
+        return api_ok(property_to_dict(prop, detailed=True, request=request))
 
 
 class PropertyContactsView(APIView):

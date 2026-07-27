@@ -22,12 +22,13 @@ def list_properties_paginated(
     page: int = 1,
     page_size: int = 20,
     query: Optional[Dict[str, Any]] = None,
+    request=None,
 ) -> Tuple[List[dict], dict]:
     params = {k: str(v) for k, v in (query or {}).items() if v is not None and str(v).strip()}
     qs = filter_properties(user, params)
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
-    items = [property_to_dict(p) for p in page_obj.object_list]
+    items = [property_to_dict(p, request=request) for p in page_obj.object_list]
     meta = {'page': page, 'page_size': page_size, 'total': paginator.count}
     return items, meta
 
@@ -71,6 +72,11 @@ def get_property_detail(user, property_id: int, *, request=None) -> Optional[dic
     )
     if source_listing:
         _enrich_property_dict_from_listing(payload['property'], source_listing)
+    # تضمین URL مطلق تصاویر برای کلاینت موبایل
+    from mobile_api.serializers import _property_image_urls
+    normalized = _property_image_urls(payload['property'].get('images') or [], request=request)
+    payload['property']['images'] = normalized
+    payload['property']['thumbnail_url'] = normalized[0] if normalized else ''
     from workspace.services.crm_scope import is_property_owner
     if is_property_owner(user, prop) and prop.deleted_at is None:
         from workspace.services.property_public_share import (
@@ -164,7 +170,11 @@ def _enrich_property_dict_from_listing(prop_dict: Dict[str, Any], listing) -> No
     if not prop_dict.get('neighborhood') and listing.neighborhood:
         prop_dict['neighborhood'] = listing.neighborhood
     if not prop_dict.get('images') and listing.images:
-        prop_dict['images'] = listing.images
+        from mobile_api.serializers import _property_image_urls, _listing_image_urls
+        # ترجیح تصاویر نرمال‌شده آگهی منبع
+        prop_dict['images'] = _listing_image_urls(listing) or _property_image_urls(listing.images)
+        if prop_dict['images']:
+            prop_dict['thumbnail_url'] = prop_dict['images'][0]
 
 
 def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:

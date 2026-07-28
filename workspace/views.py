@@ -401,11 +401,12 @@ class DatasetBulkUploadView(LicenseRequiredMixin, View):
         except (json.JSONDecodeError, TypeError):
             relative_paths = []
 
-        if relative_paths and len(relative_paths) != len(files):
-            messages.warning(
-                request,
-                'تعداد مسیرها با فایل‌های ارسالی هم‌خوان نیست — ممکن است بخشی از فایل‌ها وارد نشوند.',
-            )
+        if len(relative_paths) != len(files):
+            msg = 'تعداد مسیرها با فایل‌های ارسالی هم‌خوان نیست — آپلود لغو شد.'
+            if resp := _upload_json_err(request, msg):
+                return resp
+            messages.error(request, msg)
+            return redirect(upload_url)
 
         imported: list = []
         errors: list = []
@@ -416,10 +417,7 @@ class DatasetBulkUploadView(LicenseRequiredMixin, View):
         reactivated_files = 0
 
         for idx, uploaded in enumerate(files):
-            if idx < len(relative_paths) and relative_paths[idx]:
-                rel_path = str(relative_paths[idx]).replace('\\', '/')
-            else:
-                rel_path = (uploaded.name or '').replace('\\', '/')
+            rel_path = str(relative_paths[idx]).replace('\\', '/')
             if not is_importable_file(rel_path):
                 skipped += 1
                 continue

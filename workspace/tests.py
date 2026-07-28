@@ -16,7 +16,12 @@ from workspace.services.folder_import import (
     subcategory_match,
     transaction_match,
 )
-from workspace.services.importer import _bare_reupload_match, _match_score, _preserve_dataset_location_meta
+from workspace.services.importer import (
+    _bare_reupload_match,
+    _bare_upload_location_compatible,
+    _match_score,
+    _preserve_dataset_location_meta,
+)
 from workspace.services.listing_edit import listing_edit_payload
 from workspace.services.price_history import dedupe_price_history, should_record_price
 
@@ -359,6 +364,8 @@ class FileIdentityTests(SimpleTestCase):
             'tx_slug': 'اجاره_آپارتمان',
             'transaction_type': 'اجاره مسکونی',
             'subcategory': 'آپارتمان',
+            'city': 'تهران',
+            'district': 'بریانک',
         }
         bare_id = build_file_identity(bare_pi, 'اجاره_آپارتمان.xlsx')
         score = _match_score(folder_ds, bare_pi, 'اجاره_آپارتمان.xlsx', bare_id)
@@ -390,9 +397,80 @@ class FileIdentityTests(SimpleTestCase):
             'tx_slug': 'اجاره_آپارتمان',
             'transaction_type': 'اجاره مسکونی',
             'subcategory': 'آپارتمان',
+            'city': 'تهران',
+            'district': 'بریانک',
         }
         hit = _bare_reupload_match(_FakeQS([ds]), 'اجاره_آپارتمان.xlsx', bare_pi)
         self.assertIs(hit, ds)
+
+    def test_bare_reupload_rejects_wrong_district_single_candidate(self):
+        class _FakeQS:
+            def __init__(self, items):
+                self._items = items
+
+            def filter(self, **kwargs):
+                if 'original_filename' in kwargs:
+                    fn = kwargs['original_filename']
+                    return _FakeQS([i for i in self._items if i.original_filename == fn])
+                return self
+
+            def __iter__(self):
+                return iter(self._items)
+
+        ds = FakeDataset(
+            city='تهران',
+            district='بریانک',
+            transaction_type='فروش مسکونی',
+            filename='فروش_آپارتمان.xlsx',
+            file_identity='تهران/تهران/بریانک/فروش_آپارتمان',
+            subcategory='آپارتمان',
+        )
+        bare_pi = {
+            'tx_slug': 'فروش_آپارتمان',
+            'transaction_type': 'فروش مسکونی',
+            'subcategory': 'آپارتمان',
+            'city': 'تهران',
+            'district': 'قیطریه',
+        }
+        self.assertFalse(_bare_upload_location_compatible(ds, bare_pi))
+        hit = _bare_reupload_match(_FakeQS([ds]), 'فروش_آپارتمان.xlsx', bare_pi)
+        self.assertIsNone(hit)
+
+    def test_fuzzy_match_ambiguous_same_city_different_districts(self):
+        briyanak = FakeDataset(
+            city='تهران',
+            district='بریانک',
+            transaction_type='فروش مسکونی',
+            filename='فروش_آپارتمان.xlsx',
+            file_identity='تهران/تهران/بریانک/فروش_آپارتمان',
+            subcategory='آپارتمان',
+        )
+        gheytarie = FakeDataset(
+            city='تهران',
+            district='قیطریه',
+            transaction_type='فروش مسکونی',
+            filename='فروش_آپارتمان.xlsx',
+            file_identity='تهران/تهران/قیطریه/فروش_آپارتمان',
+            subcategory='آپارتمان',
+        )
+        bare_pi = {
+            'tx_slug': 'فروش_آپارتمان',
+            'transaction_type': 'فروش مسکونی',
+            'subcategory': 'آپارتمان',
+            'city': 'تهران',
+        }
+        bare_id = build_file_identity(bare_pi, 'فروش_آپارتمان.xlsx')
+        score_b = _match_score(briyanak, bare_pi, 'فروش_آپارتمان.xlsx', bare_id)
+        score_g = _match_score(gheytarie, bare_pi, 'فروش_آپارتمان.xlsx', bare_id)
+        self.assertEqual(score_b, 0)
+        self.assertEqual(score_g, 0)
+
+    def test_city_tx_folder_path_parsing(self):
+        pi = parse_output_relative_path('شیراز/فروش_آپارتمان/data.xlsx')
+        self.assertEqual(pi['city'], 'شیراز')
+        self.assertEqual(pi['province'], '')
+        self.assertEqual(pi['district'], '')
+        self.assertIn('فروش', pi['transaction_type'])
 
     def test_preserve_location_meta_on_bare_reupload(self):
         class DS:

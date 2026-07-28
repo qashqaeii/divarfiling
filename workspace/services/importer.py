@@ -94,6 +94,29 @@ def _filename_tx_matches(ds: Dataset, pi: dict, basename: str) -> bool:
     )
 
 
+def _bare_upload_location_compatible(ds: Dataset, pi: dict) -> bool:
+    """آپلود تکی بدون مسیر پوشه — سازگاری مکان با مجموعهٔ قبلی."""
+    pi_dist = _norm_loc(pi.get('district'))
+    pi_city = _norm_loc(pi.get('city'))
+    ds_dist = _norm_loc(ds.district)
+    ds_city = _norm_loc(ds.city)
+
+    if pi_dist and ds_dist:
+        return pi_dist == ds_dist
+    if pi_dist and not ds_dist:
+        return False
+    if ds_dist and not pi_dist:
+        return False
+
+    if pi_city and ds_city:
+        return pi_city == ds_city
+    if pi_city and not ds_city:
+        return True
+    if ds_city and not pi_city:
+        return False
+    return True
+
+
 def _bare_reupload_match(
     qs,
     basename: str,
@@ -114,7 +137,9 @@ def _bare_reupload_match(
     if not candidates:
         return None
     if len(candidates) == 1:
-        return candidates[0]
+        if _bare_upload_location_compatible(candidates[0], pi):
+            return candidates[0]
+        return None
 
     pi_dist = _norm_loc(pi.get('district'))
     pi_city = _norm_loc(pi.get('city'))
@@ -179,14 +204,14 @@ def _match_score(ds: Dataset, path_info: dict, basename: str, identity: str) -> 
     if norm_id and stored_id and stored_id != norm_id:
         if stored_id.endswith(stem) and norm_id.endswith(stem):
             loc_ok = locations_match(md, ds.city, ds.district, pi)
-            if not loc_ok and not pi_path:
-                loc_ok = True
-            elif not loc_ok:
+            if not loc_ok:
                 ds_city = _norm_loc(ds.city)
+                pi_city = _norm_loc(pi.get('city'))
                 loc_ok = (
                     not pi_dist and not ds_dist
                     and ds_city
                     and (ds_city in norm_id or ds_city in stored_id)
+                    and (not pi_city or pi_city == ds_city)
                 )
             if (
                 loc_ok
@@ -217,6 +242,8 @@ def _match_score(ds: Dataset, path_info: dict, basename: str, identity: str) -> 
         pi_city = _norm_loc(pi.get('city')) or _norm_loc(pi.get('province'))
         if pi_city and pi_city == _norm_loc(ds.city):
             if pi_dist and not ds_dist:
+                return 0
+            if ds_dist and not pi_dist:
                 return 0
             score += 85
 
@@ -253,20 +280,20 @@ def find_existing_dataset(
         norm_incoming = _norm_identity(identity)
 
         for key in _identity_lookup_keys(identity):
-            hit = qs.filter(metadata__file_identity=key).first()
+            hit = qs.filter(metadata__file_identity=key).order_by('pk').first()
             if hit and transaction_match(hit.transaction_type, hit.original_filename, pi, basename):
                 return hit
 
         source_path = normalize_file_identity(pi.get('relative_path', ''))
         if source_path:
             for key in _identity_lookup_keys(source_path):
-                hit = qs.filter(metadata__source_path=key).first()
+                hit = qs.filter(metadata__source_path=key).order_by('pk').first()
                 if hit and transaction_match(hit.transaction_type, hit.original_filename, pi, basename):
                     return hit
             for key in (pi.get('relative_path', ''), normalize_source_path(pi.get('relative_path', ''))):
                 if not key:
                     continue
-                hit = qs.filter(metadata__source_path=key).first()
+                hit = qs.filter(metadata__source_path=key).order_by('pk').first()
                 if hit and transaction_match(hit.transaction_type, hit.original_filename, pi, basename):
                     return hit
 
@@ -304,13 +331,19 @@ def find_existing_dataset(
 
         best: Optional[Dataset] = None
         best_score = 0
+        tied: List[Dataset] = []
         for ds in candidates:
             sc = _match_score(ds, pi, basename, identity)
             if sc > best_score:
                 best_score = sc
                 best = ds
+                tied = [ds]
+            elif sc == best_score and sc > 0:
+                tied.append(ds)
 
         if best_score >= 100:
+            if len(tied) > 1:
+                return None
             return best
         return None
 
@@ -505,10 +538,12 @@ def import_dataset(
     listings_to_update: List[Listing] = []
     price_records: List[PriceHistory] = []
     seen_tokens: Set[str] = set()
+    tokens_in_file: Set[str] = set()
     added_count = 0
     updated_count = 0
     skipped_count = 0
     price_cache = load_latest_snapshots(user, _tokens_in_dataframe(df))
+    prune_stale = is_update and _has_folder_path(effective_path_info)
 
     with transaction.atomic():
         if not is_update:
@@ -520,6 +555,7 @@ def import_dataset(
             if not token:
                 token = f'row_{idx}'
                 fields['token'] = token
+            tokens_in_file.add(token)
 
             if token in existing_by_token or token in seen_tokens:
                 if token in existing_by_token:
@@ -578,15 +614,18 @@ def import_dataset(
             )
 
         if price_records:
-            PriceHistory.objects.bulk_create(price_records[:2000])
+            for i in range(0, len(price_records), BATCH_SIZE):
+                PriceHistory.objects.bulk_create(price_records[i:i + BATCH_SIZE])
 
-        total_listings = (
-            len(existing_tokens) + added_count if is_update else added_count
-        )
+        if prune_stale and tokens_in_file:
+            Listing.objects.filter(dataset=dataset).exclude(
+                token__in=tokens_in_file,
+            ).delete()
+
         dataset.file_size = file_size
         dataset.original_filename = basename
         dataset.file_format = file_format
-        dataset.row_count = total_listings
+        dataset.row_count = Listing.objects.filter(dataset=dataset).count()
         dataset.column_count = len(df.columns)
         merged_columns = list(dict.fromkeys(
             list((dataset.columns or [])) + list(df.columns.astype(str))

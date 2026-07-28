@@ -18,6 +18,7 @@ from workspace.services.columns import detect_metadata, normalize_location_label
 from workspace.services.folder_import import build_dataset_name, build_file_identity
 from workspace.services.importer import (
     _listing_from_fields,
+    _preserve_dataset_location_meta,
     _update_listing_from_fields,
     find_existing_dataset,
 )
@@ -232,6 +233,7 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
 
         if existing:
             dataset = existing
+            metadata = _preserve_dataset_location_meta(metadata, path_info, dataset)
             dataset.metadata = {**(dataset.metadata or {}), **metadata}
             dataset.last_opened_at = now
             dataset.is_active = True
@@ -240,6 +242,8 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             dataset.columns = merged_columns
             if path_info['city']:
                 dataset.city = path_info['city']
+            elif dataset.city:
+                path_info['city'] = dataset.city
             if path_info['district']:
                 dataset.district = path_info['district']
             if tx_type:

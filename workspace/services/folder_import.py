@@ -60,6 +60,14 @@ def _tx_kind(label: str) -> str:
     return ''
 
 
+def _looks_like_tx_dir(part: str) -> bool:
+    slug = (part or '').replace('_', ' ')
+    if _tx_kind(slug):
+        return True
+    tx_type, _sub = parse_tx_subcategory(part)
+    return bool(tx_type)
+
+
 def _parse_location_dirs(dirs: List[str]) -> Tuple[str, str, str]:
     """استان / شهر / منطقه از عمق مسیر — پوشه تک‌سطحی = شهر."""
     if not dirs:
@@ -241,6 +249,9 @@ def parse_output_relative_path(relative_path: str) -> Dict[str, Any]:
     tx_label = ''
     if len(dirs) >= 4:
         tx_label = dirs[3]
+    elif len(dirs) == 2 and _looks_like_tx_dir(dirs[1]) and not _looks_like_tx_dir(dirs[0]):
+        province, city, district = '', _norm_part(dirs[0]), ''
+        tx_label = dirs[1]
     elif filename:
         tx_label = os.path.splitext(filename)[0]
 

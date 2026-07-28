@@ -1029,6 +1029,13 @@ function stripOutputParts(parts) {
     return idx >= 0 ? parts.slice(idx + 1) : parts;
 }
 
+function _looksLikeTxDir(part) {
+    const slug = (part || '').replace(/_/g, ' ');
+    if (/اجاره|رهن/.test(slug)) return true;
+    if (/فروش/.test(slug)) return true;
+    return false;
+}
+
 function parseLocationDirs(dirs) {
     const norm = s => (s || '').trim().replace(/_/g, ' ');
     if (!dirs.length) return { province: '', city: '', district: '' };
@@ -1044,7 +1051,10 @@ function parseOutputPath(relPath) {
     const filename = parts.pop();
     let dirs = parts.slice();
     while (dirs.length && TOKEN_DIR_RE.test(dirs[dirs.length - 1])) dirs.pop();
-    const loc = parseLocationDirs(dirs);
+    let loc = parseLocationDirs(dirs);
+    if (dirs.length === 2 && _looksLikeTxDir(dirs[1]) && !_looksLikeTxDir(dirs[0])) {
+        loc = { province: '', city: (dirs[0] || '').trim().replace(/_/g, ' '), district: '' };
+    }
     const rel = stripOutputParts((relPath || '').replace(/\\/g, '/').split('/').filter(p => p && p !== '.')).join('/');
     return { ...loc, filename, relative_path: rel };
 }

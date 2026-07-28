@@ -228,6 +228,10 @@
                                     <input type="radio" name="wizard_segment" value="users_without_license" {% if selected_segment == 'users_without_license' %}checked{% endif %}>
                                     <span class="adm-map-audience-opt-body"><strong>کاربران بدون لایسنس</strong><em>{{ marketing_stats.segment_sizes.users_without_license|default:0|currency }} مخاطب</em></span>
                                 </label>
+                                <label class="adm-map-audience-opt{% if selected_segment == 'users_with_active_license' %} is-selected{% endif %}">
+                                    <input type="radio" name="wizard_segment" value="users_with_active_license" {% if selected_segment == 'users_with_active_license' %}checked{% endif %}>
+                                    <span class="adm-map-audience-opt-body"><strong>لایسنس فعال</strong><em>{{ marketing_stats.segment_sizes.users_with_active_license|default:0|currency }} مخاطب</em></span>
+                                </label>
                                 <label class="adm-map-audience-opt{% if selected_segment == 'pending_orders' %} is-selected{% endif %}">
                                     <input type="radio" name="wizard_segment" value="pending_orders" {% if selected_segment == 'pending_orders' %}checked{% endif %}>
                                     <span class="adm-map-audience-opt-body"><strong>سفارش پرداخت‌نشده</strong><em>{{ marketing_stats.segment_sizes.pending_orders|default:0|currency }} مخاطب</em></span>

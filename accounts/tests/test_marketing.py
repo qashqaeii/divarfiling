@@ -111,6 +111,69 @@ class MarketingSegmentTests(TestCase):
         self.assertIn('campaigns_total', stats)
         self.assertIn('segment_sizes', stats)
         self.assertIn('pending_orders', stats['segment_sizes'])
+        self.assertIn('users_with_active_license', stats['segment_sizes'])
+
+    def test_active_license_segment_preview(self):
+        from licenses.models import License
+
+        paid = Order.objects.create(
+            user=self.user,
+            product=self.product,
+            plan=self.plan,
+            amount=self.plan.price,
+            status='paid',
+        )
+        License.objects.create(
+            order=paid,
+            license_key='LIC-MKT-ACTIVE-1',
+            plan=self.plan,
+            status='active',
+        )
+        preview = preview_segment('users_with_active_license')
+        phones = [r['phone'] for r in preview['recipients']]
+        self.assertIn('09121111111', phones)
+
+    def test_active_license_segment_excludes_without_license(self):
+        preview = preview_segment('users_with_active_license')
+        phones = [r['phone'] for r in preview['recipients']]
+        self.assertNotIn('09121111111', phones)
+
+    def test_active_license_campaign_send(self):
+        from licenses.models import License
+
+        paid = Order.objects.create(
+            user=self.user,
+            product=self.product,
+            plan=self.plan,
+            amount=self.plan.price,
+            status='paid',
+        )
+        License.objects.create(
+            order=paid,
+            license_key='LIC-MKT-SEND-1',
+            plan=self.plan,
+            status='active',
+        )
+        staff = User.objects.create_user(
+            username='stafflic', password='pass1234', phone='09120000001', is_staff=True,
+        )
+        campaign = create_campaign_draft(
+            name='تست لایسنس فعال',
+            segment_key='users_with_active_license',
+            message_template='سلام{name_part} — {product}: {link}',
+            discount_mode='none',
+            created_by=staff,
+            dedupe_days=0,
+        )
+        run_campaign_send(campaign)
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.status, MarketingCampaign.Status.COMPLETED)
+        self.assertGreaterEqual(campaign.sent_count, 1)
+        self.assertTrue(
+            MarketingCampaignRecipient.objects.filter(
+                campaign=campaign, phone='09121111111', status='sent',
+            ).exists()
+        )
 
     def test_render_message_placeholders(self):
         text = render_message(

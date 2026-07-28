@@ -14,7 +14,7 @@ from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 
 from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
-from licenses.models import License
+from licenses.models import License, LicenseActivation
 from shop.models import DiscountCode, Order, Product
 
 User = get_user_model()
@@ -36,6 +36,10 @@ SEGMENT_DEFAULT_TEMPLATES = {
     'users_without_license': (
         'سلام{name_part}، هنوز لایسنس فعالی ندارید. '
         'با کد {code} از میزکار شروع کنید: {link}'
+    ),
+    'users_with_active_license': (
+        'سلام{name_part}، پیشنهاد ویژه برای کاربران «{product}». '
+        'با کد {code} از میزکار: {link}'
     ),
     'abandoned_checkout': (
         'سلام{name_part}، سفارش «{product}» هنوز تکمیل نشده. '
@@ -79,6 +83,15 @@ SEGMENT_REGISTRY: Dict[str, Dict[str, Any]] = {
         'supports_days_lookback': False,
         'supports_product': False,
     },
+    'users_with_active_license': {
+        'title': 'لایسنس فعال',
+        'description': 'کاربران با لایسنس فعال — پیام تبلیغاتی و پیشنهاد ویژه',
+        'icon': 'fa-id-card',
+        'accent': 'emerald',
+        'supports_stale_hours': False,
+        'supports_days_lookback': False,
+        'supports_product': True,
+    },
     'abandoned_checkout': {
         'title': 'رها کردن Checkout',
         'description': 'سفارش pending قدیمی — فقط پیش‌نمایش (ارسال غیرفعال)',
@@ -110,6 +123,10 @@ def _checkout_url(order_id) -> str:
 
 def _shop_url() -> str:
     return f'{_site_url()}/'
+
+
+def _workspace_url() -> str:
+    return f'{_site_url()}/accounts/dashboard/'
 
 
 def _user_first_name(user) -> str:
@@ -156,6 +173,8 @@ def build_segment_recipients(
         items = _segment_failed_orders(
             days_lookback=days_lookback or 14, product_id=product_id,
         )
+    elif segment_key == 'users_with_active_license':
+        items = _segment_users_with_active_license(product_id=product_id)
     else:
         items = _segment_users_without_license()
 
@@ -168,14 +187,21 @@ def build_segment_recipients(
             continue
         # پایپلاین رشد: از ارسال هم‌پوشان با Recovery/Activation جلوگیری کن
         try:
-            from accounts.services.growth_suppression import (
-                PURPOSE_MARKETING,
-                PURPOSE_RECOVERY,
-                is_send_allowed,
-            )
-            purpose = PURPOSE_RECOVERY if segment_key == 'pending_orders' else PURPOSE_MARKETING
-            if not is_send_allowed(phone, purpose=purpose, user=getattr(item, 'user', None)):
-                continue
+            if segment_key == 'users_with_active_license':
+                from accounts.models import SuppressionEntry
+                if SuppressionEntry.objects.filter(phone_normalized=phone).exists():
+                    continue
+            else:
+                from accounts.services.growth_suppression import (
+                    PURPOSE_MARKETING,
+                    PURPOSE_RECOVERY,
+                    is_send_allowed,
+                )
+                purpose = (
+                    PURPOSE_RECOVERY if segment_key == 'pending_orders' else PURPOSE_MARKETING
+                )
+                if not is_send_allowed(phone, purpose=purpose, user=getattr(item, 'user', None)):
+                    continue
         except Exception:
             pass
         seen.add(phone)
@@ -268,6 +294,84 @@ def _segment_failed_orders(
                 'amount': _format_amount(order.amount),
                 'link': _checkout_url(order.id),
                 'order_id': str(order.id),
+                'code': '',
+            },
+        ))
+    return rows
+
+
+def _segment_users_with_active_license(
+    *,
+    product_id: Optional[int] = None,
+) -> List[SegmentRecipient]:
+    """کاربران با لایسنس فعال — مالک، تخصیص‌یافته، یا اسلات دستگاه فعال."""
+    from workspace.services.access import _user_bot_license
+
+    owner_license = License.objects.filter(
+        order__user=OuterRef('pk'),
+        order__status='paid',
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+    if product_id:
+        owner_license = owner_license.filter(order__product_id=product_id)
+
+    assigned_license = License.objects.filter(
+        assigned_user=OuterRef('pk'),
+        order__status='paid',
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+    if product_id:
+        assigned_license = assigned_license.filter(order__product_id=product_id)
+
+    assigned_seat = LicenseActivation.objects.filter(
+        assigned_user=OuterRef('pk'),
+        is_active=True,
+        license__order__status='paid',
+        license__status='active',
+    ).filter(
+        Q(license__expires_at__isnull=True) | Q(license__expires_at__gt=timezone.now())
+    )
+    if product_id:
+        assigned_seat = assigned_seat.filter(license__order__product_id=product_id)
+
+    qs = (
+        User.objects.filter(is_active=True, marketing_sms_opt_out=False)
+        .annotate(
+            _owner_license=Exists(owner_license),
+            _assigned_license=Exists(assigned_license),
+            _assigned_seat=Exists(assigned_seat),
+        )
+        .filter(
+            Q(_owner_license=True) | Q(_assigned_license=True) | Q(_assigned_seat=True)
+        )
+        .order_by('-date_joined')
+    )
+
+    rows: List[SegmentRecipient] = []
+    for user in qs:
+        name = _user_first_name(user)
+        lic = _user_bot_license(user)
+        product_title = ''
+        plan_name = ''
+        if lic:
+            if lic.plan_id:
+                plan_name = lic.plan.name
+            if lic.order_id and lic.order.product_id:
+                product_title = lic.order.product.title
+            elif lic.plan and getattr(lic.plan, 'product_id', None):
+                product_title = lic.plan.product.title
+
+        rows.append(SegmentRecipient(
+            user=user,
+            phone=user.phone or '',
+            context={
+                'name': name,
+                'name_part': f' {name}' if name else '',
+                'product': product_title or 'میزکار',
+                'plan': plan_name,
+                'amount': '',
+                'link': _workspace_url(),
+                'order_id': '',
                 'code': '',
             },
         ))
@@ -549,6 +653,7 @@ SEGMENT_SUGGESTIONS = {
     'pending_orders': 'ارسال کد تخفیف ۱۵٪ — پیامک احساسی در ساعت ۲۰',
     'failed_orders': 'یادآوری پرداخت با کد ۱۰٪ — ارسال بعد از ۲۴ ساعت',
     'users_without_license': 'معرفی میزکار + تخفیف خوش‌آمد — ارسال عصر',
+    'users_with_active_license': 'پیام تبلیغاتی یا تخفیف تمدید — ارسال عصر',
     'abandoned_checkout': 'فقط پیش‌نمایش — ارسال و Automation هنوز فعال نیست',
 }
 
@@ -748,6 +853,15 @@ def get_segment_insights(segment_key: str) -> Dict[str, Any]:
             .first()
         )
         last_activity = latest
+    elif segment_key == 'users_with_active_license':
+        latest = (
+            License.objects.filter(status='active', order__status='paid')
+            .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+            .order_by('-created_at')
+            .values_list('created_at', flat=True)
+            .first()
+        )
+        last_activity = latest
     elif segment_key == 'abandoned_checkout' and last_activity is None:
         from shop.models import PlanFunnelEvent
 
@@ -791,6 +905,11 @@ def get_ai_campaign_suggestion(segment_key: str, *, count: int = 0) -> Dict[str,
         tone = 'متن حمایتی — راهنمای پرداخت مجدد'
         send_hour = '۱۸:۰۰'
         conversion = min(55, max(15, 22 + n))
+    elif segment_key == 'users_with_active_license':
+        discount = '۱۰٪'
+        tone = 'متن تبلیغاتی — معرفی امکانات جدید یا تخفیف تمدید'
+        send_hour = '۱۹:۰۰'
+        conversion = min(40, max(10, 15 + n // 3))
     else:
         discount = '۲۰٪'
         tone = 'متن خوش‌آمد — معرفی ارزش میزکار'

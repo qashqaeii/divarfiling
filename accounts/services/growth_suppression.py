@@ -12,6 +12,7 @@ PURPOSE_ACTIVATION = 'activation'
 PURPOSE_RECOVERY = 'recovery'
 PURPOSE_LICENSE_RENEWAL = 'license_renewal'
 PURPOSE_MARKETING = 'marketing'
+PURPOSE_LICENSED_MARKETING = 'licensed_marketing'
 
 
 def _has_active_pending_order(user) -> bool:
@@ -90,6 +91,8 @@ def is_send_allowed(
                 GrowthJourney.Stage.RENEWED,
                 None,
             )
+        if purpose == PURPOSE_LICENSED_MARKETING:
+            return True
         return False
 
     if stage == GrowthJourney.Stage.EXPIRING_SOON:

@@ -1473,90 +1473,173 @@ class SupportTicketReopenView(APIView):
         return api_ok(ticket_to_dict(ticket, request=request))
 
 
+def _ai_quota_payload(user, *, enabled: bool | None = None):
+    from ai_workspace.constants import is_ai_enabled
+    from ai_workspace.services.quota import get_status
+    from mobile_api.services.license_service import license_payload_for_user
+
+    ai_enabled = is_ai_enabled() if enabled is None else bool(enabled)
+    plan_label = license_payload_for_user(user).get('plan') or 'پلن'
+    if not ai_enabled:
+        return {
+            'enabled': False,
+            'remaining': 0,
+            'limit': 0,
+            'plan_label': plan_label,
+        }
+    try:
+        status = get_status(user)
+        return {
+            'enabled': True,
+            'remaining': status.remaining,
+            'limit': status.daily_limit,
+            'plan_label': plan_label,
+        }
+    except Exception:
+        return {
+            'enabled': True,
+            'remaining': 0,
+            'limit': 0,
+            'plan_label': plan_label,
+        }
+
+
+def _ai_text_payload(*, text: str, quota_remaining: int, is_fallback: bool, summary=None):
+    payload = {
+        'text': text,
+        'quota_remaining': quota_remaining,
+        'is_fallback': bool(is_fallback),
+        'source': 'fallback' if is_fallback else 'ai',
+    }
+    if summary is not None:
+        payload['summary'] = summary
+    return payload
+
+
+def _fallback_draft_text(*, name: str, listing_token: str, tone: str, notes: str) -> str:
+    listing_hint = f' (آگهی {listing_token})' if listing_token else ''
+    tone_hint = f' — لحن {tone}' if tone else ''
+    return (
+        f'سلام {name or "مشتری"} عزیز،\n'
+        f'در خصوص درخواست شما{listing_hint}{tone_hint} در خدمتم.\n'
+        f'{notes}'.strip()
+    ).strip()
+
+
+def _fallback_listing_summary(listing) -> str:
+    parts = [listing.title or 'آگهی']
+    if listing.neighborhood or listing.city:
+        parts.append(' — '.join(p for p in (listing.neighborhood, listing.city) if p))
+    if listing.price:
+        parts.append(f'قیمت: {listing.price:,}')
+    elif listing.rent or listing.deposit:
+        rent_part = f'اجاره {listing.rent:,}' if listing.rent else ''
+        dep_part = f'ودیعه {listing.deposit:,}' if listing.deposit else ''
+        parts.append(' · '.join(p for p in (dep_part, rent_part) if p))
+    if listing.area:
+        parts.append(f'متراژ {listing.area} متر')
+    if listing.rooms:
+        parts.append(f'{listing.rooms} خواب')
+    return ' · '.join(str(p) for p in parts if p)
+
+
 class AIQuotaView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        try:
-            from ai_workspace.constants import is_ai_enabled
-            from ai_workspace.services.quota import get_status
-            from mobile_api.services.license_service import license_payload_for_user
-
-            if not is_ai_enabled():
-                raise RuntimeError('AI disabled')
-            status = get_status(request.user)
-            plan_label = license_payload_for_user(request.user).get('plan') or 'پلن'
-            return api_ok({
-                'remaining': status.remaining,
-                'limit': status.daily_limit,
-                'plan_label': plan_label,
-            })
-        except Exception:
-            return api_ok({'remaining': 0, 'limit': 0, 'plan_label': ''})
+        return api_ok(_ai_quota_payload(request.user))
 
 
 class AIDraftMessageView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        from ai_workspace.constants import is_ai_enabled, normalize_crm_tone
+        from ai_workspace.services.crm_message import generate_message, result_to_dict as crm_result_to_dict
+        from ai_workspace.services.gateway import FeatureDisabledError
+        from ai_workspace.services.quota import QuotaExceededError, get_status
+        from workspace.services.crm_scope import customer_for_user
+
         data = _parse_body(request)
         contact_id = data.get('contact_id')
         listing_token = (data.get('listing_token') or '').strip()
         intent = (data.get('intent') or '').strip()
         notes = (data.get('notes') or '').strip()
+        tone = normalize_crm_tone(data.get('tone') or intent or 'رسمی')
 
-        quota_remaining = 0
-        try:
-            from ai_workspace.constants import is_ai_enabled
-            from ai_workspace.services.crm_message import generate_message, result_to_dict as crm_result_to_dict
-            from ai_workspace.services.gateway import FeatureDisabledError
-            from ai_workspace.services.quota import QuotaExceededError, get_status
-            from workspace.services.crm_scope import customer_for_user
-
-            if is_ai_enabled() and contact_id:
-                customer = customer_for_user(request.user, contact_id)
-                if customer:
-                    try:
-                        from ai_workspace.constants import normalize_crm_tone
-                        tone = normalize_crm_tone(data.get('tone') or intent or 'رسمی')
-                        result = generate_message(request.user, customer, tone=tone)
-                        payload = crm_result_to_dict(result)
-                        quota_remaining = get_status(request.user).remaining
-                        text = payload.get('text') or ''
-                        if notes and notes not in text:
-                            text = f'{text}\n\n{notes}'.strip()
-                        return api_ok({'text': text, 'quota_remaining': quota_remaining})
-                    except (FeatureDisabledError, QuotaExceededError):
-                        pass
-        except Exception:
-            logger.exception('ai draft-message failed for user=%s', request.user.pk)
+        if not contact_id and not listing_token:
+            return api_error(
+                'حداقل شناسه مخاطب یا توکن آگهی لازم است.',
+                code='VALIDATION_ERROR',
+            )
 
         name = ''
+        customer = None
         if contact_id:
-            from workspace.services.crm_scope import customer_for_user
             customer = customer_for_user(request.user, contact_id)
+            if contact_id and not customer:
+                return api_error('مخاطب یافت نشد.', code='NOT_FOUND', status=404)
             if customer:
                 name = customer.name or ''
-        listing_hint = f' (آگهی {listing_token})' if listing_token else ''
-        intent_hint = f' — {intent}' if intent else ''
-        text = (
-            f'سلام {name or "مشتری"} عزیز،\n'
-            f'در خصوص درخواست شما{listing_hint}{intent_hint} در خدمتم.\n'
-            f'{notes}'.strip()
-        ).strip()
-        return api_ok({'text': text, 'quota_remaining': quota_remaining})
+
+        quota_payload = _ai_quota_payload(request.user)
+        quota_remaining = int(quota_payload.get('remaining') or 0)
+
+        if is_ai_enabled() and customer:
+            try:
+                result = generate_message(request.user, customer, tone=tone)
+                payload = crm_result_to_dict(result)
+                quota_remaining = get_status(request.user).remaining
+                text = payload.get('text') or ''
+                if notes and notes not in text:
+                    text = f'{text}\n\n{notes}'.strip()
+                return api_ok(
+                    _ai_text_payload(
+                        text=text,
+                        quota_remaining=quota_remaining,
+                        is_fallback=bool(payload.get('is_fallback')),
+                    )
+                )
+            except QuotaExceededError as exc:
+                return api_error(
+                    str(exc) or 'سهمیه روزانه AI تمام شده است.',
+                    code='QUOTA_EXCEEDED',
+                    status=429,
+                )
+            except FeatureDisabledError:
+                pass
+            except Exception:
+                logger.exception('ai draft-message failed for user=%s', request.user.pk)
+
+        text = _fallback_draft_text(
+            name=name,
+            listing_token=listing_token,
+            tone=tone,
+            notes=notes,
+        )
+        return api_ok(
+            _ai_text_payload(
+                text=text,
+                quota_remaining=quota_remaining,
+                is_fallback=True,
+            )
+        )
 
 
 class AISummarizeListingView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        from ai_workspace.constants import is_ai_enabled
+        from ai_workspace.services.gateway import FeatureDisabledError
+        from ai_workspace.services.listing_summary import generate_summary, result_to_dict as listing_result_to_dict
+        from ai_workspace.services.quota import QuotaExceededError, get_status
+        from workspace.models import Listing
+
         data = _parse_body(request)
         listing_token = (data.get('listing_token') or '').strip()
         if not listing_token:
             return api_error('شناسه آگهی الزامی است.', code='VALIDATION_ERROR')
-
-        from workspace.models import Listing
 
         listing = (
             Listing.objects.filter(dataset__user=request.user, token=listing_token)
@@ -1567,13 +1650,11 @@ class AISummarizeListingView(APIView):
         if not listing:
             return api_error('آگهی یافت نشد.', code='NOT_FOUND', status=404)
 
-        try:
-            from ai_workspace.constants import is_ai_enabled
-            from ai_workspace.services.gateway import FeatureDisabledError
-            from ai_workspace.services.listing_summary import generate_summary, result_to_dict as listing_result_to_dict
-            from ai_workspace.services.quota import QuotaExceededError
+        quota_payload = _ai_quota_payload(request.user)
+        quota_remaining = int(quota_payload.get('remaining') or 0)
 
-            if is_ai_enabled():
+        if is_ai_enabled():
+            try:
                 result = generate_summary(request.user, listing.dataset, listing)
                 payload = listing_result_to_dict(result)
                 summary_data = payload.get('data') or {}
@@ -1581,25 +1662,33 @@ class AISummarizeListingView(APIView):
                 if not text:
                     text = (result.text or '').strip()
                 if text:
-                    return api_ok({'text': text, 'summary': summary_data})
-        except (FeatureDisabledError, QuotaExceededError):
-            pass
-        except Exception:
-            logger.exception('ai summarize-listing failed token=%s', listing_token)
+                    quota_remaining = get_status(request.user).remaining
+                    return api_ok(
+                        _ai_text_payload(
+                            text=text,
+                            quota_remaining=quota_remaining,
+                            is_fallback=bool(getattr(result, 'is_fallback', False) or payload.get('is_fallback')),
+                            summary=summary_data,
+                        )
+                    )
+            except QuotaExceededError as exc:
+                return api_error(
+                    str(exc) or 'سهمیه روزانه AI تمام شده است.',
+                    code='QUOTA_EXCEEDED',
+                    status=429,
+                )
+            except FeatureDisabledError:
+                pass
+            except Exception:
+                logger.exception('ai summarize-listing failed token=%s', listing_token)
 
-        parts = [listing.title or 'آگهی']
-        if listing.neighborhood or listing.city:
-            parts.append(' — '.join(p for p in (listing.neighborhood, listing.city) if p))
-        if listing.price:
-            parts.append(f'قیمت: {listing.price:,}')
-        elif listing.rent or listing.deposit:
-            rent_part = f'اجاره {listing.rent:,}' if listing.rent else ''
-            dep_part = f'ودیعه {listing.deposit:,}' if listing.deposit else ''
-            parts.append(' · '.join(p for p in (dep_part, rent_part) if p))
-        if listing.area:
-            parts.append(f'متراژ {listing.area} متر')
-        if listing.rooms:
-            parts.append(f'{listing.rooms} خواب')
-        text = ' · '.join(str(p) for p in parts if p)
-        return api_ok({'text': text, 'summary': {'summary': text}})
+        text = _fallback_listing_summary(listing)
+        return api_ok(
+            _ai_text_payload(
+                text=text,
+                quota_remaining=quota_remaining,
+                is_fallback=True,
+                summary={'summary': text},
+            )
+        )
 

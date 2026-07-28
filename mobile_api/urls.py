@@ -2,6 +2,7 @@
 from django.urls import path
 
 from mobile_api import views
+from mobile_api import team_views
 
 app_name = 'mobile_api'
 
@@ -86,6 +87,18 @@ urlpatterns = [
     path('ai/quota', views.AIQuotaView.as_view(), name='ai_quota'),
     path('ai/draft-message', views.AIDraftMessageView.as_view(), name='ai_draft_message'),
     path('ai/summarize-listing', views.AISummarizeListingView.as_view(), name='ai_summarize_listing'),
+
+    path('crm/team/overview', team_views.TeamOverviewView.as_view(), name='team_overview'),
+    path('crm/team/members', team_views.TeamMembersView.as_view(), name='team_members'),
+    path('crm/team/unread', team_views.TeamUnreadView.as_view(), name='team_unread'),
+    path('crm/team/messages', team_views.TeamMessagesView.as_view(), name='team_messages'),
+    path('crm/team/messages/<int:thread_id>', team_views.TeamMessageDetailView.as_view(), name='team_message_detail'),
+    path('crm/team/announcements', team_views.TeamAnnouncementsView.as_view(), name='team_announcements'),
+    path('crm/team/announcements/<int:announcement_id>', team_views.TeamAnnouncementDetailView.as_view(), name='team_announcement_detail'),
+    path('crm/team/notifications', team_views.TeamPanelNotificationsView.as_view(), name='team_notifications'),
+    path('crm/team/inbox', team_views.TeamLeadInboxView.as_view(), name='team_inbox'),
+    path('crm/contacts/<int:contact_id>/assign', team_views.ContactAssignView.as_view(), name='contact_assign'),
+    path('crm/contacts/<int:contact_id>/transfer', team_views.ContactTransferView.as_view(), name='contact_transfer'),
 
     path('extractions/limits', views.ExtractionLimitsView.as_view(), name='extraction_limits'),
     path('extractions/upload', views.ExtractionUploadView.as_view(), name='extraction_upload'),

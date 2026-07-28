@@ -1810,3 +1810,30 @@
     }
 }
 
+/* ── Heatmap visualization polish ── */
+.mk-map-pro .mk-map-stage[data-heat-mode="true"] .leaflet-overlay-pane canvas {
+    filter: saturate(1.08) contrast(1.05);
+}
+
+.mk-map-pro .mk-map-legend.mk-map-legend--heat .mk-map-legend-badge {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.14), rgba(34, 211, 238, 0.12));
+    color: #dc2626;
+}
+
+.mk-map-pro .mk-map-mode[data-mode^="heat"].is-active {
+    background: linear-gradient(135deg, #dc2626 0%, #ea580c 42%, #f97316 100%);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+}
+
+.mk-map-pro .mk-map-mode[data-mode^="heat"].is-active .mk-map-mode-icon {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+.mk-map-pro .mk-map-mode[data-mode^="heat"]:not(.is-active):hover {
+    border-color: rgba(220, 38, 38, 0.35);
+    color: #dc2626;
+}
+

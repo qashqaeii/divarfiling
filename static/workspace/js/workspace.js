@@ -1951,6 +1951,116 @@ const MAP_VPN_TIP_KEY = 'ws_map_vpn_tip_dismissed';
 
 const MAP_VALUE_TIER_COLORS = ['#94a3b8', '#06b6d4', '#4f46e5', '#9333ea', '#d97706', '#b91c1c'];
 
+/** گرادیان‌های هیت‌مپ — هم‌راستا با تحلیل بازار (cyan→قرمز / آبی→قرمز) */
+const HEAT_COLOR_STOPS = {
+    density: [
+        [0, '#22d3ee'],
+        [0.18, '#38bdf8'],
+        [0.32, '#facc15'],
+        [0.48, '#fb923c'],
+        [0.65, '#f97316'],
+        [0.82, '#ef4444'],
+        [1, '#7f1d1d'],
+    ],
+    price: [
+        [0, '#2563eb'],
+        [0.22, '#0d9488'],
+        [0.42, '#14b8a6'],
+        [0.58, '#eab308'],
+        [0.74, '#f97316'],
+        [0.88, '#ef4444'],
+        [1, '#991b1b'],
+    ],
+    pps: [
+        [0, '#6ee7b7'],
+        [0.2, '#22d3ee'],
+        [0.38, '#6366f1'],
+        [0.55, '#a855f7'],
+        [0.72, '#f59e0b'],
+        [0.88, '#ea580c'],
+        [1, '#b91c1c'],
+    ],
+};
+
+function parseHexRgb(hex) {
+    const h = String(hex || '').replace('#', '');
+    if (h.length !== 6) return [0, 0, 0];
+    return [
+        parseInt(h.slice(0, 2), 16),
+        parseInt(h.slice(2, 4), 16),
+        parseInt(h.slice(4, 6), 16),
+    ];
+}
+
+function interpolateHexColor(c0, c1, u) {
+    const [r0, g0, b0] = parseHexRgb(c0);
+    const [r1, g1, b1] = parseHexRgb(c1);
+    const r = Math.round(r0 + u * (r1 - r0));
+    const g = Math.round(g0 + u * (g1 - g0));
+    const b = Math.round(b0 + u * (b1 - b0));
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+function heatColorAt(t, palette = 'density') {
+    const stops = HEAT_COLOR_STOPS[palette] || HEAT_COLOR_STOPS.density;
+    const clamped = Math.max(0, Math.min(1, t));
+    for (let i = 0; i < stops.length - 1; i++) {
+        const [t0, c0] = stops[i];
+        const [t1, c1] = stops[i + 1];
+        if (clamped <= t1) {
+            const u = t1 === t0 ? 0 : (clamped - t0) / (t1 - t0);
+            return interpolateHexColor(c0, c1, u);
+        }
+    }
+    return stops[stops.length - 1][1];
+}
+
+function buildLeafletHeatGradient(palette) {
+    const stops = HEAT_COLOR_STOPS[palette] || HEAT_COLOR_STOPS.density;
+    const gradient = {};
+    stops.forEach(([t, hex]) => {
+        const [r, g, b] = parseHexRgb(hex);
+        const alpha = t <= 0.02 ? 0 : Math.min(0.94, 0.12 + t * 0.82);
+        gradient[t] = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+    });
+    return gradient;
+}
+
+function cssGradientFromStops(palette) {
+    const stops = HEAT_COLOR_STOPS[palette] || HEAT_COLOR_STOPS.density;
+    const parts = stops.map(([t, c]) => `${c} ${Math.round(t * 100)}%`);
+    return `linear-gradient(90deg, ${parts.join(', ')})`;
+}
+
+function normalizeHeatValues(values) {
+    const positives = values.filter(v => v > 0);
+    const minVal = positives.length ? Math.min(...positives) : 0;
+    const maxVal = positives.length ? Math.max(...positives) : 0;
+    return values.map((v) => {
+        if (!v || v <= 0) return 0.12;
+        if (maxVal <= minVal) return 0.55;
+        return 0.15 + 0.85 * ((v - minVal) / (maxVal - minVal));
+    });
+}
+
+function computeHeatLayerOptions(source, palette, { weighted = false } = {}) {
+    const count = source.length;
+    const logFactor = Math.log10(Math.max(count, 10));
+    const radius = Math.min(46, Math.max(24, Math.round(22 + logFactor * 5)));
+    const blur = Math.round(radius * 0.82);
+    const maxIntensity = weighted
+        ? 1.0
+        : Math.min(1.35, 0.42 + count / 650);
+    return {
+        radius,
+        blur,
+        minOpacity: 0.42,
+        maxZoom: 18,
+        max: maxIntensity,
+        gradient: buildLeafletHeatGradient(palette),
+    };
+}
+
 function valueTierColor(tier) {
     return MAP_VALUE_TIER_COLORS[tier] || MAP_VALUE_TIER_COLORS[0];
 }
@@ -2119,23 +2229,33 @@ function buildMapLegendScale(mode, stats) {
         value: 'price',
         full_deposit: 'full-deposit',
         grid: 'grid',
+        heat_density: 'heat-density',
+        heat_price: 'heat-price',
+        heat_pps: 'heat-pps',
     }[mode] || 'price';
 
     const labels = {
         value: { low: 'ارزان', high: 'گران' },
         full_deposit: { low: 'رهن کم', high: 'رهن زیاد' },
-        grid: { low: '۱', high: `${stats?.maxCount ?? '…'}` },
+        grid: { low: 'کم', high: `${stats?.maxCount ?? '…'}` },
+        heat_density: { low: 'کم', high: 'زیاد' },
+        heat_price: { low: 'ارزان', high: 'گران' },
+        heat_pps: { low: 'ارزان/متر', high: 'گران/متر' },
     }[mode] || { low: 'ارزان', high: 'گران' };
 
     const caption = stats?.rangeText
         ? `<span class="mk-map-legend-caption">${stats.rangeText}</span>`
         : '';
 
+    const inlineStyle = ['heat_density', 'heat_price', 'heat_pps'].includes(mode)
+        ? ` style="background:${cssGradientFromStops(mode.replace('heat_', ''))}"`
+        : '';
+
     return `<div class="mk-map-legend-scale mk-map-legend-scale--inline">
         <div class="mk-map-legend-scale-row">
             <span class="mk-map-legend-scale-end">${labels.low}</span>
             <div class="mk-map-legend-scale-track" aria-hidden="true">
-                <span class="mk-map-legend-scale-bar mk-map-legend-scale-bar--${barClass}"></span>
+                <span class="mk-map-legend-scale-bar mk-map-legend-scale-bar--${barClass}"${inlineStyle}></span>
             </div>
             <span class="mk-map-legend-scale-end">${labels.high}</span>
         </div>
@@ -2256,6 +2376,9 @@ const MAP_MODE_LABELS = {
     grid: 'شبکه',
     market: 'بازار',
     full_deposit: 'رهن کامل',
+    heat_density: 'هیت تراکم',
+    heat_price: 'هیت قیمت',
+    heat_pps: 'هیت متر',
 };
 
 function getDefaultBasemapId() {
@@ -2566,7 +2689,8 @@ function initMap(allMarkers, settings) {
     const useCluster = settings?.map_cluster !== false && window.L.markerClusterGroup;
 
     let sellerFilter = 'all';
-    let activeMode = 'markers';
+    const heatLayerReady = typeof L.heatLayer === 'function';
+    let activeMode = settings?.map_heatmap && heatLayerReady ? 'heat_density' : 'markers';
     let showRings = false;
     let layers = {};
     let layerStats = {};
@@ -2703,6 +2827,10 @@ function initMap(allMarkers, settings) {
     function focusMarkerFromList(m) {
         if (!m) return;
         const entry = markerRegistry[m.id];
+        if (!entry && activeMode.startsWith('heat_')) {
+            map.flyTo([m.lat, m.lng], Math.min(19, focusMaxZoom + 1), { duration: 0.5 });
+            return;
+        }
         if (!entry) return;
 
         highlightedMarkerId = m.id;
@@ -2749,11 +2877,49 @@ function initMap(allMarkers, settings) {
     }
 
     function gridFillColor(t) {
-        if (t < 0.2) return '#c7d2fe';
-        if (t < 0.45) return '#818cf8';
-        if (t < 0.7) return '#a855f7';
-        if (t < 0.85) return '#f97316';
-        return '#dc2626';
+        return heatColorAt(t, 'density');
+    }
+
+    function buildHeatLayer(source, { palette = 'density', valueKey = null, perSqm = false } = {}) {
+        const emptyLayer = L.layerGroup();
+        if (!source.length) return { layer: emptyLayer, stats: {} };
+        if (!L.heatLayer) {
+            return {
+                layer: emptyLayer,
+                stats: { rangeText: 'کتابخانه هیت‌مپ بارگذاری نشده — صفحه را رفرش کنید' },
+            };
+        }
+
+        const weighted = palette !== 'density';
+        const values = weighted
+            ? source.map(m => Number(m[valueKey] || m.filter_value || m.price || 0) || 0)
+            : [];
+        const intensities = weighted ? normalizeHeatValues(values) : null;
+        const positives = weighted ? values.filter(v => v > 0) : [];
+        const minVal = positives.length ? Math.min(...positives) : 0;
+        const maxVal = positives.length ? Math.max(...positives) : 0;
+
+        const heatData = source.map((m, i) => {
+            const intensity = weighted ? intensities[i] : 0.58;
+            return [m.lat, m.lng, intensity];
+        });
+
+        const layer = L.heatLayer(heatData, computeHeatLayerOptions(source, palette, { weighted }));
+        layer._isHeatLayer = true;
+
+        let rangeText = '';
+        if (palette === 'density') {
+            rangeText = `${source.length.toLocaleString('fa-IR')} نقطه — هاله گرم‌تر = تراکم بیشتر`;
+        } else if (minVal && maxVal) {
+            rangeText = `از ${formatMapMoney(minVal, perSqm)} تا ${formatMapMoney(maxVal, perSqm)}`;
+        } else {
+            rangeText = 'داده کافی برای وزن‌دهی نیست';
+        }
+
+        return {
+            layer,
+            stats: { rangeText, minVal, maxVal },
+        };
     }
 
     function buildMarkerLayer(source, { colorMode = 'seller' } = {}) {
@@ -2927,10 +3093,10 @@ function initMap(allMarkers, settings) {
             const lng2 = sw.lng + (cell.j + 1) * lngStep - lngStep * inset;
             const rect = L.rectangle([[lat1, lng1], [lat2, lng2]], {
                 fillColor: gridFillColor(intensity),
-                fillOpacity: 0.32 + intensity * 0.48,
+                fillOpacity: 0.26 + intensity * 0.54,
                 color: gridFillColor(intensity),
-                weight: 1.5,
-                opacity: 0.5 + intensity * 0.35,
+                weight: 1.25,
+                opacity: 0.42 + intensity * 0.38,
             });
             const sample = cell.markers[0];
             if (sample) rect.bindPopup(buildMapMarkerPopup(sample), popupOpts);
@@ -2966,11 +3132,17 @@ function initMap(allMarkers, settings) {
         const value = buildValueMarkerLayer(visible);
         const fullDeposit = buildValueMarkerLayer(visible, { valueKey: 'full_deposit' });
         const grid = buildGridLayer(visible);
+        const heatDensity = buildHeatLayer(visible, { palette: 'density' });
+        const heatPrice = buildHeatLayer(visible, { palette: 'price', valueKey: 'filter_value' });
+        const heatPps = buildHeatLayer(visible, { palette: 'pps', valueKey: 'pps', perSqm: true });
 
         layerStats = {
             value: value.stats,
             full_deposit: fullDeposit.stats,
             grid: grid.stats,
+            heat_density: heatDensity.stats,
+            heat_price: heatPrice.stats,
+            heat_pps: heatPps.stats,
             market: {
                 under: visible.filter(m => m.market_tier === 'under').length,
                 fair: visible.filter(m => m.market_tier === 'fair').length,
@@ -2984,6 +3156,9 @@ function initMap(allMarkers, settings) {
             value: value.layer,
             full_deposit: fullDeposit.layer,
             grid: grid.layer,
+            heat_density: heatDensity.layer,
+            heat_price: heatPrice.layer,
+            heat_pps: heatPps.layer,
             _count: visible.length,
             _visible: visible,
         };
@@ -3199,7 +3374,8 @@ function initMap(allMarkers, settings) {
 
     layers = buildLayers();
     syncMarkerRegistry();
-    map.addLayer(layers.markers);
+    if (!layers[activeMode]) activeMode = 'markers';
+    map.addLayer(layers[activeMode] || layers.markers);
 
     if (fullBounds.isValid()) {
         if (allMarkers.length === 1) {
@@ -3233,6 +3409,9 @@ function initMap(allMarkers, settings) {
         value: { badge: 'رنگ قیمت' },
         full_deposit: { badge: 'رهن کامل' },
         grid: { badge: 'شبکه' },
+        heat_density: { badge: 'هیت تراکم' },
+        heat_price: { badge: 'هیت قیمت' },
+        heat_pps: { badge: 'هیت متر' },
     };
 
     function marketLegendHtml() {
@@ -3266,11 +3445,15 @@ function initMap(allMarkers, settings) {
         </div>`;
     }
 
+    const filterValueLabel = settings?.filter_value_label || settings?.filterValueLabel || 'قیمت';
     const legendTemplates = {
         value: () => `${buildMapLegendScale('value', layerStats.value)}<span class="mk-map-legend-hint">کلیک روی هر نقطه برای جزئیات</span>`,
         full_deposit: () => `${buildMapLegendScale('full_deposit', layerStats.full_deposit)}<span class="mk-map-legend-hint">کلیک روی هر نقطه برای جزئیات</span>`,
         grid: () => buildMapLegendScale('grid', layerStats.grid),
         market: () => marketLegendHtml(),
+        heat_density: () => `${buildMapLegendScale('heat_density', layerStats.heat_density)}<span class="mk-map-legend-hint">هاله نرم — تراکم آگهی</span>`,
+        heat_price: () => `${buildMapLegendScale('heat_price', layerStats.heat_price)}<span class="mk-map-legend-hint">وزن بر اساس ${filterValueLabel}</span>`,
+        heat_pps: () => `${buildMapLegendScale('heat_pps', layerStats.heat_pps)}<span class="mk-map-legend-hint">قیمت هر متر مربع</span>`,
     };
 
     function updateMapChrome(mode) {
@@ -3287,7 +3470,12 @@ function initMap(allMarkers, settings) {
             else if (mode === 'market') legendBody.innerHTML = marketLegendHtml();
             else legendBody.innerHTML = legendTemplates[mode]?.() || markersLegendHtml();
         }
-        if (legend) legend.dataset.mode = mode;
+        if (legend) {
+            legend.dataset.mode = mode;
+            legend.classList.toggle('mk-map-legend--heat', mode.startsWith('heat_'));
+        }
+        const stageEl = document.querySelector('.mk-map-stage');
+        if (stageEl) stageEl.dataset.heatMode = mode.startsWith('heat_') ? 'true' : 'false';
         modeButtons.forEach(btn => {
             const on = btn.dataset.mode === mode;
             btn.classList.toggle('is-active', on);
@@ -3340,5 +3528,5 @@ function initMap(allMarkers, settings) {
 
     setupAdvancedFilters();
     setupSplitList();
-    updateMapChrome('markers');
+    updateMapChrome(activeMode);
 }

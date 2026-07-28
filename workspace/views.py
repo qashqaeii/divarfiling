@@ -1454,6 +1454,7 @@ def _build_map_context(
     filter_value_label = 'رهن کامل' if is_rent_only else 'قیمت'
     map_config = {
         'map_cluster': settings.map_cluster,
+        'map_heatmap': settings.map_heatmap,
         'focusMaxZoom': 17,
         'clusterDisableZoom': 15,
         'mapModes': True,

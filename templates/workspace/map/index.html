@@ -9,7 +9,7 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=18">
+<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=19">
 {% if is_multi_map %}
 <link rel="stylesheet" href="{% static 'workspace/css/multi-listings.css' %}?v=1">
 {% endif %}
@@ -214,6 +214,30 @@
                             </button>
 
                             {% endif %}
+
+                            <button type="button" class="mk-map-mode" data-mode="heat_density" aria-pressed="false" title="هیت‌مپ نرم تراکم آگهی — گرادیان فیروزه‌ای تا قرمز">
+
+                                <span class="mk-map-mode-icon" aria-hidden="true"><i class="fas fa-fire"></i></span>
+
+                                <span class="mk-map-mode-label">هیت تراکم</span>
+
+                            </button>
+
+                            <button type="button" class="mk-map-mode" data-mode="heat_price" aria-pressed="false" title="هیت‌مپ وزن‌دار قیمت — مناطق گران‌تر پررنگ‌تر">
+
+                                <span class="mk-map-mode-icon" aria-hidden="true"><i class="fas fa-temperature-high"></i></span>
+
+                                <span class="mk-map-mode-label">هیت قیمت</span>
+
+                            </button>
+
+                            <button type="button" class="mk-map-mode" data-mode="heat_pps" aria-pressed="false" title="هیت‌مپ قیمت هر متر — مقایسه منطقه‌ای">
+
+                                <span class="mk-map-mode-icon" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+
+                                <span class="mk-map-mode-label">هیت متر</span>
+
+                            </button>
 
                             <button type="button" class="mk-map-mode" data-mode="grid" aria-pressed="false" title="شبکه تراکم منطقه‌ای">
 
@@ -523,6 +547,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script src="{% static 'workspace/js/vendor/leaflet-heat.js' %}"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
 

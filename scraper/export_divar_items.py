@@ -1524,13 +1524,9 @@ def _filter_by_advertiser_type(
     all | consultant | personal | genuine_personal
     — هم‌تراز منطق پلتفرم (advertiser_signal).
     """
-    import sys
-    from pathlib import Path
+    from workspace.services.advertiser_signal_loader import ensure_advertiser_signal_importable
 
-    _src = Path(__file__).resolve().parents[2] / "src"
-    _src_str = str(_src)
-    if _src_str not in sys.path:
-        sys.path.insert(0, _src_str)
+    ensure_advertiser_signal_importable()
 
     from advertiser_signal import (
         normalize_filter_value,

@@ -1,15 +1,11 @@
-"""تشخیص سیگنال آگهی‌دهنده — wrapper جنگو روی ماژول مشترک src/advertiser_signal."""
+"""تشخیص سیگنال آگهی‌دهنده — wrapper جنگو روی ماژول مشترک advertiser_signal."""
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from typing import Dict
 
-# مسیر src در ریشهٔ ریپو — منطق خالص بدون وابستگی به Django
-_SRC_DIR = Path(__file__).resolve().parents[3] / 'src'
-_src_str = str(_SRC_DIR)
-if _src_str not in sys.path:
-    sys.path.insert(0, _src_str)
+from workspace.services.advertiser_signal_loader import ensure_advertiser_signal_importable
+
+ensure_advertiser_signal_importable()
 
 from advertiser_signal import (  # noqa: E402
     ADVERTISER_FILTER_ALL,

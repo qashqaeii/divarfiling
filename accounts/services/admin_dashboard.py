@@ -7,8 +7,8 @@ from typing import Any, Dict, List
 
 import jdatetime
 from django.contrib.auth import get_user_model
-from django.db.models import Avg, Count, Exists, Max, OuterRef, Q, Sum
-from django.db.models.functions import TruncDate
+from django.db.models import Avg, Count, Exists, F, Max, OuterRef, Q, Subquery, Sum
+from django.db.models.functions import Coalesce, TruncDate
 from django.utils import timezone
 
 from workspace.services.jalali_input import to_persian_digits
@@ -1035,35 +1035,56 @@ def get_sales_center_stats() -> Dict[str, Any]:
     }
 
 
+def _paid_orders_qs():
+    return Order.objects.filter(status='paid')
+
+
+def _first_paid_order_pk_subquery():
+    """اولین سفارش پرداخت‌شدهٔ هر کاربر (بر اساس paid_at سپس created_at)."""
+    return (
+        Order.objects.filter(user_id=OuterRef('user_id'), status='paid')
+        .order_by(Coalesce('paid_at', 'created_at').asc(), 'created_at')
+        .values('pk')[:1]
+    )
+
+
+def get_repeat_purchase_orders_qs():
+    """
+    سفارش‌های «تمدید/خرید مجدد»: همهٔ سفارش‌های پرداخت‌شده به‌جز اولین خرید هر کاربر.
+
+    شامل:
+    - تمدید رسمی همان کلید (renewal_license)
+    - خرید لایسنس جدید بعد از خرید اول
+    """
+    return (
+        _paid_orders_qs()
+        .annotate(first_paid_pk=Subquery(_first_paid_order_pk_subquery()))
+        .exclude(pk=F('first_paid_pk'))
+    )
+
+
 def get_licensing_center_stats() -> Dict[str, Any]:
-    """آمار مرکز لایسنس + نرخ تمدید واقعی (سفارش با renewal_license)."""
+    """آمار مرکز لایسنس + نرخ تمدید (تمدید رسمی یا خرید مجدد لایسنس)."""
     now = timezone.now()
     today = _today()
     week_end = today + timedelta(days=7)
     month_ago = today - timedelta(days=30)
-    paid = Order.objects.filter(status='paid')
-    paid_renewals = paid.filter(renewal_license__isnull=False)
-    paid_purchases = paid.filter(renewal_license__isnull=True)
+    paid = _paid_orders_qs()
+    repeat_qs = get_repeat_purchase_orders_qs()
 
-    buyers_unique = paid_purchases.values('user_id').distinct().count()
+    buyers_unique = paid.values('user_id').distinct().count()
     renewed_users = (
-        paid_purchases.filter(
-            Exists(
-                Order.objects.filter(
-                    user_id=OuterRef('user_id'),
-                    status='paid',
-                    renewal_license__isnull=False,
-                )
-            )
-        )
-        .values('user_id')
-        .distinct()
+        paid.values('user_id')
+        .annotate(paid_count=Count('id'))
+        .filter(paid_count__gte=2)
         .count()
     )
-    renewal_orders = paid_renewals.count()
+    renewal_orders = repeat_qs.count()
+    formal_renewal_orders = repeat_qs.filter(renewal_license__isnull=False).count()
+    new_key_repurchase_orders = repeat_qs.filter(renewal_license__isnull=True).count()
     renewal_rate_pct = round((renewed_users / buyers_unique) * 100, 1) if buyers_unique else 0.0
-    renewal_revenue = int(paid_renewals.aggregate(t=Sum('amount'))['t'] or 0)
-    renewals_month = paid_renewals.filter(
+    renewal_revenue = int(repeat_qs.aggregate(t=Sum('amount'))['t'] or 0)
+    renewals_month = repeat_qs.filter(
         Q(paid_at__date__gte=month_ago) | Q(paid_at__isnull=True, created_at__date__gte=month_ago)
     ).count()
 
@@ -1088,6 +1109,8 @@ def get_licensing_center_stats() -> Dict[str, Any]:
         'buyers_unique': buyers_unique,
         'renewed_users': renewed_users,
         'renewal_orders': renewal_orders,
+        'formal_renewal_orders': formal_renewal_orders,
+        'new_key_repurchase_orders': new_key_repurchase_orders,
         'renewal_rate_pct': renewal_rate_pct,
         'renewal_revenue': renewal_revenue,
         'renewals_month': renewals_month,
@@ -1095,9 +1118,9 @@ def get_licensing_center_stats() -> Dict[str, Any]:
 
 
 def get_recent_renewal_orders(limit: int = TABLE_FETCH_LIMIT):
-    """آخرین سفارش‌های تمدید پرداخت‌شده برای جدول داشبورد."""
+    """آخرین تمدیدها / خریدهای مجدد برای جدول داشبورد."""
     return (
-        Order.objects.filter(status='paid', renewal_license__isnull=False)
+        get_repeat_purchase_orders_qs()
         .select_related('user', 'product', 'plan', 'renewal_license')
         .order_by('-paid_at', '-created_at')[:limit]
     )

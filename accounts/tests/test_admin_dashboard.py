@@ -102,6 +102,7 @@ class AdminDashboardServiceTests(TestCase):
         self.assertEqual(sales.model.__name__, 'AffiliateSale')
 
     def test_licensing_renewal_stats_bought_and_renewed(self):
+        from datetime import timedelta
         from decimal import Decimal
 
         from django.utils import timezone
@@ -121,6 +122,7 @@ class AdminDashboardServiceTests(TestCase):
         )
         buyer = User.objects.create_user(username='kpi_buyer', password='x', phone='09123334455')
         only_buyer = User.objects.create_user(username='kpi_only', password='x', phone='09123334456')
+        repurchase_user = User.objects.create_user(username='kpi_rep', password='x', phone='09123334457')
 
         first = Order.objects.create(
             user=buyer, product=product, plan=plan, amount=plan.price, status='pending',
@@ -130,9 +132,10 @@ class AdminDashboardServiceTests(TestCase):
 
         Order.objects.create(
             user=only_buyer, product=product, plan=plan, amount=plan.price, status='paid',
-            paid_at=timezone.now(),
+            paid_at=timezone.now() - timedelta(days=40),
         )
 
+        # Formal same-key renewal
         renewal = Order.objects.create(
             user=buyer,
             product=product,
@@ -144,20 +147,34 @@ class AdminDashboardServiceTests(TestCase):
         )
         fulfill_order_after_payment(renewal)
 
+        # New-key repurchase (no renewal_license)
+        Order.objects.create(
+            user=repurchase_user, product=product, plan=plan, amount=plan.price, status='paid',
+            paid_at=timezone.now() - timedelta(days=20),
+        )
+        Order.objects.create(
+            user=repurchase_user, product=product, plan=plan, amount=Decimal('80000'), status='paid',
+            paid_at=timezone.now(),
+        )
+
         stats = get_licensing_center_stats()
-        self.assertEqual(stats['buyers_unique'], 2)
-        self.assertEqual(stats['renewed_users'], 1)
-        self.assertEqual(stats['renewal_orders'], 1)
-        self.assertEqual(stats['renewal_rate_pct'], 50.0)
-        self.assertEqual(stats['renewal_revenue'], 90000)
+        self.assertEqual(stats['buyers_unique'], 3)
+        self.assertEqual(stats['renewed_users'], 2)
+        self.assertEqual(stats['renewal_orders'], 2)
+        self.assertEqual(stats['formal_renewal_orders'], 1)
+        self.assertEqual(stats['new_key_repurchase_orders'], 1)
+        self.assertEqual(stats['renewal_rate_pct'], 66.7)
+        self.assertEqual(stats['renewal_revenue'], 170000)
 
         recent = list(get_recent_renewal_orders())
-        self.assertEqual(len(recent), 1)
-        self.assertEqual(recent[0].user_id, buyer.id)
+        self.assertEqual(len(recent), 2)
+        kinds = {(bool(o.renewal_license_id), o.user_id) for o in recent}
+        self.assertIn((True, buyer.id), kinds)
+        self.assertIn((False, repurchase_user.id), kinds)
 
         ctx = get_admin_dashboard_context(days=30)
         self.assertIn('recent_renewals', ctx)
-        self.assertEqual(ctx['licensing_stats']['renewed_users'], 1)
+        self.assertEqual(ctx['licensing_stats']['renewed_users'], 2)
 
 
 class AdminDashboardViewTests(TestCase):

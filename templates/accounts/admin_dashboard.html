@@ -652,32 +652,40 @@
                         <div class="ecc-card-head">
                             <div>
                                 <h3><i class="fas fa-rotate"></i> تمدید اکانت</h3>
-                                <p>از بین خریداران، چند نفر لایسنس را تمدید کرده‌اند</p>
+                                <p>تمدید همان کلید یا خرید مجدد لایسنس جدید — هر خرید بعد از اولین سفارش</p>
                             </div>
                         </div>
                         <div class="ecc-metrics-row" style="margin-bottom:1rem">
                             <div class="ecc-metric-pill">
-                                <em>خریدار (اولیه)</em>
+                                <em>خریدار</em>
                                 <strong data-count-up="{{ licensing_stats.buyers_unique }}">۰</strong>
                             </div>
                             <div class="ecc-metric-pill">
-                                <em>تمدید کرده‌اند</em>
+                                <em>خرید مجدد کرده‌اند</em>
                                 <strong data-count-up="{{ licensing_stats.renewed_users }}">۰</strong>
                             </div>
                             <div class="ecc-metric-pill">
-                                <em>نرخ تمدید</em>
+                                <em>نرخ بازگشت</em>
                                 <strong>{{ licensing_stats.renewal_rate_pct|to_persian_digits }}٪</strong>
                             </div>
                             <div class="ecc-metric-pill">
-                                <em>سفارش تمدید</em>
+                                <em>سفارش مجدد</em>
                                 <strong data-count-up="{{ licensing_stats.renewal_orders }}">۰</strong>
                             </div>
                             <div class="ecc-metric-pill">
-                                <em>تمدید ۳۰ روز</em>
+                                <em>تمدید همان کلید</em>
+                                <strong data-count-up="{{ licensing_stats.formal_renewal_orders }}">۰</strong>
+                            </div>
+                            <div class="ecc-metric-pill">
+                                <em>لایسنس جدید</em>
+                                <strong data-count-up="{{ licensing_stats.new_key_repurchase_orders }}">۰</strong>
+                            </div>
+                            <div class="ecc-metric-pill">
+                                <em>مجدد ۳۰ روز</em>
                                 <strong data-count-up="{{ licensing_stats.renewals_month }}">۰</strong>
                             </div>
                             <div class="ecc-metric-pill">
-                                <em>درآمد تمدید</em>
+                                <em>درآمد مجدد</em>
                                 <strong>{{ licensing_stats.renewal_revenue|currency }} ت</strong>
                             </div>
                         </div>
@@ -688,8 +696,9 @@
                                         <tr>
                                             <th>کاربر</th>
                                             <th>محصول / پلن</th>
+                                            <th>نوع</th>
                                             <th>مبلغ</th>
-                                            <th>تاریخ تمدید</th>
+                                            <th>تاریخ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -703,11 +712,18 @@
                                                 {{ order.product.title }}
                                                 <small>{{ order.plan.name }}</small>
                                             </td>
+                                            <td>
+                                                {% if order.renewal_license_id %}
+                                                <span class="adm-badge adm-badge--paid">تمدید همان کلید</span>
+                                                {% else %}
+                                                <span class="adm-badge adm-badge--pending">لایسنس جدید</span>
+                                                {% endif %}
+                                            </td>
                                             <td>{{ order.amount|currency }} ت</td>
-                                            <td>{% if order.paid_at %}{{ order.paid_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}{% else %}—{% endif %}</td>
+                                            <td>{% if order.paid_at %}{{ order.paid_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}{% else %}{{ order.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}{% endif %}</td>
                                         </tr>
                                         {% empty %}
-                                        <tr><td colspan="4" class="adm-empty">هنوز تمدیدی ثبت نشده</td></tr>
+                                        <tr><td colspan="5" class="adm-empty">هنوز خرید مجددی ثبت نشده</td></tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>

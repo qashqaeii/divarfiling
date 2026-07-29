@@ -34,7 +34,7 @@
                         <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه آگهی‌ها</a>
                         <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-download" aria-hidden="true"></i> خروجی CSV</a>
                         {% if filing_video.available %}
-                        <a href="{% url 'workspace:dataset_list' %}?open=video#filing-video" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-circle-play" aria-hidden="true"></i> آموزش ویدیویی</a>
+                        <a href="{% url 'shop:education' %}#edu-filing-video-title" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-circle-play" aria-hidden="true"></i> آموزش ویدیویی</a>
                         {% endif %}
                         <button type="button" class="mk-ds-mobile-more-item" role="menuitem" data-modal-open="modal-rename"><i class="fas fa-pen" aria-hidden="true"></i> تغییر نام</button>
                         {% if consultant_count %}
@@ -135,7 +135,7 @@
                     </div>
                     <div class="mk-ds-action-group" role="group" aria-label="ابزارها">
                         {% if filing_video.available %}
-                        <a href="{% url 'workspace:dataset_list' %}?open=video#filing-video" class="mk-ds-action mk-ds-action-tool" title="آموزش" aria-label="آموزش ویدیویی">
+                        <a href="{% url 'shop:education' %}#edu-filing-video-title" class="mk-ds-action mk-ds-action-tool" title="آموزش" aria-label="آموزش ویدیویی">
                             <i class="fas fa-circle-play" aria-hidden="true"></i>
                         </a>
                         {% endif %}
@@ -164,15 +164,6 @@
                     <div class="mk-ds-command-text">
                         <div class="mk-ds-command-title-row">
                             <h1 class="mk-ds-command-title">{{ dataset.name }}</h1>
-                            <span class="mk-ds-coverage{% if is_listing_filtered %} is-filtered{% endif %}"
-                                  title="{% if is_listing_filtered %}نمایش فیلترشده{% else %}همه آگهی‌ها{% endif %}"
-                                  aria-label="{{ filtered_count|intcomma }} از {{ total_count|intcomma }} آگهی">
-                                <span class="mk-ds-coverage-bar" style="--mk-filter-pct: {{ filter_pct }};" aria-hidden="true"></span>
-                                <strong>{{ filtered_count|intcomma }}</strong>
-                                <span class="mk-ds-coverage-sep">از</span>
-                                <span>{{ total_count|intcomma }}</span>
-                                <span class="mk-ds-coverage-lbl">{% if is_listing_filtered %}فیلترشده{% else %}همه آگهی{% endif %}</span>
-                            </span>
                         </div>
                         <div class="mk-ds-command-chips">
                             {% if dataset.city %}

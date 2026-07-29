@@ -339,29 +339,43 @@
                     <p>تمام فیلدهای استخراج‌شده از دیوار</p>
                 </header>
                 <div class="crm-prop-panel-body">
-                    {% for section, fields in sections.items %}
-                    {% if fields %}
-                    <section class="ws-ld-dossier-section">
+                    {% if sections %}
+                    <div class="ws-ld-dossier-grid">
+                        {% for section, fields in sections.items %}
+                        {% if fields and section != 'متن' %}
+                        <section class="ws-ld-dossier-section">
+                            <h3 class="ws-ld-dossier-section-title">
+                                {% if section == 'مالی' %}<i class="fas fa-coins" aria-hidden="true"></i>
+                                {% elif section == 'ملک' %}{% include 'includes/icon_slot.html' with decor='building' size='inline' only %}
+                                {% elif section == 'مکان' %}{% include 'includes/icon_slot.html' with decor='map_pin' size='inline' only %}
+                                {% elif section == 'تماس' %}{% include 'includes/icon_slot.html' with decor='phone' size='inline' only %}
+                                {% else %}<i class="fas fa-circle-info" aria-hidden="true"></i>{% endif %}
+                                {{ section }}
+                            </h3>
+                            {% with section_rows|dict_get:section as rows %}
+                            {% include 'workspace/includes/field_list.html' with fields=rows %}
+                            {% endwith %}
+                        </section>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% with section_rows|dict_get:'متن' as text_rows %}
+                    {% if text_rows %}
+                    <section class="ws-ld-dossier-section ws-ld-dossier-section--full">
                         <h3 class="ws-ld-dossier-section-title">
-                            {% if section == 'مالی' %}<i class="fas fa-coins" aria-hidden="true"></i>
-                            {% elif section == 'ملک' %}{% include 'includes/icon_slot.html' with decor='building' size='inline' only %}
-                            {% elif section == 'مکان' %}{% include 'includes/icon_slot.html' with decor='map_pin' size='inline' only %}
-                            {% elif section == 'متن' %}<i class="fas fa-align-right" aria-hidden="true"></i>
-                            {% elif section == 'تماس' %}{% include 'includes/icon_slot.html' with decor='phone' size='inline' only %}
-                            {% else %}<i class="fas fa-circle-info" aria-hidden="true"></i>{% endif %}
-                            {{ section }}
+                            <i class="fas fa-align-right" aria-hidden="true"></i>
+                            متن
                         </h3>
-                        {% with section_rows|dict_get:section as rows %}
-                        {% include 'workspace/includes/field_list.html' with fields=rows %}
-                        {% endwith %}
+                        {% include 'workspace/includes/field_list.html' with fields=text_rows %}
                     </section>
                     {% endif %}
-                    {% empty %}
+                    {% endwith %}
+                    {% else %}
                     <div class="crm-prop-empty crm-prop-empty--pro">
                         <div class="crm-prop-empty-icon"><i class="fas fa-inbox"></i></div>
                         <p>فیلدی برای نمایش ثبت نشده</p>
                     </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
             </div>
 

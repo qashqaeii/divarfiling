@@ -56,10 +56,10 @@ class DatasetListFilingVideoTests(TestCase):
             status='active', max_activations=1,
         )
 
-    def test_dataset_list_shows_video_band_when_available(self):
+    def test_dataset_list_hides_video_band(self):
         self.client.login(username='viduser', password='pass1234')
         with patch('workspace.services.filing_video.filing_video_exists', return_value=True):
             resp = self.client.get(reverse('workspace:dataset_list'))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'id="filing-video"')
-        self.assertContains(resp, 'divar-filing.mp4')
+        self.assertNotContains(resp, 'mk-filing-video-band')
+        self.assertNotContains(resp, 'id="filing-video"')

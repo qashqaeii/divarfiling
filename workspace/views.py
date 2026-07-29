@@ -255,7 +255,6 @@ def _dataset_list_context(request, extra=None):
         'has_filters': any(filters.get(k) for k in ('q', 'tx', 'city', 'format')),
         'view_mode': filters.get('view') or 'auto',
         'page_query': _dataset_page_query(request),
-        'filing_video': get_filing_video_context(),
     }
     if extra:
         ctx.update(extra)

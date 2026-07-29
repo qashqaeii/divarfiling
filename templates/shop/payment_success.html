@@ -6,7 +6,7 @@
 {% block body_class %}mk-checkout-page mk-checkout-page--success{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=19">
 {% if can_download or app_downloads.android.available %}
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=3">
 {% endif %}
@@ -57,11 +57,9 @@
                         {% if licenses %}
                         <p class="ck-success-lead">
                             {% if is_renewal %}
-                            همان کلید لایسنس شما فعال ماند — تاریخ اعتبار به‌روز شد.
-                            {% elif licenses|length > 1 %}
-                            {{ licenses|length }} کلید لایسنس برای شما صادر شد — آماده کپی و فعال‌سازی.
+                            همان کلید لایسنس شما فعال ماند — تاریخ اعتبار به‌روز شد. معمولاً نیازی به فعال‌سازی مجدد نیست.
                             {% else %}
-                            کلید لایسنس شما آماده است — کپی کنید و در ربات یا اپ فعال کنید.
+                            فقط ۳ قدم تا فعال‌سازی ربات — به ترتیب انجام دهید.
                             {% endif %}
                         </p>
                         {% else %}
@@ -69,27 +67,141 @@
                         {% endif %}
                     </section>
 
-                    {% if licenses %}
+                    {% if licenses and not is_renewal %}
+                    <section class="ck-next-steps" aria-labelledby="ck-next-heading" data-next-steps>
+                        <header class="ck-next-steps-head">
+                            <h2 id="ck-next-heading">الان چه کار کنم؟</h2>
+                            <p>هر قدم را تمام کنید، بعد بروید سراغ بعدی</p>
+                        </header>
+
+                        <ol class="ck-next-steps-list">
+                            <li class="ck-next-step" data-step="1" id="ck-step-copy">
+                                <div class="ck-next-step-rail" aria-hidden="true">
+                                    <span class="ck-next-step-num">۱</span>
+                                    <span class="ck-next-step-line"></span>
+                                </div>
+                                <div class="ck-next-step-body">
+                                    <h3>کلید لایسنس را کپی کنید</h3>
+                                    <p class="ck-next-step-desc">این کلید را نگه دارید — در قدم ۳ داخل ربات ویندوز Paste می‌کنید.</p>
+
+                                    <div class="ck-license-list">
+                                        {% for lic in licenses %}
+                                        <article class="ck-license-item">
+                                            {% if licenses|length > 1 %}
+                                            <div class="ck-license-item-meta">
+                                                <span class="ck-license-item-num">#{{ forloop.counter }}</span>
+                                                <span class="ck-license-item-plan">{{ lic.plan.name }}</span>
+                                            </div>
+                                            {% endif %}
+                                            <div class="ck-license-key-wrap">
+                                                <code class="ck-license-key" id="license-key-{{ forloop.counter }}">{{ lic.license_key }}</code>
+                                                <button type="button" class="ck-license-copy" data-copy-target="license-key-{{ forloop.counter }}" data-mark-step="1" aria-label="کپی کلید لایسنس">
+                                                    <i class="fas fa-copy" aria-hidden="true"></i>
+                                                    <span>کپی کلید</span>
+                                                </button>
+                                            </div>
+                                        </article>
+                                        {% endfor %}
+                                    </div>
+
+                                    <p class="ck-success-hint">
+                                        <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                                        کلید را با کسی به اشتراک نگذارید. بعداً هم از میزکار → لایسنس‌ها قابل مشاهده است.
+                                    </p>
+                                </div>
+                            </li>
+
+                            <li class="ck-next-step" data-step="2" id="ck-step-download">
+                                <div class="ck-next-step-rail" aria-hidden="true">
+                                    <span class="ck-next-step-num">۲</span>
+                                    <span class="ck-next-step-line"></span>
+                                </div>
+                                <div class="ck-next-step-body">
+                                    <h3>ربات ویندوز را دانلود و نصب کنید</h3>
+                                    <p class="ck-next-step-desc">فایل نصب‌کننده را دانلود کنید، اجرا کنید و نصب را تمام کنید. بعد ربات را باز کنید.</p>
+
+                                    {% if can_download %}
+                                    <div class="ck-next-step-actions">
+                                        <a href="{% url 'payment:download' order.id %}" class="ck-success-btn ck-success-btn--primary ck-success-btn--download" data-mark-step="2">
+                                            <i class="fab fa-windows" aria-hidden="true"></i>
+                                            دانلود ربات ویندوز
+                                        </a>
+                                        {% if download_filename %}
+                                        <span class="ck-next-file" dir="ltr">{{ download_filename }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <ul class="ck-next-tips">
+                                        <li>اگر ویندوز هشدار SmartScreen داد: More info → Run anyway</li>
+                                        <li>نصب را کامل کنید، سپس ربات را از منوی Start یا دسکتاپ باز کنید</li>
+                                    </ul>
+                                    {% else %}
+                                    <p class="ck-next-step-warn">
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i>
+                                        لینک دانلود فعلاً آماده نیست — از میزکار → دانلود اپ‌ها پیگیری کنید.
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </li>
+
+                            <li class="ck-next-step" data-step="3" id="ck-step-activate">
+                                <div class="ck-next-step-rail" aria-hidden="true">
+                                    <span class="ck-next-step-num">۳</span>
+                                </div>
+                                <div class="ck-next-step-body">
+                                    <h3>کلید را در ربات فعال کنید</h3>
+                                    <p class="ck-next-step-desc">داخل اپ ویندوز این کارها را انجام دهید:</p>
+                                    <ol class="ck-activate-howto">
+                                        <li><span class="ck-activate-howto-num">الف</span><span>ربات را باز کنید</span></li>
+                                        <li><span class="ck-activate-howto-num">ب</span><span>به تب <strong>لایسنس</strong> بروید</span></li>
+                                        <li><span class="ck-activate-howto-num">ج</span><span>کلید کپی‌شده را Paste کنید</span></li>
+                                        <li><span class="ck-activate-howto-num">د</span><span>دکمه <strong>فعال‌سازی</strong> را بزنید</span></li>
+                                    </ol>
+                                    <div class="ck-next-step-actions">
+                                        <a href="{% url 'license_guide' %}" class="ck-success-btn ck-success-btn--ghost">
+                                            <i class="fas fa-book-open" aria-hidden="true"></i>
+                                            راهنمای تصویری فعال‌سازی
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                        </ol>
+                    </section>
+
+                    {% if app_downloads.android.available %}
+                    <aside class="ck-success-side-note" aria-label="اپ اندروید">
+                        <i class="fab fa-android" aria-hidden="true"></i>
+                        <div>
+                            <strong>اپ اندروید هم دارید؟</strong>
+                            <p>با همان حساب میزکار وارد شوید — نیازی به Paste کلید نیست.</p>
+                        </div>
+                        <a href="{% url 'android_app_download' %}" class="ck-success-btn ck-success-btn--ghost ck-success-btn--sm">دانلود APK</a>
+                    </aside>
+                    {% endif %}
+
+                    <nav class="ck-success-actions" aria-label="اقدامات بعدی">
+                        <a href="{% url 'dashboard' %}?tab=licenses#licenses" class="ck-success-btn ck-success-btn--ghost">
+                            <i class="fas fa-key" aria-hidden="true"></i>
+                            مشاهده کلید در میزکار
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="ck-success-btn ck-success-btn--ghost">
+                            <i class="fas fa-gauge-high" aria-hidden="true"></i>
+                            رفتن به میزکار
+                        </a>
+                    </nav>
+
+                    {% elif licenses and is_renewal %}
                     <section class="ck-success-card ck-success-licenses" aria-labelledby="ck-license-heading">
                         <header class="ck-success-card-head">
                             <span class="ck-success-card-icon"><i class="fas fa-key"></i></span>
                             <div>
-                                <h2 id="ck-license-heading">
-                                    {% if is_renewal %}کلید تمدید‌شده{% elif licenses|length > 1 %}کلیدهای لایسنس{% else %}کلید لایسنس{% endif %}
-                                </h2>
-                                <p>{% if is_renewal %}همان کلید قبلی — دستگاه‌های فعال‌سازی‌شده حفظ می‌شوند.{% else %}این کلیدها را در جای امن نگه دارید — هر کلید یک دستگاه.{% endif %}</p>
+                                <h2 id="ck-license-heading">کلید تمدید‌شده</h2>
+                                <p>همان کلید قبلی — دستگاه‌های فعال‌سازی‌شده حفظ می‌شوند.</p>
                             </div>
                         </header>
 
                         <div class="ck-license-list">
                             {% for lic in licenses %}
                             <article class="ck-license-item">
-                                {% if licenses|length > 1 %}
-                                <div class="ck-license-item-meta">
-                                    <span class="ck-license-item-num">#{{ forloop.counter }}</span>
-                                    <span class="ck-license-item-plan">{{ lic.plan.name }}</span>
-                                </div>
-                                {% endif %}
                                 <div class="ck-license-key-wrap">
                                     <code class="ck-license-key" id="license-key-{{ forloop.counter }}">{{ lic.license_key }}</code>
                                     <button type="button" class="ck-license-copy" data-copy-target="license-key-{{ forloop.counter }}" aria-label="کپی کلید لایسنس">
@@ -102,10 +214,24 @@
                         </div>
 
                         <p class="ck-success-hint">
-                            <i class="fas fa-shield-halved" aria-hidden="true"></i>
-                            کلید را با کسی به اشتراک نگذارید.
+                            <i class="fas fa-circle-info" aria-hidden="true"></i>
+                            اگر ربات از قبل فعال بوده، معمولاً نیازی به Paste مجدد نیست.
                         </p>
                     </section>
+
+                    <nav class="ck-success-actions" aria-label="اقدامات بعدی">
+                        <a href="{% url 'dashboard' %}" class="ck-success-btn ck-success-btn--primary">
+                            <i class="fas fa-gauge-high" aria-hidden="true"></i>
+                            رفتن به میزکار
+                        </a>
+                        {% if can_download %}
+                        <a href="{% url 'payment:download' order.id %}" class="ck-success-btn ck-success-btn--ghost">
+                            <i class="fab fa-windows" aria-hidden="true"></i>
+                            دانلود مجدد ربات
+                        </a>
+                        {% endif %}
+                    </nav>
+
                     {% else %}
                     <section class="ck-success-card ck-success-claim" aria-labelledby="ck-claim-heading">
                         <header class="ck-success-card-head">
@@ -135,12 +261,17 @@
                             </li>
                         </ol>
 
+                        {% if can_download %}
+                        <a href="{% url 'payment:download' order.id %}" class="ck-success-btn ck-success-btn--primary ck-success-btn--download" style="margin-bottom:0.65rem">
+                            <i class="fab fa-windows" aria-hidden="true"></i>
+                            دانلود ربات ویندوز
+                        </a>
+                        {% endif %}
                         <a href="{% url 'dashboard' %}?tab=licenses#licenses" class="ck-success-btn ck-success-btn--primary">
                             <i class="fas fa-key" aria-hidden="true"></i>
                             رفتن به صدور لایسنس
                         </a>
                     </section>
-                    {% endif %}
 
                     {% if can_download or app_downloads.android.available %}
                     <section class="ck-success-download" aria-label="دانلود اپ و ربات">
@@ -151,15 +282,12 @@
                     {% endif %}
 
                     <nav class="ck-success-actions" aria-label="اقدامات بعدی">
-                        <a href="{% url 'dashboard' %}" class="ck-success-btn ck-success-btn--primary">
-                            <i class="fas fa-gauge-high" aria-hidden="true"></i>
-                            رفتن به میزکار
-                        </a>
                         <a href="{% url 'license_guide' %}" class="ck-success-btn ck-success-btn--ghost">
                             <i class="fas fa-book-open" aria-hidden="true"></i>
                             راهنمای فعال‌سازی
                         </a>
                     </nav>
+                    {% endif %}
                 </main>
 
                 <aside class="ck-success-receipt" aria-label="رسید پرداخت">
@@ -213,7 +341,11 @@
                             </div>
 
                             <ul class="ck-order-trust">
-                                <li><i class="fas fa-bolt"></i> لایسنس بلافاصله فعال می‌شود</li>
+                                {% if is_renewal %}
+                                <li><i class="fas fa-rotate"></i> تمدید روی همان کلید</li>
+                                {% else %}
+                                <li><i class="fas fa-list-ol"></i> ۳ قدم تا فعال‌سازی</li>
+                                {% endif %}
                                 <li><i class="fas fa-headset"></i> پشتیبانی در میزکار</li>
                             </ul>
                         </div>
@@ -236,5 +368,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-checkout.js' %}?v=7"></script>
+<script src="{% static 'js/mizkar-checkout.js' %}?v=8"></script>
 {% endblock %}

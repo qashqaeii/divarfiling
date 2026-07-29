@@ -390,6 +390,11 @@
         var successRoot = document.querySelector('[data-pay-success]');
         if (!successRoot) return;
 
+        function markStepDone(stepNum) {
+            var step = successRoot.querySelector('.ck-next-step[data-step="' + stepNum + '"]');
+            if (step) step.classList.add('is-done');
+        }
+
         successRoot.querySelectorAll('[data-copy-target]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var targetId = btn.getAttribute('data-copy-target');
@@ -406,6 +411,8 @@
                     btn.classList.add('is-copied');
                     if (label) label.textContent = 'کپی شد';
                     if (icon) icon.className = 'fas fa-check';
+                    var stepNum = btn.getAttribute('data-mark-step');
+                    if (stepNum) markStepDone(stepNum);
                     setTimeout(function () {
                         btn.classList.remove('is-copied');
                         if (label) label.textContent = originalLabel;
@@ -432,6 +439,12 @@
                     }
                     document.body.removeChild(area);
                 }
+            });
+        });
+
+        successRoot.querySelectorAll('[data-mark-step="2"]').forEach(function (el) {
+            el.addEventListener('click', function () {
+                markStepDone('2');
             });
         });
     });

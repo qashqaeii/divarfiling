@@ -3315,6 +3315,273 @@ html.mk-public .ck-promo-input::placeholder {
     font-size: 0.65rem;
 }
 
+/* Post-purchase next steps */
+.ck-next-steps {
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--mk-border) 85%, rgba(52, 211, 153, 0.18));
+    background: color-mix(in srgb, var(--mk-card) 90%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 1.15rem 1.15rem 1.35rem;
+    box-shadow:
+        0 24px 48px -28px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    animation: ck-success-fade-up 0.55s ease 0.35s both;
+}
+
+.ck-next-steps-head {
+    margin-bottom: 1.15rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px dashed rgba(148, 163, 184, 0.22);
+}
+
+.ck-next-steps-head h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--mk-text, #fff);
+}
+
+.ck-next-steps-head p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--mk-text-muted);
+}
+
+.ck-next-steps-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.ck-next-step {
+    display: grid;
+    grid-template-columns: 2.25rem 1fr;
+    gap: 0.85rem;
+    align-items: stretch;
+}
+
+.ck-next-step-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ck-next-step-num {
+    flex-shrink: 0;
+    width: 2.15rem;
+    height: 2.15rem;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #c4b5fd;
+    background: rgba(124, 58, 237, 0.16);
+    border: 1px solid rgba(167, 139, 250, 0.35);
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.ck-next-step-line {
+    flex: 1;
+    width: 2px;
+    min-height: 1.25rem;
+    margin: 0.35rem 0;
+    background: linear-gradient(180deg, rgba(167, 139, 250, 0.45), rgba(148, 163, 184, 0.12));
+    border-radius: 2px;
+}
+
+.ck-next-step-body {
+    min-width: 0;
+    padding-bottom: 1.35rem;
+}
+
+.ck-next-step:last-child .ck-next-step-body {
+    padding-bottom: 0.15rem;
+}
+
+.ck-next-step-body h3 {
+    margin: 0.15rem 0 0.35rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--mk-text, #fff);
+}
+
+.ck-next-step-desc {
+    margin: 0 0 0.85rem;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: var(--mk-text-muted);
+}
+
+.ck-next-step-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.65rem;
+}
+
+.ck-success-btn--download {
+    width: auto;
+    min-width: 12rem;
+}
+
+.ck-next-file {
+    font-family: ui-monospace, monospace;
+    font-size: 0.68rem;
+    color: var(--mk-text-muted);
+    direction: ltr;
+    word-break: break-all;
+}
+
+.ck-next-tips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.ck-next-tips li {
+    position: relative;
+    padding: 0.4rem 0.65rem 0.4rem 0.85rem;
+    font-size: 0.74rem;
+    line-height: 1.55;
+    color: var(--mk-text-secondary, #cbd5e1);
+    background: rgba(7, 11, 23, 0.35);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 10px;
+}
+
+.ck-next-tips li::before {
+    content: '';
+    position: absolute;
+    right: 0.45rem;
+    top: 0.75rem;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #34d399;
+}
+
+.ck-next-step-warn {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    border-radius: 12px;
+}
+
+.ck-activate-howto {
+    list-style: none;
+    margin: 0 0 0.85rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.ck-activate-howto li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.8rem;
+    color: var(--mk-text-secondary, #cbd5e1);
+    background: rgba(7, 11, 23, 0.4);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 12px;
+}
+
+.ck-activate-howto-num {
+    flex-shrink: 0;
+    width: 1.55rem;
+    height: 1.55rem;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #6ee7b7;
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.ck-activate-howto strong {
+    color: var(--mk-text, #fff);
+    font-weight: 700;
+}
+
+.ck-next-step.is-done .ck-next-step-num {
+    color: transparent;
+    background: #34d399;
+    border-color: #6ee7b7;
+    position: relative;
+}
+
+.ck-next-step.is-done .ck-next-step-num::after {
+    content: '\f00c';
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.75rem;
+    color: #052e1a;
+}
+
+.ck-success-side-note {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(15, 23, 42, 0.35);
+    animation: ck-success-fade-up 0.55s ease 0.45s both;
+}
+
+.ck-success-side-note > i {
+    font-size: 1.25rem;
+    color: #86efac;
+}
+
+.ck-success-side-note strong {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--mk-text, #fff);
+}
+
+.ck-success-side-note p {
+    margin: 0.15rem 0 0;
+    font-size: 0.74rem;
+    color: var(--mk-text-muted);
+    line-height: 1.5;
+}
+
+.ck-success-side-note > div {
+    flex: 1;
+    min-width: 10rem;
+}
+
+.ck-success-btn--sm {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.74rem;
+}
+
 /* Claim steps (no license yet) */
 .ck-claim-steps {
     list-style: none;
@@ -3511,6 +3778,20 @@ html.mk-public .ck-promo-input::placeholder {
     .ck-success-actions .ck-success-btn {
         width: 100%;
     }
+
+    .ck-next-step-actions .ck-success-btn--download {
+        width: 100%;
+    }
+
+    .ck-success-side-note {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .ck-success-side-note .ck-success-btn {
+        width: 100%;
+    }
 }
 
 @media (max-width: 520px) {
@@ -3543,6 +3824,19 @@ html.mk-public[data-theme="light"] .ck-license-key {
 
 html.mk-public[data-theme="light"] .ck-claim-steps li {
     background: rgba(248, 250, 252, 0.85);
+}
+
+html.mk-public[data-theme="light"] .ck-next-steps {
+    background: rgba(255, 255, 255, 0.92);
+}
+
+html.mk-public[data-theme="light"] .ck-next-tips li,
+html.mk-public[data-theme="light"] .ck-activate-howto li {
+    background: rgba(248, 250, 252, 0.9);
+}
+
+html.mk-public[data-theme="light"] .ck-success-side-note {
+    background: #f8fafc;
 }
 
 html.mk-public[data-theme="light"] .ck-success-btn--ghost {

@@ -805,7 +805,9 @@ def _has_active_search_filters(sf: Optional[Dict[str, Any]] = None) -> bool:
     for key in ("parking", "elevator", "warehouse"):
         if _truthy_filter_flag(data.get(key)):
             return True
-    if str(data.get("advertiser_filter") or "all").strip().lower() == "personal":
+    if str(data.get("advertiser_filter") or "all").strip().lower() in (
+        "personal", "genuine_personal", "consultant",
+    ):
         return True
     return False
 
@@ -846,7 +848,7 @@ def _apply_search_filters(form_data: Dict[str, Any]) -> None:
             form_data[key] = {"boolean": {"value": True}}
 
     advertiser_filter = str(sf.get("advertiser_filter") or "all").strip().lower()
-    if advertiser_filter == "personal":
+    if advertiser_filter in ("personal", "genuine_personal"):
         form_data["business-type"] = {"repeated_string": {"value": ["personal"]}}
 
 
@@ -1517,37 +1519,36 @@ def _filter_by_advertiser_type(
     advertiser_filter: str = "all",
     return_removed: bool = False,
 ) -> tuple:
-    """فیلتر نوع آگهی‌دهنده: all = همه | personal = فقط شخصی (بدون مشاور/آژانس)."""
-    if str(advertiser_filter or "all").strip().lower() != "personal":
+    """
+    فیلتر نوع آگهی‌دهنده:
+    all | consultant | personal | genuine_personal
+    — هم‌تراز منطق پلتفرم (advertiser_signal).
+    """
+    import sys
+    from pathlib import Path
+
+    _src = Path(__file__).resolve().parents[2] / "src"
+    _src_str = str(_src)
+    if _src_str not in sys.path:
+        sys.path.insert(0, _src_str)
+
+    from advertiser_signal import (
+        normalize_filter_value,
+        row_matches_advertiser_filter,
+    )
+
+    key = normalize_filter_value(advertiser_filter)
+    if key == "all":
         if return_removed:
             return rows, []
         return rows
 
-    consultant_types = {
-        "premium-panel", "premium_panel", "business", "consultant", "agency",
-        "بنگاه", "مشاور", "آژانس",
-    }
     filtered_rows: List[Dict[str, Any]] = []
     removed_ads: List[str] = []
 
     for row in rows:
         title = str(row.get("title", "") or row.get("عنوان", "") or "").strip()
-        business_type = str(
-            row.get("business_type") or row.get("فروشنده_business_type") or ""
-        ).strip().lower()
-        consultant_name = str(row.get("مشاور_نام") or "").strip()
-
-        is_consultant = (
-            business_type in consultant_types
-            or "premium" in business_type
-            or bool(consultant_name)
-        )
-        if is_consultant:
-            if return_removed:
-                removed_ads.append(title or "(بدون عنوان)")
-            continue
-
-        if business_type == "personal" or (not business_type and not consultant_name):
+        if row_matches_advertiser_filter(row, key):
             filtered_rows.append(row)
         elif return_removed:
             removed_ads.append(title or "(بدون عنوان)")

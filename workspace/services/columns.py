@@ -301,9 +301,14 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
 
     title = _safe_str(row[cols['title']]) if cols['title'] else ''
     description = _safe_str(row[cols['description']]) if cols['description'] else ''
-    business_type = _safe_str(row[cols['business_type']]) if cols['business_type'] else ''
+    business_type_raw = _safe_str(row[cols['business_type']]) if cols['business_type'] else ''
+    from workspace.services.advertiser_signal import (
+        detect_advertiser_signal,
+        normalize_business_type_for_storage,
+    )
+    # برچسب‌های نمایشی اکسل (مالک واقعی / مشاور پنهان) را به شخصی/مشاور/بنگاه برگردان
+    business_type = normalize_business_type_for_storage(business_type_raw) or business_type_raw
 
-    from workspace.services.advertiser_signal import detect_advertiser_signal
     advertiser_signal = detect_advertiser_signal(
         title=title,
         description=description,

@@ -922,7 +922,7 @@ class PlatformExtractionPhase2Tests(TestCase):
         self.assertContains(resp, 'plat-faq__item', count=17)
         self.assertContains(resp, 'ویندوز')
         self.assertContains(resp, 'لایسنس')
-        self.assertContains(resp, 'یک‌روزه')
+        self.assertContains(resp, 'یک‌هفته‌ای')
         self.assertContains(resp, 'Excel')
         self.assertContains(resp, 'CSV')
         self.assertContains(resp, 'JSON')

@@ -68,10 +68,20 @@ class Command(BaseCommand):
         active_names = []
         for data in plans:
             active_names.append(data['name'])
+            defaults = {**data, 'is_active': True}
+            # پلن آزمایشی با plan_type=daily — با تغییر نام هم همان رکورد به‌روز شود
+            if data['plan_type'] == 'daily':
+                plan = product.plans.filter(plan_type='daily').order_by('id').first()
+                if plan:
+                    for key, value in defaults.items():
+                        setattr(plan, key, value)
+                    plan.save()
+                    self.stdout.write(f'  پلن {plan.name}: به‌روز — {plan.price:,} تومان')
+                    continue
             plan, created = LicensePlan.objects.update_or_create(
                 product=product,
                 name=data['name'],
-                defaults={**data, 'is_active': True},
+                defaults=defaults,
             )
             label = 'ایجاد' if created else 'به‌روز'
             self.stdout.write(f'  پلن {plan.name}: {label} — {plan.price:,} تومان')

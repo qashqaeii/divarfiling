@@ -1,4 +1,4 @@
-"""تست پلن آزمایشی یک‌روزه."""
+"""تست پلن آزمایشی یک‌هفته‌ای."""
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -25,8 +25,8 @@ TEST_KEY = 'DAIL-1234-5678-9ABC'
 class DailyPlanCatalogTests(TestCase):
     def test_bot_license_plans_includes_daily_plan(self):
         daily = next(p for p in bot_license_plans() if p['plan_type'] == 'daily')
-        self.assertEqual(daily['price'], 50_000)
-        self.assertEqual(daily['duration_days'], 1)
+        self.assertEqual(daily['name'], 'پلن آزمایشی ۱ هفته‌ای')
+        self.assertEqual(daily['duration_days'], 7)
         self.assertEqual(daily['order'], 0)
 
 
@@ -46,10 +46,10 @@ class DailyPlanLicenseFlowTests(TestCase):
         )
         self.plan = LicensePlan.objects.create(
             product=self.product,
-            name='لایسنس آزمایشی یک‌روزه',
+            name='لایسنس آزمایشی یک‌هفته‌ای',
             plan_type='daily',
             price=50_000,
-            duration_days=1,
+            duration_days=7,
             max_activations=2,
             is_active=True,
             order=0,
@@ -63,15 +63,15 @@ class DailyPlanLicenseFlowTests(TestCase):
         )
         self.client = APIClient()
 
-    def test_fulfill_issues_license_with_one_day_expiry(self):
+    def test_fulfill_issues_license_with_one_week_expiry(self):
         fulfill_order_after_payment(self.order)
         self.order.refresh_from_db()
         license_obj = issue_license_for_paid_order(self.order)
         self.assertIsNotNone(license_obj)
         self.assertIsNotNone(license_obj.expires_at)
         delta = license_obj.expires_at - timezone.now()
-        self.assertGreater(delta, timedelta(hours=23))
-        self.assertLessEqual(delta, timedelta(days=1, minutes=5))
+        self.assertGreater(delta, timedelta(days=6, hours=23))
+        self.assertLessEqual(delta, timedelta(days=7, minutes=5))
 
     def test_activate_and_access_until_expiry(self):
         license_obj = fulfill_order_after_payment(self.order)
@@ -131,10 +131,10 @@ class DailyPlanPhoneVerificationTests(TestCase):
         )
         self.daily_plan = LicensePlan.objects.create(
             product=self.product,
-            name='لایسنس آزمایشی یک‌روزه',
+            name='لایسنس آزمایشی یک‌هفته‌ای',
             plan_type='daily',
             price=50_000,
-            duration_days=1,
+            duration_days=7,
             max_activations=2,
             is_active=True,
             order=0,
@@ -213,10 +213,10 @@ class DailyPlanRepeatPurchaseTests(TestCase):
         )
         self.daily_plan = LicensePlan.objects.create(
             product=self.product,
-            name='لایسنس آزمایشی یک‌روزه',
+            name='لایسنس آزمایشی یک‌هفته‌ای',
             plan_type='daily',
             price=50_000,
-            duration_days=1,
+            duration_days=7,
             max_activations=2,
             is_active=True,
             order=0,

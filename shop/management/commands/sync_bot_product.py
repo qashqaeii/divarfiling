@@ -32,21 +32,36 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'نامک: {product.slug} | پلن‌ها: {product.plans.filter(is_active=True).count()}'))
 
     def _attach_installer(self, product):
+        files_dir = os.path.join(settings.BASE_DIR, 'files')
         candidates = [
-            os.path.join(settings.BASE_DIR, 'files', 'DivarFilingExtractor_Setup_2.13.0.ZIP'),
+            os.path.join(files_dir, 'DivarFilingExtractor_Setup_2.15.0.zip'),
+            os.path.join(files_dir, 'DivarFilingExtractor_Setup_2.15.0.ZIP'),
             os.path.join(
                 settings.BASE_DIR.parent,
                 'extractor-app',
                 'release',
                 'installer-out',
-                'DivarFilingExtractor_Setup_2.13.0.exe',
+                'DivarFilingExtractor_Setup_2.15.0.exe',
             ),
-            os.path.join(settings.BASE_DIR, 'files', 'DivarFilingExtractor_Setup_1.0.0.zip'),
-            os.path.join(settings.BASE_DIR, 'files', 'Divar-Real-Estate-Install.zip'),
-            os.path.join(settings.BASE_DIR, 'files', 'Divar-Basic-V1-Install.zip'),
-            os.path.join(settings.BASE_DIR, 'files', 'Robot.zip'),
+            os.path.join(files_dir, 'DivarFilingExtractor_Setup_2.13.0.ZIP'),
+            os.path.join(files_dir, 'DivarFilingExtractor_Setup_2.13.0.zip'),
+            os.path.join(files_dir, 'DivarFilingExtractor_Setup_1.0.0.zip'),
+            os.path.join(files_dir, 'Divar-Real-Estate-Install.zip'),
+            os.path.join(files_dir, 'Divar-Basic-V1-Install.zip'),
+            os.path.join(files_dir, 'Robot.zip'),
             os.path.join(settings.BASE_DIR, 'Robot.zip'),
         ]
+        # جدیدترین DivarFilingExtractor_Setup_*.zip در files/
+        if os.path.isdir(files_dir):
+            dynamic = [
+                os.path.join(files_dir, name)
+                for name in os.listdir(files_dir)
+                if name.lower().startswith('divarfilingextractor_setup_')
+                and name.lower().endswith(('.zip', '.exe'))
+            ]
+            dynamic.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+            candidates = dynamic + candidates
+
         zip_path = next(
             (p for p in candidates if os.path.exists(p) and os.path.getsize(p) >= 1024),
             None,

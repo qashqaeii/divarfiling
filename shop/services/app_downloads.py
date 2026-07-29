@@ -23,7 +23,7 @@ ANDROID_RELEASE_NOTES = (
 # در صورت تنظیم، کلاینت صحت فایل را بعد از دانلود بررسی می‌کند
 ANDROID_APK_SHA256 = ''
 WINDOWS_APP_VERSION = '2.15.0'
-WINDOWS_INSTALLER_FILENAME = 'DivarFilingExtractor_Setup_2.13.0.ZIP'
+WINDOWS_INSTALLER_FILENAME = 'DivarFilingExtractor_Setup_2.15.0.zip'
 
 
 def _files_dir() -> str:

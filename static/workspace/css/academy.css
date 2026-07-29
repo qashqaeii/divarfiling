@@ -533,15 +533,26 @@
 .acd-mission-card {
     position: relative;
     overflow: visible;
-    margin-bottom: 1rem;
-    padding: 0.85rem 0.95rem;
+    margin-bottom: 0.75rem;
+    padding: 0.65rem 0.8rem;
     border-radius: var(--acd-radius-sm);
     border: 1px solid var(--acd-border);
     background: var(--acd-surface);
-    box-shadow: var(--acd-shadow);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
+}
+
+.acd-mission-card .acd-btn {
+    align-self: flex-start; /* desktop: compact action */
+}
+
+@media (max-width: 720px) {
+    .acd-mission-card .acd-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 .acd-mission-card::before {
@@ -554,15 +565,15 @@
 
 .acd-mission-card-head {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.6rem;
     align-items: center;
     margin-bottom: 0;
 }
 
 .acd-mission-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
     display: grid;
     place-items: center;
     background: var(--acd-primary-soft);
@@ -573,14 +584,14 @@
 
 .acd-mission-card-title {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.98rem;
     font-weight: 800;
     line-height: 1.25;
 }
 
 .acd-mission-card-meta {
     margin: 0.25rem 0 0;
-    font-size: 0.74rem;
+    font-size: 0.7rem;
     color: var(--acd-text-secondary);
 }
 

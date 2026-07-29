@@ -374,6 +374,8 @@ class BuyView(LoginRequiredMixin, CreateView):
             plans_with_prices.append({
                 'plan': plan,
                 'original_price': int(pricing['original_price']),
+                'unit_list_price': int(pricing['unit_list_price']),
+                'unit_sale_price': int(pricing['unit_sale_price']),
                 'discount_amount': int(pricing['discount_amount']),
                 'final_price': int(pricing['final_price']),
                 'has_discount': pricing['has_discount'],

@@ -2019,10 +2019,12 @@ function buildLeafletHeatGradient(palette) {
     const stops = HEAT_COLOR_STOPS[palette] || HEAT_COLOR_STOPS.density;
     const gradient = {};
     stops.forEach(([t, hex]) => {
-        const [r, g, b] = parseHexRgb(hex);
-        const alpha = t <= 0.02 ? 0 : Math.min(0.94, 0.12 + t * 0.82);
-        gradient[t] = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+        if (t >= 0.08) gradient[t] = hex;
     });
+    // simpleheat با رنگ hex شفاف کار می‌کند؛ شروع گرادیان از ۰.۲۵
+    if (!Object.keys(gradient).some(k => parseFloat(k) <= 0.25)) {
+        gradient[0.25] = stops[0][1];
+    }
     return gradient;
 }
 
@@ -2043,19 +2045,20 @@ function normalizeHeatValues(values) {
     });
 }
 
-function computeHeatLayerOptions(source, palette, { weighted = false } = {}) {
+function computeHeatLayerOptions(source, palette, map, { weighted = false } = {}) {
     const count = source.length;
     const logFactor = Math.log10(Math.max(count, 10));
-    const radius = Math.min(46, Math.max(24, Math.round(22 + logFactor * 5)));
-    const blur = Math.round(radius * 0.82);
-    const maxIntensity = weighted
-        ? 1.0
-        : Math.min(1.35, 0.42 + count / 650);
+    const radius = Math.min(52, Math.max(30, Math.round(26 + logFactor * 5)));
+    const blur = Math.round(radius * 0.88);
+    const zoom = map?.getZoom?.();
+    // maxZoom = زوم فعلی → شدت کامل در نمای فعلی (بدون محو شدن در زوم پایین)
+    const maxZoom = Number.isFinite(zoom) ? zoom : 12;
+    const maxIntensity = weighted ? 0.75 : 0.42;
     return {
         radius,
         blur,
-        minOpacity: 0.42,
-        maxZoom: 18,
+        minOpacity: 0.58,
+        maxZoom,
         max: maxIntensity,
         gradient: buildLeafletHeatGradient(palette),
     };
@@ -2900,12 +2903,25 @@ function initMap(allMarkers, settings) {
         const maxVal = positives.length ? Math.max(...positives) : 0;
 
         const heatData = source.map((m, i) => {
-            const intensity = weighted ? intensities[i] : 0.58;
+            const intensity = weighted ? intensities[i] : 1.0;
             return [m.lat, m.lng, intensity];
         });
 
-        const layer = L.heatLayer(heatData, computeHeatLayerOptions(source, palette, { weighted }));
+        const heatOpts = computeHeatLayerOptions(source, palette, map, { weighted });
+        const layer = L.heatLayer(heatData, heatOpts);
         layer._isHeatLayer = true;
+        layer._heatPalette = palette;
+        layer._heatWeighted = weighted;
+        layer.on('add', () => {
+            requestAnimationFrame(() => {
+                const canvas = layer._canvas;
+                if (canvas) canvas.style.zIndex = '450';
+                if (layer.setOptions) {
+                    layer.setOptions(computeHeatLayerOptions(source, palette, map, { weighted }));
+                }
+                layer.redraw?.();
+            });
+        });
 
         let rangeText = '';
         if (palette === 'density') {
@@ -3392,7 +3408,19 @@ function initMap(allMarkers, settings) {
     setTimeout(() => {
         map.invalidateSize();
         mapPro?.updateZoomBadge?.();
-    }, 80);
+        if (layers[activeMode]?._isHeatLayer) {
+            const heatLayer = layers[activeMode];
+            if (heatLayer?.setOptions && heatLayer._heatPalette) {
+                heatLayer.setOptions(computeHeatLayerOptions(
+                    layers._visible || getFilteredMarkers(),
+                    heatLayer._heatPalette,
+                    map,
+                    { weighted: heatLayer._heatWeighted },
+                ));
+            }
+            heatLayer?.redraw?.();
+        }
+    }, 150);
 
     const hint = document.querySelector('.mk-map-overlay--hint');
     const legend = document.getElementById('mkMapLegend');
@@ -3493,6 +3521,21 @@ function initMap(allMarkers, settings) {
             selectMarker(selectedMarkerId);
         }
         updateMapChrome(mode);
+        if (layers[activeMode]?._isHeatLayer) {
+            setTimeout(() => {
+                map.invalidateSize();
+                const heatLayer = layers[activeMode];
+                if (heatLayer?.setOptions && heatLayer._heatPalette) {
+                    heatLayer.setOptions(computeHeatLayerOptions(
+                        layers._visible || getFilteredMarkers(),
+                        heatLayer._heatPalette,
+                        map,
+                        { weighted: heatLayer._heatWeighted },
+                    ));
+                }
+                heatLayer?.redraw?.();
+            }, 100);
+        }
     }
 
     function setSellerFilter(filter) {
@@ -3518,9 +3561,14 @@ function initMap(allMarkers, settings) {
 
     let zoomRefreshTimer;
     map.on('zoomend', () => {
-        if (['markers', 'market', 'value', 'full_deposit'].includes(activeMode) && hint) {
-            hint.hidden = map.getZoom() >= clusterDisableZoom;
-        } else if (activeMode === 'grid') {
+        if (hint) {
+            if (activeMode.startsWith('heat_') || activeMode === 'grid') {
+                hint.hidden = true;
+            } else if (['markers', 'market', 'value', 'full_deposit'].includes(activeMode)) {
+                hint.hidden = map.getZoom() >= clusterDisableZoom;
+            }
+        }
+        if (activeMode === 'grid' || activeMode.startsWith('heat_')) {
             clearTimeout(zoomRefreshTimer);
             zoomRefreshTimer = setTimeout(() => refreshLayers(), 120);
         }

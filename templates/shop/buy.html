@@ -206,9 +206,10 @@
                                     id="plan_{{ plan_data.plan.id }}"
                                     {% if plan_data.plan.id == selected_plan_id %}checked{% endif %}
                                     {% if plan_data.purchase_blocked %}disabled{% endif %}
-                                    data-original-price="{{ plan_data.original_price }}"
+                                    data-original-price="{{ plan_data.unit_list_price }}"
                                     data-final-price="{{ plan_data.final_price }}"
-                                    data-unit-final-price="{{ plan_data.final_price }}"
+                                    data-unit-list-price="{{ plan_data.unit_list_price }}"
+                                    data-unit-sale-price="{{ plan_data.unit_sale_price }}"
                                     data-has-repeat-discount="{% if plan_data.has_repeat_discount %}true{% else %}false{% endif %}"
                                     data-repeat-discount-percentage="{{ plan_data.repeat_discount_percentage }}"
                                     data-allow-bulk="{% if plan_data.plan.allow_bulk_purchase %}true{% else %}false{% endif %}"
@@ -308,5 +309,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-checkout.js' %}?v=6" defer></script>
+<script src="{% static 'js/mizkar-checkout.js' %}?v=7" defer></script>
 {% endblock %}

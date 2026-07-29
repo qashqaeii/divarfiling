@@ -1811,8 +1811,9 @@
 }
 
 /* ── Heatmap visualization polish ── */
-.mk-map-pro .mk-map-stage[data-heat-mode="true"] .leaflet-overlay-pane canvas {
-    filter: saturate(1.08) contrast(1.05);
+.mk-map-pro .mk-map-stage[data-heat-mode="true"] .leaflet-overlay-pane canvas.leaflet-heatmap-layer {
+    z-index: 450;
+    pointer-events: none;
 }
 
 .mk-map-pro .mk-map-legend.mk-map-legend--heat .mk-map-legend-badge {

@@ -21,8 +21,14 @@
         var applyDiscountUrl = root.dataset.applyDiscountUrl;
         var csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
 
-        var repeatPurchaseDiscount = null;
-        var currentPrices = { original: 0, final: 0, discounts: [] };
+        var pricingState = {
+            original: 0,
+            final: 0,
+            discountDetails: [],
+            loading: false,
+        };
+
+        var pricingRequestId = 0;
 
         function getSelectedPlan() {
             return document.querySelector('input[name="plan"]:checked');
@@ -61,17 +67,15 @@
             }
         }
 
-        function unitPricesFromSelected(selected) {
-            var unitOriginal = parseInt(selected.dataset.originalPrice, 10);
-            var unitFinal = parseInt(selected.dataset.finalPrice, 10);
-            if (currentPrices.discounts.length > 0) {
-                var qty = getQuantity();
-                unitFinal = Math.round(currentPrices.final / qty);
-            }
-            return { unitOriginal: unitOriginal, unitFinal: unitFinal };
+        function fallbackPricingFromDataset(selected, qty) {
+            var unitList = parseInt(selected.dataset.unitListPrice || selected.dataset.originalPrice, 10) || 0;
+            var unitSale = parseInt(selected.dataset.unitSalePrice || selected.dataset.finalPrice, 10) || 0;
+            pricingState.original = unitList * qty;
+            pricingState.final = unitSale * qty;
+            pricingState.discountDetails = [];
         }
 
-        function updateSummary() {
+        function renderSummary() {
             var selected = getSelectedPlan();
             if (!selected) return;
 
@@ -79,31 +83,6 @@
             var qty = getQuantity();
             var card = selected.closest('.ck-plan');
             var planName = card.querySelector('.ck-plan-name').textContent.trim();
-            var prices = unitPricesFromSelected(selected);
-            var originalPrice = prices.unitOriginal * qty;
-            var finalPrice = prices.unitFinal * qty;
-
-            if (selected.dataset.hasRepeatDiscount === 'true' && !repeatPurchaseDiscount) {
-                var pct = parseInt(selected.dataset.repeatDiscountPercentage, 10);
-                var amount = Math.floor(originalPrice * pct / 100);
-                repeatPurchaseDiscount = {
-                    label: pct + '% تخفیف خرید مجدد',
-                    amount: amount,
-                    type: 'repeat_purchase'
-                };
-            } else if (selected.dataset.hasRepeatDiscount !== 'true') {
-                repeatPurchaseDiscount = null;
-            }
-
-            if (currentPrices.discounts.length > 0) {
-                finalPrice = currentPrices.final;
-            }
-
-            var allDiscounts = [];
-            if (repeatPurchaseDiscount) allDiscounts.push(repeatPurchaseDiscount);
-            if (currentPrices.discounts.length > 0) {
-                allDiscounts = allDiscounts.concat(currentPrices.discounts);
-            }
 
             var summaryName = planName;
             if (qty > 1) {
@@ -111,11 +90,12 @@
             }
             document.getElementById('summary-plan-name').textContent = summaryName;
             document.getElementById('summary-original-price').textContent =
-                formatNumber(originalPrice) + ' تومان';
+                formatNumber(pricingState.original) + ' تومان';
 
             var discountContainer = document.getElementById('summary-discount-rows');
             discountContainer.innerHTML = '';
-            allDiscounts.forEach(function (d) {
+            pricingState.discountDetails.forEach(function (d) {
+                if (!d.amount || d.amount <= 0) return;
                 var row = document.createElement('div');
                 row.className = 'ck-order-line is-discount';
                 row.innerHTML =
@@ -124,15 +104,76 @@
                 discountContainer.appendChild(row);
             });
 
-            var finalText = formatNumber(finalPrice) + ' تومان';
+            var finalText = formatNumber(pricingState.final) + ' تومان';
             document.getElementById('summary-final-price').textContent = finalText;
             var mobileTotal = document.getElementById('mobile-final-price');
             if (mobileTotal) mobileTotal.textContent = finalText;
 
-            currentPrices.original = originalPrice;
-            currentPrices.final = finalPrice;
+            payBtns.forEach(function (btn) {
+                btn.disabled = pricingState.loading;
+            });
+        }
 
-            payBtns.forEach(function (btn) { btn.disabled = false; });
+        function fetchPlanPricing(options) {
+            options = options || {};
+            var selected = getSelectedPlan();
+            if (!selected || !applyDiscountUrl) return;
+
+            var code = options.discountCode !== undefined
+                ? options.discountCode
+                : (discountInput ? discountInput.value.trim().toUpperCase() : '');
+            var qty = getQuantity();
+            var requestId = ++pricingRequestId;
+
+            pricingState.loading = true;
+            renderSummary();
+
+            fetch(applyDiscountUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({
+                    discount_code: code,
+                    plan_id: selected.value,
+                    quantity: qty,
+                }),
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (requestId !== pricingRequestId) return;
+
+                    pricingState.loading = false;
+
+                    if (data.success) {
+                        pricingState.original = data.original_price;
+                        pricingState.final = data.final_price;
+                        pricingState.discountDetails = data.discount_details || [];
+
+                        if (options.showDiscountSuccess && code) {
+                            showDiscountMessage(
+                                'کد اعمال شد — ' + formatNumber(data.total_discount) + ' تومان تخفیف',
+                                'success'
+                            );
+                        }
+                    } else {
+                        fallbackPricingFromDataset(selected, qty);
+                        if (options.showDiscountError) {
+                            showDiscountMessage(data.message || 'خطا در محاسبه قیمت.', 'error');
+                        }
+                    }
+                    renderSummary();
+                })
+                .catch(function () {
+                    if (requestId !== pricingRequestId) return;
+                    pricingState.loading = false;
+                    fallbackPricingFromDataset(selected, qty);
+                    if (options.showDiscountError) {
+                        showDiscountMessage('خطا در ارتباط. دوباره تلاش کنید.', 'error');
+                    }
+                    renderSummary();
+                });
         }
 
         function showDiscountMessage(message, type) {
@@ -153,59 +194,59 @@
             }
 
             var code = discountInput.value.trim().toUpperCase();
-            var qty = getQuantity();
-            var baseFinal = parseInt(selected.dataset.finalPrice, 10) * qty;
-
             if (!code) {
-                currentPrices.discounts = [];
-                currentPrices.final = baseFinal;
                 clearDiscountMessage();
-                updateSummary();
+                fetchPlanPricing({ discountCode: '' });
                 return;
             }
 
             applyBtn.disabled = true;
             applyBtn.textContent = 'بررسی...';
+            discountInput.value = code;
+
+            var requestId = ++pricingRequestId;
+            var qty = getQuantity();
 
             fetch(applyDiscountUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
+                    'X-CSRFToken': csrfToken,
                 },
                 body: JSON.stringify({
                     discount_code: code,
                     plan_id: selected.value,
-                    quantity: qty
-                })
+                    quantity: qty,
+                }),
             })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                applyBtn.disabled = false;
-                applyBtn.textContent = 'اعمال';
-                discountInput.value = code;
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (requestId !== pricingRequestId) return;
+                    applyBtn.disabled = false;
+                    applyBtn.textContent = 'اعمال';
 
-                if (data.success) {
-                    currentPrices.discounts = (data.discount_details || []).filter(function (d) {
-                        return d.type === 'discount_code';
-                    });
-                    currentPrices.final = data.final_price;
-                    showDiscountMessage(
-                        'کد اعمال شد — ' + formatNumber(data.total_discount) + ' تومان تخفیف',
-                        'success'
-                    );
-                } else {
-                    currentPrices.discounts = [];
-                    currentPrices.final = baseFinal;
-                    showDiscountMessage(data.message || 'کد تخفیف معتبر نیست.', 'error');
-                }
-                updateSummary();
-            })
-            .catch(function () {
-                applyBtn.disabled = false;
-                applyBtn.textContent = 'اعمال';
-                showDiscountMessage('خطا در ارتباط. دوباره تلاش کنید.', 'error');
-            });
+                    if (data.success) {
+                        pricingState.original = data.original_price;
+                        pricingState.final = data.final_price;
+                        pricingState.discountDetails = data.discount_details || [];
+                        showDiscountMessage(
+                            'کد اعمال شد — ' + formatNumber(data.total_discount) + ' تومان تخفیف',
+                            'success'
+                        );
+                    } else {
+                        fallbackPricingFromDataset(selected, qty);
+                        showDiscountMessage(data.message || 'کد تخفیف معتبر نیست.', 'error');
+                    }
+                    renderSummary();
+                })
+                .catch(function () {
+                    if (requestId !== pricingRequestId) return;
+                    applyBtn.disabled = false;
+                    applyBtn.textContent = 'اعمال';
+                    fallbackPricingFromDataset(selected, qty);
+                    showDiscountMessage('خطا در ارتباط. دوباره تلاش کنید.', 'error');
+                    renderSummary();
+                });
         }
 
         document.querySelectorAll('input[name="plan"]').forEach(function (radio) {
@@ -215,11 +256,9 @@
                 });
                 this.closest('.ck-plan').classList.add('is-selected');
 
-                discountInput.value = '';
-                currentPrices.discounts = [];
-                repeatPurchaseDiscount = null;
+                if (discountInput) discountInput.value = '';
                 clearDiscountMessage();
-                updateSummary();
+                fetchPlanPricing({ discountCode: '' });
             });
         });
 
@@ -236,10 +275,9 @@
 
         if (qtyInput) {
             qtyInput.addEventListener('change', function () {
-                discountInput.value = '';
-                currentPrices.discounts = [];
+                if (discountInput) discountInput.value = '';
                 clearDiscountMessage();
-                updateSummary();
+                fetchPlanPricing({ discountCode: '' });
             });
         }
 
@@ -325,7 +363,7 @@
         var initial = getSelectedPlan();
         if (initial) {
             initial.closest('.ck-plan').classList.add('is-selected');
-            updateSummary();
+            fetchPlanPricing({ discountCode: '' });
         }
 
         var loyaltyNotice = document.querySelector('[data-loyalty-notice]');
@@ -335,14 +373,14 @@
                 if (localStorage.getItem(loyaltyKey) === '1') {
                     loyaltyNotice.classList.add('is-dismissed');
                 }
-            } catch (e) {}
+            } catch (e) { /* ignore */ }
 
             document.querySelectorAll('[data-loyalty-dismiss]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     loyaltyNotice.classList.add('is-dismissed');
                     try {
                         localStorage.setItem(loyaltyKey, '1');
-                    } catch (e) {}
+                    } catch (e) { /* ignore */ }
                 });
             });
         }

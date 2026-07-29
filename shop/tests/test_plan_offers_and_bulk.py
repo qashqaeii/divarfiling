@@ -82,6 +82,28 @@ class PlanPricingTests(TestCase):
         self.assertEqual(pricing['quantity'], 3)
         self.assertEqual(pricing['final_price'], Decimal('21000000'))
 
+    def test_agency_bulk_pricing_per_license(self):
+        """هر لایسنس آژانس = قیمت واحد پلن × تعداد."""
+        agency = LicensePlan.objects.create(
+            product=self.product,
+            name='یک ماهه آژانس',
+            plan_type='monthly',
+            price=990_000,
+            duration_days=30,
+            max_activations=2,
+            allow_bulk_purchase=True,
+            min_quantity=2,
+            max_quantity=5,
+            is_active=True,
+        )
+        pricing = calculate_plan_purchase_prices(
+            agency, self.product, self.user, quantity=2,
+        )
+        self.assertEqual(pricing['quantity'], 2)
+        self.assertEqual(pricing['unit_sale_price'], Decimal('990000'))
+        self.assertEqual(pricing['original_price'], Decimal('1980000'))
+        self.assertEqual(pricing['final_price'], Decimal('1980000'))
+
 
 class BulkLicenseIssueTests(TestCase):
     def setUp(self):

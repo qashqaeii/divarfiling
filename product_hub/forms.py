@@ -149,9 +149,10 @@ class ProductReleaseForm(forms.ModelForm):
 class ReleaseChangeForm(forms.ModelForm):
     class Meta:
         model = ReleaseChange
-        fields = ('change_type', 'text', 'sort_order')
+        fields = ('change_type', 'platform', 'text', 'sort_order')
         widgets = {
             'change_type': forms.Select(attrs={'class': 'ws-select'}),
+            'platform': forms.Select(attrs={'class': 'ws-select'}),
             'text': forms.TextInput(attrs={'class': 'ws-input'}),
             'sort_order': forms.NumberInput(attrs={'class': 'ws-input', 'dir': 'ltr'}),
         }

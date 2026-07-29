@@ -8,20 +8,21 @@ from django.conf import settings
 from django.http import FileResponse, Http404
 from django.urls import reverse
 
-ANDROID_APK_FILENAME = 'divar-filing-v2.5.1-36-release.apk'
-ANDROID_APP_VERSION = '2.5.1'
-ANDROID_APP_BUILD = 36
+ANDROID_APK_FILENAME = 'divar-filing-v2.5.3-38-release.apk'
+ANDROID_APP_VERSION = '2.5.3'
+ANDROID_APP_BUILD = 38
 ANDROID_PACKAGE_ID = 'ir.divarfiling.mobile'
 ANDROID_MIN_ANDROID = '8.0'
 # اگر کاربر نسخهٔ قدیمی‌تر از این داشته باشد، آپدیت اجباری است
 ANDROID_MIN_SUPPORTED_BUILD = 30
 ANDROID_FORCE_UPDATE = False
 ANDROID_RELEASE_NOTES = (
-    'بهبود استخراج تا ۲۵۰ آگهی، فیلترهای حرفه‌ای‌تر، انتخاب خودکار موقعیت، '
-    'و امکان به‌روزرسانی مستقیم از داخل اپ.'
+    'تیم آژانس داخل اپ، هوش مصنوعی کاربردی، فیلتر حرفه‌ای فایلینگ، '
+    'تقویم و یادآور، تیکت پشتیبانی کامل، ویرایش مخاطب/آگهی و ظاهر یکدست‌تر.'
 )
 # در صورت تنظیم، کلاینت صحت فایل را بعد از دانلود بررسی می‌کند
 ANDROID_APK_SHA256 = ''
+WINDOWS_APP_VERSION = '2.15.0'
 WINDOWS_INSTALLER_FILENAME = 'DivarFilingExtractor_Setup_2.13.0.ZIP'
 
 
@@ -128,6 +129,8 @@ def build_app_download_context(request) -> Dict[str, Any]:
         },
         'windows': {
             'filename': WINDOWS_INSTALLER_FILENAME,
+            'version': WINDOWS_APP_VERSION,
+            'version_label': f'v{WINDOWS_APP_VERSION}',
             'requires_license': True,
             'min_os': 'Windows 10 / 11',
         },

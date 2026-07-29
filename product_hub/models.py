@@ -31,6 +31,13 @@ CHANGE_TYPE_CHOICES = [
     ('performance', 'سرعت'),
 ]
 
+CHANGE_PLATFORM_CHOICES = [
+    ('android', 'اپ اندروید'),
+    ('windows', 'ربات ویندوز'),
+    ('platform', 'پلتفرم و میزکار'),
+    ('all', 'همه پلتفرم‌ها'),
+]
+
 REQUEST_PRIORITY_CHOICES = [
     ('low', 'کم'),
     ('medium', 'متوسط'),
@@ -136,6 +143,13 @@ class ReleaseChange(models.Model):
     )
     change_type = models.CharField(
         max_length=20, choices=CHANGE_TYPE_CHOICES, default='improvement', verbose_name='نوع تغییر',
+    )
+    platform = models.CharField(
+        max_length=20,
+        choices=CHANGE_PLATFORM_CHOICES,
+        default='all',
+        verbose_name='پلتفرم',
+        help_text='اندروید، ویندوز یا پلتفرم وب/میزکار',
     )
     text = models.CharField(max_length=500, verbose_name='متن تغییر')
     sort_order = models.PositiveIntegerField(default=0, verbose_name='ترتیب')

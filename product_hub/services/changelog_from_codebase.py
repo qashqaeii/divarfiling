@@ -250,7 +250,94 @@ GIT_RELEASES = [
             ('fix', 'رفع مشکل ورود بعضی فایل‌ها و تشخیص مشاور مبدل'),
         ],
     },
+    {
+        'version': '2.14.0',
+        'title': 'پیشنهاد مخاطب، مقالات بازار و هماهنگی تیم',
+        'summary': 'برای هر فایل، مخاطب مناسب پیشنهاد می‌شود؛ مقالات بازار از داده‌های واقعی ساخته می‌شود و تاریخچه انتقال در تیم شفاف‌تر است.',
+        'released_at': '2026-07-23T21:00:00+0330',
+        'since': '2026-07-16',
+        'until': '2026-07-24',
+        'changes': [
+            ('feature', 'platform', 'پیشنهاد مخاطب مناسب برای فایل شخصی (برعکس پیشنهاد فایل به مشتری)'),
+            ('feature', 'platform', 'مقالات بازار بر اساس دیتاست‌های باکیفیت کاربران'),
+            ('feature', 'platform', 'تاریخچه انتقال پرونده بین اعضای آژانس'),
+            ('improvement', 'platform', 'پایدارتر شدن تطبیق مخاطب و فایل در CRM'),
+            ('improvement', 'platform', 'خوانایی بهتر صفحات مخاطب و انتخاب محله'),
+        ],
+    },
+    {
+        'version': '2.15.0',
+        'title': 'هفته اخیر: اندروید، ویندوز و پلتفرم',
+        'summary': 'اپ موبایل برای کار روزانه کامل‌تر شد؛ ربات ویندوز استخراج گروهی و فیلتر آگهی‌دهنده گرفت؛ میزکار پلن یک‌هفته‌ای، راهنمای بعد از خرید و آپلود پایدارتر دارد.',
+        'released_at': '2026-07-29T16:30:00+0330',
+        'since': '2026-07-24',
+        'until': None,
+        'changes': [
+            # اندروید
+            ('feature', 'android', 'تیم آژانس داخل اپ: پیام، اعضا، اطلاعیه و صندوق سرنخ'),
+            ('feature', 'android', 'هوش مصنوعی کاربردی: خلاصه آگهی، متن معرفی ملک و پیام پیگیری'),
+            ('feature', 'android', 'فیلتر حرفه‌ای فایلینگ و ذخیره فیلترهای پرکاربرد'),
+            ('feature', 'android', 'تقویم و یادآور کامل با تکرار و اعلان'),
+            ('feature', 'android', 'تیکت پشتیبانی با گفتگو، فایل پیوست و بستن/بازگشایی'),
+            ('feature', 'android', 'ویرایش مخاطب و آگهی، ثبت مالک به‌عنوان مخاطب'),
+            ('improvement', 'android', 'ظاهر یکدست‌تر صفحه خانه، CRM، معاملات و فایلینگ'),
+            ('improvement', 'android', 'به‌روزرسانی مستقیم اپ از داخل برنامه'),
+            # ویندوز
+            ('feature', 'windows', 'استخراج گروهی پشت‌سرهم همه دسته‌ها و زیردسته‌ها با یک کلیک'),
+            ('feature', 'windows', 'انتخاب کامل‌تر نوع آگهی‌دهنده هنگام استخراج'),
+            ('improvement', 'windows', 'رابط استخراج، زمان‌بندی و فضای کار مرتب‌تر شد'),
+            ('improvement', 'windows', 'تشخیص بهتر مالک واقعی از مشاور مبدل در خروجی'),
+            # پلتفرم
+            ('feature', 'platform', 'پلن یک‌هفته‌ای به‌جای آزمایش یک‌روزه (با تأیید شماره موبایل)'),
+            ('feature', 'platform', 'راهنمای واضح‌تر بعد از خرید تا فعال‌سازی ربات ویندوز'),
+            ('fix', 'platform', 'رفع باگ آپلود و ادغام اشتباه دیتاست‌ها روی هم'),
+            ('improvement', 'platform', 'صفحات معرفی استخراج و پایگاه فایل خواناتر شد'),
+            ('improvement', 'platform', 'پایدارتر شدن ایمپورت فایل به میزکار'),
+        ],
+    },
 ]
+
+
+def normalize_change_item(item):
+    """پشتیبانی از (type, text) قدیمی و (type, platform, text) جدید."""
+    if len(item) == 2:
+        ctype, text = item
+        return ctype, 'all', text
+    if len(item) == 3:
+        ctype, platform, text = item
+        return ctype, platform, text
+    raise ValueError(f'Invalid change item: {item!r}')
+
+
+PLATFORM_SECTION_ORDER = (
+    ('android', 'اپ اندروید', 'mobile-screen'),
+    ('windows', 'ربات ویندوز', 'desktop'),
+    ('platform', 'پلتفرم و میزکار', 'globe'),
+    ('all', 'عمومی', 'layer-group'),
+)
+
+
+def group_changes_by_platform(changes):
+    """گروه‌بندی آیتم‌های تغییر برای نمایش شفاف در مرکز توسعه."""
+    buckets = {key: [] for key, _, _ in PLATFORM_SECTION_ORDER}
+    for ch in changes:
+        key = getattr(ch, 'platform', None) or 'all'
+        if key not in buckets:
+            key = 'all'
+        buckets[key].append(ch)
+    sections = []
+    for key, label, icon in PLATFORM_SECTION_ORDER:
+        items = buckets[key]
+        if items:
+            sections.append({
+                'key': key,
+                'label': label,
+                'icon': icon,
+                'changes': items,
+                'count': len(items),
+            })
+    return sections
+
 
 
 def git_available() -> bool:
@@ -338,10 +425,12 @@ def build_changelog_from_codebase(*, phone: str = '09357930033', replace_existin
             },
         )
         obj.changes.all().delete()
-        for order, (ctype, text) in enumerate(rel['changes'], start=1):
+        for order, raw in enumerate(rel['changes'], start=1):
+            ctype, platform, text = normalize_change_item(raw)
             ReleaseChange.objects.create(
                 release=obj,
                 change_type=ctype,
+                platform=platform,
                 text=text,
                 sort_order=order,
             )

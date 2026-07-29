@@ -79,6 +79,7 @@
                 {% for f in change_formset %}
                 <div class="ph-mgmt-formset-row">
                     <div class="ph-field">{{ f.change_type }}</div>
+                    <div class="ph-field">{{ f.platform }}</div>
                     <div class="ph-field ph-field--grow">{{ f.text }}</div>
                     {% if f.DELETE %}<label class="ph-check-label ph-check-label--del">{{ f.DELETE }} <span>حذف</span></label>{% endif %}
                     {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}

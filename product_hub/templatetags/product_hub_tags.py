@@ -4,6 +4,7 @@ from product_hub.services.privacy import public_submitter_label
 from product_hub.models import (
     BUG_SEVERITY_CHOICES,
     BUG_STATUS_CHOICES,
+    CHANGE_PLATFORM_CHOICES,
     CHANGE_TYPE_CHOICES,
     FEATURE_CATEGORY_CHOICES,
     FEATURE_STATUS_CHOICES,
@@ -92,5 +93,6 @@ def ph_label(value, kind):
         'bug_status': dict(BUG_STATUS_CHOICES),
         'severity': dict(BUG_SEVERITY_CHOICES),
         'change_type': dict(CHANGE_TYPE_CHOICES),
+        'platform': dict(CHANGE_PLATFORM_CHOICES),
     }
     return maps.get(kind, {}).get(value, value)

@@ -23,6 +23,54 @@
             <time datetime="{{ release.released_at|date:'c' }}">{{ release.released_at|ws_jalali }}</time>
             <span class="ph-badge ph-badge--green"><i class="fas fa-circle-check" aria-hidden="true"></i> منتشر شده</span>
         </div>
+
+        {% if surface_versions %}
+        <div class="ph-surface-versions" aria-label="نسخه هر پلتفرم">
+            <span class="ph-surface-chip ph-surface-chip--android">
+                <i class="fab fa-android" aria-hidden="true"></i>
+                <span>اندروید</span>
+                <strong dir="ltr">v{{ surface_versions.android }}</strong>
+            </span>
+            <span class="ph-surface-chip ph-surface-chip--windows">
+                <i class="fab fa-windows" aria-hidden="true"></i>
+                <span>ویندوز</span>
+                <strong dir="ltr">v{{ surface_versions.windows }}</strong>
+            </span>
+            <span class="ph-surface-chip ph-surface-chip--platform">
+                <i class="fas fa-globe" aria-hidden="true"></i>
+                <span>پلتفرم</span>
+                <strong dir="ltr">v{{ surface_versions.platform }}</strong>
+            </span>
+        </div>
+        {% endif %}
+
+        {% if latest_platform_sections %}
+        <div class="ph-platform-sections">
+            {% for section in latest_platform_sections %}
+            <section class="ph-platform-block ph-platform-block--{{ section.key }}">
+                <header class="ph-platform-block-head">
+                    <span class="ph-platform-block-ico" aria-hidden="true">
+                        {% if section.key == 'android' %}<i class="fab fa-android"></i>
+                        {% elif section.key == 'windows' %}<i class="fab fa-windows"></i>
+                        {% elif section.key == 'platform' %}<i class="fas fa-globe"></i>
+                        {% else %}<i class="fas fa-layer-group"></i>{% endif %}
+                    </span>
+                    <h3>{{ section.label }}</h3>
+                    <span class="ph-platform-block-count">{{ section.count }} مورد</span>
+                </header>
+                <ul class="ph-tl-changes">
+                    {% for ch in section.changes %}
+                    <li class="ph-tl-change {% ph_change_type_class ch.change_type %}">
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                        <span>{{ ch.text }}</span>
+                        <span class="ph-change-tag">{{ ch.change_type|ph_label:'change_type' }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endfor %}
+        </div>
+        {% else %}
         <ul class="ph-tl-changes">
             {% for ch in release.changes.all|slice:':6' %}
             <li class="ph-tl-change {% ph_change_type_class ch.change_type %}">
@@ -34,6 +82,7 @@
         </ul>
         {% if release.changes.count > 6 %}
         <a href="?tab=changelog" class="ph-release-more">+ {{ release.changes.count|add:'-6' }} مورد دیگر</a>
+        {% endif %}
         {% endif %}
     </div>
     {% else %}

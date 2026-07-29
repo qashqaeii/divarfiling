@@ -31,6 +31,8 @@ from product_hub.models import (
 from product_hub.services import notifications as notif_svc
 from product_hub.services import stats as stats_svc
 from product_hub.services import workflow as workflow_svc
+from product_hub.services.changelog_from_codebase import group_changes_by_platform
+from shop.services import app_downloads as app_dl
 from workspace.mixins import WorkspaceLoginMixin
 from workspace.services.access import has_active_bot_license
 
@@ -107,10 +109,23 @@ class ProductHubView(WorkspaceLoginMixin, TemplateView):
         })
 
         # Changelog
-        ctx['releases'] = (
+        releases = list(
             ProductRelease.objects.filter(is_published=True)
             .prefetch_related('changes')[:20]
         )
+        for rel in releases:
+            rel.platform_sections = group_changes_by_platform(list(rel.changes.all()))
+        ctx['releases'] = releases
+        latest_release = releases[0] if releases else None
+        ctx['latest_platform_sections'] = (
+            latest_release.platform_sections if latest_release else []
+        )
+        ctx['surface_versions'] = {
+            'android': app_dl.ANDROID_APP_VERSION,
+            'android_build': app_dl.ANDROID_APP_BUILD,
+            'windows': app_dl.WINDOWS_APP_VERSION,
+            'platform': latest_release.version if latest_release else '—',
+        }
 
         # Features filters
         fq = self.request.GET.get('fq', '').strip()

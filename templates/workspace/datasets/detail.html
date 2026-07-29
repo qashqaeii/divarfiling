@@ -34,7 +34,7 @@
                         <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه آگهی‌ها</a>
                         <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-download" aria-hidden="true"></i> خروجی CSV</a>
                         {% if filing_video.available %}
-                        <a href="{% url 'shop:education' %}#edu-filing-video-title" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-circle-play" aria-hidden="true"></i> آموزش ویدیویی</a>
+                        <a href="{% url 'education' %}#edu-filing-video-title" class="mk-ds-mobile-more-item" role="menuitem"><i class="fas fa-circle-play" aria-hidden="true"></i> آموزش ویدیویی</a>
                         {% endif %}
                         <button type="button" class="mk-ds-mobile-more-item" role="menuitem" data-modal-open="modal-rename"><i class="fas fa-pen" aria-hidden="true"></i> تغییر نام</button>
                         {% if consultant_count %}
@@ -135,7 +135,7 @@
                     </div>
                     <div class="mk-ds-action-group" role="group" aria-label="ابزارها">
                         {% if filing_video.available %}
-                        <a href="{% url 'shop:education' %}#edu-filing-video-title" class="mk-ds-action mk-ds-action-tool" title="آموزش" aria-label="آموزش ویدیویی">
+                        <a href="{% url 'education' %}#edu-filing-video-title" class="mk-ds-action mk-ds-action-tool" title="آموزش" aria-label="آموزش ویدیویی">
                             <i class="fas fa-circle-play" aria-hidden="true"></i>
                         </a>
                         {% endif %}

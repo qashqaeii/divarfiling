@@ -9,7 +9,7 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-dashboard.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=5">
 {% endblock %}
 
 {% block crm_content %}
@@ -51,14 +51,16 @@
     </header>
 
     <section class="acd-mission-card">
-        <div class="acd-mission-card-head">
-            <span class="acd-mission-icon" aria-hidden="true"><i class="fas fa-bullseye"></i></span>
-            <div>
-                <h2 class="acd-mission-card-title">آکادمی فایلینگ دیوار</h2>
-                <p class="acd-mission-card-meta">از اولین فایل تا اولین معامله — ماموریت ۱۵ دقیقه‌ای</p>
+        <div class="acd-mission-card-top">
+            <div class="acd-mission-card-head">
+                <span class="acd-mission-icon" aria-hidden="true"><i class="fas fa-bullseye"></i></span>
+                <div>
+                    <h2 class="acd-mission-card-title">آکادمی فایلینگ دیوار</h2>
+                    <p class="acd-mission-card-meta">از اولین فایل تا اولین معامله — ماموریت ۱۵ دقیقه‌ای</p>
+                </div>
             </div>
+            <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--sm acd-mission-cta">ورود به آکادمی</a>
         </div>
-        <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--primary acd-btn--sm">ورود به آکادمی</a>
     </section>
 
     {% if stagnant_count or overdue_contacts %}

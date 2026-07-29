@@ -6,7 +6,7 @@
 {% block body_class %}mk-checkout-page mk-checkout-page--success{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=19">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=20">
 {% if can_download or app_downloads.android.available %}
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=3">
 {% endif %}
@@ -47,30 +47,10 @@
             <div class="ck-success-grid">
 
                 <main class="ck-success-main">
-                    <section class="ck-success-hero" aria-labelledby="ck-success-title">
-                        <div class="ck-success-badge" aria-hidden="true">
-                            <span class="ck-success-ring"></span>
-                            <span class="ck-success-ring ck-success-ring--pulse"></span>
-                            <span class="ck-success-icon"><i class="fas fa-check"></i></span>
-                        </div>
-                        <h1 id="ck-success-title" class="ck-success-title">{% if is_renewal %}لایسنس با موفقیت تمدید شد{% else %}پرداخت با موفقیت انجام شد{% endif %}</h1>
-                        {% if licenses %}
-                        <p class="ck-success-lead">
-                            {% if is_renewal %}
-                            همان کلید لایسنس شما فعال ماند — تاریخ اعتبار به‌روز شد. معمولاً نیازی به فعال‌سازی مجدد نیست.
-                            {% else %}
-                            فقط ۳ قدم تا فعال‌سازی ربات — به ترتیب انجام دهید.
-                            {% endif %}
-                        </p>
-                        {% else %}
-                        <p class="ck-success-lead">سفارش تأیید شد. برای صدور کلید، شناسه سخت‌افزاری را از ربات در میزکار ثبت کنید.</p>
-                        {% endif %}
-                    </section>
-
                     {% if licenses and not is_renewal %}
                     <section class="ck-next-steps" aria-labelledby="ck-next-heading" data-next-steps>
                         <header class="ck-next-steps-head">
-                            <h2 id="ck-next-heading">الان چه کار کنم؟</h2>
+                            <h1 id="ck-next-heading" class="ck-next-steps-title">الان چه کار کنم؟</h1>
                             <p>هر قدم را تمام کنید، بعد بروید سراغ بعدی</p>
                         </header>
 

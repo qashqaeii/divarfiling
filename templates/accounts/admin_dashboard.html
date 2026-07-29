@@ -635,6 +635,9 @@
                             <h2 id="eccLicTitle"><i class="fas fa-key"></i> مرکز لایسنس</h2>
                             <p>فعال، انقضا، تمدید و فعال‌سازی دستگاه</p>
                         </div>
+                        {% if licensing_stats.renewal_rate_pct %}
+                        <span class="ecc-kpi-delta is-up">نرخ تمدید {{ licensing_stats.renewal_rate_pct|to_persian_digits }}٪</span>
+                        {% endif %}
                     </div>
                     <ul class="ecc-stat-strip" style="margin-bottom:1rem">
                         <li><span>فعال</span><strong data-count-up="{{ licensing_stats.active }}">۰</strong></li>
@@ -644,6 +647,75 @@
                         <li><span>صدور هفته</span><strong data-count-up="{{ licensing_stats.issued_week }}">۰</strong></li>
                         <li><span>دستگاه فعال</span><strong data-count-up="{{ licensing_stats.activations }}">۰</strong></li>
                     </ul>
+
+                    <article class="ecc-card ecc-card--full" style="margin-bottom:1rem" id="ecc-renewals">
+                        <div class="ecc-card-head">
+                            <div>
+                                <h3><i class="fas fa-rotate"></i> تمدید اکانت</h3>
+                                <p>از بین خریداران، چند نفر لایسنس را تمدید کرده‌اند</p>
+                            </div>
+                        </div>
+                        <div class="ecc-metrics-row" style="margin-bottom:1rem">
+                            <div class="ecc-metric-pill">
+                                <em>خریدار (اولیه)</em>
+                                <strong data-count-up="{{ licensing_stats.buyers_unique }}">۰</strong>
+                            </div>
+                            <div class="ecc-metric-pill">
+                                <em>تمدید کرده‌اند</em>
+                                <strong data-count-up="{{ licensing_stats.renewed_users }}">۰</strong>
+                            </div>
+                            <div class="ecc-metric-pill">
+                                <em>نرخ تمدید</em>
+                                <strong>{{ licensing_stats.renewal_rate_pct|to_persian_digits }}٪</strong>
+                            </div>
+                            <div class="ecc-metric-pill">
+                                <em>سفارش تمدید</em>
+                                <strong data-count-up="{{ licensing_stats.renewal_orders }}">۰</strong>
+                            </div>
+                            <div class="ecc-metric-pill">
+                                <em>تمدید ۳۰ روز</em>
+                                <strong data-count-up="{{ licensing_stats.renewals_month }}">۰</strong>
+                            </div>
+                            <div class="ecc-metric-pill">
+                                <em>درآمد تمدید</em>
+                                <strong>{{ licensing_stats.renewal_revenue|currency }} ت</strong>
+                            </div>
+                        </div>
+                        <div class="adm-tbl-box" data-preview="{{ table_preview_rows }}" data-ecc-table>
+                            <div class="adm-table-wrap">
+                                <table class="adm-table adm-table--pro adm-table--compact">
+                                    <thead>
+                                        <tr>
+                                            <th>کاربر</th>
+                                            <th>محصول / پلن</th>
+                                            <th>مبلغ</th>
+                                            <th>تاریخ تمدید</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in recent_renewals %}
+                                        <tr{% if forloop.counter > table_preview_rows %} class="adm-tbl-row--more" hidden{% endif %}>
+                                            <td>
+                                                <strong>{{ order.user.get_full_name|default:order.user.username }}</strong>
+                                                <small>{{ order.user.phone|default:order.user.email }}</small>
+                                            </td>
+                                            <td>
+                                                {{ order.product.title }}
+                                                <small>{{ order.plan.name }}</small>
+                                            </td>
+                                            <td>{{ order.amount|currency }} ت</td>
+                                            <td>{% if order.paid_at %}{{ order.paid_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}{% else %}—{% endif %}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="4" class="adm-empty">هنوز تمدیدی ثبت نشده</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% include 'accounts/partials/adm_tbl_toggle.html' with total=recent_renewals|length preview=table_preview_rows %}
+                        </div>
+                    </article>
+
                     <div class="ecc-grid">
                         <article class="ecc-card ecc-card--chart">
                             <div class="ecc-card-head"><h3>وضعیت لایسنس</h3></div>

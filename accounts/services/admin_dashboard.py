@@ -1036,10 +1036,37 @@ def get_sales_center_stats() -> Dict[str, Any]:
 
 
 def get_licensing_center_stats() -> Dict[str, Any]:
-    """آمار مرکز لایسنس."""
+    """آمار مرکز لایسنس + نرخ تمدید واقعی (سفارش با renewal_license)."""
     now = timezone.now()
     today = _today()
     week_end = today + timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    paid = Order.objects.filter(status='paid')
+    paid_renewals = paid.filter(renewal_license__isnull=False)
+    paid_purchases = paid.filter(renewal_license__isnull=True)
+
+    buyers_unique = paid_purchases.values('user_id').distinct().count()
+    renewed_users = (
+        paid_purchases.filter(
+            Exists(
+                Order.objects.filter(
+                    user_id=OuterRef('user_id'),
+                    status='paid',
+                    renewal_license__isnull=False,
+                )
+            )
+        )
+        .values('user_id')
+        .distinct()
+        .count()
+    )
+    renewal_orders = paid_renewals.count()
+    renewal_rate_pct = round((renewed_users / buyers_unique) * 100, 1) if buyers_unique else 0.0
+    renewal_revenue = int(paid_renewals.aggregate(t=Sum('amount'))['t'] or 0)
+    renewals_month = paid_renewals.filter(
+        Q(paid_at__date__gte=month_ago) | Q(paid_at__isnull=True, created_at__date__gte=month_ago)
+    ).count()
+
     return {
         'active': License.objects.filter(status='active').count(),
         'expiring': License.objects.filter(
@@ -1058,7 +1085,22 @@ def get_licensing_center_stats() -> Dict[str, Any]:
             expires_at__date__lte=week_end,
         ).count(),
         'activations': LicenseActivation.objects.filter(is_active=True).count(),
+        'buyers_unique': buyers_unique,
+        'renewed_users': renewed_users,
+        'renewal_orders': renewal_orders,
+        'renewal_rate_pct': renewal_rate_pct,
+        'renewal_revenue': renewal_revenue,
+        'renewals_month': renewals_month,
     }
+
+
+def get_recent_renewal_orders(limit: int = TABLE_FETCH_LIMIT):
+    """آخرین سفارش‌های تمدید پرداخت‌شده برای جدول داشبورد."""
+    return (
+        Order.objects.filter(status='paid', renewal_license__isnull=False)
+        .select_related('user', 'product', 'plan', 'renewal_license')
+        .order_by('-paid_at', '-created_at')[:limit]
+    )
 
 
 def get_operations_stats() -> Dict[str, Any]:
@@ -1373,6 +1415,7 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
         'crm_stats': get_crm_overview_stats(),
         'sales_stats': get_sales_center_stats(),
         'licensing_stats': get_licensing_center_stats(),
+        'recent_renewals': get_recent_renewal_orders(),
         'operations_stats': get_operations_stats(),
         'users_analytics': get_users_analytics_stats(stats),
         'marketing_stats': marketing_stats,

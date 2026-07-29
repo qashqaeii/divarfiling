@@ -8,8 +8,10 @@ from accounts.services.admin_dashboard import (
     get_activity_feed,
     get_admin_dashboard_context,
     get_affiliate_partners,
+    get_licensing_center_stats,
     get_plan_sales_breakdown,
     get_recent_affiliate_sales,
+    get_recent_renewal_orders,
     get_today_stats,
 )
 
@@ -99,6 +101,64 @@ class AdminDashboardServiceTests(TestCase):
         self.assertEqual(partners.model.__name__, 'Affiliate')
         self.assertEqual(sales.model.__name__, 'AffiliateSale')
 
+    def test_licensing_renewal_stats_bought_and_renewed(self):
+        from decimal import Decimal
+
+        from django.utils import timezone
+
+        from licenses.models import License
+        from shop.models import LicensePlan, Order, Product
+        from shop.services.order_fulfillment import fulfill_order_after_payment
+
+        product = Product.objects.create(title='ربات تمدید', slug='renew-kpi-bot', is_active=True)
+        plan = LicensePlan.objects.create(
+            product=product,
+            name='ماهانه',
+            plan_type='monthly',
+            price=100000,
+            duration_days=30,
+            is_active=True,
+        )
+        buyer = User.objects.create_user(username='kpi_buyer', password='x', phone='09123334455')
+        only_buyer = User.objects.create_user(username='kpi_only', password='x', phone='09123334456')
+
+        first = Order.objects.create(
+            user=buyer, product=product, plan=plan, amount=plan.price, status='pending',
+        )
+        fulfill_order_after_payment(first)
+        license_obj = License.objects.get(order=first)
+
+        Order.objects.create(
+            user=only_buyer, product=product, plan=plan, amount=plan.price, status='paid',
+            paid_at=timezone.now(),
+        )
+
+        renewal = Order.objects.create(
+            user=buyer,
+            product=product,
+            plan=plan,
+            amount=Decimal('90000'),
+            status='pending',
+            renewal_license=license_obj,
+            quantity=1,
+        )
+        fulfill_order_after_payment(renewal)
+
+        stats = get_licensing_center_stats()
+        self.assertEqual(stats['buyers_unique'], 2)
+        self.assertEqual(stats['renewed_users'], 1)
+        self.assertEqual(stats['renewal_orders'], 1)
+        self.assertEqual(stats['renewal_rate_pct'], 50.0)
+        self.assertEqual(stats['renewal_revenue'], 90000)
+
+        recent = list(get_recent_renewal_orders())
+        self.assertEqual(len(recent), 1)
+        self.assertEqual(recent[0].user_id, buyer.id)
+
+        ctx = get_admin_dashboard_context(days=30)
+        self.assertIn('recent_renewals', ctx)
+        self.assertEqual(ctx['licensing_stats']['renewed_users'], 1)
+
 
 class AdminDashboardViewTests(TestCase):
     def setUp(self):
@@ -119,8 +179,10 @@ class AdminDashboardViewTests(TestCase):
         self.client.login(username='admstaff', password='pass1234')
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'Executive Command Center')
         self.assertContains(resp, 'ecc-kpi-grid')
+        self.assertContains(resp, 'تمدید اکانت')
+        self.assertContains(resp, 'ecc-renewals')
+        self.assertContains(resp, 'مرکز لایسنس')
 
     def test_dashboard_with_days_param(self):
         self.client.login(username='admstaff', password='pass1234')

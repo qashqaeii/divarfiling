@@ -9,7 +9,7 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-dashboard.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
@@ -50,7 +50,7 @@
         </div>
     </header>
 
-    <section class="acd-mission-card" style="margin-bottom: 1rem;">
+    <section class="acd-mission-card">
         <div class="acd-mission-card-head">
             <span class="acd-mission-icon" aria-hidden="true"><i class="fas fa-bullseye"></i></span>
             <div>
@@ -58,7 +58,7 @@
                 <p class="acd-mission-card-meta">از اولین فایل تا اولین معامله — ماموریت ۱۵ دقیقه‌ای</p>
             </div>
         </div>
-        <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--primary">ورود به آکادمی</a>
+        <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--primary acd-btn--block">ورود به آکادمی</a>
     </section>
 
     {% if stagnant_count or overdue_contacts %}

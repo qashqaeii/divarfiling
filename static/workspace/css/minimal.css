@@ -7316,8 +7316,237 @@ button.mk-ds-card-act {
 .mk-ds-command-desk {
     display: flex;
     flex-direction: column;
-    gap: 0.95rem;
-    padding-inline-start: 0.35rem;
+    gap: 0;
+    padding: 0;
+}
+
+/* Desktop minimal command desk */
+@media (min-width: 769px) {
+    .mk-listing-page .mk-ds-command {
+        padding: 0;
+        gap: 0;
+        background: var(--ws-surface);
+        border-radius: 12px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        overflow: hidden;
+    }
+    .mk-listing-page .mk-ds-command::before { display: none; }
+    .mk-listing-page .mk-ds-command--فروش,
+    .mk-listing-page .mk-ds-command--sale,
+    .mk-listing-page .mk-ds-command--اجاره,
+    .mk-listing-page .mk-ds-command--rent,
+    .mk-listing-page .mk-ds-command--ترکیبی,
+    .mk-listing-page .mk-ds-command--mixed {
+        background: var(--ws-surface);
+    }
+
+    .mk-ds-desk-crumb {
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid var(--ws-border-light);
+        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
+    }
+
+    .mk-ds-desk-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem 1.25rem;
+        padding: 0.85rem 1rem 0.8rem;
+        flex-wrap: wrap;
+    }
+
+    .mk-ds-desk-row .mk-ds-command-identity {
+        flex: 1;
+        min-width: min(100%, 280px);
+        gap: 0.75rem;
+    }
+
+    .mk-ds-desk-row .mk-ds-command-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 0.58rem;
+        border-radius: 10px;
+        margin-top: 0.1rem;
+    }
+
+    .mk-ds-desk-row .mk-ds-command-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    .mk-ds-desk-row .mk-ds-command-title-row {
+        align-items: center;
+        gap: 0.5rem 0.75rem;
+    }
+
+    .mk-ds-desk-count {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.2rem;
+        flex-shrink: 0;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        color: var(--ws-text-muted);
+        background: var(--ws-surface-2);
+        border: 1px solid var(--ws-border-light);
+        font-variant-numeric: tabular-nums;
+    }
+    .mk-ds-desk-count strong {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--ws-text);
+    }
+    .mk-ds-desk-count-sep {
+        opacity: 0.45;
+        font-size: 0.62rem;
+    }
+    .mk-ds-desk-count-lbl {
+        font-size: 0.6rem;
+        font-weight: 600;
+        margin-inline-start: 0.1rem;
+    }
+    .mk-ds-desk-count.is-filtered {
+        border-color: color-mix(in srgb, var(--ws-primary) 24%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary-soft) 55%, var(--ws-surface));
+    }
+    .mk-ds-desk-count.is-filtered strong { color: var(--ws-primary); }
+
+    .mk-ds-desk-row .mk-ds-command-chips {
+        margin-top: 0.4rem;
+        gap: 0.28rem;
+    }
+
+    .mk-ds-desk-row .mk-ds-chip {
+        padding: 0.14rem 0.48rem;
+        font-size: 0.64rem;
+        background: transparent;
+        border-color: color-mix(in srgb, var(--ws-border) 85%, transparent);
+    }
+    .mk-ds-chip--filter {
+        color: var(--ws-primary);
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary-soft) 50%, transparent);
+    }
+
+    .mk-ds-desk-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        flex-shrink: 0;
+    }
+
+    .mk-ds-desk-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.32rem;
+        padding: 0.4rem 0.7rem;
+        border: 1px solid var(--ws-border);
+        border-radius: 8px;
+        background: var(--ws-surface);
+        font-family: inherit;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--ws-text-secondary);
+        text-decoration: none;
+        cursor: pointer;
+        white-space: nowrap;
+        line-height: 1.2;
+        transition: border-color 0.12s, color 0.12s, background 0.12s;
+    }
+    .mk-ds-desk-btn i { font-size: 0.68rem; opacity: 0.85; }
+    .mk-ds-desk-btn:hover {
+        border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
+        color: var(--ws-text);
+        background: var(--ws-surface-2);
+    }
+    .mk-ds-desk-btn--primary {
+        background: var(--ws-primary);
+        border-color: var(--ws-primary);
+        color: #fff;
+    }
+    .mk-ds-desk-btn--primary:hover {
+        background: var(--ws-primary-hover);
+        border-color: var(--ws-primary-hover);
+        color: #fff;
+    }
+    .mk-ds-desk-btn--icon {
+        width: 2rem;
+        height: 2rem;
+        padding: 0;
+    }
+    .mk-ds-desk-btn--danger:hover {
+        border-color: rgba(239, 68, 68, 0.35);
+        background: rgba(239, 68, 68, 0.08);
+        color: #dc2626;
+    }
+
+    .mk-ds-desk-foot {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.6rem 1rem 0.7rem;
+        border-top: 1px solid var(--ws-border-light);
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
+        flex-wrap: wrap;
+    }
+
+    .mk-ds-desk-stats {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.15rem 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .mk-ds-desk-stat {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.3rem;
+        font-size: 0.64rem;
+        color: var(--ws-text-muted);
+        white-space: nowrap;
+    }
+    .mk-ds-desk-stat strong {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--ws-text);
+        font-variant-numeric: tabular-nums;
+    }
+    .mk-ds-desk-stat em {
+        font-style: normal;
+        font-weight: 600;
+        color: var(--ws-text-secondary);
+    }
+
+    .mk-ds-desk-mix {
+        flex: 1;
+        min-width: min(100%, 220px);
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    .mk-ds-desk-mix .mk-ds-mix-track {
+        height: 0.4rem;
+    }
+    .mk-ds-desk-mix .mk-ds-mix-legend {
+        gap: 0.45rem 0.65rem;
+        font-size: 0.58rem;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1100px) {
+    .mk-ds-desk-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .mk-ds-desk-actions {
+        width: 100%;
+        padding-top: 0.15rem;
+    }
 }
 
 .mk-ds-command-top {

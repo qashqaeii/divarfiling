@@ -1,11 +1,16 @@
 {% load workspace_tags crm_tags %}
 {# تب تنظیمات آژانس #}
 {% if tab == 'settings' and can_manage_team %}
-<div class="crm-team-settings-v2">
+<div class="crm-team-settings-v2 crm-settings-studio">
     <header class="crm-settings-intro">
-        <span class="crm-settings-intro-kicker"><i class="fas fa-sliders" aria-hidden="true"></i> کنترل آژانس</span>
-        <h2 class="crm-settings-intro-title">تنظیمات آژانس</h2>
-        <p class="crm-settings-intro-text">هویت برند، سیاست توزیع سرنخ و اهداف عملکرد تیم.</p>
+        <div class="crm-settings-intro-brand">
+            <span class="crm-settings-intro-mark" aria-hidden="true"><i class="fas fa-sliders"></i></span>
+            <div class="crm-settings-intro-copy">
+                <span class="crm-settings-intro-kicker">کنترل آژانس</span>
+                <h2 class="crm-settings-intro-title">تنظیمات آژانس</h2>
+                <p class="crm-settings-intro-text">هویت برند، سیاست توزیع سرنخ و اهداف عملکرد تیم.</p>
+            </div>
+        </div>
     </header>
     <section class="crm-team-settings-grid">
         <article class="crm-team-settings-card crm-team-settings-card--profile">

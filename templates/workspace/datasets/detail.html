@@ -109,54 +109,16 @@
         </div>
 
         <div class="mk-ds-command-desk">
-            <div class="mk-ds-command-top">
-                <nav class="mk-ds-crumb" aria-label="مسیر">
-                    <a href="{% url 'workspace:dataset_list' %}" class="mk-ds-crumb-link mk-ds-crumb-back">
-                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                        <span>فایلینگ</span>
-                    </a>
-                    <span class="mk-ds-crumb-sep mk-ds-crumb-sep--desk" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
-                    <span class="mk-ds-crumb-current mk-ds-crumb-sep--desk">جدول آگهی</span>
-                </nav>
-                <div class="mk-ds-command-actions" role="toolbar" aria-label="عملیات فایل">
-                    <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="mk-ds-action mk-ds-action-cta" title="تحلیل بازار">
-                        <i class="fas fa-chart-line" aria-hidden="true"></i>
-                        <span>تحلیل</span>
-                    </a>
-                    <div class="mk-ds-action-group" role="group" aria-label="عملیات اصلی">
-                        <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="mk-ds-action" title="نقشه آگهی‌ها">
-                            <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-                            <span>نقشه</span>
-                        </a>
-                        <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="mk-ds-action" title="دانلود CSV">
-                            <i class="fas fa-download" aria-hidden="true"></i>
-                            <span>خروجی</span>
-                        </a>
-                    </div>
-                    <div class="mk-ds-action-group" role="group" aria-label="ابزارها">
-                        {% if filing_video.available %}
-                        <a href="{% url 'education' %}#edu-filing-video-title" class="mk-ds-action mk-ds-action-tool" title="آموزش" aria-label="آموزش ویدیویی">
-                            <i class="fas fa-circle-play" aria-hidden="true"></i>
-                        </a>
-                        {% endif %}
-                        <button type="button" class="mk-ds-action mk-ds-action-tool" data-modal-open="modal-rename" title="تغییر نام" aria-label="تغییر نام">
-                            <i class="fas fa-pen" aria-hidden="true"></i>
-                        </button>
-                        {% if consultant_count %}
-                        <button type="button" class="mk-ds-action mk-ds-action-tool mk-ds-action-danger" data-modal-open="modal-delete-consultants" title="حذف مشاورین" aria-label="حذف مشاورین">
-                            <i class="fas fa-user-slash" aria-hidden="true"></i>
-                        </button>
-                        {% endif %}
-                        {% if disguised_consultant_count %}
-                        <button type="button" class="mk-ds-action mk-ds-action-tool mk-ds-action-danger mk-ds-action-danger--disguised" data-modal-open="modal-delete-disguised" title="حذف مشاور پنهان" aria-label="حذف مشاور پنهان">
-                            <i class="fas fa-user-secret" aria-hidden="true"></i>
-                        </button>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+            <nav class="mk-ds-crumb mk-ds-desk-crumb" aria-label="مسیر">
+                <a href="{% url 'workspace:dataset_list' %}" class="mk-ds-crumb-link mk-ds-crumb-back">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    <span>فایلینگ</span>
+                </a>
+                <span class="mk-ds-crumb-sep mk-ds-crumb-sep--desk" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                <span class="mk-ds-crumb-current mk-ds-crumb-sep--desk">جدول آگهی</span>
+            </nav>
 
-            <div class="mk-ds-command-main">
+            <div class="mk-ds-desk-row">
                 <div class="mk-ds-command-identity">
                     <div class="mk-ds-command-icon mk-file-icon mk-file-icon-{{ dataset.file_format }}" aria-hidden="true">
                         {% if dataset.file_format == 'xlsx' %}XLS{% elif dataset.file_format == 'csv' %}CSV{% else %}JSON{% endif %}
@@ -164,6 +126,12 @@
                     <div class="mk-ds-command-text">
                         <div class="mk-ds-command-title-row">
                             <h1 class="mk-ds-command-title">{{ dataset.name }}</h1>
+                            <span class="mk-ds-desk-count{% if is_listing_filtered %} is-filtered{% endif %}">
+                                <strong>{{ filtered_count|intcomma }}</strong>
+                                <span class="mk-ds-desk-count-sep">/</span>
+                                {{ total_count|intcomma }}
+                                <span class="mk-ds-desk-count-lbl">آگهی</span>
+                            </span>
                         </div>
                         <div class="mk-ds-command-chips">
                             {% if dataset.city %}
@@ -177,66 +145,84 @@
                             <span class="mk-ds-chip">{{ dataset.subcategory }}</span>
                             {% endif %}
                             <span class="mk-ds-chip mk-ds-chip-muted">{{ dataset.file_format|upper }}</span>
+                            {% if filter_count %}<span class="mk-ds-chip mk-ds-chip--filter">{{ filter_count }} فیلتر</span>{% endif %}
                         </div>
                     </div>
                 </div>
+
+                <div class="mk-ds-desk-actions" role="toolbar" aria-label="عملیات فایل">
+                    <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="mk-ds-desk-btn mk-ds-desk-btn--primary" title="تحلیل بازار">
+                        <i class="fas fa-chart-line" aria-hidden="true"></i>
+                        <span>تحلیل</span>
+                    </a>
+                    <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="mk-ds-desk-btn" title="نقشه آگهی‌ها">
+                        <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                        <span>نقشه</span>
+                    </a>
+                    <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="mk-ds-desk-btn" title="دانلود CSV">
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                        <span>خروجی</span>
+                    </a>
+                    {% if filing_video.available %}
+                    <a href="{% url 'education' %}#edu-filing-video-title" class="mk-ds-desk-btn mk-ds-desk-btn--icon" title="آموزش ویدیویی" aria-label="آموزش ویدیویی">
+                        <i class="fas fa-circle-play" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                    <button type="button" class="mk-ds-desk-btn mk-ds-desk-btn--icon" data-modal-open="modal-rename" title="تغییر نام" aria-label="تغییر نام">
+                        <i class="fas fa-pen" aria-hidden="true"></i>
+                    </button>
+                    {% if consultant_count %}
+                    <button type="button" class="mk-ds-desk-btn mk-ds-desk-btn--icon mk-ds-desk-btn--danger" data-modal-open="modal-delete-consultants" title="حذف مشاورین" aria-label="حذف مشاورین">
+                        <i class="fas fa-user-slash" aria-hidden="true"></i>
+                    </button>
+                    {% endif %}
+                    {% if disguised_consultant_count %}
+                    <button type="button" class="mk-ds-desk-btn mk-ds-desk-btn--icon mk-ds-desk-btn--danger" data-modal-open="modal-delete-disguised" title="حذف مشاور پنهان" aria-label="حذف مشاور پنهان">
+                        <i class="fas fa-user-secret" aria-hidden="true"></i>
+                    </button>
+                    {% endif %}
+                </div>
             </div>
 
-            <div class="mk-ds-insight" aria-label="آمار فایل">
-                <div class="mk-ds-mix mk-ds-mix--insight" aria-label="ترکیب آگهی‌دهنده">
-                    <div class="mk-ds-mix-head">
-                        <span class="mk-ds-mix-title">ترکیب آگهی‌دهنده</span>
-                        <span class="mk-ds-mix-counts">
-                            {% if total_count %}
-                            {% if genuine_personal_count %}{{ genuine_personal_count|intcomma }} مالک واقعی{% if disguised_consultant_count or consultant_count or personal_other_count %} · {% endif %}{% endif %}
-                            {% if disguised_consultant_count %}{{ disguised_consultant_count|intcomma }} مشاور پنهان{% if consultant_count or personal_other_count %} · {% endif %}{% endif %}
-                            {{ consultant_count|intcomma }} مشاور{% if personal_other_count %} · {{ personal_other_count|intcomma }} شخصی{% endif %}
-                            {% else %}
-                            بدون آگهی
-                            {% endif %}
-                        </span>
+            <div class="mk-ds-desk-foot" aria-label="آمار فایل">
+                <div class="mk-ds-desk-stats">
+                    <div class="mk-ds-desk-stat">
+                        <strong>{{ consultant_count|intcomma }}</strong>
+                        <span>مشاور <em>{{ consultant_pct }}٪</em></span>
                     </div>
-                    {% if total_count %}
+                    <div class="mk-ds-desk-stat">
+                        <strong>{{ personal_count|intcomma }}</strong>
+                        <span>شخصی <em>{{ personal_pct }}٪</em></span>
+                    </div>
+                    {% if genuine_personal_count %}
+                    <div class="mk-ds-desk-stat">
+                        <strong>{{ genuine_personal_count|intcomma }}</strong>
+                        <span>مالک واقعی</span>
+                    </div>
+                    {% endif %}
+                    {% if disguised_consultant_count %}
+                    <div class="mk-ds-desk-stat">
+                        <strong>{{ disguised_consultant_count|intcomma }}</strong>
+                        <span>مشاور پنهان</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if total_count %}
+                <div class="mk-ds-desk-mix" aria-label="ترکیب آگهی‌دهنده">
                     <div class="mk-ds-mix-track" role="presentation" style="grid-template-columns: {% if genuine_personal_count %}{{ genuine_personal_count }}fr {% endif %}{% if disguised_consultant_count %}{{ disguised_consultant_count }}fr {% endif %}{% if personal_other_count %}{{ personal_other_count }}fr {% endif %}{% if consultant_count %}{{ consultant_count }}fr{% endif %};">
                         {% if genuine_personal_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-genuine" title="مالک واقعی {{ genuine_personal_count|intcomma }} · {{ genuine_personal_pct }}٪"></span>{% endif %}
                         {% if disguised_consultant_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-disguised" title="مشاور پنهان {{ disguised_consultant_count|intcomma }} · {{ disguised_consultant_pct }}٪"></span>{% endif %}
                         {% if personal_other_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-personal" title="شخصی {{ personal_other_count|intcomma }} · {{ personal_other_pct }}٪"></span>{% endif %}
                         {% if consultant_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-consultant" title="مشاور {{ consultant_count|intcomma }} · {{ consultant_pct }}٪"></span>{% endif %}
                     </div>
-                    {% else %}
-                    <div class="mk-ds-mix-track mk-ds-mix-track--empty" role="presentation" aria-hidden="true"></div>
-                    {% endif %}
                     <div class="mk-ds-mix-legend">
-                        {% if genuine_personal_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-genuine" aria-hidden="true"></i>مالک واقعی</span>{% endif %}
-                        {% if disguised_consultant_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-disguised" aria-hidden="true"></i>مشاور پنهان</span>{% endif %}
+                        {% if genuine_personal_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-genuine" aria-hidden="true"></i>مالک</span>{% endif %}
+                        {% if disguised_consultant_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-disguised" aria-hidden="true"></i>پنهان</span>{% endif %}
                         <span><i class="mk-ds-mix-dot mk-ds-mix-dot-consultant" aria-hidden="true"></i>مشاور</span>
                         {% if personal_other_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-personal" aria-hidden="true"></i>شخصی</span>{% endif %}
                     </div>
                 </div>
-                <div class="mk-ds-metrics">
-                    <div class="mk-ds-metric">
-                        <strong>{{ filtered_count|intcomma }}</strong>
-                        <span>در نمایش</span>
-                    </div>
-                    <div class="mk-ds-metric">
-                        <strong>{{ total_count|intcomma }}</strong>
-                        <span>کل آگهی</span>
-                    </div>
-                    <div class="mk-ds-metric">
-                        <strong>{{ consultant_count|intcomma }}</strong>
-                        <span>مشاور <em>{{ consultant_pct }}٪</em></span>
-                    </div>
-                    <div class="mk-ds-metric">
-                        <strong>{{ personal_count|intcomma }}</strong>
-                        <span>شخصی <em>{{ personal_pct }}٪</em></span>
-                    </div>
-                    {% if filter_count %}
-                    <div class="mk-ds-metric mk-ds-metric--accent">
-                        <strong>{{ filter_count }}</strong>
-                        <span>فیلتر فعال</span>
-                    </div>
-                    {% endif %}
-                </div>
+                {% endif %}
             </div>
         </div>
     </section>

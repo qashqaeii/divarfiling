@@ -20,9 +20,42 @@
 }
 .crm-sync-intro,
 .crm-hook-intro,
-.crm-xfer-intro,
-.crm-settings-intro {
+.crm-xfer-intro {
     padding: 0.15rem 0.1rem 0.25rem;
+}
+.crm-settings-studio {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.crm-settings-intro {
+    padding: 0.85rem 1rem;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    background:
+        radial-gradient(80% 70% at 100% 0%, color-mix(in srgb, var(--ws-primary) 8%, transparent), transparent 55%),
+        var(--ws-surface);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+}
+.crm-settings-intro-brand {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+.crm-settings-intro-mark {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    color: var(--ws-primary);
+    background: var(--ws-primary-soft);
+    font-size: 0.9rem;
+}
+.crm-settings-intro-copy {
+    min-width: 0;
+    flex: 1;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -314,33 +347,33 @@
 .crm-hook-intro-kicker,
 .crm-xfer-intro-kicker,
 .crm-settings-intro-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.68rem;
+    display: block;
+    font-size: 0.64rem;
     font-weight: 800;
+    letter-spacing: 0.02em;
     color: var(--ws-primary);
 }
 .crm-sync-intro-title,
 .crm-hook-intro-title,
 .crm-xfer-intro-title,
 .crm-settings-intro-title {
-    margin: 0.25rem 0 0;
+    margin: 0.2rem 0 0;
     font-family: 'Vazirmatn', inherit;
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     font-weight: 900;
     letter-spacing: -0.03em;
     color: var(--ws-text);
+    line-height: 1.25;
 }
 .crm-sync-intro-text,
 .crm-hook-intro-text,
 .crm-xfer-intro-text,
 .crm-settings-intro-text {
-    margin: 0.3rem 0 0;
-    font-size: 0.78rem;
+    margin: 0.28rem 0 0;
+    font-size: 0.72rem;
     line-height: 1.55;
     color: var(--ws-text-muted);
-    max-width: 36rem;
+    max-width: 40rem;
 }
 
 .crm-sync-volume {
@@ -2834,6 +2867,17 @@
     .crm-team-mobile .crm-team-settings-v2 {
         gap: 0.65rem;
         margin-block: 0.25rem 0.75rem;
+    }
+    .crm-team-mobile .crm-settings-intro {
+        margin-top: 0.35rem;
+        padding: 0.85rem 0.9rem;
+        border-radius: 18px;
+    }
+    .crm-team-mobile .crm-settings-intro-title {
+        font-size: 1.02rem;
+    }
+    .crm-team-mobile .crm-settings-intro-text {
+        font-size: 0.74rem;
     }
     .crm-team-mobile .crm-team-settings-grid {
         display: flex !important;

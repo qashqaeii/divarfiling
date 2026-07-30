@@ -1,6 +1,7 @@
 /**
  * Mizkar Notice System — unified dismiss, auto-hide & toast API
- * Session-persistent dismiss for referral / announcements / banners.
+ * Persistent dismiss for referral / announcements / banners
+ * (session for guests; DB for authenticated users).
  */
 (function (global) {
     'use strict';

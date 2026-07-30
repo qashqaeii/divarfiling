@@ -1,9 +1,10 @@
 {% load persian_tags %}
 {% if announcements %}
-<div class="mk-notices mk-notices--banner announcements-section" role="region" aria-label="اطلاعیه‌ها">
+{% with layout=notice_layout|default:"banner" %}
+<div class="mk-notices mk-notices--{{ layout }} announcements-section" role="region" aria-label="اطلاعیه‌ها">
     <div class="mk-notices__inner">
         {% for announcement in announcements %}
-        <div class="mk-notice mk-notice--promo mk-notice--banner announcement-bar" data-notice-kind="announcement" data-notice-id="{{ announcement.pk }}">
+        <div class="mk-notice mk-notice--promo mk-notice--{{ layout }} announcement-bar" data-notice-kind="announcement" data-notice-id="{{ announcement.pk }}">
             <span class="mk-notice__badge" aria-hidden="true">
                 <i class="fas fa-bullhorn"></i>
                 <span class="mk-notice__badge-label">اطلاعیه</span>
@@ -27,4 +28,5 @@
         {% endfor %}
     </div>
 </div>
+{% endwith %}
 {% endif %}

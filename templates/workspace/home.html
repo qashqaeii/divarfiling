@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=97">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=13">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -61,6 +61,8 @@
             </button>
         </div>
     </header>
+
+    {% include 'includes/announcements.html' with notice_layout='inline' %}
 
     {% if crm_stats.overdue_followups %}
     <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="ws-home-alert ws-home-alert--warn" role="alert">

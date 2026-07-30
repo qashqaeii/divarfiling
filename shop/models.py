@@ -658,6 +658,34 @@ class Announcement(models.Model):
         return True
 
 
+class UserDismissedNotice(models.Model):
+    """اطلاعیه/بنری که کاربر بست — دیگر نشان داده نمی‌شود."""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='dismissed_notices',
+        verbose_name='کاربر',
+    )
+    kind = models.CharField(max_length=32, db_index=True, verbose_name='نوع')
+    notice_id = models.CharField(max_length=64, blank=True, default='', verbose_name='شناسه')
+    dismissed_at = models.DateTimeField(auto_now_add=True, verbose_name='زمان بستن')
+
+    class Meta:
+        verbose_name = 'اطلاعیه بسته‌شده'
+        verbose_name_plural = 'اطلاعیه‌های بسته‌شده'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'kind', 'notice_id'],
+                name='shop_userdismissednotice_user_kind_id_uniq',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['user', 'kind']),
+        ]
+
+    def __str__(self):
+        return f'{self.user_id}:{self.kind}:{self.notice_id or "-"}'
+
 
 class PaymentSettings(models.Model):
     """تنظیمات روش‌های پرداخت — فقط یک رکورد (singleton)."""

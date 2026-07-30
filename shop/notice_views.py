@@ -1,4 +1,4 @@
-"""API بستن موقت بنر/اطلاعیه تا پایان نشست کاربر."""
+"""API بستن بنر/اطلاعیه."""
 from __future__ import annotations
 
 from django.http import JsonResponse
@@ -15,7 +15,7 @@ ALLOWED_KINDS = frozenset({'announcement', 'banner', 'referral'})
 class DismissNoticeView(View):
     """
     POST JSON: { "kind": "announcement"|"banner"|"referral", "id": optional }
-    ذخیره در session — تا logout / پایان نشست دوباره نشان داده نمی‌شود.
+    مهمان: نشست. کاربر لاگین: نشست + دیتابیس (دیگر نشان داده نمی‌شود).
     """
 
     def post(self, request):

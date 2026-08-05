@@ -466,7 +466,7 @@ class BuyView(LoginRequiredMixin, CreateView):
         renew_param = self.request.POST.get('renew')
         if renew_param and not self.renewal_license:
             messages.error(self.request, 'درخواست تمدید نامعتبر است.')
-            return redirect(f"{reverse('dashboard')}?tab=licenses#licenses")
+            return redirect(f"{reverse('dashboard_tab', kwargs={'tab': 'licenses'})}#licenses")
 
         blocked = self._redirect_for_plan_requirements(form.cleaned_data.get('plan'))
         if blocked:

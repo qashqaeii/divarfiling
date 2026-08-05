@@ -82,11 +82,11 @@
                     <i class="fas fa-layer-group" aria-hidden="true"></i>
                     <span>میزکار</span>
                 </a>
-                <button type="button" class="dash-head-btn dash-head-btn--ghost" onclick="showTab('profile', event)" title="ویرایش پروفایل">
+                <a href="{{ dashboard_tab_urls.profile }}" class="dash-head-btn dash-head-btn--ghost" title="ویرایش پروفایل">
                     <i class="fas fa-user-pen" aria-hidden="true"></i>
-                </button>
+                </a>
                 {% if pending_orders_count > 0 %}
-                <a href="{% url 'dashboard' %}?tab=orders&amp;order_status=pending" class="dash-head-btn dash-head-btn--warn" onclick="showTab('orders', event); return false;" title="سفارش پرداخت‌نشده">
+                <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="dash-head-btn dash-head-btn--warn" title="سفارش پرداخت‌نشده">
                     <i class="fas fa-clock" aria-hidden="true"></i>
                     <span>{{ pending_orders_count }}</span>
                 </a>
@@ -139,41 +139,41 @@
     <div class="dash-shell dashboard-main-card">
         <div class="dash-tabs-scroll">
             <nav class="dash-tabs dash-tabs--chips dashboard-tabs-modern" aria-label="بخش‌های پروفایل">
-                <button class="tab-btn-modern active" onclick="showTab('overview', event)" data-tab="overview">
+                <a href="{{ dashboard_tab_urls.overview }}" class="tab-btn-modern{% if active_tab == 'overview' %} active{% endif %}" data-tab="overview">
                     <span class="tab-icon"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
                     <span class="tab-text">نمای کلی</span>
-                </button>
-                <button class="tab-btn-modern" onclick="showTab('orders', event)" data-tab="orders">
+                </a>
+                <a href="{{ dashboard_tab_urls.orders }}" class="tab-btn-modern{% if active_tab == 'orders' %} active{% endif %}" data-tab="orders">
                     <span class="tab-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
                     <span class="tab-text">سفارش‌ها</span>
-                </button>
-                <button class="tab-btn-modern" onclick="showTab('licenses', event)" data-tab="licenses">
+                </a>
+                <a href="{{ dashboard_tab_urls.licenses }}" class="tab-btn-modern{% if active_tab == 'licenses' %} active{% endif %}" data-tab="licenses">
                     <span class="tab-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
                     <span class="tab-text">لایسنس‌ها</span>
-                </button>
-                <button class="tab-btn-modern" onclick="showTab('downloads', event)" data-tab="downloads">
+                </a>
+                <a href="{{ dashboard_tab_urls.downloads }}" class="tab-btn-modern{% if active_tab == 'downloads' %} active{% endif %}" data-tab="downloads">
                     <span class="tab-icon"><i class="fas fa-download" aria-hidden="true"></i></span>
                     <span class="tab-text">دانلود اپ‌ها</span>
-                </button>
-                <button class="tab-btn-modern" onclick="showTab('transactions', event)" data-tab="transactions">
+                </a>
+                <a href="{{ dashboard_tab_urls.transactions }}" class="tab-btn-modern{% if active_tab == 'transactions' %} active{% endif %}" data-tab="transactions">
                     <span class="tab-icon"><i class="fas fa-exchange-alt" aria-hidden="true"></i></span>
                     <span class="tab-text">تراکنش‌ها</span>
-                </button>
+                </a>
                 {% if has_paid_orders %}
-                <button class="tab-btn-modern" onclick="showTab('affiliate', event)" data-tab="affiliate">
+                <a href="{{ dashboard_tab_urls.affiliate }}" class="tab-btn-modern{% if active_tab == 'affiliate' %} active{% endif %}" data-tab="affiliate">
                     <span class="tab-icon"><i class="fas fa-handshake" aria-hidden="true"></i></span>
                     <span class="tab-text">همکاری در فروش</span>
-                </button>
+                </a>
                 {% endif %}
-                <button class="tab-btn-modern" onclick="showTab('profile', event)" data-tab="profile">
+                <a href="{{ dashboard_tab_urls.profile }}" class="tab-btn-modern{% if active_tab == 'profile' %} active{% endif %}" data-tab="profile">
                     <span class="tab-icon"><i class="fas fa-user" aria-hidden="true"></i></span>
                     <span class="tab-text">پروفایل</span>
-                </button>
+                </a>
             </nav>
         </div>
         
         <!-- Tab: Overview -->
-        <div id="tab-overview" class="tab-content">
+        <div id="tab-overview" class="tab-content"{% if active_tab != 'overview' %} style="display: none;"{% endif %}>
             <div class="overview-grid">
                 <!-- آخرین سفارش‌ها -->
                 <div class="section-card overview-card">
@@ -197,7 +197,7 @@
                                 </article>
                             {% endfor %}
                         </div>
-                        <a href="#" onclick="showTab('orders', event); return false;" class="view-all-link view-all-link--compact">
+                        <a href="{{ dashboard_tab_urls.orders }}" class="view-all-link view-all-link--compact">
                             مشاهده همه <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         </a>
                     {% else %}
@@ -233,7 +233,7 @@
                                 </article>
                             {% endfor %}
                         </div>
-                        <a href="#" onclick="showTab('licenses', event); return false;" class="view-all-link view-all-link--compact">
+                        <a href="{{ dashboard_tab_urls.licenses }}" class="view-all-link view-all-link--compact">
                             مشاهده همه <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         </a>
                     {% else %}
@@ -314,7 +314,7 @@
                 </div>
                 
                 <div class="affiliate-modern-actions">
-                    <a href="#" onclick="showTab('affiliate', event); return false;" class="affiliate-modern-action-btn outline">
+                    <a href="{{ dashboard_tab_urls.affiliate }}" class="affiliate-modern-action-btn outline">
                         <i class="fas fa-chart-line" aria-hidden="true"></i>
                         <span>مشاهده جزئیات</span>
                     </a>
@@ -330,7 +330,7 @@
         </div>
         
         <!-- Tab: Orders -->
-        <div id="tab-orders" class="tab-content" style="display: none;">
+        <div id="tab-orders" class="tab-content"{% if active_tab != 'orders' %} style="display: none;"{% endif %}>
             <div class="tab-header">
                 <h2 class="tab-content-title mb-4">سفارش‌های من</h2>
                 
@@ -448,7 +448,7 @@
         </div>
         
         <!-- Tab: Licenses -->
-        <div id="tab-licenses" class="tab-content" style="display: none;" data-license-mgmt>
+        <div id="tab-licenses" class="tab-content"{% if active_tab != 'licenses' %} style="display: none;"{% endif %} data-license-mgmt>
             <header class="lic-page-head">
                 <div class="lic-page-head-copy">
                     <h2 class="lic-page-title">لایسنس‌ها</h2>
@@ -710,7 +710,7 @@
 
                     <footer class="lic-tile-foot">
                         <a href="{% url 'license_guide' %}" class="lic-tile-link">راهنما</a>
-                        <a href="#" onclick="showTab('downloads', event); return false;" class="lic-tile-link">دانلود</a>
+                        <a href="{{ dashboard_tab_urls.downloads }}" class="lic-tile-link">دانلود</a>
                         {% if item.can_renew %}
                         <a href="{% url 'renew_license' lic.id %}" class="lic-tile-link lic-tile-link--renew">تمدید</a>
                         {% endif %}
@@ -748,7 +748,7 @@
         </div>
 
         <!-- Tab: Downloads -->
-        <div id="tab-downloads" class="tab-content dl-tab" style="display: none;">
+        <div id="tab-downloads" class="tab-content dl-tab"{% if active_tab != 'downloads' %} style="display: none;"{% endif %}>
             <header class="dl-tab-head">
                 <h2 class="dl-tab-title">دانلود اپ‌ها</h2>
                 <p class="dl-tab-sub">اپ اندروید و ربات ویندوز — با همان لایسنس میزکار</p>
@@ -759,7 +759,7 @@
         </div>
         
         <!-- Tab: Transactions -->
-        <div id="tab-transactions" class="tab-content" style="display: none;">
+        <div id="tab-transactions" class="tab-content"{% if active_tab != 'transactions' %} style="display: none;"{% endif %}>
             <div class="tab-header dash-txn-head">
                 <div>
                     <h2 class="tab-content-title">تراکنش‌های من</h2>
@@ -846,7 +846,7 @@
         
         <!-- Tab: Affiliate -->
         {% if has_paid_orders %}
-        <div id="tab-affiliate" class="tab-content" style="display: none;">
+        <div id="tab-affiliate" class="tab-content"{% if active_tab != 'affiliate' %} style="display: none;"{% endif %}>
             <h2 class="tab-content-title mb-4">همکاری در فروش</h2>
             
             {% if affiliate %}
@@ -1005,7 +1005,7 @@
         {% endif %}
         
         <!-- Tab: Profile -->
-        <div id="tab-profile" class="tab-content prof-tab" style="display: none;">
+        <div id="tab-profile" class="tab-content prof-tab"{% if active_tab != 'profile' %} style="display: none;"{% endif %}>
             <header class="prof-head">
                 <h2 class="prof-head-title">پروفایل</h2>
                 <p class="prof-head-sub">حساب کاربری و برند عمومی برای اشتراک با مشتری</p>
@@ -1715,69 +1715,24 @@ function previewAvatar(event) {
 
 // showNotification & showToast provided by mk-notices.js
 
-function showTab(tabName, event) {
-    // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.style.display = 'none';
-    });
-    
-    // Remove active class from all buttons
-    document.querySelectorAll('.tab-btn-modern').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected tab
-    const tabContent = document.getElementById('tab-' + tabName);
-    if (tabContent) {
-        tabContent.style.display = 'block';
-    }
-    
-    // Add active class to clicked button
-    if (event && event.target) {
-        const btn = event.target.closest('.tab-btn-modern');
-        if (btn) {
-            document.querySelectorAll('.tab-btn-modern').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            scrollActiveTabIntoView(btn);
-        }
-    } else {
-        document.querySelectorAll('.tab-btn-modern').forEach(btn => {
-            const onclick = btn.getAttribute('onclick') || '';
-            const dataTab = btn.getAttribute('data-tab');
-            if (dataTab === tabName || onclick.includes("showTab('" + tabName + "'")) {
-                btn.classList.add('active');
-                scrollActiveTabIntoView(btn);
-            }
-        });
-    }
-}
-
-function scrollActiveTabIntoView(btn) {
-    if (!btn || !btn.scrollIntoView) return;
-    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-}
-
+// اسکرول به anchor در hash (مثلاً #licenses)
 document.addEventListener('DOMContentLoaded', function() {
-    const params = new URLSearchParams(window.location.search);
-    const tabParam = params.get('tab');
+    const activeTabBtn = document.querySelector('.tab-btn-modern.active');
+    if (activeTabBtn && activeTabBtn.scrollIntoView) {
+        activeTabBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
     const hash = window.location.hash.replace('#', '');
     const downloadAnchors = new Set(['download-apps', 'mk-dl-android-notes', 'mk-dl-windows-notes']);
-    let tabName = tabParam;
-    if (!tabName && downloadAnchors.has(hash)) {
-        tabName = 'downloads';
-    } else if (!tabName && hash) {
-        tabName = hash;
+    if (!hash) return;
+    if (downloadAnchors.has(hash) && !document.getElementById('tab-downloads')?.offsetParent) {
+        window.location.replace('{{ dashboard_tab_urls.downloads }}#' + hash);
+        return;
     }
-    if (tabName) {
-        showTab(tabName, null);
-    }
-    if (hash) {
-        const anchor = document.getElementById(hash);
-        if (anchor) {
-            window.requestAnimationFrame(function() {
-                anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-        }
+    const anchor = document.getElementById(hash);
+    if (anchor) {
+        window.requestAnimationFrame(function() {
+            anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
     }
 });
 

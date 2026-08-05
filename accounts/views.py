@@ -8,11 +8,18 @@ from django.views.generic import TemplateView, CreateView, UpdateView
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.http import JsonResponse
 import json
 from .models import User, UserProfile
 from .forms import RegisterForm, ProfileForm, UserInfoForm, LoginForm
+from .dashboard_tabs import (
+    DEFAULT_TAB,
+    VALID_TABS,
+    dashboard_tab_url,
+    dashboard_tab_urls,
+    resolve_dashboard_tab,
+)
 from licenses.dashboard_views import (
     ActivateLicenseForOwnerView,
     AssignLicenseView,
@@ -89,6 +96,21 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'accounts/dashboard.html'
 
     def dispatch(self, request, *args, **kwargs):
+        tab_path = (kwargs.get('tab') or '').strip().lower() or None
+        if tab_path and tab_path not in VALID_TABS:
+            return redirect('dashboard')
+
+        if request.method == 'GET' and request.user.is_authenticated:
+            if tab_path == 'affiliate':
+                from shop.models import Order
+                if not Order.objects.filter(user=request.user, status='paid').exists():
+                    return redirect('dashboard')
+            tab_query = (request.GET.get('tab') or '').strip().lower()
+            if tab_query and not tab_path and tab_query in VALID_TABS and tab_query != DEFAULT_TAB:
+                query = request.GET.copy()
+                query.pop('tab', None)
+                return redirect(dashboard_tab_url(tab_query, query=query))
+
         response = super().dispatch(request, *args, **kwargs)
         if request.user.is_authenticated and request.method == 'GET':
             try:
@@ -230,6 +252,14 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'total_licenses': total_licenses,
             'active_licenses': active_licenses,
             'total_spent': total_spent,
+
+            # تب فعال
+            'active_tab': resolve_dashboard_tab(
+                tab_from_path=self.kwargs.get('tab'),
+                tab_from_query=self.request.GET.get('tab'),
+                has_paid_orders=has_paid_orders,
+            ),
+            'dashboard_tab_urls': dashboard_tab_urls(),
             
             # داده‌ها
             'orders': orders[:50],  # محدود به 50 مورد
@@ -536,5 +566,5 @@ class ClaimLicenseView(LoginRequiredMixin, View):
         except Exception as exc:
             messages.error(request, f'خطا در صدور لایسنس: {exc}')
 
-        return redirect(f"{reverse_lazy('dashboard')}?tab=licenses#licenses")
+        return redirect(f"{reverse('dashboard_tab', kwargs={'tab': 'licenses'})}#licenses")
 

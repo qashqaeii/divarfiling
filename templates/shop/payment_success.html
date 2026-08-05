@@ -159,7 +159,7 @@
                     {% endif %}
 
                     <nav class="ck-success-actions" aria-label="اقدامات بعدی">
-                        <a href="{% url 'dashboard' %}?tab=licenses#licenses" class="ck-success-btn ck-success-btn--ghost">
+                        <a href="{% url 'dashboard_tab' 'licenses' %}#licenses" class="ck-success-btn ck-success-btn--ghost">
                             <i class="fas fa-key" aria-hidden="true"></i>
                             مشاهده کلید در میزکار
                         </a>
@@ -247,7 +247,7 @@
                             دانلود ربات ویندوز
                         </a>
                         {% endif %}
-                        <a href="{% url 'dashboard' %}?tab=licenses#licenses" class="ck-success-btn ck-success-btn--primary">
+                        <a href="{% url 'dashboard_tab' 'licenses' %}#licenses" class="ck-success-btn ck-success-btn--primary">
                             <i class="fas fa-key" aria-hidden="true"></i>
                             رفتن به صدور لایسنس
                         </a>

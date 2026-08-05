@@ -75,7 +75,7 @@ def activate_license(request) -> dict:
     try:
         with transaction.atomic():
             try:
-                license_obj = License.objects.select_for_update().select_related(
+                license_obj = License.objects.select_for_update(of=('self',)).select_related(
                     'order__user', 'plan', 'assigned_user', 'assigned_by',
                 ).get(license_key=license_key)
             except License.DoesNotExist:

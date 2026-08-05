@@ -70,7 +70,7 @@ def bind_hardware_to_license(
 
     Returns: (activation, created, success_payload)
     """
-    license_obj = License.objects.select_for_update().select_related(
+    license_obj = License.objects.select_for_update(of=('self',)).select_related(
         'order__user', 'plan', 'assigned_user', 'assigned_by',
     ).get(pk=license_obj.pk)
 

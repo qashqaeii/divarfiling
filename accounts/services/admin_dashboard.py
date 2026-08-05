@@ -14,6 +14,7 @@ from django.utils import timezone
 from workspace.services.jalali_input import to_persian_digits
 
 from accounts.models import SmsMessageLog
+from accounts.services.admin_database_backup import get_database_backup_info
 from accounts.services.admin_exports import get_export_catalog
 from accounts.services.admin_marketing import (
     SEGMENT_REGISTRY,
@@ -1440,6 +1441,7 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
         'licensing_stats': get_licensing_center_stats(),
         'recent_renewals': get_recent_renewal_orders(),
         'operations_stats': get_operations_stats(),
+        'database_backup_info': get_database_backup_info(),
         'users_analytics': get_users_analytics_stats(stats),
         'marketing_stats': marketing_stats,
         'marketing_segments': marketing_segments,

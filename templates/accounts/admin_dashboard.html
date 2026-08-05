@@ -905,7 +905,12 @@
                     <div class="ecc-section-head">
                         <div>
                             <h2 id="eccOpsTitle"><i class="fas fa-server"></i> مرکز عملیات</h2>
-                            <p>SMS، داده و سلامت سرویس‌ها</p>
+                            <p>SMS، داده، بک‌آپ و سلامت سرویس‌ها</p>
+                        </div>
+                        <div class="ecc-section-actions">
+                            <a href="{% url 'admin_panel_database_backup' %}?format=auto" class="ecc-btn ecc-btn--primary" title="بک‌آپ دیتابیس">
+                                <i class="fas fa-database"></i> بک‌آپ دیتابیس
+                            </a>
                         </div>
                     </div>
                     {% if sms_balance.is_low and sms_balance.ok %}
@@ -923,6 +928,45 @@
                         <li><span>Dataset</span><strong>{{ operations_stats.datasets_total|currency }}</strong></li>
                     </ul>
                     <div class="ecc-grid">
+                        <article class="ecc-card ecc-card--wide adm-json-card adm-json-card--stats">
+                            <div class="adm-json-head">
+                                <div class="adm-json-main">
+                                    <span class="adm-json-icon"><i class="fas fa-database"></i></span>
+                                    <div>
+                                        <h3>بک‌آپ دیتابیس</h3>
+                                        <p>
+                                            {{ database_backup_info.engine_label }}
+                                            {% if database_backup_info.database_name %}
+                                            · <span dir="ltr">{{ database_backup_info.database_name }}</span>
+                                            {% endif %}
+                                            · پیش‌فرض: {{ database_backup_info.default_label }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="adm-json-actions">
+                                    <a href="{% url 'admin_panel_database_backup' %}?format=auto" class="adm-dl-btn adm-dl-btn--primary" title="بهترین روش برای سرور فعلی">
+                                        <i class="fas fa-download"></i> دانلود بک‌آپ
+                                    </a>
+                                    {% if database_backup_info.supports_custom_dump %}
+                                    <a href="{% url 'admin_panel_database_backup' %}?format=custom" class="adm-dl-btn" title="فرمت pg_restore">
+                                        <i class="fas fa-file-archive"></i> Custom
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'admin_panel_database_backup' %}?format=dumpdata" class="adm-dl-btn" title="JSON فشرده Django">
+                                        <i class="fas fa-file-code"></i> JSON
+                                    </a>
+                                </div>
+                            </div>
+                            <p class="adm-mkt-hint" style="margin:0.75rem 0 0">
+                                {% if database_backup_info.pg_dump_available %}
+                                PostgreSQL: خروجی SQL با pg_dump. برای بازیابی: <code dir="ltr">psql -U USER -d DB -f backup.sql</code>
+                                {% elif database_backup_info.engine_label == 'SQLite' %}
+                                SQLite: کپی مستقیم فایل دیتابیس. JSON برای انتقال بین محیط‌ها.
+                                {% else %}
+                                JSON (dumpdata) برای بازیابی با <code dir="ltr">python manage.py loaddata</code>
+                                {% endif %}
+                            </p>
+                        </article>
                         <article class="ecc-card ecc-card--chart">
                             <div class="ecc-card-head"><h3>وضعیت SMS</h3></div>
                             <div class="ecc-chart-wrap ecc-chart-wrap--donut"><canvas id="chart-operations"></canvas></div>

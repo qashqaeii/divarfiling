@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.serializers.json import DjangoJSONEncoder
-from django.http import HttpResponseNotFound, JsonResponse
+from django.http import HttpResponse, HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -13,6 +13,11 @@ from django.views import View
 from django.views.generic import DetailView, TemplateView
 
 from accounts.models import MarketingCampaign, MarketingCampaignRecipient
+from accounts.services.admin_database_backup import (
+    DatabaseBackupError,
+    create_database_backup,
+    get_database_backup_info,
+)
 from accounts.services.admin_dashboard import get_admin_dashboard_context
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 from accounts.services.admin_marketing import (
@@ -103,6 +108,27 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
         ctx.update(dashboard)
         ctx['charts_json'] = json.dumps(dashboard['charts'], ensure_ascii=False)
         return ctx
+
+
+class AdminDatabaseBackupView(StaffRequiredMixin, View):
+    """دانلود بک‌آپ دیتابیس — فقط staff."""
+
+    def get(self, request):
+        fmt = (request.GET.get('format') or 'auto').lower().strip()
+        allowed = {'auto', 'pg_dump', 'custom', 'dumpdata', 'sqlite'}
+        if fmt not in allowed:
+            fmt = 'auto'
+
+        try:
+            result = create_database_backup(fmt=fmt)
+        except DatabaseBackupError as exc:
+            messages.error(request, exc.message)
+            return redirect('admin_panel')
+
+        response = HttpResponse(result.content, content_type=result.content_type)
+        response['Content-Disposition'] = f'attachment; filename="{result.filename}"'
+        response['X-Backup-Method'] = result.method
+        return response
 
 
 class AdminExportView(StaffRequiredMixin, View):

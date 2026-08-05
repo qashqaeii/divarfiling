@@ -210,6 +210,16 @@ class DesktopLicensingAPITests(TestCase):
         alloc = data.get('allocation') or {}
         self.assertTrue(alloc.get('is_assigned'))
         self.assertEqual(alloc.get('assigned_by_name'), _display_name(self.owner))
+        account = data.get('account') or {}
+        self.assertEqual(account.get('phone'), self.member.phone)
+
+    def test_owner_bind_shows_own_profile(self):
+        resp = self.client.post('/api/desktop/v1/licenses/bind', {
+            'hardware_fingerprint': TEST_HW,
+        }, format='json')
+        self.assertEqual(resp.status_code, 200)
+        account = resp.json()['data'].get('account') or {}
+        self.assertEqual(account.get('phone'), self.owner.phone)
 
     def test_member_seat_assignment(self):
         agency = CRMAgency.objects.create(name='آژانس۲', slug='agency-2', owner=self.owner)

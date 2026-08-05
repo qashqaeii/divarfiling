@@ -65,10 +65,15 @@ def _serialize_property(prop: CRMProperty) -> Dict[str, Any]:
     }
 
 
-def build_license_account_payload(license_obj) -> Dict[str, Any]:
+def build_license_account_payload(
+    license_obj,
+    *,
+    account_user=None,
+) -> Dict[str, Any]:
     """ساخت payload اختیاری account — کلاینت‌های قدیمی نادیده می‌گیرند."""
     order = getattr(license_obj, "order", None)
-    user = getattr(order, "user", None) if order else None
+    owner = getattr(order, "user", None) if order else None
+    user = account_user or owner
     if user is None:
         return {}
 

@@ -390,6 +390,7 @@ def bind_desktop_device(
                     'user_id': user.pk,
                     'username': user.username,
                 },
+                account_user=user,
             )
     except ValueError as exc:
         raise DesktopLicensingError(str(exc), code='BIND_FAILED') from exc
@@ -520,7 +521,9 @@ def validate_desktop_session(
         payload['error'] = error
         payload['code'] = 'LICENSE_INVALID'
     else:
-        payload['account'] = build_license_account_payload(license_obj)
+        payload['account'] = build_license_account_payload(
+            license_obj, account_user=user,
+        )
         payload['allocation'] = build_license_allocation_payload(
             license_obj, activation=activation,
         )

@@ -64,6 +64,7 @@ def bind_hardware_to_license(
     device_type: str = 'desktop',
     audit_action: str = 'activation',
     audit_details: Optional[Dict[str, Any]] = None,
+    account_user=None,
 ) -> Tuple[LicenseActivation, bool, Dict[str, Any]]:
     """
     اتصال fingerprint به لایسنس — atomic با select_for_update روی License.
@@ -101,7 +102,9 @@ def bind_hardware_to_license(
             'license_id': license_obj.pk,
             'activated_at': existing_active.activated_at.isoformat(),
             'device_type': device_type if device_type != 'windows' else 'desktop',
-            'account': build_license_account_payload(license_obj),
+            'account': build_license_account_payload(
+                license_obj, account_user=account_user,
+            ),
             'allocation': build_license_allocation_payload(
                 license_obj, activation=existing_active,
             ),
@@ -182,7 +185,9 @@ def bind_hardware_to_license(
         'license_id': license_obj.pk,
         'activated_at': activation.activated_at.isoformat(),
         'device_type': device_type if device_type != 'windows' else 'desktop',
-        'account': build_license_account_payload(license_obj),
+        'account': build_license_account_payload(
+            license_obj, account_user=account_user,
+        ),
         'allocation': build_license_allocation_payload(license_obj, activation=activation),
         **_offline_grace_payload(),
         **license_obj.plan_payload(),

@@ -99,11 +99,6 @@ def _compute_eligibility_state(
         return 'active_on_this_device'
 
     active_count = license_obj.active_slot_count()
-    if active_count >= license_obj.max_activations:
-        if act_this and not act_this.is_active:
-            pass
-        else:
-            return 'full'
 
     if access_context in ('member_assigned', 'member_seat'):
         if license_obj.max_activations == 1 and active_count >= 1:
@@ -113,7 +108,18 @@ def _compute_eligibility_state(
             ).exclude(hardware_fingerprint=hardware_fingerprint).exists()
             if other:
                 return 'active_on_other_device'
+        if active_count >= license_obj.max_activations:
+            if act_this and not act_this.is_active:
+                pass
+            else:
+                return 'full'
         return 'assigned'
+
+    if active_count >= license_obj.max_activations:
+        if act_this and not act_this.is_active:
+            pass
+        else:
+            return 'full'
 
     if license_obj.assigned_user_id:
         return 'assigned'
@@ -301,10 +307,29 @@ def resolve_bind_license_id(
     bindable = [i for i in licenses if i.get('can_bind')]
 
     if not bindable:
+        if licenses:
+            states = {i.get('eligibility_state') for i in licenses}
+            if 'active_on_other_device' in states:
+                raise DesktopLicensingError(
+                    'لایسنس شما روی دستگاه دیگری فعال است. '
+                    'از مدیر آژانس بخواهید آن دستگاه را غیرفعال کند یا لایسنس دیگری تخصیص دهد.',
+                    code='LICENSE_ACTIVE_ON_OTHER_DEVICE',
+                    http_status=403,
+                    payload={'licenses': licenses},
+                )
+            if 'full' in states:
+                raise DesktopLicensingError(
+                    'تمام اسلات‌های لایسنس تخصیص‌یافته پر شده است.',
+                    code='LICENSE_SLOTS_FULL',
+                    http_status=403,
+                    payload={'licenses': licenses},
+                )
         raise DesktopLicensingError(
-            'لایسنس فعال یا قابل اتصال برای این حساب یافت نشد.',
+            'لایسنس فعال یا قابل اتصال برای این حساب یافت نشد. '
+            'اگر لایسنس از طرف آژانس تخصیص داده شده، از مدیر بخواهید تخصیص را بررسی کند.',
             code='NO_ELIGIBLE_LICENSE',
             http_status=403,
+            payload={'licenses': licenses} if licenses else None,
         )
 
     if license_id is not None:

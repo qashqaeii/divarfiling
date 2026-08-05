@@ -227,6 +227,46 @@ class DesktopLicensingAPITests(TestCase):
         ids = [x['license_id'] for x in resp.json()['data']['licenses']]
         self.assertIn(self.license.pk, ids)
 
+    def test_member_assigned_inactive_license(self):
+        """عضو با کلید تخصیص‌یافته inactive — باید بتواند bind کند (مثل داشبورد)."""
+        agency = CRMAgency.objects.create(name='آژانس۴', slug='agency-4', owner=self.owner)
+        CRMAgencyMember.objects.create(agency=agency, user=self.owner, role='owner')
+        CRMAgencyMember.objects.create(agency=agency, user=self.member, role='advisor')
+        self.license.status = 'inactive'
+        self.license.save(update_fields=['status'])
+        assign_license_to_member(self.owner, self.license.pk, self.member.pk)
+        self.license.refresh_from_db()
+        tokens = self._login(self.member)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
+        resp = self.client.get(
+            f'/api/desktop/v1/licenses/eligible?hardware_fingerprint={TEST_HW}',
+        )
+        self.assertEqual(resp.status_code, 200)
+        ids = [x['license_id'] for x in resp.json()['data']['licenses']]
+        self.assertIn(self.license.pk, ids)
+        bind = self.client.post('/api/desktop/v1/licenses/bind', {
+            'hardware_fingerprint': TEST_HW,
+        }, format='json')
+        self.assertEqual(bind.status_code, 200)
+
+    def test_member_license_active_on_other_device_message(self):
+        agency = CRMAgency.objects.create(name='آژانس۵', slug='agency-5', owner=self.owner)
+        CRMAgencyMember.objects.create(agency=agency, user=self.owner, role='owner')
+        CRMAgencyMember.objects.create(agency=agency, user=self.member, role='advisor')
+        assign_license_to_member(self.owner, self.license.pk, self.member.pk)
+        LicenseActivation.objects.create(
+            license=self.license,
+            hardware_fingerprint=TEST_HW_B,
+            is_active=True,
+        )
+        tokens = self._login(self.member)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
+        resp = self.client.post('/api/desktop/v1/licenses/bind', {
+            'hardware_fingerprint': TEST_HW,
+        }, format='json')
+        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(resp.json()['code'], 'LICENSE_ACTIVE_ON_OTHER_DEVICE')
+
     def test_revoked_member_cannot_bind(self):
         agency = CRMAgency.objects.create(name='آژانس۳', slug='agency-3', owner=self.owner)
         CRMAgencyMember.objects.create(agency=agency, user=self.owner, role='owner')

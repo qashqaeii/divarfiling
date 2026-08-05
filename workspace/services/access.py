@@ -22,11 +22,10 @@ def _paid_license_qs(user):
 
 
 def _assigned_license_qs(user):
-    """کلیدهای تخصیص‌یافته به عضو تیم (مسیر آژانس — دسترسی فوری)."""
+    """کلیدهای تخصیص‌یافته به عضو تیم — هم‌تراز allocated_licenses داشبورد."""
     return License.objects.filter(
         assigned_user=user,
         order__status='paid',
-        status='active',
     ).filter(
         Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
     ).exclude(status__in=['suspended', 'expired'])

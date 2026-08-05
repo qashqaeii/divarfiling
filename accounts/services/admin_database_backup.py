@@ -3,16 +3,20 @@ from __future__ import annotations
 
 import gzip
 import io
+import logging
 import os
 import shutil
 import subprocess
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Iterator, Optional
 
 from django.conf import settings
 from django.core.management import call_command
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 
 class DatabaseBackupError(Exception):
@@ -24,11 +28,19 @@ class DatabaseBackupError(Exception):
 
 @dataclass
 class DatabaseBackupResult:
-    content: bytes
     filename: str
     content_type: str
     method: str
-    size_bytes: int
+    content: Optional[bytes] = None
+    file_path: Optional[Path] = None
+
+    @property
+    def size_bytes(self) -> int:
+        if self.content is not None:
+            return len(self.content)
+        if self.file_path and self.file_path.is_file():
+            return self.file_path.stat().st_size
+        return 0
 
 
 def _timestamp() -> str:
@@ -72,17 +84,57 @@ def get_database_backup_info() -> Dict[str, Any]:
     }
 
 
+def iter_backup_file_chunks(
+    result: DatabaseBackupResult,
+    *,
+    chunk_size: int = 1024 * 256,
+) -> Iterator[bytes]:
+    """خواند chunkای فایل بک‌آپ و در پایان فایل موقت را حذف می‌کند."""
+    if result.content is not None:
+        for offset in range(0, len(result.content), chunk_size):
+            yield result.content[offset:offset + chunk_size]
+        return
+
+    path = result.file_path
+    if not path or not path.is_file():
+        return
+
+    try:
+        with path.open('rb') as handle:
+            while True:
+                chunk = handle.read(chunk_size)
+                if not chunk:
+                    break
+                yield chunk
+    finally:
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            logger.warning('Could not delete temp backup file: %s', path)
+
+
 def _dumpdata_backup() -> DatabaseBackupResult:
     buffer = io.StringIO()
-    call_command(
-        'dumpdata',
-        exclude=['contenttypes', 'auth.permission'],
-        natural_foreign=True,
-        natural_primary=True,
-        indent=2,
-        stdout=buffer,
-    )
+    try:
+        call_command(
+            'dumpdata',
+            exclude=['contenttypes', 'auth.permission'],
+            natural_foreign=True,
+            natural_primary=True,
+            indent=2,
+            stdout=buffer,
+        )
+    except Exception as exc:
+        logger.exception('dumpdata backup failed')
+        raise DatabaseBackupError(
+            f'بک‌آپ JSON ناموفق بود: {exc}',
+            code='dumpdata_failed',
+        ) from exc
+
     raw = buffer.getvalue().encode('utf-8')
+    if not raw:
+        raise DatabaseBackupError('خروجی dumpdata خالی بود.', code='dumpdata_empty')
+
     compressed = gzip.compress(raw)
     stamp = _timestamp()
     return DatabaseBackupResult(
@@ -90,7 +142,6 @@ def _dumpdata_backup() -> DatabaseBackupResult:
         filename=f'divarfiling-dumpdata-{stamp}.json.gz',
         content_type='application/gzip',
         method='dumpdata',
-        size_bytes=len(compressed),
     )
 
 
@@ -99,19 +150,46 @@ def _sqlite_file_backup() -> DatabaseBackupResult:
     if not db_path.is_file():
         raise DatabaseBackupError('فایل SQLite یافت نشد.')
 
-    content = db_path.read_bytes()
+    tmp = tempfile.NamedTemporaryFile(prefix='divarfiling-sqlite-backup-', suffix='.sqlite3', delete=False)
+    tmp_path = Path(tmp.name)
+    tmp.close()
+    try:
+        shutil.copy2(db_path, tmp_path)
+    except OSError as exc:
+        tmp_path.unlink(missing_ok=True)
+        raise DatabaseBackupError(f'کپی فایل SQLite ناموفق بود: {exc}') from exc
+
     stamp = _timestamp()
     return DatabaseBackupResult(
-        content=content,
+        file_path=tmp_path,
         filename=f'divarfiling-sqlite-{stamp}.sqlite3',
         content_type='application/x-sqlite3',
         method='sqlite_copy',
-        size_bytes=len(content),
     )
 
 
-def _run_pg_dump(*, custom_format: bool) -> DatabaseBackupResult:
+def _pg_dump_env() -> dict[str, str]:
+    env = os.environ.copy()
+    password = settings.DATABASES['default'].get('PASSWORD')
+    if password:
+        env['PGPASSWORD'] = str(password)
+    return env
+
+
+def _pg_dump_base_cmd(pg_dump: str) -> list[str]:
     db = settings.DATABASES['default']
+    return [
+        pg_dump,
+        '-h', str(db.get('HOST') or 'localhost'),
+        '-p', str(db.get('PORT') or 5432),
+        '-U', str(db.get('USER') or 'postgres'),
+        '-d', str(db['NAME']),
+        '--no-owner',
+        '--no-acl',
+    ]
+
+
+def _run_pg_dump(*, custom_format: bool) -> DatabaseBackupResult:
     pg_dump = shutil.which('pg_dump')
     if not pg_dump:
         raise DatabaseBackupError(
@@ -119,67 +197,53 @@ def _run_pg_dump(*, custom_format: bool) -> DatabaseBackupResult:
             code='pg_dump_missing',
         )
 
-    env = os.environ.copy()
-    password = db.get('PASSWORD')
-    if password:
-        env['PGPASSWORD'] = str(password)
-
     stamp = _timestamp()
+    suffix = '.dump' if custom_format else '.sql'
+    filename = f'divarfiling-postgres-{stamp}{suffix}'
+    content_type = 'application/octet-stream' if custom_format else 'application/sql'
+    method = 'pg_dump_custom' if custom_format else 'pg_dump_plain'
+
+    tmp = tempfile.NamedTemporaryFile(prefix='divarfiling-backup-', suffix=suffix, delete=False)
+    tmp_path = Path(tmp.name)
+    tmp.close()
+
+    cmd = _pg_dump_base_cmd(pg_dump)
     if custom_format:
-        filename = f'divarfiling-postgres-{stamp}.dump'
-        cmd = [
-            pg_dump,
-            '-h', db.get('HOST') or 'localhost',
-            '-p', str(db.get('PORT') or 5432),
-            '-U', db.get('USER') or 'postgres',
-            '-d', db['NAME'],
-            '-F', 'c',
-            '-f', '-',
-            '--no-owner',
-            '--no-acl',
-        ]
-        content_type = 'application/octet-stream'
-        method = 'pg_dump_custom'
+        cmd.extend(['-F', 'c', '-f', str(tmp_path)])
     else:
-        filename = f'divarfiling-postgres-{stamp}.sql'
-        cmd = [
-            pg_dump,
-            '-h', db.get('HOST') or 'localhost',
-            '-p', str(db.get('PORT') or 5432),
-            '-U', db.get('USER') or 'postgres',
-            '-d', db['NAME'],
-            '--no-owner',
-            '--no-acl',
-        ]
-        content_type = 'application/sql'
-        method = 'pg_dump_plain'
+        cmd.extend(['-F', 'p', '-f', str(tmp_path)])
 
     try:
         proc = subprocess.run(
             cmd,
             capture_output=True,
-            env=env,
+            env=_pg_dump_env(),
             timeout=600,
             check=False,
         )
     except subprocess.TimeoutExpired as exc:
+        tmp_path.unlink(missing_ok=True)
         raise DatabaseBackupError('زمان بک‌آپ PostgreSQL تمام شد (بیش از ۱۰ دقیقه).') from exc
+    except OSError as exc:
+        tmp_path.unlink(missing_ok=True)
+        logger.exception('pg_dump subprocess failed')
+        raise DatabaseBackupError(f'اجرای pg_dump ممکن نشد: {exc}', code='pg_dump_os_error') from exc
 
     if proc.returncode != 0:
+        tmp_path.unlink(missing_ok=True)
         stderr = (proc.stderr or b'').decode('utf-8', errors='replace').strip()
         detail = stderr[:400] if stderr else f'کد خروج: {proc.returncode}'
         raise DatabaseBackupError(f'pg_dump ناموفق بود: {detail}')
 
-    content = proc.stdout or b''
-    if not content:
+    if not tmp_path.is_file() or tmp_path.stat().st_size == 0:
+        tmp_path.unlink(missing_ok=True)
         raise DatabaseBackupError('خروجی pg_dump خالی بود.')
 
     return DatabaseBackupResult(
-        content=content,
+        file_path=tmp_path,
         filename=filename,
         content_type=content_type,
         method=method,
-        size_bytes=len(content),
     )
 
 
@@ -218,7 +282,8 @@ def create_database_backup(*, fmt: str = 'auto') -> DatabaseBackupResult:
     if 'postgresql' in engine:
         try:
             return _run_pg_dump(custom_format=False)
-        except DatabaseBackupError:
+        except DatabaseBackupError as exc:
+            logger.warning('pg_dump auto fallback to dumpdata: %s', exc.message)
             return _dumpdata_backup()
 
     if 'sqlite' in engine:

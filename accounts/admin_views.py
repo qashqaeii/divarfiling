@@ -1,11 +1,12 @@
 """ویوهای پنل مدیریت سیستم — فقط برای کاربران staff."""
 import json
+import logging
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.serializers.json import DjangoJSONEncoder
-from django.http import HttpResponse, HttpResponseNotFound, JsonResponse
+from django.http import HttpResponseNotFound, JsonResponse, StreamingHttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -17,6 +18,7 @@ from accounts.services.admin_database_backup import (
     DatabaseBackupError,
     create_database_backup,
     get_database_backup_info,
+    iter_backup_file_chunks,
 )
 from accounts.services.admin_dashboard import get_admin_dashboard_context
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
@@ -82,6 +84,8 @@ from blog.services.article_import import (
     validate_article_payload,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class StaffRequiredMixin(UserPassesTestMixin, LoginRequiredMixin):
     """دسترسی فقط برای مدیر سیستم (is_staff)."""
@@ -124,10 +128,22 @@ class AdminDatabaseBackupView(StaffRequiredMixin, View):
         except DatabaseBackupError as exc:
             messages.error(request, exc.message)
             return redirect('admin_panel')
+        except Exception:
+            logger.exception('Unexpected database backup failure (format=%s)', fmt)
+            messages.error(
+                request,
+                'خطای غیرمنتظره هنگام بک‌آپ. لاگ سرور را بررسی کنید یا از فرمت JSON امتحان کنید.',
+            )
+            return redirect('admin_panel')
 
-        response = HttpResponse(result.content, content_type=result.content_type)
+        response = StreamingHttpResponse(
+            iter_backup_file_chunks(result),
+            content_type=result.content_type,
+        )
         response['Content-Disposition'] = f'attachment; filename="{result.filename}"'
         response['X-Backup-Method'] = result.method
+        if result.size_bytes:
+            response['Content-Length'] = str(result.size_bytes)
         return response
 
 

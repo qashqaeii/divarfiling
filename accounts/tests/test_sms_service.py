@@ -44,10 +44,11 @@ class ConsoleSmsServiceTests(SimpleTestCase):
     SMS_ENABLED=True,
     SMS_PROVIDER='faraz',
     FARAZSMS_API_KEY='test-key',
-    FARAZSMS_LINE_NUMBER='90008361',
+    FARAZSMS_LINE_NUMBER='9982008148',
+    FARAZSMS_OTP_LINE_NUMBER='90008361',
     FARAZSMS_BASE_URL='https://api.iranpayamak.com',
     FARAZSMS_LOW_BALANCE=50000,
-    FARAZSMS_PATTERNS={'login': 'PATLOGIN', 'register': '', 'verify_phone': '', 'license_renewal': '', 'system': ''},
+    FARAZSMS_PATTERNS={'login': 'PATLOGIN', 'register': '', 'verify_phone': '', 'license_renewal': 'PATRENEW', 'system': 'PATSYS', 'marketing': 'PATMKT'},
     FARAZSMS_OTP_ATTR='code',
 )
 class FarazSmsServiceTests(SimpleTestCase):
@@ -72,6 +73,31 @@ class FarazSmsServiceTests(SimpleTestCase):
         self.assertEqual(kwargs['json']['recipient'], '09123456789')
         self.assertEqual(kwargs['json']['attributes']['code'], '654321')
         self.assertEqual(kwargs['json']['number_format'], 'english')
+        self.assertEqual(kwargs['json']['line_number'], '90008361')
+
+    @patch('accounts.services.sms.faraz.requests.request')
+    def test_pattern_marketing_uses_default_line(self, mock_request):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 201
+        mock_resp.content = b'{"status":"success","data":456}'
+        mock_resp.json.return_value = {'status': 'success', 'data': 456}
+        mock_request.return_value = mock_resp
+
+        send_pattern_sms('09123456789', purpose='marketing', attributes={'message': 'سلام'})
+        _args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs['json']['line_number'], '9982008148')
+
+    @patch('accounts.services.sms.faraz.requests.request')
+    def test_simple_uses_default_line(self, mock_request):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 201
+        mock_resp.content = b'{"status":"success","data":789}'
+        mock_resp.json.return_value = {'status': 'success', 'data': 789}
+        mock_request.return_value = mock_resp
+
+        send_simple_sms('09123456789', 'پیام تست')
+        _args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs['json']['line_number'], '9982008148')
 
     @patch('accounts.services.sms.faraz.requests.request')
     def test_timeout(self, mock_request):
@@ -120,7 +146,8 @@ class FarazSmsServiceTests(SimpleTestCase):
         self.assertEqual(snap['sms_count'], 625)
         self.assertFalse(snap['is_low'])
         self.assertEqual(snap['provider'], 'faraz')
-        self.assertEqual(snap['line_number'], '90008361')
+        self.assertEqual(snap['line_number'], '9982008148')
+        self.assertEqual(snap['otp_line_number'], '90008361')
         args, _kwargs = mock_request.call_args
         self.assertEqual(args[0], 'GET')
         self.assertIn('/ws/v1/account/balance', args[1])

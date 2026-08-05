@@ -314,7 +314,16 @@ LEAD_CAMPAIGN_SEND_BATCH_SIZE = config('LEAD_CAMPAIGN_SEND_BATCH_SIZE', default=
 # سازگاری قدیمی (تومان برای هر بخش) — اگر PER_PART_RIAL ست نباشد استفاده می‌شود
 LEAD_SMS_COST_TOMAN = config('LEAD_SMS_COST_TOMAN', default=0, cast=int)
 FARAZSMS_API_KEY = config('FARAZSMS_API_KEY', default='')
+# خط پیش‌فرض — بازاریابی، سیستمی، تمدید لایسنس و پیامک متنی
 FARAZSMS_LINE_NUMBER = config('FARAZSMS_LINE_NUMBER', default='90008361')
+# خط جدا برای OTP (ورود، ثبت‌نام، تأیید موبایل، بازیابی رمز)
+FARAZSMS_OTP_LINE_NUMBER = config('FARAZSMS_OTP_LINE_NUMBER', default='90008361')
+FARAZSMS_OTP_PURPOSES = (
+    'login',
+    'register',
+    'verify_phone',
+    'password_reset',
+)
 FARAZSMS_BASE_URL = config('FARAZSMS_BASE_URL', default='https://api.iranpayamak.com')
 FARAZSMS_TIMEOUT = config('FARAZSMS_TIMEOUT', default=15, cast=int)
 # هشدار موجودی کم در پنل ادمین (تومان)

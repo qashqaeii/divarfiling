@@ -39,6 +39,30 @@ def _prepare_phone(raw: str) -> str:
     return phone
 
 
+def _default_line_number() -> str:
+    return (getattr(settings, 'FARAZSMS_LINE_NUMBER', '') or '').strip()
+
+
+def _otp_line_number() -> str:
+    otp_line = (getattr(settings, 'FARAZSMS_OTP_LINE_NUMBER', '') or '').strip()
+    return otp_line or _default_line_number()
+
+
+def resolve_sms_line_number(*, purpose: str = '', for_otp: bool = False) -> str:
+    """
+    انتخاب خط ارسال:
+    - OTP (ورود/ثبت‌نام/…) → FARAZSMS_OTP_LINE_NUMBER
+    - سایر پیامک‌ها → FARAZSMS_LINE_NUMBER
+    """
+    if for_otp:
+        return _otp_line_number()
+    purpose_key = (purpose or '').strip().lower()
+    otp_purposes = tuple(getattr(settings, 'FARAZSMS_OTP_PURPOSES', ()) or ())
+    if purpose_key in otp_purposes:
+        return _otp_line_number()
+    return _default_line_number()
+
+
 def send_pattern_sms(
     phone: str,
     *,
@@ -77,6 +101,7 @@ def send_pattern_sms(
             phone=normalized,
             pattern_code=code,
             attributes=clean_attrs,
+            line_number=resolve_sms_line_number(purpose=purpose),
         )
     except SmsError:
         raise
@@ -101,7 +126,11 @@ def send_simple_sms(phone: str, text: str) -> SmsResult:
 
     normalized = _prepare_phone(phone)
     try:
-        result = _backend().send_simple(phone=normalized, text=text)
+        result = _backend().send_simple(
+            phone=normalized,
+            text=text,
+            line_number=_default_line_number(),
+        )
     except SmsError:
         raise
     except Exception as exc:  # noqa: BLE001
@@ -237,7 +266,8 @@ def get_sms_balance_snapshot(*, use_cache: bool = True, cache_ttl: int = 60) -> 
         'faraz': 'فراز اس‌ام‌اس',
         'console': 'کنسول (تست)',
     }
-    line = (getattr(settings, 'FARAZSMS_LINE_NUMBER', '') or '').strip()
+    line = _default_line_number()
+    otp_line = _otp_line_number()
     enabled = bool(getattr(settings, 'SMS_ENABLED', True))
     cache_key = f'admin:sms_balance:v3:{provider}'
 
@@ -253,6 +283,7 @@ def get_sms_balance_snapshot(*, use_cache: bool = True, cache_ttl: int = 60) -> 
         'provider': provider,
         'provider_label': provider_labels.get(provider, provider),
         'line_number': line,
+        'otp_line_number': otp_line,
         'enabled': enabled,
         'is_low': False,
         'error': '',

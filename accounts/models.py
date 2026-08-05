@@ -96,6 +96,7 @@ class OtpRequest(models.Model):
         LOGIN = 'login', 'ورود'
         REGISTER = 'register', 'ثبت‌نام'
         VERIFY_PHONE = 'verify_phone', 'تأیید موبایل'
+        PASSWORD_RESET = 'password_reset', 'بازیابی رمز'
         LICENSE_RENEWAL = 'license_renewal', 'تمدید لایسنس'
         SYSTEM = 'system', 'سیستمی'
 

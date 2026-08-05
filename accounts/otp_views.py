@@ -26,6 +26,7 @@ SESSION_PURPOSE = 'otp_purpose'
 SESSION_NEXT = 'otp_next'
 SESSION_REGISTER_VERIFIED = 'otp_register_verified'
 SESSION_REGISTER_PASSWORD = 'otp_register_password_hash'
+SESSION_RESET_VERIFIED = 'otp_reset_verified'
 
 
 def _safe_next(request, fallback='workspace:home'):
@@ -51,6 +52,7 @@ def _clear_otp_session(request):
         SESSION_NEXT,
         SESSION_REGISTER_VERIFIED,
         SESSION_REGISTER_PASSWORD,
+        SESSION_RESET_VERIFIED,
     ):
         request.session.pop(key, None)
 
@@ -541,3 +543,177 @@ def _display_phone(phone: str) -> str:
     if len(phone) == 11:
         return f'{phone[:4]}***{phone[-2:]}'
     return phone
+
+
+class OtpPasswordResetStartView(View):
+    """بازیابی رمز — مرحله ۱: شماره موبایل."""
+
+    template_name = 'accounts/otp_password_reset.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(_safe_next(request))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        return render(request, self.template_name, {
+            'form': OtpPhoneForm(),
+            'step': 'phone',
+        })
+
+    def post(self, request):
+        form = OtpPhoneForm(request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {
+                'form': form,
+                'step': 'phone',
+            })
+
+        phone = form.cleaned_data['phone']
+        if not User.objects.filter(phone=phone, is_active=True).exists():
+            form.add_error('phone', 'حسابی با این شماره یافت نشد.')
+            return render(request, self.template_name, {
+                'form': form,
+                'step': 'phone',
+            })
+
+        try:
+            challenge = request_otp(phone, 'password_reset', request=request)
+        except OtpRateLimitError as exc:
+            messages.error(request, exc.message)
+            return render(request, self.template_name, {
+                'form': form,
+                'step': 'phone',
+                'retry_after': exc.retry_after,
+            })
+        except OtpError as exc:
+            messages.error(request, exc.message)
+            return render(request, self.template_name, {
+                'form': form,
+                'step': 'phone',
+            })
+
+        _store_challenge(request, challenge.phone, 'password_reset')
+        request.session.pop(SESSION_RESET_VERIFIED, None)
+        messages.success(request, 'کد تأیید به شماره شما ارسال شد.')
+        return redirect('otp_password_reset_verify')
+
+
+class OtpPasswordResetVerifyView(View):
+    """بازیابی رمز — مرحله ۲: تأیید کد."""
+
+    template_name = 'accounts/otp_password_reset.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(_safe_next(request))
+        phone = request.session.get(SESSION_PHONE)
+        purpose = request.session.get(SESSION_PURPOSE)
+        if not phone or purpose != 'password_reset':
+            return redirect('password_reset')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        phone = request.session.get(SESSION_PHONE)
+        return render(request, self.template_name, {
+            'form': OtpCodeForm(),
+            'step': 'code',
+            'phone': phone,
+            'phone_display': _display_phone(phone),
+            'resend_url': reverse('otp_password_reset_resend'),
+        })
+
+    def post(self, request):
+        phone = request.session.get(SESSION_PHONE)
+        form = OtpCodeForm(request.POST)
+        ctx = {
+            'form': form,
+            'step': 'code',
+            'phone': phone,
+            'phone_display': _display_phone(phone),
+            'resend_url': reverse('otp_password_reset_resend'),
+        }
+        if not form.is_valid():
+            return render(request, self.template_name, ctx)
+
+        try:
+            verify_otp(phone, 'password_reset', form.cleaned_data['code'])
+        except OtpError as exc:
+            form.add_error('code', exc.message)
+            return render(request, self.template_name, ctx)
+
+        if not User.objects.filter(phone=phone, is_active=True).exists():
+            messages.error(request, 'حساب کاربری یافت نشد یا غیرفعال است.')
+            _clear_otp_session(request)
+            return redirect('password_reset')
+
+        request.session[SESSION_RESET_VERIFIED] = True
+        request.session.modified = True
+        return redirect('otp_password_reset_password')
+
+
+class OtpPasswordResetResendView(View):
+    def post(self, request):
+        phone = request.session.get(SESSION_PHONE)
+        purpose = request.session.get(SESSION_PURPOSE)
+        if not phone or purpose != 'password_reset':
+            return redirect('password_reset')
+        try:
+            request_otp(phone, 'password_reset', request=request)
+            messages.success(request, 'کد جدید ارسال شد.')
+        except OtpRateLimitError as exc:
+            messages.error(request, exc.message)
+        except OtpError as exc:
+            messages.error(request, exc.message)
+        return redirect('otp_password_reset_verify')
+
+
+class OtpPasswordResetPasswordView(View):
+    """بازیابی رمز — مرحله ۳: تعیین رمز جدید."""
+
+    template_name = 'accounts/otp_password_reset.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(_safe_next(request))
+        phone = request.session.get(SESSION_PHONE)
+        if (
+            not phone
+            or request.session.get(SESSION_PURPOSE) != 'password_reset'
+            or not request.session.get(SESSION_RESET_VERIFIED)
+        ):
+            return redirect('password_reset')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        phone = request.session.get(SESSION_PHONE)
+        return render(request, self.template_name, {
+            'form': RegisterPasswordForm(),
+            'step': 'password',
+            'phone': phone,
+            'phone_display': _display_phone(phone),
+        })
+
+    def post(self, request):
+        phone = request.session.get(SESSION_PHONE)
+        form = RegisterPasswordForm(request.POST)
+        ctx = {
+            'form': form,
+            'step': 'password',
+            'phone': phone,
+            'phone_display': _display_phone(phone),
+        }
+        if not form.is_valid():
+            return render(request, self.template_name, ctx)
+
+        user = User.objects.filter(phone=phone, is_active=True).first()
+        if not user:
+            messages.error(request, 'حساب کاربری یافت نشد.')
+            _clear_otp_session(request)
+            return redirect('password_reset')
+
+        user.set_password(form.cleaned_data['password1'])
+        user.save(update_fields=['password'])
+        _clear_otp_session(request)
+        messages.success(request, 'رمز عبور شما با موفقیت تغییر کرد. اکنون می‌توانید وارد شوید.')
+        return redirect('login')

@@ -323,6 +323,7 @@ FARAZSMS_PATTERNS = {
     'login': config('FARAZSMS_PATTERN_LOGIN', default=''),
     'register': config('FARAZSMS_PATTERN_REGISTER', default=''),
     'verify_phone': config('FARAZSMS_PATTERN_VERIFY_PHONE', default=''),
+    'password_reset': config('FARAZSMS_PATTERN_PASSWORD_RESET', default=''),
     'license_renewal': config('FARAZSMS_PATTERN_LICENSE_RENEWAL', default=''),
     'system': config('FARAZSMS_PATTERN_SYSTEM', default=''),
     'marketing': config('FARAZSMS_PATTERN_MARKETING', default=''),
@@ -330,7 +331,7 @@ FARAZSMS_PATTERNS = {
 # اگر الگوی جداگانه ندارید، یک الگو برای همه OTPها:
 _FARAZSMS_PATTERN_OTP = config('FARAZSMS_PATTERN_OTP', default='')
 if _FARAZSMS_PATTERN_OTP:
-    for _otp_key in ('login', 'register', 'verify_phone'):
+    for _otp_key in ('login', 'register', 'verify_phone', 'password_reset'):
         if not FARAZSMS_PATTERNS[_otp_key]:
             FARAZSMS_PATTERNS[_otp_key] = _FARAZSMS_PATTERN_OTP
 

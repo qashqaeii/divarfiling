@@ -1,7 +1,6 @@
 """
 URLهای مربوط به حساب کاربری
 """
-from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from . import otp_views, views
@@ -217,34 +216,10 @@ urlpatterns = [
         name='admin_panel_recovery_center_json',
     ),
     path('profile/', views.ProfileView.as_view(), name='profile'),
-    path(
-        'password-reset/',
-        auth_views.PasswordResetView.as_view(
-            template_name='accounts/password_reset.html',
-            email_template_name='accounts/password_reset_email.html',
-            subject_template_name='accounts/password_reset_subject.txt',
-            success_url='/accounts/password-reset/done/',
-        ),
-        name='password_reset',
-    ),
-    path(
-        'password-reset/done/',
-        auth_views.PasswordResetDoneView.as_view(template_name='accounts/password_reset_done.html'),
-        name='password_reset_done',
-    ),
-    path(
-        'reset/<uidb64>/<token>/',
-        auth_views.PasswordResetConfirmView.as_view(
-            template_name='accounts/password_reset_confirm.html',
-            success_url='/accounts/reset/done/',
-        ),
-        name='password_reset_confirm',
-    ),
-    path(
-        'reset/done/',
-        auth_views.PasswordResetCompleteView.as_view(template_name='accounts/password_reset_complete.html'),
-        name='password_reset_complete',
-    ),
+    path('password-reset/', otp_views.OtpPasswordResetStartView.as_view(), name='password_reset'),
+    path('password-reset/verify/', otp_views.OtpPasswordResetVerifyView.as_view(), name='otp_password_reset_verify'),
+    path('password-reset/resend/', otp_views.OtpPasswordResetResendView.as_view(), name='otp_password_reset_resend'),
+    path('password-reset/set-password/', otp_views.OtpPasswordResetPasswordView.as_view(), name='otp_password_reset_password'),
     path('api/update-user-info/', views.UpdateUserInfoView.as_view(), name='update_user_info'),
     path('api/update-profile/', views.UpdateProfileView.as_view(), name='update_profile'),
     path('api/update-consultant-profile/', views.UpdateConsultantProfileView.as_view(), name='update_consultant_profile'),

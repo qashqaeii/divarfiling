@@ -159,3 +159,31 @@ class OtpAuthFlowTests(TestCase):
             response = self.client.post(reverse('register'), {'phone': '09126666666'})
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('register_password'))
+
+    @patch('accounts.services.otp.generate_otp_code', return_value='789012')
+    def test_otp_password_reset_flow(self, _mock_code):
+        response = self.client.post(reverse('password_reset'), {'phone': '09122222222'})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('otp_password_reset_verify'))
+
+        response = self.client.post(reverse('otp_password_reset_verify'), {'code': '789012'})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('otp_password_reset_password'))
+
+        response = self.client.post(
+            reverse('otp_password_reset_password'),
+            {
+                'password1': 'NewComplexPass456!',
+                'password2': 'NewComplexPass456!',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('login'))
+        user = User.objects.get(phone='09122222222')
+        self.assertTrue(user.check_password('NewComplexPass456!'))
+        self.assertFalse(user.check_password('ComplexPass123!'))
+
+    def test_password_reset_rejects_unknown_phone(self):
+        response = self.client.post(reverse('password_reset'), {'phone': '09129999999'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'یافت نشد')

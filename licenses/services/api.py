@@ -8,7 +8,10 @@ from licenses.services.activation import (
     bind_hardware_to_license,
     deactivate_hardware_from_license,
 )
-from licenses.services.account_context import build_license_account_payload
+from licenses.services.account_context import (
+    build_license_account_payload,
+    build_license_allocation_payload,
+)
 from licenses.services.security import (
     RateLimitExceeded,
     check_rate_limit,
@@ -73,7 +76,7 @@ def activate_license(request) -> dict:
         with transaction.atomic():
             try:
                 license_obj = License.objects.select_for_update().select_related(
-                    'order__user', 'plan',
+                    'order__user', 'plan', 'assigned_user', 'assigned_by',
                 ).get(license_key=license_key)
             except License.DoesNotExist:
                 _audit(None, 'suspicious', request, {
@@ -120,7 +123,9 @@ def validate_license(request) -> dict:
         raise LicenseAPIError(str(exc), http_status=429) from exc
 
     try:
-        license_obj = License.objects.select_related('order__user', 'plan').get(license_key=license_key)
+        license_obj = License.objects.select_related(
+            'order__user', 'plan', 'assigned_user', 'assigned_by',
+        ).get(license_key=license_key)
     except License.DoesNotExist:
         raise LicenseAPIError('لایسنس یافت نشد.', http_status=404, payload={'valid': False})
 
@@ -163,6 +168,9 @@ def validate_license(request) -> dict:
 
     if is_ok:
         payload['account'] = build_license_account_payload(license_obj)
+        payload['allocation'] = build_license_allocation_payload(
+            license_obj, activation=activation,
+        )
         _audit(license_obj, 'validation', request, {'hardware_fingerprint': hardware_fingerprint[:32]})
 
     return payload

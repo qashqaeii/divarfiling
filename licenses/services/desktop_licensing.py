@@ -9,7 +9,10 @@ from django.db.models import Q
 from django.utils import timezone
 
 from licenses.models import AuditLog, License, LicenseActivation
-from licenses.services.account_context import build_license_account_payload
+from licenses.services.account_context import (
+    build_license_account_payload,
+    build_license_allocation_payload,
+)
 from licenses.services.activation import (
     _offline_grace_payload,
     _sync_license_expiration,
@@ -429,7 +432,9 @@ def validate_desktop_session(
 
         key = normalize_license_key(license_key)
         try:
-            license_obj = License.objects.select_related('order', 'plan').get(
+            license_obj = License.objects.select_related(
+                'order', 'order__user', 'plan', 'assigned_user', 'assigned_by',
+            ).get(
                 license_key=key,
             )
         except License.DoesNotExist:
@@ -454,7 +459,11 @@ def validate_desktop_session(
             hardware_fingerprint=hw,
             is_active=True,
             license__order__status='paid',
-        ).select_related('license', 'license__plan', 'license__order'):
+        ).select_related(
+            'license', 'license__plan', 'license__order', 'license__order__user',
+            'license__assigned_user', 'license__assigned_by',
+            'assigned_by',
+        ):
             if _user_can_use_license(user, act.license, act):
                 license_obj = act.license
                 activation = act
@@ -512,6 +521,9 @@ def validate_desktop_session(
         payload['code'] = 'LICENSE_INVALID'
     else:
         payload['account'] = build_license_account_payload(license_obj)
+        payload['allocation'] = build_license_allocation_payload(
+            license_obj, activation=activation,
+        )
         payload['message'] = 'session معتبر است'
     payload['eligible'] = get_eligible_licenses(user, hw)
     return payload

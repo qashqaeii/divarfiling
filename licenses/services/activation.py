@@ -7,7 +7,10 @@ from django.db import transaction
 from django.utils import timezone
 
 from licenses.models import AuditLog, License, LicenseActivation
-from licenses.services.account_context import build_license_account_payload
+from licenses.services.account_context import (
+    build_license_account_payload,
+    build_license_allocation_payload,
+)
 from licenses.services.security import get_client_ip
 
 
@@ -68,7 +71,7 @@ def bind_hardware_to_license(
     Returns: (activation, created, success_payload)
     """
     license_obj = License.objects.select_for_update().select_related(
-        'order__user', 'plan',
+        'order__user', 'plan', 'assigned_user', 'assigned_by',
     ).get(pk=license_obj.pk)
 
     _sync_license_expiration(license_obj)
@@ -99,6 +102,9 @@ def bind_hardware_to_license(
             'activated_at': existing_active.activated_at.isoformat(),
             'device_type': device_type if device_type != 'windows' else 'desktop',
             'account': build_license_account_payload(license_obj),
+            'allocation': build_license_allocation_payload(
+                license_obj, activation=existing_active,
+            ),
             **_offline_grace_payload(),
             **license_obj.plan_payload(),
         }
@@ -177,6 +183,7 @@ def bind_hardware_to_license(
         'activated_at': activation.activated_at.isoformat(),
         'device_type': device_type if device_type != 'windows' else 'desktop',
         'account': build_license_account_payload(license_obj),
+        'allocation': build_license_allocation_payload(license_obj, activation=activation),
         **_offline_grace_payload(),
         **license_obj.plan_payload(),
     }

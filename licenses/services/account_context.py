@@ -127,3 +127,42 @@ def build_license_account_payload(license_obj) -> Dict[str, Any]:
         "properties_truncated": total_count > len(properties),
     }
     return payload
+
+
+def build_license_allocation_payload(
+    license_obj,
+    *,
+    activation=None,
+) -> Dict[str, Any]:
+    """اطلاعات تخصیص آژانس — برای نمایش در اپ ویندوز."""
+    owner = getattr(getattr(license_obj, 'order', None), 'user', None)
+    owner_name = _display_name(owner) if owner else ''
+
+    result: Dict[str, Any] = {
+        'is_assigned': False,
+        'assigned_by_name': '',
+        'assigned_by_phone': '',
+        'owner_name': owner_name,
+        'assigned_at': None,
+    }
+
+    assignee_id = license_obj.assigned_user_id
+    assigned_by = license_obj.assigned_by
+    assigned_at = license_obj.assigned_at
+
+    if activation is not None:
+        if activation.assigned_user_id and not assignee_id:
+            assignee_id = activation.assigned_user_id
+            assigned_by = activation.assigned_by or assigned_by
+            assigned_at = activation.assigned_at or assigned_at
+
+    if not assignee_id:
+        return result
+
+    result['is_assigned'] = True
+    if assigned_by is not None:
+        result['assigned_by_name'] = _display_name(assigned_by)
+        result['assigned_by_phone'] = getattr(assigned_by, 'phone', '') or ''
+    if assigned_at:
+        result['assigned_at'] = assigned_at.isoformat()
+    return result

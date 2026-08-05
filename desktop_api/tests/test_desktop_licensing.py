@@ -11,6 +11,7 @@ from rest_framework.test import APIClient
 
 from licenses.models import License, LicenseActivation
 from licenses.services.management import assign_license_to_member
+from licenses.services.account_context import _display_name
 from shop.models import LicensePlan, Order, Product
 from workspace.models import CRMAgency, CRMAgencyMember
 
@@ -204,7 +205,11 @@ class DesktopLicensingAPITests(TestCase):
             'hardware_fingerprint': TEST_HW,
         }, format='json')
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.json()['data']['license_key'], TEST_KEY)
+        data = resp.json()['data']
+        self.assertEqual(data['license_key'], TEST_KEY)
+        alloc = data.get('allocation') or {}
+        self.assertTrue(alloc.get('is_assigned'))
+        self.assertEqual(alloc.get('assigned_by_name'), _display_name(self.owner))
 
     def test_member_seat_assignment(self):
         agency = CRMAgency.objects.create(name='آژانس۲', slug='agency-2', owner=self.owner)

@@ -42,3 +42,20 @@ class LicenseCoreTests(TestCase):
             {'valid': True, 'expires_at': '2030-01-01T00:00:00+00:00'},
         )
         self.assertIn('last_server_validation_at', merged)
+
+    def test_merge_server_payload_persists_allocation(self):
+        merged = merge_server_payload(
+            {'license_key': 'ABCD-1234-5678-9ABC'},
+            {
+                'valid': True,
+                'allocation': {
+                    'is_assigned': True,
+                    'assigned_by_name': 'مالک آژانس',
+                    'assigned_by_phone': '09120000000',
+                    'owner_name': 'مالک آژانس',
+                    'assigned_at': '2026-01-01T00:00:00+00:00',
+                },
+            },
+        )
+        self.assertTrue(merged['allocation']['is_assigned'])
+        self.assertEqual(merged['allocation']['assigned_by_name'], 'مالک آژانس')

@@ -77,6 +77,7 @@ urlpatterns = [
     path('dashboard/licenses/assign-license/', views.AssignLicenseView.as_view(), name='license_assign_license'),
     path('dashboard/licenses/revoke-license/', views.RevokeLicenseAssignmentView.as_view(), name='license_revoke_license'),
     path('dashboard/licenses/activate-for-owner/', views.ActivateLicenseForOwnerView.as_view(), name='license_activate_for_owner'),
+    path('dashboard/licenses/release-to-pool/', views.ReleaseLicenseToPoolView.as_view(), name='license_release_to_pool'),
     path('admin-panel/', AdminDashboardView.as_view(), name='admin_panel'),
     path('admin-panel/export/<str:export_key>/', AdminExportView.as_view(), name='admin_panel_export'),
     path('admin-panel/system-summary.json', AdminSystemSummaryView.as_view(), name='admin_panel_system_summary'),

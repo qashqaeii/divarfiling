@@ -628,7 +628,10 @@
                         </div>
                         {% elif item.allocation_state == 'owner_active' %}
                         <div class="lic-alloc-row">
-                            <span class="lic-alloc-label"><i class="fas fa-check-circle" aria-hidden="true"></i> این کلید برای شما فعال است</span>
+                            <span class="lic-alloc-label"><i class="fas fa-check-circle" aria-hidden="true"></i> این کلید روی {{ item.active_count }} دستگاه فعال است</span>
+                            <button type="button" class="lic-alloc-btn lic-alloc-btn--ghost" data-license-release-pool>
+                                آزادسازی برای تخصیص
+                            </button>
                         </div>
                         {% else %}
                         <div class="lic-alloc-row lic-alloc-row--actions">
@@ -1953,6 +1956,7 @@ function copyAffiliateLinkOverview() {
         const assignBtn = panel.querySelector('[data-license-assign]');
         const revokeBtn = panel.querySelector('[data-license-revoke]');
         const activateBtn = panel.querySelector('[data-license-activate-owner]');
+        const releaseBtn = panel.querySelector('[data-license-release-pool]');
 
         if (memberSelect && assignBtn) {
             memberSelect.addEventListener('change', () => {
@@ -2005,6 +2009,23 @@ function copyAffiliateLinkOverview() {
                 } catch (err) {
                     showToast(err.message, 'error');
                     activateBtn.disabled = false;
+                }
+            });
+        }
+
+        if (releaseBtn) {
+            releaseBtn.addEventListener('click', async () => {
+                if (!window.confirm('دستگاه‌های این کلید غیرفعال شوند و کلید به استخر آژانس برگردد؟')) return;
+                releaseBtn.disabled = true;
+                try {
+                    const data = await postForm('{% url "license_release_to_pool" %}', {
+                        license_id: licenseId,
+                    });
+                    showToast(data.message, 'success');
+                    setTimeout(() => window.location.reload(), 700);
+                } catch (err) {
+                    showToast(err.message, 'error');
+                    releaseBtn.disabled = false;
                 }
             });
         }

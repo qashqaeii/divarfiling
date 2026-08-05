@@ -9,6 +9,7 @@ from licenses.services.management import (
     assign_license_to_member,
     assign_seat_to_member,
     register_device_slot,
+    release_license_to_pool,
     remove_device_slot,
     revoke_license_assignment,
     revoke_seat_assignment,
@@ -133,12 +134,12 @@ class RevokeLicenseAssignmentView(_LicenseActionView):
         license_id = request.POST.get('license_id', '').strip()
         try:
             license_obj = revoke_license_assignment(request.user, int(license_id))
-            state = 'owner_active' if license_obj.status == 'active' else 'available'
+            from licenses.services.management import _allocation_state
             return JsonResponse({
                 'ok': True,
-                'message': 'تخصیص لایسنس لغو شد.',
+                'message': 'تخصیص لایسنس لغو شد — کلید به استخر آژانس برگشت.',
                 'license_id': license_obj.pk,
-                'allocation_state': state,
+                'allocation_state': _allocation_state(license_obj),
             })
         except Exception as exc:
             return self._json_error(exc)
@@ -149,11 +150,28 @@ class ActivateLicenseForOwnerView(_LicenseActionView):
         license_id = request.POST.get('license_id', '').strip()
         try:
             license_obj = activate_license_for_owner(request.user, int(license_id))
+            from licenses.services.management import _allocation_state
             return JsonResponse({
                 'ok': True,
                 'message': 'لایسنس برای شما فعال شد.',
                 'license_id': license_obj.pk,
-                'allocation_state': 'owner_active',
+                'allocation_state': _allocation_state(license_obj),
+            })
+        except Exception as exc:
+            return self._json_error(exc)
+
+
+class ReleaseLicenseToPoolView(_LicenseActionView):
+    def post(self, request):
+        license_id = request.POST.get('license_id', '').strip()
+        try:
+            license_obj = release_license_to_pool(request.user, int(license_id))
+            from licenses.services.management import _allocation_state
+            return JsonResponse({
+                'ok': True,
+                'message': 'کلید به استخر آژانس برگشت — اکنون می‌توانید به عضو تخصیص دهید.',
+                'license_id': license_obj.pk,
+                'allocation_state': _allocation_state(license_obj),
             })
         except Exception as exc:
             return self._json_error(exc)

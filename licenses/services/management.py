@@ -255,9 +255,10 @@ def _license_for_agency_actor(actor, license_id) -> License:
 
 
 def _allocation_state(license_obj: License) -> str:
+    """available = استخر آژانس | owner_active = دستگاه فعال روی کلید | assigned = تخصیص به عضو."""
     if license_obj.assigned_user_id:
         return 'assigned'
-    if license_obj.status == 'active':
+    if license_obj.activations.filter(is_active=True).exists():
         return 'owner_active'
     return 'available'
 
@@ -348,10 +349,14 @@ def revoke_license_assignment(actor, license_id) -> License:
     license_obj.assigned_by = None
     license_obj.assigned_at = None
 
-    has_active_device = license_obj.activations.filter(is_active=True).exists()
+    # دستگاه‌های عضو قبلی را آزاد کن — کلید به استخر برگردد
+    LicenseActivation.objects.filter(
+        license=license_obj,
+        is_active=True,
+    ).update(is_active=False)
+
     if license_obj.status not in ('suspended', 'expired'):
-        # دستگاه فعال → active بماند؛ وگرنه برگردد به استخر (آماده تخصیص)
-        license_obj.status = 'active' if has_active_device else 'inactive'
+        license_obj.status = 'inactive'
 
     license_obj.save(update_fields=[
         'assigned_user', 'assigned_by', 'assigned_at', 'status',
@@ -397,6 +402,34 @@ def activate_license_for_owner(actor, license_id) -> License:
                 'activated_by': actor.username,
             },
         )
+    return license_obj
+
+
+@transaction.atomic
+def release_license_to_pool(actor, license_id) -> License:
+    """آزادسازی کلید برای تخصیص — غیرفعال‌سازی دستگاه‌ها و بازگشت به استخر."""
+    license_obj = _license_for_owner(actor, license_id)
+    if license_obj.assigned_user_id:
+        raise ValidationError('ابتدا تخصیص عضو تیم را لغو کنید.')
+
+    deactivated = LicenseActivation.objects.filter(
+        license=license_obj,
+        is_active=True,
+    ).update(is_active=False)
+
+    if license_obj.status not in ('suspended', 'expired'):
+        license_obj.status = 'inactive'
+        license_obj.save(update_fields=['status'])
+
+    AuditLog.objects.create(
+        license=license_obj,
+        action_type='deactivation',
+        details={
+            'event': 'license_released_to_pool',
+            'released_by': actor.username,
+            'devices_deactivated': deactivated,
+        },
+    )
     return license_obj
 
 

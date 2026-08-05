@@ -10,8 +10,10 @@ from licenses.services.management import (
     assign_license_to_member,
     assign_seat_to_member,
     register_device_slot,
+    release_license_to_pool,
     remove_device_slot,
     revoke_license_assignment,
+    _allocation_state,
 )
 from shop.models import LicensePlan, Order, Product
 from workspace.models import CRMAgency, CRMAgencyMember
@@ -285,3 +287,36 @@ class LicenseKeyAssignmentTests(TestCase):
         self.license_c.refresh_from_db()
         self.assertEqual(self.license_c.status, 'active')
         self.assertIsNone(self.license_c.assigned_user_id)
+
+    def test_active_status_without_devices_is_available_for_pool(self):
+        activate_license_for_owner(self.owner, self.license_a.pk)
+        self.license_a.refresh_from_db()
+        self.assertEqual(self.license_a.status, 'active')
+        self.assertEqual(_allocation_state(self.license_a), 'available')
+
+    def test_revoke_clears_member_devices_and_returns_to_pool(self):
+        assign_license_to_member(self.owner, self.license_a.pk, self.member.id)
+        LicenseActivation.objects.create(
+            license=self.license_a,
+            hardware_fingerprint='a' * 64,
+            is_active=True,
+        )
+        revoke_license_assignment(self.owner, self.license_a.pk)
+        self.license_a.refresh_from_db()
+        self.assertEqual(_allocation_state(self.license_a), 'available')
+        self.assertEqual(self.license_a.status, 'inactive')
+        self.assertFalse(
+            LicenseActivation.objects.filter(license=self.license_a, is_active=True).exists(),
+        )
+
+    def test_release_to_pool_after_device_use(self):
+        LicenseActivation.objects.create(
+            license=self.license_b,
+            hardware_fingerprint='b' * 64,
+            is_active=True,
+        )
+        self.assertEqual(_allocation_state(self.license_b), 'owner_active')
+        release_license_to_pool(self.owner, self.license_b.pk)
+        self.license_b.refresh_from_db()
+        self.assertEqual(_allocation_state(self.license_b), 'available')
+        self.assertEqual(self.license_b.status, 'inactive')

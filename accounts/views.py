@@ -25,6 +25,7 @@ from licenses.dashboard_views import (
     AssignLicenseView,
     AssignSeatView,
     RegisterDeviceSlotView,
+    ReleaseLicenseToPoolView,
     RemoveDeviceSlotView,
     RevokeLicenseAssignmentView,
     RevokeSeatView,

@@ -49,6 +49,9 @@ def check_rate_limit(action: str, client_ip: Optional[str]) -> None:
         'deactivate': getattr(settings, 'LICENSE_RATE_LIMIT_DEACTIVATE', 10),
         'import': getattr(settings, 'LICENSE_RATE_LIMIT_IMPORT', 20),
         'client_event': getattr(settings, 'LICENSE_RATE_LIMIT_CLIENT_EVENT', 60),
+        'desktop_login': getattr(settings, 'LICENSE_RATE_LIMIT_DESKTOP_LOGIN', 10),
+        'desktop_bind': getattr(settings, 'LICENSE_RATE_LIMIT_DESKTOP_BIND', 10),
+        'desktop_validate': getattr(settings, 'LICENSE_RATE_LIMIT_DESKTOP_VALIDATE', 60),
     }
     window = getattr(settings, 'LICENSE_RATE_LIMIT_WINDOW', 300)
     limit = limits.get(action, 30)

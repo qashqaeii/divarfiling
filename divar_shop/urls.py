@@ -44,6 +44,7 @@ urlpatterns = [
     ),
     path('api/', include('licenses.api_urls')),
     path('api/mobile/v1/', include('mobile_api.urls')),
+    path('api/desktop/v1/', include('desktop_api.urls')),
     path('payment/', include('shop.payment_urls')),
     path('affiliate/', include('affiliates.urls')),
     path('blog/', include('blog.urls')),

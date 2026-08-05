@@ -1,13 +1,13 @@
 """منطق API لایسنس — atomic، sync انقضا، audit."""
 from __future__ import annotations
 
-from datetime import timedelta
-
-from django.conf import settings
 from django.db import transaction
-from django.utils import timezone
 
-from licenses.models import AuditLog, License, LicenseActivation
+from licenses.models import License, LicenseActivation
+from licenses.services.activation import (
+    bind_hardware_to_license,
+    deactivate_hardware_from_license,
+)
 from licenses.services.account_context import build_license_account_payload
 from licenses.services.security import (
     RateLimitExceeded,
@@ -29,10 +29,12 @@ class LicenseAPIError(Exception):
 
 
 def _request_meta(request) -> dict:
-    return getattr(request, 'META', {})
+    return getattr(request, 'META', {}) or {}
 
 
 def _audit(license_obj, action_type, request, details=None):
+    from licenses.models import AuditLog
+
     meta = _request_meta(request)
     AuditLog.objects.create(
         license=license_obj,
@@ -41,29 +43,6 @@ def _audit(license_obj, action_type, request, details=None):
         user_agent=meta.get('HTTP_USER_AGENT', ''),
         details=details or {},
     )
-
-
-def _offline_grace_payload() -> dict:
-    hours = getattr(settings, 'LICENSE_OFFLINE_GRACE_HOURS', 72)
-    grace_until = timezone.now() + timedelta(hours=hours)
-    return {
-        'offline_grace_until': grace_until.isoformat(),
-        'offline_grace_hours': hours,
-        'server_time': timezone.now().isoformat(),
-    }
-
-
-def _sync_license_expiration(license_obj: License) -> None:
-    if license_obj.expires_at and license_obj.expires_at < timezone.now():
-        if license_obj.status != 'expired':
-            license_obj.status = 'expired'
-            license_obj.save(update_fields=['status'])
-
-
-def _refresh_license_status_after_deactivation(license_obj: License) -> None:
-    if license_obj.status == 'active' and license_obj.active_slot_count() == 0:
-        license_obj.status = 'inactive'
-        license_obj.save(update_fields=['status'])
 
 
 def _parse_request(request):
@@ -93,7 +72,9 @@ def activate_license(request) -> dict:
     try:
         with transaction.atomic():
             try:
-                license_obj = License.objects.select_for_update().select_related('order__user', 'plan').get(license_key=license_key)
+                license_obj = License.objects.select_for_update().select_related(
+                    'order__user', 'plan',
+                ).get(license_key=license_key)
             except License.DoesNotExist:
                 _audit(None, 'suspicious', request, {
                     'license_key': license_key,
@@ -101,88 +82,27 @@ def activate_license(request) -> dict:
                 })
                 raise LicenseAPIError('لایسنس معتبر نیست.', http_status=404) from None
 
-            _sync_license_expiration(license_obj)
-            license_obj.refresh_from_db()
-
-            if not license_obj.can_be_activated():
-                raise LicenseAPIError('لایسنس منقضی شده یا غیرفعال است.', http_status=400)
-
-            existing_active = LicenseActivation.objects.filter(
-                license=license_obj,
-                hardware_fingerprint=hardware_fingerprint,
-                is_active=True,
-            ).first()
-            if existing_active:
-                return {
-                    'success': True,
-                    'message': 'لایسنس قبلاً برای این سیستم فعال شده است.',
-                    'license_key': license_obj.license_key,
-                    'activated_at': existing_active.activated_at.isoformat(),
-                    'account': build_license_account_payload(license_obj),
-                    **_offline_grace_payload(),
-                    **license_obj.plan_payload(),
-                }
-
-            active_count = LicenseActivation.objects.filter(
-                license=license_obj,
-                is_active=True,
-            ).count()
-            if active_count >= license_obj.max_activations:
-                raise LicenseAPIError(
-                    f'حداکثر تعداد سیستم ({license_obj.max_activations}) انجام شده است.',
-                    http_status=400,
+            try:
+                _activation, _created, payload = bind_hardware_to_license(
+                    license_obj,
+                    hardware_fingerprint,
+                    request,
+                    device_type='desktop',
+                    audit_action='activation',
                 )
+            except ValueError as exc:
+                raise LicenseAPIError(str(exc), http_status=400) from exc
 
-            total_slots = LicenseActivation.objects.filter(license=license_obj).count()
-            if total_slots >= license_obj.max_activations:
-                existing_slot = LicenseActivation.objects.filter(
-                    license=license_obj,
-                    hardware_fingerprint=hardware_fingerprint,
-                ).first()
-                if not existing_slot:
-                    raise LicenseAPIError(
-                        f'تمام اسلات‌های لایسنس ({license_obj.max_activations}) پر شده — '
-                        'ابتدا از داشبورد سیستم را ثبت کنید.',
-                        http_status=400,
-                    )
-
-            activation, created = LicenseActivation.objects.get_or_create(
-                license=license_obj,
-                hardware_fingerprint=hardware_fingerprint,
-                defaults={
-                    'ip_address': client_ip,
-                    'user_agent': meta.get('HTTP_USER_AGENT', ''),
-                    'is_active': True,
-                },
-            )
-            if not created:
-                activation.is_active = True
-                activation.ip_address = client_ip
-                activation.user_agent = meta.get('HTTP_USER_AGENT', '')
-                activation.save(update_fields=['is_active', 'ip_address', 'user_agent'])
-
-            license_obj.status = 'active'
-            license_obj.save(update_fields=['status'])
-
-            _audit(license_obj, 'activation', request, {
-                'hardware_fingerprint': hardware_fingerprint[:32],
-                'reactivated': not created,
-            })
-
-            return {
-                'success': True,
-                'message': 'لایسنس با موفقیت فعال شد.',
-                'license_key': license_obj.license_key,
-                'activated_at': activation.activated_at.isoformat(),
-                'account': build_license_account_payload(license_obj),
-                **_offline_grace_payload(),
-                **license_obj.plan_payload(),
-            }
+            return payload
     except LicenseAPIError:
         raise
 
 
 def validate_license(request) -> dict:
+    from django.utils import timezone
+
+    from licenses.services.activation import _offline_grace_payload, _sync_license_expiration
+
     license_key, hardware_fingerprint = _parse_request(request)
     meta = _request_meta(request)
     client_ip = get_client_ip(meta)
@@ -265,26 +185,14 @@ def deactivate_license(request) -> dict:
     except RateLimitExceeded as exc:
         raise LicenseAPIError(str(exc), http_status=429) from exc
 
-    with transaction.atomic():
-        try:
-            license_obj = License.objects.select_for_update().get(license_key=license_key)
-            activation = LicenseActivation.objects.select_for_update().get(
-                license=license_obj,
-                hardware_fingerprint=hardware_fingerprint,
-                is_active=True,
-            )
-        except (License.DoesNotExist, LicenseActivation.DoesNotExist):
-            raise LicenseAPIError('لایسنس یا فعال‌سازی یافت نشد.', http_status=404) from None
-
-        activation.is_active = False
-        activation.save(update_fields=['is_active'])
-        _refresh_license_status_after_deactivation(license_obj)
-
-        _audit(license_obj, 'deactivation', request, {
-            'hardware_fingerprint': hardware_fingerprint[:32],
-        })
-
-    return {
-        'success': True,
-        'message': 'لایسنس با موفقیت غیرفعال شد.',
-    }
+    try:
+        license_obj = License.objects.get(license_key=license_key)
+        return deactivate_hardware_from_license(
+            license_obj,
+            hardware_fingerprint,
+            request,
+        )
+    except License.DoesNotExist:
+        raise LicenseAPIError('لایسنس یا فعال‌سازی یافت نشد.', http_status=404) from None
+    except LicenseActivation.DoesNotExist:
+        raise LicenseAPIError('لایسنس یا فعال‌سازی یافت نشد.', http_status=404) from None

@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'ai_workspace',
     'product_hub',
     'mobile_api',
+    'desktop_api',
 ]
 
 MIDDLEWARE = [
@@ -253,6 +254,9 @@ LICENSE_RATE_LIMIT_WINDOW = config('LICENSE_RATE_LIMIT_WINDOW', default=300, cas
 LICENSE_ALLOW_LOCAL_DEV = config('LICENSE_ALLOW_LOCAL_DEV', default=DEBUG, cast=bool)
 LICENSE_BOT_API_KEY = config('LICENSE_BOT_API_KEY', default='')
 
+# ورود حساب کاربری در اپ ویندوز (API /api/desktop/v1/)
+DESKTOP_ACCOUNT_LOGIN_ENABLED = config('DESKTOP_ACCOUNT_LOGIN_ENABLED', default=True, cast=bool)
+
 # میزکار — فقط با سفارش paid و لایسنس active (بدون bypass خودکار staff)
 WORKSPACE_LICENSE_STAFF_BYPASS = config('WORKSPACE_LICENSE_STAFF_BYPASS', default=False, cast=bool)
 
@@ -380,6 +384,10 @@ REST_FRAMEWORK = {
         'mobile_refresh': '30/minute',
         'mobile_user': '1200/hour',
         'mobile_extraction': '30/hour',
+        'desktop_login': '10/minute',
+        'desktop_refresh': '30/minute',
+        'desktop_bind': '20/hour',
+        'desktop_validate': '120/hour',
     },
 }
 

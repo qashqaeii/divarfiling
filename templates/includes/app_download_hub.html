@@ -8,80 +8,19 @@
                 {% decor_icon 'download' size='xs' boxed=True accent='violet' %}
                 {{ app_download_hub.kicker|default:'مرکز دانلود' }}
             </span>
-            <h2 id="mk-dl-hub-title">{{ app_download_hub.title|default:'اپ موبایل و ربات ویندوز' }}</h2>
-            <p class="mk-dl-hub-lead">{{ app_download_hub.lead|default:'هر دو با یک لایسنس — اندروید را همین الان نصب کنید؛ ربات ویندوز پس از خرید در دسترس است.' }}</p>
+            <h2 id="mk-dl-hub-title">{{ app_download_hub.title|default:'ربات ویندوز و اپ اندروید' }}</h2>
+            <p class="mk-dl-hub-lead">{{ app_download_hub.lead|default:'برای استخراج حرفه‌ای ربات ویندوز توصیه می‌شود؛ اپ اندروید برای CRM و کار در محل. هر دو با یک لایسنس.' }}</p>
         </header>
 
         <div class="mk-dl-grid">
-            <article class="mk-dl-card mk-dl-card--android">
+            <article class="mk-dl-card mk-dl-card--windows{% if app_download_hub.windows.recommended %} mk-dl-card--recommended{% endif %}">
                 <div class="mk-dl-card-glow" aria-hidden="true"></div>
-                <header class="mk-dl-card-top">
-                    <div class="mk-dl-card-icon mk-dl-card-icon--android" aria-hidden="true">
-                        <img src="{% static 'logo.png' %}" alt="" width="56" height="56" loading="lazy">
-                    </div>
-                    <div class="mk-dl-card-meta">
-                        <span class="mk-dl-platform">اندروید</span>
-                        <h3>{{ app_download_hub.android.title|default:'اپ فایلینگ دیوار' }}</h3>
-                        <div class="mk-dl-badges">
-                            {% if app_downloads.android.available %}
-                            <span class="mk-dl-badge">{{ app_downloads.android.version_label }}</span>
-                            {% if app_downloads.android.size_label %}
-                            <span class="mk-dl-badge mk-dl-badge--muted">{{ app_downloads.android.size_label }}</span>
-                            {% endif %}
-                            <span class="mk-dl-badge mk-dl-badge--muted">Android {{ app_downloads.android.min_android }}+</span>
-                            {% else %}
-                            <span class="mk-dl-badge mk-dl-badge--muted">به‌زودی</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </header>
-                <ul class="mk-dl-features">
-                    {% for feat in app_download_hub.android.features %}
-                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>
-                    {% empty %}
-                    <li><i class="fas fa-check" aria-hidden="true"></i> استخراج سبک، CRM و فایلینگ</li>
-                    <li><i class="fas fa-check" aria-hidden="true"></i> ورود با همان حساب میزکار</li>
-                    <li><i class="fas fa-check" aria-hidden="true"></i> اعلان تطبیق ملک و یادآور مشتری</li>
-                    {% endfor %}
-                </ul>
-                <div class="mk-dl-card-actions">
-                    <div class="mk-dl-card-actions-row">
-                        {% if app_downloads.android.available %}
-                        <a href="{% url 'android_app_download' %}" class="mk-dl-btn mk-dl-btn--android">
-                            <i class="fab fa-android" aria-hidden="true"></i>
-                            دانلود APK
-                        </a>
-                        <a href="{% if compact %}{% url 'android_tutorial' %}{% else %}#mk-dl-android-notes{% endif %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
-                        {% else %}
-                        <span class="mk-dl-unavailable"><i class="fas fa-clock"></i> به‌زودی در سرور قرار می‌گیرد</span>
-                        {% endif %}
-                    </div>
-                    <span class="mk-dl-file-hint mk-dl-file-hint--spacer" aria-hidden="true"></span>
-                </div>
-                <div class="mk-dl-card-notes mk-dl-card-notes--android{% if not app_downloads.android.available %} mk-dl-card-notes--empty{% endif %}" id="mk-dl-android-notes">
-                    {% if app_downloads.android.available %}
-                    <h4 class="mk-dl-notes-title">
-                        <i class="fas fa-mobile-screen" aria-hidden="true"></i>
-                        {{ app_download_hub.android.install_title|default:'نصب در ۴ قدم' }}
-                    </h4>
-                    <ol class="mk-dl-notes-steps">
-                        {% for step in app_download_hub.android.install_steps %}
-                        <li><span class="mk-dl-notes-num">{{ step.num }}</span><span>{{ step.text }}</span></li>
-                        {% endfor %}
-                    </ol>
-                    <p class="mk-dl-notes-shield">
-                        <i class="fas fa-shield-halved" aria-hidden="true"></i>
-                        <span>
-                            <strong>{{ app_download_hub.play_protect.title|default:'Play Protect' }}:</strong>
-                            {{ app_download_hub.play_protect.summary|default:app_download_hub.play_protect.why }}
-                        </span>
-                    </p>
-                    {% endif %}
-                </div>
-            </article>
-
-            <article class="mk-dl-card mk-dl-card--windows">
-                <div class="mk-dl-card-glow" aria-hidden="true"></div>
+                {% if app_download_hub.windows.recommended %}
+                <span class="mk-dl-recommended-pill">
+                    <i class="fas fa-star" aria-hidden="true"></i>
+                    {{ app_download_hub.windows.recommended_label|default:'توصیه‌شده برای استخراج' }}
+                </span>
+                {% endif %}
                 <header class="mk-dl-card-top">
                     <div class="mk-dl-card-icon mk-dl-card-icon--windows" aria-hidden="true">
                         {% decor_icon 'rocket' size='lg' boxed=True accent='emerald' %}
@@ -89,6 +28,9 @@
                     <div class="mk-dl-card-meta">
                         <span class="mk-dl-platform">ویندوز</span>
                         <h3>{{ app_download_hub.windows.title|default:'ربات استخراج دیوار' }}</h3>
+                        {% if app_download_hub.windows.tagline %}
+                        <p class="mk-dl-card-tagline">{{ app_download_hub.windows.tagline }}</p>
+                        {% endif %}
                         <div class="mk-dl-badges">
                             <span class="mk-dl-badge mk-dl-badge--muted">{{ app_downloads.windows.min_os }}</span>
                             <span class="mk-dl-badge mk-dl-badge--license">نیاز به لایسنس</span>
@@ -99,9 +41,9 @@
                     {% for feat in app_download_hub.windows.features %}
                     <li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>
                     {% empty %}
-                    <li><i class="fas fa-check" aria-hidden="true"></i> استخراج حجیم و خودکار آگهی‌ها</li>
-                    <li><i class="fas fa-check" aria-hidden="true"></i> خروجی اکسل و تصاویر در پوشه output</li>
-                    <li><i class="fas fa-check" aria-hidden="true"></i> آپلود مستقیم در میزکار</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> استخراج گروهی چند زیردسته</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> سقف تا ۵۰۰ آگهی در هر دسته</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> خروجی اکسل و آپلود در میزکار</li>
                     {% endfor %}
                 </ul>
                 <div class="mk-dl-card-actions">
@@ -151,6 +93,76 @@
                         <li><i class="fas fa-circle" aria-hidden="true"></i> ربات را کامل ببندید و بعد نصب‌کننده جدید را اجرا کنید.</li>
                         {% endfor %}
                     </ul>
+                </div>
+            </article>
+
+            <article class="mk-dl-card mk-dl-card--android">
+                <div class="mk-dl-card-glow" aria-hidden="true"></div>
+                <header class="mk-dl-card-top">
+                    <div class="mk-dl-card-icon mk-dl-card-icon--android" aria-hidden="true">
+                        <img src="{% static 'logo.png' %}" alt="" width="56" height="56" loading="lazy">
+                    </div>
+                    <div class="mk-dl-card-meta">
+                        <span class="mk-dl-platform">اندروید</span>
+                        <h3>{{ app_download_hub.android.title|default:'اپ فایلینگ دیوار' }}</h3>
+                        {% if app_download_hub.android.tagline %}
+                        <p class="mk-dl-card-tagline">{{ app_download_hub.android.tagline }}</p>
+                        {% endif %}
+                        <div class="mk-dl-badges">
+                            {% if app_downloads.android.available %}
+                            <span class="mk-dl-badge">{{ app_downloads.android.version_label }}</span>
+                            {% if app_downloads.android.size_label %}
+                            <span class="mk-dl-badge mk-dl-badge--muted">{{ app_downloads.android.size_label }}</span>
+                            {% endif %}
+                            <span class="mk-dl-badge mk-dl-badge--muted">Android {{ app_downloads.android.min_android }}+</span>
+                            {% else %}
+                            <span class="mk-dl-badge mk-dl-badge--muted">به‌زودی</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </header>
+                <ul class="mk-dl-features">
+                    {% for feat in app_download_hub.android.features %}
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>
+                    {% empty %}
+                    <li><i class="fas fa-check" aria-hidden="true"></i> CRM و فایلینگ روی موبایل</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> ورود با همان حساب میزکار</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> اعلان تطبیق ملک و یادآور مشتری</li>
+                    {% endfor %}
+                </ul>
+                <div class="mk-dl-card-actions">
+                    <div class="mk-dl-card-actions-row">
+                        {% if app_downloads.android.available %}
+                        <a href="{% url 'android_app_download' %}" class="mk-dl-btn mk-dl-btn--android">
+                            <i class="fab fa-android" aria-hidden="true"></i>
+                            دانلود APK
+                        </a>
+                        <a href="{% if compact %}{% url 'android_tutorial' %}{% else %}#mk-dl-android-notes{% endif %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
+                        {% else %}
+                        <span class="mk-dl-unavailable"><i class="fas fa-clock"></i> به‌زودی در سرور قرار می‌گیرد</span>
+                        {% endif %}
+                    </div>
+                    <span class="mk-dl-file-hint mk-dl-file-hint--spacer" aria-hidden="true"></span>
+                </div>
+                <div class="mk-dl-card-notes mk-dl-card-notes--android{% if not app_downloads.android.available %} mk-dl-card-notes--empty{% endif %}" id="mk-dl-android-notes">
+                    {% if app_downloads.android.available %}
+                    <h4 class="mk-dl-notes-title">
+                        <i class="fas fa-mobile-screen" aria-hidden="true"></i>
+                        {{ app_download_hub.android.install_title|default:'نصب در ۴ قدم' }}
+                    </h4>
+                    <ol class="mk-dl-notes-steps">
+                        {% for step in app_download_hub.android.install_steps %}
+                        <li><span class="mk-dl-notes-num">{{ step.num }}</span><span>{{ step.text }}</span></li>
+                        {% endfor %}
+                    </ol>
+                    <p class="mk-dl-notes-shield">
+                        <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                        <span>
+                            <strong>{{ app_download_hub.play_protect.title|default:'Play Protect' }}:</strong>
+                            {{ app_download_hub.play_protect.summary|default:app_download_hub.play_protect.why }}
+                        </span>
+                    </p>
+                    {% endif %}
                 </div>
             </article>
         </div>

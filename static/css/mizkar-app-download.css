@@ -223,6 +223,53 @@ html.mk-public[data-theme="light"] .mk-dl-card {
     border-color: rgba(52, 211, 153, 0.22);
 }
 
+.mk-dl-card--recommended {
+    border-color: rgba(52, 211, 153, 0.38);
+    box-shadow:
+        0 20px 50px -28px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(34, 197, 94, 0.12);
+}
+
+html.mk-public[data-theme="light"] .mk-dl-card--recommended {
+    border-color: rgba(5, 150, 105, 0.32);
+    box-shadow:
+        0 18px 40px -24px rgba(15, 23, 42, 0.12),
+        0 0 0 1px rgba(5, 150, 105, 0.1);
+}
+
+.mk-dl-recommended-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    align-self: flex-start;
+    margin-bottom: 0.65rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #6ee7b7;
+    background: rgba(34, 197, 94, 0.16);
+    border: 1px solid rgba(52, 211, 153, 0.28);
+}
+
+.mk-dl-recommended-pill i {
+    font-size: 0.62rem;
+    color: #fbbf24;
+}
+
+html.mk-public[data-theme="light"] .mk-dl-recommended-pill {
+    color: #047857;
+    background: rgba(5, 150, 105, 0.1);
+}
+
+.mk-dl-card-tagline {
+    margin: 0 0 0.45rem;
+    font-size: 0.74rem;
+    line-height: 1.5;
+    color: var(--mk-text-muted);
+    font-weight: 500;
+}
+
 html.mk-public[data-theme="light"] .mk-dl-badge {
     color: #5b21b6;
     background: rgba(124, 58, 237, 0.08);

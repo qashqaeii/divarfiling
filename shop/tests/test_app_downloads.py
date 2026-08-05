@@ -51,6 +51,8 @@ class AndroidAppDownloadTests(TestCase):
             self.assertContains(response, 'href="#mk-dl-android-notes"')
         self.assertContains(response, 'id="mk-dl-windows-notes"')
         self.assertContains(response, 'output')
+        self.assertContains(response, 'توصیه‌شده برای استخراج')
+        self.assertContains(response, 'استخراج گروهی')
 
     def test_dashboard_shows_android_link_for_authenticated_user(self):
         if not android_apk_available():

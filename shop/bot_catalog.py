@@ -1006,7 +1006,7 @@ def app_download_hub_content():
         'windows': {
             'title': 'ربات استخراج دیوار',
             'recommended': True,
-            'recommended_label': 'توصیه‌شده برای استخراج',
+            'recommended_label': 'توصیه‌شده',
             'tagline': 'قدرتمندترین ابزار ساخت بانک فایل',
             'features': [
                 'استخراج گروهی — چند زیردسته و محله در یک اجرا',

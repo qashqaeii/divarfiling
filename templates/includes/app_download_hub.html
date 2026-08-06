@@ -3,6 +3,7 @@
 <section class="mk-dl-hub{% if compact %} mk-dl-hub--compact{% endif %}" id="download-apps" aria-labelledby="mk-dl-hub-title">
     <div class="mk-dl-hub-bg" aria-hidden="true"></div>
     <div class="mk-dl-hub-inner">
+        {% if not compact %}
         <header class="mk-dl-hub-head">
             <span class="mk-dl-hub-kicker">
                 {% decor_icon 'download' size='xs' boxed=True accent='violet' %}
@@ -11,26 +12,28 @@
             <h2 id="mk-dl-hub-title">{{ app_download_hub.title|default:'ربات ویندوز و اپ اندروید' }}</h2>
             <p class="mk-dl-hub-lead">{{ app_download_hub.lead|default:'برای استخراج حرفه‌ای ربات ویندوز توصیه می‌شود؛ اپ اندروید برای CRM و کار در محل. هر دو با یک لایسنس.' }}</p>
         </header>
+        {% else %}
+        <h2 id="mk-dl-hub-title" class="visually-hidden">{{ app_download_hub.title|default:'دانلود اپ‌ها' }}</h2>
+        {% endif %}
 
         <div class="mk-dl-grid">
             <article class="mk-dl-card mk-dl-card--windows{% if app_download_hub.windows.recommended %} mk-dl-card--recommended{% endif %}">
                 <div class="mk-dl-card-glow" aria-hidden="true"></div>
-                {% if app_download_hub.windows.recommended %}
-                <span class="mk-dl-recommended-pill">
-                    <i class="fas fa-star" aria-hidden="true"></i>
-                    {{ app_download_hub.windows.recommended_label|default:'توصیه‌شده برای استخراج' }}
-                </span>
-                {% endif %}
                 <header class="mk-dl-card-top">
                     <div class="mk-dl-card-icon mk-dl-card-icon--windows" aria-hidden="true">
                         {% decor_icon 'rocket' size='lg' boxed=True accent='emerald' %}
                     </div>
                     <div class="mk-dl-card-meta">
-                        <span class="mk-dl-platform">ویندوز</span>
+                        <div class="mk-dl-card-title-row">
+                            <span class="mk-dl-platform">ویندوز</span>
+                            {% if app_download_hub.windows.recommended %}
+                            <span class="mk-dl-badge mk-dl-badge--recommended">
+                                <i class="fas fa-star" aria-hidden="true"></i>
+                                {{ app_download_hub.windows.recommended_label|default:'توصیه‌شده' }}
+                            </span>
+                            {% endif %}
+                        </div>
                         <h3>{{ app_download_hub.windows.title|default:'ربات استخراج دیوار' }}</h3>
-                        {% if app_download_hub.windows.tagline %}
-                        <p class="mk-dl-card-tagline">{{ app_download_hub.windows.tagline }}</p>
-                        {% endif %}
                         <div class="mk-dl-badges">
                             <span class="mk-dl-badge mk-dl-badge--muted">{{ app_downloads.windows.min_os }}</span>
                             <span class="mk-dl-badge mk-dl-badge--license">نیاز به لایسنس</span>
@@ -80,7 +83,23 @@
                     <span class="mk-dl-file-hint mk-dl-file-hint--spacer" aria-hidden="true"></span>
                     {% endif %}
                 </div>
-                <div class="mk-dl-card-notes mk-dl-card-notes--windows" id="mk-dl-windows-notes">
+                <div class="mk-dl-card-notes mk-dl-card-notes--windows{% if compact %} mk-dl-card-notes--compact{% endif %}" id="mk-dl-windows-notes">
+                    {% if compact %}
+                    <details class="mk-dl-notes-details">
+                        <summary class="mk-dl-notes-summary">
+                            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+                            {{ app_download_hub.windows.update_title|default:'قبل از به‌روزرسانی یا حذف' }}
+                        </summary>
+                        <ul class="mk-dl-notes-list">
+                            {% for note in app_download_hub.windows.update_notes %}
+                            <li><i class="fas fa-circle" aria-hidden="true"></i> {{ note }}</li>
+                            {% empty %}
+                            <li><i class="fas fa-circle" aria-hidden="true"></i> از پوشه <code dir="ltr">output</code> کنار ربات (اکسل‌ها و تصاویر) قبل از حذف یا نصب مجدد کپی بگیرید.</li>
+                            <li><i class="fas fa-circle" aria-hidden="true"></i> ربات را کامل ببندید و بعد نصب‌کننده جدید را اجرا کنید.</li>
+                            {% endfor %}
+                        </ul>
+                    </details>
+                    {% else %}
                     <h4 class="mk-dl-notes-title">
                         <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
                         {{ app_download_hub.windows.update_title|default:'قبل از به‌روزرسانی یا حذف' }}
@@ -93,6 +112,7 @@
                         <li><i class="fas fa-circle" aria-hidden="true"></i> ربات را کامل ببندید و بعد نصب‌کننده جدید را اجرا کنید.</li>
                         {% endfor %}
                     </ul>
+                    {% endif %}
                 </div>
             </article>
 
@@ -105,9 +125,6 @@
                     <div class="mk-dl-card-meta">
                         <span class="mk-dl-platform">اندروید</span>
                         <h3>{{ app_download_hub.android.title|default:'اپ فایلینگ دیوار' }}</h3>
-                        {% if app_download_hub.android.tagline %}
-                        <p class="mk-dl-card-tagline">{{ app_download_hub.android.tagline }}</p>
-                        {% endif %}
                         <div class="mk-dl-badges">
                             {% if app_downloads.android.available %}
                             <span class="mk-dl-badge">{{ app_downloads.android.version_label }}</span>
@@ -144,8 +161,8 @@
                     </div>
                     <span class="mk-dl-file-hint mk-dl-file-hint--spacer" aria-hidden="true"></span>
                 </div>
-                <div class="mk-dl-card-notes mk-dl-card-notes--android{% if not app_downloads.android.available %} mk-dl-card-notes--empty{% endif %}" id="mk-dl-android-notes">
-                    {% if app_downloads.android.available %}
+                <div class="mk-dl-card-notes mk-dl-card-notes--android{% if not app_downloads.android.available or compact %} mk-dl-card-notes--empty{% endif %}" id="mk-dl-android-notes">
+                    {% if app_downloads.android.available and not compact %}
                     <h4 class="mk-dl-notes-title">
                         <i class="fas fa-mobile-screen" aria-hidden="true"></i>
                         {{ app_download_hub.android.install_title|default:'نصب در ۴ قدم' }}

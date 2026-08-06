@@ -74,35 +74,27 @@ html.mk-public[data-theme="light"] .mk-dl-hub-kicker {
 .mk-dl-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(4, auto);
-    gap: clamp(1rem, 2.5vw, 1.35rem);
+    gap: clamp(0.85rem, 2vw, 1.15rem);
     align-items: stretch;
 }
 
 .mk-dl-card {
     position: relative;
-    display: grid;
-    grid-template-rows: subgrid;
-    grid-row: span 4;
+    display: flex;
+    flex-direction: column;
     gap: 0;
-    padding: clamp(1.15rem, 2.5vw, 1.45rem);
-    border-radius: 20px;
+    padding: clamp(1rem, 2.2vw, 1.25rem);
+    border-radius: 16px;
     border: 1px solid rgba(148, 163, 184, 0.16);
     background: rgba(15, 23, 42, 0.45);
-    box-shadow: 0 20px 50px -28px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 16px 40px -26px rgba(0, 0, 0, 0.4);
     overflow: hidden;
+    min-width: 0;
 }
 
 @supports not (grid-template-rows: subgrid) {
     .mk-dl-grid {
         grid-template-rows: none;
-    }
-
-    .mk-dl-card {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        grid-row: auto;
     }
 }
 
@@ -137,8 +129,21 @@ html.mk-public[data-theme="light"] .mk-dl-card {
 .mk-dl-card-top {
     display: flex;
     align-items: flex-start;
-    gap: 0.9rem;
-    margin-bottom: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.mk-dl-card-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem 0.5rem;
+    margin-bottom: 0.15rem;
+}
+
+.mk-dl-card-title-row .mk-dl-platform {
+    margin-bottom: 0;
 }
 
 .mk-dl-card-meta {
@@ -149,18 +154,18 @@ html.mk-public[data-theme="light"] .mk-dl-card {
 }
 
 .mk-dl-card-meta h3 {
-    margin: 0 0 0.5rem;
-    font-size: 1.05rem;
+    margin: 0 0 0.4rem;
+    font-size: 1rem;
     font-weight: 800;
     color: var(--mk-text);
-    min-height: 1.35rem;
+    line-height: 1.35;
 }
 
 .mk-dl-card-icon {
     flex-shrink: 0;
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
     display: grid;
     place-items: center;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -195,9 +200,25 @@ html.mk-public[data-theme="light"] .mk-dl-card {
 .mk-dl-badges {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: 0.3rem;
     align-content: flex-start;
-    min-height: 3rem;
+}
+
+.mk-dl-badge--recommended {
+    color: #047857;
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(52, 211, 153, 0.28);
+    gap: 0.25rem;
+}
+
+.mk-dl-badge--recommended i {
+    font-size: 0.58rem;
+    color: #f59e0b;
+}
+
+html.mk-public[data-theme="light"] .mk-dl-badge--recommended {
+    color: #047857;
+    background: rgba(5, 150, 105, 0.1);
 }
 
 .mk-dl-badge {
@@ -224,50 +245,11 @@ html.mk-public[data-theme="light"] .mk-dl-card {
 }
 
 .mk-dl-card--recommended {
-    border-color: rgba(52, 211, 153, 0.38);
-    box-shadow:
-        0 20px 50px -28px rgba(0, 0, 0, 0.45),
-        0 0 0 1px rgba(34, 197, 94, 0.12);
+    border-color: rgba(52, 211, 153, 0.32);
 }
 
 html.mk-public[data-theme="light"] .mk-dl-card--recommended {
-    border-color: rgba(5, 150, 105, 0.32);
-    box-shadow:
-        0 18px 40px -24px rgba(15, 23, 42, 0.12),
-        0 0 0 1px rgba(5, 150, 105, 0.1);
-}
-
-.mk-dl-recommended-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    align-self: flex-start;
-    margin-bottom: 0.65rem;
-    padding: 0.22rem 0.65rem;
-    border-radius: 999px;
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: #6ee7b7;
-    background: rgba(34, 197, 94, 0.16);
-    border: 1px solid rgba(52, 211, 153, 0.28);
-}
-
-.mk-dl-recommended-pill i {
-    font-size: 0.62rem;
-    color: #fbbf24;
-}
-
-html.mk-public[data-theme="light"] .mk-dl-recommended-pill {
-    color: #047857;
-    background: rgba(5, 150, 105, 0.1);
-}
-
-.mk-dl-card-tagline {
-    margin: 0 0 0.45rem;
-    font-size: 0.74rem;
-    line-height: 1.5;
-    color: var(--mk-text-muted);
-    font-weight: 500;
+    border-color: rgba(5, 150, 105, 0.28);
 }
 
 html.mk-public[data-theme="light"] .mk-dl-badge {
@@ -277,25 +259,19 @@ html.mk-public[data-theme="light"] .mk-dl-badge {
 
 .mk-dl-features {
     list-style: none;
-    margin: 0 0 0.85rem;
+    margin: 0 0 0.65rem;
     padding: 0;
     display: grid;
-    gap: 0.45rem;
-    align-content: start;
-}
-
-@supports not (grid-template-rows: subgrid) {
-    .mk-dl-features {
-        min-height: 4.35rem;
-    }
+    gap: 0.35rem;
+    flex: 1 1 auto;
 }
 
 .mk-dl-features li {
     display: flex;
     align-items: flex-start;
-    gap: 0.45rem;
-    font-size: 0.82rem;
-    line-height: 1.55;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    line-height: 1.5;
     color: var(--mk-text-secondary);
 }
 
@@ -309,28 +285,26 @@ html.mk-public[data-theme="light"] .mk-dl-badge {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.4rem;
-    margin-top: 0;
-    margin-bottom: 0.85rem;
-    padding-top: 0;
-    min-height: 2.65rem;
+    gap: 0.3rem;
+    margin-top: auto;
+    margin-bottom: 0;
+    padding-top: 0.15rem;
 }
 
 .mk-dl-card-actions-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.55rem;
-    min-height: 2.65rem;
+    gap: 0.45rem;
 }
 
 @supports not (grid-template-rows: subgrid) {
     .mk-dl-card-actions {
-        min-height: 3.05rem;
+        min-height: 0;
     }
 
     .mk-dl-card-top {
-        min-height: 5.5rem;
+        min-height: 0;
     }
 }
 
@@ -550,10 +524,73 @@ html.mk-public[data-theme="light"] .mk-dl-shield-action {
 
 /* ─── یادداشت خلاصه زیر هر کارت ─── */
 .mk-dl-card-notes {
-    margin-top: 0;
-    padding-top: 0.85rem;
-    border-top: 1px solid rgba(148, 163, 184, 0.14);
-    align-self: start;
+    margin-top: 0.65rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.mk-dl-card-notes--compact {
+    margin-top: 0.5rem;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.mk-dl-notes-details {
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    background: rgba(148, 163, 184, 0.06);
+    overflow: hidden;
+}
+
+.mk-dl-notes-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--mk-text-secondary);
+    cursor: pointer;
+    list-style: none;
+}
+
+.mk-dl-notes-summary::-webkit-details-marker {
+    display: none;
+}
+
+.mk-dl-notes-summary::after {
+    content: '\f078';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.58rem;
+    margin-right: auto;
+    opacity: 0.55;
+    transition: transform 0.15s ease;
+}
+
+.mk-dl-notes-details[open] .mk-dl-notes-summary::after {
+    transform: rotate(180deg);
+}
+
+.mk-dl-notes-summary i {
+    font-size: 0.68rem;
+    color: #fbbf24;
+}
+
+.mk-dl-notes-details .mk-dl-notes-list {
+    padding: 0 0.55rem 0.55rem;
+}
+
+.mk-dl-hub .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .mk-dl-card-notes--empty {
@@ -687,13 +724,54 @@ html.mk-public[data-theme="light"] .mk-dl-shield-action {
 }
 
 .mk-dl-hub--compact .mk-dl-hub-head {
-    text-align: right;
-    margin-inline: 0;
-    margin-bottom: 1.15rem;
+    display: none;
 }
 
-.mk-dl-hub--compact .mk-dl-hub-head h2 {
-    font-size: 1.15rem;
+.mk-dl-hub--compact .mk-dl-card {
+    padding: 0.85rem;
+    border-radius: 12px;
+}
+
+.mk-dl-hub--compact .mk-dl-card-top {
+    margin-bottom: 0.55rem;
+    gap: 0.6rem;
+}
+
+.mk-dl-hub--compact .mk-dl-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+}
+
+.mk-dl-hub--compact .mk-dl-card-meta h3 {
+    font-size: 0.88rem;
+    margin-bottom: 0.3rem;
+}
+
+.mk-dl-hub--compact .mk-dl-features {
+    margin-bottom: 0.5rem;
+    gap: 0.28rem;
+}
+
+.mk-dl-hub--compact .mk-dl-features li {
+    font-size: 0.72rem;
+    line-height: 1.45;
+}
+
+.mk-dl-hub--compact .mk-dl-btn {
+    padding: 0.52rem 0.85rem;
+    font-size: 0.78rem;
+    border-radius: 10px;
+}
+
+.mk-dl-hub--compact .mk-dl-badge {
+    font-size: 0.62rem;
+    padding: 0.14rem 0.45rem;
+}
+
+.mk-dl-hub--compact .mk-dl-card-icon--android img {
+    width: 36px;
+    height: 36px;
 }
 
 .mk-dl-hub--compact .mk-dl-install {

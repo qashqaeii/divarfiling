@@ -1,158 +1,133 @@
 {% load workspace_tags crm_tags %}
 <section class="crm-detail-action-center crm-detail-action-center--contact" aria-label="مرکز اقدام">
-    <header class="crm-detail-action-center__head">
-        <div class="crm-detail-action-center__head-main">
-            <span class="crm-detail-action-center__kicker">Action Center</span>
-            <h2 class="crm-detail-action-center__title">کار بعدی چیست؟</h2>
-        </div>
-        {% if follow_up_state == 'overdue' %}
-        <span class="crm-detail-action-center__flag is-warn">پیگیری معوق</span>
-        {% elif follow_up_state == 'today' %}
-        <span class="crm-detail-action-center__flag is-accent">اقدام امروز</span>
-        {% elif customer.status == 'جدید' %}
-        <span class="crm-detail-action-center__flag is-info">مشتری جدید</span>
-        {% endif %}
-    </header>
-
-    <div class="crm-detail-action-center__grid">
-        {% if not customer_is_shared %}
-        <article class="crm-detail-intel-card crm-detail-intel-card--primary{% if follow_up_state == 'overdue' %} is-warn{% elif follow_up_state == 'today' %} is-accent{% elif follow_up_state == 'upcoming' %} is-growth{% endif %}">
-            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
-            <div class="crm-detail-intel-card__body">
-                <span class="crm-detail-intel-card__label">تماس / پیگیری بعدی</span>
-                {% if customer.next_follow_up %}
-                <strong class="crm-detail-intel-card__value">{{ customer.next_follow_up|ws_jalali }}</strong>
-                <span class="crm-detail-intel-card__meta">
-                    {% if follow_up_state == 'overdue' %}معوق — همین الان پیگیری کنید
-                    {% elif follow_up_state == 'today' %}امروز — اولویت بالا
-                    {% else %}برنامه‌ریزی شده{% endif %}
-                </span>
-                {% else %}
-                <strong class="crm-detail-intel-card__value is-muted">ثبت نشده</strong>
-                <span class="crm-detail-intel-card__meta">پیگیری بعدی را مشخص کنید</span>
-                {% endif %}
-            </div>
-            {% if not customer_is_shared %}
-            <button type="button" class="crm-detail-intel-card__link" data-drawer-open="drawer-followup" title="مدیریت پیگیری">
-                <i class="fas fa-chevron-left" aria-hidden="true"></i>
-            </button>
-            {% endif %}
-        </article>
-        {% else %}
-        <article class="crm-detail-intel-card{% if follow_up_state == 'overdue' %} is-warn{% elif follow_up_state == 'today' %} is-accent{% endif %}">
-            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
-            <div class="crm-detail-intel-card__body">
-                <span class="crm-detail-intel-card__label">پیگیری بعدی</span>
-                {% if customer.next_follow_up %}
-                <strong class="crm-detail-intel-card__value">{{ customer.next_follow_up|ws_jalali }}</strong>
-                {% else %}
-                <strong class="crm-detail-intel-card__value is-muted">ثبت نشده</strong>
-                {% endif %}
-            </div>
-        </article>
-        {% endif %}
-
-        <article class="crm-detail-intel-card{% if activities %} is-info{% endif %}">
-            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-phone-volume"></i></span>
-            <div class="crm-detail-intel-card__body">
-                <span class="crm-detail-intel-card__label">آخرین تماس</span>
-                {% if activities %}
-                <strong class="crm-detail-intel-card__value">{{ activities.0.activity_type }}</strong>
-                <span class="crm-detail-intel-card__meta">{{ activities.0.created_at|ws_jalali }}{% if activities.0.content %} · {{ activities.0.content|truncatechars:40 }}{% endif %}</span>
-                {% else %}
-                <strong class="crm-detail-intel-card__value is-muted">—</strong>
-                <span class="crm-detail-intel-card__meta">هنوز فعالیتی ثبت نشده</span>
-                {% endif %}
-            </div>
-            <button type="button" class="crm-detail-intel-card__link" data-tab-jump="timeline" title="مشاهده تایم‌لاین">
-                <i class="fas fa-chevron-left" aria-hidden="true"></i>
-            </button>
-        </article>
-
-        {% if reminders %}
-        <article class="crm-detail-intel-card is-accent">
-            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
-            <div class="crm-detail-intel-card__body">
-                <span class="crm-detail-intel-card__label">یادآور بعدی</span>
-                <strong class="crm-detail-intel-card__value">{{ reminders.0.title|truncatechars:28 }}</strong>
-                <span class="crm-detail-intel-card__meta">{{ reminders.0.due_at|ws_jalali_datetime }}</span>
-            </div>
-            {% if not customer_is_shared %}
-            <button type="button" class="crm-detail-intel-card__link" data-drawer-open="drawer-reminder" title="مدیریت یادآور">
-                <i class="fas fa-chevron-left" aria-hidden="true"></i>
-            </button>
-            {% endif %}
-        </article>
-        {% endif %}
-
-        {% if match_data.eligible and match_data.total_count %}
-        <article class="crm-detail-intel-card is-growth">
-            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-house"></i></span>
-            <div class="crm-detail-intel-card__body">
-                <span class="crm-detail-intel-card__label">فایل پیشنهادی</span>
-                <strong class="crm-detail-intel-card__value">{{ match_data.total_count }} ملک</strong>
-                <span class="crm-detail-intel-card__meta">تطبیق با ترجیحات مشتری</span>
-            </div>
-            <button type="button" class="crm-detail-intel-card__link" data-tab-jump="matches" title="مشاهده پیشنهادها">
-                <i class="fas fa-chevron-left" aria-hidden="true"></i>
-            </button>
-        </article>
-        {% endif %}
-
-        <article class="crm-detail-intel-card{% if deals %} is-info{% endif %}">
-            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
-            <div class="crm-detail-intel-card__body">
-                <span class="crm-detail-intel-card__label">معاملات مرتبط</span>
-                {% if deals %}
-                <strong class="crm-detail-intel-card__value">{{ deals|length }} معامله</strong>
-                <span class="crm-detail-intel-card__meta">{{ deals.0.stage }} · {{ deals.0.title|truncatechars:24 }}</span>
-                {% else %}
-                <strong class="crm-detail-intel-card__value is-muted">ثبت نشده</strong>
-                <span class="crm-detail-intel-card__meta">معامله‌ای به این مخاطب وصل نیست</span>
-                {% endif %}
-            </div>
-            {% if deals %}
-            <a href="{% url 'workspace:crm_deal_detail' deals.0.id %}" class="crm-detail-intel-card__link" title="مشاهده معامله">
-                <i class="fas fa-chevron-left" aria-hidden="true"></i>
-            </a>
-            {% elif not customer_is_shared %}
-            <button type="button" class="crm-detail-intel-card__link" data-drawer-open="drawer-deal" title="ثبت معامله">
-                <i class="fas fa-chevron-left" aria-hidden="true"></i>
-            </button>
-            {% endif %}
-        </article>
-
-        <article class="crm-detail-intel-card">
-            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-user-tag"></i></span>
-            <div class="crm-detail-intel-card__body">
-                <span class="crm-detail-intel-card__label">وضعیت مشتری</span>
-                <strong class="crm-detail-intel-card__value">{{ customer.status }}</strong>
-                <span class="crm-detail-intel-card__meta">{{ customer.customer_type }}{% if customer.priority == 'بالا' %} · اولویت بالا{% endif %}</span>
-            </div>
-        </article>
-    </div>
-
     {% if not customer_is_shared %}
-    <div class="crm-detail-action-center__quick" role="group" aria-label="اقدام سریع">
-        {% if customer.phone %}
-        <a href="{{ customer.phone|phone_tel_href }}" class="crm-detail-action-quick crm-detail-action-quick--primary">
-            <i class="fas fa-phone" aria-hidden="true"></i><span>تماس</span>
-        </a>
-        {% endif %}
-        <button type="button" class="crm-detail-action-quick" data-drawer-open="drawer-followup">
-            <i class="fas fa-calendar-plus" aria-hidden="true"></i><span>پیگیری</span>
-        </button>
-        <button type="button" class="crm-detail-action-quick" data-drawer-open="drawer-activity">
-            <i class="fas fa-plus" aria-hidden="true"></i><span>فعالیت</span>
-        </button>
-        {% if match_data.eligible %}
-        <button type="button" class="crm-detail-action-quick" data-tab-jump="matches">
-            <i class="fas fa-house" aria-hidden="true"></i><span>پیشنهاد ملک</span>
-        </button>
-        {% endif %}
-        <button type="button" class="crm-detail-action-quick" data-drawer-open="drawer-deal">
-            <i class="fas fa-handshake" aria-hidden="true"></i><span>معامله</span>
-        </button>
-    </div>
+    <article class="crm-detail-next-action{% if follow_up_state == 'overdue' %} is-warn{% elif follow_up_state == 'today' %} is-accent{% elif follow_up_state == 'upcoming' %} is-scheduled{% endif %}">
+        <div class="crm-detail-next-action__main">
+            <span class="crm-detail-next-action__kicker"><i class="fas fa-bell" aria-hidden="true"></i> اقدام بعدی</span>
+            {% if customer.next_follow_up %}
+            <strong class="crm-detail-next-action__title">
+                {% if follow_up_state == 'overdue' %}پیگیری معوق — تماس با مشتری
+                {% elif follow_up_state == 'today' %}تماس / پیگیری امروز
+                {% else %}پیگیری برنامه‌ریزی‌شده{% endif %}
+            </strong>
+            <span class="crm-detail-next-action__time">{{ customer.next_follow_up|ws_jalali }}</span>
+            <span class="crm-detail-next-action__hint">
+                {% if follow_up_state == 'overdue' %}همین الان اقدام کنید
+                {% elif follow_up_state == 'today' %}اولویت بالا — امروز
+                {% else %}در تقویم ثبت شده{% endif %}
+            </span>
+            {% else %}
+            <strong class="crm-detail-next-action__title">پیگیری بعدی ثبت نشده</strong>
+            <span class="crm-detail-next-action__time is-muted">—</span>
+            <span class="crm-detail-next-action__hint">تاریخ تماس بعدی را مشخص کنید</span>
+            {% endif %}
+        </div>
+        <div class="crm-detail-next-action__cta">
+            {% if customer.phone %}
+            <a href="{{ customer.phone|phone_tel_href }}" class="crm-detail-next-action__btn crm-detail-next-action__btn--primary">
+                <i class="fas fa-phone" aria-hidden="true"></i><span>{% if follow_up_state == 'overdue' or follow_up_state == 'today' %}شروع تماس{% else %}تماس{% endif %}</span>
+            </a>
+            {% endif %}
+            <button type="button" class="crm-detail-next-action__btn" data-drawer-open="drawer-followup">
+                <i class="fas fa-calendar-plus" aria-hidden="true"></i><span>ثبت پیگیری</span>
+            </button>
+        </div>
+    </article>
+    {% else %}
+    <article class="crm-detail-next-action is-readonly">
+        <div class="crm-detail-next-action__main">
+            <span class="crm-detail-next-action__kicker">اقدام بعدی</span>
+            {% if customer.next_follow_up %}
+            <strong class="crm-detail-next-action__title">پیگیری</strong>
+            <span class="crm-detail-next-action__time">{{ customer.next_follow_up|ws_jalali }}</span>
+            {% else %}
+            <strong class="crm-detail-next-action__title is-muted">ثبت نشده</strong>
+            {% endif %}
+        </div>
+    </article>
     {% endif %}
+
+    <div class="crm-detail-action-center__secondary">
+        <p class="crm-detail-action-center__secondary-label">سایر اطلاعات</p>
+        <div class="crm-detail-action-center__grid">
+            <article class="crm-detail-intel-card crm-detail-intel-card--neutral">
+                <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-phone-volume"></i></span>
+                <div class="crm-detail-intel-card__body">
+                    <span class="crm-detail-intel-card__label">آخرین تماس</span>
+                    {% if activities %}
+                    <strong class="crm-detail-intel-card__value">{{ activities.0.activity_type }}</strong>
+                    <span class="crm-detail-intel-card__meta">{{ activities.0.created_at|ws_jalali_datetime }}</span>
+                    {% else %}
+                    <strong class="crm-detail-intel-card__value is-muted">—</strong>
+                    <span class="crm-detail-intel-card__meta">فعالیتی ثبت نشده</span>
+                    {% endif %}
+                </div>
+                <button type="button" class="crm-detail-intel-card__link" data-tab-jump="timeline" title="تایم‌لاین">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+            </article>
+
+            {% if match_data.eligible and match_data.total_count %}
+            <article class="crm-detail-intel-card crm-detail-intel-card--neutral">
+                <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-house"></i></span>
+                <div class="crm-detail-intel-card__body">
+                    <span class="crm-detail-intel-card__label">فایل پیشنهادی</span>
+                    <strong class="crm-detail-intel-card__value">{{ match_data.total_count }} ملک</strong>
+                    <span class="crm-detail-intel-card__meta">تطبیق با ترجیحات</span>
+                </div>
+                <button type="button" class="crm-detail-intel-card__link" data-tab-jump="matches" title="پیشنهادها">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+            </article>
+            {% endif %}
+
+            <article class="crm-detail-intel-card crm-detail-intel-card--neutral">
+                <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                <div class="crm-detail-intel-card__body">
+                    <span class="crm-detail-intel-card__label">معاملات</span>
+                    {% if deals %}
+                    <strong class="crm-detail-intel-card__value">{{ deals|length }} فعال</strong>
+                    <span class="crm-detail-intel-card__meta">{{ deals.0.stage }} · {{ deals.0.title|truncatechars:22 }}</span>
+                    {% else %}
+                    <strong class="crm-detail-intel-card__value is-muted">۰</strong>
+                    <span class="crm-detail-intel-card__meta">معامله‌ای ثبت نشده</span>
+                    {% endif %}
+                </div>
+                {% if deals %}
+                <a href="{% url 'workspace:crm_deal_detail' deals.0.id %}" class="crm-detail-intel-card__link" title="معامله">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </a>
+                {% elif not customer_is_shared %}
+                <button type="button" class="crm-detail-intel-card__link" data-drawer-open="drawer-deal" title="ثبت معامله">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                {% endif %}
+            </article>
+
+            <article class="crm-detail-intel-card crm-detail-intel-card--neutral">
+                <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-user-tag"></i></span>
+                <div class="crm-detail-intel-card__body">
+                    <span class="crm-detail-intel-card__label">وضعیت</span>
+                    <strong class="crm-detail-intel-card__value">{{ customer.status }}</strong>
+                    <span class="crm-detail-intel-card__meta">{{ customer.customer_type }}{% if customer.priority == 'بالا' %} · اولویت بالا{% endif %}</span>
+                </div>
+            </article>
+
+            {% if reminders %}
+            <article class="crm-detail-intel-card crm-detail-intel-card--neutral">
+                <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
+                <div class="crm-detail-intel-card__body">
+                    <span class="crm-detail-intel-card__label">یادآور</span>
+                    <strong class="crm-detail-intel-card__value">{{ reminders.0.title|truncatechars:24 }}</strong>
+                    <span class="crm-detail-intel-card__meta">{{ reminders.0.due_at|ws_jalali_datetime }}</span>
+                </div>
+                {% if not customer_is_shared %}
+                <button type="button" class="crm-detail-intel-card__link" data-drawer-open="drawer-reminder" title="یادآور">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                {% endif %}
+            </article>
+            {% endif %}
+        </div>
+    </div>
 </section>

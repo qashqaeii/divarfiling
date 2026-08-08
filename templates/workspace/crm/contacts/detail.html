@@ -11,6 +11,7 @@
 
 {% block crm_content %}
     <div class="crm-contact-detail-pro crm-page-chrome crm-contact-mobile">
+    <div class="crm-contact-command">
     <section class="crm-contact-hero" aria-label="پروفایل مخاطب">
         <div class="crm-contact-hero__mesh" aria-hidden="true"></div>
         <div class="crm-contact-hero__accent" aria-hidden="true"></div>
@@ -27,43 +28,85 @@
                     <i class="fas fa-chevron-left" aria-hidden="true"></i>
                     <span>{{ customer.name|truncatechars:36 }}</span>
                 </nav>
-                <span class="crm-contact-hero__avatar" aria-hidden="true">{{ customer.name|slice:":1" }}</span>
-                <div class="crm-contact-hero__headline">
-                    <h1 class="crm-contact-hero__title">{{ customer.name }}</h1>
-                    <div class="crm-contact-hero__badges">
-                        <span class="crm-contact-hero__type" style="{% crm_role_style customer.customer_type %}">{{ customer.customer_type }}</span>
-                        {% if not customer_is_shared %}
-                        <div class="crm-contact-hero__status-picker" data-crm-status-picker data-url="{% url 'workspace:crm_contact_status' customer.id %}">
-                            <label class="sr-only" for="crmContactStatusSelect">وضعیت مخاطب</label>
-                            <select id="crmContactStatusSelect" class="crm-contact-hero__status-select" aria-label="تغییر وضعیت">
-                                {% for s in crm_statuses %}
-                                <option value="{{ s }}" {% if customer.status == s %}selected{% endif %}>{{ s }}</option>
-                                {% endfor %}
-                            </select>
+                <div class="crm-contact-hero__identity">
+                    <span class="crm-contact-hero__avatar" aria-hidden="true">{{ customer.name|slice:":1" }}</span>
+                    <div class="crm-contact-hero__headline">
+                        <h1 class="crm-contact-hero__title">{{ customer.name }}</h1>
+                        <div class="crm-contact-hero__badges">
+                            <span class="crm-contact-hero__type" style="{% crm_role_style customer.customer_type %}">{{ customer.customer_type }}</span>
+                            {% if not customer_is_shared %}
+                            <div class="crm-contact-hero__status-picker" data-crm-status-picker data-url="{% url 'workspace:crm_contact_status' customer.id %}">
+                                <label class="sr-only" for="crmContactStatusSelect">وضعیت مخاطب</label>
+                                <select id="crmContactStatusSelect" class="crm-contact-hero__status-select" aria-label="تغییر وضعیت">
+                                    {% for s in crm_statuses %}
+                                    <option value="{{ s }}" {% if customer.status == s %}selected{% endif %}>{{ s }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% else %}
+                            <span class="crm-contact-hero__status">{{ customer.status }}</span>
+                            {% endif %}
+                            {% if customer.priority == 'بالا' %}<span class="crm-contact-hero__priority">اولویت بالا</span>{% endif %}
                         </div>
-                        {% else %}
-                        <span class="crm-contact-hero__status">{{ customer.status }}</span>
+                        {% if customer.phone %}
+                        <a href="tel:{{ customer.phone }}" class="crm-contact-hero__phone" dir="ltr">{{ customer.phone }}</a>
                         {% endif %}
-                        {% if customer.priority == 'بالا' %}<span class="crm-contact-hero__priority">اولویت بالا</span>{% endif %}
                     </div>
                 </div>
-                <div class="crm-contact-hero__meta">
-                        {% if customer.phone %}
-                        <a href="tel:{{ customer.phone }}" class="crm-contact-hero__chip">
-                            <i class="fas fa-phone" aria-hidden="true"></i>
-                            <span dir="ltr">{{ customer.phone }}</span>
-                        </a>
-                        <button type="button" class="crm-contact-hero__chip crm-contact-hero__chip--btn" data-copy="{{ customer.phone }}" title="کپی شماره">
-                            <i class="fas fa-copy" aria-hidden="true"></i>
-                            <span>کپی</span>
-                        </button>
+
+                <div class="crm-contact-hero__pulse" aria-label="خلاصه عملیاتی">
+                    <div class="crm-contact-hero__pulse-item">
+                        <span class="crm-contact-hero__pulse-label">آخرین تماس</span>
+                        {% if activities %}
+                        <strong>{{ activities.0.activity_type }}</strong>
+                        <em>{{ activities.0.created_at|ws_jalali_datetime }}</em>
+                        {% else %}
+                        <strong class="is-muted">—</strong>
+                        <em>ثبت نشده</em>
                         {% endif %}
-                        {% if customer.phone_alt %}
-                        <span class="crm-contact-hero__chip">
-                            <i class="fas fa-phone" aria-hidden="true"></i>
-                            <span dir="ltr">{{ customer.phone_alt }}</span>
-                        </span>
+                    </div>
+                    <div class="crm-contact-hero__pulse-item crm-contact-hero__pulse-item--next{% if follow_up_state == 'overdue' %} is-warn{% elif follow_up_state == 'today' %} is-accent{% endif %}">
+                        <span class="crm-contact-hero__pulse-label">اقدام بعدی</span>
+                        {% if customer.next_follow_up %}
+                        <strong>{{ customer.next_follow_up|ws_jalali }}</strong>
+                        <em>{% if follow_up_state == 'overdue' %}معوق{% elif follow_up_state == 'today' %}امروز{% else %}برنامه‌ریزی{% endif %}</em>
+                        {% else %}
+                        <strong class="is-muted">ثبت نشده</strong>
+                        <em>پیگیری تعیین نشده</em>
                         {% endif %}
+                    </div>
+                    {% if deals %}
+                    <div class="crm-contact-hero__pulse-item">
+                        <span class="crm-contact-hero__pulse-label">معاملات</span>
+                        <strong>{{ deals|length }} فعال</strong>
+                        {% if deals.0.commission_amount %}<em>{{ deals.0.commission_amount|ws_money }}</em>{% else %}<em>{{ deals.0.stage }}</em>{% endif %}
+                    </div>
+                    {% else %}
+                    <div class="crm-contact-hero__pulse-item">
+                        <span class="crm-contact-hero__pulse-label">معاملات</span>
+                        <strong class="is-muted">۰</strong>
+                        <em>ثبت نشده</em>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if not customer_is_shared %}
+                <div class="crm-contact-hero__primary-actions" role="group" aria-label="اقدامات اصلی">
+                    {% if customer.phone %}
+                    <a href="{{ customer.phone|phone_tel_href }}" class="crm-contact-hero__action crm-contact-hero__action--primary">
+                        <i class="fas fa-phone" aria-hidden="true"></i><span>تماس</span>
+                    </a>
+                    <a href="{{ customer.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-contact-hero__action">
+                        <i class="fab fa-whatsapp" aria-hidden="true"></i><span>پیام</span>
+                    </a>
+                    {% endif %}
+                    <button type="button" class="crm-contact-hero__action" data-drawer-open="drawer-followup">
+                        <i class="fas fa-calendar-plus" aria-hidden="true"></i><span>پیگیری</span>
+                    </button>
+                </div>
+                {% endif %}
+
+                <div class="crm-contact-hero__meta crm-contact-hero__meta--secondary">
                         {% if customer.email %}
                         <a href="mailto:{{ customer.email }}" class="crm-contact-hero__chip">
                             <i class="fas fa-envelope" aria-hidden="true"></i>
@@ -81,6 +124,18 @@
                             <i class="fas fa-bullhorn" aria-hidden="true"></i>
                             <span>{{ customer.source }}</span>
                         </span>
+                        {% endif %}
+                        {% if customer.phone_alt %}
+                        <span class="crm-contact-hero__chip">
+                            <i class="fas fa-phone" aria-hidden="true"></i>
+                            <span dir="ltr">{{ customer.phone_alt }}</span>
+                        </span>
+                        {% endif %}
+                        {% if customer.phone %}
+                        <button type="button" class="crm-contact-hero__chip crm-contact-hero__chip--btn" data-copy="{{ customer.phone }}" title="کپی شماره">
+                            <i class="fas fa-copy" aria-hidden="true"></i>
+                            <span>کپی</span>
+                        </button>
                         {% endif %}
                     </div>
                     {% if customer.is_legal_entity and customer.company_name %}
@@ -148,6 +203,7 @@
     </section>
 
     {% include 'workspace/crm/includes/detail_action_center_contact.html' %}
+    </div>
 
     <section class="crm-contact-mobile-glance" aria-label="خلاصه سریع">
         {% if not customer_is_shared %}
@@ -265,18 +321,27 @@
                 </header>
                 <div class="crm-contact-panel-body">
                     {% if activities %}
-                    <div class="crm-timeline crm-timeline-pro">
+                    <div class="crm-timeline crm-timeline-pro crm-timeline-events">
                         {% for a in activities %}
-                        <article class="crm-timeline-item">
+                        <article class="crm-timeline-item crm-timeline-event">
                             <div class="crm-timeline-rail" aria-hidden="true"><span class="crm-timeline-icon"><i class="{{ a.activity_type|crm_activity_icon }}"></i></span></div>
                             <div class="crm-timeline-body">
                                 <div class="crm-timeline-top">
                                     <span class="crm-timeline-type">{{ a.activity_type }}</span>
-                                    <time class="crm-timeline-time">{{ a.created_at|ws_jalali }}</time>
+                                    <time class="crm-timeline-time">{{ a.created_at|ws_jalali_datetime }}</time>
                                 </div>
-                                {% if a.title %}<strong class="crm-timeline-title">{{ a.title }}</strong>{% endif %}
-                                {% if a.content %}<p class="crm-timeline-text">{{ a.content }}</p>{% endif %}
+                                {% if a.title %}<strong class="crm-timeline-title">{{ a.title }}</strong>{% elif a.content %}<strong class="crm-timeline-title">{{ a.content|truncatechars:72 }}</strong>{% endif %}
+                                {% if a.title and a.content %}<p class="crm-timeline-text">{{ a.content }}</p>{% endif %}
                                 {% if a.property %}<a href="{% url 'workspace:crm_property_detail' a.property_id %}" class="crm-timeline-link"><i class="fas fa-building" aria-hidden="true"></i>{{ a.property.title }}</a>{% endif %}
+                                {% if not customer_is_shared %}
+                                <div class="crm-timeline-event__actions">
+                                    {% if a.activity_type == 'پیگیری' or a.activity_type == 'تماس' %}
+                                    <button type="button" class="crm-timeline-event__action" data-drawer-open="drawer-followup">ثبت پیگیری</button>
+                                    {% else %}
+                                    <button type="button" class="crm-timeline-event__action" data-drawer-open="drawer-activity">ثبت فعالیت</button>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                             </div>
                         </article>
                         {% endfor %}
@@ -775,32 +840,34 @@
         </aside>
     </div>
 
-    <nav class="crm-contact-mobile-dock" aria-label="عملیات سریع موبایل">
+    <nav class="crm-contact-mobile-dock crm-contact-action-bar" aria-label="نوار اقدام">
         <div class="crm-contact-mobile-dock__inner">
             {% if customer.phone %}
-            <a href="{{ customer.phone|phone_tel_href }}" class="crm-contact-dock-btn crm-contact-dock-btn--call" title="تماس">
+            <a href="{{ customer.phone|phone_tel_href }}" class="crm-contact-dock-btn crm-contact-dock-btn--primary" title="تماس">
                 <i class="fas fa-phone" aria-hidden="true"></i>
                 <span>تماس</span>
             </a>
-            <a href="{{ customer.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-contact-dock-btn crm-contact-dock-btn--wa" title="واتساپ">
-                <i class="fab fa-whatsapp" aria-hidden="true"></i>
-                <span>واتساپ</span>
-            </a>
-            <a href="{{ customer.phone|phone_sms_href }}" class="crm-contact-dock-btn crm-contact-dock-btn--sms" title="پیامک">
-                <i class="fas fa-comment-sms" aria-hidden="true"></i>
-                <span>پیامک</span>
-            </a>
             {% endif %}
             {% if not customer_is_shared %}
-            <button type="button" class="crm-contact-dock-btn crm-contact-dock-btn--primary" data-drawer-open="drawer-edit" title="ویرایش">
-                <i class="fas fa-pen" aria-hidden="true"></i>
-                <span>ویرایش</span>
+            <button type="button" class="crm-contact-dock-btn" data-drawer-open="drawer-followup" title="پیگیری">
+                <i class="fas fa-calendar-plus" aria-hidden="true"></i>
+                <span>پیگیری</span>
+            </button>
+            {% if match_data.eligible %}
+            <button type="button" class="crm-contact-dock-btn" data-tab-jump="matches" title="پیشنهاد ملک">
+                <i class="fas fa-house" aria-hidden="true"></i>
+                <span>پیشنهاد فایل</span>
             </button>
             {% endif %}
-            <button type="button" class="crm-contact-dock-btn crm-contact-dock-btn--menu" data-drawer-open="drawer-activity" title="فعالیت جدید">
+            <button type="button" class="crm-contact-dock-btn" data-drawer-open="drawer-activity" title="فعالیت">
                 <i class="fas fa-plus" aria-hidden="true"></i>
                 <span>فعالیت</span>
             </button>
+            <button type="button" class="crm-contact-dock-btn" data-drawer-open="drawer-deal" title="معامله">
+                <i class="fas fa-handshake" aria-hidden="true"></i>
+                <span>معامله</span>
+            </button>
+            {% endif %}
         </div>
     </nav>
     </div>

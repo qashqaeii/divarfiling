@@ -42,6 +42,11 @@ class DecorIconTagTests(SimpleTestCase):
         self.assertNotIn('stroke="currentColor"', html)
         self.assertNotIn('stroke-width', html)
 
+    def test_bell_icon_includes_full_body(self):
+        html = str(render_lucide_svg('bell', size='nav'))
+        self.assertIn('M6 8a6 6 0 0 1 12 0', html)
+        self.assertIn('M10.268 21a2 2 0 0 0 3.464 0', html)
+
     def test_context_sizes(self):
         self.assertEqual(ICON_SIZES['nav'], 20)
         self.assertEqual(ICON_SIZES['inline'], 18)
@@ -59,7 +64,7 @@ class LucideMappingTests(SimpleTestCase):
             'map_pin': 'map-pin',
             'handshake': 'briefcase',
             'calendar': 'calendar-days',
-            'bell': 'bell-dot',
+            'bell': 'bell',
             'help_center': 'circle-help',
             'settings': 'settings-2',
             'trending_up': 'chart-no-axes-combined',

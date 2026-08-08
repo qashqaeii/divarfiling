@@ -20,7 +20,7 @@ DECOR_TO_LUCIDE: dict[str, str] = {
     'users': 'users-round',
     'handshake': 'briefcase',
     'settings': 'settings-2',
-    'bell': 'bell-dot',
+    'bell': 'bell',
     'calendar': 'calendar-days',
     'database': 'database',
     'building': 'building-2',
@@ -70,6 +70,25 @@ EXTRA_TO_LUCIDE: dict[str, str] = {
     'exit': 'log-out',
 }
 
+# lucide-registry.json is missing paths for some icons (bell body, etc.)
+REGISTRY_OVERRIDES: dict[str, list[dict[str, Any]]] = {
+    'bell': [
+        {'tag': 'path', 'attrs': {'d': 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'}},
+        {'tag': 'path', 'attrs': {'d': 'M10.268 21a2 2 0 0 0 3.464 0'}},
+    ],
+    'bell-dot': [
+        {'tag': 'path', 'attrs': {'d': 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'}},
+        {'tag': 'path', 'attrs': {'d': 'M10.268 21a2 2 0 0 0 3.464 0'}},
+        {'tag': 'circle', 'attrs': {'cx': '18', 'cy': '8', 'r': '3'}},
+    ],
+    'bell-ring': [
+        {'tag': 'path', 'attrs': {'d': 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'}},
+        {'tag': 'path', 'attrs': {'d': 'M10.268 21a2 2 0 0 0 3.464 0'}},
+        {'tag': 'path', 'attrs': {'d': 'M4 2C2.8 3.7 2 5.7 2 8'}},
+        {'tag': 'path', 'attrs': {'d': 'M22 8c0-2.3-.8-4.3-2-6'}},
+    ],
+}
+
 SVG_NS = 'http://www.w3.org/2000/svg'
 SVG_VIEWBOX = '0 0 24 24'
 
@@ -80,14 +99,24 @@ def _load_registry() -> dict[str, list[dict[str, Any]]]:
         return json.load(fh)
 
 
+def _icon_exists(lucide_name: str) -> bool:
+    return lucide_name in REGISTRY_OVERRIDES or lucide_name in _load_registry()
+
+
+def _get_icon_nodes(lucide_name: str) -> list[dict[str, Any]]:
+    if lucide_name in REGISTRY_OVERRIDES:
+        return REGISTRY_OVERRIDES[lucide_name]
+    return _load_registry().get(lucide_name, [])
+
+
 def resolve_lucide_name(name: str) -> str | None:
     """Map a decor/extra icon key to a Lucide registry name."""
     key = (name or '').strip().lower().replace('-', '_')
     lucide = DECOR_TO_LUCIDE.get(key) or EXTRA_TO_LUCIDE.get(key)
-    if lucide and lucide in _load_registry():
+    if lucide and _icon_exists(lucide):
         return lucide
     dashed = key.replace('_', '-')
-    if dashed in _load_registry():
+    if _icon_exists(dashed):
         return dashed
     return None
 
@@ -118,7 +147,7 @@ def render_lucide_svg(
     if not lucide_name:
         return ''
 
-    nodes = _load_registry().get(lucide_name, [])
+    nodes = _get_icon_nodes(lucide_name)
     inner = ''.join(_render_node(n) for n in nodes)
 
     svg_class = 'df-lucide-svg'

@@ -10,8 +10,7 @@ from django.utils.html import escape
 from django.utils.safestring import SafeString, mark_safe
 
 from shop.decor_icons import ICON_SIZES
-
-REGISTRY_PATH = Path(__file__).resolve().parent.parent / 'static' / 'icons' / 'lucide-registry.json'
+from shop.lucide_registry_overrides import REGISTRY_OVERRIDES
 
 # Lucide stroke family: round people, -days/-ring time, chart-* analytics, file/folder uploads.
 DECOR_TO_LUCIDE: dict[str, str] = {
@@ -66,28 +65,12 @@ DECOR_TO_LUCIDE: dict[str, str] = {
 }
 
 EXTRA_TO_LUCIDE: dict[str, str] = {
-    'ai': 'sparkles',
+    'ai': 'bot',
+    'ai_wand': 'wand-sparkles',
     'exit': 'log-out',
 }
 
-# lucide-registry.json is missing paths for some icons (bell body, etc.)
-REGISTRY_OVERRIDES: dict[str, list[dict[str, Any]]] = {
-    'bell': [
-        {'tag': 'path', 'attrs': {'d': 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'}},
-        {'tag': 'path', 'attrs': {'d': 'M10.268 21a2 2 0 0 0 3.464 0'}},
-    ],
-    'bell-dot': [
-        {'tag': 'path', 'attrs': {'d': 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'}},
-        {'tag': 'path', 'attrs': {'d': 'M10.268 21a2 2 0 0 0 3.464 0'}},
-        {'tag': 'circle', 'attrs': {'cx': '18', 'cy': '8', 'r': '3'}},
-    ],
-    'bell-ring': [
-        {'tag': 'path', 'attrs': {'d': 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'}},
-        {'tag': 'path', 'attrs': {'d': 'M10.268 21a2 2 0 0 0 3.464 0'}},
-        {'tag': 'path', 'attrs': {'d': 'M4 2C2.8 3.7 2 5.7 2 8'}},
-        {'tag': 'path', 'attrs': {'d': 'M22 8c0-2.3-.8-4.3-2-6'}},
-    ],
-}
+REGISTRY_PATH = Path(__file__).resolve().parent.parent / 'static' / 'icons' / 'lucide-registry.json'
 
 SVG_NS = 'http://www.w3.org/2000/svg'
 SVG_VIEWBOX = '0 0 24 24'

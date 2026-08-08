@@ -47,6 +47,11 @@ class DecorIconTagTests(SimpleTestCase):
         self.assertIn('M6 8a6 6 0 0 1 12 0', html)
         self.assertIn('M10.268 21a2 2 0 0 0 3.464 0', html)
 
+    def test_tag_icon_includes_full_body(self):
+        html = str(render_lucide_svg('tag', size='metric'))
+        self.assertIn('M12.586 2.586', html)
+        self.assertNotIn('M10.268 21a2 2 0 0 0 3.464 0', html)
+
     def test_context_sizes(self):
         self.assertEqual(ICON_SIZES['nav'], 20)
         self.assertEqual(ICON_SIZES['inline'], 18)
@@ -76,5 +81,10 @@ class LucideMappingTests(SimpleTestCase):
             self.assertIn(lucide, DECOR_TO_LUCIDE.values())
 
     def test_extra_icons(self):
-        self.assertEqual(resolve_lucide_name('ai'), 'sparkles')
+        self.assertEqual(resolve_lucide_name('ai'), 'bot')
+        self.assertEqual(resolve_lucide_name('ai_wand'), 'wand-sparkles')
         self.assertEqual(resolve_lucide_name('exit'), 'log-out')
+
+    def test_ai_wand_includes_wand_body(self):
+        html = str(render_lucide_svg('ai_wand', size='inline'))
+        self.assertIn('m21.64 3.64', html)

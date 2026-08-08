@@ -210,24 +210,33 @@
 }
 
 /* AI surfaces */
-.ws-ai-card__icon.df-decor-icon,
-.crm-drawer-head-ai-icon .df-decor-icon,
-.crm-contact-hero__edit-btn-icon.df-decor-icon {
+.ws-ai-card__orb .df-decor-icon,
+.crm-drawer-head-ai-icon .df-decor-icon {
+    width: 100%;
+    height: 100%;
+    --df-decor-size: 100%;
+    color: #7c3aed;
     opacity: 1;
 }
 
-.ws-ai-card__icon.df-decor-icon {
-    --df-decor-size: 3.5rem;
-    --mk-icon-stroke: 2;
-}
-
-.crm-drawer-head-ai-icon .df-decor-icon {
-    --df-decor-size: 2.75rem;
-    --mk-icon-stroke: 2;
-}
-
-.crm-contact-hero__edit-btn-icon.df-decor-icon,
+.ws-ai-card__cta .ws-ai-card__cta-icon .df-decor-icon,
 .ws-ai-card__cta-icon-img.df-decor-icon {
-    --df-decor-size: 1.125rem;
-    --mk-icon-stroke: 1.75;
+    width: 100%;
+    height: 100%;
+    --df-decor-size: 100%;
+    color: #fff;
+    opacity: 1;
+}
+
+.crm-contact-hero__edit-btn--ai .crm-contact-hero__edit-btn-icon.df-decor-icon,
+.crm-contact-hero__edit-btn-icon.df-decor-icon {
+    color: #7c3aed;
+    opacity: 1;
+}
+
+.crm-ai-compose-preview-empty .df-decor-icon {
+    --df-decor-size: 1.75rem;
+    color: #7c3aed;
+    opacity: 0.85;
+    margin-bottom: 0.35rem;
 }

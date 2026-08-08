@@ -17,7 +17,7 @@
         /* Layout tokens */
         --ws-mob-gutter: 16px;
         --ws-mob-gap: 10px;
-        --ws-mob-card-pad: 12px;
+        --ws-mob-card-pad: 16px;
         --ws-mob-radius: 16px;
         --ws-mob-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
         --ws-mob-canvas: #F8FAFC;
@@ -905,17 +905,52 @@
     }
 
     .crm-contact-detail-pro .crm-contact-intel-strip {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 6px !important;
         min-height: 44px !important;
-        border-radius: var(--ws-mob-radius) !important;
+        padding: var(--ws-mob-card-pad) !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        border: none !important;
+        border-top: 1px solid var(--ws-mob-card-border) !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .crm-contact-detail-pro .crm-contact-intel-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-contact-detail-pro .crm-contact-intel-strip__copy em {
+        font-size: var(--mobile-meta) !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-intel-strip__copy strong {
+        font-size: var(--mobile-body) !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-intel-strip__cell:nth-child(n + 5) {
+        display: none !important;
     }
 
     .crm-contact-detail-pro .crm-contact-intel-strip__cell {
-        min-width: 5rem !important;
-        padding: 6px 8px !important;
+        flex: 0 0 auto;
+        min-width: 7rem !important;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-mob-card-bg)) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        transition: background-color 0.15s ease, transform 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
     }
 
-    .crm-contact-detail-pro .crm-contact-intel-strip__cell.is-action {
-        display: none !important;
+    .crm-contact-detail-pro .crm-contact-intel-strip__cell:active {
+        transform: scale(0.98);
+        opacity: 0.92;
     }
 
     /* ─── PHASE 5 — Single action dock system ─── */
@@ -1571,8 +1606,8 @@
     }
 
     .crm-deal-detail-mobile .crm-deal-hero__valueband {
-        margin: 0 var(--ws-mob-gutter) var(--ws-mob-card-pad) !important;
-        padding: 8px 10px !important;
+        margin: 0 0 var(--ws-mob-card-pad) !important;
+        padding: var(--ws-mob-card-pad) !important;
         border-radius: 10px !important;
         background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-mob-card-bg)) !important;
         border: 1px solid var(--ws-mob-card-border) !important;
@@ -1718,6 +1753,261 @@
         box-shadow: none !important;
     }
 
+    /* ═══ UX CONSISTENCY AUDIT — Unified Mobile Detail Pattern ═══ */
+    /*
+     * Header → Compact Hero → Primary Action Area → Tabs → Sections → Related
+     * Property · Listing · Contact · Deal share one vertical rhythm.
+     */
+
+    :is(
+        .crm-prop-detail-mobile.crm-page-chrome,
+        .crm-contact-detail-pro.crm-page-chrome,
+        .crm-deal-detail-mobile.crm-page-chrome,
+        .ws-ld-mobile.crm-page-chrome
+    ) {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--ws-mob-gap) !important;
+    }
+
+    /* Layer 1 — Compact hero card */
+    :is(
+        .crm-prop-detail-mobile .crm-prop-hero,
+        .crm-contact-detail-pro .crm-contact-workspace__header,
+        .crm-deal-detail-mobile .crm-deal-dossier.crm-deal-hero,
+        .ws-ld-mobile .crm-prop-hero
+    ) {
+        flex-shrink: 0;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-workspace__header {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero--compact {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Layer 2 — Primary action area (intel / action center / deal checklist) */
+    :is(
+        .crm-detail-action-center,
+        .crm-deal-detail-mobile .crm-deal-checklist
+    ) {
+        flex-shrink: 0;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-checklist {
+        padding: var(--ws-mob-card-pad) !important;
+        border-radius: var(--ws-mob-radius) !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-checklist-title {
+        font-size: var(--mobile-section) !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-checklist-list {
+        gap: 6px !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-checklist-item {
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 30%, var(--ws-mob-card-bg)) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+    }
+
+    /* Layer 3 — Tabs + information sections */
+    :is(
+        .crm-prop-detail-mobile .crm-prop-detail-grid,
+        .crm-contact-detail-pro .crm-contact-workspace__body,
+        .crm-deal-detail-mobile .crm-deal-layout
+    ) {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-workspace__body,
+    .crm-deal-detail-mobile .crm-deal-layout {
+        padding: 0 !important;
+        gap: var(--ws-mob-gap) !important;
+    }
+
+    /* Listing canvas aligns with CRM detail pages */
+    .ws-ld-mobile.crm-page-chrome {
+        background: var(--ws-mob-canvas) !important;
+    }
+
+    .ws-ld-mobile .crm-prop-hero {
+        background: var(--ws-mob-card-bg) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+    }
+
+    /* ─── Property funnel — hero focuses on identity + price ─── */
+    .crm-prop-detail-mobile .crm-prop-hero-kpi:has(.fa-calendar-check),
+    .crm-prop-detail-mobile .crm-prop-hero-kpi:has(.fa-users),
+    .crm-prop-detail-mobile .crm-prop-hero-kpi:has(.fa-clock) {
+        display: none !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-pricezone {
+        width: 100%;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-pricecard:first-child {
+        flex: 1 1 100% !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-pricecard:first-child strong {
+        font-size: var(--mobile-title) !important;
+        color: var(--ws-primary) !important;
+    }
+
+    /* Action center — funnel cards only (no hero duplicates) */
+    .crm-detail-action-center--property .crm-detail-action-center__head {
+        display: none !important;
+    }
+
+    .crm-detail-action-center--property .crm-detail-intel-card.is-info,
+    .crm-detail-action-center--property .crm-detail-intel-card:has(.fa-clock),
+    .crm-detail-action-center--property .crm-detail-intel-card:has(.fa-tag) {
+        display: none !important;
+    }
+
+    .crm-detail-intel-card {
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-mob-card-bg)) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        transition: background-color 0.15s ease, transform 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-detail-intel-card:active {
+        transform: scale(0.98);
+        opacity: 0.92;
+    }
+
+    /* Aside sidebar duplicates tab content — hide on mobile */
+    .crm-prop-detail-mobile .crm-prop-aside {
+        display: none !important;
+    }
+
+    /* Related content — map / AI lower in scroll, compact intro */
+    .crm-prop-detail-mobile .crm-prop-map-finale-intro {
+        padding: var(--ws-mob-card-pad) !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-map-finale-kicker,
+    .crm-prop-detail-mobile .crm-prop-map-finale-title {
+        font-size: var(--mobile-section) !important;
+        margin: 0 0 4px !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-map-finale-place {
+        font-size: var(--mobile-body) !important;
+    }
+
+    /* Contact timeline — compact CRM cards */
+    .crm-contact-detail-pro .crm-timeline-item,
+    .crm-contact-detail-pro .crm-timeline-event {
+        border-radius: var(--ws-mob-radius) !important;
+        background: var(--ws-mob-card-bg) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-pro .crm-timeline-title {
+        font-size: var(--mobile-body) !important;
+    }
+
+    .crm-contact-detail-pro .crm-timeline-time {
+        font-size: var(--mobile-meta) !important;
+    }
+
+    /* Unified section headings inside detail panels */
+    :is(
+        .crm-prop-panel-head h2,
+        .crm-prop-panel-head h3,
+        .crm-contact-panel-head h2,
+        .crm-contact-panel-head h3,
+        .crm-deal-block-head h2,
+        .crm-deal-block-head h3
+    ) {
+        font-size: var(--mobile-section) !important;
+        font-weight: 700 !important;
+    }
+
+    /* ─── Interaction polish — touch feedback, no heavy motion ─── */
+    :is(
+        .crm-contact-dock-btn,
+        .crm-prop-dock-btn,
+        .crm-deal-dock-btn,
+        .ws-ds-mob-dock__btn,
+        .crm-contact-tabs .crm-tab-pro,
+        .crm-prop-tabs .crm-tab-pro,
+        .crm-deal-tabs .crm-tab-pro,
+        .mk-ds-card-glass,
+        .ws-ds-mobile .mk-lcard,
+        .crm-files-mobile .crm-files-card,
+        .crm-deals-mobile .crm-deals-card,
+        .ws-bottom-nav-item,
+        .mk-ds-card-act,
+        .mk-lcard-btn,
+        .crm-files-card-act
+    ) {
+        transition: background-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    :is(
+        .crm-contact-dock-btn,
+        .crm-prop-dock-btn,
+        .crm-deal-dock-btn,
+        .ws-ds-mob-dock__btn,
+        .crm-contact-tabs .crm-tab-pro,
+        .crm-prop-tabs .crm-tab-pro,
+        .crm-deal-tabs .crm-tab-pro,
+        .mk-ds-card-glass,
+        .ws-ds-mobile .mk-lcard,
+        .crm-files-mobile .crm-files-card,
+        .mk-ds-card-act,
+        .mk-lcard-btn
+    ):active:not(:disabled) {
+        transform: scale(0.98);
+        opacity: 0.92;
+    }
+
+    :is(
+        .crm-contact-dock-btn--primary,
+        .crm-prop-dock-btn--primary,
+        .crm-deal-dock-btn--primary,
+        .ws-ds-mob-dock__btn--primary
+    ):active:not(:disabled) {
+        filter: brightness(0.94);
+    }
+
+    .ws-bottom-nav-item:active {
+        opacity: 0.75;
+        transform: none;
+    }
+
+    /* Final QA — no triple action layers on detail pages */
+    body.ws-body:has(.crm-prop-mobile-dock) .crm-prop-detail-mobile .crm-prop-hero-actions,
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro .crm-contact-hero__actions-col,
+    body.ws-body:has(.crm-deal-mobile-dock) .crm-deal-detail-mobile .crm-deal-dossier-actions {
+        display: none !important;
+    }
+
     /* Map / side panels — full width */
     .ws-ld-mobile .crm-prop-map-finale,
     .crm-prop-detail-mobile .crm-prop-map-finale {
@@ -1791,8 +2081,28 @@
         .crm-deal-dock-btn,
         .ws-ds-mob-dock__btn,
         .ws-bottom-nav-item,
-        .mk-hub-metric
+        .mk-hub-metric,
+        .crm-detail-intel-card,
+        .crm-contact-intel-strip__cell,
+        .crm-tab-pro,
+        .mk-ds-card-glass,
+        .mk-lcard,
+        .crm-files-card
     ) {
         transition: none !important;
+    }
+
+    :is(
+        .crm-contact-dock-btn,
+        .crm-prop-dock-btn,
+        .crm-deal-dock-btn,
+        .ws-ds-mob-dock__btn,
+        .crm-detail-intel-card,
+        .crm-contact-intel-strip__cell,
+        .crm-tab-pro,
+        .mk-ds-card-glass,
+        .mk-lcard
+    ):active {
+        transform: none !important;
     }
 }

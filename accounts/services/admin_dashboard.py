@@ -36,6 +36,7 @@ from accounts.services.sms import get_sms_balance_snapshot
 from affiliates.models import Affiliate, AffiliateSale, Withdrawal
 from licenses.models import License, LicenseActivation
 from shop.models import CardTransferSubmission, LicensePlan, Order, Product
+from mobile_api.models import MobileDevice
 from workspace.models import (
     CRMAgency,
     CRMAgencyMember,
@@ -736,6 +737,7 @@ def get_yesterday_stats() -> Dict[str, Any]:
         'revenue_yesterday': int(orders_paid_yesterday.aggregate(total=Sum('amount'))['total'] or 0),
         'orders_paid_yesterday': orders_paid_yesterday.count(),
         'signups_yesterday': User.objects.filter(date_joined__date=yesterday).count(),
+        'users_online_yesterday': get_users_active_on_date(yesterday),
     }
 
 
@@ -758,8 +760,23 @@ def get_today_stats() -> Dict[str, Any]:
 
 
 def get_users_online_count(minutes: int = 15) -> int:
+    """کاربران آنلاین در N دقیقه اخیر (بر اساس last_login)."""
     threshold = timezone.now() - timedelta(minutes=minutes)
     return User.objects.filter(is_active=True, last_login__gte=threshold).count()
+
+
+def get_users_active_on_date(day=None) -> int:
+    """کاربران فعالی که امروز (یا روز مشخص) در وب یا اپ فعالیت داشته‌اند."""
+    if day is None:
+        day = _today()
+    return (
+        User.objects.filter(is_active=True)
+        .filter(
+            Q(last_login__date=day) | Q(mobile_devices__last_seen_at__date=day),
+        )
+        .distinct()
+        .count()
+    )
 
 
 def get_order_count_series(days: int = 30) -> Dict[str, List]:
@@ -831,7 +848,8 @@ def _licenses_sparkline(days: int = 7) -> List[int]:
 
 def build_kpi_cards(stats: Dict[str, Any], today_stats: Dict[str, Any], yesterday_stats: Dict[str, Any]) -> List[Dict[str, Any]]:
     """۸ کارت KPI اصلی با اسپارکلاین و دلتا."""
-    users_online = get_users_online_count()
+    users_online_now = get_users_online_count()
+    users_online_today = get_users_active_on_date()
     spark_rev = _revenue_sparkline(7)
     spark_orders = _orders_sparkline(7)
     spark_signups = _signups_sparkline(7)
@@ -934,16 +952,16 @@ def build_kpi_cards(stats: Dict[str, Any], today_stats: Dict[str, Any], yesterda
         },
         {
             'key': 'users_online',
-            'label': 'کاربران آنلاین',
-            'sublabel': '۱۵ دقیقه اخیر',
-            'value': users_online,
+            'label': 'کاربران آنلاین امروز',
+            'sublabel': f'الان {users_online_now} · ۱۵ دقیقه',
+            'value': users_online_today,
             'format': 'count',
-            'delta': None,
-            'delta_label': f"{stats['users_total']} کل",
+            'delta': _delta(users_online_today, yesterday_stats.get('users_online_yesterday', 0)),
+            'delta_label': 'نسبت دیروز',
             'sparkline': spark_signups,
             'icon': 'fa-signal',
             'accent': 'emerald',
-            'status': 'ok' if users_online else 'warn',
+            'status': 'ok' if users_online_today else 'warn',
         },
     ]
 
@@ -1163,6 +1181,7 @@ def get_users_analytics_stats(stats: Dict[str, Any]) -> Dict[str, Any]:
         'without_license': stats['users_without_license'],
         'expiring_license_users': stats['licenses_expiring_soon'],
         'online': get_users_online_count(),
+        'online_today': get_users_active_on_date(),
         'retention_30d': retention,
         'pending_payment': stats['users_pending_payment'],
     }

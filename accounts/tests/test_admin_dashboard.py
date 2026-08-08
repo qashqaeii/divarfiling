@@ -13,6 +13,8 @@ from accounts.services.admin_dashboard import (
     get_recent_affiliate_sales,
     get_recent_renewal_orders,
     get_today_stats,
+    get_users_active_on_date,
+    get_users_online_count,
 )
 
 User = get_user_model()
@@ -176,6 +178,41 @@ class AdminDashboardServiceTests(TestCase):
         self.assertIn('recent_renewals', ctx)
         self.assertEqual(ctx['licensing_stats']['renewed_users'], 2)
 
+    def test_users_active_on_date_web_and_mobile(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from mobile_api.models import MobileDevice
+
+        today = timezone.now().date()
+        web_user = User.objects.create_user(username='web_u', password='x', phone='09120000001')
+        web_user.last_login = timezone.now()
+        web_user.save(update_fields=['last_login'])
+
+        mobile_user = User.objects.create_user(username='mob_u', password='x', phone='09120000002')
+        MobileDevice.objects.create(user=mobile_user, device_id='test-device-1')
+
+        inactive = User.objects.create_user(
+            username='old_u', password='x', phone='09120000003', is_active=False,
+        )
+        inactive.last_login = timezone.now()
+        inactive.save(update_fields=['last_login'])
+
+        stale = User.objects.create_user(username='stale_u', password='x', phone='09120000004')
+        stale.last_login = timezone.now() - timedelta(days=2)
+        stale.save(update_fields=['last_login'])
+
+        self.assertEqual(get_users_active_on_date(today), 2)
+        self.assertEqual(get_users_online_count(minutes=15), 1)
+
+    def test_kpi_users_online_today_card(self):
+        ctx = get_admin_dashboard_context(days=30)
+        online_card = next(c for c in ctx['kpi_cards'] if c['key'] == 'users_online')
+        self.assertEqual(online_card['label'], 'کاربران آنلاین امروز')
+        self.assertIn('users_analytics', ctx)
+        self.assertIn('online_today', ctx['users_analytics'])
+
 
 class AdminDashboardViewTests(TestCase):
     def setUp(self):
@@ -197,6 +234,7 @@ class AdminDashboardViewTests(TestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'ecc-kpi-grid')
+        self.assertContains(resp, 'کاربران آنلاین امروز')
         self.assertContains(resp, 'تمدید اکانت')
         self.assertContains(resp, 'ecc-renewals')
         self.assertContains(resp, 'مرکز لایسنس')

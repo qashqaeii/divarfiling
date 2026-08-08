@@ -14,12 +14,29 @@ from django.views.generic import TemplateView
 
 from accounts.admin_views import StaffRequiredMixin
 from accounts.models import (
+    AcquisitionRun,
     CampaignMessage,
     LeadCampaign,
     LeadImportBatch,
     LeadList,
     LeadTouchpoint,
     MarketingLead,
+)
+from accounts.services.acquisition_automation import schedule_due_campaigns
+from accounts.services.acquisition_automation_ui import (
+    AutomationUIError,
+    CATEGORY_CHOICES,
+    automation_campaigns_for_ui,
+    automation_overview_stats,
+    automation_runs_for_ui,
+    create_automation_campaign_from_form,
+    list_automation_cities,
+    list_districts_for_city,
+    places_config_available,
+    queue_automation_run_now,
+    reset_automation_schedule,
+    toggle_automation_campaign,
+    update_automation_campaign_from_form,
 )
 from accounts.services.lead_attribution import record_touchpoint
 from accounts.services.lead_campaign_send import (
@@ -226,6 +243,13 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             'send_progress_start_url': reverse('admin_panel_lead_send_progress_start'),
             'send_progress_tick_url': reverse('admin_panel_lead_send_progress_tick'),
             'bulk_templates_url': reverse('admin_panel_lead_bulk_templates'),
+            'automation_stats': automation_overview_stats(),
+            'automation_campaigns': automation_campaigns_for_ui(limit=30),
+            'automation_runs': automation_runs_for_ui(limit=25),
+            'automation_cities': list_automation_cities(),
+            'automation_category_choices': CATEGORY_CHOICES,
+            'automation_places_url': reverse('admin_panel_lead_automation_places_json'),
+            'automation_places_ok': places_config_available(),
         })
         return ctx
 
@@ -260,11 +284,26 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 return self._delete_campaign(request)
             if action == 'bulk_campaigns':
                 return self._bulk_campaigns(request)
-        except (LeadImportError, LeadCampaignError) as exc:
+            if action == 'create_automation_campaign':
+                return self._create_automation_campaign(request)
+            if action == 'update_automation_campaign':
+                return self._update_automation_campaign(request)
+            if action == 'toggle_automation_campaign':
+                return self._toggle_automation_campaign(request)
+            if action == 'queue_automation_run':
+                return self._queue_automation_run(request)
+            if action == 'reset_automation_schedule':
+                return self._reset_automation_schedule(request)
+            if action == 'run_automation_scheduler':
+                return self._run_automation_scheduler(request)
+        except (LeadImportError, LeadCampaignError, AutomationUIError) as exc:
             messages.error(request, exc.message)
         except Exception as exc:  # noqa: BLE001
             logger.exception('lead acquisition admin error')
             messages.error(request, f'خطا: {exc}')
+        fragment = 'lac-automation' if (request.POST.get('action') or '').startswith(('create_automation', 'update_automation', 'toggle_automation', 'queue_automation', 'reset_automation', 'run_automation')) else ''
+        if fragment:
+            return _lac_redirect(fragment)
         return redirect('admin_panel_lead_acquisition')
 
     def _import_preview(self, request):
@@ -678,6 +717,55 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         )
         return redirect('admin_panel_lead_acquisition')
 
+    def _create_automation_campaign(self, request):
+        campaign = create_automation_campaign_from_form(request.POST)
+        messages.success(
+            request,
+            f'کمپین جمع‌آوری خودکار «{campaign.name}» ساخته شد — '
+            f'اجرای بعدی با cron یا دکمه «اجرای فوری».',
+        )
+        return _lac_redirect('lac-automation')
+
+    def _update_automation_campaign(self, request):
+        campaign_id = int(request.POST.get('campaign_id') or 0)
+        campaign = update_automation_campaign_from_form(campaign_id, request.POST)
+        messages.success(request, f'کمپین «{campaign.name}» به‌روزرسانی شد.')
+        return _lac_redirect('lac-automation')
+
+    def _toggle_automation_campaign(self, request):
+        campaign_id = int(request.POST.get('campaign_id') or 0)
+        campaign = toggle_automation_campaign(campaign_id)
+        state = 'فعال' if campaign.is_active else 'غیرفعال'
+        messages.success(request, f'کمپین «{campaign.name}» {state} شد.')
+        return _lac_redirect('lac-automation')
+
+    def _queue_automation_run(self, request):
+        campaign_id = int(request.POST.get('campaign_id') or 0)
+        run = queue_automation_run_now(campaign_id)
+        messages.success(
+            request,
+            f'اجرای #{run.pk} برای «{run.district}» در صف worker قرار گرفت.',
+        )
+        return _lac_redirect('lac-automation')
+
+    def _reset_automation_schedule(self, request):
+        campaign_id = int(request.POST.get('campaign_id') or 0)
+        campaign = reset_automation_schedule(campaign_id)
+        messages.success(
+            request,
+            f'زمان‌بندی «{campaign.name}» ریست شد — cron در اولین فرصت queue می‌کند.',
+        )
+        return _lac_redirect('lac-automation')
+
+    def _run_automation_scheduler(self, request):
+        created = schedule_due_campaigns(max_jobs=1)
+        if created:
+            ids = ', '.join(str(r.pk) for r in created)
+            messages.success(request, f'scheduler — {len(created)} اجرا در صف: {ids}')
+        else:
+            messages.info(request, 'scheduler — کمپین سررسیدی برای queue نبود.')
+        return _lac_redirect('lac-automation')
+
 
 class AdminLeadCampaignDetailView(StaffRequiredMixin, TemplateView):
     template_name = 'accounts/admin_lead_campaign_detail.html'
@@ -857,3 +945,18 @@ class AdminLeadBulkTemplatesView(StaffRequiredMixin, View):
             }, json_dumps_params={'ensure_ascii': False})
         except LeadCampaignError as exc:
             return JsonResponse({'ok': False, 'error': exc.message}, status=400)
+
+
+class AdminAutomationPlacesJsonView(StaffRequiredMixin, View):
+    """مناطق یک شهر از places-web.json برای فرم اتوماسیون."""
+
+    def get(self, request):
+        city = (request.GET.get('city') or 'تهران').strip()
+        districts = list_districts_for_city(city)
+        return JsonResponse({
+            'ok': True,
+            'city': city,
+            'districts': districts,
+            'count': len(districts),
+            'places_available': places_config_available(),
+        }, json_dumps_params={'ensure_ascii': False})

@@ -2466,3 +2466,150 @@ html.mk-public:not([data-theme="light"]) .adm-lac-bulk-bar {
     font-weight: 700;
     color: var(--lac-teal-deep);
 }
+
+/* ── Acquisition automation tab ── */
+.adm-lac-btn--cyan {
+    background: linear-gradient(135deg, #0891b2, #0e7490);
+    color: #fff;
+    border-color: transparent;
+}
+
+.adm-lac-kpis--compact {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    margin-bottom: 1rem;
+}
+
+.adm-lac-automation-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.75fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.adm-lac-panel--automation-form {
+    padding: 1.1rem 1.2rem;
+}
+
+.adm-lac-panel--automation-flow {
+    padding: 1rem 1.1rem;
+}
+
+.adm-lac-pipeline--stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+}
+
+.adm-lac-pipeline--stack .adm-lac-pipe-arrow {
+    transform: rotate(-90deg);
+    align-self: center;
+}
+
+.adm-lac-form-row--2col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+}
+
+.adm-lac-field--full {
+    grid-column: 1 / -1;
+}
+
+.adm-lac-form-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1rem;
+    margin-top: 0.65rem;
+}
+
+.adm-lac-district-picker {
+    margin-top: 0.5rem;
+    padding: 0.55rem;
+    border-radius: 12px;
+    border: 1px dashed var(--lac-line);
+    max-height: 160px;
+    overflow: auto;
+}
+
+.adm-lac-district-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.adm-lac-district-chip {
+    border: 1px solid var(--lac-line);
+    background: var(--lac-soft);
+    color: var(--lac-teal-deep);
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.adm-lac-district-chip:hover {
+    background: rgba(13, 148, 136, 0.18);
+}
+
+.adm-lac-action-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-start;
+}
+
+.adm-lac-inline-edit summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.adm-lac-inline-edit summary::-webkit-details-marker {
+    display: none;
+}
+
+.adm-lac-inline-edit__body {
+    margin-top: 0.5rem;
+    padding: 0.65rem;
+    border: 1px solid var(--lac-line);
+    border-radius: 12px;
+    display: grid;
+    gap: 0.45rem;
+    min-width: 200px;
+}
+
+.adm-lac-inline-edit__body input,
+.adm-lac-inline-edit__body textarea {
+    width: 100%;
+    font: inherit;
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--lac-line);
+}
+
+.adm-lac-run--queued { background: rgba(100, 116, 139, 0.15); color: #475569; }
+.adm-lac-run--running { background: rgba(8, 145, 178, 0.15); color: #0e7490; }
+.adm-lac-run--completed { background: rgba(13, 148, 136, 0.15); color: var(--lac-teal-deep); }
+.adm-lac-run--ingested { background: rgba(13, 148, 136, 0.22); color: #047857; }
+.adm-lac-run--rate_limited { background: rgba(217, 119, 6, 0.18); color: #b45309; }
+.adm-lac-run--failed { background: rgba(225, 29, 72, 0.12); color: #be123c; }
+
+.adm-lac-kpi-sub--error {
+    color: var(--lac-rose);
+}
+
+.adm-lac-kpi-sub--truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+}
+
+@media (max-width: 900px) {
+    .adm-lac-automation-grid {
+        grid-template-columns: 1fr;
+    }
+    .adm-lac-form-row--2col {
+        grid-template-columns: 1fr;
+    }
+}

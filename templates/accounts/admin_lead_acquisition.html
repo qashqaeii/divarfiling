@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=14">
 {% endblock %}
 
 {% block content %}
@@ -28,6 +28,7 @@
             </p>
             <div class="adm-lac-hero-actions">
                 <a class="adm-lac-btn adm-lac-btn--primary" href="#lac-import"><i class="fas fa-file-import"></i> ورود فایل</a>
+                <a class="adm-lac-btn adm-lac-btn--cyan" href="#lac-automation"><i class="fas fa-robot"></i> جمع‌آوری خودکار</a>
                 <a class="adm-lac-btn adm-lac-btn--amber" href="#lac-campaigns"><i class="fas fa-flask"></i> کمپین‌های پایلوت</a>
                 <a class="adm-lac-btn adm-lac-btn--ghost" href="{% url 'admin_panel_growth_pipeline' %}"><i class="fas fa-route"></i> پایپلاین رشد</a>
                 <a class="adm-lac-btn adm-lac-btn--ghost" href="{% url 'admin_panel_marketing' %}"><i class="fas fa-arrow-right"></i> مارکتینگ کاربران</a>
@@ -65,6 +66,7 @@
             <a href="#lac-import" class="adm-lac-tab" data-lac-tab>ورود فایل</a>
             <a href="#lac-compose" class="adm-lac-tab" data-lac-tab>ساخت کمپین</a>
             <a href="#lac-campaigns" class="adm-lac-tab" data-lac-tab>کمپین‌ها</a>
+            <a href="#lac-automation" class="adm-lac-tab" data-lac-tab>جمع‌آوری خودکار</a>
             <a href="#lac-leads" class="adm-lac-tab" data-lac-tab>سرنخ‌ها</a>
         </div>
     </nav>
@@ -735,6 +737,296 @@
         </div>
     </section>
 
+    <section id="lac-automation" class="adm-lac-section">
+        <div class="adm-lac-section-head">
+            <div>
+                <h2>جمع‌آوری خودکار از دیوار</h2>
+                <p>phone-detector → مرکز جذب → کمپین پایلوت — بدون آپلود دستی JSON</p>
+            </div>
+            <div class="adm-lac-section-head__actions">
+                <form method="post" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="run_automation_scheduler">
+                    <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" title="همان cron هر ۱۵ دقیقه">
+                        <i class="fas fa-clock"></i> اجرای scheduler
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="adm-lac-kpis adm-lac-kpis--compact">
+            <article class="adm-lac-kpi" data-accent="teal">
+                <span class="adm-lac-kpi-val">{{ automation_stats.campaigns_active|default:0|to_persian_digits }}</span>
+                <span class="adm-lac-kpi-lbl">کمپین فعال</span>
+                <p class="adm-lac-kpi-sub">از {{ automation_stats.campaigns_total|to_persian_digits }} کل</p>
+            </article>
+            <article class="adm-lac-kpi" data-accent="cyan">
+                <span class="adm-lac-kpi-val">{{ automation_stats.runs_queued|add:automation_stats.runs_running|to_persian_digits }}</span>
+                <span class="adm-lac-kpi-lbl">در صف / در حال اجرا</span>
+                <p class="adm-lac-kpi-sub">worker {% if automation_stats.worker_lock %}<span class="adm-lac-chip adm-lac-chip--live">قفل فعال</span>{% else %}آماده{% endif %}</p>
+            </article>
+            <article class="adm-lac-kpi" data-accent="amber">
+                <span class="adm-lac-kpi-val">{{ automation_stats.runs_ingested_24h|default:0|to_persian_digits }}</span>
+                <span class="adm-lac-kpi-lbl">واردشده ۲۴س</span>
+                <p class="adm-lac-kpi-sub">{{ automation_stats.phones_24h|default:0|to_persian_digits }} شماره</p>
+            </article>
+            <article class="adm-lac-kpi" data-accent="slate">
+                <span class="adm-lac-kpi-val">{% if automation_places_ok %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-triangle-exclamation"></i>{% endif %}</span>
+                <span class="adm-lac-kpi-lbl">places-web</span>
+                <p class="adm-lac-kpi-sub adm-lac-kpi-sub--truncate" title="{{ automation_stats.places_path_hint }}">{% if automation_places_ok %}متصل{% else %}فایل مناطق یافت نشد{% endif %}</p>
+            </article>
+        </div>
+
+        <div class="adm-lac-automation-grid">
+            <div class="adm-lac-panel adm-lac-panel--automation-form">
+                <div class="adm-lac-section-head" style="margin-bottom:.75rem">
+                    <div>
+                        <h3 style="margin:0;font-size:1.05rem">کمپین جمع‌آوری جدید</h3>
+                        <p class="adm-lac-kpi-sub">هر اجرا یک منطقه (چرخشی) · سپس import و کمپین SMS</p>
+                    </div>
+                </div>
+                <form method="post" id="lac-automation-create-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create_automation_campaign">
+                    <div class="adm-lac-form-row adm-lac-form-row--2col">
+                        <div class="adm-lac-field">
+                            <label for="auto_name">نام کمپین</label>
+                            <input name="name" id="auto_name" required placeholder="مثلاً تهران · ونک · فروش">
+                        </div>
+                        <div class="adm-lac-field">
+                            <label for="auto_city">شهر</label>
+                            <select name="city" id="auto_city" required>
+                                {% for c in automation_cities %}
+                                <option value="{{ c.name }}" {% if c.name == 'تهران' %}selected{% endif %}>{{ c.name }}</option>
+                                {% empty %}
+                                <option value="تهران" selected>تهران</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="adm-lac-field adm-lac-field--full">
+                            <label for="auto_districts">منطقه‌ها <span class="adm-lac-kpi-sub">(هر خط یک منطقه — یا از لیست انتخاب)</span></label>
+                            <textarea name="districts" id="auto_districts" rows="3" required placeholder="ونک"></textarea>
+                            <div class="adm-lac-district-picker" id="lac-district-picker" hidden>
+                                <p class="adm-lac-kpi-sub">کلیک برای افزودن به لیست:</p>
+                                <div class="adm-lac-district-chips" id="lac-district-chips"></div>
+                            </div>
+                        </div>
+                        <div class="adm-lac-field">
+                            <label for="auto_category">نوع آگهی</label>
+                            <select name="category" id="auto_category">
+                                {% for val, label in automation_category_choices %}
+                                <option value="{{ val }}" {% if val == 'apartment-sell' %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="adm-lac-field">
+                            <label for="auto_limit">سقف هر اجرا</label>
+                            <input type="number" name="limit_per_run" id="auto_limit" value="20" min="5" max="500">
+                        </div>
+                        <div class="adm-lac-field">
+                            <label for="auto_interval">فاصله اجرا (ساعت)</label>
+                            <input type="number" name="interval_hours" id="auto_interval" value="6" min="1" max="168">
+                        </div>
+                        <div class="adm-lac-field">
+                            <label for="auto_landing">صفحه فرود SMS</label>
+                            <input name="landing_url" id="auto_landing" value="https://divarfiling.ir/">
+                        </div>
+                    </div>
+                    <div class="adm-lac-form-checks">
+                        <label class="adm-lac-check"><input type="checkbox" name="is_active" value="1" checked> فعال</label>
+                        <label class="adm-lac-check"><input type="checkbox" name="auto_create_campaign" value="1" checked> ساخت LeadCampaign پس از import</label>
+                        <label class="adm-lac-check"><input type="checkbox" name="auto_enroll_pilot" value="1" checked> enroll پایلوت A/B</label>
+                    </div>
+                    <div style="margin-top:1rem">
+                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
+                            <i class="fas fa-plus"></i> ایجاد کمپین خودکار
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <aside class="adm-lac-panel adm-lac-panel--automation-flow">
+                <p class="adm-lac-journey-title">مسیر اتوماسیون</p>
+                <div class="adm-lac-pipeline adm-lac-pipeline--stack">
+                    <span class="adm-lac-pipe"><i class="fas fa-robot"></i> Scheduler</span>
+                    <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-down"></i></span>
+                    <span class="adm-lac-pipe"><i class="fas fa-mobile-screen"></i> phone-detector</span>
+                    <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-down"></i></span>
+                    <span class="adm-lac-pipe"><i class="fas fa-file-import"></i> import</span>
+                    <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-down"></i></span>
+                    <span class="adm-lac-pipe"><i class="fas fa-flask"></i> پایلوت SMS</span>
+                </div>
+                <p class="adm-lac-kpi-sub" style="margin-top:.75rem">
+                    worker systemd: <code>divar-acquisition-worker</code><br>
+                    cron: هر ۱۵ دقیقه <code>run_acquisition_automation</code>
+                </p>
+            </aside>
+        </div>
+
+        <div class="adm-lac-panel" style="padding:0;overflow:hidden;margin-top:1rem">
+            <div class="adm-lac-section-head" style="padding:1rem 1rem 0">
+                <div>
+                    <h3 style="margin:0;font-size:1.05rem">کمپین‌های جمع‌آوری</h3>
+                </div>
+            </div>
+            <div class="adm-lac-table-wrap" style="border:none">
+                <table class="adm-lac-table">
+                    <thead>
+                        <tr>
+                            <th>کمپین</th>
+                            <th>منطقه‌ها</th>
+                            <th>تنظیمات</th>
+                            <th>زمان‌بندی</th>
+                            <th>آخرین اجرا</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in automation_campaigns %}
+                        {% with c=row.campaign %}
+                        <tr>
+                            <td>
+                                <strong>{{ c.name }}</strong>
+                                <p class="adm-lac-kpi-sub">#{{ c.pk|to_persian_digits }} · {{ c.city }}</p>
+                                {% if not c.is_active %}
+                                <span class="adm-lac-chip">غیرفعال</span>
+                                {% else %}
+                                <span class="adm-lac-chip adm-lac-chip--live">فعال</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ row.districts_display }}</td>
+                            <td>
+                                <span class="adm-lac-kpi-sub">{{ c.category }}</span><br>
+                                <span class="adm-lac-kpi-sub">سقف {{ c.limit_per_run|to_persian_digits }} · هر {{ c.interval_hours|to_persian_digits }}س</span>
+                            </td>
+                            <td>
+                                {% if c.next_run_at %}
+                                <time>{{ c.next_run_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</time>
+                                {% else %}
+                                <span class="adm-lac-chip adm-lac-chip--amber">آماده queue</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if row.last_run %}
+                                <span class="adm-lac-status adm-lac-run--{{ row.last_run.status }}">{{ row.last_run.get_status_display }}</span>
+                                <p class="adm-lac-kpi-sub">{{ row.last_run.phones_extracted|to_persian_digits }} شماره</p>
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="adm-lac-action-stack">
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="queue_automation_run">
+                                        <input type="hidden" name="campaign_id" value="{{ c.pk }}">
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" {% if not c.is_active %}disabled{% endif %}>
+                                            <i class="fas fa-play"></i> اجرای فوری
+                                        </button>
+                                    </form>
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="toggle_automation_campaign">
+                                        <input type="hidden" name="campaign_id" value="{{ c.pk }}">
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm">
+                                            {% if c.is_active %}<i class="fas fa-pause"></i> توقف{% else %}<i class="fas fa-play"></i> فعال{% endif %}
+                                        </button>
+                                    </form>
+                                    <details class="adm-lac-inline-edit">
+                                        <summary class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm"><i class="fas fa-pen"></i> ویرایش</summary>
+                                        <form method="post" class="adm-lac-inline-edit__body">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="update_automation_campaign">
+                                            <input type="hidden" name="campaign_id" value="{{ c.pk }}">
+                                            <input name="name" value="{{ c.name }}" placeholder="نام">
+                                            <textarea name="districts" rows="2">{% for d in c.districts %}{{ d }}{% if not forloop.last %}
+{% endif %}{% endfor %}</textarea>
+                                            <input type="number" name="limit_per_run" value="{{ c.limit_per_run }}" min="5" max="500">
+                                            <input type="number" name="interval_hours" value="{{ c.interval_hours }}" min="1" max="168">
+                                            <label class="adm-lac-check"><input type="checkbox" name="auto_create_campaign" value="1" {% if c.auto_create_campaign %}checked{% endif %}> auto campaign</label>
+                                            <label class="adm-lac-check"><input type="checkbox" name="auto_enroll_pilot" value="1" {% if c.auto_enroll_pilot %}checked{% endif %}> auto pilot</label>
+                                            <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">ذخیره</button>
+                                        </form>
+                                    </details>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="adm-lac-empty">
+                                    <i class="fas fa-robot"></i>
+                                    هنوز کمپین خودکاری ندارید — فرم بالا را پر کنید.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="adm-lac-panel" style="padding:0;overflow:hidden;margin-top:1rem">
+            <div class="adm-lac-section-head" style="padding:1rem 1rem 0">
+                <div>
+                    <h3 style="margin:0;font-size:1.05rem">اجراهای اخیر</h3>
+                    <p class="adm-lac-kpi-sub">phone-detector worker · وضعیت ingest</p>
+                </div>
+            </div>
+            <div class="adm-lac-table-wrap" style="border:none">
+                <table class="adm-lac-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>کمپین</th>
+                            <th>منطقه</th>
+                            <th>وضعیت</th>
+                            <th>نتیجه</th>
+                            <th>زمان</th>
+                            <th>پیوند</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for run in automation_runs %}
+                        <tr>
+                            <td>{{ run.pk|to_persian_digits }}</td>
+                            <td>{{ run.campaign.name|truncatechars:28 }}</td>
+                            <td>{{ run.district|default:"—" }}</td>
+                            <td><span class="adm-lac-status adm-lac-run--{{ run.status }}">{{ run.get_status_display }}</span></td>
+                            <td>
+                                {{ run.phones_extracted|to_persian_digits }} شماره
+                                <p class="adm-lac-kpi-sub">{{ run.consultants_found|to_persian_digits }} مشاور</p>
+                                {% if run.error_message %}
+                                <p class="adm-lac-kpi-sub adm-lac-kpi-sub--error">{{ run.error_message|truncatechars:80 }}</p>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if run.started_at %}<time>{{ run.started_at|to_jalali_fa:"%m/%d %H:%M" }}</time>{% else %}—{% endif %}
+                            </td>
+                            <td>
+                                {% if run.lead_campaign_id %}
+                                <a href="{% url 'admin_panel_lead_campaign_detail' run.lead_campaign_id %}">SMS #{{ run.lead_campaign_id|to_persian_digits }}</a>
+                                {% elif run.import_batch_id %}
+                                <span class="adm-lac-kpi-sub">batch {{ run.import_batch_id|to_persian_digits }}</span>
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="adm-lac-empty adm-lac-empty--compact">
+                                    <i class="fas fa-clock"></i> هنوز اجرایی ثبت نشده.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <section id="lac-leads" class="adm-lac-section">
         <div class="adm-lac-section-head">
             <div>
@@ -1077,7 +1369,54 @@
     });
   });
   activate(location.hash || '#lac-overview');
+  if (location.pathname.indexOf('/automation') !== -1) {
+    activate('#lac-automation');
+  }
   window.addEventListener('hashchange', function () { activate(location.hash); });
+
+  const autoCity = document.getElementById('auto_city');
+  const autoDistricts = document.getElementById('auto_districts');
+  const districtPicker = document.getElementById('lac-district-picker');
+  const districtChips = document.getElementById('lac-district-chips');
+  const placesUrl = '{{ automation_places_url|escapejs }}';
+
+  function appendDistrict(name) {
+    if (!autoDistricts || !name) return;
+    const lines = autoDistricts.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (lines.indexOf(name) !== -1) return;
+    lines.push(name);
+    autoDistricts.value = lines.join('\n');
+  }
+
+  function loadDistricts(city) {
+    if (!districtChips || !placesUrl) return;
+    districtChips.innerHTML = '';
+    fetch(placesUrl + '?city=' + encodeURIComponent(city || 'تهران'), { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok || !data.districts || !data.districts.length) {
+          if (districtPicker) districtPicker.hidden = true;
+          return;
+        }
+        if (districtPicker) districtPicker.hidden = false;
+        data.districts.forEach(function (d) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'adm-lac-district-chip';
+          btn.textContent = d;
+          btn.addEventListener('click', function () { appendDistrict(d); });
+          districtChips.appendChild(btn);
+        });
+      })
+      .catch(function () {
+        if (districtPicker) districtPicker.hidden = true;
+      });
+  }
+
+  if (autoCity) {
+    autoCity.addEventListener('change', function () { loadDistricts(autoCity.value); });
+    loadDistricts(autoCity.value);
+  }
 
   const drop = document.getElementById('lac-dropzone');
   const file = document.getElementById('lac-file');

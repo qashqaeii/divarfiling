@@ -96,3 +96,19 @@ class AcquisitionAutomationTests(TestCase):
         ingest_acquisition_run(run)
         mock_auto_campaign.assert_not_called()
         mock_enroll.assert_not_called()
+
+
+class AcquisitionAutomationUITests(TestCase):
+    def test_create_campaign_from_form(self):
+        from accounts.services.acquisition_automation_ui import create_automation_campaign_from_form
+
+        c = create_automation_campaign_from_form({
+            'name': 'تهران · تست',
+            'city': 'تهران',
+            'districts': 'ونک\nآجودانیه',
+            'category': 'apartment-sell',
+            'limit_per_run': '25',
+        })
+        self.assertEqual(c.districts, ['ونک', 'آجودانیه'])
+        self.assertEqual(c.limit_per_run, 25)
+        self.assertTrue(c.is_active)

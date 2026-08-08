@@ -3693,6 +3693,51 @@ function initContactsMobileFilters() {
     syncSelectDisabled();
 }
 
+function initContactsMobileMenus() {
+    const root = document.querySelector('.crm-contacts-mobile');
+    if (!root) return;
+
+    const closeMenus = (except) => {
+        root.querySelectorAll('.crm-contacts-mob-toolbar-menu[open], .crm-contacts-mob-row-more[open]').forEach(menu => {
+            if (menu !== except) menu.removeAttribute('open');
+        });
+    };
+
+    root.querySelectorAll('.crm-contacts-mob-row-more-trigger, .crm-contacts-mob-row-more-panel').forEach(el => {
+        el.addEventListener('click', (e) => e.stopPropagation());
+    });
+
+    root.querySelectorAll('.crm-contacts-mob-toolbar-menu, .crm-contacts-mob-row-more').forEach(menu => {
+        menu.addEventListener('toggle', () => {
+            if (menu.open) closeMenus(menu);
+        });
+    });
+
+    root.querySelectorAll('.crm-contacts-mob-row-more-item').forEach(link => {
+        link.addEventListener('click', () => {
+            link.closest('.crm-contacts-mob-row-more')?.removeAttribute('open');
+        });
+    });
+
+    root.querySelectorAll('.crm-contacts-mob-toolbar-item[data-drawer-open]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.closest('.crm-contacts-mob-toolbar-menu')?.removeAttribute('open');
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!root.contains(e.target)) return;
+        root.querySelectorAll('.crm-contacts-mob-toolbar-menu[open], .crm-contacts-mob-row-more[open]').forEach(menu => {
+            if (!menu.contains(e.target)) menu.removeAttribute('open');
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        closeMenus();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-drawer-open]').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -3737,6 +3782,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMPropertyPipeline();
     initCRMSavedFilters();
     initContactsMobileFilters();
+    initContactsMobileMenus();
     initCRMPropertyAdvFilters();
     initCRMDealStagesEditor();
     initCRMDealChecklist();

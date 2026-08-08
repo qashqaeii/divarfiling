@@ -1,0 +1,514 @@
+/* ═══════════════════════════════════════════════════════════
+   Mizkar Account Dashboard — Premium polish (mobile-first)
+   Loads after mizkar-dashboard*.css
+   ═══════════════════════════════════════════════════════════ */
+
+.mk-dashboard-page {
+    --dash-radius: 14px;
+    --dash-radius-sm: 10px;
+    --dash-gap: 0.65rem;
+    --dash-tab-h: 2.75rem;
+}
+
+/* ─── Shell ─── */
+.mk-dashboard-page .dash-shell-pro {
+    padding: 0.65rem 0.7rem 1rem !important;
+    border-radius: var(--dash-radius) !important;
+    background: color-mix(in srgb, var(--mk-card) 96%, transparent) !important;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04) inset,
+        0 18px 40px -32px rgba(15, 23, 42, 0.45) !important;
+}
+
+/* ─── Sticky tab shell ─── */
+.mk-dashboard-page .dash-tabs-shell {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    margin: 0 -0.15rem 0.75rem;
+    padding: 0.35rem 0.15rem 0.45rem;
+    background: color-mix(in srgb, var(--mk-card) 88%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid color-mix(in srgb, var(--mk-border) 70%, transparent);
+}
+
+.mk-dashboard-page .dash-tabs-scroll {
+    margin: 0 !important;
+    scroll-snap-type: x proximity;
+}
+
+.mk-dashboard-page .dash-tabs--chips {
+    gap: 0.3rem !important;
+    padding: 0.15rem !important;
+}
+
+.mk-dashboard-page .dash-tabs--chips .tab-btn-modern {
+    scroll-snap-align: start;
+    min-height: var(--dash-tab-h);
+    padding: 0.42rem 0.7rem !important;
+    border-radius: 999px !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    border: 1px solid color-mix(in srgb, var(--mk-border) 80%, transparent) !important;
+    background: color-mix(in srgb, var(--mk-surface) 92%, transparent) !important;
+    transition: border-color 0.18s, background 0.18s, color 0.18s, transform 0.15s;
+}
+
+.mk-dashboard-page .dash-tabs--chips .tab-btn-modern .tab-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 8px;
+    font-size: 0.68rem !important;
+    background: color-mix(in srgb, var(--mk-purple) 6%, transparent);
+    transition: background 0.18s, color 0.18s;
+}
+
+.mk-dashboard-page .dash-tabs--chips .tab-btn-modern.active {
+    color: var(--mk-purple) !important;
+    background: color-mix(in srgb, var(--mk-purple) 9%, var(--mk-card)) !important;
+    border-color: color-mix(in srgb, var(--mk-purple) 28%, var(--mk-border)) !important;
+    box-shadow: 0 4px 14px -8px color-mix(in srgb, var(--mk-purple) 35%, transparent) !important;
+}
+
+.mk-dashboard-page .dash-tabs--chips .tab-btn-modern.active .tab-icon {
+    color: #fff !important;
+    background: linear-gradient(135deg, #7c3aed, #6366f1) !important;
+}
+
+.mk-dashboard-page .dash-tabs--chips .tab-btn-modern:active {
+    transform: scale(0.97);
+}
+
+/* ─── Tab panel headers ─── */
+.mk-dashboard-page .dash-tab-panel {
+    animation: dash-panel-in 0.28s ease;
+}
+
+@keyframes dash-panel-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.mk-dashboard-page .dash-tab-head {
+    margin-bottom: 0.75rem;
+}
+
+.mk-dashboard-page .dash-tab-head--row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.mk-dashboard-page .dash-tab-head-title {
+    margin: 0;
+    font-size: clamp(0.88rem, 2.2vw, 1rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--mk-text);
+    line-height: 1.3;
+}
+
+.mk-dashboard-page .dash-tab-head-sub {
+    margin: 0.2rem 0 0;
+    font-size: 0.68rem;
+    color: var(--mk-text-muted);
+    line-height: 1.5;
+}
+
+/* ─── Overview quick strip ─── */
+.mk-dashboard-page .dash-ov-quick {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin-bottom: 0.85rem;
+}
+
+.mk-dashboard-page .dash-ov-quick-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: 4.1rem;
+    padding: 0.45rem 0.35rem;
+    border-radius: var(--dash-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--mk-border) 75%, transparent);
+    background: color-mix(in srgb, var(--mk-surface) 90%, transparent);
+    text-decoration: none;
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.mk-dashboard-page .dash-ov-quick-item:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--mk-purple) 22%, var(--mk-border));
+    box-shadow: 0 8px 20px -14px rgba(15, 23, 42, 0.35);
+}
+
+.mk-dashboard-page .dash-ov-quick-ico {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    color: #fff;
+}
+
+.mk-dashboard-page .dash-ov-quick-item[data-tone="violet"] .dash-ov-quick-ico {
+    background: linear-gradient(135deg, #7c3aed, #6366f1);
+}
+
+.mk-dashboard-page .dash-ov-quick-item[data-tone="blue"] .dash-ov-quick-ico {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+}
+
+.mk-dashboard-page .dash-ov-quick-item[data-tone="emerald"] .dash-ov-quick-ico {
+    background: linear-gradient(135deg, #059669, #10b981);
+}
+
+.mk-dashboard-page .dash-ov-quick-item[data-tone="cyan"] .dash-ov-quick-ico {
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+}
+
+.mk-dashboard-page .dash-ov-quick-lbl {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--mk-text-secondary);
+    text-align: center;
+    line-height: 1.25;
+}
+
+/* ─── Overview cards ─── */
+.mk-dashboard-page #tab-overview .overview-grid {
+    gap: var(--dash-gap) !important;
+    margin-bottom: 0.75rem !important;
+}
+
+.mk-dashboard-page #tab-overview .overview-card {
+    padding: 0.7rem 0.75rem !important;
+    border-radius: var(--dash-radius-sm) !important;
+    border: 1px solid color-mix(in srgb, var(--mk-border) 78%, transparent) !important;
+    background: color-mix(in srgb, var(--mk-surface) 88%, var(--mk-card)) !important;
+}
+
+.mk-dashboard-page #tab-overview .section-card-head {
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mk-border) 55%, transparent);
+}
+
+.mk-dashboard-page #tab-overview .section-title {
+    margin: 0 !important;
+    font-size: 0.74rem !important;
+    font-weight: 700 !important;
+}
+
+.mk-dashboard-page .dash-preview-card {
+    padding: 0.55rem 0.6rem !important;
+    border-radius: 9px !important;
+    gap: 0.5rem !important;
+}
+
+.mk-dashboard-page .dash-preview-card-title {
+    font-size: 0.72rem !important;
+}
+
+.mk-dashboard-page .dash-preview-card-meta {
+    font-size: 0.62rem !important;
+    gap: 0.25rem 0.5rem !important;
+}
+
+.mk-dashboard-page .affiliate-modern-card {
+    border-radius: var(--dash-radius) !important;
+    border: 1px solid color-mix(in srgb, var(--mk-border) 75%, transparent) !important;
+    padding: 0.85rem !important;
+}
+
+.mk-dashboard-page .affiliate-modern-stats {
+    gap: 0.45rem !important;
+}
+
+.mk-dashboard-page .affiliate-modern-stat-card {
+    border-radius: var(--dash-radius-sm) !important;
+    padding: 0.55rem 0.65rem !important;
+}
+
+/* ─── Collapsible filters (orders) ─── */
+.mk-dashboard-page .dash-filter-fold {
+    margin-bottom: 0.75rem;
+    border-radius: var(--dash-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--mk-border) 75%, transparent);
+    background: color-mix(in srgb, var(--mk-surface) 90%, transparent);
+    overflow: hidden;
+}
+
+.mk-dashboard-page .dash-filter-fold-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--mk-text);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.mk-dashboard-page .dash-filter-fold-trigger::-webkit-details-marker {
+    display: none;
+}
+
+.mk-dashboard-page .dash-filter-fold-trigger::after {
+    content: '\f078';
+    margin-inline-start: auto;
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.55rem;
+    color: var(--mk-text-muted);
+    transition: transform 0.2s;
+}
+
+.mk-dashboard-page .dash-filter-fold[open] .dash-filter-fold-trigger::after {
+    transform: rotate(180deg);
+}
+
+.mk-dashboard-page .dash-filter-fold-badge {
+    font-style: normal;
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 0.12rem 0.4rem;
+    border-radius: 999px;
+    color: var(--mk-purple);
+    background: color-mix(in srgb, var(--mk-purple) 10%, transparent);
+}
+
+.mk-dashboard-page .dash-filter-fold .filter-section {
+    margin: 0;
+    padding: 0 0.65rem 0.65rem;
+}
+
+.mk-dashboard-page .dash-filter-fold .filter-form {
+    border: none;
+    padding: 0;
+    background: transparent;
+}
+
+/* ─── Orders / tables mobile cards ─── */
+.mk-dashboard-page .dash-orders-table tr {
+    border-radius: var(--dash-radius-sm) !important;
+    box-shadow: 0 6px 18px -16px rgba(15, 23, 42, 0.4);
+}
+
+.mk-dashboard-page .dash-txn-card {
+    border-radius: var(--dash-radius-sm) !important;
+    border: 1px solid color-mix(in srgb, var(--mk-border) 75%, transparent) !important;
+}
+
+.mk-dashboard-page .dash-txn-head .tab-content-title {
+    font-size: clamp(0.88rem, 2.2vw, 1rem) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.025em;
+}
+
+/* ─── Licenses tab ─── */
+.mk-dashboard-page .lic-page-head {
+    margin-bottom: 0.65rem !important;
+}
+
+.mk-dashboard-page .lic-pool-strip {
+    border-radius: var(--dash-radius-sm) !important;
+    gap: 0.35rem !important;
+}
+
+.mk-dashboard-page .lic-tile {
+    border-radius: var(--dash-radius-sm) !important;
+}
+
+/* ─── Profile tab ─── */
+.mk-dashboard-page .prof-tab {
+    padding-top: 0 !important;
+}
+
+.mk-dashboard-page .prof-head {
+    margin-bottom: 0.65rem !important;
+}
+
+.mk-dashboard-page .prof-head-title {
+    font-size: clamp(0.88rem, 2.2vw, 1rem) !important;
+    font-weight: 800 !important;
+}
+
+.mk-dashboard-page .prof-card {
+    border-radius: var(--dash-radius-sm) !important;
+}
+
+.mk-dashboard-page .prof-fold {
+    border-radius: 9px !important;
+}
+
+/* ─── Empty states ─── */
+.mk-dashboard-page .empty-state {
+    padding: 1.5rem 0.85rem !important;
+    border-radius: var(--dash-radius-sm);
+    border: 1px dashed color-mix(in srgb, var(--mk-border) 80%, transparent);
+    background: color-mix(in srgb, var(--mk-surface) 70%, transparent);
+}
+
+/* ─── CTA banner ─── */
+.mk-dashboard-page .mk-workspace-cta-free {
+    border-radius: var(--dash-radius) !important;
+    padding: 0.85rem 1rem !important;
+    margin-bottom: 0.75rem !important;
+}
+
+.mk-dashboard-page .mk-workspace-cta-free h2 {
+    font-size: 0.85rem !important;
+}
+
+.mk-dashboard-page .mk-workspace-cta-desc {
+    font-size: 0.72rem !important;
+}
+
+/* ═══ Mobile: icon-grid tabs + compact layout ═══ */
+@media (max-width: 720px) {
+    .mk-dashboard-page {
+        padding-left: 0.65rem !important;
+        padding-right: 0.65rem !important;
+    }
+
+    .mk-dashboard-page .dash-tabs-shell {
+        top: 0;
+        margin-left: -0.55rem;
+        margin-right: -0.55rem;
+        padding: 0.4rem 0.55rem 0.5rem;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .mk-dashboard-page .dash-tabs-scroll {
+        overflow-x: visible;
+    }
+
+    .mk-dashboard-page .dash-tabs--chips {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        flex-wrap: wrap !important;
+        min-width: 0 !important;
+        gap: 0.35rem !important;
+    }
+
+    .mk-dashboard-page .dash-tabs--chips .tab-btn-modern {
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.22rem !important;
+        min-height: 3.35rem;
+        padding: 0.35rem 0.2rem !important;
+        border-radius: 12px !important;
+        font-size: 0.56rem !important;
+        text-align: center;
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    .mk-dashboard-page .dash-tabs--chips .tab-btn-modern .tab-icon {
+        width: 1.65rem;
+        height: 1.65rem;
+        font-size: 0.72rem !important;
+        margin: 0 auto;
+    }
+
+    .mk-dashboard-page .dash-tabs--chips .tab-text {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mk-dashboard-page .dash-shell-pro {
+        padding: 0.55rem 0.55rem 0.85rem !important;
+    }
+
+    .mk-dashboard-page #tab-overview .overview-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .mk-dashboard-page .dash-ov-quick {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mk-dashboard-page .dash-ov-quick-item {
+        flex-direction: row;
+        justify-content: flex-start;
+        min-height: 0;
+        padding: 0.55rem 0.6rem;
+        gap: 0.5rem;
+    }
+
+    .mk-dashboard-page .dash-ov-quick-ico {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.72rem;
+        flex-shrink: 0;
+    }
+
+    .mk-dashboard-page .dash-ov-quick-lbl {
+        font-size: 0.64rem;
+        text-align: start;
+    }
+
+    .mk-dashboard-page .affiliate-modern-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .mk-dashboard-page .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mk-dashboard-page .filter-group {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .mk-dashboard-page .filter-actions {
+        width: 100%;
+    }
+
+    .mk-dashboard-page .filter-actions .btn {
+        flex: 1;
+    }
+}
+
+@media (max-width: 380px) {
+    .mk-dashboard-page .dash-tabs--chips {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* Desktop: keep horizontal scroll for many tabs */
+@media (min-width: 721px) {
+    .mk-dashboard-page .dash-filter-fold > summary.dash-filter-fold-trigger {
+        display: none;
+    }
+
+    .mk-dashboard-page .dash-filter-fold {
+        border: none;
+        background: transparent;
+        margin-bottom: 0.75rem;
+    }
+
+    .mk-dashboard-page .dash-filter-fold .filter-section {
+        padding: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mk-dashboard-page .dash-tab-panel {
+        animation: none;
+    }
+}

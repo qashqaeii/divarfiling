@@ -1,0 +1,856 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace Mobile Premium v7 — Final unified mobile layer
+   Loads LAST. Resolves cascade conflicts from:
+   workspace-mobile-premium, workspace-saas-polish,
+   workspace-contact-detail, crm-mobile, mk-filing-mobile,
+   ws-ds-mobile, ws-ld-mobile, crm-prop-detail-mobile
+   UI only — no business logic
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    :root {
+        /* Phase 2 — shared section tokens */
+        --mobile-section-width: 100%;
+        --mobile-section-radius: 20px;
+        --mobile-section-padding: 16px;
+        --mobile-section-gap: 16px;
+        --mobile-image-radius: 16px;
+
+        --ws-mob-gutter: 16px;
+        --ws-mob-nav-h: 4rem;
+        --ws-mob-nav-gap: 8px;
+        --ws-mob-nav-offset: calc(var(--ws-mob-nav-h) + var(--ws-mob-nav-gap) + env(safe-area-inset-bottom, 0px));
+        --ws-mob-dock-clearance: calc(3.25rem + 12px + env(safe-area-inset-bottom, 0px));
+        --ws-mob-canvas: #f8fafc;
+        --ws-mob-card-bg: #ffffff;
+        --ws-mob-card-border: rgba(15, 23, 42, 0.08);
+        --ws-mob-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+
+    html[data-theme="dark"] {
+        --ws-mob-canvas: var(--ws-bg, #0f172a);
+        --ws-mob-card-bg: var(--ws-surface, #1e293b);
+        --ws-mob-card-border: rgba(255, 255, 255, 0.08);
+    }
+
+    /* ─── Phase 1 — Global layout / single content container ─── */
+    html,
+    body.ws-body {
+        overflow-x: clip;
+        background: var(--ws-mob-canvas);
+    }
+
+    .ws-content {
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+        padding-inline: var(--mobile-section-padding) !important;
+        padding-top: var(--mobile-section-padding) !important;
+        padding-bottom: calc(var(--ws-mob-nav-offset) + var(--mobile-section-padding)) !important;
+        gap: var(--mobile-section-gap) !important;
+        overflow-x: clip;
+    }
+
+    .ws-content:has(.crm-prop-detail-mobile),
+    .ws-content:has(.crm-contact-detail-pro),
+    .ws-content:has(.crm-deal-detail-mobile),
+    .ws-content:has(.ws-ds-mobile) {
+        padding-bottom: calc(var(--ws-mob-dock-clearance) + var(--mobile-section-padding)) !important;
+    }
+
+    :is(
+        .mk-page,
+        .mk-filing-mobile,
+        .mk-filing-pro,
+        .ws-ds-mobile,
+        .ws-home,
+        .crm-app,
+        .crm-main,
+        .crm-page-chrome,
+        .crm-prop-detail-v2
+    ) {
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        margin-inline: 0 !important;
+        padding-inline: 0 !important;
+        box-sizing: border-box !important;
+        overflow-x: clip;
+        gap: var(--mobile-section-gap) !important;
+    }
+
+    /* ─── Phase 2 — Unified section surface ─── */
+    :is(
+        .ws-mob-section,
+        .mk-hub-card,
+        .mk-panel,
+        .ws-glass-panel,
+        .ws-home-queue-card,
+        .crm-panel,
+        .crm-dash-kpis,
+        .crm-dash-bar,
+        .mk-hub-head,
+        .mk-filing-panel,
+        .mk-filing-metrics,
+        .mk-filing-toolbar,
+        .mk-filing-mob-header,
+        .mk-filing-video-band,
+        .crm-contact-panel,
+        .crm-prop-panel,
+        .crm-deal-block,
+        .crm-detail-action-center,
+        .announcements-section,
+        .ws-ai-card,
+        .ws-ai-card--listing,
+        .crm-prop-map-finale,
+        .crm-prop-hero,
+        .crm-contact-workspace__header,
+        .crm-deal-dossier.crm-deal-hero,
+        .mk-ds-command,
+        .mk-listing-panel,
+        .mk-filter-shell,
+        .ws-ds-mob-quick,
+        .mk-ds-mobile-stats
+    ) {
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+        margin-inline: 0 !important;
+        margin-bottom: var(--mobile-section-gap) !important;
+        padding: var(--mobile-section-padding) !important;
+        border-radius: var(--mobile-section-radius) !important;
+        background: var(--ws-mob-card-bg) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+        background-image: none !important;
+    }
+
+    /* Hero / map / AI — strip nested padding conflicts */
+    .crm-prop-hero {
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    .crm-prop-map-finale {
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    .ws-ai-card--listing {
+        padding: 0 !important;
+    }
+
+    .ws-ai-card--listing .ws-ai-card__inner {
+        padding: var(--mobile-section-padding) !important;
+    }
+
+    .crm-prop-map-finale-intro {
+        padding: var(--mobile-section-padding) !important;
+    }
+
+    .crm-prop-hero-inner {
+        padding: 0 !important;
+    }
+
+    .crm-prop-hero-nav {
+        padding: var(--mobile-section-padding) var(--mobile-section-padding) 8px !important;
+    }
+
+    .crm-prop-hero-content {
+        padding: var(--mobile-section-padding) !important;
+    }
+
+    .crm-prop-hero-amenities {
+        padding: 0 var(--mobile-section-padding) var(--mobile-section-padding) !important;
+        margin: 0 !important;
+    }
+
+    /* Neutralize per-file margin hacks */
+    .ws-ld-mobile .crm-prop-map-finale,
+    .ws-ld-mobile .ws-ai-card--listing,
+    .crm-prop-detail-mobile .crm-prop-map-finale,
+    .crm-prop-detail-mobile .ws-ai-card--listing,
+    .crm-prop-detail-v2 .crm-prop-map-finale,
+    .crm-prop-detail-v2 .ws-ai-card--listing {
+        margin-inline: 0 !important;
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+    }
+
+    .ws-ld-mobile .crm-prop-hero {
+        border-radius: var(--mobile-section-radius) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+    }
+
+    .ws-ld-hero-ribbon,
+    .ws-ld-hero-mesh,
+    .ws-ai-card__glow,
+    .ws-ai-card__mesh,
+    .ws-ai-card__orb,
+    .ws-ai-card__cta-glow,
+    .mk-filing-mob-header-mesh,
+    .mk-filing-mob-header-accent {
+        display: none !important;
+    }
+
+    .ws-ai-card__chips,
+    .ws-ai-card__empty-desc,
+    .ws-ai-card__footer {
+        display: none !important;
+    }
+
+    /* Filing page canvas */
+    .mk-filing-mobile.mk-page,
+    .ws-ds-mobile.mk-page {
+        background: transparent !important;
+        background-image: none !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* ─── Phase 3 — Listing cards: vertical mobile experience ─── */
+    .ws-ds-mobile .mk-listing-cards-shell {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--mobile-section-gap) !important;
+        padding: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: unset !important;
+        grid-template-areas: unset !important;
+        position: relative !important;
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        border-radius: var(--mobile-section-radius) !important;
+        background: var(--ws-mob-card-bg) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__media {
+        position: relative !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        aspect-ratio: 16 / 9 !important;
+        border-radius: 0 !important;
+        overflow: hidden !important;
+        flex-shrink: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-link,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-img,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-empty {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        aspect-ratio: 16 / 9 !important;
+        object-fit: cover !important;
+        border-radius: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-empty {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+        color: #94a3b8 !important;
+        font-size: 2rem !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-shade,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__prop-badge,
+    .ws-ds-mobile .mk-lcard-native .mk-img-auth--cover {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-nav {
+        display: inline-flex !important;
+        opacity: 0.94 !important;
+        pointer-events: auto !important;
+        z-index: 6 !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        border-radius: 999px !important;
+        background: rgba(15, 23, 42, 0.58) !important;
+        color: #fff !important;
+        border: none !important;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+    }
+
+    .ws-ds-mobile .mk-lcard-native button.mk-lcard-cover-link {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        cursor: zoom-in !important;
+        font: inherit !important;
+        color: inherit !important;
+        touch-action: pan-y pinch-zoom !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__cover-meta {
+        display: flex !important;
+        position: absolute !important;
+        inset-inline: 10px !important;
+        top: 10px !important;
+        z-index: 4 !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        pointer-events: none;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__photos {
+        position: absolute !important;
+        bottom: 10px !important;
+        inset-inline-start: 10px !important;
+        z-index: 4 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        padding: 3px 8px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        border-radius: 8px !important;
+        background: rgba(15, 23, 42, 0.62) !important;
+        color: #fff !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__panel {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding: var(--mobile-section-padding) !important;
+        min-width: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__status {
+        position: absolute !important;
+        top: 10px !important;
+        inset-inline-end: 10px !important;
+        z-index: 5 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 3px 10px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        border-radius: 999px !important;
+        background: #ecfdf5 !important;
+        color: #059669 !important;
+        border: 1px solid #a7f3d0 !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-tx-rent.mk-lcard-native__status {
+        background: #eff6ff !important;
+        color: #2563eb !important;
+        border-color: #bfdbfe !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-tx-deposit.mk-lcard-native__status {
+        background: #fff7ed !important;
+        color: #c2410c !important;
+        border-color: #fed7aa !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__title {
+        margin: 0 !important;
+        order: 1;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__title a {
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        line-height: 1.35 !important;
+        letter-spacing: -0.02em !important;
+        color: var(--ws-text) !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__loc {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        margin: 0 !important;
+        font-size: 13px !important;
+        color: var(--ws-text-muted) !important;
+        order: 2;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__loc i {
+        font-size: 11px !important;
+        opacity: 0.75;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__pricebox {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 2px !important;
+        margin: 0 !important;
+        order: 3;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__price {
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+        color: var(--ws-primary) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__ppm {
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__rail {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+        order: 4;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__rail-item {
+        display: inline-flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 4px !important;
+        padding: 4px 10px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+        color: var(--ws-text-secondary) !important;
+        border-radius: 999px !important;
+        background: #f1f5f9 !important;
+        border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__rail-item i {
+        width: auto !important;
+        height: auto !important;
+        font-size: 10px !important;
+        background: transparent !important;
+        color: #64748b !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__foot {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        margin: 4px 0 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        order: 5;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__menu,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-more {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__cta {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+        min-height: 44px !important;
+        padding: 10px 16px !important;
+        border-radius: 12px !important;
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        text-decoration: none !important;
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--ws-primary) 28%, transparent) !important;
+        border: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__cta i {
+        font-size: 12px !important;
+        opacity: 0.9;
+    }
+
+    /* ─── Phase 4 — Dataset cards: fixed-height, single CTA ─── */
+    .mk-filing-mobile .mk-ds-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--mobile-section-gap) !important;
+        padding: 0 !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native {
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-glass {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: unset !important;
+        grid-template-rows: unset !important;
+        gap: 10px !important;
+        min-height: 220px !important;
+        max-height: 220px !important;
+        padding: var(--mobile-section-padding) !important;
+        border-radius: var(--mobile-section-radius) !important;
+        overflow: hidden !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-main {
+        display: grid !important;
+        grid-template-columns: 72px minmax(0, 1fr) !important;
+        grid-template-rows: auto auto auto !important;
+        gap: 4px 12px !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        text-decoration: none !important;
+        color: inherit !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-cover {
+        grid-column: 1 !important;
+        grid-row: 1 / 4 !important;
+        width: 72px !important;
+        height: 72px !important;
+        min-height: 72px !important;
+        max-height: 72px !important;
+        border-radius: var(--mobile-image-radius) !important;
+        align-self: start !important;
+        overflow: hidden !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-cover-top,
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-cover-fmt-pill,
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-sub {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-cover-top {
+        display: flex !important;
+        position: absolute !important;
+        inset-inline: 4px !important;
+        bottom: 4px !important;
+        top: auto !important;
+        z-index: 2 !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-cover-top .mk-tx-badge {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-count {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
+        border-radius: 6px !important;
+        background: rgba(15, 23, 42, 0.72) !important;
+        color: #fff !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-title {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        margin: 0 !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        line-height: 1.35 !important;
+        -webkit-line-clamp: 2 !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-chips {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        margin: 0 !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-chip {
+        font-size: 11px !important;
+        padding: 2px 8px !important;
+        border-radius: 999px !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-chip--dim {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-foot {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        flex-shrink: 0 !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-date {
+        font-size: 11px !important;
+        color: var(--ws-text-muted) !important;
+        text-align: start !important;
+        max-width: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-acts {
+        display: flex !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-act:not(.mk-ds-card-act--open) {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-act--open {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+        min-height: 40px !important;
+        padding: 8px 14px !important;
+        border-radius: 12px !important;
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        text-decoration: none !important;
+        border: none !important;
+        box-shadow: 0 3px 12px color-mix(in srgb, var(--ws-primary) 25%, transparent) !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-check {
+        top: 10px !important;
+        inset-inline-start: 10px !important;
+        z-index: 3;
+    }
+
+    /* ─── Phase 5 — Property detail: section order & gallery ─── */
+    .ws-ld-mobile.crm-page-chrome,
+    .crm-prop-detail-mobile.crm-page-chrome {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--mobile-section-gap) !important;
+    }
+
+    .ws-ld-mobile .crm-prop-hero {
+        order: 1 !important;
+    }
+
+    .ws-ld-mobile .crm-prop-detail-grid {
+        order: 2 !important;
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+    }
+
+    .ws-ld-mobile .ws-ai-card--listing,
+    .crm-prop-detail-mobile .ws-ai-card--listing {
+        order: 3 !important;
+    }
+
+    .ws-ld-mobile .crm-prop-map-finale,
+    .crm-prop-detail-mobile .crm-prop-map-finale {
+        order: 4 !important;
+    }
+
+    .ws-ld-mobile .ws-ld-mobile-gallery,
+    .crm-prop-detail-mobile .ws-ld-mobile-gallery {
+        order: 5 !important;
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+        margin-bottom: var(--mobile-section-gap) !important;
+        padding: var(--mobile-section-padding) !important;
+        border-radius: var(--mobile-section-radius) !important;
+        background: var(--ws-mob-card-bg) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-ld-mobile .crm-prop-mobile-dock,
+    .crm-prop-detail-mobile .crm-prop-mobile-dock {
+        order: 6 !important;
+    }
+
+    .ws-ld-mobile .crm-prop-hero-gallery-wrap {
+        display: none !important;
+    }
+
+    .ws-ld-mobile .ws-ld-mobile-gallery .crm-prop-hero-gallery {
+        display: flex !important;
+        gap: 8px !important;
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+    }
+
+    .ws-ld-mobile .ws-ld-mobile-gallery .crm-prop-hero-gallery::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ws-ld-mobile .ws-ld-mobile-gallery .crm-prop-gallery-item {
+        flex: 0 0 auto !important;
+        width: 5rem !important;
+        height: 5rem !important;
+        border-radius: 12px !important;
+        scroll-snap-align: start;
+        padding: 0 !important;
+        border: 2px solid transparent !important;
+        background: var(--ws-surface-2) !important;
+        cursor: zoom-in !important;
+        overflow: hidden !important;
+    }
+
+    .ws-ld-mobile .ws-ld-mobile-gallery .crm-prop-gallery-item.is-active {
+        border-color: var(--ws-primary) !important;
+    }
+
+    .ws-ld-mobile .crm-prop-hero-cover {
+        cursor: zoom-in !important;
+        padding: 0 !important;
+        border: none !important;
+        width: 100% !important;
+    }
+
+    .ws-ld-mobile-gallery__title {
+        margin: 0 0 12px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-ld-mobile .crm-prop-hero-cover,
+    .ws-ld-mobile .crm-prop-hero-cover img {
+        width: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        aspect-ratio: 16 / 9 !important;
+        object-fit: cover !important;
+        border-radius: 0 !important;
+    }
+
+    .ws-ld-mobile .crm-prop-hero-title {
+        font-size: 18px !important;
+        font-weight: 800 !important;
+    }
+
+    .ws-ld-mobile .crm-prop-hero-pricecard strong {
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        color: var(--ws-primary) !important;
+    }
+
+    .ws-ld-mobile .crm-prop-aside {
+        display: none !important;
+    }
+
+    /* CRM property detail — same section widths */
+    .crm-prop-detail-mobile .crm-prop-panel,
+    .crm-prop-detail-mobile .crm-detail-action-center {
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+        margin-inline: 0 !important;
+    }
+
+    /* ─── Phase 6 — Conflict resets from older layers ─── */
+    .mk-filing-mobile .mk-ds-card,
+    .mk-filing-mobile .mk-ds-card-glass,
+    .mk-filing-mobile .mk-filing-panel .mk-ds-card-glass {
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+    }
+
+    .mk-filing-panel.mk-panel-flush {
+        padding: var(--mobile-section-padding) !important;
+    }
+
+    .mk-filing-mobile .mk-filing-panel .mk-ds-grid,
+    .mk-filing-mobile .mk-filing-panel .mk-table-wrap {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .mk-filing-mobile .mk-filing-panel-head {
+        padding: 0 0 8px !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contacts-mobile .crm-contacts-card,
+    .crm-files-mobile .crm-files-card,
+    .crm-deals-mobile .crm-deals-card {
+        width: var(--mobile-section-width) !important;
+        max-width: none !important;
+        border-radius: var(--mobile-section-radius) !important;
+    }
+
+    /* Bottom nav clearance */
+    .ws-bottom-nav {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .crm-prop-mobile-dock,
+    .ws-ds-mob-dock {
+        bottom: calc(var(--ws-mob-nav-h) + env(safe-area-inset-bottom, 0px)) !important;
+    }
+}
+
+/* Gutter scale for tight screens */
+@media (max-width: 375px) {
+    :root {
+        --mobile-section-padding: 14px;
+        --mobile-section-gap: 14px;
+    }
+}
+
+@media (max-width: 320px) {
+    :root {
+        --mobile-section-padding: 12px;
+        --mobile-section-gap: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ws-ds-mobile .mk-lcard-native,
+    .mk-filing-mobile .mk-ds-card-glass,
+    .ws-ld-mobile .crm-prop-gallery-item {
+        transition: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native:active {
+        transform: none !important;
+    }
+}

@@ -54,8 +54,8 @@
                     {{ ds.updated_at|ws_jalali_datetime }}
                 </time>
                 <nav class="mk-ds-card-acts" role="toolbar" aria-label="عملیات فایل">
-                    <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-ds-card-act mk-ds-card-act--open" title="باز کردن">
-                        <i class="fas fa-arrow-left" aria-hidden="true"></i><span>باز کردن</span>
+                    <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-ds-card-act mk-ds-card-act--open" title="باز کردن فایل">
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i><span>باز کردن فایل</span>
                     </a>
                     <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="mk-ds-card-act" title="تحلیل"><i class="fas fa-chart-line" aria-hidden="true"></i></a>
                     <a href="{% url 'workspace:dataset_map' ds.id %}" class="mk-ds-card-act" title="نقشه"><i class="fas fa-map-location-dot" aria-hidden="true"></i></a>

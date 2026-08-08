@@ -1,13 +1,18 @@
 {% load humanize workspace_tags %}
 {% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token %}
 <article class="mk-lcard mk-lcard-native" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
-    <div class="mk-lcard-cover mk-lcard-native__media{% if listing.images|length > 1 %} mk-lcard-cover--gallery{% endif %}">
+    <div class="mk-lcard-cover mk-lcard-native__media{% if listing.images|length > 1 %} mk-lcard-cover--gallery{% endif %}{% if listing.images %} mk-lcard-cover--lightbox{% endif %}"{% if listing.images %} data-ws-gallery{% endif %}>
         {% if listing.images %}
-        <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-cover-link" tabindex="-1" aria-label="مشاهده آگهی">
+        <button type="button" class="mk-lcard-cover-link" data-ws-lightbox="{{ listing.images.0 }}" aria-label="بزرگ‌نمایی تصویر">
             <img class="mk-lcard-cover-img" src="{{ listing.images.0 }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-        </a>
+        </button>
         {% if listing.images|length > 1 %}
         {% with gallery_imgs=listing.images|slice:":16" %}
+        {% for img in gallery_imgs %}
+        {% if not forloop.first %}
+        <button type="button" class="mk-lcard-lightbox-src" data-ws-lightbox="{{ img }}" hidden tabindex="-1" aria-hidden="true"></button>
+        {% endif %}
+        {% endfor %}
         <div class="mk-lcard-gallery-urls" hidden aria-hidden="true">
             {% for img in gallery_imgs %}
             <span data-url="{{ img }}"></span>
@@ -113,7 +118,7 @@
 
         <footer class="mk-lcard-foot mk-lcard-native__foot">
             <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-native__cta">
-                <span>مشاهده فایل</span>
+                <span>بررسی فایل</span>
                 <i class="fas fa-arrow-left" aria-hidden="true"></i>
             </a>
             <details class="mk-action-menu mk-lcard-more">

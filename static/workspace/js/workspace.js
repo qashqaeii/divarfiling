@@ -177,6 +177,46 @@ function initWSGalleryLightbox() {
             render(current - 1);
         }
     });
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const stage = lightbox.querySelector('.ws-lightbox-stage');
+    if (stage) {
+        stage.addEventListener('touchstart', e => {
+            if (!lightbox.classList.contains('is-open')) return;
+            touchStartX = e.changedTouches[0].clientX;
+            touchStartY = e.changedTouches[0].clientY;
+        }, { passive: true });
+        stage.addEventListener('touchend', e => {
+            if (!lightbox.classList.contains('is-open')) return;
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(dy)) return;
+            render(dx < 0 ? current + 1 : current - 1);
+        }, { passive: true });
+    }
+}
+
+function initWSGalleryHeroTriggers() {
+    document.querySelectorAll('[data-ws-gallery-hero]').forEach(hero => {
+        if (hero.dataset.wsGalleryHeroBound === '1') return;
+        hero.dataset.wsGalleryHeroBound = '1';
+        hero.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const root = document.querySelector('.ws-ld-mobile-gallery[data-ws-gallery]')
+                || hero.closest('[data-ws-gallery]')
+                || document.querySelector('[data-ws-gallery]');
+            if (!root) return;
+            const triggers = Array.from(root.querySelectorAll('[data-ws-lightbox]')).filter(btn => {
+                return (btn.getAttribute('data-ws-lightbox') || '').trim();
+            });
+            if (!triggers.length) return;
+            const heroSrc = (hero.getAttribute('data-ws-lightbox') || '').trim();
+            const match = heroSrc ? triggers.findIndex(btn => btn.getAttribute('data-ws-lightbox') === heroSrc) : 0;
+            (triggers[match >= 0 ? match : 0]).click();
+        });
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -336,6 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFormattedNumericInputs();
     initPublicShareForms();
     initWSGalleryLightbox();
+    initWSGalleryHeroTriggers();
 });
 
 function getCsrfToken() {

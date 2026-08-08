@@ -71,30 +71,105 @@ def record_touchpoint(
     return tp
 
 
+def _find_last_accepted_message(
+    lead: MarketingLead,
+    *,
+    kind: str,
+    within_days: int | None = None,
+) -> Optional[CampaignMessage]:
+    qs = CampaignMessage.objects.filter(
+        lead=lead,
+        status__in=(
+            CampaignMessage.Status.PROVIDER_ACCEPTED,
+            CampaignMessage.Status.DELIVERED,
+        ),
+    ).select_related('campaign', 'variant', 'step', 'enrollment')
+    if kind == LeadCampaign.Kind.ACQUISITION:
+        qs = qs.filter(campaign__kind=LeadCampaign.Kind.ACQUISITION)
+    elif kind == LeadCampaign.Kind.ACTIVATION:
+        qs = qs.filter(campaign__kind=LeadCampaign.Kind.ACTIVATION)
+    if within_days is not None:
+        qs = qs.filter(requested_at__gte=timezone.now() - timedelta(days=within_days))
+    return qs.order_by('-requested_at').first()
+
+
 def _find_phone_matched_message(
     lead: MarketingLead,
     *,
     kind: str,
     within_days: int,
 ) -> Optional[CampaignMessage]:
-    since = timezone.now() - timedelta(days=within_days)
-    qs = (
-        CampaignMessage.objects.filter(
+    return _find_last_accepted_message(lead, kind=kind, within_days=within_days)
+
+
+def _acquisition_campaign_for_lead(lead: MarketingLead) -> Optional[LeadCampaign]:
+    enroll = (
+        CampaignEnrollment.objects.filter(
             lead=lead,
-            status__in=(
-                CampaignMessage.Status.PROVIDER_ACCEPTED,
-                CampaignMessage.Status.DELIVERED,
-            ),
-            requested_at__gte=since,
+            campaign__kind=LeadCampaign.Kind.ACQUISITION,
         )
-        .select_related('campaign', 'variant', 'step', 'enrollment')
-        .order_by('-requested_at')
+        .select_related('campaign')
+        .order_by('-enrolled_at')
+        .first()
     )
-    if kind == LeadCampaign.Kind.ACQUISITION:
-        qs = qs.filter(campaign__kind=LeadCampaign.Kind.ACQUISITION)
-    elif kind == LeadCampaign.Kind.ACTIVATION:
-        qs = qs.filter(campaign__kind=LeadCampaign.Kind.ACTIVATION)
-    return qs.first()
+    if enroll:
+        return enroll.campaign
+    attr = (
+        LeadAttribution.objects.filter(
+            lead=lead,
+            axis=LeadAttribution.Axis.ACQUISITION,
+            touch_model=LeadAttribution.TouchModel.LAST,
+        )
+        .select_related('campaign')
+        .first()
+    )
+    return attr.campaign if attr and attr.campaign_id else None
+
+
+def _resolve_conversion_message(
+    lead: MarketingLead,
+    *,
+    cookie_message: Optional[CampaignMessage] = None,
+) -> tuple[Optional[CampaignMessage], str]:
+    """پیام مرجع conversion — پنجره کوتاه، سپس هر پیام جذب/فعال‌سازی."""
+    if cookie_message and cookie_message.lead_id == lead.pk:
+        if cookie_message.campaign.kind == LeadCampaign.Kind.ACTIVATION:
+            return cookie_message, LeadAttribution.Kind.DIRECT
+        return cookie_message, LeadAttribution.Kind.MATCHED
+
+    act = _find_last_accepted_message(
+        lead, kind=LeadCampaign.Kind.ACTIVATION, within_days=CONVERSION_WINDOW_DAYS,
+    )
+    if act:
+        return act, LeadAttribution.Kind.MATCHED
+
+    acq = _find_last_accepted_message(
+        lead, kind=LeadCampaign.Kind.ACQUISITION, within_days=CONVERSION_WINDOW_DAYS,
+    )
+    if acq:
+        return acq, LeadAttribution.Kind.MATCHED
+
+    acq_attr = (
+        LeadAttribution.objects.filter(
+            lead=lead,
+            axis=LeadAttribution.Axis.ACQUISITION,
+            touch_model=LeadAttribution.TouchModel.LAST,
+        )
+        .select_related('message', 'message__campaign', 'campaign')
+        .first()
+    )
+    if acq_attr and acq_attr.message_id:
+        return acq_attr.message, LeadAttribution.Kind.MATCHED
+
+    acq_any = _find_last_accepted_message(lead, kind=LeadCampaign.Kind.ACQUISITION, within_days=None)
+    if acq_any:
+        return acq_any, LeadAttribution.Kind.MATCHED
+
+    act_any = _find_last_accepted_message(lead, kind=LeadCampaign.Kind.ACTIVATION, within_days=None)
+    if act_any:
+        return act_any, LeadAttribution.Kind.MATCHED
+
+    return None, LeadAttribution.Kind.MATCHED
 
 
 def _upsert_attribution(
@@ -110,10 +185,12 @@ def _upsert_attribution(
     registered_at=None,
     converted_at=None,
     metadata: Optional[dict] = None,
+    campaign: Optional[LeadCampaign] = None,
 ) -> LeadAttribution:
+    camp = campaign or (message.campaign if message else None)
     defaults = {
         'attribution_kind': attribution_kind,
-        'campaign': message.campaign if message else None,
+        'campaign': camp,
         'message': message,
         'variant': message.variant if message else None,
         'step': message.step if message else None,
@@ -301,6 +378,106 @@ def _exit_acquisition_enrollments(lead: MarketingLead, user, *, status: str) -> 
         enroll.save(update_fields=['status', 'exited_at', 'user'])
 
 
+def _finalize_purchase_side_effects(*, lead: MarketingLead, user, order) -> None:
+    now = timezone.now()
+    lead.status = MarketingLead.Status.CUSTOMER
+    lead.matched_user = user
+    lead.save(update_fields=['status', 'matched_user', 'updated_at'])
+
+    CampaignEnrollment.objects.filter(
+        lead=lead,
+        status=CampaignEnrollment.Status.ACTIVE,
+    ).update(
+        status=CampaignEnrollment.Status.EXITED_PURCHASED,
+        exited_at=now,
+        user=user,
+    )
+    try:
+        from accounts.services.growth_journey import on_purchase
+        from accounts.services.user_activation import exit_activation_on_purchase
+
+        on_purchase(user=user, order=order, lead=lead)
+        exit_activation_on_purchase(lead=lead, user=user)
+    except Exception:
+        pass
+
+
+def _write_conversion_attribution(
+    *,
+    lead: MarketingLead,
+    user,
+    order,
+    message: Optional[CampaignMessage],
+    kind: str,
+    campaign: Optional[LeadCampaign] = None,
+) -> LeadAttribution:
+    converted_at = getattr(order, 'paid_at', None) or timezone.now()
+    revenue = int(getattr(order, 'amount', 0) or 0)
+    meta_base = {
+        'phone_matched': kind == LeadAttribution.Kind.MATCHED,
+        'label': 'phone_matched' if kind == LeadAttribution.Kind.MATCHED else 'direct',
+    }
+
+    record_touchpoint(
+        lead=lead,
+        event_type=LeadTouchpoint.EventType.PAID,
+        message=message,
+        user=user,
+        metadata={'order_id': str(order.pk)},
+    )
+    record_touchpoint(
+        lead=lead,
+        event_type=LeadTouchpoint.EventType.LICENSED,
+        message=message,
+        user=user,
+        metadata={'order_id': str(order.pk)},
+    )
+
+    first_msg = message
+    if message and message.campaign.kind == LeadCampaign.Kind.ACTIVATION:
+        first_msg = (
+            _find_last_accepted_message(
+                lead,
+                kind=LeadCampaign.Kind.ACTIVATION,
+                within_days=CONVERSION_WINDOW_DAYS,
+            )
+            or message
+        )
+    elif not message:
+        first_msg = None
+
+    _upsert_attribution(
+        axis=LeadAttribution.Axis.CONVERSION,
+        touch_model=LeadAttribution.TouchModel.FIRST,
+        attribution_kind=(
+            LeadAttribution.Kind.DIRECT
+            if first_msg and message and first_msg.pk == message.pk and kind == LeadAttribution.Kind.DIRECT
+            else LeadAttribution.Kind.MATCHED
+        ),
+        lead=lead,
+        user=user,
+        message=first_msg,
+        order=order,
+        revenue_amount=revenue,
+        converted_at=converted_at,
+        metadata=meta_base,
+        campaign=campaign or (first_msg.campaign if first_msg else None),
+    )
+    return _upsert_attribution(
+        axis=LeadAttribution.Axis.CONVERSION,
+        touch_model=LeadAttribution.TouchModel.LAST,
+        attribution_kind=kind,
+        lead=lead,
+        user=user,
+        message=message,
+        order=order,
+        revenue_amount=revenue,
+        converted_at=converted_at,
+        metadata=meta_base,
+        campaign=campaign or (message.campaign if message else None),
+    )
+
+
 @transaction.atomic
 def attribute_purchase(*, order, request=None, cookie_token: str = '') -> Optional[LeadAttribution]:
     """پرداخت موفق → Conversion Attribution؛ Acquisition دست‌نخورده می‌ماند."""
@@ -319,130 +496,96 @@ def attribute_purchase(*, order, request=None, cookie_token: str = '') -> Option
             pass
         return None
 
+    existing = LeadAttribution.objects.filter(
+        lead=lead,
+        user=user,
+        axis=LeadAttribution.Axis.CONVERSION,
+        touch_model=LeadAttribution.TouchModel.LAST,
+    ).first()
+    if existing and existing.order_id:
+        _finalize_purchase_side_effects(lead=lead, user=user, order=order)
+        return existing
+
     token = cookie_token
     if request is not None and not token:
         token = request.COOKIES.get(COOKIE_NAME, '')
 
-    message = _message_from_cookie_token(token)
-    kind = LeadAttribution.Kind.DIRECT
-    if message and message.lead_id != lead.pk:
-        message = None
-    if message and message.campaign.kind != LeadCampaign.Kind.ACTIVATION:
-        # کلیک روی پیام جذب برای خرید conversion از activation اولویت ندارد مگر پیام activation نباشد
-        pass
+    cookie_message = _message_from_cookie_token(token)
+    if cookie_message and cookie_message.lead_id != lead.pk:
+        cookie_message = None
 
-    if not message or (message and message.campaign.kind != LeadCampaign.Kind.ACTIVATION):
-        act_msg = _find_phone_matched_message(
-            lead, kind=LeadCampaign.Kind.ACTIVATION, within_days=CONVERSION_WINDOW_DAYS,
-        )
-        if act_msg:
-            message = act_msg
-            kind = LeadAttribution.Kind.MATCHED
-        elif message and message.campaign.kind == LeadCampaign.Kind.ACQUISITION:
-            # fallback: آخرین پیام جذب در پنجره conversion به‌عنوان matched
-            kind = LeadAttribution.Kind.MATCHED
-        elif not message:
-            message = _find_phone_matched_message(
-                lead, kind=LeadCampaign.Kind.ACQUISITION, within_days=CONVERSION_WINDOW_DAYS,
-            )
-            kind = LeadAttribution.Kind.MATCHED if message else LeadAttribution.Kind.MATCHED
-
+    message, kind = _resolve_conversion_message(lead, cookie_message=cookie_message)
+    fallback_campaign = None
     if not message:
-        lead.status = MarketingLead.Status.CUSTOMER
-        lead.save(update_fields=['status', 'updated_at'])
-        try:
-            from accounts.services.growth_journey import on_purchase
-            from accounts.services.user_activation import exit_activation_on_purchase
-            on_purchase(user=user, order=order, lead=lead)
-            exit_activation_on_purchase(lead=lead, user=user)
-        except Exception:
-            pass
-        return None
+        fallback_campaign = _acquisition_campaign_for_lead(lead)
 
-    if kind == LeadAttribution.Kind.DIRECT and message.campaign.kind == LeadCampaign.Kind.ACTIVATION:
+    if kind == LeadAttribution.Kind.DIRECT and message and message.campaign.kind == LeadCampaign.Kind.ACTIVATION:
         pass
-    elif message.campaign.kind == LeadCampaign.Kind.ACTIVATION and kind != LeadAttribution.Kind.DIRECT:
+    elif message and message.campaign.kind == LeadCampaign.Kind.ACTIVATION and kind != LeadAttribution.Kind.DIRECT:
         kind = LeadAttribution.Kind.MATCHED
 
-    now = timezone.now()
-    revenue = int(getattr(order, 'amount', 0) or 0)
-    record_touchpoint(
-        lead=lead,
-        event_type=LeadTouchpoint.EventType.PAID,
-        message=message,
-        user=user,
-        metadata={'order_id': order.pk},
-    )
-    record_touchpoint(
-        lead=lead,
-        event_type=LeadTouchpoint.EventType.LICENSED,
-        message=message,
-        user=user,
-        metadata={'order_id': order.pk},
-    )
-
-    first_act = (
-        CampaignMessage.objects.filter(
-            lead=lead,
-            campaign__kind=LeadCampaign.Kind.ACTIVATION,
-            status__in=(
-                CampaignMessage.Status.PROVIDER_ACCEPTED,
-                CampaignMessage.Status.DELIVERED,
-            ),
-            requested_at__gte=now - timedelta(days=CONVERSION_WINDOW_DAYS),
-        )
-        .order_by('requested_at')
-        .select_related('campaign', 'variant', 'step')
-        .first()
-    ) or message
-
-    _upsert_attribution(
-        axis=LeadAttribution.Axis.CONVERSION,
-        touch_model=LeadAttribution.TouchModel.FIRST,
-        attribution_kind=(
-            LeadAttribution.Kind.DIRECT
-            if first_act.pk == message.pk and kind == LeadAttribution.Kind.DIRECT
-            else LeadAttribution.Kind.MATCHED
-        ),
+    last_attr = _write_conversion_attribution(
         lead=lead,
         user=user,
-        message=first_act,
         order=order,
-        revenue_amount=revenue,
-        converted_at=now,
-        metadata={'phone_matched': True} if kind == LeadAttribution.Kind.MATCHED else {},
-    )
-    last_attr = _upsert_attribution(
-        axis=LeadAttribution.Axis.CONVERSION,
-        touch_model=LeadAttribution.TouchModel.LAST,
-        attribution_kind=kind,
-        lead=lead,
-        user=user,
         message=message,
-        order=order,
-        revenue_amount=revenue,
-        converted_at=now,
-        metadata={
-            'phone_matched': kind == LeadAttribution.Kind.MATCHED,
-            'label': 'phone_matched' if kind == LeadAttribution.Kind.MATCHED else 'direct',
-        },
+        kind=kind,
+        campaign=fallback_campaign,
     )
-
-    lead.status = MarketingLead.Status.CUSTOMER
-    lead.matched_user = user
-    lead.save(update_fields=['status', 'matched_user', 'updated_at'])
-
-    CampaignEnrollment.objects.filter(
-        lead=lead,
-        status=CampaignEnrollment.Status.ACTIVE,
-    ).update(
-        status=CampaignEnrollment.Status.EXITED_PURCHASED,
-        exited_at=now,
-        user=user,
-    )
-    try:
-        from accounts.services.growth_journey import on_purchase
-        on_purchase(user=user, order=order, lead=lead)
-    except Exception:
-        pass
+    _finalize_purchase_side_effects(lead=lead, user=user, order=order)
     return last_attr
+
+
+def backfill_conversion_attributions(*, dry_run: bool = False, limit: int = 0) -> dict[str, int]:
+    """Conversion گم‌شده برای سرنخ‌هایی که سفارش paid دارند."""
+    from shop.models import Order
+
+    stats = {
+        'candidates': 0,
+        'created': 0,
+        'skipped_has_conversion': 0,
+        'skipped_no_lead': 0,
+        'errors': 0,
+    }
+    converted_leads = set(
+        LeadAttribution.objects.filter(
+            axis=LeadAttribution.Axis.CONVERSION,
+            touch_model=LeadAttribution.TouchModel.LAST,
+        ).values_list('lead_id', flat=True),
+    )
+
+    seen_leads: set[int] = set()
+    orders = (
+        Order.objects.filter(status='paid')
+        .select_related('user')
+        .order_by('-paid_at', '-created_at')
+    )
+    if limit > 0:
+        orders = orders[:limit]
+
+    for order in orders.iterator(chunk_size=200):
+        user = order.user
+        if not user:
+            continue
+        phone = normalize_phone(getattr(user, 'phone', '') or '')
+        lead = MarketingLead.objects.filter(phone_normalized=phone).first() if phone else None
+        if not lead:
+            lead = MarketingLead.objects.filter(matched_user=user).first()
+        if not lead:
+            stats['skipped_no_lead'] += 1
+            continue
+        if lead.pk in converted_leads or lead.pk in seen_leads:
+            stats['skipped_has_conversion'] += 1
+            continue
+        stats['candidates'] += 1
+        seen_leads.add(lead.pk)
+        if dry_run:
+            continue
+        try:
+            attribute_purchase(order=order)
+            stats['created'] += 1
+            converted_leads.add(lead.pk)
+        except Exception:
+            stats['errors'] += 1
+
+    return stats

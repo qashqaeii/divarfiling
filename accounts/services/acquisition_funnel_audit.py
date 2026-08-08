@@ -154,28 +154,35 @@ def audit_acquisition_funnel(*, sample_limit: int = 15) -> dict[str, Any]:
         campaign__kind=LeadCampaign.Kind.ACQUISITION,
     ).count()
 
+    conversion_total = conversion_qs.count()
+
     mismatch = [b for b in buyers_enrolled if not b.has_conversion_attr]
+    buyers_all_count = len(buyers_all)
 
     verdict = 'ok'
     notes: list[str] = []
-    if dashboard['total_purchases'] == 0 and not buyers_all:
-        verdict = 'ok'
+    if buyers_all_count == 0 and conversion_total == 0:
         notes.append(
-            'هیچ یک از ۱۰۴۰ سرنخ (بر اساس تطبیق شماره/کاربر) سفارش paid ندارند — '
+            'هیچ یک از سرنخ‌ها (بر اساس تطبیق شماره/کاربر) سفارش paid ندارند — '
             'عدد ۰ خرید در داشبورد درست است.',
         )
-    elif dashboard['total_purchases'] == 0 and buyers_all:
+    elif buyers_all_count > 0 and conversion_total == 0:
         verdict = 'attribution_gap'
         notes.append(
-            f'{len(buyers_all)} سرنخ سفارش paid دارند ولی LeadAttribution conversion = 0 — '
-            'داشبورد کم‌شمار است؛ خرید واقعی رخ داده.',
+            f'{buyers_all_count} سرنخ سفارش paid دارند ولی LeadAttribution conversion = 0 — '
+            'داشبورد کم‌شمار است؛ backfill لازم است.',
         )
-    elif dashboard['total_purchases'] > 0 and len(buyers_enrolled) >= dashboard['total_purchases']:
-        verdict = 'ok'
-        notes.append('conversion attribution با خریداران enroll‌شده هم‌خوان است.')
-    else:
+    elif buyers_all_count > conversion_total:
+        verdict = 'attribution_gap'
+        notes.append(
+            f'{buyers_all_count - conversion_total} سرنخ خریدار هنوز conversion ندارند — '
+            'python manage.py backfill_acquisition_conversions',
+        )
+    elif int(dashboard.get('total_purchases_ui', 0) or 0) != conversion_total:
         verdict = 'review'
-        notes.append('اختلاف جزئی — جزئیات را ببینید.')
+        notes.append('اختلاف جزئی بین KPI داشبورد و conversion — cache یا deploy جدید را بررسی کنید.')
+    else:
+        notes.append('conversion attribution با خریداران سرنخ هم‌خوان است.')
 
     def _sample_rows(items: list[BuyerSample], limit: int) -> list[dict]:
         rows = []

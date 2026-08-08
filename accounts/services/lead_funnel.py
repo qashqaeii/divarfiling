@@ -269,10 +269,6 @@ def campaign_funnel(campaign: LeadCampaign) -> Dict[str, Any]:
 
 
 def overview_stats() -> Dict[str, Any]:
-    acq_lead_ids = CampaignEnrollment.objects.filter(
-        campaign__kind=LeadCampaign.Kind.ACQUISITION,
-    ).values_list('lead_id', flat=True).distinct()
-
     accepted_sms = CampaignMessage.objects.filter(
         campaign__kind=LeadCampaign.Kind.ACQUISITION,
         status__in=(
@@ -287,7 +283,6 @@ def overview_stats() -> Dict[str, Any]:
     ).values('lead_id').distinct().count()
 
     purchases_qs = LeadAttribution.objects.filter(
-        lead_id__in=acq_lead_ids,
         axis=LeadAttribution.Axis.CONVERSION,
         touch_model=LeadAttribution.TouchModel.LAST,
     )

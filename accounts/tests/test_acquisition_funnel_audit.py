@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from accounts.models import MarketingLead
+from accounts.models import LeadAttribution, MarketingLead
 from accounts.services.acquisition_funnel_audit import audit_acquisition_funnel
 from shop.models import LicensePlan, Order, Product
 
@@ -24,7 +24,7 @@ class AcquisitionFunnelAuditTests(TestCase):
         self.assertEqual(report['ground_truth']['leads_with_paid_order_by_phone_or_user'], 0)
         self.assertEqual(report['dashboard']['total_purchases_ui'], 0)
 
-    def test_buyer_without_conversion_shows_gap(self):
+    def test_buyer_gets_conversion_after_attribute_purchase(self):
         user = User.objects.create_user(username='buyer1', password='x', phone='09122222222')
         MarketingLead.objects.create(
             phone_normalized='09122222222',
@@ -45,8 +45,19 @@ class AcquisitionFunnelAuditTests(TestCase):
             amount=Decimal('50000'),
             status='paid',
         )
+        order = Order.objects.filter(user=user, status='paid').first()
+        from accounts.services.lead_attribution import attribute_purchase
+
+        attribute_purchase(order=order)
 
         report = audit_acquisition_funnel(sample_limit=5)
         self.assertEqual(report['ground_truth']['leads_with_paid_order_by_phone_or_user'], 1)
-        self.assertEqual(report['attribution']['conversion_last_enrolled_acquisition'], 0)
-        self.assertEqual(report['verdict'], 'attribution_gap')
+        self.assertGreaterEqual(
+            LeadAttribution.objects.filter(
+                axis=LeadAttribution.Axis.CONVERSION,
+                touch_model=LeadAttribution.TouchModel.LAST,
+            ).count(),
+            1,
+        )
+        self.assertIn(report['verdict'], ('ok', 'review'))
+        self.assertEqual(report['dashboard']['total_purchases_ui'], 1)

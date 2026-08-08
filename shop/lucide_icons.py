@@ -16,11 +16,11 @@ REGISTRY_PATH = Path(__file__).resolve().parent.parent / 'static' / 'icons' / 'l
 # Lucide stroke family: round people, -days/-ring time, chart-* analytics, file/folder uploads.
 DECOR_TO_LUCIDE: dict[str, str] = {
     'house': 'layout-dashboard',
-    'folder': 'folder-closed',
+    'folder': 'files',
     'users': 'users-round',
-    'handshake': 'handshake',
+    'handshake': 'briefcase',
     'settings': 'settings-2',
-    'bell': 'bell-ring',
+    'bell': 'bell-dot',
     'calendar': 'calendar-days',
     'database': 'database',
     'building': 'building-2',

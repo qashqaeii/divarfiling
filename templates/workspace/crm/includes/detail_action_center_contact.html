@@ -1,7 +1,8 @@
 {% load workspace_tags crm_tags %}
 <section class="crm-contact-intel-strip" aria-label="خلاصه عملیاتی">
     <button type="button" class="crm-contact-intel-strip__cell crm-contact-intel-strip__cell--next{% if follow_up_state == 'overdue' %} is-warn{% elif follow_up_state == 'today' %} is-accent{% endif %}{% if not customer_is_shared %} is-action{% endif %}" {% if not customer_is_shared %}data-drawer-open="drawer-followup"{% endif %}>
-        <span class="crm-contact-intel-strip__ico" aria-hidden="true"><i class="fas fa-bell"></i></span>
+        {% if follow_up_state == 'overdue' or follow_up_state == 'today' %}<span class="crm-contact-intel-strip__pulse" aria-hidden="true"></span>{% endif %}
+        <span class="crm-contact-intel-strip__ico crm-contact-intel-strip__ico--next" aria-hidden="true"><i class="fas fa-bell"></i></span>
         <span class="crm-contact-intel-strip__copy">
             <em>اقدام بعدی</em>
             {% if customer.next_follow_up %}
@@ -12,8 +13,8 @@
         </span>
     </button>
 
-    <button type="button" class="crm-contact-intel-strip__cell{% if not customer_is_shared %} is-action{% endif %}" data-tab-jump="timeline">
-        <span class="crm-contact-intel-strip__ico" aria-hidden="true"><i class="fas fa-phone-volume"></i></span>
+    <button type="button" class="crm-contact-intel-strip__cell crm-contact-intel-strip__cell--contact{% if not customer_is_shared %} is-action{% endif %}" data-tab-jump="timeline">
+        <span class="crm-contact-intel-strip__ico crm-contact-intel-strip__ico--contact" aria-hidden="true"><i class="fas fa-phone-volume"></i></span>
         <span class="crm-contact-intel-strip__copy">
             <em>آخرین تماس</em>
             {% if activities %}
@@ -25,8 +26,8 @@
     </button>
 
     {% if match_data.eligible %}
-    <button type="button" class="crm-contact-intel-strip__cell is-action" data-tab-jump="matches">
-        <span class="crm-contact-intel-strip__ico" aria-hidden="true"><i class="fas fa-house"></i></span>
+    <button type="button" class="crm-contact-intel-strip__cell crm-contact-intel-strip__cell--match is-action" data-tab-jump="matches">
+        <span class="crm-contact-intel-strip__ico crm-contact-intel-strip__ico--match" aria-hidden="true"><i class="fas fa-house"></i></span>
         <span class="crm-contact-intel-strip__copy">
             <em>فایل پیشنهادی</em>
             {% if match_data.total_count %}
@@ -39,24 +40,24 @@
     {% endif %}
 
     {% if deals %}
-    <a href="{% url 'workspace:crm_deal_detail' deals.0.id %}" class="crm-contact-intel-strip__cell is-action">
-        <span class="crm-contact-intel-strip__ico" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+    <a href="{% url 'workspace:crm_deal_detail' deals.0.id %}" class="crm-contact-intel-strip__cell crm-contact-intel-strip__cell--deal is-action">
+        <span class="crm-contact-intel-strip__ico crm-contact-intel-strip__ico--deal" aria-hidden="true"><i class="fas fa-handshake"></i></span>
         <span class="crm-contact-intel-strip__copy">
             <em>معامله</em>
             <strong>{{ deals|length }} فعال</strong>
         </span>
     </a>
     {% elif not customer_is_shared %}
-    <button type="button" class="crm-contact-intel-strip__cell is-action" data-drawer-open="drawer-deal">
-        <span class="crm-contact-intel-strip__ico" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+    <button type="button" class="crm-contact-intel-strip__cell crm-contact-intel-strip__cell--deal is-action" data-drawer-open="drawer-deal">
+        <span class="crm-contact-intel-strip__ico crm-contact-intel-strip__ico--deal" aria-hidden="true"><i class="fas fa-handshake"></i></span>
         <span class="crm-contact-intel-strip__copy">
             <em>معامله</em>
             <strong class="is-muted">۰</strong>
         </span>
     </button>
     {% else %}
-    <span class="crm-contact-intel-strip__cell">
-        <span class="crm-contact-intel-strip__ico" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+    <span class="crm-contact-intel-strip__cell crm-contact-intel-strip__cell--deal">
+        <span class="crm-contact-intel-strip__ico crm-contact-intel-strip__ico--deal" aria-hidden="true"><i class="fas fa-handshake"></i></span>
         <span class="crm-contact-intel-strip__copy">
             <em>معامله</em>
             <strong class="is-muted">۰</strong>
@@ -65,8 +66,8 @@
     {% endif %}
 
     {% if reminders %}
-    <button type="button" class="crm-contact-intel-strip__cell is-action" data-drawer-open="drawer-reminder">
-        <span class="crm-contact-intel-strip__ico" aria-hidden="true"><i class="fas fa-clock"></i></span>
+    <button type="button" class="crm-contact-intel-strip__cell crm-contact-intel-strip__cell--reminder is-action" data-drawer-open="drawer-reminder">
+        <span class="crm-contact-intel-strip__ico crm-contact-intel-strip__ico--reminder" aria-hidden="true"><i class="fas fa-clock"></i></span>
         <span class="crm-contact-intel-strip__copy">
             <em>یادآور</em>
             <strong>{{ reminders.0.title|truncatechars:20 }}</strong>

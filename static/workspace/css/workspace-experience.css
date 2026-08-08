@@ -548,3 +548,37 @@ body.ws-body .mk-tx-rent {
         transition: none;
     }
 }
+
+/* CRM Contacts list — full-width table (no side preview) */
+.crm-contacts-pro .crm-contacts-workspace,
+.crm-contacts-pro .crm-contacts-layout {
+    grid-template-columns: 1fr !important;
+}
+
+.crm-contacts-pro .crm-contacts-main {
+    width: 100%;
+}
+
+.crm-contacts-pro .crm-contacts-table-wrap {
+    border: 1px solid var(--ws-border);
+    border-radius: 16px;
+    box-shadow: var(--ds-shadow-card, 0 1px 3px rgba(15, 23, 42, 0.06));
+}
+
+.crm-contacts-pro .crm-contacts-table {
+    table-layout: auto;
+}
+
+.crm-contacts-pro .crm-contacts-table th,
+.crm-contacts-pro .crm-contacts-table td {
+    padding: 0.625rem 0.875rem;
+}
+
+.crm-contacts-pro .crm-row-selectable:hover {
+    background: color-mix(in srgb, var(--ws-primary-soft) 45%, var(--ws-surface));
+}
+
+.crm-contacts-pro .crm-row-selectable.is-panel-active {
+    background: inherit;
+    box-shadow: none;
+}

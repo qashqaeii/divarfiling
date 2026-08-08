@@ -1415,12 +1415,25 @@ function crmAvatarHue(name) {
 
 function initCRMSidePanel() {
     const layout = document.getElementById('crmContactsLayout');
+    if (!layout) return;
+
     const panel = document.getElementById('crmSidePanel');
+    if (!panel) {
+        layout.querySelectorAll('.crm-row-selectable').forEach(row => {
+            row.addEventListener('click', e => {
+                if (e.target.closest('a, button, input, .crm-contacts-col-check')) return;
+                const link = row.querySelector('.crm-contacts-person-link');
+                if (link) window.location.href = link.href;
+            });
+        });
+        return;
+    }
+
     const content = document.getElementById('crmSideContent');
     const loading = document.getElementById('crmSideLoading');
     const closeBtn = document.getElementById('crmSideClose');
     const backdrop = document.getElementById('crmSideBackdrop');
-    if (!layout || !panel || !content) return;
+    if (!content) return;
 
     const baseUrl = window.crmPanelBase || '/workspace/crm/contacts/';
     let activeRow = null;
@@ -1586,9 +1599,6 @@ function initCRMSidePanel() {
             openPanel(row);
         });
     });
-
-    const firstRow = layout.querySelector('tbody .crm-row-selectable[data-panel-url]');
-    if (firstRow && !isMobilePanel()) openPanel(firstRow);
 
     if (closeBtn) closeBtn.addEventListener('click', closePanel);
     if (backdrop) backdrop.addEventListener('click', closePanel);

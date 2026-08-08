@@ -25,11 +25,10 @@
                         <span>{{ customer.name|truncatechars:28 }}</span>
                     </nav>
                 </div>
-                {% include 'workspace/crm/includes/contact_detail_actions.html' %}
+                {% include 'workspace/crm/includes/contact_detail_actions.html' with compact=True %}
             </header>
             <div class="crm-contact-hero__compact-row">
                 <div class="crm-contact-hero__identity">
-                    <span class="crm-contact-hero__avatar" aria-hidden="true">{{ customer.name|slice:":1" }}</span>
                     <div class="crm-contact-hero__headline">
                         <h1 class="crm-contact-hero__title">{{ customer.name }}</h1>
                         <div class="crm-contact-hero__badges">
@@ -173,7 +172,7 @@
                     {% if activities %}
                     <div class="crm-timeline crm-timeline-pro crm-timeline-events">
                         {% for a in activities %}
-                        <article class="crm-timeline-item crm-timeline-event">
+                        <article class="crm-timeline-item crm-timeline-event{% if a.activity_type == 'تماس' %} crm-timeline-event--call{% elif a.activity_type == 'یادآور' %} crm-timeline-event--reminder{% elif a.activity_type == 'پیگیری' %} crm-timeline-event--followup{% elif a.activity_type == 'بازدید' %} crm-timeline-event--visit{% endif %}">
                             <div class="crm-timeline-rail" aria-hidden="true"><span class="crm-timeline-icon"><i class="{{ a.activity_type|crm_activity_icon }}"></i></span></div>
                             <div class="crm-timeline-body">
                                 <div class="crm-timeline-top">
@@ -186,9 +185,13 @@
                                 {% if not customer_is_shared %}
                                 <div class="crm-timeline-event__actions">
                                     {% if a.activity_type == 'پیگیری' or a.activity_type == 'تماس' %}
-                                    <button type="button" class="crm-timeline-event__action" data-drawer-open="drawer-followup">ثبت پیگیری</button>
+                                    <button type="button" class="crm-timeline-event__action crm-timeline-event__action--primary" data-drawer-open="drawer-followup">
+                                        <i class="fas fa-calendar-plus" aria-hidden="true"></i><span>ثبت پیگیری</span>
+                                    </button>
                                     {% else %}
-                                    <button type="button" class="crm-timeline-event__action" data-drawer-open="drawer-activity">ثبت فعالیت</button>
+                                    <button type="button" class="crm-timeline-event__action" data-drawer-open="drawer-activity">
+                                        <i class="fas fa-plus" aria-hidden="true"></i><span>ثبت فعالیت</span>
+                                    </button>
                                     {% endif %}
                                 </div>
                                 {% endif %}

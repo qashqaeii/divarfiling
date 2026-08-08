@@ -68,11 +68,11 @@ CRM_ILLUSTRATIONS: dict[str, str] = {
 }
 
 ICON_SIZES: dict[str, int] = {
-    'inline': 14,
+    'inline': 18,   # buttons
     'xs': 16,
-    'nav': 18,
+    'nav': 20,      # sidebar
     'sm': 20,
-    'metric': 20,
+    'metric': 24,   # dashboard cards / KPI
     'md': 28,
     'lg': 36,
     'xl': 44,

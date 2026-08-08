@@ -1,5 +1,9 @@
 {% if not missing %}
-<span class="df-decor-icon df-decor-icon--{{ size }}{% if boxed %} df-decor-icon--boxed{% if accent %} df-decor-icon--{{ accent }}{% endif %}{% endif %}{% if class_name %} {{ class_name }}{% endif %}"{% if alt %} title="{{ alt }}"{% endif %}>
+<span class="df-decor-icon df-decor-icon--{{ size }}{% if boxed %} df-decor-icon--boxed{% if accent %} df-decor-icon--{{ accent }}{% endif %}{% endif %}{% if class_name %} {{ class_name }}{% endif %}"{% if alt %} title="{{ alt }}"{% endif %}{% if use_legacy_img %} data-legacy-png="{{ legacy_png }}"{% endif %}>
+    {% if use_legacy_img %}
     <img src="{{ src }}" alt="{{ alt }}" width="{{ width }}" height="{{ height }}" loading="lazy" decoding="async" draggable="false">
+    {% else %}
+    {{ svg_html }}
+    {% endif %}
 </span>
 {% endif %}

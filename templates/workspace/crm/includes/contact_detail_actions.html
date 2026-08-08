@@ -65,7 +65,7 @@
         </div>
         {% if customer.phone and ai_enabled and has_bot_license %}
         <button type="button" class="crm-contact-hero__edit-btn crm-contact-hero__edit-btn--ai" data-drawer-open="drawer-ai-message" title="پیام هوشمند">
-            <img src="{% static 'icons/Ai.png' %}" alt="" class="crm-contact-hero__edit-btn-icon" width="18" height="18" loading="lazy" decoding="async">
+            {% include 'includes/icon_slot.html' with decor='ai' size='nav' class_name='crm-contact-hero__edit-btn-icon' only %}
             <span class="sr-only">پیام هوشمند</span>
         </button>
         {% endif %}

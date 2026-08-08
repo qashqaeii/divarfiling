@@ -1052,7 +1052,7 @@
         <div class="crm-drawer-head crm-drawer-head-ai">
             <div class="crm-drawer-head-ai-brand">
                 <span class="crm-drawer-head-ai-icon" aria-hidden="true">
-                    <img src="{% static 'icons/Ai.png' %}" alt="" width="48" height="48" loading="lazy" decoding="async">
+                    {% include 'includes/icon_slot.html' with decor='ai' size='xl' only %}
                 </span>
                 <div class="crm-drawer-head-ai-text">
                     <span class="crm-drawer-kicker">هوش مصنوعی فایلینگ دیوار</span>
@@ -1107,7 +1107,7 @@
                 </label>
                 <div class="crm-ai-compose-preview-box" data-ai-preview-box>
                     <div class="crm-ai-compose-preview-empty" data-ai-preview-empty>
-                        <img src="{% static 'icons/sparkles.png' %}" alt="" width="28" height="28" loading="lazy" decoding="async">
+                        {% include 'includes/icon_slot.html' with decor='sparkles' size='md' only %}
                         <p>پیام آماده ارسال اینجا نمایش داده می‌شود</p>
                         <span>دکمه «ساخت پیام هوشمند» را بزنید</span>
                     </div>
@@ -1141,7 +1141,7 @@
             <button type="button" class="crm-ai-compose-cta ws-ai-trigger" data-ai-compose>
                 <span class="crm-ai-compose-cta-glow" aria-hidden="true"></span>
                 <span class="crm-ai-compose-cta-icon" aria-hidden="true">
-                    <img src="{% static 'icons/sparkles.png' %}" alt="" width="18" height="18" loading="lazy" decoding="async">
+                    {% include 'includes/icon_slot.html' with decor='sparkles' size='inline' only %}
                 </span>
                 <span class="crm-ai-compose-cta-label">ساخت پیام هوشمند</span>
             </button>

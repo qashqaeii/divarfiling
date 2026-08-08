@@ -1,4 +1,12 @@
-/* Decorative PNG icons — public marketing pages */
+/* Lucide SVG icon system — legacy PNG files remain on disk for rollback */
+:root {
+    --mk-icon-color: #64748b;
+    --mk-icon-color-hover: #6d28d9;
+    --mk-icon-color-active: #7c3aed;
+    --mk-icon-stroke: 2;
+    --mk-icon-gap-inline: 0.5rem;
+}
+
 .df-decor-icon {
     display: inline-flex;
     align-items: center;
@@ -6,26 +14,91 @@
     line-height: 0;
     flex-shrink: 0;
     vertical-align: middle;
-}
-
-.df-decor-icon img {
-    display: block;
+    color: var(--mk-icon-color);
+    transition: color 0.12s ease;
     width: var(--df-decor-size, 1.75rem);
     height: var(--df-decor-size, 1.75rem);
-    object-fit: contain;
+}
+
+.df-decor-icon svg,
+.df-decor-icon img {
+    display: block;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     user-select: none;
 }
 
-.df-decor-icon--inline { --df-decor-size: 0.875rem; }
-.df-decor-icon--nav { --df-decor-size: 1.125rem; }
-.df-decor-icon--xs { --df-decor-size: 1rem; }
-.df-decor-icon--sm { --df-decor-size: 1.25rem; }
-.df-decor-icon--metric { --df-decor-size: 1.25rem; }
-.df-decor-icon--md { --df-decor-size: 1.75rem; }
-.df-decor-icon--lg { --df-decor-size: 2.25rem; }
-.df-decor-icon--xl { --df-decor-size: 2.75rem; }
-.df-decor-icon--hero { --df-decor-size: 3.5rem; }
+.df-decor-icon svg.df-lucide-svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--mk-icon-stroke);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.df-decor-icon img {
+    object-fit: contain;
+}
+
+.df-decor-icon:hover {
+    color: var(--mk-icon-color-hover);
+}
+
+/* Context sizes — sidebar 20px, dashboard 24px, button 18px */
+.df-decor-icon--inline {
+    --df-decor-size: 1.125rem;
+    --mk-icon-stroke: 1.75;
+}
+
+.df-decor-icon--nav {
+    --df-decor-size: 1.25rem;
+    --mk-icon-stroke: 1.75;
+}
+
+.df-decor-icon--xs {
+    --df-decor-size: 1rem;
+    --mk-icon-stroke: 1.75;
+}
+
+.df-decor-icon--sm {
+    --df-decor-size: 1.25rem;
+    --mk-icon-stroke: 1.75;
+}
+
+.df-decor-icon--metric {
+    --df-decor-size: 1.5rem;
+    --mk-icon-stroke: 2;
+}
+
+.df-decor-icon--md {
+    --df-decor-size: 1.75rem;
+    --mk-icon-stroke: 2;
+}
+
+.df-decor-icon--lg {
+    --df-decor-size: 2.25rem;
+    --mk-icon-stroke: 2;
+}
+
+.df-decor-icon--xl {
+    --df-decor-size: 2.75rem;
+    --mk-icon-stroke: 2;
+}
+
+.df-decor-icon--hero {
+    --df-decor-size: 3.5rem;
+    --mk-icon-stroke: 2;
+}
+
+/* Icon + text spacing when not inside a flex gap container */
+.df-decor-icon--inline:not(:last-child) {
+    margin-inline-end: 0.375rem;
+}
+
+:is(.ws-nav-item, .ws-nav-btn, .mk-hub-head-btn, .mk-hero-btn, .crm-dash-act) > .df-decor-icon + :is(span, a, button) {
+    margin-inline-start: 0;
+}
 
 .df-decor-icon--boxed {
     width: calc(var(--df-decor-size, 1.75rem) + 0.65rem);
@@ -68,39 +141,39 @@
     height: 100%;
 }
 
-.mk-eco-icon .df-decor-icon img,
-.mk-workflow-icon .df-decor-icon img,
-.mk-tier-icon .df-decor-icon img {
-    width: 1.15rem;
-    height: 1.15rem;
+.mk-eco-icon .df-decor-icon,
+.mk-workflow-icon .df-decor-icon,
+.mk-tier-icon .df-decor-icon {
+    --df-decor-size: 1.15rem;
+    --mk-icon-stroke: 1.75;
 }
 
-.mk-cap-icon .df-decor-icon img,
-.mk-cap-cluster-icon .df-decor-icon img {
-    width: 0.95rem;
-    height: 0.95rem;
+.mk-cap-icon .df-decor-icon,
+.mk-cap-cluster-icon .df-decor-icon {
+    --df-decor-size: 0.95rem;
+    --mk-icon-stroke: 1.75;
 }
 
-.mk-crm-feat-icon .df-decor-icon img,
-.mk-nationwide-point-icon .df-decor-icon img {
-    width: 1.1rem;
-    height: 1.1rem;
+.mk-crm-feat-icon .df-decor-icon,
+.mk-nationwide-point-icon .df-decor-icon {
+    --df-decor-size: 1.1rem;
+    --mk-icon-stroke: 1.75;
 }
 
-.seo-feature-card > .df-decor-icon img,
-.seo-feature-card > .mk-icon .df-decor-icon img {
-    width: 1.35rem;
-    height: 1.35rem;
+.seo-feature-card > .df-decor-icon,
+.seo-feature-card > .mk-icon .df-decor-icon {
+    --df-decor-size: 1.35rem;
+    --mk-icon-stroke: 1.75;
 }
 
-.mk-bot-pipeline-icon .df-decor-icon img {
-    width: 1rem;
-    height: 1rem;
+.mk-bot-pipeline-icon .df-decor-icon {
+    --df-decor-size: 1rem;
+    --mk-icon-stroke: 1.75;
 }
 
-.mk-data-export-btn .df-decor-icon img {
-    width: 0.85rem;
-    height: 0.85rem;
+.mk-data-export-btn .df-decor-icon {
+    --df-decor-size: 0.85rem;
+    --mk-icon-stroke: 1.75;
     margin-inline-end: 0.25rem;
     vertical-align: -0.15em;
 }

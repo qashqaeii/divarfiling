@@ -619,7 +619,7 @@
             <header class="ws-ai-card__header">
                 <div class="ws-ai-card__brand">
                     <span class="ws-ai-card__orb">
-                        <img src="{% static 'icons/Ai.png' %}" alt="" class="ws-ai-card__icon" width="64" height="64" loading="lazy" decoding="async">
+                        {% include 'includes/icon_slot.html' with decor='ai' size='hero' class_name='ws-ai-card__icon' only %}
                     </span>
                     <div class="ws-ai-card__titles">
                         <p class="ws-ai-card__eyebrow">هوش مصنوعی فایلینگ دیوار</p>
@@ -632,7 +632,7 @@
                         data-ai-url="{% url 'workspace:ai_workspace:listing_summary' dataset.id listing.id %}">
                     <span class="ws-ai-card__cta-glow" aria-hidden="true"></span>
                     <span class="ws-ai-card__cta-icon" aria-hidden="true">
-                        <img src="{% static 'icons/sparkles.png' %}" alt="" class="ws-ai-card__cta-icon-img" width="18" height="18" loading="lazy" decoding="async">
+                        {% include 'includes/icon_slot.html' with decor='sparkles' size='inline' class_name='ws-ai-card__cta-icon-img' only %}
                     </span>
                     <span class="ws-ai-card__cta-label">تولید خلاصه</span>
                 </button>
